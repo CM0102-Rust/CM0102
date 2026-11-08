@@ -16,7 +16,7 @@ static mut CQH8_CLUBE: i32 = -1;
 
 /// O nó do histórico (0x2b bytes montados na pilha): +0 o ano da temporada do clube (0x669950), +2 o clube (−1 sem),
 /// +6 os 32 bytes da categoria, +0x26 o valor, +0x2a o tipo (3 bits) e a categoria × 8.
-unsafe fn cqh8_no(clube: usize, dados: Option<usize>, valor: u32, marca: u8) -> [u8; 0x2b] {
+unsafe fn career_history_node(clube: usize, dados: Option<usize>, valor: u32, marca: u8) -> [u8; 0x2b] {
     let ano: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(0x669950usize);
     let mut r = [0u8; 0x2b];
     r[0..2].copy_from_slice(&ano(clube).to_le_bytes());
@@ -32,7 +32,7 @@ unsafe fn cqh8_no(clube: usize, dados: Option<usize>, valor: u32, marca: u8) -> 
 
 /// Grava o nó no fim da lista do histórico da ficha (0x58e340 no arquivo [this], posições +0x18/+0x1c do registro);
 /// no ensaio, só soma.
-unsafe fn cqh8_gravar(this: usize, reg: usize, no: &[u8; 0x2b]) {
+unsafe fn append_history_node(this: usize, reg: usize, no: &[u8; 0x2b]) {
     if CQH8_ENSAIO {
         if i32::from_le_bytes([no[2], no[3], no[4], no[5]]) == CQH8_CLUBE && no[0x2a] & 0xf8 == 0x10 {
             CQH8_PENDENTES.0 = CQH8_PENDENTES.0.wrapping_add(no[6] as u16);
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, valor: u
         0
     };
     if p == 0 {
-        aviso_em(0xa78310, 0xf28);
+        show_error_at(0xa78310, 0xf28);
         return 0;
     }
     let clube = cqh8_d(p + 0x39);
@@ -80,9 +80,9 @@ unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, valor: u
             continue;
         }
         let dados = cqh8_d(this + 4).wrapping_add((id as isize * 0x20) as usize);
-        let no = cqh8_no(clube, Some(dados), valor, (((cat + 1) as u8) << 3) | tipo); // cqh8: a categoria e o tipo do nó
+        let no = career_history_node(clube, Some(dados), valor, (((cat + 1) as u8) << 3) | tipo); // cqh8: a categoria e o tipo do nó
         crate::comparacao::ramo("cqh_8 categoria arquivada");
-        cqh8_gravar(this, reg, &no);
+        append_history_node(this, reg, &no);
         if cat == 5 {
             sexta = true;
         }
@@ -118,9 +118,9 @@ unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, valor: u
             dias(0xae2c90, cqh8_d(p + 0x3e) as u32, cqh8_d(p + 0x42) as u32) < 0x16d
         };
         if gravar {
-            let no = cqh8_no(clube, None, valor, 0x30 | tipo); // cqh8: o nó vazio da sexta categoria
+            let no = career_history_node(clube, None, valor, 0x30 | tipo); // cqh8: o nó vazio da sexta categoria
             crate::comparacao::ramo("cqh_8 no vazio");
-            cqh8_gravar(this, reg, &no);
+            append_history_node(this, reg, &no);
         }
     }
     if (clube_id as i32) > -1 || (valor as i32) > -1 {
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, valor: u
 /// das categorias e os jogos e gols pelo clube (+0x20/+0x22 do registro da ficha). As posições do histórico (+0x18,
 /// +0x1c), que só a gravação da original move, ficam fora. Pessoa nula ou sem ficha: só a original.
 unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize, p: usize, valor: u32, emprestimo: u32, fim: u32, clube_id: u32, outro: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I0%%);
     if p == 0 || cqh8_d(p + 0x61) == 0 {
         return o(this, p, valor, emprestimo, fim, clube_id, outro);
     }

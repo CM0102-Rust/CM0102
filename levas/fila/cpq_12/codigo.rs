@@ -50,7 +50,7 @@ unsafe extern "C" fn comp_util_get_fixture_venue_side(clube: usize, jogo: usize)
 
 /// Comparador: pura (consulta 0x53b900, sem efeitos): pelo lado.
 unsafe extern "C" fn comparar_comp_util_get_fixture_venue_side(clube: usize, jogo: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%);
     let r = o(clube, jogo);
     let n = comp_util_get_fixture_venue_side(clube, jogo);
     PLACAR.registrar(r == n, || format!("comp_util_get_fixture_venue_side(clube {:x}, jogo {:x}) original={} rust={}", clube, jogo, r, n));
@@ -74,7 +74,7 @@ unsafe extern "C" fn compare_nation_coefficients_desc(a: usize, b: usize) -> i32
 }
 
 unsafe extern "C" fn comparar_compare_nation_coefficients_desc(a: usize, b: usize) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
     let n = compare_nation_coefficients_desc(a, b);
     PLACAR.registrar(r == n, || format!("compare_nation_coefficients_desc original={} rust={}", r, n));
@@ -89,7 +89,7 @@ unsafe extern "C" fn comparar_compare_nation_coefficients_desc(a: usize, b: usiz
 /// linha 0x5da). A data local da original (0x54a110) só ocupa a chave depois do par.
 unsafe extern "thiscall" fn has_scout_request(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
     if jogador == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%)(this, jogador, clube, so_vencidos);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%)(this, jogador, clube, so_vencidos);
     }
     let mut clube = clube;
     if clube == 0 {
@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn has_scout_request(this: usize, jogador: usize, clube
 
 /// Comparador: consulta pura (a busca binária e a data local): pelo valor; jogador nulo só a original (a caixa).
 unsafe extern "thiscall" fn comparar_has_scout_request(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if jogador == 0 {
         return o(this, jogador, clube, so_vencidos);
     }

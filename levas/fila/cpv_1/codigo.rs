@@ -23,7 +23,7 @@ unsafe fn cpv1_pessoa(id: usize) -> usize {
 }
 
 /// O contrato principal da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz depois de cada chamada.
-unsafe fn cpv1_contrato(p: usize) -> usize {
+unsafe fn transfer_manager_main_contract_stored(p: usize) -> usize {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contract_of(cpv1_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
@@ -31,7 +31,7 @@ unsafe fn cpv1_contrato(p: usize) -> usize {
 }
 
 /// O clube do contrato (id em +4); com `filtro`, nenhum para o contrato de tipo 5 (+0x35 & 0x3f).
-unsafe fn cpv1_clube_do_contrato(c: usize, filtro: bool) -> usize {
+unsafe fn club_of_contract_filtered(c: usize, filtro: bool) -> usize {
     if c != 0 && (!filtro || cpv1_b(c + 0x35) & 0x3f != 5) {
         cpv1_clube(cpv1_d(c + 4))
     } else {
@@ -40,7 +40,7 @@ unsafe fn cpv1_clube_do_contrato(c: usize, filtro: bool) -> usize {
 }
 
 /// Volta a lista ao começo (o cursor +0xa recebe a cabeça +2).
-unsafe fn cpv1_inicio(l: usize) {
+unsafe fn transfer_manager_llist_rewind(l: usize) {
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cpv1_d(l + 2));
 }
 
@@ -51,7 +51,7 @@ unsafe fn cpv1_proximo(l: usize) -> usize {
 }
 
 /// Os dados da pessoa numa notícia, a partir da vaga `k`: o id e as três chaves (+0x33 de +4, +8 e +0xc).
-unsafe fn cpv1_dados_da_pessoa(n: usize, k: i8, p: usize) {
+unsafe fn write_person_news_slots(n: usize, k: i8, p: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     gravar(n, k, cpv1_d(p) as u32);
     gravar(n, k + 1, cpv1_d(cpv1_d(p + 4) + 0x33) as u32);
@@ -86,8 +86,8 @@ unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usize, oferta: 
     let confirmar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8c3310usize);
     let comprador = cpv1_clube(cpv1_d(oferta + 8));
     let jogador = cpv1_pessoa(cpv1_d(oferta + 0xc));
-    let mut vendedor = cpv1_clube_do_contrato(cpv1_contrato(jogador), true);
-    let c = cpv1_contrato(jogador);
+    let mut vendedor = club_of_contract_filtered(transfer_manager_main_contract_stored(jogador), true);
+    let c = transfer_manager_main_contract_stored(jogador);
     if c != 0 && cpv1_b(c + 0x35) & 0x3f == 5 {
         vendedor = 0;
     }
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usize, oferta: 
         }
         let troca = cpv1_d(oferta + 4);
         if troca != 0 {
-            cpv1_inicio(troca);
+            transfer_manager_llist_rewind(troca);
             loop {
                 let x = cpv1_proximo(troca);
                 if x == 0 {
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usize, oferta: 
         }
         let rivais = cpv1_d(oferta);
         if rivais != 0 {
-            cpv1_inicio(rivais);
+            transfer_manager_llist_rewind(rivais);
             let mut x = cpv1_proximo(rivais);
             while x != 0 {
                 let outra = cpv1_d(cpv1_d(this) + cpv1_d(x) * 4);
@@ -121,11 +121,11 @@ unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usize, oferta: 
                     agendar(this, cpv1_d(cpv1_d(this) + cpv1_d(x) * 4), 0x14, 0); // cpv1: as rivais em 20 dias
                     let o = cpv1_d(cpv1_d(this) + cpv1_d(x) * 4);
                     let p = cpv1_pessoa(cpv1_d(o + 0xc));
-                    let dono = cpv1_clube_do_contrato(cpv1_contrato(p), false);
+                    let dono = club_of_contract_filtered(transfer_manager_main_contract_stored(p), false);
                     limpar_marcas(cpv1_d(this + 0x856), cpv1_clube(cpv1_d(o + 8)), p);
                     let l = cpv1_d(o + 4);
                     if l != 0 {
-                        cpv1_inicio(l);
+                        transfer_manager_llist_rewind(l);
                         loop {
                             let y = cpv1_proximo(l);
                             if y == 0 {
@@ -194,13 +194,13 @@ unsafe extern "thiscall" fn post_offer_accepted_news(this: usize, oferta: usize)
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     crate::comparacao::ramo("cpv_1 noticia da oferta aceita");
     let p = cpv1_pessoa(cpv1_d(oferta + 0xc));
-    let dono = cpv1_clube_do_contrato(cpv1_contrato(p), true);
+    let dono = club_of_contract_filtered(transfer_manager_main_contract_stored(p), true);
     let mut clubes = [0usize; 30];
     let q = destinatarios(this, oferta, 0x2d, clubes.as_mut_ptr(), 0x1e) as i8;
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xfa3, 0);
-    cpv1_dados_da_pessoa(n, 0, p);
+    write_person_news_slots(n, 0, p);
     gravar(n, 4, if dono != 0 { cpv1_d(dono) as u32 } else { u32::MAX });
     gravar(n, 5, cpv1_d(oferta + 8) as u32);
     gravar(n, 6, cpv1_d(oferta + 4) as u32);
@@ -232,10 +232,10 @@ unsafe extern "thiscall" fn post_loan_offer_news(this: usize, oferta: usize, ter
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xfb5, 0);
-    cpv1_dados_da_pessoa(n, 0, p);
+    write_person_news_slots(n, 0, p);
     gravar(n, 4, cpv1_d(oferta + 8) as u32);
     // ponytail: sem clube (contrato de tipo 5) a original lê o endereço 0 e cai; a cópia faz o mesmo.
-    let clube = cpv1_clube_do_contrato(cpv1_contrato(p), true);
+    let clube = club_of_contract_filtered(transfer_manager_main_contract_stored(p), true);
     gravar(n, 5, cpv1_d(clube) as u32);
     gravar(n, 6, cpv1_d(oferta + 0x20) as u32);
     gravar(n, 7, cpv1_d(oferta + 0x24) as u32);
@@ -243,9 +243,9 @@ unsafe extern "thiscall" fn post_loan_offer_news(this: usize, oferta: usize, ter
     gravar(n, 9, cpv1_b(oferta + 0x2c) as i8 as i32 as u32);
     gravar(n, 10, core::ptr::read_unaligned((termos + 0x2d) as *const i16) as i32 as u32);
     gravar(n, 11, core::ptr::read_unaligned((termos + 0x2f) as *const u16) as u32);
-    let c = cpv1_contrato(p);
+    let c = transfer_manager_main_contract_stored(p);
     if c == 0 {
-        return aviso_em(0xa8d514, 0x5e4c);
+        return show_error_at(0xa8d514, 0x5e4c);
     }
     gravar(n, 12, cpv1_d(c + 0xc) as u32);
     for &d in clubes.iter().take(if q > 0 { q as usize } else { 0 }) {
@@ -256,15 +256,15 @@ unsafe extern "thiscall" fn post_loan_offer_news(this: usize, oferta: usize, ter
 // ponytail: reagenda, cancela rivais, sorteia e decide pelos clubes (as chamadas mexem nas ofertas e alocam): não roda
 // duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
 unsafe extern "thiscall" fn comparar_advance_offer_to_club_approval(this: usize, oferta: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, oferta)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, oferta)
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_offer_accepted_news(this: usize, oferta: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, oferta)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, oferta)
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_loan_offer_news(this: usize, oferta: usize, termos: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, oferta, termos)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, oferta, termos)
 }

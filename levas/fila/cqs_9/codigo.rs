@@ -13,7 +13,7 @@ unsafe fn cqs9_pd(a: usize, v: usize) {
 }
 
 /// Os inscritos menos a metade (truncada, com sinal) dos clubes da preliminar (+0xb2, byte com sinal).
-unsafe fn cqs9_conta(this: usize, k: i16) -> i32 {
+unsafe fn entrants_minus_half_prelim(this: usize, k: i16) -> i32 {
     k as i32 - (*((this + 0xb2) as *const i8) as i32) / 2
 }
 
@@ -31,14 +31,14 @@ unsafe fn cqs9_conta(this: usize, k: i16) -> i32 {
 /// os inscritos + 27, a lista dos que vêm da Intertoto [inferência] (0x944e46 de +0x38 × 6 em +0x14; sem memória, a
 /// caixa da linha 0x21a e 0) com os inscritos de classe 1, cada um com a classe 3, contados em +0x36; +0x3e = +0x38;
 /// devolve 1. Com +0xb2 ímpar ou negativo, 0.
-unsafe fn cqs9_inscritos(this: usize) -> i32 {
+unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     const F: usize = 0xaa19e0;
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x91);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let l = zerada(0xa1, 6);
     cqs9_pd(this + 0xa7, l);
     if l == 0 {
-        aviso_em(F, 0x1bf);
+        show_error_at(F, 0x1bf);
         return -1;
     }
     *((this + 0xb2) as *mut u8) = 0;
@@ -64,12 +64,12 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
             }
         }
     }
-    if cqs9_conta(this, k) < 0x76 {
+    if entrants_minus_half_prelim(this, k) < 0x76 {
         let lim = |_: ()| (cqs9_d(0xae235c) as i32).wrapping_sub((cqs9_d(0xae2350) as i32).wrapping_mul(2));
         let mut j: i16 = 0;
         if lim(()) > 0 {
             loop {
-                if cqs9_conta(this, k) >= 0x76 { // cqs9: completa até 118
+                if entrants_minus_half_prelim(this, k) >= 0x76 { // cqs9: completa até 118
                     break;
                 }
                 let c = base + j as u16 as usize * 0x245;
@@ -90,7 +90,7 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
             }
         }
     }
-    while cqs9_conta(this, k) > 0x76 {
+    while entrants_minus_half_prelim(this, k) > 0x76 {
         cqs9_pd(cqs9_d(this + 0xa7) + k as i32 as usize * 6 - 6, 0);
         k = k.wrapping_sub(1);
     }
@@ -108,7 +108,7 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
     let t = alocar((n as i32 * 6) as u32);
     cqs9_pd(this + 0x14, t);
     if t == 0 {
-        aviso_em(F, 0x21a);
+        show_error_at(F, 0x21a);
         return 0;
     }
     if k > 0 {
@@ -128,13 +128,13 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
 }
 
 unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
-    cqs9_inscritos(this)
+    uefa_cup_build_entrants(this)
 }
 
 /// Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
 unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     let (a0, t0) = (cqs9_d(this + 0xa7), cqs9_d(this + 0x14));
     let base = cqs9_d(0xae23b4);
     let mut reg: Vec<(usize, usize)> = vec![(this + 0x36, 4), (this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)];
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
         cqs9_pd(this + 0x14, t0);
         r
     }, || {
-        let r = cqs9_inscritos(this);
+        let r = uefa_cup_build_entrants(this);
         lr.set((cqs9_d(this + 0xa7), cqs9_d(this + 0x14)));
         cqs9_pd(this + 0xa7, lo.get().0);
         cqs9_pd(this + 0x14, lo.get().1);

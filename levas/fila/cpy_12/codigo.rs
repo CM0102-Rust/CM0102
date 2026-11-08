@@ -23,13 +23,13 @@ unsafe fn cpy12_diretoria(this: usize, clube: usize) -> usize {
 }
 
 /// Soma `delta` à palavra `o` (+6, +0x14, +0x16: as confianças) da diretoria do clube.
-unsafe fn cpy12_confianca(this: usize, clube: usize, o: usize, delta: i16) {
+unsafe fn add_board_confidence(this: usize, clube: usize, o: usize, delta: i16) {
     let a = (cpy12_diretoria(this, clube) + o) as *mut i16;
     core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(delta));
 }
 
 /// O piso da confiança +6 em 1 e o veto 0x800.
-unsafe fn cpy12_piso(this: usize, clube: usize) -> u32 {
+unsafe fn clamp_confidence_floor(this: usize, clube: usize) -> u32 {
     let a = (cpy12_diretoria(this, clube) + 6) as *mut i16;
     if core::ptr::read_unaligned(a) < 1 {
         core::ptr::write_unaligned(a, 1);
@@ -38,13 +38,13 @@ unsafe fn cpy12_piso(this: usize, clube: usize) -> u32 {
 }
 
 /// O valor do jogador (CONTRACT_MANAGER::calc_player_value 0x4d0c60 em [0xae1050] com 0, −1 e `modo`).
-unsafe fn cpy12_valor(j: usize, clube: usize, modo: u32) -> i32 {
+unsafe fn player_value(j: usize, clube: usize, modo: u32) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(0x4d0c60usize);
     f(cpy12_d(0xae1050), j, clube, 0, -1, modo)
 }
 
 /// O clube do contrato do jogador (0x4cf5a0, guardado em [0xae1080]) ou 0.
-unsafe fn cpy12_clube_do_contrato(j: usize) -> usize {
+unsafe fn contract_club_cached(j: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cpy12_d(0xae1050), j);
     *(0xae1080 as *mut usize) = c;
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
                     }
                 }
                 let c = n();
-                if sorteio(ftol(pow_do_jogo(c as f64, f64_em(0x968930)) + f64_em(0x9688a8))) == 0 {
+                if sorteio(match_pl_ftol(game_pow(c as f64, read_f64_at(0x968930)) + read_f64_at(0x9688a8))) == 0 {
                     return 0x2000;
                 }
                 let a = sorteio(n());
@@ -149,8 +149,8 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
     if tipo == 1 || tipo == 3 || cpy12_d(j + 0x39) == 0 || humano(clube, 1, 1, 0, 0) == 0 {
         return 0;
     }
-    let x = cpy12_w(clube + 0x80) as f64 * f64_em(0x968918);
-    let mut limite = ftol(x * x);
+    let x = cpy12_w(clube + 0x80) as f64 * read_f64_at(0x968918);
+    let mut limite = match_pl_ftol(x * x);
     if limite < 0x249f0 {
         limite = 0x249f0;
     } else if limite > 0x1e8480 {
@@ -161,19 +161,19 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
         let nacao = cpy12_d(clube + 0x53);
         let divisao = cpy12_d(clube + 0x57);
         if nacao != 0 && cpy12_b(nacao + 0x11c) != 0 && divisao != 0 && cpy12_d(divisao) != cpy12_d(0x9cf764) && (contar(clube, 0, 0) as i8) < 0xf {
-            cpy12_confianca(this, clube, 6, -0x4e2);
-            cpy12_confianca(this, clube, 0x14, -0x4e2);
-            cpy12_confianca(this, clube, 0x16, -500);
-            cpy12_piso(this, clube);
+            add_board_confidence(this, clube, 6, -0x4e2);
+            add_board_confidence(this, clube, 0x14, -0x4e2);
+            add_board_confidence(this, clube, 0x16, -500);
+            clamp_confidence_floor(this, clube);
             return 0x200;
         }
         let preco: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(0x4d1600usize);
         let mut pedido = preco(cpy12_d(0xae1050), cpy12_d(j + 0x39), clube, j, 0, 0, 1);
-        let pelo_contrato = cpy12_valor(j, cpy12_clube_do_contrato(j), 1);
+        let pelo_contrato = player_value(j, contract_club_cached(j), 1);
         if pedido > pelo_contrato {
             pedido = pelo_contrato;
         }
-        let pelo_atual = cpy12_valor(j, cpy12_d(j + 0x39), 0);
+        let pelo_atual = player_value(j, cpy12_d(j + 0x39), 0);
         if pedido <= limite || pelo_atual < valor {
             return 0;
         }
@@ -181,21 +181,21 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
         let mais = cpy12_b(c + 0x3d) as i8;
         crate::comparacao::ramo("cpy_12 diretoria vendendo");
         if p > v + v && mais > 0x19 {
-            cpy12_confianca(this, clube, 6, -0x4e2);
-            cpy12_confianca(this, clube, 0x14, -0x4e2);
-        } else if pedido > 0x4c4b40 && mais > 0 && p > v * f64_em(0x968e18) {
-            cpy12_confianca(this, clube, 6, -0x4e2);
-            cpy12_confianca(this, clube, 0x14, -0x4e2);
-        } else if p > v * f64_em(0x969000) {
-            cpy12_confianca(this, clube, 6, -500);
-            cpy12_confianca(this, clube, 0x14, -500);
-            cpy12_confianca(this, clube, 0x16, -0xfa);
-            return cpy12_piso(this, clube);
+            add_board_confidence(this, clube, 6, -0x4e2);
+            add_board_confidence(this, clube, 0x14, -0x4e2);
+        } else if pedido > 0x4c4b40 && mais > 0 && p > v * read_f64_at(0x968e18) {
+            add_board_confidence(this, clube, 6, -0x4e2);
+            add_board_confidence(this, clube, 0x14, -0x4e2);
+        } else if p > v * read_f64_at(0x969000) {
+            add_board_confidence(this, clube, 6, -500);
+            add_board_confidence(this, clube, 0x14, -500);
+            add_board_confidence(this, clube, 0x16, -0xfa);
+            return clamp_confidence_floor(this, clube);
         } else {
             return 0;
         }
-        cpy12_confianca(this, clube, 0x16, -500);
-        return cpy12_piso(this, clube);
+        add_board_confidence(this, clube, 0x16, -500);
+        return clamp_confidence_floor(this, clube);
     }
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let verba: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> i64 = core::mem::transmute(0x598800usize);
@@ -207,8 +207,8 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
     if valor <= limite {
         return 0;
     }
-    let pelo_clube = cpy12_valor(j, clube, 0);
-    let pelo_contrato = cpy12_valor(j, cpy12_clube_do_contrato(j), 1);
+    let pelo_clube = player_value(j, clube, 0);
+    let pelo_contrato = player_value(j, contract_club_cached(j), 1);
     let menor = if pelo_clube > pelo_contrato { pelo_contrato } else { pelo_clube };
     let fin = financas(cpy12_d(0xae2a38), clube);
     if fin == 0 {
@@ -216,25 +216,25 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
     }
     let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     let k = match faixa(fin) {
-        2 => f64_em(0x96d1f8),
-        1 => f64_em(0x96d1f0),
-        _ => f64_em(0x968ea0),
+        2 => read_f64_at(0x96d1f8),
+        1 => read_f64_at(0x96d1f0),
+        _ => read_f64_at(0x968ea0),
     };
-    let teto = ftol(limite as f64 * f64_em(0x96a5d0) + menor as f64 + k);
-    if !(valor as f64 * f64_em(0x96d1e8) > teto as f64) {
+    let teto = match_pl_ftol(limite as f64 * read_f64_at(0x96a5d0) + menor as f64 + k);
+    if !(valor as f64 * read_f64_at(0x96d1e8) > teto as f64) {
         return 0;
     }
     crate::comparacao::ramo("cpy_12 diretoria acha caro");
-    cpy12_confianca(this, clube, 6, -0xfa);
-    cpy12_confianca(this, clube, 0x14, -500);
-    cpy12_confianca(this, clube, 0x16, -500);
-    cpy12_piso(this, clube)
+    add_board_confidence(this, clube, 6, -0xfa);
+    add_board_confidence(this, clube, 0x14, -500);
+    add_board_confidence(this, clube, 0x16, -500);
+    clamp_confidence_floor(this, clube)
 }
 
 /// Comparador: lado a lado a partir do mesmo estado do registro da diretoria do clube, do contrato guardado em
 /// [0xae1080] e do sorteio; a devolução e tudo isso têm de bater (o rand da CRT, só sem a semente do relógio).
 unsafe extern "thiscall" fn comparar_check_board_transfer_veto(this: usize, j: usize, clube: usize, valor: i32, comprando: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32) -> u32>(%%I0%%);
     let regioes = [(cpy12_diretoria(this, clube), 0x49), (0xae1080, 4), (0xde1f5c, 8), (0xad6c30, 4)];
     let (r, n, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, j, clube, valor, comprando),
         || crate::aleatorio::sem_contar(|| check_board_transfer_veto(this, j, clube, valor, comprando)));
@@ -283,7 +283,7 @@ unsafe extern "thiscall" fn post_board_ultimatum_news(_this: usize, clube: usize
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca) e sorteia: só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_board_ultimatum_news(this: usize, clube: usize, adversario: usize, comp: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%)(this, clube, adversario, comp)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%)(this, clube, adversario, comp)
 }
 
 /// { 0x6ac880 } (stdcall, ret 0xc, manager_manager.cpp): `news_board_ultimatum_text(notícia, corpo, saída)`: lê os
@@ -330,5 +330,5 @@ unsafe extern "stdcall" fn news_board_ultimatum_text(noticia: usize, corpo: u32,
 /// Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original.
 unsafe extern "stdcall" fn comparar_news_board_ultimatum_text(noticia: usize, corpo: u32, saida: usize) {
     // ponytail: o objeto de texto não pode receber o texto duas vezes; só a original roda aqui
-    orig::<unsafe extern "stdcall" fn(usize, u32, usize)>(%%I2%%)(noticia, corpo, saida);
+    original_fn::<unsafe extern "stdcall" fn(usize, u32, usize)>(%%I2%%)(noticia, corpo, saida);
 }

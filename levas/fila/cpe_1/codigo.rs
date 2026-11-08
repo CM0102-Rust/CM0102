@@ -13,13 +13,13 @@ unsafe fn cpe1_b(a: usize) -> i8 {
 }
 
 /// O clube de id `id` na tabela [0xae23b4] (registros de 0x245 bytes).
-unsafe fn cpe1_clube(id: usize) -> usize {
+unsafe fn friendly_club_by_id(id: usize) -> usize {
     cpe1_d(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
 /// O candidato `c` já tem o candidato `clube` (pelo id, +0) na lista de adversários (+0xa)? Volta o cursor da lista
 /// ao começo (+0xa = +2) e percorre com a 0x68d1b0, como as duas originais.
-unsafe fn cpe1_na_lista(c: usize, clube: usize) -> bool {
+unsafe fn already_opponent(c: usize, clube: usize) -> bool {
     let l = cpe1_d(c + 0xa);
     if l == 0 {
         return false;
@@ -39,23 +39,23 @@ unsafe fn cpe1_na_lista(c: usize, clube: usize) -> bool {
 
 /// Fora pela data: no ano do amistoso ([0xae2c90], com sinal, contra +0x34e8 do Friendly, sem sinal) o clube `op`
 /// com +0x1db igual ao float de [0x9cf6f8] (comparado como inteiro).
-unsafe fn cpe1_fora_pela_data(this: usize, op: usize) -> bool {
+unsafe fn excluded_by_intertoto(this: usize, op: usize) -> bool {
     *(0xae2c90 as *const i16) as i32 == core::ptr::read_unaligned((this + 0x34e8) as *const u16) as i32
         && cpe1_d(op + 0x1db) as u32 == *(0x9cf6f8 as *const u32)
 }
 
 /// Os clubes são rivais (+0xb3, +0xb7, +0xbb, nos dois sentidos)?
-unsafe fn cpe1_rivais(a: usize, b: usize) -> bool {
+unsafe fn are_rival_clubs(a: usize, b: usize) -> bool {
     [0xb3usize, 0xb7, 0xbb].iter().any(|&o| a == cpe1_d(b + o) || b == cpe1_d(a + o))
 }
 
 /// As nações (+0x53) dos clubes são rivais (+0x110, +0x114, +0x118, nos dois sentidos)?
-unsafe fn cpe1_nacoes_rivais(a: usize, b: usize) -> bool {
+unsafe fn are_rival_nations(a: usize, b: usize) -> bool {
     let (na, nb) = (cpe1_d(a + 0x53), cpe1_d(b + 0x53));
     [0x110usize, 0x114, 0x118].iter().any(|&o| na == cpe1_d(nb + o) || nb == cpe1_d(na + o))
 }
 
-unsafe fn cpe1_sorteio(n: i32) -> i32 {
+unsafe fn friendly_random(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     f(n)
 }
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, li
     } else if faixa > 0x14 {
         faixa = 0x14;
     }
-    let cp = cpe1_clube(cpe1_d(clube));
+    let cp = friendly_club_by_id(cpe1_d(clube));
     let mut chave = [0u8; 0x16];
     chave[5] = faixa as u8;
     let bsearch: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, li
     while c < ultimo {
         'proximo: {
             let id = cpe1_d(c);
-            let op = cpe1_clube(id);
+            let op = friendly_club_by_id(id);
             if cp == op {
                 break 'proximo;
             }
@@ -107,20 +107,20 @@ unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, li
                     }
                 }
             }
-            if cpe1_na_lista(c, clube) || cpe1_fora_pela_data(this, op) {
+            if already_opponent(c, clube) || excluded_by_intertoto(this, op) {
                 break 'proximo;
             }
             let (fc, fcl) = (cpe1_w(c + 0xe), cpe1_w(clube + 0xe));
             if fc != -1 && fcl != -1 && (fc > cpe1_w(clube + 0x10) || fcl > cpe1_w(c + 0x10)) {
                 break 'proximo;
             }
-            if cpe1_rivais(cp, op) || (cpe1_nacoes_rivais(cp, op) && cpe1_sorteio(2) == 0) {
+            if are_rival_clubs(cp, op) || (are_rival_nations(cp, op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
             if cpe1_d(cp + 0x57) == cpe1_d(op + 0x57) {
                 break 'proximo;
             }
-            if cpe1_b(c + 4) > (cpe1_sorteio(3) as i8).wrapping_add(3) {
+            if cpe1_b(c + 4) > (friendly_random(3) as i8).wrapping_add(3) {
                 break 'proximo;
             }
             let rep = cpe1_w(cp + 0x80);
@@ -137,10 +137,10 @@ unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, li
             if longe {
                 break 'proximo;
             }
-            if cpe1_b(clube + 4) as i32 > cpe1_sorteio(2) && no != nc {
+            if cpe1_b(clube + 4) as i32 > friendly_random(2) && no != nc {
                 break 'proximo;
             }
-            if cpe1_sorteio(5) == 1 { // o adversário do amistoso
+            if friendly_random(5) == 1 { // o adversário do amistoso
                 return c;
             }
         }
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, li
 }
 
 /// As regiões dos dois comparadores: o estado do sorteio e o cursor (+0xa) da lista de cada candidato.
-unsafe fn cpe1_regioes(candidatos: impl Iterator<Item = usize>) -> Vec<(usize, usize)> {
+unsafe fn candidate_regions(candidatos: impl Iterator<Item = usize>) -> Vec<(usize, usize)> {
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     for c in candidatos.filter(|&c| c != 0) {
         let l = cpe1_d(c + 0xa);
@@ -162,8 +162,8 @@ unsafe fn cpe1_regioes(candidatos: impl Iterator<Item = usize>) -> Vec<(usize, u
 }
 
 unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, faixa: u32, excluir: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(%%I0%%);
-    let reg = cpe1_regioes((0..(n as i32).max(0) as usize).map(|i| lista + 0x16 * i));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(%%I0%%);
+    let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| lista + 0x16 * i));
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, lista, n, faixa, excluir),
         || crate::aleatorio::sem_contar(|| find_friendly_opponent(this, clube, lista, n, faixa, excluir)));
     PLACAR.registrar(igual && r == m, || format!("find_friendly_opponent({:x}, {:x}, n {}, faixa {}) original={:x} rust={:x} {:x?} x {:x?}",
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: 
 /// têm o clube na lista (+0xa), os rivais, os de nações rivais (sorteio(2) = 0), os da mesma cidade (+0x57) e os acima
 /// da faixa do sorteio (+4 > sorteio(3) + 3); fica com o candidato quando sorteio(2) = 1. Nenhum: 0. Sem SEH, sem caixa.
 unsafe extern "thiscall" fn find_tour_opponent(this: usize, clube: usize, ordenados: usize, n: u32, faixa_max: u32, nacao: usize) -> usize {
-    let cp = cpe1_clube(cpe1_d(clube));
+    let cp = friendly_club_by_id(cpe1_d(clube));
     let mut chave = [0u8; 0x16];
     chave[5] = 0xff;
     core::ptr::write_unaligned(chave.as_mut_ptr().add(6) as *mut usize, cpe1_d(nacao));
@@ -204,24 +204,24 @@ unsafe extern "thiscall" fn find_tour_opponent(this: usize, clube: usize, ordena
     let ultimo = ordenados.wrapping_add((n as usize).wrapping_mul(4)).wrapping_sub(4);
     while s < ultimo {
         let c = cpe1_d(s);
-        let op = cpe1_clube(cpe1_d(c));
+        let op = friendly_club_by_id(cpe1_d(c));
         if cpe1_d(op + 0x53) != nacao {
             return 0;
         }
         'proximo: {
-            if cpe1_b(c + 5) > faixa_max as i8 || cpe1_fora_pela_data(this, op) || cp == op || cpe1_na_lista(c, clube) {
+            if cpe1_b(c + 5) > faixa_max as i8 || excluded_by_intertoto(this, op) || cp == op || already_opponent(c, clube) {
                 break 'proximo;
             }
-            if cpe1_rivais(cp, op) || (cpe1_nacoes_rivais(cp, op) && cpe1_sorteio(2) == 0) {
+            if are_rival_clubs(cp, op) || (are_rival_nations(cp, op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
             if cpe1_d(cp + 0x57) == cpe1_d(op + 0x57) {
                 break 'proximo;
             }
-            if cpe1_b(c + 4) > (cpe1_sorteio(3) as i8).wrapping_add(3) {
+            if cpe1_b(c + 4) > (friendly_random(3) as i8).wrapping_add(3) {
                 break 'proximo;
             }
-            if cpe1_sorteio(2) == 1 { // o adversário da excursão
+            if friendly_random(2) == 1 { // o adversário da excursão
                 return c;
             }
         }
@@ -231,8 +231,8 @@ unsafe extern "thiscall" fn find_tour_opponent(this: usize, clube: usize, ordena
 }
 
 unsafe extern "thiscall" fn comparar_find_tour_opponent(this: usize, clube: usize, ordenados: usize, n: u32, faixa_max: u32, nacao: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(%%I1%%);
-    let reg = cpe1_regioes((0..(n as i32).max(0) as usize).map(|i| cpe1_d(ordenados + 4 * i)));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(%%I1%%);
+    let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| cpe1_d(ordenados + 4 * i)));
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, ordenados, n, faixa_max, nacao),
         || crate::aleatorio::sem_contar(|| find_tour_opponent(this, clube, ordenados, n, faixa_max, nacao)));
     PLACAR.registrar(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, faixa {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",

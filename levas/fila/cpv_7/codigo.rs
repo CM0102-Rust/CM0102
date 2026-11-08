@@ -47,23 +47,23 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
     let nac = cpv7_d(clube + 0x53);
     let mut w;
     if nac == 0 {
-        w = ftol(padrao as f64 * f64_em(0x9689e0));
+        w = match_pl_ftol(padrao as f64 * read_f64_at(0x9689e0));
     } else {
         let tipo = (cpv7_b(nac + 0x7e) as i8).clamp(1, 3);
         let k = cpv7_b(nac + 0x85) as i8 as i32;
-        w = ftol(k as f64 / (tipo as i32 * 20) as f64 * padrao as f64);
+        w = match_pl_ftol(k as f64 / (tipo as i32 * 20) as f64 * padrao as f64);
         if tipo == 1 {
             let n = cpv7_i(nac);
             let e = |a: usize| n == cpv7_i(a);
             if e(0x9cf2e4) || e(0x9cf360) || e(0x9cf488) {
                 if cpv7_w(clube + 0x80) > 0x1c52 {
                     crate::comparacao::ramo("cpv_7 clube grande");
-                    w = ftol(w as f64 * f64_em(0x9689b8)); // cpv7: o clube grande da Inglaterra, Itália e Espanha
+                    w = match_pl_ftol(w as f64 * read_f64_at(0x9689b8)); // cpv7: o clube grande da Inglaterra, Itália e Espanha
                 }
             } else if e(0x9cf36c) {
             } else if e(0x9cf4f8) {
                 if w > 0x6d6 {
-                    w = ftol(w.wrapping_sub(0x6d6) as f64 * f64_em(0x969040) + f64_em(0x96a5f8));
+                    w = match_pl_ftol(w.wrapping_sub(0x6d6) as f64 * read_f64_at(0x969040) + read_f64_at(0x96a5f8));
                 }
             } else {
                 let (base, limiar, soma) = if e(0x9cf314) || e(0x9cf300) || e(0x9cf45c) || e(0x9cf338) {
@@ -73,29 +73,29 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
                 } else {
                     (0x968e80, 0x2ee, 0x96a5f0)
                 };
-                let mut f = f64_em(base);
+                let mut f = read_f64_at(base);
                 if r50 > k.wrapping_mul(10) {
                     let d = if k >= 1 { k } else { 1 };
-                    f = r50 as f64 / d as f64 * f64_em(0x967880) * f64_em(base);
+                    f = r50 as f64 / d as f64 * read_f64_at(0x967880) * read_f64_at(base);
                 }
                 if w > limiar {
-                    if f > f64_em(0x967890) {
-                        f = f64_em(0x967890);
+                    if f > read_f64_at(0x967890) {
+                        f = read_f64_at(0x967890);
                     }
-                    w = ftol(w.wrapping_sub(limiar) as f64 * f + f64_em(soma));
+                    w = match_pl_ftol(w.wrapping_sub(limiar) as f64 * f + read_f64_at(soma));
                 }
             }
         }
         let liga = cpv7_d(clube + 0x57);
         if liga != 0 {
             crate::comparacao::ramo("cpv_7 peso da liga");
-            w = ftol(cpv7_w(liga + 0x69) as f64 * w as f64 * f64_em(0x968918)); // cpv7: o peso da liga
+            w = match_pl_ftol(cpv7_w(liga + 0x69) as f64 * w as f64 * read_f64_at(0x968918)); // cpv7: o peso da liga
         }
     }
     match faixa(this) as i8 {
-        -2 => w = ftol(w as f64 * f64_em(0x969040)),
-        -1 => w = ftol(w as f64 * f64_em(0x9689d0)),
-        1 => w = ftol(w as f64 * f64_em(0x968940)),
+        -2 => w = match_pl_ftol(w as f64 * read_f64_at(0x969040)),
+        -1 => w = match_pl_ftol(w as f64 * read_f64_at(0x9689d0)),
+        1 => w = match_pl_ftol(w as f64 * read_f64_at(0x968940)),
         2 => w = w.wrapping_add(w),
         _ => {}
     }
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
 
 /// Comparador: pelo valor.
 unsafe extern "thiscall" fn comparar_get_max_staff_wage(this: usize, cargo: i8) -> i32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> i32>(%%I0%%)(this, cargo);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> i32>(%%I0%%)(this, cargo);
     let n = get_max_staff_wage(this, cargo);
     PLACAR.registrar(r == n, || format!("get_max_staff_wage(fin {:#x}, cargo {}) original={} rust={}", this, cargo, r, n));
     r
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn pay_bonuses(this: usize, valor: i32) {
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_pay_bonuses(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_bonuses(this, valor));
     PLACAR.registrar(igual, || format!("pay_bonuses(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
@@ -150,14 +150,14 @@ unsafe extern "thiscall" fn comparar_pay_bonuses(this: usize, valor: i32) {
 /// { 0x598340 } (thiscall, ret 4, finance.cpp): `Finance::adjust_max_wage(percentual)`, pela resposta da diretoria
 /// (MANAGER_MANAGER::handle_board_request 0x6a91b0) e pela 0x6acee8: o teto salarial (+0x14) vira (percentual + 100) ×
 /// 0,01 × teto, truncado.
-unsafe extern "thiscall" fn adjust_max_wage(this: usize, percentual: i8) {
-    let v = ftol((percentual as i32 + 100) as f64 * f64_em(0x967898) * cpv7_i(this + 0x14) as f64);
+unsafe extern "thiscall" fn adjust_max_wage(this: usize, write_percent_pair: i8) {
+    let v = match_pl_ftol((write_percent_pair as i32 + 100) as f64 * read_f64_at(0x967898) * cpv7_i(this + 0x14) as f64);
     core::ptr::write_unaligned((this + 0x14) as *mut i32, v);
 }
 
 /// Comparador: lado a lado no teto salarial (+0x14).
-unsafe extern "thiscall" fn comparar_adjust_max_wage(this: usize, percentual: i8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i8)>(%%I2%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x14, 4)], || o(this, percentual), || adjust_max_wage(this, percentual));
-    PLACAR.registrar(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this, percentual, mo, mr));
+unsafe extern "thiscall" fn comparar_adjust_max_wage(this: usize, write_percent_pair: i8) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(%%I2%%);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x14, 4)], || o(this, write_percent_pair), || adjust_max_wage(this, write_percent_pair));
+    PLACAR.registrar(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this, write_percent_pair, mo, mr));
 }

@@ -7,8 +7,8 @@
 # 7 dias) cai um ano antes nas transferencias de agosto a dezembro que passam por ela (pode escapar se nenhuma pass_ball).
 # Chamada a cada jogador: sem contador.
 MUTACOES = [
-    ('cpu2_fim_no_mesmo_ano', 'cpu2_data(fim, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte',
-     'cpu2_data(fim, c, y); // mutacao: o fim no mesmo ano'),
+    ('cpu2_fim_no_mesmo_ano', 'write_date(fim, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte',
+     'write_date(fim, c, y); // mutacao: o fim no mesmo ano'),
     ('cpu2_primavera_fora', 'return 1; // cpu2: antes do fim, na temporada',
      'return 0; // mutacao: antes do fim, fora'),
     ('cpu2_janela_na_temporada', 'return 0; // cpu2: entre o fim e o inicio, fora',

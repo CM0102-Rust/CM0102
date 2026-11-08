@@ -132,7 +132,7 @@ unsafe extern "stdcall" fn player_regen_score_club_for_player(jogador: usize, cl
 
 /// O registro (42735 bytes em [this]) da partida que o `humano` (ou o da tela, 0xb74c26 + 0x300 ×
 /// [0xb77c7a]) assiste: Ok(0) sem humano; Err se o índice (id − [0xae2364] + 0x10) sai de 0..[this+4].
-unsafe fn registro_da_partida_assistida(this: usize, humano: usize) -> Result<usize, ()> {
+unsafe fn formation_watched_match_record(this: usize, humano: usize) -> Result<usize, ()> {
     let h = if humano != 0 {
         humano
     } else {
@@ -153,9 +153,9 @@ unsafe fn registro_da_partida_assistida(this: usize, humano: usize) -> Result<us
 /// (+0), +0x34 e os dois lados (+0xc, +0x10). Partida nula ou humano fora da faixa: a original (caixa
 /// de erro e 0).
 unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida: usize, humano: usize) -> u32 {
-    let r = match registro_da_partida_assistida(this, humano) {
-        Err(()) => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano),
-        Ok(_) if partida == 0 => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano),
+    let r = match formation_watched_match_record(this, humano) {
+        Err(()) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano),
+        Ok(_) if partida == 0 => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano),
         Ok(0) => return 0,
         Ok(r) => r,
     };
@@ -173,14 +173,14 @@ unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida: usize, hum
 }
 
 unsafe extern "thiscall" fn comparar_build_position_lookup(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || build_position_lookup(this));
     PLACAR.registrar(igual && r == n, || format!("build_position_lookup {:x?} x {:x?}", mo, mr));
     r
 }
 
 unsafe extern "stdcall" fn comparar_player_regen_score_club_for_player(jogador: usize, clube: usize, elenco: i8) -> i32 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize, i8) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i8) -> i32>(%%I1%%);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO,
         || o(jogador, clube, elenco), || crate::aleatorio::sem_contar(|| player_regen_score_club_for_player(jogador, clube, elenco)));
     PLACAR.registrar(igual && r == n, || format!("player_regen_score_club_for_player(elenco {}) original={} rust={} sorteio igual={}", elenco, r, n, igual));
@@ -188,10 +188,10 @@ unsafe extern "stdcall" fn comparar_player_regen_score_club_for_player(jogador: 
 }
 
 unsafe extern "thiscall" fn comparar_is_watching_fixture(this: usize, partida: usize, humano: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
     let r = o(this, partida, humano);
     // ponytail: os casos de erro (caixa) só na original
-    if partida == 0 || registro_da_partida_assistida(this, humano).is_err() {
+    if partida == 0 || formation_watched_match_record(this, humano).is_err() {
         return r;
     }
     let n = is_watching_fixture(this, partida, humano);

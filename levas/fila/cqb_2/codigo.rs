@@ -10,19 +10,19 @@ unsafe fn cqb2_c(a: usize) -> i8 {
 }
 
 /// O saldo (i64 em +0) separado em (baixo, alto), como a original o lê em dois dwords.
-unsafe fn cqb2_saldo(fin: usize) -> (u32, i32) {
+unsafe fn balance_halves(fin: usize) -> (u32, i32) {
     (core::ptr::read_unaligned(fin as *const u32), core::ptr::read_unaligned((fin + 4) as *const i32))
 }
 
 /// O valor entra em +0x154, +0xb4 e no saldo (estendido com sinal).
-unsafe fn cqb2_creditar(fin: usize, v: i32) {
+unsafe fn credit_income(fin: usize, v: i32) {
     cpv6_somar(fin + 0x154, v);
     cpv6_somar(fin + 0xb4, v);
-    cpv6_somar_saldo(fin, v);
+    credit_balance(fin, v);
 }
 
 /// A nação do clube é uma das de 0x9cf4a8, 0x9cf408 ou 0x9cf2c0 (o valor do evento cai a um terço).
-unsafe fn cqb2_nacao_de_um_terco(clube: usize) -> bool {
+unsafe fn is_scandinavian_club(clube: usize) -> bool {
     let nac = cqb2_d(clube + 0x53);
     if nac == 0 {
         return false;
@@ -59,41 +59,41 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
     let rep = cpv6_w(clube + 0x80);
     let pres = cqb2_d(clube + 0xbf);
     let forte = |a: usize, b: usize| a != 0 && b != 0; // (ponteiros conferidos antes dos bytes)
-    let div = match cpv6_faixa(fin) {
-        -2 => f64_em(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
-        -1 => f64_em(if rep > 0x1482 { 0x967880 } else if rep > 0xcb2 { 0x96a730 } else { 0x967878 }),
+    let div = match wealth_band(fin) {
+        -2 => read_f64_at(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
+        -1 => read_f64_at(if rep > 0x1482 { 0x967880 } else if rep > 0xcb2 { 0x96a730 } else { 0x967878 }),
         0 => {
             if rep <= 0x109a {
                 let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
                 if forte(pres, ficha) && cqb2_c(pres + 0x57) > 0xf && cqb2_c(ficha + 0x20) > 0xf {
-                    f64_em(0x96a740)
+                    read_f64_at(0x96a740)
                 } else {
                     crate::comparacao::ramo("cqb_2 divisor da faixa 0 baixa");
-                    f64_em(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
+                    read_f64_at(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
                 }
             } else if rep < 0x186a {
                 let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
                 if forte(pres, ficha) && cqb2_c(ficha + 0x20) > 0xf && cqb2_c(pres + 0x57) > 0xf {
-                    f64_em(0x967888)
+                    read_f64_at(0x967888)
                 } else {
-                    f64_em(0x967878)
+                    read_f64_at(0x967878)
                 }
             } else {
-                f64_em(0x967878)
+                read_f64_at(0x967878)
             }
         }
-        _ => f64_em(0x96a350),
+        _ => read_f64_at(0x96a350),
     };
     let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
     let valor;
     if pres != 0 && ficha != 0 {
         crate::comparacao::ramo("cqb_2 com a ficha");
-        let r1 = cpv6_sortear(ftol(f64_em(0x968dd8) / div)); // cqb2: o sorteio com a ficha
+        let r1 = cpv6_sortear(match_pl_ftol(read_f64_at(0x968dd8) / div)); // cqb2: o sorteio com a ficha
         let r2 = cpv6_sortear(cqb2_c(ficha + 0xf) as i32);
         if r2 <= r1 {
             return 0;
         }
-        let (lo, hi) = cqb2_saldo(fin);
+        let (lo, hi) = balance_halves(fin);
         let n = cqb2_c(cqb2_d(cqb2_d(clube + 0xbf) + 0x69) + 0x20) as i32;
         let r3 = cpv6_sortear(n.wrapping_mul(1_000_000)) as i64;
         let divida = ((hi as i64) << 32 | lo as i64).wrapping_neg();
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
             return 0;
         }
         // ponytail: a original faz pow(+0x20, 2,0) (0x945ff0); o quadrado de um byte é exato nos dois
-        let mut v = ftol(((n as f64 * n as f64) * f64_em(0x968930) + f64_em(0x96a5f0)) * rep as f64 + f64_em(0x9688d8));
+        let mut v = match_pl_ftol(((n as f64 * n as f64) * read_f64_at(0x968930) + read_f64_at(0x96a5f0)) * rep as f64 + read_f64_at(0x9688d8));
         v = if hi < 0 { v.wrapping_sub(lo as i32) } else { v.wrapping_add(lo as i32) };
         if cpv6_w(clube + 0x80) < 0x7d0 {
             let teto = rep.wrapping_mul(rep).wrapping_add(0x16e360);
@@ -114,13 +114,13 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
                 v = teto;
             }
         }
-        if cqb2_nacao_de_um_terco(clube) {
+        if is_scandinavian_club(clube) {
             v /= 3;
         }
         valor = v;
     } else {
         crate::comparacao::ramo("cqb_2 sem a ficha");
-        let r = cpv6_sortear(ftol(f64_em(0x96a728) / div)); // cqb2: o sorteio sem a ficha
+        let r = cpv6_sortear(match_pl_ftol(read_f64_at(0x96a728) / div)); // cqb2: o sorteio sem a ficha
         if rep as i32 <= r {
             return 0;
         }
@@ -128,13 +128,13 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
             return 0;
         }
         let mut v = (cpv6_w(clube + 0x80) as i32).wrapping_add(1000).wrapping_mul(1000);
-        if cqb2_nacao_de_um_terco(clube) {
+        if is_scandinavian_club(clube) {
             v /= 3;
         }
         valor = v;
     }
-    cqb2_creditar(fin, valor);
-    let verba = cpv6_verba(fin) as i32;
+    credit_income(fin, valor);
+    let verba = transfer_budget(fin) as i32;
     let marca = cpv6_b(clube + 0x82);
     let com_ficha = pres != 0 && ficha != 0;
     let mut tipo = 0u32;
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
         if cpv6_sortear(4) == 0 {
             if com_ficha {
                 let r2 = cpv6_w(clube + 0x80) as i32;
-                let t = ftol(r2.wrapping_mul(r2) as f64 * f64_em(0x968e80));
+                let t = match_pl_ftol(r2.wrapping_mul(r2) as f64 * read_f64_at(0x968e80));
                 if valor < t && valor > 50000 {
                     tipo = 6;
                 }
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
         if cpv6_b(clube + 0x82) == 0 && cpv6_w(clube + 0x80) > 0x128e && cpv6_sortear(4) == 0
             && (!com_ficha || (nac != 0 && cpv6_i(nac) != cpv6_i(0x9cf360)))
         {
-            cpv6_noticia(this, clube, valor, verba as u32, 7);
+            post_finance_boost_news(this, clube, valor, verba as u32, 7);
             *((clube + 0x82) as *mut u8) = 1;
             tipo = 7;
         } else {
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
         }
     }
     if tipo != 7 {
-        cpv6_noticia(this, clube, valor, verba as u32, tipo);
+        post_finance_boost_news(this, clube, valor, verba as u32, tipo);
     }
     if com_ficha {
         let f = cqb2_d(cqb2_d(clube + 0xbf) + 0x69);
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
 /// troca do presidente na 0x59e940): a cópia e a original a partir do mesmo estado (o registro de finanças, o sorteio e
 /// os `extras`). Sem evento: tudo igual; com evento: a devolução, o saldo, +0xb4, +0x154, +0x165 e os `conferir` (a
 /// tipo da notícia e a marca +0x82 dependem da verba, e os sorteios depois dela também).
-unsafe fn cqb2_comparar(nome: &str, fin: usize, extras: &[(usize, usize)], conferir: &[usize], original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
+unsafe fn compare_rare_finance_event(nome: &str, fin: usize, extras: &[(usize, usize)], conferir: &[usize], original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let mut regioes = vec![(fin, 0x167)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     regioes.extend_from_slice(extras);
@@ -210,7 +210,7 @@ unsafe fn cqb2_comparar(nome: &str, fin: usize, extras: &[(usize, usize)], confe
 }
 
 unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: usize, clube: usize, fin: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let pres = if clube != 0 { cqb2_d(clube + 0xbf) } else { 0 };
     let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
     if clube == 0 || fin == 0 {
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: usize, clube:
         extras.push((ficha + 0x20, 1)); // o +0x20 da ficha cai em todo evento com ela
         conferir.push(1);
     }
-    cqb2_comparar("try_finance_boost_event", fin, &extras, &conferir, || o(this, clube, fin), || try_finance_boost_event(this, clube, fin))
+    compare_rare_finance_event("try_finance_boost_event", fin, &extras, &conferir, || o(this, clube, fin), || try_finance_boost_event(this, clube, fin))
 }
 
 /// { 0x59e940 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::try_board_takeover(clube, finanças)`, pelo passe dos
@@ -236,15 +236,15 @@ unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: usize, clube:
 /// notícia (0x59f300, tipo 2, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
 unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: usize) -> u32 {
     let rep = cpv6_w(clube + 0x80);
-    let div = match cpv6_faixa(fin) {
+    let div = match wealth_band(fin) {
         -2 => if rep > 0x109a { 0.4f64 } else { 0.25 },
         -1 => if rep > 0x109a { 0.2 } else { 0.05 },
         _ => 0.001,
     };
     let liga = cqb2_d(clube + 0x57);
     let mut fator = if liga != 0 {
-        let k = rep as i32 as f64 * f64_em(0x969048) / cpv6_w(liga + 0x69) as i32 as f64;
-        if !(k >= f64_em(0x969040)) { f64_em(0x969040) } else { k } // fcomp: menor ou sem ordem (NaN) vira 0,75
+        let k = rep as i32 as f64 * read_f64_at(0x969048) / cpv6_w(liga + 0x69) as i32 as f64;
+        if !(k >= read_f64_at(0x969040)) { read_f64_at(0x969040) } else { k } // fcomp: menor ou sem ordem (NaN) vira 0,75
     } else {
         0.5
     };
@@ -256,23 +256,23 @@ unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: u
         return 0;
     }
     fator *= cpv6_w(clube + 0x80) as i32 as f64;
-    let r = cpv6_sortear(ftol(f64_em(0x96a728) / div));
+    let r = cpv6_sortear(match_pl_ftol(read_f64_at(0x96a728) / div));
     if r as f64 >= fator {
         return 0;
     }
     crate::comparacao::ramo("cqb_2 troca do presidente");
-    let (lo, _) = cqb2_saldo(fin);
+    let (lo, _) = balance_halves(fin);
     let mut v = (cpv6_w(clube + 0x80) as i32).wrapping_add(1000).wrapping_mul(1000).wrapping_sub(lo as i32);
     if v > 0x2625a00 {
         let s = cpv6_sortear(0x9c4);
         if (cpv6_w(clube + 0x80) as i32) < s.wrapping_add(0x7d0) {
-            v = (cqb2_saldo(fin).0 as i32).wrapping_neg();
+            v = (balance_halves(fin).0 as i32).wrapping_neg();
         }
     }
     cpv6_somar(fin + 0xb4, v);
     cpv6_somar(fin + 0x154, v);
-    cpv6_somar_saldo(fin, v);
-    let verba = cpv6_verba(fin);
+    credit_balance(fin, v);
+    let verba = transfer_budget(fin);
     if com_ficha && !CPV6_ENSAIO {
         let pres = cqb2_d(clube + 0xbf);
         let nac = cqb2_d(clube + 0x53);
@@ -304,17 +304,17 @@ unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: u
             }
         }
     }
-    cpv6_noticia(this, clube, v, verba, 2);
+    post_finance_boost_news(this, clube, v, verba, 2);
     *((fin + 0x165) as *mut u8) = 0;
     1
 }
 
 unsafe extern "thiscall" fn comparar_try_board_takeover(this: usize, clube: usize, fin: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if clube == 0 || fin == 0 {
         return o(this, clube, fin); // ponytail: sem clube ou sem finanças, só a original
     }
-    cqb2_comparar("try_board_takeover", fin, &[], &[], || o(this, clube, fin), || try_board_takeover(this, clube, fin))
+    compare_rare_finance_event("try_board_takeover", fin, &[], &[], || o(this, clube, fin), || try_board_takeover(this, clube, fin))
 }
 
 /// { 0x5999e0 } (thiscall, ret 4, fin_prm.cpp): `Finance::pay_other_costs(valor)`, pela 0x7e5b10: soma o valor aos
@@ -322,12 +322,12 @@ unsafe extern "thiscall" fn comparar_try_board_takeover(this: usize, clube: usiz
 unsafe extern "thiscall" fn pay_other_costs(this: usize, valor: i32) {
     cpv6_somar(this + 0x120, valor);
     cpv6_somar(this + 0x80, valor);
-    cpz13_somar_saldo(this, -(valor as i64));
+    add_to_balance(this, -(valor as i64));
 }
 
 /// Comparador da 0x5999e0: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_pay_other_costs(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_other_costs(this, valor));
     PLACAR.registrar(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
 }

@@ -5,9 +5,11 @@ use super::*;
 
 
 
-/// A seleção (o clube da seleção principal) da nação de id [`global`]: 0x53b3d0 database_get_national_team (push nação;
+/// National team club of the nation with the given id (database_get_national_team).
+///
+/// [pt] A seleção (o clube da seleção principal) da nação de id [`global`]: 0x53b3d0 database_get_national_team (push nação;
 /// add esp -> cdecl) com a nação da tabela [0xae23a8] (0x122 bytes cada).
-pub(crate) unsafe fn cqs12_selecao(id: usize) -> usize {
+pub(crate) unsafe fn national_team_of_nation_id(id: usize) -> usize {
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     selecao(read_u32_as_usize(G_NATION_TABLE) + id * 0x122)
 }
@@ -20,7 +22,10 @@ pub(crate) const CQS12_DE_2001: [usize; 12] = [
     KEY_NATION_URUGUAY, KEY_NATION_VENEZUELA, KEY_NATION_PARAGUAY, KEY_NATION_BOLIVIA, // cqs12: as vagas 8 a 11 (a Bolívia na 11)
 ];
 
-/// { 0x5e1cd0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::set_up_team_list()`: +0xf2 = 12 e a lista +0xee (0x944e46(0x30):
+/// 0x5e1cd0 GoldCup::set_up_team_list: the 12 teams (fixed in 2001; else Copa America hosts, continent nations and
+/// guests), sorted by reputation; returns 1, 0 on failure.
+///
+/// [pt] { 0x5e1cd0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::set_up_team_list()`: +0xf2 = 12 e a lista +0xee (0x944e46(0x30):
 /// push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x37b e devolve 0). Em 2001 (+0x40 = 0x7d1): as 12 fixas
 /// (CQS12_DE_2001, cada uma pela 0x53b3d0) e devolve 1, sem ordenar. Nos outros anos: as sedes da Copa América
 /// ([0x9cf7a8]) no ano (0x5fa730 HostCountry::find_hosts em [0xb5e134]: push 1; push &segunda; push &primeira; push ano;
@@ -30,7 +35,7 @@ pub(crate) const CQS12_DE_2001: [usize; 12] = [
 /// e sempre o México ([0x9cf3d0]); cada uma entra se não é a nação de uma sede (+0x53 da seleção). Sem 12: a caixa da
 /// linha 0x3bc e devolve 0; com 12, a lista ordenada pela reputação (qsort 0x945333 com 0x4b07d0: 4 pushes; add esp ->
 /// cdecl) e devolve 1.
-pub(crate) unsafe fn cqs12_selecoes(this: usize) -> u32 {
+pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
@@ -38,14 +43,14 @@ pub(crate) unsafe fn cqs12_selecoes(this: usize) -> u32 {
     let lista = alocar(0x30);
     write_u32_from_usize(this + 0xee, lista);
     if lista == 0 {
-        aviso_em(0x9cd640, 0x37b);
+        show_error_at(0x9cd640, 0x37b);
         return 0;
     }
     let ano = read_i16(this + 0x40) as u16;
     if ano == 0x7d1 {
         crate::comparacao::ramo("cqs_12 selecoes de 2001");
         for (k, &g) in CQS12_DE_2001.iter().enumerate() {
-            write_u32_from_usize(read_u32_as_usize(this + 0xee) + k * 4, cqs12_selecao(read_u32_as_usize(g)));
+            write_u32_from_usize(read_u32_as_usize(this + 0xee) + k * 4, national_team_of_nation_id(read_u32_as_usize(g)));
         }
         return 1;
     }
@@ -56,7 +61,7 @@ pub(crate) unsafe fn cqs12_selecoes(this: usize) -> u32 {
     let quantas = sedes(read_u32_as_usize(G_HOST_COUNTRY), read_u32_as_usize(KEY_CLUB_COMP_COPA_AMERICA), ano as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
     let mut k = 0i16;
     while k < quantas as i16 {
-        write_u32_from_usize(read_u32_as_usize(this + 0xee) + k as usize * 4, cqs12_selecao(ids[k as usize] as usize));
+        write_u32_from_usize(read_u32_as_usize(this + 0xee) + k as usize * 4, national_team_of_nation_id(ids[k as usize] as usize));
         k += 1;
     }
     let mut i = 0i16;
@@ -80,7 +85,7 @@ pub(crate) unsafe fn cqs12_selecoes(this: usize) -> u32 {
         nacao += 0x122;
     }
     if k as i32 != read_u32_as_usize(this + 0xf2) as i32 {
-        aviso_em(0x9cd640, 0x3bc);
+        show_error_at(0x9cd640, 0x3bc);
         return 0;
     }
     ordenar(read_u32_as_usize(this + 0xee), k as i32 as u32, 4, 0x4b07d0);
@@ -100,13 +105,13 @@ pub(crate) unsafe fn cqs12_selecoes(this: usize) -> u32 {
 /// 0x9cf36c], nos outros anos a de 0x9cf280, e o México sempre), sem repetir as sedes, até 12, ordenadas pela
 /// reputação; sem 12, erro
 pub(crate) unsafe extern "thiscall" fn set_up_team_list(this: usize) -> u32 {
-    cqs12_selecoes(this)
+    build_gold_cup_team_list(this)
 }
 
 /// Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
 /// cópia faz a sua, comparada nas 12 vagas e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SET_UP_TEAM_LIST);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SET_UP_TEAM_LIST);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4)];
@@ -115,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) ->
         lo.set(read_u32_as_usize(this + 0xee));
         r
     }, || {
-        let r = cqs12_selecoes(this);
+        let r = build_gold_cup_team_list(this);
         lr.set(read_u32_as_usize(this + 0xee));
         write_u32_from_usize(this + 0xee, lo.get());
         r
@@ -151,11 +156,11 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if read_u32_as_usize(this + 8) == 0 {
-        return aviso_em(0x9cd640, 0x419);
+        return show_error_at(0x9cd640, 0x419);
     }
     let v = alocar((read_u32_as_usize(this + 0xf2) << 2) as u32);
     if v == 0 {
-        return aviso_em(0x9cd640, 0x421);
+        return show_error_at(0x9cd640, 0x421);
     }
     let n = read_u32_as_usize(this + 0xf2) << 2;
     core::ptr::copy_nonoverlapping(read_u32_as_usize(this + 0xee) as *const u8, v as *mut u8, n);
@@ -171,7 +176,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
 // a lista ordenada pela reputação antes, e depois a posição (+0x72 da entrada, 0x4a4850 Comp_Stats::find_club_entry) de
 // cada uma das 12 igual à da faixa.
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_SET_PREDICTED_POSITIONS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_SET_PREDICTED_POSITIONS);
     if read_u32_as_usize(this + 8) == 0 || read_u32_as_usize(this + 0xee) == 0 || read_u32_as_usize(this + 0xf2) != 0xc {
         return o(this);
     }
@@ -230,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
     write_u32_from_usize(this + 0x30, usize::MAX);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x8c));
     if regras(this) == 0 {
-        aviso_em(0x9cd640, 0x28b);
+        show_error_at(0x9cd640, 0x28b);
     }
 }
 
@@ -238,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
 // +0x30 = −1, +0xba = 0 e +0x4c = 0 (as regras gravam a tabela das rodadas de novo em +0xba: conferida só que existe
 // quando havia antes).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_START_NEW_SEASON);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_START_NEW_SEASON);
     let ano = read_i16(this + 0x40);
     o(this);
     let ok = read_i16(this + 0x40) == ano.wrapping_add(2) && read_u32_as_usize(this + 0x45) == 0 && read_u32_as_usize(this + 0x30) as i32 == -1 && read_u32_as_usize(this + 0x4c) == 0;
@@ -250,9 +255,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: u
 
 
 
-/// A seleção k da lista dos sorteados (+0xee, ponteiros: os 12 em grupos intercalados, o grupo j nas vagas j, j + 3,
+/// Team k of the drawn list (+0xee).
+///
+/// [pt] A seleção k da lista dos sorteados (+0xee, ponteiros: os 12 em grupos intercalados, o grupo j nas vagas j, j + 3,
 /// j + 6 e j + 9), a que o primeiro grupo e as fases dos outros leem.
-pub(crate) unsafe fn cqr13_sorteado(this: usize, k: usize) -> usize {
+pub(crate) unsafe fn drawn_team(this: usize, k: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr13: o sorteado k
 }
 
@@ -297,15 +304,15 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, hoje
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
         previstas(this);
         if primeiro(this) == 0 {
-            aviso_em(0x9cd640, 0x3e7);
+            show_error_at(0x9cd640, 0x3e7);
             return 0;
         }
         if jogos(this) == 0 {
-            aviso_em(0x9cd640, 0x3ed);
+            show_error_at(0x9cd640, 0x3ed);
             return 0;
         }
         if ordenar(this, 0) == 0 {
-            aviso_em(0x9cd640, 0x3f4);
+            show_error_at(0x9cd640, 0x3f4);
             return 0;
         }
         for g in 0..2i32 {
@@ -323,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, hoje
 // dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do primeiro grupo e as duas
 // fases criadas e a fase atual (+0x30) a última delas (1).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_FOR_DATE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_FOR_DATE);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo == 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -360,14 +367,14 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
     let t = novo(0xec);
     write_u32_from_usize(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0x9cd640, 0x1d4);
+        show_error_at(0x9cd640, 0x1d4);
         return 0;
     }
     let mut i = 0i8;
     while (i as i16) < read_i16(this + 0x3e) {
         crate::comparacao::ramo("cqr_13 linha do primeiro grupo");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
-        linha(this, i as u8 as u32, cqr13_sorteado(this, i as usize * 3), 0, 0);
+        linha(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
         i = i.wrapping_add(1);
     }
     noticia(this);
@@ -377,7 +384,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado 3i com a posição i (+4).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_CREATE_GROUP_TABLE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_CREATE_GROUP_TABLE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -420,12 +427,12 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let times = alocar(0x10);
     if times == 0 {
-        aviso_em(0x9cd640, 0x2bf);
+        show_error_at(0x9cd640, 0x2bf);
         return 0;
     }
     for n in 0..4usize {
         crate::comparacao::ramo("cqr_13 time do grupo");
-        write_u32_from_usize(times + n * 4, cqr13_sorteado(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo
+        write_u32_from_usize(times + n * 4, drawn_team(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
@@ -466,7 +473,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
     soltar(tabela);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
     if f == 0 {
-        aviso_em(0x9cd640, 0x2d6);
+        show_error_at(0x9cd640, 0x2d6);
         return 0;
     }
     write_u32_from_usize(this + 0x30, g as usize);
@@ -478,7 +485,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
 // fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados g + 1, g + 4, g + 7 e g + 10 (em qualquer ordem: o construtor ordena a tabela).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_GOLDCUP_CREATE_GROUP_STAGE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_GOLDCUP_CREATE_GROUP_STAGE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..2).contains(&g) {
         return o(this, g);
@@ -535,10 +542,13 @@ pub(crate) struct Cqp12Fase {
     pub(crate) nome: &'static str,
 }
 
-/// Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
+/// Builds a tournament phase's round table: outputs, allocation and the date/match operations in order; 0 without the
+/// phase or memory.
+///
+/// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
 /// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
-pub(crate) unsafe fn cqp12_tabela(this: usize, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+pub(crate) unsafe fn build_phase_table(this: usize, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
     let f = match f {
         Some(f) => f,
         None => return 0,
@@ -553,7 +563,7 @@ pub(crate) unsafe fn cqp12_tabela(this: usize, f: Option<Cqp12Fase>, rodadas: *m
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(f.tamanho);
     if t == 0 {
-        aviso_em(arquivo, f.linha);
+        show_error_at(arquivo, f.linha);
         return 0;
     }
     crate::comparacao::ramo(f.nome);
@@ -587,8 +597,10 @@ pub(crate) unsafe fn cqp12_tabela(this: usize, f: Option<Cqp12Fase>, rodadas: *m
     t
 }
 
-/// Os bytes que as operações gravam na tabela `t` (o resto fica como veio da alocação), na ordem das operações.
-pub(crate) unsafe fn cqp12_gravados(ops: &[Cqp12Op], ops2: &[Cqp12Op], t: usize) -> Vec<u8> {
+/// The bytes the phase operations write into table t, in operation order.
+///
+/// [pt] Os bytes que as operações gravam na tabela `t` (o resto fica como veio da alocação), na ordem das operações.
+pub(crate) unsafe fn phase_table_written_bytes(ops: &[Cqp12Op], ops2: &[Cqp12Op], t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     let mut pega = |a: usize, n: usize| v.extend_from_slice(core::slice::from_raw_parts((t + a) as *const u8, n));
     for op in ops.iter().chain(ops2.iter()) {
@@ -612,10 +624,12 @@ pub(crate) unsafe fn cqp12_gravados(ops: &[Cqp12Op], ops2: &[Cqp12Op], t: usize)
     v
 }
 
-/// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
+/// Side-by-side comparer for a phase table: outputs and written bytes must match; frees the copy's table.
+///
+/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
 /// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
-pub(crate) unsafe fn cqp12_comparar(nome: &str, fase: u32, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+pub(crate) unsafe fn compare_phase_table(nome: &str, fase: u32, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = match f {
         Some(f) => f,
@@ -631,7 +645,7 @@ pub(crate) unsafe fn cqp12_comparar(nome: &str, fase: u32, f: Option<Cqp12Fase>,
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
         if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let saidas = *rodadas == r2 && (extra.is_null() || *extra == e2) && (liga.is_null() || *liga == l2);
-    let tabela = if a != 0 && b != 0 { cqp12_gravados(f.ops, f.ops2, a) == cqp12_gravados(f.ops, f.ops2, b) } else { a == 0 && b == 0 };
+    let tabela = if a != 0 && b != 0 { phase_table_written_bytes(f.ops, f.ops2, a) == phase_table_written_bytes(f.ops, f.ops2, b) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
@@ -751,9 +765,11 @@ pub(crate) const CQP12_CONFED_MATA: [Cqp12Op; 57] = [
     Cqp12X(0x130, 0), Cqp12X(0x134, 0),
 ];
 
-/// A fase da Copa América pelo byte com sinal: abaixo de 2 os grupos (id 0x420 + fase; os jogos de cada grupo para −1,
+/// Copa America phase description by signed phase byte (groups below 2, knockout at 2).
+///
+/// [pt] A fase da Copa América pelo byte com sinal: abaixo de 2 os grupos (id 0x420 + fase; os jogos de cada grupo para −1,
 /// 0 e 1), 2 o mata-mata, acima nada.
-pub(crate) fn cqp12_copa_america_fase(fase: u32) -> Option<Cqp12Fase> {
+pub(crate) fn copa_america_phase(fase: u32) -> Option<Cqp12Fase> {
     let f = fase as u8 as i8;
     if f < 2 {
         let jogos: &'static [Cqp12Op] = match f {
@@ -780,20 +796,22 @@ pub(crate) fn cqp12_copa_america_fase(fase: u32) -> Option<Cqp12Fase> {
 /// Original: `GoldCup::create_schedule` (0x5e0900, goldcup.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x5e0900 } (thiscall, ret 0x10, goldcup.cpp; a virtual +0x3c da Copa América): `GoldCup::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: a fase de `cqp12_copa_america_fase`.
+/// &rodadas, &extra, &é_liga)`: a fase de `copa_america_phase`.
 pub(crate) unsafe extern "thiscall" fn goldcup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp12_tabela(this, cqp12_copa_america_fase(fase), rodadas, extra, liga, 0x9cd640)
+    build_phase_table(this, copa_america_phase(fase), rodadas, extra, liga, 0x9cd640)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_GOLDCUP_CREATE_SCHEDULE);
-    cqp12_comparar("goldcup_create_schedule", fase, cqp12_copa_america_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_GOLDCUP_CREATE_SCHEDULE);
+    compare_phase_table("goldcup_create_schedule", fase, copa_america_phase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| goldcup_create_schedule(this, fase, r, e, l))
 }
 
-/// A fase da Copa Africana: abaixo de 3 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1, 0, 1 e 2), 3 o
+/// African Nations Cup phase description (groups below 3, knockout at 3).
+///
+/// [pt] A fase da Copa Africana: abaixo de 3 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1, 0, 1 e 2), 3 o
 /// mata-mata, acima nada.
-pub(crate) fn cqp12_africana_fase(fase: u32) -> Option<Cqp12Fase> {
+pub(crate) fn african_nations_phase(fase: u32) -> Option<Cqp12Fase> {
     let f = fase as u8 as i8;
     if f < 3 {
         let jogos: &'static [Cqp12Op] = match f {
@@ -815,9 +833,11 @@ pub(crate) fn cqp12_africana_fase(fase: u32) -> Option<Cqp12Fase> {
 
 
 
-/// A fase da Copa das Confederações: abaixo de 1 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1 e 0), 1 o
+/// Confederations Cup phase description (groups below 1, knockout at 1).
+///
+/// [pt] A fase da Copa das Confederações: abaixo de 1 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1 e 0), 1 o
 /// mata-mata, acima nada.
-pub(crate) fn cqp12_confed_fase(fase: u32) -> Option<Cqp12Fase> {
+pub(crate) fn confed_cup_phase(fase: u32) -> Option<Cqp12Fase> {
     let f = fase as u8 as i8;
     if f < 1 {
         let jogos: &'static [Cqp12Op] = match f {
@@ -841,22 +861,24 @@ pub(crate) fn cqp12_confed_fase(fase: u32) -> Option<Cqp12Fase> {
 /// Original: `FifaConfed::create_schedule` (0x58b560, fifa_confed.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x58b560 } (thiscall, ret 0x10, fifa_confed.cpp; a virtual +0x3c da Copa das Confederações): `FifaConfed::
-/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp12_confed_fase`.
+/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `confed_cup_phase`.
 pub(crate) unsafe extern "thiscall" fn goldcup_create_schedule_58b560(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp12_tabela(this, cqp12_confed_fase(fase), rodadas, extra, liga, 0x9c7474)
+    build_phase_table(this, confed_cup_phase(fase), rodadas, extra, liga, 0x9c7474)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_schedule_58b560(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_GOLDCUP_CREATE_SCHEDULE_58B560);
-    cqp12_comparar("goldcup_create_schedule_58b560", fase, cqp12_confed_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_GOLDCUP_CREATE_SCHEDULE_58B560);
+    compare_phase_table("goldcup_create_schedule_58b560", fase, confed_cup_phase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| goldcup_create_schedule_58b560(this, fase, r, e, l))
 }
 
 // ---------- 274a leva: as regras dos torneios de seleções: a Copa América, a Copa Africana de Nações e a eliminatória da Oceania (goldcup.cpp, african_nations.cpp, wc_oceania_league.cpp) ----------
 
-/// Os campos de byte e palavra que a virtual +0x8c (set_up_rules) de um torneio de seleções grava na liga do grupo:
+/// Writes the byte/word rule fields of a national-team tournament league; the win points (+0xc2) come separately.
+///
+/// [pt] Os campos de byte e palavra que a virtual +0x8c (set_up_rules) de um torneio de seleções grava na liga do grupo:
 /// (deslocamento, tamanho 1 ou 2, valor). Os pontos da vitória (+0xc2) vêm à parte, para as mutações.
-pub(crate) unsafe fn cqk10_campos(this: usize, campos: &[(usize, u8, u32)], vitoria: u8) {
+pub(crate) unsafe fn goldcup_write_rule_fields(this: usize, campos: &[(usize, u8, u32)], vitoria: u8) {
     for &(o, n, v) in campos {
         if n == 1 {
             *((this + o) as *mut u8) = if o == 0xc2 { vitoria } else { v as u8 };
@@ -866,9 +888,11 @@ pub(crate) unsafe fn cqk10_campos(this: usize, campos: &[(usize, u8, u32)], vito
     }
 }
 
-/// A primeira palavra da Date(dia, mês, ano da competição +0x40 + `ano`, dia da semana) (0x549f70: push semana; push
+/// First word of Date(day, month, competition year + offset, weekday).
+///
+/// [pt] A primeira palavra da Date(dia, mês, ano da competição +0x40 + `ano`, dia da semana) (0x549f70: push semana; push
 /// ano; push mês; push dia; lea ecx, local -> thiscall, ret 0x10).
-pub(crate) unsafe fn cqk10_data(this: usize, dia: u32, mes: u32, ano: i16, semana: u32) -> u16 {
+pub(crate) unsafe fn competition_date_word(this: usize, dia: u32, mes: u32, ano: i16, semana: u32) -> u16 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // ponytail: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
@@ -878,9 +902,11 @@ pub(crate) unsafe fn cqk10_data(this: usize, dia: u32, mes: u32, ano: i16, seman
 }
 
 
-/// O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
-pub(crate) unsafe fn cqk10_confere(nome: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, i16, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
-    let palavra = cqk10_data(this, data.0, data.1, data.2, data.3);
+/// Runs the original set_up_rules and checks the fields, +0xb6 date, +0xb8 and return value 1.
+///
+/// [pt] O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
+pub(crate) unsafe fn check_set_up_rules(nome: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, i16, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
+    let palavra = competition_date_word(this, data.0, data.1, data.2, data.3);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
@@ -913,16 +939,16 @@ pub(crate) const CQK10_COPA_AMERICA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da copa america");
     let vitoria = 3; // cqk10: a vitória nos grupos da Copa América
-    cqk10_campos(this, &CQK10_COPA_AMERICA, vitoria);
+    goldcup_write_rule_fields(this, &CQK10_COPA_AMERICA, vitoria);
     let dia = 0x14; // cqk10: o dia da data da Copa América
-    let palavra = cqk10_data(this, dia, 2, 0, 5);
-    cqj12_fim(this, palavra, 0)
+    let palavra = competition_date_word(this, dia, 2, 0, 5);
+    finish_rules_setup(this, palavra, 0)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES);
-    cqk10_confere("goldcup_set_up_rules", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES);
+    check_set_up_rules("goldcup_set_up_rules", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
 }
 
 pub(crate) const CQK10_AFRICANA: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1),
@@ -944,16 +970,16 @@ pub(crate) const CQK10_OCEANIA: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1
 /// do ano da competição num dia da semana 5.
 pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da oceania");
-    cqk10_campos(this, &CQK10_OCEANIA, 3);
+    goldcup_write_rule_fields(this, &CQK10_OCEANIA, 3);
     let dia = 0xf; // cqk10: o dia do começo na Oceania
-    let palavra = cqk10_data(this, dia, 0, 0, 5);
-    cqj12_fim(this, palavra, 0)
+    let palavra = competition_date_word(this, dia, 0, 0, 5);
+    finish_rules_setup(this, palavra, 0)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES_91ECF0);
-    cqk10_confere("goldcup_set_up_rules_91ecf0", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES_91ECF0);
+    check_set_up_rules("goldcup_set_up_rules_91ecf0", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
 }
 
 /// rule: the Copa América moves on one stage when the current one ends; after the 2 group stages (on reaching 2) it
@@ -963,26 +989,26 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules_91ecf0(this
 /// [pt] { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
 /// América: a caixa da linha 0x29d na última; chegando a 2 (depois dos 2 grupos-fase), o mata-mata (0x5e18a0).
 pub(crate) unsafe extern "thiscall" fn goldcup_advance_stage(this: usize) {
-    cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
+    con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_ADVANCE_STAGE);
-    cqs11_comparar_fase_seguinte("goldcup_advance_stage", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_ADVANCE_STAGE);
+    con_merc_cup_compare_advance_stage("goldcup_advance_stage", this, || o(this))
 }
 
 /// rule: the Copa America follows the African Nations Cup rule with two group stages (the knockout at stage 2)
 /// Original: `GoldCup::update_staff_records_for_status` (0x5e13b0, goldcup.cpp, thiscall, ret 0x18).
 ///
 /// [pt] { 0x5e13b0 } (thiscall, ret 0x18, goldcup.cpp; a virtual +0x44 da Copa América): `GoldCup::
-/// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: cqj10_selecao com 2 fases de grupos (o
+/// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: national_tournament_staff_records com 2 fases de grupos (o
 /// mata-mata na fase 2).
 pub(crate) unsafe extern "thiscall" fn goldcup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
-    cqj10_selecao(1, this, clube, desfecho, fase, jogo, a6, 2)
+    national_tournament_staff_records(1, this, clube, desfecho, fase, jogo, a6, 2)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, desfecho, fase, a4, jogo, a6);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, desfecho, fase, a4, jogo, a6);
     PLACAR.registrar(r == 0, || format!("goldcup_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }

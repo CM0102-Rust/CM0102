@@ -1,5 +1,5 @@
 # Mutacoes (cpz_5), na soma do resultado na linha da tatica (0x896290), que roda no fim de cada partida sem humano
-# (o laco do motor, 0x6ba9a0). A escolha da formacao do computador (0x6e0230, julgar_formacoes) le de cada linha os
+# (o laco do motor, 0x6ba9a0). A escolha da formacao do computador (0x6e0230, judge_formations) le de cada linha os
 # jogos (+2, peso ate 3000) e a razao da stance (+0x10, +0x18 ou +0x20, ate 3): a vitoria valendo 1 ponto, os gols
 # contra no lugar dos pro ou a razao da stance normal sem o ultimo fator q mudam a nota das formacoes, a formacao
 # escolhida e as partidas seguintes (sorteios e resultados), que a carreira le. O contador fica depois das condicoes

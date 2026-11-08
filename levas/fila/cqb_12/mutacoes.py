@@ -6,11 +6,11 @@
 # se nenhum conflito nem busca de data mudar de resposta ate 2002-06-01 (o tipo so conta quando outro jogo do mesmo
 # dia o tem; os contadores mostram que os trechos rodam, nao que a resposta mudou).
 MUTACOES = [
-    ('cqb12_clube_sem_indice', '            return *((cqb12_entrada(k) + 0x14) as *const u8); // cqb12: o índice ativo da nação do clube',
-     '            return 3 + 0 * *((cqb12_entrada(k) + 0x14) as *const u8); // mutacao: como fora das nacoes-chave',
+    ('cqb12_clube_sem_indice', '            return *((key_nation_entry(k) + 0x14) as *const u8); // cqb12: o índice ativo da nação do clube',
+     '            return 3 + 0 * *((key_nation_entry(k) + 0x14) as *const u8); // mutacao: como fora das nacoes-chave',
      'cqb_12 nacao chave do clube'),
-    ('cqb12_estadio_sem_indice', '            *((cqb12_entrada(k) + 0x14) as *const u8) // cqb12: o índice ativo da nação do estádio',
-     '            3 + 0 * *((cqb12_entrada(k) + 0x14) as *const u8) // mutacao: como fora das nacoes-chave',
+    ('cqb12_estadio_sem_indice', '            *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: o índice ativo da nação do estádio',
+     '            3 + 0 * *((key_nation_entry(k) + 0x14) as *const u8) // mutacao: como fora das nacoes-chave',
      'cqb_12 nacao chave do estadio'),
     ('cqb12_clube_de_fora_0', '    3 // cqb12: clube fora das nações-chave',
      '    0 // mutacao: clube de fora na primeira nacao-chave',

@@ -18,7 +18,7 @@ unsafe fn cps12_clube(i: usize) -> usize {
 }
 
 /// Uma lista nova (0x944cf1 de 0xe bytes + 0x68d020); 0 sem memória.
-unsafe fn cps12_lista_nova() -> usize {
+unsafe fn alloc_empty_list() -> usize {
     let novo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x944cf1usize);
     let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let p = novo(0xe);
@@ -26,14 +26,14 @@ unsafe fn cps12_lista_nova() -> usize {
 }
 
 /// Acrescenta à lista `l` uma cópia de `n` bytes de `p` (0x68d0d0); devolve a cópia (0 se falhou).
-unsafe fn cps12_copiar(l: usize, p: usize, n: u32) -> usize {
+unsafe fn list_append_copy(l: usize, p: usize, n: u32) -> usize {
     let copiar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
     copiar(l, p, n)
 }
 
 /// A situação da data `data` para o clube (0x5c75a0 Friendly::get_club_date_status, com as três saídas em locais, sem
 /// datas escolhidas, tipo 0 e conferindo o estádio): 1 = livre.
-unsafe fn cps12_situacao(this: usize, clube: usize, data: usize) -> u8 {
+unsafe fn club_date_status(this: usize, clube: usize, data: usize) -> u8 {
     let situacao: unsafe extern "thiscall" fn(usize, usize, usize, *mut u32, *mut u32, *mut u32, u32, u32, u32, u32) -> u8 =
         core::mem::transmute(0x5c75a0usize);
     let (mut t, mut m, mut q) = (0u32, 0u32, 0u32);
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn create_due_planned_friendlies(this: usize) {
             let mut data = [0u8; 8]; // cópia da data da entrada
             core::ptr::copy_nonoverlapping(e as *const u8, data.as_mut_ptr(), 8);
             let pdata = data.as_mut_ptr() as usize;
-            if cps12_situacao(this, cps12_clube(b), pdata) == 1 && cps12_situacao(this, cps12_clube(c), pdata) == 1 {
+            if club_date_status(this, cps12_clube(b), pdata) == 1 && club_date_status(this, cps12_clube(c), pdata) == 1 {
                 let e = cps12_d(this + 0x34d8).wrapping_add(cps12_d(this + 0x34dc).wrapping_mul(20));
                 crate::comparacao::ramo("cps_12 amistoso planejado");
                 let m = if a == b { acrescentar(this, cps12_clube(a), e, cps12_clube(c), 1) } else { acrescentar(this, cps12_clube(a), e, cps12_clube(b), 0) }; // cps12: criar
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn create_due_planned_friendlies(this: usize) {
 
 /// O estádio do clube (+0x69) já tem jogo na data em alguma fatia (0x5ae870 do calendário [0xae2a58] com −1)? Sem
 /// estádio: não.
-unsafe fn cps12_estadio_ocupado(clube: usize, data: usize) -> bool {
+unsafe fn stadium_busy_on(clube: usize, data: usize) -> bool {
     let estadio = cps12_d(clube + 0x69);
     if estadio == 0 {
         return false;
@@ -108,11 +108,11 @@ unsafe fn cps12_estadio_ocupado(clube: usize, data: usize) -> bool {
 }
 
 /// O estádio de quem joga em casa (o clube com `em_casa`, senão o adversário, se houver) está ocupado na data?
-unsafe fn cps12_casa_ocupada(clube: usize, data: usize, adversario: usize, em_casa: u32) -> bool {
+unsafe fn home_stadium_busy_on(clube: usize, data: usize, adversario: usize, em_casa: u32) -> bool {
     if em_casa != 0 {
-        cps12_estadio_ocupado(clube, data)
+        stadium_busy_on(clube, data)
     } else {
-        adversario != 0 && cps12_estadio_ocupado(adversario, data)
+        adversario != 0 && stadium_busy_on(adversario, data)
     }
 }
 
@@ -136,11 +136,11 @@ unsafe extern "thiscall" fn add_friendly_match(this: usize, clube: usize, data: 
         let p = novo(0x19);
         m = if p != 0 { data_padrao(p); p } else { 0 };
         if m == 0 {
-            aviso_em(0x9cd0a0, 0xe6b);
+            show_error_at(0x9cd0a0, 0xe6b);
             return 0;
         }
     }
-    if cps12_casa_ocupada(clube, data, adversario, em_casa) {
+    if home_stadium_busy_on(clube, data, adversario, em_casa) {
         return 0;
     }
     let atribuir: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -158,10 +158,10 @@ unsafe extern "thiscall" fn add_friendly_match(this: usize, clube: usize, data: 
     cps12_pd(m + 0x10, mandante);
     cps12_pd(m + 0x14, visitante);
     if cps12_d(this + 0x34c8) == 0 {
-        let l = cps12_lista_nova();
+        let l = alloc_empty_list();
         cps12_pd(this + 0x34c8, l);
         if l == 0 {
-            aviso_em(0x9cd0a0, 0xe9f);
+            show_error_at(0x9cd0a0, 0xe9f);
             liberar(m);
             return 0;
         }
@@ -169,9 +169,9 @@ unsafe extern "thiscall" fn add_friendly_match(this: usize, clube: usize, data: 
     if reaproveitado {
         return m;
     }
-    let c = cps12_copiar(cps12_d(this + 0x34c8), m, 0x19);
+    let c = list_append_copy(cps12_d(this + 0x34c8), m, 0x19);
     if c == 0 {
-        aviso_em(0x9cd0a0, 0xeac);
+        show_error_at(0x9cd0a0, 0xeac);
         liberar(m);
         return 0;
     }
@@ -232,21 +232,21 @@ unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, anfitriao: u
     crate::comparacao::ramo("cps_12 data livre");
     marcar(this, anfitriao, casa, fora, pdata);
     if cps12_d(casa + 0x12) == 0 {
-        cps12_pd(casa + 0x12, cps12_lista_nova());
+        cps12_pd(casa + 0x12, alloc_empty_list());
     }
     if cps12_d(fora + 0x12) == 0 {
-        cps12_pd(fora + 0x12, cps12_lista_nova());
+        cps12_pd(fora + 0x12, alloc_empty_list());
     }
-    cps12_copiar(cps12_d(casa + 0x12), pdata, 8);
-    cps12_copiar(cps12_d(fora + 0x12), pdata, 8);
+    list_append_copy(cps12_d(casa + 0x12), pdata, 8);
+    list_append_copy(cps12_d(fora + 0x12), pdata, 8);
     if cps12_d(casa + 0xa) == 0 {
-        cps12_pd(casa + 0xa, cps12_lista_nova());
+        cps12_pd(casa + 0xa, alloc_empty_list());
     }
-    cps12_copiar(cps12_d(casa + 0xa), fora, 4);
+    list_append_copy(cps12_d(casa + 0xa), fora, 4);
     if cps12_d(fora + 0xa) == 0 {
-        cps12_pd(fora + 0xa, cps12_lista_nova());
+        cps12_pd(fora + 0xa, alloc_empty_list());
     }
-    cps12_copiar(cps12_d(fora + 0xa), casa, 4);
+    list_append_copy(cps12_d(fora + 0xa), casa, 4);
     *((casa + 4) as *mut u8) = (*((casa + 4) as *const u8)).wrapping_add(1);
     *((fora + 4) as *mut u8) = (*((fora + 4) as *const u8)).wrapping_add(1);
     1
@@ -255,15 +255,15 @@ unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, anfitriao: u
 // ponytail: cria amistosos (aloca), manda os pedidos e libera o plano: não roda duas vezes. Só a original; a cópia leva o
 // ramo (pré-temporada da IA, 515 chamadas até 2002-06-01).
 unsafe extern "thiscall" fn comparar_create_due_planned_friendlies(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// Comparador: aloca e acrescenta à lista (não roda duas vezes): a original faz e a cópia confere o resultado com o
 /// estádio de quem joga em casa visto antes (0x5ae870, só lê): ocupado → 0; senão o amistoso devolvido tem a data,
 /// +0xc o clube, +8 = 0, +0x18 = 1 e o mandante e o visitante pelo `em_casa`.
 unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, clube: usize, data: usize, adversario: usize, em_casa: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize>(%%I1%%);
-    let ocupada = cps12_casa_ocupada(clube, data, adversario, em_casa);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize>(%%I1%%);
+    let ocupada = home_stadium_busy_on(clube, data, adversario, em_casa);
     let (dia, ano) = (cps12_w(data), cps12_w(data + 2));
     let r = o(this, clube, data, adversario, em_casa);
     let (casa, fora) = if em_casa != 0 { (clube, adversario) } else { (adversario, clube) };
@@ -281,5 +281,5 @@ unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, clube: usiz
 
 // ponytail: sorteia a data e acrescenta às listas: não roda duas vezes. Só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_plan_friendly_on_free_date(this: usize, anfitriao: usize, casa: usize, fora: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, anfitriao, casa, fora)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, anfitriao, casa, fora)
 }

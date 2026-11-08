@@ -9,19 +9,19 @@ unsafe fn cqr4_w(a: usize) -> i16 {
 }
 
 /// A linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`: o clube (+0) e os pontos (+0x19, word).
-unsafe fn cqr4_linha(t: usize, i: usize) -> (usize, i16) {
+unsafe fn table_row_club_points(t: usize, i: usize) -> (usize, i16) {
     let l = cqr4_d(t + 0xb1) + i * 0x3b;
     (cqr4_d(l), cqr4_w(l + 0x19))
 }
 
 /// Grava o registro de 6 bytes `k` (clube, pontos) do vetor `r`.
-fn cqr4_por(r: &mut [u8], k: usize, (c, p): (usize, i16)) {
+fn put_club_points_record(r: &mut [u8], k: usize, (c, p): (usize, i16)) {
     r[6 * k..6 * k + 4].copy_from_slice(&(c as u32).to_le_bytes());
     r[6 * k + 4..6 * k + 6].copy_from_slice(&p.to_le_bytes());
 }
 
 /// O clube do registro de 6 bytes `k` do vetor `r`.
-fn cqr4_clube(r: &[u8], k: usize) -> usize {
+fn club_of_record(r: &[u8], k: usize) -> usize {
     u32::from_le_bytes([r[6 * k], r[6 * k + 1], r[6 * k + 2], r[6 * k + 3]]) as usize
 }
 
@@ -33,7 +33,7 @@ fn cqr4_clube(r: &[u8], k: usize) -> usize {
 unsafe extern "thiscall" fn usa_mls_advance_stage(this: usize) {
     let fase = cqr4_d(this + 0x30) as i32;
     if fase >= (cqr4_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0xaa1fb4, 0x55b);
+        return show_error_at(0xaa1fb4, 0x55b);
     }
     if fase == 1 {
         core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
@@ -80,30 +80,30 @@ unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize) {
     let (a, b) = (cqr4_d(cqr4_d(this + 0xc)), cqr4_d(cqr4_d(this + 0xc) + 4));
     let lista = alocar(0x20);
     if lista == 0 {
-        return aviso_em(0xaa1fb4, 0x58d);
+        return show_error_at(0xaa1fb4, 0x58d);
     }
     let poe = |k: usize, c: usize| core::ptr::write_unaligned((lista + 4 * k) as *mut usize, c);
     let mut r = [0u8; 54];
-    cqr4_por(&mut r, 0, cqr4_linha(this, 0));
-    cqr4_por(&mut r, 1, cqr4_linha(a, 0));
-    cqr4_por(&mut r, 2, cqr4_linha(b, 0));
+    put_club_points_record(&mut r, 0, table_row_club_points(this, 0));
+    put_club_points_record(&mut r, 1, table_row_club_points(a, 0));
+    put_club_points_record(&mut r, 2, table_row_club_points(b, 0));
     ordenar(r.as_mut_ptr(), 3, 6, 0x90a130);
-    poe(1, cqr4_clube(&r, 0)); // cqr4: o melhor campeão de divisão
-    poe(3, cqr4_clube(&r, 1));
-    poe(5, cqr4_clube(&r, 2));
+    poe(1, club_of_record(&r, 0)); // cqr4: o melhor campeão de divisão
+    poe(3, club_of_record(&r, 1));
+    poe(5, club_of_record(&r, 2));
     let mut k = 0usize;
     for j in 1..4 {
         for t in [this, a, b] {
-            cqr4_por(&mut r, k, cqr4_linha(t, j));
+            put_club_points_record(&mut r, k, table_row_club_points(t, j));
             k += 1;
         }
     }
     ordenar(r.as_mut_ptr(), 9, 6, 0x90a130);
-    poe(7, cqr4_clube(&r, 0));
-    poe(6, cqr4_clube(&r, 1));
-    poe(4, cqr4_clube(&r, 2));
-    poe(2, cqr4_clube(&r, 3));
-    poe(0, cqr4_clube(&r, 4)); // cqr4: o quinto melhor dos outros
+    poe(7, club_of_record(&r, 0));
+    poe(6, club_of_record(&r, 1));
+    poe(4, club_of_record(&r, 2));
+    poe(2, club_of_record(&r, 3));
+    poe(0, club_of_record(&r, 4)); // cqr4: o quinto melhor dos outros
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqr4_d(cqr4_d(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 2, &mut rodadas, &mut extra, 0);
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize) {
     soltar(t);
     let fase = cqr4_d(cqr4_d(this + 0xc) + 8);
     if fase == 0 {
-        return aviso_em(0xaa1fb4, 0x5c4);
+        return show_error_at(0xaa1fb4, 0x5c4);
     }
     crate::comparacao::ramo("cqr_4 play-off");
     montar(fase, 0);
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     let po = cqr4_d(cqr4_d(this + 0xc) + 8);
     let lista = alocar(8);
     if lista == 0 {
-        return aviso_em(0xaa1fb4, 0x5e5);
+        return show_error_at(0xaa1fb4, 0x5e5);
     }
     let mut n = 0i8;
     let mut i = 0i32;
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     soltar(t);
     let fase = cqr4_d(cqr4_d(this + 0xc) + 0xc);
     if fase == 0 {
-        return aviso_em(0xaa1fb4, 0x5fe);
+        return show_error_at(0xaa1fb4, 0x5fe);
     }
     crate::comparacao::ramo("cqr_4 final");
     montar(fase, 0);
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
 unsafe extern "thiscall" fn comparar_usa_mls_advance_stage(this: usize) {
     let antes = cqr4_d(this + 0x30) as i32;
     let ultima = antes >= (cqr4_d(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqr4_d(this + 0x30) as i32;
     let esperado = if ultima { antes } else if antes == 1 || antes == 2 { antes + 1 } else { antes };
     PLACAR.registrar(depois == esperado, || format!("usa_mls_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
@@ -192,25 +192,25 @@ unsafe extern "thiscall" fn comparar_usa_mls_create_playoff_stage(this: usize) {
     let (a, b) = (cqr4_d(cqr4_d(this + 0xc)), cqr4_d(cqr4_d(this + 0xc) + 4));
     let mut plano = [0usize; 8];
     let mut r = [0u8; 54];
-    cqr4_por(&mut r, 0, cqr4_linha(this, 0));
-    cqr4_por(&mut r, 1, cqr4_linha(a, 0));
-    cqr4_por(&mut r, 2, cqr4_linha(b, 0));
+    put_club_points_record(&mut r, 0, table_row_club_points(this, 0));
+    put_club_points_record(&mut r, 1, table_row_club_points(a, 0));
+    put_club_points_record(&mut r, 2, table_row_club_points(b, 0));
     ordenar(r.as_mut_ptr(), 3, 6, 0x90a130);
     for k in 0..3 {
-        plano[k] = cqr4_clube(&r, k);
+        plano[k] = club_of_record(&r, k);
     }
     let mut k = 0usize;
     for j in 1..4 {
         for t in [this, a, b] {
-            cqr4_por(&mut r, k, cqr4_linha(t, j));
+            put_club_points_record(&mut r, k, table_row_club_points(t, j));
             k += 1;
         }
     }
     ordenar(r.as_mut_ptr(), 9, 6, 0x90a130);
     for k in 0..5 {
-        plano[3 + k] = cqr4_clube(&r, k);
+        plano[3 + k] = club_of_record(&r, k);
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let fase = cqr4_d(cqr4_d(this + 0xc) + 8);
     let igual = fase != 0 && cqr4_w(fase + 0x3e) == 8 && cqr4_d(fase + 4) == cqr4_d(this + 4) && {
         let mut nela = [0usize; 8];
@@ -241,7 +241,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_create_final_stage(this: usize) {
         }
         i += 1;
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let fase = cqr4_d(cqr4_d(this + 0xc) + 0xc);
     // ponytail: com menos de dois vencedores a original lê vagas da lista sem valor; aí só a fase é conferida.
     let igual = fase != 0 && n < 2 || fase != 0 && {

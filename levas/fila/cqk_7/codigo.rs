@@ -29,7 +29,7 @@ unsafe fn cqk7_campeao(clube: usize, comp: usize) {
 
 /// A fase de pontos corridos (fase -1) dos estaduais: os classificados (6) ganham o registro de classificação (rodada
 /// 0x82, peso 0x32), os rebaixados (3) o de rebaixamento. Igual nas duas rotinas dos estaduais.
-unsafe fn cqk7_pontos_corridos(this: usize, clube: usize, st: u8, fazer: bool) {
+unsafe fn record_state_league_stage(this: usize, clube: usize, st: u8, fazer: bool) {
     let comp = cqk7_d(this + 4);
     if st == 6 {
         if fazer {
@@ -45,7 +45,7 @@ unsafe fn cqk7_pontos_corridos(this: usize, clube: usize, st: u8, fazer: bool) {
 /// O mata-mata dos estaduais: a linha do clube na tabela (+0xb1, +0x3e linhas); o campeão (1) ganha o registro de
 /// campeão e o destino 5; os eliminados (2 ou -1), o registro de eliminação (0x86c000) com o peso da escala 0x4bf850
 /// (30 a 50 pela rodada do jogo em `rodadas`) e o destino -2. Devolve (linha gravada ou 0, destino).
-unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usize, rodadas: u32, fazer: bool) -> (usize, u8) {
+unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jogo: usize, rodadas: u32, fazer: bool) -> (usize, u8) {
     let comp = cqk7_d(this + 4);
     let n = cqk7_w(this + 0x3e) as i32;
     let mut i = 0i32;
@@ -86,25 +86,25 @@ unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usize, rodadas
 
 /// O Centro-Oeste e o Goiano (0x4314e0): a fase -1 de pontos corridos e o mata-mata na fase 0 (escala de 3 rodadas).
 /// `fazer` = falso: o ensaio do comparador. Devolve (devolução, linha gravada ou 0, destino).
-unsafe fn cqk7_centro(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
+unsafe fn centro_oeste_end_of_stage(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8);
     if fa == 0xff {
-        cqk7_pontos_corridos(this, clube, st, fazer);
+        record_state_league_stage(this, clube, st, fazer);
         return (0, 0, 0);
     }
     if fa != 0 {
         return (0, 0, 0);
     }
-    let (l, d) = cqk7_mata_mata(this, clube, st, jogo, 3, fazer);
+    let (l, d) = record_state_knockout(this, clube, st, jogo, 3, fazer);
     (0, l, d)
 }
 
 /// O Mineiro, o Paranaense e o Carioca (0x434d90): a fase -1 de pontos corridos; as fases 0 e 1 (os turnos) devolvem -1;
 /// o mata-mata na fase 2 (escala de 1 rodada: a média, 40); as outras, 0.
-unsafe fn cqk7_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
+unsafe fn mineiro_end_of_stage(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8 as i8);
     if fa == -1 {
-        cqk7_pontos_corridos(this, clube, st, fazer);
+        record_state_league_stage(this, clube, st, fazer);
         return (0, 0, 0);
     }
     if fa < 2 {
@@ -113,12 +113,12 @@ unsafe fn cqk7_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, jogo
     if fa != 2 {
         return (0, 0, 0);
     }
-    let (l, d) = cqk7_mata_mata(this, clube, st, jogo, 1, fazer);
+    let (l, d) = record_state_knockout(this, clube, st, jogo, 1, fazer);
     (0, l, d)
 }
 
 /// A NSL (0x411980). Devolve (devolução, 0, 0): não grava na tabela.
-unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
+unsafe fn nsl_end_of_stage(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8);
     let comp = cqk7_d(this + 4);
     if fa == 0xff {
@@ -163,14 +163,14 @@ unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u32, fazer: b
 /// (destino 5) e os eliminados (destino -2, registro de eliminação com peso de 30 a 50 em 3 rodadas). Devolve 0.
 unsafe extern "thiscall" fn bra_reg_central_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
-    cqk7_centro(this, clube, situacao, fase, jogo, true).0
+    centro_oeste_end_of_stage(this, clube, situacao, fase, jogo, true).0
 }
 
 /// Comparador: só a original (ponytail: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
 /// com o plano do ensaio (a cópia sem os registros nem a gravação, rodada antes): a devolução e o destino na linha.
 unsafe extern "thiscall" fn comparar_bra_reg_central_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let (n, l, dest) = cqk7_centro(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, jogo, a6);
+    let (n, l, dest) = centro_oeste_end_of_stage(this, clube, situacao, fase, jogo, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_central_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
@@ -181,13 +181,13 @@ unsafe extern "thiscall" fn comparar_bra_reg_central_update_staff_records_for_st
 /// devolvem -1; o mata-mata na fase 2 (peso pela escala de uma rodada só: 40). Devolve 0 ou -1.
 unsafe extern "thiscall" fn bra_reg_minas_gerais_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
-    cqk7_mineiro(this, clube, situacao, fase, jogo, true).0
+    mineiro_end_of_stage(this, clube, situacao, fase, jogo, true).0
 }
 
 /// Comparador: como o do Centro-Oeste.
 unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let (n, l, dest) = cqk7_mineiro(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, situacao, fase, a4, jogo, a6);
+    let (n, l, dest) = mineiro_end_of_stage(this, clube, situacao, fase, jogo, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_minas_gerais_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
@@ -199,13 +199,13 @@ unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_update_staff_records_f
 /// (fase 0x435) e -1; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.
 unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    cqk7_nsl(this, clube, situacao, fase, true).0
+    nsl_end_of_stage(this, clube, situacao, fase, true).0
 }
 
 /// Comparador: só a original (os registros alocam) com a devolução prevista pelo ensaio.
 unsafe extern "thiscall" fn comparar_aus_nsl_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, _, _) = cqk7_nsl(this, clube, situacao, fase, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I2%%)(this, clube, situacao, fase, a4, a5, a6);
+    let (n, _, _) = nsl_end_of_stage(this, clube, situacao, fase, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I2%%)(this, clube, situacao, fase, a4, a5, a6);
     PLACAR.registrar(r == n, || format!("aus_nsl_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
     r
 }

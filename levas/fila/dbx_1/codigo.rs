@@ -28,8 +28,8 @@ unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, texto: usize
                 if let Some((_, fontes)) = cadeia.iter().find(|e| *(e.0 as *const i32) == id) {
                     match fontes[f.min(5)] { // as formas 5..255 pela última coluna
                         0 => {}
-                        1 => dbu1_copiar(texto, nome),
-                        t => dbu1_copiar(texto, t as usize),
+                        1 => copy_c_string(texto, nome),
+                        t => copy_c_string(texto, t as usize),
                     }
                 }
             }
@@ -38,12 +38,12 @@ unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, texto: usize
             }
         }
     }
-    dbu1_copiar(texto, nome);
+    copy_c_string(texto, nome);
     1
 }
 
 unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
     if texto == 0 {
         return o(nacao, texto, tamanho, genero);
     }

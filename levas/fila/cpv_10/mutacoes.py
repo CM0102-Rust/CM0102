@@ -4,8 +4,8 @@
 # lesionados para sempre: a escalacao e o motor das partidas mudam.
 MUTACOES = [
     ('cpv10_fica_a_lesao_atual',
-     'core::ptr::write_unaligned((cpv10_registro(this, cpv10_d(pessoa)) + 0xe) as *mut i32, -1); // cpv10: sem lesão atual',
-     'let _ = cpv10_registro(this, cpv10_d(pessoa)); // mutacao: o +0xe fica',
+     'core::ptr::write_unaligned((physical_record_of_id(this, cpv10_d(pessoa)) + 0xe) as *mut i32, -1); // cpv10: sem lesão atual',
+     'let _ = physical_record_of_id(this, cpv10_d(pessoa)); // mutacao: o +0xe fica',
      'cpv_10 fim da lesao'),
     ('cpv10_entrada_zero_nao_termina',
      'if i == -1 { // cpv10: a lesão atual',

@@ -65,7 +65,7 @@ unsafe fn cqv6_plano(this: usize, r: usize, ano: u32, dono: usize, vt: usize, ca
 /// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x967cf8, o registro em +4, o ano em +0x40 e
 /// os da tabela CQV6_CAMPOS_COPA_DO_BRASIL); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os 71 inscritos (BraCup::select_entrants) (0x427f00, thiscall, ret 0, sem conferir); a tabela dos 71 times (BraCup::build_team_table) (0x427c20, thiscall, ret 0; a caixa da linha 0x4b se devolver 0); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x59 se devolver 0); as estatísticas em +8 (a caixa da linha 0x60 sem elas); a classificação final (Cup::rank_teams) (0x5223a0, thiscall, ret 0, sem conferir); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: tipo 1 (clubes de uma nação); fundo de prêmios de 500.000; 7 reservas no banco e 3 substituições; regra de disciplina 6 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqv6_copa_do_brasil_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
@@ -90,7 +90,7 @@ unsafe fn cqv6_copa_do_brasil_corpo(this: usize, ano: u32, dono: usize) -> usize
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x427c20usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x98a3bc, 0x4b);
+        show_error_at(0x98a3bc, 0x4b);
         return this;
     }
     cqv6_p8(this + 0x49, 0x7);
@@ -100,11 +100,11 @@ unsafe fn cqv6_copa_do_brasil_corpo(this: usize, ano: u32, dono: usize) -> usize
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x98a3bc, 0x59);
+        show_error_at(0x98a3bc, 0x59);
         return this;
     }
     if !cqv6_estatisticas(this) {
-        aviso_em(0x98a3bc, 0x60);
+        show_error_at(0x98a3bc, 0x60);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn cqv6_copa_do_brasil(this: usize, ano: u32, dono: usi
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqv6_plano).
 unsafe extern "thiscall" fn comparar_cqv6_copa_do_brasil(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqv6_plano(this, r, ano, dono, 0x967cf8, &CQV6_CAMPOS_COPA_DO_BRASIL, true);
     PLACAR.registrar(erro.is_none(), || format!("cqv6_copa_do_brasil({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
@@ -186,7 +186,7 @@ unsafe fn cqv6_selecao(this: usize) {
     let livro = zerada(6, 0x47);
     cqv6_p32(this + 0x14, livro as u32);
     if livro == 0 {
-        aviso_em(0x98a3bc, 0x1e0);
+        show_error_at(0x98a3bc, 0x1e0);
         return;
     }
     let base = cqv6_d(0xae23b4);
@@ -272,7 +272,7 @@ unsafe fn cqv6_selecao(this: usize) {
         }
     }
     if !(b[0] == 0x36 && b[3] == 7 && b[1] == 5 && b[2] == 5) {
-        aviso_em(0x98a3bc, 0x3ce);
+        show_error_at(0x98a3bc, 0x3ce);
     }
 }
 
@@ -283,7 +283,7 @@ unsafe extern "thiscall" fn cqv6_inscritos_da_copa_do_brasil(this: usize) {
 /// Lado a lado a partir do mesmo estado (+0x36/+0x38, +0x4b, [0xb67a34]; não sorteia): a original deixa o livro dela em
 /// +0x14, a cópia faz o seu, comparado nos 0x47 registros (6 bytes) e liberado.
 unsafe extern "thiscall" fn comparar_cqv6_inscritos_da_copa_do_brasil(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let antes = cqv6_d(this + 0x14);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);

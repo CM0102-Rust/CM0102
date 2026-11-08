@@ -14,7 +14,7 @@ unsafe extern "C" fn club_is_in_season(clube: usize) -> u32 {
 }
 
 unsafe extern "C" fn comparar_club_is_in_season(clube: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(clube);
     let n = club_is_in_season(clube);
     PLACAR.registrar(r == n, || format!("club_is_in_season({:x}) original={} rust={}", clube, r, n));
     r
@@ -38,7 +38,7 @@ unsafe extern "C" fn club_is_in_major_nation(clube: usize) -> u8 {
 }
 
 unsafe extern "C" fn comparar_club_is_in_major_nation(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_is_in_major_nation(clube);
     PLACAR.registrar(r == n, || format!("club_is_in_major_nation({:x}) original={} rust={}", clube, r, n));
     r
@@ -57,7 +57,7 @@ unsafe extern "C" fn nation_is_major_nation(nacao: usize) -> u8 {
 }
 
 unsafe extern "C" fn comparar_nation_is_major_nation(nacao: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(nacao);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(nacao);
     let n = nation_is_major_nation(nacao);
     PLACAR.registrar(r == n, || format!("nation_is_major_nation({:x}) original={} rust={}", nacao, r, n));
     r

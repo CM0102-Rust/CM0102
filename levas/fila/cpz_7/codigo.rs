@@ -20,15 +20,15 @@ unsafe fn cpz7_b(a: usize) -> u8 {
 /// se ele não for negativo, senão o normal (+0x43/+0x44); visitante: +0x15 o +0xc e o placar ao contrário. Devolve 1.
 unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
     if jogo == 0 {
-        aviso_em(0xa7a088, 0x29);
+        show_error_at(0xa7a088, 0x29);
         return 0;
     }
     if clube == 0 {
-        aviso_em(0xa7a088, 0x31);
+        show_error_at(0xa7a088, 0x31);
         return 0;
     }
     if saida == 0 {
-        aviso_em(0xa7a088, 0x39);
+        show_error_at(0xa7a088, 0x39);
         return 0;
     }
     let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
@@ -72,7 +72,7 @@ unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, s
 /// Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
 /// só a original.
 unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%);
     if jogo == 0 || clube == 0 || saida == 0 {
         return o(jogo, clube, saida);
     }
@@ -82,7 +82,7 @@ unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: usize, clube:
 }
 
 /// O id do nome (+0x33 do registro de nome) ou −1 sem nome.
-unsafe fn cpz7_nome(p: u32) -> u32 {
+unsafe fn name_id(p: u32) -> u32 {
     if p != 0 { cpz7_d(p as usize + 0x33) } else { u32::MAX }
 }
 
@@ -92,15 +92,15 @@ unsafe fn cpz7_nome(p: u32) -> u32 {
 /// nascimento (+0x10, 0x417c10); devolve 1.
 unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
     if pessoa == 0 {
-        aviso_em(0xa7a088, 0x80);
+        show_error_at(0xa7a088, 0x80);
         return 0;
     }
     if saida == 0 {
-        aviso_em(0xa7a088, 0x88);
+        show_error_at(0xa7a088, 0x88);
         return 0;
     }
     for k in 0..3 {
-        core::ptr::write_unaligned((saida + 4 * k) as *mut u32, cpz7_nome(cpz7_d(pessoa + 4 + 4 * k)));
+        core::ptr::write_unaligned((saida + 4 * k) as *mut u32, name_id(cpz7_d(pessoa + 4 + 4 * k)));
     }
     core::ptr::write_unaligned((saida + 0xc) as *mut u32, cpz7_d(pessoa));
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -111,7 +111,7 @@ unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
 
 /// Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
 unsafe extern "C" fn comparar_fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
     if pessoa == 0 || saida == 0 {
         return o(pessoa, saida);
     }
@@ -125,7 +125,7 @@ unsafe extern "C" fn comparar_fill_staff_name_ref(pessoa: usize, saida: usize) -
 /// empate com gols: 2; empate sem gols: 1; derrota: −3 (só o byte conta: quem chama lê al).
 unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 {
     if registro == 0 {
-        aviso_em(0xa7a088, 0x25a);
+        show_error_at(0xa7a088, 0x25a);
         return 0;
     }
     let (p, c) = (cpz7_b(registro + 0x19) as i8, cpz7_b(registro + 0x1a) as i8);
@@ -142,7 +142,7 @@ unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 {
 
 /// Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
 unsafe extern "C" fn comparar_match_record_result_code(registro: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
     if registro == 0 {
         return o(registro);
     }

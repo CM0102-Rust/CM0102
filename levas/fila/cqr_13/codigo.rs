@@ -14,7 +14,7 @@ unsafe fn cqr13_pd(a: usize, v: usize) {
 
 /// A seleção k da lista dos sorteados (+0xee, ponteiros: os 12 em grupos intercalados, o grupo j nas vagas j, j + 3,
 /// j + 6 e j + 9), a que o primeiro grupo e as fases dos outros leem.
-unsafe fn cqr13_sorteado(this: usize, k: usize) -> usize {
+unsafe fn drawn_team(this: usize, k: usize) -> usize {
     cqr13_d(cqr13_d(this + 0xee) + k * 4) // cqr13: o sorteado k
 }
 
@@ -53,15 +53,15 @@ unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, hoje: usize, co
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x5c));
         previstas(this);
         if primeiro(this) == 0 {
-            aviso_em(0x9cd640, 0x3e7);
+            show_error_at(0x9cd640, 0x3e7);
             return 0;
         }
         if jogos(this) == 0 {
-            aviso_em(0x9cd640, 0x3ed);
+            show_error_at(0x9cd640, 0x3ed);
             return 0;
         }
         if ordenar(this, 0) == 0 {
-            aviso_em(0x9cd640, 0x3f4);
+            show_error_at(0x9cd640, 0x3f4);
             return 0;
         }
         for g in 0..2i32 {
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, hoje: usize, co
 // dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do primeiro grupo e as duas
 // fases criadas e a fase atual (+0x30) a última delas (1).
 unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = cqr13_d(this + 0x45) == 0
         && completo == 0
         && (cqr13_w(this + 0xb8) as u16).wrapping_add(cqr13_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -112,14 +112,14 @@ unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -> u32 {
     let t = novo(0xec);
     cqr13_pd(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0x9cd640, 0x1d4);
+        show_error_at(0x9cd640, 0x1d4);
         return 0;
     }
     let mut i = 0i8;
     while (i as i16) < cqr13_w(this + 0x3e) {
         crate::comparacao::ramo("cqr_13 linha do primeiro grupo");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
-        linha(this, i as u8 as u32, cqr13_sorteado(this, i as usize * 3), 0, 0);
+        linha(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
         i = i.wrapping_add(1);
     }
     noticia(this);
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -> u32 {
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado 3i com a posição i (+4).
 unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqr13_d(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -168,12 +168,12 @@ unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g: i32) -> u
         core::mem::transmute(0x68b100usize);
     let times = alocar(0x10);
     if times == 0 {
-        aviso_em(0x9cd640, 0x2bf);
+        show_error_at(0x9cd640, 0x2bf);
         return 0;
     }
     for n in 0..4usize {
         crate::comparacao::ramo("cqr_13 time do grupo");
-        cqr13_pd(times + n * 4, cqr13_sorteado(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo
+        cqr13_pd(times + n * 4, drawn_team(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g: i32) -> u
     soltar(tabela);
     let f = cqr13_d(cqr13_d(this + 0xc) + g as usize * 4);
     if f == 0 {
-        aviso_em(0x9cd640, 0x2d6);
+        show_error_at(0x9cd640, 0x2d6);
         return 0;
     }
     cqr13_pd(this + 0x30, g as usize);
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g: i32) -> u
 // fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados g + 1, g + 4, g + 7 e g + 10 (em qualquer ordem: o construtor ordena a tabela).
 unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(%%I2%%);
     let lista = cqr13_d(this + 0xee);
     if lista == 0 || !(0..2).contains(&g) {
         return o(this, g);

@@ -9,7 +9,7 @@ unsafe fn cqo7_w(a: usize) -> i16 {
 }
 
 /// O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
-unsafe fn cqo7_campeao_do_turno(this: usize, k: usize) -> usize {
+unsafe fn half_champion(this: usize, k: usize) -> usize {
     cqo7_d(cqo7_d(cqo7_d(cqo7_d(this + 0xc) + 4 * k) + 0xb1))
 }
 
@@ -20,7 +20,7 @@ unsafe fn cqo7_campeao_do_turno(this: usize, k: usize) -> usize {
 unsafe extern "thiscall" fn bra_reg_minas_gerais_advance_stage(this: usize) {
     let fase = cqo7_d(this + 0x30) as i32;
     if fase >= (cqo7_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x98aed0, 0x202);
+        return show_error_at(0x98aed0, 0x202);
     }
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
@@ -48,11 +48,11 @@ unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(this: usize)
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let lista = alocar(8);
     if lista == 0 {
-        return aviso_em(0x98aed0, 0x226);
+        return show_error_at(0x98aed0, 0x226);
     }
-    let a = cqo7_campeao_do_turno(this, 0);
+    let a = half_champion(this, 0);
     core::ptr::write_unaligned(lista as *mut usize, a);
-    let b = cqo7_campeao_do_turno(this, 1);
+    let b = half_champion(this, 1);
     core::ptr::write_unaligned((lista + 4) as *mut usize, b);
     if a == b {
         crate::comparacao::ramo("cqo_7 mesmo campeao");
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(this: usize)
     core::ptr::write_unaligned((cqo7_d(this + 0xc) + 8) as *mut usize, fase);
     let fase = cqo7_d(cqo7_d(this + 0xc) + 8);
     if fase == 0 {
-        return aviso_em(0x98aed0, 0x250);
+        return show_error_at(0x98aed0, 0x250);
     }
     crate::comparacao::ramo("cqo_7 final");
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honours(this: usi
 unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_stage(this: usize) {
     let antes = cqo7_d(this + 0x30) as i32;
     let ultima = antes >= (cqo7_d(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqo7_d(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
     PLACAR.registrar(igual, || format!("bra_reg_minas_gerais_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
@@ -150,8 +150,8 @@ unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_stage(this: us
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
 unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_final_stage(this: usize) {
-    let (a, b) = (cqo7_campeao_do_turno(this, 0), cqo7_campeao_do_turno(this, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    let (a, b) = (half_champion(this, 0), half_champion(this, 1));
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let igual = if a == b {
         let marca = |k: usize| *((cqo7_d(cqo7_d(cqo7_d(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
         let na_liga = (0..cqo7_w(this + 0x3e).max(0) as usize).all(|i| {
@@ -176,5 +176,5 @@ unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_final_stage(thi
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_7 historico da final" e "cqo_7 premios") e é provada pelas mutações e pelas duas carreiras Rust.
 unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_record_season_honours(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
 }

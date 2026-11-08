@@ -9,18 +9,18 @@ unsafe fn cqi5_w(a: usize) -> i16 {
 }
 
 /// O registro de competição (0x6b bytes em [0xae23d0]) do id guardado no global `g`.
-unsafe fn cqi5_registro(g: usize) -> usize {
+unsafe fn comp_record_of(g: usize) -> usize {
     cqi5_d(0xae23d0).wrapping_add((cqi5_d(g) as i32 as usize).wrapping_mul(0x6b))
 }
 
 /// O ano do jogo ([0xae2c92]) passou de 1999 (o dinheiro da TV maior).
-unsafe fn cqi5_depois_de_1999() -> bool {
+unsafe fn is_after_1999() -> bool {
     core::ptr::read_unaligned(0xae2c92 as *const u16) > 0x7cf
 }
 
 /// League::pay_tv_rights (0x683010: thiscall(liga, valor, filtro), ret 8): o valor a cada clube da tabela, ou só aos
 /// que vieram da competição `filtro` (+0x5b do clube).
-unsafe fn cqi5_pagar(this: usize, valor: i32, filtro: usize) {
+unsafe fn eng_prm_pay_tv_rights(this: usize, valor: i32, filtro: usize) {
     let pagar: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(0x683010usize);
     pagar(this, valor, filtro);
 }
@@ -30,13 +30,13 @@ unsafe fn cqi5_pagar(this: usize, valor: i32, filtro: usize) {
 /// (+0x57, o id no +0) é a do global `g`, na ordem do banco, cada um na linha seguinte (League::init_table_row
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Sem encher: 0. Cheia: o fundo de prêmios
 /// +0x28 (League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4), +0xe1 = 1, o dinheiro da TV (`pagar`) e 1.
-unsafe fn cqi5_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, cota: i32, pagar: impl FnOnce()) -> u32 {
+unsafe fn eng_prm_fill_league_table(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, cota: i32, pagar: impl FnOnce()) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return 0;
     }
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
@@ -73,22 +73,22 @@ unsafe fn cqi5_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
 /// { 0x574a20 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::create_table()`: 20 clubes ([0x9cf5bc]), cota 250.000 do
 /// fundo de prêmios e a TV: 12.000.000 a cada clube depois de 1999 (5.000.000 antes). Fonte 0x9c43b0, linha 0x1ee.
 unsafe extern "thiscall" fn eng_prm_create_table(this: usize) -> u32 {
-    cqi5_tabela(this, 0x14, 0x9c43b0, 0x1ee, 0x9cf5bc, 0x3d090, || {
-        let valor = if cqi5_depois_de_1999() { 0xb71b00 } else { 0x4c4b40 }; // cqi5: a TV da Premier
-        cqi5_pagar(this, valor, 0)
+    eng_prm_fill_league_table(this, 0x14, 0x9c43b0, 0x1ee, 0x9cf5bc, 0x3d090, || {
+        let valor = if is_after_1999() { 0xb71b00 } else { 0x4c4b40 }; // cqi5: a TV da Premier
+        eng_prm_pay_tv_rights(this, valor, 0)
     })
 }
 
 /// { 0x576630 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_table()`: 24 clubes ([0x9cf5c4]), cota 20.000
 /// e a TV: 2.500.000 depois de 1999 (300.000 antes). Fonte 0x9c43e8, linha 0x1f5.
 unsafe extern "thiscall" fn eng_second_create_table(this: usize) -> u32 {
-    cqi5_tabela(this, 0x18, 0x9c43e8, 0x1f5, 0x9cf5c4, 0x4e20, || cqi5_pagar(this, if cqi5_depois_de_1999() { 0x2625a0 } else { 0x493e0 }, 0))
+    eng_prm_fill_league_table(this, 0x18, 0x9c43e8, 0x1f5, 0x9cf5c4, 0x4e20, || eng_prm_pay_tv_rights(this, if is_after_1999() { 0x2625a0 } else { 0x493e0 }, 0))
 }
 
 /// { 0x577f70 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_table()`: 24 clubes ([0x9cf5c8]), cota 10.000
 /// e a TV: 1.000.000 depois de 1999 (200.000 antes). Fonte 0x9c4424, linha 0x1fa.
 unsafe extern "thiscall" fn eng_prm_create_table_577f70(this: usize) -> u32 {
-    cqi5_tabela(this, 0x18, 0x9c4424, 0x1fa, 0x9cf5c8, 0x2710, || cqi5_pagar(this, if cqi5_depois_de_1999() { 0xf4240 } else { 0x30d40 }, 0))
+    eng_prm_fill_league_table(this, 0x18, 0x9c4424, 0x1fa, 0x9cf5c8, 0x2710, || eng_prm_pay_tv_rights(this, if is_after_1999() { 0xf4240 } else { 0x30d40 }, 0))
 }
 
 /// { 0x572bf0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::create_table()`: 24 clubes ([0x9cf5c0]), cota 70.000
@@ -96,13 +96,13 @@ unsafe extern "thiscall" fn eng_prm_create_table_577f70(this: usize) -> u32 {
 /// de [0x9cf5bc]), 4.099.999 aos que já estavam na First (o próprio registro, +4) e 4.099.999 aos que subiram da
 /// Second ([0x9cf5c4]); antes, 1.000.000 a todos. Fonte 0x9c4374, linha 0x22d.
 unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u32 {
-    cqi5_tabela(this, 0x18, 0x9c4374, 0x22d, 0x9cf5c0, 0x11170, || {
-        if cqi5_depois_de_1999() {
-            cqi5_pagar(this, 0x59b011, cqi5_registro(0x9cf5bc)); // cqi5: a TV de quem caiu da Premier
-            cqi5_pagar(this, 0x3e8fa0, cqi5_d(this + 4));
-            cqi5_pagar(this, 0x3e8fa0, cqi5_registro(0x9cf5c4));
+    eng_prm_fill_league_table(this, 0x18, 0x9c4374, 0x22d, 0x9cf5c0, 0x11170, || {
+        if is_after_1999() {
+            eng_prm_pay_tv_rights(this, 0x59b011, comp_record_of(0x9cf5bc)); // cqi5: a TV de quem caiu da Premier
+            eng_prm_pay_tv_rights(this, 0x3e8fa0, cqi5_d(this + 4));
+            eng_prm_pay_tv_rights(this, 0x3e8fa0, comp_record_of(0x9cf5c4));
         } else {
-            cqi5_pagar(this, 0xf4240, 0);
+            eng_prm_pay_tv_rights(this, 0xf4240, 0);
         }
     })
 }
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u32 {
 /// O comparador das quatro: a original aloca a tabela e paga os clubes (não roda duas vezes): só ela. O plano, feito
 /// antes: os clubes da divisão na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu
 /// (senão 0) e as linhas da tabela com os clubes do plano, na ordem; cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
-unsafe fn cqi5_comparar(nome: &str, this: usize, n: i16, g: usize, cota: i32, original: impl FnOnce() -> u32) -> u32 {
+unsafe fn eng_prm_compare_league_table(nome: &str, this: usize, n: i16, g: usize, cota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < cqi5_d(0xae235c) as i32 && (plano.len() as i16) < n {
@@ -139,21 +139,21 @@ unsafe fn cqi5_comparar(nome: &str, this: usize, n: i16, g: usize, cota: i32, or
 }
 
 unsafe extern "thiscall" fn comparar_eng_prm_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqi5_comparar("eng_prm_create_table", this, 0x14, 0x9cf5bc, 0x3d090, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    eng_prm_compare_league_table("eng_prm_create_table", this, 0x14, 0x9cf5bc, 0x3d090, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_eng_second_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqi5_comparar("eng_second_create_table", this, 0x18, 0x9cf5c4, 0x4e20, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    eng_prm_compare_league_table("eng_second_create_table", this, 0x18, 0x9cf5c4, 0x4e20, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_eng_prm_create_table_577f70(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqi5_comparar("eng_prm_create_table_577f70", this, 0x18, 0x9cf5c8, 0x2710, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    eng_prm_compare_league_table("eng_prm_create_table_577f70", this, 0x18, 0x9cf5c8, 0x2710, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_eng_first_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
-    cqi5_comparar("eng_first_create_table", this, 0x18, 0x9cf5c0, 0x11170, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
+    eng_prm_compare_league_table("eng_first_create_table", this, 0x18, 0x9cf5c0, 0x11170, || o(this))
 }

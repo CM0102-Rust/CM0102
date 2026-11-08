@@ -22,7 +22,7 @@ unsafe fn cpr8_pw(a: usize, v: u16) {
 
 /// O contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) e, pelo clube dele (registro de 0x245 bytes pelo +4; sem
 /// contrato, 0), o contrato da pessoa com esse clube (0x4cf5f0), que a rotina devolve.
-unsafe fn cpr8_contratos(pessoa: usize) -> usize {
+unsafe fn contract_with_current_club(pessoa: usize) -> usize {
     let de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = de(cpr8_d(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
@@ -32,7 +32,7 @@ unsafe fn cpr8_contratos(pessoa: usize) -> usize {
 }
 
 /// O estatuto do contrato com o clube (+0x3d); sem ele, −100 (0x9c).
-unsafe fn cpr8_estatuto(c2: usize) -> i8 {
+unsafe fn contract_status(c2: usize) -> i8 {
     if c2 == 0 {
         0x9cu8 as i8
     } else {
@@ -43,7 +43,7 @@ unsafe fn cpr8_estatuto(c2: usize) -> i8 {
 /// O limite de idade de quem não é jogador, pelo tipo do cargo (+0x3d; sem ele +0x28; sem os dois, como a original,
 /// o byte baixo do ponteiro da saída, que ela lê da vaga errada da pilha): 1, 2 e 4: 70 + sorteio(10); 8 e 9:
 /// 60 + sorteio(5); os outros: 61 + sorteio(5) com clube (+0x39) ou seleção (+0x24), senão 55 + sorteio(10). Byte.
-unsafe fn cpr8_limite_sem_jogador(pessoa: usize, saida: usize) -> i8 {
+unsafe fn non_player_age_limit(pessoa: usize, saida: usize) -> i8 {
     let mut t = cpr8_b(pessoa + 0x3d);
     if t == 0 {
         t = cpr8_b(pessoa + 0x28);
@@ -67,7 +67,7 @@ unsafe fn cpr8_limite_sem_jogador(pessoa: usize, saida: usize) -> i8 {
 
 /// O limite de idade do jogador pela ficha: 34 com +0xf ≥ 15; senão 30 com +0x15 ≥ 15; senão 31 com +0x14 < 15;
 /// senão 30 (bytes com sinal).
-unsafe fn cpr8_limite_do_jogador(j: usize) -> i8 {
+unsafe fn player_age_limit(j: usize) -> i8 {
     if cpr8_b(j + 0xf) >= 15 {
         0x22
     } else if cpr8_b(j + 0x15) >= 15 {
@@ -80,7 +80,7 @@ unsafe fn cpr8_limite_do_jogador(j: usize) -> i8 {
 }
 
 /// A saída de quem se aposenta: o motivo (+0x18), +0x19 = 0, o id (+0) e o id do clube (+4; −1 sem clube).
-unsafe fn cpr8_preencher(pessoa: usize, saida: usize, motivo: u8) {
+unsafe fn fill_retirement_entry(pessoa: usize, saida: usize, motivo: u8) {
     *((saida + 0x18) as *mut u8) = motivo;
     *((saida + 0x19) as *mut u8) = 0;
     core::ptr::write_unaligned(saida as *mut u32, cpr8_d(pessoa) as u32);
@@ -89,7 +89,7 @@ unsafe fn cpr8_preencher(pessoa: usize, saida: usize, motivo: u8) {
 }
 
 /// Amanhã (dia + 1, só a palavra) nas duas datas da saída (+8 e +0x10; ano em +0xa e +0x12).
-unsafe fn cpr8_amanha(saida: usize) {
+unsafe fn set_dates_tomorrow(saida: usize) {
     let (dia, ano) = (cpr8_u(0xae2c90).wrapping_add(1), cpr8_u(0xae2c92));
     cpr8_pw(saida + 8, dia);
     cpr8_pw(saida + 0xa, ano);
@@ -99,7 +99,7 @@ unsafe fn cpr8_amanha(saida: usize) {
 
 /// Sem nação-chave válida na aposentadoria pela idade: hoje + sorteio(20) nas duas datas; passando de 365, o dia
 /// sorteio(10) do ano seguinte.
-unsafe fn cpr8_fora_por_idade(saida: usize) {
+unsafe fn set_dates_no_key_nation(saida: usize) {
     let a = (sortear(20) as u32).wrapping_add(cpr8_d(0xae2c90) as u32) as u16;
     let ano = cpr8_u(0xae2c92);
     if a as i16 > 0x16d {
@@ -122,7 +122,7 @@ unsafe fn cpr8_fora_por_idade(saida: usize) {
 /// aposentadoria no fim de temporada da nação (+0x15 do registro de 72 bytes em 0xb63d60) + sorteio(30) (passando de
 /// 365, sorteio(30) do ano seguinte; com +0x1d, um ano a mais); a aposentadoria antes do anúncio fica no anúncio, e a
 /// menos de 45 dias dele (0x54cdb0) o anúncio vai para ela. Índice fora: `fora` (cada rotina tem a sua).
-unsafe fn cpr8_datas(pessoa: usize, saida: usize, fora: unsafe fn(usize)) {
+unsafe fn set_retirement_dates(pessoa: usize, saida: usize, fora: unsafe fn(usize)) {
     let clube = cpr8_d(pessoa + 0x39);
     let k = if clube != 0 {
         let pelo_clube: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x669360usize);
@@ -130,7 +130,7 @@ unsafe fn cpr8_datas(pessoa: usize, saida: usize, fora: unsafe fn(usize)) {
     } else {
         let nacao = cpr8_d(pessoa + 0x1a);
         if nacao == 0 {
-            return cpr8_amanha(saida);
+            return set_dates_tomorrow(saida);
         }
         let pela_nacao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x669340usize);
         pela_nacao(nacao) as u8 as i8
@@ -170,34 +170,34 @@ unsafe fn cpr8_datas(pessoa: usize, saida: usize, fora: unsafe fn(usize)) {
 
 /// { 0x7a79c0 } (thiscall sem ler o this, ret 8, player_regen.cpp): `player_regen_check_initial_retirement(pessoa,
 /// saida)`: no jogo novo (pela 0x7a58f0), a pessoa com clube (+0x39) se aposenta nesta temporada? O contrato
-/// (cpr8_contratos) e o estatuto (cpr8_estatuto). Sem ficha de jogador (+0x61): sem ficha de técnico (+0x69) sempre;
-/// com ela, passando do limite (cpr8_limite_sem_jogador); motivo 0x20. Jogador: passando do limite da ficha
-/// (cpr8_limite_do_jogador), v = ⌊⌊1 − (idade − limite) × 0,1⌋ × habilidade (+0xb)⌋ (16 bits); acima de 45 anos,
+/// (contract_with_current_club) e o estatuto (contract_status). Sem ficha de jogador (+0x61): sem ficha de técnico (+0x69) sempre;
+/// com ela, passando do limite (non_player_age_limit); motivo 0x20. Jogador: passando do limite da ficha
+/// (player_age_limit), v = ⌊⌊1 − (idade − limite) × 0,1⌋ × habilidade (+0xb)⌋ (16 bits); acima de 45 anos,
 /// motivo 1. Clube sem competição (+0x57; sem clube, nação sem +0x11c): sorteio(3) ≠ 0 aposenta, senão só estatuto
 /// negativo com clube. Senão: v ≥ 5000 ou +5 > 80, não; +5 < 10 ou v < 1500, sim; com clube, só estatuto negativo;
-/// sem clube, motivo 2 com sorteio(25 × +0x3c) = 0. Quem se aposenta: a saída (cpr8_preencher) e as datas
-/// (cpr8_datas; sem nação-chave válida, amanhã); devolve 1.
+/// sem clube, motivo 2 com sorteio(25 × +0x3c) = 0. Quem se aposenta: a saída (fill_retirement_entry) e as datas
+/// (set_retirement_dates; sem nação-chave válida, amanhã); devolve 1.
 unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, pessoa: usize, saida: usize) -> u8 {
     if cpr8_d(pessoa + 0x39) == 0 {
         return 0;
     }
-    let c2 = cpr8_contratos(pessoa);
-    let estatuto = cpr8_estatuto(c2);
+    let c2 = contract_with_current_club(pessoa);
+    let estatuto = contract_status(c2);
     let idade = cpr8_b(pessoa + 0x18);
     let j = cpr8_d(pessoa + 0x61);
     let motivo: u8 = 'm: {
         if j == 0 {
-            if cpr8_d(pessoa + 0x69) != 0 && idade <= cpr8_limite_sem_jogador(pessoa, saida) {
+            if cpr8_d(pessoa + 0x69) != 0 && idade <= non_player_age_limit(pessoa, saida) {
                 return 0;
             }
             break 'm 0x20;
         }
-        let lim = cpr8_limite_do_jogador(j);
+        let lim = player_age_limit(j);
         if idade <= lim {
             return 0;
         }
-        let f = ftol(f64_em(0x967890) - (idade as i32 - lim as i32) as f64 * f64_em(0x967880)) as i16;
-        let v = ftol(f as f64 * cpr8_w(j + 0xb) as f64) as i16;
+        let f = match_pl_ftol(read_f64_at(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64_at(0x967880)) as i16;
+        let v = match_pl_ftol(f as f64 * cpr8_w(j + 0xb) as f64) as i16;
         if idade > 0x2d {
             break 'm 1;
         }
@@ -239,8 +239,8 @@ unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, 
         }
         2
     };
-    cpr8_preencher(pessoa, saida, motivo);
-    cpr8_datas(pessoa, saida, cpr8_amanha);
+    fill_retirement_entry(pessoa, saida, motivo);
+    set_retirement_dates(pessoa, saida, set_dates_tomorrow);
     1
 }
 
@@ -256,20 +256,20 @@ unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, 
 /// ([[0xadadfc] + id × 4] = 0, ou sem +0x57; sem clube, nação sem +0x11c): sorteio(3) = 0 aposenta; com clube e
 /// estatuto negativo também; senão só com v < 3500. Senão como na 0x7a79c0 (+5 > 100 não; +5 < 10 ou v < 1500 sim;
 /// com clube só estatuto negativo; sem clube motivo 2 com sorteio(25 × +0x3c) = 0). Quem se aposenta: a saída e as
-/// datas (sem nação-chave válida, cpr8_fora_por_idade); devolve 1.
+/// datas (sem nação-chave válida, set_dates_no_key_nation); devolve 1.
 unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: usize, saida: usize) -> u8 {
-    let c2 = cpr8_contratos(pessoa);
-    let estatuto = cpr8_estatuto(c2);
+    let c2 = contract_with_current_club(pessoa);
+    let estatuto = contract_status(c2);
     let idade = cpr8_b(pessoa + 0x18);
     let j = cpr8_d(pessoa + 0x61);
     let motivo: u8 = 'm: {
         if j == 0 {
-            if cpr8_d(pessoa + 0x69) != 0 && idade <= cpr8_limite_sem_jogador(pessoa, saida) {
+            if cpr8_d(pessoa + 0x69) != 0 && idade <= non_player_age_limit(pessoa, saida) {
                 return 0;
             }
             break 'm 0x20;
         }
-        let mut lim = cpr8_limite_do_jogador(j);
+        let mut lim = player_age_limit(j);
         if idade <= lim {
             return 0;
         }
@@ -291,7 +291,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
                 }
             }
         }
-        let v = ftol((f64_em(0x967890) - (idade as i32 - lim as i32) as f64 * f64_em(0x96a730)) * cpr8_w(j + 0xb) as f64) as i16;
+        let v = match_pl_ftol((read_f64_at(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64_at(0x96a730)) * cpr8_w(j + 0xb) as f64) as i16;
         if idade > 0x2d {
             break 'm 1;
         }
@@ -316,7 +316,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
                 }
                 if cpr8_b(pessoa + 0x57) as i32 > sortear(20) {
                     let (cur, pot) = (cpr8_w(j + 5) as f64, cpr8_w(j + 7) as f64);
-                    if !(pot * f64_em(0x969520) <= cur) {
+                    if !(pot * read_f64_at(0x969520) <= cur) {
                         break 'm 1;
                     }
                 }
@@ -364,8 +364,8 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
         }
         2
     };
-    cpr8_preencher(pessoa, saida, motivo);
-    cpr8_datas(pessoa, saida, cpr8_fora_por_idade);
+    fill_retirement_entry(pessoa, saida, motivo);
+    set_retirement_dates(pessoa, saida, set_dates_no_key_nation);
     1
 }
 
@@ -405,7 +405,7 @@ unsafe extern "thiscall" fn build_initial_retirement_list(this: usize) {
 }
 
 /// As regiões que as duas decisões mudam: o sorteio, [0xae1080], a saída e a data estática da 0x54cdb0.
-unsafe fn cpr8_regioes(saida: usize) -> Vec<(usize, usize)> {
+unsafe fn retirement_decision_regions(saida: usize) -> Vec<(usize, usize)> {
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend_from_slice(&[(0xae1080, 4), (saida, 0x1a), (0xae2470, 8), (0xae2418, 1)]);
     reg
@@ -413,8 +413,8 @@ unsafe fn cpr8_regioes(saida: usize) -> Vec<(usize, usize)> {
 
 /// Comparador: lado a lado pelo sorteio, [0xae1080], a saída e a data estática (a cópia sem contar), e a devolução.
 unsafe extern "thiscall" fn comparar_player_regen_check_initial_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&cpr8_regioes(saida), || o(this, pessoa, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&retirement_decision_regions(saida), || o(this, pessoa, saida),
         || crate::aleatorio::sem_contar(|| player_regen_check_initial_retirement(this, pessoa, saida)));
     PLACAR.registrar(igual && r == n, || format!("player_regen_check_initial_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
@@ -422,8 +422,8 @@ unsafe extern "thiscall" fn comparar_player_regen_check_initial_retirement(this:
 
 /// Comparador: como o da 0x7a79c0.
 unsafe extern "thiscall" fn comparar_player_regen_check_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&cpr8_regioes(saida), || o(this, pessoa, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&retirement_decision_regions(saida), || o(this, pessoa, saida),
         || crate::aleatorio::sem_contar(|| player_regen_check_retirement(this, pessoa, saida)));
     PLACAR.registrar(igual && r == n, || format!("player_regen_check_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
@@ -432,5 +432,5 @@ unsafe extern "thiscall" fn comparar_player_regen_check_retirement(this: usize, 
 // ponytail: a lista inicial acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo
 // Rust e a carreira provam a cópia.
 unsafe extern "thiscall" fn comparar_build_initial_retirement_list(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

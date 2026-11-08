@@ -9,6 +9,6 @@ MUTACOES = [
     ('cpp_cargo_pessoa_nula', '        return 0; // pessoa nula',
      '        return 1; // mutacao: a pessoa nula pode',
      'cpp_4 pessoa nula'),
-    ('cpp_queda_sem_arredondar', '    Some(ftol(d / y + f64_em(0x968968)) as u8 as i8)',
-     '    Some(ftol(d / y) as u8 as i8) // mutacao: sem o arredondamento'),
+    ('cpp_queda_sem_arredondar', '    Some(match_pl_ftol(d / y + read_f64_at(0x968968)) as u8 as i8)',
+     '    Some(match_pl_ftol(d / y) as u8 as i8) // mutacao: sem o arredondamento'),
 ]

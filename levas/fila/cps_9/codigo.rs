@@ -16,14 +16,14 @@ unsafe fn cps9_i(a: usize) -> i32 {
 /// liberada (0x9452ca, também quando nula). Quente (cada jogador de cada partida): sem contador.
 unsafe extern "stdcall" fn player_stats_get_career_goals(pessoa: usize) -> u16 {
     if pessoa == 0 {
-        aviso_em(0xa78310, 0xb4b);
+        show_error_at(0xa78310, 0xb4b);
         return 0;
     }
     if cps9_i(pessoa) >= cps9_i(0xae2364) {
         return 0;
     }
     if cps9_d(pessoa + 0x61) == 0 {
-        aviso_em(0xa78310, 0xb5d);
+        show_error_at(0xa78310, 0xb5d);
         return 0;
     }
     let montar: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(0x7c3e40usize);
@@ -44,7 +44,7 @@ unsafe extern "stdcall" fn player_stats_get_career_goals(pessoa: usize) -> u16 {
 
 /// Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(pessoa: usize) -> u16 {
-    let o = orig::<unsafe extern "stdcall" fn(usize) -> u16>(%%I0%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(%%I0%%);
     if pessoa == 0 || (cps9_i(pessoa) < cps9_i(0xae2364) && cps9_d(pessoa + 0x61) == 0) {
         return o(pessoa);
     }
@@ -61,31 +61,31 @@ unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(pessoa: usize)
 /// é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
 unsafe extern "thiscall" fn add_loan_records(this: usize, pessoa: usize, de: usize, clube: usize) {
     crate::comparacao::ramo("cps_9 emprestimo");
-    let mut e = cpq4_entrada();
+    let mut e = history_entry();
     if clube != 0 && cps9_d(clube + 0xcf) != 0 {
         let tecnico = cps9_d(clube + 0xcf);
-        cpq4_datar(e.as_mut_ptr());
+        stamp_game_date(e.as_mut_ptr());
         e[0xc] = 0x69;
-        cpq4_por(&mut e, 8, cps9_i(clube));
-        cpq4_quem(&mut e, 0xd, pessoa);
-        cpq4_por(&mut e, 0x1d, cps9_i(de));
-        cpq4_historico(true, this, cps9_d(tecnico), &e);
+        put_i32(&mut e, 8, cps9_i(clube));
+        put_person_keys(&mut e, 0xd, pessoa);
+        put_i32(&mut e, 0x1d, cps9_i(de));
+        append_person_history_by_id(true, this, cps9_d(tecnico), &e);
     }
-    cpq4_datar(e.as_mut_ptr());
+    stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x6a;
-    cpq4_por(&mut e, 8, cps9_i(clube));
-    cpq4_por(&mut e, 0xd, cps9_i(de));
+    put_i32(&mut e, 8, cps9_i(clube));
+    put_i32(&mut e, 0xd, cps9_i(de));
     if pessoa != 0 {
-        cpq4_historico(true, this, cps9_d(pessoa), &e);
+        append_person_history_by_id(true, this, cps9_d(pessoa), &e);
     } else {
-        aviso_em(0xa83b78, 0x1010);
+        show_error_at(0xa83b78, 0x1010);
     }
 }
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_add_loan_records(this: usize, pessoa: usize, de: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%)(this, pessoa, de, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%)(this, pessoa, de, clube)
 }
 
 /// { 0x632040 } (cdecl, injury.cpp): `injury_compare_entry_dates(chave, item)`, a ordem do bsearch (0x946464) da fila
@@ -105,7 +105,7 @@ unsafe extern "C" fn injury_compare_entry_dates(chave: usize, item: usize) -> i3
 }
 
 unsafe extern "C" fn comparar_injury_compare_entry_dates(chave: usize, item: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(chave, item);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(chave, item);
     let n = injury_compare_entry_dates(chave, item);
     PLACAR.registrar(r == n, || format!("injury_compare_entry_dates(chave {:x}, item {:x}) original={} rust={}", chave, item, r, n));
     r

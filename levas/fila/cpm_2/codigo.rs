@@ -21,7 +21,7 @@ unsafe fn cpm2_b(a: usize) -> u8 {
 const CPM2_LINHA: usize = 0x3b;
 
 /// A regra 4 (confrontos diretos) entre as 4 regras de desempate (+0xc5, até a primeira 0).
-unsafe fn cpm2_regra_dos_confrontos(this: usize) -> bool {
+unsafe fn uses_head_to_head_rule(this: usize) -> bool {
     for k in 0..4 {
         match cpm2_b(this + 0xc5 + k) {
             0 => return false,
@@ -46,7 +46,7 @@ unsafe extern "thiscall" fn init_table_row(this: usize, i: u32, clube: usize, ma
     }
     if cpm2_w(this + 0xa7) == -1 && cpm2_w(this + 0x3e) > 0 {
         if cpm2_w(this + 0x3e) > 0x32 {
-            aviso_em(0x9f15f4, 0xfe9); // mais de 50 clubes: a caixa, e segue
+            show_error_at(0x9f15f4, 0xfe9); // mais de 50 clubes: a caixa, e segue
         }
         let total = (cpm2_w(this + 0x3e) - 1).wrapping_mul(cpm2_w(this + 0x3c));
         core::ptr::write_unaligned((this + 0xa7) as *mut i16, total);
@@ -71,13 +71,13 @@ unsafe extern "thiscall" fn init_table_row(this: usize, i: u32, clube: usize, ma
         let p = alocar(cpm2_w(this + 0xa7) as i32 as u32);
         cpm2_por(l + 9, p);
         if p == 0 {
-            aviso_em(0x9f15f4, 0x100c);
+            show_error_at(0x9f15f4, 0x100c);
             return;
         }
     } else {
         cpm2_por(l + 9, 0);
     }
-    if cpm2_regra_dos_confrontos(this) {
+    if uses_head_to_head_rule(this) {
         let n = cpm2_w(this + 0x3e) as i32;
         cpm2_por(l + 5, alocar((n * 14 - 14) as u32));
         // os confrontos zerados (+4..+0xd de cada um; a original grava o +4 duas vezes, sem conferir a memória)
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn league_get_club_array(this: usize, saida: *mut usize
     let p = alocar((cpm2_w(this + 0x3e) as i32 * 4) as u32);
     *saida = p;
     if p == 0 {
-        aviso_em(0x9f15f4, 0x10cc);
+        show_error_at(0x9f15f4, 0x10cc);
         *n = 0;
         return;
     }
@@ -149,14 +149,14 @@ unsafe extern "thiscall" fn record_final_positions(this: usize) {
 /// total de rodadas, a situação do clube, os campos, os blocos zerados, os vetores presentes e, na última linha, os
 /// adversários de cada linha).
 unsafe extern "thiscall" fn comparar_init_table_row(this: usize, i: u32, clube: usize, marca: u32, linhas: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32, usize)>(%%I0%%);
     let a7 = cpm2_w(this + 0xa7);
     let n = cpm2_w(this + 0x3e);
     let a7_esperado = if a7 == -1 && n > 0 { (n - 1).wrapping_mul(cpm2_w(this + 0x3c)) } else { a7 };
     let situacao = if clube != 0 { cpm2_b(clube + 0x64) } else { 0 };
     let situacao_esperada = if situacao == 3 { 2 } else { situacao };
     let tab = if linhas == 0 { cpm2_d(this + 0xb1) } else { linhas };
-    let confrontos = cpm2_regra_dos_confrontos(this);
+    let confrontos = uses_head_to_head_rule(this);
     o(this, i, clube, marca, linhas);
     let idx = i as u8 as i8 as isize;
     let l = tab.wrapping_add((idx * CPM2_LINHA as isize) as usize);
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn comparar_init_table_row(this: usize, i: u32, clube: 
 
 /// Comparador: a original aloca o vetor: roda só ela e confere a conta e os clubes, na ordem da tabela.
 unsafe extern "thiscall" fn comparar_league_get_club_array(this: usize, saida: *mut usize, n: *mut i16) {
-    orig::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(%%I1%%)(this, saida, n);
+    original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(%%I1%%)(this, saida, n);
     let p = *saida;
     if p == 0 {
         return; // sem memória: a caixa já saiu
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn comparar_league_get_club_array(this: usize, saida: *
 
 /// Comparador: lado a lado pela divisão da última temporada e pela posição (+0x5b..+0x5f) de cada clube da tabela.
 unsafe extern "thiscall" fn comparar_record_final_positions(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let reg: Vec<(usize, usize)> = (0..cpm2_w(this + 0x3e).max(0) as usize)
         .map(|i| (cpm2_d(cpm2_d(this + 0xb1) + i * CPM2_LINHA) + 0x5b, 5))
         .collect();

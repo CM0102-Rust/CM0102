@@ -9,7 +9,7 @@ unsafe fn cqn7_w(a: usize) -> i16 {
 }
 
 /// O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
-unsafe fn cqn7_clube(liga: usize, l: usize) -> usize {
+unsafe fn bra_reg_bahia_table_row_club(liga: usize, l: usize) -> usize {
     cqn7_d(cqn7_d(liga + 0xb1) + l * 0x3b)
 }
 
@@ -24,7 +24,7 @@ unsafe fn cqn7_clube(liga: usize, l: usize) -> usize {
 /// primeira vaga de fases ([+0xc]). Sem fase: a caixa `linha_sem_fase` e volta (sem liberar). Com ela:
 /// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela de rodadas e a lista liberadas (free 0x9452ca,
 /// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
-unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
+unsafe fn bra_reg_bahia_build_knockout_from_table(this: usize, linhas: &[usize], sementes: &[u8], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
     let n = linhas.len();
     // as sementes: a original grava os bytes na pilha antes de alocar (iguais às linhas, mas constantes à parte)
     let mut s = [0u8; 8];
@@ -32,10 +32,10 @@ unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let lista = alocar((n * 4) as u32);
     if lista == 0 {
-        return aviso_em(arquivo, linha_sem_lista);
+        return show_error_at(arquivo, linha_sem_lista);
     }
     for (k, &l) in linhas.iter().enumerate() {
-        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn7_clube(this, l));
+        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
     }
     crate::comparacao::ramo(ramo);
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqn7_d(cqn7_d(this) + 0x3c));
@@ -56,7 +56,7 @@ unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
     core::ptr::write_unaligned(cqn7_d(this + 0xc) as *mut usize, fase);
     let fase = cqn7_d(cqn7_d(this + 0xc));
     if fase == 0 {
-        return aviso_em(arquivo, linha_sem_fase);
+        return show_error_at(arquivo, linha_sem_fase);
     }
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
     montar(fase, 0);
@@ -69,27 +69,27 @@ unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
 /// { 0x430050 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98acac, linhas 0x21b (sem lista) e 0x22f (sem fase).
 unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage(this: usize) {
-    cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98acac, 0x21b, 0x22f, "cqn_7 baiano"); // cqn7: 1º × 4º, 2º × 3º Baiano
+    bra_reg_bahia_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98acac, 0x21b, 0x22f, "cqn_7 baiano"); // cqn7: 1º × 4º, 2º × 3º Baiano
 }
 
 /// { 0x4360c0 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98af14, linhas 0x21b (sem lista) e 0x22f (sem fase).
 unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage_4360c0(this: usize) {
-    cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af14, 0x21b, 0x22f, "cqn_7 norte"); // cqn7: 1º × 4º, 2º × 3º Norte
+    bra_reg_bahia_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af14, 0x21b, 0x22f, "cqn_7 norte"); // cqn7: 1º × 4º, 2º × 3º Norte
 }
 
 /// { 0x4370d0 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98af54, linhas 0x20d (sem lista) e 0x221 (sem fase).
 unsafe extern "thiscall" fn bra_reg_northeast_create_semi_final_stage(this: usize) {
-    cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af54, 0x20d, 0x221, "cqn_7 nordeste"); // cqn7: 1º × 4º, 2º × 3º Nordeste
+    bra_reg_bahia_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af54, 0x20d, 0x221, "cqn_7 nordeste"); // cqn7: 1º × 4º, 2º × 3º Nordeste
 }
 
 /// O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
 /// plano, feito antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = n, +4 = o +4 da
 /// liga e os n primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como conjunto: o sorteio da rodada
 /// 0x51c800 pode reordenar as chaves), e +0x30 = 0.
-unsafe fn cqn7_comparar(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
-    let mut plano: Vec<usize> = linhas.iter().map(|&l| cqn7_clube(this, l)).collect();
+unsafe fn bra_reg_bahia_compare_knockout_from_table(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
+    let mut plano: Vec<usize> = linhas.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
     original();
     let fase = cqn7_d(cqn7_d(this + 0xc));
     if fase == 0 {
@@ -106,16 +106,16 @@ unsafe fn cqn7_comparar(nome: &str, this: usize, linhas: &[usize], original: imp
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqn7_comparar("bra_reg_bahia_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    bra_reg_bahia_compare_knockout_from_table("bra_reg_bahia_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_stage_4360c0(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqn7_comparar("bra_reg_bahia_create_semi_final_stage_4360c0", this, &[0, 3, 1, 2], || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    bra_reg_bahia_compare_knockout_from_table("bra_reg_bahia_create_semi_final_stage_4360c0", this, &[0, 3, 1, 2], || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_semi_final_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqn7_comparar("bra_reg_northeast_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    bra_reg_bahia_compare_knockout_from_table("bra_reg_northeast_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }

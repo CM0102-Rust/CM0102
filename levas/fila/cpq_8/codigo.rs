@@ -19,7 +19,7 @@ unsafe fn cpq8_pessoa(id: usize) -> usize {
 }
 
 /// O contrato da pessoa da oferta (+0xc; 0x4cf5a0 com o gerente [0xae1050]), guardado em [0xae1080].
-unsafe fn cpq8_contrato(oferta: usize) -> usize {
+unsafe fn offer_target_contract(oferta: usize) -> usize {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contract_of(cpq8_d(0xae1050), cpq8_pessoa(cpq8_d(oferta + 0xc)));
     *(0xae1080 as *mut usize) = c;
@@ -27,8 +27,8 @@ unsafe fn cpq8_contrato(oferta: usize) -> usize {
 }
 
 /// O clube do contrato da pessoa da oferta; contrato de tipo 5 (+0x35 & 0x3f) não conta.
-unsafe fn cpq8_vendedor(oferta: usize) -> usize {
-    let c = cpq8_contrato(oferta);
+unsafe fn offer_target_seller_club(oferta: usize) -> usize {
+    let c = offer_target_contract(oferta);
     if c != 0 && cpq8_b(c + 0x35) & 0x3f != 5 {
         cpq8_clube(cpq8_d(c + 4))
     } else {
@@ -37,12 +37,12 @@ unsafe fn cpq8_vendedor(oferta: usize) -> usize {
 }
 
 /// Recomeça o cursor da LLIST (+0xa = +2, o primeiro nó).
-unsafe fn cpq8_recomecar(lista: usize) {
+unsafe fn llist_restart(lista: usize) {
     core::ptr::write_unaligned((lista + 0xa) as *mut usize, cpq8_d(lista + 2));
 }
 
 /// O estado da oferta (+0x2c) que deixa a marca 1 da pessoa sair: 2, 3, 0x14, 0x10, 4 e 0xf com +0x2e ≥ 3.
-unsafe fn cpq8_estado_encerrado(oferta: usize) -> bool {
+unsafe fn is_offer_state_closed(oferta: usize) -> bool {
     match cpq8_b(oferta + 0x2c) {
         2 | 3 | 0x14 | 0x10 | 4 => true,
         0xf => cpq8_b(oferta + 0x2e) >= 3,
@@ -55,7 +55,7 @@ unsafe fn cpq8_estado_encerrado(oferta: usize) -> bool {
 /// com `tirar_futura`, tira a transferência futura (0x8cbf70). Põe o estado 0x10, fecha as propostas (0x8c6db0), solta
 /// os lances do comprador (+8) pela pessoa e do vendedor (clube do contrato, guardado em [0xae1080]) pelos da troca
 /// (0x84aeb0), posta a notícia (0x8de790 com o clube e o motivo) e agenda a oferta (0x8c6220 com 0x14). Encerrada a
-/// oferta e todas as da lista +0 (estados de `cpq8_estado_encerrado`), tira a marca 1 da pessoa. Atualiza a lista do
+/// oferta e todas as da lista +0 (estados de `is_offer_state_closed`), tira a marca 1 da pessoa. Atualiza a lista do
 /// comprador (0x849ce0 e 0x843e10 com 1), tira a oferta de contrato (0x4cca70), zera +0x10 e solta os contratos da troca
 /// (0x4ccb30 com a vaga +0x20; +4 do item = 0).
 unsafe extern "thiscall" fn collapse_offer(this: usize, oferta: usize, clube: usize, motivo: u32, tirar_futura: u32) {
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn collapse_offer(this: usize, oferta: usize, clube: us
     if cpq8_b(oferta + 0x2c) == 0x13 {
         *marca(cpq8_d(oferta + 0xc)) &= 0xef;
         if cpq8_d(oferta + 4) != 0 {
-            cpq8_recomecar(cpq8_d(oferta + 4));
+            llist_restart(cpq8_d(oferta + 4));
             loop {
                 let it = proximo(cpq8_d(oferta + 4));
                 if it == 0 {
@@ -84,11 +84,11 @@ unsafe extern "thiscall" fn collapse_offer(this: usize, oferta: usize, clube: us
     let fechar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c6db0usize);
     fechar(this, oferta);
     let pessoa = cpq8_pessoa(cpq8_d(oferta + 0xc));
-    let c = cpq8_contrato(oferta);
+    let c = offer_target_contract(oferta);
     let vendedor = if c != 0 { cpq8_clube(cpq8_d(c + 4)) } else { 0 };
     desmarcar(cpq8_d(this + 0x856), cpq8_clube(cpq8_d(oferta + 8)), pessoa);
     if cpq8_d(oferta + 4) != 0 {
-        cpq8_recomecar(cpq8_d(oferta + 4));
+        llist_restart(cpq8_d(oferta + 4));
         loop {
             let it = proximo(cpq8_d(oferta + 4));
             if it == 0 {
@@ -101,16 +101,16 @@ unsafe extern "thiscall" fn collapse_offer(this: usize, oferta: usize, clube: us
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
     noticia(this, oferta, clube, motivo);
     agendar(this, oferta, 0x14, 0);
-    if cpq8_estado_encerrado(oferta) {
+    if is_offer_state_closed(oferta) {
         let mut todas = true;
         if cpq8_d(oferta) != 0 {
-            cpq8_recomecar(cpq8_d(oferta));
+            llist_restart(cpq8_d(oferta));
             loop {
                 let it = proximo(cpq8_d(oferta));
                 if it == 0 {
                     break;
                 }
-                if !cpq8_estado_encerrado(cpq8_d(cpq8_d(this) + cpq8_d(it) * 4)) {
+                if !is_offer_state_closed(cpq8_d(cpq8_d(this) + cpq8_d(it) * 4)) {
                     todas = false;
                     break;
                 }
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn collapse_offer(this: usize, oferta: usize, clube: us
     *((oferta + 0x10) as *mut u8) = 0;
     if cpq8_d(oferta + 4) != 0 {
         let soltar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4ccb30usize);
-        cpq8_recomecar(cpq8_d(oferta + 4));
+        llist_restart(cpq8_d(oferta + 4));
         loop {
             let it = proximo(cpq8_d(oferta + 4));
             if it == 0 {
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn collapse_offer(this: usize, oferta: usize, clube: us
 /// fim, a porcentagem do salário e as duas cláusulas); acrescenta a oferta (0x8be300 com o contrato) e a oferta de
 /// contrato (0x4cc490 com a vaga +0x20 e o valor +0x24 da oferta, 0xb, 0, 1, 0). Destrói a oferta local (0x8e5710) e
 /// devolve a vaga (+0x20).
-unsafe extern "thiscall" fn make_loan_offer(this: usize, jogador: usize, clube: usize, fim: usize, percentual: u32, a5: u32, a6: u32) -> u32 {
+unsafe extern "thiscall" fn make_loan_offer(this: usize, jogador: usize, clube: usize, fim: usize, write_percent_pair: u32, a5: u32, a6: u32) -> u32 {
     let construir: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x8e5680usize);
     let emprestimo: unsafe extern "thiscall" fn(*mut u8, usize, usize) = core::mem::transmute(0x8e7810usize);
     let construir_contrato: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x85e410usize);
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn make_loan_offer(this: usize, jogador: usize, clube: 
     let mut c = [0u8; 0x50];
     construir_contrato(c.as_mut_ptr());
     crate::comparacao::ramo("cpq_8 oferta de emprestimo");
-    pelo_atual(c.as_mut_ptr(), jogador, clube, fim, percentual, a5, a6); // o salário pela porcentagem
+    pelo_atual(c.as_mut_ptr(), jogador, clube, fim, write_percent_pair, a5, a6); // o salário pela porcentagem
     acrescentar(this, o.as_mut_ptr(), c.as_mut_ptr());
     acrescentar_contrato(cpq8_d(0xae1050), c.as_mut_ptr(), campo(&o, 0x20), campo(&o, 0x24), 0xb, 0, 1, 0);
     let vaga = campo(&o, 0x20);
@@ -200,17 +200,17 @@ unsafe extern "thiscall" fn process_due_future_transfers(this: usize) {
         }
         let oferta = cpq8_d(cpq8_d(this) + cpq8_d(e + 8) * 4);
         if oferta == 0 {
-            aviso_em(0xa8d514, 0x2846);
+            show_error_at(0xa8d514, 0x2846);
         } else if permissoes(this, oferta, 1) != 0 {
             let comprador = cpq8_clube(cpq8_d(oferta + 8));
             let mut segura = false;
             if restricoes(this, oferta, comprador, &mut motivo, 0) as u8 != 0 && motivo as u16 != 9 {
                 desfazer(this, oferta, comprador, motivo, 0);
                 segura = true;
-            } else if cpq8_vendedor(oferta) != 0 {
-                let v = cpq8_vendedor(oferta);
+            } else if offer_target_seller_club(oferta) != 0 {
+                let v = offer_target_seller_club(oferta);
                 if restricoes(this, oferta, v, &mut motivo, 0) as u8 != 0 && motivo as u16 != 9 {
-                    let v = cpq8_vendedor(oferta);
+                    let v = offer_target_seller_club(oferta);
                     desfazer(this, oferta, v, motivo, 0);
                     segura = true;
                 }
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn process_due_future_transfers(this: usize) {
         feitas += 1;
     }
     if feitas < 0 {
-        aviso_em(0xa8d514, 0x288a);
+        show_error_at(0xa8d514, 0x288a);
     }
     if feitas == 0 {
         return;
@@ -247,17 +247,17 @@ unsafe extern "thiscall" fn process_due_future_transfers(this: usize) {
 /// Comparador: muda o estado, as listas e as marcas, posta notícia e agenda: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
 unsafe extern "thiscall" fn comparar_collapse_offer(this: usize, oferta: usize, clube: usize, motivo: u32, tirar_futura: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I0%%)(this, oferta, clube, motivo, tirar_futura)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I0%%)(this, oferta, clube, motivo, tirar_futura)
 }
 
 /// Comparador: acrescenta a oferta e a oferta de contrato (alocam): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_make_loan_offer(this: usize, jogador: usize, clube: usize, fim: usize, percentual: u32, a5: u32, a6: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> u32>(%%I1%%)(this, jogador, clube, fim, percentual, a5, a6)
+unsafe extern "thiscall" fn comparar_make_loan_offer(this: usize, jogador: usize, clube: usize, fim: usize, write_percent_pair: u32, a5: u32, a6: u32) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> u32>(%%I1%%)(this, jogador, clube, fim, write_percent_pair, a5, a6)
 }
 
 /// Comparador: conclui e desfaz transferências (elencos, dinheiro, notícias): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
 unsafe extern "thiscall" fn comparar_process_due_future_transfers(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

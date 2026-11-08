@@ -10,7 +10,7 @@ unsafe fn cpq10_por(a: usize, v: usize) {
 
 /// A vaga da categoria `categoria` (1..6, byte com sinal) no índice do jogador: o registro de 39 bytes do id dele
 /// (+0) em [this+0x30], dword 4 × (categoria − 1). None sem jogador ou fora de 1..6.
-unsafe fn cpq10_vaga(this: usize, jogador: usize, categoria: u32) -> Option<usize> {
+unsafe fn category_slot(this: usize, jogador: usize, categoria: u32) -> Option<usize> {
     let k = (categoria as u8 as i8 as i32).wrapping_sub(1);
     if jogador == 0 || k as u32 > 5 {
         return None;
@@ -21,7 +21,7 @@ unsafe fn cpq10_vaga(this: usize, jogador: usize, categoria: u32) -> Option<usiz
 /// A caixa "Memory Allocation Error" de player_stats.cpp (0xa78310): "v%s %s.%s %d (%s)" (versão 0x90d130, nome e
 /// extensão, `linha`, `texto`) em 0xae24d0, o título traduzido (0x66f4e0) em 0xae28bc, o corpo (0x9a7ff8 com
 /// 0xae24d0) em 0xae26c4 e a caixa 0x5e8290. O jogo segue.
-unsafe fn cpq10_sem_memoria(linha: u32, texto: usize) {
+unsafe fn show_stats_memory_error(linha: u32, texto: usize) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -37,13 +37,13 @@ unsafe fn cpq10_sem_memoria(linha: u32, texto: usize) {
 }
 
 /// { 0x7c3920 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::get_category_record(jogador, categoria)`: o
-/// registro de 0x20 bytes ([this+4] + 32 × índice) da categoria do jogador (cpq10_vaga), ou 0 quando o índice é −1
+/// registro de 0x20 bytes ([this+4] + 32 × índice) da categoria do jogador (category_slot), ou 0 quando o índice é −1
 /// ou menor. Sem jogador ou fora de 1..6, a caixa "Error" e 0: a original. Pela PlayerStats::record_match 0x7c10e6 e
 /// pela PlayerStats::get_stat 0x7c1e30 (as médias do motor de partida). Quente: sem contador.
 unsafe extern "thiscall" fn get_category_record(this: usize, jogador: usize, categoria: u32) -> usize {
-    let vaga = match cpq10_vaga(this, jogador, categoria) {
+    let vaga = match category_slot(this, jogador, categoria) {
         Some(v) => v,
-        _ => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, jogador, categoria),
+        _ => return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, jogador, categoria),
     };
     let i = cpq10_d(vaga) as i32; // o índice da categoria
     if i <= -1 {
@@ -53,14 +53,14 @@ unsafe extern "thiscall" fn get_category_record(this: usize, jogador: usize, cat
 }
 
 /// { 0x7c5d80 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::create_stats(jogador, categoria)`: o registro da
-/// categoria do jogador (cpq10_vaga); sem índice (−1), com registros soltos ([this+0x38]), o primeiro registro de
+/// categoria do jogador (category_slot); sem índice (−1), com registros soltos ([this+0x38]), o primeiro registro de
 /// [this+4] (conta +0xc) com +0xe = 0xffff vira o dele (zerado; os soltos descem); senão um no fim (zerado; a conta
 /// sobe): cheio (capacidade +8), cresce de 100 em 100 (realloc 0x945667; sem memória, a caixa 0xef4 e 0). Sem
 /// jogador ou fora de 1..6, a caixa "Error" e 0: a original. Pela PlayerStats::record_match 0x7c10f9.
 unsafe extern "thiscall" fn create_stats(this: usize, jogador: usize, categoria: u32) -> usize {
-    let vaga = match cpq10_vaga(this, jogador, categoria) {
+    let vaga = match category_slot(this, jogador, categoria) {
         Some(v) => v,
-        _ => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%)(this, jogador, categoria),
+        _ => return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%)(this, jogador, categoria),
     };
     if cpq10_d(vaga) as i32 != -1 {
         return cpq10_d(this + 4).wrapping_add(cpq10_d(vaga) << 5);
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn create_stats(this: usize, jogador: usize, categoria:
         let p = realocar(cpq10_d(this + 4), cap << 5);
         cpq10_por(this + 4, p);
         if p == 0 {
-            cpq10_sem_memoria(0xef4, 0xa784fc); // "PLAYER_STATS::create_stats() : Unable to allocate enough memory"
+            show_stats_memory_error(0xef4, 0xa784fc); // "PLAYER_STATS::create_stats() : Unable to allocate enough memory"
             return 0;
         }
     }
@@ -123,8 +123,8 @@ unsafe extern "thiscall" fn is_retirement_pending(this: usize, pessoa: usize) ->
 
 /// Comparador: pelo valor (só lê); os casos de erro só na original.
 unsafe extern "thiscall" fn comparar_get_category_record(this: usize, jogador: usize, categoria: u32) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, jogador, categoria);
-    if cpq10_vaga(this, jogador, categoria).is_none() {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, jogador, categoria);
+    if category_slot(this, jogador, categoria).is_none() {
         return r;
     }
     let n = get_category_record(this, jogador, categoria);
@@ -136,8 +136,8 @@ unsafe extern "thiscall" fn comparar_get_category_record(this: usize, jogador: u
 /// conta e os soltos depois); depois, o registro devolvido, o índice na vaga, a conta, os soltos e o registro
 /// zerado quando é novo. ponytail: os casos de erro e a falta de memória só na original, sem conferir.
 unsafe extern "thiscall" fn comparar_create_stats(this: usize, jogador: usize, categoria: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%);
-    let vaga = match cpq10_vaga(this, jogador, categoria) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%);
+    let vaga = match category_slot(this, jogador, categoria) {
         Some(v) => v,
         _ => return o(this, jogador, categoria),
     };

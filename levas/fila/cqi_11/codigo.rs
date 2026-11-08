@@ -13,7 +13,7 @@ unsafe fn cqi11_b(a: usize) -> u8 {
 }
 
 /// O registro da competição `id` no banco ([0xae23d0] + 0x6b × id).
-unsafe fn cqi11_comp(id: usize) -> usize {
+unsafe fn club_comp_record(id: usize) -> usize {
     cqi11_d(0xae23d0).wrapping_add(id.wrapping_mul(0x6b))
 }
 
@@ -27,7 +27,7 @@ struct Cqi11Listas {
     n: [u32; 4],
 }
 
-unsafe fn cqi11_listas() -> Cqi11Listas {
+unsafe fn concacaf_club_lists() -> Cqi11Listas {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     // ponytail: as quatro listas começam zeradas na cópia (na original, sobra de pilha que só é lida quando falta clube;
     // o comparador manda esse caso para a original sozinha)
@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 8);
     let outro = cqi11_d(cqi11_d(0xadadfc).wrapping_add(cqi11_d(0x9cf728).wrapping_mul(4)));
-    let mut l = cqi11_listas();
+    let mut l = concacaf_club_lists();
     ordenar(l.mex.as_mut_ptr() as usize, l.n[0], 2);
     ordenar(l.centro.as_mut_ptr() as usize, l.n[1], 3); // cqi11: três centro-americanos
     ordenar(l.caribe.as_mut_ptr() as usize, l.n[2], 1);
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32
         pd(t(1), l.mls[1]);
     } else {
         crate::comparacao::ramo("cqi_11 campeao da mls");
-        let mls = cqi11_comp(cqi11_d(0x9cf590));
+        let mls = club_comp_record(cqi11_d(0x9cf590));
         pd(t(0), colocado(mls, 0));
         pd(t(1), colocado(cqi11_d(outro + 4), 0));
         if cqi11_d(t(0)) == cqi11_d(t(1)) { // cqi11: o campeão das duas dá a vaga ao vice da MLS
@@ -125,8 +125,8 @@ unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32
 /// embaralha; a cópia sem contar). Quando falta clube numa lista (menos de 2 mexicanos, 3 centro-americanos, 1
 /// caribenho, ou 2 da MLS sem o objeto [0x9cf728]) a original lê sobra de pilha: só a original.
 unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    let l = cqi11_listas();
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let l = concacaf_club_lists();
     let outro = cqi11_d(cqi11_d(0xadadfc).wrapping_add(cqi11_d(0x9cf728).wrapping_mul(4)));
     if l.n[0] < 2 || l.n[1] < 3 || l.n[2] < 1 || (outro == 0 && l.n[3] < 2) || cqi11_d(this + 0xa7) == 0 {
         return o(this); // ponytail: lista curta (a original lê sobra de pilha) ou sem tabela: só a original
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, hoje: usize, 
         let classificar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x4c11a0usize);
         if classificar(this) < 0 {
             // ponytail: a 0x4c11a0 sempre devolve 1; o caso de erro fica com a caixa e o 0 da original
-            aviso_em(0x9a7d30, 0x1ba);
+            show_error_at(0x9a7d30, 0x1ba);
             return 0;
         }
         crate::comparacao::ramo("cqi_11 dia da selecao");
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, hoje: usize, 
 // tabela vazia e fase ≠ 0, a copa sai com 8 times e o time 0 preenchido (a 0x4c11a0 tem o seu comparador); senão +0x3e
 // não muda.
 unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if cqi11_d(this + 0xa7) == 0 {
         return o(this, hoje, fase);
     }
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere o fundo de
 // prêmios (+0x28 = 2.000.000) e a devolução 1.
 unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     PLACAR.registrar(r == 1 && cqi11_d(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, cqi11_d(this + 0x28)));
     r
 }

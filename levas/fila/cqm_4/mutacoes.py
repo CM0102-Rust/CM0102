@@ -1,6 +1,6 @@
 # Mutacoes (cqm_4), nos construtores das divisoes italianas (a criacao da carreira de 8 ligas).
 # - a regra de disciplina das quatro trocada (0x11 -> 0): acusada em 2001-238 na prova do agente;
-# - sem as posicoes previstas na criacao (a expectativa da diretoria e a reputacao partem de outro lugar);
+# - sem as posicoes previstas na criacao (a expectativa da diretoria e a injury_word_0c partem de outro lugar);
 # - na Serie A e na Serie B, a marca do historico (+0x4c) comeca em 0 (acusada na prova do agente: o jogo cai em
 #   2002-131, no fim da temporada, ao gravar o historico duas vezes).
 # Escapou na prova do agente: "sem o calendario real de 2001/02" (a carreira derruba as quatro listas: metade dos nomes

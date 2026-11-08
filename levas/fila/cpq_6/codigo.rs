@@ -20,7 +20,7 @@ unsafe fn cpq6_pessoa(id: usize) -> usize {
 
 /// O clube do contrato da `pessoa` (0x4cf5a0 com o gerente de contratos [0xae1050], guardado em [0xae1080]); contrato
 /// de tipo 5 (+0x35 & 0x3f) não conta.
-unsafe fn cpq6_vendedor(pessoa: usize) -> usize {
+unsafe fn seller_club_of_person(pessoa: usize) -> usize {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contract_of(cpq6_d(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
@@ -31,7 +31,7 @@ unsafe fn cpq6_vendedor(pessoa: usize) -> usize {
     }
 }
 
-unsafe fn cpq6_por_u32(r: &mut [u8; 13], k: usize, v: usize) {
+unsafe fn put_u32_le(r: &mut [u8; 13], k: usize, v: usize) {
     r[k..k + 4].copy_from_slice(&(v as u32).to_le_bytes());
 }
 
@@ -61,7 +61,7 @@ unsafe extern "stdcall" fn transfer_manager_calc_compensation_fee(pessoa: usize,
     let mut t = [0u32; 2];
     padrao(&mut data);
     if pessoa == 0 || comprador == 0 {
-        aviso_em(0xa8d514, 0x372e);
+        show_error_at(0xa8d514, 0x372e);
         return 0;
     }
     if cpq6_d(pessoa + 0x61) == 0 && cpq6_d(pessoa + 0x69) != 0 {
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn pay_fee_and_record_clauses(this: usize, oferta: usiz
         *m |= bit;
     };
     let comprador = cpq6_clube(cpq6_d(oferta + 8));
-    let vendedor = cpq6_vendedor(cpq6_pessoa(cpq6_d(oferta + 0xc)));
+    let vendedor = seller_club_of_person(cpq6_pessoa(cpq6_d(oferta + 0xc)));
     let fin_c = financas(tabela(), comprador);
     // ponytail: sem vendedor, a original leria as finanças de um lugar sem valor (e cairia adiante, em [vendedor]); a
     // cópia não paga ninguém
@@ -152,45 +152,45 @@ unsafe extern "thiscall" fn pay_fee_and_record_clauses(this: usize, oferta: usiz
     let n = cpq6_b(oferta + 0x40) as i8;
     if n > 0 {
         let parcela = cpq6_d(oferta + 0x1b) as i32 / n as i32;
-        cpq6_por_u32(&mut r, 0, parcela as usize);
-        cpq6_por_u32(&mut r, 4, cpq6_d(comprador));
-        cpq6_por_u32(&mut r, 8, cpq6_d(vendedor));
+        put_u32_le(&mut r, 0, parcela as usize);
+        put_u32_le(&mut r, 4, cpq6_d(comprador));
+        put_u32_le(&mut r, 8, cpq6_d(vendedor));
         r[12] = (n as u8).wrapping_sub(1);
         let fc = financas(tabela(), comprador);
         let fv = financas(tabela(), vendedor);
         if fc != 0 {
             let s = (fc + 0x1c) as *mut i32;
-            *s = (*s).wrapping_add(ftol(parcela as f64 * f64_em(0x970420)));
+            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970420)));
         }
         if fv != 0 {
             let s = (fv + 0x1c) as *mut i32;
-            *s = (*s).wrapping_add(ftol(parcela as f64 * f64_em(0x970418)));
+            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970418)));
         }
         por_na_lista(this + 0x872, r.as_ptr(), 0xd);
     }
     let p = cpq6_b(oferta + 0x3f);
     if (p as i8) > 0 {
         r[0] = p;
-        cpq6_por_u32(&mut r, 1, cpq6_d(comprador));
-        cpq6_por_u32(&mut r, 5, cpq6_d(vendedor));
-        cpq6_por_u32(&mut r, 9, cpq6_d(oferta + 0xc));
+        put_u32_le(&mut r, 1, cpq6_d(comprador));
+        put_u32_le(&mut r, 5, cpq6_d(vendedor));
+        put_u32_le(&mut r, 9, cpq6_d(oferta + 0xc));
         proxima_venda(this, r.as_ptr());
         marcar(8);
     }
     let v = cpq6_d(oferta + 0x35) as i32;
     if v > 0 {
-        cpq6_por_u32(&mut r, 0, cpq6_d(oferta + 0xc));
-        cpq6_por_u32(&mut r, 4, v as usize);
-        cpq6_por_u32(&mut r, 9, cpq6_d(vendedor));
+        put_u32_le(&mut r, 0, cpq6_d(oferta + 0xc));
+        put_u32_le(&mut r, 4, v as usize);
+        put_u32_le(&mut r, 9, cpq6_d(vendedor));
         r[8] = cpq6_b(oferta + 0x39);
         premio_time(this, r.as_ptr());
         marcar(2);
     }
     let v = cpq6_d(oferta + 0x3a) as i32;
     if v > 0 {
-        cpq6_por_u32(&mut r, 0, cpq6_d(oferta + 0xc));
-        cpq6_por_u32(&mut r, 4, v as usize);
-        cpq6_por_u32(&mut r, 9, cpq6_d(vendedor));
+        put_u32_le(&mut r, 0, cpq6_d(oferta + 0xc));
+        put_u32_le(&mut r, 4, v as usize);
+        put_u32_le(&mut r, 9, cpq6_d(vendedor));
         r[8] = cpq6_b(oferta + 0x3e);
         premio_selecao(this, r.as_ptr());
         marcar(4);
@@ -213,7 +213,7 @@ unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(oferta: usi
     let ponderado: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x8e7b50usize);
     let comprador = cpq6_clube(cpq6_d(oferta + 8));
     let pessoa = cpq6_pessoa(cpq6_d(oferta + 0xc));
-    let vendedor = cpq6_vendedor(pessoa);
+    let vendedor = seller_club_of_person(pessoa);
     if vendedor == 0 {
         return 1;
     }
@@ -241,7 +241,7 @@ unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(oferta: usi
     }
     if estrito != 0 {
         let w2 = ponderado(oferta, 0, 0, 1, 0, 1);
-        if !((pedido as f64) < w2 as f64 * f64_em(0x968de8)) {
+        if !((pedido as f64) < w2 as f64 * read_f64_at(0x968de8)) {
             return 0;
         }
     }
@@ -253,7 +253,7 @@ unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(oferta: usi
 
 /// Comparador: pelo valor (lado a lado pelas estáticas das datas; o valor do jogador 0x4d0c60 e a idade só calculam).
 unsafe extern "stdcall" fn comparar_transfer_manager_calc_compensation_fee(pessoa: usize, comprador: usize, sem_regras_novas: u32) -> i32 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize, u32) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> i32>(%%I0%%);
     let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&CPQ6_ESTATICAS, || o(pessoa, comprador, sem_regras_novas), || transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas));
     PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_calc_compensation_fee(pessoa {:x}) {} x {}, estáticas iguais {}", if pessoa != 0 { cpq6_d(pessoa) } else { 0 }, ro, rr, igual));
     ro
@@ -262,12 +262,12 @@ unsafe extern "stdcall" fn comparar_transfer_manager_calc_compensation_fee(pesso
 /// Comparador: paga, acrescenta nas listas (aloca) e marca: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
 unsafe extern "thiscall" fn comparar_pay_fee_and_record_clauses(this: usize, oferta: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, oferta)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, oferta)
 }
 
 /// Comparador: lado a lado pelo motivo e [0xae1080], e pelo valor devolvido (o preço e o valor ponderado só calculam).
 unsafe extern "stdcall" fn comparar_transfer_manager_selling_club_must_accept(oferta: usize, estrito: u32, motivo: *mut u16) -> u32 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, u32, *mut u16) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, u32, *mut u16) -> u32>(%%I2%%);
     let mut reg: Vec<(usize, usize)> = vec![(0xae1080, 4)];
     if !motivo.is_null() {
         reg.push((motivo as usize, 2));

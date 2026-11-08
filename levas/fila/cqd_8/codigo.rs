@@ -22,13 +22,13 @@ unsafe fn cqd8_sortear(n: i32) -> i32 {
 }
 
 /// A entrada de 6 bytes do treino do jogador: [this+0x651d] + 6 × id da ficha (+0x61).
-unsafe fn cqd8_entrada(this: usize, p: usize) -> usize {
+unsafe fn training_entry_of_staff(this: usize, p: usize) -> usize {
     cqd8_d(this + 0x651d).wrapping_add((cqd8_i(cqd8_d(p + 0x61)) as isize * 6) as usize)
 }
 
 /// O contrato da pessoa (CONTRACT_MANAGER 0x4cf5a0, thiscall no gerente [0xae1050]), guardado em [0xae1080] como a
 /// original faz a cada consulta.
-unsafe fn cqd8_contrato(p: usize) -> usize {
+unsafe fn training_manager_get_contract_stored(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cqd8_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
@@ -36,7 +36,7 @@ unsafe fn cqd8_contrato(p: usize) -> usize {
 }
 
 /// O clube do contrato (+4 o id; registros de 0x245 bytes em [0xae23b4]), ou 0 sem contrato.
-unsafe fn cqd8_clube(c: usize) -> usize {
+unsafe fn training_manager_club_of_contract(c: usize) -> usize {
     if c == 0 {
         0
     } else {
@@ -45,7 +45,7 @@ unsafe fn cqd8_clube(c: usize) -> usize {
 }
 
 /// O técnico humano é um dos 16 últimos ids de pessoa ([0xae2364] − 16 para cima).
-unsafe fn cqd8_humano(tec: usize) -> bool {
+unsafe fn is_human_manager_id(tec: usize) -> bool {
     cqd8_i(tec) >= cqd8_i(0xae2364).wrapping_sub(0x10)
 }
 
@@ -54,7 +54,7 @@ unsafe fn cqd8_humano(tec: usize) -> bool {
 unsafe fn cqd8_programa_do_humano(this: usize, tec: usize, vaga: i8) -> usize {
     let k = cqd8_i(0xae2364).wrapping_sub(cqd8_i(tec)).wrapping_sub(1);
     if !(0..0x10).contains(&k) {
-        aviso_em(0xa8ccd0, 0x68f);
+        show_error_at(0xa8ccd0, 0x68f);
         return 0;
     }
     let v = if (0..10).contains(&vaga) { vaga as i32 } else { 1 };
@@ -92,32 +92,32 @@ unsafe fn cqd8_meio_byte(e: usize, k: usize) -> i8 {
 /// tira-os da lista (o último no lugar) e reordena (qsort 0x945333 com 0x8b4e00).
 unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular: u32) {
     if p == 0 {
-        aviso_em(0xa8ccd0, 0x18a);
+        show_error_at(0xa8ccd0, 0x18a);
         return;
     }
     if cqd8_i(p) >= cqd8_i(0xae2364) {
         return;
     }
     if cqd8_d(p + 0x61) == 0 {
-        aviso_em(0xa8ccd0, 0x195);
+        show_error_at(0xa8ccd0, 0x195);
         return;
     }
     let mut d = [0i8; 8]; // o progresso das cinco categorias (a original zera um dword e um byte)
-    let e = cqd8_entrada(this, p);
+    let e = training_entry_of_staff(this, p);
     let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8b39f0usize);
     let prog = programa(this, p);
     if prog == 0 {
-        aviso_em(0xa8ccd0, 0x1a3);
+        show_error_at(0xa8ccd0, 0x1a3);
         return;
     }
     let gravar_carga: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x62c660usize);
     let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(0x8b4b20usize);
     let marca = (e + 5) as *mut u8;
     if *marca & 0x20 == 0 {
-        let c = cqd8_contrato(p);
-        if c != 0 && cqd8_clube(c) != 0 && cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf) != 0
-            && cqd8_humano(cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf)) {
-            let tec = cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf);
+        let c = training_manager_get_contract_stored(p);
+        if c != 0 && training_manager_club_of_contract(c) != 0 && cqd8_d(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf) != 0
+            && is_human_manager_id(cqd8_d(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf)) {
+            let tec = cqd8_d(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf);
             *marca |= 0x20;
             let (mut goleiro, mut geral) = (-1i8, -1i8);
             for k in 0..10i8 {
@@ -147,15 +147,15 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
         return;
     }
     if *marca & 0x20 != 0 {
-        let c = cqd8_contrato(p);
-        let ainda = c != 0 && cqd8_clube(c) != 0 && cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf) != 0
-            && cqd8_humano(cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf));
+        let c = training_manager_get_contract_stored(p);
+        let ainda = c != 0 && training_manager_club_of_contract(c) != 0 && cqd8_d(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf) != 0
+            && is_human_manager_id(cqd8_d(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf));
         if !ainda {
             crate::comparacao::ramo("cqd_8 saiu do clube humano");
             *marca &= 0xdf;
             gravar_carga(cqd8_d(0xb63d28), p, 0x32);
             let f = cqd8_d(p + 0x61);
-            *(cqd8_entrada(this, p) as *mut u8) = if cqd8_b(f + 0xf) >= 0xf { 6 } else { 1 };
+            *(training_entry_of_staff(this, p) as *mut u8) = if cqd8_b(f + 0xf) >= 0xf { 6 } else { 1 };
             let mut q = 0usize;
             let n = achar(this, p, &mut q);
             let parar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8b4450usize);
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
         // 0x8b41d0 leem o byte
         let lv = nivel(prog, k as u32) as u8 as i8;
         let base = (lv as i16).wrapping_mul(2).wrapping_add(0x3c); // cqd8: o peso do nível
-        let clube = cqd8_clube(cqd8_contrato(p));
+        let clube = training_manager_club_of_contract(training_manager_get_contract_stored(p));
         let fa = fator(this, clube, k as u32) as u16 as i16 as i32;
         let x = base.wrapping_add(((fa - 100) / 5) as i16);
         let peso: i16 = if x < 0 { 0 } else if x > 200 { 200 } else { x };
@@ -319,7 +319,7 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
 /// da cópia fora da contagem. Só a original: os casos de erro e o jogador com treino de posição (0x8b4b20 antes de
 /// rodar): ali a 0x8b4450, a marca do contrato (0x867700) e a 0x5885c0 mexem fora dessas regiões.
 unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usize, pular: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     if p == 0 || cqd8_i(p) >= cqd8_i(0xae2364) || cqd8_d(p + 0x61) == 0 {
         return o(this, p, pular);
     }
@@ -331,7 +331,7 @@ unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usiz
     }
     let f = cqd8_d(p + 0x61);
     let mut reg = Vec::from(crate::aleatorio::REGIOES_DO_ESTADO);
-    reg.extend_from_slice(&[(0xae1080, 4), (cqd8_entrada(this, p), 6), (f + 0xf, 0x33)]);
+    reg.extend_from_slice(&[(0xae1080, 4), (training_entry_of_staff(this, p), 6), (f + 0xf, 0x33)]);
     let les = cqd8_d(0xb63d28);
     if les != 0 {
         reg.push((cqd8_d(les).wrapping_add((cqd8_i(p) as isize * 31 + 0x1e) as usize), 1));
@@ -349,34 +349,34 @@ unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usiz
 /// (linha 0x68f) e 0. Senão: lesionado, o programa 0 (this); senão this + 0x9b × vaga (com sinal).
 unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize) -> usize {
     if p == 0 || cqd8_d(p + 0x61) == 0 {
-        aviso_em(0xa8ccd0, 0x6ad);
+        show_error_at(0xa8ccd0, 0x6ad);
         return 0;
     }
     let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
-    let c = cqd8_contrato(p);
-    if c != 0 && cqd8_clube(c) != 0 {
-        let tec = cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf);
-        if tec != 0 && cqd8_humano(tec) {
+    let c = training_manager_get_contract_stored(p);
+    if c != 0 && training_manager_club_of_contract(c) != 0 {
+        let tec = cqd8_d(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf);
+        if tec != 0 && is_human_manager_id(tec) {
             if estado(cqd8_d(0xb63d28), p) == 2 {
                 let k = cqd8_i(0xae2364).wrapping_sub(cqd8_i(tec)).wrapping_sub(1);
                 if !(0..0x10).contains(&k) {
-                    aviso_em(0xa8ccd0, 0x68f);
+                    show_error_at(0xa8ccd0, 0x68f);
                     return 0;
                 }
                 return this.wrapping_add(0x4d8 + 0x60e * k as usize);
             }
-            return cqd8_programa_do_humano(this, tec, *(cqd8_entrada(this, p) as *const i8));
+            return cqd8_programa_do_humano(this, tec, *(training_entry_of_staff(this, p) as *const i8));
         }
     }
     if estado(cqd8_d(0xb63d28), p) == 2 {
         return this;
     }
-    this.wrapping_add((*(cqd8_entrada(this, p) as *const i8) as isize * 0x9b) as usize)
+    this.wrapping_add((*(training_entry_of_staff(this, p) as *const i8) as isize * 0x9b) as usize)
 }
 
 /// Comparador: a devolução e [0xae1080] lado a lado; sem pessoa ou sem ficha (a caixa), só a original.
 unsafe extern "thiscall" fn comparar_get_player_schedule(this: usize, p: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if p == 0 || cqd8_d(p + 0x61) == 0 {
         return o(this, p);
     }
@@ -396,7 +396,7 @@ unsafe extern "thiscall" fn get_category_level(this: usize, categoria: u32) -> u
 
 /// Comparador: a devolução inteira (só lê).
 unsafe extern "thiscall" fn comparar_get_category_level(this: usize, categoria: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, categoria);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, categoria);
     let n = get_category_level(this, categoria);
     PLACAR.registrar(r == n, || format!("get_category_level({:x}, {}) original={:x} rust={:x}", this, categoria as u8 as i8, r, n));
     r

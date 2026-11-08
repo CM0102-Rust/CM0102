@@ -9,10 +9,10 @@ MUTACOES = [
     ('cpo13_competicao_atual_parada', 'cpo13_por(p.vaga, nova);',
      'let _ = nova; // mutacao: a competicao atual nao muda',
      'cpo_13 competicao atual'),
-    ('cpo13_mandante_sem_marca', 'cpo13_marcar(this, casa, n, codigo); // o mandante',
+    ('cpo13_mandante_sem_marca', 'mark_club_code(this, casa, n, codigo); // o mandante',
      '// mutacao: o mandante sem marca',
      'cpo_13 clubes com jogo'),
-    ('cpo13_visitante_sem_marca', 'cpo13_marcar(this, fora, n, codigo); // o visitante',
+    ('cpo13_visitante_sem_marca', 'mark_club_code(this, fora, n, codigo); // o visitante',
      '// mutacao: o visitante sem marca',
      'cpo_13 clubes com jogo'),
 ]

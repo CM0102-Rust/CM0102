@@ -17,24 +17,24 @@ unsafe fn cqo2_b(a: usize) -> u8 {
 }
 
 /// O sorteio do jogo (0x90cfc0, cdecl): 0..n-1.
-unsafe fn cqo2_sortear(n: u32) -> i32 {
+unsafe fn random_below(n: u32) -> i32 {
     let f: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x90cfc0usize);
     f(n)
 }
 
 /// A cidade (registro de 0x38 bytes em [0xae23ac]) do estádio `est` (+0x38); sem estádio ou sem cidade, uma sorteada
 /// entre as [0xae2354].
-unsafe fn cqo2_cidade(est: usize) -> usize {
+unsafe fn stadium_city(est: usize) -> usize {
     if est != 0 && cqo2_d(est + 0x38) != 0 {
         return cqo2_d(est + 0x38);
     }
-    let r = cqo2_sortear(cqo2_d(0xae2354) as u32);
+    let r = random_below(cqo2_d(0xae2354) as u32);
     cqo2_d(0xae23ac).wrapping_add((r as usize).wrapping_mul(0x38))
 }
 
 /// O piso do fator de cada lado na competição de tipo `t` (+0x3a da partida), pelos limites +0x30/+0x32 da partida e
 /// pela reputação (/500) `rep` do clube do lado (0x109a = 4250, 0x1676 = 5750).
-unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
+unsafe fn apply_side_factor_floor(jogo: usize, lado: u8, f: &mut [f64; 2]) {
     let t = cqo2_b(jogo + 0x3a);
     let rep = |l: u8| cqo2_w(cqo2_d(jogo + if l == 0 { 0x1c } else { 0x20 }) + 0x80);
     let k = lado as usize;
@@ -51,59 +51,59 @@ unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
         let a = cqo2_w(jogo + 0x30) as u16;
         if a == 0x96 {
             if alto(0x1676) {
-                piso(&mut f[k], f64_em(0x9690a8));
+                piso(&mut f[k], read_f64_at(0x9690a8));
             } else {
-                piso(&mut f[k], f64_em(0x968e38));
+                piso(&mut f[k], read_f64_at(0x968e38));
             }
-        } else if a == 0x82 && f[k] < f64_em(0x968e18) {
+        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) {
             if alto(0x1676) {
-                piso(&mut f[k], f64_em(0x968ec8));
+                piso(&mut f[k], read_f64_at(0x968ec8));
             } else {
-                piso(&mut f[k], f64_em(0x968930));
+                piso(&mut f[k], read_f64_at(0x968930));
             }
         } else if lado > 1 || rep(lado) >= 0x1676 {
-            piso(&mut f[k], f64_em(0x9689b8));
+            piso(&mut f[k], read_f64_at(0x9689b8));
         } else if rep(lado) >= 0x109a {
-            piso(&mut f[k], f64_em(0x968928));
+            piso(&mut f[k], read_f64_at(0x968928));
         } else {
-            piso(&mut f[k], f64_em(0x968f98));
+            piso(&mut f[k], read_f64_at(0x968f98));
         }
     }
     if t == 6 {
         let a = cqo2_w(jogo + 0x30) as u16;
         if a == 0x96 {
             if alto(0x109a) {
-                piso(&mut f[k], f64_em(0x9690a8));
+                piso(&mut f[k], read_f64_at(0x9690a8));
             } else {
-                piso(&mut f[k], f64_em(0x968e38));
+                piso(&mut f[k], read_f64_at(0x968e38));
             }
-        } else if a == 0x82 && f[k] < f64_em(0x968e18) {
-            f[k] = f64_em(0x968e18);
+        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) {
+            f[k] = read_f64_at(0x968e18);
         } else {
-            piso(&mut f[k], f64_em(0x968928));
+            piso(&mut f[k], read_f64_at(0x968928));
         }
     } else if cqo2_w(jogo + 0x30) as u16 == 0x96 && t == 5 {
         if alto(0x109a) {
-            piso(&mut f[k], f64_em(0x9690a8));
+            piso(&mut f[k], read_f64_at(0x9690a8));
         } else {
-            piso(&mut f[k], f64_em(0x968e38));
+            piso(&mut f[k], read_f64_at(0x968e38));
         }
     } else if cqo2_w(jogo + 0x32) as u16 == 0xa0 && t == 5 {
         if lado == 0 {
-            if rep(0) < 0x109a && f[0] < f64_em(0x96fe20) {
-                f[0] = f64_em(0x96fe20);
+            if rep(0) < 0x109a && f[0] < read_f64_at(0x96fe20) {
+                f[0] = read_f64_at(0x96fe20);
             } else {
-                piso(&mut f[0], f64_em(0x968e18));
+                piso(&mut f[0], read_f64_at(0x968e18));
             }
         } else {
-            piso(&mut f[k], f64_em(0x968e18));
+            piso(&mut f[k], read_f64_at(0x968e18));
         }
-    } else if t == 10 && f[k] < f64_em(0x968928) {
-        f[k] = f64_em(0x968928);
-    } else if t == 9 && f[k] < f64_em(0x9689b0) {
-        f[k] = f64_em(0x9689b0);
+    } else if t == 10 && f[k] < read_f64_at(0x968928) {
+        f[k] = read_f64_at(0x968928);
+    } else if t == 9 && f[k] < read_f64_at(0x9689b0) {
+        f[k] = read_f64_at(0x9689b0);
     } else {
-        piso(&mut f[k], f64_em(0x967880));
+        piso(&mut f[k], read_f64_at(0x967880));
     }
 }
 
@@ -114,7 +114,7 @@ unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
 /// 0x7e6f20, sem +0x43 = 2) mais a diferença (+0x34 da partida − +0x3c da liga, entre −6 e 5). O fator do mandante vezes
 /// R do visitante / R dele (se ele tem R < 15 ou abaixo do outro), ×1,1 com o outro acima de 17, ×1,25 com o outro
 /// acima de 12 e ele abaixo de 14; dividido pelo número de clubes da liga do clube (+0x57 → +0x69), sem ela ×0,2 (tipo
-/// 10) ou ×0,05. O do visitante, o mesmo com os papéis trocados. Pisos por tipo de competição (cqo2_piso: copas 8, 6 e
+/// 10) ou ×0,05. O do visitante, o mesmo com os papéis trocados. Pisos por tipo de competição (apply_side_factor_floor: copas 8, 6 e
 /// 5 com os limites +0x30/+0x32 e a reputação; 10 1,25; 9 0,8; senão 0,1). Com estádio fora de campo neutro: as
 /// cidades do estádio e dos dois clubes (sorteadas sem cidade), o fator da distância (0x85d8a0, no mínimo 0,15); o
 /// mandante leva a média (+0x73) × fator × distância, o visitante (+0x73 + +0x77) × fator × distância × 0,5; na
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
         let comp = cqo2_d(jogo + 0x14);
         if comp != 0 {
             f[k] = cqo2_w(comp + 0x69) as i32 as f64;
-            if f[k] < f64_em(0x967890) {
+            if f[k] < read_f64_at(0x967890) {
                 f[k] = 1.0;
             }
         } else {
@@ -157,22 +157,22 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
         }
         let t = cqo2_b(jogo + 0x3a);
         if t == 8 || t == 10 || t == 6 {
-            f[k] += f64_em(0x968950);
+            f[k] += read_f64_at(0x968950);
         }
         let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
-        let mut ajuste = f64_em(0x9689a0);
+        let mut ajuste = read_f64_at(0x9689a0);
         if amistoso(cqo2_d(0xae2c74), comp) == 0 && cqo2_d(0xadadfc) != 0 && cqo2_d(cqo2_d(0xadadfc) + cqo2_d(comp) * 4) != 0 && cqo2_d(0xb74434) != 0 {
             let grupo: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7e6f20usize);
             if grupo(cqo2_d(jogo + 0x14)) == 0 {
                 let liga = cqo2_d(cqo2_d(0xadadfc) + cqo2_d(cqo2_d(jogo + 0x14)) * 4);
                 if cqo2_b(liga + 0x43) != 2 {
                     let x = (cqo2_b(jogo + 0x34).wrapping_sub(cqo2_b(liga + 0x3c)) as i8) as i32 as f64;
-                    ajuste = if x < f64_em(0x96fe28) {
-                        f64_em(0x96fe28)
-                    } else if x <= f64_em(0x9688a0) {
+                    ajuste = if x < read_f64_at(0x96fe28) {
+                        read_f64_at(0x96fe28)
+                    } else if x <= read_f64_at(0x9688a0) {
                         x
                     } else {
-                        f64_em(0x9688a0)
+                        read_f64_at(0x9688a0)
                     };
                 }
             }
@@ -186,42 +186,42 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
                 f[k] = outro as i32 as f64 / eu as i32 as f64 * v;
             }
             if outro > 0x11 {
-                f[k] *= f64_em(0x9689c0);
+                f[k] *= read_f64_at(0x9689c0);
             }
             if outro > 0xc && eu < 0xe {
-                f[k] *= f64_em(0x968928);
+                f[k] *= read_f64_at(0x968928);
             }
             let _ = clube;
             let lg = cqo2_d(cqo2_d(jogo + if lado == 0 { 0x1c } else { 0x20 }) + 0x57);
             if lg != 0 && cqo2_w(lg + 0x69) != 0 {
                 f[k] /= cqo2_w(lg + 0x69) as i32 as f64;
             } else if cqo2_b(jogo + 0x3a) == 0xa {
-                f[k] *= f64_em(0x968918);
+                f[k] *= read_f64_at(0x968918);
             } else {
-                f[k] *= f64_em(0x967888); // cqo2: o fator sem a liga do clube
+                f[k] *= read_f64_at(0x967888); // cqo2: o fator sem a liga do clube
             }
         }
-        cqo2_piso(jogo, lado, &mut f);
+        apply_side_factor_floor(jogo, lado, &mut f);
         lado += 1;
     }
     let mut pc: i32; // o público do mandante ([esp+0x14] / esi)
     let mut pf: i32; // o do visitante ([esp+0x18])
     let est = cqo2_d(jogo + 0x18);
     if est != 0 && cqo2_b(jogo + 0x3c) == 0 {
-        let c_est = cqo2_cidade(est);
-        let c_casa = cqo2_cidade(cqo2_d(casa + 0x69));
-        let c_fora = cqo2_cidade(cqo2_d(fora + 0x69));
+        let c_est = stadium_city(est);
+        let c_casa = stadium_city(cqo2_d(casa + 0x69));
+        let c_fora = stadium_city(cqo2_d(fora + 0x69));
         let fator: unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64 = core::mem::transmute(0x85d8a0usize);
         let mut d = fator(this, jogo, c_est, c_casa, f[0]);
-        if d < f64_em(0x968f20) {
-            d = f64_em(0x968f20);
+        if d < read_f64_at(0x968f20) {
+            d = read_f64_at(0x968f20);
         }
-        pc = ftol(cqo2_i(casa + 0x73) as f64 * f[0] * d);
+        pc = match_pl_ftol(cqo2_i(casa + 0x73) as f64 * f[0] * d);
         let mut d = fator(this, jogo, c_est, c_fora, f[1]);
-        if d < f64_em(0x968f20) {
-            d = f64_em(0x968f20);
+        if d < read_f64_at(0x968f20) {
+            d = read_f64_at(0x968f20);
         }
-        pf = ftol(cqo2_i(fora + 0x77).wrapping_add(cqo2_i(fora + 0x73)) as f64 * f[1] * d * f64_em(0x968968));
+        pf = match_pl_ftol(cqo2_i(fora + 0x77).wrapping_add(cqo2_i(fora + 0x73)) as f64 * f[1] * d * read_f64_at(0x968968));
         let comp = cqo2_d(jogo + 0x14);
         if comp != 0 && casa != 0 && cqo2_d(casa + 0x57) == comp {
             let liga = cqo2_d(cqo2_d(0xadadfc) + cqo2_d(comp) * 4);
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
                             } else if cl < 4 {
                                 2
                             } else {
-                                ftol(ax as i32 as f64 * f64_em(0x9689e0)) as i16
+                                match_pl_ftol(ax as i32 as f64 * read_f64_at(0x9689e0)) as i16
                             };
                         }
                         let m = if bl < 4 && dl == 1 { 25 } else { 15 };
@@ -284,24 +284,24 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
             }
         }
     } else {
-        pc = ftol(cqo2_i(casa + 0x73) as f64 * f[0]);
-        pf = ftol(cqo2_i(fora + 0x73) as f64 * f[1]);
+        pc = match_pl_ftol(cqo2_i(casa + 0x73) as f64 * f[0]);
+        pf = match_pl_ftol(cqo2_i(fora + 0x73) as f64 * f[1]);
     }
     // os clássicos
     let (casa, fora) = (cqo2_d(jogo + 0x1c), cqo2_d(jogo + 0x20));
     let rival = |a: usize, b: usize| cqo2_d(a + 0xb3) == b || cqo2_d(a + 0xb7) == b || cqo2_d(a + 0xbb) == b;
     if rival(casa, fora) {
         crate::comparacao::ramo("cqo_2 classico");
-        pc = ftol(pc as f64 * f64_em(0x968940)); // cqo2: o clássico
+        pc = match_pl_ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico
     } else if cqo2_d(casa + 0x69) != 0 && cqo2_d(fora + 0x69) != 0 && cqo2_d(cqo2_d(casa + 0x69) + 0x38) == cqo2_d(cqo2_d(fora + 0x69) + 0x38) {
-        pc = ftol(pc as f64 * f64_em(0x969588));
+        pc = match_pl_ftol(pc as f64 * read_f64_at(0x969588));
     }
     if rival(fora, casa) {
-        pf = ftol(pf as f64 * f64_em(0x969588));
+        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969588));
     }
     if cqo2_b(jogo + 0x3c) == 0 && cqo2_b(jogo + 0x3b) != 0xff {
-        pc = ftol(pc as f64 * f64_em(0x9689b8));
-        pf = ftol(pf as f64 * f64_em(0x969520));
+        pc = match_pl_ftol(pc as f64 * read_f64_at(0x9689b8));
+        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969520));
     }
     let comp = cqo2_d(jogo + 0x14);
     if comp != 0 && casa != 0 && cqo2_d(casa + 0x57) == comp && cqo2_b(casa + 0x6d) != 0 {
@@ -326,7 +326,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
             if pc < n * 250 {
                 pc = n * 250;
             } else if pc > n * 1500 {
-                pc = n * 1500 - ftol((pc - n * 1500) as f64 * f64_em(0x968f30));
+                pc = n * 1500 - match_pl_ftol((pc - n * 1500) as f64 * read_f64_at(0x968f30));
             }
         }
     }
@@ -344,10 +344,10 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
             let vis = if cqo2_b(jogo + 0x3c) == 0 {
                 let a = lot as f64;
                 let x = a - cqo2_i(cqo2_d(jogo + 0x20) + 0x73) as f64 * f[0];
-                let y = a * f64_em(0x968f20);
+                let y = a * read_f64_at(0x968f20);
                 let z = if x < y { x } else { y };
-                let w = a * f64_em(0x967888);
-                ftol(if w > z { w } else { z })
+                let w = a * read_f64_at(0x967888);
+                match_pl_ftol(if w > z { w } else { z })
             } else {
                 lot / 2
             };
@@ -367,13 +367,13 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
             }
         }
     } else {
-        pc = cqo2_sortear(0x32) + 1;
-        pf = cqo2_sortear(0xf) + 1;
+        pc = random_below(0x32) + 1;
+        pf = random_below(0xf) + 1;
     }
-    let r = cqo2_sortear(0x32); // cqo2: o sorteio do total
+    let r = random_below(0x32); // cqo2: o sorteio do total
     let mut total = pf.wrapping_add(pc).wrapping_sub(r);
     if total < 0 {
-        total = cqo2_sortear(0x96) + 0x2d;
+        total = random_below(0x96) + 0x2d;
     }
     if !saida.is_null() {
         *saida = total;
@@ -386,7 +386,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
 /// Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
 /// ela pode subir para 1.500) e pela devolução.
 unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(%%I0%%);
     if jogo == 0 {
         return o(this, jogo, saida);
     }

@@ -4,7 +4,7 @@
 # valor). O periodo do emprestimo recuando dois meses de cada vez (o fim do emprestimo muda: a volta do jogador e as
 # escalacoes; o comparando acusa pelas saidas). Os ramos dizem se a carreira passou por eles.
 MUTACOES = [
-    ('cpo_lista_pela_pessoa', 'cpo9_inserir(this, 0, 0x10, pessoa, clube, 0x757ea0); // o vetor pela pessoa',
+    ('cpo_lista_pela_pessoa', 'insert_sorted_pair(this, 0, 0x10, pessoa, clube, 0x757ea0); // o vetor pela pessoa',
      '// mutacao: sem o vetor pela pessoa',
      'cpo_9 nova entrada'),
     ('cpo_prever_negocia', 'crate::comparacao::ramo("cpo_9 negocia");\n    1\n}',

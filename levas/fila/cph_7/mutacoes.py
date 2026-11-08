@@ -1,6 +1,6 @@
 # Mutacoes dos diversos. A do olheiro devolve a pessoa mesmo quando ela nao confere: o comparando acusa na primeira
 # vaga mudada; a carreira PODE NAO ACUSAR (159 chamadas, olheiros quase nao decidem). A da sequencia pede menos de 9
-# dias e a do rival pede 500 de reputacao: o comparando acusa; a carreira, se a midia usar (noticias e comentarios
+# dias e a do rival pede 500 de injury_word_0c: o comparando acusa; a carreira, se a midia usar (noticias e comentarios
 # entram pouco na impressao): PODEM ESCAPAR da carreira. A do recordista grava a data em +8: o comparando acusa na
 # primeira construcao.
 MUTACOES = [
@@ -10,6 +10,6 @@ MUTACOES = [
      '< 9 { // mutacao: 9 dias'),
     ('cph_recordista_data', 'padrao(this + 0x10); // a data do recordista',
      'padrao(this + 0x8); // mutacao: em +8'),
-    ('cph_rival_reputacao', 'if reputacao(clube) + 0x2ee >= reputacao(r) {',
-     'if reputacao(clube) + 0x1f4 >= reputacao(r) { // mutacao: 500'),
+    ('cph_rival_reputacao', 'if injury_word_0c(clube) + 0x2ee >= injury_word_0c(r) {',
+     'if injury_word_0c(clube) + 0x1f4 >= injury_word_0c(r) { // mutacao: 500'),
 ]

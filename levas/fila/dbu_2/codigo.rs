@@ -4,12 +4,12 @@ unsafe fn dbu2_u32(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
 }
 
-unsafe fn dbu2_vazio(t: usize) -> bool {
+unsafe fn is_empty_text(t: usize) -> bool {
     *(t as *const u8) == 0
 }
 
 /// strcat (os `repne scasb` e os `rep movsd`/`rep movsb` da original).
-unsafe fn dbu2_juntar(destino: usize, origem: usize) {
+unsafe fn append_c_string(destino: usize, origem: usize) {
     let mut d = destino;
     while *(d as *const u8) != 0 {
         d += 1;
@@ -38,7 +38,7 @@ unsafe fn dbu2_juntar(destino: usize, origem: usize) {
 unsafe extern "C" fn club_get_national_team_name(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
     let f = forma as u8 as i8;
     if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
-        return orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(%%I0%%)(clube, variante, texto, tamanho, forma, aspas);
+        return original_fn::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(%%I0%%)(clube, variante, texto, tamanho, forma, aspas);
     }
     if !(1..=4).contains(&f) {
         return 1;
@@ -83,14 +83,14 @@ unsafe extern "C" fn club_get_national_team_name(clube: usize, variante: u32, te
         }
         None => {
             *(texto as *mut u8) = 0;
-            dbu2_juntar(texto, nome);
+            append_c_string(texto, nome);
         }
     }
     1
 }
 
 unsafe extern "C" fn comparar_club_get_national_team_name(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(%%I0%%);
     let f = forma as u8 as i8;
     if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
         return o(clube, variante, texto, tamanho, forma, aspas); // caixa: só a original
@@ -146,7 +146,7 @@ const DBU2_ATRIBUTOS: [(usize, bool, usize, bool); 31] = [
 unsafe extern "C" fn database_get_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let x = atributo as u8 as i8;
     if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
-        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I1%%)(atributo, texto, tamanho, abreviado);
+        return original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I1%%)(atributo, texto, tamanho, abreviado);
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     *(texto as *mut u8) = 0;
@@ -161,7 +161,7 @@ unsafe extern "C" fn database_get_player_attribute_name(atributo: u32, texto: us
 }
 
 unsafe extern "C" fn comparar_database_get_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I1%%);
     let x = atributo as u8 as i8;
     if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
         return o(atributo, texto, tamanho, abreviado); // caixa: só a original
@@ -176,30 +176,30 @@ unsafe extern "C" fn comparar_database_get_player_attribute_name(atributo: u32, 
 /// Uma posição no texto da 0x53ee50: forma 1 o abreviado (com o vazio 0xad9c64), 2 e 3 o inteiro, com a barra antes
 /// quando o texto já tem algo; as outras formas, a letra só com o texto ainda vazio. O traduzido passa pelo texto
 /// global [0xde1f64] (0x66f4e0), como na original.
-unsafe fn dbu2_posicao(buf: usize, f: u8, curto: usize, longo: usize, longo_vazio: bool, letra: usize) {
+unsafe fn append_position_text(buf: usize, f: u8, curto: usize, longo: usize, longo_vazio: bool, letra: usize) {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     match f {
         1 => {
-            if !dbu2_vazio(buf) {
-                dbu2_juntar(buf, 0x9b7630); // "/"
+            if !is_empty_text(buf) {
+                append_c_string(buf, 0x9b7630); // "/"
             }
             formatar(0xde1f64, curto, 0xad9c64usize);
-            dbu2_juntar(buf, 0xde1f64);
+            append_c_string(buf, 0xde1f64);
         }
         2 | 3 => {
-            if !dbu2_vazio(buf) {
-                dbu2_juntar(buf, 0x9b7630);
+            if !is_empty_text(buf) {
+                append_c_string(buf, 0x9b7630);
             }
             if longo_vazio {
                 formatar(0xde1f64, longo, 0xad9c64usize);
             } else {
                 formatar(0xde1f64, longo);
             }
-            dbu2_juntar(buf, 0xde1f64);
+            append_c_string(buf, 0xde1f64);
         }
         _ => {
-            if dbu2_vazio(buf) {
-                dbu2_juntar(buf, letra);
+            if is_empty_text(buf) {
+                append_c_string(buf, letra);
             }
         }
     }
@@ -228,7 +228,7 @@ const DBU2_AVANTE: (usize, usize, bool, usize) = (0x9b74b4, 0x9b7484, true, 0x9b
 /// Nas telas do clube, de busca, da pessoa, de tática e de treino e nas impressões.
 unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
-        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%)(jogador, texto, tamanho, forma);
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%)(jogador, texto, tamanho, forma);
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -238,7 +238,7 @@ unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usi
     let mut linha = [0u8; 0x7d0];
     let mut lados = [0u8; 0x7c0];
     let buf = linha.as_mut_ptr() as usize;
-    let pos = |p: (usize, usize, bool, usize)| dbu2_posicao(buf, f, p.0, p.1, p.2, p.3);
+    let pos = |p: (usize, usize, bool, usize)| append_position_text(buf, f, p.0, p.1, p.2, p.3);
     let mut minimo: u8 = 0xf;
     loop {
         *(buf as *mut u8) = 0;
@@ -268,15 +268,15 @@ unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usi
         }
         if nota(0xf) >= t {
             // goleiro: só a linha
-            dbu2_juntar(texto, buf);
+            append_c_string(texto, buf);
             return 1;
         }
         minimo = minimo.wrapping_sub(1);
-        if !dbu2_vazio(buf) || minimo < 0xa {
+        if !is_empty_text(buf) || minimo < 0xa {
             break;
         }
     }
-    if dbu2_vazio(buf) {
+    if is_empty_text(buf) {
         if nota(0x14) >= 0xf {
             *((jogador + 0x13) as *mut u8) = 0xf; // a original grava no jogador
         }
@@ -285,7 +285,7 @@ unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usi
         } else {
             formatar(0xde1f64, DBU2_MEIA_ATACANTE.0, 0xad9c64usize);
         }
-        dbu2_juntar(buf, 0xde1f64);
+        append_c_string(buf, 0xde1f64);
     }
     let lado = lados.as_mut_ptr() as usize;
     let mut volta: u8 = 0xf;
@@ -298,18 +298,18 @@ unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usi
             match f {
                 1 => {
                     formatar(0xde1f64, curto, 0xad9c64usize); // R, L, C
-                    dbu2_juntar(lado, 0xde1f64);
+                    append_c_string(lado, 0xde1f64);
                 }
                 2 => {
-                    if !dbu2_vazio(lado) {
-                        dbu2_juntar(lado, 0x9b7630);
+                    if !is_empty_text(lado) {
+                        append_c_string(lado, 0x9b7630);
                     }
                     formatar(0xde1f64, longo); // Right, Left, Centre
-                    dbu2_juntar(lado, 0xde1f64);
+                    append_c_string(lado, 0xde1f64);
                 }
                 4 => {
-                    if dbu2_vazio(lado) {
-                        dbu2_juntar(lado, letra);
+                    if is_empty_text(lado) {
+                        append_c_string(lado, letra);
                     }
                 }
                 _ => {}
@@ -317,22 +317,22 @@ unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usi
         }
         // a original repete a volta (de 15 a 10) enquanto os lados ficam vazios; as notas são as mesmas
         volta = volta.wrapping_sub(1);
-        if !dbu2_vazio(lado) || volta < 0xa {
+        if !is_empty_text(lado) || volta < 0xa {
             break;
         }
     }
-    if f == 2 && !dbu2_vazio(lado) {
+    if f == 2 && !is_empty_text(lado) {
         sprintf(texto, 0x9a3d8c, buf, lado); // "%s (%s)" (dbu)
-    } else if !dbu2_vazio(lado) {
+    } else if !is_empty_text(lado) {
         sprintf(texto, 0x98f0b8, buf, lado); // "%s %s"
     } else {
-        dbu2_juntar(texto, buf);
+        append_c_string(texto, buf);
     }
     1
 }
 
 unsafe extern "C" fn comparar_database_format_player_positions(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%);
     if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
         return o(jogador, texto, tamanho, forma); // caixa: só a original
     }

@@ -14,7 +14,7 @@ unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, marca: i16, 
     let e = (r + 0xc) as *mut i16;
     let v = core::ptr::read_unaligned(e);
     if v < -1000 {
-        let x = (v as f64 * f64_em(0x96bac0) - f64_em(0x968e18)) * ritmo as f64;
+        let x = (v as f64 * read_f64_at(0x96bac0) - read_f64_at(0x968e18)) * ritmo as f64;
         core::ptr::write_unaligned(e, (x as i32).wrapping_add(v as i32) as i16);
         return;
     }
@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn table_penalty(t: usize, linha: i32, coluna: i8, tipo
 }
 
 unsafe extern "thiscall" fn comparar_recover_injury(t: usize, p: *const i32, marca: i16, ritmo: i16) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const i32, i16, i16)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, i16, i16)>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if !p.is_null() && *p < *(0xae2364 as *const i32) {
         reg.push(((*(t as *const usize)).wrapping_add((*p as usize).wrapping_mul(31)).wrapping_add(0xa), 4));
@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn comparar_recover_injury(t: usize, p: *const i32, mar
 }
 
 unsafe extern "thiscall" fn comparar_person_in_transfer_list(t: usize, p: *const i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(%%I1%%);
     let reg = [(t + 0x92c + 0xa, 4)];
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(t, p), || person_in_transfer_list(t, p));
     PLACAR.registrar(igual && r == v, || format!("person_in_transfer_list({:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, p, r, mo, v, mr));

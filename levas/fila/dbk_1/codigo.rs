@@ -137,7 +137,7 @@ unsafe extern "C" fn database_build_nation_name_index() {
     *(0xae2338 as *mut usize) = t;
     if t == 0 {
         // ponytail: a original pede de novo e, sem memória, abre a caixa e encerra o jogo
-        return orig::<unsafe extern "C" fn()>(%%I2%%)();
+        return original_fn::<unsafe extern "C" fn()>(%%I2%%)();
     }
     let mut k = 0i32;
     while k < *(0xae2350 as *const i32) {
@@ -186,7 +186,7 @@ unsafe extern "C" fn database_build_nation_name_index() {
 /// As regiões dos comparadores de 0x541e60 e 0x544970: a tabela de clubes inteira (581 bytes por linha: a marca
 /// +0x244 de todos e as casas dos pares) e as pessoas (110 bytes) nas casas dos clubes A e B dos pares de 0x540a50,
 /// as únicas que as duas tiram, põem ou desligam (0x53c190 e 0x53bd10 só mexem no clube e na pessoa).
-unsafe fn regioes_dos_times_a_e_b() -> Vec<(usize, usize)> {
+unsafe fn ab_team_regions() -> Vec<(usize, usize)> {
     let tabela = *(0xae23b4 as *const usize);
     let n = *(0xae235c as *const i32);
     let mut regioes = vec![(tabela, n.max(0) as usize * 581)];
@@ -217,7 +217,7 @@ unsafe fn regioes_dos_times_a_e_b() -> Vec<(usize, usize)> {
 /// Original e cópia lado a lado sobre as regiões dos times A e B; a mensagem dá o primeiro byte que difere (a
 /// tabela de clubes tem 8 MB: as fotos não vão para a mensagem nem voltam às sobras).
 unsafe fn comparar_times_a_e_b(nome: &'static str, original: impl FnOnce(), rust: impl FnOnce()) {
-    let regioes = regioes_dos_times_a_e_b();
+    let regioes = ab_team_regions();
     let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, original, rust);
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| {
         x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k]))
@@ -231,12 +231,12 @@ unsafe fn comparar_times_a_e_b(nome: &'static str, original: impl FnOnce(), rust
 }
 
 unsafe extern "C" fn comparar_database_trim_senior_and_b_team_squads() {
-    let o = orig::<unsafe extern "C" fn()>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
     comparar_times_a_e_b("database_trim_senior_and_b_team_squads", || o(), || database_trim_senior_and_b_team_squads());
 }
 
 unsafe extern "C" fn comparar_database_merge_b_team_staff() {
-    let o = orig::<unsafe extern "C" fn()>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
     comparar_times_a_e_b("database_merge_b_team_staff", || o(), || database_merge_b_team_staff());
 }
 
@@ -244,7 +244,7 @@ unsafe extern "C" fn comparar_database_merge_b_team_staff() {
 /// da cópia é liberado (free 0x9452ca) e o da original volta a [0xae2338]. Muda a heap do modo de comparação (a
 /// impressão dele não é critério).
 unsafe extern "C" fn comparar_database_build_nation_name_index() {
-    orig::<unsafe extern "C" fn()>(%%I2%%)();
+    original_fn::<unsafe extern "C" fn()>(%%I2%%)();
     let t = *(0xae2338 as *const usize);
     let n = (*(0xae2350 as *const i32)).max(0) as usize * 0x24;
     if t == 0 || n == 0 {

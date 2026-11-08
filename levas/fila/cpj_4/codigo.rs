@@ -23,7 +23,7 @@ unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, oferta: usize, 
     if valor < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // abaixo do mínimo pela reputação
     }
-    if exigir != 0 && valor < ftol(rep as f64 * rep as f64 * f64_em(0x967880)) {
+    if exigir != 0 && valor < match_pl_ftol(rep as f64 * rep as f64 * read_f64_at(0x967880)) {
         return 0;
     }
     (valor != 0 && valor > cpj4_d(rec + 0x313) as i32) as u8
@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn get_condition(this: usize, jogador: usize, em_porcen
         100
     };
     if em_porcento != 0 {
-        c = ftol(c as i16 as f64 * f32_em(0x96bac8) as f64 + f64_em(0x968968));
+        c = match_pl_ftol(c as i16 as f64 * read_f32_at(0x96bac8) as f64 + read_f64_at(0x968968));
         if c as i16 > 100 {
             c = 100;
         }
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn get_selection_limit(this: usize, partida: usize, sai
 /// Comparador: a 0x452710 cria os recordes do clube na primeira vez (a original primeiro; a cópia acha os mesmos):
 /// pelo valor.
 unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: usize, oferta: usize, exigir: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I0%%)(this, oferta, exigir);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I0%%)(this, oferta, exigir);
     let n = offer_breaks_fee_record(this, oferta, exigir);
     PLACAR.registrar(r == n, || format!("offer_breaks_fee_record({:x}, {}) original={} rust={}", oferta, exigir, r, n));
     r
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: usize, oferta
 
 /// Comparador: pelo valor (a 0x62c400 só lê).
 unsafe extern "thiscall" fn comparar_get_condition(this: usize, jogador: usize, em_porcento: u32) -> u16 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(%%I1%%)(this, jogador, em_porcento);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(%%I1%%)(this, jogador, em_porcento);
     let n = get_condition(this, jogador, em_porcento);
     PLACAR.registrar(r == n, || format!("get_condition({:x}, {}) original={} rust={}", jogador, em_porcento, r, n));
     r
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn comparar_get_condition(this: usize, jogador: usize, 
 
 /// Comparador: lado a lado pelos 6 bytes da saída (a 0x8cf6b0 só escreve na tabela local).
 unsafe extern "thiscall" fn comparar_get_selection_limit(this: usize, partida: usize, saida: *mut u8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida as usize, 6)], || o(this, partida, saida), || get_selection_limit(this, partida, saida));
     PLACAR.registrar(igual, || format!("get_selection_limit({:x}) {:x?} x {:x?}", partida, mo, mr));
 }

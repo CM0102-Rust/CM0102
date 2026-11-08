@@ -1,4 +1,4 @@
-# Mutacoes. A compra grande a partir de 1000 x (reputacao + 200) (mais recordes vao a fila e mais tecnicos passam a
+# Mutacoes. A compra grande a partir de 1000 x (injury_word_0c + 200) (mais recordes vao a fila e mais tecnicos passam a
 # gostar do jogador pela 0x547a10, que sorteia quando nao ha vaga: muda a carreira; comparando, o plano usa a mesma
 # regra e a original nao: a conta da fila difere). O gostar sem forcar (sem vaga, nao sorteia: so o modo Rust e a
 # carreira; PODE ESCAPAR se os tecnicos tiverem vaga livre, ver o ramo). O jogador de quem o clube gosta perdendo 0,2

@@ -4,8 +4,8 @@ MUTACOES = [
     ('g_situacao', "5 | 2 | 3 | -2 | -4 | -5", "5 | 2 | -2 | -4 | -5"),
     ('g_alcance', "if alcance >= *((t + 0x19) as *const i16)", "if alcance > *((t + 0x19) as *const i16)"),
     ('n_titular', "if k <= 10 || *((j + 0x1f) as *const u8) != 0xff {", "if k <= 9 || *((j + 0x1f) as *const u8) != 0xff {"),
-    ('n_7', "if media < f64_em(0x968988) &&", "if media < f64_em(0x968988) + 0.5 &&"),
-    ('n_08', "forca(0x20) * f64_em(0x9689b0)", "forca(0x20)"),
+    ('n_7', "if media < read_f64_at(0x968988) &&", "if media < read_f64_at(0x968988) + 0.5 &&"),
+    ('n_08', "forca(0x20) * read_f64_at(0x9689b0)", "forca(0x20)"),
     ('n_2120', "casa == fora && classificado != 0", "casa == fora && classificado == 0"),
     ('n_2001', "fala(chamar, 0x2001, 0);", "fala(chamar, 0x2001, 1);"),
 ]

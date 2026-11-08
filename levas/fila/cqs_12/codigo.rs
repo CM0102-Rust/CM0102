@@ -14,7 +14,7 @@ unsafe fn cqs12_pd(a: usize, v: usize) {
 
 /// A seleção (o clube da seleção principal) da nação de id [`global`]: 0x53b3d0 database_get_national_team (push nação;
 /// add esp -> cdecl) com a nação da tabela [0xae23a8] (0x122 bytes cada).
-unsafe fn cqs12_selecao(id: usize) -> usize {
+unsafe fn national_team_of_nation_id(id: usize) -> usize {
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     selecao(cqs12_d(0xae23a8) + id * 0x122)
 }
@@ -37,7 +37,7 @@ const CQS12_DE_2001: [usize; 12] = [
 /// e sempre o México ([0x9cf3d0]); cada uma entra se não é a nação de uma sede (+0x53 da seleção). Sem 12: a caixa da
 /// linha 0x3bc e devolve 0; com 12, a lista ordenada pela reputação (qsort 0x945333 com 0x4b07d0: 4 pushes; add esp ->
 /// cdecl) e devolve 1.
-unsafe fn cqs12_selecoes(this: usize) -> u32 {
+unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
@@ -45,14 +45,14 @@ unsafe fn cqs12_selecoes(this: usize) -> u32 {
     let lista = alocar(0x30);
     cqs12_pd(this + 0xee, lista);
     if lista == 0 {
-        aviso_em(0x9cd640, 0x37b);
+        show_error_at(0x9cd640, 0x37b);
         return 0;
     }
     let ano = cqs12_w(this + 0x40) as u16;
     if ano == 0x7d1 {
         crate::comparacao::ramo("cqs_12 selecoes de 2001");
         for (k, &g) in CQS12_DE_2001.iter().enumerate() {
-            cqs12_pd(cqs12_d(this + 0xee) + k * 4, cqs12_selecao(cqs12_d(g)));
+            cqs12_pd(cqs12_d(this + 0xee) + k * 4, national_team_of_nation_id(cqs12_d(g)));
         }
         return 1;
     }
@@ -63,7 +63,7 @@ unsafe fn cqs12_selecoes(this: usize) -> u32 {
     let quantas = sedes(cqs12_d(0xb5e134), cqs12_d(0x9cf7a8), ano as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
     let mut k = 0i16;
     while k < quantas as i16 {
-        cqs12_pd(cqs12_d(this + 0xee) + k as usize * 4, cqs12_selecao(ids[k as usize] as usize));
+        cqs12_pd(cqs12_d(this + 0xee) + k as usize * 4, national_team_of_nation_id(ids[k as usize] as usize));
         k += 1;
     }
     let mut i = 0i16;
@@ -87,7 +87,7 @@ unsafe fn cqs12_selecoes(this: usize) -> u32 {
         nacao += 0x122;
     }
     if k as i32 != cqs12_d(this + 0xf2) as i32 {
-        aviso_em(0x9cd640, 0x3bc);
+        show_error_at(0x9cd640, 0x3bc);
         return 0;
     }
     ordenar(cqs12_d(this + 0xee), k as i32 as u32, 4, 0x4b07d0);
@@ -95,13 +95,13 @@ unsafe fn cqs12_selecoes(this: usize) -> u32 {
 }
 
 unsafe extern "thiscall" fn set_up_team_list(this: usize) -> u32 {
-    cqs12_selecoes(this)
+    build_gold_cup_team_list(this)
 }
 
 /// Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
 /// cópia faz a sua, comparada nas 12 vagas e liberada.
 unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4)];
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
         lo.set(cqs12_d(this + 0xee));
         r
     }, || {
-        let r = cqs12_selecoes(this);
+        let r = build_gold_cup_team_list(this);
         lr.set(cqs12_d(this + 0xee));
         cqs12_pd(this + 0xee, lo.get());
         r
@@ -143,11 +143,11 @@ unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     if cqs12_d(this + 8) == 0 {
-        return aviso_em(0x9cd640, 0x419);
+        return show_error_at(0x9cd640, 0x419);
     }
     let v = alocar((cqs12_d(this + 0xf2) << 2) as u32);
     if v == 0 {
-        return aviso_em(0x9cd640, 0x421);
+        return show_error_at(0x9cd640, 0x421);
     }
     let n = cqs12_d(this + 0xf2) << 2;
     core::ptr::copy_nonoverlapping(cqs12_d(this + 0xee) as *const u8, v as *mut u8, n);
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
 // a lista ordenada pela reputação antes, e depois a posição (+0x72 da entrada, 0x4a4850 Comp_Stats::find_club_entry) de
 // cada uma das 12 igual à da faixa.
 unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     if cqs12_d(this + 8) == 0 || cqs12_d(this + 0xee) == 0 || cqs12_d(this + 0xf2) != 0xc {
         return o(this);
     }
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
     cqs12_pd(this + 0x30, usize::MAX);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs12_d(cqs12_d(this) + 0x8c));
     if regras(this) == 0 {
-        aviso_em(0x9cd640, 0x28b);
+        show_error_at(0x9cd640, 0x28b);
     }
 }
 
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
 // +0x30 = −1, +0xba = 0 e +0x4c = 0 (as regras gravam a tabela das rodadas de novo em +0xba: conferida só que existe
 // quando havia antes).
 unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let ano = cqs12_w(this + 0x40);
     o(this);
     let ok = cqs12_w(this + 0x40) == ano.wrapping_add(2) && cqs12_d(this + 0x45) == 0 && cqs12_d(this + 0x30) as i32 == -1 && cqs12_d(this + 0x4c) == 0;

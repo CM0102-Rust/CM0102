@@ -15,7 +15,7 @@ unsafe fn cpk6_w(a: usize) -> i16 {
 unsafe extern "thiscall" fn get_slot_string(noticia: usize, dado: u32, destino: *mut u8, n: i32) -> u32 {
     let k = dado as u8 as i8;
     if !(0..0x32).contains(&k) || destino.is_null() || n < 1 {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(%%I0%%)(noticia, dado, destino, n); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(%%I0%%)(noticia, dado, destino, n); // caixa: só a original
     }
     crate::comparacao::ramo("cpk_6 texto do dado");
     let origem = (noticia + 5 + 4 * k as usize) as *const u8; // o dado
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize, clube: usi
 }
 
 /// O clube que a 0x7f9190 usa: o `clube`, ou o do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]] + 0x39).
-unsafe fn cpk6_clube(clube: usize) -> usize {
+unsafe fn club_or_current_human(clube: usize) -> usize {
     if clube != 0 {
         return clube;
     }
@@ -77,9 +77,9 @@ unsafe fn cpk6_clube(clube: usize) -> usize {
 /// de 64 bits abaixo de 1.000.000, reputação (+0x80) abaixo de 5000 e a região (+0x76) da nação dele (+0x53) diferente
 /// da região da `nacao`: 0. Senão 1. Sem clube nenhum: a original (caixa "Error" e 0).
 unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nacao: usize, clube: usize) -> u32 {
-    let c = cpk6_clube(clube);
+    let c = club_or_current_human(clube);
     if c == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, nacao, clube); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, nacao, clube); // caixa: só a original
     }
     let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let f = get_club_finance(cpk6_d(0xae2a38), c);
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nacao: usize, clu
 
 /// Comparador: lado a lado pelos `n` bytes do destino.
 unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, dado: u32, destino: *mut u8, n: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(%%I0%%);
     let k = dado as u8 as i8;
     if !(0..0x32).contains(&k) || destino.is_null() || n < 1 {
         return o(noticia, dado, destino, n);
@@ -109,13 +109,13 @@ unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, dado: u32, 
 /// modo Rust).
 unsafe extern "thiscall" fn comparar_post_financial_trouble_news(this: usize, clube: usize) {
     crate::comparacao::ramo("post_financial_trouble_news");
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
 }
 
 /// Comparador: pelo valor (a 0x5a0590 só procura).
 unsafe extern "thiscall" fn comparar_can_club_scout_nation(this: usize, nacao: usize, clube: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, nacao, clube);
-    if cpk6_clube(clube) == 0 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, nacao, clube);
+    if club_or_current_human(clube) == 0 {
         return r;
     }
     let n = can_club_scout_nation(this, nacao, clube);

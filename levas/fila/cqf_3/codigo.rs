@@ -29,12 +29,12 @@ unsafe fn cqf3_pb(a: usize, v: u8) {
 }
 
 /// Os três bônus do contrato (+0x10, +0x14, +0x18): os que não são −1 (> −1) × `f`, truncados.
-unsafe fn cqf3_bonus(c: usize, f: f64) {
+unsafe fn scale_contract_bonuses(c: usize, f: f64) {
     for k in 0..3 {
         let a = c + 0x10 + 4 * k;
         let v = cqf3_i(a);
         if v > -1 {
-            cqf3_pd(a, ftol(v as f64 * f) as u32);
+            cqf3_pd(a, match_pl_ftol(v as f64 * f) as u32);
         }
     }
 }
@@ -139,21 +139,21 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
     // ponytail: o estatuto e o cargo vão em dwords com os bytes altos de sobra da pilha na original; a 0x85fc50 e a
     // 0x597db0 leem o byte
     let r = desejado(c, pessoa, clube, vaga, est as u32, cargo as u32, 0, 0);
-    if r as f64 == f64_em(0x9689a0) {
+    if r as f64 == read_f64_at(0x9689a0) {
         return 0;
     }
-    cqf3_pd(c + 8, ftol(cqf3_i(c + 8) as f64 * fator) as u32);
-    cqf3_pd(c + 0xc, ftol(cqf3_i(c + 0xc) as f64 * fator) as u32);
+    cqf3_pd(c + 8, match_pl_ftol(cqf3_i(c + 8) as f64 * fator) as u32);
+    cqf3_pd(c + 0xc, match_pl_ftol(cqf3_i(c + 0xc) as f64 * fator) as u32);
     if cqf3_b(c + 0x1d) != 0 {
         let mut piso: i32 = 0;
         if oferta != 0 {
             let v = valor_oferta(oferta, 0, 0, 0, 0, 1);
             if v > 0x4c4b40 {
-                piso = ftol((v - 0x4c4b40) as f64 * f64_em(0x968928) + f64_em(0x968e28));
+                piso = match_pl_ftol((v - 0x4c4b40) as f64 * read_f64_at(0x968928) + read_f64_at(0x968e28));
             } else if v > 0xf4240 {
-                piso = ftol((v - 0xf4240) as f64 * f64_em(0x968940) + f64_em(0x968e20));
+                piso = match_pl_ftol((v - 0xf4240) as f64 * read_f64_at(0x968940) + read_f64_at(0x968e20));
             } else if v > 0xc350 {
-                piso = ftol((v - 0xc350) as f64 * f64_em(0x968e18) + f64_em(0x9688f0));
+                piso = match_pl_ftol((v - 0xc350) as f64 * read_f64_at(0x968e18) + read_f64_at(0x9688f0));
             } else if cqf3_i(c + 0x21) < 0x186a0 {
                 piso = 0x186a0;
             }
@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
         let nibble = (cqf3_b(c + 0x4f) >> 4) as u32;
         let f = financas(cqf3_d(0xae2a38), clube);
         let m = teto_max(f, pessoa, nibble);
-        (fator + f64_em(0x967890)) * f64_em(0x968968) * m as f64 // cqf3: o teto do estatuto 11
+        (fator + read_f64_at(0x967890)) * read_f64_at(0x968968) * m as f64 // cqf3: o teto do estatuto 11
     } else {
         let f = financas(cqf3_d(0xae2a38), clube);
         teto_pessoal(f, cargo as i8) as f64
@@ -180,54 +180,54 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
     let ficha = cqf3_d(pessoa + 0x61);
     if ficha != 0 {
         let dias = dias_ate(0xae2c90, cqf3_d(pessoa + 0x10) as u32, cqf3_d(pessoa + 0x14) as u32);
-        let mut x = dias as f64 * f64_em(0x968e10);
+        let mut x = dias as f64 * read_f64_at(0x968e10);
         if cqf3_b(ficha + 0xf) == 0x14 {
-            x -= f64_em(0x968950);
+            x -= read_f64_at(0x968950);
         } else {
             let s = cqf3_b(ficha + 0x3c) as i8 as i32 + cqf3_b(ficha + 0x34) as i8 as i32 + cqf3_b(pessoa + 0x5b) as i8 as i32;
-            x -= (s as f64 * f64_em(0x968a80) - f64_em(0x968e08)) * f64_em(0x968e00);
+            x -= (s as f64 * read_f64_at(0x968a80) - read_f64_at(0x968e08)) * read_f64_at(0x968e00);
         }
         let fim = |c: usize| core::ptr::read_unaligned((c + 0x2f) as *const u16) as u32;
-        if x > f64_em(0x968df8) || (atual != 0 && cqf3_b(atual + 0x4f) & 0xf0 == 0x60) {
+        if x > read_f64_at(0x968df8) || (atual != 0 && cqf3_b(atual + 0x4f) & 0xf0 == 0x60) {
             if fim(c) > ano as u32 + 1 {
                 crate::comparacao::ramo("cqf_3 fim no ano que vem");
                 cqf3_pw(c + 0x2f, ano.wrapping_add(1)); // cqf3: o fim no ano que vem
-                cqf3_pd(c + 0xc, ftol(cqf3_i(c + 0xc) as f64 * f64_em(0x9689c0)) as u32);
+                cqf3_pd(c + 0xc, match_pl_ftol(cqf3_i(c + 0xc) as f64 * read_f64_at(0x9689c0)) as u32);
             }
-            cqf3_bonus(c, f64_em(0x968928));
-        } else if x > f64_em(0x968df0) {
+            scale_contract_bonuses(c, read_f64_at(0x968928));
+        } else if x > read_f64_at(0x968df0) {
             if fim(c) > ano as u32 + 2 {
                 cqf3_pw(c + 0x2f, ano.wrapping_add(2));
-                cqf3_pd(c + 0xc, ftol(cqf3_i(c + 0xc) as f64 * f64_em(0x9689c0)) as u32);
+                cqf3_pd(c + 0xc, match_pl_ftol(cqf3_i(c + 0xc) as f64 * read_f64_at(0x9689c0)) as u32);
             }
-            cqf3_bonus(c, f64_em(0x968de8));
-        } else if x > f64_em(0x968de0) && cqf3_w(clube + 0x80) as f64 > cqf3_w(ficha + 0xd) as f64 * f64_em(0x968978) {
-            let k = ftol(x + f64_em(0x968968)) as i8;
+            scale_contract_bonuses(c, read_f64_at(0x968de8));
+        } else if x > read_f64_at(0x968de0) && cqf3_w(clube + 0x80) as f64 > cqf3_w(ficha + 0xd) as f64 * read_f64_at(0x968978) {
+            let k = match_pl_ftol(x + read_f64_at(0x968968)) as i8;
             if fim(c) as i32 > (ano as i32 - k as i32) + 0x22 {
                 cqf3_pw(c + 0x2f, ano.wrapping_sub(k as i16 as u16).wrapping_add(0x22));
-                cqf3_pd(c + 0xc, ftol(cqf3_i(c + 0xc) as f64 * f64_em(0x9689c0)) as u32);
+                cqf3_pd(c + 0xc, match_pl_ftol(cqf3_i(c + 0xc) as f64 * read_f64_at(0x9689c0)) as u32);
             }
-            cqf3_bonus(c, f64_em(0x968940));
+            scale_contract_bonuses(c, read_f64_at(0x968940));
         }
-        if cqf3_i(c + 0xc) > 0x2710 && x > f64_em(0x968dd8) {
+        if cqf3_i(c + 0xc) > 0x2710 && x > read_f64_at(0x968dd8) {
             let dias_fim = dias_ate(c + 0x2d, cqf3_d(0xae2c90) as u32, cqf3_d(0xae2c94) as u32);
             let mut semanas = dias_fim / 7;
             let mut total = semanas.wrapping_mul(cqf3_i(c + 0xc));
-            let mut a = pow_do_jogo(cqf3_w(ficha + 0xb) as f64, f64_em(0x968950)) * f64_em(0x968dd0);
-            if !(a < f64_em(0x968dc8)) {
+            let mut a = game_pow(cqf3_w(ficha + 0xb) as f64, read_f64_at(0x968950)) * read_f64_at(0x968dd0);
+            if !(a < read_f64_at(0x968dc8)) {
                 a = 8000.0;
             }
-            let mut b = pow_do_jogo(x - f64_em(0x968dd8), f64_em(0x968950));
-            if !(b > f64_em(0x967890)) {
+            let mut b = game_pow(x - read_f64_at(0x968dd8), read_f64_at(0x968950));
+            if !(b > read_f64_at(0x967890)) {
                 b = 1.0;
             }
-            let limite = ftol(pow_do_jogo(a, f64_em(0x968950)) / b);
-            let reduz = (limite as f64 * f64_em(0x968940)) < total as f64;
+            let limite = match_pl_ftol(game_pow(a, read_f64_at(0x968950)) / b);
+            let reduz = (limite as f64 * read_f64_at(0x968940)) < total as f64;
             let mut feito = false;
             if reduz {
                 while semanas > 0x68 {
                     semanas -= 0x34;
-                    cqf3_pd(c + 0xc, ftol(cqf3_i(c + 0xc) as f64 * f64_em(0x9689c0)) as u32);
+                    cqf3_pd(c + 0xc, match_pl_ftol(cqf3_i(c + 0xc) as f64 * read_f64_at(0x9689c0)) as u32);
                     total = semanas.wrapping_mul(cqf3_i(c + 0xc));
                     if limite >= total {
                         feito = true;
@@ -261,16 +261,16 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
         cqf3_pw(c + 0x2f, ano.wrapping_add(5));
     }
     let w = cqf3_i(c + 0xc) as f64;
-    if w > teto * f64_em(0x968dc0) {
+    if w > teto * read_f64_at(0x968dc0) {
         return 0;
     }
     if w > teto {
         crate::comparacao::ramo("cqf_3 acima do teto");
-        let den = if f64_em(0x967890) > teto { f64_em(0x967890) } else { teto };
+        let den = if read_f64_at(0x967890) > teto { read_f64_at(0x967890) } else { teto };
         let razao = w / den;
-        cqf3_pd(c + 8, ftol(cqf3_i(c + 8) as f64 * razao) as u32);
-        cqf3_bonus(c, razao);
-        cqf3_pd(c + 0xc, ftol(teto) as u32); // cqf3: o valor no teto
+        cqf3_pd(c + 8, match_pl_ftol(cqf3_i(c + 8) as f64 * razao) as u32);
+        scale_contract_bonuses(c, razao);
+        cqf3_pd(c + 0xc, match_pl_ftol(teto) as u32); // cqf3: o valor no teto
     }
     limpar(c, 0);
     if saida != 0 {
@@ -326,7 +326,7 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
 /// sorteios); sem `saida` (pode propor o contrato, que aloca), só a original.
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_contract_manager_offer_contract(this: usize, pessoa: usize, clube: usize, saida: usize, vaga: i32, fator: f64, modo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, i32, f64, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, i32, f64, u32) -> u32>(%%I0%%);
     if saida == 0 {
         return o(this, pessoa, clube, saida, vaga, fator, modo); // ponytail: só a original
     }

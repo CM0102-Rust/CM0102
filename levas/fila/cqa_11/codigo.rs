@@ -21,7 +21,7 @@ unsafe fn cqa11_somar(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, cqa11_i(a).wrapping_add(v));
 }
 
-unsafe fn cqa11_mais1(a: usize) {
+unsafe fn increment_i16(a: usize) {
     core::ptr::write_unaligned(a as *mut i16, cqa11_w(a).wrapping_add(1));
 }
 
@@ -31,7 +31,7 @@ unsafe fn cqa11_sortear(n: i32) -> i32 {
 }
 
 /// O registro de pontos do técnico do clube (+0xcf, lido sem conferir o clube; 0x86f5b0 com criar), ou 0 sem técnico.
-unsafe fn cqa11_registro(this: usize, clube: usize) -> usize {
+unsafe fn club_manager_record(this: usize, clube: usize) -> usize {
     let t = cqa11_d(clube + 0xcf);
     if t == 0 {
         return 0;
@@ -41,7 +41,7 @@ unsafe fn cqa11_registro(this: usize, clube: usize) -> usize {
 }
 
 /// Os pontos de um lado na partida `m`: ((a + b) × 5 + (c − b, em 8 bits)) × 2 + d, vezes 5 (bytes com sinal).
-unsafe fn cqa11_pontos(m: usize, a: usize, b: usize, c: usize, d: usize) -> i32 {
+unsafe fn side_match_points(m: usize, a: usize, b: usize, c: usize, d: usize) -> i32 {
     let x = cqa11_c(m + a).wrapping_add(cqa11_c(m + b));
     let y = (*((m + c) as *const u8)).wrapping_sub(*((m + b) as *const u8)) as i8 as i32;
     let x = x.wrapping_mul(5).wrapping_add(y);
@@ -51,7 +51,7 @@ unsafe fn cqa11_pontos(m: usize, a: usize, b: usize, c: usize, d: usize) -> i32 
 /// A nota do jogo para o técnico: a importância (0x48e190 da competição do jogo, com `lado` e a saída em `saida`; só o
 /// byte, com sinal) × (reputação do adversário / 500) × o peso da competição (+0x69 de [+0x14]) × (pontos + bônus) × 50,
 /// dividido por 100000 (divisões com sinal truncadas, como as multiplicações mágicas da original; produtos em 32 bits).
-unsafe fn cqa11_nota(p: usize, lado: u32, saida: &mut u32, adversario: usize, pontos: i32) -> i32 {
+unsafe fn match_rating_for_manager(p: usize, lado: u32, saida: &mut u32, adversario: usize, pontos: i32) -> i32 {
     let comp = cqa11_d(cqa11_d(0xadadfc).wrapping_add(4 * cqa11_d(p)));
     let importancia: unsafe extern "thiscall" fn(usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(0x48e190usize);
     let i = importancia(comp, p, lado, saida as *mut u32) as u8 as i8 as i32;
@@ -76,13 +76,13 @@ unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize)
         return;
     }
     let (casa, fora) = (cqa11_d(p + 0x1c), cqa11_d(p + 0x20));
-    let a = cqa11_registro(this, casa);
-    let v = cqa11_registro(this, fora);
+    let a = club_manager_record(this, casa);
+    let v = club_manager_record(this, fora);
     if a != 0 {
-        cqa11_mais1(a + 0x8e);
+        increment_i16(a + 0x8e);
     }
     if v != 0 {
-        cqa11_mais1(v + 0x8e);
+        increment_i16(v + 0x8e);
     }
     let (ga, gv) = if *((p + 0x47) as *const u8) == 0xff {
         (cqa11_c(p + 0x43), cqa11_c(p + 0x44))
@@ -102,27 +102,27 @@ unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize)
         ba = 900; // cqa11: o bônus da vitória do mandante
         if a != 0 {
             crate::comparacao::ramo("cqa_11 vitoria do mandante");
-            cqa11_mais1(a + 0x90);
+            increment_i16(a + 0x90);
         }
         if v != 0 {
-            cqa11_mais1(v + 0x94);
+            increment_i16(v + 0x94);
         }
     } else if ga < gv {
         bv = 900;
         if v != 0 {
-            cqa11_mais1(v + 0x90);
+            increment_i16(v + 0x90);
         }
         if a != 0 {
-            cqa11_mais1(a + 0x94);
+            increment_i16(a + 0x94);
         }
     } else {
         ba = 300;
         bv = 300;
         if a != 0 {
-            cqa11_mais1(a + 0x92);
+            increment_i16(a + 0x92);
         }
         if v != 0 {
-            cqa11_mais1(v + 0x92);
+            increment_i16(v + 0x92);
         }
     }
     // a saída da 0x48e190 vai na vaga do argumento `jogo` da original, que começa com o próprio jogo
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize)
     let comp = cqa11_d(p + 0x14);
     if a != 0 {
         crate::comparacao::ramo("cqa_11 nota do mandante");
-        let q = cqa11_nota(p, 0, &mut saida, fora, cqa11_pontos(m, 0x11f, 0x128, 0x127, 0x129).wrapping_add(ba));
+        let q = match_rating_for_manager(p, 0, &mut saida, fora, side_match_points(m, 0x11f, 0x128, 0x127, 0x129).wrapping_add(ba));
         cqa11_somar(a + 0xb6, q);
         cqa11_somar(a + 0xca, q);
         guardado = q;
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize)
         }
     }
     if v != 0 {
-        let q = cqa11_nota(p, 1, &mut saida, casa, cqa11_pontos(m, 0x744, 0x74d, 0x74c, 0x74e).wrapping_add(bv));
+        let q = match_rating_for_manager(p, 1, &mut saida, casa, side_match_points(m, 0x744, 0x74d, 0x74c, 0x74e).wrapping_add(bv));
         cqa11_somar(v + 0xb6, q);
         cqa11_somar(v + 0xca, q);
         if comp == cqa11_d(fora + 0x57) || comp == cqa11_d(fora + 0x60) {
@@ -163,12 +163,12 @@ unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize)
 /// Comparador lado a lado nos dois registros (0xd2 bytes), criados antes pela 0x86f5b0 como a original faria (a segunda
 /// chamada acha o mesmo registro). Jogo não disputado: só a original (não cria nada).
 unsafe extern "thiscall" fn comparar_record_match_result(this: usize, p: usize, m: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if *((p + 0x3a) as *const u8) == 1 {
         return o(this, p, m);
     }
-    let a = cqa11_registro(this, cqa11_d(p + 0x1c));
-    let v = cqa11_registro(this, cqa11_d(p + 0x20));
+    let a = club_manager_record(this, cqa11_d(p + 0x1c));
+    let v = club_manager_record(this, cqa11_d(p + 0x20));
     let mut reg = Vec::new();
     for r in [a, v] {
         if r != 0 {
@@ -186,19 +186,19 @@ unsafe extern "thiscall" fn comparar_record_match_result(this: usize, p: usize, 
 unsafe extern "thiscall" fn add_league_finish_records(this: usize, liga: usize) {
     crate::comparacao::ramo("cqa_11 fim da liga");
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
-    let mut e = cpq4_entrada();
-    cpq4_datar(e.as_mut_ptr());
+    let mut e = history_entry();
+    stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0xa;
-    cpq4_por(&mut e, 0x11, cqa11_w(liga + 0x3a) as i32);
-    cpq4_por(&mut e, 0xd, cqa11_i(cqa11_d(liga + 4)));
+    put_i32(&mut e, 0x11, cqa11_w(liga + 0x3a) as i32);
+    put_i32(&mut e, 0xd, cqa11_i(cqa11_d(liga + 4)));
     let mut k: i16 = 0;
     while k < cqa11_w(liga + 0x3e) {
         let clube = cqa11_d(linha(liga, k as i32));
-        cpq4_por(&mut e, 0x15, k as i32 + 1);
-        cpq4_por(&mut e, 8, cqa11_i(clube));
+        put_i32(&mut e, 0x15, k as i32 + 1);
+        put_i32(&mut e, 8, cqa11_i(clube));
         let t = cqa11_d(clube + 0xcf);
         if t != 0 {
-            cpq4_historico(true, this, cqa11_d(t), &e);
+            append_person_history_by_id(true, this, cqa11_d(t), &e);
         }
         k += 1;
     }
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn add_league_finish_records(this: usize, liga: usize) 
 
 // ponytail: só grava o histórico no arquivo (não roda duas vezes): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_add_league_finish_records(this: usize, liga: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, liga)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, liga)
 }
 
 /// O ensaio do comparador da 0x86dc30: a cópia sem o histórico (arquivo).
@@ -219,18 +219,18 @@ static mut CQA11_ENSAIO: bool = false;
 /// sorteio(2)). Pessoa nula: a original (a caixa e a leitura de +0x59 da pessoa nula).
 unsafe extern "thiscall" fn add_supporters_player_of_year_record(this: usize, pessoa: usize, clube: usize, a: u32, b: u32) {
     if pessoa == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, pessoa, clube, a, b);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, pessoa, clube, a, b);
     }
-    let mut e = cpq4_entrada();
-    cpq4_datar(e.as_mut_ptr());
+    let mut e = history_entry();
+    stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x35;
-    cpq4_por(&mut e, 8, cqa11_i(clube));
-    cpq4_por(&mut e, 0xd, (a & 0xffff) as i32);
-    cpq4_por(&mut e, 0x11, b as i32);
-    cpq4_historico(!CQA11_ENSAIO, this, cqa11_d(pessoa), &e);
+    put_i32(&mut e, 8, cqa11_i(clube));
+    put_i32(&mut e, 0xd, (a & 0xffff) as i32);
+    put_i32(&mut e, 0x11, b as i32);
+    append_person_history_by_id(!CQA11_ENSAIO, this, cqa11_d(pessoa), &e);
     let r1 = cqa11_sortear(0x15 - cqa11_c(pessoa + 0x59));
     if r1 < cqa11_sortear(10) {
-        crate::comparacao::ramo("cqa_11 torcida favorita");
+        crate::comparacao::ramo("cqa_11 goal_crowd_reaction favorita");
         let gosta: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547d90usize);
         let favorita: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547870usize);
         gosta(pessoa, clube, cqa11_sortear(2) as u32);
@@ -242,7 +242,7 @@ unsafe extern "thiscall" fn add_supporters_player_of_year_record(this: usize, pe
 /// rejeitadas do clube +0x9b e os clubes favoritos e rejeitados da pessoa, preferências +0x65: +4..+0x18). Pessoa nula:
 /// só a original.
 unsafe extern "thiscall" fn comparar_add_supporters_player_of_year_record(this: usize, pessoa: usize, clube: usize, a: u32, b: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%);
     if pessoa == 0 || clube == 0 {
         return o(this, pessoa, clube, a, b);
     }

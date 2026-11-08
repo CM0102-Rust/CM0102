@@ -4,6 +4,6 @@
 # ESCAPA da carreira da Inglaterra (lacuna); a carreira ampla (ESP, ITA) e o jogo real comparando com essas ligas
 # podem acusar.
 MUTACOES = [
-    ('dbr_latitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x23) // a latitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x2b) // mutacao: a longitude no lugar da latitude'),
-    ('dbr_longitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x2b) // a longitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x23) // mutacao: a latitude no lugar da longitude'),
+    ('dbr_latitude', '    order_by_city_coordinate(ca, cb, 0x23) // a latitude', '    order_by_city_coordinate(ca, cb, 0x2b) // mutacao: a longitude no lugar da latitude'),
+    ('dbr_longitude', '    order_by_city_coordinate(ca, cb, 0x2b) // a longitude', '    order_by_city_coordinate(ca, cb, 0x23) // mutacao: a latitude no lugar da longitude'),
 ]

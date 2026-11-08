@@ -13,7 +13,7 @@ MUTACOES = [
      'let c = cqm10_d(cqm10_d(this + 0xb2) + 0x70 + (27 - k as usize) * 4); // mutacao: ordem inversa',
      'cqm_10 segunda chave do trofeu da liga'),
     ('cqm10_supercopa_com_o_vice',
-     'let a = cqm10_colocado(0x9cf5bc, 0); // cqm10: o campeão inglês',
-     'let a = cqm10_colocado(0x9cf5bc, 1); // mutacao: o vice',
+     'let a = latest_placed_club(0x9cf5bc, 0); // cqm10: o campeão inglês',
+     'let a = latest_placed_club(0x9cf5bc, 1); // mutacao: o vice',
      'cqm_10 clubes da supercopa inglesa'),
 ]

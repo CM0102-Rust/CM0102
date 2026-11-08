@@ -2,7 +2,7 @@
 
 /// Solta uma tabela do banco como 0x527ee0/0x527f20: `GlobalFree` (IAT 0x9670f4) com o banco no bloco
 /// compartilhado ([0xae2340] ≠ 0), senão `free` 0x9452ca.
-unsafe fn soltar_tabela_do_banco(tabela: usize) {
+unsafe fn free_database_table(tabela: usize) {
     if *(0xae2340 as *const u32) != 0 {
         let global_free: unsafe extern "system" fn(usize) -> usize = core::mem::transmute(*(0x9670f4 as *const usize));
         global_free(tabela);
@@ -22,7 +22,7 @@ unsafe extern "C" fn database_free_staff_history_table() {
         return;
     }
     crate::comparacao::ramo("banco liberar histórico de pessoas");
-    soltar_tabela_do_banco(tabela);
+    free_database_table(tabela);
     *(0xae23cc as *mut usize) = 0;
     *(0xae2374 as *mut u32) = 0;
 }
@@ -30,7 +30,7 @@ unsafe extern "C" fn database_free_staff_history_table() {
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
 // ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_database_free_staff_history_table() {
-    orig::<unsafe extern "C" fn()>(%%I0%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
 /// { 0x527f20 } (cdecl, Database.cpp): `database_free_staff_comp_history_table()`: o mesmo para o histórico
@@ -41,7 +41,7 @@ unsafe extern "C" fn database_free_staff_comp_history_table() {
         return;
     }
     crate::comparacao::ramo("banco liberar histórico de prêmios");
-    soltar_tabela_do_banco(tabela);
+    free_database_table(tabela);
     *(0xae23e4 as *mut usize) = 0;
     *(0xae238c as *mut u32) = 0;
 }
@@ -49,7 +49,7 @@ unsafe extern "C" fn database_free_staff_comp_history_table() {
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
 // ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_database_free_staff_comp_history_table() {
-    orig::<unsafe extern "C" fn()>(%%I1%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I1%%)()
 }
 
 /// { 0x527f60 } (cdecl, Database.cpp): `database_grow_comp_history_table(n)`: `realloc` 0x945667 do histórico de
@@ -81,6 +81,6 @@ unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 {
 /// Comparador: o `realloc` não se desfaz (crescer duas vezes deixaria a tabela com 2n linhas a mais).
 // ponytail: só a original; a prova é o .qst (a tabela vai para o save) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_database_grow_comp_history_table(n: i32) -> u32 {
-    orig::<unsafe extern "C" fn(i32) -> u32>(%%I2%%)(n)
+    original_fn::<unsafe extern "C" fn(i32) -> u32>(%%I2%%)(n)
 }
 

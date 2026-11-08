@@ -12,7 +12,7 @@ unsafe fn cps11_w(a: usize) -> u16 {
 /// 0x5ab230 e 0x5abc30): o bloco seguinte (+0x112c) de outro ano é levado ao ano pedido (0x5aa2d0 set_year); sem
 /// seguinte, um bloco novo (0x944cf1, 0x1184 bytes; 0x5a9cf0 com o ano, o bloco de antes e 0) entra na corrente. 0 se
 /// faltou memória (a corrente fica com 0 em +0x112c, como na original).
-unsafe fn cps11_bloco_do_ano(fm: usize, f: usize) -> usize {
+unsafe fn calendar_year_block(fm: usize, f: usize) -> usize {
     let mudar_ano: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x5aa2d0usize);
     let novo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x944cf1usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> usize = core::mem::transmute(0x5a9cf0usize);
@@ -44,7 +44,7 @@ unsafe fn cps11_bloco_do_ano(fm: usize, f: usize) -> usize {
 
 /// A lista do dia, fatia (+0x3f) e nação-chave do jogo `f` no bloco `b`: [[b + (dia +0x2a × 3 + fatia) × 4] + nação × 4],
 /// a nação pela 0x48dd70 (competição +0x14, o jogo), com sinal.
-unsafe fn cps11_lista_no_bloco(b: usize, f: usize) -> usize {
+unsafe fn fixture_list_in_block(b: usize, f: usize) -> usize {
     let nacao: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x48dd70usize);
     let n = nacao(cps11_d(f + 0x14), f) as u8 as i8 as isize;
     let k = cps11_w(f + 0x2a) as usize * 3 + *((f + 0x3f) as *const u8) as usize;
@@ -65,12 +65,12 @@ unsafe extern "thiscall" fn find_stored_fixture(this: usize, f: usize) -> usize 
     if f == 0 {
         return 0;
     }
-    let b = cps11_bloco_do_ano(this, f);
+    let b = calendar_year_block(this, f);
     if b == 0 {
-        aviso_em(0x9cc208, 0x7cf);
+        show_error_at(0x9cc208, 0x7cf);
         return 0;
     }
-    let l = cps11_lista_no_bloco(b, f);
+    let l = fixture_list_in_block(b, f);
     core::ptr::write_unaligned((l + 0xa) as *mut u32, cps11_d(l + 2) as u32);
     let alvo = core::slice::from_raw_parts(f as *const u8, 0x4f);
     let mut item = cps11_proximo(l);
@@ -88,14 +88,14 @@ unsafe extern "thiscall" fn find_stored_fixture(this: usize, f: usize) -> usize 
 /// bytes do jogo (0x68d0d0) à lista do dia, fatia e nação-chave dele no bloco do ano (pela corrente). Sem memória para o
 /// bloco: a caixa (linha 0x3ff); a cópia que falha: a caixa (linha 0x3eb).
 unsafe extern "thiscall" fn insert_fixture(this: usize, f: usize) {
-    let b = cps11_bloco_do_ano(this, f);
+    let b = calendar_year_block(this, f);
     if b == 0 {
-        return aviso_em(0x9cc208, 0x3ff);
+        return show_error_at(0x9cc208, 0x3ff);
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
-    let l = cps11_lista_no_bloco(b, f);
+    let l = fixture_list_in_block(b, f);
     if copiar(l, f, 0x4f) == 0 { // cps11: guardar
-        return aviso_em(0x9cc208, 0x3eb);
+        return show_error_at(0x9cc208, 0x3eb);
     }
     crate::comparacao::ramo("cps_11 jogo guardado");
 }
@@ -104,13 +104,13 @@ unsafe extern "thiscall" fn insert_fixture(this: usize, f: usize) {
 /// nação-chave do jogo (no bloco do ano, pela corrente) o primeiro item com os mesmos bytes (0x68d1f0). Devolve 1 se
 /// tirou, 0 se não; sem memória para o bloco: a caixa (linha 0x5ef) e 0.
 unsafe extern "thiscall" fn remove_fixture(this: usize, f: usize) -> u32 {
-    let b = cps11_bloco_do_ano(this, f);
+    let b = calendar_year_block(this, f);
     if b == 0 {
-        aviso_em(0x9cc208, 0x5ef);
+        show_error_at(0x9cc208, 0x5ef);
         return 0;
     }
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
-    let r = tirar(cps11_lista_no_bloco(b, f), f); // cps11: tirar
+    let r = tirar(fixture_list_in_block(b, f), f); // cps11: tirar
     if r != 0 {
         crate::comparacao::ramo("cps_11 jogo tirado");
     }
@@ -119,15 +119,15 @@ unsafe extern "thiscall" fn remove_fixture(this: usize, f: usize) -> u32 {
 
 /// A lista do jogo no calendário, achada antes da original (o laço da corrente faz o mesmo que ela faria: depois dele
 /// a original acha o bloco do ano de primeira); 0 sem memória.
-unsafe fn cps11_lista_antes(fm: usize, f: usize) -> usize {
-    let b = cps11_bloco_do_ano(fm, f);
-    if b == 0 { 0 } else { cps11_lista_no_bloco(b, f) }
+unsafe fn find_fixture_list(fm: usize, f: usize) -> usize {
+    let b = calendar_year_block(fm, f);
+    if b == 0 { 0 } else { fixture_list_in_block(b, f) }
 }
 
 /// Comparador: a original e a cópia só andam o cursor da lista (e a primeira pode criar o bloco do ano, que a segunda
 /// acha pronto): pela devolução.
 unsafe extern "thiscall" fn comparar_find_stored_fixture(this: usize, f: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%)(this, f);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%)(this, f);
     let n = find_stored_fixture(this, f);
     PLACAR.registrar(r == n, || format!("find_stored_fixture(jogo {:x}) original={:x} rust={:x}", f, r, n));
     r
@@ -136,8 +136,8 @@ unsafe extern "thiscall" fn comparar_find_stored_fixture(this: usize, f: usize) 
 /// Comparador: acrescenta à lista (não roda duas vezes): a lista é achada antes pela cópia, a original guarda e a conta
 /// tem de subir 1 com a cauda nova igual aos 0x4f bytes do jogo.
 unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
-    let l = cps11_lista_antes(this, f);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let l = find_fixture_list(this, f);
     if l == 0 {
         return o(this, f); // ponytail: sem memória para o bloco, só a original (a caixa)
     }
@@ -152,8 +152,8 @@ unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: usize) {
 /// Comparador: tira da lista (não roda duas vezes): antes da original, a cópia acha a lista e vê se algum item tem os
 /// bytes do jogo (o tamanho guardado em +4, como a 0x68d1f0); a original tira e devolve: a devolução e a conta.
 unsafe extern "thiscall" fn comparar_remove_fixture(this: usize, f: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
-    let l = cps11_lista_antes(this, f);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
+    let l = find_fixture_list(this, f);
     if l == 0 {
         return o(this, f); // ponytail: sem memória para o bloco, só a original (a caixa)
     }

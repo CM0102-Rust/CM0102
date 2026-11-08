@@ -5,7 +5,7 @@
 #   mudam;
 # - o sorteio um dia depois (28/12): os sorteios da Copa se intercalam de outro jeito com os do resto do jogo.
 # Os contadores ficam colados no efeito: a vaga no grupo depois do laco da repeticao; o sorteio de 2002 depois da
-# condicao do ano; o dia do sorteio dentro da condicao inteira.
+# match_condition do ano; o dia do sorteio dentro da match_condition inteira.
 MUTACOES = [
     ('cqf4_limite_do_grupo_mais_um',
      'let lim = ((k / 8) as i8).wrapping_add(1); // cqf4: o limite de times por grupo',

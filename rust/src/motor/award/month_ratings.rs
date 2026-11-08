@@ -6,8 +6,10 @@ use super::*;
 
 
 
-/// A pessoa `id` da tabela de pessoas ([0xae23bc], 0x6e bytes cada).
-pub(crate) unsafe fn cpw5_pessoa(id: i32) -> usize {
+/// Staff record of id (G_STAFF_TABLE, 0x6e bytes).
+///
+/// [pt] A pessoa `id` da tabela de pessoas ([0xae23bc], 0x6e bytes cada).
+pub(crate) unsafe fn month_ratings_staff_by_id(id: i32) -> usize {
     read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e))
 }
 
@@ -32,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: u
             if k >= 0xb && read_u8(e + 0x32) == 0xff {
                 continue;
             }
-            let p = cpw5_pessoa(read_i32(e));
+            let p = month_ratings_staff_by_id(read_i32(e));
             if p != 0 && read_i32(p) >= read_i32(0xae2364) {
                 continue;
             }
@@ -48,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: u
 /// O comparador das notas da partida: lado a lado (cabeçalho e as vagas da tabela que podem mudar) quando cabem as 40
 /// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize, jogo: usize, partida: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RATINGS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RATINGS);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
     if tab == 0 || n < 0 || cap.wrapping_sub(n) < 40 {
         // ponytail: a tabela pode crescer (realloc): só a original; a 0x767fa0 compara cada nota
@@ -59,9 +61,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize
     PLACAR.registrar(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
-/// A nota da partida (+0x35 da vaga, sem sinal) soma na palavra +8 do registro de 12 bytes e o byte +0xa conta mais um
+/// Adds a slot's match rating (+0x35) to word +8 of a 12-byte record and counts one more game at +0xa.
+///
+/// [pt] A nota da partida (+0x35 da vaga, sem sinal) soma na palavra +8 do registro de 12 bytes e o byte +0xa conta mais um
 /// jogo.
-pub(crate) unsafe fn cpw5_somar(r: usize, e: usize) {
+pub(crate) unsafe fn add_match_rating(r: usize, e: usize) {
     let s = (r + 8) as *mut u16;
     core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(read_u8(e + 0x35) as u16));
     *((r + 0xa) as *mut u8) = read_u8(r + 0xa).wrapping_add(1);
@@ -82,7 +86,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     for k in 0..n.max(0) as usize {
         let r = tab + k * 12;
         if read_i32(r) == id {
-            return cpw5_somar(r, e);
+            return add_match_rating(r, e);
         }
     }
     let cap = read_i32(this + 8);
@@ -100,11 +104,11 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
         if tab == 0 {
             // ponytail: sem memória (a caixa "Error" da original): volta a capacidade e deixa a original refazer
             write_u32(this + 8, cap as u32);
-            return orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_PLAYER_RATING)(this, e);
+            return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_PLAYER_RATING)(this, e);
         }
         write_u32(this, tab as u32);
     }
-    let p = cpw5_pessoa(id);
+    let p = month_ratings_staff_by_id(id);
     let clube = read_usize(p + 0x39);
     let mut liga = -1i32;
     if clube != 0 {
@@ -121,13 +125,13 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     crate::comparacao::ramo("cpw_5 jogador novo no mes");
     *((r + 0xa) as *mut u8) = 0; // cpw5: começa sem jogos
     write_u32(this + 4, n.wrapping_add(1) as u32);
-    cpw5_somar(r, e);
+    add_match_rating(r, e);
 }
 
 /// O comparador da nota do mês: lado a lado (cabeçalho e os registros até o novo) quando a tabela não precisa crescer;
 /// senão só a original (realloc).
 pub(crate) unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_PLAYER_RATING);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_PLAYER_RATING);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
     let achou = tab != 0 && (0..n.max(0) as usize).any(|k| read_i32(tab + k * 12) == read_i32(e));
     if tab == 0 || n < 0 || (n >= cap && !achou) {
@@ -179,7 +183,7 @@ pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, liga: i32, 
             if liga == -1 {
                 return r;
             }
-            let c = read_usize(cpw5_pessoa(read_i32(r)) + 0x39);
+            let c = read_usize(month_ratings_staff_by_id(read_i32(r)) + 0x39);
             if c != 0 {
                 let l = read_usize(c + 0x57);
                 if l != 0 && read_i32(l) == liga {
@@ -196,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, liga: i32, 
 
 /// O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
 pub(crate) unsafe extern "thiscall" fn comparar_find_best_player(this: usize, liga: i32, idade: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(IDX_FIND_BEST_PLAYER);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(IDX_FIND_BEST_PLAYER);
     let (tab, n) = (read_usize(this), read_i32(this + 4));
     let regioes: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, liga, idade), || find_best_player(this, liga, idade));

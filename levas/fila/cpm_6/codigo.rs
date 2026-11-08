@@ -17,7 +17,7 @@ unsafe fn cpm6_por_w(a: usize, v: i16) {
 }
 
 /// A notícia de recorde (id do clube, tipo) já está no vetor de 6 bytes [this+0x24] (conta +0x2c)?
-unsafe fn cpm6_noticia_na_fila(this: usize, id: usize, tipo: u8) -> bool {
+unsafe fn is_record_news_queued(this: usize, id: usize, tipo: u8) -> bool {
     let n = cpm6_d(this + 0x2c) as i32;
     let v = cpm6_d(this + 0x24);
     (0..n.max(0) as usize).any(|k| cpm6_d(v + 6 * k) == id && *((v + 6 * k + 4) as *const u8) == tipo)
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprad
     let ano = ano_do_clube(vendedor) as i16;
     if (cpm6_d(s + 0x36b) as i32) < cpm6_d(t + 0x36b) as i32 {
         let minimo = (cpm6_w(vendedor + 0x80) as i32 + 500).wrapping_mul(1000);
-        if cpm6_d(t + 0x36b) as i32 >= minimo && ano != cpm6_w(s + 0x36f) && !cpm6_noticia_na_fila(this, cpm6_d(vendedor), 0x1f) {
+        if cpm6_d(t + 0x36b) as i32 >= minimo && ano != cpm6_w(s + 0x36f) && !is_record_news_queued(this, cpm6_d(vendedor), 0x1f) {
             crate::comparacao::ramo("cpm_6 noticia de recorde recebido");
             noticia(this, cpm6_d(vendedor) as u32, 0x1f); // recorde de valor recebido
         }
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprad
     if (cpm6_d(t + 0x365) as i32) > cpm6_d(s + 0x365) as i32 {
         let minimo = (cpm6_w(comprador + 0x80) as i32 + 500).wrapping_mul(1000);
         // a original confere o mínimo com o recorde antigo (o ecx que ainda tem o de sempre)
-        if cpm6_d(s + 0x365) as i32 >= minimo && !cpm6_noticia_na_fila(this, cpm6_d(comprador), 0x1e) {
+        if cpm6_d(s + 0x365) as i32 >= minimo && !is_record_news_queued(this, cpm6_d(comprador), 0x1e) {
             crate::comparacao::ramo("cpm_6 noticia de recorde pago");
             noticia(this, cpm6_d(comprador) as u32, 0x1e); // recorde de valor pago
         }
@@ -83,13 +83,13 @@ unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprad
 /// sem registro: a caixa "Error" (linhas 0x6fa e 0x702) e 0.
 unsafe extern "thiscall" fn club_records_update_career_records(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
     if jogador == 0 || clube == 0 {
-        aviso_em(0x98b6a0, 0x6fa);
+        show_error_at(0x98b6a0, 0x6fa);
         return 0;
     }
     let sempre: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x452710usize);
     let r = sempre(this, clube, 1);
     if r == 0 {
-        aviso_em(0x98b6a0, 0x702);
+        show_error_at(0x98b6a0, 0x702);
         return 0;
     }
     let vale: unsafe extern "stdcall" fn(u32, usize, u32) -> u32 = core::mem::transmute(0x449590usize);
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn club_records_update_career_records(this: usize, joga
 /// original (caixa 0x16f2, 0).
 unsafe extern "thiscall" fn update_season_rating_record(this: usize, clube: usize) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, clube); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, clube); // caixa: só a original
     }
     let entrada = cpm6_d(this + 0x1c).wrapping_add(cpm6_d(clube).wrapping_mul(0x6a));
     if *((entrada + 0x10) as *const u8) == 0 {
@@ -150,13 +150,13 @@ unsafe extern "thiscall" fn update_season_rating_record(this: usize, clube: usiz
         if reg == 0 {
             continue;
         }
-        let jogou = ftol(estatistica(reg, 1, 6.5)) as u8;
+        let jogou = match_pl_ftol(estatistica(reg, 1, 6.5)) as u8;
         if (jogou as i32) < *((entrada + 0x10) as *const i8) as i32 / 2 { // menos da metade dos jogos
             continue;
         }
         let media = estatistica(reg, 0x11, 6.5);
         // fcomp com o −1.0 (double) e fcom com o float guardado: passa só com a média maior
-        if *nota as f64 == f64_em(0x968948) || media > *nota as f64 {
+        if *nota as f64 == read_f64_at(0x968948) || media > *nota as f64 {
             crate::comparacao::ramo("cpm_6 recorde de nota da temporada");
             *nota = media as f32;
             *((r + 0x20d) as *mut u8) = jogou;
@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn update_season_rating_record(this: usize, clube: usiz
 /// de notícias sem folga para duas, só a original. Lado a lado pelos quatro registros (+0x365, 12 bytes), a conta das
 /// notícias e as duas vagas seguintes.
 unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32>(%%I0%%);
     if comprador == 0 || vendedor == 0 || (cpm6_d(this + 0x28).wrapping_sub(cpm6_d(this + 0x2c)) as i32) < 2 {
         return o(this, valor, comprador, vendedor); // ponytail: com realloc da fila, só a original
     }
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize, valor: i32
 /// Comparador: o registro de sempre é pedido antes (pode ser criado; a segunda vez só acha); lado a lado pelos dois
 /// recordes e as referências (+0x247 a +0x27b). Nulos ou sem registro: só a original (a caixa).
 unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I1%%);
     if jogador == 0 || clube == 0 {
         return o(this, jogador, clube, jogos, gols);
     }
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: us
 
 /// Comparador: lado a lado pelo recorde de nota (+0x1f1 a +0x210 do registro da temporada, pedido antes sem criar).
 unsafe extern "thiscall" fn comparar_update_season_rating_record(this: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     if clube == 0 {
         return o(this, clube);
     }

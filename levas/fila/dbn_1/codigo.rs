@@ -2,7 +2,7 @@
 
 /// A caixa de erro do Database.cpp: "v%s %s.%s %d" (0x90d130 com nome e extensão de Database.cpp e a `linha`) em
 /// 0xae24d0, a caixa "Error" (0x5e8290) e [0xb67a34] = 0. O jogo segue.
-unsafe fn caixa_do_banco_dbn1(linha: u32) {
+unsafe fn database_error_box(linha: u32) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -16,11 +16,11 @@ unsafe fn caixa_do_banco_dbn1(linha: u32) {
 }
 
 /// A caixa do Database.cpp seguida do fim do jogo (0x5cc7d0, 0x5a8f60 e exit(−1)), como a original sem memória.
-unsafe fn banco_fatal_dbn1(linha: u32) -> ! {
+unsafe fn database_fatal_error(linha: u32) -> ! {
     let antes: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
     let depois: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
     let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(0x945934usize);
-    caixa_do_banco_dbn1(linha);
+    database_error_box(linha);
     antes();
     depois();
     sair(-1)
@@ -35,13 +35,13 @@ unsafe fn rd_dbn1(a: usize) -> usize {
 }
 
 /// Clube da nação da chave 0x9cf2e4 com reputação (+0x80, 16 bits com sinal) até 500: 0x527240 e 0x5267c0 o tratam à parte.
-unsafe fn fraco_da_chave_2e4_dbn1(c: usize) -> bool {
+unsafe fn is_weak_english_club(c: usize) -> bool {
     let nac = rd_dbn1(c + 0x53);
     nac != 0 && gi_dbn1(nac) == gi_dbn1(0x9cf2e4) && core::ptr::read_unaligned((c + 0x80) as *const i16) <= 500
 }
 
 /// A conferência inicial da 0x527240: alguma pessoa de cargo 8 (+0x3d) com clube (+0x39) que não a tem nas 5 casas +0x19f.
-unsafe fn cargo_8_fora_do_clube_dbn1() -> bool {
+unsafe fn any_coach_missing_from_club() -> bool {
     let mut i = 0i32;
     while i < gi_dbn1(0xae2364) {
         let s = rd_dbn1(0xae23bc) + i as usize * 110;
@@ -57,7 +57,7 @@ unsafe fn cargo_8_fora_do_clube_dbn1() -> bool {
 /// Uma pessoa do pessoal extra da 0x527240: a linha [0xae2364] − gerados − 17 (das reservas, de trás para a frente),
 /// primeiro e segundo nome da nação (0x539c60, 0x53a1b0) e o nome comum: a linha guardada em [0x9b59b4] ou, sem ela
 /// (−1), a primeira linha de nome comum vazia (guardada) ou, sem nenhuma, uma sorteada entre todas (sem guardar).
-unsafe fn pessoa_extra_dbn1(nacao: usize, gerados: i32) -> usize {
+unsafe fn make_extra_staff(nacao: usize, gerados: i32) -> usize {
     let primeiro: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539c60usize);
     let segundo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53a1b0usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -84,7 +84,7 @@ unsafe fn pessoa_extra_dbn1(nacao: usize, gerados: i32) -> usize {
 
 /// A data de nascimento da pessoa extra (+0x10, 0x54a130): ano 1940 + sorteio(26), mês sorteio(11), dia sorteio(27) + 1,
 /// sorteados nessa ordem.
-unsafe fn nascimento_extra_dbn1(s: usize) {
+unsafe fn set_extra_staff_birth_date(s: usize) {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(0x54a130usize);
     let ano = sorteio(0x1a) + 0x794; // 1940 + até 25
@@ -98,7 +98,7 @@ unsafe fn nascimento_extra_dbn1(s: usize) {
 /// segue). Depois, em cada clube que não é seleção (id < [0xae235c] − 2 × [0xae2350]), não é fraco da chave 0x9cf2e4,
 /// tem nação escolhida (+0x11c) e não é time A de um par (0x540a50 com 1): completa técnicos (+0x19f, 5, cargo 8),
 /// olheiros (+0x1b3, 7, cargo 9) e fisioterapeutas (+0x1cf, 3, cargo 10) até (reputação + 500) × casas / 10000, entre 1
-/// e o número de casas, com pessoas das reservas (pessoa_extra_dbn1, nação +0x1a, +0x5f = 1, nascimento sorteado) postas
+/// e o número de casas, com pessoas das reservas (make_extra_staff, nação +0x1a, +0x5f = 1, nascimento sorteado) postas
 /// na primeira casa livre. Por fim, cada clube sem treinador (+0xcf) que seja seleção ou (com nação, divisão +0x57, nação
 /// escolhida e reputação ≠ 0) ou reputação > 7500, fora os fracos da 0x9cf2e4, ganha um treinador (cargo 5, +0x28 = 5)
 /// sem clube e sem seleção (não vai para a casa). Mais de 23.000: caixa (0x65f, 0x6aa, 0x6f5, 0x734) e 0. Grava "generated
@@ -110,8 +110,8 @@ unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u32 {
     let rd = |a: usize| rd_dbn1(a);
     let rep = |c: usize| core::ptr::read_unaligned((c + 0x80) as *const i16) as i32;
     let byte = |a: usize| *(a as *const u8);
-    if cargo_8_fora_do_clube_dbn1() {
-        caixa_do_banco_dbn1(0x62f);
+    if any_coach_missing_from_club() {
+        database_error_box(0x62f);
     }
     let selecao = |c: usize| gi(c) >= gi(0xae235c) - 2 * gi(0xae2350);
     let mut gerados = 0i32;
@@ -120,7 +120,7 @@ unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u32 {
         while i < gi(0xae235c) {
             let c = rd(0xae23b4) + i as usize * 581;
             i += 1;
-            if fraco_da_chave_2e4_dbn1(c) || selecao(c) {
+            if is_weak_english_club(c) || selecao(c) {
                 continue;
             }
             let nac = rd(c + 0x53);
@@ -136,13 +136,13 @@ unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u32 {
             while tem < alvo {
                 tem += 1;
                 if gerados >= 23000 {
-                    caixa_do_banco_dbn1(linha);
+                    database_error_box(linha);
                     return 0;
                 }
-                let s = pessoa_extra_dbn1(rd(c + 0x53), gerados);
+                let s = make_extra_staff(rd(c + 0x53), gerados);
                 core::ptr::write_unaligned((s + 0x1a) as *mut usize, rd(c + 0x53));
                 *((s + 0x5f) as *mut u8) = 1;
-                nascimento_extra_dbn1(s);
+                set_extra_staff_birth_date(s);
                 if let Some(j) = (0..k).find(|&j| rd(c + d + 4 * j) == 0) {
                     core::ptr::write_unaligned((c + d + 4 * j) as *mut usize, s);
                     core::ptr::write_unaligned((s + 0x39) as *mut usize, c);
@@ -156,7 +156,7 @@ unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u32 {
     while i < gi(0xae235c) {
         let c = rd(0xae23b4) + i as usize * 581;
         i += 1;
-        if fraco_da_chave_2e4_dbn1(c) {
+        if is_weak_english_club(c) {
             continue;
         }
         let nac = rd(c + 0x53);
@@ -165,16 +165,16 @@ unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u32 {
             continue;
         }
         if gerados >= 23000 {
-            caixa_do_banco_dbn1(0x734);
+            database_error_box(0x734);
             return 0;
         }
-        let s = pessoa_extra_dbn1(nac, gerados);
+        let s = make_extra_staff(nac, gerados);
         *((s + 0x5f) as *mut u8) = 1;
         *((s + 0x3d) as *mut u8) = 5; // treinador sem clube
         core::ptr::write_unaligned((s + 0x39) as *mut usize, 0);
         core::ptr::write_unaligned((s + 0x24) as *mut usize, 0);
         *((s + 0x28) as *mut u8) = 5;
-        nascimento_extra_dbn1(s);
+        set_extra_staff_birth_date(s);
         gerados += 1;
     }
     formatar(0xde1f64, 0x9b5b10, gerados);
@@ -194,7 +194,7 @@ unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u32 {
 /// (caixa) ou sem memória no new: a original; sem memória nos calloc: caixa e fim, como a original.
 unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
     if *(0xae23a8 as *const usize) == 0 {
-        return orig::<unsafe extern "C" fn(u32)>(%%I1%%)(tamanho);
+        return original_fn::<unsafe extern "C" fn(u32)>(%%I1%%)(tamanho);
     }
     crate::comparacao::ramo("criação cortar a tabela de clubes");
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -220,13 +220,13 @@ unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
     let pequena = t == 2 || t == 1;
     let marcados = calloc(gi(0xae235c) as u32, 4);
     if marcados == 0 {
-        banco_fatal_dbn1(0x513);
+        database_fatal_error(0x513);
     }
     let marcar = |id: i32| wi(marcados.wrapping_add((id as usize).wrapping_mul(4)), 1);
     let ultimo = rd(0xae23b4).wrapping_add((gi(0xae235c) as usize).wrapping_mul(581)).wrapping_sub(581);
     let nacoes = calloc(gi(0xae2350) as u32, 0xd0);
     if nacoes == 0 {
-        banco_fatal_dbn1(0x51b);
+        database_fatal_error(0x51b);
     }
     let limite = if pequena { 15 } else { 20 }; // clubes por nação
     let chaves = [0x9cf2e4usize, 0x9cf360, 0x9cf314, 0x9cf488, 0x9cf300, 0x9cf408, 0x9cf260, 0x9cf218, 0x9cf2c0, 0x9cf244,
@@ -380,7 +380,7 @@ unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
     let r = realocar(rd(0xae23b4), (linha as u32).wrapping_mul(581));
     *(0xae23b8 as *mut usize) = rd(0xae23b4).wrapping_add(((linha - gi(0xae2360)) as usize).wrapping_mul(581));
     if r != rd(0xae23b4) {
-        banco_fatal_dbn1(0x4ca);
+        database_fatal_error(0x4ca);
     }
     apagar(novos);
     formatar(0xde1f64, 0x9b5af4, gi(0xae235c));
@@ -418,7 +418,7 @@ unsafe extern "C" fn database_prune_comp_history_table() {
 }
 
 /// O primeiro byte que difere entre as fotos da original e da cópia (endereço, original, cópia).
-fn diferenca_dbn1(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Option<(usize, u8, u8)> {
+fn first_memory_difference(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Option<(usize, u8, u8)> {
     mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])))
 }
 
@@ -426,8 +426,8 @@ fn diferenca_dbn1(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memor
 /// texto de 0xde1f64 e o estado do sorteador (a cópia sem contar sorteios). Com a pessoa de cargo 8 fora das casas
 /// (caixa), só a original. O estouro das 23.000 (caixa) não é previsto aqui: a base de fábrica gera bem menos.
 unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32 {
-    let o = orig::<unsafe extern "C" fn() -> u32>(%%I0%%);
-    if cargo_8_fora_do_clube_dbn1() {
+    let o = original_fn::<unsafe extern "C" fn() -> u32>(%%I0%%);
+    if any_coach_missing_from_club() {
         return o();
     }
     let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -437,7 +437,7 @@ unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32
     regioes.push((rd_dbn1(0xae23bc), gi_dbn1(0xae2364).max(0) as usize * 110));
     let (r, m, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(),
         || crate::aleatorio::sem_contar(|| database_generate_extra_non_playing_staff()));
-    let onde = diferenca_dbn1(&mo, &mr);
+    let onde = first_memory_difference(&mo, &mr);
     PLACAR.registrar(igual && r == m, || match onde {
         Some((a, x, y)) => format!("database_generate_extra_non_playing_staff: original={} rust={}, diverge em {:x} original={:02x} rust={:02x}", r, m, a, x, y),
         None => format!("database_generate_extra_non_playing_staff: original={} rust={}", r, m),
@@ -451,11 +451,11 @@ unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32
 // ponytail: compacta e realoca a tabela de clubes, aloca [0xae23fc] e troca as chaves de clube; não roda duas
 // vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst tem a tabela cortada).
 unsafe extern "C" fn comparar_database_trim_club_table(tamanho: u32) {
-    orig::<unsafe extern "C" fn(u32)>(%%I1%%)(tamanho)
+    original_fn::<unsafe extern "C" fn(u32)>(%%I1%%)(tamanho)
 }
 
 // ponytail: compacta e realoca o histórico de competições; não roda duas vezes. Só a original; a cópia é provada
 // pela prova do save (o histórico podado vai para o .qst).
 unsafe extern "C" fn comparar_database_prune_comp_history_table() {
-    orig::<unsafe extern "C" fn()>(%%I2%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

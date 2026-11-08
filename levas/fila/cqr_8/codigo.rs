@@ -27,7 +27,7 @@ unsafe fn cqr8_pd(a: usize, v: usize) {
 /// altos, que o construtor não lê: a cópia passa os valores limpos) guardada em [+0xc][g]; o vetor e a tabela das
 /// rodadas liberados (0x9452ca). Sem fase: a caixa da `linhas[1]` e 0. Com ela: a notícia do sorteio do grupo (0x684230
 /// na fase), +0x30 = g e 1.
-unsafe fn cqr8_fase_do_grupo(this: usize, g: u32, arquivo: usize, linhas: [u32; 2], ramo: &'static str) -> u32 {
+unsafe fn ita_cup_create_group_stage_cqr8_fase_do_grupo(this: usize, g: u32, arquivo: usize, linhas: [u32; 2], ramo: &'static str) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -40,7 +40,7 @@ unsafe fn cqr8_fase_do_grupo(this: usize, g: u32, arquivo: usize, linhas: [u32; 
     let tabela = rodadas_da_copa(this, g, &mut rodadas, &mut id, 0);
     let times = alocar(((cqr8_w(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
-        aviso_em(arquivo, linhas[0]);
+        show_error_at(arquivo, linhas[0]);
         return 0;
     }
     if cqr8_w(this + 0x3e) > 0 {
@@ -95,7 +95,7 @@ unsafe fn cqr8_fase_do_grupo(this: usize, g: u32, arquivo: usize, linhas: [u32; 
     soltar(tabela);
     let f = cqr8_d(cqr8_d(this + 0xc) + g as usize * 4);
     if f == 0 {
-        aviso_em(arquivo, linhas[1]);
+        show_error_at(arquivo, linhas[1]);
         return 0;
     }
     noticia(f);
@@ -107,7 +107,7 @@ unsafe fn cqr8_fase_do_grupo(this: usize, g: u32, arquivo: usize, linhas: [u32; 
 /// feito antes: devolve 1 com a fase em [+0xc][g] e +0x30 = g; a fase com os times (+0x3e) e o ano (+0x40) da copa; os
 /// primeiros +0x3e inscritos não nulos de +0xee zerados e, na tabela da fase (+0xb1, linhas de 0x3b bytes), esses clubes
 /// (em qualquer ordem: a fase ordena a tabela dela [inferência, como na fase dos grupos da Copa do Mundo]).
-unsafe fn cqr8_comparar(nome: &str, this: usize, g: u32, original: impl FnOnce() -> u32) -> u32 {
+unsafe fn compare_group_stage(nome: &str, this: usize, g: u32, original: impl FnOnce() -> u32) -> u32 {
     let n = cqr8_w(this + 0x3e).max(0) as usize;
     let mut plano = Vec::new();
     let mut vagas = Vec::new();
@@ -140,23 +140,23 @@ unsafe fn cqr8_comparar(nome: &str, this: usize, g: u32, original: impl FnOnce()
 }
 
 /// { 0x63f640 } (thiscall, ret 4, ita_cup.cpp): `ItaCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
-/// (`cqr8_fase_do_grupo`; as caixas do ita_cup.cpp nas linhas 0x263 e 0x27c).
+/// (`ita_cup_create_group_stage_cqr8_fase_do_grupo`; as caixas do ita_cup.cpp nas linhas 0x263 e 0x27c).
 unsafe extern "thiscall" fn ita_cup_create_group_stage(this: usize, g: u32) -> u32 {
-    cqr8_fase_do_grupo(this, g, 0x9ea23c, [0x263, 0x27c], "cqr_8 time do grupo da copa da italia")
+    ita_cup_create_group_stage_cqr8_fase_do_grupo(this, g, 0x9ea23c, [0x263, 0x27c], "cqr_8 time do grupo da copa da italia")
 }
 
 unsafe extern "thiscall" fn comparar_ita_cup_create_group_stage(this: usize, g: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I0%%);
-    cqr8_comparar("ita_cup_create_group_stage", this, g, || o(this, g))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I0%%);
+    compare_group_stage("ita_cup_create_group_stage", this, g, || o(this, g))
 }
 
 /// { 0x63d9e0 } (thiscall, ret 4, ita_c_cup.cpp): `ItaCCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
-/// da Série C (`cqr8_fase_do_grupo`; as caixas do ita_c_cup.cpp nas linhas 0x265 e 0x27e).
+/// da Série C (`ita_cup_create_group_stage_cqr8_fase_do_grupo`; as caixas do ita_c_cup.cpp nas linhas 0x265 e 0x27e).
 unsafe extern "thiscall" fn ita_cup_create_group_stage_63d9e0(this: usize, g: u32) -> u32 {
-    cqr8_fase_do_grupo(this, g, 0x9ea204, [0x265, 0x27e], "cqr_8 time do grupo da copa da serie c")
+    ita_cup_create_group_stage_cqr8_fase_do_grupo(this, g, 0x9ea204, [0x265, 0x27e], "cqr_8 time do grupo da copa da serie c")
 }
 
 unsafe extern "thiscall" fn comparar_ita_cup_create_group_stage_63d9e0(this: usize, g: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%);
-    cqr8_comparar("ita_cup_create_group_stage_63d9e0", this, g, || o(this, g))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%);
+    compare_group_stage("ita_cup_create_group_stage_63d9e0", this, g, || o(this, g))
 }

@@ -10,7 +10,7 @@ unsafe fn cpi6_d(a: usize) -> usize {
 /// encerra. Devolve 0. Notícia ou nação nulas: a original (caixa "Error").
 unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     if noticia == 0 || nacao == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, nacao); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, nacao); // caixa: só a original
     }
     *((noticia + 0xde) as *mut u8) = 2; // o alcance da nação
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x785d40usize);
@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize, noticia: u
 
 /// O olheiro da busca confere (o tipo +0xa é 4, o índice +0x180 > −1 e a pessoa ainda confere com os nomes e a data
 /// guardados pela 0x53e990)? Devolve a pessoa, ou nenhuma (a original mostra a caixa).
-unsafe fn cpi6_olheiro(this: usize) -> Option<usize> {
+unsafe fn check_search_scout(this: usize) -> Option<usize> {
     let i = cpi6_d(this + 0x180) as i32;
     if *((this + 0xa) as *const u8) != 4 || i <= -1 {
         return None;
@@ -50,8 +50,8 @@ unsafe fn cpi6_olheiro(this: usize) -> Option<usize> {
 /// região +0x194 byte, competição +0x195 acima de −1; base +0x199, adversário +0x19d não nulos), copia as seis para
 /// as saídas e devolve 1; nenhuma: 0. Olheiro que não confere: a original (caixa "Error" e 0).
 unsafe extern "thiscall" fn get_scout_assignment(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, adversario: *mut u32) -> u32 {
-    if cpi6_olheiro(this).is_none() {
-        return orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(%%I1%%)(this, clube, nacao, regiao, comp, base, adversario); // caixa: só a original
+    if check_search_scout(this).is_none() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(%%I1%%)(this, clube, nacao, regiao, comp, base, adversario); // caixa: só a original
     }
     let marcada = cpi6_d(this + 0x190) as i32 > -1
         || cpi6_d(this + 0x18c) as i32 > -1
@@ -97,13 +97,13 @@ unsafe extern "thiscall" fn cup_check_complete(this: usize, fases: u32, _x: u32)
 /// modo Rust).
 unsafe extern "thiscall" fn comparar_send_to_nation_club_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     crate::comparacao::ramo("send_to_nation_club_managers");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, nacao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, nacao)
 }
 
 /// Comparador: lado a lado pelas seis saídas (a 0x53e990 só lê); com a caixa, só a original.
 unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, adversario: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(%%I1%%);
-    if cpi6_olheiro(this).is_none() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(%%I1%%);
+    if check_search_scout(this).is_none() {
         return o(this, clube, nacao, regiao, comp, base, adversario);
     }
     let reg = [(clube as usize, 4), (nacao as usize, 4), (regiao as usize, 1), (comp as usize, 4), (base as usize, 4), (adversario as usize, 4)];
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, clube: *m
 
 /// Comparador: pelo valor (o método das fases só lê).
 unsafe extern "thiscall" fn comparar_cup_check_complete(this: usize, fases: u32, x: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(%%I2%%)(this, fases, x);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(%%I2%%)(this, fases, x);
     let n = cup_check_complete(this, fases, x);
     PLACAR.registrar(r == n, || format!("cup_check_complete({:x}, {}) original={} rust={}", this, fases, r, n));
     r

@@ -4,13 +4,13 @@
 # das financas (0x5986b0) e os eventos da semana (divida, injecao) mudam, e com eles as ofertas seguintes. Escapam so
 # se nenhuma transferencia com valor (ou com luvas) acontecer ate 2002-06-01 (os contadores mostram).
 MUTACOES = [
-    ('cpz12_venda_fora_do_saldo', '    cpz12_somar64(this, v); // cpz12: a venda entra no saldo',
+    ('cpz12_venda_fora_do_saldo', '    fin_prm_add_i64(this, v); // cpz12: a venda entra no saldo',
      '    let _ = v; // mutacao: a venda nao entra no saldo',
      'cpz_12 venda recebida'),
-    ('cpz12_compra_fora_do_saldo', '    cpz12_somar64(this, v.wrapping_neg()); // cpz12: a compra sai do saldo',
+    ('cpz12_compra_fora_do_saldo', '    fin_prm_add_i64(this, v.wrapping_neg()); // cpz12: a compra sai do saldo',
      '    let _ = v; // mutacao: a compra nao sai do saldo',
      'cpz_12 compra paga'),
-    ('cpz12_luvas_no_saldo', '    cpz12_somar64(this, (valor as i64).wrapping_neg()); // cpz12: as luvas saem do saldo',
-     '    cpz12_somar64(this, valor as i64); // mutacao: as luvas entram no saldo',
+    ('cpz12_luvas_no_saldo', '    fin_prm_add_i64(this, (valor as i64).wrapping_neg()); // cpz12: as luvas saem do saldo',
+     '    fin_prm_add_i64(this, valor as i64); // mutacao: as luvas entram no saldo',
      'cpz_12 luvas pagas'),
 ]

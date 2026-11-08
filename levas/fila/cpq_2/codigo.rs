@@ -23,7 +23,7 @@ unsafe fn cpq2_sortear(n: i32) -> i32 {
 }
 
 /// A confiança `c` (+6 da linha) somada de `v` (16 bits), presa a `[piso, teto]` (primeiro o teto).
-unsafe fn cpq2_somar(c: usize, v: i16, piso: i16, teto: i16) {
+unsafe fn add_clamped_i16(c: usize, v: i16, piso: i16, teto: i16) {
     cpq2_pw(c, cpq2_w(c).wrapping_add(v));
     if cpq2_w(c) > teto {
         cpq2_pw(c, teto);
@@ -33,7 +33,7 @@ unsafe fn cpq2_somar(c: usize, v: i16, piso: i16, teto: i16) {
 }
 
 /// A saída do técnico da seleção na lista das saídas [this+4] (6 bytes: 1, `motivo`, o id da seleção).
-unsafe fn cpq2_saida(this: usize, selecao: usize, motivo: u8) {
+unsafe fn record_national_departure(this: usize, selecao: usize, motivo: u8) {
     let mut reg = [0u8; 8];
     reg[0] = 1;
     reg[1] = motivo;
@@ -43,7 +43,7 @@ unsafe fn cpq2_saida(this: usize, selecao: usize, motivo: u8) {
 }
 
 /// A federação pensa em demitir (0x69aba0 sem conferir o ultimato).
-unsafe fn cpq2_pensar(this: usize, selecao: usize) {
+unsafe fn consider_sacking(this: usize, selecao: usize) {
     crate::comparacao::ramo("cpq_2 a federacao pensa");
     let pensar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x69aba0usize);
     pensar(this, selecao, 0);
@@ -76,23 +76,23 @@ unsafe extern "thiscall" fn review_national_team_performance(this: usize, comp: 
     crate::comparacao::ramo("cpq_2 selecao avaliada");
     let avaliar: unsafe extern "thiscall" fn(usize, usize, usize, i32) = core::mem::transmute(0x6a5a60usize);
     let c = cpq2_linha(this, selecao) + 6;
-    let reputacao = || cpq2_w(selecao + 0x80);
+    let injury_word_0c = || cpq2_w(selecao + 0x80);
     match nota {
         3 => {
-            cpq2_somar(c, 0x4e2, 0x2134, 0x2710);
+            add_clamped_i16(c, 0x4e2, 0x2134, 0x2710);
             avaliar(this, comp, selecao, 3);
         }
         2 => {
-            cpq2_somar(c, 0x2ee, 0x1964, 0x2710);
+            add_clamped_i16(c, 0x2ee, 0x1964, 0x2710);
             avaliar(this, comp, selecao, 2);
             let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
             if humano(selecao, 0, 1, 0, 0) != 0 || dias <= 0xe42 {
                 return;
             }
-            if (cpq2_sortear(0x3a98) + 0xea6) as i16 >= reputacao() {
+            if (cpq2_sortear(0x3a98) + 0xea6) as i16 >= injury_word_0c() {
                 return;
             }
-            cpq2_saida(this, selecao, 6);
+            record_national_departure(this, selecao, 6);
         }
         0 => {
             cpq2_pw(c, cpq2_w(c).wrapping_sub(250));
@@ -102,42 +102,42 @@ unsafe extern "thiscall" fn review_national_team_performance(this: usize, comp: 
             cpq2_pw(c, 0xdac);
             avaliar(this, comp, selecao, 0);
             if dias > 0xe42 {
-                return cpq2_saida(this, selecao, 6);
+                return record_national_departure(this, selecao, 6);
             }
-            if reputacao() <= 0x1a5e || dias <= 0x5b4 {
+            if injury_word_0c() <= 0x1a5e || dias <= 0x5b4 {
                 return;
             }
-            if cpq2_sortear(0x3a98) >= reputacao() as i32 {
-                return cpq2_pensar(this, selecao);
+            if cpq2_sortear(0x3a98) >= injury_word_0c() as i32 {
+                return consider_sacking(this, selecao);
             }
-            cpq2_saida(this, selecao, 6);
+            record_national_departure(this, selecao, 6);
         }
         -1 => {
-            cpq2_somar(c, -750, 1, 0xdac);
+            add_clamped_i16(c, -750, 1, 0xdac);
             avaliar(this, comp, selecao, -1);
             if dias > 0x5b4 {
-                return cpq2_saida(this, selecao, 6);
+                return record_national_departure(this, selecao, 6);
             }
             if dias <= 0x2da {
                 return;
             }
-            if cpq2_sortear(0x4e20) >= reputacao() as i32 {
-                return cpq2_pensar(this, selecao);
+            if cpq2_sortear(0x4e20) >= injury_word_0c() as i32 {
+                return consider_sacking(this, selecao);
             }
-            cpq2_saida(this, selecao, 0);
+            record_national_departure(this, selecao, 0);
         }
         -2 => {
-            cpq2_somar(c, -1250, 1, 0xbb8);
+            add_clamped_i16(c, -1250, 1, 0xbb8);
             avaliar(this, comp, selecao, -2);
-            if dias <= 0x2da && cpq2_sortear(0x3a98) + 0x4e2 >= reputacao() as i32 {
-                return cpq2_pensar(this, selecao);
+            if dias <= 0x2da && cpq2_sortear(0x3a98) + 0x4e2 >= injury_word_0c() as i32 {
+                return consider_sacking(this, selecao);
             }
-            cpq2_saida(this, selecao, 0);
+            record_national_departure(this, selecao, 0);
         }
         -3 => {
-            cpq2_somar(c, -1750, 1, 0xbb8);
+            add_clamped_i16(c, -1750, 1, 0xbb8);
             avaliar(this, comp, selecao, -3);
-            cpq2_saida(this, selecao, 0);
+            record_national_departure(this, selecao, 0);
         }
         _ => {}
     }
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn review_national_team_performance(this: usize, comp: 
 // ponytail: solta a notícia da avaliação (0x6a5a60), sorteia e aloca a saída (ou chama a 0x69aba0): só a original;
 // a cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_review_national_team_performance(this: usize, comp: usize, selecao: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, comp, selecao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, comp, selecao)
 }
 
 /// { 0x69eb50 } (thiscall, ret 4, manager_manager.cpp): `MANAGER_MANAGER::is_club_in_financial_trouble(clube)`: clube
@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn is_club_in_financial_trouble(this: usize, clube: usi
 }
 
 unsafe extern "thiscall" fn comparar_is_club_in_financial_trouble(this: usize, clube: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
     let n = is_club_in_financial_trouble(this, clube);
     PLACAR.registrar(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", clube, r, n));
     r
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn get_board_confidence_band(this: usize, clube: usize)
 }
 
 unsafe extern "thiscall" fn comparar_get_board_confidence_band(this: usize, clube: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, clube);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, clube);
     let n = get_board_confidence_band(this, clube);
     PLACAR.registrar(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
     r

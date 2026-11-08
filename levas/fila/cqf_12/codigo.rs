@@ -25,7 +25,7 @@ unsafe fn cqf12_clube(id: usize) -> usize {
 }
 
 /// `a` depois de `b` (datas: ano sem sinal em +2, dia com sinal em +0), como as comparações da original.
-unsafe fn cqf12_depois(dia: i16, ano: u16, data: usize) -> bool {
+unsafe fn scout_manager_date_after(dia: i16, ano: u16, data: usize) -> bool {
     let (d, a) = (cqf12_w(data), cqf12_w(data + 2) as u16);
     ano > a || (ano == a && dia > d)
 }
@@ -37,7 +37,7 @@ static mut CQF12_ENSAIO: bool = false;
 /// (tirar, processar). Sai o pedido de clube que não é humano, de jogador do próprio clube (o +0x39 ou o do contrato),
 /// com mais de um ano, com 3 relatórios, ou (depois de 30 dias) de jogador machucado (0x62c400 = 2); entre 30 dias e um
 /// ano o pedido é processado (e sai), salvo jogador sem nação ou de clube que joga nos 14 dias seguintes, que fica.
-unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usize, usize) {
+unsafe fn judge_scout_request(pedido: usize, catorze: usize) -> (bool, bool, usize, usize, usize) {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
@@ -66,7 +66,7 @@ unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usi
     let (dia, ano) = (cqf12_w(0xae2c90), cqf12_w(0xae2c92) as u16);
     let mut t = [0u32; 2];
     let ano_depois = mais(pedido + 8, t.as_mut_ptr() as usize, 0x16d); // cqf12: um ano
-    if cqf12_depois(dia, ano, ano_depois) {
+    if scout_manager_date_after(dia, ano, ano_depois) {
         return (true, false, 0, 0, 0);
     }
     if (cqf12_b(pedido + 0x10) as i8) >= 3 { // cqf12: três relatórios
@@ -74,7 +74,7 @@ unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usi
     }
     let mut t2 = [0u32; 2];
     let mes_depois = mais(pedido + 8, t2.as_mut_ptr() as usize, 0x1e); // cqf12: trinta dias
-    if !cqf12_depois(dia, ano, mes_depois) {
+    if !scout_manager_date_after(dia, ano, mes_depois) {
         return (false, false, 0, 0, 0);
     }
     if lesao(cqf12_d(0xb63d28), jogador) == 2 {
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
     let mut i: i32 = 0;
     while i < cqf12_i(this + 0x64) {
         let pedido = cqf12_d(this + 0x5c) + i as usize * 0x11;
-        let (tirar, processar, jogador, tecnico, nacao) = cqf12_julgar(pedido, catorze);
+        let (tirar, processar, jogador, tecnico, nacao) = judge_scout_request(pedido, catorze);
         if processar && !CQF12_ENSAIO {
             crate::comparacao::ramo("cqf_12 pedido processado");
             let mut feitos: i8 = 0;
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
 /// roda. Antes, a cópia em ensaio poda uma cópia dos pedidos (sem os relatórios) e os põe na ordem da original; os
 /// pedidos que a original deixa (conta e os 0x11 bytes de cada) têm de ser esses.
 unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     if cqf12_b(0xae2c88) != 2 {
         return o(this);
     }
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn send_scout_reports(this: usize, lista: usize) {
     // thiscall, ret 8
     let v = alocar(n.wrapping_mul(0x67));
     if v == 0 && n != 0 {
-        aviso_em(0xa7b094, 0x7dd);
+        show_error_at(0xa7b094, 0x7dd);
         return;
     }
     core::ptr::write_unaligned((lista + 0xa) as *mut usize, cqf12_d(lista + 2));
@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn send_scout_reports(this: usize, lista: usize) {
 /// 0x7f9a60 ligado; antes, a cópia em ensaio (sem a 0x7f9a60) diz os grupos (jogador, clube, quantos) em ordem, e as
 /// chamadas da original têm de ser essas.
 unsafe extern "thiscall" fn comparar_send_scout_reports(this: usize, lista: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let cursor = cqf12_d(lista + 0xa);
     *core::ptr::addr_of_mut!(CQF12_GRUPOS) = Some(Vec::new());
     CQF12_ENSAIO = true;
@@ -380,5 +380,5 @@ unsafe extern "thiscall" fn comparar_send_scout_report_news(this: usize, r: usiz
     if let Some(g) = &mut *core::ptr::addr_of_mut!(CQF12_GRUPOS) {
         g.push((cqf12_d(r + 0x2b) as u32, cqf12_d(r + 0x50) as u32, quantos as u8));
     }
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, r, quantos);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, r, quantos);
 }

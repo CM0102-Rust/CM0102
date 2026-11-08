@@ -23,7 +23,7 @@ unsafe extern "C" fn staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> 
 }
 
 unsafe extern "C" fn comparar_staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I0%%);
     let pref = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + 0x65) as *const usize) };
     if pref == 0 {
         return o(pessoa, alvo); // não escreve nada
@@ -59,7 +59,7 @@ unsafe extern "C" fn staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *m
 }
 
 unsafe extern "C" fn comparar_staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(%%I1%%);
     let com_vetor = [(vetor, 12), (n as usize, 1)];
     let regioes: &[(usize, usize)] = if vetor == 0 { &com_vetor[1..] } else { &com_vetor };
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(pessoa, vetor, n), || staff_get_favoured_staff(pessoa, vetor, n));

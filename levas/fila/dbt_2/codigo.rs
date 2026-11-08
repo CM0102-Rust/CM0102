@@ -42,7 +42,7 @@ unsafe extern "C" fn staff_is_player_attribute_visible(quem_ve: usize, pessoa: u
 }
 
 unsafe extern "C" fn comparar_staff_is_player_attribute_visible(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I0%%)(quem_ve, pessoa, atributo);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I0%%)(quem_ve, pessoa, atributo);
     let n = staff_is_player_attribute_visible(quem_ve, pessoa, atributo);
     PLACAR.registrar(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, atributo as u8 as i8, r, n));
     r
@@ -57,7 +57,7 @@ unsafe extern "C" fn comparar_staff_is_player_attribute_visible(quem_ve: usize, 
 unsafe extern "C" fn staff_get_player_attribute_for_viewer(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let x = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&x) {
-        return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%)(quem_ve, pessoa, atributo);
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%)(quem_ve, pessoa, atributo);
     }
     let calcular: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x543540usize);
     let jogador = core::ptr::read_unaligned((pessoa + 0x61) as *const usize);
@@ -72,7 +72,7 @@ unsafe extern "C" fn staff_get_player_attribute_for_viewer(quem_ve: usize, pesso
 }
 
 unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%)(quem_ve, pessoa, atributo);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%)(quem_ve, pessoa, atributo);
     let x = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&x) {
         return r; // caixa: só a original
@@ -107,7 +107,7 @@ const DBT2_NOMES: [(usize, usize); 12] = [
 unsafe extern "C" fn database_get_non_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let x = atributo as u8 as i8;
     if !(1..=12).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
-        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I2%%)(atributo, texto, tamanho, abreviado);
+        return original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I2%%)(atributo, texto, tamanho, abreviado);
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     *(texto as *mut u8) = 0;
@@ -123,7 +123,7 @@ unsafe extern "C" fn database_get_non_player_attribute_name(atributo: u32, texto
 }
 
 unsafe extern "C" fn comparar_database_get_non_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I2%%);
     let x = atributo as u8 as i8;
     if !(1..=12).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
         return o(atributo, texto, tamanho, abreviado);

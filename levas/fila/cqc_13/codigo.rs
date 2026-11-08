@@ -67,14 +67,14 @@ unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p: usize, res
 /// buscas e a 0x7f9890 entrega as notícias: não pode rodar duas vezes. Só a original roda (ponytail: ela mesma só grava
 /// o vetor e a lista locais, que saem); confere a devolução (1).
 unsafe extern "thiscall" fn comparar_scout_manager_scout_match(this: usize, p: usize, resultado: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, p, resultado);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, p, resultado);
     PLACAR.registrar(r == 1, || format!("scout_manager_scout_match(partida {:x}) original={}", p, r));
     r
 }
 
 /// O índice (0..15) do técnico `tecnico` (nulo: o humano da vez, [0xb74c26 + 0x300 × [0xb77c7a]]) pela conta de um
 /// byte da original ((id − [0xae2364]) + 16 em 8 bits); None nos casos da caixa (sem técnico ou fora).
-unsafe fn cqc13_indice(tecnico: usize) -> Option<usize> {
+unsafe fn scout_manager_human_manager_index(tecnico: usize) -> Option<usize> {
     let t = if tecnico != 0 {
         tecnico
     } else {
@@ -91,16 +91,16 @@ unsafe fn cqc13_indice(tecnico: usize) -> Option<usize> {
 /// conhecidos da busca (0x7afeb7). A sessão de edição do técnico humano (+0xc + 4 × índice). Sem técnico ou índice
 /// fora: a caixa (linhas 0xde e 0xe8; a original) e 0.
 unsafe extern "thiscall" fn get_edit_session(this: usize, tecnico: usize) -> usize {
-    let Some(i) = cqc13_indice(tecnico) else {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(this, tecnico); // a caixa
+    let Some(i) = scout_manager_human_manager_index(tecnico) else {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(this, tecnico); // a caixa
     };
     cqc13_d(this + 0xc + i * 4)
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
 unsafe extern "thiscall" fn comparar_get_edit_session(this: usize, tecnico: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
-    if cqc13_indice(tecnico).is_none() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
+    if scout_manager_human_manager_index(tecnico).is_none() {
         return o(this, tecnico);
     }
     let r = o(this, tecnico);
@@ -113,8 +113,8 @@ unsafe extern "thiscall" fn comparar_get_edit_session(this: usize, tecnico: usiz
 /// das buscas (0x8085bc, 0x812d88...). Grava a sessão em +0xc + 4 × índice do técnico e devolve 1. Sem técnico ou
 /// índice fora: a caixa (linhas 0xb8 e 0xc2; a original) e 0.
 unsafe extern "thiscall" fn set_edit_session(this: usize, sessao: usize, tecnico: usize) -> u32 {
-    let Some(i) = cqc13_indice(tecnico) else {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, sessao, tecnico); // a caixa
+    let Some(i) = scout_manager_human_manager_index(tecnico) else {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, sessao, tecnico); // a caixa
     };
     core::ptr::write_unaligned((this + 0xc + i * 4) as *mut usize, sessao);
     1
@@ -122,8 +122,8 @@ unsafe extern "thiscall" fn set_edit_session(this: usize, sessao: usize, tecnico
 
 /// Comparador: lado a lado pelas 16 sessões e a devolução; com a caixa, só a original.
 unsafe extern "thiscall" fn comparar_set_edit_session(this: usize, sessao: usize, tecnico: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
-    if cqc13_indice(tecnico).is_none() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
+    if scout_manager_human_manager_index(tecnico).is_none() {
         return o(this, sessao, tecnico);
     }
     let reg = [(this + 0xc, 0x40)];

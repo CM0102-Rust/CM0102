@@ -23,16 +23,16 @@ unsafe fn cpp3_por_w(a: usize, v: i16) {
 /// A linha do clube de id `id` na tabela da diretoria do MANAGER_MANAGER ([this] + 0x49 × id; relida a cada uso, como
 /// na original): +1 a faixa de riqueza, +2/+3 marcas, +6 confiança, +8/+0xa/+0xc os humores, +0x10..+0x16 as mudanças,
 /// +0x28, +0x30/+0x38 doubles, +0x40 marcas.
-unsafe fn cpp3_linha(this: usize, id: u32) -> usize {
+unsafe fn board_row_by_id(this: usize, id: u32) -> usize {
     (cpp3_d(this) as usize).wrapping_add((id as usize).wrapping_mul(0x49))
 }
 
 /// O humor novo (`mov word`): ftol do float `f32(sorteio1 + q)` menos `sorteio2` (os dois de 0..499), em dupla precisão.
-unsafe fn cpp3_humor(q: f32) -> i16 {
+unsafe fn roll_mood(q: f32) -> i16 {
     let s1 = sortear(0x1f4);
     let base = (s1 as f64 + q as f64) as f32; // fstp dword
     let s2 = sortear(0x1f4);
-    ftol(base as f64 - s2 as f64) as i16
+    match_pl_ftol(base as f64 - s2 as f64) as i16
 }
 
 /// { 0x694c80 } (thiscall, ret 4, manager_manager.cpp): `MANAGER_MANAGER::reset_board_for_new_manager(clube)`: marca o
@@ -49,92 +49,92 @@ unsafe fn cpp3_humor(q: f32) -> i16 {
 /// as táticas das 50 vagas (0x896c60). +1 = a faixa de riqueza das finanças (0x5986b0), 0 nas seleções ou sem finanças.
 unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usize) {
     let id = cpp3_d(clube);
-    *(((cpp3_linha(this, id)) + 2) as *mut u8) |= 1;
+    *(((board_row_by_id(this, id)) + 2) as *mut u8) |= 1;
     let expectativas: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a3770usize);
     expectativas(this, clube, 1);
-    *(((cpp3_linha(this, id)) + 2) as *mut u8) |= 1;
+    *(((board_row_by_id(this, id)) + 2) as *mut u8) |= 1;
     let lista = cpp3_d(cpp3_d(cpp3_d(0xde1f54) as usize + 0x856) as usize + 0xdc) as usize;
     *(lista.wrapping_add((id as usize).wrapping_mul(9)) as *mut u8).add(4) = 2;
-    let k = f64_em(0x967880); // 0,1
+    let k = read_f64_at(0x967880); // 0,1
     let rep = cpp3_w(clube + 0x80) as i32;
     let tecnico = cpp3_d(clube + 0xcf) as usize;
     let ficha = cpp3_d(tecnico + 0x69) as usize;
     if cpp3_d(clube + 0x53) == cpp3_d(tecnico + 0x1a) {
         let a = cpp3_w(ficha + 0xa) as i32;
-        cpp3_por_w(ficha + 0xa, ftol((rep - a) as f64 * k + a as f64) as i16);
+        cpp3_por_w(ficha + 0xa, match_pl_ftol((rep - a) as f64 * k + a as f64) as i16);
         let ficha = cpp3_d(cpp3_d(clube + 0xcf) as usize + 0x69) as usize;
         let b = cpp3_w(ficha + 8) as i32;
-        cpp3_por_w(ficha + 8, ftol((rep - b) as f64 * k + b as f64) as i16);
+        cpp3_por_w(ficha + 8, match_pl_ftol((rep - b) as f64 * k + b as f64) as i16);
     } else {
         let c = cpp3_w(ficha + 0xc) as i32;
         let a = cpp3_w(ficha + 0xa) as i32;
-        cpp3_por_w(ficha + 0xa, ftol((rep - c) as f64 * k + a as f64) as i16);
+        cpp3_por_w(ficha + 0xa, match_pl_ftol((rep - c) as f64 * k + a as f64) as i16);
     }
     let ficha = cpp3_d(cpp3_d(clube + 0xcf) as usize + 0x69) as usize;
     let v = cpp3_w(ficha + 0xa) as i32;
     let mut atual = v as f32; // fst dword
-    let zero = f32_em(0x968970) as f64;
+    let zero = read_f32_at(0x968970) as f64;
     if v as f64 == zero {
         let r = cpp3_w(clube + 0x80) as i32;
         atual = if r != 0 { (r / 2) as f32 } else { 5000.0 };
-    } else if (atual as f64) < f32_em(0x96d1a8) as f64 {
+    } else if (atual as f64) < read_f32_at(0x96d1a8) as f64 {
         atual = (sortear(0x3e8) + 0x1f4) as f32;
     }
     let d = cpp3_w(clube + 0x80) as i32;
     let divisor = if d as f64 == zero {
         atual as f64
-    } else if (d as f64) < f32_em(0x96d1a8) as f64 {
+    } else if (d as f64) < read_f32_at(0x96d1a8) as f64 {
         (sortear(0x2ee) + 0xfa) as f64
     } else {
         d as f64
     };
-    let mut q = ((atual as f64 / divisor) * f32_em(0x96d1a4) as f64) as f32; // fstp dword
-    if q as f64 > f64_em(0x96d1b0) {
+    let mut q = ((atual as f64 / divisor) * read_f32_at(0x96d1a4) as f64) as f32; // fstp dword
+    if q as f64 > read_f64_at(0x96d1b0) {
         crate::comparacao::ramo("cpp_3 base no teto");
         q = 10000.0;
-    } else if !(q as f64 >= f32_em(0x96d1ac) as f64) {
+    } else if !(q as f64 >= read_f32_at(0x96d1ac) as f64) {
         q = 6500.0;
     }
     // a confiança e os humores, cada um com os seus limites
-    let h = cpp3_humor(q);
-    cpp3_por_w(cpp3_linha(this, id) + 6, h);
-    let c = cpp3_w(cpp3_linha(this, id) + 6);
+    let h = roll_mood(q);
+    cpp3_por_w(board_row_by_id(this, id) + 6, h);
+    let c = cpp3_w(board_row_by_id(this, id) + 6);
     if c < 0x186a {
-        cpp3_por_w(cpp3_linha(this, id) + 6, (sortear(0x4e2) + 0x186a) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 6, (sortear(0x4e2) + 0x186a) as i16);
     } else if c > 0x251c {
-        cpp3_por_w(cpp3_linha(this, id) + 6, (0x2710 - sortear(0x1f4)) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 6, (0x2710 - sortear(0x1f4)) as i16);
     }
     let s1 = sortear(0x1f4);
-    let parcial = cpp3_w(cpp3_linha(this, id) + 6).wrapping_sub(s1 as i16);
+    let parcial = cpp3_w(board_row_by_id(this, id) + 6).wrapping_sub(s1 as i16);
     let s2 = sortear(0x1f4);
-    cpp3_por_w(cpp3_linha(this, id) + 8, parcial.wrapping_add(s2 as i16));
-    let c = cpp3_w(cpp3_linha(this, id) + 8);
+    cpp3_por_w(board_row_by_id(this, id) + 8, parcial.wrapping_add(s2 as i16));
+    let c = cpp3_w(board_row_by_id(this, id) + 8);
     if c < 0x186a {
-        cpp3_por_w(cpp3_linha(this, id) + 8, (sortear(0x4e2) + 0x186a) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 8, (sortear(0x4e2) + 0x186a) as i16);
     } else if c > 0x2710 {
-        cpp3_por_w(cpp3_linha(this, id) + 8, 0x2710);
+        cpp3_por_w(board_row_by_id(this, id) + 8, 0x2710);
     }
-    let h = cpp3_humor(q);
-    cpp3_por_w(cpp3_linha(this, id) + 0xa, h);
-    let c = cpp3_w(cpp3_linha(this, id) + 0xa);
+    let h = roll_mood(q);
+    cpp3_por_w(board_row_by_id(this, id) + 0xa, h);
+    let c = cpp3_w(board_row_by_id(this, id) + 0xa);
     if c < 0x1482 {
-        cpp3_por_w(cpp3_linha(this, id) + 0xa, (sortear(0xfa) + 0x1482) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 0xa, (sortear(0xfa) + 0x1482) as i16);
     } else if c > 0x2710 {
-        cpp3_por_w(cpp3_linha(this, id) + 0xa, 0x2710);
+        cpp3_por_w(board_row_by_id(this, id) + 0xa, 0x2710);
     }
-    let h = cpp3_humor(q);
-    cpp3_por_w(cpp3_linha(this, id) + 0xc, h);
-    let c = cpp3_w(cpp3_linha(this, id) + 0xc);
+    let h = roll_mood(q);
+    cpp3_por_w(board_row_by_id(this, id) + 0xc, h);
+    let c = cpp3_w(board_row_by_id(this, id) + 0xc);
     if c < 0x1676 {
-        cpp3_por_w(cpp3_linha(this, id) + 0xc, (sortear(0xfa) + 0x1676) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 0xc, (sortear(0xfa) + 0x1676) as i16);
     } else if c > 0x2710 {
-        cpp3_por_w(cpp3_linha(this, id) + 0xc, 0x2710);
+        cpp3_por_w(board_row_by_id(this, id) + 0xc, 0x2710);
     }
-    let e = cpp3_linha(this, id);
+    let e = board_row_by_id(this, id);
     for o in [0x10, 0x12, 0x14, 0x16] {
         cpp3_por_w(e + o, 0); // as mudanças
     }
-    let m = |o: usize, mascara: u8| *((cpp3_linha(this, id) + o) as *mut u8) &= mascara;
+    let m = |o: usize, mascara: u8| *((board_row_by_id(this, id) + o) as *mut u8) &= mascara;
     m(2, 0xf7);
     m(2, 0xfb);
     m(2, 0xfd);
@@ -172,13 +172,13 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
             faixa = riqueza(fin);
         }
     }
-    *((cpp3_linha(this, cpp3_d(clube)) + 1) as *mut u8) = faixa;
+    *((board_row_by_id(this, cpp3_d(clube)) + 1) as *mut u8) = faixa;
 }
 
 unsafe extern "thiscall" fn comparar_reset_board_for_new_manager(this: usize, clube: usize) {
     // ponytail: as expectativas (0x6a3770) postam notícia e o registro (0x869aa0) grava o histórico em arquivo: não
     // rodam duas vezes; só a original, a cópia prova pela carreira no modo Rust (o ramo)
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube)
 }
 
 /// { 0x69b350 } (thiscall, ret 4, manager_manager.cpp): `MANAGER_MANAGER::get_departure_reason(id)`: o motivo (0..11) da
@@ -241,13 +241,13 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
                 }
             }
         }
-        let e = cpp3_linha(this, id);
+        let e = board_row_by_id(this, id);
         let (gasto, teto) = (core::ptr::read_unaligned((e + 0x30) as *const f64), core::ptr::read_unaligned((e + 0x38) as *const f64));
         if !(gasto >= teto) && cpp3_w(e + 0x12) < -300 {
             return 0xa;
         }
     }
-    let e = cpp3_linha(this, id);
+    let e = board_row_by_id(this, id);
     if cpp3_w(e + 0x12) < -750 && tipo != 1 && sortear(3) == 0 {
         crate::comparacao::ramo("cpp_3 motivo 2");
         return 2;
@@ -263,13 +263,13 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
     }
     let humor = cpp3_w(e + 0xa);
     if humor < cpp3_w(e + 6) {
-        let a = sortear(cpp3_w(cpp3_linha(this, id) + 6) as i32);
+        let a = sortear(cpp3_w(board_row_by_id(this, id) + 6) as i32);
         let b = sortear(humor as i32);
         if b < a {
             return 8;
         }
     }
-    if cpp3_w(cpp3_linha(this, id) + 0x16) < -750 && sortear(3) != 0 {
+    if cpp3_w(board_row_by_id(this, id) + 0x16) < -750 && sortear(3) != 0 {
         return 4;
     }
     let tecnico = cpp3_d(clube + 0xcf) as usize;
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
 /// Comparador: lado a lado a partir do mesmo estado do sorteador (a rotina sorteia em vários caminhos), pela devolução;
 /// a cópia sem contar os sorteios.
 unsafe extern "thiscall" fn comparar_get_departure_reason(this: usize, id: u32) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u8>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, id),
         || crate::aleatorio::sem_contar(|| get_departure_reason(this, id)));
     PLACAR.registrar(igual && r == n, || format!("get_departure_reason(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
@@ -296,7 +296,7 @@ unsafe extern "thiscall" fn comparar_get_departure_reason(this: usize, id: u32) 
 /// O registro do técnico (210 bytes) que a 0x86f5b0 olha: humano (id em [0xae2364] − 16 .. [0xae2364]) pela vaga dele
 /// depois dos [0xae2368] registros; senão pelo id da ficha de não jogador (+0x69). None: sem ficha, ou humano sem
 /// situação (+0x5f 0 ou 5).
-unsafe fn cpp3_registro(this: usize, pessoa: usize) -> Option<usize> {
+unsafe fn manager_manager_manager_record(this: usize, pessoa: usize) -> Option<usize> {
     let n = cpp3_d(0xae2364) as i32;
     let id = cpp3_d(pessoa) as i32;
     let k = if id >= n.wrapping_sub(0x10) && id < n {
@@ -343,7 +343,7 @@ unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: usize, criar
         return 0;
     }
     let r = loop {
-        let Some(r) = cpp3_registro(this, pessoa) else {
+        let Some(r) = manager_manager_manager_record(this, pessoa) else {
             return 0;
         };
         let dono = cpp3_d(r + 0x86) as i32;
@@ -439,11 +439,11 @@ unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: usize, criar
 /// Comparador: lado a lado pelo registro do técnico (e, quando a vaga é de outro, pelo registro que a original zera),
 /// pela devolução. Pessoa nula (a caixa) e o humano sem situação: só a original.
 unsafe extern "thiscall" fn comparar_get_manager_record(this: usize, pessoa: usize, criar: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
     if pessoa == 0 {
         return o(this, pessoa, criar);
     }
-    let Some(r) = cpp3_registro(this, pessoa) else {
+    let Some(r) = manager_manager_manager_record(this, pessoa) else {
         return o(this, pessoa, criar);
     };
     let mut reg = vec![(r, 0xd2)];

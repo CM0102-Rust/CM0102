@@ -28,7 +28,7 @@ const fn cqn11r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u
 
 /// Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
-unsafe fn cqn11_rodada(t: usize, i: u32, r: &Cqn11R, ano: u32) {
+unsafe fn jap_j_cup_write_cup_round(t: usize, i: u32, r: &Cqn11R, ano: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521eb0usize);
     sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
@@ -58,7 +58,7 @@ unsafe fn cqn11_rodada(t: usize, i: u32, r: &Cqn11R, ano: u32) {
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela.
-unsafe fn cqn11_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cqn11R], arquivo: usize, linha: u32, nome: &'static str) -> usize {
+unsafe fn build_single_stage_cup_rounds(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cqn11R], arquivo: usize, linha: u32, nome: &'static str) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -70,13 +70,13 @@ unsafe fn cqn11_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i1
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar(tabela.len() as u32 * 0x68);
     if t == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return 0;
     }
     crate::comparacao::ramo(nome);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in tabela.iter().enumerate() {
-        cqn11_rodada(t, i as u32, r, ano);
+        jap_j_cup_write_cup_round(t, i as u32, r, ano);
     }
     t
 }
@@ -96,7 +96,7 @@ unsafe fn cqn11_gravados(t: usize, n: i16) -> Vec<u8> {
 
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
-unsafe fn cqn11_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
+unsafe fn compare_cup_round_table(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if fase as u8 != 0xff {
         // ponytail: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
@@ -131,12 +131,12 @@ const CQN11_COPA_DA_LIGA_JAPONESA: [Cqn11R; 5] = [
 /// { 0x665640 } (thiscall, ret 0x10, jap_j_cup.cpp; a virtual +0x3c da Copa da Liga japonesa): `JapJCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0x9e sem memória.
 unsafe extern "thiscall" fn jap_j_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cqn11_tabela(this, fase, rodadas, extra, saida, &CQN11_COPA_DA_LIGA_JAPONESA, 0x9eaf14, 0x9e, "cqn_11 tabela da copa da liga japonesa")
+    build_single_stage_cup_rounds(this, fase, rodadas, extra, saida, &CQN11_COPA_DA_LIGA_JAPONESA, 0x9eaf14, 0x9e, "cqn_11 tabela da copa da liga japonesa")
 }
 
 unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqn11_comparar("jap_j_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    compare_cup_round_table("jap_j_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| jap_j_cup_create_round_table(this, fase, r, e, s))
 }
 
@@ -155,12 +155,12 @@ const CQN11_COPA_DO_IMPERADOR: [Cqn11R; 7] = [
 /// { 0x661ff0 } (thiscall, ret 0x10, jap_emp_cup.cpp; a virtual +0x3c da Copa do Imperador): `JapEmpCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa0 sem memória.
 unsafe extern "thiscall" fn jap_j_cup_create_round_table_661ff0(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cqn11_tabela(this, fase, rodadas, extra, saida, &CQN11_COPA_DO_IMPERADOR, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
+    build_single_stage_cup_rounds(this, fase, rodadas, extra, saida, &CQN11_COPA_DO_IMPERADOR, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
 }
 
 unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table_661ff0(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cqn11_comparar("jap_j_cup_create_round_table_661ff0", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    compare_cup_round_table("jap_j_cup_create_round_table_661ff0", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| jap_j_cup_create_round_table_661ff0(this, fase, r, e, s))
 }
 
@@ -177,11 +177,11 @@ const CQN11_COPA_DOS_EUA: [Cqn11R; 5] = [
 /// { 0x90b170 } (thiscall, ret 0x10, usa_open_cup.cpp; a virtual +0x3c da Copa dos EUA): `UsaOpenCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0x9c sem memória.
 unsafe extern "thiscall" fn jap_j_cup_create_round_table_90b170(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cqn11_tabela(this, fase, rodadas, extra, saida, &CQN11_COPA_DOS_EUA, 0xaa20e0, 0x9c, "cqn_11 tabela da copa dos eua")
+    build_single_stage_cup_rounds(this, fase, rodadas, extra, saida, &CQN11_COPA_DOS_EUA, 0xaa20e0, 0x9c, "cqn_11 tabela da copa dos eua")
 }
 
 unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table_90b170(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
-    cqn11_comparar("jap_j_cup_create_round_table_90b170", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
+    compare_cup_round_table("jap_j_cup_create_round_table_90b170", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| jap_j_cup_create_round_table_90b170(this, fase, r, e, s))
 }

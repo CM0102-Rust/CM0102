@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 {
 
 /// O calendário (a virtual +0x3c) aloca: só a original, conferindo os campos e a devolução 1.
 unsafe extern "thiscall" fn comparar_fra_cfa_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let r = o(this);
     let b = |k: usize| *((this + k) as *const u8);
     let ok = r == 1 && core::ptr::read_unaligned((this + 0x3c) as *const u16) == 2 && b(0xc2) == 3 && b(0xc3) == 1 && b(0xc4) == 2
@@ -89,7 +89,7 @@ struct Cqn4Fundo {
 /// (League::free_table 0x687970: push 0; mov ecx -> thiscall, ret 4): os jogos do grupo ficam no calendário do jogo e a
 /// liga segue sem tabela. A lista é um registro local de 72 ou 40 ponteiros; a cópia usa um vetor zerado (a carreira
 /// enche a lista; a original leria lixo da pilha sem clubes bastantes).
-unsafe fn cqn4_construir(this: usize, ano: u32, p: &Cqn4Fundo) -> usize {
+unsafe fn construct_group_league(this: usize, ano: u32, p: &Cqn4Fundo) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5ba0a0usize);
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x4afb40usize);
@@ -105,7 +105,7 @@ unsafe fn cqn4_construir(this: usize, ano: u32, p: &Cqn4Fundo) -> usize {
     *((this + 0x44) as *mut u8) = 0xff;
     cqn4_pd(this + 0x30, 0xffff_ffff);
     if regras(this) == 0 {
-        aviso_em(p.arquivo, p.linhas[0]);
+        show_error_at(p.arquivo, p.linhas[0]);
         return this;
     }
     crate::comparacao::ramo("cqn_4 liga de fundo francesa");
@@ -150,11 +150,11 @@ unsafe fn cqn4_construir(this: usize, ano: u32, p: &Cqn4Fundo) -> usize {
     embaralhar(lista.as_mut_ptr() as usize, k as u16 as u32); // cqn4: o sorteio da lista
     for g in 0..p.grupos {
         if tabela(this, lista.as_ptr() as usize + g * p.por_grupo * 4) == 0 {
-            aviso_em(p.arquivo, p.linhas[1]);
+            show_error_at(p.arquivo, p.linhas[1]);
             return this;
         }
         if jogos(this) == 0 {
-            aviso_em(p.arquivo, p.linhas[2]);
+            show_error_at(p.arquivo, p.linhas[2]);
             return this;
         }
         soltar(this, 0);
@@ -194,19 +194,19 @@ const CQN4_BAIXO: Cqn4Fundo = Cqn4Fundo {
 /// [inferência: os times reserva]) e até 34 da divisão genérica cuja competição de reserva é a CFA, embaralhados em 4
 /// grupos de 18. Fonte 0x9ccaf0, linhas 0x40, 0x64, 0x6b.
 unsafe extern "thiscall" fn construct_fra_cfa(this: usize, ano: u32) -> usize {
-    cqn4_construir(this, ano, &CQN4_CFA)
+    construct_group_league(this, ano, &CQN4_CFA)
 }
 
 /// { 0x5bd600 } (thiscall, ret 4, fra_lower.cpp, 578 bytes): `FraLower::FraLower(ano)`, a divisão de baixo francesa
 /// (competição de id [0x9cf548]): até 40 clubes, os do National ([0x9cf5d4]) e até 20 franceses ([0x9cf300]) da divisão
 /// genérica sem competição de reserva, embaralhados em 2 grupos de 20. Fonte 0x9ccbd0, linhas 0x40, 0x62, 0x69.
 unsafe extern "thiscall" fn construct_fra_lower(this: usize, ano: u32) -> usize {
-    cqn4_construir(this, ano, &CQN4_BAIXO)
+    construct_group_league(this, ano, &CQN4_BAIXO)
 }
 
 /// Sorteiam e alocam: só a original, conferindo a devolução, a vtable, o ano, a disciplina, o registro e a liga sem
 /// tabela no fim (+0x3e = 0, +0xb1 = 0: a última tabela foi solta).
-unsafe fn cqn4_comparar(nome: &str, this: usize, ano: u32, p: &Cqn4Fundo, original: impl FnOnce() -> usize) -> usize {
+unsafe fn compare_construct_group_league(nome: &str, this: usize, ano: u32, p: &Cqn4Fundo, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let ok = r == this && cqn4_d(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && *((this + 0x50) as *const u8) == 0xff && cqn4_d(this + 4) == cqn4_registro(p.competicao)
@@ -216,13 +216,13 @@ unsafe fn cqn4_comparar(nome: &str, this: usize, ano: u32, p: &Cqn4Fundo, origin
 }
 
 unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, ano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%);
-    cqn4_comparar("construct_fra_cfa", this, ano, &CQN4_CFA, || o(this, ano))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%);
+    compare_construct_group_league("construct_fra_cfa", this, ano, &CQN4_CFA, || o(this, ano))
 }
 
 unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, ano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I2%%);
-    cqn4_comparar("construct_fra_lower", this, ano, &CQN4_BAIXO, || o(this, ano))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I2%%);
+    compare_construct_group_league("construct_fra_lower", this, ano, &CQN4_BAIXO, || o(this, ano))
 }
 
 /// O corpo dos dois destrutores (thiscall, ret 0, quadro SEH só no caminho de exceção; iguais fora a vtable): a vtable
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, ano: u32) 
 /// (0x9452ca: push; add esp, 4 -> cdecl) e zerado, cada fase de 0 a +0x30 (com +0x30 ≥ 0) destruída pela sua virtual
 /// 0 com 1 (o destrutor que solta: push 1; mov ecx, fase -> thiscall, ret 4), o vetor [+0xc] solto e zerado e, por fim,
 /// League::~League (0x682300: mov ecx -> thiscall, ret 0).
-unsafe fn cqn4_destruir(this: usize, vtabela: usize) {
+unsafe fn destroy_group_league(this: usize, vtabela: usize) {
     let soltar_tabela: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x687970usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let base: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x682300usize);
@@ -266,20 +266,20 @@ unsafe fn cqn4_destruir(this: usize, vtabela: usize) {
 /// { 0x5b9460 } (thiscall, ret 0, fra_cfa.cpp): `FraCfa::~FraCfa()`.
 unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
     crate::comparacao::ramo("cqn_4 destrutor da cfa");
-    cqn4_destruir(this, 0x96a7b0)
+    destroy_group_league(this, 0x96a7b0)
 }
 
 /// { 0x5bd870 } (thiscall, ret 0, fra_lower.cpp): `FraLower::~FraLower()`.
 unsafe extern "thiscall" fn destroy_fra_lower(this: usize) {
     crate::comparacao::ramo("cqn_4 destrutor da divisao de baixo");
-    cqn4_destruir(this, 0x96ab78)
+    destroy_group_league(this, 0x96ab78)
 }
 
 /// Soltam memória: só a original.
 unsafe extern "thiscall" fn comparar_destroy_fra_cfa(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I3%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I3%%)(this)
 }
 
 unsafe extern "thiscall" fn comparar_destroy_fra_lower(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I4%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I4%%)(this)
 }

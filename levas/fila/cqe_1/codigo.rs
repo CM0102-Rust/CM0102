@@ -37,7 +37,7 @@ unsafe fn cqe1_ativa(o: usize) -> bool {
 
 /// A caixa "Error" com "v%s %s.%s %d" (versão 0x90d130, nome e extensão do .cpp `arquivo` pela 0x944cff, `linha`) em
 /// 0xae24d0 (0x944c9f) e a caixa 0x5e8290; [0xb67a34] = 0. As três chamadas cdecl, como na original.
-unsafe fn cqe1_caixa(arquivo: usize, linha: u32) {
+unsafe fn show_error_box(arquivo: usize, linha: u32) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
                 melhor_atracao = atracao[i];
             }
             let v = valor(opcoes[i], 0, 0, 1, 1, 1);
-            if v as f64 * f64_em(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido
+            if v as f64 * read_f64_at(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido
                 crate::comparacao::ramo("cqe_1 aceita");
                 if ensaio == 0 {
                     aceitar(this, vaga, 0);
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
         return;
     }
     if melhor == 0 {
-        cqe1_caixa(0xa8d514, 0x1eee);
+        show_error_box(0xa8d514, 0x1eee);
         recusar(this, vaga, 1, motivo);
         return;
     }
@@ -248,15 +248,15 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
         let pedido_f = pedido as f64;
         let v = valor(melhor, 0, 0, 0, 0, 1);
         let tipo = cqe1_d(o + 0x31) & 0xf;
-        if v as f64 * f64_em(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta
+        if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta
             crate::comparacao::ramo("cqe_1 contraproposta");
             cqe1_pb(melhor + 0x30, (cqe1_b(melhor + 0x30) & 0xf0) | (cqe1_b(o + 0x30) & 0xf));
             negociar(this, o, melhor, 0);
         } else {
             let w = cqe1_d(alvo + 0x52) as i32;
             let (tf, wf) = (total as f64, w as f64);
-            if (tf < wf * f64_em(0x96a5d8) && w.wrapping_sub(total) > 2000000)
-                || (tf < wf * f64_em(0x967880) && w.wrapping_sub(total) > 100000 && ensaio == 0)
+            if (tf < wf * read_f64_at(0x96a5d8) && w.wrapping_sub(total) > 2000000)
+                || (tf < wf * read_f64_at(0x967880) && w.wrapping_sub(total) > 100000 && ensaio == 0)
             {
                 motivo = 10;
             }
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
 /// Comparador da 0x8c8090: só a original (aceita, recusa ou contrapropõe, reagenda, mexe nas listas de observação e
 /// aloca e solta as opções).
 unsafe extern "thiscall" fn comparar_ai_respond_to_bid(this: usize, vaga: usize, ensaio: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, vaga, ensaio) // ponytail: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, vaga, ensaio) // ponytail: só a original
 }
 
 /// { 0x8bee50 } (thiscall, ret 0x14, transfer_manager.cpp, quadro SEH da oferta local): `TRANSFER_MANAGER::
@@ -347,5 +347,5 @@ unsafe extern "thiscall" fn add_loan_negotiation(this: usize, o: usize, a2: u32,
 
 /// Comparador da 0x8bee50: só a original (a lista de contratos cresce, a negociação nova é alocada).
 unsafe extern "thiscall" fn comparar_add_loan_negotiation(this: usize, o: usize, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(%%I1%%)(this, o, a2, a3, a4, a5) // ponytail: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(%%I1%%)(this, o, a2, a3, a4, a5) // ponytail: só a original
 }

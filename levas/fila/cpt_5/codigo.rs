@@ -10,7 +10,7 @@ unsafe fn cpt5_sortear(n: i32) -> i32 {
 }
 
 /// A linha seguinte do arquivo (0x90cba0: FILE*, buffer), 0 no fim.
-unsafe fn cpt5_ler_linha(f: usize, buf: *mut u8) -> i32 {
+unsafe fn read_config_line(f: usize, buf: *mut u8) -> i32 {
     let ler: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(0x90cba0usize);
     ler(f, buf)
 }
@@ -29,7 +29,7 @@ unsafe extern "thiscall" fn update_city_weather(this: usize) {
         for k in 0..3usize { // cpt5: as três medidas
             let p = cpt5_d(this + 4) + i * 4 + k;
             let r = cpt5_sortear(100);
-            *(p as *mut u8) = ftol((r as i16 as i32 + *(p as *const i8) as i32) as f64 * f64_em(0x968968)) as u8;
+            *(p as *mut u8) = match_pl_ftol((r as i16 as i32 + *(p as *const i8) as i32) as f64 * read_f64_at(0x968968)) as u8;
             let p = cpt5_d(this + 4) + i * 4 + k;
             let v = *(p as *const i8);
             if v < 0 {
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn update_city_weather(this: usize) {
 
 // ponytail: sorteia 3 ou 4 vezes por cidade: só a original; a cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_update_city_weather(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// { 0x922c40 } (thiscall, ret 8, weather.cpp): `Weather::read_region(f, regiao)`: uma linha do weather.cfg (0x90cba0,
@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao: usize) ->
     let periodo: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x922d20usize);
     crate::comparacao::ramo("cpt_5 regiao do clima");
     let mut linha = [0u8; 2000];
-    if cpt5_ler_linha(f, linha.as_mut_ptr()) == 0 {
+    if read_config_line(f, linha.as_mut_ptr()) == 0 {
         return 0;
     }
     if ler(linha.as_ptr(), 0xad4e24, regiao, regiao + 4) != 2 {
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao: usize) ->
 
 // ponytail: lê do arquivo (não dá para ler duas vezes): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_read_region(this: usize, f: usize, regiao: usize) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%)(this, f, regiao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%)(this, f, regiao)
 }
 
 /// { 0x922d20 } (thiscall, ret 8, weather.cpp): `Weather::read_region_period(f, periodo)`: arquivo nulo é a caixa
@@ -89,12 +89,12 @@ unsafe extern "thiscall" fn comparar_read_region(this: usize, f: usize, regiao: 
 unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize, periodo: usize) -> u8 {
     let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(0x946fd8usize);
     if f == 0 {
-        aviso_em(0xad4dec, 0xea);
+        show_error_at(0xad4dec, 0xea);
         return 0;
     }
     crate::comparacao::ramo("cpt_5 periodo do clima");
     let mut linha = [0u8; 2000];
-    if cpt5_ler_linha(f, linha.as_mut_ptr()) == 0 {
+    if read_config_line(f, linha.as_mut_ptr()) == 0 {
         return 0;
     }
     // ponytail: o nome tem 200 bytes na original; aqui 2000 para o %s não estourar (com os nomes do arquivo, igual).
@@ -116,5 +116,5 @@ unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize, periodo: 
 
 // ponytail: lê do arquivo: só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_read_region_period(this: usize, f: usize, periodo: usize) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%)(this, f, periodo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%)(this, f, periodo)
 }

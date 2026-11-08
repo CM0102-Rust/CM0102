@@ -22,11 +22,11 @@ unsafe fn cpp8_sorteio(n: i32) -> i32 {
 }
 
 /// O clube pelo índice (registro de 0x245 bytes em [0xae23b4]).
-unsafe fn cpp8_clube(i: i32) -> usize {
+unsafe fn injury_club_by_index(i: i32) -> usize {
     cpp8_d(0xae23b4).wrapping_add((i as usize).wrapping_mul(0x245))
 }
 
-unsafe fn cpp8_selecao(clube: usize) -> bool {
+unsafe fn injury_is_national_team(clube: usize) -> bool {
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     is_national_team(clube) != 0
 }
@@ -37,7 +37,7 @@ const CPP8_SURTO: usize = 0x11;
 
 /// Se o surto entra (os sorteios da 0x62e820, na ordem): tipo 4 nunca; tipo 3 só com 1 em 15 (sorteio de 15 = 0); os
 /// outros com 3 em 4 (sorteio de 4 ≠ 0); e nunca numa seleção (0x53b900).
-unsafe fn cpp8_surto_entra(tipo: u8, clube_i: i32) -> bool {
+unsafe fn outbreak_takes_hold(tipo: u8, clube_i: i32) -> bool {
     if tipo == 4 {
         return false;
     }
@@ -48,16 +48,16 @@ unsafe fn cpp8_surto_entra(tipo: u8, clube_i: i32) -> bool {
     } else if cpp8_sorteio(4) == 0 { // 1 em 4 fica de fora
         return false;
     }
-    !cpp8_selecao(cpp8_clube(clube_i))
+    !injury_is_national_team(injury_club_by_index(clube_i))
 }
 
 /// { 0x62e820 } (thiscall, ret 0x10, injury.cpp): `Injury::add_illness_outbreak(data, tipo, clube, partida)`: o tipo
-/// é o byte baixo; se o surto entra (`cpp8_surto_entra`), cresce o vetor de 30 em 30 quando cheio (0x945667, ou
+/// é o byte baixo; se o surto entra (`outbreak_takes_hold`), cresce o vetor de 30 em 30 quando cheio (0x945667, ou
 /// 0x944e46 sem vetor; sem memória, a caixa "Error" da linha 0xd01 e nada), grava o surto no fim (data pela 0x417c10)
 /// e reordena pela data (qsort 0x945333 com 0x778e90).
 unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
     let tipo = tipo as u8;
-    if !cpp8_surto_entra(tipo, clube_i) {
+    if !outbreak_takes_hold(tipo, clube_i) {
         return;
     }
     crate::comparacao::ramo("cpp_8 surto novo");
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, tipo:
         };
         core::ptr::write_unaligned((this + 0x1c) as *mut usize, novo);
         if novo == 0 {
-            aviso_em(0x9e7f28, 0xd01);
+            show_error_at(0x9e7f28, 0xd01);
             return;
         }
     }
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, tipo:
 }
 
 /// A data de cinco dias atrás (0x54c8e0 sobre a data do jogo).
-unsafe fn cpp8_cinco_dias_atras() -> [u8; 8] {
+unsafe fn five_days_ago() -> [u8; 8] {
     let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(0x54c8e0usize);
     let mut d = [0u8; 8];
     datar(0xae2c90, &mut d, 5); // cinco dias atrás
@@ -103,7 +103,7 @@ unsafe fn cpp8_cinco_dias_atras() -> [u8; 8] {
 }
 
 /// A data `limite` (dia com sinal em +0, ano sem sinal em +2) é depois da do surto `e`?
-unsafe fn cpp8_depois(limite: &[u8; 8], e: usize) -> bool {
+unsafe fn is_after_outbreak(limite: &[u8; 8], e: usize) -> bool {
     let dia = i16::from_le_bytes([limite[0], limite[1]]);
     let ano = u16::from_le_bytes([limite[2], limite[3]]);
     let ano_e = cpp8_w(e + 2) as u16;
@@ -118,7 +118,7 @@ unsafe fn cpp8_depois(limite: &[u8; 8], e: usize) -> bool {
 /// byte baixo da dword do deslocamento do surto, como a original; a partida do surto). No fim, os que saem vão
 /// embora do começo do vetor (os outros descem) e a conta cai.
 unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
-    let cinco = cpp8_cinco_dias_atras();
+    let cinco = five_days_ago();
     let injure: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(0x62d250usize);
     let mut removidos: i32 = 0;
     let mut k: i32 = 0;
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
         if ano_h < ano_e || (ano_h == ano_e && (hoje4 as u16 as i16) < cpp8_w(e)) {
             break; // o primeiro surto depois de hoje
         }
-        if cpp8_depois(&cinco, e) {
+        if is_after_outbreak(&cinco, e) {
             crate::comparacao::ramo("cpp_8 surto antigo");
             removidos += 1;
         } else {
@@ -142,8 +142,8 @@ unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
             };
             if let Some(mut quantos) = quantos {
                 crate::comparacao::ramo("cpp_8 espalhar");
-                let clube = cpp8_clube(cpp8_i(cpp8_d(this + 0x1c).wrapping_add(off) + 9));
-                if !cpp8_selecao(clube) {
+                let clube = injury_club_by_index(cpp8_i(cpp8_d(this + 0x1c).wrapping_add(off) + 9));
+                if !injury_is_national_team(clube) {
                     let mut t = 0;
                     while t < 0x14 && (quantos as i8) > 0 {
                         let vaga = cpp8_sorteio(0x32) as i8 as isize;
@@ -218,9 +218,9 @@ unsafe extern "stdcall" fn injury_player_in_close_season(pessoa: usize) -> u32 {
 /// guardado e devolvido); a original roda. Confere o mesmo estado do sorteio e, se o surto entrou, a conta +1 e o surto
 /// (data, tipo, clube, partida) no vetor; senão a conta igual.
 unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, usize)>(%%I0%%);
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let entra = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| cpp8_surto_entra(tipo as u8, clube_i)));
+    let entra = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| outbreak_takes_hold(tipo as u8, clube_i)));
     let depois_do_plano = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     estado.escrever();
     let n0 = cpp8_i(this + 0x24);
@@ -248,8 +248,8 @@ unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usi
 /// feito antes: quantos surtos tinham mais de cinco dias (os que saem) e, depois, nenhum surto com mais de cinco dias e
 /// a conta pelo menos a de antes menos os que saem.
 unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    let cinco = cpp8_cinco_dias_atras();
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let cinco = five_days_ago();
     let n0 = cpp8_i(this + 0x24);
     let hoje4 = cpp8_d(0xae2c90) as u32;
     let mut saem = 0;
@@ -259,13 +259,13 @@ unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
         if ano_h < ano_e || (ano_h == ano_e && (hoje4 as u16 as i16) < cpp8_w(e)) {
             break;
         }
-        if cpp8_depois(&cinco, e) {
+        if is_after_outbreak(&cinco, e) {
             saem += 1;
         }
     }
     o(this);
     let n = cpp8_i(this + 0x24);
-    let velho = (0..n.max(0) as usize).find(|&k| cpp8_depois(&cinco, cpp8_d(this + 0x1c) + k * CPP8_SURTO));
+    let velho = (0..n.max(0) as usize).find(|&k| is_after_outbreak(&cinco, cpp8_d(this + 0x1c) + k * CPP8_SURTO));
     PLACAR.registrar(velho.is_none() && n >= n0 - saem, || {
         format!("spread_illness_outbreaks: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, velho)
     });
@@ -273,7 +273,7 @@ unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
 
 /// Comparador: pelo valor (datas, a seleção e a temporada só calculam).
 unsafe extern "stdcall" fn comparar_injury_player_in_close_season(pessoa: usize) -> u32 {
-    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
     let n = injury_player_in_close_season(pessoa);
     PLACAR.registrar(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", pessoa, r, n));
     r

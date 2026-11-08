@@ -14,7 +14,7 @@ unsafe fn cpy1_w(a: usize) -> u16 {
 
 /// O contrato principal da pessoa (CONTRACT_MANAGER::get_contract 0x4cf5a0: thiscall([0xae1050], pessoa), ret 4).
 /// As três marcas não guardam o contrato em [0xae1080].
-unsafe fn cpy1_contrato(pessoa: usize) -> usize {
+unsafe fn contract_of_staff(pessoa: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     f(cpy1_d(0xae1050), pessoa)
 }
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn count_slots_with_bids(this: usize, clube: usize, pos
 
 /// Comparador: lado a lado pelas 40 vagas do clube e pelas datas estáticas, e a devolução.
 unsafe extern "thiscall" fn comparar_count_slots_with_bids(this: usize, clube: usize, posicao: u32) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I0%%);
     let mut reg = CPY1_ESTATICAS.to_vec();
     reg.push((cpy1_d(cpy1_entrada(this, clube)), 40 * 0x25));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, posicao), || count_slots_with_bids(this, clube, posicao));
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn comparar_count_slots_with_bids(this: usize, clube: u
 /// telas de transferência (0x8f6770, 0x8f8120). Sem contrato (0x4cf5a0): 0. Com ele, o bit 0 de +0x4e (na lista de
 /// transferências) sai e devolve 1 no byte baixo (os de cima são os do ponteiro do contrato, como a original).
 unsafe extern "stdcall" fn shortlist_manager_remove_from_transfer_list(pessoa: usize) -> u32 {
-    let c = cpy1_contrato(pessoa);
+    let c = contract_of_staff(pessoa);
     if c == 0 {
         return 0;
     }
@@ -102,8 +102,8 @@ unsafe extern "stdcall" fn shortlist_manager_remove_from_transfer_list(pessoa: u
 
 /// Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
 unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_transfer_list(pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%);
-    let c = cpy1_contrato(pessoa);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%);
+    let c = contract_of_staff(pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || shortlist_manager_remove_from_transfer_list(pessoa));
     PLACAR.registrar(igual && r == n, || format!("shortlist_manager_remove_from_transfer_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
@@ -114,7 +114,7 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_transfer_list(
 /// renovação do contrato (0x4dc3a0) e pelas telas de transferência. Sem contrato: 0; com ele, o bit 1 de +0x4e (na
 /// lista de empréstimos) sai e devolve 1 no byte baixo (os de cima, os do ponteiro do contrato).
 unsafe extern "stdcall" fn shortlist_manager_remove_from_loan_list(pessoa: usize) -> u32 {
-    let c = cpy1_contrato(pessoa);
+    let c = contract_of_staff(pessoa);
     if c == 0 {
         return 0;
     }
@@ -124,8 +124,8 @@ unsafe extern "stdcall" fn shortlist_manager_remove_from_loan_list(pessoa: usize
 
 /// Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
 unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_loan_list(pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%);
-    let c = cpy1_contrato(pessoa);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%);
+    let c = contract_of_staff(pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || shortlist_manager_remove_from_loan_list(pessoa));
     PLACAR.registrar(igual && r == n, || format!("shortlist_manager_remove_from_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));

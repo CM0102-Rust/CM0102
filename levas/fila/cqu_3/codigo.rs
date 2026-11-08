@@ -76,21 +76,21 @@ unsafe extern "thiscall" fn cqu3_resultado_da_j1(this: usize, jogo: usize, estat
 }
 
 unsafe extern "thiscall" fn comparar_cqu3_resultado_do_mineiro(this: usize, jogo: usize, estat: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     cqu3_comparar("cqu3_resultado_do_mineiro", this, jogo, 0xb, || o(this, jogo, estat))
 }
 
 unsafe extern "thiscall" fn comparar_cqu3_resultado_do_paranaense(this: usize, jogo: usize, estat: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     cqu3_comparar("cqu3_resultado_do_paranaense", this, jogo, 0xb, || o(this, jogo, estat))
 }
 
 unsafe extern "thiscall" fn comparar_cqu3_resultado_do_carioca(this: usize, jogo: usize, estat: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     cqu3_comparar("cqu3_resultado_do_carioca", this, jogo, 0xb, || o(this, jogo, estat))
 }
 
 unsafe extern "thiscall" fn comparar_cqu3_resultado_da_j1(this: usize, jogo: usize, estat: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I3%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I3%%);
     cqu3_comparar("cqu3_resultado_da_j1", this, jogo, 0xf, || o(this, jogo, estat))
 }

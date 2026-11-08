@@ -65,7 +65,7 @@ unsafe fn cqu6_plano(this: usize, r: usize, ano: u32, dono: usize, vt: usize, ca
 /// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x96f9c8, o registro em +4, o ano em +0x40 e
 /// os da tabela CQU6_CAMPOS_COPA_DO_REI); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x60 se devolver 0); as estatísticas em +8 (a caixa da linha 0x67 sem elas); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: tipo 1 (clubes de uma nação); 83 times; fundo de prêmios de 1.000.000; 7 reservas no banco e 3 substituições; regra de disciplina 27 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqu6_copa_do_rei_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
@@ -93,7 +93,7 @@ unsafe fn cqu6_copa_do_rei_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let v = zerada(0x53, 6);
     cqu6_p32(this + 0xa7, v as u32);
     if v == 0 {
-        aviso_em(0xa82810, 0x52);
+        show_error_at(0xa82810, 0x52);
         return this;
     }
     cqu6_p32(this + 0x28, 0xf4240);
@@ -101,11 +101,11 @@ unsafe fn cqu6_copa_do_rei_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0xa82810, 0x60);
+        show_error_at(0xa82810, 0x60);
         return this;
     }
     if !cqu6_estatisticas(this) {
-        aviso_em(0xa82810, 0x67);
+        show_error_at(0xa82810, 0x67);
         return this;
     }
     this
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn cqu6_copa_do_rei(this: usize, ano: u32, dono: usize)
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu6_plano).
 unsafe extern "thiscall" fn comparar_cqu6_copa_do_rei(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu6_plano(this, r, ano, dono, 0x96f9c8, &CQU6_CAMPOS_COPA_DO_REI, true);
     PLACAR.registrar(erro.is_none(), || format!("cqu6_copa_do_rei({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn comparar_cqu6_copa_do_rei(this: usize, ano: u32, don
 /// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x96fd38, o registro em +4, o ano em +0x40 e
 /// os da tabela CQU6_CAMPOS_SUPERCOPA_ESPANHOLA); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os dois clubes (SpaSuper::select_teams) (0x858aa0, thiscall, ret 0; a caixa da linha 0x43 se devolver negativo); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x51 se devolver negativo); as estatísticas em +8 (a caixa da linha 0x58 sem elas); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: tipo 1 (clubes de uma nação); sem fundo de prêmios (+0x28 fica como a base deixou); 7 reservas no banco e 3 substituições; regra de disciplina 26 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqu6_supercopa_espanhola_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
@@ -155,18 +155,18 @@ unsafe fn cqu6_supercopa_espanhola_corpo(this: usize, ano: u32, dono: usize) -> 
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x858aa0usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0xa82a58, 0x43);
+        show_error_at(0xa82a58, 0x43);
         return this;
     }
     cqu6_rodadas(this);
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0xa82a58, 0x51);
+        show_error_at(0xa82a58, 0x51);
         return this;
     }
     if !cqu6_estatisticas(this) {
-        aviso_em(0xa82a58, 0x58);
+        show_error_at(0xa82a58, 0x58);
         return this;
     }
     this
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn cqu6_supercopa_espanhola(this: usize, ano: u32, dono
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu6_plano).
 unsafe extern "thiscall" fn comparar_cqu6_supercopa_espanhola(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu6_plano(this, r, ano, dono, 0x96fd38, &CQU6_CAMPOS_SUPERCOPA_ESPANHOLA, true);
     PLACAR.registrar(erro.is_none(), || format!("cqu6_supercopa_espanhola({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
@@ -272,7 +272,7 @@ unsafe fn cqu6_inscritos(this: usize) -> i32 {
     let t = zerada(0x53, 6);
     cqu6_p32(this + 0xa7, t as u32);
     if t == 0 {
-        aviso_em(0xa82810, 0x1e0);
+        show_error_at(0xa82810, 0x1e0);
         return -1;
     }
     let faltam_w = faltam as i16 as i32;
@@ -282,7 +282,7 @@ unsafe fn cqu6_inscritos(this: usize) -> i32 {
         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
         let lista = alocar(0x2d0);
         if lista == 0 {
-            aviso_em(0xa82810, 0x1ee);
+            show_error_at(0xa82810, 0x1ee);
             return 0;
         }
         let mut n = 0i32;
@@ -353,7 +353,7 @@ unsafe extern "thiscall" fn cqu6_inscritos_da_copa_do_rei(this: usize) -> i32 {
 /// Lado a lado a partir do mesmo estado (+0x3e; não sorteia): a original deixa a tabela dela em +0xa7, a cópia faz a sua,
 /// comparada nas 83 vagas (6 bytes cada) e liberada; a devolução também.
 unsafe extern "thiscall" fn comparar_cqu6_inscritos_da_copa_do_rei(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
     let antes = cqu6_d(this + 0xa7);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);

@@ -6,7 +6,7 @@
 # sorteio(5)); sem a noticia, o sorteio(3) e o resto somem. Os contadores "cqd_11 noticia da falta" e "cqd_11 relator
 # tecnico" mostram quantas vezes cada ramo roda. Podem escapar so se a noticia nao rodar ate a data.
 MUTACOES = [
-    ('cqd11_sem_sorteio', '    let r = cqd11_sortear(3); // cqd11: o sorteio da notícia',
+    ('cqd11_sem_sorteio', '    let r = taped_random(3); // cqd11: o sorteio da notícia',
      '    let r = 0; // mutacao: sem o sorteio da noticia',
      'cqd_11 noticia da falta'),
     ('cqd11_relator_invertido', '    if tecnico != 0 && humano(clube, 1, 1, 0, 0) == 0 { // cqd11: o técnico da IA relata',

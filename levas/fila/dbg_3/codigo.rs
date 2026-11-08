@@ -19,7 +19,7 @@ unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i32, registr
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_db_files_write_players(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%)(stream, use_zip, registros, n)
+    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%)(stream, use_zip, registros, n)
 }
 
 /// { 0x54fbb0 } (cdecl, Db_files.cpp): `db_files_write_non_players(stream, use_zip, registros, quantidade)`: grava de uma vez
@@ -41,7 +41,7 @@ unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zip: i32, reg
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_db_files_write_non_players(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I1%%)(stream, use_zip, registros, n)
+    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I1%%)(stream, use_zip, registros, n)
 }
 
 /// { 0x54fd00 } (cdecl, Db_files.cpp): `db_files_write_staff_extra(stream, use_zip, registros, quantidade)`: grava de uma vez
@@ -63,5 +63,5 @@ unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zip: i32, reg
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_db_files_write_staff_extra(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I2%%)(stream, use_zip, registros, n)
+    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I2%%)(stream, use_zip, registros, n)
 }

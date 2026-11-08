@@ -21,21 +21,21 @@ unsafe fn cpo3_por(a: usize, v: usize) {
 /// +0xc6 as competições deles, −1 sem), +0xca/+0xce os do mês.
 const CPO3_REGISTRO: usize = 0xd2;
 
-unsafe fn cpo3_quantos() -> i32 {
+unsafe fn manager_record_count() -> i32 {
     cpo3_i(0xae2368).wrapping_add(0x10)
 }
 
-unsafe fn cpo3_registro(this: usize, k: i32) -> usize {
+unsafe fn manager_record_at(this: usize, k: i32) -> usize {
     cpo3_d(this + 8).wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO))
 }
 
 /// A pessoa pelo id (registro de 0x6e bytes em [0xae23bc]; −1 dá o registro antes da tabela, como na original).
-unsafe fn cpo3_pessoa(id: usize) -> usize {
+unsafe fn staff_records_staff_by_id(id: usize) -> usize {
     cpo3_d(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
 }
 
 /// O mês da data (0x54cfb0, o al com sinal).
-unsafe fn cpo3_mes(data: usize) -> i16 {
+unsafe fn date_month(data: usize) -> i16 {
     let mes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x54cfb0usize);
     mes(data) as u8 as i8 as i16
 }
@@ -45,16 +45,16 @@ unsafe fn cpo3_mes(data: usize) -> i16 {
 /// registros e guarda o mês e o ano novos. No primeiro dia do ano (dia +0 = 0) passa os pontos do ano (+0xb6) de cada
 /// registro com pessoa (+0x86) ao hall da fama (0x5ef270 em [0xb5ded8]) e os zera.
 unsafe extern "thiscall" fn staff_records_daily_update(this: usize, data: usize) {
-    if cpo3_mes(data) as i32 != cpo3_w(this + 0x14) as u16 as i32 || cpo3_w(data + 2) != cpo3_w(this + 0x16) {
+    if date_month(data) as i32 != cpo3_w(this + 0x14) as u16 as i32 || cpo3_w(data + 2) != cpo3_w(this + 0x16) {
         crate::comparacao::ramo("cpo_3 virada do mes");
         let base = cpo3_d(this + 8);
-        let n = cpo3_quantos();
+        let n = manager_record_count();
         for k in 0..n.max(0) as usize {
             let e = base.wrapping_add(k * CPO3_REGISTRO);
             cpo3_por(e + 0xca, 0);
             cpo3_por(e + 0xce, 0); // os pontos do mês
         }
-        let m = cpo3_mes(data);
+        let m = date_month(data);
         core::ptr::write_unaligned((this + 0x14) as *mut i16, m);
         core::ptr::write_unaligned((this + 0x16) as *mut i16, cpo3_w(data + 2));
     }
@@ -62,11 +62,11 @@ unsafe extern "thiscall" fn staff_records_daily_update(this: usize, data: usize)
         let base = cpo3_d(this + 8);
         let hall: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x5ef270usize);
         let mut k = 0i32;
-        while k < cpo3_quantos() {
+        while k < manager_record_count() {
             let e = base.wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO));
             let id = cpo3_d(e + 0x86);
             if id as i32 != -1 {
-                hall(cpo3_d(0xb5ded8), cpo3_pessoa(id), cpo3_d(e + 0xb6));
+                hall(cpo3_d(0xb5ded8), staff_records_staff_by_id(id), cpo3_d(e + 0xb6));
             }
             cpo3_por(e + 0xb6, 0);
             k += 1;
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn staff_records_end_season_for_nation(this: usize, ent
     let guarda = |c: usize| c != 0 && *((c + 0x11c) as *const u8) != 0;
     let base = cpo3_d(this + 8);
     let mut k = 0i32;
-    while k < cpo3_quantos() {
+    while k < manager_record_count() {
         let s = base.wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO)) + 0xba;
         let copa = cpo3_i(s + 0xc);
         if cpo3_i(s + 8) == id {
@@ -102,13 +102,13 @@ unsafe extern "thiscall" fn staff_records_end_season_for_nation(this: usize, ent
                 cpo3_por(s + 4, 0);
             }
             if guarda(cpo3_d(entrada)) {
-                hall(cpo3_d(0xb5ded8), cpo3_pessoa(cpo3_d(s - 0x34)), id, cpo3_d(s));
+                hall(cpo3_d(0xb5ded8), staff_records_staff_by_id(cpo3_d(s - 0x34)), id, cpo3_d(s));
             }
             cpo3_por(s, 0);
             cpo3_por(s + 8, usize::MAX);
         } else if copa == id {
             if guarda(cpo3_d(entrada)) {
-                hall(cpo3_d(0xb5ded8), cpo3_pessoa(cpo3_d(s - 0x34)), id, cpo3_d(s + 4));
+                hall(cpo3_d(0xb5ded8), staff_records_staff_by_id(cpo3_d(s - 0x34)), id, cpo3_d(s + 4));
             }
             cpo3_por(s + 4, 0);
             cpo3_por(s + 0xc, usize::MAX);
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn staff_records_end_season_for_nation(this: usize, ent
 unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, indice: i32) -> usize {
     let liga = cpo3_d(cpo3_d(0xadadfc).wrapping_add((indice as usize).wrapping_mul(4)));
     if *((liga + 0x43) as *const u8) != 2 {
-        aviso_em(0xa83b78, 0x104e);
+        show_error_at(0xa83b78, 0x104e);
         return 0;
     }
     let antes: unsafe extern "thiscall" fn(usize, *mut u32, i32) -> usize = core::mem::transmute(0x54cab0usize);
@@ -165,18 +165,18 @@ unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, indice: i32) 
 /// Comparador: os pontos vão ao hall da fama (0x5ef270, soma): roda só a original e confere o plano: na virada, os pontos
 /// do mês zerados e o mês e o ano guardados; no primeiro dia do ano, os pontos do ano zerados.
 unsafe extern "thiscall" fn comparar_staff_records_daily_update(this: usize, data: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
-    let virada = cpo3_mes(data) as i32 != cpo3_w(this + 0x14) as u16 as i32 || cpo3_w(data + 2) != cpo3_w(this + 0x16);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let virada = date_month(data) as i32 != cpo3_w(this + 0x14) as u16 as i32 || cpo3_w(data + 2) != cpo3_w(this + 0x16);
     let ano = cpo3_w(data) == 0;
-    let (m, a) = (cpo3_mes(data), cpo3_w(data + 2));
+    let (m, a) = (date_month(data), cpo3_w(data + 2));
     o(this, data);
     if !virada && !ano {
         return;
     }
     let mut ok = !virada || (cpo3_w(this + 0x14) == m && cpo3_w(this + 0x16) == a);
     let mut primeiro = -1i32;
-    for k in 0..cpo3_quantos().max(0) {
-        let e = cpo3_registro(this, k);
+    for k in 0..manager_record_count().max(0) {
+        let e = manager_record_at(this, k);
         let certo = (!virada || (cpo3_d(e + 0xca) == 0 && cpo3_d(e + 0xce) == 0)) && (!ano || cpo3_d(e + 0xb6) == 0);
         if !certo && primeiro < 0 {
             primeiro = k;
@@ -189,17 +189,17 @@ unsafe extern "thiscall" fn comparar_staff_records_daily_update(this: usize, dat
 /// Comparador: os pontos vão ao hall da fama (0x5ef330, soma): roda só a original e confere o plano feito antes: os
 /// quatro campos (+0xba, +0xbe, +0xc2, +0xc6) de cada registro.
 unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nation(this: usize, entrada: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let p = cpo3_d(entrada + 4);
     if !(p != 0 && cpo3_d(p) == cpo3_d(0x9cfa10)) && cpo3_d(entrada) == 0 {
         return o(this, entrada);
     }
     let comp = cpo3_d(entrada);
     let id = if comp != 0 { cpo3_i(comp) } else { -1 };
-    let n = cpo3_quantos().max(0);
+    let n = manager_record_count().max(0);
     let mut plano = Vec::with_capacity(n as usize);
     for k in 0..n {
-        let s = cpo3_registro(this, k) + 0xba;
+        let s = manager_record_at(this, k) + 0xba;
         let (mut liga, mut copa, mut cl, mut cc) = (cpo3_d(s), cpo3_d(s + 4), cpo3_i(s + 8), cpo3_i(s + 0xc));
         if cl == id {
             if cc == id {
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nation(this: u
     }
     o(this, entrada);
     let errado = (0..n).find(|&k| {
-        let s = cpo3_registro(this, k) + 0xba;
+        let s = manager_record_at(this, k) + 0xba;
         plano[k as usize] != (cpo3_d(s), cpo3_d(s + 4), cpo3_i(s + 8), cpo3_i(s + 0xc))
     });
     PLACAR.registrar(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nation(this: u
 
 /// Comparador: pelo valor (o registro 0x86f5b0 criado pela original já existe para a cópia).
 unsafe extern "thiscall" fn comparar_find_manager_of_the_month(this: usize, indice: i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%);
     let liga = cpo3_d(cpo3_d(0xadadfc).wrapping_add((indice as usize).wrapping_mul(4)));
     if *((liga + 0x43) as *const u8) != 2 {
         return o(this, indice);

@@ -50,15 +50,15 @@ unsafe extern "thiscall" fn african_nations_update_for_date(this: usize, hoje: u
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqs13_d(cqs13_d(this) + 0x5c));
         previstas(this);
         if grupo_a(this) == 0 {
-            aviso_em(0x9870f8, 0x3c2);
+            show_error_at(0x9870f8, 0x3c2);
             return 0;
         }
         if jogos(this) == 0 {
-            aviso_em(0x9870f8, 0x3c8);
+            show_error_at(0x9870f8, 0x3c8);
             return 0;
         }
         if ordenar(this, 0) == 0 {
-            aviso_em(0x9870f8, 0x3cf);
+            show_error_at(0x9870f8, 0x3cf);
             return 0;
         }
         for g in 0..3i32 {
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn african_nations_update_for_date(this: usize, hoje: u
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e as três fases
 // criadas e a fase atual (+0x30) a última delas (2).
 unsafe extern "thiscall" fn comparar_african_nations_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = completo != 0
         && cqs13_d(this + 0x45) == 0
         && (cqs13_w(this + 0xb8) as u16).wrapping_add(cqs13_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn comparar_african_nations_update_for_date(this: usize
 /// devolve 0): para cada grupo j (0..3) e pote p (0..3), um sorteado (0x90cfc0(4): push 4; add esp -> cdecl; o byte com
 /// sinal; de novo enquanto a vaga do pote já saiu) entre os 4 do pote (a lista nas vagas 4p a 4p + 3) vai para a vaga 4j
 /// + p dos grupos e sai do pote (zerado). A lista liberada (0x9452ca) e +0xee = os grupos. Devolve 1.
-unsafe fn cqs13_sorteio(this: usize) -> u32 {
+unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
@@ -119,7 +119,7 @@ unsafe fn cqs13_sorteio(this: usize) -> u32 {
     let lista = alocar(0xc8);
     cqs13_pd(this + 0xee, lista);
     if lista == 0 {
-        aviso_em(0x9870f8, 0x349);
+        show_error_at(0x9870f8, 0x349);
         return 0;
     }
     let mut ids = [-1i32; 2];
@@ -155,7 +155,7 @@ unsafe fn cqs13_sorteio(this: usize) -> u32 {
     ordenar(cqs13_d(this + 0xee) + (h as isize * 4) as usize, (n as i32 - h) as u32, 4, 0x4b07d0); // cqs13: as não sedes pela reputação
     let grupos = alocar(0x40);
     if grupos == 0 {
-        aviso_em(0x9870f8, 0x380);
+        show_error_at(0x9870f8, 0x380);
         return 0;
     }
     crate::comparacao::ramo("cqs_13 sorteio da copa africana");
@@ -176,14 +176,14 @@ unsafe fn cqs13_sorteio(this: usize) -> u32 {
 }
 
 unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
-    cqs13_sorteio(this)
+    draw_african_nations_finalists(this)
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa os grupos dela em +0xee, a cópia faz os seus, comparados nas 16 vagas e liberados (sem os 16, as listas
 /// de 50 comparadas nas 16 primeiras vagas).
 unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u32 {
         lo.set(cqs13_d(this + 0xee));
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| cqs13_sorteio(this));
+        let r = crate::aleatorio::sem_contar(|| draw_african_nations_finalists(this));
         lr.set(cqs13_d(this + 0xee));
         cqs13_pd(this + 0xee, lo.get());
         r
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn african_nations_create_group_stage(this: usize, g: i
         core::mem::transmute(0x68b100usize);
     let times = alocar(0x10);
     if times == 0 {
-        aviso_em(0x9870f8, 0x2dc);
+        show_error_at(0x9870f8, 0x2dc);
         return 0;
     }
     for n in 0..4usize {
@@ -278,7 +278,7 @@ unsafe extern "thiscall" fn african_nations_create_group_stage(this: usize, g: i
     soltar(tabela);
     let f = cqs13_d(cqs13_d(this + 0xc) + g as usize * 4);
     if f == 0 {
-        aviso_em(0x9870f8, 0x2f2);
+        show_error_at(0x9870f8, 0x2f2);
         return 0;
     }
     cqs13_pd(this + 0x30, g as usize);
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn african_nations_create_group_stage(this: usize, g: i
 // fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 unsafe extern "thiscall" fn comparar_african_nations_create_group_stage(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(%%I2%%);
     let lista = cqs13_d(this + 0xee);
     if lista == 0 || !(0..3).contains(&g) {
         return o(this, g);

@@ -57,7 +57,7 @@ unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, partida: usi
 }
 
 unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(comp, partida);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(comp, partida);
     let n = comp_active_key_nation_of_fixture(comp, partida);
     PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", cpt3_d(comp) as i32, partida, r, n));
     r
@@ -75,7 +75,7 @@ const CPT3_INTERNACIONAIS: [usize; 10] = [0x9cf7a0, 0x9cf7a4, 0x9cf784, 0x9cf7ac
 /// das eliminatórias, 1; senão 0. Competição nula: a caixa "Error" (linha 0x3d7) e 0.
 unsafe extern "C" fn key_nation_is_world_cup_comp(comp: usize) -> u32 {
     if comp == 0 {
-        aviso_em(0x9eaff4, 0x3d7);
+        show_error_at(0x9eaff4, 0x3d7);
         return 0;
     }
     let id = cpt3_d(comp);
@@ -83,7 +83,7 @@ unsafe extern "C" fn key_nation_is_world_cup_comp(comp: usize) -> u32 {
 }
 
 unsafe extern "C" fn comparar_key_nation_is_world_cup_comp(comp: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
     if comp == 0 {
         return o(comp);
     }
@@ -97,7 +97,7 @@ unsafe extern "C" fn comparar_key_nation_is_world_cup_comp(comp: usize) -> u32 {
 /// seleções fora da Copa do Mundo, 1; senão 0. Competição nula: a caixa (linha 0x3ef) e 0.
 unsafe extern "C" fn key_nation_is_international_comp(comp: usize) -> u32 {
     if comp == 0 {
-        aviso_em(0x9eaff4, 0x3ef);
+        show_error_at(0x9eaff4, 0x3ef);
         return 0;
     }
     let id = cpt3_d(comp);
@@ -105,7 +105,7 @@ unsafe extern "C" fn key_nation_is_international_comp(comp: usize) -> u32 {
 }
 
 unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
     if comp == 0 {
         return o(comp);
     }

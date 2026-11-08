@@ -13,12 +13,12 @@ unsafe fn cpw4_pd(a: usize, v: u32) {
 }
 
 /// O contador de ofertas de contrato da pessoa (byte +8 do registro de 79 bytes em [0xae2d0c]).
-unsafe fn cpw4_contador(pessoa: usize) -> usize {
+unsafe fn contract_offer_counter(pessoa: usize) -> usize {
     cpw4_d(0xae2d0c).wrapping_add(cpw4_d(pessoa).wrapping_mul(0x4f)).wrapping_add(8)
 }
 
 /// A atribuição de data (0x417c10: thiscall(destino, temporária, origem)).
-unsafe fn cpw4_copiar_data(destino: usize, origem: usize) {
+unsafe fn contract_manager_copy_date(destino: usize, origem: usize) {
     let copia: unsafe extern "thiscall" fn(usize, *mut [u32; 2], usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut t = [0u32; 2];
     copia(destino, &mut t, origem);
@@ -26,7 +26,7 @@ unsafe fn cpw4_copiar_data(destino: usize, origem: usize) {
 
 /// A oferta de contrato da pessoa (id em +0) pelo clube (id em +4) na lista `l` (nós: +0 o item, +6 o próximo), sem
 /// mexer no cursor; nenhuma: 0.
-unsafe fn cpw4_achar(l: usize, id: usize, clube: usize) -> usize {
+unsafe fn find_contract_offer(l: usize, id: usize, clube: usize) -> usize {
     let mut no = cpw4_d(l + 2);
     let mut n = 0;
     while no != 0 && n < 100000 {
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
     data_padrao(r + 0x51);
     let id = cpw4_d(termos);
     let mut item = 0;
-    if cpw4_b(cpw4_contador(termos)) != 0 && cpw4_d(this + 0x34) != 0 {
+    if cpw4_b(contract_offer_counter(termos)) != 0 && cpw4_d(this + 0x34) != 0 {
         let clube = cpw4_d(termos + 4);
         let l = cpw4_d(this + 0x34);
         core::ptr::write_unaligned((l + 0xa) as *mut usize, cpw4_d(l + 2));
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
         // ponytail: a original embute o operator= (0x4cc810) aqui; a cópia chama a versão Rust dele, as mesmas gravações
         contract_manager_operator(item, termos);
         *((item + 0x50) as *mut u8) = if acertado != 0 { 2 } else { 0 };
-        cpw4_copiar_data(item + 0x51, 0xae2c90);
+        contract_manager_copy_date(item + 0x51, 0xae2c90);
         cpw4_pd(item + 0x59, vaga as u32);
         cpw4_pd(item + 0x5d, valor);
         *((item + 0x61) as *mut u8) = marca as u8;
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
         let operador: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cc810usize);
         operador(r, termos);
         *((r + 0x50) as *mut u8) = 0;
-        cpw4_copiar_data(r + 0x51, 0xae2c90);
+        contract_manager_copy_date(r + 0x51, 0xae2c90);
         cpw4_pd(r + 0x5d, valor);
         cpw4_pd(r + 0x59, vaga as u32);
         *((r + 0x61) as *mut u8) = marca as u8;
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
             acrescentar(cpw4_d(this + 0x34), r, 0x6f);
         }
         crate::comparacao::ramo("cpw_4 oferta nova");
-        let c = cpw4_contador(termos) as *mut u8;
+        let c = contract_offer_counter(termos) as *mut u8;
         *c = (*c).wrapping_add(1); // cpw4: o contador de ofertas da pessoa
     }
     if CPW4_ENSAIO {
@@ -151,12 +151,12 @@ static mut CPW4_REGISTRO: [u8; 0x6f] = [0; 0x6f];
 /// a cópia em ensaio monta o registro; a original acrescenta, e o nó novo (o último do jogador pelo clube) tem de ter os
 /// mesmos 0x63 primeiros bytes, com o contador + 1.
 unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, termos: usize, vaga: i32, valor: u32, marca: u32, a5: u32, decidir: u32, acertado: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(%%I0%%);
     let id = cpw4_d(termos);
     let clube = cpw4_d(termos + 4);
-    let cont = cpw4_contador(termos);
+    let cont = contract_offer_counter(termos);
     let l = cpw4_d(this + 0x34);
-    let item = if cpw4_b(cont) != 0 && l != 0 { cpw4_achar(l, id, clube) } else { 0 };
+    let item = if cpw4_b(cont) != 0 && l != 0 { find_contract_offer(l, id, clube) } else { 0 };
     let mut todas = vec![(cont, 1usize)];
     if item != 0 {
         todas.push((item, 0x63));
@@ -230,14 +230,14 @@ unsafe extern "thiscall" fn remove_contract_offer_for_transfer(this: usize, pess
     }
     let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x68d1f0usize);
     tirar(cpw4_d(this + 0x34), x);
-    let c = cpw4_contador(pessoa) as *mut u8;
+    let c = contract_offer_counter(pessoa) as *mut u8;
     *c = (*c).wrapping_sub(1);
 }
 
 /// Comparador: a original tira o item da lista (libera): só ela, conferindo o plano feito antes: com a oferta da pessoa
 /// pela vaga na lista, o contador desce 1; sem ela, fica.
 unsafe extern "thiscall" fn comparar_remove_contract_offer_for_transfer(this: usize, pessoa: usize, vaga: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I1%%);
     let l = cpw4_d(this + 0x34);
     let mut achou = false;
     if l != 0 {
@@ -253,9 +253,9 @@ unsafe extern "thiscall" fn comparar_remove_contract_offer_for_transfer(this: us
             n += 1;
         }
     }
-    let antes = cpw4_b(cpw4_contador(pessoa));
+    let antes = cpw4_b(contract_offer_counter(pessoa));
     o(this, pessoa, vaga);
-    let depois = cpw4_b(cpw4_contador(pessoa));
+    let depois = cpw4_b(contract_offer_counter(pessoa));
     let esperado = if achou { antes.wrapping_sub(1) } else { antes };
     PLACAR.registrar(depois == esperado, || format!("remove_contract_offer_for_transfer(pessoa {:#x}, vaga {}) achou {} contador {} -> {}", cpw4_d(pessoa), vaga, achou, antes, depois));
 }
@@ -281,7 +281,7 @@ unsafe extern "stdcall" fn contract_manager_lowest_wage_demand(pessoa: usize, cl
 /// Comparador: a original e a cópia a partir do mesmo estado (o sorteio e o último contrato pedido [0xae1080]); a
 /// devolução e a memória.
 unsafe extern "stdcall" fn comparar_contract_manager_lowest_wage_demand(pessoa: usize, clube: usize) -> i32 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> i32>(%%I2%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i32>(%%I2%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(pessoa, clube), || crate::aleatorio::sem_contar(|| contract_manager_lowest_wage_demand(pessoa, clube)));

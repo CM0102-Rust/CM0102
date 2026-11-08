@@ -14,7 +14,7 @@ unsafe fn cpn5_b(a: usize) -> u8 {
 
 /// O `clube` já tem vaga na lista [this+8] (+0 conta, cursor +0xa recomeçado de +2, iterador 0x68d1b0; +0xe da vaga o
 /// id do clube)? `None`: a lista acabou antes da conta (a caixa da original).
-unsafe fn cpn5_tem_vaga(this: usize, clube: usize) -> Option<bool> {
+unsafe fn club_has_vacancy(this: usize, clube: usize) -> Option<bool> {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let l = cpn5_d(this + 8);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cpn5_d(l + 2));
@@ -40,7 +40,7 @@ unsafe fn cpn5_tem_vaga(this: usize, clube: usize) -> Option<bool> {
 
 /// O `clube` está sem técnico (0x53ca90), pode ser dirigido (0x544820), não é o time B de um par (0x540a50 com 1
 /// achando o parceiro com 0 em `eh_a`) e não tem vaga aberta? `None`: a caixa da lista.
-unsafe fn cpn5_falta_vaga(this: usize, clube: usize, eh_a: &mut u32) -> Option<bool> {
+unsafe fn club_needs_vacancy(this: usize, clube: usize, eh_a: &mut u32) -> Option<bool> {
     let tecnico: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
     let dirigivel: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
@@ -50,12 +50,12 @@ unsafe fn cpn5_falta_vaga(this: usize, clube: usize, eh_a: &mut u32) -> Option<b
     if parceiro(clube, eh_a, 1) != 0 && *eh_a == 0 {
         return Some(false);
     }
-    cpn5_tem_vaga(this, clube).map(|tem| !tem)
+    club_has_vacancy(this, clube).map(|tem| !tem)
 }
 
 /// { 0x69d060 } (thiscall, ret 0, manager_manager.cpp): `MANAGER_MANAGER::fix_missing_jobs()`: cada clube
 /// ([0xae23b4], 0x245 bytes, [0xae235c] relido a cada volta) sem técnico, dirigível, que não é time B e sem vaga
-/// aberta (`cpn5_falta_vaga`) ganha o aviso "Job not found for %s" (nome +4) em [0xde1f64] e a vaga (0x69ba50 sem
+/// aberta (`club_needs_vacancy`) ganha o aviso "Job not found for %s" (nome +4) em [0xde1f64] e a vaga (0x69ba50 sem
 /// técnico anterior). A lista que acaba antes da conta: a caixa "Error" (linha 0x311e) e a rotina acaba. Sem SEH, sem
 /// sorteio; a local do parceiro começa em 0 uma vez só e só é lida quando a 0x540a50 o acha (e a grava).
 unsafe extern "thiscall" fn fix_missing_jobs(this: usize) {
@@ -65,9 +65,9 @@ unsafe extern "thiscall" fn fix_missing_jobs(this: usize) {
     let mut clube = cpn5_d(0xae23b4);
     let mut i = 0i32;
     while i < cpn5_d(0xae235c) as i32 {
-        match cpn5_falta_vaga(this, clube, &mut eh_a) {
+        match club_needs_vacancy(this, clube, &mut eh_a) {
             None => {
-                aviso_em(0x9f18a4, 0x311e);
+                show_error_at(0x9f18a4, 0x311e);
                 return;
             }
             Some(true) => {
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn best_manager_candidate_score(this: usize, clube: usi
 /// usa 10) com a fatia [0xae2c88] + `fatias` trazida para 0..2 (cada 3 fatias, mais um dia), e o balde da lista: os
 /// dias desde a data base (+0x84d; ainda sem ano em +0x84f, hoje) mais o começo (+0x84c), módulo 50 de 50 a 127, × 3 +
 /// fatia, nas listas de 14 bytes a partir de +0x18. Só lê (0x54c5b0 e 0x54cdb0 sobre cópias das datas).
-unsafe fn cpn5_plano(this: usize, dias: u8, fatias: u8) -> ([u8; 8], i8, usize) {
+unsafe fn vacancy_schedule_plan(this: usize, dias: u8, fatias: u8) -> ([u8; 8], i8, usize) {
     let somar: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let desde: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
     let base = if cpn5_w(this + 0x84f) == 0 { 0xae2c90 } else { this + 0x84d };
@@ -176,7 +176,7 @@ unsafe fn cpn5_plano(this: usize, dias: u8, fatias: u8) -> ([u8; 8], i8, usize) 
 /// { 0x8c6220 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::schedule_offer(oferta, dias, fatias)`:
 /// sem data base (ano +0x84f zerado), ela vira hoje (0x417c10 de [0xae2c90] em +0x84d) e a fatia +0x855 a de hoje
 /// ([0xae2c88]); `dias` ≥ 50: a caixa "Error" (linha 0x18b9) e 10 dias. A oferta ganha a data (+0x12) e a fatia (+0x1a)
-/// do plano (`cpn5_plano`) e o +0x20 dela (4 bytes) entra no balde (0x68d0d0, que aloca); devolve o que a 0x68d0d0
+/// do plano (`vacancy_schedule_plan`) e o +0x20 dela (4 bytes) entra no balde (0x68d0d0, que aloca); devolve o que a 0x68d0d0
 /// devolve. Sem SEH, sem sorteio.
 unsafe extern "thiscall" fn schedule_offer(this: usize, oferta: usize, dias: u32, fatias: u32) -> u32 {
     crate::comparacao::ramo("cpn_5 agendar oferta");
@@ -187,11 +187,11 @@ unsafe extern "thiscall" fn schedule_offer(this: usize, oferta: usize, dias: u32
         *((this + 0x855) as *mut u8) = cpn5_b(0xae2c88);
     }
     if dias as u8 as i8 >= 0x32 {
-        aviso_em(0xa8d514, 0x18b9);
+        show_error_at(0xa8d514, 0x18b9);
     }
     // ponytail: as datas são feitas no plano sobre cópias (0x54c5b0, 0x54cdb0 e 0x417c10 só leem e copiam) e gravadas
     // de uma vez; a original grava a data e a fatia a cada volta da fatia, com o mesmo fim
-    let (data, fatia, balde) = cpn5_plano(this, dias as u8, fatias as u8);
+    let (data, fatia, balde) = vacancy_schedule_plan(this, dias as u8, fatias as u8);
     core::ptr::copy_nonoverlapping(data.as_ptr(), (oferta + 0x12) as *mut u8, 8);
     *((oferta + 0x1a) as *mut i8) = fatia;
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x68d0d0usize);
@@ -201,14 +201,14 @@ unsafe extern "thiscall" fn schedule_offer(this: usize, oferta: usize, dias: u32
 /// Comparador: sem vaga a abrir (o plano pelo mesmo teste, com o cursor da lista devolvido), lado a lado pelo cursor
 /// da lista; com vaga a abrir (ou a caixa), só a original.
 unsafe extern "thiscall" fn comparar_fix_missing_jobs(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let l = cpn5_d(this + 8);
     let cursor = cpn5_d(l + 0xa);
     let mut eh_a = 0u32;
     let mut clube = cpn5_d(0xae23b4);
     let mut vazio = true;
     for _ in 0..(cpn5_d(0xae235c) as i32).max(0) {
-        if cpn5_falta_vaga(this, clube, &mut eh_a) != Some(false) {
+        if club_needs_vacancy(this, clube, &mut eh_a) != Some(false) {
             vazio = false;
             break;
         }
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn comparar_fix_missing_jobs(this: usize) {
 /// Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x69d1b0 e a 0x69f810 podem sortear), pela nota e
 /// pelo cursor da lista de vagas (a 0x69fc60 o devolve).
 unsafe extern "thiscall" fn comparar_best_manager_candidate_score(this: usize, clube: usize, atual: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I1%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((cpn5_d(this + 8) + 0xa, 4));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, atual), || crate::aleatorio::sem_contar(|| best_manager_candidate_score(this, clube, atual)));
@@ -240,9 +240,9 @@ unsafe extern "thiscall" fn comparar_best_manager_candidate_score(this: usize, c
 /// não havia.
 unsafe extern "thiscall" fn comparar_schedule_offer(this: usize, oferta: usize, dias: u32, fatias: u32) -> u32 {
     let sem_base = cpn5_w(this + 0x84f) == 0;
-    let (data, fatia, balde) = cpn5_plano(this, dias as u8, fatias as u8);
+    let (data, fatia, balde) = vacancy_schedule_plan(this, dias as u8, fatias as u8);
     let conta = cpn5_w(balde);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I2%%)(this, oferta, dias, fatias);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I2%%)(this, oferta, dias, fatias);
     let gravada = core::slice::from_raw_parts((oferta + 0x12) as *const u8, 8);
     let base_ok = !sem_base || core::slice::from_raw_parts((this + 0x84d) as *const u8, 8) == core::slice::from_raw_parts(0xae2c90 as *const u8, 8);
     let ok = gravada == &data[..] && *((oferta + 0x1a) as *const i8) == fatia && cpn5_w(balde) == conta.wrapping_add(1) && base_ok;

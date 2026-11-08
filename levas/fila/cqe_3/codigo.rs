@@ -29,7 +29,7 @@ unsafe fn cqe3_clube(id: usize) -> usize {
 }
 
 /// O contrato da pessoa (0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4), guardado em [0xae1080].
-unsafe fn cqe3_contrato(pessoa: usize) -> usize {
+unsafe fn contract_of_staff_cached(pessoa: usize) -> usize {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contrato(cqe3_d(0xae1050), pessoa);
     cqe3_pd(0xae1080, c);
@@ -37,13 +37,13 @@ unsafe fn cqe3_contrato(pessoa: usize) -> usize {
 }
 
 /// O clube do contrato da pessoa (o tipo 5 conta; sem contrato, 0), com o contrato em [0xae1080].
-unsafe fn cqe3_clube_do_contrato(pessoa: usize) -> usize {
-    let c = cqe3_contrato(pessoa);
+unsafe fn club_of_staff_contract(pessoa: usize) -> usize {
+    let c = contract_of_staff_cached(pessoa);
     if c == 0 { 0 } else { cqe3_clube(cqe3_d(c + 4)) }
 }
 
 /// A pessoa tem a pessoa no registro de 79 bytes em [0xae2d0c]: o byte +0xb.
-unsafe fn cqe3_registro_0b(pessoa: usize) -> u8 {
+unsafe fn staff_state_byte_0b(pessoa: usize) -> u8 {
     cqe3_b(cqe3_d(0xae2d0c).wrapping_add(cqe3_d(pessoa).wrapping_mul(0x4f)) + 0xb)
 }
 
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
             continue;
         }
         let p = cqe3_pessoa(id as usize);
-        if cqe3_clube_do_contrato(p) == clube {
+        if club_of_staff_contract(p) == clube {
             continue;
         }
         if !jogador {
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                 _ => {}
             }
         }
-        if cqe3_registro_0b(p) & 0x30 != 0 && jogador {
+        if staff_state_byte_0b(p) & 0x30 != 0 && jogador {
             continue;
         }
         if futura(gm, p, 0) != 0 || acertado(gm, p, 0) != 0 {
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                 }
             }
             if cqe3_d(vaga(0x13)) as i32 > -1 && cqe3_b(vaga(0)) == 0xb {
-                let atual = cqe3_clube_do_contrato(p);
+                let atual = club_of_staff_contract(p);
                 if pode_contratar(gm, clube, pdata, p, atual, 1, &mut motivo) == 0 && motivo != 9 {
                     let x = cqe3_d(vaga(0xb)) as i32;
                     v = v.wrapping_add(if x > 0x2710 { x } else { 0x2710 });
@@ -224,16 +224,16 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                 let f = cqe3_d(sub + 0x61);
                 if f != 0 {
                     let x = cqe3_b(f + 0x45) as i8 as f64;
-                    v = v.wrapping_add(ftol((f64_em(0x968940) - x * f64_em(0x969020)) * v as f64));
+                    v = v.wrapping_add(match_pl_ftol((read_f64_at(0x968940) - x * read_f64_at(0x969020)) * v as f64));
                 }
                 if sob_oferta(gm, sub, 0) != 0 {
-                    let x = cqe3_d(vaga(0xb)) as i32 as f64 * f64_em(0x968940);
-                    v = v.wrapping_add(ftol(if x > f64_em(0x968910) { x } else { f64_em(0x968910) }));
+                    let x = cqe3_d(vaga(0xb)) as i32 as f64 * read_f64_at(0x968940);
+                    v = v.wrapping_add(match_pl_ftol(if x > read_f64_at(0x968910) { x } else { read_f64_at(0x968910) }));
                 }
             }
-            let c = cqe3_contrato(p);
+            let c = contract_of_staff_cached(p);
             if c != 0 && cqe3_clube(cqe3_d(c + 4)) != 0 && jogador {
-                let vendedor = cqe3_clube_do_contrato(p);
+                let vendedor = club_of_staff_contract(p);
                 if humano(vendedor, 0, 1, 0, 0) != 0 || cqe3_d(p + 0x39) == clube {
                     let mut contrato = [0u8; 0x50];
                     let pc = contrato.as_mut_ptr() as usize;
@@ -243,12 +243,12 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                     // edx que a 0x600a50 deixou (lixo): a 0x85fc50 recebe um char, só o byte conta
                     let st = (e as u32 & 0xffff_ff00) | ((cqe3_b(e + 0x24) >> 1) & 0xf) as u32;
                     let r = desejado(pc, p, clube, u32::MAX, st, cqe3_b(e) as u32, 0, 0);
-                    if r as f64 == f64_em(0x9689a0) {
+                    if r as f64 == read_f64_at(0x9689a0) {
                         continue;
                     }
                     // ponytail: o cargo vai com os bytes altos do resultado e do fnstsw; a 0x5968d0 lê só o byte
                     let t = teto(financas(cqe3_d(0xae2a38), clube), p, ((cqe3_b(vaga(0x24)) >> 1) & 0xf) as u32);
-                    if (t as f64 * f64_em(0x968de8)) < cqe3_d(pc + 0xc) as i32 as f64 {
+                    if (t as f64 * read_f64_at(0x968de8)) < cqe3_d(pc + 0xc) as i32 as f64 {
                         continue;
                     }
                 }
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                     // ponytail: o cargo vai com os bytes altos do ponteiro do vetor das vagas (como na original)
                     let cargo = (cqe3_d(reg) as u32 & 0xffff_ff00) | cqe3_b(vaga(0)) as u32;
                     contract_offer(cqe3_d(0xae1050), termos, cqe3_d(po + 0x20) as i32, cqe3_d(po + 0x24) as u32, cargo, 0, 1, 0);
-                    let c = cqe3_contrato(p);
+                    let c = contract_of_staff_cached(p);
                     let vendedor = if c == 0 { 0 } else { cqe3_clube(cqe3_d(c + 4)) };
                     if vendedor != 0 && humano(vendedor, 0, 1, 0, 0) == 0
                         && tem_oferta_de_contrato(cqe3_d(0xae1050), cqe3_d(p) as i32, cqe3_d(vendedor) as i32) == 0
@@ -284,14 +284,14 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                                 1 | 2 if entrada(this, vendedor, p, 0, 0) != 0 => {
                                     let rep = cqe3_w(clube + 0x80);
                                     let div = if rep < 1 { 1 } else { rep as i32 };
-                                    let f = (cqe3_registro_0b(p) & 0xf) as f64 * f64_em(0x967880) + rep as i32 as f64 / div as f64;
-                                    Some(if f64_em(0x967890) <= f { if f64_em(0x968dc0) < f { 1.4 } else { f } } else { 1.0 })
+                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64_at(0x967880) + rep as i32 as f64 / div as f64;
+                                    Some(if read_f64_at(0x967890) <= f { if read_f64_at(0x968dc0) < f { 1.4 } else { f } } else { 1.0 })
                                 }
                                 3 | 4 | 5 if entrada(this, vendedor, p, 0, 0) != 0 => {
                                     let rep = cqe3_w(clube + 0x80) as i32;
                                     let div = if rep.wrapping_mul(2) >= 1 { rep.wrapping_mul(2) } else { 1 };
-                                    let f = (cqe3_registro_0b(p) & 0xf) as f64 * f64_em(0x967880) + rep as f64 / div as f64 + f64_em(0x968968);
-                                    Some(if f64_em(0x967890) <= f { if f64_em(0x968978) < f { 1.2 } else { f } } else { 1.0 })
+                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64_at(0x967880) + rep as f64 / div as f64 + read_f64_at(0x968968);
+                                    Some(if read_f64_at(0x967890) <= f { if read_f64_at(0x968978) < f { 1.2 } else { f } } else { 1.0 })
                                 }
                                 _ => None,
                             };
@@ -318,8 +318,8 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
             if transfer_manager_can_loan_player(gm, clube, p, 0) == 0 {
                 continue;
             }
-            let c = cqe3_contrato(p);
-            if c != 0 && cqe3_clube(cqe3_d(c + 4)) != 0 && humano(cqe3_clube_do_contrato(p), 0, 1, 0, 0) != 0 {
+            let c = contract_of_staff_cached(p);
+            if c != 0 && cqe3_clube(cqe3_d(c + 4)) != 0 && humano(club_of_staff_contract(p), 0, 1, 0, 0) != 0 {
                 let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
                 if cqe3_b(contrato(cqe3_d(0xae1050), p) + 0x4e) & 2 == 0 {
                     continue;
@@ -353,5 +353,5 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
 
 /// Comparador da 0x84a020: só a original (sorteia, faz lances e pedidos de empréstimo, aloca ofertas e termos).
 unsafe extern "thiscall" fn comparar_make_club_bids(this: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube) // ponytail: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube) // ponytail: só a original
 }

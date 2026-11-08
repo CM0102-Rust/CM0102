@@ -7,15 +7,15 @@
 #   outra contagem de sorteios).
 MUTACOES = [
     ('cqq8_sem_a_virada_do_paulista',
-     '        cqq8_virtual(cqq8_comp(*g), 8); // cqq8: a virada de cada uma',
-     '        if k != 13 { cqq8_virtual(cqq8_comp(*g), 8); } // mutacao: sem a virada do Paulista',
+     '        bra_nat_first_call_virtual_no_args(comp_by_global(*g), 8); // cqq8: a virada de cada uma',
+     '        if k != 13 { bra_nat_first_call_virtual_no_args(comp_by_global(*g), 8); } // mutacao: sem a virada do Paulista',
      'cqq_8 virada do paulista'),
     ('cqq8_sem_troca_entre_a_e_b',
-     '    trocar(this, cqq8_comp(a), cqq8_comp(b), 1, 1, -1, -1); // cqq8: A e B',
+     '    trocar(this, comp_by_global(a), comp_by_global(b), 1, 1, -1, -1); // cqq8: A e B',
      '    // mutacao: sem a troca entre A e B',
      'cqq_8 acesso e rebaixamento'),
     ('cqq8_serie_b_sem_arbitros',
-     '    crate::comparacao::ramo("cqq_8 virada da serie b");\n    cqq8_expectativas_e_arbitros(this)\n',
+     '    crate::comparacao::ramo("cqq_8 virada da serie b");\n    set_expectations_and_renew_officials(this)\n',
      '    crate::comparacao::ramo("cqq_8 virada da serie b");\n    0 // mutacao: sem expectativas nem arbitros\n',
      'cqq_8 virada da serie b'),
 ]

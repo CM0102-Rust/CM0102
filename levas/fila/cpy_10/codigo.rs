@@ -9,19 +9,19 @@ unsafe fn cpy10_b(a: usize) -> u8 {
 }
 
 /// O corpo da 0x86c390; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.
-unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32, gravar: bool) {
-    let mut e = cpq4_entrada();
-    cpq4_datar(e.as_mut_ptr());
+unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32, gravar: bool) {
+    let mut e = history_entry();
+    stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x34;
-    cpq4_por(&mut e, 8, if clube != 0 { cpy10_d(clube) as i32 } else { -1 });
-    cpq4_por(&mut e, 0xd, cpy10_d(premio) as i32);
-    cpq4_por(&mut e, 0x11, (a4 & 0xffff) as i32);
-    cpq4_por(&mut e, 0x15, a5 as u8 as i8 as i32);
-    cpq4_por(&mut e, 0x19, credito as u8 as i8 as i32);
-    cpq4_historico(gravar, this, cpy10_d(p), &e);
+    put_i32(&mut e, 8, if clube != 0 { cpy10_d(clube) as i32 } else { -1 });
+    put_i32(&mut e, 0xd, cpy10_d(premio) as i32);
+    put_i32(&mut e, 0x11, (a4 & 0xffff) as i32);
+    put_i32(&mut e, 0x15, a5 as u8 as i8 as i32);
+    put_i32(&mut e, 0x19, credito as u8 as i8 as i32);
+    append_person_history_by_id(gravar, this, cpy10_d(p), &e);
     let (t3d, t28) = (cpy10_b(p + 0x3d), cpy10_b(p + 0x28));
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
-        let r = cpq4_registro(this, p);
+        let r = staff_records_manager_record(this, p);
         if r != 0 {
             crate::comparacao::ramo("cpy_10 prêmio do técnico");
             let a = (r + 0x9e) as *mut u16;
@@ -42,7 +42,7 @@ unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
         return;
     }
     let do_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
-    let k = do_clube(cpy10_d(0xae1050), p, cpv13_clube_do_contrato(p));
+    let k = do_clube(cpy10_d(0xae1050), p, contract_club_except_type5(p));
     if k == 0 {
         return;
     }
@@ -50,11 +50,11 @@ unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
         let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x54cdb0usize);
         if dias(0xae2c90, cpy10_d(k + 0x25), cpy10_d(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
             let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
-            let dono = cpv13_clube_do_contrato(p);
+            let dono = contract_club_except_type5(p);
             let x = entrada(cpy10_d(cpy10_d(0xde1f54) + 0x856), dono, p, 0, 0);
             if x != 0 && cpy10_d(x + 0xf) == cpy10_d(p) {
                 crate::comparacao::ramo("cpy_10 renovação");
-                cpq3_renovar(p);
+                offer_renewal(p);
             }
         }
     }
@@ -91,16 +91,16 @@ unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
 /// prêmio: a original (caixa "Error").
 unsafe extern "thiscall" fn add_year_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
     if p == 0 || premio == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(%%I0%%)(this, p, clube, premio, a4, a5, credito);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(%%I0%%)(this, p, clube, premio, a4, a5, credito);
     }
-    cpy10_premio(this, p, clube, premio, a4, a5, credito, true)
+    add_year_award(this, p, clube, premio, a4, a5, credito, true)
 }
 
 /// Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
 /// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
 unsafe extern "thiscall" fn comparar_add_year_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(%%I0%%);
     if p == 0 || premio == 0 {
         return o(this, p, clube, premio, a4, a5, credito);
     }
@@ -109,12 +109,12 @@ unsafe extern "thiscall" fn comparar_add_year_award_record(this: usize, p: usize
         crate::comparacao::ramo("add_year_award_record jogador");
         return o(this, p, clube, premio, a4, a5, credito);
     }
-    let r = cpq4_registro(this, p);
+    let r = staff_records_manager_record(this, p);
     if r == 0 {
         return o(this, p, clube, premio, a4, a5, credito);
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5, credito),
-        || cpy10_premio(this, p, clube, premio, a4, a5, credito, false));
+        || add_year_award(this, p, clube, premio, a4, a5, credito, false));
     PLACAR.registrar(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpy10_d(premio), mo, mr));
 }
 
@@ -123,19 +123,19 @@ unsafe extern "thiscall" fn comparar_add_year_award_record(this: usize, p: usize
 /// diferença maior que a de `b`, ou igual com mais gols feitos. Registro nulo: a original (caixa "Error", 0).
 unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%)(a, b);
+        return original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%)(a, b);
     }
-    let (fa, sa, fb, sb) = (cpy10_b(a + 0x19) as i8, cpy10_b(a + 0x1a) as i8, cpy10_b(b + 0x19) as i8, cpy10_b(b + 0x1a) as i8);
+    let (fa, sa, fb, signed_byte_at) = (cpy10_b(a + 0x19) as i8, cpy10_b(a + 0x1a) as i8, cpy10_b(b + 0x19) as i8, cpy10_b(b + 0x1a) as i8);
     if fa <= sa {
         return 0;
     }
-    let (da, db) = (fa as i32 - sa as i32, fb as i32 - sb as i32);
+    let (da, db) = (fa as i32 - sa as i32, fb as i32 - signed_byte_at as i32);
     (da > db || (da == db && fa > fb)) as u32
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
 unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%)(a, b);
     if a == 0 || b == 0 {
         return r;
     }
@@ -149,19 +149,19 @@ unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> 
 /// sofridos. Registro nulo: a original (caixa "Error", 0).
 unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(a, b);
+        return original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(a, b);
     }
-    let (fa, sa, fb, sb) = (cpy10_b(a + 0x19) as i8, cpy10_b(a + 0x1a) as i8, cpy10_b(b + 0x19) as i8, cpy10_b(b + 0x1a) as i8);
+    let (fa, sa, fb, signed_byte_at) = (cpy10_b(a + 0x19) as i8, cpy10_b(a + 0x1a) as i8, cpy10_b(b + 0x19) as i8, cpy10_b(b + 0x1a) as i8);
     if fa >= sa {
         return 0;
     }
-    let (da, db) = (sa as i32 - fa as i32, sb as i32 - fb as i32);
-    (da > db || (da == db && sa > sb)) as u32
+    let (da, db) = (sa as i32 - fa as i32, signed_byte_at as i32 - fb as i32);
+    (da > db || (da == db && sa > signed_byte_at)) as u32
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
 unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(a, b);
     if a == 0 || b == 0 {
         return r;
     }

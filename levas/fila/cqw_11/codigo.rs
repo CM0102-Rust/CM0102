@@ -39,7 +39,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_selecoes(this: usize) -> 
     core::ptr::write_unaligned((this + 0xa7) as *mut i16, -1);
     let hc = cqw11_d(0xb5e134);
     if hc == 0 {
-        aviso_em(0xad4afc, 0x452);
+        show_error_at(0xad4afc, 0x452);
     } else {
         let ano = (cqw11_w(this + 0x40) as u16).wrapping_add(2);
         let (a, b) = sede.split_at_mut(1);
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_selecoes(this: usize) -> 
     let lista = alocar((n as u32).wrapping_mul(4));
     cqw11_pd(this + 0xef, lista);
     if lista == 0 {
-        aviso_em(0xad4afc, 0x481);
+        show_error_at(0xad4afc, 0x481);
         return 0;
     }
     let mut k = 0i32;
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_selecoes(this: usize) -> 
 // ponytail: a lista é alocada: não roda duas vezes. Só a original; o plano: com 1, +0xf3 = 10 − +0xee, a lista com
 // seleções da Oceania (sem a Nova Caledônia e a Papua-Nova Guiné), sem repetição e pela reputação decrescente.
 unsafe extern "thiscall" fn comparar_cqw11_eliminatoria_oceania_selecoes(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let r = o(this);
     if r == 1 {
         let n = cqw11_d(this + 0xf3) as i32;
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_final(this: usize) {
         core::mem::transmute(0x522e00usize);
     let v = alocar(8);
     if v == 0 {
-        return aviso_em(0xad4afc, 0x3ce);
+        return show_error_at(0xad4afc, 0x3ce);
     }
     crate::comparacao::ramo("cqw_11 final da oceania");
     cqw11_pd(v, cqw11_d(linha(this, 0))); // cqw11: o campeão do primeiro grupo manda primeiro
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_final(this: usize) {
     soltar(tabela);
     let f = cqw11_d(cqw11_d(this + 0xc) + 4);
     if f == 0 {
-        return aviso_em(0xad4afc, 0x3e3);
+        return show_error_at(0xad4afc, 0x3e3);
     }
     rodada(f, 0);
 }
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_final(this: usize) {
 // ponytail: a fase é alocada e a rodada montada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com
 // os dois campeões (o do primeiro grupo e o da fase 0) na tabela de times (+0xa7, linhas de 6 bytes), nessa ordem.
 unsafe extern "thiscall" fn comparar_cqw11_eliminatoria_oceania_final(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let fases = cqw11_d(this + 0xc);
     if fases == 0 || cqw11_d(fases) == 0 || cqw11_d(this + 0xb1) == 0 || cqw11_d(cqw11_d(fases) + 0xb1) == 0 {
         return o(this);
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn cqw11_oceania_nacoes_segundo_grupo(this: usize, fase
         core::mem::transmute(0x68b100usize);
     let times = alocar(0xc);
     if times == 0 {
-        aviso_em(0xa6a0ec, 0x331);
+        show_error_at(0xa6a0ec, 0x331);
         return 0;
     }
     for i in 0..3usize {
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn cqw11_oceania_nacoes_segundo_grupo(this: usize, fase
     soltar(tabela);
     let f = cqw11_d(cqw11_d(this + 0xc) + fase as usize * 4);
     if f == 0 {
-        aviso_em(0xa6a0ec, 0x347);
+        show_error_at(0xa6a0ec, 0x347);
         return 0;
     }
     cqw11_pd(this + 0x30, fase as usize);
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn cqw11_oceania_nacoes_segundo_grupo(this: usize, fase
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1, a
 // fase em [+0xc][fase], +0x30 = fase e as seleções 3, 4 e 5 da lista na tabela dela (em qualquer ordem).
 unsafe extern "thiscall" fn comparar_cqw11_oceania_nacoes_segundo_grupo(this: usize, fase: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%);
     let lista = cqw11_d(this + 0xee);
     if lista == 0 || fase > 8 {
         return o(this, fase);

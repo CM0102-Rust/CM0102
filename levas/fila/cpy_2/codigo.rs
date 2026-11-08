@@ -28,7 +28,7 @@ const CPY2_ESTATICAS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xae
 /// Tira o par (pessoa, clube) de um dos vetores ordenados de pares (8 bytes) do Shortlist_Manager (`base` = +0 ou +4,
 /// conta em `base` + 0x10) pela busca binária (0x946464: cdecl(chave, vetor, conta, 8, comparação), add esp, 0x14):
 /// os de depois descem uma casa, o último fica zerado e a conta cai. Devolve se achou.
-unsafe fn cpy2_tirar_par(base: usize, chave: &[u32; 2], comparar: usize) -> bool {
+unsafe fn remove_sorted_pair(base: usize, chave: &[u32; 2], comparar: usize) -> bool {
     let bsearch: unsafe extern "C" fn(*const u32, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
     let p = bsearch(chave.as_ptr(), cpy2_d(base), cpy2_d(base + 0x10) as u32, 8, comparar);
     if p == 0 {
@@ -51,7 +51,7 @@ unsafe fn cpy2_tirar_par(base: usize, chave: &[u32; 2], comparar: usize) -> bool
 
 /// A data de hoje mais (0x54c5b0) ou menos (0x54c8e0) `dias` (thiscall(0xae2c90, saída, dias), ret 8) copiada para a
 /// data da vaga em +0x1b (0x417c10: thiscall(destino, saída, origem), ret 8).
-unsafe fn cpy2_data_da_vaga(v: usize, rotina: usize, dias: u32) {
+unsafe fn set_slot_date(v: usize, rotina: usize, dias: u32) {
     let deslocar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(rotina);
     let copiar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut a = [0u8; 8];
@@ -63,8 +63,8 @@ unsafe fn cpy2_data_da_vaga(v: usize, rotina: usize, dias: u32) {
 /// O par (pessoa, clube) do evento 2 ou 5: a vaga guarda a pessoa em +0x13 (bloqueada até a data de +0x1b), sem lance
 /// (+0x17 = −1) e sem valores (+0xb, +7); o estatuto da vaga (bits 1..4 de +0x24) vai ao nibble alto de +0x4f do
 /// contrato da pessoa no clube; a entrada fica com 100 em +8.
-unsafe fn cpy2_bloquear(v: usize, entrada: usize, pessoa: usize, contrato: usize, rotina: usize, dias: u32) {
-    cpy2_data_da_vaga(v, rotina, dias);
+unsafe fn block_slot_for_person(v: usize, entrada: usize, pessoa: usize, contrato: usize, rotina: usize, dias: u32) {
+    set_slot_date(v, rotina, dias);
     cpy2_pd(v + 0x13, cpy2_d(pessoa) as u32);
     cpy2_pd(v + 0x17, 0xffff_ffff);
     cpy2_pd(v + 0xb, 0);
@@ -122,8 +122,8 @@ unsafe extern "thiscall" fn update_staff_status(this: usize, pessoa: usize, club
             return 0;
         }
         let chave = [id as u32, cpy2_d(clube) as u32];
-        let mut faltou = !cpy2_tirar_par(this, &chave, 0x757ea0);
-        faltou |= !cpy2_tirar_par(this + 4, &chave, 0x844740);
+        let mut faltou = !remove_sorted_pair(this, &chave, 0x757ea0);
+        faltou |= !remove_sorted_pair(this + 4, &chave, 0x844740);
         if humano(clube, 0, 1, 0, 0) == 0 && !faltou {
             crate::comparacao::ramo("cpy_2 contagem da lista");
             let r = (cpy2_d(0xae2d0c).wrapping_add(id.wrapping_mul(0x4f)) + 0xb) as *mut u8;
@@ -156,15 +156,15 @@ unsafe extern "thiscall" fn update_staff_status(this: usize, pessoa: usize, club
                 crate::comparacao::ramo("cpy_2 vaga refeita");
                 preencher(this, v, clube, pessoa); // cpy2: a vaga é preenchida de novo
             }
-            2 => cpy2_bloquear(v, entrada, pessoa, contrato, 0x54c5b0, 0x78),
+            2 => block_slot_for_person(v, entrada, pessoa, contrato, 0x54c5b0, 0x78),
             5 => {
                 crate::comparacao::ramo("cpy_2 bloqueio de 14 dias");
-                cpy2_bloquear(v, entrada, pessoa, contrato, 0x54c5b0, 0xe); // cpy2: o bloqueio de 14 dias
+                block_slot_for_person(v, entrada, pessoa, contrato, 0x54c5b0, 0xe); // cpy2: o bloqueio de 14 dias
             }
             3 => {
                 cpy2_pd(v + 0xf, 0xffff_ffff);
                 cpy2_pd(v + 0x17, 0xffff_ffff);
-                cpy2_data_da_vaga(v, 0x54c8e0, 0x78);
+                set_slot_date(v, 0x54c8e0, 0x78);
                 if cpy2_d(v + 0x13) == id {
                     cpy2_pd(v + 0x13, 0xffff_ffff);
                 }
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn update_staff_status(this: usize, pessoa: usize, club
                 if cpy2_d(v + 0xf) == id {
                     cpy2_pd(v + 0xf, 0xffff_ffff);
                     cpy2_pd(v + 0x17, 0xffff_ffff);
-                    cpy2_data_da_vaga(v, 0x54c8e0, 0x78);
+                    set_slot_date(v, 0x54c8e0, 0x78);
                 }
             }
             _ => {}
@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn update_staff_status(this: usize, pessoa: usize, club
 
 /// O caso que não pode rodar duas vezes: a recursão do evento 4 pelos clubes interessados, ou o evento 1 com a pessoa no
 /// alvo de alguma vaga do clube (a 0x83f3a0 preenche a vaga: sorteia, acrescenta pares com realocação e dá notícias).
-unsafe fn cpy2_so_a_original(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) -> bool {
+unsafe fn is_original_only_case(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) -> bool {
     let ev = evento as u8;
     if ev == 4 && (clube == 0 || clube == cpy2_d(pessoa + 0x39)) {
         return true;
@@ -216,8 +216,8 @@ unsafe fn cpy2_so_a_original(this: usize, pessoa: usize, clube: usize, evento: u
 /// vagas e o +8 da entrada do clube, pelo byte +0x4f do contrato e pelas datas estáticas, e a devolução. Na recursão do
 /// evento 4 e no evento 1 que preenche a vaga, só a original (a cópia leva os ramos).
 unsafe extern "thiscall" fn comparar_update_staff_status(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%);
-    if cpy2_so_a_original(this, pessoa, clube, evento, tipo) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%);
+    if is_original_only_case(this, pessoa, clube, evento, tipo) {
         return o(this, pessoa, clube, evento, tipo);
     }
     let mut reg = CPY2_ESTATICAS.to_vec();
@@ -259,7 +259,7 @@ unsafe extern "stdcall" fn shortlist_manager_add_to_loan_list(pessoa: usize) -> 
 
 /// Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
 unsafe extern "stdcall" fn comparar_shortlist_manager_add_to_loan_list(pessoa: usize) -> usize {
-    let o = orig::<unsafe extern "stdcall" fn(usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize) -> usize>(%%I1%%);
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cpy2_d(0xae1050), pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn shortlist_manager_max_fee_for_player_status(this: us
 
 /// Comparador: a devolução (rotina pura).
 unsafe extern "thiscall" fn comparar_shortlist_manager_max_fee_for_player_status(this: usize, clube: usize, pessoa: usize, estatuto: u32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> i32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> i32>(%%I2%%);
     let r = o(this, clube, pessoa, estatuto);
     let n = shortlist_manager_max_fee_for_player_status(this, clube, pessoa, estatuto);
     PLACAR.registrar(r == n, || format!("shortlist_manager_max_fee_for_player_status(clube {:x}, pessoa {:x}, estatuto {}) original={} rust={}", clube, pessoa, estatuto as i8, r, n));

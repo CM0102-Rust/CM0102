@@ -5,7 +5,7 @@ unsafe fn cpd1_d(a: usize) -> usize {
 }
 
 /// Os itens da lista `l` (0x68d0d0: começo em +2, nó = item +0 e seguinte +6), sem mexer no cursor (+0xa).
-unsafe fn cpd1_itens(l: usize) -> Vec<usize> {
+unsafe fn list_items_capped(l: usize) -> Vec<usize> {
     let mut v = Vec::new();
     let mut no = cpd1_d(l + 2);
     while no != 0 && v.len() < 100_000 {
@@ -17,7 +17,7 @@ unsafe fn cpd1_itens(l: usize) -> Vec<usize> {
 
 /// O fim das convocações da lista [this] (as duas rotinas da 0x774f30/0x774f90): do começo (cursor +0xa = +2),
 /// cada registro que `passa` recebe em +0x10 a palavra +0 (o dia) de amanhã (0x54c5b0 com 1 sobre [0xae2c90]).
-unsafe fn cpd1_encerrar(this: usize, passa: impl Fn(usize) -> bool) {
+unsafe fn end_call_ups(this: usize, passa: impl Fn(usize) -> bool) {
     let l = cpd1_d(this);
     if l == 0 {
         return;
@@ -40,42 +40,42 @@ unsafe fn cpd1_encerrar(this: usize, passa: impl Fn(usize) -> bool) {
 /// de convocação [this], os da competição (+4 igual a *comp) terminam amanhã (+0x10). Sem SEH, sem caixa, sem
 /// sorteio; a local é a data que a 0x54c5b0 grava.
 unsafe extern "thiscall" fn end_duty_for_competition(this: usize, comp: usize) {
-    cpd1_encerrar(this, |r| cpd1_d(r + 4) == cpd1_d(comp) /* a competição */)
+    end_call_ups(this, |r| cpd1_d(r + 4) == cpd1_d(comp) /* a competição */)
 }
 
 /// { 0x774f90 } (thiscall, ret 8, national_teams.cpp): `end_duty_for_nation_in_competition(nacao, comp)`: como a
 /// 0x774f30, só os registros da competição (+4) e da nação (+0 igual a *nacao).
 unsafe extern "thiscall" fn end_duty_for_nation_in_competition(this: usize, nacao: usize, comp: usize) {
-    cpd1_encerrar(this, |r| cpd1_d(r + 4) == cpd1_d(comp) && cpd1_d(r) == cpd1_d(nacao) /* a nação */)
+    end_call_ups(this, |r| cpd1_d(r + 4) == cpd1_d(comp) && cpd1_d(r) == cpd1_d(nacao) /* a nação */)
 }
 
 /// As regiões do fim das convocações: o cursor da lista e o +0x10 de cada registro.
-unsafe fn cpd1_regioes_encerrar(this: usize) -> Vec<(usize, usize)> {
+unsafe fn end_call_ups_regions(this: usize) -> Vec<(usize, usize)> {
     let l = cpd1_d(this);
     if l == 0 {
         return Vec::new();
     }
     let mut reg = vec![(l + 0xa, 4)];
-    reg.extend(cpd1_itens(l).into_iter().filter(|&r| r != 0).map(|r| (r + 0x10, 2)));
+    reg.extend(list_items_capped(l).into_iter().filter(|&r| r != 0).map(|r| (r + 0x10, 2)));
     reg
 }
 
 unsafe extern "thiscall" fn comparar_end_duty_for_competition(this: usize, comp: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
-    let reg = cpd1_regioes_encerrar(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let reg = end_call_ups_regions(this);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, comp), || end_duty_for_competition(this, comp));
     PLACAR.registrar(igual, || format!("end_duty_for_competition({:x}, {:x}) {:x?} x {:x?}", this, comp, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_end_duty_for_nation_in_competition(this: usize, nacao: usize, comp: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
-    let reg = cpd1_regioes_encerrar(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
+    let reg = end_call_ups_regions(this);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao, comp), || end_duty_for_nation_in_competition(this, nacao, comp));
     PLACAR.registrar(igual, || format!("end_duty_for_nation_in_competition({:x}, {:x}, {:x}) {:x?} x {:x?}", this, nacao, comp, mo, mr));
 }
 
 /// O número de registros de convocação por clube da 0x7774b0: [0xae235c] − 2 × [0xae2350].
-unsafe fn cpd1_quantos() -> i32 {
+unsafe fn club_call_up_record_count() -> i32 {
     (*(0xae235c as *const i32)).wrapping_sub((*(0xae2350 as *const i32)).wrapping_mul(2))
 }
 
@@ -85,7 +85,7 @@ unsafe fn cpd1_quantos() -> i32 {
 /// (0x777590) e diminui a contagem; zerada com vetor, solta o vetor (0x9452ca) e zera +4 e +0. Sem SEH, sem caixa,
 /// sem sorteio; a local (o vencido) é zerada antes de ler.
 unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
-    let n = cpd1_quantos();
+    let n = club_call_up_record_count();
     let mut rec = cpd1_d(this + 0x20);
     if n <= 0 {
         return;
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
 
 /// O registro `rec` da 0x7774b0 terminaria sem entradas e com vetor (a original solta o vetor)? Escrito à parte da
 /// cópia, para o comparador.
-unsafe fn cpd1_soltaria(rec: usize) -> bool {
+unsafe fn would_free_call_up_record(rec: usize) -> bool {
     let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
     let n = *((rec + 5) as *const i8);
     let v = cpd1_d(rec);
@@ -148,10 +148,10 @@ unsafe fn cpd1_soltaria(rec: usize) -> bool {
 /// Comparador: os registros (6 bytes cada) e os vetores de entradas. Algum vetor a soltar (0x9452ca; soltar duas
 /// vezes): só a original.
 unsafe extern "thiscall" fn comparar_prune_club_call_up_records(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    let n = cpd1_quantos().max(0) as usize;
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let n = club_call_up_record_count().max(0) as usize;
     let recs = cpd1_d(this + 0x20);
-    if n == 0 || recs == 0 || (0..n).any(|i| cpd1_soltaria(recs + 6 * i)) {
+    if n == 0 || recs == 0 || (0..n).any(|i| would_free_call_up_record(recs + 6 * i)) {
         return o(this);
     }
     let mut reg = vec![(recs, 6 * n)];

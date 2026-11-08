@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn init_default_table(this: usize) {
                 definir(&mut d, a[0], a[1], a[2], a[3]);
             }
             _ => {
-                let (ini, n, g, ano, passo, intervalo) = CQO3_LACOS[v as usize];
+                let (ini, n, g, ano, step_towards, intervalo) = CQO3_LACOS[v as usize];
                 let mut e = cqo3_d(this) + ini as usize;
                 let mut y = ano;
                 for _ in 0..n {
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn init_default_table(this: usize) {
                     cqo3_pw(e + 0x1f, d.dia as u16);
                     *((e + 0x21) as *mut u8) = intervalo;
                     e += 0x22;
-                    y = y.wrapping_add(passo);
+                    y = y.wrapping_add(step_towards);
                 }
             }
         }
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn init_default_table(this: usize) {
         cqo3_pw(p, cqo3_w(p).wrapping_add((r - 0x23) as u16));
         let e = cqo3_d(this) + o;
         if *((e + 0x1e) as *const u8) != 0xfd && (cqo3_d(e + 0x12) as u32 != u32::MAX || cqo3_d(e + 0x1a) as u32 != u32::MAX) {
-            aviso_em(0x9cf0d8, 0x226);
+            show_error_at(0x9cf0d8, 0x226);
             cqo3_pd(cqo3_d(this) + o + 0x12, u32::MAX);
             cqo3_pd(cqo3_d(this) + o + 0x1a, u32::MAX);
         }
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn init_default_table(this: usize) {
 /// Lado a lado (a cópia sem contar os sorteios) pela tabela (conta +4 × 0x22 bytes), pelo estado do sorteador e por
 /// [0xb67a34].
 unsafe extern "thiscall" fn comparar_init_default_table(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = cqo3_w(this + 4) as i16;
     if cqo3_d(this) == 0 || n <= 0 {
         return o(this);
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn post_host_news(_this: usize, lista: usize) {
 
 // ponytail: entrega notícias (aloca); só a original. A cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_host_news(this: usize, lista: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, lista)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, lista)
 }
 
 /// { 0x5fb160 } (thiscall, ret 0, host_country.cpp, `HostCountry::load_temp_file`; pelo construtor 0x5f97c0): lê o
@@ -245,7 +245,7 @@ unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
         return 0;
     }
     if ler(this + 4, 2, 1, f) != 1 {
-        aviso_em(0x9cf0d8, 0x448);
+        show_error_at(0x9cf0d8, 0x448);
         fechar(f);
         return 0;
     }
@@ -253,13 +253,13 @@ unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     let b = alocar((n * 0x22) as u32);
     cqo3_pd(this, b as u32);
     if b == 0 {
-        aviso_em(0x9cf0d8, 0x452);
+        show_error_at(0x9cf0d8, 0x452);
         fechar(f);
         return 0;
     }
     let n = cqo3_w(this + 4) as i16 as i32 as u32;
     if ler(b, 0x22, n, f) != cqo3_w(this + 4) as i16 as i32 as u32 {
-        aviso_em(0x9cf0d8, 0x45c);
+        show_error_at(0x9cf0d8, 0x45c);
         fechar(f);
         soltar(cqo3_d(this));
         return 0;
@@ -270,5 +270,5 @@ unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
 
 // ponytail: abre o arquivo e aloca; só a original. A cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_load_temp_file(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
 }

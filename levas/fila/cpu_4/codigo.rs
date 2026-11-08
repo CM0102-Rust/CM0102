@@ -20,7 +20,7 @@ unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u32 {
 }
 
 unsafe extern "thiscall" fn comparar_has_active_release_clause(c: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(c);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(c);
     let n = has_active_release_clause(c);
     PLACAR.registrar(r == n, || format!("has_active_release_clause({:x}) original={} rust={}", c, r, n));
     r
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x: usize, no_
 unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: usize, x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
     // as saídas como estavam antes: a cópia parte delas (a original só grava `anos` no período)
     let (mut nl, mut na) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(%%I1%%)(c, x, no_limite, anos);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(%%I1%%)(c, x, no_limite, anos);
     let (ol, oa) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
     let n = check_fifa_protected_period(
         c,
@@ -100,7 +100,7 @@ unsafe extern "C" fn staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u
 }
 
 unsafe extern "C" fn comparar_staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u32) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%)(pessoa, tipo);
+    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%)(pessoa, tipo);
     let n = staff_contract_is_bonus_type_allowed(pessoa, tipo);
     PLACAR.registrar(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", pessoa, tipo as u8, r, n));
     r

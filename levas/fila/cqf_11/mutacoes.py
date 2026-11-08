@@ -2,7 +2,7 @@
 # sorteia (sorteio(2)); as mutacoes mudam o numero de noticias (e de sorteios) ou tiram o sorteio.
 MUTACOES = [
     ('cqf11_sem_sorteio',
-     'let r = cqf11_sortear(2); // cqf11: o sorteio da notícia',
+     'let r = random_or_tape(2); // cqf11: o sorteio da notícia',
      'let r = 0; // mutacao: sem o sorteio',
      'cqf_11 noticia do clube'),
     ('cqf11_um_grupo_so',

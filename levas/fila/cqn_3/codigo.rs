@@ -10,7 +10,7 @@ const CQN3_COPAS: [usize; 3] = [0x9cf6e8, 0x9cf6f0, 0x9cf6f8];
 
 /// Os clubes da competição `comp` pelo método +0x58 dela (thiscall(comp, &lista, etapa), devolve a conta em ax); a
 /// lista alocada é solta pela 0x9452ca depois de `cada` pass_ball por todos.
-unsafe fn cqn3_clubes(comp: usize, etapa: u32, mut cada: impl FnMut(usize)) {
+unsafe fn for_each_comp_club(comp: usize, etapa: u32, mut cada: impl FnMut(usize)) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let metodo: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(cqn3_d(cqn3_d(comp) as usize + 0x58) as usize);
     let mut lista = 0usize;
@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn process_euro_registration(this: usize, etapa: u32) {
         if comp == 0 {
             continue;
         }
-        cqn3_clubes(comp, etapa, |c| {
+        for_each_comp_club(comp, etapa, |c| {
             if c == 0 || cqn3_d(c + 0x1db) != id {
                 return;
             }
@@ -69,14 +69,14 @@ unsafe extern "thiscall" fn process_euro_registration(this: usize, etapa: u32) {
 /// [0xae1080] da 0x85aae0. Com algum clube das três copas com técnico humano (a notícia não roda duas vezes), só a
 /// original.
 unsafe extern "thiscall" fn comparar_process_euro_registration(this: usize, etapa: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let mut tem_humano = false;
     for &chave in CQN3_COPAS.iter() {
         let id = cqn3_d(chave);
         let comp = cqn3_d(cqn3_d(0xadadfc) as usize + 4 * id as usize) as usize;
         if comp != 0 {
-            cqn3_clubes(comp, etapa, |c| {
+            for_each_comp_club(comp, etapa, |c| {
                 if c != 0 && cqn3_d(c + 0x1db) == id && humano(cqn3_d(0xb7431c) as usize, c) != 0 {
                     tem_humano = true;
                 }
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn create_default_table(this: usize) {
     let t = calloc(cqn3_d(0xae2350), 0x2c);
     *(this as *mut usize) = t;
     if t == 0 {
-        aviso_em(0x9c74f4, 0x2da);
+        show_error_at(0x9c74f4, 0x2da);
         return;
     }
     let c1 = core::ptr::read_unaligned(0x96a348 as *const f64);
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn create_default_table(this: usize) {
 /// Lado a lado à mão: a original no objeto de quem chama (ela aloca a tabela em +0), a cópia num objeto de rascunho
 /// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).
 unsafe extern "thiscall" fn comparar_create_default_table(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     o(this);
     let mut s = [0usize; 1];
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn build_venue_list(this: usize) {
     }
     let hc = cqn3_d(0xb5e134) as usize;
     if hc == 0 {
-        aviso_em(0xa835b0, 0x858);
+        show_error_at(0xa835b0, 0x858);
     } else {
         // as sedes: só achadas (a original não as usa depois); as saídas se sobrepõem como na original
         let mut s = [0u32; 8];
@@ -220,14 +220,14 @@ unsafe extern "thiscall" fn build_venue_list(this: usize) {
         if *lista == 0 {
             *lista = alocar(0x1e0);
             if *lista == 0 {
-                aviso_em(0xa835b0, 0x89c);
+                show_error_at(0xa835b0, 0x89c);
                 return;
             }
             *cap = 0x1e;
         } else if *conta == *cap {
             *lista = realocar(*lista, ((*cap + 0x1e) << 4) as u32);
             if *lista == 0 {
-                aviso_em(0xa835b0, 0x8ac);
+                show_error_at(0xa835b0, 0x8ac);
                 return;
             }
             *cap += 0x1e;
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn build_venue_list(this: usize) {
 /// lista velha zerada (a original já a soltou); iguais os campos (fora o ponteiro +0xc) e as listas (a do rascunho é
 /// solta). Sem o HostCountry (a caixa), só a original.
 unsafe extern "thiscall" fn comparar_build_venue_list(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     if cqn3_d(0xb5e134) == 0 {
         return o(this);

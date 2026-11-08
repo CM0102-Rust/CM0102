@@ -37,7 +37,7 @@ unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i32, registr
 /// 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo parou.
 // ponytail: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
 unsafe extern "C" fn comparar_db_files_read_comps_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%);
     if use_zip != 0 {
         return o(stream, use_zip, registros, n);
     }
@@ -75,14 +75,14 @@ unsafe extern "C" fn nation_get_english_name(nacao: usize) -> usize {
     let t = *(0xae2408 as *const usize);
     if t == 0 {
         // ponytail: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%)(nacao);
+        return original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%)(nacao);
     }
     let id = *(nacao as *const i32);
     (*((t + 0x2c) as *const usize)).wrapping_add((id as usize).wrapping_mul(109))
 }
 
 unsafe extern "C" fn comparar_nation_get_english_name(nacao: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
         return o(nacao); // primeiro uso (aloca e carrega): só a original
@@ -105,7 +105,7 @@ unsafe extern "C" fn club_get_english_short_name(clube: usize) -> usize {
     let t = *(0xae2408 as *const usize);
     if t == 0 {
         // ponytail: o primeiro uso aloca e carrega o eng.lng sob o quadro SEH: a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(%%I2%%)(clube);
+        return original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%)(clube);
     }
     let linhas = *((t + 0x20) as *const usize);
     let id = *(clube as *const i32);
@@ -121,7 +121,7 @@ unsafe extern "C" fn club_get_english_short_name(clube: usize) -> usize {
 }
 
 unsafe extern "C" fn comparar_club_get_english_short_name(clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
         return o(clube); // primeiro uso (aloca e carrega): só a original

@@ -3,7 +3,7 @@ MUTACOES = [
     ('i_decidida', "            if byte(p, 0x47) != -2\n", "            if byte(p, 0x47) != -3\n"),
     ('i_volta', "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, -1);", "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, 0);"),
     ('i_rapida', "                    preparar(motor, p + 4, r, 0, 0);", "                    preparar(motor, p + 4, 1, 0, 0);"),
-    ('a_passo', "        passo(1);\n", "        passo(2);\n"),
+    ('a_passo', "        step_towards(1);\n", "        step_towards(2);\n"),
     ('a_conta', "            *((dia + 0x25) as *mut i32) += 1;", "            *((dia + 0x25) as *mut i32) += 2;"),
     ('a_fim', "    let fim = |e: u8| e == 2 || e == 8;", "    let fim = |e: u8| e == 2;"),
     ('f_copia', "    core::ptr::copy((p + 4) as *const u8, jogo as *mut u8, 0x4f);", "    core::ptr::copy((p + 4) as *const u8, jogo as *mut u8, 0x4e);"),

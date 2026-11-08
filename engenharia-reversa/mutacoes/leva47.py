@@ -8,5 +8,5 @@ MUTACOES = [
     ('f_dono', "                        ocupada[4] = 1;\n                        (bx, by)", "                        ocupada[4] = 0;\n                        (bx, by)"),
     ('f_marca', "                    *e.add(7) = 1;\n                    k += 1;\n                }\n            }", "                    *e.add(7) = 2;\n                    k += 1;\n                }\n            }"),
     ('f_zera', "        *saida.add(7 + 6 * i) = 0;", "        *saida.add(7 + 6 * i) = 1;"),
-    ('f_papel', "(e.add(5) as *mut u16).write_unaligned(f717410(p));", "(e.add(5) as *mut u16).write_unaligned(f717410(p) ^ 1);"),
+    ('f_papel', "(e.add(5) as *mut u16).write_unaligned(match_player_position(p));", "(e.add(5) as *mut u16).write_unaligned(match_player_position(p) ^ 1);"),
 ]

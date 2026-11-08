@@ -2,7 +2,7 @@
 
 /// O registro de notícias da mídia (`this`: +0 os registros de 0x17 bytes, +8 quantos): algum com o
 /// jogador em +8 que `aceita`?
-unsafe fn alguma_noticia(midia: usize, id: i32, aceita: impl Fn(usize) -> bool) -> bool {
+unsafe fn any_news_for_player(midia: usize, id: i32, aceita: impl Fn(usize) -> bool) -> bool {
     let n = *((midia + 8) as *const i32);
     let base = *(midia as *const usize);
     (0..n.max(0) as usize).any(|k| {
@@ -13,12 +13,12 @@ unsafe fn alguma_noticia(midia: usize, id: i32, aceita: impl Fn(usize) -> bool) 
 
 /// { 0x735780 } (thiscall, ret 4, media.cpp): o jogador `*id` tem uma notícia com a resposta 2 (+0x10)?
 unsafe extern "thiscall" fn story_with_response_two(midia: usize, id: *const i32) -> u32 {
-    alguma_noticia(midia, *id, |r| *((r + 0x10) as *const u8) == 2) as u32
+    any_news_for_player(midia, *id, |r| *((r + 0x10) as *const u8) == 2) as u32
 }
 
 /// { 0x735840 } (thiscall, ret 4, media.cpp): o jogador `*id` tem alguma notícia? Devolve só `al`.
 unsafe extern "thiscall" fn has_story(midia: usize, id: *const i32) -> u8 {
-    alguma_noticia(midia, *id, |_| true) as u8
+    any_news_for_player(midia, *id, |_| true) as u8
 }
 
 /// { 0x5221f0 } (thiscall, ret 0xc, Cup.cpp): a importância da partida da copa (a fase +0x34 da
@@ -42,21 +42,21 @@ unsafe extern "thiscall" fn cup_match_importance(copa: usize, partida: usize, se
 }
 
 unsafe extern "thiscall" fn comparar_story_with_response_two(midia: usize, id: *const i32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(%%I0%%)(midia, id);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(%%I0%%)(midia, id);
     let n = story_with_response_two(midia, id);
     PLACAR.registrar(r == n, || format!("story_with_response_two({}) original={} rust={}", *id, r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_has_story(midia: usize, id: *const i32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *const i32) -> u8>(%%I1%%)(midia, id);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u8>(%%I1%%)(midia, id);
     let n = has_story(midia, id);
     PLACAR.registrar(r == n, || format!("has_story({}) original={} rust={}", *id, r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_cup_match_importance(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u8, *mut u8) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8, *mut u8) -> u8>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(margem as usize, 1)], || o(copa, partida, segundo, margem), || cup_match_importance(copa, partida, segundo, margem));
     PLACAR.registrar(igual && r == n, || format!("cup_match_importance(lado {}) original={} rust={} {:x?} x {:x?}", segundo, r, n, mo, mr));
     r

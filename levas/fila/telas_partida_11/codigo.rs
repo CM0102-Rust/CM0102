@@ -4,7 +4,7 @@
 /// rotinas de valores fazem no fim (a cópia é a 0x71dd70 / 0x71df00 em linha): campos de 4, 2 e 1
 /// bytes até 0x11f, os dois blocos de time de 0x625 bytes e o fim 0xd69..0xd7a. Sem cópia ainda:
 /// aloca (0x944cf1), constrói os dois blocos (0x9463af com 0x453c30) e grava no parâmetro 0x1d.
-unsafe fn guardar_estado_da_partida(mut copia: usize, estado: usize) {
+unsafe fn save_match_snapshot(mut copia: usize, estado: usize) {
     if copia == 0 {
         crate::comparacao::ramo("telas cria a copia do estado da partida");
         let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -13,38 +13,38 @@ unsafe fn guardar_estado_da_partida(mut copia: usize, estado: usize) {
         if copia != 0 {
             vetor(copia + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
         }
-        gravar_parametro_da_tela(0x1d, copia);
+        set_screen_param(0x1d, copia);
     }
-    copiar_campos(copia, estado, 0, 8, 4);
-    copiar_campos(copia, estado, 8, 0x34, 2);
-    copiar_campos(copia, estado, 0x34, 0x4c, 4);
-    copiar_campos(copia, estado, 0x4c, 0x4d, 1);
-    copiar_campos(copia, estado, 0x4d, 0x53, 2);
-    copiar_campos(copia, estado, 0x53, 0x11f, 4);
+    copy_fields(copia, estado, 0, 8, 4);
+    copy_fields(copia, estado, 8, 0x34, 2);
+    copy_fields(copia, estado, 0x34, 0x4c, 4);
+    copy_fields(copia, estado, 0x4c, 0x4d, 1);
+    copy_fields(copia, estado, 0x4d, 0x53, 2);
+    copy_fields(copia, estado, 0x53, 0x11f, 4);
     for t in [0x11f, 0x11f + 0x625] {
         let (d, s) = (copia + t, estado + t);
-        copiar_campos(d, s, 0, 0x11, 1);
-        copiar_campos(d, s, 0x11, 0x1f, 2);
-        copiar_campos(d, s, 0x1f, 0x35, 1);
-        copiar_campos(d, s, 0x35, 0x61, 2);
-        copiar_campos(d, s, 0x61, 0x69, 4);
-        copiar_campos(d, s, 0x69, 0x71, 2);
+        copy_fields(d, s, 0, 0x11, 1);
+        copy_fields(d, s, 0x11, 0x1f, 2);
+        copy_fields(d, s, 0x1f, 0x35, 1);
+        copy_fields(d, s, 0x35, 0x61, 2);
+        copy_fields(d, s, 0x61, 0x69, 4);
+        copy_fields(d, s, 0x69, 0x71, 2);
         for j in 0..20 {
             match_player_row_assign(d + 0x71 + j * 0x49, s + 0x71 + j * 0x49);
         }
     }
-    copiar_campos(copia, estado, 0xd69, 0xd75, 4);
-    copiar_campos(copia, estado, 0xd75, 0xd76, 1);
-    copiar_campos(copia, estado, 0xd76, 0xd7a, 4);
+    copy_fields(copia, estado, 0xd69, 0xd75, 4);
+    copy_fields(copia, estado, 0xd75, 0xd76, 1);
+    copy_fields(copia, estado, 0xd76, 0xd7a, 4);
 }
 
 /// O estado da partida que as rotinas de valores mostram: na partida (parâmetro 0) [p0 + 0x5f], fora
 /// dela o parâmetro 0x20 (lido depois dos outros, como a original).
-unsafe fn estado_da_partida_na_tela(p0: usize) -> usize {
+unsafe fn displayed_match_state(p0: usize) -> usize {
     if p0 != 0 {
         core::ptr::read_unaligned((p0 + 0x5f) as *const usize)
     } else {
-        parametro_da_tela(0x20)
+        get_screen_param(0x20)
     }
 }
 
@@ -63,10 +63,10 @@ unsafe extern "C" fn refresh_match_stats_values() {
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
-    let p0 = parametro_da_tela(0);
-    let item = parametro_da_tela(9) as u32;
-    let copia = parametro_da_tela(0x1d);
-    let e = estado_da_partida_na_tela(p0);
+    let p0 = get_screen_param(0);
+    let item = get_screen_param(9) as u32;
+    let copia = get_screen_param(0x1d);
+    let e = displayed_match_state(p0);
     let u8_ = |b: usize, k: usize| *((b + k) as *const u8) as i32;
     let i16_ = |b: usize, k: usize| core::ptr::read_unaligned((b + k) as *const i16) as i32;
     let byte = |k: usize, d: u32| {
@@ -81,7 +81,7 @@ unsafe extern "C" fn refresh_match_stats_values() {
             texto(sm, item.wrapping_add(d), BUF);
         }
     };
-    let percentual = |muda: usize, den: usize, num: usize, d: u32, inverter: bool| {
+    let write_percent_pair = |muda: usize, den: usize, num: usize, d: u32, inverter: bool| {
         if copia == 0 || i16_(e, muda) != i16_(copia, muda) {
             if i16_(e, den) == 0 {
                 *(BUF as *mut [u8; 2]) = *b"-\0";
@@ -102,16 +102,16 @@ unsafe extern "C" fn refresh_match_stats_values() {
     for (k, d) in [(0x129, 9), (0x74e, 0xb), (0x12a, 0xc), (0x74f, 0xe), (0x12b, 0xf), (0x750, 0x11), (0x12c, 0x12), (0x751, 0x14), (0x12d, 0x15), (0x752, 0x17)] {
         byte(k, d);
     }
-    percentual(0x130, 0x130, 0x132, 0x18, false);
-    percentual(0x755, 0x755, 0x757, 0x1a, false);
-    percentual(0x134, 0x134, 0x136, 0x1b, false);
-    percentual(0x759, 0x759, 0x75b, 0x1d, false);
-    percentual(0x138, 0x138, 0x13a, 0x1e, false);
-    percentual(0x75d, 0x138, 0x13a, 0x20, true);
+    write_percent_pair(0x130, 0x130, 0x132, 0x18, false);
+    write_percent_pair(0x755, 0x755, 0x757, 0x1a, false);
+    write_percent_pair(0x134, 0x134, 0x136, 0x1b, false);
+    write_percent_pair(0x759, 0x759, 0x75b, 0x1d, false);
+    write_percent_pair(0x138, 0x138, 0x13a, 0x1e, false);
+    write_percent_pair(0x75d, 0x138, 0x13a, 0x20, true);
     for (k, d) in [(0x12e, 0x21), (0x753, 0x23), (0x12f, 0x24), (0x754, 0x26)] {
         byte(k, d);
     }
-    guardar_estado_da_partida(copia, e);
+    save_match_snapshot(copia, e);
 }
 
 /// { 0x720320 } (cdecl, match_screens.cpp): passa às células das zonas de ação os valores que mudaram
@@ -135,16 +135,16 @@ unsafe extern "C" fn refresh_action_zones_values() {
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
-    let p0 = parametro_da_tela(0);
-    let lado = parametro_da_tela(0xa) as u8 as i8 as isize;
-    let b = parametro_da_tela(0xb) as u32;
-    let altura = parametro_da_tela(0xc) as i32;
-    let esq = parametro_da_tela(0x16) as i32;
-    let dir = parametro_da_tela(0x18) as i32;
-    let base = parametro_da_tela(0x19) as i32;
-    let copia = parametro_da_tela(0x1d);
-    let marcas = parametro_da_tela(0x23) as u32;
-    let e = estado_da_partida_na_tela(p0);
+    let p0 = get_screen_param(0);
+    let lado = get_screen_param(0xa) as u8 as i8 as isize;
+    let b = get_screen_param(0xb) as u32;
+    let altura = get_screen_param(0xc) as i32;
+    let esq = get_screen_param(0x16) as i32;
+    let dir = get_screen_param(0x18) as i32;
+    let base = get_screen_param(0x19) as i32;
+    let copia = get_screen_param(0x1d);
+    let marcas = get_screen_param(0x23) as u32;
+    let e = displayed_match_state(p0);
     let u8_ = |x: usize, k: usize| *((x + k) as *const u8) as u32;
     let it = |d: u32| b.wrapping_add(d);
 
@@ -214,7 +214,7 @@ unsafe extern "C" fn refresh_action_zones_values() {
         texto(sm, it(0x16), BUF);
         fundo(sm, it(0x17), cor(p));
     }
-    guardar_estado_da_partida(copia, e);
+    save_match_snapshot(copia, e);
 }
 
 /// { 0x723350 } (cdecl, match_screens.cpp): passa às linhas das notas dos jogadores (7 itens por linha a
@@ -235,10 +235,10 @@ unsafe extern "C" fn refresh_player_ratings_rows() {
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
-    let p0 = parametro_da_tela(0);
-    let mut item = parametro_da_tela(0xd) as u32;
-    let copia = parametro_da_tela(0x1d);
-    let e = estado_da_partida_na_tela(p0);
+    let p0 = get_screen_param(0);
+    let mut item = get_screen_param(0xd) as u32;
+    let copia = get_screen_param(0x1d);
+    let e = displayed_match_state(p0);
     let atual = core::ptr::read_unaligned((e + 0x3c) as *const u32);
     for t in 0..2usize {
         for j in 0..20usize {
@@ -265,16 +265,16 @@ unsafe extern "C" fn refresh_player_ratings_rows() {
                     let (a, d) = (er(0x2c), er(0x2d));
                     if a != 0 && d != 0 {
                         margem(sm, i, 0x20030);
-                        fundo(sm, i, cor_em(0xaebdec) as u32);
+                        fundo(sm, i, colour_word(0xaebdec) as u32);
                         margem(sm, i + 1, 0x40030);
-                        fundo(sm, i + 1, cor_em(0xae31a8) as u32);
+                        fundo(sm, i + 1, colour_word(0xae31a8) as u32);
                     } else if a == 0 && d != 0 {
                         margem(sm, i, 0x20030);
-                        fundo(sm, i, cor_em(0xae31a8) as u32);
+                        fundo(sm, i, colour_word(0xae31a8) as u32);
                         margem(sm, i + 1, 1);
                     } else if a != 0 {
                         margem(sm, i, 0x20030);
-                        fundo(sm, i, cor_em(0xaebdec) as u32);
+                        fundo(sm, i, colour_word(0xaebdec) as u32);
                         margem(sm, i + 1, 1);
                     } else {
                         margem(sm, i, 1);
@@ -297,7 +297,7 @@ unsafe extern "C" fn refresh_player_ratings_rows() {
                     match minuto {
                         Some((f, v, cor)) => {
                             traduzido(BUF, f, v as i32 + 1);
-                            cor_do_texto(sm, i + 3, cor_em(cor) as u32);
+                            cor_do_texto(sm, i + 3, colour_word(cor) as u32);
                             texto(sm, i + 3, BUF);
                         }
                         None => texto(sm, i + 3, TEXTO_VAZIO),
@@ -331,13 +331,13 @@ unsafe extern "C" fn refresh_player_ratings_rows() {
                     0xae3184
                 };
                 if difere(&[0x33, 0x34, 0x30, 0x32]) || atual != core::ptr::read_unaligned((copia + 0x3c) as *const u32) {
-                    cor_do_texto(sm, i + 2, cor_em(cor) as u32);
+                    cor_do_texto(sm, i + 2, colour_word(cor) as u32);
                 }
             }
             item = item.wrapping_add(7);
         }
     }
-    guardar_estado_da_partida(copia, e);
+    save_match_snapshot(copia, e);
 }
 
 /// As três rotinas são comparadas de verdade quando já existe a cópia do estado (parâmetro 0x1d): as
@@ -346,14 +346,14 @@ unsafe extern "C" fn refresh_player_ratings_rows() {
 /// parâmetros, a cópia do estado (0xd7a bytes) e o texto 0xde1f64 têm de sair iguais. O conteúdo do
 /// buffer de mensagens ([gerente + 0x37fe]) não entra (como na leva das listas).
 unsafe fn comparar_valores_da_partida(nome: &str, original: impl FnOnce(), rust: impl FnOnce()) {
-    let copia = parametro_da_tela(0x1d);
+    let copia = get_screen_param(0x1d);
     if copia == 0 {
         // ponytail: sem cópia a rotina aloca a cópia (0x944cf1) e a grava no parâmetro 0x1d; não dá
         // para rodar duas vezes. Só a original; a cópia Rust prova esse ramo no modo Rust.
         return original();
     }
-    let mut reg = regioes_da_tela();
-    reg.extend(regioes_dos_parametros());
+    let mut reg = screen_build_regions();
+    reg.extend(screen_param_regions());
     reg.push((copia, 0xd7a));
     reg.push((0xde1f64, 0x100));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, rust);
@@ -367,16 +367,16 @@ unsafe fn comparar_valores_da_partida(nome: &str, original: impl FnOnce(), rust:
 }
 
 unsafe extern "C" fn comparar_refresh_match_stats_values() {
-    let o = orig::<unsafe extern "C" fn()>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
     comparar_valores_da_partida("refresh_match_stats_values", || o(), || refresh_match_stats_values());
 }
 
 unsafe extern "C" fn comparar_refresh_action_zones_values() {
-    let o = orig::<unsafe extern "C" fn()>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
     comparar_valores_da_partida("refresh_action_zones_values", || o(), || refresh_action_zones_values());
 }
 
 unsafe extern "C" fn comparar_refresh_player_ratings_rows() {
-    let o = orig::<unsafe extern "C" fn()>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn()>(%%I2%%);
     comparar_valores_da_partida("refresh_player_ratings_rows", || o(), || refresh_player_ratings_rows());
 }

@@ -28,7 +28,7 @@ unsafe fn cpo8_pessoa(id: usize) -> usize {
 
 /// O contrato principal da pessoa (0x4cf5a0, guardado em [0xae1080]), o clube dele (id em +4) e o contrato com esse
 /// clube (0x4cf5f0).
-unsafe fn cpo8_contrato_com_o_clube(p: usize) -> usize {
+unsafe fn contract_with_own_club(p: usize) -> usize {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let c = contract_of(cpo8_d(0xae1050), p);
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_usado: u32) {
         let v = alocar(cpo8_d(this + 0xd8).wrapping_mul(12) as u32);
         cpo8_w(this + 0x18 + k * 4, v as u32);
         if v == 0 {
-            erro_em(0xa825a4, 0x10c);
+            fatal_error_at(0xa825a4, 0x10c);
         }
     }
     for k in 0..16usize {
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_usado: u32) {
             let pv = vaga as usize;
             let conta = cpo8_i(this + 0x98 + pv * 4);
             if conta >= cpo8_i(this + 0xd8) {
-                erro_em(0xa825a4, 0x121);
+                fatal_error_at(0xa825a4, 0x121);
             }
             let o = (conta as usize).wrapping_mul(12);
             let (l1, l2) = (cpo8_d(this + 0x18 + pv * 4).wrapping_add(o), cpo8_d(this + 0x58 + pv * 4).wrapping_add(o));
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_usado: u32) {
             cpo8_w(l1 + 4, cpo8_d(nacao) as u32);
             cpo8_w(l2 + 4, cpo8_d(cpo8_d(p + 0x1a)) as u32);
             cpo8_w(l1 + 8, cpo8_d(p + 0x52) as u32);
-            let k = cpo8_contrato_com_o_clube(p);
+            let k = contract_with_own_club(p);
             cpo8_w(l2 + 8, if k != 0 { cpo8_b(k + 0x3d) as i8 as i32 as u32 } else { 100 });
             cpo8_w(this + 0x98 + pv * 4, (conta + 1) as u32);
         }
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn sort_position_lists(this: usize) {
         let mut o = 0usize;
         while j < cpo8_i(this + 0x98 + vaga * 4) {
             let p = cpo8_pessoa(cpo8_d(cpo8_d(this + 0x18 + vaga * 4) + o));
-            let k = cpo8_contrato_com_o_clube(p);
+            let k = contract_with_own_club(p);
             if vaga == 15 {
                 cpo8_w(cpo8_d(this + 0x54) + o + 8, cpo8_d(p + 0x52) as u32);
                 j += 1;
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn sort_position_lists(this: usize) {
             }
             // a segunda lista
             let p2 = cpo8_pessoa(cpo8_d(cpo8_d(this + 0x58 + vaga * 4) + o));
-            let k2 = cpo8_contrato_com_o_clube(p2);
+            let k2 = contract_with_own_club(p2);
             let clube = cpo8_d(p2 + 0x39);
             let chave: i32 = if cpo8_d(p2 + 0x61) == 0 || clube == 0 || cpo8_d(clube + 0x57) == 0 {
                 0x7d0
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn collect_interested_clubs(this: usize, jogador: usize
 }
 
 /// Os itens (8 bytes) de uma LLIST (+2 o primeiro nó; nó: +0 o dado, +6 o próximo).
-unsafe fn cpo8_itens(lista: usize) -> Vec<(u32, u32)> {
+unsafe fn llist_pairs(lista: usize) -> Vec<(u32, u32)> {
     let mut v = Vec::new();
     let mut no = cpo8_d(lista + 2);
     while no != 0 {
@@ -290,7 +290,7 @@ unsafe fn cpo8_itens(lista: usize) -> Vec<(u32, u32)> {
 // ponytail: a original solta e aloca os 32 vetores (e pode sortear a nação de quem não tem); não roda duas vezes. Confere
 // o resultado: as duas listas de cada vaga com os mesmos ids, cada entrada servindo para a vaga, a conta no limite.
 unsafe extern "thiscall" fn comparar_build_position_lists(this: usize, nao_usado: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, nao_usado);
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, nao_usado);
     let serve: unsafe extern "stdcall" fn(usize, u32) -> u8 = core::mem::transmute(0x844300usize);
     let mut ruim = None;
     'f: for vaga in 0..16usize {
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn comparar_build_position_lists(this: usize, nao_usado
 
 /// Comparador: lado a lado pelos 32 vetores (12 bytes por entrada) e por [0xae1080].
 unsafe extern "thiscall" fn comparar_sort_position_lists(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let mut reg = vec![(0xae1080usize, 4usize)];
     for vaga in 0..16usize {
         let n = cpo8_i(this + 0x98 + vaga * 4);
@@ -330,7 +330,7 @@ unsafe extern "thiscall" fn comparar_sort_position_lists(this: usize) {
 
 /// Comparador: a original na lista de saída e a cópia numa lista nova (0x68d020, solta com 0x68d080); compara os pares.
 unsafe extern "thiscall" fn comparar_collect_interested_clubs(this: usize, jogador: usize, saida: usize, ignorar: u32, modo: u32, so_humanos: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I2%%);
     o(this, jogador, saida, ignorar, modo, so_humanos);
     if saida == 0 {
         return;
@@ -341,7 +341,7 @@ unsafe extern "thiscall" fn comparar_collect_interested_clubs(this: usize, jogad
     let l = nova.as_mut_ptr() as usize;
     criar(l);
     collect_interested_clubs(this, jogador, l, ignorar, modo, so_humanos);
-    let (a, b) = (cpo8_itens(saida), cpo8_itens(l));
+    let (a, b) = (llist_pairs(saida), llist_pairs(l));
     limpar(l);
     PLACAR.registrar(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", jogador, a, b));
 }

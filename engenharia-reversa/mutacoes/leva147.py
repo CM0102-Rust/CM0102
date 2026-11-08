@@ -1,6 +1,6 @@
 # Mutacoes da leva147 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva147.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
-    ('k_cinco', "let l1b = ((ftol(d as f64 * f32_em(0x96d754) as f64 + f64_em(0x968e18)) as i8 as i32 / 5) * 5) as i8;", "let l1b = ((ftol(d as f64 * f32_em(0x96d754) as f64 + f64_em(0x968e18)) as i8 as i32 / 4) * 4) as i8;"),
+    ('k_cinco', "let l1b = ((match_pl_ftol(d as f64 * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8 as i32 / 5) * 5) as i8;", "let l1b = ((match_pl_ftol(d as f64 * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8 as i32 / 4) * 4) as i8;"),
     ('k_meio', "*w(p, 0x39) = (*w(p, 0x39)).wrapping_add(-(l7c as i16 as i32 / 2) as i16);", "*w(p, 0x39) = (*w(p, 0x39)).wrapping_add(-(l7c as i16 as i32 / 3) as i16);"),
     ('k_assist', "            *w(q, 0x35) = (*w(q, 0x35)).wrapping_add((*w(p, 0x29) as i32 / 3 + 0xe1) as i16);\n            *dw(m, 0x4782) = (*dw(m, 0x4782)).wrapping_add(0x113);\n        }\n        l68 = 1;", "            *w(q, 0x35) = (*w(q, 0x35)).wrapping_add((*w(p, 0x29) as i32 / 3 + 0xe2) as i16);\n            *dw(m, 0x4782) = (*dw(m, 0x4782)).wrapping_add(0x113);\n        }\n        l68 = 1;", "shot assistencia"),
     ('k_lado', "        0x18 | 0x19 | 0x1c => (sortear(3) != 0) as u8,\n        0x3a =>", "        0x18 | 0x19 | 0x1c => (sortear(4) != 0) as u8,\n        0x3a =>"),
@@ -16,8 +16,8 @@ MUTACOES = [
     ('k_erro', "let di = ((*w(p, 0x39)).wrapping_sub(v as i16).wrapping_add(0xf0)).clamp(0, 200);", "let di = ((*w(p, 0x39)).wrapping_sub(v as i16).wrapping_add(0xf1)).clamp(0, 200);"),
     ('k_longe', "    if l1b as i32 > sortear(0xf) + 0x19 {", "    if l1b as i32 > sortear(0xf) + 0x1a {", "shot de longe"),
     ('k_goleiro', "            v = sortear(400).wrapping_add(v).wrapping_add(0xbe);", "            v = sortear(401).wrapping_add(v).wrapping_add(0xbe);"),
-    ('k_fator', "        0x1b => f32_em(0x9689a8),\n        0x35 => f32_em(0x969584),", "        0x1b => f32_em(0x969584),\n        0x35 => f32_em(0x969584),"),
-    ('k_razao', "        razao as f64 > f32_em(0x96d808) as f64\n    } else {", "        razao as f64 > f32_em(0x96d80c) as f64\n    } else {"),
+    ('k_fator', "        0x1b => read_f32_at(0x9689a8),\n        0x35 => read_f32_at(0x969584),", "        0x1b => read_f32_at(0x969584),\n        0x35 => read_f32_at(0x969584),"),
+    ('k_razao', "        razao as f64 > read_f32_at(0x96d808) as f64\n    } else {", "        razao as f64 > read_f32_at(0x96d80c) as f64\n    } else {"),
     ('k_piso', "            let piso = (ub(p, 0xc) as i32 + 5) * 1000;", "            let piso = (ub(p, 0xc) as i32 + 4) * 1000;", "shot gol"),
     ('k_sofreu', "                *w(g, 0x35) = (*w(g, 0x35)).wrapping_sub(500);\n            }\n            let di = *w(g, 0x35);", "                *w(g, 0x35) = (*w(g, 0x35)).wrapping_sub(501);\n            }\n            let di = *w(g, 0x35);", "shot gol"),
     ('k_placar', "        let k = m + 0xf5bd + (lado as isize * 0x36) as usize;\n        *b(k, 0) = (*b(k, 0)).wrapping_add(1);", "        let k = m + 0xf5bd + (lado as isize * 0x36) as usize;\n        *b(k, 0) = (*b(k, 0)).wrapping_add(2);", "shot gol valido"),

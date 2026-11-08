@@ -65,7 +65,7 @@ unsafe fn cqw5_plano(this: usize, r: usize, ano: u32, dono: usize, vt: usize, ca
 /// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x9676c8, o registro em +4, o ano em +0x40 e
 /// os da tabela CQW5_CAMPOS_SUPERCOPA_ASIATICA); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os dois clubes (AsiaSuperCup::select_teams) (0x410a50, thiscall, ret 0; a caixa da linha 0x3e se devolver negativo); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x4c se devolver negativo); as estatísticas em +8 (a caixa da linha 0x53 sem elas); a classificação final (Cup::rank_teams) (0x5223a0, thiscall, ret 0, sem conferir); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: tipo 2 (clubes de várias nações); sem fundo de prêmios (+0x28 fica como a base deixou); 7 reservas no banco e 3 substituições; regra de disciplina 41 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqw5_supercopa_asiatica_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
@@ -90,18 +90,18 @@ unsafe fn cqw5_supercopa_asiatica_corpo(this: usize, ano: u32, dono: usize) -> u
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x410a50usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0x987be0, 0x3e);
+        show_error_at(0x987be0, 0x3e);
         return this;
     }
     cqw5_rodadas(this);
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0x987be0, 0x4c);
+        show_error_at(0x987be0, 0x4c);
         return this;
     }
     if !cqw5_estatisticas(this) {
-        aviso_em(0x987be0, 0x53);
+        show_error_at(0x987be0, 0x53);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn cqw5_supercopa_asiatica(this: usize, ano: u32, dono:
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqw5_plano).
 unsafe extern "thiscall" fn comparar_cqw5_supercopa_asiatica(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x9676c8, &CQW5_CAMPOS_SUPERCOPA_ASIATICA, true);
     PLACAR.registrar(erro.is_none(), || format!("cqw5_supercopa_asiatica({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn comparar_cqw5_supercopa_asiatica(this: usize, ano: u
 /// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x96bad8, o registro em +4, o ano em +0x40 e
 /// os da tabela CQW5_CAMPOS_COPA_INTERAMERICANA); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os dois finalistas (InterAmerCup::select_teams) (0x632480, thiscall, ret 0; a caixa da linha 0x41 se devolver negativo); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x4f se devolver negativo); as estatísticas em +8 (a caixa da linha 0x56 sem elas); a classificação final (Cup::rank_teams) (0x5223a0, thiscall, ret 0, sem conferir); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: tipo 2 (clubes de várias nações); sem fundo de prêmios (+0x28 fica como a base deixou); 7 reservas no banco e 3 substituições; regra de disciplina 255 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqw5_copa_interamericana_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
@@ -154,18 +154,18 @@ unsafe fn cqw5_copa_interamericana_corpo(this: usize, ano: u32, dono: usize) -> 
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x632480usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0x9e9d94, 0x41);
+        show_error_at(0x9e9d94, 0x41);
         return this;
     }
     cqw5_rodadas(this);
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0x9e9d94, 0x4f);
+        show_error_at(0x9e9d94, 0x4f);
         return this;
     }
     if !cqw5_estatisticas(this) {
-        aviso_em(0x9e9d94, 0x56);
+        show_error_at(0x9e9d94, 0x56);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn cqw5_copa_interamericana(this: usize, ano: u32, dono
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqw5_plano).
 unsafe extern "thiscall" fn comparar_cqw5_copa_interamericana(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x96bad8, &CQW5_CAMPOS_COPA_INTERAMERICANA, true);
     PLACAR.registrar(erro.is_none(), || format!("cqw5_copa_interamericana({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn comparar_cqw5_copa_interamericana(this: usize, ano: 
 /// sobre a base League::League (0x682200, thiscall, ret 0); os campos fixos (a vtable 0x968b40, o registro em +4, o ano em +0x40 e
 /// os da tabela CQW5_CAMPOS_COPA_MERCOSUL); se o estado salvo carrega (League::load_from_temp_file 0x687b10: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: o vetor das fases em +0xc (malloc 0x944e46 de 0x10: push; add esp, 4 -> cdecl, sem conferir); as regras (ConMercCup::set_up_rules) (0x4c1ed0, thiscall, ret 0; a caixa da linha 0x4d se devolver 0); as estatísticas em +8 (a caixa da linha 0x59 sem elas); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: sem fundo de prêmios (+0x28 fica como a base deixou); reservas e substituições da base; regra de disciplina 255 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqw5_copa_mercosul_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
@@ -217,13 +217,13 @@ unsafe fn cqw5_copa_mercosul_corpo(this: usize, ano: u32, dono: usize) -> usize 
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x4c1ed0usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9a7d6c, 0x4d);
+        show_error_at(0x9a7d6c, 0x4d);
         return this;
     }
     cqw5_p16(this + 0x3e, 0x0);
     cqw5_p32(this + 0xb1, 0x0);
     if !cqw5_estatisticas(this) {
-        aviso_em(0x9a7d6c, 0x59);
+        show_error_at(0x9a7d6c, 0x59);
         return this;
     }
     cqw5_p32(this + 0x45, 0x0);
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn cqw5_copa_mercosul(this: usize, ano: u32, dono: usiz
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqw5_plano).
 unsafe extern "thiscall" fn comparar_cqw5_copa_mercosul(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x968b40, &CQW5_CAMPOS_COPA_MERCOSUL, false);
     PLACAR.registrar(erro.is_none(), || format!("cqw5_copa_mercosul({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn comparar_cqw5_copa_mercosul(this: usize, ano: u32, d
 /// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x9708f8, o registro em +4, o ano em +0x40 e
 /// os da tabela CQW5_CAMPOS_JOGO_DAS_ESTRELAS); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os dois times das estrelas (UsaMlsAllStars::set_up_teams) (0x90a540, thiscall, ret 0; a caixa da linha 0x44 se devolver negativo); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x52 se devolver negativo); as estatísticas em +8 (a caixa da linha 0x59 sem elas); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: tipo 1 (clubes de uma nação); sem fundo de prêmios (+0x28 fica como a base deixou); reservas e substituições da base; regra de disciplina 255 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqw5_jogo_das_estrelas_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
@@ -272,18 +272,18 @@ unsafe fn cqw5_jogo_das_estrelas_corpo(this: usize, ano: u32, dono: usize) -> us
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x90a540usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0xaa20a0, 0x44);
+        show_error_at(0xaa20a0, 0x44);
         return this;
     }
     cqw5_rodadas(this);
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0xaa20a0, 0x52);
+        show_error_at(0xaa20a0, 0x52);
         return this;
     }
     if !cqw5_estatisticas(this) {
-        aviso_em(0xaa20a0, 0x59);
+        show_error_at(0xaa20a0, 0x59);
         return this;
     }
     this
@@ -297,7 +297,7 @@ unsafe extern "thiscall" fn cqw5_jogo_das_estrelas(this: usize, ano: u32, dono: 
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqw5_plano).
 unsafe extern "thiscall" fn comparar_cqw5_jogo_das_estrelas(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x9708f8, &CQW5_CAMPOS_JOGO_DAS_ESTRELAS, true);
     PLACAR.registrar(erro.is_none(), || format!("cqw5_jogo_das_estrelas({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r

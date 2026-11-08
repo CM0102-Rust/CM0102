@@ -56,15 +56,15 @@ unsafe extern "thiscall" fn cqv10_oceania_nacoes_dia(this: usize, hoje: usize, c
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqv10_d(cqv10_d(this) + 0x5c));
         previstas(this);
         if grupo(this) == 0 {
-            aviso_em(0xa6a0ec, 0x405);
+            show_error_at(0xa6a0ec, 0x405);
             return 0;
         }
         if jogos(this) == 0 {
-            aviso_em(0xa6a0ec, 0x40b);
+            show_error_at(0xa6a0ec, 0x40b);
             return 0;
         }
         if ordenar(this, 0) == 0 {
-            aviso_em(0xa6a0ec, 0x412);
+            show_error_at(0xa6a0ec, 0x412);
             return 0;
         }
         segundo(this, 0);
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn cqv10_oceania_nacoes_dia(this: usize, hoje: usize, c
 // sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do primeiro grupo e a fase do
 // segundo criadas.
 unsafe extern "thiscall" fn comparar_cqv10_oceania_nacoes_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = completo != 0 && cqv10_d(this + 0x45) == 0 && {
         let (dia, ano) = cqv10_data_do_sorteio(this);
         core::ptr::read_unaligned(hoje as *const u16) == dia && core::ptr::read_unaligned((hoje + 2) as *const u16) == ano
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn cqv10_oceania_nacoes_sorteio(this: usize) -> u32 {
     let lista = alocar(0x18);
     cqv10_pd(this + 0xee, lista);
     if lista == 0 {
-        aviso_em(0xa6a0ec, 0x39e);
+        show_error_at(0xa6a0ec, 0x39e);
         return 0;
     }
     let (mut mel, mut pol) = ([0usize; 10], [0usize; 10]);
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn cqv10_oceania_nacoes_sorteio(this: usize) -> u32 {
 // ponytail: a lista é alocada e os sorteios contam: não roda duas vezes. Só a original; o plano: devolve 1, +0xf2 = 6 e,
 // na lista, a Austrália e a Nova Zelândia nas vagas 0 e 3 (em qualquer ordem).
 unsafe extern "thiscall" fn comparar_cqv10_oceania_nacoes_sorteio(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let r = o(this);
     if r == 1 {
         let lista = cqv10_d(this + 0xee);
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn cqv10_oceania_nacoes_primeiro_grupo(this: usize) -> 
     let t = novo(0xb1);
     cqv10_pd(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0xa6a0ec, 0x246);
+        show_error_at(0xa6a0ec, 0x246);
         return 0;
     }
     let mut i = 0i8;
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn cqv10_oceania_nacoes_primeiro_grupo(this: usize) -> 
 // ponytail: a tabela é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1,
 // +0x3e = 3 e na linha i a seleção i da lista com a posição i (+4).
 unsafe extern "thiscall" fn comparar_cqv10_oceania_nacoes_primeiro_grupo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let lista = cqv10_d(this + 0xee);
     if lista == 0 {
         return o(this);

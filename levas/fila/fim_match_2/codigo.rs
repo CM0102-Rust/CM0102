@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: usize, n: i
     let t = novo((n as u32).wrapping_mul(12));
     *(estat as *mut usize) = t;
     if t == 0 {
-        erro_em(0xa17ba0, 0x62);
+        fatal_error_at(0xa17ba0, 0x62);
     }
     *d(0x1c) = n;
     let mut soma = 0i32;
@@ -88,14 +88,14 @@ unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: usize, n: i
     }
     let f = abrir(caminho(0x987da0, 0xa17b88), 0x9a7f28);
     if f == 0 {
-        aviso_em(0xa17ba0, 0x71);
+        show_error_at(0xa17ba0, 0x71);
     } else {
         core::ptr::write_bytes(r as *mut u8, 0, 0xd7a);
         let mut ok = true;
         let mut i = 0;
         while i < n {
             if escrever(r, 0xd7a, 1, f) != 1 {
-                aviso_em(0xa17ba0, 0x7e);
+                show_error_at(0xa17ba0, 0x7e);
                 fechar(f);
                 ok = false;
                 break;
@@ -129,9 +129,9 @@ unsafe extern "thiscall" fn destroy_match_stats(estat: usize) {
 // original; as cópias se provam no modo Rust (os ramos: a carreira automática cria o jogo e passa pelo
 // construtor).
 unsafe extern "thiscall" fn comparar_construct_match_stats(estat: usize, zip: usize, n: i32) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize, usize, i32) -> usize>(%%I0%%)(estat, zip, n)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> usize>(%%I0%%)(estat, zip, n)
 }
 
 unsafe extern "thiscall" fn comparar_destroy_match_stats(estat: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(estat)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(estat)
 }

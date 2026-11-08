@@ -20,13 +20,13 @@ unsafe fn cpv6_somar(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, cpv6_i(a).wrapping_add(v));
 }
 
-unsafe fn cpv6_saldo(fin: usize) -> i64 {
+unsafe fn balance(fin: usize) -> i64 {
     core::ptr::read_unaligned(fin as *const i64)
 }
 
 /// O saldo (i64 em +0) mais `v` estendido com sinal (o cdq/adc da original).
-unsafe fn cpv6_somar_saldo(fin: usize, v: i32) {
-    core::ptr::write_unaligned(fin as *mut i64, cpv6_saldo(fin).wrapping_add(v as i64));
+unsafe fn credit_balance(fin: usize, v: i32) {
+    core::ptr::write_unaligned(fin as *mut i64, balance(fin).wrapping_add(v as i64));
 }
 
 unsafe fn cpv6_sortear(n: i32) -> i32 {
@@ -34,13 +34,13 @@ unsafe fn cpv6_sortear(n: i32) -> i32 {
     f(n)
 }
 
-unsafe fn cpv6_faixa(fin: usize) -> i8 {
+unsafe fn wealth_band(fin: usize) -> i8 {
     let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     f(fin) as i8
 }
 
 /// Um evento da semana (0x59e050, 0x59dd40, 0x59e5a0, 0x59e940): thiscall(tabela, clube, finanças), 1 se aconteceu.
-unsafe fn cpv6_evento(rotina: usize, this: usize, clube: usize, fin: usize) -> u32 {
+unsafe fn run_weekly_event(rotina: usize, this: usize, clube: usize, fin: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(rotina);
     f(this, clube, fin)
 }
@@ -50,7 +50,7 @@ unsafe fn cpv6_evento(rotina: usize, this: usize, clube: usize, fin: usize) -> u
 static mut CPV6_ENSAIO: bool = false;
 
 /// A notícia do evento (0x59f300: thiscall(tabela, clube, valor, verba, tipo), ret 0x10); no ensaio, nada.
-unsafe fn cpv6_noticia(this: usize, clube: usize, valor: i32, verba: u32, tipo: u32) {
+unsafe fn post_finance_boost_news(this: usize, clube: usize, valor: i32, verba: u32, tipo: u32) {
     if CPV6_ENSAIO {
         return;
     }
@@ -60,7 +60,7 @@ unsafe fn cpv6_noticia(this: usize, clube: usize, valor: i32, verba: u32, tipo: 
 
 /// A verba de transferências (Finance::get_transfer_budget 0x598800 com 0, 0, 0, 1, 0) que vai na notícia; no
 /// ensaio, 0 (a notícia não sai).
-unsafe fn cpv6_verba(fin: usize) -> u32 {
+unsafe fn transfer_budget(fin: usize) -> u32 {
     if CPV6_ENSAIO {
         return 0;
     }
@@ -69,16 +69,16 @@ unsafe fn cpv6_verba(fin: usize) -> u32 {
 }
 
 /// O fim da semana do clube no estado de crise (0x5a02f0: thiscall(tabela, id)).
-unsafe fn cpv6_fim_da_crise(this: usize, clube: usize) {
+unsafe fn post_receivers_appeased(this: usize, clube: usize) {
     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5a02f0usize);
     f(this, cpv6_d(clube) as u32);
 }
 
 /// O estado (+0x165) volta a 0; se era 1 (crise), a notícia do fim da crise (0x5a02f0) antes.
-unsafe fn cpv6_sair_da_crise(this: usize, clube: usize, fin: usize) {
+unsafe fn leave_crisis(this: usize, clube: usize, fin: usize) {
     let s = cpv6_b(fin + 0x165);
     if s == 1 {
-        cpv6_fim_da_crise(this, clube);
+        post_receivers_appeased(this, clube);
     }
     if s == 1 || s == 2 {
         *((fin + 0x165) as *mut u8) = 0;
@@ -86,7 +86,7 @@ unsafe fn cpv6_sair_da_crise(this: usize, clube: usize, fin: usize) {
 }
 
 /// O centro de treino no máximo (20) cai um nível com sorteio(10) zero, se a reputação for menor que 7250.
-unsafe fn cpv6_desgaste_do_centro(clube: usize) {
+unsafe fn decay_training_ground(clube: usize) {
     let nivel = (clube + 0x7f) as *mut i8;
     if *nivel == 0x14 && cpv6_w(clube + 0x80) < 0x1c52 && cpv6_sortear(10) == 0 {
         *nivel = (*nivel).wrapping_sub(1);
@@ -106,7 +106,7 @@ unsafe fn cpv6_desgaste_do_centro(clube: usize) {
 /// treino cai pelo sorteio.
 unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usize, semana: u32) {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, semana);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, semana);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let mut eh_a: u32 = 0;
@@ -114,12 +114,12 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
     let c = if p != 0 && eh_a == 0 { p } else { clube };
     let fin = cpv6_d(this).wrapping_add((cpv6_d(c) as u32).wrapping_mul(0x167) as usize);
     let aperto = (fin + 0x166) as *mut i8;
-    match cpv6_faixa(fin) {
+    match wealth_band(fin) {
         -1 => {
             let s = cpv6_b(fin + 0x165);
             if s != 2 {
                 if s == 1 {
-                    cpv6_fim_da_crise(this, clube);
+                    post_receivers_appeased(this, clube);
                 }
                 *((fin + 0x165) as *mut u8) = 2;
             }
@@ -129,9 +129,9 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
             if cpv6_b(clube + 0x6d) != 0 {
                 *aperto = (*aperto).wrapping_add(1);
             }
-            cpv6_desgaste_do_centro(clube);
-            if cpv6_evento(0x59dd40, this, clube, fin) == 0 && cpv6_evento(0x59e5a0, this, clube, fin) == 0 {
-                cpv6_evento(0x59e940, this, clube, fin);
+            decay_training_ground(clube);
+            if run_weekly_event(0x59dd40, this, clube, fin) == 0 && run_weekly_event(0x59e5a0, this, clube, fin) == 0 {
+                run_weekly_event(0x59e940, this, clube, fin);
             }
         }
         -2 => {
@@ -174,28 +174,28 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
             if semana == 0 {
                 return;
             }
-            if cpv6_evento(0x59e940, this, clube, fin) == 0 && cpv6_evento(0x59e5a0, this, clube, fin) == 0 {
-                cpv6_evento(0x59e050, this, clube, fin);
+            if run_weekly_event(0x59e940, this, clube, fin) == 0 && run_weekly_event(0x59e5a0, this, clube, fin) == 0 {
+                run_weekly_event(0x59e050, this, clube, fin);
             }
-            cpv6_desgaste_do_centro(clube);
+            decay_training_ground(clube);
             if cpv6_b(clube + 0x6d) != 0 {
                 *aperto = (*aperto).wrapping_add(3);
             }
         }
         1 => {
-            cpv6_sair_da_crise(this, clube, fin);
+            leave_crisis(this, clube, fin);
             if semana == 0 {
                 return;
             }
             if *aperto > 0 {
                 *aperto -= 1;
             }
-            if cpv6_evento(0x59e050, this, clube, fin) == 0 && cpv6_evento(0x59dd40, this, clube, fin) == 0 {
-                cpv6_evento(0x59e5a0, this, clube, fin);
+            if run_weekly_event(0x59e050, this, clube, fin) == 0 && run_weekly_event(0x59dd40, this, clube, fin) == 0 {
+                run_weekly_event(0x59e5a0, this, clube, fin);
             }
         }
         2 => {
-            cpv6_sair_da_crise(this, clube, fin);
+            leave_crisis(this, clube, fin);
             if semana == 0 {
                 return;
             }
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
             }
         }
         _ => {
-            cpv6_sair_da_crise(this, clube, fin);
+            leave_crisis(this, clube, fin);
             if semana == 0 {
                 return;
             }
@@ -212,9 +212,9 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
                 *aperto -= 1;
             }
             crate::comparacao::ramo("cpv_6 impulso na faixa 0");
-            let ok = cpv6_evento(0x59e050, this, clube, fin) != 0; // cpv6: o impulso na faixa 0
-            if !ok && cpv6_evento(0x59dd40, this, clube, fin) == 0 {
-                cpv6_evento(0x59e5a0, this, clube, fin);
+            let ok = run_weekly_event(0x59e050, this, clube, fin) != 0; // cpv6: o impulso na faixa 0
+            if !ok && run_weekly_event(0x59dd40, this, clube, fin) == 0 {
+                run_weekly_event(0x59e5a0, this, clube, fin);
             }
         }
     }
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
     if lugares <= 0xabe || cpv6_sortear(cpv6_w(clube + 0x80) as i32) >= lugares {
         return;
     }
-    let t = ftol(lugares as f64 * f64_em(0x967880)) as i16 as i32;
+    let t = match_pl_ftol(lugares as f64 * read_f64_at(0x967880)) as i16 as i32;
     let dez = (t / 10).wrapping_mul(10);
     let fechar = dez as i16 as i32;
     let resto = cpv6_i(est + 0x40);
@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
 
 // ponytail: chama originais que sorteiam, alocam notícias e mexem nos contratos: só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_process_club_finance_events(this: usize, clube: usize, semana: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, semana)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, semana)
 }
 
 /// { 0x59dd40 } (thiscall, ret 8, finance.cpp): `FinanceTable::try_board_debt_payment(clube, finanças)`, pelo passe dos
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn comparar_process_club_finance_events(this: usize, cl
 /// saldo; a notícia (0x59f300, tipo 4); devolve 1.
 unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fin: usize) -> u32 {
     let rep = cpv6_w(clube + 0x80) as i32;
-    let div = match cpv6_faixa(fin) {
+    let div = match wealth_band(fin) {
         -2 => 2.0f64,
         -1 => {
             if rep >= 0xdac {
@@ -300,7 +300,7 @@ unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fi
             }
         }
         0 => {
-            if rep > 0xdac || cpv6_saldo(fin) >= rep.wrapping_mul(25) as i64 {
+            if rep > 0xdac || balance(fin) >= rep.wrapping_mul(25) as i64 {
                 return 0;
             }
             0.4
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fi
     if rep >= r.wrapping_add(0xdac) {
         return 0;
     }
-    let n = ftol(f64_em(0x969000) / div);
+    let n = match_pl_ftol(read_f64_at(0x969000) / div);
     let outro = cpv6_d(clube + 0xbf);
     if outro != 0 && cpv6_d(outro + 0x69) != 0 {
         if cpv6_sortear(n) != 0 {
@@ -331,7 +331,7 @@ unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fi
         }
     }
     let rep = cpv6_w(clube + 0x80) as i32;
-    let saldo = cpv6_saldo(fin);
+    let saldo = balance(fin);
     let valor = if rep < 0x4e2 && saldo < rep.wrapping_mul(-450) as i64 {
         rep.wrapping_mul(450)
     } else if saldo >= rep.wrapping_mul(-300) as i64 {
@@ -341,15 +341,15 @@ unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fi
     };
     cpv6_somar(fin + 0x154, valor);
     cpv6_somar(fin + 0xb4, valor);
-    cpv6_somar_saldo(fin, valor);
-    cpv6_noticia(this, clube, valor, 0, 4);
+    credit_balance(fin, valor);
+    post_finance_boost_news(this, clube, valor, 0, 4);
     1
 }
 
 /// O comparador dos eventos: a cópia em ensaio (sem notícia nem verba) e a original a partir do mesmo estado (registro de
 /// finanças e sorteio). Sem evento: tudo igual, inclusive o sorteio; com evento: a devolução e os campos que o evento
 /// grava (saldo, +0xb4, +0x154, +0x165), porque a notícia e a verba da original podem sortear e gravar.
-unsafe fn cpv6_comparar(nome: &str, fin: usize, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
+unsafe fn compare_finance_event(nome: &str, fin: usize, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let mut regioes = vec![(fin, 0x167)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
@@ -371,8 +371,8 @@ unsafe fn cpv6_comparar(nome: &str, fin: usize, original: impl FnOnce() -> u32, 
 }
 
 unsafe extern "thiscall" fn comparar_try_board_debt_payment(this: usize, clube: usize, fin: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
-    cpv6_comparar("try_board_debt_payment", fin, || o(this, clube, fin), || try_board_debt_payment(this, clube, fin))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
+    compare_finance_event("try_board_debt_payment", fin, || o(this, clube, fin), || try_board_debt_payment(this, clube, fin))
 }
 
 /// { 0x59e5a0 } (thiscall, ret 8, finance.cpp): `FinanceTable::try_cash_injection(clube, finanças)`, pelo passe dos
@@ -399,16 +399,16 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
         }
     }
     crate::comparacao::ramo("cpv_6 injecao avaliada");
-    let div = match cpv6_faixa(fin) {
-        -2 => f64_em(0x9689e0),
-        -1 => f64_em(0x967880),
-        _ => f64_em(0x96a350),
+    let div = match wealth_band(fin) {
+        -2 => read_f64_at(0x9689e0),
+        -1 => read_f64_at(0x967880),
+        _ => read_f64_at(0x96a350),
     };
     let rep = cpv6_w(clube + 0x80) as i32;
     let outro = cpv6_d(clube + 0xbf);
     let mut valor;
     if outro != 0 && cpv6_d(outro + 0x69) != 0 && cpv6_b(clube + 0x82) == 0 {
-        let r = cpv6_sortear(ftol(f64_em(0x968dd8) / div));
+        let r = cpv6_sortear(match_pl_ftol(read_f64_at(0x968dd8) / div));
         let est = cpv6_d(cpv6_d(clube + 0xbf) + 0x69);
         if (cpv6_b(est + 0xf) as i8 as i32) <= r {
             return 0;
@@ -419,7 +419,7 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
         }
         valor = e.wrapping_mul(20).wrapping_add(0x96).wrapping_mul(rep).wrapping_add(0xb71b0);
     } else {
-        if cpv6_sortear(ftol(f64_em(0x968938) / div)) != 0 {
+        if cpv6_sortear(match_pl_ftol(read_f64_at(0x968938) / div)) != 0 {
             return 0;
         }
         if cpv6_b(clube + 0x82) != 0 {
@@ -427,9 +427,9 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
         }
         valor = rep.wrapping_mul(5).wrapping_add(0x3a98).wrapping_mul(50);
     }
-    let saldo = cpv6_saldo(fin);
+    let saldo = balance(fin);
     if (valor.wrapping_mul(10) as i64) < saldo.wrapping_neg() {
-        valor = ftol(-(saldo as f64 * f64_em(0x967880)));
+        valor = match_pl_ftol(-(saldo as f64 * read_f64_at(0x967880)));
     }
     if cpv6_w(clube + 0x80) < 0x7d0 {
         let teto = rep.wrapping_mul(rep).wrapping_add(0x16e360);
@@ -437,21 +437,21 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
             valor = teto;
         }
     } else {
-        let maior = (valor as f64 > rep.wrapping_mul(rep) as f64 * f64_em(0x9689e0)) as i32;
+        let maior = (valor as f64 > rep.wrapping_mul(rep) as f64 * read_f64_at(0x9689e0)) as i32;
         if valor > 0x3d0900 + maior {
             valor = 0x3d0900 + maior;
         }
     }
     cpv6_somar(fin + 0x154, valor);
     cpv6_somar(fin + 0xb4, valor);
-    cpv6_somar_saldo(fin, valor);
-    let verba = cpv6_verba(fin);
-    cpv6_noticia(this, clube, valor, verba, 3);
+    credit_balance(fin, valor);
+    let verba = transfer_budget(fin);
+    post_finance_boost_news(this, clube, valor, verba, 3);
     *((fin + 0x165) as *mut u8) = 0;
     1
 }
 
 unsafe extern "thiscall" fn comparar_try_cash_injection(this: usize, clube: usize, fin: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
-    cpv6_comparar("try_cash_injection", fin, || o(this, clube, fin), || try_cash_injection(this, clube, fin))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
+    compare_finance_event("try_cash_injection", fin, || o(this, clube, fin), || try_cash_injection(this, clube, fin))
 }

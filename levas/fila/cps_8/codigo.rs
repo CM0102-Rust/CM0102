@@ -77,14 +77,14 @@ unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usi
 }
 
 unsafe extern "thiscall" fn comparar_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, partida);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, partida);
     let n = fixture_has_scouted_player(this, partida);
     PLACAR.registrar(r == n, || format!("fixture_has_scouted_player(partida {:x}) original={} rust={}", partida, r, n));
     r
 }
 
 /// O gerente do humano da vez ([0xb74c26 + 0x300 × (i16)[0xb77c7a]]).
-unsafe fn cps8_gerente_da_vez() -> usize {
+unsafe fn scout_manager_current_human_manager() -> usize {
     let k = core::ptr::read_unaligned(0xb77c7a as *const i16) as isize;
     cps8_d((0xb74c26isize + 0x300 * k) as usize)
 }
@@ -96,12 +96,12 @@ unsafe fn cps8_gerente_da_vez() -> usize {
 /// resposta dela (0x804540); senão a primeira das 10 buscas (0x7f6cd0) de tipo 1 (+0xa) responde (0x7af600). Sem ela, 0.
 unsafe extern "thiscall" fn is_player_shortlisted(this: usize, pessoa: usize, gerente: usize) -> u32 {
     if pessoa == 0 {
-        aviso_em(0xa7b094, 0x231);
+        show_error_at(0xa7b094, 0x231);
         return 0;
     }
-    let m = if gerente != 0 { gerente } else { cps8_gerente_da_vez() };
+    let m = if gerente != 0 { gerente } else { scout_manager_current_human_manager() };
     if m == 0 {
-        aviso_em(0xa7b094, 0x23b);
+        show_error_at(0xa7b094, 0x23b);
         return 0;
     }
     let vaga = (*(m as *const u8)).wrapping_sub(*(0xae2364 as *const u8)).wrapping_add(0x10) as i8;
@@ -128,8 +128,8 @@ unsafe extern "thiscall" fn is_player_shortlisted(this: usize, pessoa: usize, ge
 }
 
 unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usize, pessoa: usize, gerente: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
-    if pessoa == 0 || (gerente == 0 && cps8_gerente_da_vez() == 0) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
+    if pessoa == 0 || (gerente == 0 && scout_manager_current_human_manager() == 0) {
         return o(this, pessoa, gerente);
     }
     let r = o(this, pessoa, gerente);
@@ -144,21 +144,21 @@ unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usize, pessoa: 
 /// O clube é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
 unsafe extern "thiscall" fn add_first_cap_record(this: usize, pessoa: usize, adversario: usize) {
     crate::comparacao::ramo("cps_8 primeira convocacao");
-    let mut e = cpq4_entrada();
-    cpq4_datar(e.as_mut_ptr());
+    let mut e = history_entry();
+    stamp_game_date(e.as_mut_ptr());
     e[0xc] = 6;
-    cpq4_por(&mut e, 8, cpq4_clube_de(pessoa));
-    cpq4_por(&mut e, 0xd, cps8_i(adversario));
-    cpq4_por(&mut e, 0x11, *((pessoa + 0x18) as *const i8) as i32);
+    put_i32(&mut e, 8, club_job_id(pessoa));
+    put_i32(&mut e, 0xd, cps8_i(adversario));
+    put_i32(&mut e, 0x11, *((pessoa + 0x18) as *const i8) as i32);
     if pessoa != 0 {
-        cpq4_historico(true, this, cps8_d(pessoa), &e);
+        append_person_history_by_id(true, this, cps8_d(pessoa), &e);
     } else {
-        aviso_em(0xa83b78, 0x1010);
+        show_error_at(0xa83b78, 0x1010);
     }
 }
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_add_first_cap_record(this: usize, pessoa: usize, adversario: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, pessoa, adversario)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, pessoa, adversario)
 }

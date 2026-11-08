@@ -1,7 +1,7 @@
 # Mutações da 268a leva (itens cqe_1, cqe_2, cqe_3, cqe_4, cqe_5, cqe_6). Uso: python mutacoes.py mutacoes\leva268.py --carreira 2002-06-01
 MUTACOES = [
-    ('cqe1_aceita_menos', 'if v as f64 * f64_em(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido', 'if v as f64 * 1.2 < pedido_f && troca_recusada == 0 { // mutacao: a opção × 1,2 abaixo do pedido', 'cqe_1 aceita'),
-    ('cqe1_sem_contraproposta', 'if v as f64 * f64_em(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta', 'if v as f64 * f64_em(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 && false { // mutacao: sem contraproposta', 'cqe_1 contraproposta'),
+    ('cqe1_aceita_menos', 'if v as f64 * read_f64_at(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido', 'if v as f64 * 1.2 < pedido_f && troca_recusada == 0 { // mutacao: a opção × 1,2 abaixo do pedido', 'cqe_1 aceita'),
+    ('cqe1_sem_contraproposta', 'if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta', 'if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 && false { // mutacao: sem contraproposta', 'cqe_1 contraproposta'),
     ('cqe1_preco_sempre_o_piso', 'let preco = if k > piso { // cqe1: o preço pelo valor k', 'let preco = if k > piso && false { // mutacao: sempre o piso', 'cqe_1 preço pelo k'),
     ('cqe2_preco_pela_metade', 'write_u32_from_usize(nova + 0x1b, valor as u32 as usize); // cqe2: o preço da opção', 'write_u32_from_usize(nova + 0x1b, (valor / 2) as u32 as usize); // mutacao: a metade', 'cqe_2 opção montada'),
     ('cqe2_lista_do_vendedor_invertida', 'if read_u8(reg + 4) == 0 { // cqe2: o vendedor sem lista de observação ativa', 'if read_u8(reg + 4) != 0 { // mutacao: invertido', 'cqe_2 opção montada'),

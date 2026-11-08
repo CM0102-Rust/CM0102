@@ -20,7 +20,7 @@ static mut CPW11_ENSAIO: bool = false;
 /// estatística dela (+8) e com o jogo: 0x49f570 com os pontos dos dois; devolve 1. Partida nula: a caixa e −1.
 unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, jogo: usize) -> i32 {
     if p == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%)(liga, p, jogo);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%)(liga, p, jogo);
     }
     let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut local = [0u8; 8];
@@ -31,7 +31,7 @@ unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, jogo: usize
         let k = fase as i8 as i32;
         if k > cpw11_d(liga + 0x30) as i32 || k < 0 {
             // as caixas da fase fora da faixa (linhas 0xc8e e 0xc8f): a original (a data já está gravada, igual)
-            return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%)(liga, p, jogo);
+            return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%)(liga, p, jogo);
         }
         let filha = cpw11_d(cpw11_d(liga + 0xc).wrapping_add(4 * k as usize));
         let somar: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(cpw11_d(cpw11_d(filha) + 4));
@@ -65,13 +65,13 @@ unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, jogo: usize
 /// partir do mesmo estado: a data em +0xc9, as linhas da tabela com os confrontos (as regiões da 0x685f60), o +0x3d/+0x3e
 /// da partida e a devolução.
 unsafe extern "thiscall" fn comparar_league_add_result(liga: usize, p: usize, jogo: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%);
     if p == 0 || (*((liga + 0x44) as *const u8) == 0xff && *((p + 0x42) as *const u8) != 0xff) {
         return o(liga, p, jogo); // ponytail: a caixa ou a fase, só a original
     }
     let n = cpw11_w(liga + 0x3e) as u16 as u32;
     let mut regioes = vec![(liga + 0xc9, 8)];
-    regioes.extend(cpe2_regioes(p, cpw11_d(liga + 0xb1), n, core::ptr::null_mut(), core::ptr::null_mut()));
+    regioes.extend(result_update_regions(p, cpw11_d(liga + 0xb1), n, core::ptr::null_mut(), core::ptr::null_mut()));
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPW11_ENSAIO = true;
     let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| league_add_result(liga, p, jogo)));
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn copy_table(liga: usize) -> usize {
     }
     if cpw11_w(liga + 0xa7) == -1 && n > 0 {
         if n > 0x32 {
-            return orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%)(liga); // ponytail: a caixa, só a original
+            return original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%)(liga); // ponytail: a caixa, só a original
         }
         let v = n.wrapping_sub(1).wrapping_mul(cpw11_w(liga + 0x3c));
         core::ptr::write_unaligned((liga + 0xa7) as *mut i16, v);
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn copy_table(liga: usize) -> usize {
     let linha = |i: i32| (i as usize).wrapping_mul(0x3b);
     let c = alocar((n as i32 * 0x3b) as u32);
     if c == 0 {
-        aviso_em(0x9f15f4, 0x1061);
+        show_error_at(0x9f15f4, 0x1061);
         return 0;
     }
     core::ptr::copy_nonoverlapping(tab as *const u8, c as *mut u8, n as i32 as usize * 0x3b);
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn copy_table(liga: usize) -> usize {
 /// (calculado antes) e a cópia devolvida igual à tabela, linha a linha (fora os ponteiros dos vetores novos), com os
 /// vetores de confrontos e de forma iguais aos da tabela.
 unsafe extern "thiscall" fn comparar_copy_table(liga: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     let tab = cpw11_d(liga + 0xb1);
     let n = cpw11_w(liga + 0x3e);
     if tab == 0 || n <= 0 || n > 0x32 {
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn comparar_copy_table(liga: usize) -> usize {
 /// estatística (0x4a2540); solta o vetor (0x9452ca).
 unsafe extern "thiscall" fn league_set_predicted_positions(liga: usize) {
     if cpw11_d(liga + 8) == 0 {
-        return aviso_em(0x9f15f4, 0x189e);
+        return show_error_at(0x9f15f4, 0x189e);
     }
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn league_set_predicted_positions(liga: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
     let v = alocar(((cpw11_w(liga + 0x3e) as i32) << 2) as u32);
     if v == 0 {
-        return aviso_em(0x9f15f4, 0x18a6);
+        return show_error_at(0x9f15f4, 0x18a6);
     }
     let mut i = 0i32;
     while i < cpw11_w(liga + 0x3e) as i32 {
@@ -219,14 +219,14 @@ unsafe extern "thiscall" fn league_set_predicted_positions(liga: usize) {
 /// do vetor ordenada pelo núcleo da 0x4c08f0 (chaves num Vec); depois, o registro de cada clube (a última vez que ele
 /// aparece) tem de ter em +0x72 a posição planejada.
 unsafe extern "thiscall" fn comparar_league_set_predicted_positions(liga: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let n = cpw11_w(liga + 0x3e) as i32;
     if cpw11_d(liga + 8) == 0 || n <= 0 {
         return o(liga); // ponytail: a caixa ou nada a ordenar, só a original
     }
     let mut v: Vec<u32> = (0..n as usize).map(|i| cpw11_d(cpw11_d(liga + 0xb1) + 0x3b * i) as u32).collect();
     let mut k = vec![0i32; n as usize];
-    cpt13_ordenar_com(v.as_mut_ptr(), k.as_mut_ptr(), n);
+    sort_clubs_by_strength(v.as_mut_ptr(), k.as_mut_ptr(), n);
     o(liga);
     let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let mut erros = Vec::new();

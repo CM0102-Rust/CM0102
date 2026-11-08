@@ -10,14 +10,14 @@ unsafe fn cpz5_w(a: usize) -> i16 {
 
 /// A linha da tabela de estatísticas das táticas ([this], 0x28 bytes por tática) usada pelo clube: a palavra +0 do
 /// registro de 0x91 bytes do clube (id em +0) na tabela tática (+0x601).
-unsafe fn cpz5_linha(this: usize, clube: usize) -> usize {
+unsafe fn tactic_stats_row(this: usize, clube: usize) -> usize {
     let id = cpz5_d(clube);
     let k = cpz5_w(cpz5_d(this + 0x601).wrapping_add(id.wrapping_mul(0x91))) as i32;
     cpz5_d(this).wrapping_add((k as isize * 0x28) as usize)
 }
 
 /// x < 1 vale 1 (palavra com sinal), como as três comparações antes de cada `fild`.
-fn cpz5_pelo_menos_1(x: i16) -> f64 {
+fn at_least_one(x: i16) -> f64 {
     if x < 1 { 1.0 } else { x as f64 }
 }
 
@@ -25,14 +25,14 @@ fn cpz5_pelo_menos_1(x: i16) -> f64 {
 /// do motor (0x6ba9a0, com o placar agregado; fixture +0 ≠ −2). Jogo nulo: a caixa da linha 0x1f9 e 0. Mandante (+0x1c)
 /// ou visitante (+0x20) dirigido por humano (0x600a50 com 0, 1, 0, 0; cdecl 5): 0. Senão, para cada lado (clube nulo:
 /// a caixa da linha 0x20a e segue), o registro da partida pelo clube (0x7e4750, num registro local que começa com a
-/// data padrão 0x54a110) soma na linha da tática do clube (cpz5_linha): +2 jogos, +4 vitórias (+3 pontos em +0xe), +6
+/// data padrão 0x54a110) soma na linha da tática do clube (tactic_stats_row): +2 jogos, +4 vitórias (+3 pontos em +0xe), +6
 /// empates (+1 ponto), +8 derrotas, +0xa gols pró (+0x19 do registro, com sinal), +0xc contra (+0x1a); com p = jogos,
 /// a = pró, b = contra e c = pontos (cada um pelo menos 1), q = c/p, g = a/p, h = g·q², r = p/b: +0x10 = r·h·g, +0x18
 /// = r·g·q²·q, +0x20 = r·r·h (a ordem das contas do x87). A escolha da formação do computador (0x6e0230) lê +2 e as
 /// três razões. Devolve 1.
 unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u32 {
     if jogo == 0 {
-        aviso_em(0xa8b908, 0x1f9);
+        show_error_at(0xa8b908, 0x1f9);
         return 0;
     }
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
@@ -50,10 +50,10 @@ unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u3
     for k in 0..2 {
         let c = cpz5_d(jogo + 0x1c + 4 * k);
         if c == 0 {
-            aviso_em(0xa8b908, 0x20a);
+            show_error_at(0xa8b908, 0x20a);
             continue;
         }
-        let l = cpz5_linha(this, c);
+        let l = tactic_stats_row(this, c);
         registro(jogo, c, pr);
         let m = |o: usize| (l + o) as *mut i16;
         crate::comparacao::ramo("cpz_5 linha da tatica");
@@ -70,10 +70,10 @@ unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u3
         }
         *m(0xa) = (*m(0xa)).wrapping_add(pro as i16); // cpz5: os gols pró
         *m(0xc) = (*m(0xc)).wrapping_add(contra as i16);
-        let a = cpz5_pelo_menos_1(*m(0xa));
-        let b = cpz5_pelo_menos_1(*m(0xc));
-        let c = cpz5_pelo_menos_1(*m(0xe));
-        let p = cpz5_pelo_menos_1(*m(2));
+        let a = at_least_one(*m(0xa));
+        let b = at_least_one(*m(0xc));
+        let c = at_least_one(*m(0xe));
+        let p = at_least_one(*m(2));
         let q = c / p;
         let q2 = q * q;
         let g = a / p;
@@ -90,11 +90,11 @@ unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u3
 /// Comparador da 0x896290: lado a lado nas linhas das táticas dos dois clubes (0x28 bytes cada) e na devolução; o
 /// registro da partida é local. Jogo ou clube nulos: a caixa, só a original.
 unsafe extern "thiscall" fn comparar_record_tactic_result(this: usize, jogo: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if jogo == 0 || cpz5_d(jogo + 0x1c) == 0 || cpz5_d(jogo + 0x20) == 0 {
         return o(this, jogo);
     }
-    let reg = [(cpz5_linha(this, cpz5_d(jogo + 0x1c)), 0x28), (cpz5_linha(this, cpz5_d(jogo + 0x20)), 0x28)];
+    let reg = [(tactic_stats_row(this, cpz5_d(jogo + 0x1c)), 0x28), (tactic_stats_row(this, cpz5_d(jogo + 0x20)), 0x28)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo), || record_tactic_result(this, jogo));
     PLACAR.registrar(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
     r
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn comparar_record_tactic_result(this: usize, jogo: usi
 /// dword +0x52 do registro de 0x91 bytes da linha na tabela tática (+0x601).
 unsafe extern "thiscall" fn get_captain(this: usize, clube: usize, time: u32) -> u32 {
     if clube == 0 {
-        aviso_em(0xa8b908, 0x527);
+        show_error_at(0xa8b908, 0x527);
         return 0;
     }
     let linha: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn get_captain(this: usize, clube: usize, time: u32) ->
 
 /// Comparador da 0x8976a0: pela devolução (só lê; a linha nula ou fora da faixa mostra a caixa nas duas).
 unsafe extern "thiscall" fn comparar_get_captain(this: usize, clube: usize, time: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if clube == 0 {
         return o(this, clube, time);
     }
@@ -133,11 +133,11 @@ unsafe extern "thiscall" fn comparar_get_captain(this: usize, clube: usize, time
 /// (0x8982b0; −1: 0); grava o dword apontado em +0x52 do registro da linha (+0x601) e devolve 1.
 unsafe extern "thiscall" fn set_captain(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
     if clube == 0 {
-        aviso_em(0xa8b908, 0x579);
+        show_error_at(0xa8b908, 0x579);
         return 0;
     }
     if pessoa == 0 {
-        aviso_em(0xa8b908, 0x581);
+        show_error_at(0xa8b908, 0x581);
         return 0;
     }
     let linha: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn set_captain(this: usize, clube: usize, pessoa: usize
 /// Comparador da 0x897880: lado a lado no dword do capitão da linha (achada antes pela 0x8982b0, que só lê) e na
 /// devolução. Clube ou ponteiro nulos, ou sem linha: só a original.
 unsafe extern "thiscall" fn comparar_set_captain(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if clube == 0 || pessoa == 0 {
         return o(this, clube, pessoa, time);
     }

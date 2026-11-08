@@ -45,15 +45,15 @@ unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, hoje: usize, fa
         let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x84d910usize);
         // ponytail: nas caixas a original zera só o al (o resto do eax vem da caixa); quem chama lê o byte
         if inscritos(this) < 0 {
-            aviso_em(0xa82810, 0x161);
+            show_error_at(0xa82810, 0x161);
             return 0;
         }
         if cqt5_virtual(this, 0x8c) < 0 {
-            aviso_em(0xa82810, 0x168);
+            show_error_at(0xa82810, 0x168);
             return 0;
         }
         if cqt5_virtual(this, 0x94) < 0 {
-            aviso_em(0xa82810, 0x16f);
+            show_error_at(0xa82810, 0x16f);
             return 0;
         }
         cqt5_virtual(this, 0x5c);
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, hoje: usize, fa
 // ponytail: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
 // original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
 unsafe extern "thiscall" fn comparar_spa_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let antes = cqt5_d(this + 0x45);
     let vira = antes == 0 && cqt5_w(cqt5_d(0xde1f58) + 0x439) as u16 as i32 == cqt5_w(this + 0x40) as i32 && fase != 0;
     let r = o(this, hoje, fase);
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn comparar_spa_cup_update_for_date(this: usize, hoje: 
 
 /// O histórico da temporada de uma copa (`record_season_honours`, 11 bytes: mov eax, [ecx+0xc]; mov ecx, [eax+o]; mov
 /// edx, [ecx]; jmp [edx+0x30]): a virtual +0x30 da fase [+0xc][o/4] (a última fase da copa: a final), com o eax dela.
-unsafe fn cqt5_historico(this: usize, o: usize, ramo: &'static str) -> i32 {
+unsafe fn record_season_honours(this: usize, o: usize, ramo: &'static str) -> i32 {
     crate::comparacao::ramo(ramo);
     let fase = cqt5_d(cqt5_d(this + 0xc) + o);
     cqt5_virtual(fase, 0x30)
@@ -85,38 +85,38 @@ unsafe fn cqt5_historico(this: usize, o: usize, ramo: &'static str) -> i32 {
 /// { 0x584ad0 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::record_season_honours()`: o histórico da fase 12
 /// (+0x30: a final da Liga dos Campeões).
 unsafe extern "thiscall" fn spa_cup_record_season_honours(this: usize) -> i32 {
-    cqt5_historico(this, 0x30, "cqt_5 historico da liga dos campeoes")
+    record_season_honours(this, 0x30, "cqt_5 historico da liga dos campeoes")
 }
 
 /// { 0x5e93e0 } (thiscall, ret 0, gre_cup.cpp): `GreCup::record_season_honours()`: o histórico da fase 10 (+0x28).
 unsafe extern "thiscall" fn spa_cup_record_season_honours_5e93e0(this: usize) -> i32 {
-    cqt5_historico(this, 0x28, "cqt_5 historico da copa da grecia")
+    record_season_honours(this, 0x28, "cqt_5 historico da copa da grecia")
 }
 
 /// { 0x637750 } (thiscall, ret 0, ire_lge_cup.cpp): `IreLgeCup::record_season_honours()`: o histórico da fase 7 (+0x1c).
 unsafe extern "thiscall" fn spa_cup_record_season_honours_637750(this: usize) -> i32 {
-    cqt5_historico(this, 0x1c, "cqt_5 historico da copa da liga irlandesa")
+    record_season_honours(this, 0x1c, "cqt_5 historico da copa da liga irlandesa")
 }
 
 /// { 0x63d770 } (thiscall, ret 0, ita_c_cup.cpp): `ItaCCup::record_season_honours()`: o histórico da fase 15 (+0x3c: o
 /// mata-mata da Copa da Série C).
 unsafe extern "thiscall" fn spa_cup_record_season_honours_63d770(this: usize) -> i32 {
-    cqt5_historico(this, 0x3c, "cqt_5 historico da copa da serie c")
+    record_season_honours(this, 0x3c, "cqt_5 historico da copa da serie c")
 }
 
 // ponytail: o histórico grava nas estatísticas das competições (acha ou acrescenta entradas: aloca); só a original
 unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours(this: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%)(this)
 }
 
 unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_5e93e0(this: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%)(this)
 }
 
 unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_637750(this: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I3%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I3%%)(this)
 }
 
 unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_63d770(this: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I4%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I4%%)(this)
 }

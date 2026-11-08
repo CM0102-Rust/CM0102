@@ -13,7 +13,7 @@ const CPY4_ESTATICAS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae
 
 /// O corpo da 0x5cbb00. No `ensaio` (o comparador), nada se grava e nada se chama além das consultas: devolve o par
 /// (primeira entrada, quantas) que iria à 0x5cbdf0, ou None se a original não a chamaria.
-unsafe fn cpy4_amistosos(this: usize, ensaio: bool) -> Option<(usize, u32)> {
+unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option<(usize, u32)> {
     // 0x54a110: thiscall(data) (lea ecx); 0x54c770: thiscall(0xae2c90, saída, 0xc) (mov ecx, 0xae2c90; 2 push);
     // 0x68d080: thiscall(lista) (mov ecx, lista; sem push); 0x945333: cdecl(vetor, conta, tamanho, comparação) (add esp,
     // 0x10); 0x5cbdd0: thiscall(entrada, ano) (mov ecx, entrada; 1 push); 0x417c10: thiscall(destino, saída, origem)
@@ -117,18 +117,18 @@ unsafe fn cpy4_amistosos(this: usize, ensaio: bool) -> Option<(usize, u32)> {
 /// (+0x34f4), as entradas com a data de hoje + 12 semanas (bsearch e as vizinhas iguais) vão à 0x5cbdf0 e o dia fica
 /// marcado.
 unsafe extern "thiscall" fn update_international_friendlies(this: usize) {
-    cpy4_amistosos(this, false);
+    update_friendlies_body(this, false);
 }
 
 /// Comparador: no primeiro dia do ano (as listas se esvaziam, liberando) e quando há amistosos a marcar (a 0x5cbdf0
 /// cria jogos e sorteia), só a original, conferindo o plano: o dia marcado em +0x34f4. Nos outros dias, lado a lado
 /// pelo dia marcado e pelas datas estáticas.
 unsafe extern "thiscall" fn comparar_update_international_friendlies(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpy4_w(0xae2c90) == 0 {
         return o(this);
     }
-    if let Some((primeira, quantas)) = cpy4_amistosos(this, true) {
+    if let Some((primeira, quantas)) = update_friendlies_body(this, true) {
         o(this);
         let dia = cpy4_w(this + 0x34f4);
         PLACAR.registrar(dia == cpy4_w(0xae2c90), || format!("update_international_friendlies(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, dia, cpy4_w(0xae2c90)));
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_update_international_friendlies(this: usize
 
 /// O técnico (nulo: o humano da vez, [0xb74c26 + 0x300 × [0xb77c7a]]) e o índice dele entre os 16 humanos (id −
 /// [0xae2364] + 16), ou None nos casos de erro da original (sem técnico ou fora de 0..15).
-unsafe fn cpy4_indice(tecnico: usize) -> Option<usize> {
+unsafe fn manager_human_index(tecnico: usize) -> Option<usize> {
     let t = if tecnico != 0 {
         tecnico
     } else {
@@ -162,16 +162,16 @@ unsafe fn cpy4_indice(tecnico: usize) -> Option<usize> {
 /// busca (0x804248). A lista escolhida pelo técnico humano (byte em +0x4c + índice). Sem técnico ou fora de 0..15: a
 /// original (caixa "Error", 0xff).
 unsafe extern "thiscall" fn get_selected_list(this: usize, tecnico: usize) -> u8 {
-    let Some(i) = cpy4_indice(tecnico) else {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, tecnico); // caixa: só a original
+    let Some(i) = manager_human_index(tecnico) else {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, tecnico); // caixa: só a original
     };
     *((this + 0x4c + i) as *const u8)
 }
 
 /// Comparador: a devolução (rotina pura); nos casos de erro, só a original (caixa).
 unsafe extern "thiscall" fn comparar_get_selected_list(this: usize, tecnico: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%);
-    if cpy4_indice(tecnico).is_none() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%);
+    if manager_human_index(tecnico).is_none() {
         return o(this, tecnico);
     }
     let r = o(this, tecnico);
@@ -184,8 +184,8 @@ unsafe extern "thiscall" fn comparar_get_selected_list(this: usize, tecnico: usi
 /// de busca (0x804460). Grava a lista escolhida (byte) em +0x4c + índice do técnico humano e devolve 1. Sem técnico ou
 /// fora de 0..15: a original (caixa "Error", 0).
 unsafe extern "thiscall" fn set_selected_list(this: usize, lista: u32, tecnico: usize) -> u32 {
-    let Some(i) = cpy4_indice(tecnico) else {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(%%I2%%)(this, lista, tecnico); // caixa: só a original
+    let Some(i) = manager_human_index(tecnico) else {
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(%%I2%%)(this, lista, tecnico); // caixa: só a original
     };
     *((this + 0x4c + i) as *mut u8) = lista as u8;
     1
@@ -193,8 +193,8 @@ unsafe extern "thiscall" fn set_selected_list(this: usize, lista: u32, tecnico: 
 
 /// Comparador: lado a lado pelos 16 bytes das listas escolhidas, e a devolução; nos casos de erro, só a original.
 unsafe extern "thiscall" fn comparar_set_selected_list(this: usize, lista: u32, tecnico: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(%%I2%%);
-    if cpy4_indice(tecnico).is_none() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(%%I2%%);
+    if manager_human_index(tecnico).is_none() {
         return o(this, lista, tecnico);
     }
     let reg = [(this + 0x4c, 0x10)];

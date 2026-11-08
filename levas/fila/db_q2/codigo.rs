@@ -5,7 +5,7 @@
 /// chegou. Pessoa nula: caixa "Error" e 0xff (a original). Só o ax é devolvido (quem chama usa al).
 unsafe extern "C" fn database_get_staff_age(pessoa: usize, data: *const u16) -> u16 {
     if pessoa == 0 {
-        return orig::<unsafe extern "C" fn(usize, *const u16) -> u16>(%%I0%%)(pessoa, data);
+        return original_fn::<unsafe extern "C" fn(usize, *const u16) -> u16>(%%I0%%)(pessoa, data);
     }
     let dia_nasc = core::ptr::read_unaligned((pessoa + 0x10) as *const i16) as i32;
     let anos = core::ptr::read_unaligned(data.add(1)).wrapping_sub(core::ptr::read_unaligned((pessoa + 0x12) as *const u16));
@@ -75,7 +75,7 @@ unsafe extern "C" fn database_is_staff_eu_national(pessoa: usize, nacao_do_clube
 }
 
 unsafe extern "C" fn comparar_database_get_staff_age(pessoa: usize, data: *const u16) -> u16 {
-    let o = orig::<unsafe extern "C" fn(usize, *const u16) -> u16>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, *const u16) -> u16>(%%I0%%);
     if pessoa == 0 {
         return o(pessoa, data); // caixa: só a original
     }
@@ -86,14 +86,14 @@ unsafe extern "C" fn comparar_database_get_staff_age(pessoa: usize, data: *const
 }
 
 unsafe extern "C" fn comparar_nation_allows_free_transfers(nacao: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(nacao);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(nacao);
     let n = nation_allows_free_transfers(nacao);
     PLACAR.registrar(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
 unsafe extern "C" fn comparar_database_is_staff_eu_national(pessoa: usize, nacao_do_clube: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(pessoa, nacao_do_clube);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(pessoa, nacao_do_clube);
     let n = database_is_staff_eu_national(pessoa, nacao_do_clube);
     PLACAR.registrar(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", pessoa, nacao_do_clube, r, n));
     r

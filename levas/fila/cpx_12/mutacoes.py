@@ -5,11 +5,11 @@
 # primeiro jogador que conta da chamada; o da categoria, no tipo 1 da competicao (liga), colado na escolha.
 MUTACOES = [
     ('cpx12_sem_nota',
-     'cpx12_mais_w(r + 0xe, nota as u16); // cpx12: a nota',
+     'add_u16_at(r + 0xe, nota as u16); // cpx12: a nota',
      '// mutacao: a nota fora da soma',
      'cpx_12 jogo registrado'),
     ('cpx12_sem_jogo',
-     'cpx12_mais_b(r, 1); // cpx12: o jogo',
+     'add_u8_at(r, 1); // cpx12: o jogo',
      '// mutacao: o jogo fora da conta',
      'cpx_12 jogo registrado'),
     ('cpx12_categorias_da_liga_trocadas',

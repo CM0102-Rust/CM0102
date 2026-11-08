@@ -6,7 +6,7 @@ unsafe fn cqo11_d(a: usize) -> usize {
 
 /// Os clubes da tabela de clubes ([0xae23b4], 0x245 bytes) que a passada olha: [0xae235c] − 2 × [0xae2350] (sem as
 /// seleções [inferência]).
-unsafe fn cqo11_clubes() -> i32 {
+unsafe fn ita_cup_club_count_without_nations() -> i32 {
     (cqo11_d(0xae235c) as i32).wrapping_sub((cqo11_d(0xae2350) as i32).wrapping_mul(2))
 }
 
@@ -21,12 +21,12 @@ unsafe fn cqo11_comp(c: usize, o: usize) -> Option<usize> {
 }
 
 /// O clube é da Itália (+0x53 a nação; [0x9cf360] o id da Itália).
-unsafe fn cqo11_italiano(c: usize) -> bool {
+unsafe fn is_italian_club(c: usize) -> bool {
     cqo11_comp(c, 0x53) == Some(cqo11_d(0x9cf360))
 }
 
 /// A posição na temporada anterior (+0x5f, byte com sinal; 0 o campeão [inferência]).
-unsafe fn cqo11_posicao(c: usize) -> i8 {
+unsafe fn last_season_position(c: usize) -> i8 {
     *((c + 0x5f) as *const i8)
 }
 
@@ -37,32 +37,32 @@ unsafe fn cqo11_sortear(n: i32) -> i32 {
 }
 
 /// Embaralha `n` ponteiros a partir de `v` (0x4afb40: push n; push v; add esp junto -> cdecl; já em Rust).
-unsafe fn cqo11_embaralhar(v: usize, n: u32) {
+unsafe fn shuffle_pointers(v: usize, n: u32) {
     let f: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x4afb40usize);
     f(v, n);
 }
 
 /// O qsort de `n` ponteiros a partir de `v` com a comparação `cmp` (0x945333: 4 pushes; add esp, 0x10 -> cdecl).
-unsafe fn cqo11_ordenar(v: usize, n: u32, cmp: usize) {
+unsafe fn sort_pointers(v: usize, n: u32, cmp: usize) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     ordenar(v, n, 4, cmp);
 }
 
 /// A lista de ponteiros (+0xee) com o máximo `max` em +0xf2 (dword): 0x944e46 de 4 × max; sem memória, a caixa `linha`.
-unsafe fn cqo11_lista(this: usize, max: u32, arquivo: usize, linha: u32) -> Option<usize> {
+unsafe fn alloc_entrant_list(this: usize, max: u32, arquivo: usize, linha: u32) -> Option<usize> {
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, max);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let l = alocar(max * 4);
     core::ptr::write_unaligned((this + 0xee) as *mut u32, l as u32);
     if l == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return None;
     }
     Some(l)
 }
 
 /// Põe `c` no fim da lista (+0xee) e devolve verdadeiro quando a conta chega ao máximo +0xf2 (dword).
-unsafe fn cqo11_por(this: usize, n: &mut i32, c: usize) -> bool {
+unsafe fn push_entrant(this: usize, n: &mut i32, c: usize) -> bool {
     *n += 1;
     core::ptr::write_unaligned((cqo11_d(this + 0xee) + (*n as usize - 1) * 4) as *mut u32, c as u32);
     *n == cqo11_d(this + 0xf2) as i32
@@ -77,25 +77,25 @@ unsafe fn cqo11_por(this: usize, n: &mut i32, c: usize) -> bool {
 /// cada pote (0x90cfc0(8), seguindo para o próximo do pote se já saiu). Depois os 3 primeiros da Série B anterior e os
 /// da Série A anterior do 10º ao 15º (até completar 48) e, sem conferir antes, os 9 primeiros da Série A anterior.
 /// Devolve 1.
-unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
-    let l = match cqo11_lista(this, 0x30, 0x9ea23c, 0x2e1) {
+unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
+    let l = match alloc_entrant_list(this, 0x30, 0x9ea23c, 0x2e1) {
         Some(l) => l,
         None => return (0, 0),
     };
     let (serie_a, serie_b, c1a, c1b) = (cqo11_d(0x9cf570), cqo11_d(0x9cf574), cqo11_d(0x9cf578), cqo11_d(0x9cf57c));
     let mut v = [0usize; 32];
     let mut k = 0usize;
-    let n = cqo11_clubes();
+    let n = ita_cup_club_count_without_nations();
     'grupos: {
         let mut i = 0;
         while i < n {
             let c = cqo11_clube(i);
             i += 1;
-            if !cqo11_italiano(c) {
+            if !is_italian_club(c) {
                 continue;
             }
             let antes = cqo11_comp(c, 0x5b);
-            if antes == Some(serie_b) && cqo11_posicao(c) < 3 || antes == Some(serie_a) && cqo11_posicao(c) < 0xf {
+            if antes == Some(serie_b) && last_season_position(c) < 3 || antes == Some(serie_a) && last_season_position(c) < 0xf {
                 continue;
             }
             if cqo11_comp(c, 0x57) == Some(serie_b) {
@@ -106,7 +106,7 @@ unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
                 }
                 continue;
             }
-            let p = cqo11_posicao(c);
+            let p = last_season_position(c);
             let entra = match antes {
                 None => false,
                 Some(x) if x == serie_b => p == 3 || p == 4 || p > 0x10,
@@ -126,7 +126,7 @@ unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
             while i < n {
                 let c = cqo11_clube(i);
                 i += 1;
-                if !cqo11_italiano(c) {
+                if !is_italian_club(c) {
                     continue;
                 }
                 let agora = cqo11_comp(c, 0x57);
@@ -134,7 +134,7 @@ unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
                     continue;
                 }
                 let antes = cqo11_comp(c, 0x5b);
-                if (antes == Some(c1a) || antes == Some(c1b)) && cqo11_posicao(c) == lugar {
+                if (antes == Some(c1a) || antes == Some(c1b)) && last_season_position(c) == lugar {
                     crate::comparacao::ramo("cqo_11 completar com a c1");
                     v[k] = c;
                     k += 1;
@@ -146,7 +146,7 @@ unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
             lugar = lugar.wrapping_add(1);
         }
     }
-    cqo11_ordenar(v.as_mut_ptr() as usize, k as u32, 0x640590);
+    sort_pointers(v.as_mut_ptr() as usize, k as u32, 0x640590);
     let mut m = 0i32;
     for _ in 0..8 {
         let mut pote = 0usize;
@@ -167,27 +167,27 @@ unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
     }
     'b: {
         let mut i = 0;
-        while i < cqo11_clubes() {
+        while i < ita_cup_club_count_without_nations() {
             let c = cqo11_clube(i);
             i += 1;
-            if !cqo11_italiano(c) {
+            if !is_italian_club(c) {
                 continue;
             }
             let antes = cqo11_comp(c, 0x5b);
-            let p = cqo11_posicao(c);
+            let p = last_season_position(c);
             if antes == Some(serie_b) && p < 3 || antes == Some(serie_a) && p > 8 && p < 0xf { // cqo11: os que entram na 2ª rodada
-                if cqo11_por(this, &mut m, c) {
+                if push_entrant(this, &mut m, c) {
                     break 'b;
                 }
             }
         }
     }
     let mut i = 0;
-    while i < cqo11_clubes() {
+    while i < ita_cup_club_count_without_nations() {
         let c = cqo11_clube(i);
         i += 1;
-        if cqo11_italiano(c) && cqo11_comp(c, 0x5b) == Some(serie_a) && cqo11_posicao(c) < 9 {
-            if cqo11_por(this, &mut m, c) {
+        if is_italian_club(c) && cqo11_comp(c, 0x5b) == Some(serie_a) && last_season_position(c) < 9 {
+            if push_entrant(this, &mut m, c) {
                 break;
             }
         }
@@ -196,13 +196,13 @@ unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
 }
 
 unsafe extern "thiscall" fn ita_cup_select_entrants(this: usize) -> i32 {
-    cqo11_copa_da_italia(this).0
+    select_coppa_italia_entrants(this).0
 }
 
 /// Lado a lado para as rotinas que alocam a lista de ponteiros +0xee e sorteiam: o +0xf2, o [0xb67a34] e o estado do
 /// sorteador a partir do mesmo estado (a cópia sorteia sem contar); a original deixa a lista dela em +0xee, a cópia faz
 /// a sua, comparada nos inscritos que ela gravou e liberada.
-unsafe fn cqo11_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
+unsafe fn compare_select_entrants(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
@@ -237,8 +237,8 @@ unsafe fn cqo11_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
 }
 
 unsafe extern "thiscall" fn comparar_ita_cup_select_entrants(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
-    cqo11_comparar("ita_cup_select_entrants", this, || o(this), || cqo11_copa_da_italia(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
+    compare_select_entrants("ita_cup_select_entrants", this, || o(this), || select_coppa_italia_entrants(this))
 }
 
 /// { 0x63dfe0 } (thiscall, ret 0, ita_c_cup.cpp): `ItaCCup::select_entrants()`: os 90 inscritos da Copa da Série C (+0xf2
@@ -247,23 +247,23 @@ unsafe extern "thiscall" fn comparar_ita_cup_select_entrants(this: usize) -> i32
 /// que vieram da C1 em 4º, 5º ou 6º vão, um a um, para as vagas 80, 81... (trocados com o que estava lá). Os 80 primeiros
 /// são embaralhados (0x4afb40), ordenados pela longitude (qsort com 0x53fe50) e cada uma das 8 dezenas deles
 /// embaralhada (os grupos por região [inferência]); as 10 últimas vagas ficam como estão. Devolve 1.
-unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
-    let l = match cqo11_lista(this, 0x5a, 0x9ea204, 0x322) {
+unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
+    let l = match alloc_entrant_list(this, 0x5a, 0x9ea204, 0x322) {
         Some(l) => l,
         None => return (0, 0),
     };
     let divisoes = [cqo11_d(0x9cf578), cqo11_d(0x9cf57c), cqo11_d(0x9cf580), cqo11_d(0x9cf584), cqo11_d(0x9cf588)];
     let mut m = 0i32;
     let mut i = 0;
-    while i < cqo11_clubes() {
+    while i < ita_cup_club_count_without_nations() {
         let c = cqo11_clube(i);
         i += 1;
-        if !cqo11_italiano(c) {
+        if !is_italian_club(c) {
             continue;
         }
         match cqo11_comp(c, 0x57) {
             Some(d) if divisoes.contains(&d) => {
-                if cqo11_por(this, &mut m, c) {
+                if push_entrant(this, &mut m, c) {
                     break;
                 }
             }
@@ -278,7 +278,7 @@ unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
             Some(x) => x,
             None => continue,
         };
-        let p = cqo11_posicao(c);
+        let p = last_season_position(c);
         if antes == serie_b || (antes == c1a || antes == c1b) && (p == 3 || p == 4 || p == 5) {
             crate::comparacao::ramo("cqo_11 vagas do fim da copa da serie c");
             let e = l + (j as i16 as isize * 4) as usize;
@@ -291,57 +291,57 @@ unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
             }
         }
     }
-    cqo11_embaralhar(l, 0x50);
-    cqo11_ordenar(l, 0x50, 0x53fe50);
+    shuffle_pointers(l, 0x50);
+    sort_pointers(l, 0x50, 0x53fe50);
     crate::comparacao::ramo("cqo_11 dezenas da copa da serie c");
     for k in 0..8usize {
-        cqo11_embaralhar(l + k * 0x28, 0xa); // cqo11: as dezenas da Copa da Série C
+        shuffle_pointers(l + k * 0x28, 0xa); // cqo11: as dezenas da Copa da Série C
     }
     (1, m)
 }
 
 unsafe extern "thiscall" fn ita_cup_select_entrants_63dfe0(this: usize) -> i32 {
-    cqo11_copa_c(this).0
+    select_serie_c_cup_entrants(this).0
 }
 
 unsafe extern "thiscall" fn comparar_ita_cup_select_entrants_63dfe0(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
-    cqo11_comparar("ita_cup_select_entrants_63dfe0", this, || o(this), || cqo11_copa_c(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
+    compare_select_entrants("ita_cup_select_entrants_63dfe0", this, || o(this), || select_serie_c_cup_entrants(this))
 }
 
 /// { 0x65fa60 } (thiscall, ret 0, ita_super.cpp): `ItaSuper::init_team_list()`: a lista de dois (+0x3e = 2, 0xc bytes
 /// em +0xa7; sem memória, a caixa da linha 0xc2 e −1). O campeão da Série A ([0x9cf570]; sem ele, a caixa 0xcb e 0) e o
 /// da Copa da Itália ([0x9cf71c]; sem ele, 0xd4 e 0); se é o mesmo clube, o segundo vira o vice da Copa (sem ele, 0xe0
 /// e 0). Classe e situação 0 nos dois; devolve 1.
-unsafe fn cqo11_supercopa(this: usize) -> (i32, i32) {
+unsafe fn init_supercoppa_teams(this: usize) -> (i32, i32) {
     const F: usize = 0x9ea934;
-    let l = match cqm12_lista(this, F, 0xc2) {
+    let l = match alloc_two_team_list(this, F, 0xc2) {
         Some(l) => l,
         None => return (-1, 0),
     };
     let a = cqm12_colocado(0x9cf570, 0); // cqo11: o campeão da Série A
-    if !cqm12_vaga(l, 0, a, F, 0xcb) {
+    if !set_team_slot(l, 0, a, F, 0xcb) {
         return (0, 0);
     }
     let b = cqm12_colocado(0x9cf71c, 0);
-    if !cqm12_vaga(l, 1, b, F, 0xd4) {
+    if !set_team_slot(l, 1, b, F, 0xd4) {
         return (0, 0);
     }
     if a == b {
         crate::comparacao::ramo("cqo_11 dobradinha italiana");
-        if !cqm12_vaga(l, 1, cqm12_colocado(0x9cf71c, 1), F, 0xe0) {
+        if !set_team_slot(l, 1, cqm12_colocado(0x9cf71c, 1), F, 0xe0) {
             return (0, 0);
         }
     }
     crate::comparacao::ramo("cqo_11 clubes da supercopa da italia");
-    cqm12_fim(l)
+    finish_two_team_list(l)
 }
 
 unsafe extern "thiscall" fn ita_cup_init_team_list(this: usize) -> i32 {
-    cqo11_supercopa(this).0
+    init_supercoppa_teams(this).0
 }
 
 unsafe extern "thiscall" fn comparar_ita_cup_init_team_list(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
-    cqm12_comparar("ita_cup_init_team_list", this, || o(this), || cqo11_supercopa(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
+    compare_team_list("ita_cup_init_team_list", this, || o(this), || init_supercoppa_teams(this))
 }

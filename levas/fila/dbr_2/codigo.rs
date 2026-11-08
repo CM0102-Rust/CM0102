@@ -10,7 +10,7 @@ unsafe extern "C" fn database_is_polynesian_nation(nacao: usize) -> u32 {
 }
 
 unsafe extern "C" fn comparar_database_is_polynesian_nation(nacao: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nacao);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nacao);
     let n = database_is_polynesian_nation(nacao);
     PLACAR.registrar(r == n, || format!("database_is_polynesian_nation({:x}) original={} rust={}", nacao, r, n));
     r
@@ -40,7 +40,7 @@ unsafe extern "C" fn database_get_coaching_job_name(cargo: u32, genero: usize) -
 }
 
 unsafe extern "C" fn comparar_database_get_coaching_job_name(cargo: u32, genero: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(u32, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(u32, usize) -> usize>(%%I1%%);
     // o texto (os nomes traduzidos cabem em 64) e o byte do gênero
     let com = [(0xae1980usize, 64usize), (genero, 1)];
     let regioes = if genero != 0 { &com[..] } else { &com[..1] };
@@ -56,7 +56,7 @@ unsafe extern "C" fn comparar_database_get_coaching_job_name(cargo: u32, genero:
 /// competições (0x44aa20, 0x4a5690, 0x4a7f50).
 unsafe extern "C" fn database_format_years_between_dates(fim: usize, inicio: usize, texto: usize, tamanho: i32) -> u32 {
     if texto == 0 || tamanho < 5 || fim == 0 || inicio == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(%%I2%%)(fim, inicio, texto, tamanho);
+        return original_fn::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(%%I2%%)(fim, inicio, texto, tamanho);
     }
     let w = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const i16);
     let mut anos = w(fim, 2).wrapping_sub(w(inicio, 2));
@@ -69,7 +69,7 @@ unsafe extern "C" fn database_format_years_between_dates(fim: usize, inicio: usi
 }
 
 unsafe extern "C" fn comparar_database_format_years_between_dates(fim: usize, inicio: usize, texto: usize, tamanho: i32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(%%I2%%);
     if texto == 0 || tamanho < 5 || fim == 0 || inicio == 0 {
         return o(fim, inicio, texto, tamanho); // caixa: só a original
     }

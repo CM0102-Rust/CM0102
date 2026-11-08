@@ -9,7 +9,7 @@ type Cqq4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 /// As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-unsafe fn cqq4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqq4Rodada]) {
+unsafe fn spa_second_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqq4Rodada]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(0x68a160usize);
     let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -54,28 +54,28 @@ struct Cqq4Natal {
     linha: u32,
 }
 
-unsafe fn cqq4_natal(t: usize, ano: u32, n: &Cqq4Natal, arquivo: usize) {
+unsafe fn set_rounds_with_christmas(t: usize, ano: u32, n: &Cqq4Natal, arquivo: usize) {
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
-    cqq4_rodadas(t, ano, 0, n.comeco);
+    spa_second_set_league_rounds(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
     construir(&mut d, 1, 0xb, ano, 0xffff_ffff);
     let dia = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (dia.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
     let caso = if k as u32 > 6 {
-        aviso_em(arquivo, n.linha);
+        show_error_at(arquivo, n.linha);
         7
     } else {
         k as usize
     };
     let meio = n.casos[caso];
-    cqq4_rodadas(t, ano, n.comeco.len() as i32, meio);
-    cqq4_rodadas(t, ano, (n.comeco.len() + meio.len()) as i32, n.fim);
+    spa_second_set_league_rounds(t, ano, n.comeco.len() as i32, meio);
+    spa_second_set_league_rounds(t, ano, (n.comeco.len() + meio.len()) as i32, n.fim);
 }
 
 /// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `cqq4_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
-unsafe fn cqq4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+/// `cqq4_gravados`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
+unsafe fn spa_second_compare_schedule_all_stages(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -89,7 +89,7 @@ unsafe fn cqq4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i1
             let n = *rodadas as usize;
             cqq4_gravados(a, a, n) == cqq4_gravados(b, a, n)
         } else {
-            cql10_gravados(a, *rodadas) == cql10_gravados(b, *rodadas)
+            eng_cc_cup_written_round_bytes(a, *rodadas) == eng_cc_cup_written_round_bytes(b, *rodadas)
         }
     } else {
         a == 0 && b == 0
@@ -252,15 +252,15 @@ unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, fase: u32, r
             *extra = 0;
             let t = alocar(0xaaa);
             if t == 0 {
-                aviso_em(0xa828bc, 0xa9);
+                show_error_at(0xa828bc, 0xa9);
                 return 0;
             }
             crate::comparacao::ramo("cqq_4 calendario da segunda espanhola");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             if (ano as i16) % 2 != 0 {
-                cqq4_rodadas(t, ano, 0, &CQQ4_SEGUNDA_IMPAR_TODAS);
+                spa_second_set_league_rounds(t, ano, 0, &CQQ4_SEGUNDA_IMPAR_TODAS);
             } else {
-                cqq4_natal(t, ano, &CQQ4_SEGUNDA_PAR_NATAL, 0xa828bc);
+                set_rounds_with_christmas(t, ano, &CQQ4_SEGUNDA_PAR_NATAL, 0xa828bc);
             }
             t
         }
@@ -269,6 +269,6 @@ unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, fase: u32, r
 }
 
 unsafe extern "thiscall" fn comparar_spa_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqq4_comparar("spa_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| spa_second_create_schedule(this, fase, r, e, l))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    spa_second_compare_schedule_all_stages("spa_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| spa_second_create_schedule(this, fase, r, e, l))
 }

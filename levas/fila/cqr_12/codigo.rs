@@ -13,7 +13,7 @@ unsafe fn cqr12_pd(a: usize, v: usize) {
 }
 
 /// O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
-unsafe fn cqr12_sorteado(this: usize, k: usize) -> usize {
+unsafe fn con_merc_cup_drawn_club(this: usize, k: usize) -> usize {
     cqr12_d(cqr12_d(this + 0xee) + k * 4) // cqr12: o sorteado k
 }
 
@@ -41,17 +41,17 @@ unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize, hoje: usiz
             crate::comparacao::ramo("cqr_12 sorteio da merconorte");
             clubes(this);
             if primeiro(this) == 0 {
-                aviso_em(0x9a7d6c, 0x385);
+                show_error_at(0x9a7d6c, 0x385);
                 // ponytail: a original devolve só o al = 0 (o resto do eax é o que a caixa deixou); quem chama lê o byte
                 return 0;
             }
             if jogos(this) == 0 {
-                aviso_em(0x9a7d6c, 0x38b);
+                show_error_at(0x9a7d6c, 0x38b);
                 // ponytail: a original devolve só o al = 0 (o resto do eax é o que a caixa deixou); quem chama lê o byte
                 return 0;
             }
             if ordenar(this, 0) == 0 {
-                aviso_em(0x9a7d6c, 0x392);
+                show_error_at(0x9a7d6c, 0x392);
                 // ponytail: a original devolve só o al = 0 (o resto do eax é o que a caixa deixou); quem chama lê o byte
                 return 0;
             }
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize, hoje: usiz
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 3 fases
 // criadas e a fase atual (+0x30) a última delas.
 unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = cqr12_d(this + 0x45) == 0
         && completo != 0
         && (cqr12_w(this + 0xb8) as u16).wrapping_add(cqr12_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -104,14 +104,14 @@ unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(this: usize) -
     let t = novo(0xec);
     cqr12_pd(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0x9a7d6c, 0x145);
+        show_error_at(0x9a7d6c, 0x145);
         return 0;
     }
     let mut i = 0i8;
     while (i as i16) < cqr12_w(this + 0x3e) {
         crate::comparacao::ramo("cqr_12 linha do primeiro grupo");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
-        linha(this, i as u8 as u32, cqr12_sorteado(this, i as usize), 0, 0);
+        linha(this, i as u8 as u32, con_merc_cup_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
     noticia(this);
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(this: usize) -
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
 unsafe extern "thiscall" fn comparar_con_merc_cup_create_first_group_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqr12_d(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -159,14 +159,14 @@ unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usize, g: i32)
         core::mem::transmute(0x68b100usize);
     let times = alocar(0x10);
     if times == 0 {
-        aviso_em(0x9a7d6c, 0x1e9);
+        show_error_at(0x9a7d6c, 0x1e9);
         return 0;
     }
     let mut k = g * 4 + 4;
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
         crate::comparacao::ramo("cqr_12 time do grupo");
-        cqr12_pd(times + n * 4, cqr12_sorteado(this, k as usize)); // cqr12: o time na vaga do grupo
+        cqr12_pd(times + n * 4, con_merc_cup_drawn_club(this, k as usize)); // cqr12: o time na vaga do grupo
         k += 1;
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr12_d(cqr12_d(this) + 0x3c));
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usize, g: i32)
     soltar(tabela);
     let f = cqr12_d(cqr12_d(this + 0xc) + g as usize * 4);
     if f == 0 {
-        aviso_em(0x9a7d6c, 0x1ff);
+        show_error_at(0x9a7d6c, 0x1ff);
         return 0;
     }
     noticia(f);
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usize, g: i32)
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 unsafe extern "thiscall" fn comparar_con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(%%I2%%);
     let lista = cqr12_d(this + 0xee);
     if lista == 0 || !(0..3).contains(&g) {
         return o(this, g);

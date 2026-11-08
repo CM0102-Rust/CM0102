@@ -9,12 +9,12 @@ unsafe fn cpp5_w(a: usize, v: u16) {
 }
 
 /// A entrada de 9 bytes do clube na Shortlist_Manager (+0xdc; +0 as 40 vagas de 0x25 bytes, +8 o estado).
-unsafe fn cpp5_entrada(this: usize, clube: usize) -> usize {
+unsafe fn shortlist_club_entry(this: usize, clube: usize) -> usize {
     cpp5_d(this + 0xdc).wrapping_add(cpp5_d(clube).wrapping_mul(9))
 }
 
 /// A primeira diferença entre duas leituras de memória (endereço, original, Rust), para a mensagem.
-fn cpp5_dif(a: &crate::comparacao::Memoria, b: &crate::comparacao::Memoria) -> Option<(usize, u8, u8)> {
+fn first_memory_diff(a: &crate::comparacao::Memoria, b: &crate::comparacao::Memoria) -> Option<(usize, u8, u8)> {
     for ((ea, va), (_, vb)) in a.0.iter().zip(b.0.iter()) {
         if let Some(k) = (0..va.len()).find(|&k| va[k] != vb[k]) {
             return Some((ea + k, va[k], vb[k]));
@@ -77,8 +77,8 @@ unsafe extern "thiscall" fn update_club_shortlist(this: usize, clube: usize) {
     let soltar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x844660usize);
     let avaliar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x83cb40usize);
     let verba: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x83b6e0usize);
-    soltar(this, clube, cpp5_entrada(this, clube));
-    avaliar(this, cpp5_entrada(this, clube), clube, 1, 0);
+    soltar(this, clube, shortlist_club_entry(this, clube));
+    avaliar(this, shortlist_club_entry(this, clube), clube, 1, 0);
     crate::comparacao::ramo("cpp_5 refazer lista");
     verba(this, clube); // a verba de transferências
 }
@@ -131,22 +131,22 @@ unsafe extern "thiscall" fn suspend_clubs_shortlisting_player(this: usize, jogad
 
 /// Comparador: lado a lado pelas 40 vagas da entrada (sem chamadas).
 unsafe extern "stdcall" fn comparar_shortlist_set_up_formation_slots(entrada: usize) {
-    let o = orig::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
     let reg = [(cpp5_d(entrada), 40 * 0x25)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(entrada), || shortlist_set_up_formation_slots(entrada));
-    PLACAR.registrar(igual, || format!("shortlist_set_up_formation_slots(formacao {}) primeira diferença {:x?}", *((entrada + 7) as *const i8), cpp5_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("shortlist_set_up_formation_slots(formacao {}) primeira diferença {:x?}", *((entrada + 7) as *const i8), first_memory_diff(&mo, &mr)));
 }
 
 /// Comparador: a 0x83cb40 reavalia o elenco (sorteios, ofertas, vagas de muitos clubes): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
 unsafe extern "thiscall" fn comparar_update_club_shortlist(this: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
 }
 
 /// Comparador: lado a lado pelas entradas (9 bytes) e, com `limpar`, pelas vagas (40 × 0x25) dos clubes do plano: os
 /// clubes que a 0x842180 (pura) junta antes, numa lista própria. Cada lado cria e libera a sua lista.
 unsafe extern "thiscall" fn comparar_suspend_clubs_shortlisting_player(this: usize, jogador: usize, limpar: u8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u8)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8)>(%%I2%%);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let interessados: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x842180usize);
@@ -172,5 +172,5 @@ unsafe extern "thiscall" fn comparar_suspend_clubs_shortlisting_player(this: usi
     destruir(lista);
     liberar(lista);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogador, limpar), || suspend_clubs_shortlisting_player(this, jogador, limpar));
-    PLACAR.registrar(igual, || format!("suspend_clubs_shortlisting_player(jogador {:x}, limpar {}, {} regiões) primeira diferença {:x?}", cpp5_d(jogador), limpar, reg.len(), cpp5_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("suspend_clubs_shortlisting_player(jogador {:x}, limpar {}, {} regiões) primeira diferença {:x?}", cpp5_d(jogador), limpar, reg.len(), first_memory_diff(&mo, &mr)));
 }

@@ -4,7 +4,7 @@
 /// (INJURY 0x62c400 em [0xb63d28] ≠ 2), id (+0) < [0xae2364] (com sinal), habilidade atual (+5 do jogador, curto com
 /// sinal) acima do `limite` e o `extra` (os atributos do jogador). Na ordem da original (a 0x62c400 só para os da
 /// posição). Contador de 8 bits (no máximo 50).
-unsafe fn dbo2_contar(clube: usize, limite: i32, posicao: impl Fn(usize) -> bool, extra: impl Fn(usize) -> bool) -> u8 {
+unsafe fn count_squad_above_ability_with(clube: usize, limite: i32, posicao: impl Fn(usize) -> bool, extra: impl Fn(usize) -> bool) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let mut n = 0u8;
@@ -28,7 +28,7 @@ unsafe fn dbo2_contar(clube: usize, limite: i32, posicao: impl Fn(usize) -> bool
 }
 
 /// A reputação do clube (+0x80, curto com sinal).
-unsafe fn dbo2_reputacao(clube: usize) -> i32 {
+unsafe fn club_reputation(clube: usize) -> i32 {
     core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32
 }
 
@@ -40,13 +40,13 @@ unsafe extern "C" fn club_has_enough_hard_workers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    let limite = (dbo2_reputacao(clube) / 65 + 40).clamp(40, 0x8c);
-    let n = dbo2_contar(clube, limite, |_| true, |j| *((j + 0x44) as *const i8) > 14);
+    let limite = (club_reputation(clube) / 65 + 40).clamp(40, 0x8c);
+    let n = count_squad_above_ability_with(clube, limite, |_| true, |j| *((j + 0x44) as *const i8) > 14);
     (n > 4) as u8 // esforcados (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_enough_hard_workers(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_has_enough_hard_workers(clube);
     PLACAR.registrar(r == n, || format!("club_has_enough_hard_workers({:x}) original={} rust={}", clube, r, n));
     r
@@ -78,7 +78,7 @@ unsafe extern "C" fn club_has_fit_goalkeeper(clube: usize) -> u8 {
 }
 
 unsafe extern "C" fn comparar_club_has_fit_goalkeeper(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_has_fit_goalkeeper(clube);
     PLACAR.registrar(r == n, || format!("club_has_fit_goalkeeper({:x}) original={} rust={}", clube, r, n));
     r
@@ -92,16 +92,16 @@ unsafe extern "C" fn club_has_ball_winning_midfielders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    let rep = dbo2_reputacao(clube);
+    let rep = club_reputation(clube);
     let limite = (rep / 75 + 25).clamp(40, 0x87);
     let a = (rep / 500 + 5).min(14);
     let meia = |j: usize| *((j + 0x14) as *const u8) == 20 || *((j + 0x12) as *const u8) == 20 || *((j + 0x13) as *const u8) == 20;
-    let n = dbo2_contar(clube, limite, meia, |j| *((j + 0x44) as *const i8) as i32 > a && *((j + 0x3e) as *const i8) as i32 > a);
+    let n = count_squad_above_ability_with(clube, limite, meia, |j| *((j + 0x44) as *const i8) as i32 > a && *((j + 0x3e) as *const i8) as i32 > a);
     (n > 1) as u8 // meias que roubam (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_ball_winning_midfielders(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     let n = club_has_ball_winning_midfielders(clube);
     PLACAR.registrar(r == n, || format!("club_has_ball_winning_midfielders({:x}) original={} rust={}", clube, r, n));
     r

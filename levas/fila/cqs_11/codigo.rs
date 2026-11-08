@@ -43,7 +43,7 @@ impl Cqs11Nacao {
 /// 3 × 16 trocas sorteadas). Devolve 1.
 /// A original guarda as listas na pilha sem zerá-las: com menos clubes que as vagas, ela lê sobra; a cópia lê zero
 /// [inferência: nesta carreira as quatro nações e a MLS têm clubes que bastam; o comparador confere a lista].
-unsafe fn cqs11_convidados(this: usize) -> u32 {
+unsafe fn select_invited_clubs(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
@@ -54,7 +54,7 @@ unsafe fn cqs11_convidados(this: usize) -> u32 {
     let lista = alocar(0x40);
     cqs11_pd(this + 0xee, lista);
     if lista == 0 {
-        aviso_em(0x9a7d6c, 0x262);
+        show_error_at(0x9a7d6c, 0x262);
         return 0;
     }
     let (mut mexico, mut colombia, mut peru, mut bolivia) = (Cqs11Nacao::novo(), Cqs11Nacao::novo(), Cqs11Nacao::novo(), Cqs11Nacao::novo());
@@ -125,14 +125,14 @@ unsafe fn cqs11_convidados(this: usize) -> u32 {
 }
 
 unsafe extern "thiscall" fn con_merc_cup_select_invited_clubs(this: usize) -> u32 {
-    cqs11_convidados(this)
+    select_invited_clubs(this)
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
 /// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
 unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usi
         lo.set(cqs11_d(this + 0xee));
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| cqs11_convidados(this));
+        let r = crate::aleatorio::sem_contar(|| select_invited_clubs(this));
         lr.set(cqs11_d(this + 0xee));
         cqs11_pd(this + 0xee, lo.get());
         r
@@ -164,10 +164,10 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usi
 /// A fase seguinte de um torneio com grupos e mata-mata (`advance_stage`, a virtual +0x28): na última fase (+0x30 ≥
 /// +0x2c − 1, com sinal), a caixa da linha e volta; senão +0x30 sobe e, chegando a `mata`, o mata-mata (call direto com
 /// o ecx da copa -> thiscall, ret 0).
-unsafe fn cqs11_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata: i32, rotina: usize, ramo: &'static str) {
+unsafe fn con_merc_cup_advance_stage_cqs11_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata: i32, rotina: usize, ramo: &'static str) {
     let f = cqs11_d(this + 0x30) as i32;
     if f >= (cqs11_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(arquivo, linha);
+        return show_error_at(arquivo, linha);
     }
     let f = f + 1;
     cqs11_pd(this + 0x30, f as usize);
@@ -180,7 +180,7 @@ unsafe fn cqs11_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata: i32
 
 // ponytail: o mata-mata aloca e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um (fora da última
 // fase, que dá a caixa e não muda nada).
-unsafe fn cqs11_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
+unsafe fn con_merc_cup_compare_advance_stage(nome: &str, this: usize, original: impl FnOnce()) {
     let f = cqs11_d(this + 0x30) as i32;
     let ultima = f >= (cqs11_d(this + 0x2c) as i32).wrapping_sub(1);
     original();
@@ -191,21 +191,21 @@ unsafe fn cqs11_comparar_fase_seguinte(nome: &str, this: usize, original: impl F
 /// { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
 /// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
 unsafe extern "thiscall" fn conmebol_merc_advance_stage(this: usize) {
-    cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
+    con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
 }
 
 unsafe extern "thiscall" fn comparar_conmebol_merc_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqs11_comparar_fase_seguinte("conmebol_merc_advance_stage", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    con_merc_cup_compare_advance_stage("conmebol_merc_advance_stage", this, || o(this))
 }
 
 /// { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
 /// América: a caixa da linha 0x29d na última; chegando a 2 (depois dos 2 grupos-fase), o mata-mata (0x5e18a0).
 unsafe extern "thiscall" fn goldcup_advance_stage(this: usize) {
-    cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
+    con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
 }
 
 unsafe extern "thiscall" fn comparar_goldcup_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqs11_comparar_fase_seguinte("goldcup_advance_stage", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    con_merc_cup_compare_advance_stage("goldcup_advance_stage", this, || o(this))
 }

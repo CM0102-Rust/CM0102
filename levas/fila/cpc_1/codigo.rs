@@ -2,7 +2,7 @@
 
 /// A lista das partidas de (ano, dia, fatia, grupo) no gerenciador `this` (0x5abf10, thiscall ret 0x10, original:
 /// carrega o ano se preciso), com o cursor voltado ao começo (+0xa = +2), como as duas originais fazem; nula: 0.
-unsafe fn cpc1_lista(this: usize, ano: u32, dia: u32, fatia: u32, grupo: u32) -> usize {
+unsafe fn get_fixture_list_rewound(this: usize, ano: u32, dia: u32, fatia: u32, grupo: u32) -> usize {
     let lista: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(0x5abf10usize);
     let l = lista(this, ano, dia, fatia, grupo);
     if l != 0 {
@@ -12,14 +12,14 @@ unsafe fn cpc1_lista(this: usize, ano: u32, dia: u32, fatia: u32, grupo: u32) ->
 }
 
 /// O próximo item da lista `l` (0x68d1b0, next_list_item), ou 0.
-unsafe fn cpc1_proximo(l: usize) -> usize {
+unsafe fn list_next_item(l: usize) -> usize {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     proximo(l)
 }
 
 /// A partida `f` passa pelo filtro da find_next_fixture? Cada filtro em -1 deixa pass_ball: a competição (+0), a fase
 /// (+0x34, curto com sinal) e os dois clubes (cada um o mandante +0xc ou o visitante +0x10).
-unsafe fn cpc1_passa(f: usize, comp: i32, fase: i32, clube_a: i32, clube_b: i32) -> bool {
+unsafe fn fixture_matches_next_filter(f: usize, comp: i32, fase: i32, clube_a: i32, clube_b: i32) -> bool {
     let d = |o: usize| core::ptr::read_unaligned((f + o) as *const i32);
     let clube = |c: i32| c == -1 || c == d(0xc) || c == d(0x10);
     (comp == -1 || comp == d(0)) // a competição
@@ -30,7 +30,7 @@ unsafe fn cpc1_passa(f: usize, comp: i32, fase: i32, clube_a: i32, clube_b: i32)
 
 /// { 0x5ac920 } (thiscall, ret 0x2c, fix_man.cpp): `FIXTURE_MANAGER::find_next_fixture(ano*, dia*, fatia*, adiante,
 /// comp, fase, clube_a, clube_b, ...)`: a partida seguinte (ou anterior, `adiante` 0) ao cursor (ano, dia, fatia),
-/// o próprio cursor incluído, que passa pelo filtro (cpc1_passa). O grupo das listas vem da 0x48dd70 (a competição
+/// o próprio cursor incluído, que passa pelo filtro (fixture_matches_next_filter). O grupo das listas vem da 0x48dd70 (a competição
 /// da tabela [0xae23d0] + 107 × comp, 0). Adiante: fatias até 2, dias até 365 (0x16e exclusivo), anos seguintes no
 /// dia 0 (a fatia só volta a 0 na virada do dia); atrás: fatias até 0, depois 2, dias até 0, anos anteriores no dia
 /// 0x16d. A cinco anos do ano do cursor (adiante: com sinal menos sem sinal; atrás: com sinal), 0. Achou: grava o
@@ -45,13 +45,13 @@ unsafe extern "thiscall" fn find_next_fixture(this: usize, pano: *mut u16, pdia:
     let grupo = grupo_de(tabela.wrapping_add((comp as usize).wrapping_mul(107)), 0) as u8 as u32;
     let (mut ano, mut dia, mut fatia) = (*pano, *pdia, *pfatia as u16);
     let achar = |ano: u16, dia: u16, fatia: u16| -> usize {
-        let l = cpc1_lista(this, ano as u32, dia as u32, fatia as u32, grupo);
+        let l = get_fixture_list_rewound(this, ano as u32, dia as u32, fatia as u32, grupo);
         if l == 0 {
             return 0;
         }
         loop {
-            let f = cpc1_proximo(l);
-            if f == 0 || cpc1_passa(f, comp, fase, clube_a, clube_b) {
+            let f = list_next_item(l);
+            if f == 0 || fixture_matches_next_filter(f, comp, fase, clube_a, clube_b) {
                 return f;
             }
         }
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn find_next_fixture(this: usize, pano: *mut u16, pdia:
 
 unsafe extern "thiscall" fn comparar_find_next_fixture(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, fase: i32, clube_a: i32, clube_b: i32, a9: u32, a10: u32, a11: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(%%I0%%);
     let antes = (*pano, *pdia, *pfatia);
     let reg = [(pano as usize, 2), (pdia as usize, 2), (pfatia as usize, 1)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg,
@@ -142,10 +142,10 @@ unsafe extern "thiscall" fn is_stadium_in_use(this: usize, estadio: usize, dia: 
         }
         let mut s = ini;
         while s <= fim {
-            let l = cpc1_lista(this, ano, dia, (ano & 0xffff_ff00) | s as u8 as u32, g as u32);
+            let l = get_fixture_list_rewound(this, ano, dia, (ano & 0xffff_ff00) | s as u8 as u32, g as u32);
             if l != 0 {
                 loop {
-                    let f = cpc1_proximo(l);
+                    let f = list_next_item(l);
                     if f == 0 {
                         break;
                     }
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn friendly_international_date_resolve(this: usize, ano
 }
 
 /// A original (ret 4) com eax = ano, como no único chamador.
-unsafe fn cpc1_data_original(o: usize, this: usize, ano: u32) -> u32 {
+unsafe fn call_original_with_year(o: usize, this: usize, ano: u32) -> u32 {
     let r: u32;
     core::arch::asm!(
         "push {a}",
@@ -194,8 +194,8 @@ unsafe fn cpc1_data_original(o: usize, this: usize, ano: u32) -> u32 {
 }
 
 unsafe extern "thiscall" fn comparar_friendly_international_date_resolve(this: usize, ano: u32) -> u32 {
-    let o = orig::<usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 11)], || cpc1_data_original(o, this, ano),
+    let o = original_fn::<usize>(%%I2%%);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 11)], || call_original_with_year(o, this, ano),
         || friendly_international_date_resolve(this, ano));
     PLACAR.registrar(igual /* o eax é lixo de pilha: só a memória */, || format!("friendly_international_date_resolve({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         this, ano, r, n, mo, mr));

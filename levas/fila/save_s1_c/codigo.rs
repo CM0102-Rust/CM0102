@@ -8,30 +8,30 @@
 // RLE: byte <= 0x80 sai como está; > 0x80 = (byte − 0x80) cópias do byte seguinte (1 a 0x7f).
 
 /// Lê um dword sem alinhamento no ZFILE.
-unsafe fn zf_u(z: usize, o: usize) -> i32 {
+unsafe fn zf_read_i32(z: usize, o: usize) -> i32 {
     core::ptr::read_unaligned((z + o) as *const i32)
 }
 
 /// Grava um dword sem alinhamento no ZFILE.
-unsafe fn zf_por(z: usize, o: usize, v: i32) {
+unsafe fn zf_write_i32(z: usize, o: usize, v: i32) {
     core::ptr::write_unaligned((z + o) as *mut i32, v)
 }
 
 /// O próximo byte comprimido do item: do buffer de leitura (+0x41705, cursor +0xa3185 até +0xa318d)
 /// ou, acabado, de um `fread` de 0x30d40 bytes (o primeiro byte do bloco novo, mesmo se veio vazio).
-unsafe fn zf_proximo_byte(z: usize) -> u8 {
+unsafe fn zf_next_byte(z: usize) -> u8 {
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(0x945bfeusize);
-    let c = zf_u(z, 0xa3185);
-    if c < zf_u(z, 0xa318d) {
+    let c = zf_read_i32(z, 0xa3185);
+    if c < zf_read_i32(z, 0xa318d) {
         let b = *((z + 0x41705 + c as usize) as *const u8);
-        zf_por(z, 0xa3185, c + 1);
+        zf_write_i32(z, 0xa3185, c + 1);
         return b;
     }
     // ponytail: o ramo marca o bloco, nao cada chamada (a zread roda milhoes de vezes na carga)
     crate::comparacao::ramo("save zread bloco");
-    zf_por(z, 0xa318d, ler(z + 0x41705, 1, 0x30d40, zf_u(z, 0) as usize));
+    zf_write_i32(z, 0xa318d, ler(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize));
     let b = *((z + 0x41705) as *const u8);
-    zf_por(z, 0xa3185, 1);
+    zf_write_i32(z, 0xa3185, 1);
     b
 }
 
@@ -42,41 +42,41 @@ unsafe fn zf_proximo_byte(z: usize) -> u8 {
 /// como a original: `tam` 0 derruba as duas).
 unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
     let ler: unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32 = core::mem::transmute(0x945bfeusize);
-    if z == 0 || zf_u(z, 4) != 0 {
+    if z == 0 || zf_read_i32(z, 4) != 0 {
         return 0;
     }
-    let tamanho_do_item = zf_u(z, 0x29 + 0x10c * zf_u(z, 0xc) as usize);
+    let tamanho_do_item = zf_read_i32(z, 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize);
     let mut pedido = tam.wrapping_mul(quantos);
-    let pos = zf_u(z, 8);
+    let pos = zf_read_i32(z, 8);
     if pos > tamanho_do_item.wrapping_sub(pedido) {
         pedido = tamanho_do_item.wrapping_sub(pos);
         if pedido <= 0 {
             return 0;
         }
     }
-    let fim = zf_u(z, 8).wrapping_add(pedido);
-    zf_por(z, 8, fim);
-    if zf_u(z, 0x19) != 4 {
+    let fim = zf_read_i32(z, 8).wrapping_add(pedido);
+    zf_write_i32(z, 8, fim);
+    if zf_read_i32(z, 0x19) != 4 {
         crate::comparacao::ramo("save zread tipo 3");
         let q = pedido / tam;
-        zf_por(z, 8, tam.wrapping_mul(q).wrapping_sub(pedido).wrapping_add(fim));
-        return ler(buf, tam, q, zf_u(z, 0) as usize);
+        zf_write_i32(z, 8, tam.wrapping_mul(q).wrapping_sub(pedido).wrapping_add(fim));
+        return ler(buf, tam, q, zf_read_i32(z, 0) as usize);
     }
     let mut k = 0i32;
     if pedido > 0 {
         'fora: loop {
             // o resto da repetição pendente
-            let n = zf_u(z, 0x14);
-            if n != 0 && zf_u(z, 0x10) < n {
+            let n = zf_read_i32(z, 0x14);
+            if n != 0 && zf_read_i32(z, 0x10) < n {
                 loop {
                     if k >= pedido {
                         break 'fora;
                     }
                     *buf.add(k as usize) = *((z + 0x18) as *const u8);
                     k += 1;
-                    let e = zf_u(z, 0x10) + 1;
-                    zf_por(z, 0x10, e);
-                    if e >= zf_u(z, 0x14) {
+                    let e = zf_read_i32(z, 0x10) + 1;
+                    zf_write_i32(z, 0x10, e);
+                    if e >= zf_read_i32(z, 0x14) {
                         break;
                     }
                 }
@@ -84,18 +84,18 @@ unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize
             if k >= pedido {
                 break;
             }
-            zf_por(z, 0x14, 0);
-            zf_por(z, 0x10, 0);
+            zf_write_i32(z, 0x14, 0);
+            zf_write_i32(z, 0x10, 0);
             loop {
-                let b = zf_proximo_byte(z);
+                let b = zf_next_byte(z);
                 if b <= 0x80 {
                     *buf.add(k as usize) = b;
                     k += 1;
                 } else {
-                    zf_por(z, 0x14, b as i32 - 0x80);
-                    *((z + 0x18) as *mut u8) = zf_proximo_byte(z);
+                    zf_write_i32(z, 0x14, b as i32 - 0x80);
+                    *((z + 0x18) as *mut u8) = zf_next_byte(z);
                 }
-                if zf_u(z, 0x14) == 0 {
+                if zf_read_i32(z, 0x14) == 0 {
                     if k >= pedido {
                         break 'fora;
                     }
@@ -114,23 +114,23 @@ unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize
 // ponytail: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
 // (carga, --sav) e a gravação (o zseek relê pela zread) passam por aqui.
 unsafe extern "C" fn comparar_zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    orig::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(%%I0%%)(buf, tam, quantos, z)
+    original_fn::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(%%I0%%)(buf, tam, quantos, z)
 }
 
 /// Um byte comprimido para o buffer de escrita (+0x72445, cursor +0xa3189); cheio, grava o buffer
 /// inteiro (`fwrite`) e o byte vai para o começo.
-unsafe fn zf_soltar(z: usize, b: u8) {
+unsafe fn zf_put_byte(z: usize, b: u8) {
     let escrever: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
-    let p = zf_u(z, 0xa3189);
+    let p = zf_read_i32(z, 0xa3189);
     if p < 0x30d40 {
         *((z + 0x72445 + p as usize) as *mut u8) = b;
-        zf_por(z, 0xa3189, p + 1);
+        zf_write_i32(z, 0xa3189, p + 1);
         return;
     }
     // ponytail: o ramo marca o bloco, nao cada chamada (a zwrite roda milhoes de vezes no save)
     crate::comparacao::ramo("save zwrite bloco");
-    escrever(z + 0x72445, 1, p, zf_u(z, 0) as usize);
-    zf_por(z, 0xa3189, 1);
+    escrever(z + 0x72445, 1, p, zf_read_i32(z, 0) as usize);
+    zf_write_i32(z, 0xa3189, 1);
     *((z + 0x72445) as *mut u8) = b;
 }
 
@@ -141,42 +141,42 @@ unsafe fn zf_soltar(z: usize, b: u8) {
 /// byte <= 0x80 sai literal, senão o par 0x80 + n, byte); a 0x7f sai o par e recomeça. Devolve `quantos`.
 unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
     let escrever: unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32 = core::mem::transmute(0x945ce6usize);
-    if z == 0 || zf_u(z, 4) != 1 {
+    if z == 0 || zf_read_i32(z, 4) != 1 {
         return 0;
     }
-    let item = 0x29 + 0x10c * zf_u(z, 0xc) as usize;
+    let item = 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize;
     let total = tam.wrapping_mul(quantos);
-    zf_por(z, item, zf_u(z, item).wrapping_add(total));
-    zf_por(z, 8, zf_u(z, 8).wrapping_add(total));
-    if zf_u(z, 0x19) != 4 {
+    zf_write_i32(z, item, zf_read_i32(z, item).wrapping_add(total));
+    zf_write_i32(z, 8, zf_read_i32(z, 8).wrapping_add(total));
+    if zf_read_i32(z, 0x19) != 4 {
         crate::comparacao::ramo("save zwrite tipo 3");
-        return escrever(buf, tam, quantos, zf_u(z, 0) as usize);
+        return escrever(buf, tam, quantos, zf_read_i32(z, 0) as usize);
     }
     let repetido = (z + 0x18) as *mut u8;
     let mut k = 0i32;
     while k < total {
-        let n = zf_u(z, 0x14);
+        let n = zf_read_i32(z, 0x14);
         if n != 0 {
             let c = *repetido;
             if *buf.add(k as usize) == c {
                 if n.wrapping_add(0x80) < 0xff {
-                    zf_por(z, 0x14, n + 1);
+                    zf_write_i32(z, 0x14, n + 1);
                     k += 1;
                     continue;
                 }
                 // 0x7f cópias: sai o par e recomeça
                 crate::comparacao::ramo("save zwrite par 0x7f");
-                zf_soltar(z, (n as u8).wrapping_add(0x80));
-                zf_soltar(z, *repetido);
+                zf_put_byte(z, (n as u8).wrapping_add(0x80));
+                zf_put_byte(z, *repetido);
             } else if n <= 1 && c <= 0x80 {
-                zf_soltar(z, c);
+                zf_put_byte(z, c);
             } else {
                 let contagem = (n as u8).wrapping_add(0x80);
-                zf_soltar(z, contagem);
-                zf_soltar(z, *repetido);
+                zf_put_byte(z, contagem);
+                zf_put_byte(z, *repetido);
             }
         }
-        zf_por(z, 0x14, 1);
+        zf_write_i32(z, 0x14, 1);
         *repetido = *buf.add(k as usize);
         k += 1;
     }
@@ -186,7 +186,7 @@ unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: us
 // ponytail: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
 // compara o .qst tipo 4 gravado com e sem a leva.
 unsafe extern "C" fn comparar_zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    orig::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(%%I1%%)(buf, tam, quantos, z)
+    original_fn::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(%%I1%%)(buf, tam, quantos, z)
 }
 
 /// { 0x932b00 } (cdecl, zipdir.cpp): `zclose(&z)`. Gravando: esvazia o buffer de escrita; se o item
@@ -203,20 +203,20 @@ unsafe extern "C" fn zclose(zz: *mut usize) {
         return;
     }
     crate::comparacao::ramo("save zclose");
-    let f = || zf_u(z, 0) as usize;
-    if zf_u(z, 4) == 1 {
-        let n = zf_u(z, 0xa3189);
+    let f = || zf_read_i32(z, 0) as usize;
+    if zf_read_i32(z, 4) == 1 {
+        let n = zf_read_i32(z, 0xa3189);
         if n > 0 {
             escrever(z + 0x72445, 1, n, f());
-            zf_por(z, 0xa3189, 0);
+            zf_write_i32(z, 0xa3189, 0);
         }
     } else {
-        zf_por(z, 0xa318d, 0);
-        zf_por(z, 0xa3185, 0);
+        zf_write_i32(z, 0xa318d, 0);
+        zf_write_i32(z, 0xa3185, 0);
     }
-    if zf_u(z, 4) == 1 && zf_u(z, 0x29 + 0x10c * zf_u(z, 0xc) as usize) != 0 {
-        let n = zf_u(z, 0x14);
-        if zf_u(z, 0x19) == 4 && n != 0 {
+    if zf_read_i32(z, 4) == 1 && zf_read_i32(z, 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize) != 0 {
+        let n = zf_read_i32(z, 0x14);
+        if zf_read_i32(z, 0x19) == 4 && n != 0 {
             if n <= 1 && *((z + 0x18) as *const u8) <= 0x80 {
                 escrever(z + 0x18, 1, 1, f());
             } else {
@@ -229,12 +229,12 @@ unsafe extern "C" fn zclose(zz: *mut usize) {
         escrever(z + 0x19, 0x416ec, 1, f());
     }
     fechar(f());
-    zf_por(z, 0, 0);
+    zf_write_i32(z, 0, 0);
     liberar(z);
     *zz = 0;
 }
 
 // ponytail: grava, fecha o arquivo e libera; efeito único. A prova do save compara o .qst gravado.
 unsafe extern "C" fn comparar_zclose(zz: *mut usize) {
-    orig::<unsafe extern "C" fn(*mut usize)>(%%I2%%)(zz)
+    original_fn::<unsafe extern "C" fn(*mut usize)>(%%I2%%)(zz)
 }

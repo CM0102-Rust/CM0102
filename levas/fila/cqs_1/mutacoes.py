@@ -11,12 +11,12 @@ MUTACOES = [
      'iniciar(this, (3 - n) as u8 as u32, c, 0, 0); // mutacao: as linhas de baixo para cima',
      'cqs_1 tabela da mls'),
     ('cqs1_segunda_vitoria_vale_empate',
-     'cqs1_divisao(this, 0x47b, 0, 0, 0xc2,',
-     'cqs1_divisao(this, 0x47b, 0, 0, 0xc3, /* mutacao: a vitoria vale o empate */',
+     'create_division_stage(this, 0x47b, 0, 0, 0xc2,',
+     'create_division_stage(this, 0x47b, 0, 0, 0xc3, /* mutacao: a vitoria vale o empate */',
      'cqs_1 segunda divisao'),
     ('cqs1_terceira_sem_fase_atual',
-     'cqs1_divisao(this, 0x414, 1, 1, 0xc2,',
-     'cqs1_divisao(this, 0x414, 1, 0, 0xc2, /* mutacao: a fase atual fica 0 */',
+     'create_division_stage(this, 0x414, 1, 1, 0xc2,',
+     'create_division_stage(this, 0x414, 1, 0, 0xc2, /* mutacao: a fase atual fica 0 */',
      'cqs_1 terceira divisao'),
 ]
 # Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as tres ACUSADAS (2001-081, 2001-197, 2001-085).

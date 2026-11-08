@@ -37,7 +37,7 @@ struct Cqp11Fase {
 /// Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
 /// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
-unsafe fn cqp11_tabela(this: usize, f: Option<Cqp11Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+unsafe fn create_round_table(this: usize, f: Option<Cqp11Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
     let f = match f {
         Some(f) => f,
         None => return 0,
@@ -52,7 +52,7 @@ unsafe fn cqp11_tabela(this: usize, f: Option<Cqp11Fase>, rodadas: *mut i16, ext
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar(f.tamanho);
     if t == 0 {
-        aviso_em(arquivo, f.linha);
+        show_error_at(arquivo, f.linha);
         return 0;
     }
     crate::comparacao::ramo(f.nome);
@@ -87,7 +87,7 @@ unsafe fn cqp11_tabela(this: usize, f: Option<Cqp11Fase>, rodadas: *mut i16, ext
 }
 
 /// Os bytes que as operações gravam na tabela `t` (o resto fica como veio da alocação), na ordem das operações.
-unsafe fn cqp11_gravados(ops: &[Cqp11Op], t: usize) -> Vec<u8> {
+unsafe fn written_round_table_bytes(ops: &[Cqp11Op], t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     let mut pega = |a: usize, n: usize| v.extend_from_slice(core::slice::from_raw_parts((t + a) as *const u8, n));
     for op in ops {
@@ -114,7 +114,7 @@ unsafe fn cqp11_gravados(ops: &[Cqp11Op], t: usize) -> Vec<u8> {
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
 /// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
-unsafe fn cqp11_comparar(nome: &str, fase: u32, f: Option<Cqp11Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+unsafe fn asia_club_champ_compare_round_table(nome: &str, fase: u32, f: Option<Cqp11Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = match f {
         Some(f) => f,
@@ -130,7 +130,7 @@ unsafe fn cqp11_comparar(nome: &str, fase: u32, f: Option<Cqp11Fase>, rodadas: *
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
         if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let saidas = *rodadas == r2 && (extra.is_null() || *extra == e2) && (liga.is_null() || *liga == l2);
-    let tabela = if a != 0 && b != 0 { cqp11_gravados(f.ops, a) == cqp11_gravados(f.ops, b) } else { a == 0 && b == 0 };
+    let tabela = if a != 0 && b != 0 { written_round_table_bytes(f.ops, a) == written_round_table_bytes(f.ops, b) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(b);
@@ -227,7 +227,7 @@ const CQP11_TROFEU_FINAL: [Cqp11Op; 18] = [
 /// A Liga dos Campeões asiática [inferência: o Campeonato Asiático de Clubes], as fases: −1 e 0 as eliminatórias de
 /// cada zona (2 rodadas de ida e volta em agosto e setembro), 1 e 2 os grupos finais (3 rodadas em março), 3 a fase
 /// final (semifinal, terceiro lugar e final em maio).
-fn cqp11_asia_clubes_fase(fase: u32) -> Option<Cqp11Fase> {
+fn asian_club_champ_stage(fase: u32) -> Option<Cqp11Fase> {
     let f = fase as u8 as i8;
     match f {
         -1 | 0 => Some(Cqp11Fase { liga: 0, rodadas: 2, extra: 0x480 + (f != -1) as i16, extra_checa: false, tamanho: 0xd0, linha: 0xc5,
@@ -241,20 +241,20 @@ fn cqp11_asia_clubes_fase(fase: u32) -> Option<Cqp11Fase> {
 }
 
 /// { 0x40ae90 } (thiscall, ret 0x10, asia_club_champ.cpp; a virtual +0x3c): `AsiaClubChamp::create_round_table(fase,
-/// &rodadas, &extra, &é_liga)`: a fase de `cqp11_asia_clubes_fase`.
+/// &rodadas, &extra, &é_liga)`: a fase de `asian_club_champ_stage`.
 unsafe extern "thiscall" fn asia_club_champ_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqp11_asia_clubes_fase(fase), rodadas, extra, liga, 0x987a40)
+    create_round_table(this, asian_club_champ_stage(fase), rodadas, extra, liga, 0x987a40)
 }
 
 unsafe extern "thiscall" fn comparar_asia_club_champ_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqp11_comparar("asia_club_champ_create_round_table", fase, cqp11_asia_clubes_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    asia_club_champ_compare_round_table("asia_club_champ_create_round_table", fase, asian_club_champ_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| asia_club_champ_create_round_table(this, fase, r, e, l))
 }
 
 /// A Recopa asiática, as fases: −1 e 0 as eliminatórias de cada zona (3 rodadas de agosto a março), 1 a fase final
 /// (semifinal, terceiro lugar e final em maio).
-fn cqp11_asia_recopa_fase(fase: u32) -> Option<Cqp11Fase> {
+fn asian_cup_winners_stage(fase: u32) -> Option<Cqp11Fase> {
     let f = fase as u8 as i8;
     match f {
         -1 | 0 => Some(Cqp11Fase { liga: 0, rodadas: 3, extra: 0x480 + (f != -1) as i16, extra_checa: false, tamanho: 0x138, linha: 0xc6,
@@ -266,20 +266,20 @@ fn cqp11_asia_recopa_fase(fase: u32) -> Option<Cqp11Fase> {
 }
 
 /// { 0x40cf90 } (thiscall, ret 0x10, asia_cup_winner.cpp; a virtual +0x3c): `AsiaCupWinner::create_round_table(fase,
-/// &rodadas, &extra, &é_liga)`: a fase de `cqp11_asia_recopa_fase`.
+/// &rodadas, &extra, &é_liga)`: a fase de `asian_cup_winners_stage`.
 unsafe extern "thiscall" fn asia_cup_winner_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqp11_asia_recopa_fase(fase), rodadas, extra, liga, 0x987b60)
+    create_round_table(this, asian_cup_winners_stage(fase), rodadas, extra, liga, 0x987b60)
 }
 
 unsafe extern "thiscall" fn comparar_asia_cup_winner_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cqp11_comparar("asia_cup_winner_create_round_table", fase, cqp11_asia_recopa_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    asia_club_champ_compare_round_table("asia_cup_winner_create_round_table", fase, asian_cup_winners_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| asia_cup_winner_create_round_table(this, fase, r, e, l))
 }
 
 /// O LDV Vans Trophy (o troféu da liga inglesa de baixo), as fases: −1 e 0 as chaves do Norte e do Sul (5 rodadas em
 /// jogo único de dezembro a fevereiro e a final da chave em ida e volta em março), 1 a final (abril, mando 4).
-fn cqp11_trofeu_fase(fase: u32) -> Option<Cqp11Fase> {
+fn ldv_trophy_stage(fase: u32) -> Option<Cqp11Fase> {
     let f = fase as u8 as i8;
     match f {
         -1 | 0 => Some(Cqp11Fase { liga: 0, rodadas: 5, extra: 0x41d + (f != -1) as i16, extra_checa: false, tamanho: 0x208, linha: 0xca,
@@ -291,13 +291,13 @@ fn cqp11_trofeu_fase(fase: u32) -> Option<Cqp11Fase> {
 }
 
 /// { 0x56ade0 } (thiscall, ret 0x10, eng_auto_cup.cpp; a virtual +0x3c do LDV Vans Trophy): `EngAutoCup::
-/// create_round_table(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp11_trofeu_fase`.
+/// create_round_table(fase, &rodadas, &extra, &é_liga)`: a fase de `ldv_trophy_stage`.
 unsafe extern "thiscall" fn eng_auto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqp11_trofeu_fase(fase), rodadas, extra, liga, 0x9c4180)
+    create_round_table(this, ldv_trophy_stage(fase), rodadas, extra, liga, 0x9c4180)
 }
 
 unsafe extern "thiscall" fn comparar_eng_auto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
-    cqp11_comparar("eng_auto_cup_create_round_table", fase, cqp11_trofeu_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
+    asia_club_champ_compare_round_table("eng_auto_cup_create_round_table", fase, ldv_trophy_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| eng_auto_cup_create_round_table(this, fase, r, e, l))
 }

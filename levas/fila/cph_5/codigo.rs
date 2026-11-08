@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn remove_retirement(this: usize, chave: usize) {
 }
 
 /// Está na lista de observados (0x842080 no gerente da lista [[0xde1f54]+0x856], sem clube)?
-unsafe fn cph5_observado(pessoa: usize) -> bool {
+unsafe fn player_regen_is_on_shortlist(pessoa: usize) -> bool {
     let observado: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x842080usize);
     observado(cph5_d(cph5_d(0xde1f54) as usize + 0x856) as usize, pessoa, 0) != 0
 }
@@ -50,7 +50,7 @@ unsafe fn cph5_sortear(n: i32) -> i32 {
 /// pessoa, o motivo 0x10, +0x19 = 0, o clube (−1 sem) e a data do jogo em +8 e +0x10; devolve 1. Senão 0.
 unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(pessoa: usize, saida: usize) -> u8 {
     let mut sem_registro = false;
-    if cph5_observado(pessoa) {
+    if player_regen_is_on_shortlist(pessoa) {
         return 0;
     }
     let tecnico = cph5_d(pessoa + 0x69) as usize;
@@ -65,7 +65,7 @@ unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(pessoa: usiz
     } else if cph5_d(pessoa + 0x61) == 0 {
         false
     } else {
-        if cph5_observado(pessoa) {
+        if player_regen_is_on_shortlist(pessoa) {
             return 0;
         }
         if cph5_d(pessoa + 0x39) != 0 || cph5_d(pessoa + 0x24) != 0 {
@@ -97,7 +97,7 @@ unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(pessoa: usiz
 }
 
 unsafe extern "thiscall" fn comparar_remove_retirement(this: usize, chave: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let n = (*((this + 8) as *const i32)).max(0) as usize;
     let reg = [(this + 4, 8), (cph5_d(this + 4) as usize, n * 26)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, chave), || remove_retirement(this, chave));
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn comparar_remove_retirement(this: usize, chave: usize
 
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pela saída (26 bytes), a cópia em sem_contar.
 unsafe extern "stdcall" fn comparar_player_regen_check_unemployed_retirement(pessoa: usize, saida: usize) -> u8 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I1%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I1%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((saida, 0x1a));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida),

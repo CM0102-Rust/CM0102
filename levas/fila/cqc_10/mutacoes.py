@@ -3,7 +3,7 @@
 # do contrato) e a resposta a historia, que mudam o banco e a contagem de sorteios da carreira.
 # - O interesse vale 45 dias em vez de 31: menos registros saem, mais sorteios de boato.
 # - O sorteio do boato passa de 25 a 20: mais boatos.
-# - O sorteio da reputacao para o pedido de transferencia passa de 12500 a 10000: mais pedidos (e reacoes do elenco).
+# - O sorteio da injury_word_0c para o pedido de transferencia passa de 12500 a 10000: mais pedidos (e reacoes do elenco).
 MUTACOES = [
     ('cqc10_interesse_45_dias', '        let p = mais(r + 8, fim.as_mut_ptr(), 0x1f); // cqc10: o interesse vale 31 dias',
      '        let p = mais(r + 8, fim.as_mut_ptr(), 0x2d); // mutacao: o interesse vale 31 dias', 'cqc_10 interesse'),

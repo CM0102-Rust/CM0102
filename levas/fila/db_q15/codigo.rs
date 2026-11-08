@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: a entrada da pessoa no clube (Database.cpp) ----------
 
 /// Põe a `pessoa` na primeira das `n` casas vazias a partir de `clube + d`; false se não há.
-unsafe fn ocupar_casa_do_clube(clube: usize, d: usize, n: usize, pessoa: usize) -> bool {
+unsafe fn fill_club_slot(clube: usize, d: usize, n: usize, pessoa: usize) -> bool {
     let casa = |i: usize| (clube + d + 4 * i) as *mut usize;
     match (0..n).find(|&i| core::ptr::read_unaligned(casa(i)) == 0) {
         Some(i) => {
@@ -24,7 +24,7 @@ unsafe fn ocupar_casa_do_clube(clube: usize, d: usize, n: usize, pessoa: usize) 
 /// +0x39/+0x3d clube). Devolve 1. Clube ou pessoa nulos: a original (caixa "Error" e 0).
 unsafe extern "C" fn database_add_staff_to_club(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
     if clube == 0 || pessoa == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(%%I0%%)(clube, pessoa, cargo, data, gravar, reduzir);
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(%%I0%%)(clube, pessoa, cargo, data, gravar, reduzir);
     }
     let gi = |a: usize| *(a as *const i32);
     let selecao = || gi(clube) >= gi(0xae235c).wrapping_sub(gi(0xae2350).wrapping_mul(2));
@@ -54,7 +54,7 @@ unsafe extern "C" fn database_add_staff_to_club(clube: usize, pessoa: usize, car
             }
         }
     }
-    let ocupar = |d: usize, n: usize| ocupar_casa_do_clube(clube, d, n, pessoa);
+    let ocupar = |d: usize, n: usize| fill_club_slot(clube, d, n, pessoa);
     let unica = |d: usize| {
         let p = (clube + d) as *mut usize;
         if core::ptr::read_unaligned(p) != 0 {
@@ -110,7 +110,7 @@ unsafe extern "C" fn database_add_staff_to_club(clube: usize, pessoa: usize, car
 }
 
 unsafe extern "C" fn comparar_database_add_staff_to_club(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(%%I0%%);
     if clube == 0 || pessoa == 0 {
         return o(clube, pessoa, cargo, data, gravar, reduzir); // caixa: só a original
     }

@@ -23,7 +23,7 @@ unsafe fn cpx11_financas(clube: usize) -> usize {
 static mut CPX11_ENSAIO: bool = false;
 
 /// O divisor dos prêmios: 1 + 2 + … + n (16 bits, como o ax da original).
-unsafe fn cpx11_soma_das_posicoes(n: i16) -> i32 {
+unsafe fn sum_of_positions(n: i16) -> i32 {
     let (mut s, mut k) = (0i32, 0i32);
     if n > 0 {
         loop {
@@ -50,17 +50,17 @@ unsafe extern "thiscall" fn pay_prize_money(liga: usize) {
     if e1 == 3 {
         let t = cpx11_d(0xadadfc);
         if t == 0 {
-            return aviso_em(0x9f15f4, 0x1df);
+            return show_error_at(0x9f15f4, 0x1df);
         }
         let comp = cpx11_d(t.wrapping_add(cpx11_d(cpx11_d(liga + 4)).wrapping_mul(4)));
         let pagar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(cpx11_d(cpx11_d(comp) + 0x6c));
         return pagar(comp, liga);
     }
-    let s = cpx11_soma_das_posicoes(cpx11_w(liga + 0x3e));
+    let s = sum_of_positions(cpx11_w(liga + 0x3e));
     let fundo = cpx11_d(liga + 0x28) as i32;
     if s == 0 || (fundo == i32::MIN && s == -1) {
         // ponytail: a original divide por zero (ou estoura) e cai; só a original, para cair do mesmo jeito
-        return orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(liga);
+        return original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(liga);
     }
     let parte = fundo / s;
     if cpx11_w(liga + 0x3e) <= 0 {
@@ -92,10 +92,10 @@ unsafe extern "thiscall" fn pay_prize_money(liga: usize) {
 /// outros casos, o ensaio: a cópia sem a notícia do prêmio (0x48e3e0 aloca) e a original a partir do mesmo estado, nos
 /// registros de finanças (0x167 bytes) de todos os clubes da tabela.
 unsafe extern "thiscall" fn comparar_pay_prize_money(liga: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = cpx11_w(liga + 0x3e);
     let e1 = cpx11_b(liga + 0xe1);
-    if e1 == 3 || cpx11_soma_das_posicoes(n) == 0 {
+    if e1 == 3 || sum_of_positions(n) == 0 {
         return o(liga); // ponytail: a virtual ou a divisão por zero, só a original
     }
     let mut regioes: Vec<(usize, usize)> = Vec::new();
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn league_update_staff_records_for_status(liga: usize, 
 // ponytail: os três registros acrescentam ao histórico das pessoas e mexem na reputação (alocam): só a original; a
 // cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_league_update_staff_records_for_status(liga: usize, clube: usize, situacao: u32, fase: u32, saida: usize, a: u32, b: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(%%I1%%)(liga, clube, situacao, fase, saida, a, b)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(%%I1%%)(liga, clube, situacao, fase, saida, a, b)
 }
 
 /// { 0x686670 } (thiscall, ret 0x14, league.cpp, quadro SEH sem destrutor): `League::announce_team_status(clube,
@@ -239,5 +239,5 @@ unsafe extern "thiscall" fn announce_team_status(liga: usize, clube: usize, situ
 // ponytail: a virtual +0x44 acrescenta registros e a notícia vai às caixas dos técnicos (alocam): só a original; a
 // cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_announce_team_status(liga: usize, clube: usize, situacao: u32, fase: u32, a: u32, b: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(%%I2%%)(liga, clube, situacao, fase, a, b)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(%%I2%%)(liga, clube, situacao, fase, a, b)
 }

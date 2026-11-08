@@ -5,8 +5,8 @@
 # - A vitoria vale (c / 10 + 30) por gol de saldo em vez de + 20.
 # - A nota do time no jogo soma 40 antes do fator (as partidas com o registro do jogo, a 0x6951e0 passa sempre).
 MUTACOES = [
-    ('cqc8_confianca_mais_20', '        let t = cqc8_ftol(v * cqc8_f(k)); // cqc8: a confiança pelo ajuste',
-     '        let t = cqc8_ftol(v * cqc8_f(k) * 1.2); // mutacao: a confiança pelo ajuste', 'cqc_8 confianca'),
+    ('cqc8_confianca_mais_20', '        let t = ftol_f64(v * cqc8_f(k)); // cqc8: a confiança pelo ajuste',
+     '        let t = ftol_f64(v * cqc8_f(k) * 1.2); // mutacao: a confiança pelo ajuste', 'cqc_8 confianca'),
     ('cqc8_vitoria_30', '        aj = aj.wrapping_add((c16 / 10 + 20).wrapping_mul(a - b)); // cqc8: a vitória',
      '        aj = aj.wrapping_add((c16 / 10 + 30).wrapping_mul(a - b)); // mutacao: a vitória', 'cqc_8 vitoria'),
     ('cqc8_nota_do_jogo_mais_40', '        v = v * cqc8_f(0x96d1c8) - cqc8_f(0x96d1c0); // cqc8: a nota do jogo (× 67 − 470)',

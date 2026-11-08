@@ -5,8 +5,8 @@
 # - a terceira fase embaralhando 7 em vez de 8 (outra contagem de sorteios e outros grupos).
 MUTACOES = [
     ('cqs3_grupos_vitoria_vale_empate',
-     'cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos',
-     'cqs3_grupo(this, g, 0xc3) // mutacao: a vitoria vale o empate',
+     'bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos',
+     'bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc3) // mutacao: a vitoria vale o empate',
      'cqs_3 grupo'),
     ('cqs3_segunda_fase_em_ordem',
      'const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase',

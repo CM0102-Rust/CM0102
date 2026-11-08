@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn get_language_fluency(this: usize, pessoa: usize, clu
 /// deslocamento = −1). Pessoa nula: a original (caixa fatal: o jogo termina).
 unsafe extern "thiscall" fn rewind_staff_history(this: usize, pessoa: usize) {
     if pessoa == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, pessoa); // caixa fatal: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, pessoa); // caixa fatal: só a original
     }
     crate::comparacao::ramo("cpk_7 recomecar historico");
     let par = cpk7_d(this + 0xc).wrapping_add(cpk7_d(pessoa).wrapping_mul(8));
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn rewind_staff_history(this: usize, pessoa: usize) {
 unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
     let k = casa as u8 as i8;
     if !(0..=10).contains(&k) {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I2%%)(this, casa, posicao, extra); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I2%%)(this, casa, posicao, extra); // caixa: só a original
     }
     let s = k as usize;
     let p = posicao as u16 as i16;
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32, posicao: u
 
 /// Comparador: pelo valor (a 0x4cf5f0 e a busca só leem).
 unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%)(this, pessoa, clube, idioma, pelo_contrato);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%)(this, pessoa, clube, idioma, pelo_contrato);
     let n = get_language_fluency(this, pessoa, clube, idioma, pelo_contrato);
     PLACAR.registrar(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
     r
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize, pessoa: u
 
 /// Comparador: lado a lado pelo par da pessoa (8 bytes; a 0x58f110 só grava o segundo).
 unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize, pessoa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if pessoa == 0 {
         return o(this, pessoa);
     }
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize, pessoa: u
 /// Comparador: lado a lado pela formação (+0x12d a +0x584: posições, marcas e casas no campo; a máscara +0x187b e
 /// +0x187f) e [0xb67a34] (a 0x5b73a0 zera quando falha).
 unsafe extern "thiscall" fn comparar_set_slot_position(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I2%%);
     if !(0..=10).contains(&(casa as u8 as i8)) {
         return o(this, casa, posicao, extra);
     }

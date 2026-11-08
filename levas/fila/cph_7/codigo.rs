@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn record_holder_construct(this: usize) -> usize {
 }
 
 /// O técnico (+0xcf) de um clube rival passa nos sorteios (sorteio(+0x5c) = 0 e sorteio(+0x57) > 5)?
-unsafe fn cph7_sorteado(c: usize) -> bool {
+unsafe fn rival_manager_passes_draws(c: usize) -> bool {
     cph7_sortear(*((cph7_d(c + 0xcf) as usize + 0x5c) as *const i8) as i32) == 0
         && cph7_sortear(*((cph7_d(c + 0xcf) as usize + 0x57) as *const i8) as i32) > 5
 }
@@ -102,14 +102,14 @@ unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, clube: usize) ->
     }
     for rival in [0xb3usize, 0xb7, 0xbb] {
         let r = cph7_d(clube + rival) as usize;
-        if r == 0 || cph7_d(r + 0xcf) == 0 || !cph7_sorteado(r) {
+        if r == 0 || cph7_d(r + 0xcf) == 0 || !rival_manager_passes_draws(r) {
             continue;
         }
         if cph7_d(r + 0x57) != cph7_d(clube + 0x57) {
             continue;
         }
-        let reputacao = |c: usize| *((c + 0x80) as *const i16) as i32;
-        if reputacao(clube) + 0x2ee >= reputacao(r) {
+        let injury_word_0c = |c: usize| *((c + 0x80) as *const i16) as i32;
+        if injury_word_0c(clube) + 0x2ee >= injury_word_0c(r) {
             continue; // o rival não é bem maior
         }
         if cph7_sortear(3) != 0 {
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, clube: usize) ->
         let limite = (cph7_d(0xae235c) as i32).wrapping_sub((cph7_d(0xae2350) as i32).wrapping_mul(2));
         let i = cph7_sortear(limite) as usize;
         let c = (cph7_d(0xae23b4) as usize).wrapping_add(i).wrapping_add(i.wrapping_mul(145).wrapping_mul(4));
-        if confronto(clube, c, limite) != 0 && cph7_d(c + 0xcf) != 0 && cph7_sorteado(c) {
+        if confronto(clube, c, limite) != 0 && cph7_d(c + 0xcf) != 0 && rival_manager_passes_draws(c) {
             return cph7_d(cph7_d(c + 0xcf) as usize);
         }
         b += 1;
@@ -136,14 +136,14 @@ comparar_valor!(comparar_get_scout, get_scout, %%I0%%, () -> usize);
 /// Comparador: a original grava nas saídas de verdade, a cópia em locais; a 0x4a4850 pode reordenar as estatísticas
 /// (a original primeiro; a cópia acha a tabela já em ordem e a mesma linha).
 unsafe extern "thiscall" fn comparar_get_current_run(this: usize, clube: usize, tipo: *mut u8, tamanho: *mut u8) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(%%I1%%)(this, clube, tipo, tamanho);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(%%I1%%)(this, clube, tipo, tamanho);
     let (mut t, mut n) = (0u8, 0u8);
     get_current_run(this, clube, &mut t, &mut n);
     PLACAR.registrar(*tipo == t && *tamanho == n, || format!("get_current_run({:x}) original={}/{} rust={}/{}", clube, *tipo, *tamanho, t, n));
 }
 
 unsafe extern "thiscall" fn comparar_record_holder_construct(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x10, 8)], || o(this), || record_holder_construct(this));
     PLACAR.registrar(igual && r == n, || format!("record_holder_construct {:x?} x {:x?}", mo, mr));
     r
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn comparar_record_holder_construct(this: usize) -> usi
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio, a cópia em sem_contar (as escritas são só nas
 /// locais da pilha de cada uma).
 unsafe extern "thiscall" fn comparar_pick_rival_manager_id(this: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I3%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I3%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, clube),
         || crate::aleatorio::sem_contar(|| pick_rival_manager_id(this, clube)));
     PLACAR.registrar(igual && r == n, || format!("pick_rival_manager_id({:x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));

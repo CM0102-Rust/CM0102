@@ -5,10 +5,10 @@
 # mudam. Os premios por jogos pagos (cpp_6 "premio por jogos" ~4 na base; mexem no saldo de dois clubes) deixam de sair
 # quando os jogos do premio passam a ser os de final 3.
 MUTACOES = [
-    ('cpy11_falta_nao_conta', '    cpy11_contar(r, 6); // cpy11: a falta conta na permissão',
+    ('cpy11_falta_nao_conta', '    increment_permit_counter(r, 6); // cpy11: a falta conta na permissão',
      '    let _ = r; // mutacao: a falta não conta',
      'cpy_11 falta contada'),
-    ('cpy11_jogo_nao_conta', '        cpy11_contar(r, 4); // cpy11: o jogo conta na permissão',
+    ('cpy11_jogo_nao_conta', '        increment_permit_counter(r, 4); // cpy11: o jogo conta na permissão',
      '        let _ = r; // mutacao: o jogo não conta',
      'cpy_11 jogo contado'),
     ('cpy11_premio_aos_3', '        if (jogos as i32 % 10 == 0 && jogos <= 0x32) || jogos == 1 { // cpy11: os jogos do prêmio',

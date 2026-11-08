@@ -10,7 +10,7 @@ unsafe fn cpv8_b(a: usize) -> i8 {
 
 /// A pessoa da vaga de 0x49 bytes da partida (id em −0x30): sem id (−1) ou com id fora de [0xae2364], nenhuma. A
 /// original confere o ponteiro nulo antes do id (ponteiro nulo passa).
-unsafe fn cpv8_pessoa_da_vaga(vaga: usize) -> Option<(i32, usize)> {
+unsafe fn staff_of_match_slot(vaga: usize) -> Option<(i32, usize)> {
     let id = cpv8_d(vaga - 0x30);
     if id == -1 {
         return None;
@@ -23,7 +23,7 @@ unsafe fn cpv8_pessoa_da_vaga(vaga: usize) -> Option<(i32, usize)> {
 }
 
 /// O nível da vaga para o ritmo: +4 se não for negativo, senão +0, senão o padrão da partida (+0x4d).
-unsafe fn cpv8_nivel(partida: usize, vaga: usize) -> i8 {
+unsafe fn slot_rhythm_level(partida: usize, vaga: usize) -> i8 {
     let b = cpv8_b(vaga + 4);
     if b >= 0 {
         return b;
@@ -61,14 +61,14 @@ unsafe extern "thiscall" fn apply_match_effects(this: usize, jogo: usize, partid
         let base = partida + 0x1c0 + 0x625 * lado;
         for k in 0..0x14i8 {
             let vaga = base + 0x49 * k as usize;
-            let Some((id, pessoa)) = cpv8_pessoa_da_vaga(vaga) else { continue };
+            let Some((id, pessoa)) = staff_of_match_slot(vaga) else { continue };
             let marca = cpv8_b(partida + 0x4c) != 0;
             let nivel: i8 = if k < 0xb {
-                if marca { 0x5a } else { cpv8_nivel(partida, vaga) }
+                if marca { 0x5a } else { slot_rhythm_level(partida, vaga) }
             } else if *((vaga + 2) as *const u8) == 0xff {
                 0
             } else {
-                cpv8_nivel(partida, vaga).wrapping_sub(cpv8_b(vaga + 2))
+                slot_rhythm_level(partida, vaga).wrapping_sub(cpv8_b(vaga + 2))
             };
             let c = 0x2710i32.wrapping_sub(core::ptr::read_unaligned((vaga + 6) as *const i16) as i32);
             // ponytail: a original soma o ecx inteiro: o nível nos 16 de baixo, os 16 de cima de 10000 − condição
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn apply_match_effects(this: usize, jogo: usize, partid
                 crate::comparacao::ramo("cpv_8 metade");
                 v = (v as i16 as i32) / 2; // cpv8: sem a marca do jogo, a metade
             } else if cpv8_b(pessoa + 0x18) as i32 > sorteio(3) + 0x21 {
-                v = ((v as i16 as i32) as f64 * f64_em(0x968928)) as i32;
+                v = ((v as i16 as i32) as f64 * read_f64_at(0x968928)) as i32;
             } else if (cpv8_b(pessoa + 0x18) as i32) < 0x17 - sorteio(5) {
                 crate::comparacao::ramo("cpv_8 jovem");
                 v = v.wrapping_add(v); // cpv8: o jovem em dobro
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn apply_match_effects(this: usize, jogo: usize, partid
 
 /// A pessoa tem batida na lista da partida que chega à lesão (a mesma conferência da 0x62c080)? O cursor (+0xa) volta
 /// ao que era.
-unsafe fn cpv8_tem_batida(this: usize, id: i32, pessoa: usize) -> bool {
+unsafe fn has_injury_hit(this: usize, id: i32, pessoa: usize) -> bool {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let lista = cpv8_d(this + 0x28) as usize;
     let cursor = core::ptr::read_unaligned((lista + 0xa) as *const u32);
@@ -139,18 +139,18 @@ unsafe fn cpv8_tem_batida(this: usize, id: i32, pessoa: usize) -> bool {
 /// registro de 31 bytes em [this]) de cada pessoa das vagas. Partida com batida que chega ao tipo da lesão: só a original (a lesão nova aloca e manda a
 /// notícia; a gravidade da primeira batida pode ser sobra de pilha).
 unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize, jogo: usize, partida: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let mut batida = false;
     for lado in 0..2usize {
         for k in 0..0x14usize {
             let vaga = partida + 0x1c0 + 0x625 * lado + 0x49 * k;
-            let Some((id, pessoa)) = cpv8_pessoa_da_vaga(vaga) else { continue };
+            let Some((id, pessoa)) = staff_of_match_slot(vaga) else { continue };
             if pessoa == 0 {
                 return o(this, jogo, partida);
             }
             reg.push(((cpv8_d(this) as u32).wrapping_add((id as u32).wrapping_mul(31)).wrapping_add(0xa) as usize, 4));
-            if *((vaga - 0x11) as *const u8) != 0 && cpv8_d(this + 0x28) != 0 && cpv8_tem_batida(this, id, pessoa) {
+            if *((vaga - 0x11) as *const u8) != 0 && cpv8_d(this + 0x28) != 0 && has_injury_hit(this, id, pessoa) {
                 batida = true;
             }
         }
@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn find_match_injury(this: usize, pessoa: usize) -> usi
 
 /// Comparador: lado a lado no cursor da lista e na devolução.
 unsafe extern "thiscall" fn comparar_find_match_injury(this: usize, pessoa: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let lista = cpv8_d(this + 0x28) as usize;
     let reg: &[(usize, usize)] = if lista == 0 { &[] } else { &[(lista + 0xa, 4)] };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, pessoa), || find_match_injury(this, pessoa));
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn is_player_on_holiday(_this: usize, pessoa: usize) ->
 
 /// Comparador: a devolução (só o al).
 unsafe extern "thiscall" fn comparar_is_player_on_holiday(this: usize, pessoa: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let r = o(this, pessoa);
     let n = is_player_on_holiday(this, pessoa);
     PLACAR.registrar(r == n, || format!("is_player_on_holiday({:x}) original={} rust={}", pessoa, r, n));

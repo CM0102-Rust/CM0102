@@ -1,6 +1,6 @@
 # Mutacoes da leva97 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva97.py --jogo 2001-08-20
 MUTACOES = [
-    ('d_desliga', "            if !(r2 as f64 + v4d as f64 * f64_em(0x96d818) > r1 as f64) {", "            if !(r2 as f64 + v4d as f64 * f64_em(0x96d818) > r1 as f64 + 1.0) {"),
+    ('d_desliga', "            if !(r2 as f64 + v4d as f64 * read_f64_at(0x96d818) > r1 as f64) {", "            if !(r2 as f64 + v4d as f64 * read_f64_at(0x96d818) > r1 as f64 + 1.0) {"),
     ('d_marcados', "                if prod <= sortear(0x384) + 0x32 {", "                if prod <= sortear(0x384) + 0x31 {"),
     ('d_cansa', "            *w(0x35) = (*w(0x35)).wrapping_add(0xfff1);", "            *w(0x35) = (*w(0x35)).wrapping_add(0xfff2);"),
     ('d_folego', "        let r = sortear(5) + 5;\n        let f = (j + 0x4d) as *mut f32;", "        let r = sortear(5) + 6;\n        let f = (j + 0x4d) as *mut f32;"),

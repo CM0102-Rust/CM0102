@@ -5,7 +5,7 @@
 const CQF9_LESOES: [(u32, usize, u8); 75] = [(4, 0xa6b840, 0), (3, 0xa6b83c, 1), (5, 0xa6b834, 2), (10, 0xa6b824, 3), (10, 0xa6b80c, 4), (10, 0xa6b7fc, 5), (10, 0xa6b7ec, 6), (10, 0xa6b7dc, 7), (10, 0xa6b7d0, 8), (10, 0xa6b7c0, 9), (10, 0xa6b7b4, 10), (15, 0xa6b7a0, 11), (15, 0xa6b788, 12), (10, 0xa6b778, 80), (10, 0xa6b768, 13), (10, 0xa6b758, 14), (10, 0xa6b74c, 15), (10, 0xa6b73c, 16), (10, 0xa6b730, 17), (10, 0xa6b71c, 18), (10, 0xa6b70c, 19), (10, 0xa6b6fc, 20), (10, 0xa6b6ec, 21), (10, 0xa6b6dc, 22), (10, 0xa6b6c8, 23), (10, 0xa6b6b4, 24), (10, 0xa6b6a0, 25), (10, 0xa6b690, 26), (10, 0xa6b678, 27), (10, 0xa6b664, 28), (10, 0xa6b654, 29), (10, 0xa6b644, 30), (10, 0xa6b634, 31), (10, 0xa6b628, 32), (10, 0xa6b618, 33), (10, 0xa6b608, 34), (10, 0xa6b5f8, 35), (10, 0xa6b5e4, 36), (5, 0xa6b5d8, 37), (10, 0xa6b5c8, 38), (10, 0xa6b5bc, 39), (10, 0xa6b5ac, 40), (10, 0xa6b5a0, 41), (14, 0xa6b590, 42), (10, 0xa6b584, 43), (10, 0xa6b574, 44), (10, 0xa6b564, 45), (10, 0xa6b554, 46), (5, 0xa6b548, 47), (10, 0xa6b538, 48), (10, 0xa6b52c, 49), (10, 0xa6b51c, 50), (10, 0xa6b50c, 52), (15, 0xa6b4fc, 53), (5, 0xa6b4f0, 54), (13, 0xa6b4e0, 55), (10, 0xa6b4d0, 56), (10, 0xa6b4c4, 57), (10, 0xa6b4b0, 58), (10, 0xa6b49c, 59), (10, 0xa6b48c, 60), (10, 0xa6b47c, 61), (10, 0xa6b46c, 62), (10, 0xa6b458, 63), (10, 0xa6b448, 64), (10, 0xa6b438, 65), (5, 0xa6b42c, 66), (10, 0xa6b420, 67), (5, 0xa6b414, 68), (5, 0xa6b408, 69), (13, 0xa6b3f8, 70), (10, 0xa6b3e8, 71), (19, 0xa6b3d4, 72), (10, 0xa6b3c0, 73), (10, 0xa6b3b4, 74)];
 
 /// strncmp (0x946fa0, cdecl).
-unsafe fn cqf9_strncmp(a: usize, b: usize, n: u32) -> i32 {
+unsafe fn strncmp(a: usize, b: usize, n: u32) -> i32 {
     let f: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x946fa0usize);
     f(a, b, n)
 }
@@ -16,17 +16,17 @@ unsafe fn cqf9_strncmp(a: usize, b: usize, n: u32) -> i32 {
 /// deixa o resto do eax do strncmp).
 unsafe extern "C" fn player_setup_injury_from_name(nome: usize) -> u32 {
     for &(n, texto, tipo) in CQF9_LESOES.iter() {
-        if cqf9_strncmp(nome, texto, n) == 0 {
+        if strncmp(nome, texto, n) == 0 {
             crate::comparacao::ramo("cqf_9 lesao pelo nome");
             return tipo as u32; // cqf9: o tipo da lesão pelo nome
         }
     }
-    if cqf9_strncmp(nome, 0xa6b3a8, 8) == 0 { 0x4c } else { 0x4b }
+    if strncmp(nome, 0xa6b3a8, 8) == 0 { 0x4c } else { 0x4b }
 }
 
 /// Comparador: a devolução (o al; só lê).
 unsafe extern "C" fn comparar_player_setup_injury_from_name(nome: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nome);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nome);
     let n = player_setup_injury_from_name(nome);
     PLACAR.registrar(r as u8 == n as u8, || format!("player_setup_injury_from_name({:x}) original={:x} rust={:x}", nome, r as u8, n as u8));
     r
@@ -51,29 +51,29 @@ static mut CQF9_ENSAIO: bool = false;
 static mut CQF9_FUGIU: bool = false;
 
 /// O registro de forma do jogador na tabela das lesões ([this] + 31 × id).
-unsafe fn cqf9_forma(this: usize, p: usize) -> usize {
+unsafe fn physical_record_of_player(this: usize, p: usize) -> usize {
     cqf9_d(this).wrapping_add((*(p as *const i32) as isize * 31) as usize)
 }
 
 /// Gosta/não gosta do técnico (0x547810/0x547840) e tirar dos favoritos/rejeitados (0x547c10/0x547c50), cdecl.
-unsafe fn cqf9_pref(rotina: usize, p: usize, tec: usize) -> u32 {
+unsafe fn call_preference_routine(rotina: usize, p: usize, tec: usize) -> u32 {
     let f: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(rotina);
     f(p, tec)
 }
 
 /// Acrescentar aos favoritos (0x547a10) ou aos rejeitados (0x547af0), cdecl(pessoa, outra, 1).
-unsafe fn cqf9_acrescentar(rotina: usize, p: usize, tec: usize) {
+unsafe fn injury_add_to_preference_list(rotina: usize, p: usize, tec: usize) {
     let f: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(rotina);
     f(p, tec, 1);
 }
 
 /// O técnico gostar mais: tira dos rejeitados e, com sorteio(+0x59) acima de 5, põe nos favoritos.
-unsafe fn cqf9_gostar_mais(p: usize, clube: usize) {
-    if cqf9_d(clube + 0xcf) != 0 && cqf9_pref(0x547840, p, cqf9_d(clube + 0xcf)) != 0 {
-        cqf9_pref(0x547c50, p, cqf9_d(clube + 0xcf));
+unsafe fn like_manager_more(p: usize, clube: usize) {
+    if cqf9_d(clube + 0xcf) != 0 && call_preference_routine(0x547840, p, cqf9_d(clube + 0xcf)) != 0 {
+        call_preference_routine(0x547c50, p, cqf9_d(clube + 0xcf));
     }
     if cqf9_d(clube + 0xcf) != 0 && cqf9_sortear(cqf9_sb(p + 0x59) as i32) > 5 {
-        cqf9_acrescentar(0x547a10, p, cqf9_d(clube + 0xcf));
+        injury_add_to_preference_list(0x547a10, p, cqf9_d(clube + 0xcf));
     }
 }
 
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
                 }
                 if feliz && caiu {
                     res = 2;
-                    cqf9_gostar_mais(p, clube);
+                    like_manager_more(p, clube);
                 } else {
                     if cqf9_d(0xad9c6c) != 0 && cqf9_sb(p + 0x59) < 0xc {
                         let a = cqf9_sortear(cqf9_sb(p + 0x59) as i32);
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
             if tp != 0x4d {
                 res = -1;
             } else {
-                let forma = cqf9_forma(this, p);
+                let forma = physical_record_of_player(this, p);
                 let mut v: Option<i8> = None;
                 crate::comparacao::ramo("cqf_9 tratamento");
                 if s == 0 { // cqf9: o tratamento dá certo
@@ -249,11 +249,11 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
                     if cqf9_sb(p + 0x5d) < 5 {
                         f1 = -1;
                         if clube != 0 {
-                            if cqf9_d(clube + 0xcf) != 0 && cqf9_pref(0x547810, p, cqf9_d(clube + 0xcf)) != 0 {
-                                cqf9_pref(0x547c10, p, cqf9_d(clube + 0xcf));
+                            if cqf9_d(clube + 0xcf) != 0 && call_preference_routine(0x547810, p, cqf9_d(clube + 0xcf)) != 0 {
+                                call_preference_routine(0x547c10, p, cqf9_d(clube + 0xcf));
                             }
                             if cqf9_d(clube + 0xcf) != 0 && cqf9_sortear(cqf9_sb(p + 0x5d) as i32) == 0 {
-                                cqf9_acrescentar(0x547af0, p, cqf9_d(clube + 0xcf));
+                                injury_add_to_preference_list(0x547af0, p, cqf9_d(clube + 0xcf));
                             }
                         }
                     }
@@ -262,13 +262,13 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
                     if v > 10 {
                         f1 = 1;
                         if clube != 0 {
-                            cqf9_gostar_mais(p, clube);
+                            like_manager_more(p, clube);
                         }
                     }
                 }
             }
         } else {
-            let forma = cqf9_forma(this, p);
+            let forma = physical_record_of_player(this, p);
             crate::comparacao::ramo("cqf_9 volta da lesao");
             if tp == 0x4f {
                 if s < 30000 { // cqf9: a volta 'O' completa
@@ -316,7 +316,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
 /// o registro de forma (31), o byte +0xc do registro de 79 bytes, o registro do técnico do clube e o estado do sorteio.
 /// Com a fuga na cópia (a original põe na lista, sorteia e manda notícia): só a original.
 unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, p: usize, estagio: u32, tipo: u32, forcar: u32, dias: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
     if p == 0 {
         return o(this, p, estagio, tipo, forcar, dias);
     }
@@ -333,7 +333,7 @@ unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, p: usize, e
         reg.push((c, 0x4f));
     }
     reg.push((0xae1080, 4));
-    reg.push((cqf9_forma(this, p), 31));
+    reg.push((physical_record_of_player(this, p), 31));
     reg.push((cqf9_d(0xae2d0c).wrapping_add((*(p as *const i32) as isize * 0x4f) as usize), 0x4f));
     let clube = cqf9_d(p + 0x39);
     if clube != 0 && cqf9_d(clube + 0xcf) != 0 {
@@ -361,7 +361,7 @@ unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, p: usize, e
 /// gênero do nome). Tamanho abaixo de 20: a caixa (linha 0x10d0) e o al zerado.
 unsafe extern "stdcall" fn injury_get_category_name(categoria: u32, texto: usize, tamanho: i32) -> u32 {
     if tamanho < 0x14 {
-        aviso_em(0x9e7f28, 0x10d0);
+        show_error_at(0x9e7f28, 0x10d0);
         return 0;
     }
     const NOMES: [usize; 13] = [0x9e89ac, 0x9e89a0, 0x9e8994, 0x9e8988, 0x9e8978, 0x9e8968, 0x9e8954, 0x9e8948, 0x9e893c, 0x9e892c, 0x9e8920, 0x9e8914, 0x9e8904];
@@ -370,7 +370,7 @@ unsafe extern "stdcall" fn injury_get_category_name(categoria: u32, texto: usize
         let traduzir: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
         traduzir(texto, NOMES[k as usize]);
     } else {
-        aviso_em(0x9e7f28, 0x10e7);
+        show_error_at(0x9e7f28, 0x10e7);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
     if idioma() == 3 { 2 } else { 0 }
@@ -378,7 +378,7 @@ unsafe extern "stdcall" fn injury_get_category_name(categoria: u32, texto: usize
 
 /// Comparador: lado a lado no texto (o tamanho, até 0x100) e na devolução; o tamanho curto (a caixa): só a original.
 unsafe extern "stdcall" fn comparar_injury_get_category_name(categoria: u32, texto: usize, tamanho: i32) -> u32 {
-    let o = orig::<unsafe extern "stdcall" fn(u32, usize, i32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(u32, usize, i32) -> u32>(%%I2%%);
     if tamanho < 0x14 || texto == 0 {
         return o(categoria, texto, tamanho);
     }

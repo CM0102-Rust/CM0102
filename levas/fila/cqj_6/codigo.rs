@@ -32,12 +32,12 @@ unsafe fn cqj6_fundo(this: usize, cota: i32) {
 /// `arquivo` na linha `linha` e None); os clubes de [0xae23b4] (0x245 bytes, [0xae235c] deles) cuja competição
 /// (+0x57, o id no +0) é a do global `g`, na ordem do banco, cada um na linha seguinte (League::init_table_row
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve se encheu.
-unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usize) -> Option<bool> {
+unsafe fn fra_first_fill_league_table(this: usize, arquivo: usize, linha: u32, g: usize) -> Option<bool> {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar((cqj6_w(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return None;
     }
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u32 {
     let n: i16 = if core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     core::ptr::write_unaligned((this + 0xa7) as *mut u16, 0xffff);
-    if cqj6_encher(this, 0x9ccb5c, 0x1d3, 0x9cf5cc) != Some(true) {
+    if fra_first_fill_league_table(this, 0x9ccb5c, 0x1d3, 0x9cf5cc) != Some(true) {
         return 0;
     }
     crate::comparacao::ramo("cqj_6 tabela da primeira");
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u32 {
 /// National ([0x9cf5d4]); 1. Fonte 0x9ccc0c, linha 0x171.
 unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
-    if cqj6_encher(this, 0x9ccc0c, 0x171, 0x9cf5d0) != Some(true) {
+    if fra_first_fill_league_table(this, 0x9ccc0c, 0x171, 0x9cf5d0) != Some(true) {
         return 0;
     }
     crate::comparacao::ramo("cqj_6 tabela da segunda");
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u32 {
 /// pela cota de 20.000 e a TV de 200.000 a cada clube; 1. Fonte 0x9ccc80, linha 0x15d.
 unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
-    if cqj6_encher(this, 0x9ccc80, 0x15d, 0x9cf5d4) != Some(true) {
+    if fra_first_fill_league_table(this, 0x9ccc80, 0x15d, 0x9cf5d4) != Some(true) {
         return 0;
     }
     cqj6_fundo(this, 0x4e20);
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u32 {
 /// clubes da divisão na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu, as linhas
 /// com os clubes do plano na ordem e, cheia, +0xe1 e +0x28 como a rotina grava (`cota`: o fundo da cota e 1; None: 0
 /// e 2).
-unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
+unsafe fn fra_first_compare_league_table(nome: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < cqj6_d(0xae235c) as i32 && (plano.len() as i16) < n {
@@ -148,17 +148,17 @@ unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<
 }
 
 unsafe extern "thiscall" fn comparar_fra_first_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let n: i16 = if core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
-    cqj6_comparar("fra_first_create_table", this, n, 0x9cf5cc, Some(0x30d40), || o(this))
+    fra_first_compare_league_table("fra_first_create_table", this, n, 0x9cf5cc, Some(0x30d40), || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_fra_second_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqj6_comparar("fra_second_create_table", this, 0x14, 0x9cf5d0, None, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    fra_first_compare_league_table("fra_second_create_table", this, 0x14, 0x9cf5d0, None, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_fra_third_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqj6_comparar("fra_third_create_table", this, 0x14, 0x9cf5d4, Some(0x4e20), || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    fra_first_compare_league_table("fra_third_create_table", this, 0x14, 0x9cf5d4, Some(0x4e20), || o(this))
 }

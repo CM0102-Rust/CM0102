@@ -1,12 +1,12 @@
 // ---------- %%LEVA%%a leva: a contagem e a lista do elenco do clube e se o clube pode ser dirigido (Database.cpp) ----------
 
 /// Um dos 50 lugares do elenco (+0xd7, ponteiros de pessoa) do `clube`.
-unsafe fn lugar_do_elenco(clube: usize, i: usize) -> usize {
+unsafe fn squad_slot(clube: usize, i: usize) -> usize {
     core::ptr::read_unaligned((clube + 0xd7 + 4 * i) as *const usize)
 }
 
 /// A pessoa do elenco conta: não nula e com id abaixo de [0xae2364] (com sinal).
-unsafe fn pessoa_valida_do_elenco(p: usize) -> bool {
+unsafe fn is_valid_squad_person(p: usize) -> bool {
     p != 0 && *(p as *const i32) < *(0xae2364 as *const i32)
 }
 
@@ -18,7 +18,7 @@ unsafe fn pessoa_valida_do_elenco(p: usize) -> bool {
 /// (0x4cf5a0, guardado em [0xae1080]; +4 = id) também for outro. Clube nulo: a original (caixa).
 unsafe extern "C" fn database_count_club_squad(clube: usize, modo: u32, filtro: u32) -> u8 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, u32, u32) -> u8>(%%I0%%)(clube, modo, filtro);
+        return original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(%%I0%%)(clube, modo, filtro);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let tem_reservas: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x542740usize);
@@ -28,8 +28,8 @@ unsafe extern "C" fn database_count_club_squad(clube: usize, modo: u32, filtro: 
     let contar = |c: usize, marcas: u8| -> u8 {
         let mut n = 0u8;
         for i in 0..50 {
-            let p = lugar_do_elenco(c, i);
-            if !pessoa_valida_do_elenco(p) || (marcas != 0 && *((p + 0x5e) as *const u8) & marcas == 0) {
+            let p = squad_slot(c, i);
+            if !is_valid_squad_person(p) || (marcas != 0 && *((p + 0x5e) as *const u8) & marcas == 0) {
                 continue;
             }
             if filtro != 0 && ficha(*(0xae1050 as *const usize), p) != 0
@@ -74,14 +74,14 @@ unsafe extern "C" fn database_count_club_squad(clube: usize, modo: u32, filtro: 
 /// `dobro`, senão 50), o resto até o limite zerado. Devolve 1. Clube nulo: a original (caixa e 0).
 unsafe extern "C" fn database_collect_club_squad(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(%%I1%%)(clube, vetor, dobro);
+        return original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(%%I1%%)(clube, vetor, dobro);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let limite: i8 = if dobro != 0 { 100 } else { 50 };
     let p = parceiro(clube, core::ptr::null_mut(), 1);
     if p == 0 {
         for i in 0..50 {
-            core::ptr::write_unaligned(vetor.add(i), lugar_do_elenco(clube, i));
+            core::ptr::write_unaligned(vetor.add(i), squad_slot(clube, i));
         }
         if dobro != 0 {
             for i in 50..100 {
@@ -92,8 +92,8 @@ unsafe extern "C" fn database_collect_club_squad(clube: usize, vetor: *mut usize
     }
     let mut n: i8 = 0;
     for i in 0..50 {
-        let q = lugar_do_elenco(clube, i);
-        if pessoa_valida_do_elenco(q) {
+        let q = squad_slot(clube, i);
+        if is_valid_squad_person(q) {
             core::ptr::write_unaligned(vetor.add(n as usize), q);
             n += 1;
         }
@@ -102,8 +102,8 @@ unsafe extern "C" fn database_collect_club_squad(clube: usize, vetor: *mut usize
         if n >= limite {
             break;
         }
-        let q = lugar_do_elenco(p, i);
-        if pessoa_valida_do_elenco(q) {
+        let q = squad_slot(p, i);
+        if is_valid_squad_person(q) {
             core::ptr::write_unaligned(vetor.add(n as usize), q);
             n += 1;
         }
@@ -149,7 +149,7 @@ unsafe extern "C" fn club_can_be_managed(clube: usize) -> u8 {
 }
 
 unsafe extern "C" fn comparar_database_count_club_squad(clube: usize, modo: u32, filtro: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32) -> u8>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(%%I0%%);
     if clube == 0 {
         return o(clube, modo, filtro); // caixa: só a original
     }
@@ -161,7 +161,7 @@ unsafe extern "C" fn comparar_database_count_club_squad(clube: usize, modo: u32,
 }
 
 unsafe extern "C" fn comparar_database_collect_club_squad(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(%%I1%%);
     if clube == 0 {
         return o(clube, vetor, dobro); // caixa: só a original
     }
@@ -173,7 +173,7 @@ unsafe extern "C" fn comparar_database_collect_club_squad(clube: usize, vetor: *
 }
 
 unsafe extern "C" fn comparar_club_can_be_managed(clube: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
     let marca = [(clube.wrapping_add(0x244), 1)];
     let regioes = if clube == 0 { &marca[..0] } else { &marca[..] };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(clube), || club_can_be_managed(clube));

@@ -19,7 +19,7 @@ unsafe fn cqc4_pw(a: usize, v: u16) {
 type Cqc4Data = [u8; 8];
 
 /// `a` depois de `b` como a original compara as datas: o ano (+2) sem sinal, depois o dia (+0) com sinal.
-unsafe fn cqc4_depois(a: usize, b: usize) -> bool {
+unsafe fn fix_man_date_is_after(a: usize, b: usize) -> bool {
     let (ya, yb) = (cqc4_w(a + 2), cqc4_w(b + 2));
     ya > yb || (ya == yb && (cqc4_w(a) as i16) > (cqc4_w(b) as i16))
 }
@@ -28,20 +28,20 @@ unsafe fn cqc4_depois(a: usize, b: usize) -> bool {
 /// 0x549ef0 a data (dia, ano) (push ano; push dia), 0x417c10 a atribuição (push fonte; push ret), 0x54c5b0 + dias,
 /// 0x54c8e0 − dias, 0x54c770 + semanas (push n; push ret), 0x54a2d0 o dia da semana alvo (push dest; push alvo),
 /// 0x54a3f0 o dia da semana (sem pushes).
-unsafe fn cqc4_padrao(d: &mut Cqc4Data) {
+unsafe fn date_default(d: &mut Cqc4Data) {
     let f: unsafe extern "thiscall" fn(*mut Cqc4Data) -> usize = core::mem::transmute(0x54a110usize);
     f(d);
 }
-unsafe fn cqc4_nova(d: &mut Cqc4Data, dia: u16, ano: u16) -> usize {
+unsafe fn date_from_day_year(d: &mut Cqc4Data, dia: u16, ano: u16) -> usize {
     let f: unsafe extern "thiscall" fn(*mut Cqc4Data, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
     f(d, dia as u32, ano as u32)
 }
-unsafe fn cqc4_atribuir(d: &mut Cqc4Data, fonte: usize) {
+unsafe fn date_assign(d: &mut Cqc4Data, fonte: usize) {
     let f: unsafe extern "thiscall" fn(*mut Cqc4Data, *mut Cqc4Data, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut ret = [0u8; 8];
     f(d, &mut ret, fonte);
 }
-unsafe fn cqc4_op(rotina: usize, d: usize, n: u32) -> usize {
+unsafe fn date_op(rotina: usize, d: usize, n: u32) -> usize {
     let f: unsafe extern "thiscall" fn(usize, *mut Cqc4Data, u32) -> usize = core::mem::transmute(rotina);
     let mut ret = [0u8; 8];
     // ponytail: a original passa um ret na pilha dela; as três escrevem nele ou na estática e devolvem o ponteiro,
@@ -54,24 +54,24 @@ unsafe fn cqc4_op(rotina: usize, d: usize, n: u32) -> usize {
     r
 }
 static mut CQC4_RET: Cqc4Data = [0; 8];
-unsafe fn cqc4_semana(d: usize) -> i32 {
+unsafe fn date_weekday(d: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x54a3f0usize);
     f(d)
 }
-unsafe fn cqc4_alvo(d: usize, alvo: u32, dest: &mut Cqc4Data) {
+unsafe fn nearest_weekday(d: usize, alvo: u32, dest: &mut Cqc4Data) {
     let f: unsafe extern "thiscall" fn(usize, u32, *mut Cqc4Data) -> u32 = core::mem::transmute(0x54a2d0usize);
     f(d, alvo, dest);
 }
 
 /// A faixa de horário (0x5af2f0: mov ecx, gerenciador; push dia; push comp -> thiscall, ret 8).
-unsafe fn cqc4_faixa(this: usize, comp: usize, dia: u32) -> u8 {
+unsafe fn fixture_time_slice(this: usize, comp: usize, dia: u32) -> u8 {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x5af2f0usize);
     f(this, comp, dia)
 }
 
 /// Os conflitos do jogo (0x5ad780: mov ecx, gerenciador; push marca; push &gravidade; push jogo -> thiscall, ret
 /// 0xc): a lista (ou 0) e a gravidade.
-unsafe fn cqc4_conflitos(this: usize, jogo: usize, dois: u32) -> (usize, i32) {
+unsafe fn fix_man_find_fixture_clashes(this: usize, jogo: usize, dois: u32) -> (usize, i32) {
     let f: unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize = core::mem::transmute(0x5ad780usize);
     let mut g: i32 = 0;
     let l = f(this, jogo, &mut g, dois);
@@ -79,7 +79,7 @@ unsafe fn cqc4_conflitos(this: usize, jogo: usize, dois: u32) -> (usize, i32) {
 }
 
 /// Destrói e libera a lista (0x68d040: mov ecx, lista -> thiscall; 0x944c94: push; add esp, 4 -> cdecl).
-unsafe fn cqc4_liberar(l: usize) {
+unsafe fn free_list(l: usize) {
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     destruir(l);
@@ -98,18 +98,18 @@ unsafe fn cqc4_liberar(l: usize) {
 /// fica. Sem achar: 2 dias depois da data do jogo (ou de hoje, se já passou).
 unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: usize) {
     if jogo == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, jogo); // a caixa
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, jogo); // a caixa
     }
     let (mut s, mut e, mut j, mut h, mut k) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
-    cqc4_padrao(&mut s);
-    cqc4_padrao(&mut e);
-    cqc4_padrao(&mut j);
-    cqc4_padrao(&mut h);
-    cqc4_padrao(&mut k);
+    date_default(&mut s);
+    date_default(&mut e);
+    date_default(&mut j);
+    date_default(&mut h);
+    date_default(&mut k);
     let dias: [i16; 9] = [2, 1, -1, 5, 6, -1, 0, 3, 4]; // cqc4: a ordem dos dias da semana
     let mut tmp = [0u8; 8];
-    let r = cqc4_nova(&mut tmp, cqc4_w(jogo + 0x2a), cqc4_w(jogo + 0x28));
-    cqc4_atribuir(&mut j, r);
+    let r = date_from_day_year(&mut tmp, cqc4_w(jogo + 0x2a), cqc4_w(jogo + 0x28));
+    date_assign(&mut j, r);
     let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
     let rodada = cqc4_w(jogo + 0x30) as i16 as i32;
     if units_digit(rodada) == 3 || units_digit(rodada) == 4 {
@@ -127,34 +127,34 @@ unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: usize) {
         0 => {
             if cqc4_w(jogo + 0x24) != 0 {
                 let mut t = [0u8; 8];
-                let r = cqc4_nova(&mut t, cqc4_w(jogo + 0x26), cqc4_w(jogo + 0x24));
-                cqc4_atribuir(&mut e, r);
+                let r = date_from_day_year(&mut t, cqc4_w(jogo + 0x26), cqc4_w(jogo + 0x24));
+                date_assign(&mut e, r);
             } else {
-                aviso_em(0x9cc208, 0x4f9); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
-                let r = cqc4_op(0x54c770, pj, 2);
-                cqc4_atribuir(&mut e, r);
+                show_error_at(0x9cc208, 0x4f9); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
+                let r = date_op(0x54c770, pj, 2);
+                date_assign(&mut e, r);
             }
             let fim = e;
-            let r = cqc4_op(0x54c770, pj, 0x14);
-            let r = if cqc4_depois(fim.as_ptr() as usize, r) { cqc4_op(0x54c770, pj, 4) } else { cqc4_op(0x54c5b0, pj, 3) };
-            cqc4_atribuir(&mut s, r);
+            let r = date_op(0x54c770, pj, 0x14);
+            let r = if fix_man_date_is_after(fim.as_ptr() as usize, r) { date_op(0x54c770, pj, 4) } else { date_op(0x54c5b0, pj, 3) };
+            date_assign(&mut s, r);
         }
         2 | 4 => {
-            let r = cqc4_op(0x54c770, pj, 2);
-            cqc4_atribuir(&mut e, r);
-            let r = cqc4_op(0x54c5b0, pj, 3);
-            cqc4_atribuir(&mut s, r);
+            let r = date_op(0x54c770, pj, 2);
+            date_assign(&mut e, r);
+            let r = date_op(0x54c5b0, pj, 3);
+            date_assign(&mut s, r);
         }
         3 => {
-            let r = cqc4_op(0x54c770, pj, 1);
-            cqc4_atribuir(&mut e, r);
-            cqc4_atribuir(&mut s, pj);
+            let r = date_op(0x54c770, pj, 1);
+            date_assign(&mut e, r);
+            date_assign(&mut s, pj);
         }
         5 | 6 | 8 => {
-            let r = cqc4_op(0x54c770, pj, 1);
-            cqc4_atribuir(&mut e, r);
-            let r = cqc4_op(0x54c8e0, pj, 3);
-            cqc4_atribuir(&mut s, r);
+            let r = date_op(0x54c770, pj, 1);
+            date_assign(&mut e, r);
+            let r = date_op(0x54c8e0, pj, 3);
+            date_assign(&mut s, r);
         }
         _ => {}
     }
@@ -166,40 +166,40 @@ unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: usize) {
                 if alvo == -1 {
                     continue;
                 }
-                cqc4_atribuir(&mut k, ps);
-                while cqc4_depois(pe, pk) {
-                    cqc4_alvo(pk, alvo as u16 as u32, &mut h);
-                    let t = cqc4_op(0x54c5b0, 0xae2c90, 2);
+                date_assign(&mut k, ps);
+                while fix_man_date_is_after(pe, pk) {
+                    nearest_weekday(pk, alvo as u16 as u32, &mut h);
+                    let t = date_op(0x54c5b0, 0xae2c90, 2);
                     let t = [cqc4_d(t), cqc4_d(t + 4)];
                     let pt = t.as_ptr() as usize;
-                    if !cqc4_depois(pt, ph) && !cqc4_depois(ph, pe) {
+                    if !fix_man_date_is_after(pt, ph) && !fix_man_date_is_after(ph, pe) {
                         crate::comparacao::ramo("cqc_4 nova data");
                         cqc4_pw(jogo + 0x28, cqc4_w(ph + 2));
                         cqc4_pw(jogo + 0x2a, cqc4_w(ph));
-                        *((jogo + 0x3f) as *mut u8) = cqc4_faixa(this, cqc4_d(jogo + 0x14), alvo as u16 as u32);
-                        let (l, g) = cqc4_conflitos(this, jogo, (passada == 1) as u32);
+                        *((jogo + 0x3f) as *mut u8) = fixture_time_slice(this, cqc4_d(jogo + 0x14), alvo as u16 as u32);
+                        let (l, g) = fix_man_find_fixture_clashes(this, jogo, (passada == 1) as u32);
                         if l == 0 {
                             if g == 0 {
                                 return;
                             }
                         } else {
-                            cqc4_liberar(l);
+                            free_list(l);
                         }
                         if g == 1 || (cqc4_b(jogo + 0x3a) as i8 as i32) > g {
                             return;
                         }
                     }
-                    let r = cqc4_op(0x54c5b0, pk, 4); // cqc4: o passo da busca
-                    cqc4_atribuir(&mut k, r);
+                    let r = date_op(0x54c5b0, pk, 4); // cqc4: o passo da busca
+                    date_assign(&mut k, r);
                 }
             }
         }
     }
-    if cqc4_depois(0xae2c90, pj) {
-        cqc4_atribuir(&mut j, 0xae2c90);
+    if fix_man_date_is_after(0xae2c90, pj) {
+        date_assign(&mut j, 0xae2c90);
     }
-    let r = cqc4_op(0x54c5b0, pj, 2);
-    cqc4_atribuir(&mut j, r);
+    let r = date_op(0x54c5b0, pj, 2);
+    date_assign(&mut j, r);
     cqc4_pw(jogo + 0x2a, cqc4_w(pj));
     cqc4_pw(jogo + 0x28, cqc4_w(pj + 2));
 }
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: usize) {
 /// O comparador da nova data: lado a lado no jogo (0x4f bytes); os conflitos de dentro (0x5ad780) criam e destroem a
 /// lista deles. Só a original quando o jogo entra na lista de conferência das pernas (aloca o nó).
 unsafe extern "thiscall" fn comparar_find_new_fixture_date(this: usize, jogo: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
     // a caixa da janela sem data (+0x24, tipo 2) apareceria duas vezes: só a original
     if jogo == 0 || matches!(units_digit(cqc4_w(jogo + 0x30) as i16 as i32), 3 | 4) || (cqc4_b(jogo + 0x3a) == 2 && cqc4_w(jogo + 0x24) == 0) {
@@ -244,8 +244,8 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
     cqc4_pw(jogo + 0x2e, 0xffff);
     let hoje = [cqc4_d(0xae2c90), cqc4_d(0xae2c94)];
     let mut dj = [0u8; 8];
-    let r = cqc4_nova(&mut dj, cqc4_w(jogo + 0x2a), cqc4_w(jogo + 0x28));
-    if !cqc4_depois(r, hoje.as_ptr() as usize) && cqc4_b(jogo + 0x43) == 0xff {
+    let r = date_from_day_year(&mut dj, cqc4_w(jogo + 0x2a), cqc4_w(jogo + 0x28));
+    if !fix_man_date_is_after(r, hoje.as_ptr() as usize) && cqc4_b(jogo + 0x43) == 0xff {
         nova_data(this, jogo);
     }
     let marcas = cqc4_w(jogo + 0x4d);
@@ -261,32 +261,32 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
         let preferido = cqc4_b(casa + 0x72);
         if preferido != 0xff && (preferido == 5 || preferido == 6 || preferido == 4) {
             let mut d = [0u8; 8];
-            cqc4_nova(&mut d, cqc4_w(jogo + 0x2a), cqc4_w(jogo + 0x28));
+            date_from_day_year(&mut d, cqc4_w(jogo + 0x2a), cqc4_w(jogo + 0x28));
             let pd = d.as_ptr() as usize;
-            let dia = cqc4_semana(pd) as u8;
+            let dia = date_weekday(pd) as u8;
             if preferido != dia && (dia == 5 || dia == 6) {
                 let mut t = [0u8; 8];
-                cqc4_padrao(&mut t);
+                date_default(&mut t);
                 crate::comparacao::ramo("cqc_4 dia preferido do mandante");
-                cqc4_alvo(pd, preferido as i8 as i16 as u16 as u32, &mut t); // cqc4: o dia preferido do mandante
+                nearest_weekday(pd, preferido as i8 as i16 as u16 as u32, &mut t); // cqc4: o dia preferido do mandante
                 let pt = t.as_ptr() as usize;
                 cqc4_pw(jogo + 0x28, cqc4_w(pt + 2));
                 cqc4_pw(jogo + 0x2a, cqc4_w(pt));
-                *((jogo + 0x3f) as *mut u8) = cqc4_faixa(this, cqc4_d(jogo + 0x14), cqc4_semana(pt) as u32);
-                let (l, g) = cqc4_conflitos(this, jogo, 0);
+                *((jogo + 0x3f) as *mut u8) = fixture_time_slice(this, cqc4_d(jogo + 0x14), date_weekday(pt) as u32);
+                let (l, g) = fix_man_find_fixture_clashes(this, jogo, 0);
                 if l != 0 || g != 0 {
                     cqc4_pw(jogo + 0x2a, cqc4_w(pd));
                     cqc4_pw(jogo + 0x28, cqc4_w(pd + 2));
-                    *((jogo + 0x3f) as *mut u8) = cqc4_faixa(this, cqc4_d(jogo + 0x14), cqc4_semana(pd) as u32);
+                    *((jogo + 0x3f) as *mut u8) = fixture_time_slice(this, cqc4_d(jogo + 0x14), date_weekday(pd) as u32);
                     if l != 0 {
-                        cqc4_liberar(l);
+                        free_list(l);
                     }
                 }
             }
         }
     }
     if *contagem < 10 {
-        let (l, g) = cqc4_conflitos(this, jogo, 0);
+        let (l, g) = fix_man_find_fixture_clashes(this, jogo, 0);
         if l != 0 || g != 0 {
             *contagem = (*contagem).wrapping_add(1);
             if g == 0x14 {
@@ -294,7 +294,7 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
                 let mesmo_dia: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x5ae380usize);
                 mesmo_dia(this, jogo, l); // cqc4: o conflito do mesmo dia
                 if l != 0 {
-                    cqc4_liberar(l);
+                    free_list(l);
                 }
                 return 1;
             }
@@ -305,7 +305,7 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
                     let aceita: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(cqc4_d(cqc4_d(c) + 0x64));
                     if aceita(c, jogo) == 0 {
                         if l != 0 {
-                            cqc4_liberar(l);
+                            free_list(l);
                         }
                         return 0;
                     }
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
             let convocada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7e6f20usize);
             if g >= cqc4_b(jogo + 0x3a) as i8 as i32 {
                 if l != 0 {
-                    cqc4_liberar(l);
+                    free_list(l);
                 }
                 if convocada(cqc4_d(0xb74434), cqc4_d(jogo + 0x14)) != 0 {
                     return 0;
@@ -354,7 +354,7 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
                     }
                     x = proximo(l);
                 }
-                cqc4_liberar(l);
+                free_list(l);
             }
         }
     }
@@ -410,7 +410,7 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
         outro = if b != 0 { construir(b, ano as u32, this, 0) } else { 0 };
         core::ptr::write_unaligned((this + 0x112c) as *mut usize, outro);
         if outro == 0 {
-            aviso_em(0x9cc208, 0x2e6);
+            show_error_at(0x9cc208, 0x2e6);
             return 0;
         }
     }
@@ -422,7 +422,7 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
 /// bloco do outro ano, remarca e entrega notícias; não pode rodar duas vezes). A cópia segue no modo Rust, com os
 /// contadores.
 unsafe extern "thiscall" fn comparar_add_fixture(this: usize, jogo: usize, zerar: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, zerar)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, zerar)
 }
 
 /// { 0x5aa2d0 } (thiscall, ret 4, fix_man.cpp; quadro SEH dos blocos novos): `FIXTURE_MANAGER::set_year(ano)`, pela entrada
@@ -441,7 +441,7 @@ unsafe extern "thiscall" fn set_year(this: usize, ano: u32) -> u32 {
     }
     let gravar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x5ac060usize);
     if gravar(this, 0) == 0 {
-        aviso_em(0x9cc208, 0x126);
+        show_error_at(0x9cc208, 0x126);
         return 0;
     }
     let outro = cqc4_d(this + 0x112c);
@@ -463,7 +463,7 @@ unsafe extern "thiscall" fn set_year(this: usize, ano: u32) -> u32 {
                     let slot = cqc4_d(p).wrapping_add((k as i32 as usize).wrapping_mul(4));
                     let l = cqc4_d(slot);
                     if l != 0 {
-                        cqc4_liberar(l);
+                        free_list(l);
                         core::ptr::write_unaligned(cqc4_d(p).wrapping_add((k as i32 as usize).wrapping_mul(4)) as *mut usize, 0);
                     }
                 }
@@ -500,7 +500,7 @@ unsafe extern "thiscall" fn set_year(this: usize, ano: u32) -> u32 {
                     core::ptr::write_unaligned(cqc4_d(e + j * 4).wrapping_add(desloc) as *mut usize, l);
                 }
                 if (0..3usize).any(|j| cqc4_d(cqc4_d(e + j * 4).wrapping_add(desloc)) == 0) {
-                    aviso_em(0x9cc208, 0x170);
+                    show_error_at(0x9cc208, 0x170);
                     return 0;
                 }
                 k = k.wrapping_add(1);
@@ -518,5 +518,5 @@ unsafe extern "thiscall" fn set_year(this: usize, ano: u32) -> u32 {
 /// O comparador do ano do calendário: só a original (ponytail: grava e lê os arquivos dos jogos do ano e refaz todas
 /// as listas; não pode rodar duas vezes).
 unsafe extern "thiscall" fn comparar_set_year(this: usize, ano: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, ano)
+    original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, ano)
 }

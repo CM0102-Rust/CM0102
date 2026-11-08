@@ -9,28 +9,36 @@ use super::*;
 
 
 
-pub(crate) unsafe fn cqc10_humano(c: usize, a: u32, b: u32) -> u32 {
+/// Calls human_manager is_human_club(club, a, b, 0, 0).
+pub(crate) unsafe fn media_is_human_club(c: usize, a: u32, b: u32) -> u32 {
     let f: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     f(c, a, b, 0, 0)
 }
 
-/// Os clubes humanos que recebem notícias do jogador (0x8d1da0 em [0xde1f54]: 4 na pilha, ret 0x10; o ecx da original é
+/// Collects the human clubs that receive news about a player (TRANSFER_MANAGER collect_player_news_recipients,
+/// 0x8d1da0).
+///
+/// [pt] Os clubes humanos que recebem notícias do jogador (0x8d1da0 em [0xde1f54]: 4 na pilha, ret 0x10; o ecx da original é
 /// o gerenciador das transferências).
-pub(crate) unsafe fn cqc10_destinos(jogador: usize, marcas: u32, saida: *mut usize, max: u32) -> u8 {
+pub(crate) unsafe fn player_news_recipients(jogador: usize, marcas: u32, saida: *mut usize, max: u32) -> u8 {
     let f: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(FN_TRANSFER_MANAGER_COLLECT_PLAYER_NEWS_RECIPIENTS);
     f(read_usize(G_TRANSFER_MANAGER), jogador, marcas, saida, max)
 }
 
-/// O id e os três nomes (+0x33 de +4, +8, +0xc) de uma pessoa, nos índices `k`..`k+3` da notícia.
-pub(crate) unsafe fn cqc10_nomes(gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32, n: usize, k: i8, p: usize) {
+/// Writes a person's id and three name keys (+0x33 of +4, +8, +0xc) into news slots k..k+3.
+///
+/// [pt] O id e os três nomes (+0x33 de +4, +8, +0xc) de uma pessoa, nos índices `k`..`k+3` da notícia.
+pub(crate) unsafe fn set_person_name_slots(gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32, n: usize, k: i8, p: usize) {
     gravar(n, k, read_usize(p) as u32);
     gravar(n, k + 1, read_usize(read_usize(p + 4) + 0x33) as u32);
     gravar(n, k + 2, read_usize(read_usize(p + 8) + 0x33) as u32);
     gravar(n, k + 3, read_usize(read_usize(p + 0xc) + 0x33) as u32);
 }
 
-/// Acrescenta `c` aos destinos se ainda não estiver lá (até 30).
-pub(crate) fn cqc10_acrescentar(dest: &mut [usize; 30], n: &mut u8, c: usize) {
+/// Appends club c to the recipients array (max 30) if not already there.
+///
+/// [pt] Acrescenta `c` aos destinos se ainda não estiver lá (até 30).
+pub(crate) fn add_unique_recipient(dest: &mut [usize; 30], n: &mut u8, c: usize) {
     if !dest[..(*n as i8).max(0) as usize].contains(&c) {
         dest[*n as i8 as usize] = c;
         *n = n.wrapping_add(1);
@@ -61,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
+    let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let chegar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_CAN_CLUB_BID_FOR_PLAYER);
     let resposta: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_MEDIA_PICK_AI_MANAGER_RESPONSE);
@@ -79,14 +87,14 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
     while i < read_i32(this + 0x14) {
         let r = read_usize(this + 0xc).wrapping_add((i as usize).wrapping_mul(25));
         let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(0x6e));
-        let clube = cpw6_clube(read_i32(r + 4));
+        let clube = month_award_club_by_id(read_i32(r + 4));
         let c = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
         core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
         let (mut dono, mut vinc) = (0usize, 0usize);
         if c != 0 {
-            dono = cpw6_clube(read_i32(c + 4));
+            dono = month_award_club_by_id(read_i32(c + 4));
             if dono != 0 {
-                vinc = vinculo(read_usize(G_CONTRACT_MANAGER), pessoa, dono);
+                vinc = contract_bond(read_usize(G_CONTRACT_MANAGER), pessoa, dono);
                 tec_dono = read_usize(dono + 0xcf);
             }
         }
@@ -110,7 +118,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         }
         if read_u8(r + 0x10) == 0 && {
             crate::comparacao::ramo("cqc_10 sorteio do boato");
-            cpe1_sorteio(0x19) == 0 // cqc10: o sorteio do boato
+            friendly_random(0x19) == 0 // cqc10: o sorteio do boato
         } {
             // os clubes interessados no jogador
             let mut ids = [-1i32; 5];
@@ -140,13 +148,13 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             let mut noticia = [0u32; 0x3a]; // a notícia local
             let n = noticia.as_mut_ptr() as usize;
             construir(n, 0xfbc, 0);
-            cqc10_nomes(gravar, n, 0, pessoa);
+            set_person_name_slots(gravar, n, 0, pessoa);
             gravar(n, 4, if dono != 0 { read_usize(dono) as u32 } else { 0xffff_ffff });
             let mut pede = false;
             let mut sai = false;
             if read_i8(pessoa + staff::PROFESSIONALISM) < 0xf && read_i8(pessoa + staff::LOYALITY) < 0xf {
                 crate::comparacao::ramo("cqc_10 pedido de transferencia");
-                let rr = cpe1_sorteio(0x30d4); // cqc10: o sorteio da reputação para o pedido
+                let rr = friendly_random(0x30d4); // cqc10: o sorteio da reputação para o pedido
                 if (read_i16(read_usize(pessoa + staff::PLAYER) + 0xd) as i32) > rr {
                     let lim = read_i8(pessoa + staff::LOYALITY) as i32 as f64 * 12.5 + 500.0;
                     if lim < read_i32(r + 0x15) as f64 {
@@ -157,11 +165,11 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 }
             }
             if !sai {
-                let s = cpe1_sorteio(3);
+                let s = friendly_random(3);
                 gravar(n, 5, s as u32);
             }
             gravar(n, 6, read_usize(r + 0x11) as u32);
-            let resp = if dono != 0 && cqc10_humano(dono, 0, 1) == 0 {
+            let resp = if dono != 0 && media_is_human_club(dono, 0, 1) == 0 {
                 resposta(this, read_usize(dono + 0xcf), pessoa, 0x1f)
             } else {
                 0
@@ -170,7 +178,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             gravar(n, 8, forcas(pessoa, dono));
             gravar(n, 9, posicoes(read_usize(pessoa + staff::PLAYER)) as i16 as i32 as u32);
             if tec_dono != 0 {
-                cqc10_nomes(gravar, n, 0xa, tec_dono);
+                set_person_name_slots(gravar, n, 0xa, tec_dono);
             } else {
                 for k in 0xa..=0xd {
                     gravar(n, k, 0xffff_ffff);
@@ -179,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             gravar(n, 0xe, (listada(pessoa, 0) != 0) as u32);
             gravar(n, 0xf, cnt as i32 as u32);
             // os interessados por reputação (do maior para o menor)
-            let rep = |id: i32| read_i16(cpw6_clube(id) + 0x80);
+            let rep = |id: i32| read_i16(month_award_club_by_id(id) + 0x80);
             let c = cnt as usize;
             for a in 0..c.saturating_sub(1) {
                 for b in a + 1..c {
@@ -193,12 +201,12 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             }
             // os destinos
             let mut dest = [0usize; 30];
-            let mut nd: u8 = if read_usize(G_TRANSFER_MANAGER) != 0 { cqc10_destinos(pessoa, 0xda, dest.as_mut_ptr(), 0x1e) } else { 0 };
+            let mut nd: u8 = if read_usize(G_TRANSFER_MANAGER) != 0 { player_news_recipients(pessoa, 0xda, dest.as_mut_ptr(), 0x1e) } else { 0 };
             for &id in ids.iter().take(c) {
                 if (nd as i8) >= 0x1e {
                     break;
                 }
-                cqc10_acrescentar(&mut dest, &mut nd, cpw6_clube(id));
+                add_unique_recipient(&mut dest, &mut nd, month_award_club_by_id(id));
             }
             let total = read_i32(0xae2364);
             for q in 0..16i32 {
@@ -211,12 +219,12 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                     if (nd as i8) >= 0x1e {
                         break;
                     }
-                    let ci = cpw6_clube(id);
+                    let ci = month_award_club_by_id(id);
                     let hc = read_usize(h + 0x39);
                     let junto = read_usize(ci + 0x57) == read_usize(hc + 0x57)
                         || (read_usize(ci + 0x53) == read_usize(hc + 0x53) && (read_i16(ci + 0x80) as i32 - 0xbb8) > read_i16(hc + 0x80) as i32);
                     if junto {
-                        cqc10_acrescentar(&mut dest, &mut nd, hc);
+                        add_unique_recipient(&mut dest, &mut nd, hc);
                     }
                 }
             }
@@ -227,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 let reacao: unsafe extern "thiscall" fn(usize, u32, usize, usize, *mut i32, u32) = core::mem::transmute(FN_MEDIA_APPLY_SQUAD_REACTION_TO_PLAYER_STORY);
                 reacao(this, 0x1f, pessoa, dono, ids.as_mut_ptr(), cnt as u8 as u32);
             }
-            if dono != 0 && cqc10_humano(dono, 0, 1) == 0 && resp != 0 {
+            if dono != 0 && media_is_human_club(dono, 0, 1) == 0 && resp != 0 {
                 if clube != 0 {
                     let rival: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) = core::mem::transmute(FN_MEDIA_WARN_SQUAD_OF_POSITION_RIVAL);
                     rival(this, pessoa, clube, dono, resp);
@@ -239,14 +247,14 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             continue;
         }
         // estado 1: o dono da IA pode avisar que não vende
-        if read_u8(r + 0x10) == 1 && dono != 0 && cqc10_humano(dono, 1, 1) == 0 {
+        if read_u8(r + 0x10) == 1 && dono != 0 && media_is_human_club(dono, 1, 1) == 0 {
             let (rd, ra) = (read_i16(r + 8), read_i16(r + 0xa) as u16);
             let (pd, pa) = (read_i16(pessoa + staff::DATE_JOINED_CLUB), read_i16(pessoa + 0x40) as u16);
             let depois = ra > pa || (ra == pa && rd > pd);
             if depois && vinc != 0 && read_u8(vinc + 0x49) == 0 && listada(pessoa, 0) == 0 {
                 let feliz = read_i8(vinc + 0x3d) as i32;
-                let s = cpe1_sorteio(0x32);
-                if feliz > s + 0x28 && cpe1_sorteio(0x1e) == 0 {
+                let s = friendly_random(0x32);
+                if feliz > s + 0x28 && friendly_random(0x1e) == 0 {
                     crate::comparacao::ramo("cqc_10 nao vende");
                     let nao_vende: unsafe extern "C" fn(usize, usize, usize, usize) = core::mem::transmute(FN_NEWS_CREATE_NOT_FOR_SALE_STORY);
                     nao_vende(pessoa, dono, read_usize(dono + 0xbf), 0);
@@ -274,7 +282,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
 // 0x758010, 0x741020, 0x587600): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e
 // pelas mutações.
 pub(crate) unsafe extern "thiscall" fn comparar_process_transfer_interest(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_PROCESS_TRANSFER_INTEREST)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PROCESS_TRANSFER_INTEREST)(this)
 }
 
 /// news item 0xfbe that the club will not sell the player, with the chairman when he likes the player; to every manager
@@ -294,22 +302,22 @@ pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(jogador: usize, c
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_FAVOURED_BY);
     let mut dest = [0usize; 30];
-    let nd: u8 = if read_usize(G_TRANSFER_MANAGER) != 0 { cqc10_destinos(jogador, 0xd8, dest.as_mut_ptr(), 0x1e) } else { 0 };
+    let nd: u8 = if read_usize(G_TRANSFER_MANAGER) != 0 { player_news_recipients(jogador, 0xd8, dest.as_mut_ptr(), 0x1e) } else { 0 };
     crate::comparacao::ramo("cqc_10 noticia nao vende");
     let mut noticia = [0u32; 0x3a];
     let n = noticia.as_mut_ptr() as usize;
     construir(n, 0xfbe, 0);
-    cqc10_nomes(gravar, n, 0, jogador);
+    set_person_name_slots(gravar, n, 0, jogador);
     gravar(n, 4, if outro != 0 { read_usize(outro) as u32 } else { 0xffff_ffff });
     gravar(n, 5, read_usize(clube) as u32);
-    let s = cpe1_sorteio(3);
+    let s = friendly_random(3);
     gravar(n, 6, s as u32);
     let cita = gosta(jogador, presidente) != 0 || (presidente != 0 && read_usize(presidente + 0x69) != 0 && {
-        let a = cpe1_sorteio(read_i8(read_usize(presidente + 0x69) + 0x16) as i32);
-        a > cpe1_sorteio(0x14)
+        let a = friendly_random(read_i8(read_usize(presidente + 0x69) + 0x16) as i32);
+        a > friendly_random(0x14)
     });
     if cita {
-        cqc10_nomes(gravar, n, 7, presidente);
+        set_person_name_slots(gravar, n, 7, presidente);
     } else {
         gravar(n, 7, 0xffff_ffff);
     }
@@ -327,7 +335,7 @@ pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(jogador: usize, c
 
 // ponytail: a notícia vai aos técnicos (aloca): só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "C" fn comparar_news_create_not_for_sale_story(jogador: usize, clube: usize, presidente: usize, outro: usize) {
-    orig::<unsafe extern "C" fn(usize, usize, usize, usize)>(IDX_NEWS_CREATE_NOT_FOR_SALE_STORY)(jogador, clube, presidente, outro)
+    original_fn::<unsafe extern "C" fn(usize, usize, usize, usize)>(IDX_NEWS_CREATE_NOT_FOR_SALE_STORY)(jogador, clube, presidente, outro)
 }
 
 /// news item 0x2e with the board and fans praising the manager for the title, with the outlet and the pundit, for a
@@ -357,10 +365,10 @@ pub(crate) unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, c
     let mut noticia = [0u32; 0x3a];
     let n = noticia.as_mut_ptr() as usize;
     construir(n, 0x2e, 0);
-    cqc10_nomes(gravar, n, 0, read_usize(clube + club::MANAGER));
+    set_person_name_slots(gravar, n, 0, read_usize(clube + club::MANAGER));
     gravar(n, 4, read_usize(clube) as u32);
     gravar(n, 5, read_usize(comp) as u32);
-    let s = cpe1_sorteio(2);
+    let s = friendly_random(2);
     gravar(n, 6, s as u32);
     let v = veiculo(clube);
     gravar(n, 7, v);
@@ -389,7 +397,7 @@ pub(crate) unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, c
 
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_queue_trophy_praise_story(this: usize, clube: usize, comp: usize, marca: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_QUEUE_TROPHY_PRAISE_STORY)(this, clube, comp, marca)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_QUEUE_TROPHY_PRAISE_STORY)(this, clube, comp, marca)
 }
 
 // ---------- 264a leva: a reação do elenco à história de um jogador, o aviso aos rivais de posição e o rótulo das respostas à mídia (media.cpp) ----------
@@ -398,39 +406,49 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_trophy_praise_story(this: 
 
 
 
-/// O vínculo da `pessoa` com o `clube` (0x4cf5f0: thiscall em [0xae1050], 2 na pilha; grava [0xae1080]).
-pub(crate) unsafe fn cqb8_vinculo(pessoa: usize, clube: usize) -> usize {
+/// CONTRACT_MANAGER get_contract_for_club (0x4cf5f0) for a person and club.
+///
+/// [pt] O vínculo da `pessoa` com o `clube` (0x4cf5f0: thiscall em [0xae1050], 2 na pilha; grava [0xae1080]).
+pub(crate) unsafe fn media_contract_for_club(pessoa: usize, clube: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     f(read_usize(G_CONTRACT_MANAGER), pessoa, clube)
 }
 
-/// O contrato inteiro (+0 a +0x4f) da `pessoa` no `clube`, como região do comparador.
-pub(crate) unsafe fn cqb8_contrato(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
-    let c = cqb8_vinculo(pessoa, clube);
+/// The person's whole contract at a club (+0..+0x4f) as a comparer region, or None.
+///
+/// [pt] O contrato inteiro (+0 a +0x4f) da `pessoa` no `clube`, como região do comparador.
+pub(crate) unsafe fn contract_region(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
+    let c = media_contract_for_club(pessoa, clube);
     (c != 0).then_some((c, 0x50))
 }
 
-/// Uma rotina sem porta que por dentro chama units_digit da fita (0x544520 e 0x544600 chamam a 0x4cf5f0; a 0x62c400
+/// For a routine that internally makes tape calls: runs it on a scratch tape and replays the recorded inner calls
+/// through `chamar` in order; outside post-match comparison just calls it.
+///
+/// [pt] Uma rotina sem porta que por dentro chama units_digit da fita (0x544520 e 0x544600 chamam a 0x4cf5f0; a 0x62c400
 /// alcança a 0x600a50 e portas): na comparação pela fita, a original grava essas chamadas internas no nível de cima
 /// (com o comparador da rotina, a original e a cópia dele gravam cada uma a sua). A cópia roda a rotina numa fita de
 /// rascunho e pede as mesmas chamadas por `chamar`, na ordem. Fora da comparação (sem GRAVAR_POS) só chama.
-pub(crate) unsafe fn cqb8_pela_fita<R>(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, f: impl FnOnce() -> R) -> R {
+pub(crate) unsafe fn replay_inner_tape_calls<R>(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, f: impl FnOnce() -> R) -> R {
     if !GRAVAR_POS.load(std::sync::atomic::Ordering::Relaxed) {
         return f();
     }
-    let externa = fita().replace((Vec::new(), Vec::new()));
+    let externa = tape_lock().replace((Vec::new(), Vec::new()));
     let r = f();
-    let gravadas = core::mem::replace(&mut *fita(), externa).map_or(Vec::new(), |g| g.1);
+    let gravadas = core::mem::replace(&mut *tape_lock(), externa).map_or(Vec::new(), |g| g.1);
     for c in gravadas {
         chamar(c.0, c.1, c.2);
     }
     r
 }
 
-/// O vetor que a 0x755340 monta na pilha (58 dwords, ela percorre 57): os 50 do elenco (0x541f90 com 0, cdecl), o
+/// Builds the 58-entry vector 0x755340 uses: the 50 squad players, chairman, manager (unless human or player job),
+/// assistant and 5 coaches.
+///
+/// [pt] O vetor que a 0x755340 monta na pilha (58 dwords, ela percorre 57): os 50 do elenco (0x541f90 com 0, cdecl), o
 /// +0xbf do clube, o técnico (+0xcf) só sem humano no clube (0x600a50 com 0, 1, 0, 0, cdecl, por `chamar`: unidade da
 /// fita) e fora dos tipos 11 a 15 (0x53b620, cdecl, o byte +0x3d), o +0xd3 e os cinco dwords de +0x19f.
-pub(crate) unsafe fn cqb8_vetor(clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> [usize; 58] {
+pub(crate) unsafe fn club_staff_vector(clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> [usize; 58] {
     let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let tipo: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
     let mut v = [0usize; 58];
@@ -449,22 +467,25 @@ pub(crate) unsafe fn cqb8_vetor(clube: usize, chamar: &mut dyn FnMut(usize, usiz
     v
 }
 
-/// { 0x755340 } (thiscall, ret 0x14, media.cpp): `Media::apply_squad_reaction_to_player_story(tópico, jogador, clube,
+/// 0x755340 Media::apply_squad_reaction_to_player_story: after a story about a player, interested clubs and the club's
+/// staff may come to dislike him, setting contract flags and grievances.
+///
+/// [pt] { 0x755340 } (thiscall, ret 0x14, media.cpp): `Media::apply_squad_reaction_to_player_story(tópico, jogador, clube,
 /// ids, n)`, depois de uma história sobre o jogador (o boato de transferência 0x754a30 com o tópico 0x1f e os clubes
 /// interessados; 0x72c1f0 e 0x733a60 sem ids). A chance começa em 10 (5 se o jogador é favorito do clube, 0x547790; 15
 /// se rejeitado, 0x5477d0) e cresce por clube interessado: 100 no clássico de Glasgow, 10 se a liga tem o confronto
 /// (0x4b02e0), 15 se o clube é rival dele (+0xb3/+0xb7/+0xbb), 5 se é da mesma divisão (fora da divisão inferior).
 /// Sorteio(chance) acima de sorteio(10): o clube rejeita o jogador (0x547940 com 1). Listado (0x544520): −25; sem
 /// vínculo: −15; senão −10 no fim de contrato (0x867d30) e mais a felicidade (+0x3d) / 10; no mínimo 5. Para cada uma
-/// das 57 pessoas do vetor (cqb8_vetor) com preferências (+0x65): a nota (10, o +0x1d da ficha de técnico + 10, ou pelo
+/// das 57 pessoas do vetor (club_staff_vector) com preferências (+0x65): a nota (10, o +0x1d da ficha de técnico + 10, ou pelo
 /// +0x5d, idade, +0x5b e lista a pedido do jogador do elenco), ajustada pelo tópico 0x20/0x1e, pelo +0x59/+0x5a/+0x5b,
 /// por gostar ou não do jogador (0x547810/0x547840) e pelo jogador ser favorito ou rejeitado do clube, no mínimo 5;
 /// sorteio(chance) acima de sorteio(nota): a pessoa passa a não gostar do jogador (0x547af0 com 1) e, com vínculo e
 /// sorteio(nota) abaixo de sorteio(10), a marca 1 do contrato (0x867560) ou, nos tópicos 0x1e/0x20 ou com sorteio(nota)
 /// zero, as queixas 0x800 (0x867700). As três com efeito vão por `chamar` (as portas do pós-jogo), e também as units_digit
 /// da fita que a original chama: o vínculo 0x4cf5f0 (0x75551e, 0x7557dc), o humano 0x600a50 (0x755598) e as 0x4cf5f0
-/// de dentro da 0x544520 (0x7554e8) e da 0x544600 (0x75567f, 0x7556ad), estas por `cqb8_pela_fita`.
-pub(crate) unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize, n: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+/// de dentro da 0x544520 (0x7554e8) e da 0x544600 (0x75567f, 0x7556ad), estas por `replay_inner_tape_calls`.
+pub(crate) unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize, ids: usize, n: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_FAVOURS_STAFF);
     let rejeitado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_DISLIKES_STAFF);
     let confronto: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE);
@@ -511,12 +532,12 @@ pub(crate) unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, 
             }
         }
     }
-    let r1 = cpe1_sorteio(chance);
-    if r1 > cpe1_sorteio(10) {
+    let r1 = friendly_random(chance);
+    if r1 > friendly_random(10) {
         rejeitar(clube, jogador, 1);
     }
     // cqb8: a 0x4cf5f0 (de dentro da 0x544520 e direta) é unidade da fita: vai por `chamar`
-    if cqb8_pela_fita(chamar, || listada(jogador, 0)) != 0 {
+    if replay_inner_tape_calls(chamar, || listada(jogador, 0)) != 0 {
         chance -= 0x19;
     } else {
         let c = chamar(0x4cf5f0, read_usize(G_CONTRACT_MANAGER), [jogador as u32, clube as u32, 0, 0, 0]) as usize;
@@ -532,7 +553,7 @@ pub(crate) unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, 
     if chance < 5 {
         chance = 5;
     }
-    let v = cqb8_vetor(clube, chamar);
+    let v = club_staff_vector(clube, chamar);
     let topico = topico as u16;
     for &p in v.iter().take(57) {
         if p == 0 || p == jogador || read_usize(p + 0x65) == 0 {
@@ -555,12 +576,12 @@ pub(crate) unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, 
             if m == 0x14 {
                 nota = nota.wrapping_add(1);
             } else if m == 1 {
-                nota = nota.wrapping_sub(if cqb8_pela_fita(chamar, || a_pedido(p, 0)) != 0 { 0xf } else { 10 });
+                nota = nota.wrapping_sub(if replay_inner_tape_calls(chamar, || a_pedido(p, 0)) != 0 { 0xf } else { 10 });
                 if read_i16(read_usize(p + 0x61) + 0xb) > 0x1676 {
                     nota = nota.wrapping_sub(10);
                 }
             } else if m < 6 {
-                nota = nota.wrapping_sub(if cqb8_pela_fita(chamar, || a_pedido(p, 0)) != 0 { 10 } else { 5 });
+                nota = nota.wrapping_sub(if replay_inner_tape_calls(chamar, || a_pedido(p, 0)) != 0 { 10 } else { 5 });
                 if read_i16(read_usize(p + 0x61) + 0xb) > 0x1676 {
                     nota = nota.wrapping_sub(5);
                 }
@@ -605,15 +626,15 @@ pub(crate) unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, 
         if nota < 5 {
             nota = 5;
         }
-        let r1 = cpe1_sorteio(chance);
-        if r1 > cpe1_sorteio(nota as i32) { // cqb8: o desafeto sorteado
+        let r1 = friendly_random(chance);
+        if r1 > friendly_random(nota as i32) { // cqb8: o desafeto sorteado
             crate::comparacao::ramo("cqb_8 desafeto sorteado");
             chamar(0x547af0, 0, [p as u32, jogador as u32, 1, 0, 0]);
             let c = chamar(0x4cf5f0, read_usize(G_CONTRACT_MANAGER), [p as u32, clube as u32, 0, 0, 0]) as usize;
             if c != 0 {
-                let r = cpe1_sorteio(nota as i32);
-                if r < cpe1_sorteio(10) {
-                    if topico != 0x1e && topico != 0x20 && cpe1_sorteio(nota as i32) != 0 {
+                let r = friendly_random(nota as i32);
+                if r < friendly_random(10) {
+                    if topico != 0x1e && topico != 0x20 && friendly_random(nota as i32) != 0 {
                         chamar(0x867560, c, [1, 0, 0, 0, 0]);
                     } else {
                         chamar(0x867700, c, [0x800, 0, 0, 0, 0]);
@@ -635,7 +656,7 @@ pub(crate) unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, 
 /// da comissão e da diretoria, a nota pela posição no elenco, ambição, lealdade e preferências; sorteada, a pessoa
 /// passa a não gostar do jogador e o contrato dela ganha a marca 1 ou as queixas 0x800
 pub(crate) unsafe extern "thiscall" fn apply_squad_reaction_to_player_story(_this: usize, topico: u32, jogador: usize, clube: usize, ids: usize, n: u32) {
-    cqb8_reacao_com(topico, jogador, clube, ids, n, &mut |r, t, a| despachar_pos(r, t, a))
+    squad_reaction_to_story_with(topico, jogador, clube, ids, n, &mut |r, t, a| dispatch_post_match_call(r, t, a))
 }
 
 /// Comparador: pela fita das portas do pós-jogo (comparar_pos): as desafeições (0x547af0), a marca (0x867560) e as
@@ -643,13 +664,13 @@ pub(crate) unsafe extern "thiscall" fn apply_squad_reaction_to_player_story(_thi
 /// sorteador, [0xae1080], as seis pessoas do clube (+0x9b, a 0x547940), o contrato do jogador e, de cada pessoa do
 /// vetor, as preferências (+0x1c..+0x33), o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 pub(crate) unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_story(this: usize, topico: u32, jogador: usize, clube: usize, ids: usize, n: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, u32)>(IDX_APPLY_SQUAD_REACTION_TO_PLAYER_STORY);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, u32)>(IDX_APPLY_SQUAD_REACTION_TO_PLAYER_STORY);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((0xae1080, 4));
     if clube != 0 && jogador != 0 {
         reg.push((clube + club::FAV_STAFF1, 24));
-        reg.extend(cqb8_contrato(jogador, clube));
-        for &p in cqb8_vetor(clube, &mut |r, t, a| despachar_pos(r, t, a)).iter().take(57) {
+        reg.extend(contract_region(jogador, clube));
+        for &p in club_staff_vector(clube, &mut |r, t, a| dispatch_post_match_call(r, t, a)).iter().take(57) {
             if p == 0 {
                 continue;
             }
@@ -658,14 +679,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_s
                 reg.push((pref + 0x1c, 24));
             }
             reg.push((p + 0x58, 6));
-            reg.extend(cqb8_contrato(p, clube));
+            reg.extend(contract_region(p, clube));
         }
     }
     comparar_pos("apply_squad_reaction_to_player_story", reg, || o(this, topico, jogador, clube, ids, n),
-        |chamar| cqb8_reacao_com(topico, jogador, clube, ids, n, chamar));
+        |chamar| squad_reaction_to_story_with(topico, jogador, clube, ids, n, chamar));
 }
 
-/// { 0x758010 } (thiscall, ret 0x10, media.cpp): `Media::warn_squad_of_position_rival(jogador, clube, _, _)`, pelo
+/// 0x758010 Media::warn_squad_of_position_rival: squad players in the same position may react to a reputable newcomer
+/// with a story (0x25) and contract flag 0x800.
+///
+/// [pt] { 0x758010 } (thiscall, ret 0x10, media.cpp): `Media::warn_squad_of_position_rival(jogador, clube, _, _)`, pelo
 /// boato de transferência (0x754a30) e pela resposta à história do jogador (0x741020). Com ficha, clube com mais de 2
 /// do elenco na máscara da posição dele (0x548150 com 0x5481a0), divisão com competição ([0xadadfc]) e reputação
 /// (+0xb da ficha) acima de 4750: cada um dos 50 do elenco (+0xd7) com ficha, vínculo (0x4cf5f0) de felicidade (+0x3d)
@@ -673,9 +697,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_s
 /// (0x544520), acima de 20 anos, do tipo 0x10/0x20/0x30 (+0x4f & 0xf0), com +0x5a abaixo de n + 5 e +0x5b abaixo de
 /// n + 10, sorteio(+0x5a) abaixo de sorteio(n), a mesma máscara e reputação acima de 3750: a primeira vez, a história
 /// 0x25 dele (0x72c1f0 em [0xb6b7c8]); sem a marca 0x800 (0x8676f0), a marca 0x800 (0x867560). As duas com efeito vão
-/// por `chamar`, e também o vínculo 0x4cf5f0 (0x7580c2, unidade da fita) e, por `cqb8_pela_fita`, o que a 0x62c400
+/// por `chamar`, e também o vínculo 0x4cf5f0 (0x7580c2, unidade da fita) e, por `replay_inner_tape_calls`, o que a 0x62c400
 /// (0x7580ee) e a 0x544520 (0x75810a) chamam de units_digit por dentro.
-pub(crate) unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn warn_position_rivals_with(jogador: usize, clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let mascara: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_GET_NATURAL_POSITION_MASK);
     let contar: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_CLUB_COUNT_SQUAD_WITH_POSITION_MASK);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
@@ -708,8 +732,8 @@ pub(crate) unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut d
         if c == 0 || read_usize(p + 0x61) == 0 || read_i8(c + 0x3d) <= 0 {
             continue;
         }
-        if cqb8_pela_fita(chamar, || lesao(read_usize(G_INJURY), jogador)) == 2 || read_usize(c + 0x45) & 0x101 != 0
-            || cqb8_pela_fita(chamar, || listada(p, clube)) != 0
+        if replay_inner_tape_calls(chamar, || lesao(read_usize(G_INJURY), jogador)) == 2 || read_usize(c + 0x45) & 0x101 != 0
+            || replay_inner_tape_calls(chamar, || listada(p, clube)) != 0
         {
             continue;
         }
@@ -724,8 +748,8 @@ pub(crate) unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut d
         if a5a >= n + 5 || read_i8(p + 0x5b) as i32 >= n + 10 {
             continue;
         }
-        let r1 = cpe1_sorteio(n);
-        if cpe1_sorteio(a5a) >= r1 {
+        let r1 = friendly_random(n);
+        if friendly_random(a5a) >= r1 {
             continue;
         }
         let m = mascara(jogador);
@@ -751,13 +775,13 @@ pub(crate) unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut d
 /// insatisfeitos (pela ambição e pela lealdade, por sorteio) ganham a marca 0x800 no contrato, e o primeiro dá a
 /// história 0x25
 pub(crate) unsafe extern "thiscall" fn warn_squad_of_position_rival(_this: usize, jogador: usize, clube: usize, _a: u32, _b: u32) {
-    cqb8_rival_com(jogador, clube, &mut |r, t, a| despachar_pos(r, t, a))
+    warn_position_rivals_with(jogador, clube, &mut |r, t, a| dispatch_post_match_call(r, t, a))
 }
 
 /// Comparador: pela fita das portas do pós-jogo (a história 0x72c1f0 e a marca 0x867560 rodam só na original). Regiões:
 /// o sorteador, [0xae1080] e, de cada um dos 50 do elenco, o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 pub(crate) unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(this: usize, jogador: usize, clube: usize, a: u32, b: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_WARN_SQUAD_OF_POSITION_RIVAL);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_WARN_SQUAD_OF_POSITION_RIVAL);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((0xae1080, 4));
     if clube != 0 {
@@ -765,11 +789,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(thi
             let p = read_usize(clube + club::SQUAD + 4 * i);
             if p != 0 {
                 reg.push((p + 0x58, 6));
-                reg.extend(cqb8_contrato(p, clube));
+                reg.extend(contract_region(p, clube));
             }
         }
     }
-    comparar_pos("warn_squad_of_position_rival", reg, || o(this, jogador, clube, a, b), |chamar| cqb8_rival_com(jogador, clube, chamar));
+    comparar_pos("warn_squad_of_position_rival", reg, || o(this, jogador, clube, a, b), |chamar| warn_position_rivals_with(jogador, clube, chamar));
 }
 
 /// As respostas 1 e 2 de cada caso da tabela de saltos da 0x735160 (a 3ª, de todos, é "No Comment", 0xa27808); o caso
@@ -807,7 +831,7 @@ pub(crate) unsafe extern "stdcall" fn media_format_response_option_label(tipo: u
 
 /// Comparador: lado a lado nos primeiros bytes da saída (até 0x50, o maior rótulo tem 61).
 pub(crate) unsafe extern "stdcall" fn comparar_media_format_response_option_label(tipo: u32, opcao: u32, saida: usize, tamanho: u32) {
-    let o = orig::<unsafe extern "stdcall" fn(u32, u32, usize, u32)>(IDX_MEDIA_FORMAT_RESPONSE_OPTION_LABEL);
+    let o = original_fn::<unsafe extern "stdcall" fn(u32, u32, usize, u32)>(IDX_MEDIA_FORMAT_RESPONSE_OPTION_LABEL);
     let reg = if saida != 0 && (tamanho as i16) >= 0xf { vec![(saida, (tamanho as u16 as usize).min(0x50))] } else { Vec::new() };
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(tipo, opcao, saida, tamanho), || media_format_response_option_label(tipo, opcao, saida, tamanho));
     PLACAR.registrar(igual, || format!("media_format_response_option_label({}, {}) {:x?} x {:x?}", tipo as i16, opcao as i8, mo, mr));
@@ -820,32 +844,42 @@ pub(crate) unsafe extern "stdcall" fn comparar_media_format_response_option_labe
 
 
 
-/// A pessoa do id (0x6e bytes em [0xae23bc]).
-pub(crate) unsafe fn cqa13_pessoa(id: i32) -> usize {
+/// Staff record of id (0x6e bytes each in G_STAFF_TABLE).
+///
+/// [pt] A pessoa do id (0x6e bytes em [0xae23bc]).
+pub(crate) unsafe fn media_staff_by_id(id: i32) -> usize {
     read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(0x6e) as usize)
 }
 
 
-/// A máscara da posição natural da pessoa (0x5481a0).
-pub(crate) unsafe fn cqa13_mascara(pessoa: usize) -> u32 {
+/// Staff natural position mask (0x5481a0).
+///
+/// [pt] A máscara da posição natural da pessoa (0x5481a0).
+pub(crate) unsafe fn natural_position_mask(pessoa: usize) -> u32 {
     let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_GET_NATURAL_POSITION_MASK);
     f(pessoa)
 }
 
-/// As marcas de evento do contrato (+0x40, 0x8676f0).
-pub(crate) unsafe fn cqa13_bandeiras(c: usize) -> u32 {
+/// STAFF_CONTRACT get_flags (0x8676f0, contract +0x40).
+///
+/// [pt] As marcas de evento do contrato (+0x40, 0x8676f0).
+pub(crate) unsafe fn media_contract_flags(c: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GET_FLAGS);
     f(c)
 }
 
-/// Apaga marcas de evento do contrato (0x8676d0).
-pub(crate) unsafe fn cqa13_desmarcar(c: usize, marcas: u32) {
+/// STAFF_CONTRACT clear_flags (0x8676d0) on a contract.
+///
+/// [pt] Apaga marcas de evento do contrato (0x8676d0).
+pub(crate) unsafe fn clear_contract_flags(c: usize, marcas: u32) {
     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_STAFF_CONTRACT_CLEAR_FLAGS);
     f(c, marcas);
 }
 
-/// A reputação atual do jogador (+0xb da ficha +0x61).
-pub(crate) unsafe fn cqa13_rep(pessoa: usize) -> i16 {
+/// Player's current reputation (+0xb of the player record at staff +0x61).
+///
+/// [pt] A reputação atual do jogador (+0xb da ficha +0x61).
+pub(crate) unsafe fn current_reputation(pessoa: usize) -> i16 {
     read_i16(read_usize(pessoa + staff::PLAYER) + 0xb)
 }
 
@@ -854,9 +888,12 @@ pub(crate) unsafe fn cqa13_rep(pessoa: usize) -> i16 {
 pub(crate) static mut CQA13_ENSAIO: bool = false;
 pub(crate) static mut CQA13_PAROU: bool = false;
 
-/// Liga marcas no contrato (STAFF_CONTRACT::set_flags 0x867560). No ensaio, pela cópia em ensaio dela (CPW7_ENSAIO): se
+/// STAFF_CONTRACT set_flags; in the dry run, checks whether it would trigger a transfer request and returns true (stop)
+/// if so.
+///
+/// [pt] Liga marcas no contrato (STAFF_CONTRACT::set_flags 0x867560). No ensaio, pela cópia em ensaio dela (CPW7_ENSAIO): se
 /// ela pediria transferência, para. Devolve se parou.
-pub(crate) unsafe fn cqa13_marcas(c: usize, marcas: u32) -> bool {
+pub(crate) unsafe fn set_contract_flags_or_stop(c: usize, marcas: u32) -> bool {
     if CQA13_ENSAIO {
         CPW7_ENSAIO = true;
         CPW7_DECISAO = 0;
@@ -872,12 +909,15 @@ pub(crate) unsafe fn cqa13_marcas(c: usize, marcas: u32) -> bool {
     false
 }
 
-/// A decisão de pedir transferência da 0x867700 com as `marcas` (sem efeito: o +0x45 volta): funções 0xb, 0xf e 0xd,
+/// Side-effect-free copy of 0x867700's transfer-request decision with the given flags (job, not manager/assistant,
+/// morale, wants to leave, no future transfer, not queued, age or reputation).
+///
+/// [pt] A decisão de pedir transferência da 0x867700 com as `marcas` (sem efeito: o +0x45 volta): funções 0xb, 0xf e 0xd,
 /// fora o técnico e o auxiliar do clube do contrato, moral (+0x44) não negativa, sem +0x49, quer sair (0x866f60, com as
 /// marcas já ligadas), sem transferência futura (0x8cca10), sem os bits 1 e 8 de +0x4e, fora da fila da transferência
 /// livre (0x8c1870) e com mais de 20 anos ou reputação acima de 4250.
-pub(crate) unsafe fn cqa13_pediria(c: usize, marcas: u32) -> bool {
-    let pessoa = cqa13_pessoa(read_i32(c));
+pub(crate) unsafe fn would_request_transfer(c: usize, marcas: u32) -> bool {
+    let pessoa = media_staff_by_id(read_i32(c));
     let funcao = *((pessoa + staff::JOB_FOR_CLUB) as *const u8);
     if funcao != 0xb && funcao != 0xf && funcao != 0xd {
         return false;
@@ -908,13 +948,15 @@ pub(crate) unsafe fn cqa13_pediria(c: usize, marcas: u32) -> bool {
     if na_fila(read_usize(G_TRANSFER_MANAGER), pessoa) != 0 {
         return false;
     }
-    !(read_i8_as_i32(pessoa + staff::YEAR_OF_BIRTH) <= 0x14 && cqa13_rep(pessoa) <= 0x109a)
+    !(read_i8_as_i32(pessoa + staff::YEAR_OF_BIRTH) <= 0x14 && current_reputation(pessoa) <= 0x109a)
 }
 
-/// As queixas do contrato (STAFF_CONTRACT::apply_event_flags 0x867700 com a pessoa). No ensaio, para antes se ela
+/// STAFF_CONTRACT apply_event_flags (0x867700); in the dry run stops first if the person would request a transfer.
+///
+/// [pt] As queixas do contrato (STAFF_CONTRACT::apply_event_flags 0x867700 com a pessoa). No ensaio, para antes se ela
 /// pediria transferência. Devolve se parou.
-pub(crate) unsafe fn cqa13_eventos(c: usize, marcas: u32, pessoa: usize) -> bool {
-    if CQA13_ENSAIO && cqa13_pediria(c, marcas) {
+pub(crate) unsafe fn apply_event_flags_or_stop(c: usize, marcas: u32, pessoa: usize) -> bool {
+    if CQA13_ENSAIO && would_request_transfer(c, marcas) {
         CQA13_PAROU = true;
         return true;
     }
@@ -923,13 +965,15 @@ pub(crate) unsafe fn cqa13_eventos(c: usize, marcas: u32, pessoa: usize) -> bool
     false
 }
 
-/// Tira queixas do contrato (STAFF_CONTRACT::clear_grievances 0x8674e0). No ensaio, para antes se o pedido de
-/// transferência seria retirado (a decisão `cph1_retira` com as queixas já tiradas). Devolve se parou.
-pub(crate) unsafe fn cqa13_limpar(c: usize, queixas: u32) -> bool {
+/// STAFF_CONTRACT clear_grievances (0x8674e0); in the dry run stops first if the transfer request would be withdrawn.
+///
+/// [pt] Tira queixas do contrato (STAFF_CONTRACT::clear_grievances 0x8674e0). No ensaio, para antes se o pedido de
+/// transferência seria retirado (a decisão `should_withdraw_transfer_request` com as queixas já tiradas). Devolve se parou.
+pub(crate) unsafe fn clear_grievances_or_stop(c: usize, queixas: u32) -> bool {
     if CQA13_ENSAIO {
         let antes = read_usize(c + 0x45);
         core::ptr::write_unaligned((c + 0x45) as *mut usize, antes & !(queixas as usize));
-        let retira = cph1_retira(c).is_some();
+        let retira = should_withdraw_transfer_request(c).is_some();
         core::ptr::write_unaligned((c + 0x45) as *mut usize, antes);
         if retira {
             CQA13_PAROU = true;
@@ -941,8 +985,10 @@ pub(crate) unsafe fn cqa13_limpar(c: usize, queixas: u32) -> bool {
     false
 }
 
-/// A comemoração da contratação (0x75b6e0); no ensaio, para.
-pub(crate) unsafe fn cqa13_comemorar(this: usize, p: usize, clube: usize, tipo: u32, porta_voz: usize) -> bool {
+/// Queues the signing celebration story (0x75b6e0); in the dry run stops instead.
+///
+/// [pt] A comemoração da contratação (0x75b6e0); no ensaio, para.
+pub(crate) unsafe fn signing_celebration_or_stop(this: usize, p: usize, clube: usize, tipo: u32, porta_voz: usize) -> bool {
     if CQA13_ENSAIO {
         CQA13_PAROU = true;
         return true;
@@ -952,16 +998,19 @@ pub(crate) unsafe fn cqa13_comemorar(this: usize, p: usize, clube: usize, tipo: 
     false
 }
 
-/// O porta-voz do elenco: entre os 50 do clube com ficha, fora `p`, com reputação acima de 4250, o maior sorteio(reputação
+/// Picks the squad spokesman: among the club's 50 players other than p with reputation above 4250, the highest
+/// random(reputation + 20 x (+0x5b + +0x59) +- age adjustment).
+///
+/// [pt] O porta-voz do elenco: entre os 50 do clube com ficha, fora `p`, com reputação acima de 4250, o maior sorteio(reputação
 /// + 20 × (+0x5b + +0x59) ± pela idade: abaixo de 19 −1500, de 23 −750, de 28 −250, de 34 +250), acima de 0.
-pub(crate) unsafe fn cqa13_porta_voz(clube: usize, p: usize) -> usize {
+pub(crate) unsafe fn squad_spokesman(clube: usize, p: usize) -> usize {
     let (mut melhor, mut quem) = (0i32, 0usize);
     for j in 0..50usize {
         let m = read_usize(clube + club::SQUAD + 4 * j);
         if m == 0 || read_usize(m + 0x61) == 0 || m == p {
             continue;
         }
-        let r = cqa13_rep(m);
+        let r = current_reputation(m);
         if r <= 0x109a {
             continue;
         }
@@ -978,7 +1027,7 @@ pub(crate) unsafe fn cqa13_porta_voz(clube: usize, p: usize) -> usize {
         } else {
             0
         };
-        let s = cpe1_sorteio(x);
+        let s = friendly_random(x);
         if s > melhor {
             melhor = s;
             quem = m;
@@ -1020,33 +1069,33 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             let tipo = *((h + 0x10) as *const u8);
             let id = read_i32(h + 8);
             if id != -1 {
-                let q = cqa13_pessoa(id);
-                let rp = cqa13_rep(p);
-                if cqa13_mascara(p) == cqa13_mascara(q) && (rp > 0x128e || rp as i32 - 0x5dc > cqa13_rep(q) as i32) {
-                    let c = cqb8_vinculo(q, novo);
+                let q = media_staff_by_id(id);
+                let rp = current_reputation(p);
+                if natural_position_mask(p) == natural_position_mask(q) && (rp > 0x128e || rp as i32 - 0x5dc > current_reputation(q) as i32) {
+                    let c = media_contract_for_club(q, novo);
                     if c != 0 {
                         crate::comparacao::ramo("cqa_13 historia da midia");
                         mudou = true;
                         if tipo == 1 {
-                            if cqa13_eventos(c, 0x8000000, 0) || cqa13_eventos(c, 0x80000000, p) {
+                            if apply_event_flags_or_stop(c, 0x8000000, 0) || apply_event_flags_or_stop(c, 0x80000000, p) {
                                 return;
                             }
                         } else if tipo == 2 {
-                            if cqa13_bandeiras(c) & 0x800 != 0
-                                && (cqa13_marcas(c, 0x200) || cqa13_eventos(c, 0x80000000, p) || cqa13_marcas(c, 0x80))
+                            if media_contract_flags(c) & 0x800 != 0
+                                && (set_contract_flags_or_stop(c, 0x200) || apply_event_flags_or_stop(c, 0x80000000, p) || set_contract_flags_or_stop(c, 0x80))
                             {
                                 return;
                             }
-                        } else if cpe1_sorteio(read_i8_as_i32(q + 0x5b)) < cpe1_sorteio(10) {
-                            if cqa13_marcas(c, 0x80) {
+                        } else if friendly_random(read_i8_as_i32(q + 0x5b)) < friendly_random(10) {
+                            if set_contract_flags_or_stop(c, 0x80) {
                                 return;
                             }
-                            if cpe1_sorteio(read_i8_as_i32(q + 0x5a)) == 0 && cqa13_eventos(c, 0x80000000, p) {
+                            if friendly_random(read_i8_as_i32(q + 0x5a)) == 0 && apply_event_flags_or_stop(c, 0x80000000, p) {
                                 return;
                             }
                         }
-                        if cqa13_bandeiras(c) & 0x800 != 0 {
-                            cqa13_desmarcar(c, 0x800);
+                        if media_contract_flags(c) & 0x800 != 0 {
+                            clear_contract_flags(c, 0x800);
                         }
                     }
                 }
@@ -1059,7 +1108,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     let forca = contar(novo, 0, 0) as i8 as i32;
     let rn = read_i16(novo + 0x80);
     let limite = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: o limite do elenco forte
-    let mesma = mesma_posicao(novo, cqa13_mascara(p)) as i8 as i32;
+    let mesma = mesma_posicao(novo, natural_position_mask(p)) as i8 as i32;
     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let categoria: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
     for j in 0..50usize {
@@ -1070,35 +1119,35 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
         if dias(0xae2c90, read_usize(m + 0x3e) as u32, read_usize(m + 0x42) as u32) <= read_i8_as_i32(m + 0x5a) + 0xf {
             continue;
         }
-        let c = cqb8_vinculo(m, novo);
+        let c = media_contract_for_club(m, novo);
         if c == 0 {
             continue;
         }
-        if cqa13_bandeiras(c) & 0x800 != 0 && cqa13_mascara(p) == cqa13_mascara(m) {
-            cqa13_desmarcar(c, 0x800);
-            if cqa13_eventos(c, 0x80000000, p) {
+        if media_contract_flags(c) & 0x800 != 0 && natural_position_mask(p) == natural_position_mask(m) {
+            clear_contract_flags(c, 0x800);
+            if apply_event_flags_or_stop(c, 0x80000000, p) {
                 return;
             }
-            if cpe1_sorteio(read_i8_as_i32(m + 0x5a)) == 0 && cqa13_marcas(c, 0x200) {
+            if friendly_random(read_i8_as_i32(m + 0x5a)) == 0 && set_contract_flags_or_stop(c, 0x200) {
                 return;
             }
-            if cpe1_sorteio(read_i8_as_i32(m + 0x5b)) == 0 && cqa13_marcas(c, 0x80) {
+            if friendly_random(read_i8_as_i32(m + 0x5b)) == 0 && set_contract_flags_or_stop(c, 0x80) {
                 return;
             }
         }
-        if cqa13_bandeiras(c) & 0x400 != 0 && forca >= limite {
+        if media_contract_flags(c) & 0x400 != 0 && forca >= limite {
             crate::comparacao::ramo("cqa_13 elenco forte");
-            cqa13_desmarcar(c, 0x400);
+            clear_contract_flags(c, 0x400);
         }
-        if mesma > 2 && cqa13_bandeiras(c) & 0x400 == 0 && cqa13_rep(m) > 0x109a && cqa13_mascara(p) == cqa13_mascara(m) {
-            let rp = cqa13_rep(p);
+        if mesma > 2 && media_contract_flags(c) & 0x400 == 0 && current_reputation(m) > 0x109a && natural_position_mask(p) == natural_position_mask(m) {
+            let rp = current_reputation(p);
             if rp > 0x128e || rp as i32 - 0x5dc > read_i16(novo + 0x80) as i32 {
                 let a = read_i8_as_i32(m + 0x5a);
-                if a < 0xf && read_i8_as_i32(m + 0x5b) < 0xf && a < mesma + 4 && read_i8_as_i32(m + 0x57) < mesma + 8 && cpe1_sorteio(a) < cpe1_sorteio(6) {
+                if a < 0xf && read_i8_as_i32(m + 0x5b) < 0xf && a < mesma + 4 && read_i8_as_i32(m + 0x57) < mesma + 8 && friendly_random(a) < friendly_random(6) {
                     let parou = if categoria(m, c) == 1 || categoria(m, c) == 2 {
-                        cqa13_eventos(c, 0x80000000, p)
+                        apply_event_flags_or_stop(c, 0x80000000, p)
                     } else {
-                        cqa13_marcas(c, 0x200)
+                        set_contract_flags_or_stop(c, 0x200)
                     };
                     if parou {
                         return;
@@ -1107,12 +1156,12 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             }
         }
         if read_i32(c + 0x45) & 0x20000000 != 0 {
-            let rp = cqa13_rep(p);
+            let rp = current_reputation(p);
             if rp > 0x1482 || rp as i32 - 0x4e2 > read_i16(novo + 0x80) as i32 {
                 mudou = true;
-                if forca > 0x28 || cpe1_sorteio(read_i8_as_i32(m + 0x5a)) != 0 {
+                if forca > 0x28 || friendly_random(read_i8_as_i32(m + 0x5a)) != 0 {
                     crate::comparacao::ramo("cqa_13 queixa limpa");
-                    if cqa13_limpar(c, 0x20000000) { // cqa13: chega alguém maior
+                    if clear_grievances_or_stop(c, 0x20000000) { // cqa13: chega alguém maior
                         return;
                     }
                 }
@@ -1126,9 +1175,9 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             let linha = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_i32(novo) as u32).wrapping_mul(0x49) as usize);
             let x = read_i16(linha + 8).wrapping_add(0x1f4); // cqa13: a torcida comemora
             let x = if x < 1 { 1 } else if x > 10000 { 10000 } else { x };
-            crate::comparacao::ramo("cqa_13 torcida comemora");
+            crate::comparacao::ramo("cqa_13 goal_crowd_reaction comemora");
             core::ptr::write_unaligned((linha + 8) as *mut i16, x);
-            if cqa13_comemorar(this, p, novo, 1, 0) {
+            if signing_celebration_or_stop(this, p, novo, 1, 0) {
                 return;
             }
         }
@@ -1139,10 +1188,10 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             && read_i16(ficha + 0xb) as i32 + 0x2ee > read_i16(novo + 0x80) as i32
             && read_i8_as_i32(p + 0x5b) > 0xa
             && read_i8_as_i32(p + 0x59) > 6
-            && cpe1_sorteio(3) != 0
+            && friendly_random(3) != 0
         {
-            let quem = cqa13_porta_voz(novo, p);
-            if quem != 0 && cqa13_comemorar(this, p, novo, 2, quem) {
+            let quem = squad_spokesman(novo, p);
+            if quem != 0 && signing_celebration_or_stop(this, p, novo, 2, quem) {
                 return;
             }
         }
@@ -1166,19 +1215,19 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     } else {
         (0x23, 0x2e)
     };
-    let mesma = mesma_posicao(velho, cqa13_mascara(p)) as i8 as i32;
+    let mesma = mesma_posicao(velho, natural_position_mask(p)) as i8 as i32;
     let candidato: unsafe extern "C" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_STAFF_IS_BEST_FAVOURED_CANDIDATE);
     for j in 0..50usize {
         let m = read_usize(velho + 0xd7 + 4 * j);
         if m == 0 || read_usize(m + 0x61) == 0 || m == p {
             continue;
         }
-        let c = cqb8_vinculo(m, velho);
+        let c = media_contract_for_club(m, velho);
         if c == 0 {
             continue;
         }
         let mut q: i32 = if read_i32(c + 0x45) != 0 { 3 } else { 0 };
-        if cqa13_bandeiras(c) != 0 {
+        if media_contract_flags(c) != 0 {
             q += 1;
         }
         if read_i8_as_i32(c + 0x44) < -0x19 {
@@ -1188,17 +1237,17 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
         let mut queixa = 0u32; // 0x40000000 ou 0x20000000 pela saída do companheiro
         let mut segundo = true;
         if flag as u8 != 0
-            && cqa13_bandeiras(c) & 0x200 == 0
-            && cqa13_bandeiras(c) & 0x800 == 0
+            && media_contract_flags(c) & 0x200 == 0
+            && media_contract_flags(c) & 0x800 == 0
             && read_i32(c + 0x45) as u32 & 0x80000000 == 0
             && (forca < 0x28 || mesma < 6)
-            && (cqa13_mascara(p) != cqa13_mascara(m) || mesma < 2)
+            && (natural_position_mask(p) != natural_position_mask(m) || mesma < 2)
         {
-            let rp = cqa13_rep(p);
+            let rp = current_reputation(p);
             if rp > 0x1e46 || rp > read_i16(novo + 0x80).wrapping_sub(0x2ee) {
-                let r = cpe1_sorteio(6);
-                if read_i8_as_i32(m + 0x57) + q > r + 10 && read_i8_as_i32(c + 0x3d) > 0x19 && cqa13_rep(m) > 0x109a
-                    && cpe1_sorteio(read_i8_as_i32(m + 0x5b)) < q + 5 && cpe1_sorteio(read_i8_as_i32(m + 0x5a)) == 0
+                let r = friendly_random(6);
+                if read_i8_as_i32(m + 0x57) + q > r + 10 && read_i8_as_i32(c + 0x3d) > 0x19 && current_reputation(m) > 0x109a
+                    && friendly_random(read_i8_as_i32(m + 0x5b)) < q + 5 && friendly_random(read_i8_as_i32(m + 0x5a)) == 0
                 {
                     segundo = false;
                     queixa = if read_i8_as_i32(p + 0x18) < 0x18 && read_i16(read_usize(p + 0x61) + 0xd) < 0x128e { 0x40000000 } else { 0x20000000 };
@@ -1209,10 +1258,10 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             && read_i8_as_i32(p + 0x18) > 0x17
             && flag as u8 != 0
             && candidato(m, novo, p) != 0
-            && cqa13_mascara(p) != cqa13_mascara(m)
-            && cpe1_sorteio(read_i8_as_i32(m + 0x5b)) < q + 5
+            && natural_position_mask(p) != natural_position_mask(m)
+            && friendly_random(read_i8_as_i32(m + 0x5b)) < q + 5
         {
-            let rp = cqa13_rep(p);
+            let rp = current_reputation(p);
             if rp > 0x1e46 || rp > read_i16(novo + 0x80).wrapping_sub(0x2ee) {
                 queixa = 0x20000000;
             } else {
@@ -1222,42 +1271,42 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             }
         }
         if queixa != 0 {
-            if cqa13_eventos(c, queixa, p) {
+            if apply_event_flags_or_stop(c, queixa, p) {
                 return;
             }
             mudou = true;
         }
-        if read_i8_as_i32(m + 0x18) > 0x17 && cqa13_bandeiras(c) & 0x400 == 0 && read_i8_as_i32(m + 0x57) > 0xf {
-            let r = (cpe1_sorteio(10) as u8).wrapping_add(10) as i8;
-            if *((m + 0x58) as *const i8) > r && read_i8_as_i32(m + 0x5b) > 0xa && cqa13_rep(p) > 0x109a && cqa13_rep(m) > 0x109a && forca < lim1 && cqa13_marcas(c, 0x400) {
+        if read_i8_as_i32(m + 0x18) > 0x17 && media_contract_flags(c) & 0x400 == 0 && read_i8_as_i32(m + 0x57) > 0xf {
+            let r = (friendly_random(10) as u8).wrapping_add(10) as i8;
+            if *((m + 0x58) as *const i8) > r && read_i8_as_i32(m + 0x5b) > 0xa && current_reputation(p) > 0x109a && current_reputation(m) > 0x109a && forca < lim1 && set_contract_flags_or_stop(c, 0x400) {
                 return;
             }
         }
-        let iguais = || cqa13_mascara(p) == cqa13_mascara(m);
-        if (forca < lim2 || mesma < 2) && iguais() && cqa13_bandeiras(c) & 0x200 != 0 {
-            cqa13_desmarcar(c, 0x200);
+        let iguais = || natural_position_mask(p) == natural_position_mask(m);
+        if (forca < lim2 || mesma < 2) && iguais() && media_contract_flags(c) & 0x200 != 0 {
+            clear_contract_flags(c, 0x200);
         }
         let tirar_800 = if forca < lim2 {
-            let r1 = cpe1_sorteio(read_i8_as_i32(p + 0x5a));
-            (r1 > cpe1_sorteio(10) && iguais()) || mesma < 2
+            let r1 = friendly_random(read_i8_as_i32(p + 0x5a));
+            (r1 > friendly_random(10) && iguais()) || mesma < 2
         } else {
             mesma < 2
         };
-        if tirar_800 && cqa13_bandeiras(c) & 0x800 != 0 {
-            cqa13_desmarcar(c, 0x800);
+        if tirar_800 && media_contract_flags(c) & 0x800 != 0 {
+            clear_contract_flags(c, 0x800);
         }
-        if ((forca < lim2 && iguais()) || mesma < 2) && read_i32(c + 0x45) as u32 & 0x80000000 != 0 && cqa13_limpar(c, 0x80000000) {
+        if ((forca < lim2 && iguais()) || mesma < 2) && read_i32(c + 0x45) as u32 & 0x80000000 != 0 && clear_grievances_or_stop(c, 0x80000000) {
             return;
         }
-        if cqa13_bandeiras(c) & 0x400 != 0 {
-            if read_i32(c + 0x45) as u32 & 0x80000000 != 0 && cqa13_limpar(c, 0x80000000) {
+        if media_contract_flags(c) & 0x400 != 0 {
+            if read_i32(c + 0x45) as u32 & 0x80000000 != 0 && clear_grievances_or_stop(c, 0x80000000) {
                 return;
             }
-            if cqa13_bandeiras(c) & 0x800 != 0 {
-                cqa13_desmarcar(c, 0x800);
+            if media_contract_flags(c) & 0x800 != 0 {
+                clear_contract_flags(c, 0x800);
             }
-            if cqa13_bandeiras(c) & 0x200 != 0 {
-                cqa13_desmarcar(c, 0x200);
+            if media_contract_flags(c) & 0x200 != 0 {
+                clear_contract_flags(c, 0x200);
             }
         }
     }
@@ -1270,9 +1319,9 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
         && read_i16(ficha + 0xb) as i32 + 0x2ee > read_i16(velho + 0x80) as i32
         && read_i8_as_i32(p + 0x5b) > 0xa
         && read_i8_as_i32(p + 0x59) > 6
-        && cpe1_sorteio(3) != 0
+        && friendly_random(3) != 0
     {
-        let quem = cqa13_porta_voz(velho, p);
+        let quem = squad_spokesman(velho, p);
         if quem != 0 {
             if CQA13_ENSAIO {
                 CQA13_PAROU = true;
@@ -1289,8 +1338,8 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
 /// do novo clube em [[0xb67a44]] e, de cada um dos elencos dos dois clubes (e da pessoa da história da mídia), o contrato
 /// com o clube (0x50 bytes) e a linha de opiniões em [0xae2d0c] (0x4f bytes). Quando a cópia para: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions(this: usize, p: usize, novo: usize, velho: usize, flag: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(IDX_PROCESS_TRANSFER_SQUAD_REACTIONS);
-    if p == 0 || novo == 0 || read_usize(p + 0x61) == 0 || read_i8_as_i32(p + 0x18) < 0x13 || cqa13_rep(p) < 0x109a {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(IDX_PROCESS_TRANSFER_SQUAD_REACTIONS);
+    if p == 0 || novo == 0 || read_usize(p + 0x61) == 0 || read_i8_as_i32(p + 0x18) < 0x13 || current_reputation(p) < 0x109a {
         return o(this, p, novo, velho, flag);
     }
     let ficha = read_usize(G_CONTRACT_LOOKUP_RESULT);
@@ -1304,7 +1353,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions
         if m == 0 {
             return;
         }
-        let c = cqb8_vinculo(m, clube);
+        let c = media_contract_for_club(m, clube);
         if c != 0 {
             reg.push((c, 0x50));
         }
@@ -1318,7 +1367,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions
         }
     }
     if read_i32(this + 8) > 0 && read_i32(read_usize(this) + 8) != -1 {
-        juntar(cqa13_pessoa(read_i32(read_usize(this) + 8)), novo);
+        juntar(media_staff_by_id(read_i32(read_usize(this) + 8)), novo);
     }
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, ficha); // os contratos lidos acima não contam
     let antes = crate::comparacao::Memoria::ler(&reg);
@@ -1378,7 +1427,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
         gravar(nt, k as i8, read_usize(read_usize(p + 4 * k) + 0x33) as u32);
     }
     gravar(nt, 4, read_usize(read_usize(p + 0x39)) as u32);
-    gravar(nt, 5, cpe1_sorteio(2) as u32);
+    gravar(nt, 5, friendly_random(2) as u32);
     let v = veiculo(p);
     gravar(nt, 6, v);
     let nacao = read_usize(clube + club::NATION);
@@ -1411,7 +1460,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
 
 // ponytail: a notícia vai à caixa do técnico (aloca) e sorteia: só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_queue_signing_celebration_story(this: usize, p: usize, clube: usize, tipo: u32, a: u32, porta_voz: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize)>(IDX_QUEUE_SIGNING_CELEBRATION_STORY)(this, p, clube, tipo, a, porta_voz)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize)>(IDX_QUEUE_SIGNING_CELEBRATION_STORY)(this, p, clube, tipo, a, porta_voz)
 }
 
 /// news 0xbe4 of the team mate unhappy at the sale, to the old club's manager
@@ -1449,8 +1498,8 @@ pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, vel
     }
     gravar(nt, 0xc, read_usize(velho) as u32);
     gravar(nt, 0xd, read_usize(novo) as u32);
-    let r = cpe1_sorteio(5);
-    let s = if read_i8_as_i32(comp + 0x5b) > r + 10 { cpe1_sorteio(2) } else { cpe1_sorteio(2) + 2 };
+    let r = friendly_random(5);
+    let s = if read_i8_as_i32(comp + 0x5b) > r + 10 { friendly_random(2) } else { friendly_random(2) + 2 };
     gravar(nt, 0xe, s as u32);
     let v = veiculo(velho);
     gravar(nt, 0xf, v);
@@ -1462,7 +1511,7 @@ pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, vel
 
 // ponytail: a notícia vai à caixa do técnico (aloca) e sorteia: só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_queue_sale_unrest_story(this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_QUEUE_SALE_UNREST_STORY)(this, velho, novo, p, comp)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_QUEUE_SALE_UNREST_STORY)(this, velho, novo, p, comp)
 }
 
 // ---------- 259a leva: a fila dos regens: os regens jovens que vencem e os técnicos de reserva refeitos; o veículo da notícia pelo clube e pela pessoa (player_regen.cpp, media.cpp) ----------
@@ -1472,31 +1521,39 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_sale_unrest_story(this: us
 
 
 
-/// A data da entrada `e` da fila dos regens (+4) é antes de hoje (0x456770)?
-pub(crate) unsafe fn cpw10_vencida(e: usize) -> bool {
+/// True if the date (+4) of a regen queue entry is before today.
+///
+/// [pt] A data da entrada `e` da fila dos regens (+4) é antes de hoje (0x456770)?
+pub(crate) unsafe fn is_regen_entry_due(e: usize) -> bool {
     let anterior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
     anterior(e + 4, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32) != 0 // cpw10: a entrada vencida
 }
 
-/// Uma nota do técnico refeito (um dos blocos da 0x7a65d0): P = pow(+0x22 da pessoa, 0x968950) (vezes `fator`, quando
+/// One rating of the rebuilt coach (0x7a65d0): max(pow(+0x22, 0x968950) x factor, record value v) x k, capped and
+/// truncated.
+///
+/// [pt] Uma nota do técnico refeito (um dos blocos da 0x7a65d0): P = pow(+0x22 da pessoa, 0x968950) (vezes `fator`, quando
 /// há), o maior entre P e o valor `v` da ficha, vezes `k`, no máximo `teto` (f64 em 0x...), truncado.
-pub(crate) unsafe fn cpw10_nota(pessoa: usize, v: i16, fator: Option<usize>, k: usize, teto: usize) -> u16 {
-    let mut p = pow_do_jogo(*((pessoa + staff::INT_APPS) as *const u8) as f64, f64_em(0x968950));
+pub(crate) unsafe fn rebuilt_coach_rating(pessoa: usize, v: i16, fator: Option<usize>, k: usize, teto: usize) -> u16 {
+    let mut p = game_pow(*((pessoa + staff::INT_APPS) as *const u8) as f64, read_f64_at(0x968950));
     if let Some(f) = fator {
-        p *= f64_em(f);
+        p *= read_f64_at(f);
     }
     let v = v as f64;
     let m = if p > v { p } else { v };
-    let mk = m * f64_em(k);
-    let t = f64_em(teto);
-    ftol(if !(mk >= t) { mk } else { t }) as u16
+    let mk = m * read_f64_at(k);
+    let t = read_f64_at(teto);
+    match_pl_ftol(if !(mk >= t) { mk } else { t }) as u16
 }
 
-/// O cargo do técnico refeito no clube da máquina (0x7a6757..0x7a68d8): reputação do jogador (+0xb da ficha) abaixo da
+/// Places the rebuilt coach at his AI club (0x7a6757..0x7a68d8) as coach in empty coach slots or as assistant, by
+/// reputation against the club's.
+///
+/// [pt] O cargo do técnico refeito no clube da máquina (0x7a6757..0x7a68d8): reputação do jogador (+0xb da ficha) abaixo da
 /// do clube (+0x80) vezes 0x968968 e menos de 5 treinadores (0x53c8d0): as vagas de treinador vazias (+0x19f, 5) ficam
 /// com ele (cargo 0xf); sem vaga, auxiliar (+0xd3, cargo 0xd) se o clube não tiver (0x53cb80). Senão, abaixo da do clube
 /// vezes 0x969040, auxiliar do mesmo jeito.
-pub(crate) unsafe fn cpw10_cargo_no_clube(s: usize) {
+pub(crate) unsafe fn place_coach_at_ai_club(s: usize) {
     let clube = read_usize(s + 0x39);
     if clube == 0 {
         return;
@@ -1509,7 +1566,7 @@ pub(crate) unsafe fn cpw10_cargo_no_clube(s: usize) {
     let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_ASSISTANT);
     let rep = |k: usize| {
         let f = read_i16(read_usize(s + 0x61) + 0xb) as f64;
-        let c = read_i16(read_usize(s + 0x39) + 0x80) as f64 * f64_em(k);
+        let c = read_i16(read_usize(s + 0x39) + 0x80) as f64 * read_f64_at(k);
         c > f
     };
     if rep(0x968968) && (treinadores(read_usize(s + 0x39)) as i8) < 5 {
@@ -1536,9 +1593,11 @@ pub(crate) unsafe fn cpw10_cargo_no_clube(s: usize) {
 
 
 
-/// O veículo pelo sorteio(100) dos grandes (0x757f30/0x757fa0): 0 → 6; até 7 → 3; até 14 → 5; até 39 → 2; até 59 → 0;
+/// Media outlet code for big clubs from a random(100) value (6, 3, 5, 2, 0 or 1) [inference: "veiculo" = media outlet].
+///
+/// [pt] O veículo pelo sorteio(100) dos grandes (0x757f30/0x757fa0): 0 → 6; até 7 → 3; até 14 → 5; até 39 → 2; até 59 → 0;
 /// senão 1 (comparações do al com sinal).
-pub(crate) fn cpw10_veiculo_grande(al: i8) -> u32 {
+pub(crate) fn big_club_outlet(al: i8) -> u32 {
     if al == 0 {
         6
     } else if al < 8 {
@@ -1552,9 +1611,11 @@ pub(crate) fn cpw10_veiculo_grande(al: i8) -> u32 {
     }
 }
 
-/// O veículo dos menores: sorteio(4) de 0 a 2 → 2, senão 4.
-pub(crate) unsafe fn cpw10_veiculo_menor() -> u32 {
-    let r = cpe1_sorteio(4);
+/// Media outlet code for smaller clubs: random(4) 0..2 gives 2, else 4 [inference].
+///
+/// [pt] O veículo dos menores: sorteio(4) de 0 a 2 → 2, senão 4.
+pub(crate) unsafe fn small_club_outlet() -> u32 {
+    let r = friendly_random(4);
     if (0..=2).contains(&r) {
         2
     } else {
@@ -1570,14 +1631,14 @@ pub(crate) unsafe fn cpw10_veiculo_menor() -> u32 {
 /// (0x75cfc0).
 pub(crate) unsafe extern "C" fn media_pick_outlet_type_for_club(clube: usize) -> u32 {
     if read_i16(clube + club::REPUTATION) > 0x186a {
-        cpw10_veiculo_grande(cpe1_sorteio(100) as u8 as i8)
+        big_club_outlet(friendly_random(100) as u8 as i8)
     } else {
-        cpw10_veiculo_menor()
+        small_club_outlet()
     }
 }
 
 pub(crate) unsafe extern "C" fn comparar_media_pick_outlet_type_for_club(clube: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_MEDIA_PICK_OUTLET_TYPE_FOR_CLUB);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MEDIA_PICK_OUTLET_TYPE_FOR_CLUB);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(clube), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_club(clube)));
     PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
     r
@@ -1591,14 +1652,14 @@ pub(crate) unsafe extern "C" fn comparar_media_pick_outlet_type_for_club(clube: 
 /// comemoração da contratação (0x75b6e0, nas transferências).
 pub(crate) unsafe extern "C" fn media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
     if read_i16(read_usize(pessoa + staff::PLAYER) + 0xb) > 0x186a {
-        cpw10_veiculo_grande(cpe1_sorteio(100) as u8 as i8)
+        big_club_outlet(friendly_random(100) as u8 as i8)
     } else {
-        cpw10_veiculo_menor()
+        small_club_outlet()
     }
 }
 
 pub(crate) unsafe extern "C" fn comparar_media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_MEDIA_PICK_OUTLET_TYPE_FOR_PERSON);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MEDIA_PICK_OUTLET_TYPE_FOR_PERSON);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_person(pessoa)));
     PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));
     r
@@ -1611,64 +1672,78 @@ pub(crate) unsafe extern "C" fn comparar_media_pick_outlet_type_for_person(pesso
 
 
 
-/// A linha do clube no gerente dos técnicos: [[0xb67a44]] + id × 0x49 (+6 confiança da diretoria, +8 da torcida, as duas
+/// The club's row in the manager manager table ([[G_MANAGER_MANAGER]] + id x 0x49; +6 board confidence, +8 fan
+/// confidence).
+///
+/// [pt] A linha do clube no gerente dos técnicos: [[0xb67a44]] + id × 0x49 (+6 confiança da diretoria, +8 da torcida, as duas
 /// entre 1 e 10000; +0xe outra palavra).
-pub(crate) unsafe fn cpo5_linha(clube: usize) -> usize {
+pub(crate) unsafe fn manager_manager_row(clube: usize) -> usize {
     read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_i32(clube) as usize).wrapping_mul(0x49))
 }
 
-/// Os amortecedores comuns das duas confianças: com o preferido (`gosta`) a queda vale metade e a alta o dobro; com o
+/// Dampens a confidence change: halved drop / doubled rise for a favoured manager, the reverse for a disliked one;
+/// beyond +-1000 the excess counts 0.2.
+///
+/// [pt] Os amortecedores comuns das duas confianças: com o preferido (`gosta`) a queda vale metade e a alta o dobro; com o
 /// rejeitado (`nao_gosta`) o contrário; fora de ±1000, o excesso vale 0,2. Devolve a palavra baixa (o original usa `di`).
-pub(crate) unsafe fn cpo5_amortecer(v: i32, gosta: bool, nao_gosta: bool) -> i16 {
+pub(crate) unsafe fn damp_confidence_change(v: i32, gosta: bool, nao_gosta: bool) -> i16 {
     let mut v = v;
     if gosta {
         let x = v as i16 as f64;
-        v = if (v as i16) < 0 { ftol(x * f64_em(0x968968)) } else { ftol(x + x) };
+        v = if (v as i16) < 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) };
     } else if nao_gosta {
         let x = v as i16 as f64;
-        v = if (v as i16) > 0 { ftol(x * f64_em(0x968968)) } else { ftol(x + x) };
+        v = if (v as i16) > 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) };
     }
     let x = v as i16 as i32;
     if x < -1000 {
-        v = ftol((x + 1000) as f64 * f64_em(0x968918) - f64_em(0x968908));
+        v = match_pl_ftol((x + 1000) as f64 * read_f64_at(0x968918) - read_f64_at(0x968908));
     } else if x > 1000 {
-        v = ftol((x - 1000) as f64 * f64_em(0x968918) + f64_em(0x968908));
+        v = match_pl_ftol((x - 1000) as f64 * read_f64_at(0x968918) + read_f64_at(0x968908));
     }
     v as i16
 }
 
-/// A variação da confiança da torcida (0x738340): conf = +8 da linha (0 sem clube); d = alvo − trunc((conf − 5000) ×
+/// Fan confidence change (0x738340) toward a target, from the row's +8 and the manager being favoured or disliked by
+/// the club.
+///
+/// [pt] A variação da confiança da torcida (0x738340): conf = +8 da linha (0 sem clube); d = alvo − trunc((conf − 5000) ×
 /// −0,05) (16 bits); v = trunc(d × 0,75); o técnico (+0xcf) favorito (0x547790) ou rejeitado (0x5477d0) pelo clube
 /// amortece. As duas consultas são puras.
-pub(crate) unsafe fn cpo5_variacao_da_torcida(clube: usize, alvo: u32) -> i16 {
+pub(crate) unsafe fn fan_confidence_change(clube: usize, alvo: u32) -> i16 {
     let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_FAVOURS_STAFF);
     let rejeitado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_DISLIKES_STAFF);
-    let conf = if clube != 0 { read_i16(cpo5_linha(clube) + 8) as i32 } else { 0 };
-    let t = ftol((conf - 5000) as f64 * f64_em(0x96d280));
+    let conf = if clube != 0 { read_i16(manager_manager_row(clube) + 8) as i32 } else { 0 };
+    let t = match_pl_ftol((conf - 5000) as f64 * read_f64_at(0x96d280));
     let d = (alvo as i32).wrapping_sub(t) as i16;
-    let v = ftol(d as f64 * f64_em(0x969040));
+    let v = match_pl_ftol(d as f64 * read_f64_at(0x969040));
     let tecnico = read_usize(clube + club::MANAGER);
     let fav = favorito(tecnico, clube) != 0;
     let rej = !fav && rejeitado(tecnico, clube) != 0;
-    cpo5_amortecer(v, fav, rej)
+    damp_confidence_change(v, fav, rej)
 }
 
-/// A variação da confiança da diretoria (0x7386f0): conf = +6 da linha (0 sem clube); s = (conf − 6000) / 20 + alvo
+/// Board confidence change (0x7386f0) toward a target, from the row's +6 and the chairman liking or disliking the
+/// manager.
+///
+/// [pt] A variação da confiança da diretoria (0x7386f0): conf = +6 da linha (0 sem clube); s = (conf − 6000) / 20 + alvo
 /// (16 bits); v = trunc(s × 0,75); o presidente (+0xbf) gosta (0x547810) ou não gosta (0x547840) do técnico (+0xcf).
-pub(crate) unsafe fn cpo5_variacao_da_diretoria(clube: usize, alvo: u32) -> i16 {
+pub(crate) unsafe fn board_confidence_change(clube: usize, alvo: u32) -> i16 {
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_FAVOURED_BY);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
-    let conf = if clube != 0 { read_i16(cpo5_linha(clube) + 6) as i32 } else { 0 };
+    let conf = if clube != 0 { read_i16(manager_manager_row(clube) + 6) as i32 } else { 0 };
     let s = ((conf - 6000) / 20).wrapping_add(alvo as i32) as i16;
-    let v = ftol(s as f64 * f64_em(0x969040));
+    let v = match_pl_ftol(s as f64 * read_f64_at(0x969040));
     let (tecnico, presidente) = (read_usize(clube + club::MANAGER), read_usize(clube + club::CHAIRMAN));
     let g = gosta(tecnico, presidente) != 0;
     let n = !g && nao_gosta(tecnico, presidente) != 0;
-    cpo5_amortecer(v, g, n)
+    damp_confidence_change(v, g, n)
 }
 
-/// Soma `v` na palavra da linha, entre 1 e 10000.
-pub(crate) unsafe fn cpo5_somar(p: usize, v: i16) {
+/// Adds v to a confidence word, clamped to 1..10000.
+///
+/// [pt] Soma `v` na palavra da linha, entre 1 e 10000.
+pub(crate) unsafe fn add_clamped_confidence(p: usize, v: i16) {
     let x = read_i16(p).wrapping_add(v);
     core::ptr::write_unaligned(p as *mut i16, x.clamp(1, 10000));
 }
@@ -1682,15 +1757,15 @@ pub(crate) unsafe fn cpo5_somar(p: usize, v: i16) {
 ///
 /// [pt] { 0x738340 } (thiscall, ret 0x14, media.cpp, quadro SEH sem destrutor): `Media::adjust_supporter_confidence(clube,
 /// sujeito, tópico, alvo, variante)`: soma na confiança da torcida (+8 da linha do clube, entre 1 e 10000) a variação
-/// (ver `cpo5_variacao_da_torcida`). Fora de ±500, a notícia 0xbe0 (local) ao técnico do clube (0x7861e0): 0 = 0, 1 =
+/// (ver `fan_confidence_change`). Fora de ±500, a notícia 0xbe0 (local) ao técnico do clube (0x7861e0): 0 = 0, 1 =
 /// tópico, 2 = variante, 3 = sorteio(4), 4 = id do clube, 5 = o grau (5 abaixo de −750, 4 negativa, 3 até 750, 2
 /// acima), 6..9 o técnico; com sujeito, 10..13 o sujeito e 14 = 6 favorito, 7 rejeitado, 8 nenhum; depois −1, a
 /// confiança nova e 0.
 pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
-    let v = cpo5_variacao_da_torcida(clube, alvo);
-    crate::comparacao::ramo("cpo_5 torcida");
+    let v = fan_confidence_change(clube, alvo);
+    crate::comparacao::ramo("cpo_5 goal_crowd_reaction");
     if clube != 0 {
-        cpo5_somar(cpo5_linha(clube) + 8, v);
+        add_clamped_confidence(manager_manager_row(clube) + 8, v);
     }
     if (-500..=500).contains(&v) {
         return;
@@ -1712,9 +1787,9 @@ pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize,
     gravar(n, 4, read_usize(clube) as u32);
     let grau = if v < -750 { 5 } else if v < 0 { 4 } else if v > 750 { 2 } else { 3 };
     gravar(n, 5, grau);
-    cqc10_nomes(gravar, n, 6, read_usize(clube + club::MANAGER));
+    set_person_name_slots(gravar, n, 6, read_usize(clube + club::MANAGER));
     let b: i8 = if sujeito != 0 {
-        cqc10_nomes(gravar, n, 10, sujeito);
+        set_person_name_slots(gravar, n, 10, sujeito);
         let r = if favorito(sujeito, clube) != 0 {
             6
         } else if rejeitado(sujeito, clube) != 0 {
@@ -1729,7 +1804,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize,
         0xb
     };
     gravar(n, b, u32::MAX);
-    let conf = if clube != 0 { read_i16(cpo5_linha(clube) + 8) as i32 } else { 0 };
+    let conf = if clube != 0 { read_i16(manager_manager_row(clube) + 8) as i32 } else { 0 };
     gravar(n, b + 1, conf as u32);
     gravar(n, b + 2, 0);
     entregar(read_usize(G_NEWS), n, clube);
@@ -1741,7 +1816,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize,
 ///
 /// [pt] { 0x7386f0 } (thiscall, ret 0x18, media.cpp, quadro SEH sem destrutor): `Media::adjust_board_confidence(clube,
 /// sujeito, tópico, alvo, variante, sexto)`: soma na confiança da diretoria (+6 da linha do clube, entre 1 e 10000) a
-/// variação (ver `cpo5_variacao_da_diretoria`). Fora de ±500, a notícia 0xbe0 (local) ao técnico do clube (0x7861e0):
+/// variação (ver `board_confidence_change`). Fora de ±500, a notícia 0xbe0 (local) ao técnico do clube (0x7861e0):
 /// 0 = 1, 1 = tópico, 2 = variante, 3 = sorteio(4), 4 = id do clube, 5 = o grau (5 abaixo de −750 com confiança abaixo
 /// de 4500; 9 negativa com confiança acima de 6250, senão 4; 2 acima de 750 com confiança acima de 6250, senão 3), 6..9
 /// o técnico; com sujeito 10..13 e 14 = 6/7/8 (o presidente gosta, não gosta, nenhum); depois o presidente (ou −1), a
@@ -1749,10 +1824,10 @@ pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize,
 /// média das notas acima da média da liga × 5, +0x59 e +0x5b acima de 14, mais de 1500 dias no clube, valor (0x4d0c60)
 /// acima de 4.500.000 e reputação (+5 da ficha) acima de 140.
 pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
-    let v = cpo5_variacao_da_diretoria(clube, alvo);
+    let v = board_confidence_change(clube, alvo);
     crate::comparacao::ramo("cpo_5 diretoria");
     if clube != 0 {
-        cpo5_somar(cpo5_linha(clube) + 6, v);
+        add_clamped_confidence(manager_manager_row(clube) + 6, v);
     }
     if (-500..=500).contains(&v) {
         return;
@@ -1768,7 +1843,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     let ratings_average: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(FN_PLAYERSTATS_GET_RECENT_FORM);
     let dias_ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_PLAYER_VALUE);
-    let conf = || if clube != 0 { read_i16(cpo5_linha(clube) + 6) } else { 0 };
+    let conf = || if clube != 0 { read_i16(manager_manager_row(clube) + 6) } else { 0 };
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbe0, 0);
@@ -1788,9 +1863,9 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
         3
     };
     gravar(n, 5, grau);
-    cqc10_nomes(gravar, n, 6, read_usize(clube + club::MANAGER));
+    set_person_name_slots(gravar, n, 6, read_usize(clube + club::MANAGER));
     let mut b: i8 = if sujeito != 0 {
-        cqc10_nomes(gravar, n, 10, sujeito);
+        set_person_name_slots(gravar, n, 10, sujeito);
         let presidente = read_usize(clube + club::CHAIRMAN);
         let r = if gosta(sujeito, presidente) != 0 {
             6
@@ -1807,7 +1882,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     };
     let presidente = read_usize(clube + club::CHAIRMAN);
     if presidente != 0 {
-        cqc10_nomes(gravar, n, b, presidente);
+        set_person_name_slots(gravar, n, b, presidente);
         b += 4;
     } else {
         gravar(n, b, u32::MAX);
@@ -1817,7 +1892,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     b += 1;
     if sexto != 0 {
         gravar(n, b, 1);
-        let w = if clube != 0 { read_i16(cpo5_linha(clube) + 0xe) } else { 0 };
+        let w = if clube != 0 { read_i16(manager_manager_row(clube) + 0xe) } else { 0 };
         gravar(n, b + 1, w as i32 as u32);
         b += 2;
     } else {
@@ -1842,10 +1917,10 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
         let base = read_usize(G_PLAYER_STATS);
         let notas = ratings_average(base, read_usize(sujeito + 0x61)) as i8 as f64;
         let base = read_usize(G_PLAYER_STATS);
-        let y = f64_em(base + 0x18);
-        let c0 = f64_em(0x9689a0);
-        let media = if !(y < c0 || y > c0) { f64_em(0x968998) } else { f64_em(base + 0x10) / y }; // sem jogos: 6,8
-        if notas > media * f64_em(0x9688a0) {
+        let y = read_f64_at(base + 0x18);
+        let c0 = read_f64_at(0x9689a0);
+        let media = if !(y < c0 || y > c0) { read_f64_at(0x968998) } else { read_f64_at(base + 0x10) / y }; // sem jogos: 6,8
+        if notas > media * read_f64_at(0x9688a0) {
             m = 1;
         }
     }
@@ -1861,8 +1936,8 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     let caro = sujeito != 0 && valor(read_usize(G_CONTRACT_MANAGER), sujeito, clube, 0, u32::MAX, 0) > 0x44aa20;
     gravar(n, b, caro as u32);
     b += 1;
-    let reputacao = sujeito != 0 && read_usize(sujeito + 0x61) != 0 && read_i16(read_usize(sujeito + 0x61) + 5) > 0x8c;
-    gravar(n, b, reputacao as u32);
+    let injury_word_0c = sujeito != 0 && read_usize(sujeito + 0x61) != 0 && read_i16(read_usize(sujeito + 0x61) + 5) > 0x8c;
+    gravar(n, b, injury_word_0c as u32);
     entregar(read_usize(G_NEWS), n, clube);
 }
 
@@ -1870,31 +1945,31 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
 /// Comparador: a original sorteia e entrega a notícia (não pode rodar duas vezes): roda só ela e confere o plano feito
 /// antes: a confiança da torcida nova (a variação é pura).
 pub(crate) unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADJUST_SUPPORTER_CONFIDENCE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADJUST_SUPPORTER_CONFIDENCE);
     if clube == 0 {
         return o(this, clube, sujeito, topico, alvo, variante);
     }
-    let p = cpo5_linha(clube) + 8;
+    let p = manager_manager_row(clube) + 8;
     let antes = read_i16(p);
-    let v = cpo5_variacao_da_torcida(clube, alvo);
+    let v = fan_confidence_change(clube, alvo);
     let esperado = antes.wrapping_add(v).clamp(1, 10000);
     o(this, clube, sujeito, topico, alvo, variante);
-    let depois = read_i16(cpo5_linha(clube) + 8);
+    let depois = read_i16(manager_manager_row(clube) + 8);
     PLACAR.registrar(depois == esperado, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i16, antes, v, esperado, depois));
 }
 
 /// Comparador: como o da torcida, pela confiança da diretoria nova.
 pub(crate) unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_ADJUST_BOARD_CONFIDENCE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_ADJUST_BOARD_CONFIDENCE);
     if clube == 0 {
         return o(this, clube, sujeito, topico, alvo, variante, sexto);
     }
-    let p = cpo5_linha(clube) + 6;
+    let p = manager_manager_row(clube) + 6;
     let antes = read_i16(p);
-    let v = cpo5_variacao_da_diretoria(clube, alvo);
+    let v = board_confidence_change(clube, alvo);
     let esperado = antes.wrapping_add(v).clamp(1, 10000);
     o(this, clube, sujeito, topico, alvo, variante, sexto);
-    let depois = read_i16(cpo5_linha(clube) + 6);
+    let depois = read_i16(manager_manager_row(clube) + 6);
     PLACAR.registrar(depois == esperado, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i32, antes, v, esperado, depois));
 }
 
@@ -1905,9 +1980,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: us
 
 pub(crate) type Cpo7Gravar = unsafe extern "thiscall" fn(usize, i8, u32) -> u32;
 
-/// Os dados da pessoa a partir de `k`: id e as três chaves +0x33 de +4, +8 e +0xc (a de +0xc pode faltar: −1, só
+/// Writes a person's id and three keys (+0x33 of +4, +8, +0xc) into news slots from k; the +0xc one may be missing (-1)
+/// when optional.
+///
+/// [pt] Os dados da pessoa a partir de `k`: id e as três chaves +0x33 de +4, +8 e +0xc (a de +0xc pode faltar: −1, só
 /// quando `opcional`).
-pub(crate) unsafe fn cpo7_dados(gravar: Cpo7Gravar, n: usize, k: i8, p: usize, opcional: bool) {
+pub(crate) unsafe fn set_person_slots_optional(gravar: Cpo7Gravar, n: usize, k: i8, p: usize, opcional: bool) {
     gravar(n, k, read_usize(p) as u32);
     gravar(n, k + 1, read_usize(read_usize(p + 4) + 0x33) as u32);
     gravar(n, k + 2, read_usize(read_usize(p + 8) + 0x33) as u32);
@@ -1915,13 +1993,17 @@ pub(crate) unsafe fn cpo7_dados(gravar: Cpo7Gravar, n: usize, k: i8, p: usize, o
     gravar(n, k + 3, if opcional && q == 0 { u32::MAX } else { read_usize(q + 0x33) as u32 });
 }
 
-/// A dupla de transmutes comum: construir a notícia (0x77bbe0) e gravar um dado (0x785790).
-pub(crate) unsafe fn cpo7_noticia() -> (unsafe extern "thiscall" fn(usize, u32, u32) -> usize, Cpo7Gravar) {
+/// Returns the NEWSITEM constructor (0x77bbe0) and set_slot (0x785790) function pointers.
+///
+/// [pt] A dupla de transmutes comum: construir a notícia (0x77bbe0) e gravar um dado (0x785790).
+pub(crate) unsafe fn news_item_fns() -> (unsafe extern "thiscall" fn(usize, u32, u32) -> usize, Cpo7Gravar) {
     (core::mem::transmute(FN_NEWSITEM_NEWSITEM), core::mem::transmute(FN_NEWSITEM_SET_SLOT))
 }
 
-/// Os dias desde a chegada da pessoa (+0x3e/+0x42) até hoje (0x54cdb0 em 0xae2c90).
-pub(crate) unsafe fn cpo7_dias(p: usize) -> i32 {
+/// Days from the person's date at +0x3e/+0x42 to today (Date days_since).
+///
+/// [pt] Os dias desde a chegada da pessoa (+0x3e/+0x42) até hoje (0x54cdb0 em 0xae2c90).
+pub(crate) unsafe fn days_since_arrival(p: usize) -> i32 {
     let dias_ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     dias_ate(0xae2c90, read_usize(p + 0x3e) as u32, read_usize(p + 0x42) as u32)
 }
@@ -1953,14 +2035,14 @@ pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, 
         return;
     }
     crate::comparacao::ramo("cpo_7 gratidao");
-    let (construir, gravar) = cpo7_noticia();
+    let (construir, gravar) = news_item_fns();
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let lesionado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbda, 0);
-    cpo7_dados(gravar, n, 0, jogador, true);
+    set_person_slots_optional(gravar, n, 0, jogador, true);
     gravar(n, 4, read_usize(clube) as u32);
     // a lista da mídia (this +0, conta em +8)
     let mut in_list = false;
@@ -2013,11 +2095,11 @@ pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, 
     };
     gravar(n, 7, v as u32);
     let tecnico = read_usize(clube + club::MANAGER);
-    cpo7_dados(gravar, n, 8, tecnico, false);
+    set_person_slots_optional(gravar, n, 8, tecnico, false);
     gravar(n, 0xc, 0x420e9);
     let auxiliar = read_usize(clube + club::ASSISTANT_MANAGER);
     if auxiliar != 0 {
-        cpo7_dados(gravar, n, 0xd, auxiliar, false);
+        set_person_slots_optional(gravar, n, 0xd, auxiliar, false);
     } else {
         gravar(n, 0xd, u32::MAX);
     }
@@ -2043,27 +2125,27 @@ pub(crate) unsafe extern "thiscall" fn post_player_backing_request_news(_this: u
         return;
     }
     crate::comparacao::ramo("cpo_7 pedido de apoio");
-    let (construir, gravar) = cpo7_noticia();
+    let (construir, gravar) = news_item_fns();
     let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED_OR_REQUESTED);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbcf, 0);
-    cpo7_dados(gravar, n, 0, jogador, true);
+    set_person_slots_optional(gravar, n, 0, jogador, true);
     gravar(n, 4, read_usize(clube) as u32);
     let t = tipo as u8;
     let alvo = t == 0x20 || t == 1 || t == 0x1e;
     let (a, b): (i32, i32) = if read_i16(read_usize(jogador + 0x61) + 0xb) > 0x109a {
         if read_i8_as_i32(jogador + 0x57) > 0xf && read_i8_as_i32(jogador + 0x5d) < 6 {
             (1, 1)
-        } else if alvo && read_i8_as_i32(jogador + 0x59) > 0xf && read_i8_as_i32(jogador + 0x5b) > 0xa && cpo7_dias(jogador) > 0xd2 {
+        } else if alvo && read_i8_as_i32(jogador + 0x59) > 0xf && read_i8_as_i32(jogador + 0x5b) > 0xa && days_since_arrival(jogador) > 0xd2 {
             (1, 3)
         } else {
             (1, 2)
         }
     } else if read_i8_as_i32(jogador + 0x5b) < 0xa && read_i8_as_i32(jogador + 0x59) < 6 {
         (2, 1)
-    } else if alvo && read_i8_as_i32(jogador + 0x59) > 0xf && read_i8_as_i32(jogador + 0x5b) > 0xa && cpo7_dias(jogador) > 0xd2 {
+    } else if alvo && read_i8_as_i32(jogador + 0x59) > 0xf && read_i8_as_i32(jogador + 0x5b) > 0xa && days_since_arrival(jogador) > 0xd2 {
         (2, 3)
     } else {
         (2, 2)
@@ -2098,7 +2180,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
         return;
     }
     crate::comparacao::ramo("cpo_7 reacao a critica");
-    let (construir, gravar) = cpo7_noticia();
+    let (construir, gravar) = news_item_fns();
     let categoria: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
     let clubes_interessados: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(FN_TRANSFER_MANAGER_COLLECT_PLAYER_NEWS_RECIPIENTS);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
@@ -2111,7 +2193,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
         && read_i8_as_i32(jogador + 0x5d) > 0xa
         && read_i8_as_i32(jogador + 0x59) < 0xf
         && read_i8_as_i32(jogador + 0x18) > 0x17;
-    cpo7_dados(gravar, n, 0, jogador, true);
+    set_person_slots_optional(gravar, n, 0, jogador, true);
     gravar(n, 4, read_usize(clube) as u32);
     let r = resposta as u8;
     let rep = read_i16(read_usize(jogador + 0x61) + 0xb);
@@ -2122,7 +2204,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
         if cat_ok && read_i8_as_i32(jogador + 0x18) > 0x16 {
             if read_i8_as_i32(jogador + 0x59) < 0xa && read_i8_as_i32(jogador + 0x57) > 0xf && read_i8_as_i32(jogador + 0x5d) < 6 {
                 reacao = if marca && r == 2 { 3 } else { 1 };
-            } else if cpo7_dias(jogador) > 0x3e8 && read_i8_as_i32(jogador + 0x59) > 0xf && read_usize(contrato + 0x45) & 0x181 == 0 {
+            } else if days_since_arrival(jogador) > 0x3e8 && read_i8_as_i32(jogador + 0x59) > 0xf && read_usize(contrato + 0x45) & 0x181 == 0 {
                 reacao = if marca && r == 2 { 4 } else { 2 };
             }
         }
@@ -2132,7 +2214,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     let linha = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_usize(clube)).wrapping_mul(0x49));
     gravar(n, 7, (read_i16(linha + 6) < 0xfa0) as u32); // confiança da diretoria abaixo de 4000
     gravar(n, 8, topico);
-    cpo7_dados(gravar, n, 9, read_usize(clube + club::MANAGER), false);
+    set_person_slots_optional(gravar, n, 9, read_usize(clube + club::MANAGER), false);
     let mut clubes = [0usize; 0x1e];
     let tm = read_usize(G_TRANSFER_MANAGER);
     let k = if tm != 0 { clubes_interessados(tm, jogador, 0x21a, clubes.as_mut_ptr(), 0x1e) as i8 } else { 0 };
@@ -2144,17 +2226,17 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
 /// Comparador: a gratidão sorteia, sobe +0x44 da ficha e entrega a notícia: só a original (a prova é a carreira e o
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_queue_player_gratitude_news(this: usize, jogador: usize, clube: usize, tipo: u32, variante: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_QUEUE_PLAYER_GRATITUDE_NEWS)(this, jogador, clube, tipo, variante)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_QUEUE_PLAYER_GRATITUDE_NEWS)(this, jogador, clube, tipo, variante)
 }
 
 /// Comparador: a notícia vai à caixa do técnico (não pode rodar duas vezes): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_post_player_backing_request_news(this: usize, jogador: usize, clube: usize, tipo: u32, quarto: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_POST_PLAYER_BACKING_REQUEST_NEWS)(this, jogador, clube, tipo, quarto)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_POST_PLAYER_BACKING_REQUEST_NEWS)(this, jogador, clube, tipo, quarto)
 }
 
 /// Comparador: a notícia vai às caixas dos técnicos (não pode rodar duas vezes): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_post_player_criticism_reaction_news(this: usize, jogador: usize, clube: usize, topico: u32, resposta: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_POST_PLAYER_CRITICISM_REACTION_NEWS)(this, jogador, clube, topico, resposta)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_POST_PLAYER_CRITICISM_REACTION_NEWS)(this, jogador, clube, topico, resposta)
 }
 
 // ---------- 250a leva: a mídia e a caixa: a nota do jogador para uma história, o texto da crise financeira e as notícias da caixa do humano (media.cpp, news.cpp) ----------
@@ -2166,9 +2248,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_player_criticism_reaction_n
 /// A notícia guardada na caixa: 0xdf bytes (+0xd6 id).
 pub(crate) const CPN3_NOTICIA: usize = 0xdf;
 
-/// A razão entre a reputação do jogador (+0xb do registro +0x61, no mínimo 2000) e a do clube (+0x80, entre 2000 e
+/// Player reputation (min 2000) over club reputation (clamped 2000..7500).
+///
+/// [pt] A razão entre a reputação do jogador (+0xb do registro +0x61, no mínimo 2000) e a do clube (+0x80, entre 2000 e
 /// 7500), como o fild/fidiv do original.
-pub(crate) unsafe fn cpn3_razao_das_reputacoes(jogador: usize, clube: usize) -> f64 {
+pub(crate) unsafe fn player_club_reputation_ratio(jogador: usize, clube: usize) -> f64 {
     let a = read_i16(read_usize(jogador + 0x61) + 0xb);
     let a = if a < 2000 { 2000 } else { a as i32 };
     let b = read_i16(clube + club::REPUTATION);
@@ -2176,8 +2260,10 @@ pub(crate) unsafe fn cpn3_razao_das_reputacoes(jogador: usize, clube: usize) -> 
     a as f64 / b as f64
 }
 
-/// O tipo de história (0..0x52) → o caso do original (a tabela de bytes de 0x736b8c; 12 = a nota como está).
-pub(crate) fn cpn3_caso(tipo: i16) -> u8 {
+/// Maps a story type (0..0x52) to the original's switch case (byte table at 0x736b8c; 12 = rating unchanged).
+///
+/// [pt] O tipo de história (0..0x52) → o caso do original (a tabela de bytes de 0x736b8c; 12 = a nota como está).
+pub(crate) fn story_type_case(tipo: i16) -> u8 {
     match tipo {
         0 => 0,
         1 | 2 | 9 => 1,
@@ -2239,7 +2325,7 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
     }
     if !(r >= 0.0) {
         crate::comparacao::ramo("cpn_3 nota negativa");
-        r = r * cpn3_razao_das_reputacoes(jogador, clube); // a negativa pela reputação
+        r = r * player_club_reputation_ratio(jogador, clube); // a negativa pela reputação
     }
     let rf = r as f32;
     let tipo = tipo as u16 as i16;
@@ -2247,7 +2333,7 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
         return r;
     }
     let c = *((contrato + contract::SQUAD_STATUS) as *const u8) >> 4; // o tipo de contrato
-    match cpn3_caso(tipo) {
+    match story_type_case(tipo) {
         0 => match c {
             1 => r - 0.5,
             2 => r - 0.35f32 as f64,
@@ -2274,7 +2360,7 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
         6 => r + (read_i8(read_usize(jogador + 0x61) + 0x2f) as i32 - 10) as f64 * (1.0f32 / 3.0) as f64,
         7 => r + l0 as f64,
         8 => {
-            let r2 = if r > 0.0 { r / cpn3_razao_das_reputacoes(jogador, clube) } else { r };
+            let r2 = if r > 0.0 { r / player_club_reputation_ratio(jogador, clube) } else { r };
             match c {
                 1 => r2 - 0.5,
                 2 => r2 - 0.35f32 as f64,
@@ -2339,7 +2425,7 @@ pub(crate) unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: 
 /// Comparador: a nota é pura (as estatísticas, as datas e o contrato só leem; nada sorteia): compara a devolução bit a
 /// bit (a original e a cópia na mesma precisão dupla do x87).
 pub(crate) unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this: usize, jogador: usize, clube: usize, contrato: usize, tipo: u32, modo: u32, peso: f32) -> f64 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(IDX_RATE_PLAYER_FORM_FOR_STORY)(this, jogador, clube, contrato, tipo, modo, peso);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(IDX_RATE_PLAYER_FORM_FOR_STORY)(this, jogador, clube, contrato, tipo, modo, peso);
     let n = rate_player_form_for_story(this, jogador, clube, contrato, tipo, modo, peso);
     PLACAR.registrar(o.to_bits() == n.to_bits() || (o.is_nan() && n.is_nan()),
         || format!("rate_player_form_for_story(tipo {}, modo {}, peso {}) {} x {}", tipo as u16 as i16, modo as u8, peso, o, n));
@@ -2350,7 +2436,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this:
 /// prova no modo Rust, pelo ramo).
 pub(crate) unsafe extern "thiscall" fn comparar_write_financial_trouble_news_text(this: usize, noticia: usize, corpo: u32, saida: usize) {
     // ponytail: o objeto de texto não pode receber o texto duas vezes; só a original roda aqui
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_FINANCIAL_TROUBLE_NEWS_TEXT)(this, noticia, corpo, saida);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_FINANCIAL_TROUBLE_NEWS_TEXT)(this, noticia, corpo, saida);
 }
 
 
@@ -2359,8 +2445,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_write_financial_trouble_news_tex
 
 
 
-/// A data `a` é anterior à `b`? Como a original: a palavra +2 sem sinal e, igual, a palavra +0 com sinal.
-pub(crate) unsafe fn cpl6_antes(a: usize, b: usize) -> bool {
+/// True if date a is before date b (year word unsigned, then day word signed).
+///
+/// [pt] A data `a` é anterior à `b`? Como a original: a palavra +2 sem sinal e, igual, a palavra +0 com sinal.
+pub(crate) unsafe fn media_date_before(a: usize, b: usize) -> bool {
     let (x, y) = (read_u16(a + 2), read_u16(b + 2));
     if x != y {
         return x < y;
@@ -2368,24 +2456,29 @@ pub(crate) unsafe fn cpl6_antes(a: usize, b: usize) -> bool {
     (read_u16(a) as i16) < (read_u16(b) as i16)
 }
 
-/// O id (+0) do sujeito, ou −1 sem ele.
-pub(crate) unsafe fn cpl6_id(p: usize) -> usize {
+/// The record's id (+0), or -1 when null.
+///
+/// [pt] O id (+0) do sujeito, ou −1 sem ele.
+pub(crate) unsafe fn media_id_or_minus_one(p: usize) -> usize {
     if p != 0 { read_usize(p) } else { usize::MAX }
 }
 
-/// Os 23 bytes que a 0x757a50 grava no registro (data de hoje [0xae2c90], ids, resposta, subtipo, tipo).
-pub(crate) unsafe fn cpl6_registro(a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) -> [u8; 0x17] {
+/// Builds the 23-byte record 0x757a50 stores (today's date, two ids, response, subtype, type).
+///
+/// [pt] Os 23 bytes que a 0x757a50 grava no registro (data de hoje [0xae2c90], ids, resposta, subtipo, tipo).
+pub(crate) unsafe fn build_news_log_record(a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) -> [u8; 0x17] {
     let mut r = [0u8; 0x17];
     r[..8].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
-    r[8..0xc].copy_from_slice(&(cpl6_id(a) as u32).to_le_bytes());
-    r[0xc..0x10].copy_from_slice(&(cpl6_id(b) as u32).to_le_bytes());
+    r[8..0xc].copy_from_slice(&(media_id_or_minus_one(a) as u32).to_le_bytes());
+    r[0xc..0x10].copy_from_slice(&(media_id_or_minus_one(b) as u32).to_le_bytes());
     r[0x10] = resposta as u8;
     r[0x11..0x13].copy_from_slice(&(subtipo as u8 as i8 as i16).to_le_bytes());
     r[0x13..].copy_from_slice(&tipo.to_le_bytes());
     r
 }
 
-pub(crate) unsafe fn cpl6_ordenar(base: usize, n: usize) {
+/// qsorts the 23-byte records with the comparer 0x757ee0.
+pub(crate) unsafe fn sort_news_log(base: usize, n: usize) {
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     qsort(base, n as u32, 0x17, 0x757ee0);
 }
@@ -2405,8 +2498,8 @@ pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize
         let p = alocar(0x1cc);
         write_usize(this, p);
         if p == 0 {
-            aviso_em(0xa17bec, 0x6e11);
-            erro_fatal();
+            show_error_at(0xa17bec, 0x6e11);
+            fatal_exit();
         }
         write_usize(this + 4, 0x14);
     }
@@ -2416,21 +2509,21 @@ pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize
         let p = realocar(read_usize(this), cap.wrapping_add(0x14).wrapping_mul(0x17) as u32);
         write_usize(this, p);
         if p == 0 {
-            aviso_em(0xa17bec, 0x6e1c);
-            erro_fatal();
+            show_error_at(0xa17bec, 0x6e1c);
+            fatal_exit();
         }
         write_usize(this + 4, read_usize(this + 4).wrapping_add(0x14));
     }
     let item = || read_usize(this).wrapping_add(read_usize(this + 8).wrapping_mul(0x17));
-    write_usize(item() + 8, cpl6_id(a));
-    write_usize(item() + 0xc, cpl6_id(b));
-    copiar_data_do_recorde(item(), 0xae2c90);
+    write_usize(item() + 8, media_id_or_minus_one(a));
+    write_usize(item() + 0xc, media_id_or_minus_one(b));
+    copy_record_date(item(), 0xae2c90);
     write_usize(item() + 0x13, tipo as usize);
     core::ptr::write_unaligned((item() + 0x11) as *mut i16, subtipo as u8 as i8 as i16);
     *((item() + 0x10) as *mut u8) = resposta as u8;
     let n = read_usize(this + 8).wrapping_add(1);
     write_usize(this + 8, n); // mais uma história
-    cpl6_ordenar(read_usize(this), n);
+    sort_news_log(read_usize(this), n);
 }
 
 /// removes stories older than 100 days (team ones, 0xbdf, older than 40 + random(40)) moving the last one into the gap;
@@ -2459,7 +2552,7 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
         };
         let mut local = [0u8; 8];
         let limite = datar(0xae2c90, &mut local, dias);
-        if cpl6_antes(r, limite) {
+        if media_date_before(r, limite) {
             let n = read_usize(this + 8);
             let ultimo = read_usize(this).wrapping_add(n.wrapping_mul(0x17)).wrapping_sub(0x17);
             core::ptr::copy(ultimo as *const u8, r as *mut u8, 0x17);
@@ -2469,7 +2562,7 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
         i += 1;
     }
     if read_usize(this + 8) != 0 {
-        cpl6_ordenar(read_usize(this), read_usize(this + 8));
+        sort_news_log(read_usize(this), read_usize(this + 8));
     }
 }
 
@@ -2498,7 +2591,7 @@ pub(crate) unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b
         }
         return 0;
     }
-    chave[8..0xc].copy_from_slice(&(cpl6_id(a) as u32).to_le_bytes());
+    chave[8..0xc].copy_from_slice(&(media_id_or_minus_one(a) as u32).to_le_bytes());
     chave[0x13..].copy_from_slice(&tipo.to_le_bytes());
     chave[0xc..0x10].copy_from_slice(&(read_usize(b) as u32).to_le_bytes());
     chave[0x11..0x13].copy_from_slice(&s.to_le_bytes());
@@ -2510,15 +2603,15 @@ pub(crate) unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b
     if desde == 0 {
         return 1;
     }
-    if cpl6_antes(e, desde) { 0 } else { 1 }
+    if media_date_before(e, desde) { 0 } else { 1 }
 }
 
 /// Comparador: a original pode alocar e realocar (não roda duas vezes): o registro esperado antes; confere a conta e
 /// que o registro esperado está na lista (a ordem é a do qsort).
 pub(crate) unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
     let n = read_usize(this + 8);
-    let esperado = cpl6_registro(a, b, tipo, subtipo, resposta);
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_LOG_STORY)(this, a, b, tipo, subtipo, resposta);
+    let esperado = build_news_log_record(a, b, tipo, subtipo, resposta);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_LOG_STORY)(this, a, b, tipo, subtipo, resposta);
     let m = read_usize(this + 8);
     let achou = (0..m).any(|k| {
         core::slice::from_raw_parts(read_usize(this).wrapping_add(k * 0x17) as *const u8, 0x17) == &esperado[..]
@@ -2531,7 +2624,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize,
 /// Comparador: lado a lado pelo registro (ponteiro, capacidade e conta; as histórias) e o estado do sorteio (a cópia
 /// sem contar os sorteios).
 pub(crate) unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_EXPIRE_STORY_LOG);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_EXPIRE_STORY_LOG);
     if read_usize(this) == 0 {
         return o(this);
     }
@@ -2545,7 +2638,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
 
 /// Comparador: pelo valor (a busca e a data padrão da chave só leem).
 pub(crate) unsafe extern "thiscall" fn comparar_has_logged_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(IDX_HAS_LOGGED_STORY)(this, a, b, tipo, subtipo, desde);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(IDX_HAS_LOGGED_STORY)(this, a, b, tipo, subtipo, desde);
     let n = has_logged_story(this, a, b, tipo, subtipo, desde);
     PLACAR.registrar(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));
     r
@@ -2555,13 +2648,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_logged_story(this: usize, a:
 
 
 
-/// A chave da 0x754740: {id do jogador, id do clube ou −1} (os 8 bytes que a 0x757ea0 lê).
-pub(crate) unsafe fn cpl7_chave(jogador: usize, clube: usize) -> [u32; 2] {
+/// Search key for 0x754740: {player id, club id or -1}.
+///
+/// [pt] A chave da 0x754740: {id do jogador, id do clube ou −1} (os 8 bytes que a 0x757ea0 lê).
+pub(crate) unsafe fn interest_key(jogador: usize, clube: usize) -> [u32; 2] {
     [read_usize(jogador) as u32, if clube != 0 { read_usize(clube) as u32 } else { u32::MAX }]
 }
 
-/// O interesse já está no vetor? (bsearch 0x946464 com 0x757ea0; sem vetor, não).
-pub(crate) unsafe fn cpl7_ja_esta(this: usize, chave: &[u32; 2]) -> bool {
+/// True if the interest key is already in the media's sorted interest array (bsearch with 0x757ea0).
+///
+/// [pt] O interesse já está no vetor? (bsearch 0x946464 com 0x757ea0; sem vetor, não).
+pub(crate) unsafe fn has_interest(this: usize, chave: &[u32; 2]) -> bool {
     let base = read_usize(this + 0xc);
     if base == 0 {
         return false;
@@ -2570,8 +2667,10 @@ pub(crate) unsafe fn cpl7_ja_esta(this: usize, chave: &[u32; 2]) -> bool {
     bsearch(chave.as_ptr() as usize, base, read_usize(this + 0x14) as u32, 0x19, 0x757ea0) != 0
 }
 
-/// O valor que a 0x754740 grava: o `valor` limitado a 50.000.000.
-pub(crate) fn cpl7_valor(valor: i32) -> i32 {
+/// Caps the interest value at 50,000,000.
+///
+/// [pt] O valor que a 0x754740 grava: o `valor` limitado a 50.000.000.
+pub(crate) fn cap_interest_value(valor: i32) -> i32 {
     if valor < 0x2faf080 { valor } else { 0x2faf080 }
 }
 
@@ -2590,8 +2689,8 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogado
     let mut data = [0u8; 8];
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     padrao(data.as_mut_ptr() as usize);
-    let chave = cpl7_chave(jogador, clube);
-    if cpl7_ja_esta(this, &chave) {
+    let chave = interest_key(jogador, clube);
+    if has_interest(this, &chave) {
         crate::comparacao::ramo("cpl_7 interesse repetido");
         return; // o interesse já está
     }
@@ -2601,8 +2700,8 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogado
         let p = alocar(0x1f4);
         write_usize(this + 0xc, p);
         if p == 0 {
-            aviso_em(0xa17bec, 0x665d);
-            erro_fatal();
+            show_error_at(0xa17bec, 0x665d);
+            fatal_exit();
         }
         write_usize(this + 0x10, 0x14);
     }
@@ -2612,18 +2711,18 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogado
         let p = realocar(read_usize(this + 0xc), cap.wrapping_add(0x14).wrapping_mul(0x19) as u32);
         write_usize(this + 0xc, p);
         if p == 0 {
-            aviso_em(0xa17bec, 0x6668);
-            erro_fatal();
+            show_error_at(0xa17bec, 0x6668);
+            fatal_exit();
         }
         write_usize(this + 0x10, read_usize(this + 0x10).wrapping_add(0x14));
     }
     let item = || read_usize(this + 0xc).wrapping_add(read_usize(this + 0x14).wrapping_mul(0x19));
     write_usize(item(), read_usize(jogador));
     write_usize(item() + 4, read_usize(clube));
-    copiar_data_do_recorde(item() + 8, 0xae2c90);
+    copy_record_date(item() + 8, 0xae2c90);
     *((item() + 0x10) as *mut u8) = 0; // o boato ainda não saiu
-    write_usize(item() + 0x11, cpl7_valor(valor) as usize);
-    write_usize(item() + 0x15, ftol(avaliacao * 100.0) as usize); // [0x9688a8] = 100.0
+    write_usize(item() + 0x11, cap_interest_value(valor) as usize);
+    write_usize(item() + 0x15, match_pl_ftol(avaliacao * 100.0) as usize); // [0x9688a8] = 100.0
     let n = read_usize(this + 0x14).wrapping_add(1);
     write_usize(this + 0x14, n); // mais um interesse
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
@@ -2676,14 +2775,16 @@ pub(crate) unsafe extern "C" fn compare_story_log_records(a: usize, b: usize) ->
     s(a) - s(b)
 }
 
-/// Os 25 bytes que a 0x754740 acrescenta.
-pub(crate) unsafe fn cpl7_interesse(jogador: usize, clube: usize, valor: i32, avaliacao: f64) -> [u8; 0x19] {
+/// Builds the 25-byte interest record 0x754740 appends (player, club, today, capped value, rating x 100).
+///
+/// [pt] Os 25 bytes que a 0x754740 acrescenta.
+pub(crate) unsafe fn build_interest_record(jogador: usize, clube: usize, valor: i32, avaliacao: f64) -> [u8; 0x19] {
     let mut r = [0u8; 0x19];
     r[..4].copy_from_slice(&(read_usize(jogador) as u32).to_le_bytes());
     r[4..8].copy_from_slice(&(read_usize(clube) as u32).to_le_bytes());
     r[8..0x10].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
-    r[0x11..0x15].copy_from_slice(&cpl7_valor(valor).to_le_bytes());
-    r[0x15..].copy_from_slice(&ftol(avaliacao * 100.0).to_le_bytes());
+    r[0x11..0x15].copy_from_slice(&cap_interest_value(valor).to_le_bytes());
+    r[0x15..].copy_from_slice(&match_pl_ftol(avaliacao * 100.0).to_le_bytes());
     r
 }
 
@@ -2691,9 +2792,9 @@ pub(crate) unsafe fn cpl7_interesse(jogador: usize, clube: usize, valor: i32, av
 /// confere a conta e que o registro novo está no vetor (a ordem é a do qsort).
 pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_interest(this: usize, jogador: usize, clube: usize, valor: i32, avaliacao: f64) {
     let n = read_usize(this + 0x14);
-    let ja_esta = cpl7_ja_esta(this, &cpl7_chave(jogador, clube));
-    let esperado = if ja_esta { None } else { Some(cpl7_interesse(jogador, clube, valor, avaliacao)) };
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, i32, f64)>(IDX_ADD_TRANSFER_INTEREST)(this, jogador, clube, valor, avaliacao);
+    let ja_esta = has_interest(this, &interest_key(jogador, clube));
+    let esperado = if ja_esta { None } else { Some(build_interest_record(jogador, clube, valor, avaliacao)) };
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, f64)>(IDX_ADD_TRANSFER_INTEREST)(this, jogador, clube, valor, avaliacao);
     let m = read_usize(this + 0x14);
     let ok = match &esperado {
         None => m == n,
@@ -2706,7 +2807,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_interest(this: usiz
 
 /// Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_ID_PAIR_KEYS)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_ID_PAIR_KEYS)(a, b);
     let n = compare_id_pair_keys(a, b);
     PLACAR.registrar(r == n, || format!("compare_id_pair_keys({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -2714,7 +2815,7 @@ pub(crate) unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize
 
 /// Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_compare_story_log_records(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_STORY_LOG_RECORDS)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_STORY_LOG_RECORDS)(a, b);
     let n = compare_story_log_records(a, b);
     PLACAR.registrar(r == n, || format!("compare_story_log_records({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -2723,12 +2824,14 @@ pub(crate) unsafe extern "C" fn comparar_compare_story_log_records(a: usize, b: 
 // ---------- 244a leva: tirar de vetores ordenados: o interesse de transferência da mídia, o pedido de observação e o apelido de todos os técnicos humanos ----------
 
 
-pub(crate) unsafe fn cph4_qsort(base: usize, n: i32, tamanho: u32, comparar: usize) {
+/// Calls the exe's CRT qsort.
+pub(crate) unsafe fn media_crt_qsort(base: usize, n: i32, tamanho: u32, comparar: usize) {
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     qsort(base, n, tamanho, comparar);
 }
 
-pub(crate) unsafe fn cph4_bsearch(chave: usize, base: usize, n: u32, tamanho: u32, comparar: usize) -> usize {
+/// Calls the exe's CRT bsearch.
+pub(crate) unsafe fn crt_bsearch(chave: usize, base: usize, n: u32, tamanho: u32, comparar: usize) -> usize {
     let bsearch: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     bsearch(chave, base, n, tamanho, comparar)
 }
@@ -2762,14 +2865,14 @@ pub(crate) unsafe extern "thiscall" fn remove_transfer_interest(this: usize, pes
         }
     }
     if *n != 0 {
-        cph4_qsort(read_u32(this + 0xc) as usize, *n, 0x19, 0x757ea0);
+        media_crt_qsort(read_u32(this + 0xc) as usize, *n, 0x19, 0x757ea0);
     }
 }
 
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_remove_transfer_interest(this: usize, pessoa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_TRANSFER_INTEREST);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_TRANSFER_INTEREST);
     let n = (*((this + 0x14) as *const i32)).max(0) as usize;
     let reg = [(this + 0xc, 0xc), (read_u32(this + 0xc) as usize, n * 25)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || remove_transfer_interest(this, pessoa));
@@ -2826,7 +2929,7 @@ pub(crate) unsafe extern "thiscall" fn get_finable_story_kind(midia: usize, joga
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_get_finable_story_kind(midia: usize, jogador: usize) -> u16 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_GET_FINABLE_STORY_KIND)(midia, jogador);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_GET_FINABLE_STORY_KIND)(midia, jogador);
     let n = get_finable_story_kind(midia, jogador);
     PLACAR.registrar(r == n, || format!("get_finable_story_kind original={} rust={}", r, n));
     r
@@ -2836,9 +2939,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_finable_story_kind(midia: us
 
 // ---------- 181a leva: as notícias do jogador na mídia e a importância da partida de copa ----------
 
-/// O registro de notícias da mídia (`this`: +0 os registros de 0x17 bytes, +8 quantos): algum com o
+/// True if any 0x17-byte media news record has the player id at +8 and passes the predicate.
+///
+/// [pt] O registro de notícias da mídia (`this`: +0 os registros de 0x17 bytes, +8 quantos): algum com o
 /// jogador em +8 que `aceita`?
-pub(crate) unsafe fn alguma_noticia(midia: usize, id: i32, aceita: impl Fn(usize) -> bool) -> bool {
+pub(crate) unsafe fn any_news_for_player(midia: usize, id: i32, aceita: impl Fn(usize) -> bool) -> bool {
     let n = *((midia + 8) as *const i32);
     let base = *(midia as *const usize);
     (0..n.max(0) as usize).any(|k| {
@@ -2852,7 +2957,7 @@ pub(crate) unsafe fn alguma_noticia(midia: usize, id: i32, aceita: impl Fn(usize
 ///
 /// [pt] { 0x735780 } (thiscall, ret 4, media.cpp): o jogador `*id` tem uma notícia com a resposta 2 (+0x10)?
 pub(crate) unsafe extern "thiscall" fn story_with_response_two(midia: usize, id: *const i32) -> u32 {
-    alguma_noticia(midia, *id, |r| *((r + 0x10) as *const u8) == 2) as u32
+    any_news_for_player(midia, *id, |r| *((r + 0x10) as *const u8) == 2) as u32
 }
 
 /// whether the player has any story in the media log
@@ -2860,19 +2965,19 @@ pub(crate) unsafe extern "thiscall" fn story_with_response_two(midia: usize, id:
 ///
 /// [pt] { 0x735840 } (thiscall, ret 4, media.cpp): o jogador `*id` tem alguma notícia? Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn has_story(midia: usize, id: *const i32) -> u8 {
-    alguma_noticia(midia, *id, |_| true) as u8
+    any_news_for_player(midia, *id, |_| true) as u8
 }
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_story_with_response_two(midia: usize, id: *const i32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(IDX_STORY_WITH_RESPONSE_TWO)(midia, id);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(IDX_STORY_WITH_RESPONSE_TWO)(midia, id);
     let n = story_with_response_two(midia, id);
     PLACAR.registrar(r == n, || format!("story_with_response_two({}) original={} rust={}", *id, r, n));
     r
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_has_story(midia: usize, id: *const i32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *const i32) -> u8>(IDX_HAS_STORY)(midia, id);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u8>(IDX_HAS_STORY)(midia, id);
     let n = has_story(midia, id);
     PLACAR.registrar(r == n, || format!("has_story({}) original={} rust={}", *id, r, n));
     r
@@ -2916,7 +3021,7 @@ pub(crate) unsafe extern "stdcall" fn media_queue_player_apology_news(jogador: u
 
 /// Comparador: a notícia sorteia e vai para a caixa do técnico: só a original (a prova é a carreira e o modo Rust).
 pub(crate) unsafe extern "stdcall" fn comparar_media_queue_player_apology_news(jogador: usize, clube: usize, historia: i16) {
-    orig::<unsafe extern "stdcall" fn(usize, usize, i16)>(IDX_MEDIA_QUEUE_PLAYER_APOLOGY_NEWS)(jogador, clube, historia)
+    original_fn::<unsafe extern "stdcall" fn(usize, usize, i16)>(IDX_MEDIA_QUEUE_PLAYER_APOLOGY_NEWS)(jogador, clube, historia)
 }
 
 /// draws a former international (37+, 50+ caps) as pundit, weighted by nation reputation and caps
@@ -2938,7 +3043,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
-    let reputacao = |nacao: usize| core::ptr::read_unaligned((nacao + nation::REPUTATION) as *const i16) as i32;
+    let injury_word_0c = |nacao: usize| core::ptr::read_unaligned((nacao + nation::REPUTATION) as *const i16) as i32;
     let (mut melhor, mut maior) = (0usize, 0i32);
     for _ in 0..150 {
         let mut tentativas = 0;
@@ -2964,7 +3069,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
             continue;
         }
         let nacao = u(p + 0x1a);
-        let mut peso = sorteio(reputacao(nacao).wrapping_mul(*((p + 0x22) as *const u8) as i32));
+        let mut peso = sorteio(injury_word_0c(nacao).wrapping_mul(*((p + 0x22) as *const u8) as i32));
         let mesma_nacao = if assunto == 0 {
             if nacao != u(clube + club::NATION) {
                 continue;
@@ -2977,7 +3082,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
             peso = peso.wrapping_add(peso);
         } else {
             let corte = sorteio(100).wrapping_add(0x1964);
-            if reputacao(nacao) < corte
+            if injury_word_0c(nacao) < corte
                 || core::ptr::read_unaligned((u(p + 0x69) + 0xc) as *const i16) < 0x1770
                 || nao_gosta(assunto, p) != 0
             {
@@ -2993,7 +3098,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_pick_former_international_pundit(this: usize, clube: usize, assunto: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_PICK_FORMER_INTERNATIONAL_PUNDIT);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_PICK_FORMER_INTERNATIONAL_PUNDIT);
     if assunto == 0 && clube == 0 {
         return o(this, clube, assunto);
     }
@@ -3052,13 +3157,13 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tec
     }
     let mut nota = tecnico as i32; // sem jogador: o argumento que ocupa a vaga
     if jogador != 0 {
-        nota = ftol(nota_da_historia(this, jogador, clube, contrato, tipo, 3, 0.0) * *(0x968990 as *const f32) as f64);
+        nota = match_pl_ftol(nota_da_historia(this, jogador, clube, contrato, tipo, 3, 0.0) * *(0x968990 as *const f32) as f64);
     }
     let f = || read_usize(tecnico + 0x69); // a ficha de técnico
     let ch = |o: usize| chance(f(), *((f() + o) as *const i8)) as i8 as i32; // o conhecimento pelo atributo +o
     let k = tipo as i16;
     if k == 0x83 {
-        let t = cpo6_tipo(contrato);
+        let t = contract_squad_status(contrato);
         if t == 0x10 || t == 0x20 {
             return 1;
         }
@@ -3068,7 +3173,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tec
         if read_i16(read_usize(jogador + 0x61) + 0xb) < 0x1482 && ch(0x14) > 0xf {
             return 2;
         }
-        if cpo6_tipo(contrato) == 0x70 && ch(0x14) > 0xa {
+        if contract_squad_status(contrato) == 0x70 && ch(0x14) > 0xa {
             return 2;
         }
         return if sorteio(ch(0x19)) != 0 { 1 } else { 3 };
@@ -3214,7 +3319,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tec
         }
         0 | 0xd | 0x11 | 0x52 | 0x23 | 0xe | 2 | 0x21 | 0x22 | 9 | 0xc => {
             crate::comparacao::ramo("cpo_6 tipos comuns");
-            let t = cpo6_tipo(contrato);
+            let t = contract_squad_status(contrato);
             if t == 0x30 || t == 0x10 || t == 0x20 {
                 let e = entrada(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), clube, jogador, 0, 0);
                 if e != 0 && read_usize(e + 0xf) == read_usize(jogador) && nota > -10 {
@@ -3347,7 +3452,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tec
                     return 2;
                 }
             }
-            let t = cpo6_tipo(contrato);
+            let t = contract_squad_status(contrato);
             if t != 0 && t != 0x70 && t != 0x80 && listada_pelo_clube(jogador, 0) == 0 {
                 let x = sorteio(read_i8_as_i32(tecnico + 0x59));
                 let y = sorteio(6);
@@ -3363,7 +3468,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tec
                     }
                 }
             }
-            let t = cpo6_tipo(contrato);
+            let t = contract_squad_status(contrato);
             if t != 0x70 && t != 0x40 {
                 return 3;
             }
@@ -3440,7 +3545,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tec
 /// Comparador: a resposta sorteia e pode pôr o jogador entre os rejeitados do técnico (0x547af0): lado a lado no
 /// estado do gerador e no bloco das preferências do técnico (+0x65, +0x1c..+0x34), a cópia sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn comparar_pick_ai_manager_response(this: usize, tecnico: usize, jogador: usize, tipo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_PICK_AI_MANAGER_RESPONSE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_PICK_AI_MANAGER_RESPONSE);
     let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if tecnico != 0 && read_usize(tecnico + 0x65) != 0 {
         regioes.push((read_usize(tecnico + 0x65) + 0x1c, 0x18));
@@ -3496,7 +3601,7 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_post_financial_trouble_news(this: usize, clube: usize) {
     crate::comparacao::ramo("post_financial_trouble_news");
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_FINANCIAL_TROUBLE_NEWS)(this, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_FINANCIAL_TROUBLE_NEWS)(this, clube)
 }
 
 /// the manager of a rival (+0xb3/+0xb7/+0xbb) of the same league and much bigger, or of a drawn club in a league clash,
@@ -3531,7 +3636,7 @@ pub(crate) unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, clube
         let p = *rejeitados.as_ptr().add(k as u8 as usize); // como o original, sem conferir o tamanho (a 0x5480f0 dá até 3)
         if p != 0 && read_u32(p + 0x69) != 0 {
             let nota = *((read_u32(p + 0x69) as usize + 0xa) as *const i16) as i32;
-            if nota.wrapping_add(0x2ee) < nota && cpe1_sorteio(3) != 0 {
+            if nota.wrapping_add(0x2ee) < nota && friendly_random(3) != 0 {
                 return read_u32(p);
             }
         }
@@ -3539,17 +3644,17 @@ pub(crate) unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, clube
     }
     for rival in [0xb3usize, 0xb7, 0xbb] {
         let r = read_u32(clube + rival) as usize;
-        if r == 0 || read_u32(r + 0xcf) == 0 || !cph7_sorteado(r) {
+        if r == 0 || read_u32(r + 0xcf) == 0 || !rival_manager_passes_draws(r) {
             continue;
         }
         if read_u32(r + 0x57) != read_u32(clube + club::DIVISION) {
             continue;
         }
-        let reputacao = |c: usize| *((c + 0x80) as *const i16) as i32;
-        if reputacao(clube) + 0x2ee >= reputacao(r) {
+        let injury_word_0c = |c: usize| *((c + 0x80) as *const i16) as i32;
+        if injury_word_0c(clube) + 0x2ee >= injury_word_0c(r) {
             continue; // o rival não é bem maior
         }
-        if cpe1_sorteio(3) != 0 {
+        if friendly_random(3) != 0 {
             return read_u32(read_u32(r + 0xcf) as usize);
         }
     }
@@ -3557,9 +3662,9 @@ pub(crate) unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, clube
     let mut b = 0i8;
     while b < 0x32 {
         let limite = (read_u32(G_CLUB_COUNT) as i32).wrapping_sub((read_u32(G_NATION_COUNT) as i32).wrapping_mul(2));
-        let i = cpe1_sorteio(limite) as usize;
+        let i = friendly_random(limite) as usize;
         let c = (read_u32(G_CLUB_TABLE) as usize).wrapping_add(i).wrapping_add(i.wrapping_mul(145).wrapping_mul(4));
-        if confronto(clube, c, limite) != 0 && read_u32(c + 0xcf) != 0 && cph7_sorteado(c) {
+        if confronto(clube, c, limite) != 0 && read_u32(c + 0xcf) != 0 && rival_manager_passes_draws(c) {
             return read_u32(read_u32(c + 0xcf) as usize);
         }
         b += 1;
@@ -3570,7 +3675,7 @@ pub(crate) unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, clube
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio, a cópia em sem_contar (as escritas são só nas
 /// locais da pilha de cada uma).
 pub(crate) unsafe extern "thiscall" fn comparar_pick_rival_manager_id(this: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_PICK_RIVAL_MANAGER_ID);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_PICK_RIVAL_MANAGER_ID);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, clube),
         || crate::aleatorio::sem_contar(|| pick_rival_manager_id(this, clube)));
     PLACAR.registrar(igual && r == n, || format!("pick_rival_manager_id({:x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));
@@ -3630,5 +3735,5 @@ pub(crate) unsafe extern "thiscall" fn queue_manager_fa_complaint_story(this: us
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_queue_manager_fa_complaint_story(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_QUEUE_MANAGER_FA_COMPLAINT_STORY)(this, clube, pessoa, tipo, a, b, c)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_QUEUE_MANAGER_FA_COMPLAINT_STORY)(this, clube, pessoa, tipo, a, b, c)
 }

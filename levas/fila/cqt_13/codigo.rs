@@ -22,7 +22,7 @@ const CQT13_QUARTAS: [(i32, i32); 8] = [
 ];
 
 /// O clube da posição `p` do grupo `g` (pela 0x6826d0 League::get_table_row: push p; mov ecx, grupo -> thiscall, ret 4).
-unsafe fn cqt13_do_grupo(this: usize, g: i32, p: i32) -> usize {
+unsafe fn group_table_club(this: usize, g: i32, p: i32) -> usize {
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
     let grupo = if g < 0 { this } else { cqt13_d(cqt13_d(this + 0xc) + g as usize * 4) };
     cqt13_d(linha(grupo, p))
@@ -44,11 +44,11 @@ unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(this: usize) {
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
     let lista = alocar(0x20);
     if lista == 0 {
-        return aviso_em(0x9870f8, 0x311);
+        return show_error_at(0x9870f8, 0x311);
     }
     crate::comparacao::ramo("cqt_13 quartas da copa africana");
     for (k, &(g, p)) in CQT13_QUARTAS.iter().enumerate() {
-        cqt13_pd(lista + k * 4, cqt13_do_grupo(this, g, p));
+        cqt13_pd(lista + k * 4, group_table_club(this, g, p));
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt13_d(cqt13_d(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(this: usize) {
     soltar(tabela);
     let f = cqt13_d(cqt13_d(this + 0xc) + 0xc);
     if f == 0 {
-        return aviso_em(0x9870f8, 0x32c);
+        return show_error_at(0x9870f8, 0x32c);
     }
     montar(f, 0);
     cqt13_pd(this + 0x30, 3);
@@ -77,7 +77,7 @@ unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(this: usize) {
 // o +4 da copa e os 8 cruzados (lidos antes pelas tabelas, +0xb1 de cada grupo) na lista dela (+0xa7, 6 bytes; como
 // conjunto) e +0x30 = 3.
 unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let fases = cqt13_d(this + 0xc);
     if fases == 0 || (0..3).any(|g| cqt13_d(fases + g * 4) == 0) || cqt13_d(this + 0xb1) == 0 {
         return o(this);
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_stage(this:
 unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize) {
     let f = cqt13_d(this + 0x30) as i32;
     if f >= (cqt13_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x987b60, 0x328);
+        return show_error_at(0x987b60, 0x328);
     }
     let f = f + 1;
     cqt13_pd(this + 0x30, f as usize);
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize) {
 // ponytail: as finais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da última
 // fase, que dá a caixa e não muda nada).
 unsafe extern "thiscall" fn comparar_asia_cup_winner_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let f = cqt13_d(this + 0x30) as i32;
     let ultima = f >= (cqt13_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn comparar_asia_cup_winner_advance_stage(this: usize) 
 /// copa, +0xa7) e depois os da segunda (a tabela +0xa7 da fase [+0xc][0]), até 4 ao todo, as duas buscas até o +0x3e da
 /// copa (palavra com sinal); o 2º e o 3º trocam de lugar (os cruzamentos: as chaves são os pares da lista). As vagas
 /// que sobrarem ficam 0 (a original as deixa com o que o malloc deu).
-unsafe fn cqt13_finalistas(this: usize) -> [usize; 4] {
+unsafe fn asian_cup_winners_finalists(this: usize) -> [usize; 4] {
     let mut v = [0usize; 4];
     let mut n = 0i16;
     let times = cqt13_w(this + 0x3e);
@@ -152,7 +152,7 @@ unsafe fn cqt13_finalistas(this: usize) -> [usize; 4] {
 
 /// { 0x40e030 } (thiscall, ret 0, asia_cup_winner.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `AsiaCupWinner::create_finals_stage()`: a lista dos 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; sem
-/// memória, a caixa da linha 0x34b e volta) de cqt13_finalistas; a tabela das rodadas pela virtual +0x3c (push 0; push
+/// memória, a caixa da linha 0x34b e volta) de asian_cup_winners_finalists; a tabela das rodadas pela virtual +0x3c (push 0; push
 /// &id; push &rodadas; push 1; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2) push; add esp, 4 -> cdecl;
 /// Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 4, a lista, as rodadas, +4, a tabela, o ano +0x40, 1, 2, o
 /// id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo nos 16 bits altos, que o
@@ -166,11 +166,11 @@ unsafe extern "thiscall" fn create_finals_stage(this: usize) {
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
     let lista = alocar(0x10);
     if lista == 0 {
-        return aviso_em(0x987b60, 0x34b);
+        return show_error_at(0x987b60, 0x34b);
     }
     crate::comparacao::ramo("cqt_13 finalistas da recopa asiatica");
     // ponytail: com menos de 4 vivos a original deixa nas vagas o que o malloc deu; a cópia grava 0 (nesta carreira são 4)
-    for (k, &c) in cqt13_finalistas(this).iter().enumerate() {
+    for (k, &c) in asian_cup_winners_finalists(this).iter().enumerate() {
         cqt13_pd(lista + k * 4, c);
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt13_d(cqt13_d(this) + 0x3c));
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn create_finals_stage(this: usize) {
     soltar(tabela);
     let f = cqt13_d(cqt13_d(this + 0xc) + 4);
     if f == 0 {
-        return aviso_em(0x987b60, 0x375);
+        return show_error_at(0x987b60, 0x375);
     }
     sortear(f, 0);
     soltar(lista);
@@ -198,11 +198,11 @@ unsafe extern "thiscall" fn create_finals_stage(this: usize) {
 // ponytail: aloca a fase e sorteia a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4
 // times, o +4 da copa e os 4 finalistas (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto).
 unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqt13_d(this + 0xa7) == 0 || cqt13_d(this + 0xc) == 0 || cqt13_d(cqt13_d(this + 0xc)) == 0 {
         return o(this);
     }
-    let mut plano = cqt13_finalistas(this).to_vec();
+    let mut plano = asian_cup_winners_finalists(this).to_vec();
     o(this);
     let fase = cqt13_d(cqt13_d(this + 0xc) + 4);
     if fase == 0 {

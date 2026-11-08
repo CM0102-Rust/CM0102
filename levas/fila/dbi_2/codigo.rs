@@ -5,11 +5,11 @@
 /// a de `a` menor que a de `b`: 1; maior: −1; iguais: 0.
 unsafe extern "C" fn qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
     let clubes = *(0xae23b4 as *const usize);
-    let reputacao = |p: usize| {
+    let injury_word_0c = |p: usize| {
         let id = *(p as *const i32);
         if id > -1 { core::ptr::read_unaligned(clubes.wrapping_add((id as usize).wrapping_mul(581)).wrapping_add(0x80) as *const i16) } else { 0 }
     };
-    let (ra, rb) = (reputacao(a), reputacao(b));
+    let (ra, rb) = (injury_word_0c(a), injury_word_0c(b));
     if ra < rb {
         1 // a de menor reputação depois
     } else if ra > rb {
@@ -20,7 +20,7 @@ unsafe extern "C" fn qsort_comparator_club_ids_by_reputation(a: usize, b: usize)
 }
 
 unsafe extern "C" fn comparar_qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = qsort_comparator_club_ids_by_reputation(a, b);
     PLACAR.registrar(r == n, || format!("qsort_comparator_club_ids_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -46,7 +46,7 @@ unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b: usize) ->
 }
 
 unsafe extern "C" fn comparar_qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = qsort_comparator_squad_by_player_0xb(a, b);
     PLACAR.registrar(r == n, || format!("qsort_comparator_squad_by_player_0xb({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -78,7 +78,7 @@ unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b: usize) ->
 }
 
 unsafe extern "C" fn comparar_compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_staff_by_player_ability_desc(a, b);
     PLACAR.registrar(r == n, || format!("compare_staff_by_player_ability_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r

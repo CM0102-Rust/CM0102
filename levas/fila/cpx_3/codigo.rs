@@ -29,15 +29,15 @@ unsafe fn cpx3_contrato_de(pessoa: usize) -> usize {
 }
 
 /// O mesmo, guardado em [0xae1080] como a original faz.
-unsafe fn cpx3_contrato(pessoa: usize) -> usize {
+unsafe fn get_contract_store_result(pessoa: usize) -> usize {
     let c = cpx3_contrato_de(pessoa);
     *(0xae1080 as *mut usize) = c;
     c
 }
 
 /// O clube do contrato principal que não é de tipo 5 (ou 0), com o contrato guardado em [0xae1080].
-unsafe fn cpx3_clube_nao_5(pessoa: usize) -> usize {
-    let c = cpx3_contrato(pessoa);
+unsafe fn contract_club_not_type5(pessoa: usize) -> usize {
+    let c = get_contract_store_result(pessoa);
     if c == 0 || cpx3_b(c + 0x35) & 0x3f == 5 {
         0
     } else {
@@ -69,7 +69,7 @@ unsafe fn cpx3_encerrada(o: usize) -> bool {
 
 /// O clube que recebe: sem técnico humano (0x600a50) e com números de camisa (SQUAD_MANAGER 0x85add0 em [0xdd7ef0]),
 /// os números de quem chegou (0x85a470).
-unsafe fn cpx3_numeros(clube: usize) {
+unsafe fn allocate_arrival_squad_numbers(clube: usize) {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     if humano(clube, 1, 1, 0, 0) != 0 {
         return;
@@ -93,7 +93,7 @@ unsafe fn cpx3_numeros(clube: usize) {
 unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
     let p = cpx3_pessoa(cpx3_d(o + 0xc));
     let comprador = cpx3_clube(cpx3_d(o + 8));
-    let vendedor = cpx3_clube_nao_5(p);
+    let vendedor = contract_club_not_type5(p);
     let confianca: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x6978f0usize);
     crate::comparacao::ramo("cpx_3 confianca das diretorias");
     confianca(cpx3_d(0xb67a44), o); // cpx3: a confiança das diretorias
@@ -142,12 +142,12 @@ unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
     }
     let mudar: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x8c9720usize);
     mudar(this, p, comprador, o);
-    cpx3_numeros(comprador);
+    allocate_arrival_squad_numbers(comprador);
     if cpx3_d(o + 4) != 0 {
         for e in cpx3_itens(cpx3_d(o + 4)) {
             mudar(this, cpx3_pessoa(cpx3_d(e)), vendedor, o);
         }
-        cpx3_numeros(vendedor);
+        allocate_arrival_squad_numbers(vendedor);
     }
     *((o + 0x2c) as *mut u8) = 0x14;
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
         }
     }
     let p = cpx3_pessoa(cpx3_d(o + 0xc));
-    let c = cpx3_contrato(p);
+    let c = get_contract_store_result(p);
     let novo = if c == 0 { 0 } else { cpx3_clube(cpx3_d(c + 4)) };
     let desmarcar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
     desmarcar(cpx3_d(this + 0x856), cpx3_clube(cpx3_d(o + 8)), p);
@@ -189,13 +189,13 @@ unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
 // ponytail: muda jogadores de clube, paga e agenda (não pode rodar duas vezes): só a original, com o plano do estado
 // final (0x14, que nenhuma chamada depois dele muda); a cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_finalise_transfer(this: usize, o: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, o);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, o);
     let e = cpx3_b(o + 0x2c);
     PLACAR.registrar(e == 0x14, || format!("finalise_transfer(oferta {:#x}) estado={:#x} (plano 0x14)", o, e));
 }
 
 /// A notícia local com a pessoa (o id e as três chaves) nas vagas `k` a `k` + 3.
-unsafe fn cpx3_pessoa_na_noticia(nt: usize, k: u8, p: usize) {
+unsafe fn put_person_in_news(nt: usize, k: u8, p: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     gravar(nt, k as i8, cpx3_d(p) as u32);
     gravar(nt, k.wrapping_add(1) as i8, cpx3_d(cpx3_d(p + 4) + 0x33) as u32);
@@ -205,22 +205,22 @@ unsafe fn cpx3_pessoa_na_noticia(nt: usize, k: u8, p: usize) {
 
 /// A vaga 5 das duas notícias: o id do clube do contrato (sem tipo 5) ou −1 (a original relê o contrato e, sem ele, lê
 /// o id no endereço 0, o que não acontece porque acabou de achá-lo).
-unsafe fn cpx3_vaga_5(p: usize) -> u32 {
-    if cpx3_clube_nao_5(p) == 0 {
+unsafe fn contract_club_id_or_minus1(p: usize) -> u32 {
+    if contract_club_not_type5(p) == 0 {
         return u32::MAX;
     }
-    cpx3_d(cpx3_clube_nao_5(p)) as u32
+    cpx3_d(contract_club_not_type5(p)) as u32
 }
 
 /// Os da troca (+4) na notícia a partir da vaga `k` (os três primeiros, quatro vagas cada); devolve (quantos, a vaga
 /// seguinte).
-unsafe fn cpx3_troca_na_noticia(nt: usize, o: usize, mut k: u8) -> (i8, u8) {
+unsafe fn put_exchange_players_in_news(nt: usize, o: usize, mut k: u8) -> (i8, u8) {
     let mut n = 0i8;
     let troca = cpx3_d(o + 4);
     if troca != 0 {
         for e in cpx3_itens(troca) {
             if n < 3 {
-                cpx3_pessoa_na_noticia(nt, k, cpx3_pessoa(cpx3_d(e)));
+                put_person_in_news(nt, k, cpx3_pessoa(cpx3_d(e)));
                 k = k.wrapping_add(4);
             }
             n = n.wrapping_add(1);
@@ -230,7 +230,7 @@ unsafe fn cpx3_troca_na_noticia(nt: usize, o: usize, mut k: u8) -> (i8, u8) {
 }
 
 /// A entrega: com técnico humano no comprador (0x7875e0), a todos os técnicos (0x786780); senão a cada destinatário.
-unsafe fn cpx3_entregar(nt: usize, o: usize, lista: &[usize], n: i8) {
+unsafe fn deliver_transfer_news(nt: usize, o: usize, lista: &[usize], n: i8) {
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     if humano(cpx3_d(0xb7431c), cpx3_clube(cpx3_d(o + 8))) != 0 {
         let todos: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x786780usize);
@@ -265,16 +265,16 @@ unsafe extern "thiscall" fn post_transfer_completed_news(this: usize, o: usize) 
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfa8, 0);
-    cpx3_pessoa_na_noticia(nt, 0, p);
+    put_person_in_news(nt, 0, p);
     gravar(nt, 4, cpx3_d(o + 8) as u32);
-    gravar(nt, 5, cpx3_vaga_5(p));
+    gravar(nt, 5, contract_club_id_or_minus1(p));
     gravar(nt, 6, cpx3_d(o + 0x1b) as u32);
     gravar(nt, 7, 0);
     gravar(nt, 8, total(o, 1, 1, 0, 1));
     gravar(nt, 9, cpx3_b(o + 0x2f) as i8 as u32);
     gravar(nt, 0xc, cpx3_b(o + 0x11) as i8 as u32);
     gravar(nt, 0xd, clausulas(o));
-    if cpx3_b(o + 0x2f) != 0 && cpx3_clube_nao_5(p) != 0 && cpx3_b(o + 0x30) & 0xf == 3 {
+    if cpx3_b(o + 0x2f) != 0 && contract_club_not_type5(p) != 0 && cpx3_b(o + 0x30) & 0xf == 3 {
         let c = cpx3_contrato_de(p);
         let ano = cpx3_w(0xae2c92) as u16;
         let vem = c != 0
@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn post_transfer_completed_news(this: usize, o: usize) 
             gravar(nt, 11, 0);
         }
     }
-    let (m, k) = cpx3_troca_na_noticia(nt, o, 0xf);
+    let (m, k) = put_exchange_players_in_news(nt, o, 0xf);
     gravar(nt, 0xe, m as i32 as u32);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     gravar(nt, k as i8, sorteio(3) as u32);
@@ -296,18 +296,18 @@ unsafe extern "thiscall" fn post_transfer_completed_news(this: usize, o: usize) 
         gravar(nt, k.wrapping_add(1) as i8, 1);
         let fortes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x546ab0usize);
         let posicoes: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(0x5b7d20usize);
-        let clube = cpx3_clube_nao_5(p);
+        let clube = contract_club_not_type5(p);
         gravar(nt, k.wrapping_add(2) as i8, fortes(p, clube));
         gravar(nt, k.wrapping_add(3) as i8, posicoes(cpx3_d(p + 0x61)) as i32 as u32);
     } else {
         gravar(nt, k.wrapping_add(1) as i8, 0);
     }
-    cpx3_entregar(nt, o, &lista, n);
+    deliver_transfer_news(nt, o, &lista, n);
 }
 
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_transfer_completed_news(this: usize, o: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, o)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, o)
 }
 
 /// { 0x8e05d0 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
@@ -330,21 +330,21 @@ unsafe extern "thiscall" fn post_transfer_agreed_news(this: usize, o: usize, dat
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfb3, 0);
-    cpx3_pessoa_na_noticia(nt, 0, p);
+    put_person_in_news(nt, 0, p);
     gravar(nt, 4, cpx3_d(o + 8) as u32);
-    gravar(nt, 5, cpx3_vaga_5(p));
+    gravar(nt, 5, contract_club_id_or_minus1(p));
     gravar(nt, 6, cpx3_d(o + 0x1b) as u32);
     gravar(nt, 7, cpx3_b(o + 0x2f) as i8 as u32);
     gravar(nt, 8, total(o, 0, 1, 0, 1));
     gravar(nt, 9, (((cpx3_b(o + 0x30) << 4) as i8) >> 4) as i32 as u32);
     gravar(nt, 0xa, cpx3_w(data) as i32 as u32);
     gravar(nt, 0xb, cpx3_w(data + 2) as u16 as u32);
-    let (m, _) = cpx3_troca_na_noticia(nt, o, 0xd);
+    let (m, _) = put_exchange_players_in_news(nt, o, 0xd);
     gravar(nt, 0xc, m as i32 as u32);
-    cpx3_entregar(nt, o, &lista, n);
+    deliver_transfer_news(nt, o, &lista, n);
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_transfer_agreed_news(this: usize, o: usize, data: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, o, data)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, o, data)
 }

@@ -308,7 +308,7 @@ pub unsafe extern "thiscall" fn dias_ate(this: *const Data, outra: Data) -> i32 
 static mut ORIGINAIS: [usize; 10] = [0; 10];
 static PLACAR: Placar = Placar::novo("data");
 
-unsafe fn orig<F>(i: usize) -> F {
+unsafe fn original_fn<F>(i: usize) -> F {
     core::mem::transmute_copy(&ORIGINAIS[i])
 }
 
@@ -336,21 +336,21 @@ fn regioes(objetos: &[usize]) -> Regioes {
 }
 
 unsafe extern "thiscall" fn comparar_padrao(this: *mut Data) -> *mut Data {
-    let f: unsafe extern "thiscall" fn(*mut Data) -> *mut Data = orig(0);
+    let f: unsafe extern "thiscall" fn(*mut Data) -> *mut Data = original_fn(0);
     let (r, rr, igual, mo, mr) = lado_a_lado(&regioes(&[this as usize]), || f(this), || data_padrao(this));
     PLACAR.registrar(igual && r == rr, || format!("padrao original={:x?} rust={:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_nova(this: *mut Data, dia: u32, ano: u32) -> *mut Data {
-    let f: unsafe extern "thiscall" fn(*mut Data, u32, u32) -> *mut Data = orig(1);
+    let f: unsafe extern "thiscall" fn(*mut Data, u32, u32) -> *mut Data = original_fn(1);
     let (r, rr, igual, mo, mr) = lado_a_lado(&regioes(&[this as usize]), || f(this, dia, ano), || data_nova(this, dia, ano));
     PLACAR.registrar(igual && r == rr, || format!("nova({:#x}, {:#x}) original={:x?} rust={:x?}", dia, ano, mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_semana(this: *const Data) -> i32 {
-    let f: unsafe extern "thiscall" fn(*const Data) -> i32 = orig(2);
+    let f: unsafe extern "thiscall" fn(*const Data) -> i32 = original_fn(2);
     let r = f(this);
     let nosso = dia_da_semana(this);
     PLACAR.registrar(r == nosso, || format!("semana({:?}) original={} rust={}", *this, r, nosso));
@@ -358,7 +358,7 @@ unsafe extern "thiscall" fn comparar_semana(this: *const Data) -> i32 {
 }
 
 unsafe extern "thiscall" fn comparar_copia(this: *mut Data, ret: *mut Data, src: *const Data) -> *mut Data {
-    let f: unsafe extern "thiscall" fn(*mut Data, *mut Data, *const Data) -> *mut Data = orig(3);
+    let f: unsafe extern "thiscall" fn(*mut Data, *mut Data, *const Data) -> *mut Data = original_fn(3);
     let reg = regioes(&[this as usize, ret as usize, src as usize]);
     let (r, rr, igual, mo, mr) = lado_a_lado(&reg, || f(this, ret, src), || copia(this, ret, src));
     PLACAR.registrar(igual && r == rr, || format!("copia original={:x?} rust={:x?}", mo, mr));
@@ -368,7 +368,7 @@ unsafe extern "thiscall" fn comparar_copia(this: *mut Data, ret: *mut Data, src:
 macro_rules! comparar_operador {
     ($nome:ident, $i:expr, $rust:ident, $texto:literal) => {
         unsafe extern "thiscall" fn $nome(this: *const Data, ret: *mut Data, n: u32) -> *mut Data {
-            let f: unsafe extern "thiscall" fn(*const Data, *mut Data, u32) -> *mut Data = orig($i);
+            let f: unsafe extern "thiscall" fn(*const Data, *mut Data, u32) -> *mut Data = original_fn($i);
             let reg = regioes(&[this as usize, ret as usize]);
             let (r, rr, igual, mo, mr) = lado_a_lado(&reg, || f(this, ret, n), || $rust(this, ret, n));
             PLACAR.registrar(igual && r == rr, || format!("{}({:?}, {:#x}) original={:x?} rust={:x?}", $texto, *this, n, mo, mr));
@@ -382,7 +382,7 @@ comparar_operador!(comparar_menos, 5, menos, "menos");
 comparar_operador!(comparar_semanas, 6, mais_semanas, "mais_semanas");
 
 unsafe extern "thiscall" fn comparar_ajustar(this: *const Data, alvo: u32, dest: *mut Data) -> u32 {
-    let f: unsafe extern "thiscall" fn(*const Data, u32, *mut Data) -> u32 = orig(7);
+    let f: unsafe extern "thiscall" fn(*const Data, u32, *mut Data) -> u32 = original_fn(7);
     let reg = regioes(&[this as usize, dest as usize]);
     // O valor devolvido e o endereco de uma temporaria na pilha: nao e comparado.
     let (r, _, igual, mo, mr) = lado_a_lado(&reg, || f(this, alvo, dest), || ajustar_semana(this, alvo, dest));
@@ -391,7 +391,7 @@ unsafe extern "thiscall" fn comparar_ajustar(this: *const Data, alvo: u32, dest:
 }
 
 unsafe extern "thiscall" fn comparar_dma(this: *mut Data, dia: u32, mes: u32, ano: u32, semana: u32) -> *mut Data {
-    let f: unsafe extern "thiscall" fn(*mut Data, u32, u32, u32, u32) -> *mut Data = orig(8);
+    let f: unsafe extern "thiscall" fn(*mut Data, u32, u32, u32, u32) -> *mut Data = original_fn(8);
     if !entrada_valida(dia, mes) {
         // Caminho de erro: mostraria a caixa duas vezes. So a original roda.
         return f(this, dia, mes, ano, semana);
@@ -403,7 +403,7 @@ unsafe extern "thiscall" fn comparar_dma(this: *mut Data, dia: u32, mes: u32, an
 }
 
 unsafe extern "thiscall" fn comparar_dias(this: *const Data, outra: Data) -> i32 {
-    let f: unsafe extern "thiscall" fn(*const Data, Data) -> i32 = orig(9);
+    let f: unsafe extern "thiscall" fn(*const Data, Data) -> i32 = original_fn(9);
     let reg = [(this as usize, 8), (EST_DIAS.valor, 8), (EST_DIAS.guarda, 1)];
     let (r, rr, igual, mo, mr) = lado_a_lado(&reg, || f(this, outra), || dias_ate(this, outra));
     PLACAR.registrar(igual && r == rr, || format!("dias_ate({:?}, {:?}) original={} {:x?} rust={} {:x?}", *this, outra, r, mo, rr, mr));

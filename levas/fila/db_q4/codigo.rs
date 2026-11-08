@@ -72,7 +72,7 @@ unsafe extern "C" fn nation_is_uk_or_ireland(nacao: usize) -> u32 {
 }
 
 unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = database_compare_comp_history_rows(a, b);
     PLACAR.registrar(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -80,7 +80,7 @@ unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: usize, b: us
 
 unsafe extern "C" fn comparar_database_player_to_attribute_vector(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
                                                             fim_das_posicoes: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(%%I1%%);
     let mut regioes = vec![(vetor, 0x3f * 3)];
     for p in [fim_dos_lados, fim_das_posicoes, fim_dos_ponderados] {
         if !p.is_null() {
@@ -95,7 +95,7 @@ unsafe extern "C" fn comparar_database_player_to_attribute_vector(jogador: usize
 }
 
 unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nacao: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nacao);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nacao);
     let n = nation_is_uk_or_ireland(nacao);
     PLACAR.registrar(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nacao, r, n));
     r

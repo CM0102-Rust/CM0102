@@ -10,7 +10,7 @@ unsafe fn cqj1_clube(id: u32) -> usize {
 }
 
 /// O clube `c` (não nulo e ainda sem vaga, +0x1db = −1) entra na Libertadores na fase `fase`. Devolve se entrou.
-unsafe fn cqj1_entra(c: usize, fase: u8) -> bool {
+unsafe fn enter_libertadores(c: usize, fase: u8) -> bool {
     if c == 0 || cqj1_d(c + 0x1db) != u32::MAX {
         return false;
     }
@@ -35,7 +35,7 @@ unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubes: usiz
         *((h + 0x1df) as *mut u8) = 1;
         *((h + 0x1db) as *mut u32) = cqj1_d(0x9cf63c);
     } else {
-        aviso_em(0x9a7ed8, 0x114);
+        show_error_at(0x9a7ed8, 0x114);
     }
     for k in 0..0xbusize {
         let e = this + k * 10;
@@ -46,24 +46,24 @@ unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubes: usiz
                 if c == 0 || cqj1_d(c + 0x1db) != u32::MAX {
                     c = campeao(linha(0x9cf9e8), 1);
                 }
-                if cqj1_entra(c, 2) {
+                if enter_libertadores(c, 2) {
                     n = 1;
                 }
                 let id = cqj1_d(this + 0x71);
-                if id != u32::MAX && cqj1_entra(cqj1_clube(id), 2) {
+                if id != u32::MAX && enter_libertadores(cqj1_clube(id), 2) {
                     n = n.wrapping_add(1);
                 }
             } else {
-                if cqj1_entra(cqj1_clube(cqj1_d(0x9d0274)), 2) {
+                if enter_libertadores(cqj1_clube(cqj1_d(0x9d0274)), 2) {
                     crate::comparacao::ramo("cqj_1 brasil fixo");
                     n = 1; // cqj1: o Palmeiras
                 }
-                if cqj1_entra(cqj1_clube(cqj1_d(0x9d026c)), 2) {
+                if enter_libertadores(cqj1_clube(cqj1_d(0x9d026c)), 2) {
                     n = n.wrapping_add(1);
                 }
             }
             for lugar in [0u32, 1] {
-                if cqj1_entra(campeao(linha(0x9cf9ec), lugar), 2) {
+                if enter_libertadores(campeao(linha(0x9cf9ec), lugar), 2) {
                     n = n.wrapping_add(1);
                 }
             }
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubes: usiz
             let c = enesimo(this, clubes, conta, cqj1_d(e), 1, 1, 0);
             if c != 0 && cqj1_d(c + 0x1db) == u32::MAX {
                 crate::comparacao::ramo("cqj_1 cota da nacao");
-                cqj1_entra(c, 2); // cqj1: a vaga da cota
+                enter_libertadores(c, 2); // cqj1: a vaga da cota
             }
             n = n.wrapping_add(1);
         }
@@ -87,7 +87,7 @@ fn cqj1_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) ->
 
 /// Lado a lado: os clubes do jogo e a marca da caixa.
 unsafe extern "thiscall" fn comparar_assign_libertadores_places(this: usize, clubes: usize, conta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let n = (cqj1_d(0xae235c) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
     let reg = [(cqj1_d(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (cqj1_d(0xae23d4) as usize, (cqj1_d(0xae237c) as i32).max(0) as usize * 0x1a)];
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this: usize, cl
 
 /// A devolução das duas (a rotina só lê).
 unsafe extern "thiscall" fn comparar_find_nth_unqualified_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     let c = find_nth_unqualified_club_of_nation(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     PLACAR.registrar(r == c, || format!("find_nth_unqualified_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn is_mercosur_invited_club(_this: usize, clube: usize)
 
 /// A devolução das duas (a rotina só lê).
 unsafe extern "thiscall" fn comparar_is_mercosur_invited_club(this: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let r = o(this, clube);
     let c = is_mercosur_invited_club(this, clube);
     PLACAR.registrar(r == c, || format!("is_mercosur_invited_club({:x}): original {} rust {}", clube, r, c));

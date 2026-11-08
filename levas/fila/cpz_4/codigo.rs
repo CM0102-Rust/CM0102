@@ -18,7 +18,7 @@ unsafe fn cpz4_registros() -> usize {
 }
 
 /// comp_util_scale_by_round (0x4bf850, cdecl(baixo, alto, rodada, rodadas)): a faixa pela rodada, de 0 a 100.
-unsafe fn cpz4_escala(baixo: u32, alto: u32, rodada: i16, rodadas: u32) -> u32 {
+unsafe fn scale_by_round(baixo: u32, alto: u32, rodada: i16, rodadas: u32) -> u32 {
     let f: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x4bf850usize);
     // ponytail: a original empurra a rodada num registrador com lixo nos 16 bits altos; a 0x4bf850 só lê a palavra.
     f(baixo, alto, rodada as u16 as u32, rodadas)
@@ -26,25 +26,25 @@ unsafe fn cpz4_escala(baixo: u32, alto: u32, rodada: i16, rodadas: u32) -> u32 {
 
 /// Staff_Records::add_qualified_for_round_record (0x86bdd0: thiscall(registros, clube, comp, fase, rodada, peso),
 /// ret 0x14).
-unsafe fn cpz4_classificado(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
+unsafe fn european_cup_add_qualified_record(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86bdd0usize);
     f(cpz4_registros(), clube, comp, fase, rodada, peso);
 }
 
 /// Staff_Records::add_failed_to_qualify_record (0x86c1d0: thiscall(registros, clube, comp, fase, _), ret 0x10).
-unsafe fn cpz4_nao_classificado(clube: usize, comp: usize, fase: u32, x: u32) {
+unsafe fn european_cup_add_failed_to_qualify_record(clube: usize, comp: usize, fase: u32, x: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x86c1d0usize);
     f(cpz4_registros(), clube, comp, fase, x);
 }
 
 /// Staff_Records::add_knocked_out_record (0x86c000: thiscall(registros, clube, comp, fase, rodada, _), ret 0x14).
-unsafe fn cpz4_eliminado(clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
+unsafe fn european_cup_add_knocked_out_record(clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86c000usize);
     f(cpz4_registros(), clube, comp, fase, rodada, x);
 }
 
 /// O clube sai da competição europeia da temporada (+0x1db = −1).
-unsafe fn cpz4_sair(clube: usize) {
+unsafe fn leave_euro_competition(clube: usize) {
     core::ptr::write_unaligned((clube + 0x1db) as *mut i32, -1);
 }
 
@@ -69,65 +69,65 @@ unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: u
             0 | 1 => {
                 let r = cpz4_w(jogo + 0x34);
                 if r == 0 {
-                    let peso = cpz4_escala(1, 0x14, 0, 2);
+                    let peso = scale_by_round(1, 0x14, 0, 2);
                     let rodada = cpz4_w(cpz4_d(this + 0xa3) + 0x6f) as u16 as u32;
                     // ponytail: a fase +0x3a vai num registrador com lixo nos 16 bits altos; a 0x86bdd0 só usa a palavra.
-                    cpz4_classificado(clube, comp, cpz4_w(this + 0x3a) as u16 as u32, rodada, peso);
+                    european_cup_add_qualified_record(clube, comp, cpz4_w(this + 0x3a) as u16 as u32, rodada, peso);
                 } else {
-                    let peso = cpz4_escala(1, 0x14, r, 2);
-                    cpz4_classificado(clube, comp, 0x41c, 0, peso);
+                    let peso = scale_by_round(1, 0x14, r, 2);
+                    european_cup_add_qualified_record(clube, comp, 0x41c, 0, peso);
                 }
             }
             0xff | 2 => {
-                let peso = cpz4_escala(1, 0x14, cpz4_w(jogo + 0x34), 2);
+                let peso = scale_by_round(1, 0x14, cpz4_w(jogo + 0x34), 2);
                 // ponytail: +0x32 e +0x30 vão em registradores com lixo nos 16 bits altos; a 0x86c000 só usa as palavras.
-                cpz4_eliminado(clube, comp, cpz4_w(jogo + 0x32) as u16 as u32, cpz4_w(jogo + 0x30) as u16 as u32, peso);
+                european_cup_add_knocked_out_record(clube, comp, cpz4_w(jogo + 0x32) as u16 as u32, cpz4_w(jogo + 0x30) as u16 as u32, peso);
                 crate::comparacao::ramo("cpz_4 caiu na qualificacao");
-                cpz4_sair(clube); // cpz4: quem cai na qualificação sai da competição europeia
+                leave_euro_competition(clube); // cpz4: quem cai na qualificação sai da competição europeia
             }
             _ => {}
         }
     } else if (f as i8) < 8 {
         if d == 6 {
-            cpz4_classificado(clube, comp, 0x44a, 0xffff_ffff, 0x32);
+            european_cup_add_qualified_record(clube, comp, 0x44a, 0xffff_ffff, 0x32);
         } else if d == 0xfe {
-            cpz4_nao_classificado(clube, comp, 0x449, 0x32);
+            european_cup_add_failed_to_qualify_record(clube, comp, 0x449, 0x32);
             crate::comparacao::ramo("cpz_4 caiu na fase 1");
-            cpz4_sair(clube); // cpz4: quem cai na fase 1 sai da competição europeia
+            leave_euro_competition(clube); // cpz4: quem cai na fase 1 sai da competição europeia
         }
     } else if (f as i8) < 0xc {
         if d == 6 {
             crate::comparacao::ramo("cpz_4 passou da fase 2");
-            cpz4_classificado(clube, comp, 0, 0x78, 0x32); // cpz4: pass_ball da fase 2 pesa 0x32
+            european_cup_add_qualified_record(clube, comp, 0, 0x78, 0x32); // cpz4: pass_ball da fase 2 pesa 0x32
         } else if d == 0xfe {
-            cpz4_nao_classificado(clube, comp, 0x44a, 0x32);
-            cpz4_sair(clube);
+            european_cup_add_failed_to_qualify_record(clube, comp, 0x44a, 0x32);
+            leave_euro_competition(clube);
         }
     } else if f == 0xc {
         match d {
             1 => {
                 let titulo: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x86a800usize);
                 titulo(cpz4_registros(), clube, jogo, fim);
-                cpz4_sair(clube);
+                leave_euro_competition(clube);
             }
             2 => {
                 let vice: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x86b0b0usize);
                 vice(cpz4_registros(), clube, jogo, fim);
-                cpz4_sair(clube);
+                leave_euro_competition(clube);
             }
             0 => {
-                let peso = cpz4_escala(0x4b, 0x64, cpz4_w(jogo + 0x34), 2);
+                let peso = scale_by_round(0x4b, 0x64, cpz4_w(jogo + 0x34), 2);
                 let mata = cpz4_d(cpz4_d(this + 0xc) + 0x30);
                 let rodadas = cpz4_d(mata + 0xa3);
                 let r = cpz4_w(jogo + 0x34) as i32;
                 // os bits de cima do registrador que a original empurra são os do ponteiro das fases (+0xc)
                 let rodada = (cpz4_d(this + 0xc) as u32 & 0xffff_0000) | cpz4_w(rodadas.wrapping_add((r as usize).wrapping_mul(0x68)) + 0x6f) as u16 as u32;
-                cpz4_classificado(clube, comp, 0, rodada, peso);
+                european_cup_add_qualified_record(clube, comp, 0, rodada, peso);
             }
             0xff => {
-                let peso = cpz4_escala(0x4b, 0x64, cpz4_w(jogo + 0x34), 2);
-                cpz4_eliminado(clube, comp, 0, cpz4_w(jogo + 0x30) as u16 as u32, peso);
-                cpz4_sair(clube);
+                let peso = scale_by_round(0x4b, 0x64, cpz4_w(jogo + 0x34), 2);
+                european_cup_add_knocked_out_record(clube, comp, 0, cpz4_w(jogo + 0x30) as u16 as u32, peso);
+                leave_euro_competition(clube);
             }
             _ => {}
         }
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: u
 // elenco da final: não rodam duas vezes. Só a original roda; o plano confere o que a rotina mesma grava (+0x1db do
 // clube: −1 nos casos em que ele sai, intacto nos outros).
 unsafe extern "thiscall" fn comparar_european_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a: u32, jogo: usize, fim: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%);
     let (d, f) = (desfecho as u8, fase as u8);
     // as faixas da original comparam o byte da fase com sinal (0x80 a 0xfe contam como fase 1)
     let sai = if f == 0xff {
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn comparar_european_cup_update_staff_records_for_statu
 
 /// Os quatro sorteados da fase 2 (os índices dos grupos, todos diferentes): a, b ≠ a, c ≠ a, b e d ≠ a, b, c, cada um
 /// com sorteio(4) (0x90cfc0) até sair um que serve (a d sorteia pelo menos uma vez: começa igual à a).
-unsafe fn cpz4_sorteio_dos_grupos() -> [i8; 4] {
+unsafe fn draw_four_groups() -> [i8; 4] {
     let a = sortear(4) as i8;
     let mut b = sortear(4) as i8;
     while b == a {
@@ -180,7 +180,7 @@ unsafe fn cpz4_sorteio_dos_grupos() -> [i8; 4] {
 
 /// O clube da linha `k` do grupo `g` da fase 2 (a fase [+0xc] + 0x20 + 4 × g; League::get_table_row 0x6826d0,
 /// thiscall(grupo, k), ret 4).
-unsafe fn cpz4_do_grupo(this: usize, g: i8, k: u32) -> usize {
+unsafe fn second_stage_group_club(this: usize, g: i8, k: u32) -> usize {
     let linha: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x6826d0usize);
     cpz4_d(linha(cpz4_d(cpz4_d(this + 0xc) + 0x20 + 4 * (g as i32 as usize)), k))
 }
@@ -197,13 +197,13 @@ unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let lista = calloc(8, 4);
     if lista == 0 {
-        return aviso_em(0x9c4900, 0x762);
+        return show_error_at(0x9c4900, 0x762);
     }
     crate::comparacao::ramo("cpz_4 sorteio das quartas");
-    let [a, b, c, d] = cpz4_sorteio_dos_grupos();
+    let [a, b, c, d] = draw_four_groups();
     let ordem: [(i8, u32); 8] = [(a, 0), (b, 1), (a, 1), (b, 0), (c, 0), (d, 1), (c, 1), (d, 0)];
     for (k, &(g, l)) in ordem.iter().enumerate() {
-        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cpz4_do_grupo(this, g, l));
+        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, second_stage_group_club(this, g, l));
     }
     let tv: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7e9180usize);
     for k in 0..8 {
@@ -230,11 +230,11 @@ unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     liberar(t);
     let fase = cpz4_d(cpz4_d(this + 0xc) + 0x30);
     if fase == 0 {
-        return aviso_em(0x9c4900, 0x78a);
+        return show_error_at(0x9c4900, 0x78a);
     }
     for g in 0..4i8 {
-        cpz4_sair(cpz4_do_grupo(this, g, 2));
-        cpz4_sair(cpz4_do_grupo(this, g, 3));
+        leave_euro_competition(second_stage_group_club(this, g, 2));
+        leave_euro_competition(second_stage_group_club(this, g, 3));
     }
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
     montar(fase, 0);
@@ -245,14 +245,14 @@ unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
 // feito antes: os 8 primeiros e segundos dos grupos e o 3º e 4º de cada um; depois, +0x30 = 12, a fase do mata-mata
 // com 8 clubes que são os primeiros e segundos (como conjunto) e o 3º e o 4º de cada grupo com +0x1db = −1.
 unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let mut vivos: Vec<usize> = Vec::new();
     let mut fora: Vec<usize> = Vec::new();
     for g in 0..4i8 {
-        vivos.push(cpz4_do_grupo(this, g, 0));
-        vivos.push(cpz4_do_grupo(this, g, 1));
-        fora.push(cpz4_do_grupo(this, g, 2));
-        fora.push(cpz4_do_grupo(this, g, 3));
+        vivos.push(second_stage_group_club(this, g, 0));
+        vivos.push(second_stage_group_club(this, g, 1));
+        fora.push(second_stage_group_club(this, g, 2));
+        fora.push(second_stage_group_club(this, g, 3));
     }
     o(this);
     let fase = cpz4_d(cpz4_d(this + 0xc) + 0x30);
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize) {
 
 /// A lista dos inscritos (+0x14, 6 bytes: +0 o clube, +4 a rodada de entrada; +0x38 deles) que seguem na competição
 /// (+0x1db = o id da copa, [+4]); com `sem_7`, fora os de rodada de entrada 7. Grava em `v` (até 71) e devolve a conta.
-unsafe fn cpz4_inscritos(this: usize, sem_7: bool, v: *mut usize) -> i16 {
+unsafe fn active_entrants(this: usize, sem_7: bool, v: *mut usize) -> i16 {
     let mut n: i16 = 0;
     let mut i: i16 = 0;
     while i < cpz4_w(this + 0x38) {
@@ -306,12 +306,12 @@ unsafe extern "thiscall" fn european_cup_collect_club_list(this: usize, saida: u
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let v = alocar(0x11c);
     if v == 0 {
-        aviso_em(0x9c4900, linha);
+        show_error_at(0x9c4900, linha);
         core::ptr::write_unaligned(saida as *mut usize, 0);
         return 0;
     }
     crate::comparacao::ramo("cpz_4 lista dos inscritos");
-    let n = cpz4_inscritos(this, sem_7, v as *mut usize);
+    let n = active_entrants(this, sem_7, v as *mut usize);
     core::ptr::write_unaligned(saida as *mut usize, v);
     (v as u32 & 0xffff_0000) | n as u16 as u32
 }
@@ -320,7 +320,7 @@ unsafe extern "thiscall" fn european_cup_collect_club_list(this: usize, saida: u
 /// local pelos mesmos inscritos: a conta (palavra de baixo da devolução) e os clubes da lista dela iguais. Nos tipos
 /// que vão para a 0x48e1c0 e sem lista: a devolução e a saída como a original deixou.
 unsafe extern "thiscall" fn comparar_european_cup_collect_club_list(this: usize, saida: usize, tipo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     let t = tipo as u8;
     let sem_7 = match t {
         1 => Some(true),
@@ -330,7 +330,7 @@ unsafe extern "thiscall" fn comparar_european_cup_collect_club_list(this: usize,
     };
     let mut plano = [0usize; 71];
     let n = match sem_7 {
-        Some(s) if cpz4_w(this + 0x38) <= 71 => cpz4_inscritos(this, s, plano.as_mut_ptr()),
+        Some(s) if cpz4_w(this + 0x38) <= 71 => active_entrants(this, s, plano.as_mut_ptr()),
         _ => return o(this, saida, tipo),
     };
     let r = o(this, saida, tipo);

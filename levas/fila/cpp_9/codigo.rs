@@ -27,14 +27,14 @@ unsafe fn cpp9_selecao(clube: usize) -> bool {
 }
 
 /// Os clubes sem as seleções do fim do vetor: [0xae235c] − 2 × [0xae2350].
-unsafe fn cpp9_clubes_sem_selecoes() -> i32 {
+unsafe fn injury_club_count_without_nations() -> i32 {
     cpp9_i(0xae235c).wrapping_sub(cpp9_i(0xae2350).wrapping_mul(2))
 }
 
 /// Os dias de pré-temporada que contam na forma inicial: dentro da temporada da nação do clube (0x669bd0), 0; fora,
 /// os dias do começo dela até hoje (0x54cdb0 sobre a primeira data): acima de 80, 40; de 41 a 80, 80 − dias (no byte,
 /// com sinal); senão os dias.
-unsafe fn cpp9_dias_de_preparo(clube: usize, inicio: &mut [u32; 2], fim: &mut [u32; 2]) -> i32 {
+unsafe fn preseason_days(clube: usize, inicio: &mut [u32; 2], fim: &mut [u32; 2]) -> i32 {
     let temporada: unsafe extern "C" fn(usize, *mut u32, *mut u32) -> u32 = core::mem::transmute(0x669bd0usize);
     if temporada(clube, inicio.as_mut_ptr(), fim.as_mut_ptr()) != 0 {
         return 0;
@@ -51,7 +51,7 @@ unsafe fn cpp9_dias_de_preparo(clube: usize, inicio: &mut [u32; 2], fim: &mut [u
 }
 
 /// { 0x62a920 } (thiscall, ret 0, injury.cpp, quadro SEH sem destrutor): `Injury::init_squad_fitness()`: para cada
-/// clube (sem as seleções), os dias de preparo (`cpp9_dias_de_preparo`); cada uma das 50 vagas (+0xd7) com pessoa de
+/// clube (sem as seleções), os dias de preparo (`preseason_days`); cada uma das 50 vagas (+0xd7) com pessoa de
 /// id abaixo de [0xae2364]: jogador (+0x61): v = dias − (+0x34 do jogador)/2 − (+0x5b da pessoa)/4 (com sinal,
 /// truncado), entre 1 e 40, e a forma (+8 do registro de 31 bytes em [this]) = 10000 − 75 × v; quem não é jogador sai
 /// da vaga (0), e se o clube dele (+0x39) é este: cargo (+0x3d) 0xb fica sem clube e 8, 0xf vira 8, 0xd vira 6.
@@ -63,9 +63,9 @@ unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
     construir(fim.as_mut_ptr());
     let base = cpp9_d(0xae23b4);
     let mut i = 0i32;
-    while i < cpp9_clubes_sem_selecoes() {
+    while i < injury_club_count_without_nations() {
         let clube = base.wrapping_add((i as usize).wrapping_mul(0x245));
-        let dias = cpp9_dias_de_preparo(clube, &mut inicio, &mut fim);
+        let dias = preseason_days(clube, &mut inicio, &mut fim);
         for s in 0..50usize {
             let vaga = clube + 0xd7 + 4 * s;
             let p = cpp9_d(vaga);
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn init_records(this: usize) {
     let v = alocar((n as u32).wrapping_mul(31));
     core::ptr::write_unaligned(this as *mut usize, v);
     if v == 0 {
-        aviso_em(0x9e7f28, 0x7d0);
+        show_error_at(0x9e7f28, 0x7d0);
         return;
     }
     let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn init_records(this: usize) {
 /// A nação em cuja lista dos jovens o clube entra (0x7acfc0): nenhuma para seleção (0x53b900), sem nação (+0x53),
 /// nação sem +0x71 ou os dois clubes de 0x9d00a4/0x9d00a8. Nação com +0x11c: só com +0x80 até 2 e divisão (+0x57);
 /// sem: com divisão.
-unsafe fn cpp9_nacao_da_lista(clube: usize) -> usize {
+unsafe fn injury_youth_list_nation(clube: usize) -> usize {
     if cpp9_selecao(clube) {
         return 0;
     }
@@ -186,7 +186,7 @@ unsafe fn cpp9_nacao_da_lista(clube: usize) -> usize {
 /// { 0x7acfc0 } (thiscall, ret 0, player_regen.cpp, quadro SEH do `new`): `PLAYER_REGEN::build_nation_club_lists()`:
 /// [this] = 14 bytes por nação de [0xae2350] (0x944e46, sem teste), com uma lista nova (0x944cf1 de 0xe e 0x68d020;
 /// sem memória, 0) por nação; cada clube de [0xae235c] entra (0x68d0d0, os 4 bytes do id) na lista da nação dele
-/// (`cpp9_nacao_da_lista`).
+/// (`injury_youth_list_nation`).
 unsafe extern "thiscall" fn build_nation_club_lists(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn build_nation_club_lists(this: usize) {
     let mut j = 0i32;
     while j < cpp9_i(0xae235c) {
         let clube = base.wrapping_add((j as usize).wrapping_mul(0x245));
-        let nacao = cpp9_nacao_da_lista(clube);
+        let nacao = injury_youth_list_nation(clube);
         if nacao != 0 {
             crate::comparacao::ramo("cpp_9 clube na lista");
             let l = cpp9_d(cpp9_d(this).wrapping_add((cpp9_i(nacao) as usize).wrapping_mul(4)));
@@ -218,10 +218,10 @@ unsafe extern "thiscall" fn build_nation_club_lists(this: usize) {
 /// Comparador: lado a lado pelos registros de lesão (31 bytes × [0xae2364]), pelos clubes (as vagas) e pelo clube e
 /// cargo (+0x39..+0x3d) de quem não é jogador nas vagas.
 unsafe extern "thiscall" fn comparar_init_squad_fitness(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let base = cpp9_d(0xae23b4);
     let mut regioes = vec![(cpp9_d(this), (cpp9_i(0xae2364).max(0) as usize) * 31), (base, (cpp9_i(0xae235c).max(0) as usize) * 0x245)];
-    for i in 0..cpp9_clubes_sem_selecoes().max(0) as usize {
+    for i in 0..injury_club_count_without_nations().max(0) as usize {
         for s in 0..50usize {
             let p = cpp9_d(base + i * 0x245 + 0xd7 + 4 * s);
             if p != 0 && cpp9_i(p) < cpp9_i(0xae2364) && cpp9_d(p + 0x61) == 0 {
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn comparar_init_squad_fitness(this: usize) {
 /// Comparador: a original aloca, sorteia e lesiona (0x62d250): roda só ela e confere o que a 0x62d250 não muda: o
 /// vetor alocado e o +0x1e = 50 de todos os registros.
 unsafe extern "thiscall" fn comparar_init_records(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let v = cpp9_d(this);
     if v == 0 {
         return;
@@ -253,15 +253,15 @@ unsafe extern "thiscall" fn comparar_build_nation_club_lists(this: usize) {
     let base = cpp9_d(0xae23b4);
     for j in 0..cpp9_i(0xae235c).max(0) as usize {
         let clube = base + j * 0x245;
-        let nacao = cpp9_nacao_da_lista(clube);
+        let nacao = injury_youth_list_nation(clube);
         if nacao != 0 && (cpp9_i(nacao) as usize) < n {
             plano[cpp9_i(nacao) as usize].push(cpp9_d(clube));
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let errada = (0..n).find(|&k| {
         let l = cpp9_d(cpp9_d(this) + 4 * k);
-        let ids: Vec<usize> = if l != 0 { cpd1_itens(l).into_iter().map(|e| cpp9_d(e)).collect() } else { Vec::new() };
+        let ids: Vec<usize> = if l != 0 { list_items_capped(l).into_iter().map(|e| cpp9_d(e)).collect() } else { Vec::new() };
         l != 0 && ids != plano[k]
     });
     PLACAR.registrar(errada.is_none(), || format!("build_nation_club_lists: a lista da nação {:?} difere do plano", errada));

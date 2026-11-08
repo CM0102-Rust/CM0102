@@ -6,8 +6,8 @@ MUTACOES = [
      'core::ptr::write_unaligned(this as *mut u16, core::ptr::read_unaligned(origem as *const u16).wrapping_add(1)); // mutacao: uma a mais'),
     ('cpf_torcedor_ano', 'core::ptr::write_unaligned((this + 0x18) as *mut u16, core::ptr::read_unaligned((origem + 0x18) as *const u16)); // o ano do torcedor',
      'core::ptr::write_unaligned((this + 0x18) as *mut u16, 0); // mutacao: o ano zerado'),
-    ('cpf_ocorrencias_data', 'cpf2_data_padrao(this + 0x11); // a data das ocorrências',
-     'cpf2_data_padrao(this + 0x10); // mutacao: a data um byte antes'),
-    ('cpf_contagem_data', 'cpf2_data_padrao(this + 0x12); // a data da contagem',
-     'cpf2_data_padrao(this + 0x11); // mutacao: a data um byte antes'),
+    ('cpf_ocorrencias_data', 'init_default_date(this + 0x11); // a data das ocorrências',
+     'init_default_date(this + 0x10); // mutacao: a data um byte antes'),
+    ('cpf_contagem_data', 'init_default_date(this + 0x12); // a data da contagem',
+     'init_default_date(this + 0x11); // mutacao: a data um byte antes'),
 ]

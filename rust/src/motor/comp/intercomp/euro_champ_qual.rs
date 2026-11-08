@@ -5,7 +5,10 @@ use super::*;
 
 
 
-/// { 0x57e8f0 } (thiscall, ret 0, euro_champ_qual.cpp; a virtual +0x8c, do construtor em 2001-000; quadro SEH pela Date
+/// EuroChampQual::set_up_rules (0x57e8f0): points, rounds, tiebreaks, qualification places, draw date; builds the round
+/// table; returns 1.
+///
+/// [pt] { 0x57e8f0 } (thiscall, ret 0, euro_champ_qual.cpp; a virtual +0x8c, do construtor em 2001-000; quadro SEH pela Date
 /// local, sem destrutor): `EuroChampQual::set_up_rules()`: 3 pontos pela vitória (+0xc2) e 1 pelo empate (+0xc3), +0x4a =
 /// 3, dois turnos (+0x3c = 2, word), a categoria 0xa dos jogos (+0xc4), +0x43 = 2, os desempates 1, 2, 4, 5 (+0xc5..+0xc8),
 /// uma vaga direta (+0xbe = 1) e uma de play-off (+0xbf = 1), sem rebaixamento (+0xc0 = +0xc1 = 0), +0x49 = 7, +0xa7 =
@@ -13,7 +16,7 @@ use super::*;
 /// push 0xa; lea ecx, local -> thiscall, ret 0x10: 10 de março levado à sexta-feira [inferência]); +0xb8 = 0 (word); a
 /// tabela das rodadas pela virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) em
 /// +0xba. Devolve 1.
-pub(crate) unsafe fn cqs8_regras(this: usize) -> u32 {
+pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
     write_u8(this + 0xc2, 3);
     write_u8(this + 0x4a, 3);
     core::ptr::write_unaligned((this + 0x3c) as *mut i16, 2); // cqs8: dois turnos
@@ -43,13 +46,13 @@ pub(crate) unsafe fn cqs8_regras(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize) -> u32 {
-    cqs8_regras(this)
+    set_up_rules(this)
 }
 
 /// Lado a lado a partir do mesmo estado (os campos +0x3a..+0xc9 da copa, fora o ponteiro +0xba); a tabela das rodadas que
 /// cada lado aloca em +0xba (pela virtual +0x3c, original) só é conferida como montada, e a da cópia é liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EURO_CHAMP_QUAL_SET_UP_RULES);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EURO_CHAMP_QUAL_SET_UP_RULES);
     let antes = read_u32_as_usize(this + 0xba);
     let reg = [(this + 0x3a, 0x80usize), (this + 0xbe, 0xb)];
     let to = core::cell::Cell::new(0usize);
@@ -60,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(thi
         core::ptr::write_unaligned((this + 0xba) as *mut u32, antes as u32);
         r
     }, || {
-        let r = cqs8_regras(this);
+        let r = set_up_rules(this);
         tr.set(read_u32_as_usize(this + 0xba));
         core::ptr::write_unaligned((this + 0xba) as *mut u32, to.get() as u32);
         r
@@ -77,54 +80,58 @@ pub(crate) unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(thi
     a
 }
 
-/// { 0x57d9d0 } (thiscall, ret 4, euro_champ_qual.cpp): `EuroChampQual::get_group_team_count(g)`: com o formato +0xf6 = 1
+/// EuroChampQual::get_group_team_count(g): 6 or 5 teams by format (+0xf6); other format shows the box and returns 5.
+///
+/// [pt] { 0x57d9d0 } (thiscall, ret 4, euro_champ_qual.cpp): `EuroChampQual::get_group_team_count(g)`: com o formato +0xf6 = 1
 /// (9 grupos [inferência]), os grupos 0, 2 e 5 têm 6 seleções e os outros 5; com o formato 2 (10 grupos [inferência]), os
 /// grupos 0, 2, 5 e 7 têm 6 e os outros 5; outro formato, a caixa da linha 0x245 e 5. `g` é o byte do argumento.
-pub(crate) unsafe fn cqs8_tamanho(this: usize, g: u32) -> i16 {
+pub(crate) unsafe fn group_team_count(this: usize, g: u32) -> i16 {
     let g = g as u8;
     match *((this + 0xf6) as *const i8) {
         1 => if matches!(g, 0 | 2 | 5) { 6 } else { 5 }, // cqs8: os grupos de 6 no formato 1
         2 => if matches!(g, 0 | 2 | 5 | 7) { 6 } else { 5 },
         _ => {
-            aviso_em(0x9c4674, 0x245);
+            show_error_at(0x9c4674, 0x245);
             5
         }
     }
 }
 
 pub(crate) unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32) -> i16 {
-    cqs8_tamanho(this, g)
+    group_team_count(this, g)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_get_group_team_count(this: usize, g: u32) -> i16 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> i16>(IDX_GET_GROUP_TEAM_COUNT);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> i16>(IDX_GET_GROUP_TEAM_COUNT);
     let r = o(this, g);
     if !matches!(*((this + 0xf6) as *const i8), 1 | 2) {
         return r; // ponytail: o formato desconhecido mostra a caixa: só a original
     }
-    let n = cqs8_tamanho(this, g);
+    let n = group_team_count(this, g);
     PLACAR.registrar(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));
     r
 }
 
-/// { 0x580b50 } (thiscall, ret 4, euro_champ_qual.cpp; a virtual da situação de um clube): `EuroChampQual::
+/// EuroChampQual::get_qualification_status(club): -2 if club stat 0x12 (low byte) < 14, else -3.
+///
+/// [pt] { 0x580b50 } (thiscall, ret 4, euro_champ_qual.cpp; a virtual da situação de um clube): `EuroChampQual::
 /// get_qualification_status(clube)`: a estatística 0x12 do clube nas estatísticas da copa (Comp_Stats::get_club_stat
 /// 0x4a2e10: push 0x12; push clube; mov ecx, [this+8] -> thiscall, ret 8, devolve float), truncada (_ftol 0x945640): com o
 /// byte de baixo menor que 14 (com sinal), −2; senão −3 (word).
-pub(crate) unsafe fn cqs8_situacao(this: usize, clube: usize) -> i16 {
+pub(crate) unsafe fn qualification_status(this: usize, clube: usize) -> i16 {
     let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(FN_COMP_STATS_GET_CLUB_STAT);
-    let x = ftol(estatistica(read_u32_as_usize(this + 8), clube, 0x12));
+    let x = match_pl_ftol(estatistica(read_u32_as_usize(this + 8), clube, 0x12));
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: a situação pela estatística 0x12
 }
 
 pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, clube: usize) -> i16 {
-    cqs8_situacao(this, clube)
+    qualification_status(this, clube)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_get_qualification_status(this: usize, clube: usize) -> i16 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> i16>(IDX_GET_QUALIFICATION_STATUS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i16>(IDX_GET_QUALIFICATION_STATUS);
     let r = o(this, clube);
-    let n = cqs8_situacao(this, clube);
+    let n = qualification_status(this, clube);
     PLACAR.registrar(r == n, || format!("get_qualification_status({:#x}) original={} rust={}", clube, r, n));
     r
 }
@@ -143,7 +150,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
     let t = alocar((n as i32 * 0x3b) as u32);
     core::ptr::write_unaligned((this + 0xb1) as *mut u32, t as u32);
     if t == 0 {
-        aviso_em(0x9c4674, 0x2d2);
+        show_error_at(0x9c4674, 0x2d2);
         return 0;
     }
     let n = read_i16(this + 0x3e);
@@ -170,7 +177,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
 /// plano feito antes: devolve 1, +0x3e = o tamanho do grupo −1, +0xa7 = (+0x3e − 1) × +0x3c e as seleções de +0xf7 nas
 /// linhas, na ordem.
 pub(crate) unsafe extern "thiscall" fn comparar_init_group_one_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INIT_GROUP_ONE_TABLE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INIT_GROUP_ONE_TABLE);
     let n = if matches!(*((this + 0xf6) as *const i8), 1 | 2) { 5i16 } else { return o(this) };
     let plano: Vec<usize> = (0..n as usize).map(|k| read_u32_as_usize(read_u32_as_usize(this + 0xf7) + k * 4)).collect();
     let r = o(this);

@@ -2,8 +2,10 @@ use super::*;
 
 // ---------- centesima quinquagesima quarta leva: os eventos gravados e o passo em rede (0x6d98b0, 0x6d9c40, 0x6b55c0) ----------
 
-/// Os dois arquivos de eventos (humano ou computador) em CM3_TEMP.
-pub(crate) fn arquivos_de_eventos(humano: bool) -> (usize, usize) {
+/// The two match event file names in CM3_TEMP (human or computer).
+///
+/// [pt] Os dois arquivos de eventos (humano ou computador) em CM3_TEMP.
+pub(crate) fn match_event_files(humano: bool) -> (usize, usize) {
     if humano { (0xa15a8c, 0xa15a78) } else { (0xa15a60, 0xa15a48) }
 }
 
@@ -28,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
     if desc.is_null() {
         return 0;
     }
-    let (um, dois) = arquivos_de_eventos(humano != 0);
+    let (um, dois) = match_event_files(humano != 0);
     let (mut versao, mut quantos, mut numero) = (0i32, 0i32, 0i32);
     let mut ids = [-1i32, -1];
     let mut aberto = 0usize;
@@ -43,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
         ler(&mut quantos, 4, 1, f);
         numero = ids[k];
         if versao != 1 {
-            aviso_em(0xa159b0, if k == 0 { 0xb5c } else { 0xb7b });
+            show_error_at(0xa159b0, if k == 0 { 0xb5c } else { 0xb7b });
             fechar(f);
             return 0;
         }
@@ -60,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
         let nome = if ids[0] == -1 || (ids[1] != -1 && ids[0] <= ids[1]) { um } else { dois };
         let f = abrir(caminho(0x987da0, nome), 0x9a7f28);
         if f == 0 {
-            aviso_em(0xa159b0, 0xba4);
+            show_error_at(0xa159b0, 0xba4);
             return 0;
         }
         versao = 1;
@@ -104,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
     if desc.is_null() {
         return 0;
     }
-    let (um, dois) = arquivos_de_eventos(*(desc.add(3) as *const u8) != 0);
+    let (um, dois) = match_event_files(*(desc.add(3) as *const u8) != 0);
     let (mut versao, mut numero) = (0i32, 0i32);
     for (k, nome) in [um, dois].into_iter().enumerate() {
         let f = abrir(caminho(0x987da0, nome), 0x98f928);
@@ -118,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
         ler(&mut numero as *mut i32 as usize, 4, 1, f);
         if versao != 1 {
             // como na original: o arquivo fica aberto
-            aviso_em(0xa159b0, if k == 0 { 0xbf6 } else { 0xc11 });
+            show_error_at(0xa159b0, if k == 0 { 0xbf6 } else { 0xc11 });
             return 0;
         }
         if numero as u32 == *desc.add(2) {
@@ -138,13 +140,13 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
 // ponytail: os eventos gravados mexem em arquivos e o passo em rede so roda em jogo em rede; sem
 // comparacao propria, validados pela carreira (Rust x original).
 pub(crate) unsafe extern "thiscall" fn comparar_record_events(e: usize, desc: *mut u32, humano: u8) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, *mut u32, u8) -> u8>(IDX_RECORD_EVENTS)(e, desc, humano)
+    original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, u8) -> u8>(IDX_RECORD_EVENTS)(e, desc, humano)
 }
 /// Ler os eventos so le arquivo (sem efeito fora do registro): a original e a copia leem os mesmos
 /// eventos (+6 quantos, +0x720 os eventos de 0xe bytes) e o resultado e conferido. Nasceu do erro
 /// `Area.cpp 507` ao rever o relatorio de uma partida antiga (17/10/2026).
 pub(crate) unsafe extern "thiscall" fn comparar_read_events(e: usize, desc: *const u32) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const u32) -> u8>(IDX_READ_EVENTS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const u32) -> u8>(IDX_READ_EVENTS);
     if desc.is_null() {
         return o(e, desc);
     }
@@ -157,12 +159,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_read_events(e: usize, desc: *con
 
 // ---------- centesima quinquagesima quinta leva: o leitor dos eventos da partida (0x6d9e50) ----------
 
-/// Como `aviso_em`, e o jogo para (como a original: 0x5cc7d0, 0x5a8f60 e sai com -1).
-pub(crate) unsafe fn erro_em(arquivo: usize, linha: u32) -> ! {
+/// Like show_error_at (error box at file/line), then cleanup and exit(-1) like the original.
+///
+/// [pt] Como `show_error_at`, e o jogo para (como a original: 0x5cc7d0, 0x5a8f60 e sai com -1).
+pub(crate) unsafe fn fatal_error_at(arquivo: usize, linha: u32) -> ! {
     let fechar1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
     let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
-    aviso_em(arquivo, linha);
+    show_error_at(arquivo, linha);
     fechar1();
     fechar2();
     sair(-1)
@@ -249,7 +253,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         *(FIM as *mut u8) = 1;
         f = abrir(caminho(0x9b5348, 0xa15c3c), 0x9899fc);
         if f == 0 {
-            erro_em(FONTE, 0xcc4);
+            fatal_error_at(FONTE, 0xcc4);
         }
     }
 
@@ -285,7 +289,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         *((BUF + n) as *mut u8) = 0;
         let t = alocar(n as u32 + 1);
         if t == 0 {
-            erro_em(FONTE, linha_alocacao);
+            fatal_error_at(FONTE, linha_alocacao);
         }
         core::ptr::copy_nonoverlapping(BUF as *const u8, t as *mut u8, n + 1);
         let mut i = 0usize;
@@ -294,7 +298,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 let x = *((t + i + 1) as *const i8);
                 if !b"CDFNOPRTYcdfnoprty".contains(&(x as u8)) {
                     formatar_texto(BUF, 0xa15b74, x as i32);
-                    aviso_em(FONTE, linha_marca);
+                    show_error_at(FONTE, linha_marca);
                 }
             }
             i += 1;
@@ -317,12 +321,12 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                     let s = sons(e);
                     if s == 0 {
                         formatar(BUF, 0xa15b38, atual);
-                        erro_em(FONTE, 0xcdf);
+                        fatal_error_at(FONTE, 0xcdf);
                     }
                     for j in 0..quantos(e).max(0) as usize {
                         if core::ptr::read_unaligned((s + 0x110 * j + 0x108) as *const usize) == 0 {
                             formatar(BUF, 0xa15af0, atual);
-                            erro_em(FONTE, 0xcea);
+                            fatal_error_at(FONTE, 0xcea);
                         }
                     }
                 }
@@ -330,7 +334,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 atual = numero(BUF);
                 if !(0..=0x2a4).contains(&atual) {
                     formatar(BUF, 0xa15aa0, atual);
-                    erro_em(FONTE, 0xcfb);
+                    fatal_error_at(FONTE, 0xcfb);
                 }
                 let e = evento(atual);
                 let mut c = 0;
@@ -353,18 +357,18 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 }
                 if *((e + 2) as *const u8) != 0 && *(e as *const u8) == 0 {
                     formatar(BUF, 0xa15bf0, atual);
-                    aviso_em(FONTE, 0xd40);
+                    show_error_at(FONTE, 0xd40);
                 }
             }
             0x3e => {
                 // `>`: mais um som no evento aberto
                 if atual == -1 {
-                    erro_em(FONTE, 0xd49);
+                    fatal_error_at(FONTE, 0xd49);
                 }
                 let e = evento(atual);
                 let novo = realocar(sons(e), (quantos(e) as i32 + 1) as u32 * 0x110);
                 if novo == 0 {
-                    erro_em(FONTE, 0xd50);
+                    fatal_error_at(FONTE, 0xd50);
                 }
                 core::ptr::write_unaligned((e + 8) as *mut usize, novo);
                 let s = novo + 0x110 * quantos(e) as usize;
@@ -402,15 +406,15 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                     (0x10c, 0xdcf, 0xdd1, 0xdd3, 0xde6, 0xe12)
                 };
                 if atual == -1 {
-                    erro_em(FONTE, sem);
+                    fatal_error_at(FONTE, sem);
                 }
                 let e = evento(atual);
                 if quantos(e) == 0 {
-                    erro_em(FONTE, cheio);
+                    fatal_error_at(FONTE, cheio);
                 }
                 let campo_texto = (sons(e) as isize + quantos(e) as isize * 0x110 - 0x110 + o as isize) as usize;
                 if core::ptr::read_unaligned(campo_texto as *const usize) != 0 {
-                    erro_em(FONTE, ja);
+                    fatal_error_at(FONTE, ja);
                 }
                 let t = texto(alocacao, marca);
                 // a original grava o ponteiro antes de copiar; o resultado e o mesmo
@@ -432,7 +436,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
             core::ptr::write_unaligned((e + 8) as *mut usize, 0xb68670);
             core::ptr::write_unaligned((e + 0xc) as *mut i16, 1);
             formatar(BUF, 0xa15b38, k);
-            aviso_em(FONTE, 0xe46);
+            show_error_at(FONTE, 0xe46);
         } else {
             let total = (*peso(e)).wrapping_mul(10);
             core::ptr::write_unaligned(peso(e), total);
@@ -451,7 +455,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 // ponytail: le arquivo, aloca os textos e grava a tabela global; sem comparacao propria, validada
 // pela carreira (Rust x original) e pela comparacao da tabela no fim da leitura.
 pub(crate) unsafe extern "C" fn comparar_read_events_cfg() {
-    orig::<unsafe extern "C" fn()>(IDX_READ_EVENTS_CFG)()
+    original_fn::<unsafe extern "C" fn()>(IDX_READ_EVENTS_CFG)()
 }
 
 // ---------- centesima quinquagesima sexta leva: o texto dos eventos e o comeco da partida assistida (0x6d8d10, 0x6b5260) ----------
@@ -703,7 +707,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                         }
                     }
                     b'O' | b'o' | b'Y' | b'y' => {}
-                    _ => aviso_em(0xa159b0, 0xb10),
+                    _ => show_error_at(0xa159b0, 0xb10),
                 }
                 // fim da marca: ate o `>`; o tamanho e recontado
                 if t(pos) != b'>' {
@@ -742,7 +746,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 /// O texto do evento so escreve nos buffers de texto ([0xb67ea0], [0xb67dd8]) e no `qual` do evento:
 /// a original e a copia montam o mesmo texto e o resultado e conferido.
 pub(crate) unsafe extern "stdcall" fn comparar_event_text(ev: usize, ctx: usize, comp: i32, variante: u32) -> usize {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize, i32, u32) -> usize>(IDX_EVENT_TEXT);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i32, u32) -> usize>(IDX_EVENT_TEXT);
     if ev == 0 {
         return o(ev, ctx, comp, variante);
     }
@@ -805,14 +809,14 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         return 0;
     }
     let eu = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-    let torcida = |n: usize| ((n as isize) + eu() + 0x20) as *mut u8;
-    if *torcida(nar) != 0xff && tocando(SOM, *torcida(nar) as u32) == 0 {
-        parar(SOM, *torcida(nar) as u32);
-        *torcida(nar) = 0xff;
+    let goal_crowd_reaction = |n: usize| ((n as isize) + eu() + 0x20) as *mut u8;
+    if *goal_crowd_reaction(nar) != 0xff && tocando(SOM, *goal_crowd_reaction(nar) as u32) == 0 {
+        parar(SOM, *goal_crowd_reaction(nar) as u32);
+        *goal_crowd_reaction(nar) = 0xff;
     }
-    if *torcida(nar) == 0xff {
+    if *goal_crowd_reaction(nar) == 0xff {
         let p = caminho(0x9c382c, 0xa159a0);
-        tocar(SOM, torcida(nar) as usize, 2, p, 1);
+        tocar(SOM, goal_crowd_reaction(nar) as usize, 2, p, 1);
     }
     let b = |o: usize| *((ev + o) as *const u8);
     let k = ((*(ev as *const u16) & 0x7fff) as i32 - 0x1f40) as i16;
@@ -1066,7 +1070,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 }
                             }
                         }
-                        _ => aviso_em(0xa159b0, 0x89d),
+                        _ => show_error_at(0xa159b0, 0x89d),
                     }
                     if t(pos) != b'>' {
                         let mut j = pos;
@@ -1180,15 +1184,18 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
 // ponytail: desenha no painel e toca som; sem comparacao propria (so roda com a tela da partida).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, largura: i32, quebrar: u32, fonte: usize, modo: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, painel, largura, quebrar, fonte, modo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, painel, largura, quebrar, fonte, modo)
 }
 
 // ---------- 172a leva: o match_wrap_up do motor (6): a leitura da narração, o nome do jogador e a habilidade vista ----------
 
-/// Avança a posição de leitura da fila da narração (+0xc, anel de 12): marca a nova vaga (+0x3d =
+/// Advances the commentary queue read position (+0xc, ring of 12), marks the slot and switches the queue off on
+/// reaching write/saved position; returns whether it did.
+///
+/// [pt] Avança a posição de leitura da fila da narração (+0xc, anel de 12): marca a nova vaga (+0x3d =
 /// −1, tira o bit 0x8000 do evento) e, chegando na de escrita (+8, e então +0x2d68 = −1) ou na
 /// guardada (+0xa), desliga a fila (+5 = 0). Devolve se desligou.
-pub(crate) unsafe fn avancar_leitura(t: usize) -> bool {
+pub(crate) unsafe fn advance_commentary_read(t: usize) -> bool {
     let c = (t + 0xc) as *mut i16;
     *c = if c.read().wrapping_add(1) > 0xb { 0 } else { c.read().wrapping_add(1) };
     let p = t + 0x30 + *c as usize * 14;
@@ -1226,7 +1233,7 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, saida: *mut usize) -
     let vaga = |t: usize| t + 0x30 + *((t + 0xc) as *const i16) as usize * 14;
     let mut p = vaga(t);
     while *(p as *const u16) == 0 {
-        if avancar_leitura(t) {
+        if advance_commentary_read(t) {
             return 0;
         }
         p = vaga(t);
@@ -1268,7 +1275,7 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, saida: *mut usize) -
         }
     }
     if n <= s {
-        avancar_leitura(t);
+        advance_commentary_read(t);
     }
     p
 }
@@ -1321,7 +1328,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, jogador: i8, l
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize) -> usize>(IDX_NEXT_EVENT);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> usize>(IDX_NEXT_EVENT);
     let mut reg = vec![(t, 0x2db4)];
     if !saida.is_null() {
         reg.push((saida as usize, 4));
@@ -1334,7 +1341,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut
 // ponytail: escreve em `buf` e chama a 0x53e140 e a 0x541f90 (efeitos fora); comparação pelo texto
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, x: u32, longa: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(IDX_COMMENTARY_PLAYER_NAME);
+    let o = original_fn::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(IDX_COMMENTARY_PLAYER_NAME);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((buf as usize, tam as usize));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pt, jogador, lado, buf, tam, curto, x, longa), || crate::aleatorio::sem_contar(|| commentary_player_name(pt, jogador, lado, buf, tam, curto, x, longa)));
@@ -1692,8 +1699,8 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i16>(IDX_COMBINE_WITH_PREVIOUS);
-    if gravando_no_topo() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i16>(IDX_COMBINE_WITH_PREVIOUS);
+    if is_recording_top_level() {
         return o(t, e, m);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -1704,14 +1711,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, 
 }
 
 
-/// Sonda de vizinhança do comentário de contexto: o jogo só pergunta pelo evento do gol, então cada
+/// Neighbourhood probe of the context commentary: compares all 13 comments both sides with ratings at each threshold
+/// and fake news, restoring random state and ratings.
+///
+/// [pt] Sonda de vizinhança do comentário de contexto: o jogo só pergunta pelo evento do gol, então cada
 /// chamada real compara também os 13 comentários (0x21a3..=0x21af) nos dois lados e, com as notas
 /// dos 20 jogadores do lado (+0x47cb) postas exatamente em cada limite de média (7501, 7001, 8000,
 /// 7750, 6699), as fronteiras de `>=`/`>`; e, com uma mídia falsa (uma notícia de hoje de cada tipo
 /// para os dois clubes) e o minuto 31, os caminhos que dependem das notícias. O estado do sorteador e as notas voltam ao que eram e os
 /// sorteios não contam nem entram no rastro de uma comparação pela fita em curso (o shot, 0x702050,
 /// chama esta rotina por dentro): a trajetória do jogo comparando não muda.
-pub(crate) unsafe fn sonda_do_comentario(m: usize, o: unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32) {
+pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32) {
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     // a mídia falsa: no registro de notícias (0x757da0 busca por sujeito -1, id do clube, tipo -1 e
     // subtipo, registros de 0x17 bytes em ordem), uma notícia de hoje de cada subtipo que os
@@ -1805,7 +1815,7 @@ pub(crate) unsafe extern "thiscall" fn event_at_front(t: usize, a: u32, b: u32, 
 /// os campos (+0x2db0 = 125, +1 e +0xa = −1, +0x2d68 = −1), os globais de evento (0xb68670..), lê os
 /// eventos (0x6d9e50), marca as 16 vagas (+0x10, +0x20) com −1 e zera os 16 tempos (+0x2d6c); com
 /// `torcida`, toca o loop da torcida do lado da vez ([0xb77c7a]) pela 0x8025e0. Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, torcida: u8) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal_crowd_reaction: u8) -> usize {
     let b = |o: usize, v: u8| *((t + o) as *mut u8) = v;
     let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
     w(0xa, 0xffff);
@@ -1833,7 +1843,7 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, torc
         b(0x20 + k, 0xff);
         core::ptr::write_unaligned((t + 0x2d6c + 4 * k) as *mut u32, 0);
     }
-    if torcida != 0 {
+    if goal_crowd_reaction != 0 {
         let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
         let tocar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_PLAY_SOUND);
         let lado = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
@@ -1879,15 +1889,15 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 // ponytail: as tres enfileiram narracao, tocam som ou liberam memoria (nao rodam duas vezes): sem
 // comparacao propria, provadas pela carreira (fila de 19414 partidas, 285 mil eventos na frente).
 pub(crate) unsafe extern "thiscall" fn comparar_event_at_front(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32>(IDX_EVENT_AT_FRONT)(t, a, b, c, d, e, f, g)
+    original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32>(IDX_EVENT_AT_FRONT)(t, a, b, c, d, e, f, g)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construct_commentary_queue(t: usize, torcida: u8) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize, u8) -> usize>(IDX_CONSTRUCT_COMMENTARY_QUEUE)(t, torcida)
+pub(crate) unsafe extern "thiscall" fn comparar_construct_commentary_queue(t: usize, goal_crowd_reaction: u8) -> usize {
+    original_fn::<unsafe extern "thiscall" fn(usize, u8) -> usize>(IDX_CONSTRUCT_COMMENTARY_QUEUE)(t, goal_crowd_reaction)
 }
 
 pub(crate) unsafe extern "C" fn comparar_free_event_tables() {
-    orig::<unsafe extern "C" fn()>(IDX_FREE_EVENT_TABLES)()
+    original_fn::<unsafe extern "C" fn()>(IDX_FREE_EVENT_TABLES)()
 }
 
 /// have the sounds of the 16 marked events played and passed their window (clock 0x90c510; stops the finished channels,
@@ -1930,7 +1940,7 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_sounds_finished(e: usize, ativos: *const u32) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, *const u32) -> u8>(IDX_SOUNDS_FINISHED)(e, ativos)
+    original_fn::<unsafe extern "thiscall" fn(usize, *const u32) -> u8>(IDX_SOUNDS_FINISHED)(e, ativos)
 }
 
 /// swaps the commentary event for a variant, by a draw and by the play type
@@ -1970,8 +1980,8 @@ pub(crate) unsafe extern "system" fn event_variant(e: *const i16, lados: u32, ti
 }
 
 pub(crate) unsafe extern "system" fn comparar_event_variant(e: *const i16, lados: u32, tipo: u8) -> i16 {
-    let o = orig::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(IDX_EVENT_VARIANT);
-    if gravando_no_topo() {
+    let o = original_fn::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(IDX_EVENT_VARIANT);
+    if is_recording_top_level() {
         return o(e, lados, tipo);
     }
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();

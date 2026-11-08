@@ -1,9 +1,9 @@
 # Mutacoes da leva146 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva146.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
     ('p_folego', "        v * v / 50000\n    }) as i16 as i32;", "        v * v / 40000\n    }) as i16 as i32;"),
-    ('p_distancia', "let mut l14 = sortear(ftol(d as f64 * d as f64 * d as f64 * d as f64 * f32_em(0x96d228) as f64 / k));", "let mut l14 = sortear(ftol(d as f64 * d as f64 * d as f64 * f32_em(0x96d228) as f64 / k));"),
-    ('p_perto', "l14 = l14.wrapping_add(ftol(f32_em(0x96d210) as f64 - d as f64 * f32_em(0x96d7c0) as f64));", "l14 = l14.wrapping_add(ftol(f32_em(0x96d210) as f64 - d as f64 * f32_em(0x96d7c0) as f64 * 1.1));"),
-    ('p_cinco', "let cinco = |v: f64| ((ftol(v * f32_em(0x96d754) as f64 + f64_em(0x968e18)) as i8 as i32 / 5) * 5) as i8;", "let cinco = |v: f64| ((ftol(v * f32_em(0x96d754) as f64 + f64_em(0x968e18)) as i8 as i32 / 4) * 4) as i8;"),
+    ('p_distancia', "let mut l14 = sortear(match_pl_ftol(d as f64 * d as f64 * d as f64 * d as f64 * read_f32_at(0x96d228) as f64 / k));", "let mut l14 = sortear(match_pl_ftol(d as f64 * d as f64 * d as f64 * read_f32_at(0x96d228) as f64 / k));"),
+    ('p_perto', "l14 = l14.wrapping_add(match_pl_ftol(read_f32_at(0x96d210) as f64 - d as f64 * read_f32_at(0x96d7c0) as f64));", "l14 = l14.wrapping_add(match_pl_ftol(read_f32_at(0x96d210) as f64 - d as f64 * read_f32_at(0x96d7c0) as f64 * 1.1));"),
+    ('p_cinco', "let cinco = |v: f64| ((match_pl_ftol(v * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8 as i32 / 5) * 5) as i8;", "let cinco = |v: f64| ((match_pl_ftol(v * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8 as i32 / 4) * 4) as i8;"),
     ('p_posicao', "return w.wrapping_add(if dirigido() { 0x3e } else { 0x2d });", "return w.wrapping_add(if dirigido() { 0x3e } else { 0x2e });"),
     ('p_terco', "base.wrapping_sub((l14 as i16 as i32 / 3) as i16).wrapping_sub(l20 as i16)", "base.wrapping_sub((l14 as i16 as i32 / 4) as i16).wrapping_sub(l20 as i16)"),
     ('p_escanteio', "wp(0x186).wrapping_sub((l14 as i16).wrapping_add(l14 as i16))", "wp(0x186).wrapping_sub(l14 as i16)", "passe impreciso"),
@@ -15,7 +15,7 @@ MUTACOES = [
     ('p_ganho', "let ganho: i16 = if dominou { 0x78 } else { 0xc8 };\n    let longe = t() & 4 == 0 && t() & 2 == 0;", "let ganho: i16 = if dominou { 0x78 } else { 0xc9 };\n    let longe = t() & 4 == 0 && t() & 2 == 0;", "passe desarmado"),
     ('p_sem_folego', "let lim = ((25 - byte(pessoa, 0x5d) as i32) * 2) as f32;", "let lim = ((26 - byte(pessoa, 0x5d) as i32) * 2) as f32;", "passe sem folego"),
     ('p_fator', "        1 => 0x96d7bc,\n        2 => 0x96d3d4,", "        1 => 0x96d3d4,\n        2 => 0x96d3d4,"),
-    ('p_impreciso', "let e8 = ftol((fator as f64 * d as f64 + f64_em(0x967890)) * f64_em(0x968968)) as i8 as i32;", "let e8 = ftol((fator as f64 * d as f64 + f64_em(0x967890)) * f64_em(0x968968) * 1.2) as i8 as i32;", "passe impreciso"),
+    ('p_impreciso', "let e8 = match_pl_ftol((fator as f64 * d as f64 + read_f64_at(0x967890)) * read_f64_at(0x968968)) as i8 as i32;", "let e8 = match_pl_ftol((fator as f64 * d as f64 + read_f64_at(0x967890)) * read_f64_at(0x968968) * 1.2) as i8 as i32;", "passe impreciso"),
     ('p_custo', "*w(p, 0x35) = wp(0x35).wrapping_sub(if matches!(tipo, 8 | 7 | 6) { 0x14 } else { 0x48 });", "*w(p, 0x35) = wp(0x35).wrapping_sub(if matches!(tipo, 8 | 7 | 6) { 0x14 } else { 0x49 });"),
     ('p_aproximacao', "Some(if canto_proprio { 0x215a } else if canto_outro { 0x215c } else { 0x215b })", "Some(if canto_proprio { 0x215a } else if canto_outro { 0x215c } else { 0x215c })", "passe aproximacao narrada"),
     ('p_frente', "        if (lado == 0 && ty > y) || (lado == 1 && ty < y) {\n            f |= 1;", "        if (lado == 0 && ty >= y) || (lado == 1 && ty < y) {\n            f |= 1;"),
@@ -23,6 +23,6 @@ MUTACOES = [
     ('p_cai', "|| (bl2 < 4 && wp(0x19c) as i32 > sortear(200));", "|| (bl2 < 4 && wp(0x19c) as i32 > sortear(250));"),
     ('p_posse', "        if *o > 0 {\n            *o = (*o).wrapping_sub(10);", "        if *o > 0 {\n            *o = (*o).wrapping_sub(9);"),
     ('p_forca', "let forca = if l44 > -100 { l44 as i32 } else { -100 };", "let forca = if l44 > -90 { l44 as i32 } else { -90 };"),
-    ('p_transito', "*b(m, 0x1c5) = ftol((d as f64 + d as f64) / k + f64_em(0x968968)) as u8;", "*b(m, 0x1c5) = ftol((d as f64 + d as f64) / k + f64_em(0x968968) + 1.0) as u8;"),
+    ('p_transito', "*b(m, 0x1c5) = match_pl_ftol((d as f64 + d as f64) / k + read_f64_at(0x968968)) as u8;", "*b(m, 0x1c5) = match_pl_ftol((d as f64 + d as f64) / k + read_f64_at(0x968968) + 1.0) as u8;"),
     ('p_grupo', "[0x2026, 0x2027, 0x2028, 0x2023, 0x2024, 0x2022, 0x2025],", "[0x2026, 0x2027, 0x2028, 0x2023, 0x2024, 0x2023, 0x2025],"),
 ]

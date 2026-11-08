@@ -25,12 +25,12 @@ unsafe fn cqd5_pb(a: usize, v: u8) {
 }
 
 /// O método `k` (deslocamento na tabela virtual) do objeto `o`.
-unsafe fn cqd5_metodo(o: usize, k: usize) -> usize {
+unsafe fn vtable_method(o: usize, k: usize) -> usize {
     cqd5_d(cqd5_d(o) + k)
 }
 
 /// As duas datas (dia, ano) são a mesma (as palavras, como a original compara).
-unsafe fn cqd5_mesma_data(a: usize, b: usize) -> bool {
+unsafe fn same_date(a: usize, b: usize) -> bool {
     cqd5_w(a + 2) == cqd5_w(b + 2) && cqd5_w(a) == cqd5_w(b)
 }
 
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
         }
     }
     let tab = cqd5_d(this + 0xb1);
-    if tab != 0 && cqd5_b(tab + 0x11) == 0 && cqd5_b(this + 0x44) == 0xff && completo != 0 && !cqd5_mesma_data(this + 0xd1, data) {
+    if tab != 0 && cqd5_b(tab + 0x11) == 0 && cqd5_b(this + 0x44) == 0xff && completo != 0 && !same_date(this + 0xd1, data) {
         let c = cqd5_d(this + 4);
         if cqd5_d(c + 0x5d) != 0 {
             let k = chave(c) as i8 as isize;
@@ -101,29 +101,29 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
         let mut i = 0i32;
         while i <= cqd5_d(this + 0x30) as i32 {
             let fase = cqd5_d(cqd5_d(this + 0xc) + i as usize * 4);
-            let f: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(cqd5_metodo(fase, 0x14));
+            let f: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(vtable_method(fase, 0x14));
             f(fase, data, completo);
             i += 1;
         }
     }
     if cqd5_w(this + 0xc9 + 2) == cqd5_w(0xae2c92) && cqd5_w(this + 0xc9) == cqd5_w(0xae2c90) && cqd5_d(this + 0xdd) == 0 {
         cqd5_pd(this + 0xad, 0);
-        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqd5_metodo(this, 0x94));
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, 0x94));
         f(this);
     }
     let mut seguir_tv = true;
     if cqd5_b(this + 0x44) == 0xff {
         if cqd5_d(this + 0xb1) == 0 {
             seguir_tv = false;
-        } else if !cqd5_mesma_data(this + 0xd1, data) {
-            let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(cqd5_metodo(this, 0x10));
+        } else if !same_date(this + 0xd1, data) {
+            let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(vtable_method(this, 0x10));
             f(this, 0, 0);
             if cqd5_d(this + 0xdd) == 1 {
                 let mut acabadas = true;
                 let mut i = 0i32;
                 while i <= cqd5_d(this + 0x30) as i32 {
                     let fase = cqd5_d(cqd5_d(this + 0xc) + i as usize * 4);
-                    let g: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(cqd5_metodo(fase, 0x10));
+                    let g: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(vtable_method(fase, 0x10));
                     if g(fase, 0, 1) as u8 == 0 {
                         acabadas = false;
                         break;
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
                 }
                 if acabadas {
                     if (cqd5_d(this + 0x30) as i32) < (cqd5_d(this + 0x2c) as i32).wrapping_sub(1) {
-                        let h: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqd5_metodo(this, 0x28));
+                        let h: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, 0x28));
                         h(this);
                     } else if cqd5_d(this + 0x4c) == 0 {
                         historico(cqd5_d(0xad9da8), this);
@@ -140,9 +140,9 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
                             recordes(cqd5_d(0xad9dac), this, 1);
                         }
                         if cqd5_d(this + 0xe6) != 0 {
-                            aviso_em(0x9f15f4, 0x74c);
+                            show_error_at(0x9f15f4, 0x74c);
                         }
-                        let h: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqd5_metodo(this, 0x30));
+                        let h: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, 0x30));
                         h(this);
                         if cqd5_d(this + 8) != 0 {
                             fim_anexo(cqd5_d(this + 8));
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
     if completo == 0 {
         return 1;
     }
-    if cqd5_b(this + 0x52) & 2 != 0 && cqd5_b(this + 0x44) == 0xff && !cqd5_mesma_data(this + 0xd1, data)
+    if cqd5_b(this + 0x52) & 2 != 0 && cqd5_b(this + 0x44) == 0xff && !same_date(this + 0xd1, data)
         && cqd5_d(this + 0xdd) == 0 && cqd5_b(cqd5_d(this + 0xb1) + 0x11) == 0 {
         let e = cqd5_d(this + 0xba);
         // ponytail: a original empurra o dia e o ano em registradores com sobra nos bytes altos; a 0x549ef0 só lê as palavras
@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
             0xe
         };
         let r = mais(pd0, pw, dias);
-        if cqd5_mesma_data(pt, r) {
+        if same_date(pt, r) {
             prazo(cqd5_d(0xdd7ef0), this, 0, 0);
         }
     }
@@ -200,10 +200,10 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
 /// recordes e os jogos para a TV, que mexem no calendário: não roda duas vezes). Confere o que a rotina garante: 0 só
 /// com a liga parada ou sem clubes e, completo, +0xd1 com a data.
 unsafe extern "thiscall" fn comparar_league_update_for_date(this: usize, data: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let parada = cqd5_b(this + 0xb5) != 0 || cqd5_d(this + 0x45) == 0;
     let r = o(this, data, completo);
-    let ok = if parada { r as u8 == 0 } else { r as u8 == 1 && (completo == 0 || cqd5_mesma_data(this + 0xd1, data)) };
+    let ok = if parada { r as u8 == 0 } else { r as u8 == 1 && (completo == 0 || same_date(this + 0xd1, data)) };
     PLACAR.registrar(ok, || format!("league_update_for_date(completo {}): parada {} devolveu {} +0xd1 {:x} data {:x}",
         completo, parada, r as u8, cqd5_d(this + 0xd1), cqd5_d(data)));
     r
@@ -215,7 +215,7 @@ unsafe extern "thiscall" fn comparar_league_update_for_date(this: usize, data: u
 /// 0xc), a data (+0x28 ano + o da liga, +0x2a dia) e a fatia (+0x3f) da entrada `off` da tabela das datas (+0xba), os
 /// bits 0..1 de +0x4e zerados e o bit 3 na última rodada (+0x34 = +0xa9 − 1; ou com `tipo4`, data do tipo 4), e o jogo
 /// vai ao calendário (0x5aa680: push 1; push &jogo; mov ecx, [0xae2a58] -> thiscall, ret 8).
-unsafe fn cqd5_jogo(this: usize, r: usize, ea: usize, eb: usize, off: usize, tipo4: bool) {
+unsafe fn add_league_fixture(this: usize, r: usize, ea: usize, eb: usize, off: usize, tipo4: bool) {
     let estadio: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(0x85c260usize);
     let calendario: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x5aa680usize);
     let (ea, eb) = (ea, eb); // cqd5: o mandante e o visitante
@@ -255,7 +255,7 @@ unsafe fn cqd5_jogo(this: usize, r: usize, ea: usize, eb: usize, off: usize, tip
 /// push +0x3c; push +0x3e; push id; push &passo; push rodada; add esp, 0x1c -> cdecl) e a coluna j % (n − 1) (n − 1 no
 /// zero): cada time i com adversário v ≠ 0 na grade apaga a vaga do adversário; o mando pela paridade de v > 0, do turno
 /// ((j − 1)/(n − 1)) e do ano + fase; com a nação +0x24, o clube dessa nação (+0x69) fica como mandante. Cada jogo vai
-/// ao calendário (cqd5_jogo). No fim, a grade é liberada e as datas do tipo 3 da tabela levam os jogos para a TV
+/// ao calendário (add_league_fixture). No fim, a grade é liberada e as datas do tipo 3 da tabela levam os jogos para a TV
 /// (0x685640). Devolve 1.
 unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -271,21 +271,21 @@ unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     let mut rodada: i32 = -1;
     let times = cqd5_w(this + 0x3e) as i32;
     let n = times + times % 2;
-    let mut passo: i8 = 0;
+    let mut step_towards: i8 = 0;
     let (mut x, mut y, mut z) = ([0u8; 8], [0u8; 8], [0u8; 8]);
     let (px, py, pz) = (x.as_mut_ptr() as usize, y.as_mut_ptr() as usize, z.as_mut_ptr() as usize);
     padrao(px);
     cqd5_pd(this + 0xdd, 0);
     let grade = novo((n * 4 + 4) as u32);
     if grade == 0 {
-        aviso_em(0x9f15f4, 0x3fc);
+        show_error_at(0x9f15f4, 0x3fc);
         return 0;
     }
     let mut i = 1i32;
     while i <= n {
         let l = novo((n * 4) as u32);
         if l == 0 {
-            aviso_em(0x9f15f4, 0x405);
+            show_error_at(0x9f15f4, 0x405);
             liberar(grade);
             return 0;
         }
@@ -320,7 +320,7 @@ unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     cqd5_pb(r + 0x3d, 0);
     cqd5_pb(r + 0x3e, 0);
     cqd5_pb(r + 0x3b, 0xff);
-    let preparar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(cqd5_metodo(this, 0x7c));
+    let preparar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(vtable_method(this, 0x7c));
     preparar(this, r);
     let ult = cqd5_d(this + 0xba).wrapping_add((cqd5_w(this + 0xa9) as i32 * 0x41) as usize);
     // ponytail: a original empurra o dia e o ano com sobra nos bytes altos; a 0x549ef0 só lê as palavras
@@ -357,7 +357,7 @@ unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
                     }
                 }
                 let tb = cqd5_d(this + 0xb1);
-                cqd5_jogo(this, r, tb.wrapping_add((ia as isize * 0x3b) as usize), tb.wrapping_add((ib as isize * 0x3b) as usize), off, true);
+                add_league_fixture(this, r, tb.wrapping_add((ia as isize * 0x3b) as usize), tb.wrapping_add((ib as isize * 0x3b) as usize), off, true);
                 i += 1;
             }
             k += 1;
@@ -374,7 +374,7 @@ unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
         while j <= cqd5_w(this + 0x3c) as i32 * (n - 1) {
             // ponytail: a original empurra as palavras +0x3e, +0x3c, +0xa9 e +0xd9 com sobra nos bytes altos; a 0x68a030
             // só lê as palavras e o byte
-            rodada = girar(rodada, &mut passo, cqd5_d(cqd5_d(this + 4)) as u32, cqd5_w(this + 0x3e) as u16 as u32,
+            rodada = girar(rodada, &mut step_towards, cqd5_d(cqd5_d(this + 4)) as u32, cqd5_w(this + 0x3e) as u16 as u32,
                 cqd5_w(this + 0x3c) as u16 as u32, cqd5_w(this + 0xa9) as u16 as u32, cqd5_w(this + 0xd9) as u16 as u32);
             let mut col = j % (n - 1);
             if col == 0 {
@@ -403,7 +403,7 @@ unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
                             } else {
                                 (ea, eb)
                             };
-                            cqd5_jogo(this, r, m, f, (rodada as isize * 0x41) as usize, false);
+                            add_league_fixture(this, r, m, f, (rodada as isize * 0x41) as usize, false);
                         }
                     }
                     i += 1;
@@ -437,7 +437,7 @@ unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
 /// jogos no calendário, que aloca: não roda duas vezes). Confere o que a rotina garante: com a lista própria do ano, ela
 /// é liberada (+0xea = 0) quando devolve 1.
 unsafe extern "thiscall" fn comparar_create_fixtures(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqd5_d(this + 0xea);
     let propria = lista != 0 && cqd5_w(this + 0x40) as i32 == cqd5_w(lista + 2) as u16 as i32;
     let r = o(this);
@@ -540,15 +540,15 @@ unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, acima: usize
         }
     }
     if sobem as u8 != 0xff && subiram != sobem as u8 {
-        aviso_em(0x9f15f4, 0x15dc);
+        show_error_at(0x9f15f4, 0x15dc);
     }
     if descem as u8 != 0xff && desceram != descem as u8 {
-        aviso_em(0x9f15f4, 0x15e2);
+        show_error_at(0x9f15f4, 0x15e2);
     }
 }
 
 /// O comparador da promoção e do rebaixamento: só a original (ponytail: os contratos, o técnico demitido e as notícias
 /// não rodam duas vezes); a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_league_promote_and_relegate(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pares: u32, sobem: u32, descem: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(%%I2%%)(ecx, acima, abaixo, contratos, aos_pares, sobem, descem)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(%%I2%%)(ecx, acima, abaixo, contratos, aos_pares, sobem, descem)
 }

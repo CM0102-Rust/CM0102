@@ -5,6 +5,6 @@ MUTACOES = [
      'c != 0 // mutacao: qualquer divisao'),
     ('cpj_noticia_selecao', '(c != 0 && cpj3_d(c + 0x53) == nacao) || (s != 0 && cpj3_d(s + 0x53) == nacao) // o clube ou a seleção',
      '(c != 0 && cpj3_d(c + 0x53) == nacao) && s == s // mutacao: so o clube'),
-    ('cpj_noticia_alcance', 'cpj3_entregar(this, noticia, 4, |_| true) as u32',
-     'cpj3_entregar(this, noticia, 2, |_| true) as u32 // mutacao: alcance 2'),
+    ('cpj_noticia_alcance', 'deliver_to_human_managers(this, noticia, 4, |_| true) as u32',
+     'deliver_to_human_managers(this, noticia, 2, |_| true) as u32 // mutacao: alcance 2'),
 ]

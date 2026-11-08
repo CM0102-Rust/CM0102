@@ -48,7 +48,7 @@ unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -> i32 {
     let forca = |p: usize| {
         let s = *((p + 0x105) as *const i8) as i32 + *((p + 0x104) as *const i8) as i32;
         let w = core::ptr::read_unaligned((p + 0x3b) as *const i16) as f64;
-        ftol(s as f64 * (w * f64_em(0x968ef0) + f64_em(0x968968)) * core::ptr::read_unaligned((p + 0x4d) as *const f32) as f64)
+        match_pl_ftol(s as f64 * (w * read_f64_at(0x968ef0) + read_f64_at(0x968968)) * core::ptr::read_unaligned((p + 0x4d) as *const f32) as f64)
     };
     forca(pb).wrapping_sub(forca(pa))
 }
@@ -87,22 +87,22 @@ unsafe extern "system" fn event_variant(e: *const i16, lados: u32, tipo: u8) -> 
 }
 
 unsafe extern "C" fn comparar_day_match_order(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = day_match_order(a, b);
     PLACAR.registrar(r == n, || format!("day_match_order({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }
 
 unsafe extern "C" fn comparar_action_order(a: *const usize, b: *const usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
     let n = action_order(a, b);
     PLACAR.registrar(r == n, || format!("action_order({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
     r
 }
 
 unsafe extern "system" fn comparar_event_variant(e: *const i16, lados: u32, tipo: u8) -> i16 {
-    let o = orig::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(%%I2%%);
-    if gravando_no_topo() {
+    let o = original_fn::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(%%I2%%);
+    if is_recording_top_level() {
         return o(e, lados, tipo);
     }
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();

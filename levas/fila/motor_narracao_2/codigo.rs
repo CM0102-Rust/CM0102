@@ -519,8 +519,8 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
 }
 
 unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i16>(%%I0%%);
-    if gravando_no_topo() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i16>(%%I0%%);
+    if is_recording_top_level() {
         return o(t, e, m);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -531,8 +531,8 @@ unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, e: usize, m
 }
 
 unsafe extern "thiscall" fn comparar_context_commentary(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32>(%%I1%%);
-    if gravando_no_topo() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32>(%%I1%%);
+    if is_recording_top_level() {
         return o(m, lado, evento, saida);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -576,7 +576,7 @@ unsafe extern "thiscall" fn construct_match_player(j: usize) -> usize {
 }
 
 unsafe extern "thiscall" fn comparar_construct_match_player(j: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(j, 0x1bc)], || o(j), || construct_match_player(j));
     PLACAR.registrar(igual && r == n, || format!("construct_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));
     r

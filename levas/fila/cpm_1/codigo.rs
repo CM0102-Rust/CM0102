@@ -19,7 +19,7 @@ unsafe fn cpm1_d(a: usize) -> usize {
 /// O corpo da 0x51c020: `Some(lado)`, ou `None` no empate também nos pênaltis com a regra deles (a original mostra a
 /// caixa "Error" com a linha 0x97e e segue para W.O. e pontos): quem chama roda a original inteira, que refaz o único
 /// que já foi gravado (+0x3d/+0x3e = 1 com o bit 0x10, idempotente).
-unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
+unsafe fn fixture_winner_side(this: usize, f: usize) -> Option<u32> {
     let fl = cpm1_w(f + 0x38) as u16;
     if fl & 0x10 != 0 {
         cpm1_por(f + 0x3d, 1);
@@ -146,16 +146,16 @@ unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
 /// Jogo nulo ou empate nos pênaltis: a original (caixa "Error").
 unsafe extern "thiscall" fn decide_fixture_winner(this: usize, jogo: usize) -> u32 {
     if jogo != 0 {
-        if let Some(r) = cpm1_jogo(this, jogo) {
+        if let Some(r) = fixture_winner_side(this, jogo) {
             return r;
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, jogo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, jogo)
 }
 
 /// O corpo da 0x51f2f0: `None` no empate nos pênaltis com a regra deles (a original mostra a caixa "Error" com a linha
 /// 0x11d1 e devolve 4; nada foi gravado antes).
-unsafe fn cpm1_confronto(conf: usize, j: usize) -> Option<u32> {
+unsafe fn tie_winner_side(conf: usize, j: usize) -> Option<u32> {
     let t = |k: usize| cpm1_b(conf + k);
     let fl = cpm1_w(j + 0x38) as u16;
     if t(0x33) as u8 != 1 {
@@ -306,9 +306,9 @@ unsafe fn cpm1_confronto(conf: usize, j: usize) -> Option<u32> {
 /// código 4 com o bit 1, senão 5); nada decidido: 4. Pontos (0x10) e regra 0x2000 têm os ramos próprios. Empate nos
 /// pênaltis: a original (caixa "Error", 4).
 unsafe extern "thiscall" fn decide_tie_winner(this: usize, confronto: usize, jogo: usize) -> u32 {
-    match cpm1_confronto(confronto, jogo) {
+    match tie_winner_side(confronto, jogo) {
         Some(r) => r,
-        None => orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, confronto, jogo),
+        None => original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, confronto, jogo),
     }
 }
 
@@ -322,12 +322,12 @@ unsafe extern "C" fn cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32
 /// Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; jogo nulo ou empate nos pênaltis (a
 /// caixa): só a original.
 unsafe extern "thiscall" fn comparar_decide_fixture_winner(this: usize, jogo: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if jogo == 0 {
         return o(this, jogo);
     }
     let reg = [(jogo + 0x3d, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, jogo)), || cpm1_jogo(this, jogo));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, jogo)), || fixture_winner_side(this, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
         PLACAR.registrar(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", cpm1_w(jogo + 0x38) as u16, r, n, mo, mr));
@@ -338,9 +338,9 @@ unsafe extern "thiscall" fn comparar_decide_fixture_winner(this: usize, jogo: us
 /// Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; empate nos pênaltis (a caixa): só a
 /// original.
 unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, confronto: usize, jogo: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     let reg = [(jogo + 0x3d, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, confronto, jogo)), || cpm1_confronto(confronto, jogo));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, confronto, jogo)), || tie_winner_side(confronto, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
         PLACAR.registrar(igual && r == n, || format!("decide_tie_winner(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
@@ -351,7 +351,7 @@ unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, confronto: u
 
 /// Comparador: pelo valor.
 unsafe extern "C" fn comparar_cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = cup_compare_draw_entries_by_seed(a, b);
     PLACAR.registrar(r == n, || format!("cup_compare_draw_entries_by_seed({}, {}) original={} rust={}", cpm1_b(a + 6), cpm1_b(b + 6), r, n));
     r

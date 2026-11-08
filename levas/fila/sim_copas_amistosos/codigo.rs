@@ -1,17 +1,17 @@
 // ---------- %%LEVA%%a leva: as regras da rodada no jogo da copa, a chave do jogo e o país da excursão (Cup.cpp, friendly.cpp) ----------
 
 /// A rodada `r` da copa: registro de 104 bytes em [copa+0xa3].
-unsafe fn rodada_da_copa(copa: usize, r: i32) -> usize {
+unsafe fn cup_cup_round(copa: usize, r: i32) -> usize {
     (*((copa + 0xa3) as *const usize) as isize + r as isize * 104) as usize
 }
 
 /// A linha da chave `k` da rodada `r` da copa: [[copa+0xad] + 4·r] + 53·k.
-unsafe fn linha_da_chave(copa: usize, r: i32, k: i32) -> usize {
+unsafe fn bracket_row(copa: usize, r: i32, k: i32) -> usize {
     (*((*((copa + 0xad) as *const usize) as isize + r as isize * 4) as *const usize) as isize + k as isize * 53) as usize
 }
 
 /// O registro de 6 bytes da vaga `v` da copa: [copa+0xa7] + 6·v.
-unsafe fn vaga_da_copa(copa: usize, v: i16) -> usize {
+unsafe fn team_slot(copa: usize, v: i16) -> usize {
     (*((copa + 0xa7) as *const usize) as isize + v as isize * 6) as usize
 }
 
@@ -22,13 +22,13 @@ unsafe fn vaga_da_copa(copa: usize, v: i16) -> usize {
 unsafe extern "thiscall" fn apply_round_rules_to_match(copa: usize, jogo: usize, chave: i32) {
     let r = *((jogo + 0x34) as *const i16) as i32;
     let marcas = (jogo + 0x38) as *mut u16;
-    let m = core::ptr::read_unaligned(marcas) | core::ptr::read_unaligned((rodada_da_copa(copa, r) + 0xf) as *const u16);
+    let m = core::ptr::read_unaligned(marcas) | core::ptr::read_unaligned((cup_cup_round(copa, r) + 0xf) as *const u16);
     core::ptr::write_unaligned(marcas, m);
     if m & 0x800 == 0 {
         return;
     }
-    let linha = linha_da_chave(copa, r, chave);
-    let nivel = |o: usize| *((vaga_da_copa(copa, core::ptr::read_unaligned((linha + o) as *const i16)) + 4) as *const i8);
+    let linha = bracket_row(copa, r, chave);
+    let nivel = |o: usize| *((team_slot(copa, core::ptr::read_unaligned((linha + o) as *const i16)) + 4) as *const i8);
     let (a, b) = (nivel(0), nivel(2));
     let m = if a < b { (m ^ 0x800) | 0x1000 } else if a > b { m | 0x800 } else { (m ^ 0x800) | 1 };
     core::ptr::write_unaligned(marcas, m);
@@ -39,16 +39,16 @@ unsafe extern "thiscall" fn apply_round_rules_to_match(copa: usize, jogo: usize,
 /// nenhuma. O número de chaves é a palavra +0x1a da rodada. Jogo nulo: a original (caixa de erro).
 unsafe extern "thiscall" fn find_tree_slot_for_fixture(copa: usize, jogo: usize) -> i32 {
     if jogo == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%)(copa, jogo);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%)(copa, jogo);
     }
     let r = *((jogo + 0x34) as *const i16) as i32;
-    let n = core::ptr::read_unaligned((rodada_da_copa(copa, r) + 0x1a) as *const i16) as i32;
+    let n = core::ptr::read_unaligned((cup_cup_round(copa, r) + 0x1a) as *const i16) as i32;
     let mandante = *((jogo + 0xc) as *const usize);
     for i in 0..n {
-        let linha = linha_da_chave(copa, r, i);
+        let linha = bracket_row(copa, r, i);
         for o in [0, 2] {
             let v = core::ptr::read_unaligned((linha + o) as *const i16);
-            if v >= 0 && *(core::ptr::read_unaligned(vaga_da_copa(copa, v) as *const usize) as *const usize) == mandante {
+            if v >= 0 && *(core::ptr::read_unaligned(team_slot(copa, v) as *const usize) as *const usize) == mandante {
                 return i;
             }
         }
@@ -108,14 +108,14 @@ unsafe extern "thiscall" fn pick_tour_nation(_this: usize, clube: usize) -> usiz
 }
 
 unsafe extern "thiscall" fn comparar_apply_round_rules_to_match(copa: usize, jogo: usize, chave: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(jogo + 0x38, 2)], || o(copa, jogo, chave),
         || apply_round_rules_to_match(copa, jogo, chave));
     PLACAR.registrar(igual, || format!("apply_round_rules_to_match(chave {}) {:x?} x {:x?}", chave, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_find_tree_slot_for_fixture(copa: usize, jogo: usize) -> i32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%)(copa, jogo);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%)(copa, jogo);
     if jogo == 0 {
         return r;
     }
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn comparar_find_tree_slot_for_fixture(copa: usize, jog
 }
 
 unsafe extern "thiscall" fn comparar_pick_tour_nation(this: usize, clube: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube),
         || crate::aleatorio::sem_contar(|| pick_tour_nation(this, clube)));

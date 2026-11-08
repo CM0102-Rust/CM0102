@@ -10,7 +10,7 @@ MUTACOES = [
     ('cpq4_compras_de_2_em_2', '            cpq4_pw(r + 0xa0, cpq4_w(r + 0xa0).wrapping_add(1));',
      '            cpq4_pw(r + 0xa0, cpq4_w(r + 0xa0).wrapping_add(2)); // mutacao: de 2 em 2',
      'cpq_4 compra'),
-    ('cpq4_venda_sem_receita', '            cpq4_somar64(r + 0xac, valor);\n            if cpq4_d(t + 4) != 0 {\n                cpq4_pw(r + 0xa0,',
+    ('cpq4_venda_sem_receita', '            staff_records_add_i64(r + 0xac, valor);\n            if cpq4_d(t + 4) != 0 {\n                cpq4_pw(r + 0xa0,',
      '            // mutacao: sem a receita\n            if cpq4_d(t + 4) != 0 {\n                cpq4_pw(r + 0xa0,',
      'cpq_4 venda'),
 ]

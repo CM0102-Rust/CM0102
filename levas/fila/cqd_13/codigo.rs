@@ -26,7 +26,7 @@ static mut CQD13_RENOVADOS: Vec<usize> = Vec::new();
 static mut CQD13_DATA_SOLTA: bool = false;
 
 /// A reputação do clube (+0x80) sobe até peso × 500, no máximo 750 de uma vez (entre 1 e 10000; soma em 16 bits).
-unsafe fn cqd13_reputacao(clube: usize, peso: i16, campeao_da_liga: bool) {
+unsafe fn raise_champion_reputation(clube: usize, peso: i16, campeao_da_liga: bool) {
     let alvo = (peso as i32).wrapping_mul(500);
     let rep = cqd13_w(clube + 0x80) as i32;
     if rep < alvo {
@@ -35,16 +35,16 @@ unsafe fn cqd13_reputacao(clube: usize, peso: i16, campeao_da_liga: bool) {
         let v = cqd13_w(clube + 0x80).wrapping_add(soma as i16);
         let v = if v < 1 { 1 } else if v > 10000 { 10000 } else { v };
         if campeao_da_liga {
-            crate::comparacao::ramo("cqd_13 reputacao do campeao da liga");
+            crate::comparacao::ramo("cqd_13 injury_word_0c do campeao da liga");
         } else {
-            crate::comparacao::ramo("cqd_13 reputacao do campeao da copa");
+            crate::comparacao::ramo("cqd_13 injury_word_0c do campeao da copa");
         }
         core::ptr::write_unaligned((clube + 0x80) as *mut i16, v); // cqd13: a reputação do campeão
     }
 }
 
 /// O moral do contrato (+0x44, byte com sinal) sobe `d`, preso em −100..100.
-unsafe fn cqd13_moral(k: usize, d: i32) {
+unsafe fn add_contract_morale(k: usize, d: i32) {
     let c = *((k + 0x44) as *const i8);
     let x = c as i32 + d;
     *((k + 0x44) as *mut i8) = if x > 100 { 100 } else if x < -100 { -100 } else { c.wrapping_add(d as i8) };
@@ -53,12 +53,12 @@ unsafe fn cqd13_moral(k: usize, d: i32) {
 /// A renovação oferecida ao jogador do próprio clube (0x4cda70 com 1,0 e submeter): com o gerente de transferências
 /// ([0xde1f54]), mais de 300 dias desde a data do contrato (+0x25; 0x54cdb0) e a vaga dele na lista do clube (0x849ce0
 /// com 0, 0; +0xf o id). No ensaio, só anota o contrato.
-unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
+unsafe fn offer_renewal_if_due(clube: usize, p: usize, k: usize) {
     if cqd13_d(0xde1f54) == 0 {
         return;
     }
     CQD13_DATA_SOLTA = false;
-    if cqa12_dias(0xae2c90, k + 0x25) <= 300 {
+    if days_between(0xae2c90, k + 0x25) <= 300 {
         return;
     }
     let vaga_de: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
@@ -80,7 +80,7 @@ unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
 
 /// Os históricos da entrada `e` para o técnico (já feito por quem chama), o presidente (+0xbf) e os 20 da escalação
 /// (+0x190 do lado, 0x49 bytes, −1 vazio; pessoas válidas e fora o técnico; nula: a caixa da linha 0x1010).
-unsafe fn cqd13_escalacao(this: usize, clube: usize, escalacao: usize, e: &[u8; 0x40]) {
+unsafe fn add_lineup_histories(this: usize, clube: usize, escalacao: usize, e: &[u8; 0x40]) {
     for j in 0..0x14usize {
         let id = cqd13_i(escalacao + 0x49 * j);
         if id == -1 {
@@ -94,19 +94,19 @@ unsafe fn cqd13_escalacao(this: usize, clube: usize, escalacao: usize, e: &[u8; 
             continue;
         }
         if p == 0 {
-            aviso_em(0xa83b78, 0x1010);
+            show_error_at(0xa83b78, 0x1010);
             continue;
         }
-        cpq4_historico(!CQD13_ENSAIO, this, cqd13_d(p), e);
+        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(p), e);
     }
 }
 
 /// O histórico do clube (tipo no +8, a competição no +9).
-unsafe fn cqd13_historico_do_clube(this: usize, clube: usize, tipo: u8, comp: usize) {
-    let mut e = cpq4_entrada();
-    cpq4_datar(e.as_mut_ptr());
+unsafe fn add_club_history(this: usize, clube: usize, tipo: u8, comp: usize) {
+    let mut e = history_entry();
+    stamp_game_date(e.as_mut_ptr());
     e[8] = tipo;
-    cpq4_por(&mut e, 9, cqd13_i(comp));
+    put_i32(&mut e, 9, cqd13_i(comp));
     if !CQD13_ENSAIO {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(0x58e340usize);
         let p = cqd13_d(this + 0x10).wrapping_add(cqd13_d(clube).wrapping_mul(8));
@@ -115,7 +115,7 @@ unsafe fn cqd13_historico_do_clube(this: usize, clube: usize, tipo: u8, comp: us
 }
 
 /// A notícia do elogio do título (0x75c390 em [0xb6b7c8]; fora do ensaio).
-unsafe fn cqd13_elogio(clube: usize, comp: usize, marca: u32) {
+unsafe fn post_trophy_praise(clube: usize, comp: usize, marca: u32) {
     if CQD13_ENSAIO {
         CQD13_DATA_SOLTA = true;
         return;
@@ -127,7 +127,7 @@ unsafe fn cqd13_elogio(clube: usize, comp: usize, marca: u32) {
 
 /// As notas k1/k2 do técnico pela fase: na competição de fase 1 ([0xadadfc] + 4 × id, +0x42 = 1) 200 na terceira e 200
 /// na segunda se o técnico for estrangeiro (0x53d980 com a nação +0x53 e 1), senão 400.
-unsafe fn cqd13_notas(t: usize, clube: usize, id_comp: usize) -> (i32, i32) {
+unsafe fn manager_rating_gains(t: usize, clube: usize, id_comp: usize) -> (i32, i32) {
     let c = cqd13_d(cqd13_d(0xadadfc).wrapping_add(4 * id_comp));
     if *((c + 0x42) as *const i8) != 1 {
         (400, 400)
@@ -152,14 +152,14 @@ unsafe fn cqd13_notas(t: usize, clube: usize, id_comp: usize) -> (i32, i32) {
 /// com 1) e, acima de 12, com 3.
 unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usize, comp: usize) {
     if clube == 0 || comp == 0 {
-        return aviso_em(0xa83b78, 0x21c);
+        return show_error_at(0xa83b78, 0x21c);
     }
     let obj = cqd13_d(cqd13_d(0xadadfc).wrapping_add(4 * cqd13_d(comp)));
     if obj == 0 {
-        return aviso_em(0xa83b78, 0x224);
+        return show_error_at(0xa83b78, 0x224);
     }
     let peso = cqd13_w(comp + 0x69);
-    cqd13_reputacao(clube, peso, true); // cqd13: a reputação do campeão da liga
+    raise_champion_reputation(clube, peso, true); // cqd13: a reputação do campeão da liga
     if cqd13_d(clube + 0x57) != 0 {
         let b = cqd13_d(clube + 0x69);
         if b != 0 {
@@ -174,22 +174,22 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
         }
     }
     let n = ((cqd13_w(obj + 0x3e) as i32) - 1).wrapping_mul(cqd13_w(obj + 0x3c) as i32);
-    let limiar = ftol(n as f64 * f64_em(0x968f78)) as i16; // o ftol fica no word (movsx word depois)
-    let mut e = cpq4_entrada();
-    cpq4_datar(e.as_mut_ptr());
+    let limiar = match_pl_ftol(n as f64 * read_f64_at(0x968f78)) as i16; // o ftol fica no word (movsx word depois)
+    let mut e = history_entry();
+    stamp_game_date(e.as_mut_ptr());
     e[0xc] = 5;
-    cpq4_por(&mut e, 8, cqd13_i(clube));
-    cpq4_por(&mut e, 0xd, cqd13_i(comp));
+    put_i32(&mut e, 8, cqd13_i(clube));
+    put_i32(&mut e, 0xd, cqd13_i(comp));
     let t = cqd13_d(clube + 0xcf);
     if t != 0 {
         let np = cqd13_d(t + 0x69);
         if np != 0 {
-            let (k1, k2) = cqd13_notas(t, clube, cqd13_d(comp));
-            cqa12_subir(np + 0xa, peso, 400);
-            cqa12_subir(np + 8, peso, k1);
-            cqa12_subir(np + 0xc, peso, k2);
+            let (k1, k2) = manager_rating_gains(t, clube, cqd13_d(comp));
+            raise_side_rating(np + 0xa, peso, 400);
+            raise_side_rating(np + 8, peso, k1);
+            raise_side_rating(np + 0xc, peso, k2);
         }
-        cpq4_historico(!CQD13_ENSAIO, this, cqd13_d(t), &e);
+        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(t), &e);
         let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
         // 0x86f5b0: push 1; push técnico; mov ecx, edi (o this) -> thiscall (ret 8)
         let r = registro(this, cqd13_d(clube + 0xcf), 1);
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
     }
     let presidente = cqd13_d(clube + 0xbf);
     if presidente != 0 {
-        cpq4_historico(!CQD13_ENSAIO, this, cqd13_d(presidente), &e);
+        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(presidente), &e);
     }
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
     let moral: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x544710usize);
@@ -220,28 +220,28 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
         let f = media(cqd13_d(0xb74350), cqd13_d(p + 0x61), 2, 1, 6.5);
         if f > limiar as f64 { // cqd13: acima do limiar
             crate::comparacao::ramo("cqd_13 jogador destacado do campeao");
-            cpq4_historico(!CQD13_ENSAIO, this, cqd13_d(p), &e);
+            append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(p), &e);
             moral(p, 0x14, 1); // cqd13: o moral do jogador destacado
             let k = contrato(cqd13_d(0xae1050), p, clube);
             if k == 0 {
                 continue;
             }
             crate::comparacao::ramo("cqd_13 contrato do destacado");
-            cqd13_moral(k, 100); // cqd13: o contrato do jogador destacado
-            cqd13_renovar(clube, p, k);
+            add_contract_morale(k, 100); // cqd13: o contrato do jogador destacado
+            offer_renewal_if_due(clube, p, k);
         } else {
             moral(p, 0xa, 1);
             let k = contrato(cqd13_d(0xae1050), p, clube);
             if k != 0 {
-                cqd13_moral(k, 50);
+                add_contract_morale(k, 50);
             }
         }
     }
-    cqd13_historico_do_clube(this, clube, 5, comp);
+    add_club_history(this, clube, 5, comp);
     if cqd13_d(0xb6b7c8) != 0 && peso > 3 {
-        cqd13_elogio(clube, comp, 1);
+        post_trophy_praise(clube, comp, 1);
         if peso > 12 {
-            cqd13_elogio(clube, comp, 3);
+            post_trophy_praise(clube, comp, 3);
         }
     }
 }
@@ -258,32 +258,32 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
 /// acima de 10, o elogio (0x75c390 com 1) e, com peso acima de 12 ou reputação abaixo de 2500, com 3.
 unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     if clube == 0 || jogo == 0 || partida == 0 {
-        return aviso_em(0xa83b78, 0x51e);
+        return show_error_at(0xa83b78, 0x51e);
     }
     let comp = cqd13_d(jogo + 0x14);
     let peso = cqd13_w(comp + 0x69);
-    cqd13_reputacao(clube, peso, false);
-    let mut e = cpq4_entrada();
-    cpq4_datar(e.as_mut_ptr());
+    raise_champion_reputation(clube, peso, false);
+    let mut e = history_entry();
+    stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0;
-    cpq4_por(&mut e, 8, cqd13_i(clube));
-    cpq4_por(&mut e, 0xd, cqd13_i(comp));
+    put_i32(&mut e, 8, cqd13_i(clube));
+    put_i32(&mut e, 0xd, cqd13_i(comp));
     let t = cqd13_d(clube + 0xcf);
     if t != 0 {
         if cqd13_d(t + 0x69) != 0 {
-            let (k1, k2) = cqd13_notas(t, clube, cqd13_d(jogo));
+            let (k1, k2) = manager_rating_gains(t, clube, cqd13_d(jogo));
             let lado = partida + 0x188 + 0x625 * (cqd13_d(jogo + 0x20) == clube) as usize;
-            cqa12_subir(lado, peso, 400);
-            cqa12_subir(lado + 2, peso, k1);
-            cqa12_subir(lado + 4, peso, k2);
+            raise_side_rating(lado, peso, 400);
+            raise_side_rating(lado + 2, peso, k1);
+            raise_side_rating(lado + 4, peso, k2);
         }
-        cpq4_historico(!CQD13_ENSAIO, this, cqd13_d(cqd13_d(clube + 0xcf)), &e);
+        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(cqd13_d(clube + 0xcf)), &e);
         let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
         let r = registro(this, cqd13_d(clube + 0xcf), 1);
         if r != 0 {
             core::ptr::write_unaligned((r + 0x8a) as *mut i16, cqd13_w(r + 0x8a).wrapping_add(1));
             // fild peso; fld 4,0; _CIpow (base em st1); fmul 0,5; ftol
-            let v = ftol(pow_do_jogo(cqd13_w(comp + 0x69) as f64, f64_em(0x968938)) * f64_em(0x968968)); // cqd13: o peso do título
+            let v = match_pl_ftol(game_pow(cqd13_w(comp + 0x69) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: o peso do título
             cqd13_pi(r + 0xb6, cqd13_i(r + 0xb6).wrapping_add(v));
             cqd13_pi(r + 0xca, cqd13_i(r + 0xca).wrapping_add(v));
             if is_national_team(clube) != 0 {
@@ -295,10 +295,10 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
     }
     let presidente = cqd13_d(clube + 0xbf);
     if presidente != 0 {
-        cpq4_historico(!CQD13_ENSAIO, this, cqd13_d(presidente), &e);
+        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(presidente), &e);
     }
     let escalacao = partida + 0x190 + 0x625 * (clube != cqd13_d(jogo + 0x1c)) as usize;
-    cqd13_escalacao(this, clube, escalacao, &e);
+    add_lineup_histories(this, clube, escalacao, &e);
     let moral: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x544710usize);
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     for j in 0..50usize {
@@ -316,12 +316,12 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
             continue;
         }
         crate::comparacao::ramo("cqd_13 moral do elenco campeao da copa");
-        cqd13_moral(k, 100); // cqd13: o moral do contrato do campeão da copa
+        add_contract_morale(k, 100); // cqd13: o moral do contrato do campeão da copa
         let s = *((k + 0x4f) as *const u8) >> 4;
         if s == 0 || (s > 3 && s != 5) {
             continue;
         }
-        cqd13_renovar(clube, p, k);
+        offer_renewal_if_due(clube, p, k);
     }
     let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x76d940usize);
     // 0x76d940 e 0x774f30: push comp; mov ecx, [0xb74318] (a 0x76d940 não lê o ecx e só compara o id; ret 4 nas duas)
@@ -333,11 +333,11 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
             acabar(cqd13_d(0xb74318), cqd13_d(jogo + 0x14));
         }
     }
-    cqd13_historico_do_clube(this, clube, 0, comp);
+    add_club_history(this, clube, 0, comp);
     if cqd13_d(0xb6b7c8) != 0 && peso > 10 {
-        cqd13_elogio(clube, comp, 1);
+        post_trophy_praise(clube, comp, 1);
         if cqd13_w(comp + 0x69) > 12 || cqd13_w(clube + 0x80) < 0x9c4 {
-            cqd13_elogio(clube, comp, 3);
+            post_trophy_praise(clube, comp, 3);
         }
     }
 }
@@ -352,7 +352,7 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
 /// e conta dias (0x54cdb0): o moral das fichas depois do primeiro renovado fica fora da igualdade e é conferido pela
 /// faixa da 0x544710; a data estática fica fora quando o ensaio pulou, depois da última conta de dias da cópia, uma
 /// chamada da original que conta dias (CQD13_DATA_SOLTA). Visto na ENG em maio de 2002 e na auditoria das 8 ligas.
-unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, usize), liga: bool, original: impl FnOnce(), copia: impl FnOnce()) {
+unsafe fn compare_champion_update(nome: &str, this: usize, clube: usize, notas: (usize, usize), liga: bool, original: impl FnOnce(), copia: impl FnOnce()) {
     let mut fixas: Vec<(usize, usize)> = vec![(clube + 0x80, 2), (0xae2470, 8), notas];
     let t = cqd13_d(clube + 0xcf);
     if t != 0 {
@@ -417,23 +417,23 @@ unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, u
 }
 
 unsafe extern "thiscall" fn comparar_add_league_champions_record(this: usize, clube: usize, comp: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if clube == 0 || comp == 0 || cqd13_d(cqd13_d(0xadadfc).wrapping_add(4 * cqd13_d(comp))) == 0 {
         return o(this, clube, comp);
     }
     let t = cqd13_d(clube + 0xcf);
     let notas = if t != 0 && cqd13_d(t + 0x69) != 0 { (cqd13_d(t + 0x69) + 8, 6) } else { (clube + 0x80, 2) };
-    cqd13_comparar("add_league_champions_record", this, clube, notas, true, || o(this, clube, comp),
+    compare_champion_update("add_league_champions_record", this, clube, notas, true, || o(this, clube, comp),
         || add_league_champions_record(this, clube, comp));
 }
 
 unsafe extern "thiscall" fn comparar_add_cup_winners_record(this: usize, clube: usize, jogo: usize, partida: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
     if clube == 0 || jogo == 0 || partida == 0 {
         return o(this, clube, jogo, partida);
     }
     let notas = (partida + 0x188 + 0x625 * (cqd13_d(jogo + 0x20) == clube) as usize, 6);
-    cqd13_comparar("add_cup_winners_record", this, clube, notas, false, || o(this, clube, jogo, partida),
+    compare_champion_update("add_cup_winners_record", this, clube, notas, false, || o(this, clube, jogo, partida),
         || add_cup_winners_record(this, clube, jogo, partida));
 }
 
@@ -458,7 +458,7 @@ unsafe extern "thiscall" fn clear_human_manager_record(this: usize, pessoa: usiz
 
 /// Comparador: lado a lado pelo registro (os 0xd2 bytes que a rotina zera).
 unsafe extern "thiscall" fn comparar_clear_human_manager_record(this: usize, pessoa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let id = cqd13_i(pessoa);
     let lim = cqd13_i(0xae2364);
     let r = if id >= lim.wrapping_sub(0x10) && id < lim {

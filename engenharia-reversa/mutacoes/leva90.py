@@ -8,5 +8,5 @@ MUTACOES = [
     ('j_modo', "            if modo == 2 {\n                n = n.wrapping_add(1);", "            if modo == 3 {\n                n = n.wrapping_add(1);"),
     ('t_fim', "        while y < fim || (ate_o_fim && y == fim) {", "        while y < fim {"),
     ('t_11', "true, 11, &|x, y, v|", "true, 8, &|x, y, v|"),
-    ('t_lado', "    let lado = (byte(this, 0x8eae) == 0) as i8;\n    percorrer_linha", "    let lado = (byte(this, 0x8eae) != 0) as i8;\n    percorrer_linha"),
+    ('t_lado', "    let lado = (byte(this, 0x8eae) == 0) as i8;\n    walk_line_cells", "    let lado = (byte(this, 0x8eae) != 0) as i8;\n    walk_line_cells"),
 ]

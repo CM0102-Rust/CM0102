@@ -1,6 +1,6 @@
 # Mutacoes (cqi_10). O destino de cada clube no Intertoto (0x633c10, 114 chamadas ate 2002-06-01 com as 8 ligas: as
 # rodadas de julho e agosto de 2001) e na Copa da UEFA (0x9030e0, 288 chamadas): o +0x1db do clube (a competicao
-# europeia da temporada) fica no bloco dos clubes que a impressao do banco le todo dia e entra na reputacao pela
+# europeia da temporada) fica no bloco dos clubes que a impressao do banco le todo dia e entra na injury_word_0c pela
 # competicao do clube e na lista dos inscritos; como na cpz_4 (cpz4_eliminado_na_qualificacao_continua foi acusada em
 # 2001-199), mudar a marca deve ser pego no dia. Os contadores ficam colados no efeito, depois das condicoes.
 MUTACOES = [
@@ -9,7 +9,7 @@ MUTACOES = [
      'let _ = clube; // mutacao: o vencedor do Intertoto nao recebe a marca da UEFA',
      'cqi_10 vencedor do intertoto'),
     ('cqi10_eliminado_no_intertoto_continua',
-     'cpz4_sair(clube); // cqi10: quem cai no Intertoto sai da competição europeia',
+     'leave_euro_competition(clube); // cqi10: quem cai no Intertoto sai da competição europeia',
      'let _ = clube; // mutacao: o eliminado do Intertoto continua na competicao europeia',
      'cqi_10 caiu no intertoto'),
     ('cqi10_eliminado_na_uefa_continua',

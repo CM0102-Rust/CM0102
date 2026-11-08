@@ -7,7 +7,7 @@
 /// original (padrões, caixa "Error" e 0).
 unsafe extern "C" fn database_get_club_kit_colours(clube: usize, kit: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(%%I0%%)(clube, kit, frente, fundo);
+        return original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(%%I0%%)(clube, kit, frente, fundo);
     }
     // ponytail: a original empurra dwords com só o byte de baixo escrito (o resto é lixo de pilha);
     // a 0x5e4800 faz & 0xff nos três, então os bytes estendidos dão o mesmo pixel
@@ -48,7 +48,7 @@ unsafe extern "C" fn database_get_club_manager(clube: usize) -> usize {
     let mut c = clube;
     loop {
         if c == 0 {
-            return orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%)(0);
+            return original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%)(0);
         }
         let t = tecnico(c);
         if t != 0 {
@@ -76,7 +76,7 @@ unsafe extern "C" fn club_get_english_name(clube: usize) -> usize {
     let t = *(0xae2408 as *const usize);
     if t == 0 {
         // ponytail: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(%%I2%%)(clube);
+        return original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%)(clube);
     }
     let linhas = *((t + 0x20) as *const usize);
     let id = *(clube as *const i32);
@@ -93,7 +93,7 @@ unsafe extern "C" fn club_get_english_name(clube: usize) -> usize {
 }
 
 unsafe extern "C" fn comparar_database_get_club_kit_colours(clube: usize, kit: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(%%I0%%);
     if clube == 0 {
         return o(clube, kit, frente, fundo); // caixa: só a original
     }
@@ -104,7 +104,7 @@ unsafe extern "C" fn comparar_database_get_club_kit_colours(clube: usize, kit: u
 }
 
 unsafe extern "C" fn comparar_database_get_club_manager(clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
@@ -117,7 +117,7 @@ unsafe extern "C" fn comparar_database_get_club_manager(clube: usize) -> usize {
 }
 
 unsafe extern "C" fn comparar_club_get_english_name(clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
         return o(clube); // primeiro uso (aloca e carrega): só a original

@@ -7,7 +7,7 @@
 # "cpx_10 motivo pela avaliacao", que conta so os casos abaixo do limite original). A saida e o tecnico novo so mudam as
 # caixas dos humanos: passageiras (contadores "cpx_10 noticia da saida" e "cpx_10 noticia do tecnico novo").
 MUTACOES = [
-    ('cpx10_sem_data', '    copiar(cpx10_linha(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha',
+    ('cpx10_sem_data', '    copiar(board_row_of(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha',
      '    let _ = (copiar, data); // mutacao: sem a data',
      'cpx_10 data da pressure'),
     ('cpx10_boato_sem_sorteio', '    let mut boato = cpx10_sortear(10); // cpx10: o sorteio do boato',

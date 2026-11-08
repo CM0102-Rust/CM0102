@@ -4,7 +4,7 @@
 /// em [0xb63d28] ≠ 2), id (+0) < [0xae2364] (com sinal), habilidade atual (+5, curto com sinal) acima de
 /// reputação/75 + 25 (de 40 a 135) e o `extra` com o limite de atributo reputação/500 + 5 (no máximo `teto`).
 /// Reputação: +0x80 do clube, curto com sinal. Na ordem da original. Contador de 8 bits (no máximo 50).
-unsafe fn dbo4_contar(clube: usize, teto: i32, posicao: impl Fn(usize) -> bool, extra: impl Fn(usize, i32) -> bool) -> u8 {
+unsafe fn count_squad_by_rep_thresholds(clube: usize, teto: i32, posicao: impl Fn(usize) -> bool, extra: impl Fn(usize, i32) -> bool) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let rep = core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32;
@@ -38,12 +38,12 @@ unsafe extern "C" fn club_has_fast_striker(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    let n = dbo4_contar(clube, 17, |j| *((j + 0x15) as *const u8) == 20, |j, a| *((j + 0x36) as *const i8) as i32 > a);
+    let n = count_squad_by_rep_thresholds(clube, 17, |j| *((j + 0x15) as *const u8) == 20, |j, a| *((j + 0x36) as *const i8) as i32 > a);
     (n > 0) as u8 // atacante rapido (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_fast_striker(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_has_fast_striker(clube);
     PLACAR.registrar(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", clube, r, n));
     r
@@ -57,12 +57,12 @@ unsafe extern "C" fn club_has_two_creative_midfielders(clube: usize) -> u8 {
         return 0;
     }
     let meia = |j: usize| *((j + 0x14) as *const u8) == 20 || *((j + 0x12) as *const u8) == 20 || *((j + 0x13) as *const u8) == 20;
-    let n = dbo4_contar(clube, 14, meia, |j, a| *((j + 0x43) as *const i8) as i32 > a && *((j + 0x37) as *const i8) as i32 > a);
+    let n = count_squad_by_rep_thresholds(clube, 14, meia, |j, a| *((j + 0x43) as *const i8) as i32 > a && *((j + 0x37) as *const i8) as i32 > a);
     (n > 1) as u8 // meias criativos (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_two_creative_midfielders(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_has_two_creative_midfielders(clube);
     PLACAR.registrar(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", clube, r, n));
     r
@@ -148,7 +148,7 @@ unsafe extern "C" fn club_squad_strength_band(clube: usize, outro: usize) -> u8 
 }
 
 unsafe extern "C" fn comparar_club_squad_strength_band(clube: usize, outro: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(clube, outro);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(clube, outro);
     let n = club_squad_strength_band(clube, outro);
     PLACAR.registrar(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", clube, outro, r, n));
     r

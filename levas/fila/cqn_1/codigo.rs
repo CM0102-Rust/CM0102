@@ -14,7 +14,7 @@ unsafe fn cqn1_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha:
     let j = alocar((t.len() * 6) as u32);
     core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
     if j == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return;
     }
     for (k, r) in t.iter().enumerate() {
@@ -24,7 +24,7 @@ unsafe fn cqn1_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha:
 
 /// O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
 /// vtable da nação e as janelas.
-unsafe fn cqn1_construir(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
+unsafe fn argentina_rules_construct_nation_transfer_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
     let base: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x8e84a0usize);
     base(this, a[0], a[1], a[2], a[3], a[4]);
     core::ptr::write_unaligned(this as *mut u32, vtable);
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn argentina_rules_init_transfer_windows(this: usize) {
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqn1_comparar`).
 unsafe extern "thiscall" fn comparar_argentina_rules_init_transfer_windows(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     cqn1_comparar("argentina_rules_init_transfer_windows", this, || o(this), |s| argentina_rules_init_transfer_windows(s));
 }
 
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn argentina_rules_init_transfer_windows_7d3df0(this: u
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqn1_comparar`).
 unsafe extern "thiscall" fn comparar_argentina_rules_init_transfer_windows_7d3df0(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqn1_comparar("argentina_rules_init_transfer_windows_7d3df0", this, || o(this), |s| argentina_rules_init_transfer_windows_7d3df0(s));
 }
 
@@ -106,14 +106,14 @@ const CQN1_COREIA: [[u8; 6]; 2] = [
 /// { 0x66e630 } (thiscall, ret 0x14, korea_rules.cpp, `KOREA_RULES::KOREA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Coreia do Sul (regra 27): a base (0x8e84a0), a vtable 0x96cfec, 1 janela(s) de `CQN1_COREIA`; o +0x13 = 7 (o padrão da base é 50) [inferência: o limite de estrangeiros]. Devolve o objeto.
 unsafe extern "thiscall" fn construct_korea_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqn_1 coreia");
-    cqn1_construir(this, [a1, a2, a3, a4, a5], 0x96cfec, 1, &CQN1_COREIA, 0x9eb20c, 0x51);
+    argentina_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96cfec, 1, &CQN1_COREIA, 0x9eb20c, 0x51);
     *((this + 0x13) as *mut u8) = 7;
     this
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqn1_comparar`).
 unsafe extern "thiscall" fn comparar_construct_korea_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
     let mut r = 0usize;
     cqn1_comparar("construct_korea_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         construct_korea_rules(s, a1, a2, a3, a4, a5);

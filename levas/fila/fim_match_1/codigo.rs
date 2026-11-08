@@ -71,7 +71,7 @@ unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         let m = if mem != 0 { construir(mem) } else { 0 };
         core::ptr::write_unaligned(motor, m);
         if m == 0 {
-            aviso_em(0xa15708, 0xa4b);
+            show_error_at(0xa15708, 0xa4b);
             return;
         }
         preparar(m, jogo + 4, 0, 0, 0);
@@ -91,7 +91,7 @@ unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         }
         core::ptr::write_unaligned((jogo + 0x5f) as *mut usize, mem);
         if mem == 0 {
-            aviso_em(0xa15708, 0xa68);
+            show_error_at(0xa15708, 0xa68);
             return;
         }
         registrar(u(0xb6b7c0, 0), core::ptr::read_unaligned(motor), mem);
@@ -112,7 +112,7 @@ unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
 /// fora de 0..[this+0x1c] ou saída nula: a original (caixa de erro, 0).
 unsafe extern "thiscall" fn find_record_fixture(estat: usize, k: i32, saida: usize) -> u32 {
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%)(estat, k, saida);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%)(estat, k, saida);
     }
     let jogos: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x5acbe0usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -146,11 +146,11 @@ unsafe extern "thiscall" fn find_record_fixture(estat: usize, k: i32, saida: usi
 // temporário: rodar duas vezes não dá, então o comparador só chama a original; a cópia se prova no
 // modo Rust (o ramo), na sessão do Lucas com rede (só um jogador da rede saindo a chama).
 unsafe extern "C" fn comparar_match_day_drop_viewer_and_finish_match() {
-    orig::<unsafe extern "C" fn()>(%%I0%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
 unsafe extern "thiscall" fn comparar_find_record_fixture(estat: usize, k: i32, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%);
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
         return o(estat, k, saida);
     }

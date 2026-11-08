@@ -11,7 +11,7 @@ const FAMILIAS_DAS_CORES: [(usize, u8); 34] = [
 ];
 
 /// A família da `cor` pela tabela; None se o id não está em nenhuma chave (caixa na original).
-unsafe fn familia_conhecida_da_cor(cor: usize) -> Option<u8> {
+unsafe fn colour_family(cor: usize) -> Option<u8> {
     let id = *(cor as *const u32);
     FAMILIAS_DAS_CORES.iter().find(|&&(a, _)| *(a as *const u32) == id).map(|&(_, f)| f)
 }
@@ -20,9 +20,9 @@ unsafe fn familia_conhecida_da_cor(cor: usize) -> Option<u8> {
 /// de cor em `FAMILIAS_DAS_CORES` (a primeira que casa). Cor fora da lista: a original (caixa "Error",
 /// [0xb67a34] = 0 e 2).
 unsafe extern "C" fn database_get_colour_family(cor: usize) -> u8 {
-    match familia_conhecida_da_cor(cor) {
+    match colour_family(cor) {
         Some(f) => f,
-        None => orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(cor),
+        None => original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(cor),
     }
 }
 
@@ -53,14 +53,14 @@ unsafe extern "C" fn database_colours_clash(a: usize, b: usize) -> u8 {
 unsafe extern "C" fn staff_compute_non_player_attribute(pessoa: usize, nao_jogador: usize, atributo: u32) -> u8 {
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=12).contains(&a) || nao_jogador == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I2%%)(pessoa, nao_jogador, atributo);
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I2%%)(pessoa, nao_jogador, atributo);
     }
     let byte = |p: usize, d: usize| *((p + d) as *const u8);
     let formula = |d: usize| {
         let b = *((nao_jogador + d) as *const i8) as f64;
         let x = (*((nao_jogador + 4) as *const i16) as f64 + (b + b)) * 0.05 + 10.0;
-        let y = (x * x * 0.1 + x) * f64_em(0x968a80) + 0.5;
-        ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y }) as u8
+        let y = (x * x * 0.1 + x) * read_f64_at(0x968a80) + 0.5;
+        match_pl_ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y }) as u8
     };
     match a {
         1 => byte(pessoa, 0x56),
@@ -79,9 +79,9 @@ unsafe extern "C" fn staff_compute_non_player_attribute(pessoa: usize, nao_jogad
 }
 
 unsafe extern "C" fn comparar_database_get_colour_family(cor: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%);
     let r = o(cor);
-    if familia_conhecida_da_cor(cor).is_none() {
+    if colour_family(cor).is_none() {
         return r; // caixa: só a original
     }
     let n = database_get_colour_family(cor);
@@ -90,9 +90,9 @@ unsafe extern "C" fn comparar_database_get_colour_family(cor: usize) -> u8 {
 }
 
 unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%);
     let r = o(a, b);
-    if familia_conhecida_da_cor(a).is_none() || familia_conhecida_da_cor(b).is_none() {
+    if colour_family(a).is_none() || colour_family(b).is_none() {
         return r; // caixa: só a original
     }
     let n = database_colours_clash(a, b);
@@ -101,7 +101,7 @@ unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usize) -> u8 {
 }
 
 unsafe extern "C" fn comparar_staff_compute_non_player_attribute(pessoa: usize, nao_jogador: usize, atributo: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I2%%);
     let r = o(pessoa, nao_jogador, atributo);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=12).contains(&a) || nao_jogador == 0 {

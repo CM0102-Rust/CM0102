@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn sort_table(liga: usize, linhas: usize) -> u32 {
                     let (oa, ob) = (CPA1_LINHA * i as i32 as usize, CPA1_LINHA * (i as i32 + 1) as usize);
                     let (a, b) = (cpa1_d(liga + 0xb1) + oa, cpa1_d(liga + 0xb1) + ob);
                     let col = cpa1_d(*(0xb679fc as *const usize) + 0xad);
-                    let decidir = cpa1_d(a) == 0 || cpa1_d(b) == 0 || cpa1_empate(a, b, col);
+                    let decidir = cpa1_d(a) == 0 || cpa1_d(b) == 0 || is_sort_tie(a, b, col);
                     if decidir && ordem(cpa1_d(liga + 0xb1) + oa, cpa1_d(liga + 0xb1) + ob) > 0 {
                         let t = cpa1_d(liga + 0xb1);
                         core::ptr::swap_nonoverlapping((t + oa) as *mut u8, (t + ob) as *mut u8, CPA1_LINHA); // a troca das linhas
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn sort_table(liga: usize, linhas: usize) -> u32 {
 /// A bolha da 0x6827d0 decide o par (a, b) pela 0x683210? Só quando empatam: na comparação própria [0xb67a00]
 /// (chamada de novo quando dá diferente de 0) ou, sem ela, nos pontos (+0x19 da coluna) e, com os dois sem jogos
 /// (+0x11), no id dos clubes; com jogos, no confronto direto (gols +5/+7 e +8/+0xa da entrada do clube b).
-unsafe fn cpa1_empate(a: usize, b: usize, col: usize) -> bool {
+unsafe fn is_sort_tie(a: usize, b: usize, col: usize) -> bool {
     let propria = *(0xb67a00 as *const usize);
     if propria != 0 {
         let f: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(propria);
@@ -155,7 +155,7 @@ unsafe fn cpa1_empate(a: usize, b: usize, col: usize) -> bool {
 
 /// As regiões da ordenação: as linhas pedidas e as da liga, o total de rodadas, as duas globais e o histórico de
 /// posições de cada linha (o byte gravado vai até a rodada +0x11, um byte com sinal: no máximo 127).
-unsafe fn cpa1_regioes_da_ordem(liga: usize, linhas: usize) -> Vec<(usize, usize)> {
+unsafe fn sort_regions(liga: usize, linhas: usize) -> Vec<(usize, usize)> {
     let n = cpa1_w(liga + 0x3e).max(0) as usize;
     let linhas = if linhas == 0 { cpa1_d(liga + 0xb1) } else { linhas };
     let mut reg = vec![(liga + 0xa7, 2), (0xb679fc, 4), (0xb67a00, 4)];
@@ -184,8 +184,8 @@ unsafe fn cpa1_regioes_da_ordem(liga: usize, linhas: usize) -> Vec<(usize, usize
 }
 
 unsafe extern "thiscall" fn comparar_sort_table(liga: usize, linhas: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
-    let reg = cpa1_regioes_da_ordem(liga, linhas);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
+    let reg = sort_regions(liga, linhas);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(liga, linhas), || sort_table(liga, linhas));
     PLACAR.registrar(igual && r == n, || format!("sort_table({:x}, {:x}) {}/{} {:x?} x {:x?}", liga, linhas, r, n, mo, mr));
     r
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn build_h2h_table(liga: usize, linhas: usize) {
     let calloc: unsafe extern "C" fn(i32, u32) -> usize = core::mem::transmute(0x945501usize);
     let t = calloc(n() as i32, CPA1_LINHA as u32);
     if t == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(liga, linhas); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(liga, linhas); // caixa: só a original
     }
     let linha = |base: usize, i: i16| base + CPA1_LINHA * i as i32 as usize;
     let mut i: i16 = 0;
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn build_h2h_table(liga: usize, linhas: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_build_h2h_table(liga: usize, linhas: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if linhas == 0 {
         return o(liga, linhas);
     }
@@ -316,7 +316,7 @@ unsafe extern "thiscall" fn free_table(liga: usize, tabela: usize) {
 /// Comparador: liberar duas vezes soltaria os mesmos blocos duas vezes.
 // ponytail: só a original (como as liberações da 232ª); a prova é a carreira e o ramo da cópia no modo Rust.
 unsafe extern "thiscall" fn comparar_free_table(liga: usize, tabela: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(liga, tabela)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(liga, tabela)
 }
 
 /// { 0x689ad0 } (thiscall, league.cpp): `League::check_complete(fases, avisar)`: 0 sem tabela, encerrada (+0xb5) ou
@@ -392,7 +392,7 @@ unsafe extern "thiscall" fn league_check_complete(liga: usize, fases: u32, avisa
 
 /// O caminho da 0x689ad0 que só lê (e acerta +0xa7)? Escrito à parte da cópia: sem tabela, encerrada ou sem +0x45;
 /// completa fora da fase única, ou na única sem pedir as fases; ou algum clube sem todos os jogos.
-unsafe fn cpa1_completa_so_le(liga: usize, fases: u32) -> bool {
+unsafe fn is_complete_check_read_only(liga: usize, fases: u32) -> bool {
     let tab = cpa1_d(liga + 0xb1);
     if tab == 0 || cpa1_b(liga + 0xb5) != 0 || cpa1_d(liga + 0x45) == 0 {
         return true;
@@ -409,8 +409,8 @@ unsafe fn cpa1_completa_so_le(liga: usize, fases: u32) -> bool {
 }
 
 unsafe extern "thiscall" fn comparar_league_check_complete(liga: usize, fases: u32, avisar: u32) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(%%I3%%);
-    if !cpa1_completa_so_le(liga, fases) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(%%I3%%);
+    if !is_complete_check_read_only(liga, fases) {
         return o(liga, fases, avisar); // fim de liga (registros, prêmios, fases, aviso): só a original
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(liga + 0xa7, 2)], || o(liga, fases, avisar), || league_check_complete(liga, fases, avisar));

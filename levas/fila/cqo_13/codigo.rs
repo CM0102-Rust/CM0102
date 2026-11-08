@@ -9,9 +9,9 @@ type Cqo13G = (u32, u32, u32, u32);
 /// rodadas = o número de rodadas de grupo, extra = fase + 0x3e9 (16 bits); a tabela de 0x41 bytes por rodada (0x944e46;
 /// sem memória, a caixa `linha_g` e devolve 0) com as datas de `grupos`. Na fase `limite`, o mata-mata: é_liga = 0,
 /// rodadas = o tamanho de `mata`, extra = 0; a tabela de 0x68 bytes por rodada (sem memória, a caixa `linha_m`), as
-/// rodadas pela `cql10_rodada` com o ano +0x40 da copa (com sinal) e as palavras de `a_mais` (rodada, deslocamento,
+/// rodadas pela `eng_cc_cup_write_cup_round` com o ano +0x40 da copa (com sinal) e as palavras de `a_mais` (rodada, deslocamento,
 /// valor). Acima de `limite`: devolve 0 sem gravar nada.
-unsafe fn cqo13_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, grupos: &[Cqo13G],
+unsafe fn south_american_cup_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, grupos: &[Cqo13G],
     mata: &[Cql10R], a_mais: &[(usize, usize, u16)], arquivo: usize, linha_g: u32, linha_m: u32, nome_g: &'static str, nome: &'static str) -> usize {
     let f = fase as u8 as i8;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -25,7 +25,7 @@ unsafe fn cqo13_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i1
         *extra = (f as i16).wrapping_add(0x3e9);
         let t = alocar(grupos.len() as u32 * 0x41);
         if t == 0 {
-            aviso_em(arquivo, linha_g);
+            show_error_at(arquivo, linha_g);
             return 0;
         }
         crate::comparacao::ramo(nome_g);
@@ -48,13 +48,13 @@ unsafe fn cqo13_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i1
     *extra = 0;
     let t = alocar(mata.len() as u32 * 0x68);
     if t == 0 {
-        aviso_em(arquivo, linha_m);
+        show_error_at(arquivo, linha_m);
         return 0;
     }
     crate::comparacao::ramo(nome);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in mata.iter().enumerate() {
-        cql10_rodada(t, i as u32, r, ano);
+        eng_cc_cup_write_cup_round(t, i as u32, r, ano);
     }
     for &(r, o, v) in a_mais {
         core::ptr::write_unaligned((t + r * 0x68 + o) as *mut u16, v);
@@ -77,7 +77,7 @@ unsafe fn cqo13_gravados_grupos(t: usize, n: i16) -> Vec<u8> {
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas (grupos ou mata-mata, este com as
 /// palavras de `a_mais`) têm de ser iguais; a tabela da cópia é liberada (0x9452ca). Acima do mata-mata só a original.
-unsafe fn cqo13_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, a_mais: &[(usize, usize, u16)],
+unsafe fn compare_south_american_cup_schedule(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, a_mais: &[(usize, usize, u16)],
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = fase as u8 as i8;
     if f > limite {
@@ -96,7 +96,7 @@ unsafe fn cqo13_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i
         if f < limite {
             cqo13_gravados_grupos(a, *rodadas) == cqo13_gravados_grupos(b, r2)
         } else {
-            cql10_gravados(a, *rodadas) == cql10_gravados(b, r2) && mais(a) == mais(b)
+            eng_cc_cup_written_round_bytes(a, *rodadas) == eng_cc_cup_written_round_bytes(b, r2) && mais(a) == mais(b)
         }
     } else {
         a == 0 && b == 0
@@ -125,13 +125,13 @@ const CQO13_LIBERTADORES: [Cql10R; 4] = [
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 7 (a caixa da linha 0x9f), o mata-mata na
 /// fase 7 (a caixa da linha 0xc5).
 unsafe extern "thiscall" fn conmebol_liber_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo13_tabela(this, fase, rodadas, extra, liga, 7, &CQO13_LIBERTADORES_GRUPOS, &CQO13_LIBERTADORES, &[], 0x9a7de4, 0x9f, 0xc5,
+    south_american_cup_schedule(this, fase, rodadas, extra, liga, 7, &CQO13_LIBERTADORES_GRUPOS, &CQO13_LIBERTADORES, &[], 0x9a7de4, 0x9f, 0xc5,
         "cqo_13 grupos da libertadores", "cqo_13 mata-mata da libertadores")
 }
 
 unsafe extern "thiscall" fn comparar_conmebol_liber_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqo13_comparar("conmebol_liber_create_schedule", fase, rodadas, extra, liga, 7, &[], || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    compare_south_american_cup_schedule("conmebol_liber_create_schedule", fase, rodadas, extra, liga, 7, &[], || o(this, fase, rodadas, extra, liga),
         |r, e, l| conmebol_liber_create_schedule(this, fase, r, e, l))
 }
 
@@ -153,13 +153,13 @@ const CQO13_MERCOSUL_A_MAIS: [(usize, usize, u16); 1] = [(2, 0x11, 3)];
 /// fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 4 (a caixa da linha 0x97), o mata-mata na fase 4 (a caixa
 /// da linha 0xbd).
 unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo13_tabela(this, fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_GRUPOS, &CQO13_MERCOSUL, &CQO13_MERCOSUL_A_MAIS, 0x9a7e5c, 0x97, 0xbd,
+    south_american_cup_schedule(this, fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_GRUPOS, &CQO13_MERCOSUL, &CQO13_MERCOSUL_A_MAIS, 0x9a7e5c, 0x97, 0xbd,
         "cqo_13 grupos da mercosul", "cqo_13 mata-mata da mercosul")
 }
 
 unsafe extern "thiscall" fn comparar_conmebol_merc_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cqo13_comparar("conmebol_merc_create_schedule", fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_A_MAIS, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    compare_south_american_cup_schedule("conmebol_merc_create_schedule", fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_A_MAIS, || o(this, fase, rodadas, extra, liga),
         |r, e, l| conmebol_merc_create_schedule(this, fase, r, e, l))
 }
 
@@ -171,13 +171,13 @@ unsafe fn cqo13_d(a: usize) -> usize {
 /// ponteiros (0x944e46 de 0x50 em +0xee; sem memória, a caixa da linha 0x2c6 e 0); cada clube da tabela ([0xae23b4],
 /// [0xae235c] − 2 × [0xae2350]) que as regras ([0xae1000], 0x4c6890: thiscall com o clube) convidam entra na lista, sem
 /// conferir o espaço; a lista é embaralhada (0x4afb40 com +0xf2). Devolve 1.
-unsafe fn cqo13_convidados(this: usize) -> (i32, i32) {
+unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x14);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let l = alocar(0x50);
     core::ptr::write_unaligned((this + 0xee) as *mut u32, l as u32);
     if l == 0 {
-        aviso_em(0x9a7e5c, 0x2c6);
+        show_error_at(0x9a7e5c, 0x2c6);
         return (0, 0);
     }
     let convidado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4c6890usize);
@@ -200,13 +200,13 @@ unsafe fn cqo13_convidados(this: usize) -> (i32, i32) {
 }
 
 unsafe extern "thiscall" fn conmebol_merc_select_invited_clubs(this: usize) -> i32 {
-    cqo13_convidados(this).0
+    mercosur_select_invited_clubs(this).0
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nos convidados que ela gravou e liberada.
 unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: us
         lo.set(cqo13_d(this + 0xee));
         r
     }, || {
-        let (r, n) = crate::aleatorio::sem_contar(|| cqo13_convidados(this));
+        let (r, n) = crate::aleatorio::sem_contar(|| mercosur_select_invited_clubs(this));
         lr.set(cqo13_d(this + 0xee));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xee) as *mut u32, lo.get() as u32);

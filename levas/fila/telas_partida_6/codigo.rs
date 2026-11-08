@@ -5,7 +5,7 @@
 /// grupo de jogos, 2 e 3 zero, 4 um. Grupo nulo: a original (caixa de erro e [0xb67a34] = 0).
 unsafe extern "C" fn open_day_fixtures_screen(vaga: u32, grupo: usize) {
     if grupo == 0 {
-        return orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, grupo);
+        return original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, grupo);
     }
     crate::comparacao::ramo("telas abrir os jogos do dia");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
@@ -26,7 +26,7 @@ unsafe extern "C" fn open_day_fixtures_screen(vaga: u32, grupo: usize) {
 unsafe extern "C" fn handle_day_fixtures_input(item: u32) -> i32 {
     crate::comparacao::ramo("telas respond aos jogos do dia");
     let i = item as i16;
-    let id = |i: i16| if i == -1 { *(0xdd6bde as *const u16) } else { id_do_item(i) };
+    let id = |i: i16| if i == -1 { *(0xdd6bde as *const u16) } else { display_item_id(i) };
     let dado = |i: i16| {
         if i == -1 {
             return 0usize;
@@ -36,7 +36,7 @@ unsafe extern "C" fn handle_day_fixtures_input(item: u32) -> i32 {
     };
     if i != -1 {
         let converter: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x803320usize);
-        gravar_parametro_da_tela(2, converter(GERENTE_DE_TELAS, parametro_da_tela(3)));
+        set_screen_param(2, converter(GERENTE_DE_TELAS, get_screen_param(3)));
     }
     match id(i) {
         1 => {
@@ -68,7 +68,7 @@ unsafe extern "C" fn handle_day_fixtures_input(item: u32) -> i32 {
 /// de erro). Quem chama só usa `al`.
 unsafe extern "C" fn match_screens_find_best_rated_starter_slot(tatica: usize, contexto: i32) -> u8 {
     if tatica == 0 {
-        return orig::<unsafe extern "C" fn(usize, i32) -> u8>(%%I2%%)(tatica, contexto);
+        return original_fn::<unsafe extern "C" fn(usize, i32) -> u8>(%%I2%%)(tatica, contexto);
     }
     let da_tatica: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> usize = core::mem::transmute(0x8968f0usize);
     let avaliar: unsafe extern "C" fn(usize, usize, usize) -> i16 = core::mem::transmute(0x6e1cf0usize);
@@ -90,16 +90,16 @@ unsafe extern "C" fn match_screens_find_best_rated_starter_slot(tatica: usize, c
 // ponytail: abrir e respond mexem em telas e menu (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 unsafe extern "C" fn comparar_open_day_fixtures_screen(vaga: u32, grupo: usize) {
-    orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, grupo)
+    original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, grupo)
 }
 
 unsafe extern "C" fn comparar_handle_day_fixtures_input(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
+    original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
 }
 
 /// Só lê: compara a vaga devolvida (tática nula: só a original, pela caixa de erro).
 unsafe extern "C" fn comparar_match_screens_find_best_rated_starter_slot(tatica: usize, contexto: i32) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, i32) -> u8>(%%I2%%)(tatica, contexto);
+    let r = original_fn::<unsafe extern "C" fn(usize, i32) -> u8>(%%I2%%)(tatica, contexto);
     if tatica == 0 {
         return r;
     }

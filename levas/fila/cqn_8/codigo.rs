@@ -24,7 +24,7 @@ unsafe fn cqn8_clube(liga: usize, l: usize) -> usize {
 /// primeira vaga de fases ([+0xc]). Sem fase: a caixa `linha_sem_fase` e volta (sem liberar). Com ela:
 /// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela de rodadas e a lista liberadas (free 0x9452ca,
 /// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
-unsafe fn cqn8_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
+unsafe fn bra_reg_pern_build_knockout_from_table(this: usize, linhas: &[usize], sementes: &[u8], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
     let n = linhas.len();
     // as sementes: a original grava os bytes na pilha antes de alocar (iguais às linhas, mas constantes à parte)
     let mut s = [0u8; 8];
@@ -32,7 +32,7 @@ unsafe fn cqn8_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let lista = alocar((n * 4) as u32);
     if lista == 0 {
-        return aviso_em(arquivo, linha_sem_lista);
+        return show_error_at(arquivo, linha_sem_lista);
     }
     for (k, &l) in linhas.iter().enumerate() {
         core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn8_clube(this, l));
@@ -56,7 +56,7 @@ unsafe fn cqn8_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
     core::ptr::write_unaligned(cqn8_d(this + 0xc) as *mut usize, fase);
     let fase = cqn8_d(cqn8_d(this + 0xc));
     if fase == 0 {
-        return aviso_em(arquivo, linha_sem_fase);
+        return show_error_at(arquivo, linha_sem_fase);
     }
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
     montar(fase, 0);
@@ -69,26 +69,26 @@ unsafe fn cqn8_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
 /// { 0x439710 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98afd8, linhas 0x21b (sem lista) e 0x22f (sem fase).
 unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage(this: usize) {
-    cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98afd8, 0x21b, 0x22f, "cqn_8 pernambucano"); // cqn8: 1º × 4º, 2º × 3º Pernambucano
+    bra_reg_pern_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98afd8, 0x21b, 0x22f, "cqn_8 pernambucano"); // cqn8: 1º × 4º, 2º × 3º Pernambucano
 }
 
 /// { 0x43bf50 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b050, linhas 0x21b (sem lista) e 0x22f (sem fase).
 unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage_43bf50(this: usize) {
-    cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b050, 0x21b, 0x22f, "cqn_8 catarinense"); // cqn8: 1º × 4º, 2º × 3º Catarinense
+    bra_reg_pern_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b050, 0x21b, 0x22f, "cqn_8 catarinense"); // cqn8: 1º × 4º, 2º × 3º Catarinense
 }
 
 /// { 0x43cf80 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b090, linhas 0x20d (sem lista) e 0x221 (sem fase).
 unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage_43cf80(this: usize) {
-    cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b090, 0x20d, 0x221, "cqn_8 paulista"); // cqn8: 1º × 4º, 2º × 3º Paulista
+    bra_reg_pern_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b090, 0x20d, 0x221, "cqn_8 paulista"); // cqn8: 1º × 4º, 2º × 3º Paulista
 }
 
 /// O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
 /// plano, feito antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = n, +4 = o +4 da
 /// liga e os n primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como conjunto: o sorteio da rodada
 /// 0x51c800 pode reordenar as chaves), e +0x30 = 0.
-unsafe fn cqn8_comparar(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
+unsafe fn bra_reg_pern_compare_knockout_from_table(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
     let mut plano: Vec<usize> = linhas.iter().map(|&l| cqn8_clube(this, l)).collect();
     original();
     let fase = cqn8_d(cqn8_d(this + 0xc));
@@ -106,16 +106,16 @@ unsafe fn cqn8_comparar(nome: &str, this: usize, linhas: &[usize], original: imp
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqn8_comparar("bra_reg_pern_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    bra_reg_pern_compare_knockout_from_table("bra_reg_pern_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage_43bf50(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqn8_comparar("bra_reg_pern_create_semi_final_stage_43bf50", this, &[0, 3, 1, 2], || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    bra_reg_pern_compare_knockout_from_table("bra_reg_pern_create_semi_final_stage_43bf50", this, &[0, 3, 1, 2], || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage_43cf80(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqn8_comparar("bra_reg_pern_create_semi_final_stage_43cf80", this, &[0, 3, 1, 2], || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    bra_reg_pern_compare_knockout_from_table("bra_reg_pern_create_semi_final_stage_43cf80", this, &[0, 3, 1, 2], || o(this))
 }

@@ -46,11 +46,11 @@ fn cqu4_j2_fase(fase: u32) -> Option<Cqp11Fase> {
 /// { 0x664780 } (thiscall, ret 0x10, jap_j2.cpp; a virtual +0x3c): `JapJ2::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
 /// de `cqu4_j2_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
 unsafe extern "thiscall" fn cqu4_calendario_j2(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqu4_j2_fase(fase), rodadas, extra, liga, 0x9eaedc)
+    create_round_table(this, cqu4_j2_fase(fase), rodadas, extra, liga, 0x9eaedc)
 }
 
 unsafe extern "thiscall" fn comparar_cqu4_calendario_j2(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqp11_comparar("cqu4_calendario_j2", fase, cqu4_j2_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    asia_club_champ_compare_round_table("cqu4_calendario_j2", fase, cqu4_j2_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqu4_calendario_j2(this, fase, r, e, l))
 }

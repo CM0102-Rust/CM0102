@@ -18,7 +18,7 @@ unsafe fn cpu5_sortear(n: i32) -> i32 {
 }
 
 /// O fim do adiamento: sorteio(n) diferente de zero não adia (0), zero abandona (6).
-unsafe fn cpu5_abandonar_se_zero(n: i32) -> u8 {
+unsafe fn abandon_if_draw_zero(n: i32) -> u8 {
     if cpu5_sortear(n) != 0 {
         0
     } else {
@@ -27,7 +27,7 @@ unsafe fn cpu5_abandonar_se_zero(n: i32) -> u8 {
 }
 
 /// O fim do adiamento: sorteio(n) zero não adia (0), diferente de zero adia (5).
-unsafe fn cpu5_adiar_se_nao_zero(n: i32) -> u8 {
+unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
     if cpu5_sortear(n) == 0 {
         0
     } else {
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
                 if cpu5_sortear(4) != 0 {
                     return 5;
                 }
-                return cpu5_abandonar_se_zero(4);
+                return abandon_if_draw_zero(4);
             }
             if cap <= 0x1d4c && !mandante {
                 if cpu5_sortear(0x19) != 0 {
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
             if cpu5_sortear(0x1e) == 0 {
                 return 6;
             }
-            cpu5_adiar_se_nao_zero(0xf)
+            postpone_if_draw_nonzero(0xf)
         }
         9 => {
             let (d1, d2, d3) = if vento == 4 { (10, 0x14, 10) } else { (0x14, 10, 4) };
@@ -161,17 +161,17 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
                     if cpu5_sortear(d2) != 0 {
                         return 5;
                     }
-                    return cpu5_abandonar_se_zero(d3);
+                    return abandon_if_draw_zero(d3);
                 }
                 if cpu5_sortear(d2) == 0 {
-                    return cpu5_abandonar_se_zero(d3);
+                    return abandon_if_draw_zero(d3);
                 }
                 return 5;
             }
             if cpu5_sortear(0x32) == 0 {
                 return 6;
             }
-            cpu5_adiar_se_nao_zero(if vento == 4 { 8 } else { 4 })
+            postpone_if_draw_nonzero(if vento == 4 { 8 } else { 4 })
         }
         _ => 0,
     }
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
 
 // ponytail: sorteia: só a original; a cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_check_postponement(this: usize, jogo: usize) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, jogo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, jogo)
 }
 
 /// { 0x5a0590 } (thiscall, ret 4, finance.cpp): `FinanceTable::get_club_finance(clube)`: o registro de finanças
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn comparar_check_postponement(this: usize, jogo: usize
 /// Clube nulo: a caixa "Error" de finance.CPP (a original).
 unsafe extern "thiscall" fn get_club_finance(this: usize, clube: usize) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(this, clube);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(this, clube);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let mut eh_a: u32 = 0;
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn get_club_finance(this: usize, clube: usize) -> usize
 
 /// Comparador: pelo valor (clube nulo: só a original, com a caixa de erro).
 unsafe extern "thiscall" fn comparar_get_club_finance(this: usize, clube: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if clube == 0 {
         return o(this, clube);
     }
@@ -229,7 +229,7 @@ unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> i32 {
 
 /// Comparador: pelo valor.
 unsafe extern "C" fn comparar_stadium_compare_bookings(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = stadium_compare_bookings(a, b);
     PLACAR.registrar(r == n, || format!("stadium_compare_bookings({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r

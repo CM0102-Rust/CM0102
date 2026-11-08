@@ -26,7 +26,7 @@ unsafe fn cqc5_pw(a: usize, v: u16) {
 
 /// O clube é dirigido por um técnico humano (0x7875e0: push clube; ecx = [0xb7431c]; sem add esp -> thiscall(notícias,
 /// clube), ret 4).
-unsafe fn cqc5_humano(clube: usize) -> bool {
+unsafe fn cup_has_human_manager(clube: usize) -> bool {
     let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     f(cqc5_d(0xb7431c), clube) != 0
 }
@@ -35,7 +35,7 @@ unsafe fn cqc5_humano(clube: usize) -> bool {
 /// local -> thiscall, ret 8) que não estiver depois de hoje ([0xae2c90]: ano sem sinal, dia com sinal) passa a amanhã
 /// (0x54c5b0: push 1; push saída; mov ecx, 0xae2c90 -> thiscall(data, saída, n), ret 8); e a partida vai ao calendário
 /// (0x5aa680: push 1; push &partida; ecx = [0xae2a58] -> thiscall, ret 8).
-unsafe fn cqc5_ao_calendario(p: usize) {
+unsafe fn add_fixture_to_calendar(p: usize) {
     let nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let juntar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x5aa680usize);
@@ -65,7 +65,7 @@ unsafe fn cqc5_ao_calendario(p: usize) {
 /// de +0x4d (sem mão de volta e +0x20 > 0), os clubes (+0x1c, +0x20) e ids (+0xc, +0x10; −1 sem clube), a data (dia
 /// +3, ano +5 + o da copa), a fatia +6, a data da rodada seguinte (+0x6b/+0x6d; na última, 0), o estádio (0x85c260:
 /// push +0x24 da copa; push &partida; push +0x13; mov ecx, [0xdd7ef4] -> thiscall, ret 0xc) e o calendário
-/// (cqc5_ao_calendario). Com técnico humano num dos dois e sem o bit 0x100 em +0xd, a notícia 0x14 aos dois. Na de duas
+/// (add_fixture_to_calendar). Com técnico humano num dos dois e sem o bit 0x100 em +0xd, a notícia 0x14 aos dois. Na de duas
 /// mãos, com a copa ainda em [0xadadfc]: a volta +0x22 dias depois (0x549ef0, 0x54c5b0, 0x417c10), o código +4, a
 /// fatia pelo dia da semana (0x54a3f0: sábado ou domingo 1, senão 2), mando invertido, o estádio e o calendário.
 /// Devolve 1.
@@ -74,13 +74,13 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
     let ri = rodada as i16 as i32;
     let (mut k, mut adiar) = (confronto, adiar);
     if confronto as i16 == -1 {
-        let n = cqc5_w(cpq11_rodada(this, ri) + 0x1a);
+        let n = cqc5_w(round_entry(this, ri) + 0x1a);
         let mut i: u32 = 0;
         loop {
             if (i as i16) >= n {
                 return 0;
             }
-            let m = cqc5_b(cpq11_confronto(this, ri, i as i16 as i32) + 0x34);
+            let m = cqc5_b(tie_of_round(this, ri, i as i16 as i32) + 0x34);
             if m == 1 {
                 adiar = 1;
                 break;
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
             return 0;
         }
     }
-    let t = cpq11_confronto(this, ri, k as i16 as i32);
+    let t = tie_of_round(this, ri, k as i16 as i32);
     if adiar != 0 {
         *((t + 0x34) as *mut u8) = 2;
         return 1;
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
     }
     cqc5_pw(p + 0x2c, cqc5_w(this + 0x40) as u16);
     cqc5_pw(p + 0x32, cqc5_w(this + 0x3a) as u16);
-    let e = cpq11_rodada(this, ri);
+    let e = round_entry(this, ri);
     let mut codigo = cqc5_w(e + 7);
     if cqc5_b(e + 0x21) == 2 {
         codigo = codigo.wrapping_add(3);
@@ -142,24 +142,24 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
     cqc5_pb(p + 0x40, 1);
     cqc5_pb(p + 0x41, 1);
     if (cqc5_b(e + 0x21) as i8) < 2 && cqc5_w(p + 0x38) as u16 & 0x800 != 0 {
-        let nc = cqc5_b(cpq11_time(this, cqc5_w(t)) + 4) as i8;
-        let nf = cqc5_b(cpq11_time(this, cqc5_w(t + 2)) + 4) as i8;
+        let nc = cqc5_b(cup_team_entry(this, cqc5_w(t)) + 4) as i8;
+        let nf = cqc5_b(cup_team_entry(this, cqc5_w(t + 2)) + 4) as i8;
         cqc5_pw(p + 0x38, if nc >= nf { 0x1000 } else { 0x800 });
     }
     let virtual_7c: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(cqc5_d(cqc5_d(this) + 0x7c));
     virtual_7c(this, p);
-    let e = cpq11_rodada(this, ri);
+    let e = round_entry(this, ri);
     if (cqc5_b(e + 0x21) as i8) < 2 && (cqc5_b(e + 0x20) as i8) > 0 {
         cqc5_pb(p + 0x4e, cqc5_b(p + 0x4e) | 4);
     } else {
         cqc5_pb(p + 0x4e, cqc5_b(p + 0x4e) & !4);
     }
-    let t = cpq11_confronto(this, ri, k as i16 as i32);
+    let t = tie_of_round(this, ri, k as i16 as i32);
     let (lc, lf) = (cqc5_w(t), cqc5_w(t + 2)); // cqc5: os lados da ida
-    let casa = cqc5_d(cpq11_time(this, lc));
+    let casa = cqc5_d(cup_team_entry(this, lc));
     cqc5_pd(p + 0x1c, casa);
     cqc5_pd(p + 0xc, if casa != 0 { cqc5_d(casa) } else { usize::MAX });
-    let fora = cqc5_d(cpq11_time(this, lf));
+    let fora = cqc5_d(cup_team_entry(this, lf));
     cqc5_pd(p + 0x20, fora);
     cqc5_pd(p + 0x10, if fora != 0 { cqc5_d(fora) } else { usize::MAX });
     let ano_copa = cqc5_w(this + 0x40);
@@ -176,9 +176,9 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
     let estadio: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x85c260usize);
     estadio(cqc5_d(0xdd7ef4), cqc5_d(e + 0x13), p, cqc5_d(this + 0x24));
     crate::comparacao::ramo("cqc_5 jogo do confronto");
-    cqc5_ao_calendario(p);
+    add_fixture_to_calendar(p);
     let (casa, fora) = (cqc5_d(p + 0x1c), cqc5_d(p + 0x20));
-    if (cqc5_humano(casa) || cqc5_humano(fora)) && cqc5_w(cpq11_rodada(this, ri) + 0xd) as u16 & 0x100 == 0 {
+    if (cup_has_human_manager(casa) || cup_has_human_manager(fora)) && cqc5_w(round_entry(this, ri) + 0xd) as u16 & 0x100 == 0 {
         let mut noticia = [0u32; 0x38];
         let n = noticia.as_mut_ptr() as usize;
         let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -187,12 +187,12 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
         construir(n, 0x14, 0);
         gravar(n, 0, cqc5_d(cqc5_d(this + 4)) as u32);
         gravar(n, 1, cqc5_w(this + 0x3a) as i32 as u32);
-        gravar(n, 2, cqc5_w(cpq11_rodada(this, ri) + 7) as i32 as u32);
-        gravar(n, 5, (cqc5_b(cpq11_rodada(this, ri) + 0x21) == 2) as u32);
+        gravar(n, 2, cqc5_w(round_entry(this, ri) + 7) as i32 as u32);
+        gravar(n, 5, (cqc5_b(round_entry(this, ri) + 0x21) == 2) as u32);
         gravar(n, 6, cqc5_d(p + 4) as u32);
         gravar(n, 7, cqc5_w(p + 0x2a) as u16 as u32);
         gravar(n, 8, cqc5_w(p + 0x28) as u16 as u32);
-        if cqc5_humano(casa) {
+        if cup_has_human_manager(casa) {
             gravar(n, 3, cqc5_d(p + 0xc) as u32);
             gravar(n, 4, cqc5_d(p + 0x10) as u32);
         } else {
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
         entregar(cqc5_d(0xb7431c), n, casa);
         entregar(cqc5_d(0xb7431c), n, fora);
     }
-    let e = cpq11_rodada(this, ri);
+    let e = round_entry(this, ri);
     if cqc5_d(cqc5_d(0xadadfc) + id * 4) == 0 || cqc5_b(e + 0x21) != 2 {
         return 1;
     }
@@ -235,14 +235,14 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
     cqc5_pd(p + 0xc, i2);
     cqc5_pd(p + 0x10, i1);
     cqc5_pd(p + 0x1c, c2);
-    let e = cpq11_rodada(this, ri);
+    let e = round_entry(this, ri);
     estadio(cqc5_d(0xdd7ef4), cqc5_d(e + 0x13), p, cqc5_d(this + 0x24));
-    cqc5_ao_calendario(p);
+    add_fixture_to_calendar(p);
     1
 }
 
 /// (ano, dia) + n dias (o dia vai de 0 a 364, ou 365 no bissexto da 0x549ef0).
-fn cqc5_somar((ano, dia): (i32, i32), n: i32) -> (i32, i32) {
+fn add_days_to_day_year((ano, dia): (i32, i32), n: i32) -> (i32, i32) {
     let (mut a, mut d) = (ano, dia + n);
     loop {
         let t = if crate::data::bissexto(a as u16) == 1 { 366 } else { 365 };
@@ -257,7 +257,7 @@ fn cqc5_somar((ano, dia): (i32, i32), n: i32) -> (i32, i32) {
 /// Os jogos do clube (id) na competição de hoje até (ano, dia) (0x5acbe0: lista nula, tipo 0xfe e lado 0xff
 /// quaisquer), para o comparador. A janela não passa de onde a 0x5aa680 pode pôr os jogos novos + 14 dias: a busca cria
 /// o bloco do ano que faltar (0x5abf10).
-unsafe fn cqc5_jogos(clube: u32, comp: u32, (ano, dia): (i32, i32)) -> u32 {
+unsafe fn club_fixtures_until(clube: u32, comp: u32, (ano, dia): (i32, i32)) -> u32 {
     let achar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 =
         core::mem::transmute(0x5acbe0usize);
     achar(cqc5_d(0xae2a58), cqc5_w(0xae2c90) as u16 as u32, cqc5_w(0xae2c92) as u16 as u32, dia as u32, ano as u32, clube, 0,
@@ -269,15 +269,15 @@ unsafe fn cqc5_jogos(clube: u32, comp: u32, (ano, dia): (i32, i32)) -> u32 {
 /// adiar, 3 ao criar) e, criando com os dois times, os jogos do mandante na competição sobem 1 (2 na de duas mãos com a
 /// copa ainda ativa).
 unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I0%%);
     let ri = rodada as i16 as i32;
     let id = cqc5_d(cqc5_d(this + 4)) as u32;
     let (mut k, mut ad) = (confronto as i16 as i32, adiar);
     if k == -1 {
-        let n = cqc5_w(cpq11_rodada(this, ri) + 0x1a) as i32;
+        let n = cqc5_w(round_entry(this, ri) + 0x1a) as i32;
         k = -1;
         for i in 0..n.max(0) {
-            let m = cqc5_b(cpq11_confronto(this, ri, i) + 0x34);
+            let m = cqc5_b(tie_of_round(this, ri, i) + 0x34);
             if m == 1 || m == 2 {
                 k = i;
                 ad = (m == 1) as u32;
@@ -290,11 +290,11 @@ unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u3
             return r;
         }
     }
-    let t = cpq11_confronto(this, ri, k);
+    let t = tie_of_round(this, ri, k);
     let completo = cqc5_w(t) != -1 && cqc5_w(t + 2) != -1;
-    let e = cpq11_rodada(this, ri);
+    let e = round_entry(this, ri);
     let duas = cqc5_b(e + 0x21) == 2;
-    let casa = if completo { cqc5_d(cpq11_time(this, cqc5_w(t))) } else { 0 };
+    let casa = if completo { cqc5_d(cup_team_entry(this, cqc5_w(t))) } else { 0 };
     let ic = if casa != 0 { cqc5_d(casa) as u32 } else { u32::MAX };
     let conferir = ad == 0 && completo && ic != u32::MAX;
     // o fim da janela: a data da rodada (+ os dias até a volta), amanhã ou a data da rodada seguinte (+0x6b/+0x6d), o
@@ -302,15 +302,15 @@ unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u3
     // rodada seguinte (sem ela, 2 semanas), os outros tipos até 2 semanas depois; com mais ligas acontece (a 1a rodada
     // da copa 101, 2001-225, foi a mais de 7 dias)
     let ida = (cqc5_b(e + 5) as i8 as i32 + cqc5_w(this + 0x40) as i32, cqc5_w(e + 3) as i32);
-    let ultimo = if duas { cqc5_somar(ida, cqc5_b(e + 0x22) as i32) } else { ida };
-    let amanha = cqc5_somar((cqc5_w(0xae2c92) as u16 as i32, cqc5_w(0xae2c90) as i32), 1);
+    let ultimo = if duas { add_days_to_day_year(ida, cqc5_b(e + 0x22) as i32) } else { ida };
+    let amanha = add_days_to_day_year((cqc5_w(0xae2c92) as u16 as i32, cqc5_w(0xae2c90) as i32), 1);
     let seguinte = if ri < cqc5_w(this + 0x3c) as i32 - 1 {
         (cqc5_b(e + 0x6d) as i8 as i32 + cqc5_w(this + 0x40) as i32, cqc5_w(e + 0x6b) as i32)
     } else {
         ultimo
     };
-    let fim = cqc5_somar(ultimo.max(amanha).max(seguinte), 14);
-    let antes = if conferir { cqc5_jogos(ic, id, fim) } else { 0 };
+    let fim = add_days_to_day_year(ultimo.max(amanha).max(seguinte), 14);
+    let antes = if conferir { club_fixtures_until(ic, id, fim) } else { 0 };
     let r = o(this, rodada, confronto, adiar);
     let marca = cqc5_b(t + 0x34);
     let mut ok = r == 1 && marca == if ad != 0 { 2 } else { 3 };
@@ -318,7 +318,7 @@ unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u3
     let mut depois = 0;
     if conferir && cqc5_d(cqc5_d(0xadadfc) + id as usize * 4) != 0 {
         esperado = 1 + duas as u32;
-        depois = cqc5_jogos(ic, id, fim);
+        depois = club_fixtures_until(ic, id, fim);
         ok = ok && depois == antes + esperado;
     }
     PLACAR.registrar(ok, || format!("create_tie_fixtures(rodada {}, confronto {}, adiar {}) devolveu {} marca {} jogos {} -> {} (esperado +{})",
@@ -335,13 +335,13 @@ unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u3
 /// (0x7861e0: push clube; push &notícia; mov ecx, [0xb7431c] -> thiscall, ret 8; os possíveis só se não nulos).
 unsafe extern "thiscall" fn post_draw_news(this: usize, rodada: u32, confronto: u32) {
     let ri = rodada as i16 as i32;
-    let t = cpq11_confronto(this, ri, confronto as i16 as i32);
+    let t = tie_of_round(this, ri, confronto as i16 as i32);
     let (mut a1, mut a2, mut b1, mut b2, mut casa) = (0usize, 0usize, 0usize, 0usize, 0usize);
     let h = cqc5_w(t);
     if h != -1 && cqc5_w(t + 2) != -1 {
         return;
     }
-    if cqc5_w(cpq11_rodada(this, ri) + 0x1a) < 2 {
+    if cqc5_w(round_entry(this, ri) + 0x1a) < 2 {
         return;
     }
     if h == -1 {
@@ -349,15 +349,15 @@ unsafe extern "thiscall" fn post_draw_news(this: usize, rodada: u32, confronto: 
         if r2 == -1 {
             return;
         }
-        let o = cpq11_confronto(this, r2 as i32, cqc5_w(t + 0xa) as i32);
+        let o = tie_of_round(this, r2 as i32, cqc5_w(t + 0xa) as i32);
         let (x, y) = (cqc5_w(o), cqc5_w(o + 2));
         if x == -1 || y == -1 {
             return;
         }
-        a1 = cqc5_d(cpq11_time(this, x));
-        a2 = cqc5_d(cpq11_time(this, y));
+        a1 = cqc5_d(cup_team_entry(this, x));
+        a2 = cqc5_d(cup_team_entry(this, y));
     } else {
-        casa = cqc5_d(cpq11_time(this, h));
+        casa = cqc5_d(cup_team_entry(this, h));
     }
     let fora;
     let v = cqc5_w(t + 2);
@@ -366,16 +366,16 @@ unsafe extern "thiscall" fn post_draw_news(this: usize, rodada: u32, confronto: 
         if r2 == -1 {
             return;
         }
-        let o = cpq11_confronto(this, r2 as i32, cqc5_w(t + 0xc) as i32);
+        let o = tie_of_round(this, r2 as i32, cqc5_w(t + 0xc) as i32);
         let (x, y) = (cqc5_w(o), cqc5_w(o + 2));
         if x == -1 || y == -1 {
             return;
         }
-        b1 = cqc5_d(cpq11_time(this, x));
-        b2 = cqc5_d(cpq11_time(this, y));
+        b1 = cqc5_d(cup_team_entry(this, x));
+        b2 = cqc5_d(cup_team_entry(this, y));
         fora = 0;
     } else {
-        fora = cqc5_d(cpq11_time(this, v));
+        fora = cqc5_d(cup_team_entry(this, v));
     }
     crate::comparacao::ramo("cqc_5 confronto pendente");
     let mut noticia = [0u32; 0x38];
@@ -386,7 +386,7 @@ unsafe extern "thiscall" fn post_draw_news(this: usize, rodada: u32, confronto: 
     construir(n, 0x26, 0);
     gravar(n, 0, cqc5_d(cqc5_d(this + 4)) as u32);
     gravar(n, 1, cqc5_w(this + 0x3a) as i32 as u32);
-    gravar(n, 2, cqc5_w(cpq11_rodada(this, ri) + 7) as i32 as u32);
+    gravar(n, 2, cqc5_w(round_entry(this, ri) + 7) as i32 as u32);
     if casa != 0 {
         gravar(n, 3, cqc5_d(casa) as u32);
         gravar(n, 4, u32::MAX);
@@ -426,7 +426,7 @@ unsafe extern "thiscall" fn post_draw_news(this: usize, rodada: u32, confronto: 
 
 /// Comparador da 0x522950: só a original (a notícia vai aos técnicos e não tem outro efeito).
 unsafe extern "thiscall" fn comparar_post_draw_news(this: usize, rodada: u32, confronto: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I1%%)(this, rodada, confronto) // ponytail: só a notícia
+    original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I1%%)(this, rodada, confronto) // ponytail: só a notícia
 }
 
 /// { 0x8c6bc0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: as datas locais):
@@ -514,5 +514,5 @@ unsafe extern "thiscall" fn update_transfer_window_news(this: usize, hoje: usize
 /// Comparador da 0x8c6bc0: só a original (ela só grava nas locais; os avisos das regras alocam notícias e as ofertas
 /// em espera mudam de status e são reagendadas).
 unsafe extern "thiscall" fn comparar_update_transfer_window_news(this: usize, hoje: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, hoje) // ponytail: nada próprio a conferir
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, hoje) // ponytail: nada próprio a conferir
 }

@@ -15,7 +15,7 @@ unsafe extern "C" fn get_regions_sorted_by_name(idioma: u32) -> usize {
 }
 
 unsafe extern "C" fn comparar_get_regions_sorted_by_name(idioma: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(u32) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(%%I0%%);
     let reg = [(0xae2104, 14), (0xae232b, 1)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(idioma), || get_regions_sorted_by_name(idioma));
     PLACAR.registrar(igual && r == n, || format!("get_regions_sorted_by_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8, r, n, mo, mr));
@@ -39,11 +39,11 @@ unsafe extern "C" fn compare_region_names(a: usize, b: usize) -> i32 {
     let mut nb = [0u8; 0xc8];
     nome(*(a as *const u8) as u32, na.as_mut_ptr() as usize, 0xc8, idioma);
     nome(*(b as *const u8) as u32, nb.as_mut_ptr() as usize, 0xc8, idioma);
-    dbr_comparar_textos(na.as_ptr(), nb.as_ptr()) // (dbt)
+    compare_text_nocase(na.as_ptr(), nb.as_ptr()) // (dbt)
 }
 
 unsafe extern "C" fn comparar_compare_region_names(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_region_names(a, b);
     PLACAR.registrar(r == n, || format!("compare_region_names({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -78,7 +78,7 @@ unsafe extern "C" fn staff_get_opinion_link_staff(pessoa: usize, alvo: u32) -> u
 }
 
 unsafe extern "C" fn comparar_staff_get_opinion_link_staff(pessoa: usize, alvo: u32) -> usize {
-    let r = orig::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%)(pessoa, alvo);
+    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%)(pessoa, alvo);
     let n = staff_get_opinion_link_staff(pessoa, alvo);
     PLACAR.registrar(r == n, || format!("staff_get_opinion_link_staff({:x}, {:x}) original={:x} rust={:x}", pessoa, alvo, r, n));
     r

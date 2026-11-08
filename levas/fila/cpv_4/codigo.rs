@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn add_transfer_negotiation(this: usize, oferta: usize,
         let v = cpv4_d(this + 0xc);
         match (0..cap.max(0) as usize).find(|&j| cpv4_d(v + 4 * j) == 0) {
             Some(j) => k = j,
-            None => return aviso_em(0xa8d514, 0x60f),
+            None => return show_error_at(0xa8d514, 0x60f),
         }
         crate::comparacao::ramo("cpv_4 vaga nova");
         cpv4_pd(oferta + 0x28, k);
@@ -229,15 +229,15 @@ unsafe extern "thiscall" fn post_player_rejects_move_news(this: usize, oferta: u
 // ponytail: aloca e libera negociações e listas, agenda a oferta e manda notícias: não roda duas vezes. Só a original;
 // a cópia leva os ramos e se prova pela carreira e pelas mutações.
 unsafe extern "thiscall" fn comparar_add_transfer_negotiation(this: usize, oferta: usize, termos: usize, marcar: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, oferta, termos, marcar)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, oferta, termos, marcar)
 }
 
 // ponytail: sorteia e a notícia vai às caixas (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_job_rumour_news(this: usize, pessoa: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, pessoa, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, pessoa, clube)
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_player_rejects_move_news(this: usize, oferta: usize, motivo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, oferta, motivo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, oferta, motivo)
 }

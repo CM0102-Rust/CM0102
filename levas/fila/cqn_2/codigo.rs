@@ -14,7 +14,7 @@ unsafe fn cqn2_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha:
     let j = alocar((t.len() * 6) as u32);
     core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
     if j == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return;
     }
     for (k, r) in t.iter().enumerate() {
@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn greece_rules_init_transfer_windows(this: usize) {
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqn2_comparar`).
 unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     cqn2_comparar("greece_rules_init_transfer_windows", this, || o(this), |s| greece_rules_init_transfer_windows(s));
 }
 
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn greece_rules_init_transfer_windows_7ec7e0(this: usiz
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqn2_comparar`).
 unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_7ec7e0(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqn2_comparar("greece_rules_init_transfer_windows_7ec7e0", this, || o(this), |s| greece_rules_init_transfer_windows_7ec7e0(s));
 }
 
@@ -107,6 +107,6 @@ unsafe extern "thiscall" fn greece_rules_init_transfer_windows_424c00(this: usiz
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqn2_comparar`).
 unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_424c00(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqn2_comparar("greece_rules_init_transfer_windows_424c00", this, || o(this), |s| greece_rules_init_transfer_windows_424c00(s));
 }

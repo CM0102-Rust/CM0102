@@ -17,7 +17,7 @@ unsafe fn cql4_pd(a: usize, v: usize) {
 }
 
 /// A linha `i` da tabela [+0xb1] (0x3b bytes).
-unsafe fn cql4_linha(liga: usize, i: usize) -> usize {
+unsafe fn ita_ser_a_table_row(liga: usize, i: usize) -> usize {
     cql4_d(liga + 0xb1) + i * 0x3b
 }
 
@@ -27,7 +27,7 @@ unsafe fn cql4_linha(liga: usize, i: usize) -> usize {
 /// Copa da UEFA, logo depois; 4 as duas seguintes [inferência: a Intertoto]; 5 as `+0xc1` últimas de 18 (o
 /// rebaixamento); 0 o resto. A original monta as 18 faixas num registro local (16 + 2 bytes) e lê duas além com uma
 /// tabela de mais de 18 clubes; a cópia usa 64 bytes com zero depois das 18 (a Série A tem 18).
-unsafe fn cql4_faixas_da_serie_a(liga: usize) -> [u8; 64] {
+unsafe fn serie_a_zones(liga: usize) -> [u8; 64] {
     let vagas: unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8) = core::mem::transmute(0x905c60usize);
     let mut z = [0u8; 64];
     z[0] = 1;
@@ -68,7 +68,7 @@ unsafe fn cql4_faixas_da_serie_a(liga: usize) -> [u8; 64] {
 
 /// As faixas da Série B: 1 o campeão; 2 as 3 vagas seguintes de acesso; 3 as 4 últimas de 20 (o rebaixamento); 0 o
 /// resto (registro local de 20 bytes na original).
-fn cql4_faixas_da_serie_b() -> [u8; 64] {
+fn serie_b_zones() -> [u8; 64] {
     let mut z = [0u8; 64];
     z[0] = 1;
     z[1] = 2;
@@ -81,10 +81,10 @@ fn cql4_faixas_da_serie_b() -> [u8; 64] {
 }
 
 /// Há duas linhas vizinhas com os mesmos pontos (+0x19) em faixas diferentes? (a conferência do comparador)
-unsafe fn cql4_empate_na_fronteira(liga: usize, z: &[u8; 64]) -> bool {
+unsafe fn tie_on_zone_boundary(liga: usize, z: &[u8; 64]) -> bool {
     let n = cql4_w(liga + 0x3e) as i32 - 1;
     (0..n.max(0) as usize).any(|i| {
-        let l = cql4_linha(liga, i);
+        let l = ita_ser_a_table_row(liga, i);
         cql4_w(l + 0x19) == cql4_w(l + 0x3b + 0x19) && z[i.min(63)] != z[(i + 1).min(63)]
     })
 }
@@ -93,7 +93,7 @@ unsafe fn cql4_empate_na_fronteira(liga: usize, z: &[u8; 64]) -> bool {
 /// dia de liga (League::update_for_date 0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja
 /// devolução ela repassa. Depois, no fim da temporada (+0xdd), na fase principal (+0x2c = 0, sem fases criadas), com
 /// `completo` e com +0xe6 [inferência: a tabela fechada]: zera +0x4c e procura, de cima para baixo, o primeiro par de
-/// clubes vizinhos com os mesmos pontos em faixas diferentes (cql4_faixas_da_serie_a). Achando: ordena os empatados
+/// clubes vizinhos com os mesmos pontos em faixas diferentes (serie_a_zones). Achando: ordena os empatados
 /// pelo confronto direto (0x6471a0: push pontos; mov ecx, this -> thiscall, ret 4), cria o vetor de 1 fase (+0x2c =
 /// 1, +0xc = malloc 0x944e46 de 4: push 4; add esp, 4 -> cdecl) e chama a virtual +0x28 (a fase seguinte: o jogo de
 /// desempate). Sem empate na fronteira: +0xdd = 0, +0xe6 = 0 e a virtual +0x94 (League::update_positions_and_status).
@@ -109,14 +109,14 @@ unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, hoje: usize, 
     if cql4_d(this + 0xdd) == 0 || cql4_d(this + 0x2c) != 0 || completo == 0 || cql4_d(this + 0xe6) == 0 {
         return r;
     }
-    let z = cql4_faixas_da_serie_a(this);
+    let z = serie_a_zones(this);
     let n = cql4_w(this + 0x3e) as i32 - 1;
     cql4_pd(this + 0x4c, 0);
     crate::comparacao::ramo("cql_4 fim da serie a");
     let mut i: i16 = 0;
     if n > 0 {
         loop {
-            let l = cql4_linha(this, i as usize);
+            let l = ita_ser_a_table_row(this, i as usize);
             let pontos = cql4_w(l + 0x19);
             if pontos == cql4_w(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: o par da Série A na fronteira
                 ordenar(this, pontos as u16 as u32);
@@ -154,13 +154,13 @@ unsafe extern "thiscall" fn ita_ser_a_update_for_date_647050(this: usize, hoje: 
     if cql4_d(this + 0xdd) == 0 || cql4_d(this + 0x2c) != 0 || completo == 0 || cql4_d(this + 0xe6) == 0 {
         return r;
     }
-    let z = cql4_faixas_da_serie_b();
+    let z = serie_b_zones();
     cql4_pd(this + 0x4c, 0);
     crate::comparacao::ramo("cql_4 fim da serie b");
     let mut achou = false;
     let mut i: i16 = 0;
     while (i as i32) < cql4_w(this + 0x3e) as i32 - 1 {
-        let l = cql4_linha(this, i as usize);
+        let l = ita_ser_a_table_row(this, i as usize);
         let pontos = cql4_w(l + 0x19);
         if pontos == cql4_w(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: o par da Série B na fronteira
             achou = true;
@@ -187,13 +187,13 @@ unsafe extern "thiscall" fn ita_ser_a_update_for_date_647050(this: usize, hoje: 
 /// ela garante. Na fase principal e com `completo`: se a fase do desempate foi criada (+0x2c mudou), há na tabela um
 /// par vizinho empatado em faixas diferentes; e a original nunca sai com o fim da temporada pendente (+0xdd e +0xe6
 /// ligados e +0x2c = 0), porque ou cria a fase ou os zera.
-unsafe fn cql4_comparar(nome: &str, this: usize, completo: u32, faixas: impl Fn() -> [u8; 64], original: impl FnOnce() -> u32) -> u32 {
+unsafe fn compare_league_day(nome: &str, this: usize, completo: u32, faixas: impl Fn() -> [u8; 64], original: impl FnOnce() -> u32) -> u32 {
     let fases = cql4_d(this + 0x2c);
     let r = original();
     if completo != 0 && fases == 0 {
         if cql4_d(this + 0x2c) != 0 {
             let z = faixas();
-            PLACAR.registrar(cql4_empate_na_fronteira(this, &z) && cql4_d(this + 0xc) != 0, || format!("{}({:#x}): fase do desempate sem empate na fronteira (+0xc = {:#x})", nome, this, cql4_d(this + 0xc)));
+            PLACAR.registrar(tie_on_zone_boundary(this, &z) && cql4_d(this + 0xc) != 0, || format!("{}({:#x}): fase do desempate sem empate na fronteira (+0xc = {:#x})", nome, this, cql4_d(this + 0xc)));
         } else {
             PLACAR.registrar(!(cql4_d(this + 0xdd) != 0 && cql4_d(this + 0xe6) != 0), || format!("{}({:#x}): o fim da temporada ficou pendente (+0xdd e +0xe6 ligados)", nome, this));
         }
@@ -202,13 +202,13 @@ unsafe fn cql4_comparar(nome: &str, this: usize, completo: u32, faixas: impl Fn(
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
-    cql4_comparar("ita_ser_a_update_for_date", this, completo, || cql4_faixas_da_serie_a(this), || o(this, hoje, completo))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    compare_league_day("ita_ser_a_update_for_date", this, completo, || serie_a_zones(this), || o(this, hoje, completo))
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date_647050(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
-    cql4_comparar("ita_ser_a_update_for_date_647050", this, completo, cql4_faixas_da_serie_b, || o(this, hoje, completo))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
+    compare_league_day("ita_ser_a_update_for_date_647050", this, completo, serie_b_zones, || o(this, hoje, completo))
 }
 
 /// { 0x6471a0 } (thiscall, ret 4, ita_ser_b.cpp; chamada também pela da Série A): `ita_league_sort_clubs_level_on_points
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(this: usize, p
     qsort(primeira, quantas as u16 as i16 as i32, 0x3b, 0x683410); // cql4: o bloco dos empatados
     let mut i: i16 = 0;
     while i < cql4_w(this + 0x3e) {
-        *((cql4_linha(this, i as usize) + 4) as *mut u8) = i as u8;
+        *((ita_ser_a_table_row(this, i as usize) + 4) as *mut u8) = i as u8;
         i += 1;
     }
 }
@@ -246,7 +246,7 @@ unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(this: usize, p
 /// Lado a lado na tabela inteira (a 0x682b30 grava +4 de cada linha e solta a sua minitabela; o qsort só mexe no
 /// bloco).
 unsafe extern "thiscall" fn comparar_ita_league_sort_clubs_level_on_points(this: usize, pontos: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%);
     let t = cql4_d(this + 0xb1);
     let n = cql4_w(this + 0x3e).max(0) as usize;
     if t == 0 || n == 0 {
@@ -318,7 +318,7 @@ unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status(this: usiz
     let n = cql4_w(this + 0x3e);
     let mut k: i16 = 0;
     while k < n {
-        if cql4_b(cql4_linha(this, k as usize) + 0x37) == 1 {
+        if cql4_b(ita_ser_a_table_row(this, k as usize) + 0x37) == 1 {
             return 0xffff_ffff;
         }
         k += 1;
@@ -336,7 +336,7 @@ unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status(this: usiz
 /// Na liga e no desempate com a situação 1 há chamadas que não rodam duas vezes (os registros da base, a ordenação, as
 /// virtuais): só a original. Nas outras situações a cópia só devolve −1: compara a devolução.
 unsafe extern "thiscall" fn comparar_ita_ser_a_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I3%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I3%%);
     let r = o(this, clube, situacao, fase, a4, jogo, a6);
     if fase as u8 != 0xff && situacao as u8 != 1 {
         PLACAR.registrar(r == 0xffff_ffff, || format!("ita_ser_a_update_staff_records_for_status: devolveu {:#x}", r));

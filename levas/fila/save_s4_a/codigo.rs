@@ -1,12 +1,12 @@
 // ---------- %%LEVA%%a leva: o save: carregar o jogo inteiro (load_game_data) (Setup.cpp) ----------
 
-/// A caixa "Error" da carga sem volta (memória para os dados de execução): `aviso_do_setup(linha)`,
+/// A caixa "Error" da carga sem volta (memória para os dados de execução): `setup_warning(linha)`,
 /// 0x5cc7d0, 0x5a8f60 e `exit(-1)` (0x945934).
-unsafe fn fatal_da_carga(linha: u32) -> ! {
+unsafe fn load_fatal_error(linha: u32) -> ! {
     let fechar1: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
     let fechar2: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
     let sair: unsafe extern "C" fn(i32) = core::mem::transmute(0x945934usize);
-    aviso_do_setup(linha);
+    setup_warning(linha);
     fechar1();
     fechar2();
     sair(-1);
@@ -14,10 +14,10 @@ unsafe fn fatal_da_carga(linha: u32) -> ! {
 }
 
 /// A leitura do `general.dat` que falhou: a caixa "Load Game Error" com a linha e o texto (como a
-/// `caixa_do_save`) e o item fechado (0x932b00). Devolve 0, a resposta da carga.
-unsafe fn erro_na_carga(linha: u32, texto: usize, z: &mut usize) -> u32 {
+/// `save_error_box`) e o item fechado (0x932b00). Devolve 0, a resposta da carga.
+unsafe fn load_read_error(linha: u32, texto: usize, z: &mut usize) -> u32 {
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    caixa_do_save(linha, texto, 0x9af3e0, 0x9af334);
+    save_error_box(linha, texto, 0x9af3e0, 0x9af334);
     fechar_item(z);
     0
 }
@@ -29,7 +29,7 @@ unsafe fn erro_na_carga(linha: u32, texto: usize, z: &mut usize) -> u32 {
 /// 0x3e042): +0xd = 0 e o bit 1 de +0xc apagado; 0x27 (0x3e042..0x3e044): +0xd do antigo e o bit 1
 /// de +0xc do antigo. Os 5 pares (+0x12 + 5j = 0, +0xe + 5j = −1) e os dwords +0x27/+0x2b/+0x2f/
 /// +0x33/+0x37 (+0x14j, j = 0, 1) = −1.
-unsafe fn converter_dados_das_pessoas(fonte: usize, tam: usize, n: i32) {
+unsafe fn convert_staff_state(fonte: usize, tam: usize, n: i32) {
     let d = || *(0xae2d0c as *const usize);
     let b = |o: usize| *((fonte + o) as *const u8);
     let mesclar = |base: u8, outro: u8, m: u8| base ^ ((base ^ outro) & m);
@@ -144,7 +144,7 @@ const PASSOS_DA_CARGA: [PassoDaCarga; 0x2b] = [
 /// `exigir` = a do começo (com os patches sem CD do cm0102-1080 lidos do exe: 0x82aac4 e 0x82ab07):
 /// devolve só quando acha (sem achar, a caixa "Insert CD" e de novo, para sempre). Sem `exigir` = a do fim
 /// (0x82e31d, sem patch nos dois exes): numa unidade de CD sem o exe, a caixa "CD Not Required" e para.
-unsafe fn cd_da_carga(exigir: bool) {
+unsafe fn check_game_cd(exigir: bool) {
     let units_digit: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
     let tipo: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(*(0x967100 as *const usize));
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -203,7 +203,7 @@ unsafe fn cd_da_carga(exigir: bool) {
 /// { 0x82a9c0 } (cdecl, Setup.cpp, ~14,6 KB, SEH): `load_game_data(caminho)`: carrega o save inteiro.
 /// Devolve 1 se carregou.
 /// - Disco (0x7a1820(0) < 25 liga [0xdd7134]) e memória ([0x9cd1fc] e 0x7a1710() < 50 liga [0xdd7138]);
-///   a pasta temporária (0x90bde0 "CM3_TEMP"); o CD (`cd_da_carga`); `caminho` nulo dá a caixa "Error"
+///   a pasta temporária (0x90bde0 "CM3_TEMP"); o CD (`check_game_cd`); `caminho` nulo dá a caixa "Error"
 ///   0x233b. O banco: 0x528080 se [0xae23a8] ≠ 0 e 0x524d10(caminho, 1) (a resposta não é olhada).
 /// - "Loading game data" e a barra 0x802f80 (passo de 0x2d); limpa os `*.tmp` (0x90cd50), o espaço
 ///   deles (0x933860, em MB, 0 vira 25) contra o disco, desempacota (0x933320; falha: "Disk Space
@@ -213,7 +213,7 @@ unsafe fn cd_da_carga(exigir: bool) {
 ///   depois, com [0xdd7140] = o tempo de jogo dele); [0xdd7144] = time(); o id único, o tamanho do banco,
 ///   as datas e horas (a do jogo num local), as ligas, a nação padrão ([0xae2d08] = nação id, ou 0 se
 ///   < 0), os dados de execução das pessoas ([0xae2d0c], 0x4f × [0xae2d10]; os saves antigos convertidos
-///   por `converter_dados_das_pessoas`; |v| < 0x3e018 apaga o bit 7 de +0xb das [0xae2364] primeiras),
+///   por `convert_staff_state`; |v| < 0x3e018 apaga o bit 7 de +0xb das [0xae2364] primeiras),
 ///   dos clubes ([0xae2d14], 6 × [0xae2d18] = [0xae235c]; |v| < 0x3e022: −1, 0, 0) e a reputação
 ///   ([0xae2d1c], 4 × [0xae235c]; |v| < 0x3e022 não lê e chama 0x53db40(1)). Leitura que falha: "Load
 ///   Game Error" com a linha e o texto do campo, item fechado; sem memória: "Error" e o jogo fecha.
@@ -268,10 +268,10 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
         return 0;
     }
     let mut temporaria = [0u8; 0x104];
-    copiar_texto(temporaria.as_mut_ptr(), pasta(0x987da0, 0xad9c64));
-    cd_da_carga(true);
+    copy_text(temporaria.as_mut_ptr(), pasta(0x987da0, 0xad9c64));
+    check_game_cd(true);
     if caminho.is_null() {
-        aviso_do_setup(0x233b);
+        setup_warning(0x233b);
         return 0;
     }
     if u(0xae23a8) != 0 {
@@ -304,7 +304,7 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     }
     barra(0xb74450, texto.as_ptr(), 2, 0x2d, -1);
     if desempacotar(caminho, temporaria.as_ptr(), 0xa813ac) == 0 {
-        caixa_do_save(0x2382, 0xa81758, 0x9c7774, 0x9c7680);
+        save_error_box(0x2382, 0xa81758, 0x9c7774, 0x9c7680);
         return 0;
     }
     if falta_espaco(0x19) {
@@ -313,12 +313,12 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     barra(0xb74450, texto.as_ptr(), 3, 0x2d, -1);
     let mut z = abrir_item(caminho, 0x9c7b84, 0, 0x15, 4);
     if z == 0 {
-        caixa_do_save(0x2397, 0xa81720, 0x9af3e0, 0x9af334);
+        save_error_box(0x2397, 0xa81720, 0x9af3e0, 0x9af334);
         return 0;
     }
     let mut versao = 0i32;
     if ler(&mut versao as *mut i32 as usize, 4, 1, z) != 1 {
-        return erro_na_carga(0x239e, 0xa816e0, &mut z);
+        return load_read_error(0x239e, 0xa816e0, &mut z);
     }
     *(0xdd7110 as *mut i32) = versao;
     let v = versao.wrapping_abs();
@@ -326,12 +326,12 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     if v >= 0x3e023 {
         if v < 0x3e027 {
             if ler(resumo.as_mut_ptr() as usize, 0xf70, 1, z) != 1 {
-                return erro_na_carga(0x23b2, 0xa816a4, &mut z);
+                return load_read_error(0x23b2, 0xa816a4, &mut z);
             }
             resumo[0xf70..].fill(0);
         } else {
             if ler(resumo.as_mut_ptr() as usize, 0xf74, 1, z) != 1 {
-                return erro_na_carga(0x23bf, 0xa816a4, &mut z);
+                return load_read_error(0x23bf, 0xa816a4, &mut z);
             }
             *(0xdd7140 as *mut u32) = core::ptr::read_unaligned(resumo.as_ptr().add(0xf6c) as *const u32);
         }
@@ -353,32 +353,32 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     ];
     for (buf, tam, linha, msg) in campos {
         if ler(buf, tam, 1, z) != 1 {
-            return erro_na_carga(linha, msg, &mut z);
+            return load_read_error(linha, msg, &mut z);
         }
     }
     *(0xae2d08 as *mut usize) = if nacao > -1 { (u(0xae23a8) as usize).wrapping_add((nacao as usize).wrapping_mul(0x122)) } else { 0 };
     if ler(0xae2d10, 4, 1, z) != 1 {
-        return erro_na_carga(0x2420, 0xa81450, &mut z);
+        return load_read_error(0x2420, 0xa81450, &mut z);
     }
     let pessoas = reservar(u(0xae2d10).wrapping_mul(0x4f));
     *(0xae2d0c as *mut usize) = pessoas;
     if pessoas == 0 {
-        fatal_da_carga(0x2427);
+        load_fatal_error(0x2427);
     }
     if v < 0x3e045 {
         // os saves antigos: registros de 0x26 (|v| < 0x3e042) ou 0x27 bytes, convertidos
         let (tam, linha_mem, linha_ler) = if v < 0x3e042 { (0x26u32, 0x242f, 0x2434) } else { (0x27, 0x24bd, 0x24c2) };
         let antigos = reservar(u(0xae2d10).wrapping_mul(tam));
         if antigos == 0 {
-            fatal_da_carga(linha_mem);
+            load_fatal_error(linha_mem);
         }
         if ler(antigos, tam, u(0xae2d10), z) != u(0xae2d10) as i32 {
-            return erro_na_carga(linha_ler, 0xa81418, &mut z);
+            return load_read_error(linha_ler, 0xa81418, &mut z);
         }
-        converter_dados_das_pessoas(antigos, tam as usize, u(0xae2d10) as i32);
+        convert_staff_state(antigos, tam as usize, u(0xae2d10) as i32);
         soltar(antigos);
     } else if ler(pessoas, 0x4f, u(0xae2d10), z) != u(0xae2d10) as i32 {
-        return erro_na_carga(0x24f0, 0xa81418, &mut z);
+        return load_read_error(0x24f0, 0xa81418, &mut z);
     }
     if v < 0x3e018 {
         for i in 0..u(0xae2364) as i32 {
@@ -389,7 +389,7 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     let clubes = reservar(u(0xae235c).wrapping_mul(6));
     *(0xae2d14 as *mut usize) = clubes;
     if clubes == 0 {
-        fatal_da_carga(0x2503);
+        load_fatal_error(0x2503);
     }
     if v < 0x3e022 {
         for i in 0..u(0xae2d18) as i32 {
@@ -401,29 +401,29 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
         let r = reservar(u(0xae235c).wrapping_mul(4));
         *(0xae2d1c as *mut usize) = r;
         if r == 0 {
-            fatal_da_carga(0x2516);
+            load_fatal_error(0x2516);
         }
         reputacao_inicial(1);
     } else {
         if ler(clubes, 6, u(0xae2d18), z) != u(0xae2d18) as i32 {
-            return erro_na_carga(0x251f, 0xa813e0, &mut z);
+            return load_read_error(0x251f, 0xa813e0, &mut z);
         }
         let r = reservar(u(0xae235c).wrapping_mul(4));
         *(0xae2d1c as *mut usize) = r;
         if r == 0 {
-            fatal_da_carga(0x2528);
+            load_fatal_error(0x2528);
         }
         if ler(r, 4, u(0xae235c), z) != u(0xae235c) as i32 {
-            aviso_do_setup(0x252c);
+            setup_warning(0x252c);
             fechar_item(&mut z);
             return 0;
         }
     }
     fechar_item(&mut z);
-    for (i, passo) in PASSOS_DA_CARGA.iter().enumerate() {
+    for (i, step_towards) in PASSOS_DA_CARGA.iter().enumerate() {
         let k = (i as u32 + 4).min(0x2d);
         if k == 9 {
-            tecnicos_de_ferias_desfeitos();
+            undo_holiday_managers();
         }
         if i == PASSOS_DA_CARGA.len() - 1 && v < 0x3e032 {
             let acertar: unsafe extern "C" fn(usize) = core::mem::transmute(0x538bc0usize);
@@ -435,11 +435,11 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
             return 0;
         }
         barra(0xb74450, texto.as_ptr(), k, 0x2d, -1);
-        match *passo {
+        match *step_towards {
             PassoDaCarga::Rotina(f, linha) => {
                 let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(f);
                 if f() == 0 && linha != 0 {
-                    aviso_do_setup(linha);
+                    setup_warning(linha);
                     return 0;
                 }
                 if k == 5 {
@@ -482,7 +482,7 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
                 // o FOG_OF_WAR confere o global de Media (como na gravação)
                 let conferido = if k == 0x29 { u(0xb6b7c8) as usize } else { o };
                 if conferido == 0 {
-                    aviso_do_setup(linha);
+                    setup_warning(linha);
                     return 0;
                 }
                 if k == 0x22 {
@@ -520,7 +520,7 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
         }
     }
     if existe(0xa80340) == 0 {
-        cd_da_carga(false);
+        check_game_cd(false);
     }
     1
 }
@@ -531,7 +531,7 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
 /// NationalTeams 0x775ba0, Staff_Records 0x86fb80/0x86fc70 (cada um com o global como está), os três
 /// nomes vazios, +0x10 = data(1, 0, 1966, −1) (0x54a130), +0x18 = 1966, +0x24 = +0x39 = 0 e 0x7ff990
 /// (gerente de telas, pessoa, −1).
-unsafe fn tecnicos_de_ferias_desfeitos() {
+unsafe fn undo_holiday_managers() {
     let u = |a: usize| *(a as *const usize);
     let um: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x787630usize);
     for i in 0..0x10usize {
@@ -566,5 +566,5 @@ unsafe fn tecnicos_de_ferias_desfeitos() {
 // ponytail: carrega o save inteiro (apaga e recria os subsistemas, desempacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela carga da prova do save.
 unsafe extern "C" fn comparar_load_game_data(caminho: *const u8) -> u32 {
-    orig::<unsafe extern "C" fn(*const u8) -> u32>(%%I0%%)(caminho)
+    original_fn::<unsafe extern "C" fn(*const u8) -> u32>(%%I0%%)(caminho)
 }

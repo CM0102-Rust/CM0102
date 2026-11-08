@@ -6,8 +6,8 @@
 #   inverno.
 MUTACOES = [
     ('cqj5_primeira_rebaixa_3',
-     'let caem = if cqj5_em_2001(this) { 2 } else { 3 }; // cqj5: a primeira rebaixa 2 em 2001',
-     'let caem = if cqj5_em_2001(this) { 3 } else { 3 }; // mutacao: rebaixa 3',
+     'let caem = if is_2001_season(this) { 2 } else { 3 }; // cqj5: a primeira rebaixa 2 em 2001',
+     'let caem = if is_2001_season(this) { 3 } else { 3 }; // mutacao: rebaixa 3',
      'cqj_5 regras da primeira'),
     ('cqj5_segunda_vitoria_vale_2',
      'v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqj5: a segunda dá 3 pontos pela vitória',

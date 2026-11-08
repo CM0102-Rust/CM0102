@@ -6,7 +6,7 @@ unsafe fn cqp1_d(a: usize) -> usize {
 
 /// O slot 0xa4 da vtable da liga (thiscall, sem argumentos) [inferência: fecha a classificação final da temporada e
 /// marca os que sobem e descem (+0x37 dos clubes), que a 0x689c80 lê].
-unsafe fn cqp1_fechar(liga: usize) {
+unsafe fn finalize_league_table(liga: usize) {
     let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqp1_d(cqp1_d(liga) + 0xa4));
     f(liga)
 }
@@ -23,11 +23,11 @@ unsafe extern "thiscall" fn league_process_promotion_relegation_chain(this: usiz
     crate::comparacao::ramo("cqp_1 cadeia");
     let trocar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) = core::mem::transmute(0x689c80usize);
     let mut acima = this;
-    cqp1_fechar(this); // cqp1: fecha a liga do topo
+    finalize_league_table(this); // cqp1: fecha a liga do topo
     let mut i = cqp1_d(this + 0x20) as i32;
     while i >= 0 {
         let abaixo = cqp1_d(cqp1_d(0xadadfc) + i as usize * 4);
-        cqp1_fechar(abaixo); // cqp1: fecha a de baixo
+        finalize_league_table(abaixo); // cqp1: fecha a de baixo
         trocar(this, acima, abaixo, 1, aos_pares, u32::MAX, u32::MAX); // cqp1: sobem e descem
         i = cqp1_d(abaixo + 0x20) as i32;
         acima = abaixo;
@@ -37,7 +37,7 @@ unsafe extern "thiscall" fn league_process_promotion_relegation_chain(this: usiz
 // ponytail: fecha temporadas e move clubes entre as ligas (contratos, técnicos, notícias): não roda duas vezes; só a
 // original. A cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_league_process_promotion_relegation_chain(this: usize, aos_pares: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, aos_pares)
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, aos_pares)
 }
 
 /// O técnico do clube é humano? (0x7875e0, stdcall de 1, já em Rust; o ecx = [0xb7431c] da original não conta.)
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn send_prize_money_news(this: usize, clube: usize, lo:
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_send_prize_money_news(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(%%I1%%)(this, clube, lo, hi, posicao, rodada, partida, tipo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(%%I1%%)(this, clube, lo, hi, posicao, rodada, partida, tipo)
 }
 
 /// { 0x48ea40 } (thiscall, ret 8, comp.cpp, `Comp::send_tv_rights_news(clube, valor)`; quadro SEH só pela notícia local):
@@ -118,5 +118,5 @@ unsafe extern "thiscall" fn send_tv_rights_news(this: usize, clube: usize, valor
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_send_tv_rights_news(this: usize, clube: usize, valor: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, clube, valor)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, clube, valor)
 }

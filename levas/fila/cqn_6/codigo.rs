@@ -26,7 +26,7 @@ unsafe fn cqn6_jogos(liga: usize) -> i32 {
 /// vetor é destruído (`eh vector destructor iterator` 0x9462bb: push 0x5a53c0; push conta; push 0x10; push vetor ->
 /// stdcall, ret 0x10; operator delete 0x944c94 do bloco: push; add esp, 4 -> cdecl) e +0xea = 0: a liga volta ao
 /// calendário sorteado.
-unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: usize, linha: u32) {
+unsafe fn set_up_fixed_fixtures_body(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: usize, linha: u32) {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let construir: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
     let destruir: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(0x9462bbusize);
@@ -43,7 +43,7 @@ unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
     };
     cqn6_pd(this + 0xea, vetor);
     if vetor == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return;
     }
     for (k, &(dia, mes, ano, casa, fora)) in tabela.iter().enumerate() {
@@ -71,17 +71,17 @@ unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
 /// { 0x64be90 } (thiscall, ret 0, ita_ser_c1a.cpp, 11.650 bytes): `ItaSerC1a::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/A 2001/02 (34 rodadas de 9). Fonte 0x9ea474, linha 0x3fd.
 unsafe extern "thiscall" fn ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
-    cqn6_fixos(this, &CQN6_C1A, 0x9ea474, 0x3fd)
+    set_up_fixed_fixtures_body(this, &CQN6_C1A, 0x9ea474, 0x3fd)
 }
 
 /// { 0x650100 } (thiscall, ret 0, ita_ser_c1b.cpp, 11.650 bytes): `ItaSerC1b::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/B 2001/02. Fonte 0x9ea558, linha 0x404.
 unsafe extern "thiscall" fn fra_first_set_up_fixed_fixtures(this: usize) {
-    cqn6_fixos(this, &CQN6_C1B, 0x9ea558, 0x404)
+    set_up_fixed_fixtures_body(this, &CQN6_C1B, 0x9ea558, 0x404)
 }
 /// O comparador das duas: alocam: só a original, conferindo o que ela garante: ou a lista ficou (+0xea com a conta n e
 /// cada jogo com os dois clubes achados), ou foi derrubada (+0xea = 0).
-unsafe fn cqn6_comparar(nome: &str, this: usize, original: impl FnOnce()) {
+unsafe fn fra_first_compare_fixed_fixtures(nome: &str, this: usize, original: impl FnOnce()) {
     original();
     let v = cqn6_d(this + 0xea);
     let n = cqn6_jogos(this);
@@ -90,13 +90,13 @@ unsafe fn cqn6_comparar(nome: &str, this: usize, original: impl FnOnce()) {
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqn6_comparar("ita_ser_c1a_set_up_fixed_fixtures", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    fra_first_compare_fixed_fixtures("ita_ser_c1a_set_up_fixed_fixtures", this, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_fra_first_set_up_fixed_fixtures(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqn6_comparar("fra_first_set_up_fixed_fixtures", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    fra_first_compare_fixed_fixtures("fra_first_set_up_fixed_fixtures", this, || o(this))
 }
 
 /// { 0x5bb540 } (thiscall, ret 8, fra_first.cpp, 8 bytes): `stub_return_one_ret8(a, b)`, o toco das competições que não
@@ -113,14 +113,14 @@ unsafe extern "thiscall" fn stub_return_one_ret4(_this: usize, _a: u32) -> u32 {
 
 /// Os dois tocos: compara a devolução.
 unsafe extern "thiscall" fn comparar_stub_return_one_ret8(this: usize, a: u32, b: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%)(this, a, b);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%)(this, a, b);
     let n = stub_return_one_ret8(this, a, b);
     PLACAR.registrar(r == n, || format!("stub_return_one_ret8: original={} rust={}", r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_stub_return_one_ret4(this: usize, a: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I3%%)(this, a);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I3%%)(this, a);
     let n = stub_return_one_ret4(this, a);
     PLACAR.registrar(r == n, || format!("stub_return_one_ret4: original={} rust={}", r, n));
     r

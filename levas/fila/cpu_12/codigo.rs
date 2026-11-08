@@ -12,15 +12,15 @@ unsafe fn cpu12_w(a: usize) -> i16 {
 const CPU12_LINHA: usize = 0x3b;
 
 /// Copia um registro de 59 bytes (o `rep movsd` de 14 dwords, a palavra e o byte da original).
-unsafe fn cpu12_copiar(destino: usize, origem: usize) {
+unsafe fn copy_row_59(destino: usize, origem: usize) {
     core::ptr::copy(origem as *const u8, destino as *mut u8, CPU12_LINHA);
 }
 
 /// Põe o par (i, j) da tabela nas vagas k e metade + k da grade, marca as vagas e os dois clubes.
-unsafe fn cpu12_par(grade: usize, posto: *mut u32, usado: *mut u32, tab: usize, i: usize, j: usize, k: &mut i32, metade: i32) {
-    cpu12_copiar(grade + *k as usize * CPU12_LINHA, tab + i * CPU12_LINHA);
+unsafe fn place_pair(grade: usize, posto: *mut u32, usado: *mut u32, tab: usize, i: usize, j: usize, k: &mut i32, metade: i32) {
+    copy_row_59(grade + *k as usize * CPU12_LINHA, tab + i * CPU12_LINHA);
     let m = metade + *k;
-    cpu12_copiar(grade + m as usize * CPU12_LINHA, tab + j * CPU12_LINHA);
+    copy_row_59(grade + m as usize * CPU12_LINHA, tab + j * CPU12_LINHA);
     *posto.add(m as usize) = 1;
     *posto.add(*k as usize) = 1;
     *usado.add(j) = 1;
@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
     let grade = novo((n() * CPU12_LINHA as i32) as u32);
     let mut k: i32 = 0;
     if grade == 0 || usado.is_null() || posto.is_null() {
-        aviso_em(0x9f15f4, 0xed3);
+        show_error_at(0x9f15f4, 0xed3);
         liberar(posto as usize);
         liberar(usado as usize);
         liberar(grade);
@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
         let mut tmp = [0u8; CPU12_LINHA];
         let t = tab();
         core::ptr::copy(( t + a * CPU12_LINHA) as *const u8, tmp.as_mut_ptr(), CPU12_LINHA);
-        cpu12_copiar(t + a * CPU12_LINHA, t + b * CPU12_LINHA);
+        copy_row_59(t + a * CPU12_LINHA, t + b * CPU12_LINHA);
         core::ptr::copy(tmp.as_ptr(), (tab() + b * CPU12_LINHA) as *mut u8, CPU12_LINHA); // cpu12: a troca
         i += 1;
     }
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
         while (i as i32) < n() {
             let s = vaga_do(this, cpu12_d(tab() + i * CPU12_LINHA)) as i8 as i32;
             if s >= 0 && s < n() && cpu12_d(grade + s as usize * CPU12_LINHA) == 0 {
-                cpu12_copiar(grade + s as usize * CPU12_LINHA, tab() + i * CPU12_LINHA);
+                copy_row_59(grade + s as usize * CPU12_LINHA, tab() + i * CPU12_LINHA);
                 *((tab() + i * CPU12_LINHA) as *mut u32) = 0;
             }
             i += 1;
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
             let lin = tab() + i * CPU12_LINHA;
             if cpu12_d(lin) != 0 {
                 if let Some(j) = (0..n().max(0) as usize).find(|&j| cpu12_d(grade + j * CPU12_LINHA) == 0) {
-                    cpu12_copiar(grade + j * CPU12_LINHA, lin);
+                    copy_row_59(grade + j * CPU12_LINHA, lin);
                 }
             }
             i += 1;
@@ -129,8 +129,8 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
             }
             if rangers != -1 && celtic != -1 {
                 let (primeiro, segundo) = if sorteio(2) != 0 { (celtic, rangers) } else { (rangers, celtic) };
-                cpu12_copiar(grade, tab() + primeiro as isize as usize * CPU12_LINHA);
-                cpu12_copiar(grade + metade as usize * CPU12_LINHA, tab() + segundo as isize as usize * CPU12_LINHA);
+                copy_row_59(grade, tab() + primeiro as isize as usize * CPU12_LINHA);
+                copy_row_59(grade + metade as usize * CPU12_LINHA, tab() + segundo as isize as usize * CPU12_LINHA);
                 k = 1;
                 *posto.add(metade as usize) = 1;
                 *posto = 1;
@@ -150,9 +150,9 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
                             let ej = cpu12_d(cpu12_d(tab() + j * CPU12_LINHA) + 0x69);
                             if ej != 0 && ei == ej {
                                 if k >= metade_n {
-                                    aviso_em(0x9f15f4, 0xf76);
+                                    show_error_at(0x9f15f4, 0xf76);
                                 } else {
-                                    cpu12_par(grade, posto, usado, tab(), i, j, &mut k, metade);
+                                    place_pair(grade, posto, usado, tab(), i, j, &mut k, metade);
                                 }
                                 break;
                             }
@@ -180,9 +180,9 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
                         }
                         if cpu12_d(ei + 0x48) == ej || cpu12_d(ej + 0x48) == ei {
                             if k >= metade_n {
-                                aviso_em(0x9f15f4, 0xfa3);
+                                show_error_at(0x9f15f4, 0xfa3);
                             } else {
-                                cpu12_par(grade, posto, usado, tab(), i, j, &mut k, metade);
+                                place_pair(grade, posto, usado, tab(), i, j, &mut k, metade);
                             }
                             break;
                         }
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
             if *usado.add(i) == 0 {
                 if let Some(j) = (0..n().max(0) as usize).find(|&j| *posto.add(j) == 0) { // cpu12: a primeira vaga livre
                     crate::comparacao::ramo("cpu_12 clube na vaga livre");
-                    cpu12_copiar(grade + j * CPU12_LINHA, tab() + i * CPU12_LINHA);
+                    copy_row_59(grade + j * CPU12_LINHA, tab() + i * CPU12_LINHA);
                     *posto.add(j) = 1;
                     *usado.add(i) = 1;
                 }
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
     }
     let mut i = 0usize;
     while (i as i32) < n() {
-        cpu12_copiar(tab() + i * CPU12_LINHA, grade + i * CPU12_LINHA);
+        copy_row_59(tab() + i * CPU12_LINHA, grade + i * CPU12_LINHA);
         i += 1;
     }
     liberar(posto as usize);
@@ -220,17 +220,17 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
 /// +2) com clube vai a `saida[*conta]` (e conta sobe); lado vazio (−1) desce ao jogo de onde ele vem (+0xe/+0xa e
 /// +0x10/+0xc). Rodada negativa ou jogo −1 (também nas descidas): a caixa (linha 0x1592, se `caixa`) e a conta.
 /// Devolve a conta.
-unsafe fn cpu12_coletar(this: usize, rodada: i32, jogo: i32, saida: *mut i16, conta: *mut i32, caixa: bool) -> i32 {
+unsafe fn collect_fixture_teams(this: usize, rodada: i32, jogo: i32, saida: *mut i16, conta: *mut i32, caixa: bool) -> i32 {
     if rodada < 0 || jogo == -1 {
         if caixa {
-            aviso_em(0x9b55ac, 0x1592);
+            show_error_at(0x9b55ac, 0x1592);
         }
         return *conta;
     }
     let reg = cpu12_d(cpu12_d(this + 0xad) + rodada as usize * 4) + (jogo as usize).wrapping_mul(0x35);
     let a = cpu12_w(reg);
     if a == -1 {
-        cpu12_coletar(this, cpu12_w(reg + 0xe) as i32, cpu12_w(reg + 0xa) as i32, saida, conta, caixa);
+        collect_fixture_teams(this, cpu12_w(reg + 0xe) as i32, cpu12_w(reg + 0xa) as i32, saida, conta, caixa);
     } else {
         *saida.offset(*conta as isize) = a;
         *conta += 1;
@@ -238,7 +238,7 @@ unsafe fn cpu12_coletar(this: usize, rodada: i32, jogo: i32, saida: *mut i16, co
     let reg = cpu12_d(cpu12_d(this + 0xad) + rodada as usize * 4) + (jogo as usize).wrapping_mul(0x35);
     let b = cpu12_w(reg + 2);
     if b == -1 {
-        cpu12_coletar(this, cpu12_w(reg + 0x10) as i32, cpu12_w(reg + 0xc) as i32, saida, conta, caixa);
+        collect_fixture_teams(this, cpu12_w(reg + 0x10) as i32, cpu12_w(reg + 0xc) as i32, saida, conta, caixa);
         return *conta;
     }
     *saida.offset(*conta as isize) = b;
@@ -251,9 +251,9 @@ unsafe fn cpu12_coletar(this: usize, rodada: i32, jogo: i32, saida: *mut i16, co
 /// conta nula: a original (a caixa).
 unsafe extern "thiscall" fn collect_possible_teams(this: usize, rodada: i32, jogo: i32, saida: *mut i16, conta: *mut i32) -> i32 {
     if saida.is_null() || conta.is_null() {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32>(%%I2%%)(this, rodada, jogo, saida, conta);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32>(%%I2%%)(this, rodada, jogo, saida, conta);
     }
-    cpu12_coletar(this, rodada, jogo, saida, conta, true)
+    collect_fixture_teams(this, rodada, jogo, saida, conta, true)
 }
 
 /// { 0x521790 } (thiscall, ret 0x10, Cup.cpp): `Cup::get_fixture_side_teams(rodada, jogo, lado, saida)`: o clube de um
@@ -262,7 +262,7 @@ unsafe extern "thiscall" fn collect_possible_teams(this: usize, rodada: i32, jog
 /// original (a caixa e 0).
 unsafe extern "thiscall" fn get_fixture_side_teams(this: usize, rodada: i32, jogo: i32, lado: u32, saida: *mut i16) -> i32 {
     if rodada < 0 || rodada > cpu12_w(this + 0x3c) as i32 || cpu12_d(this + 0xa7) == 0 || jogo == -1 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(%%I1%%)(this, rodada, jogo, lado, saida);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(%%I1%%)(this, rodada, jogo, lado, saida);
     }
     let coletar: unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32 = core::mem::transmute(0x5219b0usize);
     let conta = 0xae1880 as *mut i32;
@@ -276,7 +276,7 @@ unsafe extern "thiscall" fn get_fixture_side_teams(this: usize, rodada: i32, jog
     }
     coletar(this, cpu12_w(r) as i32, cpu12_w(j) as i32, saida, conta);
     if *conta == 0 {
-        aviso_em(0x9b55ac, 0x157f);
+        show_error_at(0x9b55ac, 0x157f);
     }
     *conta
 }
@@ -284,13 +284,13 @@ unsafe extern "thiscall" fn get_fixture_side_teams(this: usize, rodada: i32, jog
 /// Comparador: embaralha com o sorteio e o rand, aloca e chama a tabela virtual: só a original.
 unsafe extern "thiscall" fn comparar_draw_team_order(this: usize, clubes: i32) {
     // ponytail: sorteia e aloca (não roda duas vezes); a cópia se prova pela carreira (a grade de jogos de toda liga)
-    orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%)(this, clubes)
+    original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%)(this, clubes)
 }
 
 /// Comparador: o esperado sai do núcleo sobre uma conta própria e uma saída própria antes da original; depois, a
 /// devolução, a conta global e a saída têm de bater.
 unsafe extern "thiscall" fn comparar_get_fixture_side_teams(this: usize, rodada: i32, jogo: i32, lado: u32, saida: *mut i16) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(%%I1%%);
     if saida.is_null() || rodada < 0 || rodada > cpu12_w(this + 0x3c) as i32 || cpu12_d(this + 0xa7) == 0 || jogo == -1 {
         return o(this, rodada, jogo, lado, saida); // ponytail: a caixa, só a original
     }
@@ -302,7 +302,7 @@ unsafe extern "thiscall" fn comparar_get_fixture_side_teams(this: usize, rodada:
         esperado[0] = c;
         n = 1;
     } else {
-        cpu12_coletar(this, cpu12_w(r) as i32, cpu12_w(j) as i32, esperado.as_mut_ptr(), &mut n, false);
+        collect_fixture_teams(this, cpu12_w(r) as i32, cpu12_w(j) as i32, esperado.as_mut_ptr(), &mut n, false);
     }
     let res = o(this, rodada, jogo, lado, saida);
     let obtido = core::slice::from_raw_parts(saida, res.clamp(0, 0x100) as usize);
@@ -314,14 +314,14 @@ unsafe extern "thiscall" fn comparar_get_fixture_side_teams(this: usize, rodada:
 /// Comparador: o esperado sai do núcleo sobre uma cópia da conta e uma saída própria antes da original; depois, a
 /// devolução, a conta e os clubes acrescentados têm de bater.
 unsafe extern "thiscall" fn comparar_collect_possible_teams(this: usize, rodada: i32, jogo: i32, saida: *mut i16, conta: *mut i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32>(%%I2%%);
     if saida.is_null() || conta.is_null() || rodada < 0 || jogo == -1 || !(0..0x100).contains(&*conta) {
         return o(this, rodada, jogo, saida, conta); // ponytail: a caixa ou conta fora do esperado, só a original
     }
     let c0 = *conta;
     let mut esperado = vec![0i16; 0x200];
     let mut n = c0;
-    cpu12_coletar(this, rodada, jogo, esperado.as_mut_ptr(), &mut n, false);
+    collect_fixture_teams(this, rodada, jogo, esperado.as_mut_ptr(), &mut n, false);
     let res = o(this, rodada, jogo, saida, conta);
     let fim = (*conta).clamp(c0, 0x200);
     let obtido = core::slice::from_raw_parts(saida.offset(c0 as isize), (fim - c0) as usize);

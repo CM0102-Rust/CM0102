@@ -25,7 +25,7 @@ unsafe fn cqf10_clube(id: usize) -> usize {
 }
 
 /// O clube do contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) ou 0.
-unsafe fn cqf10_clube_do_contrato(pessoa: usize) -> usize {
+unsafe fn player_search_contract_club(pessoa: usize) -> usize {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     // 0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4
     let c = contract_of(cqf10_d(0xae1050), pessoa);
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn player_search_record_scouted_club_match(this: usize,
         }
         let r = vaga_de(this, p, 1);
         if r == 0 {
-            aviso_em(0xa701b0, 0x2065);
+            show_error_at(0xa701b0, 0x2065);
             return;
         }
         let quantos = cqf10_b(r + 0x1a1);
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn player_search_record_scouted_club_match(this: usize,
 /// humano, a 0x5b09d0 grava o que se sabe do jogador e sorteia: aí só a original roda (ponytail: o caso de um humano
 /// observando o próprio clube; a carreira automática não chega a esta rotina).
 unsafe extern "thiscall" fn comparar_player_search_record_scouted_club_match(this: usize, jogo: usize, resultado: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let clube_obs = cqf10_clube(cqf10_d(this));
     if cqf10_b(0x9cc270) != 0 && cqf10_d(clube_obs + 0xcf) != 0 {
         o(this, jogo, resultado);
@@ -216,14 +216,14 @@ unsafe extern "thiscall" fn player_search_scout_match(this: usize, jogo: usize, 
     let mut lista = [0u8; 16];
     let l = lista.as_mut_ptr() as usize;
     nova(l);
-    let r = cqf10_corpo(this, jogo, resultado, saida, l);
+    let r = scout_match_body(this, jogo, resultado, saida, l);
     soltar(l);
     r
 }
 
-unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, saida: usize, l: usize) -> u32 {
+unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: usize, l: usize) -> u32 {
     if jogo == 0 || resultado == 0 {
-        aviso_em(0xa701b0, 0xef1);
+        show_error_at(0xa701b0, 0xef1);
         return 0;
     }
     let dono = cqf10_pessoa(cqf10_d(this));
@@ -354,7 +354,7 @@ unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, saida: usize, 
     let quadro: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5afde0usize);
     let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x5b09d0usize);
     let pedido: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x7f8d70usize);
-    let reputacao: unsafe extern "C" fn(usize, usize, u32) -> i16 = core::mem::transmute(0x5407e0usize);
+    let injury_word_0c: unsafe extern "C" fn(usize, usize, u32) -> i16 = core::mem::transmute(0x5407e0usize);
     let relatorio: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, usize, usize, u32) = core::mem::transmute(0x7b62a0usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
     // 0x5afde0: push dono; mov ecx, [0xae2a60] -> thiscall, ret 4; 0x5b09d0: push olheiro; push jogador; mov ecx, eax ->
@@ -389,7 +389,7 @@ unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, saida: usize, 
             if p != 0 && cqf10_i(p) >= cqf10_i(0xae2364) {
                 continue;
             }
-            if cqf10_clube_do_contrato(p) == clube_olheiro || cqf10_d(p + 0x61) == 0 {
+            if player_search_contract_club(p) == clube_olheiro || cqf10_d(p + 0x61) == 0 {
                 continue;
             }
             if cqf10_b(0x9cc270) != 0 {
@@ -401,7 +401,7 @@ unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, saida: usize, 
             let pediu = pedido(cqf10_d(0xb74448), p, clube_olheiro, 0);
             if pediu == 0 {
                 let alvo = cqf10_i(this + 0x195);
-                if !(alvo != -1 && cqf10_i(jogo) == alvo) && reputacao(p, olheiro, 0) >= 0xfa0 { // cqf10: reputação vista
+                if !(alvo != -1 && cqf10_i(jogo) == alvo) && injury_word_0c(p, olheiro, 0) >= 0xfa0 { // cqf10: reputação vista
                     continue;
                 }
             }
@@ -450,7 +450,7 @@ unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, saida: usize, 
 /// roda. Antes, a cópia em ensaio decide até o relatório sem os efeitos (sem o histórico e sem o relatório, com o estado
 /// do sorteador guardado e devolvido) e diz a devolução e se o começo da lista vai a amanhã; a original tem de bater.
 unsafe extern "thiscall" fn comparar_player_search_scout_match(this: usize, jogo: usize, resultado: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I0%%);
     if jogo == 0 || resultado == 0 {
         return o(this, jogo, resultado, saida);
     }

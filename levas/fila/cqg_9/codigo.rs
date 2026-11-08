@@ -26,14 +26,14 @@ unsafe fn cqg9_sortear(n: i32) -> i32 {
 }
 
 /// O registro do árbitro `i` (0x2b bytes em [0xae23e8], [0xae2390] deles).
-unsafe fn cqg9_arbitro(i: i32) -> usize {
+unsafe fn official_record(i: i32) -> usize {
     cqg9_d(0xae23e8).wrapping_add((i as isize * 0x2b) as usize)
 }
 
 /// O fim fatal da original sem memória: a caixa (linha `linha` de officials_manager.cpp, 0xa6a22c), 0x5cc7d0, 0x5a8f60
 /// e exit(−1) (0x945934).
-unsafe fn cqg9_fatal(linha: u32) -> ! {
-    aviso_em(0xa6a22c, linha);
+unsafe fn officials_out_of_memory(linha: u32) -> ! {
+    show_error_at(0xa6a22c, linha);
     let f1: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
     let f2: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
     let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(0x945934usize);
@@ -43,19 +43,19 @@ unsafe fn cqg9_fatal(linha: u32) -> ! {
 }
 
 /// O qsort do jogo (0x945333) pela rotina de comparação `cmp`.
-unsafe fn cqg9_ordenar(base: usize, n: u32, tam: u32, cmp: usize) {
+unsafe fn officials_manager_crt_qsort(base: usize, n: u32, tam: u32, cmp: usize) {
     let q: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     q(base, n, tam, cmp);
 }
 
 /// calloc (0x945501, cdecl).
-unsafe fn cqg9_calloc(n: u32, tam: u32) -> usize {
+unsafe fn crt_calloc(n: u32, tam: u32) -> usize {
     let f: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     f(n, tam)
 }
 
 /// free (0x9452ca, cdecl).
-unsafe fn cqg9_liberar(p: usize) {
+unsafe fn crt_free(p: usize) {
     let f: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     f(p);
 }
@@ -72,15 +72,15 @@ unsafe fn cqg9_liberar(p: usize) {
 unsafe extern "thiscall" fn set_up_officials(this: usize) {
     let rever: unsafe extern "C" fn() = core::mem::transmute(0x79caa0usize);
     rever();
-    cqg9_ordenar(cqg9_d(0xae23e8), cqg9_i(0xae2390) as u32, 0x2b, 0x79d4e0);
+    officials_manager_crt_qsort(cqg9_d(0xae23e8), cqg9_i(0xae2390) as u32, 0x2b, 0x79d4e0);
     let n = cqg9_i(0xae2390);
-    let marcas = cqg9_calloc(n as u32, 1);
+    let marcas = crt_calloc(n as u32, 1);
     let mut ficam = 0i32;
     if n > 0 {
-        let mut atual = cqg9_d(cqg9_arbitro(0) + 0x16);
+        let mut atual = cqg9_d(official_record(0) + 0x16);
         let mut grupo = 0i32;
         for i in 0..n {
-            let nac = cqg9_d(cqg9_arbitro(i) + 0x16);
+            let nac = cqg9_d(official_record(i) + 0x16);
             if nac != atual {
                 grupo = 0;
                 atual = nac;
@@ -102,18 +102,18 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
             grupo += 1;
         }
     }
-    let nova = cqg9_calloc(ficam as u32, 0x2b);
+    let nova = crt_calloc(ficam as u32, 0x2b);
     let mut dst = nova;
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x79c530usize);
     let mut i = 0i32;
     while i < cqg9_i(0xae2390) {
         if *((marcas + i as usize) as *const u8) != 0 {
-            copiar(dst, cqg9_arbitro(i));
+            copiar(dst, official_record(i));
             dst += 0x2b;
         }
         i += 1;
     }
-    cqg9_liberar(cqg9_d(0xae23e8));
+    crt_free(cqg9_d(0xae23e8));
     cqg9_pd(0xae23e8, nova as u32);
     cqg9_pd(0xae2390, ficam as u32);
     let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
     let blocos = malloc((nacoes as u32).wrapping_mul(0x102));
     cqg9_pd(this + 0xc, blocos as u32);
     if blocos == 0 {
-        cqg9_fatal(0x1ff);
+        officials_out_of_memory(0x1ff);
     }
     for k in 0..nacoes.max(0) {
         let b = blocos + k as usize * 0x102;
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
         cqg9_pw(b + 0x10, cqg9_w(b + 0x10).wrapping_add(1));
     }
     for i in 0..cqg9_i(0xae2390).max(0) {
-        let b = blocos.wrapping_add((cqg9_i(cqg9_d(cqg9_arbitro(i) + 0x16)) as isize * 0x102) as usize);
+        let b = blocos.wrapping_add((cqg9_i(cqg9_d(official_record(i) + 0x16)) as isize * 0x102) as usize);
         cqg9_pd(b + 4, cqg9_d(b + 4).wrapping_add(1) as u32);
     }
     let novos: unsafe extern "stdcall" fn(i32, usize) = core::mem::transmute(0x79c5c0usize);
@@ -187,10 +187,10 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
         }
     }
     for i in 0..cqg9_i(0xae2390).max(0) {
-        cqg9_pd(cqg9_arbitro(i), i as u32);
+        cqg9_pd(official_record(i), i as u32);
     }
     for i in 0..cqg9_i(0xae2390).max(0) {
-        let r = cqg9_arbitro(i);
+        let r = official_record(i);
         let b = blocos.wrapping_add((cqg9_i(cqg9_d(r + 0x16)) as isize * 0x102) as usize);
         if cqg9_i(r) < cqg9_i(b + 8) {
             cqg9_pd(b + 8, cqg9_d(r) as u32);
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
         if c == 0 {
             continue;
         }
-        cqg9_ordenar(b + 0x12, c as i32 as u32, 0x10, 0x79d410);
+        officials_manager_crt_qsort(b + 0x12, c as i32 as u32, 0x10, 0x79d410);
         let mut j = 0i32;
         while j < cqg9_w(b + 0x10) as i32 {
             let c = cqg9_w(b + 0x10) as i32;
@@ -215,18 +215,18 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
     }
     let total = cqg9_i(0xae2390);
     cqg9_pd(this + 4, total as u32);
-    let m = cqg9_calloc(total as u32, 1);
+    let m = crt_calloc(total as u32, 1);
     cqg9_pd(this + 8, m as u32);
     if m == 0 {
-        cqg9_fatal(0x2dd);
+        officials_out_of_memory(0x2dd);
     }
-    cqg9_liberar(marcas);
+    crt_free(marcas);
 }
 
 /// Comparador: só a original (ponytail: aloca, libera e troca a tabela dos árbitros, e as chamadas sorteiam: não pode
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
 unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     PLACAR.registrar(cqg9_d(this + 0xc) != 0 && cqg9_i(this + 4) == cqg9_i(0xae2390) && cqg9_d(this + 8) != 0,
         || format!("set_up_officials: blocos {:x}, conta {} x {}", cqg9_d(this + 0xc), cqg9_i(this + 4), cqg9_i(0xae2390)));
 }
@@ -254,16 +254,16 @@ unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b: usize) ->
     }
     let base = cqg9v_i(0xae23d0) as u32 as usize;
     let sa = cqg9v_w(base.wrapping_add((ca as isize * 0x6b + 0x69) as usize));
-    let sb = cqg9v_w(base.wrapping_add((cb as isize * 0x6b + 0x69) as usize));
-    if sa == sb {
+    let signed_byte_at = cqg9v_w(base.wrapping_add((cb as isize * 0x6b + 0x69) as usize));
+    if sa == signed_byte_at {
         return ca.wrapping_sub(cb);
     }
-    sa as i32 - sb as i32
+    sa as i32 - signed_byte_at as i32
 }
 
 /// Comparador: a devolução (só lê).
 unsafe extern "C" fn comparar_officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = officials_manager_compare_comp_level(a, b);
     PLACAR.registrar(r == n, || format!("officials_manager_compare_comp_level({:x}, {:x}) original={} rust={}", a, b, r, n));
     r

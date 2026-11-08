@@ -10,7 +10,7 @@ unsafe fn cpr11_w(a: usize) -> i16 {
 
 /// A entrada da projeção (0xe bytes, no bloco da 0x944cf1): +0 o clube, +4 os pontos por jogo (float), +8 os pontos,
 /// +0xa os pontos projetados, +0xc os jogos.
-unsafe fn cpr11_entrada(buf: usize, i: i32) -> usize {
+unsafe fn projection_entry(buf: usize, i: i32) -> usize {
     buf.wrapping_add((i as isize * 0xe) as usize)
 }
 
@@ -29,17 +29,17 @@ unsafe extern "C" fn compare_projection_by_points_desc(a: usize, b: usize) -> i3
 }
 
 /// A posição (1..) do clube na projeção já ordenada (a primeira entrada dele; `None` sem ela).
-unsafe fn cpr11_posicao(buf: usize, n: i16, clube: usize) -> Option<i32> {
-    (0..n as i32).find(|&i| cpr11_d(cpr11_entrada(buf, i)) == clube)
+unsafe fn projection_position(buf: usize, n: i16, clube: usize) -> Option<i32> {
+    (0..n as i32).find(|&i| cpr11_d(projection_entry(buf, i)) == clube)
 }
 
 /// O clube com outra forma: os pontos por jogo (+4) vezes `fator` (o float guardado; o x87 segue com o de 53 bits) e
 /// os pontos projetados de novo com ele.
-unsafe fn cpr11_outra_forma(this: usize, e: usize, fator: f64) -> i32 {
+unsafe fn apply_form_factor(this: usize, e: usize, fator: f64) -> i32 {
     let r = *((e + 4) as *const f32) as f64 * fator;
     *((e + 4) as *mut f32) = r as f32; // fst: guarda o float e segue com o de 53 bits
     let resta = cpr11_w(this + 0xa7) as i32 - cpr11_w(e + 0xc) as i32;
-    *((e + 0xa) as *mut i16) = (ftol(resta as f64 * r) as i16).wrapping_add(cpr11_w(e + 8));
+    *((e + 0xa) as *mut i16) = (match_pl_ftol(resta as f64 * r) as i16).wrapping_add(cpr11_w(e + 8));
     resta
 }
 
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
     let mut i: i16 = 0;
     while i < cpr11_w(this + 0x3e) {
         let l = cpr11_d(this + 0xb1).wrapping_add((i as isize * 0x3b) as usize);
-        let e = cpr11_entrada(buf, i as i32);
+        let e = projection_entry(buf, i as i32);
         core::ptr::write_unaligned(e as *mut usize, cpr11_d(l));
         *((e + 8) as *mut i16) = cpr11_w(l + 0x19);
         let jogos = *((l + 0x11) as *const i8);
@@ -81,43 +81,43 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
     // neles (o float A e a conta das linhas na escala pela reputação, o que resta de jogos do clube no terceiro)
     let (mut normal, mut melhor, mut pior) = (0u32, 0u32, 0u32);
     if (*((linha + 0x11) as *const i8) as i32) * 3 < cpr11_w(this + 0xa7) as i32 {
-        crate::comparacao::ramo("cpr_11 projecao pela reputacao");
+        crate::comparacao::ramo("cpr_11 projecao pela injury_word_0c");
         let n = cpr11_w(this + 0x3e);
         qsort(buf, n as i32 as u32, 0xe, 0x68afb0);
         let c = *((this + 0xc2) as *const i8) as f64;
-        let a = (c * f64_em(0x96d0e8)) as f32; // fstp no local: o primeiro arredonda para float
+        let a = (c * read_f64_at(0x96d0e8)) as f32; // fstp no local: o primeiro arredonda para float
         normal = a.to_bits();
-        let b = c * f64_em(0x96d0e0);
+        let b = c * read_f64_at(0x96d0e0);
         if n > 0 {
             let d = a as f64 - b;
-            let passo = d / n as f64;
+            let step_towards = d / n as f64;
             for k in 0..n as i32 {
-                *((cpr11_entrada(buf, k) + 4) as *mut f32) = (a as f64 - passo * k as f64) as f32; // do maior ao menor
+                *((projection_entry(buf, k) + 4) as *mut f32) = (a as f64 - step_towards * k as f64) as f32; // do maior ao menor
             }
             melhor = n as i32 as u32;
         }
     }
     let mut i: i16 = 0;
     while i < cpr11_w(this + 0x3e) {
-        let e = cpr11_entrada(buf, i as i32);
+        let e = projection_entry(buf, i as i32);
         let resta = cpr11_w(this + 0xa7) as i32 - cpr11_w(e + 0xc) as i32;
         pior = resta as u32;
-        *((e + 0xa) as *mut i16) = (ftol(resta as f64 * *((e + 4) as *const f32) as f64) as i16).wrapping_add(cpr11_w(e + 8));
+        *((e + 0xa) as *mut i16) = (match_pl_ftol(resta as f64 * *((e + 4) as *const f32) as f64) as i16).wrapping_add(cpr11_w(e + 8));
         i += 1;
     }
     qsort(buf, cpr11_w(this + 0x3e) as i32 as u32, 0xe, 0x68afd0);
-    if let Some(k) = cpr11_posicao(buf, cpr11_w(this + 0x3e), clube) {
+    if let Some(k) = projection_position(buf, cpr11_w(this + 0x3e), clube) {
         normal = (normal & !0xff) | (k as u8).wrapping_add(1) as u32; // a posição na forma normal
-        pior = cpr11_outra_forma(this, cpr11_entrada(buf, k), f64_em(0x968940)) as u32;
+        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(0x968940)) as u32;
     }
     qsort(buf, cpr11_w(this + 0x3e) as i32 as u32, 0xe, 0x68afd0);
-    if let Some(k) = cpr11_posicao(buf, cpr11_w(this + 0x3e), clube) {
+    if let Some(k) = projection_position(buf, cpr11_w(this + 0x3e), clube) {
         melhor = (melhor & !0xff) | (k as u8).wrapping_add(1) as u32;
-        pior = cpr11_outra_forma(this, cpr11_entrada(buf, k), f64_em(0x96d0d8)) as u32;
+        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(0x96d0d8)) as u32;
     }
     qsort(buf, cpr11_w(this + 0x3e) as i32 as u32, 0xe, 0x68afd0);
     for k in 0..cpr11_w(this + 0x3e) as i32 {
-        if cpr11_d(cpr11_entrada(buf, k)) == clube {
+        if cpr11_d(projection_entry(buf, k)) == clube {
             pior = (pior & !0xff) | (k as u8).wrapping_add(1) as u32; // a última (o clube está uma vez só)
         }
     }
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_projection_by_reputation_desc(a, b);
     PLACAR.registrar(r == n, || format!("compare_projection_by_reputation_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -143,7 +143,7 @@ unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a: usize, b:
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "C" fn comparar_compare_projection_by_points_desc(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_projection_by_points_desc(a, b);
     PLACAR.registrar(r == n, || format!("compare_projection_by_points_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -154,7 +154,7 @@ unsafe extern "C" fn comparar_compare_projection_by_points_desc(a: usize, b: usi
 /// 0x4ae300 devolve o registro provisório dela): lado a lado nesses 3 bytes e na devolução. As duas versões que repassam
 /// a outra competição (0x48e380, 0x7ef100) gravam fora da região: aí só a devolução pesa.
 unsafe extern "thiscall" fn comparar_update_projected_positions(this: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let stats = cpr11_d(this + 8);
     let busca: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let reg = if stats != 0 { busca(stats, clube) } else { 0 };

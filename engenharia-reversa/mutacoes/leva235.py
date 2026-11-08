@@ -1,8 +1,8 @@
 # Mutações da 235a leva (itens dbq_1, dbq_2, dbq_3, dbr_1, dbr_2, dbr_3, dbr_4). Uso: python mutacoes.py mutacoes\leva235.py --carreira 2002-06-01
 MUTACOES = [
-    ('dbq_clube_favorita', '    dbq1_acrescentar(clube + club::FAV_STAFF1, clube + club::DIS_STAFF1, pessoa, dbq1_tem(clube + club::FAV_STAFF1, pessoa), forcar) // as favoritas do clube', '    dbq1_acrescentar(clube + 0x9f, clube + 0xa7, pessoa, dbq1_tem(clube + 0x9b, pessoa), forcar) // mutacao: uma vaga adiante'),
-    ('dbq_clube_rejeitada', '    dbq1_acrescentar(clube + club::DIS_STAFF1, clube + club::FAV_STAFF1, pessoa, dbq1_tem(clube + club::DIS_STAFF1, pessoa), forcar) // as rejeitadas do clube', '    dbq1_acrescentar(clube + 0xab, clube + 0x9b, pessoa, dbq1_tem(clube + 0xa7, pessoa), forcar) // mutacao: uma vaga adiante'),
-    ('dbq_pessoa_favorita', '    dbq1_acrescentar(pref + 0x1c, pref + 0x28, outra, dbq1_tem(pref + 0x1c, outra), forcar) // as favoritas da pessoa', '    dbq1_acrescentar(pref + 0x20, pref + 0x28, outra, dbq1_tem(pref + 0x1c, outra), forcar) // mutacao: uma vaga adiante'),
+    ('dbq_clube_favorita', '    database_add_to_preference_list(clube + club::FAV_STAFF1, clube + club::DIS_STAFF1, pessoa, list3_contains(clube + club::FAV_STAFF1, pessoa), forcar) // as favoritas do clube', '    database_add_to_preference_list(clube + 0x9f, clube + 0xa7, pessoa, list3_contains(clube + 0x9b, pessoa), forcar) // mutacao: uma vaga adiante'),
+    ('dbq_clube_rejeitada', '    database_add_to_preference_list(clube + club::DIS_STAFF1, clube + club::FAV_STAFF1, pessoa, list3_contains(clube + club::DIS_STAFF1, pessoa), forcar) // as rejeitadas do clube', '    database_add_to_preference_list(clube + 0xab, clube + 0x9b, pessoa, list3_contains(clube + 0xa7, pessoa), forcar) // mutacao: uma vaga adiante'),
+    ('dbq_pessoa_favorita', '    database_add_to_preference_list(pref + 0x1c, pref + 0x28, outra, list3_contains(pref + 0x1c, outra), forcar) // as favoritas da pessoa', '    database_add_to_preference_list(pref + 0x20, pref + 0x28, outra, list3_contains(pref + 0x1c, outra), forcar) // mutacao: uma vaga adiante'),
     ('dbq_clube_rejeitado', '    let lista = pref + 0x10; // os clubes rejeitados', '    let lista = pref + 0x14; // mutacao: uma vaga adiante'),
     ('dbq_esmaecer', '        if read_usize(v) != 0 && sortear(*((pessoa + staff::LOYALITY) as *const i8) as i32 + 15) == 0 { // as favoritas', '        if read_usize(v) != 0 && sortear(*((pessoa + 0x59) as *const i8) as i32 + 14) == 0 { // mutacao: 14 no lugar do 15'),
     ('dbq_rejeitadas', '        let p = read_usize(pref + 0x28 + 4 * k); // as rejeitadas', '        let p = read_usize(pref + 0x1c + 4 * k); // mutacao: as favoritas'),
@@ -15,9 +15,9 @@ MUTACOES = [
     ('dbr_polinesia', 'KEY_NATION_COOK_ISLANDS, KEY_NATION_WESTERN_SAMOA]; // polinésias', '0x9cf2a4, 0x9cf2a4]; // mutacao: sem a ultima polinesia'),
     ('dbr_nome_do_cargo', '        3 | 10 => (0x9b6448, 1),       // "Coach"', '        3 | 10 => (0x9b6440, 1),       // mutacao: "Manager" no lugar de "Coach"'),
     ('dbr_anos_em_texto', '        anos = anos.wrapping_sub(1); // o aniversário ainda não chegou', '        // mutacao: sem o desconto do aniversario'),
-    ('dbr_clubes_pelo_nome_curto', '    dbr_comparar_textos(nome(a), nome(b))', '    dbr_comparar_textos(nome(b), nome(a)) // mutacao: a ordem invertida'),
-    ('dbr_pessoas_pelo_nome_completo', '    dbr_comparar_textos(na.as_ptr(), nb.as_ptr())', '    dbr_comparar_textos(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
+    ('dbr_clubes_pelo_nome_curto', '    compare_text_nocase(nome(a), nome(b))', '    compare_text_nocase(nome(b), nome(a)) // mutacao: a ordem invertida'),
+    ('dbr_pessoas_pelo_nome_completo', '    compare_text_nocase(na.as_ptr(), nb.as_ptr())', '    compare_text_nocase(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
     ('dbr_confere_nomes', '    for (d, id) in [(4, nome), (8, sobrenome), (0xc, comum)] {', '    for (d, id) in [(4, nome), (0xc, comum)] { // mutacao: sem o sobrenome'),
-    ('dbr_latitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x23) // a latitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x2b) // mutacao: a longitude no lugar da latitude'),
-    ('dbr_longitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x2b) // a longitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x23) // mutacao: a latitude no lugar da longitude'),
+    ('dbr_latitude', '    order_by_city_coordinate(ca, cb, 0x23) // a latitude', '    order_by_city_coordinate(ca, cb, 0x2b) // mutacao: a longitude no lugar da latitude'),
+    ('dbr_longitude', '    order_by_city_coordinate(ca, cb, 0x2b) // a longitude', '    order_by_city_coordinate(ca, cb, 0x23) // mutacao: a latitude no lugar da longitude'),
 ]

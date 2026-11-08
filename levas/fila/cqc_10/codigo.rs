@@ -29,20 +29,20 @@ unsafe fn cqc10_clube(id: i32) -> usize {
     cqc10_d(0xae23b4).wrapping_add((id as usize).wrapping_mul(0x245))
 }
 
-unsafe fn cqc10_humano(c: usize, a: u32, b: u32) -> u32 {
+unsafe fn media_is_human_club(c: usize, a: u32, b: u32) -> u32 {
     let f: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     f(c, a, b, 0, 0)
 }
 
 /// Os clubes humanos que recebem notícias do jogador (0x8d1da0 em [0xde1f54]: 4 na pilha, ret 0x10; o ecx da original é
 /// o gerenciador das transferências).
-unsafe fn cqc10_destinos(jogador: usize, marcas: u32, saida: *mut usize, max: u32) -> u8 {
+unsafe fn player_news_recipients(jogador: usize, marcas: u32, saida: *mut usize, max: u32) -> u8 {
     let f: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1da0usize);
     f(cqc10_d(0xde1f54), jogador, marcas, saida, max)
 }
 
 /// O id e os três nomes (+0x33 de +4, +8, +0xc) de uma pessoa, nos índices `k`..`k+3` da notícia.
-unsafe fn cqc10_nomes(gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32, n: usize, k: i8, p: usize) {
+unsafe fn set_person_name_slots(gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32, n: usize, k: i8, p: usize) {
     gravar(n, k, cqc10_d(p) as u32);
     gravar(n, k + 1, cqc10_d(cqc10_d(p + 4) + 0x33) as u32);
     gravar(n, k + 2, cqc10_d(cqc10_d(p + 8) + 0x33) as u32);
@@ -50,7 +50,7 @@ unsafe fn cqc10_nomes(gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32
 }
 
 /// Acrescenta `c` aos destinos se ainda não estiver lá (até 30).
-fn cqc10_acrescentar(dest: &mut [usize; 30], n: &mut u8, c: usize) {
+fn add_unique_recipient(dest: &mut [usize; 30], n: &mut u8, c: usize) {
     if !dest[..(*n as i8).max(0) as usize].contains(&c) {
         dest[*n as i8 as usize] = c;
         *n = n.wrapping_add(1);
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let chegar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8ce990usize);
     let resposta: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x735870usize);
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         if c != 0 {
             dono = cqc10_clube(cqc10_i(c + 4));
             if dono != 0 {
-                vinc = vinculo(cqc10_d(0xae1050), pessoa, dono);
+                vinc = contract_bond(cqc10_d(0xae1050), pessoa, dono);
                 tec_dono = cqc10_d(dono + 0xcf);
             }
         }
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             let mut noticia = [0u32; 0x3a]; // a notícia local
             let n = noticia.as_mut_ptr() as usize;
             construir(n, 0xfbc, 0);
-            cqc10_nomes(gravar, n, 0, pessoa);
+            set_person_name_slots(gravar, n, 0, pessoa);
             gravar(n, 4, if dono != 0 { cqc10_d(dono) as u32 } else { 0xffff_ffff });
             let mut pede = false;
             let mut sai = false;
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 gravar(n, 5, s as u32);
             }
             gravar(n, 6, cqc10_d(r + 0x11) as u32);
-            let resp = if dono != 0 && cqc10_humano(dono, 0, 1) == 0 {
+            let resp = if dono != 0 && media_is_human_club(dono, 0, 1) == 0 {
                 resposta(this, cqc10_d(dono + 0xcf), pessoa, 0x1f)
             } else {
                 0
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             gravar(n, 8, forcas(pessoa, dono));
             gravar(n, 9, posicoes(cqc10_d(pessoa + 0x61)) as i16 as i32 as u32);
             if tec_dono != 0 {
-                cqc10_nomes(gravar, n, 0xa, tec_dono);
+                set_person_name_slots(gravar, n, 0xa, tec_dono);
             } else {
                 for k in 0xa..=0xd {
                     gravar(n, k, 0xffff_ffff);
@@ -208,12 +208,12 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             }
             // os destinos
             let mut dest = [0usize; 30];
-            let mut nd: u8 = if cqc10_d(0xde1f54) != 0 { cqc10_destinos(pessoa, 0xda, dest.as_mut_ptr(), 0x1e) } else { 0 };
+            let mut nd: u8 = if cqc10_d(0xde1f54) != 0 { player_news_recipients(pessoa, 0xda, dest.as_mut_ptr(), 0x1e) } else { 0 };
             for &id in ids.iter().take(c) {
                 if (nd as i8) >= 0x1e {
                     break;
                 }
-                cqc10_acrescentar(&mut dest, &mut nd, cqc10_clube(id));
+                add_unique_recipient(&mut dest, &mut nd, cqc10_clube(id));
             }
             let total = cqc10_i(0xae2364);
             for q in 0..16i32 {
@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                     let junto = cqc10_d(ci + 0x57) == cqc10_d(hc + 0x57)
                         || (cqc10_d(ci + 0x53) == cqc10_d(hc + 0x53) && (cqc10_w(ci + 0x80) as i32 - 0xbb8) > cqc10_w(hc + 0x80) as i32);
                     if junto {
-                        cqc10_acrescentar(&mut dest, &mut nd, hc);
+                        add_unique_recipient(&mut dest, &mut nd, hc);
                     }
                 }
             }
@@ -242,7 +242,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 let reacao: unsafe extern "thiscall" fn(usize, u32, usize, usize, *mut i32, u32) = core::mem::transmute(0x755340usize);
                 reacao(this, 0x1f, pessoa, dono, ids.as_mut_ptr(), cnt as u8 as u32);
             }
-            if dono != 0 && cqc10_humano(dono, 0, 1) == 0 && resp != 0 {
+            if dono != 0 && media_is_human_club(dono, 0, 1) == 0 && resp != 0 {
                 if clube != 0 {
                     let rival: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) = core::mem::transmute(0x758010usize);
                     rival(this, pessoa, clube, dono, resp);
@@ -254,7 +254,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             continue;
         }
         // estado 1: o dono da IA pode avisar que não vende
-        if cqc10_u(r + 0x10) == 1 && dono != 0 && cqc10_humano(dono, 1, 1) == 0 {
+        if cqc10_u(r + 0x10) == 1 && dono != 0 && media_is_human_club(dono, 1, 1) == 0 {
             let (rd, ra) = (cqc10_w(r + 8), cqc10_w(r + 0xa) as u16);
             let (pd, pa) = (cqc10_w(pessoa + 0x3e), cqc10_w(pessoa + 0x40) as u16);
             let depois = ra > pa || (ra == pa && rd > pd);
@@ -289,7 +289,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
 // 0x758010, 0x741020, 0x587600): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e
 // pelas mutações.
 unsafe extern "thiscall" fn comparar_process_transfer_interest(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// { 0x587600 } (cdecl, media.cpp no fluxo; european_cup.cpp no mapa, sem outro chamador; quadro SEH sem destrutor no
@@ -305,12 +305,12 @@ unsafe extern "C" fn news_create_not_for_sale_story(jogador: usize, clube: usize
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
     let mut dest = [0usize; 30];
-    let nd: u8 = if cqc10_d(0xde1f54) != 0 { cqc10_destinos(jogador, 0xd8, dest.as_mut_ptr(), 0x1e) } else { 0 };
+    let nd: u8 = if cqc10_d(0xde1f54) != 0 { player_news_recipients(jogador, 0xd8, dest.as_mut_ptr(), 0x1e) } else { 0 };
     crate::comparacao::ramo("cqc_10 noticia nao vende");
     let mut noticia = [0u32; 0x3a];
     let n = noticia.as_mut_ptr() as usize;
     construir(n, 0xfbe, 0);
-    cqc10_nomes(gravar, n, 0, jogador);
+    set_person_name_slots(gravar, n, 0, jogador);
     gravar(n, 4, if outro != 0 { cqc10_d(outro) as u32 } else { 0xffff_ffff });
     gravar(n, 5, cqc10_d(clube) as u32);
     let s = cqc10_sortear(3);
@@ -320,7 +320,7 @@ unsafe extern "C" fn news_create_not_for_sale_story(jogador: usize, clube: usize
         a > cqc10_sortear(0x14)
     });
     if cita {
-        cqc10_nomes(gravar, n, 7, presidente);
+        set_person_name_slots(gravar, n, 7, presidente);
     } else {
         gravar(n, 7, 0xffff_ffff);
     }
@@ -338,7 +338,7 @@ unsafe extern "C" fn news_create_not_for_sale_story(jogador: usize, clube: usize
 
 // ponytail: a notícia vai aos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "C" fn comparar_news_create_not_for_sale_story(jogador: usize, clube: usize, presidente: usize, outro: usize) {
-    orig::<unsafe extern "C" fn(usize, usize, usize, usize)>(%%I1%%)(jogador, clube, presidente, outro)
+    original_fn::<unsafe extern "C" fn(usize, usize, usize, usize)>(%%I1%%)(jogador, clube, presidente, outro)
 }
 
 /// { 0x75c390 } (thiscall, ret 0xc, media.cpp, quadro SEH sem destrutor no caminho normal):
@@ -364,7 +364,7 @@ unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, clube: usize
     let mut noticia = [0u32; 0x3a];
     let n = noticia.as_mut_ptr() as usize;
     construir(n, 0x2e, 0);
-    cqc10_nomes(gravar, n, 0, cqc10_d(clube + 0xcf));
+    set_person_name_slots(gravar, n, 0, cqc10_d(clube + 0xcf));
     gravar(n, 4, cqc10_d(clube) as u32);
     gravar(n, 5, cqc10_d(comp) as u32);
     let s = cqc10_sortear(2);
@@ -396,5 +396,5 @@ unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, clube: usize
 
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_queue_trophy_praise_story(this: usize, clube: usize, comp: usize, marca: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, clube, comp, marca)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, clube, comp, marca)
 }

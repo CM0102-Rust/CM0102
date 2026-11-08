@@ -15,7 +15,7 @@ MUTACOES = [
     ('cqr8_times_em_ordem_inversa', 'write_u32_from_usize(times + k as usize * 4, c); // cqr8: o time na vaga k do grupo', 'write_u32_from_usize(times + (read_i16(this + 0x3e) as i32 - 1 - k) as usize * 4, c); // mutacao', 'cqr_8 time do grupo da copa da italia'),
     ('cqr8_time_fica_na_lista', '                write_u32_from_usize(read_u32_as_usize(this + 0xee) + o, 0);\n', '                // mutacao: fica na lista\n', 'cqr_8 time do grupo da copa da serie c'),
     ('cqr8_vitoria_vale_empate', '            rodadas as u16 as u32,\n            read_u8(this + 0xc2) as u32,', '            rodadas as u16 as u32,\n            read_u8(this + 0xc3) as u32, // mutacao', 'cqr_8 time do grupo da copa da italia'),
-    ('cqr9_segundos_no_lugar_dos_campeoes', 'write_u32_from_usize(times + i * 4, read_u32_as_usize(cqr9_tabela(this, i))); // cqr9: o campeão do grupo i', 'write_u32_from_usize(times + i * 4, read_u32_as_usize(cqr9_tabela(this, i) + 0x3b)); // mutacao', 'cqr_9 mata-mata da copa da italia'),
+    ('cqr9_segundos_no_lugar_dos_campeoes', 'write_u32_from_usize(times + i * 4, read_u32_as_usize(group_table(this, i))); // cqr9: o campeão do grupo i', 'write_u32_from_usize(times + i * 4, read_u32_as_usize(group_table(this, i) + 0x3b)); // mutacao', 'cqr_9 mata-mata da copa da italia'),
     ('cqr9_segundos_sem_classificacao', 'ordenar(liga, 0); // cqr9: a classificação dos segundos', 'let _ = ordenar; // mutacao', 'cqr_9 mata-mata da copa da serie c'),
     ('cqr9_sementes_iguais', '        *s = 3 - (k / 8) as u8;', '        *s = 1 + 0 * k as u8; // mutacao', 'cqr_9 mata-mata da copa da italia'),
     ('cqs8_sorteio_duas_semanas_depois', 'construir(&mut data, 0xa, 2, read_i16(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio', 'construir(&mut data, 0x18, 2, read_i16(this + 0x40) as u16 as u32, 5); // mutacao: 24 de março', 'cqs_8 regras da eurocopa'),
@@ -26,5 +26,5 @@ MUTACOES = [
     ('cqs9_preliminar_de_11', 'if *((c + 0x1df) as *const i8) >= 0xa { // cqs9: os da preliminar', 'if *((c + 0x1df) as *const i8) >= 0xb { // mutacao', 'cqs_9 inscritos da uefa'),
     ('cqt5_copa_do_rei_no_ano_seguinte', 'read_i16(this + 0x40) as i32 && fase != 0 { // cqt5: o ano da Copa do Rei', '(read_i16(this + 0x40) as i32 + 1) && fase != 0 { // mutacao', 'cqt_5 copa do rei refeita'),
     ('cqt5_copa_do_rei_sem_marca', 'core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez', '// mutacao: refeita todo dia', 'cqt_5 copa do rei refeita'),
-    ('cqt5_historico_da_serie_c_da_fase_14', 'cqt5_historico(this, 0x3c, "cqt_5 historico da copa da serie c")', 'cqt5_historico(this, 0x38, "cqt_5 historico da copa da serie c") // mutacao', 'cqt_5 historico da copa da serie c'),
+    ('cqt5_historico_da_serie_c_da_fase_14', 'record_season_honours(this, 0x3c, "cqt_5 historico da copa da serie c")', 'record_season_honours(this, 0x38, "cqt_5 historico da copa da serie c") // mutacao', 'cqt_5 historico da copa da serie c'),
 ]

@@ -5,7 +5,7 @@
 /// assistir a `partida` (0x5fe290); senão 0. Partida nula: a original (caixa de erro e 0).
 unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: usize) -> u32 {
     if partida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, partida);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, partida);
     }
     let assiste: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x5fe290usize);
     for k in 0..16i32 {
@@ -20,7 +20,7 @@ unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: usize) -> u
 
 /// O índice (0..[this+4]) do técnico humano `humano` (ou o da vez, [0xb74c26 + 0x300 × [0xb77c7a]])
 /// para a 0x600740: None se não há humano; Some(None) fora da faixa (caso de erro da original).
-unsafe fn indice_do_humano_do_apelido(this: usize, humano: usize) -> Option<Option<usize>> {
+unsafe fn human_index_for_nickname(this: usize, humano: usize) -> Option<Option<usize>> {
     let h = if humano != 0 {
         humano
     } else {
@@ -44,9 +44,9 @@ unsafe extern "thiscall" fn has_nickname(this: usize, pessoa: usize, humano: usi
     if pessoa == 0 {
         return 0;
     }
-    let i = match indice_do_humano_do_apelido(this, humano) {
+    let i = match human_index_for_nickname(this, humano) {
         None => return 0,
-        Some(None) => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, pessoa, humano),
+        Some(None) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, pessoa, humano),
         Some(Some(i)) => i,
     };
     let buscar: unsafe extern "C" fn(*const u32, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn retire_record_assign(this: usize, origem: usize) -> 
 
 unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, partida: usize) -> u32 {
     // a 0x5fe290 só lê: pode rodar nos dois lados
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if partida == 0 {
         return o(this, partida);
     }
@@ -86,8 +86,8 @@ unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, partida: us
 }
 
 unsafe extern "thiscall" fn comparar_has_nickname(this: usize, pessoa: usize, humano: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
-    if pessoa != 0 && matches!(indice_do_humano_do_apelido(this, humano), Some(None)) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
+    if pessoa != 0 && matches!(human_index_for_nickname(this, humano), Some(None)) {
         return o(this, pessoa, humano);
     }
     let r = o(this, pessoa, humano);
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn comparar_has_nickname(this: usize, pessoa: usize, hu
 }
 
 unsafe extern "thiscall" fn comparar_retire_record_assign(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this, origem), || retire_record_assign(this, origem));
     PLACAR.registrar(igual && r == n, || format!("retire_record_assign {:x?} x {:x?}", mo, mr));
     r

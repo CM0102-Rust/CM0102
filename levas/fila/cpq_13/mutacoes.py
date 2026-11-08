@@ -4,8 +4,8 @@
 # computador chama, tira o batedor que deixou de jogar: ele seguiria batendo; PODE ESCAPAR se o caso nao ocorrer ate
 # 2002-06-01: o ramo diz).
 MUTACOES = [
-    ('cpq_limpar_outra_vaga', '    core::ptr::write_unaligned(cpq13_celula(this, k, 2 + 4 * v as usize) as *mut i32, -1); // a vaga',
-     '    core::ptr::write_unaligned(cpq13_celula(this, k, 2 + 4 * (v as usize + 1)) as *mut i32, -1); // mutacao: a vaga seguinte',
+    ('cpq_limpar_outra_vaga', '    core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * v as usize) as *mut i32, -1); // a vaga',
+     '    core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * (v as usize + 1)) as *mut i32, -1); // mutacao: a vaga seguinte',
      'cpq_13 limpar vaga'),
     ('cpq_batedor_fica', '    core::ptr::write_unaligned(celula(e), -1); // sem batedor',
      '    // mutacao: o batedor tirado fica na celula',

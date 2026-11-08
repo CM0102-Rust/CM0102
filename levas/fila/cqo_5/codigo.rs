@@ -8,7 +8,7 @@ type Cqo5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 /// As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-unsafe fn cqo5_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqo5Rodada]) {
+unsafe fn fra_cfa_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqo5Rodada]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(0x68a160usize);
     let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -52,7 +52,7 @@ struct Cqo5Liga {
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-unsafe fn cqo5_calendario(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5Liga) -> usize {
+unsafe fn create_cfa_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5Liga) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -64,18 +64,18 @@ unsafe fn cqo5_calendario(this: usize, fase: u32, rodadas: *mut i16, extra: *mut
     *extra = 0;
     let t = alocar(p.rodadas as u32 * 0x41);
     if t == 0 {
-        aviso_em(p.arquivo, p.linha);
+        show_error_at(p.arquivo, p.linha);
         return 0;
     }
     crate::comparacao::ramo(p.ramo);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-    cqo5_rodadas(t, ano, 0, p.tabela);
+    fra_cfa_set_league_rounds(t, ano, 0, p.tabela);
     t
 }
 
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do mesmo [0xb67a34]; as
 /// saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada: 0x9452ca, cdecl).
-unsafe fn cqo5_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+unsafe fn compare_cfa_schedule(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -98,8 +98,8 @@ unsafe fn cqo5_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i1
 
 /// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `cqo5_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
-unsafe fn cqo5_comparar_fases(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+/// `cqo5_gravados`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
+unsafe fn compare_c1_schedule(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                              original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -113,7 +113,7 @@ unsafe fn cqo5_comparar_fases(nome: &str, fase: u32, rodadas: *mut i16, extra: *
             let n = *rodadas as usize;
             cqo5_gravados(a, a, n) == cqo5_gravados(b, a, n)
         } else {
-            cql10_gravados(a, *rodadas) == cql10_gravados(b, *rodadas)
+            eng_cc_cup_written_round_bytes(a, *rodadas) == eng_cc_cup_written_round_bytes(b, *rodadas)
         }
     } else {
         a == 0 && b == 0
@@ -206,15 +206,15 @@ const CQO5_LIGA_CFA: Cqo5Liga = Cqo5Liga { rodadas: 0x22, arquivo: 0x9ccaf0, lin
 /// { 0x5b9510 } (thiscall, ret 0x10, fra_cfa.cpp, 2.703 bytes, método +0x3c): `FraCfa::create_schedule(fase, &rodadas, &extra,
 /// &é_liga)`: a CFA, 34 rodadas (`CQO5_CFA`). Fonte 0x9ccaf0, linha 0xab.
 unsafe extern "thiscall" fn fra_cfa_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo5_calendario(this, fase, rodadas, extra, liga, &CQO5_LIGA_CFA)
+    create_cfa_schedule(this, fase, rodadas, extra, liga, &CQO5_LIGA_CFA)
 }
 
 unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqo5_comparar("fra_cfa_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule(this, fase, r, e, l))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    compare_cfa_schedule("fra_cfa_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule(this, fase, r, e, l))
 }
 
-/// As fases de copa da C1 (rodadas de 0x68 bytes, `cql10_rodada`; categoria 5, sem prêmios, o ano +0x40 com sinal):
+/// As fases de copa da C1 (rodadas de 0x68 bytes, `eng_cc_cup_write_cup_round`; categoria 5, sem prêmios, o ano +0x40 com sinal):
 /// a fase 0, os play-offs de acesso: as semifinais (sorteio em 8/mai, ida em 21/mai, ida e volta com 7 dias entre os
 /// jogos, 4 times em 2 confrontos, todos novos; 0xa00 no jogo único = sem sorteio (0x200)
 /// mais 0x800, 0x802 no confronto de dois jogos) e a final (sorteio em 29/mai, ida em 4/jun, 2 times); a fase 1, os
@@ -235,7 +235,7 @@ struct Cqo5C1 {
 /// +0x40 como palavra); 0 os play-offs (é_liga = 0, 2 rodadas, extra 0xa0, a tabela de 0xd0 bytes com as semifinais e a
 /// final); 1 os play-outs (é_liga = 0, 1 rodada, extra 0, 0x68 bytes); as outras devolvem 0 sem gravar nada. Sem memória
 /// (malloc 0x944e46: push; add esp, 4 -> cdecl): a caixa da linha da fase e 0. Devolve a tabela.
-unsafe fn cqo5_c1(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5C1) -> usize {
+unsafe fn create_c1_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5C1) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let (k, l, n, x, tamanho) = match fase as u8 {
         0xff => (0, 1, 0x22, 0, 0x8a2),
@@ -250,21 +250,21 @@ unsafe fn cqo5_c1(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, li
     *extra = x;
     let t = alocar(tamanho);
     if t == 0 {
-        aviso_em(p.arquivo, p.linhas[k]);
+        show_error_at(p.arquivo, p.linhas[k]);
         return 0;
     }
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16);
     if k == 0 {
         crate::comparacao::ramo("cqo_5 calendario da c1");
-        cqo5_rodadas(t, ano as u16 as u32, 0, &CQO5_C1);
+        fra_cfa_set_league_rounds(t, ano as u16 as u32, 0, &CQO5_C1);
     } else {
         crate::comparacao::ramo("cqo_5 play-offs da c1");
         let ano = ano as i32 as u32;
         if k == 1 {
-            cql10_rodada(t, 0, &CQO5_SEMIFINAIS, ano);
-            cql10_rodada(t, 1, &CQO5_FINAL, ano);
+            eng_cc_cup_write_cup_round(t, 0, &CQO5_SEMIFINAIS, ano);
+            eng_cc_cup_write_cup_round(t, 1, &CQO5_FINAL, ano);
         } else {
-            cql10_rodada(t, 0, &CQO5_PLAYOUT, ano);
+            eng_cc_cup_write_cup_round(t, 0, &CQO5_PLAYOUT, ano);
         }
     }
     t
@@ -273,21 +273,21 @@ unsafe fn cqo5_c1(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, li
 /// { 0x64ad80 } (thiscall, ret 0x10, ita_ser_c1a.cpp, 2.279 bytes, método +0x3c): `ItaSerC1a::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a chave A da Série C1. Fonte 0x9ea474, linhas 0xab, 0x155, 0x18f.
 unsafe extern "thiscall" fn ita_ser_c1a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo5_c1(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea474, linhas: [0xab, 0x155, 0x18f] })
+    create_c1_schedule(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea474, linhas: [0xab, 0x155, 0x18f] })
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cqo5_comparar_fases("ita_ser_c1a_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| ita_ser_c1a_create_schedule(this, fase, r, e, l))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    compare_c1_schedule("ita_ser_c1a_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| ita_ser_c1a_create_schedule(this, fase, r, e, l))
 }
 
 /// { 0x64ef30 } (thiscall, ret 0x10, ita_ser_c1b.cpp, 2.279 bytes, método +0x3c): `ItaSerC1b::create_schedule`: a
 /// chave B, o mesmo código. Fonte 0x9ea558, linhas 0xac, 0x156, 0x190.
 unsafe extern "thiscall" fn fra_cfa_create_schedule_64ef30(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo5_c1(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea558, linhas: [0xac, 0x156, 0x190] })
+    create_c1_schedule(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea558, linhas: [0xac, 0x156, 0x190] })
 }
 
 unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule_64ef30(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
-    cqo5_comparar_fases("fra_cfa_create_schedule_64ef30", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule_64ef30(this, fase, r, e, l))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
+    compare_c1_schedule("fra_cfa_create_schedule_64ef30", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule_64ef30(this, fase, r, e, l))
 }

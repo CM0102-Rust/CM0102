@@ -27,7 +27,7 @@ unsafe fn cpx13_registro(this: usize, clube: usize) -> usize {
 /// data do elenco em +0x3a/+0x4e/+0x62, a marca de convocado em +0x43/+0x57/+0x6b): com o elenco de até 14 dias (0x54cdb0
 /// sobre hoje) e a marca (e `extra`), grava hoje (0x417c10) e leva a data do elenco até a data do jogo (+0x2a/+0x28)
 /// se ela for anterior; senão pede o elenco (0x76c120 com a nação, o tipo, hoje, a partida e 0).
-unsafe fn cpx13_elenco(this: usize, p: usize, clube: usize, reg: usize, tipo: u32, extra: impl FnOnce() -> bool) {
+unsafe fn refresh_or_select_squad(this: usize, p: usize, clube: usize, reg: usize, tipo: u32, extra: impl FnOnce() -> bool) {
     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
     let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
@@ -58,13 +58,13 @@ unsafe fn cpx13_elenco(this: usize, p: usize, clube: usize, reg: usize, tipo: u3
 
 /// Os elencos B/olímpico (+0x4e da partida, bit 0x100) ou sub-21 (bit 0x200, ou o clube é seleção B 0x5409b0) do lado
 /// `clube`; o sub-21 só sem convocado: competição [0x9cf7a0] ou a nação fora do vetor [this+0x36].
-unsafe fn cpx13_elencos_menores(this: usize, p: usize, clube: usize, reg: usize) {
+unsafe fn refresh_minor_squads(this: usize, p: usize, clube: usize, reg: usize) {
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
     let m = cpx13_w(p + 0x4d) as u16;
     if m & 0x100 != 0 {
-        cpx13_elenco(this, p, clube, reg, 1, || true);
+        refresh_or_select_squad(this, p, clube, reg, 1, || true);
     } else if m & 0x200 != 0 || segunda(clube) != 0 {
-        cpx13_elenco(this, p, clube, reg, 2, || {
+        refresh_or_select_squad(this, p, clube, reg, 2, || {
             cpx13_d(p) == cpx13_d(0x9cf7a0) || cpx13_b(cpx13_d(cpx13_d(clube + 0x53)).wrapping_add(cpx13_d(this + 0x36))) == 0
         });
     }
@@ -72,7 +72,7 @@ unsafe fn cpx13_elencos_menores(this: usize, p: usize, clube: usize, reg: usize)
 
 /// O que a 0x76d880 grava no registro (fora das pessoas): depois da data do sub-21 (+0x62/+0x66, 0x456740 sobre
 /// hoje), zera a marca +0x6b.
-unsafe fn cpx13_dispensar(this: usize, clube: usize) {
+unsafe fn release_overage_u21(this: usize, clube: usize) {
     if !CPX13_ENSAIO {
         let dispensar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x76d880usize);
         return dispensar(this, cpx13_d(clube + 0x53));
@@ -87,8 +87,8 @@ unsafe fn cpx13_dispensar(this: usize, clube: usize) {
 /// { 0x76bab0 } (thiscall, ret 4, national_teams.cpp, quadro SEH sem destrutor): `NationalTeams::select_squads_for_fixture
 /// (partida)`: sem a marca +0x40 com o bit 1 de +0x4e, ou mandante seleção B (0x5409b0) com o bit 2, nada. Só a
 /// partir de duas semanas antes do jogo (0x54cab0 sobre a data +0x2a/+0x28). Mandante: fora de seleção B, o elenco
-/// principal (cpx13_elenco tipo 0) e, sem o bit 2, a dispensa do sub-21 (0x76d880) das duas nações; os elencos
-/// menores (cpx13_elencos_menores). Visitante: o mesmo sem a dispensa. Por fim apaga os repetidos (0x76c060) das duas.
+/// principal (refresh_or_select_squad tipo 0) e, sem o bit 2, a dispensa do sub-21 (0x76d880) das duas nações; os elencos
+/// menores (refresh_minor_squads). Visitante: o mesmo sem a dispensa. Por fim apaga os repetidos (0x76c060) das duas.
 unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p: usize) {
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
     let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
@@ -112,18 +112,18 @@ unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p: usize) {
     let (casa, fora) = (cpx13_d(p + 0x1c), cpx13_d(p + 0x20));
     let reg = cpx13_registro(this, casa);
     if segunda(casa) == 0 {
-        cpx13_elenco(this, p, casa, reg, 0, || true);
+        refresh_or_select_squad(this, p, casa, reg, 0, || true);
         if cpx13_b(p + 0x4e) & 2 == 0 {
-            cpx13_dispensar(this, cpx13_d(p + 0x1c));
-            cpx13_dispensar(this, cpx13_d(p + 0x20));
+            release_overage_u21(this, cpx13_d(p + 0x1c));
+            release_overage_u21(this, cpx13_d(p + 0x20));
         }
     }
-    cpx13_elencos_menores(this, p, casa, reg);
+    refresh_minor_squads(this, p, casa, reg);
     let reg = cpx13_registro(this, fora);
     if segunda(fora) == 0 {
-        cpx13_elenco(this, p, fora, reg, 0, || true);
+        refresh_or_select_squad(this, p, fora, reg, 0, || true);
     }
-    cpx13_elencos_menores(this, p, fora, reg);
+    refresh_minor_squads(this, p, fora, reg);
     if !CPX13_ENSAIO {
         repetidos(cpx13_d(cpx13_d(p + 0x1c) + 0x53));
         repetidos(cpx13_d(cpx13_d(p + 0x20) + 0x53));
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p: usize) {
 /// a +0x6c: marcas de hoje, datas dos elencos e marcas de convocado). Se a cópia pediu algum elenco (0x76c120 aloca e
 /// mexe nos elencos), a comparação não vale e fica a original; senão os registros têm de bater.
 unsafe extern "thiscall" fn comparar_select_squads_for_fixture(this: usize, p: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let regioes = [(cpx13_registro(this, cpx13_d(p + 0x1c)) + 0x32, 0x3a), (cpx13_registro(this, cpx13_d(p + 0x20)) + 0x32, 0x3a)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     o(this, p);
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn comparar_select_squads_for_fixture(this: usize, p: u
 
 /// O clube do contrato da pessoa (0x4cf5a0 de [0xae1050], gravado em [0xae1080]; clube +4 em [0xae23b4], 0x245
 /// bytes), ou 0.
-unsafe fn cpx13_clube_do_contrato(pessoa: usize) -> usize {
+unsafe fn club_of_person_contract(pessoa: usize) -> usize {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contrato(cpx13_d(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
@@ -180,10 +180,10 @@ unsafe extern "stdcall" fn national_teams_post_player_called_up_news(jogador: us
     let b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     let c39 = cpx13_d(jogador + 0x39);
     if c39 == 0 || humano(c39) == 0 {
-        if cpx13_clube_do_contrato(jogador) == 0 {
+        if club_of_person_contract(jogador) == 0 {
             return;
         }
-        if humano(cpx13_clube_do_contrato(jogador)) == 0 {
+        if humano(club_of_person_contract(jogador)) == 0 {
             return;
         }
     }
@@ -214,10 +214,10 @@ unsafe extern "stdcall" fn national_teams_post_player_called_up_news(jogador: us
     if c39 != 0 && !CPX13_ENSAIO_NOTICIA {
         ao_clube(noticias, n, c39);
     }
-    if cpx13_clube_do_contrato(jogador) == cpx13_d(jogador + 0x39) {
+    if club_of_person_contract(jogador) == cpx13_d(jogador + 0x39) {
         return;
     }
-    let c = cpx13_clube_do_contrato(jogador);
+    let c = club_of_person_contract(jogador);
     if !CPX13_ENSAIO_NOTICIA {
         ao_clube(noticias, n, c);
     }
@@ -226,7 +226,7 @@ unsafe extern "stdcall" fn national_teams_post_player_called_up_news(jogador: us
 /// Comparador: a cópia em ensaio (sem entregar) e a original a partir do mesmo [0xae1080] (o último contrato lido, que
 /// as duas gravam).
 unsafe extern "stdcall" fn comparar_national_teams_post_player_called_up_news(jogador: usize, nacao: usize, vaga: u32) {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I1%%);
     let regioes = [(0xae1080usize, 4usize)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPX13_ENSAIO_NOTICIA = true;
@@ -305,5 +305,5 @@ unsafe extern "thiscall" fn add_team_result_news(copa: usize, clube: usize, desf
 // ponytail: a virtual +0x44 da copa acrescenta registros às pessoas e a notícia vai às caixas dos técnicos (alocam): só
 // a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_add_team_result_news(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I2%%)(copa, clube, desfecho, a3, p, a5)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I2%%)(copa, clube, desfecho, a3, p, a5)
 }

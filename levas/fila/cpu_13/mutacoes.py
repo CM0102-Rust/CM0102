@@ -9,7 +9,7 @@ MUTACOES = [
     ('cpu13_faixa_do_meio', 'esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: a faixa do meio',
      'esi.wrapping_mul(5).wrapping_sub(4900) // mutacao: 100 a mais',
      'cpu_13 faixa de 3000 a 5000'),
-    ('cpu13_rico', 'let (x, y) = (v * f64_em(0x968fa0), edi.wrapping_add(250) as f64); // cpu13: o rico',
-     'let (x, y) = (v * (f64_em(0x968fa0) + 0.025), edi.wrapping_add(250) as f64); // mutacao: 1,05',
+    ('cpu13_rico', 'let (x, y) = (v * read_f64_at(0x968fa0), edi.wrapping_add(250) as f64); // cpu13: o rico',
+     'let (x, y) = (v * (read_f64_at(0x968fa0) + 0.025), edi.wrapping_add(250) as f64); // mutacao: 1,05',
      'cpu_13 clube rico'),
 ]

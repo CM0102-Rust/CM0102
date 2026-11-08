@@ -1,4 +1,4 @@
-# As da leva132c que escaparam por causa dos sorteios, refeitas com a fita conferindo a lista de
+# As da leva132c que escaparam por causa dos sorteios, refeitas com a tape_lock conferindo a lista de
 # sorteios (pedido, resultado). As e_1e_* com o ramo certo (so roda em 2002-04: pulada ate 2001-10-01).
 # Uso: python mutacoes.py mutacoes\leva132d.py --jogo 2001-10-01
 MUTACOES = [

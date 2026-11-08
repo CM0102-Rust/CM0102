@@ -15,7 +15,7 @@ MUTACOES = [
      'let valor = vinte.wrapping_mul(peso); // mutacao: sem dividir pela soma dos pesos',
      'cqb_6 parte paga'),
     ('cqb6_parte_sai_do_comprador',
-     'cqb6_dinheiro(0x599800, fin, valor); // cqb6: entra nas vendas do comprador',
-     'cqb6_dinheiro(0x599890, fin, valor); // mutacao: sai pelas compras do comprador',
+     'post_finance_amount(0x599800, fin, valor); // cqb6: entra nas vendas do comprador',
+     'post_finance_amount(0x599890, fin, valor); // mutacao: sai pelas compras do comprador',
      'cqb_6 parte paga'),
 ]

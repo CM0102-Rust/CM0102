@@ -39,7 +39,7 @@ struct Cqp12Fase {
 /// Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
 /// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
-unsafe fn cqp12_tabela(this: usize, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+unsafe fn build_phase_table(this: usize, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
     let f = match f {
         Some(f) => f,
         None => return 0,
@@ -54,7 +54,7 @@ unsafe fn cqp12_tabela(this: usize, f: Option<Cqp12Fase>, rodadas: *mut i16, ext
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar(f.tamanho);
     if t == 0 {
-        aviso_em(arquivo, f.linha);
+        show_error_at(arquivo, f.linha);
         return 0;
     }
     crate::comparacao::ramo(f.nome);
@@ -89,7 +89,7 @@ unsafe fn cqp12_tabela(this: usize, f: Option<Cqp12Fase>, rodadas: *mut i16, ext
 }
 
 /// Os bytes que as operações gravam na tabela `t` (o resto fica como veio da alocação), na ordem das operações.
-unsafe fn cqp12_gravados(ops: &[Cqp12Op], ops2: &[Cqp12Op], t: usize) -> Vec<u8> {
+unsafe fn phase_table_written_bytes(ops: &[Cqp12Op], ops2: &[Cqp12Op], t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     let mut pega = |a: usize, n: usize| v.extend_from_slice(core::slice::from_raw_parts((t + a) as *const u8, n));
     for op in ops.iter().chain(ops2.iter()) {
@@ -116,7 +116,7 @@ unsafe fn cqp12_gravados(ops: &[Cqp12Op], ops2: &[Cqp12Op], t: usize) -> Vec<u8>
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
 /// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
-unsafe fn cqp12_comparar(nome: &str, fase: u32, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+unsafe fn compare_phase_table(nome: &str, fase: u32, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = match f {
         Some(f) => f,
@@ -132,7 +132,7 @@ unsafe fn cqp12_comparar(nome: &str, fase: u32, f: Option<Cqp12Fase>, rodadas: *
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
         if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let saidas = *rodadas == r2 && (extra.is_null() || *extra == e2) && (liga.is_null() || *liga == l2);
-    let tabela = if a != 0 && b != 0 { cqp12_gravados(f.ops, f.ops2, a) == cqp12_gravados(f.ops, f.ops2, b) } else { a == 0 && b == 0 };
+    let tabela = if a != 0 && b != 0 { phase_table_written_bytes(f.ops, f.ops2, a) == phase_table_written_bytes(f.ops, f.ops2, b) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(b);
@@ -254,7 +254,7 @@ const CQP12_CONFED_MATA: [Cqp12Op; 57] = [
 
 /// A fase da Copa América pelo byte com sinal: abaixo de 2 os grupos (id 0x420 + fase; os jogos de cada grupo para −1,
 /// 0 e 1), 2 o mata-mata, acima nada.
-fn cqp12_copa_america_fase(fase: u32) -> Option<Cqp12Fase> {
+fn copa_america_phase(fase: u32) -> Option<Cqp12Fase> {
     let f = fase as u8 as i8;
     if f < 2 {
         let jogos: &'static [Cqp12Op] = match f {
@@ -274,20 +274,20 @@ fn cqp12_copa_america_fase(fase: u32) -> Option<Cqp12Fase> {
 }
 
 /// { 0x5e0900 } (thiscall, ret 0x10, goldcup.cpp; a virtual +0x3c da Copa América): `GoldCup::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: a fase de `cqp12_copa_america_fase`.
+/// &rodadas, &extra, &é_liga)`: a fase de `copa_america_phase`.
 unsafe extern "thiscall" fn goldcup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp12_tabela(this, cqp12_copa_america_fase(fase), rodadas, extra, liga, 0x9cd640)
+    build_phase_table(this, copa_america_phase(fase), rodadas, extra, liga, 0x9cd640)
 }
 
 unsafe extern "thiscall" fn comparar_goldcup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqp12_comparar("goldcup_create_schedule", fase, cqp12_copa_america_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    compare_phase_table("goldcup_create_schedule", fase, copa_america_phase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| goldcup_create_schedule(this, fase, r, e, l))
 }
 
 /// A fase da Copa Africana: abaixo de 3 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1, 0, 1 e 2), 3 o
 /// mata-mata, acima nada.
-fn cqp12_africana_fase(fase: u32) -> Option<Cqp12Fase> {
+fn african_nations_phase(fase: u32) -> Option<Cqp12Fase> {
     let f = fase as u8 as i8;
     if f < 3 {
         let jogos: &'static [Cqp12Op] = match f {
@@ -308,20 +308,20 @@ fn cqp12_africana_fase(fase: u32) -> Option<Cqp12Fase> {
 }
 
 /// { 0x4012e0 } (thiscall, ret 0x10, african_nations.cpp; a virtual +0x3c da Copa Africana): `AfricanNations::
-/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp12_africana_fase`.
+/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `african_nations_phase`.
 unsafe extern "thiscall" fn african_nations_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp12_tabela(this, cqp12_africana_fase(fase), rodadas, extra, liga, 0x9870f8)
+    build_phase_table(this, african_nations_phase(fase), rodadas, extra, liga, 0x9870f8)
 }
 
 unsafe extern "thiscall" fn comparar_african_nations_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cqp12_comparar("african_nations_create_schedule", fase, cqp12_africana_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    compare_phase_table("african_nations_create_schedule", fase, african_nations_phase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| african_nations_create_schedule(this, fase, r, e, l))
 }
 
 /// A fase da Copa das Confederações: abaixo de 1 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1 e 0), 1 o
 /// mata-mata, acima nada.
-fn cqp12_confed_fase(fase: u32) -> Option<Cqp12Fase> {
+fn confed_cup_phase(fase: u32) -> Option<Cqp12Fase> {
     let f = fase as u8 as i8;
     if f < 1 {
         let jogos: &'static [Cqp12Op] = match f {
@@ -340,13 +340,13 @@ fn cqp12_confed_fase(fase: u32) -> Option<Cqp12Fase> {
 }
 
 /// { 0x58b560 } (thiscall, ret 0x10, fifa_confed.cpp; a virtual +0x3c da Copa das Confederações): `FifaConfed::
-/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp12_confed_fase`.
+/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `confed_cup_phase`.
 unsafe extern "thiscall" fn goldcup_create_schedule_58b560(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp12_tabela(this, cqp12_confed_fase(fase), rodadas, extra, liga, 0x9c7474)
+    build_phase_table(this, confed_cup_phase(fase), rodadas, extra, liga, 0x9c7474)
 }
 
 unsafe extern "thiscall" fn comparar_goldcup_create_schedule_58b560(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
-    cqp12_comparar("goldcup_create_schedule_58b560", fase, cqp12_confed_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
+    compare_phase_table("goldcup_create_schedule_58b560", fase, confed_cup_phase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| goldcup_create_schedule_58b560(this, fase, r, e, l))
 }

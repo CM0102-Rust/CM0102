@@ -8,7 +8,7 @@ MUTACOES = [
      'return 1; // mutacao: lesionado como recuperando'),
     ('cpr10_recuperando_como_pronto', '(dias < cpr10_w(l + 0x28) as i32) as u8 // cpr10: recuperando a forma',
      '0 // mutacao: recuperando como pronto'),
-    ('cpr10_decisao_mais_tarde', 'cpr10_mais(0xae2c90, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias',
-     'cpr10_mais(0xae2c90, (sortear(5) + 2) as u32, &mut d); // mutacao: 2 a 6 dias',
+    ('cpr10_decisao_mais_tarde', 'injury_date_add_days(0xae2c90, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias',
+     'injury_date_add_days(0xae2c90, (sortear(5) + 2) as u32, &mut d); // mutacao: 2 a 6 dias',
      'cpr_10 nova decisao'),
 ]

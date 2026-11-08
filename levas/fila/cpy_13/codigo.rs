@@ -19,13 +19,13 @@ unsafe fn cpy13_pessoa(id: usize) -> usize {
 }
 
 /// O contrato principal da pessoa (0x4cf5a0 em [0xae1050]), sem guardar.
-unsafe fn cpy13_contrato(p: usize) -> usize {
+unsafe fn get_contract_unstored(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     f(cpy13_d(0xae1050), p)
 }
 
 /// Date::operator= (0x417c10: thiscall(destino, resultado, origem), ret 8): a data de hoje ([0xae2c90]) no destino.
-unsafe fn cpy13_hoje_em(destino: usize) {
+unsafe fn copy_today_to(destino: usize) {
     let f: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut resultado = [0u8; 8];
     f(destino, resultado.as_mut_ptr(), 0xae2c90);
@@ -47,7 +47,7 @@ unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize, clube: us
     if ficha(cpy13_d(0xae1050), p) != 0 {
         return;
     }
-    if !cpl3_crescer(this, 0x862, 4, 100, 0x25, 0xce9, 0xa8e998) {
+    if !grow_record_vector(this, 0x862, 4, 100, 0x25, 0xce9, 0xa8e998) {
         return;
     }
     let n = cpy13_d(this + 0x86a);
@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize, clube: us
     let por = |o: usize, v: u32| core::ptr::write_unaligned((r + o) as *mut u32, v);
     por(0x10, u32::MAX);
     por(0x14, if clube != 0 { cpy13_d(clube) as u32 } else { u32::MAX });
-    cpy13_hoje_em(r + 0x1d);
+    copy_today_to(r + 0x1d);
     por(0, cpy13_d(p) as u32);
     por(4, cpy13_d(cpy13_d(p + 4) + 0x33) as u32);
     por(8, cpy13_d(cpy13_d(p + 8) + 0x33) as u32);
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize, clube: us
         historico(cpy13_d(0xb74350), p, 0, 0, -1, motivo, 0);
     }
     if clube != 0 {
-        let c = cpy13_contrato(p);
+        let c = get_contract_unstored(p);
         let mut comp = compensacao;
         if comp == -1 {
             comp = if c != 0 && cpy13_b(c + 0x35) & 0x3f == 2 {
@@ -99,12 +99,12 @@ unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize, clube: us
             escalacao(cpy13_d(0xde1d08), cpy13_d(p + 0x39), p, 0, 1);
             elenco(cpy13_d(p + 0x39), p, 0, 1, 0);
         }
-        cpy13_hoje_em(p + 0x3e);
+        copy_today_to(p + 0x3e);
     }
-    let c = cpy13_contrato(p);
+    let c = get_contract_unstored(p);
     *(0xae1080 as *mut usize) = c;
     if c != 0 && cpy13_clube(cpy13_d(c + 4)) != 0 {
-        let c = cpy13_contrato(p);
+        let c = get_contract_unstored(p);
         *(0xae1080 as *mut usize) = c;
         let dono = if c == 0 { 0 } else { cpy13_clube(cpy13_d(c + 4)) };
         let tirar_ofertas: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4cca70usize);
@@ -114,12 +114,12 @@ unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize, clube: us
     tirar_contrato(cpy13_d(0xae1050), p);
     core::ptr::write_unaligned((p + 0x52) as *mut u32, 0);
     *((p + 0x6d) as *mut u8) = 0;
-    let percentual: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cb4f0usize);
+    let write_percent_pair: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cb4f0usize);
     let bonus_time: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cb590usize);
     let bonus_selecao: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cb630usize);
     let permissao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8c7e20usize);
     let fim: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4196a0usize);
-    percentual(this, p);
+    write_percent_pair(this, p);
     bonus_time(this, p);
     bonus_selecao(this, p);
     permissao(this, p, 0);
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn comparar_free_transfer_staff(this: usize, p: usize, 
     let ficha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     let emprestada = ficha(cpy13_d(0xae1050), p) != 0;
     let n = cpy13_d(this + 0x86a);
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32)>(%%I0%%)(this, p, clube, motivo, compensacao, so_registro);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32)>(%%I0%%)(this, p, clube, motivo, compensacao, so_registro);
     if emprestada {
         PLACAR.registrar(cpy13_d(this + 0x86a) == n, || format!("free_transfer_staff(pessoa {}) emprestada: conta {} -> {}", cpy13_d(p), n, cpy13_d(this + 0x86a)));
         return;
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_free_transfer_staff(this: usize, p: usize, 
         && cpy13_d(r + 0x14) as u32 == if clube != 0 { cpy13_d(clube) as u32 } else { u32::MAX }
         && cpy13_b(r + 0x1c) == if so_registro != 0 { 5 } else { 3 };
     if so_registro == 0 {
-        ok = ok && cpy13_contrato(p) == 0 && cpy13_d(p + 0x52) == 0 && cpy13_b(p + 0x6d) == 0;
+        ok = ok && get_contract_unstored(p) == 0 && cpy13_d(p + 0x52) == 0 && cpy13_b(p + 0x6d) == 0;
     }
     PLACAR.registrar(ok, || format!("free_transfer_staff(pessoa {}, clube {:x}, só registro {}): conta {} -> {}, registro {:x?}", cpy13_d(p), clube, so_registro,
         n, cpy13_d(this + 0x86a), core::slice::from_raw_parts(r as *const u8, 0x1d)));
@@ -165,13 +165,13 @@ unsafe extern "thiscall" fn set_on_holiday(this: usize, ferias: u32, tecnico: us
     if t == 0 {
         t = cpy13_d(0xb74c26 + 0x300 * (*(0xb77c7a as *const i16) as isize as usize));
         if t == 0 {
-            aviso_em(0x9cf11c, 0x41c);
+            show_error_at(0x9cf11c, 0x41c);
             return;
         }
     }
     let i = (cpy13_d(t) as i32).wrapping_sub(cpy13_d(0xae2364) as i32).wrapping_add(0x10);
     if i < 0 || i > (cpy13_d(this + 4) as i32).wrapping_sub(1) {
-        aviso_em(0x9cf11c, 0x428);
+        show_error_at(0x9cf11c, 0x428);
         return;
     }
     let marca = cpy13_d(this).wrapping_add((i as usize).wrapping_mul(0xa6ef)).wrapping_add(0x9a01);
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn set_on_holiday(this: usize, ferias: u32, tecnico: us
 // ponytail: responde notícias e mexe no interesse do dia (não pode rodar duas vezes): só a original, conferida pelo
 // plano: a marca de férias passa a `férias` e a conta muda de ±1 só quando a marca muda.
 unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, ferias: u32, tecnico: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(%%I1%%);
     let t = if tecnico != 0 { tecnico } else { cpy13_d(0xb74c26 + 0x300 * (*(0xb77c7a as *const i16) as isize as usize)) };
     let i = if t == 0 { -1 } else { (cpy13_d(t) as i32).wrapping_sub(cpy13_d(0xae2364) as i32).wrapping_add(0x10) };
     if i < 0 || i > (cpy13_d(this + 4) as i32).wrapping_sub(1) {
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn post_contract_talks_news(_this: usize, o: usize) {
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let p = cpy13_pessoa(cpy13_d(o + 0xc));
-    let c = cpy13_contrato(p);
+    let c = get_contract_unstored(p);
     *(0xae1080 as *mut usize) = c;
     let vendedor = if c == 0 || cpy13_b(c + 0x35) & 0x3f == 5 { 0 } else { cpy13_clube(cpy13_d(c + 4)) };
     let comprador = cpy13_clube(cpy13_d(o + 8));
@@ -282,5 +282,5 @@ unsafe extern "thiscall" fn post_contract_talks_news(_this: usize, o: usize) {
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_post_contract_talks_news(this: usize, o: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, o)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, o)
 }

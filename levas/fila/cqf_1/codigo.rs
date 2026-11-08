@@ -26,7 +26,7 @@ unsafe fn cqf1_clube(id: usize) -> usize {
 
 /// O clube do contrato da pessoa (0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4; guardado em
 /// [0xae1080]); sem contrato ou com o de tipo 5, 0.
-unsafe fn cqf1_clube_do_contrato(pessoa: usize) -> usize {
+unsafe fn contract_club_excluding_type5(pessoa: usize) -> usize {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contrato(cqf1_d(0xae1050), pessoa);
     cqf1_pd(0xae1080, c);
@@ -38,7 +38,7 @@ unsafe fn cqf1_clube_do_contrato(pessoa: usize) -> usize {
 /// oferta do mesmo comprador pelo mesmo alvo dá a vaga dela; a primeira oferta de outro comprador pelo alvo é a rival.
 /// Para na vaga vazia quando já contou as `conta` ofertas ou quando é a primeira oferta pelo alvo. Devolve (vaga, rival).
 #[allow(clippy::too_many_arguments)]
-unsafe fn cqf1_vagas(v: usize, lidas: i32, cap: i32, conta: i32, alvo: usize, comprador: usize, inicial: i32, primeira: bool) -> (i32, i32) {
+unsafe fn find_offer_slot_and_rival(v: usize, lidas: i32, cap: i32, conta: i32, alvo: usize, comprador: usize, inicial: i32, primeira: bool) -> (i32, i32) {
     let (mut vaga, mut rival, mut contadas) = (inicial, -1i32, 0i32);
     let mut i = 0i32;
     while i < cap {
@@ -68,7 +68,7 @@ unsafe fn cqf1_vagas(v: usize, lidas: i32, cap: i32, conta: i32, alvo: usize, co
 
 /// A caixa "Memory Allocation Error" de transfer_manager.cpp (0xa8d514): "v%s %s.%s %d (%s)" (0x90d130 com a linha e
 /// o texto) em 0xae24d0, o título traduzido (0x66f4e0) em 0xae28bc, o corpo (0x9a7ff8) em 0xae26c4 e a caixa 0x5e8290.
-unsafe fn cqf1_sem_memoria(linha: u32, texto: usize) {
+unsafe fn show_out_of_memory_box(linha: u32, texto: usize) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -87,7 +87,7 @@ unsafe fn cqf1_sem_memoria(linha: u32, texto: usize) {
 /// oferta e das listas): `TRANSFER_MANAGER::add_transfer_offer(oferta, termos)`. A menor vaga livre guardada (+0x85e)
 /// é lida e volta a −1; a oferta sem valor (+0x1b = 0) perde o +0x40. Vetor cheio (+8 = +4): cresce 50 (calloc
 /// 0x945501 na primeira vez, senão realloc 0x945667 com as 50 novas zeradas; sem memória, a caixa (linha 0x4d2) e o
-/// fim do jogo). A vaga (`cqf1_vagas`); nenhuma: a caixa "Error" (linha 0x511) e nada. A oferta antiga da vaga sai
+/// fim do jogo). A vaga (`find_offer_slot_and_rival`); nenhuma: a caixa "Error" (linha 0x511) e nada. A oferta antiga da vaga sai
 /// (0x8d0f60); uma nova (0x944cf1 de 0x41 bytes, 0x8e5680) recebe a cópia dos campos (a data +0x12 pela 0x417c10, o
 /// nibble baixo de +0x30 e de +0x31), o índice da vaga (+0x20, também na oferta de entrada), +0x28 = −1, +0x2c e +0x10
 /// zerados, +0x2d 2 vira 1, e o número de série (+0x24 = [this+0x85a], que sobe; também na de entrada). Com troca
@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn add_transfer_offer(this: usize, oferta: usize, termo
             let p = realocar(cqf1_d(this), cap.wrapping_mul(4));
             cqf1_pd(this, p);
             if p == 0 {
-                cqf1_sem_memoria(0x4d2, 0xa8e940);
+                show_out_of_memory_box(0x4d2, 0xa8e940);
                 *(0xb67a34 as *mut u32) = 0;
                 fechar1();
                 fechar2();
@@ -146,9 +146,9 @@ unsafe extern "thiscall" fn add_transfer_offer(this: usize, oferta: usize, termo
         }
     }
     let cap = cqf1_d(this + 4) as i32;
-    let (vaga, rival) = cqf1_vagas(cqf1_d(this), cap, cap, cqf1_d(this + 8) as i32, alvo, comprador, inicial, primeira);
+    let (vaga, rival) = find_offer_slot_and_rival(cqf1_d(this), cap, cap, cqf1_d(this + 8) as i32, alvo, comprador, inicial, primeira);
     if vaga == -1 {
-        aviso_em(0xa8d514, 0x511);
+        show_error_at(0xa8d514, 0x511);
         return;
     }
     let slot = |k: i32| cqf1_d(this).wrapping_add(4 * k as usize);
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn add_transfer_offer(this: usize, oferta: usize, termo
             cqf1_pd(cqf1_d(slot(vaga)), l);
         }
     }
-    let vendedor = cqf1_clube_do_contrato(cqf1_pessoa(alvo));
+    let vendedor = contract_club_excluding_type5(cqf1_pessoa(alvo));
     // ponytail: os dois dwords que a original empurra para a 0x8c6220 têm só o byte baixo gravado (o resto é sobra da
     // pilha); a 0x8c6220 lê os bytes (dias as u8, fatias as u8)
     let (mut dias, mut fatias) = (0u8, 0u8);
@@ -273,15 +273,15 @@ unsafe extern "thiscall" fn add_transfer_offer(this: usize, oferta: usize, termo
 }
 
 /// Comparador da 0x8be300: só a original (aloca a oferta e as listas, tira a oferta antiga, agenda, entrega a
-/// notícia). Confere o plano feito antes: a vaga (`cqf1_vagas`, com o vetor que cresce quando está cheio) e o número
+/// notícia). Confere o plano feito antes: a vaga (`find_offer_slot_and_rival`, com o vetor que cresce quando está cheio) e o número
 /// de série gravados na oferta de entrada e a série que sobe.
 unsafe extern "thiscall" fn comparar_add_transfer_offer(this: usize, oferta: usize, termos: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let (alvo, comprador) = (cqf1_d(oferta + 0xc), cqf1_d(oferta + 8));
     let primeira = cqf1_b(cqf1_d(this + 0x86e).wrapping_add(alvo.wrapping_mul(8)) + 1) == 0;
     let (lidas, conta) = (cqf1_d(this + 4) as i32, cqf1_d(this + 8) as i32);
     let cap = if conta == lidas { lidas.wrapping_add(0x32) } else { lidas };
-    let (vaga, _) = cqf1_vagas(cqf1_d(this), lidas, cap, conta, alvo, comprador, cqf1_d(this + 0x85e) as i32, primeira);
+    let (vaga, _) = find_offer_slot_and_rival(cqf1_d(this), lidas, cap, conta, alvo, comprador, cqf1_d(this + 0x85e) as i32, primeira);
     let serie = cqf1_d(this + 0x85a);
     o(this, oferta, termos); // ponytail: só a original
     if vaga == -1 {
@@ -294,7 +294,7 @@ unsafe extern "thiscall" fn comparar_add_transfer_offer(this: usize, oferta: usi
 }
 
 /// O status da oferta deixa seguir (0x8c0660): 2, 3, 0x14, 0x10, 4, ou 0xf com +0x2e ≥ 3.
-unsafe fn cqf1_segue(e: usize) -> bool {
+unsafe fn is_offer_settled(e: usize) -> bool {
     match cqf1_b(e + 0x2c) {
         2 | 3 | 0x14 | 0x10 | 4 => true,
         0xf => cqf1_b(e + 0x2e) >= 3,
@@ -307,7 +307,7 @@ unsafe fn cqf1_segue(e: usize) -> bool {
 /// (0x4cc930 em [0xae1050]), o status 8 e a notícia da oferta aceita (0x8d76d0); a decisão 0: nada mais. Senão a
 /// notícia da recusa em se mudar (0x8d8310 com 0), o status 0xf com +0x2e = 3, o jogador sai das listas de observação
 /// do comprador (0x84aeb0) e cada jogador da troca das do vendedor (o clube do contrato do jogador), e a oferta é
-/// agendada para 10 dias (0x8c6220). Se ela e todas as ofertas pelo jogador (+0) seguem (`cqf1_segue`), o bit 0 do
+/// agendada para 10 dias (0x8c6220). Se ela e todas as ofertas pelo jogador (+0) seguem (`is_offer_settled`), o bit 0 do
 /// registro de 8 bytes do jogador ([this+0x86e]) apaga.
 unsafe extern "thiscall" fn accept_loan_offer(this: usize, vaga: *mut usize, marcar: u32) {
     let decidir: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4cc930usize);
@@ -347,7 +347,7 @@ unsafe extern "thiscall" fn accept_loan_offer(this: usize, vaga: *mut usize, mar
     }
     agendar(this, *vaga, 10, 0);
     let o = *vaga;
-    if !cqf1_segue(o) {
+    if !is_offer_settled(o) {
         return;
     }
     let lista = cqf1_d(o);
@@ -355,7 +355,7 @@ unsafe extern "thiscall" fn accept_loan_offer(this: usize, vaga: *mut usize, mar
         cqf1_pd(lista + 0xa, cqf1_d(lista + 2));
         let mut n = proximo(cqf1_d(o));
         while n != 0 {
-            if !cqf1_segue(cqf1_d(cqf1_d(this).wrapping_add(4 * cqf1_d(n)))) {
+            if !is_offer_settled(cqf1_d(cqf1_d(this).wrapping_add(4 * cqf1_d(n)))) {
                 return;
             }
             n = proximo(cqf1_d(o));
@@ -369,5 +369,5 @@ unsafe extern "thiscall" fn accept_loan_offer(this: usize, vaga: *mut usize, mar
 
 /// Comparador da 0x8c0660: só a original (entrega notícias, agenda a oferta, mexe nas listas de observação).
 unsafe extern "thiscall" fn comparar_accept_loan_offer(this: usize, vaga: *mut usize, marcar: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32)>(%%I1%%)(this, vaga, marcar) // ponytail: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32)>(%%I1%%)(this, vaga, marcar) // ponytail: só a original
 }

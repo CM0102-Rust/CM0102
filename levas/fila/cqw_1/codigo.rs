@@ -48,12 +48,12 @@ fn cqw1_baiano_fase(fase: u32) -> Option<Cqp11Fase> {
 /// { 0x42f5d0 } (thiscall, ret 0x10, bra_reg_bahia.cpp; a virtual +0x3c): `BraRegBahia::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
 /// de `cqw1_baiano_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
 unsafe extern "thiscall" fn cqw1_calendario_baiano(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqw1_baiano_fase(fase), rodadas, extra, liga, 0x98acac)
+    create_round_table(this, cqw1_baiano_fase(fase), rodadas, extra, liga, 0x98acac)
 }
 
 unsafe extern "thiscall" fn comparar_cqw1_calendario_baiano(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqp11_comparar("cqw1_calendario_baiano", fase, cqw1_baiano_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    asia_club_champ_compare_round_table("cqw1_calendario_baiano", fase, cqw1_baiano_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqw1_calendario_baiano(this, fase, r, e, l))
 }
 
@@ -105,12 +105,12 @@ fn cqw1_centro_oeste_fase(fase: u32) -> Option<Cqp11Fase> {
 /// { 0x4307b0 } (thiscall, ret 0x10, bra_reg_central.cpp; a virtual +0x3c): `BraRegCentral::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
 /// de `cqw1_centro_oeste_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
 unsafe extern "thiscall" fn cqw1_calendario_centro_oeste(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqw1_centro_oeste_fase(fase), rodadas, extra, liga, 0x98ae10)
+    create_round_table(this, cqw1_centro_oeste_fase(fase), rodadas, extra, liga, 0x98ae10)
 }
 
 unsafe extern "thiscall" fn comparar_cqw1_calendario_centro_oeste(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cqp11_comparar("cqw1_calendario_centro_oeste", fase, cqw1_centro_oeste_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    asia_club_champ_compare_round_table("cqw1_calendario_centro_oeste", fase, cqw1_centro_oeste_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqw1_calendario_centro_oeste(this, fase, r, e, l))
 }
 
@@ -161,12 +161,12 @@ fn cqw1_gaucho_fase(fase: u32) -> Option<Cqp11Fase> {
 /// { 0x431ac0 } (thiscall, ret 0x10, bra_reg_gaucho.cpp; a virtual +0x3c): `BraRegGaucho::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
 /// de `cqw1_gaucho_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
 unsafe extern "thiscall" fn cqw1_calendario_gaucho(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqw1_gaucho_fase(fase), rodadas, extra, liga, 0x98ae50)
+    create_round_table(this, cqw1_gaucho_fase(fase), rodadas, extra, liga, 0x98ae50)
 }
 
 unsafe extern "thiscall" fn comparar_cqw1_calendario_gaucho(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
-    cqp11_comparar("cqw1_calendario_gaucho", fase, cqw1_gaucho_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
+    asia_club_champ_compare_round_table("cqw1_calendario_gaucho", fase, cqw1_gaucho_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqw1_calendario_gaucho(this, fase, r, e, l))
 }
 
@@ -216,11 +216,11 @@ fn cqw1_goiano_fase(fase: u32) -> Option<Cqp11Fase> {
 /// { 0x432e50 } (thiscall, ret 0x10, bra_reg_goias.cpp; a virtual +0x3c): `BraRegGoias::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
 /// de `cqw1_goiano_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
 unsafe extern "thiscall" fn cqw1_calendario_goiano(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqw1_goiano_fase(fase), rodadas, extra, liga, 0x98ae90)
+    create_round_table(this, cqw1_goiano_fase(fase), rodadas, extra, liga, 0x98ae90)
 }
 
 unsafe extern "thiscall" fn comparar_cqw1_calendario_goiano(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I3%%);
-    cqp11_comparar("cqw1_calendario_goiano", fase, cqw1_goiano_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I3%%);
+    asia_club_champ_compare_round_table("cqw1_calendario_goiano", fase, cqw1_goiano_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqw1_calendario_goiano(this, fase, r, e, l))
 }

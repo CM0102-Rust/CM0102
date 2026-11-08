@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn process_pending_departures(this: usize) {
     while k < cpo4_w(cpo4_d(this + 4)) as i32 {
         let item = proximo(cpo4_d(this + 4));
         if item == 0 {
-            aviso_em(0x9f18a4, 0x2b70);
+            show_error_at(0x9f18a4, 0x2b70);
         } else {
             let id = cpo4_d(item + 2) as u32;
             let clube = cpo4_clube(id as usize);
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn process_pending_departures(this: usize) {
 }
 
 /// A função sem vaga no elenco depois de sair (12 → 5, 13 → 6, 15 → 8: a pessoa fica no clube) ou 0xb (sai).
-fn cpo4_funcao_depois(f: u8) -> (u8, bool) {
+fn role_after_leaving(f: u8) -> (u8, bool) {
     match f {
         0xc => (5, true),
         0xd => (6, true),
@@ -76,7 +76,7 @@ fn cpo4_funcao_depois(f: u8) -> (u8, bool) {
 }
 
 /// Tira a pessoa da primeira das 50 vagas do elenco do clube (+0xd7) em que ela está.
-unsafe fn cpo4_tirar_das_50(clube: usize, pessoa: usize) {
+unsafe fn remove_from_squad(clube: usize, pessoa: usize) {
     for k in 0..0x32usize {
         let v = clube + 0xd7 + 4 * k;
         if cpo4_d(v) == pessoa {
@@ -95,7 +95,7 @@ unsafe fn cpo4_tirar_das_50(clube: usize, pessoa: usize) {
 unsafe extern "thiscall" fn manager_manager_remove_player_from_squad(_this: usize, pessoa: usize, clube: usize) -> usize {
     let tatica: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x896c60usize);
     if cpo4_d(pessoa + 0x39) == clube {
-        let (f, fica) = cpo4_funcao_depois(cpo4_b(pessoa + 0x3d));
+        let (f, fica) = role_after_leaving(cpo4_b(pessoa + 0x3d));
         *((pessoa + 0x3d) as *mut u8) = f;
         let listas: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, i32, u32) = core::mem::transmute(0x7c5fe0usize);
         listas(cpo4_d(0xb74350), pessoa, -1, 0, 0, -1, 0);
@@ -103,17 +103,17 @@ unsafe extern "thiscall" fn manager_manager_remove_player_from_squad(_this: usiz
         midia(cpo4_d(cpo4_d(0xde1f54) + 0x856), pessoa, clube, 4, 2);
         tatica(cpo4_d(0xde1d08), clube, pessoa, 0, 1);
         tatica(cpo4_d(0xde1d08), clube, pessoa, 1, 1);
-        cpo4_tirar_das_50(clube, pessoa);
+        remove_from_squad(clube, pessoa);
         if !fica {
             cpo4_por(pessoa + 0x39, 0);
         }
     }
     if cpo4_d(pessoa + 0x24) == clube {
-        let (f, fica) = cpo4_funcao_depois(cpo4_b(pessoa + 0x28));
+        let (f, fica) = role_after_leaving(cpo4_b(pessoa + 0x28));
         *((pessoa + 0x28) as *mut u8) = f;
         tatica(cpo4_d(0xde1d08), clube, pessoa, 0, 1);
         tatica(cpo4_d(0xde1d08), clube, pessoa, 1, 1);
-        cpo4_tirar_das_50(clube, pessoa);
+        remove_from_squad(clube, pessoa);
         if !fica {
             cpo4_por(pessoa + 0x24, 0);
         }
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn manager_manager_remove_player_from_squad(_this: usiz
 }
 
 /// Zera as `n` vagas de `c + base` que guardam a pessoa (todas).
-unsafe fn cpo4_zerar_vagas(c: usize, base: usize, n: usize, pessoa: usize) {
+unsafe fn clear_slots_holding(c: usize, base: usize, n: usize, pessoa: usize) {
     for k in 0..n {
         if cpo4_d(c + base + 4 * k) == pessoa {
             cpo4_por(c + base + 4 * k, 0);
@@ -142,7 +142,7 @@ unsafe fn cpo4_zerar_vagas(c: usize, base: usize, n: usize, pessoa: usize) {
 /// 12, 13, 15 (jogador-técnico, jogador-auxiliar, jogador-treinador): a vaga zerada e a função 0xb (fica no clube);
 /// outras: +0x39 = 0 só se o byte baixo do ponteiro da pessoa é 0 (o `[esp+0x10]` da original). Na seleção (+0x24,
 /// função +0x28, tabela 0x690b34) o mesmo com +0x24, sem a conferência do técnico, e as outras funções saem.
-unsafe fn cpo4_desligar(pessoa: usize, s: usize, clube: usize, c: usize) {
+unsafe fn detach_staff_from_club(pessoa: usize, s: usize, clube: usize, c: usize) {
     if cpo4_d(s + 0x39) == clube {
         match (cpo4_b(s + 0x3d) as i8 as i32).wrapping_sub(1) as u32 {
             0 => {
@@ -150,7 +150,7 @@ unsafe fn cpo4_desligar(pessoa: usize, s: usize, clube: usize, c: usize) {
                 cpo4_por(s + 0x39, 0);
             }
             1 => {
-                cpo4_zerar_vagas(c, 0xc3, 3, pessoa);
+                clear_slots_holding(c, 0xc3, 3, pessoa);
                 cpo4_por(s + 0x39, 0);
             }
             4 => {
@@ -165,15 +165,15 @@ unsafe fn cpo4_desligar(pessoa: usize, s: usize, clube: usize, c: usize) {
                 cpo4_por(s + 0x39, 0);
             }
             7 => {
-                cpo4_zerar_vagas(c, 0x19f, 5, pessoa);
+                clear_slots_holding(c, 0x19f, 5, pessoa);
                 cpo4_por(s + 0x39, 0);
             }
             8 => {
-                cpo4_zerar_vagas(c, 0x1b3, 7, pessoa);
+                clear_slots_holding(c, 0x1b3, 7, pessoa);
                 cpo4_por(s + 0x39, 0);
             }
             9 => {
-                cpo4_zerar_vagas(c, 0x1cf, 3, pessoa);
+                clear_slots_holding(c, 0x1cf, 3, pessoa);
                 cpo4_por(s + 0x39, 0);
             }
             11 => {
@@ -188,7 +188,7 @@ unsafe fn cpo4_desligar(pessoa: usize, s: usize, clube: usize, c: usize) {
             }
             14 => {
                 *((s + 0x3d) as *mut u8) = 0xb;
-                cpo4_zerar_vagas(c, 0x19f, 5, pessoa);
+                clear_slots_holding(c, 0x19f, 5, pessoa);
             }
             _ => {
                 if pessoa as u8 == 0 {
@@ -199,12 +199,12 @@ unsafe fn cpo4_desligar(pessoa: usize, s: usize, clube: usize, c: usize) {
     } else if cpo4_d(s + 0x24) == clube {
         match (cpo4_b(s + 0x28) as i8 as i32).wrapping_sub(1) as u32 {
             0 => cpo4_por(c + 0xbf, 0),
-            1 => cpo4_zerar_vagas(c, 0xc3, 3, pessoa),
+            1 => clear_slots_holding(c, 0xc3, 3, pessoa),
             4 => cpo4_por(c + 0xcf, 0),
             5 => cpo4_por(c + 0xd3, 0),
-            7 => cpo4_zerar_vagas(c, 0x19f, 5, pessoa),
-            8 => cpo4_zerar_vagas(c, 0x1b3, 7, pessoa),
-            9 => cpo4_zerar_vagas(c, 0x1cf, 3, pessoa),
+            7 => clear_slots_holding(c, 0x19f, 5, pessoa),
+            8 => clear_slots_holding(c, 0x1b3, 7, pessoa),
+            9 => clear_slots_holding(c, 0x1cf, 3, pessoa),
             11 => {
                 cpo4_por(c + 0xcf, 0);
                 *((s + 0x28) as *mut u8) = 0xb;
@@ -217,7 +217,7 @@ unsafe fn cpo4_desligar(pessoa: usize, s: usize, clube: usize, c: usize) {
             }
             14 => {
                 *((s + 0x28) as *mut u8) = 0xb;
-                cpo4_zerar_vagas(c, 0x19f, 5, pessoa);
+                clear_slots_holding(c, 0x19f, 5, pessoa);
                 return;
             }
             _ => {}
@@ -227,13 +227,13 @@ unsafe fn cpo4_desligar(pessoa: usize, s: usize, clube: usize, c: usize) {
 }
 
 /// { 0x690890 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::remove_staff_from_club(pessoa, clube)`: tira o
-/// contrato (0x4d0b50 em [0xae1050]), tira a pessoa do cargo no clube ou na seleção (`cpo4_desligar`), da mídia
+/// contrato (0x4d0b50 em [0xae1050]), tira a pessoa do cargo no clube ou na seleção (`detach_staff_from_club`), da mídia
 /// (0x843e10 com 4, 2) e, se ela é humana (entre as 16 últimas pessoas), das listas do humano (0x7f7270 em
 /// [0xb74448]) e do clube (0x8b2470 em [0xde1f44] com 0). Devolve o eax da última chamada.
 unsafe extern "thiscall" fn remove_staff_from_club(_this: usize, pessoa: usize, clube: usize) -> usize {
     let contrato: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4d0b50usize);
     contrato(cpo4_d(0xae1050), pessoa);
-    cpo4_desligar(pessoa, pessoa, clube, clube);
+    detach_staff_from_club(pessoa, pessoa, clube, clube);
     let midia: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x843e10usize);
     let mut r = midia(cpo4_d(cpo4_d(0xde1f54) + 0x856), pessoa, clube, 4, 2);
     if cpo4_i(pessoa) >= cpo4_i(0xae2364).wrapping_sub(0x10) {
@@ -248,12 +248,12 @@ unsafe extern "thiscall" fn remove_staff_from_club(_this: usize, pessoa: usize, 
 /// Comparador: a saída e a vaga (0x69b790, 0x69ba50) demitem e contratam: roda só a original.
 // ponytail: sem plano (a 0x69ba50 pode acrescentar saídas na mesma lista); a prova é a carreira e o modo Rust.
 unsafe extern "thiscall" fn comparar_process_pending_departures(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// Os campos da pessoa e do clube que a 0x690730/0x690890 gravam: (pessoa +0x24..+0x29, +0x39..+0x3e) e as vagas do
 /// clube (+0xbf..+0x1db).
-unsafe fn cpo4_campos(pessoa: usize, clube: usize) -> ([u8; 6], [u8; 5], [u8; 0x11c]) {
+unsafe fn staff_job_fields(pessoa: usize, clube: usize) -> ([u8; 6], [u8; 5], [u8; 0x11c]) {
     let mut a = [0u8; 6];
     let mut b = [0u8; 5];
     let mut c = [0u8; 0x11c];
@@ -266,20 +266,20 @@ unsafe fn cpo4_campos(pessoa: usize, clube: usize) -> ([u8; 6], [u8; 5], [u8; 0x
 /// Comparador: a original tira a pessoa das listas, da mídia e das táticas (não pode rodar duas vezes): roda só ela e
 /// confere o plano: a função e o clube (e a seleção) da pessoa e ela fora das 50 vagas do elenco.
 unsafe extern "thiscall" fn comparar_manager_manager_remove_player_from_squad(this: usize, pessoa: usize, clube: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I1%%);
     let no_clube = cpo4_d(pessoa + 0x39) == clube;
     let na_selecao = cpo4_d(pessoa + 0x24) == clube;
     let (mut f39, mut c39) = (cpo4_b(pessoa + 0x3d), cpo4_d(pessoa + 0x39));
     let (mut f28, mut c24) = (cpo4_b(pessoa + 0x28), cpo4_d(pessoa + 0x24));
     if no_clube {
-        let (f, fica) = cpo4_funcao_depois(f39);
+        let (f, fica) = role_after_leaving(f39);
         f39 = f;
         if !fica {
             c39 = 0;
         }
     }
     if c24 == clube {
-        let (f, fica) = cpo4_funcao_depois(f28);
+        let (f, fica) = role_after_leaving(f28);
         f28 = f;
         if !fica {
             c24 = 0;
@@ -294,10 +294,10 @@ unsafe extern "thiscall" fn comparar_manager_manager_remove_player_from_squad(th
 }
 
 /// Comparador: a original tira o contrato e tira a pessoa da mídia e das listas do humano (não pode rodar duas vezes):
-/// roda só ela e confere o plano feito antes com o corpo (`cpo4_desligar`) sobre cópias dos campos da pessoa e das vagas
+/// roda só ela e confere o plano feito antes com o corpo (`detach_staff_from_club`) sobre cópias dos campos da pessoa e das vagas
 /// do clube. Pessoa humana: só a original (as listas do humano podem mexer no clube).
 unsafe extern "thiscall" fn comparar_remove_staff_from_club(this: usize, pessoa: usize, clube: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%);
     if pessoa == 0 || clube == 0 || cpo4_i(pessoa) >= cpo4_i(0xae2364).wrapping_sub(0x10) {
         return o(this, pessoa, clube);
     }
@@ -306,10 +306,10 @@ unsafe extern "thiscall" fn comparar_remove_staff_from_club(this: usize, pessoa:
     let mut c = [0u8; 0x1e0];
     core::ptr::copy_nonoverlapping(pessoa as *const u8, s.as_mut_ptr(), 0x40);
     core::ptr::copy_nonoverlapping(clube as *const u8, c.as_mut_ptr(), 0x1e0);
-    cpo4_desligar(pessoa, s.as_mut_ptr() as usize, clube, c.as_mut_ptr() as usize);
-    let esperado = cpo4_campos(s.as_ptr() as usize, c.as_ptr() as usize);
+    detach_staff_from_club(pessoa, s.as_mut_ptr() as usize, clube, c.as_mut_ptr() as usize);
+    let esperado = staff_job_fields(s.as_ptr() as usize, c.as_ptr() as usize);
     let r = o(this, pessoa, clube);
-    let depois = cpo4_campos(pessoa, clube);
+    let depois = staff_job_fields(pessoa, clube);
     PLACAR.registrar(depois == esperado, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
         cpo4_d(pessoa), cpo4_b(pessoa + 0x3d) as i8, cpo4_d(clube), depois.0, depois.1, esperado.0, esperado.1));
     r

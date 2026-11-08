@@ -62,7 +62,7 @@ unsafe extern "C" fn cqv3_acesso_dos_estaduais() {
     let mut vagas: [i8; 12] = core::array::from_fn(|i| *((ligas[i] + 0xc1) as *const i8));
     let lista = alocar(0x320);
     if lista == 0 {
-        return aviso_em(0x98aa30, 0x3d0);
+        return show_error_at(0x98aa30, 0x3d0);
     }
     let mut n = 0i16;
     let mut i = 0usize;
@@ -112,7 +112,7 @@ unsafe extern "C" fn cqv3_acesso_dos_estaduais() {
 /// das últimas linhas de cada estadual. Depois: de cada divisão sobem exatamente min(vagas, os dela na lista) clubes
 /// (+0x60 = o registro do estadual) e os outros dela ficam; os das últimas linhas estão na divisão de baixo.
 unsafe extern "C" fn comparar_cqv3_acesso_dos_estaduais() {
-    let o = orig::<unsafe extern "C" fn()>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
     let ligas: [usize; 12] = core::array::from_fn(|i| cqv3_liga(CQV3_ESTADUAIS[i]));
     let baixo: [usize; 12] = core::array::from_fn(|i| cqv3_registro(CQV3_DE_BAIXO[i]));
@@ -197,7 +197,7 @@ unsafe extern "C" fn cqv3_renovar_serie_c() {
     let (t, reg) = cqv3_serie_c();
     let lista = alocar(0x280);
     if lista == 0 {
-        return aviso_em(0x98aa30, 0x43a);
+        return show_error_at(0x98aa30, 0x43a);
     }
     let v = cqv3_sem_divisao();
     for (k, &c) in v.iter().enumerate() {
@@ -236,7 +236,7 @@ unsafe extern "C" fn cqv3_renovar_serie_c() {
 /// Depois, com 16 ou mais sem divisão: exatamente 16 deles estão na Série C e os outros sem divisão; os marcados, sem
 /// divisão. Com menos de 16: nada mudou neles.
 unsafe extern "C" fn comparar_cqv3_renovar_serie_c() {
-    let o = orig::<unsafe extern "C" fn()>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
     let (t, reg) = cqv3_serie_c();
     let v = cqv3_sem_divisao();
@@ -294,22 +294,22 @@ unsafe fn cqv3_virada_j2(this: usize, anos: i16) -> u32 {
     crate::comparacao::ramo("cqv_3 virada da j2");
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqv3_d(cqv3_d(this) + 0x8c));
     if regras(this) == 0 {
-        aviso_em(0x9eaedc, 0x196);
+        show_error_at(0x9eaedc, 0x196);
         return 0;
     }
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x665030usize);
     if tabela(this) == 0 {
-        aviso_em(0x9eaedc, 0x19d);
+        show_error_at(0x9eaedc, 0x19d);
         return 0;
     }
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
     if jogos(this) == 0 {
-        aviso_em(0x9eaedc, 0x1a3);
+        show_error_at(0x9eaedc, 0x1a3);
         return 0;
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
     if ordenar(this, 0) == 0 {
-        aviso_em(0x9eaedc, 0x1aa);
+        show_error_at(0x9eaedc, 0x1aa);
         return 0;
     }
     let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqv3_d(cqv3_d(this) + 0x5c));
@@ -326,7 +326,7 @@ unsafe fn cqv3_virada_j2(this: usize, anos: i16) -> u32 {
 unsafe extern "thiscall" fn comparar_cqv3_virada_da_j2(this: usize) -> u32 {
     let antes = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let bloco = cqv3_d(this + 8);
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let igual = depois == antes.wrapping_add(1) && cqv3_d(this + 8) == bloco && cqv3_d(this + 0xb1) != 0;
     PLACAR.registrar(igual, || format!("cqv3_virada_da_j2({:#x}) ano antes={} depois={} +8={:#x} +0xb1={:#x}", this, antes, depois, cqv3_d(this + 8), cqv3_d(this + 0xb1)));

@@ -65,7 +65,7 @@ unsafe fn cqv8_plano(this: usize, r: usize, ano: u32, dono: usize, vt: usize, ca
 /// sobre a base League::League (0x682200, thiscall, ret 0); os campos fixos (a vtable 0x96c318, o registro em +4, o ano em +0x40 e
 /// os da tabela CQV8_CAMPOS_COPA_DA_ITALIA); se o estado salvo carrega (League::load_from_temp_file 0x687b10: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: o vetor das fases em +0xc (malloc 0x944e46 de 0x20: push; add esp, 4 -> cdecl, sem conferir); os 48 inscritos (ItaCup::select_entrants) (0x63faf0, thiscall, ret 0, sem conferir); as estatísticas em +8 (a caixa da linha 0x54 sem elas); as posições previstas (ItaCup::set_predicted_positions) (0x640210, thiscall, ret 0, sem conferir); as regras (ItaCup::set_up_rules) (0x63f350, thiscall, ret 0; a caixa da linha 0x5e se devolver 0); a tabela do grupo 1 (ItaCup::create_first_group_table) (0x63f250, thiscall, ret 0; a caixa da linha 0x65 se devolver 0); os jogos (League::create_fixtures) (0x6835c0, thiscall, ret 0; a caixa da linha 0x6b se devolver 0); a ordem da tabela (League::sort_table) (0x6827d0, thiscall, push 0, ret 4; a caixa da linha 0x72 se devolver 0); a fase de cada grupo (ItaCup::create_group_stage) para os grupos 0 a 6 (0x63f640, push i; mov ecx, this -> thiscall, ret 4); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: sem fundo de prêmios (+0x28 fica como a base deixou); 7 reservas no banco e 3 substituições; regra de disciplina 18 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqv8_copa_da_italia_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
@@ -91,7 +91,7 @@ unsafe fn cqv8_copa_da_italia_corpo(this: usize, ano: u32, dono: usize) -> usize
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63faf0usize);
     f(this);
     if !cqv8_estatisticas(this) {
-        aviso_em(0x9ea23c, 0x54);
+        show_error_at(0x9ea23c, 0x54);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x640210usize);
@@ -99,25 +99,25 @@ unsafe fn cqv8_copa_da_italia_corpo(this: usize, ano: u32, dono: usize) -> usize
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63f350usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ea23c, 0x5e);
+        show_error_at(0x9ea23c, 0x5e);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63f250usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ea23c, 0x65);
+        show_error_at(0x9ea23c, 0x65);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x6835c0usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ea23c, 0x6b);
+        show_error_at(0x9ea23c, 0x6b);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x6827d0usize);
     let r = f(this, 0);
     if r == 0 {
-        aviso_em(0x9ea23c, 0x72);
+        show_error_at(0x9ea23c, 0x72);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x63f640usize);
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn cqv8_copa_da_italia(this: usize, ano: u32, dono: usi
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqv8_plano).
 unsafe extern "thiscall" fn comparar_cqv8_copa_da_italia(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqv8_plano(this, r, ano, dono, 0x96c318, &CQV8_CAMPOS_COPA_DA_ITALIA, false);
     PLACAR.registrar(erro.is_none(), || format!("cqv8_copa_da_italia({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn comparar_cqv8_copa_da_italia(this: usize, ano: u32, 
 /// sobre a base League::League (0x682200, thiscall, ret 0); os campos fixos (a vtable 0x96c264, o registro em +4, o ano em +0x40 e
 /// os da tabela CQV8_CAMPOS_COPA_DA_SERIE_C); se o estado salvo carrega (League::load_from_temp_file 0x687b10: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: o vetor das fases em +0xc (malloc 0x944e46 de 0x40: push; add esp, 4 -> cdecl, sem conferir); os 90 inscritos (ItaCCup::select_entrants) (0x63dfe0, thiscall, ret 0, sem conferir); as estatísticas em +8 (a caixa da linha 0x4f sem elas); as posições previstas (ItaCCup::set_predicted_positions) (0x63e580, thiscall, ret 0, sem conferir); as regras (ItaCCup::set_up_rules) (0x63d6e0, thiscall, ret 0; a caixa da linha 0x59 se devolver 0); a tabela do grupo 1 (ItaCCup::init_first_group) (0x63d5e0, thiscall, ret 0; a caixa da linha 0x60 se devolver 0); os jogos (League::create_fixtures) (0x6835c0, thiscall, ret 0; a caixa da linha 0x66 se devolver 0); a ordem da tabela (League::sort_table) (0x6827d0, thiscall, push 0, ret 4; a caixa da linha 0x6d se devolver 0); a fase de cada grupo (ItaCCup::create_group_stage) para os grupos 0 a 14 (0x63d9e0, push i; mov ecx, this -> thiscall, ret 4); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: sem fundo de prêmios (+0x28 fica como a base deixou); 7 reservas no banco e 3 substituições; regra de disciplina 18 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqv8_copa_da_serie_c_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
@@ -172,7 +172,7 @@ unsafe fn cqv8_copa_da_serie_c_corpo(this: usize, ano: u32, dono: usize) -> usiz
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63dfe0usize);
     f(this);
     if !cqv8_estatisticas(this) {
-        aviso_em(0x9ea204, 0x4f);
+        show_error_at(0x9ea204, 0x4f);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63e580usize);
@@ -180,25 +180,25 @@ unsafe fn cqv8_copa_da_serie_c_corpo(this: usize, ano: u32, dono: usize) -> usiz
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63d6e0usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ea204, 0x59);
+        show_error_at(0x9ea204, 0x59);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63d5e0usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ea204, 0x60);
+        show_error_at(0x9ea204, 0x60);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x6835c0usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ea204, 0x66);
+        show_error_at(0x9ea204, 0x66);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x6827d0usize);
     let r = f(this, 0);
     if r == 0 {
-        aviso_em(0x9ea204, 0x6d);
+        show_error_at(0x9ea204, 0x6d);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x63d9e0usize);
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn cqv8_copa_da_serie_c(this: usize, ano: u32, dono: us
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqv8_plano).
 unsafe extern "thiscall" fn comparar_cqv8_copa_da_serie_c(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqv8_plano(this, r, ano, dono, 0x96c264, &CQV8_CAMPOS_COPA_DA_SERIE_C, false);
     PLACAR.registrar(erro.is_none(), || format!("cqv8_copa_da_serie_c({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r

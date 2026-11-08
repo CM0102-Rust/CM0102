@@ -31,7 +31,7 @@ unsafe fn cpv3_contrato(p: usize) -> usize {
 }
 
 /// O clube do contrato (id em +4); com `filtro`, nenhum para o contrato de tipo 5 (+0x35 & 0x3f).
-unsafe fn cpv3_clube_do_contrato(c: usize, filtro: bool) -> usize {
+unsafe fn offer_contract_club(c: usize, filtro: bool) -> usize {
     if c != 0 && (!filtro || cpv3_b(c + 0x35) & 0x3f != 5) {
         cpv3_clube(cpv3_d(c + 4))
     } else {
@@ -51,7 +51,7 @@ unsafe fn cpv3_resolvida(o: usize) -> bool {
 /// Põe a oferta em espera: status 1, a marca +0x30 (bits 1..3 limpos, bit 0 ligado), sai a proposta de contrato do
 /// jogador com o comprador (0x4cca70), termos zerados (+0x10) e, para cada jogador da troca (+4), sai a proposta pela
 /// vaga +0x20 (0x4ccb30) e o estado dele (+4) zera.
-unsafe fn cpv3_em_espera(o: usize) {
+unsafe fn put_offer_on_hold(o: usize) {
     let tirar_proposta: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4cca70usize);
     let tirar_da_troca: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4ccb30usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -128,13 +128,13 @@ unsafe extern "thiscall" fn hold_offers_at_window_close(this: usize, nacao: usiz
             && st != 0x13
             && aceita(o, comprador)
         {
-            cpv3_em_espera(o);
+            put_offer_on_hold(o);
             let humano_vende = || {
                 let c = cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc)));
                 if c == 0 || cpv3_b(c + 0x35) & 0x3f == 5 || cpv3_clube(cpv3_d(c + 4)) == 0 {
                     return false;
                 }
-                let v = cpv3_clube_do_contrato(cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc))), true);
+                let v = offer_contract_club(cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc))), true);
                 humano(cpv3_d(0xb7431c), v) != 0
             };
             if humano(cpv3_d(0xb7431c), cpv3_clube(cpv3_d(o + 8))) != 0 || humano_vende() {
@@ -159,23 +159,23 @@ unsafe extern "thiscall" fn hold_offers_at_window_close(this: usize, nacao: usiz
         if c == 0 || cpv3_clube(cpv3_d(c + 4)) == 0 {
             continue;
         }
-        let vendedor = cpv3_clube_do_contrato(cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc))), false);
+        let vendedor = offer_contract_club(cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc))), false);
         if cpv3_d(vendedor + 0x53) != nacao || cpv3_resolvida(o) || cpv3_b(o + 0x2c) == 0x13 {
             continue;
         }
         if regras != 0 {
-            let dono = cpv3_clube_do_contrato(cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc))), false);
+            let dono = offer_contract_club(cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc))), false);
             if !aceita(o, dono) {
                 continue;
             }
         }
-        cpv3_em_espera(o);
+        put_offer_on_hold(o);
         let humano_vende = || {
             let c = cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc)));
             if c == 0 || cpv3_clube(cpv3_d(c + 4)) == 0 {
                 return false;
             }
-            let v = cpv3_clube_do_contrato(cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc))), false);
+            let v = offer_contract_club(cpv3_contrato(cpv3_pessoa(cpv3_d(o + 0xc))), false);
             humano(cpv3_d(0xb7431c), v) != 0
         };
         if humano(cpv3_d(0xb7431c), cpv3_clube(cpv3_d(o + 8))) != 0 || humano_vende() {
@@ -236,15 +236,15 @@ unsafe extern "thiscall" fn post_supporter_protest_news(_this: usize, clube: usi
 // ponytail: completa, retira, recusa e reagenda ofertas (as chamadas liberam e alocam): não roda duas vezes. Só a
 // original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
 unsafe extern "thiscall" fn comparar_hold_offers_at_window_close(this: usize, nacao: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, nacao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, nacao)
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_fa_expectations_news(this: usize, selecao: usize, expectativa: u32, competicao: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%)(this, selecao, expectativa, competicao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%)(this, selecao, expectativa, competicao)
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_supporter_protest_news(this: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, clube)
 }

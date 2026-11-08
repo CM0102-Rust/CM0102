@@ -5,8 +5,8 @@
 # no efeito: a decisao, o fator da distancia (clubes com cidade do estadio) e a partida do amistoso aceito.
 MUTACOES = [
     ('cqa2_convidado_com_o_dobro_da_folga',
-     'let aceita = ra as f64 >= ro as f64 / f || f * f64_em(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação',
-     'let aceita = ra as f64 >= ro as f64 / (f * 2.0) || f * f64_em(0x96a690) * 2.0 >= ro.wrapping_sub(ra) as f64; // mutacao: o dobro da folga',
+     'let aceita = ra as f64 >= ro as f64 / f || f * read_f64_at(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação',
+     'let aceita = ra as f64 >= ro as f64 / (f * 2.0) || f * read_f64_at(0x96a690) * 2.0 >= ro.wrapping_sub(ra) as f64; // mutacao: o dobro da folga',
      'cqa_2 decisao do amistoso'),
     ('cqa2_sem_o_fator_da_distancia',
      'f *= v; // cqa2: o fator da distância',

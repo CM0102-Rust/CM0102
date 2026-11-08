@@ -13,18 +13,18 @@ unsafe fn cqs10_pd(a: usize, v: usize) {
 }
 
 /// Os classificados por grupo (+0xbe, byte com sinal).
-unsafe fn cqs10_vagas(this: usize) -> i32 {
+unsafe fn qualifiers_per_group(this: usize) -> i32 {
     *((this + 0xbe) as *const i8) as i32
 }
 
 /// O clube da linha i da tabela do grupo 1 (a da própria copa: +0xb1, linhas de 0x3b bytes).
-unsafe fn cqs10_do_grupo_um(this: usize, i: usize) -> usize {
+unsafe fn group_one_club(this: usize, i: usize) -> usize {
     cqs10_d(cqs10_d(this + 0xb1) + i * 0x3b) // cqs10: a linha do grupo 1
 }
 
 /// O clube da posição j da fase f ([+0xc][f], um League_Stage): a linha pela 0x6826d0 (League::get_table_row: push j;
 /// mov ecx, fase -> thiscall, ret 4) e o clube no +0 dela.
-unsafe fn cqs10_da_fase(this: usize, f: usize, j: i32) -> usize {
+unsafe fn stage_club_at(this: usize, f: usize, j: i32) -> usize {
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
     let fase = cqs10_d(cqs10_d(this + 0xc) + f * 4);
     cqs10_d(linha(fase, j)) // cqs10: a posição j da fase
@@ -40,27 +40,27 @@ unsafe fn cqs10_da_fase(this: usize, f: usize, j: i32) -> usize {
 /// as rodadas, o id e o ano com lixo nos 16 bits altos, que o construtor não lê) em [+0xc][`mata`]; a lista e a tabela
 /// liberadas (0x9452ca). Sem fase: a caixa `linha_sem_fase`. Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round:
 /// push 0; mov ecx, fase -> thiscall, ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
-unsafe fn cqs10_mata_mata(this: usize, times: u32, fases: usize, mata: u32, arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
+unsafe fn build_knockout_stage(this: usize, times: u32, fases: usize, mata: u32, arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
     let lista = alocar(times * 4);
     if lista == 0 {
-        return aviso_em(arquivo, linha_sem_lista);
+        return show_error_at(arquivo, linha_sem_lista);
     }
     let mut n = 0usize;
     let mut i = 0i32;
-    while i < cqs10_vagas(this) {
-        cqs10_pd(lista + n * 4, cqs10_do_grupo_um(this, i as usize));
+    while i < qualifiers_per_group(this) {
+        cqs10_pd(lista + n * 4, group_one_club(this, i as usize));
         n += 1;
         i += 1;
     }
     for f in 0..fases {
         let mut j = 0i32;
-        while j < cqs10_vagas(this) {
+        while j < qualifiers_per_group(this) {
             crate::comparacao::ramo(ramo);
-            cqs10_pd(lista + n * 4, cqs10_da_fase(this, f, j)); // cqs10: os classificados de cada fase
+            cqs10_pd(lista + n * 4, stage_club_at(this, f, j)); // cqs10: os classificados de cada fase
             n += 1;
             j += 1;
         }
@@ -82,7 +82,7 @@ unsafe fn cqs10_mata_mata(this: usize, times: u32, fases: usize, mata: u32, arqu
     soltar(tabela);
     let f = cqs10_d(cqs10_d(this + 0xc) + mata as usize * 4);
     if f == 0 {
-        return aviso_em(arquivo, linha_sem_fase);
+        return show_error_at(arquivo, linha_sem_fase);
     }
     sortear(f, 0);
 }
@@ -91,8 +91,8 @@ unsafe fn cqs10_mata_mata(this: usize, times: u32, fases: usize, mata: u32, arqu
 /// sorteada): os classificados lidos antes (o grupo 1 nas linhas, as fases pelas linhas da tabela +0xb1 delas, como a
 /// 0x6826d0); depois a fase em [+0xc][`mata`] com +0x3e = `times`, o +4 da copa e os clubes da lista dela (+0xa7, 6
 /// bytes) iguais aos do plano como conjunto (o sorteio pode reordenar).
-unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: usize, fases: usize, mata: usize, original: impl FnOnce()) {
-    let q = cqs10_vagas(this).max(0) as usize;
+unsafe fn con_merc_cup_compare_knockout_stage(nome: &str, this: usize, times: usize, fases: usize, mata: usize, original: impl FnOnce()) {
+    let q = qualifiers_per_group(this).max(0) as usize;
     let mut plano: Vec<usize> = (0..q).map(|i| cqs10_d(cqs10_d(this + 0xb1) + i * 0x3b)).collect();
     for f in 0..fases {
         let fase = cqs10_d(cqs10_d(this + 0xc) + f * 4);
@@ -119,24 +119,24 @@ unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: usize, fases:
 /// Libertadores: os 16 (os 2 primeiros do grupo 1 e das 7 fases de grupo) na fase 7; caixas nas linhas 0x24c (sem
 /// lista) e 0x26a (sem fase).
 unsafe extern "thiscall" fn conmebol_liber_create_knockout_stage(this: usize) {
-    cqs10_mata_mata(this, 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
+    build_knockout_stage(this, 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
 }
 
 unsafe extern "thiscall" fn comparar_conmebol_liber_create_knockout_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqs10_comparar_mata_mata("conmebol_liber_create_knockout_stage", this, 0x10, 7, 7, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    con_merc_cup_compare_knockout_stage("conmebol_liber_create_knockout_stage", this, 0x10, 7, 7, || o(this))
 }
 
 /// { 0x4c2330 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::create_semi_final_stage()`, as semifinais da
 /// Merconorte: os 4 (o primeiro do grupo 1 e das 3 fases de grupo) na fase 3; caixas nas linhas 0x21d (sem lista) e
 /// 0x23b (sem fase).
 unsafe extern "thiscall" fn con_merc_cup_create_semi_final_stage(this: usize) {
-    cqs10_mata_mata(this, 4, 3, 3, 0x9a7d6c, 0x21d, 0x23b, "cqs_10 classificados da merconorte");
+    build_knockout_stage(this, 4, 3, 3, 0x9a7d6c, 0x21d, 0x23b, "cqs_10 classificados da merconorte");
 }
 
 unsafe extern "thiscall" fn comparar_con_merc_cup_create_semi_final_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqs10_comparar_mata_mata("con_merc_cup_create_semi_final_stage", this, 4, 3, 3, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    con_merc_cup_compare_knockout_stage("con_merc_cup_create_semi_final_stage", this, 4, 3, 3, || o(this))
 }
 
 /// { 0x4c20b0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x28): `ConMercCup::advance_stage()`, a fase seguinte da
@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_create_semi_final_stage(this: 
 unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
     let f = cqs10_d(this + 0x30) as i32;
     if f >= (cqs10_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x9a7d6c, 0x1c7);
+        return show_error_at(0x9a7d6c, 0x1c7);
     }
     let f = f + 1;
     cqs10_pd(this + 0x30, f as usize);
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
 // ponytail: as semifinais (0x4c2330) alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa e não muda nada).
 unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let f = cqs10_d(this + 0x30) as i32;
     let ultima = f >= (cqs10_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);

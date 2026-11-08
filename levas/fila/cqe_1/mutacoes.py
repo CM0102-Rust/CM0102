@@ -8,12 +8,12 @@
 # Os contadores ficam colados no efeito, depois de todas as condicoes do trecho mutado.
 MUTACOES = [
     ('cqe1_aceita_menos',
-     'if v as f64 * f64_em(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido',
+     'if v as f64 * read_f64_at(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido',
      'if v as f64 * 1.2 < pedido_f && troca_recusada == 0 { // mutacao: a opção × 1,2 abaixo do pedido',
      'cqe_1 aceita'),
     ('cqe1_sem_contraproposta',
-     'if v as f64 * f64_em(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta',
-     'if v as f64 * f64_em(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 && false { // mutacao: sem contraproposta',
+     'if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta',
+     'if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 && false { // mutacao: sem contraproposta',
      'cqe_1 contraproposta'),
     ('cqe1_preco_sempre_o_piso',
      'let preco = if k > piso { // cqe1: o preço pelo valor k',

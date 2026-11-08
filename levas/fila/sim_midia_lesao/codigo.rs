@@ -100,20 +100,20 @@ unsafe extern "thiscall" fn get_category(noticia: usize) -> u32 {
         4000..=4999 => 5,
         5000..=5999 => 1,
         6000..=0x1790 => 6,
-        _ => return orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(noticia),
+        _ => return original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(noticia),
     };
     (t as u32 & 0xffff_ff00) | c
 }
 
 unsafe extern "thiscall" fn comparar_get_finable_story_kind(midia: usize, jogador: usize) -> u16 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u16>(%%I0%%)(midia, jogador);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(%%I0%%)(midia, jogador);
     let n = get_finable_story_kind(midia, jogador);
     PLACAR.registrar(r == n, || format!("get_finable_story_kind original={} rust={}", r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_choose_injury_type(lesoes: usize, categoria: i8, gravidade: i8, jogador: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8>(%%I1%%);
     // ponytail: jogador nulo abre a caixa de erro do 0x62ed70; não roda duas vezes
     if jogador == 0 {
         return o(lesoes, categoria, gravidade, jogador);
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn comparar_choose_injury_type(lesoes: usize, categoria
 }
 
 unsafe extern "thiscall" fn comparar_get_category(noticia: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let t = *(noticia as *const i32);
     if !(1..=0x1790).contains(&t) {
         return o(noticia);

@@ -12,5 +12,5 @@ MUTACOES = [
     ('n_bonus', "        if t as i16 > novo {", "        if t as i16 >= novo + 1 && t as i16 > 0 {"),
     ('n_limite', "    let limite = (nv * 300 + 4000) as i16;", "    let limite = (nv * 300 + 3000) as i16;"),
     ('n_baixo', "    let v = if baixo > mf as f64 {", "    let v = if baixo >= mf as f64 + 1.0 {"),
-    ('n_clamp', "    let r = (ftol(v) as i16).clamp(1, 10000);", "    let r = (ftol(v) as i16).clamp(0, 10000);"),
+    ('n_clamp', "    let r = (match_pl_ftol(v) as i16).clamp(1, 10000);", "    let r = (match_pl_ftol(v) as i16).clamp(0, 10000);"),
 ]

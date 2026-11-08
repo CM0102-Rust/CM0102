@@ -28,7 +28,7 @@ unsafe fn cqe6_contrato(p: usize) -> usize {
 
 /// O começo comum das regras escocesa, irlandesa e espanhola: sem contrato do jogador (ou sem clube do contrato),
 /// `None` (pode); senão o clube dono pelo contrato consultado de novo (0 se a segunda consulta não achar).
-unsafe fn cqe6_dono(jogador: usize) -> Option<usize> {
+unsafe fn loan_owner_club(jogador: usize) -> Option<usize> {
     let c = cqe6_contrato(jogador);
     if c == 0 || cqe6_clube_do_contrato(c) == 0 {
         return None;
@@ -38,7 +38,7 @@ unsafe fn cqe6_dono(jogador: usize) -> Option<usize> {
 }
 
 /// A recusa "fora da janela" (motivo 9), com o adjetivo da nação das regras (+0xa).
-unsafe fn cqe6_fora_da_janela(this: usize, msg: usize, motivo: *mut u16) -> u32 {
+unsafe fn refuse_outside_window(this: usize, msg: usize, motivo: *mut u16) -> u32 {
     if msg != 0 {
         // 0x6181d0: push 2; push 100; push buffer; push nação; add esp, 0x10 -> cdecl
         let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x6181d0usize);
@@ -55,7 +55,7 @@ unsafe fn cqe6_fora_da_janela(this: usize, msg: usize, motivo: *mut u16) -> u32 
 }
 
 /// Uma recusa com o texto `formato` montado com o byte +0x37 (duas vezes) e o nome em +4 do registro `r`.
-unsafe fn cqe6_recusa(msg: usize, motivo: *mut u16, formato: usize, r: usize, m: u16) -> u32 {
+unsafe fn refuse_loan(msg: usize, motivo: *mut u16, formato: usize, r: usize, m: u16) -> u32 {
     if msg != 0 {
         let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
         let g = cqe6_b(r + 0x37) as i8 as i32;
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize, clube: us
 /// { 0x7f6650 } (thiscall, ret 0x10, scotland_rules.cpp): `SCOTLAND_RULES::can_loan_player(clube, jogador, mensagem,
 /// motivo)`: com contrato, o clube que pede e o dono na mesma divisão escocesa ([0x9cf5dc]) não podem (0x1d).
 unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    let dono = match cqe6_dono(jogador) {
+    let dono = match loan_owner_club(jogador) {
         None => return 1,
         Some(d) => d,
     };
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usize, clube: 
     if comp == cqe6_d(dono + 0x57) && comp != 0 && cqe6_d(comp) == cqe6_d(0x9cf5dc) {
         crate::comparacao::ramo("cqe_6 escocia mesma divisao");
         let r = cqe6_d(0xae23d0).wrapping_add(cqe6_d(0x9cf5dc).wrapping_mul(0x6b));
-        return cqe6_recusa(msg, motivo, 0x9c4590, r, 0x1d);
+        return refuse_loan(msg, motivo, 0x9c4590, r, 0x1d);
     }
     1
 }
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn scotland_rules_can_loan_player_661770(this: usize, c
     let na_janela: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x8e8c40usize);
     if na_janela(this, 0xae2c90, cqe6_d(this + 4)) == 0 && na_janela(this, 0xae2c90, cqe6_d(this + 4) + 0xc) == 0 {
         crate::comparacao::ramo("cqe_6 italia fora da janela");
-        return cqe6_fora_da_janela(this, msg, motivo);
+        return refuse_outside_window(this, msg, motivo);
     }
     let comp = cqe6_d(clube + 0x57);
     if comp == 0 {
@@ -215,13 +215,13 @@ unsafe extern "thiscall" fn scotland_rules_can_loan_player_63c3d0(this: usize, c
         }
         return 0;
     }
-    let dono = match cqe6_dono(jogador) {
+    let dono = match loan_owner_club(jogador) {
         None => return 1,
         Some(d) => d,
     };
     if cqe6_d(clube + 0x57) == cqe6_d(dono + 0x57) {
         crate::comparacao::ramo("cqe_6 irlanda mesma divisao");
-        return cqe6_recusa(msg, motivo, 0x9ea168, cqe6_d(this + 0xa), 0x1d);
+        return refuse_loan(msg, motivo, 0x9ea168, cqe6_d(this + 0xa), 0x1d);
     }
     1
 }
@@ -234,9 +234,9 @@ unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, clube: usiz
     let janela: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8e8e50usize);
     if janela(this, 0xae2c90, 0) == 0 {
         crate::comparacao::ramo("cqe_6 espanha fora da janela");
-        return cqe6_fora_da_janela(this, msg, motivo);
+        return refuse_outside_window(this, msg, motivo);
     }
-    let dono = match cqe6_dono(jogador) {
+    let dono = match loan_owner_club(jogador) {
         None => return 1,
         Some(d) => d,
     };
@@ -244,9 +244,9 @@ unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, clube: usiz
         // 0x7c1e30: push 6,5f; push 1; push 2; push ficha; mov ecx, [0xb74350] -> thiscall, ret 0x10 (devolve no st0)
         let jogos: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
         let v = jogos(cqe6_d(0xb74350), cqe6_d(jogador + 0x61), 2, 1, 6.5);
-        if v > f32_em(0x968990) as f64 {
+        if v > read_f32_at(0x968990) as f64 {
             crate::comparacao::ramo("cqe_6 espanha mesma divisao");
-            return cqe6_recusa(msg, motivo, 0xa82b00, cqe6_d(this + 0xa), 0x1f);
+            return refuse_loan(msg, motivo, 0xa82b00, cqe6_d(this + 0xa), 0x1f);
         }
     }
     1
@@ -270,7 +270,7 @@ unsafe fn cqe6_texto(msg: usize) -> Vec<u8> {
 
 /// Comparador comum (pode emprestar): lado a lado na devolução, em [0xae1080] e no motivo; a mensagem, que só é
 /// escrita, é conferida pelo texto (antes da cópia o primeiro byte vai a zero, e no fim volta o texto da original).
-unsafe fn cqe6_comparar_pode(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, nome: &str, this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
+unsafe fn scotland_rules_compare_can_loan(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, nome: &str, this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     let mut regioes = vec![(0xae1080usize, 4usize)];
     if !motivo.is_null() {
         regioes.push((motivo as usize, 2));
@@ -298,32 +298,32 @@ unsafe fn cqe6_comparar_pode(o: unsafe extern "thiscall" fn(usize, usize, usize,
 
 /// Comparador: lado a lado nas quatro saídas e em [0xae1080] (a regra base pode consultar contratos).
 unsafe extern "thiscall" fn comparar_england_rules_get_loan_period(this: usize, clube: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(%%I0%%);
     let regioes = [(ini_mes as usize, 1usize), (ini_ano as usize, 2), (fim_mes as usize, 1), (fim_ano as usize, 2), (0xae1080, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador), || england_rules_get_loan_period(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador));
     PLACAR.registrar(igual, || format!("england_rules_get_loan_period(regras {:#x}, clube {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, clube, jogador, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_scotland_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I1%%), scotland_rules_can_loan_player, "scotland_rules_can_loan_player", this, clube, jogador, msg, motivo)
+    scotland_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I1%%), scotland_rules_can_loan_player, "scotland_rules_can_loan_player", this, clube, jogador, msg, motivo)
 }
 
 /// Comparador: lado a lado nas quatro saídas e em [0xae1080].
 unsafe extern "thiscall" fn comparar_scotland_rules_get_loan_period(this: usize, a1: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(%%I2%%);
     let regioes = [(ini_mes as usize, 1usize), (ini_ano as usize, 2), (fim_mes as usize, 1), (fim_ano as usize, 2), (0xae1080, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, a1, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador), || scotland_rules_get_loan_period(this, a1, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador));
     PLACAR.registrar(igual, || format!("scotland_rules_get_loan_period(regras {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, jogador, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_scotland_rules_can_loan_player_661770(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I3%%), scotland_rules_can_loan_player_661770, "scotland_rules_can_loan_player_661770", this, clube, jogador, msg, motivo)
+    scotland_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I3%%), scotland_rules_can_loan_player_661770, "scotland_rules_can_loan_player_661770", this, clube, jogador, msg, motivo)
 }
 
 unsafe extern "thiscall" fn comparar_scotland_rules_can_loan_player_63c3d0(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I4%%), scotland_rules_can_loan_player_63c3d0, "scotland_rules_can_loan_player_63c3d0", this, clube, jogador, msg, motivo)
+    scotland_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I4%%), scotland_rules_can_loan_player_63c3d0, "scotland_rules_can_loan_player_63c3d0", this, clube, jogador, msg, motivo)
 }
 
 unsafe extern "thiscall" fn comparar_spain_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I5%%), spain_rules_can_loan_player, "spain_rules_can_loan_player", this, clube, jogador, msg, motivo)
+    scotland_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I5%%), spain_rules_can_loan_player, "spain_rules_can_loan_player", this, clube, jogador, msg, motivo)
 }

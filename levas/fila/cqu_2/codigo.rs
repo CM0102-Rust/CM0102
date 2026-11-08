@@ -81,28 +81,28 @@ unsafe fn cqu2_construir(this: usize, ano: u32, registro: usize, e: &Cqu2Liga, d
         let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(r);
         let linha = *l.next().unwrap();
         if regras(this) == 0 {
-            aviso_em(e.arquivo, linha);
+            show_error_at(e.arquivo, linha);
             return this;
         }
     }
     let (lt, lj, lo, ls) = (*l.next().unwrap(), *l.next().unwrap(), *l.next().unwrap(), *l.next().unwrap());
     if tabela(this) == 0 {
-        aviso_em(e.arquivo, lt);
+        show_error_at(e.arquivo, lt);
         return this;
     }
     if jogos(this) == 0 {
-        aviso_em(e.arquivo, lj);
+        show_error_at(e.arquivo, lj);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        aviso_em(e.arquivo, lo);
+        show_error_at(e.arquivo, lo);
         return this;
     }
     let n = novo(0x5ce);
     let s = if n != 0 { estatisticas(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
-        aviso_em(e.arquivo, ls);
+        show_error_at(e.arquivo, ls);
         return this;
     }
     if e.serie_c {
@@ -238,16 +238,16 @@ unsafe extern "thiscall" fn cqu2_construir_mls(this: usize, ano: u32, registro: 
 }
 
 unsafe extern "thiscall" fn comparar_cqu2_construir_serie_c(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     cqu2_comparar("cqu2_construir_serie_c", this, ano, registro, &CQU2_SERIE_C, 7, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_cqu2_construir_j2(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     cqu2_comparar("cqu2_construir_j2", this, ano, registro, &CQU2_J2, 0x13, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_cqu2_construir_mls(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
     cqu2_comparar("cqu2_construir_mls", this, ano, registro, &CQU2_MLS, 0x1e, || o(this, ano, registro))
 }

@@ -20,7 +20,7 @@ const CQI12_COPA_DOS_CAMPEOES: Cqi12Regras = Cqi12Regras { vitoria: 3, empate: 1
 /// Grava as regras `g` na liga `this`: sobe/cai para nenhuma (+0x1c, +0x20 = −1), um turno (+0x3c = 1), o tipo 1
 /// (+0x42, clubes), sem play-offs nem rebaixamento (+0xbf, +0xc0, +0xc1 = 0); depois a tabela das rodadas da virtual
 /// +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
-unsafe fn cqi12_regras(this: usize, g: &Cqi12Regras, turnos: i16) -> u32 {
+unsafe fn set_cup_league_rules(this: usize, g: &Cqi12Regras, turnos: i16) -> u32 {
     let b = |o: usize, v: u8| *((this + o) as *mut u8) = v;
     b(0xc2, g.vitoria);
     b(0xc3, g.empate);
@@ -49,8 +49,8 @@ unsafe fn cqi12_regras(this: usize, g: &Cqi12Regras, turnos: i16) -> u32 {
     1
 }
 
-/// O plano: os campos que `cqi12_regras` grava, lidos depois da original.
-unsafe fn cqi12_confere(nome: &str, this: usize, g: &Cqi12Regras, r: u32) {
+/// O plano: os campos que `set_cup_league_rules` grava, lidos depois da original.
+unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &Cqi12Regras, r: u32) {
     let b = |o: usize| *((this + o) as *const u8);
     let lido = (b(0xc2), b(0xc3), b(0xc4), [b(0xc5), b(0xc6), b(0xc7), b(0xc8)], b(0xbe), [b(0xbf), b(0xc0), b(0xc1)], b(0x42),
         core::ptr::read_unaligned((this + 0x1c) as *const i32), core::ptr::read_unaligned((this + 0x20) as *const i32),
@@ -69,13 +69,13 @@ unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 {
     let mut g = CQI12_COPA_DA_ITALIA;
     g.vitoria = 3; // cqi12: a vitória nos grupos da Copa da Itália
     g.categoria = 4; // cqi12: a categoria dos jogos da Copa da Itália
-    cqi12_regras(this, &g, 1)
+    set_cup_league_rules(this, &g, 1)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
-    cqi12_confere("ita_cup_set_up_rules", this, &CQI12_COPA_DA_ITALIA, r);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
+    check_cup_league_rules("ita_cup_set_up_rules", this, &CQI12_COPA_DA_ITALIA, r);
     r
 }
 
@@ -84,13 +84,13 @@ unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules(this: usize) -> u32 {
 unsafe extern "thiscall" fn ita_cup_set_up_rules_63d6e0(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_12 regras da copa da serie c");
     let turnos = 1i16; // cqi12: o turno único dos grupos da Série C
-    cqi12_regras(this, &CQI12_COPA_DA_SERIE_C, turnos)
+    set_cup_league_rules(this, &CQI12_COPA_DA_SERIE_C, turnos)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules_63d6e0(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this);
-    cqi12_confere("ita_cup_set_up_rules_63d6e0", this, &CQI12_COPA_DA_SERIE_C, r);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this);
+    check_cup_league_rules("ita_cup_set_up_rules_63d6e0", this, &CQI12_COPA_DA_SERIE_C, r);
     r
 }
 
@@ -100,12 +100,12 @@ unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules_63d6e0(this: usize) ->
 /// seguinte); sem fundo de prêmios. Depois a tabela das rodadas.
 unsafe extern "thiscall" fn bra_champ_cup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_12 regras da copa dos campeoes");
-    cqi12_regras(this, &CQI12_COPA_DOS_CAMPEOES, 1)
+    set_cup_league_rules(this, &CQI12_COPA_DOS_CAMPEOES, 1)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_bra_champ_cup_set_up_rules(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
-    cqi12_confere("bra_champ_cup_set_up_rules", this, &CQI12_COPA_DOS_CAMPEOES, r);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
+    check_cup_league_rules("bra_champ_cup_set_up_rules", this, &CQI12_COPA_DOS_CAMPEOES, r);
     r
 }

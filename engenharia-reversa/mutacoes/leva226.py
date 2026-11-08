@@ -2,7 +2,7 @@
 MUTACOES = [
     ('dq13_adjetivo', '(indice as u8 as i8 as i32).wrapping_sub(1) as u32;', '(indice as u8 as i8 as i32).wrapping_sub(2) as u32;'),
     ('dq13_atributo', '    calcular(pessoa, nao_jogador, atributo)\n', '    calcular(pessoa, nao_jogador, atributo) ^ 1\n'),
-    ('dq13_reduzida', 'habilidade * f64_em(0x967880) + (v + v)', 'habilidade * f64_em(0x967880) * 2.0 + (v + v)'),
+    ('dq13_reduzida', 'habilidade * read_f64_at(0x967880) + (v + v)', 'habilidade * read_f64_at(0x967880) * 2.0 + (v + v)'),
     ('dq14_peso', 'for _ in 0..3 { // 3 sorteios pelo peso', 'for _ in 0..2 { // 3 sorteios pelo peso'),
     ('dq14_cores', '    let (a, b) = if dono != 0 {', '    let (b, a) = if dono != 0 {'),
     ('dq14_vaga', '        v == 0 || v == pessoa\n', '        v == pessoa\n'),

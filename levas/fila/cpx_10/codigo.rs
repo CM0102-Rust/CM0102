@@ -23,44 +23,44 @@ unsafe fn cpx10_sortear(n: i32) -> i32 {
 
 /// A data das notícias de técnico ([0xdd6ec8]: dia com sinal em +0, ano sem sinal em +2) ainda não chegou (é depois de
 /// hoje, [0xae2c90])? Então nenhuma notícia sai.
-unsafe fn cpx10_antes_da_data() -> bool {
+unsafe fn before_news_start_date() -> bool {
     let (dia, ano) = (cpx10_w(0xdd6ec8), cpx10_w(0xdd6eca) as u16);
     let hoje = cpx10_w(0xae2c92) as u16;
     ano > hoje || (ano == hoje && dia > cpx10_w(0xae2c90))
 }
 
 /// A linha do clube na tabela da diretoria (0x49 bytes por id, a partir de [this]).
-unsafe fn cpx10_linha(this: usize, clube: usize) -> usize {
+unsafe fn board_row_of(this: usize, clube: usize) -> usize {
     cpx10_d(this).wrapping_add(cpx10_i(clube).wrapping_mul(0x49) as usize)
 }
 
-unsafe fn cpx10_gravar(n: usize, k: u32, v: u32) {
+unsafe fn news_set_slot(n: usize, k: u32, v: u32) {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x785790usize);
     f(n, k, v);
 }
 
 /// O id e as três chaves (+0x33 de +4, +8 e +0xc) da pessoa `p` nos dados `k`..`k`+3 da notícia.
-unsafe fn cpx10_gravar_pessoa(n: usize, k: u32, p: usize) {
-    cpx10_gravar(n, k, cpx10_d(p) as u32);
-    cpx10_gravar(n, k + 1, cpx10_d(cpx10_d(p + 4) + 0x33) as u32);
-    cpx10_gravar(n, k + 2, cpx10_d(cpx10_d(p + 8) + 0x33) as u32);
-    cpx10_gravar(n, k + 3, cpx10_d(cpx10_d(p + 0xc) + 0x33) as u32);
+unsafe fn news_set_person(n: usize, k: u32, p: usize) {
+    news_set_slot(n, k, cpx10_d(p) as u32);
+    news_set_slot(n, k + 1, cpx10_d(cpx10_d(p + 4) + 0x33) as u32);
+    news_set_slot(n, k + 2, cpx10_d(cpx10_d(p + 8) + 0x33) as u32);
+    news_set_slot(n, k + 3, cpx10_d(cpx10_d(p + 0xc) + 0x33) as u32);
 }
 
 /// O técnico humano (uma das 16 últimas pessoas: id ≥ [0xae2364] − 16)?
-unsafe fn cpx10_humano(p: usize) -> bool {
+unsafe fn is_human_manager(p: usize) -> bool {
     cpx10_i(p) >= cpx10_i(0xae2364).wrapping_sub(0x10)
 }
 
 /// Os dois nomes do técnico humano (os textos de +4 e +8, 0x7858c0) a partir do dado `primeiro`; o próximo dado livre
 /// depois do primeiro nome vai no dado `k_proximo`.
-unsafe fn cpx10_nomes(n: usize, p: usize, primeiro: u8, k_proximo: u32) {
+unsafe fn news_set_manager_names(n: usize, p: usize, primeiro: u8, k_proximo: u32) {
     let texto: unsafe extern "thiscall" fn(usize, u32, usize, *mut u8) -> u32 = core::mem::transmute(0x7858c0usize);
     // ponytail: a original guarda o próximo dado no byte baixo de uma local que tinha a data [0xdd6ec8] e empurra o
     // dword inteiro como campo; a 0x7858c0 lê só o byte baixo, e a cópia passa o valor limpo
     let mut proximo = primeiro;
     texto(n, primeiro as u32, cpx10_d(p + 4), &mut proximo);
-    cpx10_gravar(n, k_proximo, proximo as i8 as i32 as u32);
+    news_set_slot(n, k_proximo, proximo as i8 as i32 as u32);
     texto(n, proximo as u32, cpx10_d(p + 8), &mut proximo);
 }
 
@@ -73,7 +73,7 @@ static mut CPX10_NOTICIA: [u8; 0xe0] = [0; 0xe0];
 
 /// A entrega da notícia `n` pelo `alcance` (4: 0x786780; 2: 0x7863f0 com a nação; 1: 0x7862d0 com a divisão) pelas
 /// notícias [0xb7431c]; no ensaio, só o plano.
-unsafe fn cpx10_entregar(n: usize, alcance: u8, alvo: usize) {
+unsafe fn deliver_news(n: usize, alcance: u8, alvo: usize) {
     if CPX10_ENSAIO {
         CPX10_ALCANCE = alcance;
         core::ptr::copy_nonoverlapping(n as *const u8, core::ptr::addr_of_mut!(CPX10_NOTICIA) as *mut u8, 0xe0);
@@ -98,18 +98,18 @@ unsafe fn cpx10_entregar(n: usize, alcance: u8, alvo: usize) {
 
 /// A entrega das notícias de saída e de técnico novo de um técnico da máquina: clube que pode ser dirigido (0x544820);
 /// seleção (0x53b900) ou reputação (+0x80) acima de 7250: a todos; senão aos do país (+0x53), se houver.
-unsafe fn cpx10_entregar_pelo_clube(n: usize, clube: usize) {
+unsafe fn deliver_news_for_club(n: usize, clube: usize) {
     let pode: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if pode(clube) == 0 {
         return;
     }
     if selecao(clube) != 0 || cpx10_w(clube + 0x80) > 0x1c52 {
-        cpx10_entregar(n, 4, 0);
+        deliver_news(n, 4, 0);
     } else {
         let nacao = cpx10_d(clube + 0x53);
         if nacao != 0 {
-            cpx10_entregar(n, 2, nacao);
+            deliver_news(n, 2, nacao);
         }
     }
 }
@@ -119,7 +119,7 @@ unsafe fn cpx10_entregar_pelo_clube(n: usize, clube: usize) {
 /// pode sortear depois); e cada técnico humano cuja caixa (News +8: 12 bytes por humano, início do anel em +0, próxima
 /// vaga em +4) andou recebeu a notícia da cópia: tipo (+0), dados e data (+5..+0xd6) e o alcance (+0xde); sem entrega
 /// planejada, nenhuma caixa anda.
-unsafe fn cpx10_comparar(nome: &str, regioes: Vec<(usize, usize)>, original: impl FnOnce(), copia: impl FnOnce()) {
+unsafe fn compare_manager_news(nome: &str, regioes: Vec<(usize, usize)>, original: impl FnOnce(), copia: impl FnOnce()) {
     let noticias = cpx10_d(0xb7431c);
     let caixas = if noticias != 0 { cpx10_d(noticias + 8) } else { 0 };
     let antes_caixas: Vec<(i32, i32)> = if caixas != 0 { (0..0x10).map(|k| (cpx10_i(caixas + 12 * k), cpx10_i(caixas + 12 * k + 4))).collect() } else { Vec::new() };
@@ -170,27 +170,27 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
         return;
     }
     let tec = cpx10_d(clube + 0xcf);
-    if tec == 0 || cpx10_antes_da_data() {
+    if tec == 0 || before_news_start_date() {
         return;
     }
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x1777, 0);
-    cpx10_gravar_pessoa(n, 0, tec);
-    cpx10_gravar(n, 4, cpx10_d(clube) as u32);
+    news_set_person(n, 0, tec);
+    news_set_slot(n, 4, cpx10_d(clube) as u32);
     let pres = cpx10_d(clube + 0xbf);
     if pres != 0 {
-        cpx10_gravar(n, 5, cpx10_d(cpx10_d(pres + 4) + 0x33) as u32);
-        cpx10_gravar(n, 6, cpx10_d(cpx10_d(pres + 8) + 0x33) as u32);
-        cpx10_gravar(n, 7, cpx10_d(cpx10_d(pres + 0xc) + 0x33) as u32);
-        cpx10_gravar(n, 0xa, cpx10_d(pres) as u32);
+        news_set_slot(n, 5, cpx10_d(cpx10_d(pres + 4) + 0x33) as u32);
+        news_set_slot(n, 6, cpx10_d(cpx10_d(pres + 8) + 0x33) as u32);
+        news_set_slot(n, 7, cpx10_d(cpx10_d(pres + 0xc) + 0x33) as u32);
+        news_set_slot(n, 0xa, cpx10_d(pres) as u32);
     } else {
         for k in [5, 6, 7, 0xa] {
-            cpx10_gravar(n, k, u32::MAX);
+            news_set_slot(n, k, u32::MAX);
         }
     }
-    let l = cpx10_linha(this, clube);
+    let l = board_row_of(this, clube);
     let motivo: i8 = if (cpx10_w(l + 8) as i32) < cpx10_w(l + 6) as i32 - 500 /* cpx10: o limite pela avaliação +8 */ && {
         crate::comparacao::ramo("cpx_10 motivo pela avaliacao");
         cpx10_sortear(3) == 0
@@ -203,8 +203,8 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
     } else {
         0
     };
-    cpx10_gravar(n, 8, motivo as i32 as u32);
-    cpx10_gravar(n, 9, tipo as u8 as i8 as i32 as u32);
+    news_set_slot(n, 8, motivo as i32 as u32);
+    news_set_slot(n, 9, tipo as u8 as i8 as i32 as u32);
     crate::comparacao::ramo("cpx_10 sorteio do boato");
     let mut boato = cpx10_sortear(10); // cpx10: o sorteio do boato
     let nj = cpx10_d(tec + 0x69);
@@ -214,27 +214,27 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
             boato = 1;
         }
     }
-    cpx10_gravar(n, 0xb, boato as u32);
-    if cpx10_humano(tec) {
-        cpx10_entregar(n, 4, 0);
+    news_set_slot(n, 0xb, boato as u32);
+    if is_human_manager(tec) {
+        deliver_news(n, 4, 0);
     } else if cpx10_w(clube + 0x80) > 0x1388 {
-        cpx10_entregar(n, 2, cpx10_d(clube + 0x53));
+        deliver_news(n, 2, cpx10_d(clube + 0x53));
     } else {
         let div = cpx10_d(clube + 0x57);
         if div != 0 && cpx10_i(div) != cpx10_i(0x9cf764) {
-            cpx10_entregar(n, 1, div);
+            deliver_news(n, 1, div);
         }
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut data = [0u32; 2];
     crate::comparacao::ramo("cpx_10 data da pressure");
-    copiar(cpx10_linha(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha
+    copiar(board_row_of(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha
 }
 
 unsafe extern "thiscall" fn comparar_post_manager_under_pressure_news(this: usize, clube: usize, tipo: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
-    let regioes = if clube != 0 { vec![(cpx10_linha(this, clube), 0x49)] } else { Vec::new() };
-    cpx10_comparar("post_manager_under_pressure_news", regioes, || o(this, clube, tipo), || post_manager_under_pressure_news(this, clube, tipo));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let regioes = if clube != 0 { vec![(board_row_of(this, clube), 0x49)] } else { Vec::new() };
+    compare_manager_news("post_manager_under_pressure_news", regioes, || o(this, clube, tipo), || post_manager_under_pressure_news(this, clube, tipo));
 }
 
 /// { 0x6a1b00 } (thiscall, ret 0x14, manager_manager.cpp): `MANAGER_MANAGER::post_manager_departure_news(tecnico, tipo,
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn comparar_post_manager_under_pressure_news(this: usiz
 /// todos; senão pelo clube (0x544820; seleção ou reputação acima de 7250 a todos, senão aos do país).
 unsafe extern "thiscall" fn post_manager_departure_news(this: usize, tec: usize, tipo: u32, motivo: u32, clube: usize, cargo: u32) {
     let _ = this;
-    if tec == 0 || clube == 0 || cpx10_antes_da_data() {
+    if tec == 0 || clube == 0 || before_news_start_date() {
         return;
     }
     let t = tipo as u8 as i8;
@@ -255,27 +255,27 @@ unsafe extern "thiscall" fn post_manager_departure_news(this: usize, tec: usize,
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x1770, 0);
-    cpx10_gravar_pessoa(n, 0, tec);
-    cpx10_gravar(n, 4, t as i32 as u32);
-    cpx10_gravar(n, 5, cpx10_d(clube) as u32);
-    cpx10_gravar(n, 7, cargo as u8 as i8 as i32 as u32);
+    news_set_person(n, 0, tec);
+    news_set_slot(n, 4, t as i32 as u32);
+    news_set_slot(n, 5, cpx10_d(clube) as u32);
+    news_set_slot(n, 7, cargo as u8 as i8 as i32 as u32);
     let pres = cpx10_d(clube + 0xbf);
     for (k, d) in [(8, 4), (9, 8), (0xa, 0xc)] {
-        cpx10_gravar(n, k, if pres != 0 { cpx10_d(cpx10_d(pres + d) + 0x33) as u32 } else { u32::MAX });
+        news_set_slot(n, k, if pres != 0 { cpx10_d(cpx10_d(pres + d) + 0x33) as u32 } else { u32::MAX });
     }
-    cpx10_gravar(n, 0xb, motivo as u8 as i8 as i32 as u32);
+    news_set_slot(n, 0xb, motivo as u8 as i8 as i32 as u32);
     crate::comparacao::ramo("cpx_10 noticia da saida");
-    if cpx10_humano(tec) {
-        cpx10_nomes(n, tec, 0xd, 0xc);
-        cpx10_entregar(n, 4, 0);
+    if is_human_manager(tec) {
+        news_set_manager_names(n, tec, 0xd, 0xc);
+        deliver_news(n, 4, 0);
     } else {
-        cpx10_entregar_pelo_clube(n, clube);
+        deliver_news_for_club(n, clube);
     }
 }
 
 unsafe extern "thiscall" fn comparar_post_manager_departure_news(this: usize, tec: usize, tipo: u32, motivo: u32, clube: usize, cargo: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32)>(%%I1%%);
-    cpx10_comparar("post_manager_departure_news", Vec::new(), || o(this, tec, tipo, motivo, clube, cargo), || post_manager_departure_news(this, tec, tipo, motivo, clube, cargo));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32)>(%%I1%%);
+    compare_manager_news("post_manager_departure_news", Vec::new(), || o(this, tec, tipo, motivo, clube, cargo), || post_manager_departure_news(this, tec, tipo, motivo, clube, cargo));
 }
 
 /// { 0x6a2e00 } (thiscall, ret 0x10, manager_manager.cpp): `MANAGER_MANAGER::post_manager_appointment_news(tecnico,
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn comparar_post_manager_departure_news(this: usize, te
 /// humano: os nomes a partir do dado 8 (o próximo livre no 7) e a todos; senão pelo clube, como a da saída.
 unsafe extern "thiscall" fn post_manager_appointment_news(this: usize, tec: usize, anterior: usize, clube: usize, cargo: u32) {
     let _ = this;
-    if tec == 0 || clube == 0 || cpx10_antes_da_data() {
+    if tec == 0 || clube == 0 || before_news_start_date() {
         return;
     }
     let c = cargo as u8 as i8;
@@ -307,10 +307,10 @@ unsafe extern "thiscall" fn post_manager_appointment_news(this: usize, tec: usiz
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x1787, 0);
-    cpx10_gravar_pessoa(n, 0, tec);
-    cpx10_gravar(n, 4, if anterior != 0 { cpx10_d(anterior) as u32 } else { u32::MAX });
-    cpx10_gravar(n, 5, cpx10_d(clube) as u32);
-    cpx10_gravar(n, 6, c as i32 as u32);
+    news_set_person(n, 0, tec);
+    news_set_slot(n, 4, if anterior != 0 { cpx10_d(anterior) as u32 } else { u32::MAX });
+    news_set_slot(n, 5, cpx10_d(clube) as u32);
+    news_set_slot(n, 6, c as i32 as u32);
     let funcao = if anterior == 0 {
         u32::MAX
     } else if selecao(anterior) != 0 {
@@ -318,17 +318,17 @@ unsafe extern "thiscall" fn post_manager_appointment_news(this: usize, tec: usiz
     } else {
         cpx10_b(tec + 0x3d) as i8 as i32 as u32
     };
-    cpx10_gravar(n, 7, funcao);
+    news_set_slot(n, 7, funcao);
     crate::comparacao::ramo("cpx_10 noticia do tecnico novo");
-    if cpx10_humano(tec) {
-        cpx10_nomes(n, tec, 8, 7);
-        cpx10_entregar(n, 4, 0);
+    if is_human_manager(tec) {
+        news_set_manager_names(n, tec, 8, 7);
+        deliver_news(n, 4, 0);
     } else {
-        cpx10_entregar_pelo_clube(n, clube);
+        deliver_news_for_club(n, clube);
     }
 }
 
 unsafe extern "thiscall" fn comparar_post_manager_appointment_news(this: usize, tec: usize, anterior: usize, clube: usize, cargo: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I2%%);
-    cpx10_comparar("post_manager_appointment_news", Vec::new(), || o(this, tec, anterior, clube, cargo), || post_manager_appointment_news(this, tec, anterior, clube, cargo));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I2%%);
+    compare_manager_news("post_manager_appointment_news", Vec::new(), || o(this, tec, anterior, clube, cargo), || post_manager_appointment_news(this, tec, anterior, clube, cargo));
 }

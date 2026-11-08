@@ -22,7 +22,7 @@ unsafe extern "thiscall" fn get_agreed_contract_club(gerente: usize, id: *const 
 }
 
 /// O registro de 8 bytes da pessoa `*id` no gerente de transferências (+0x86e).
-unsafe fn registro_da_pessoa(gerente: usize, id: *const i32) -> usize {
+unsafe fn staff_flags_entry(gerente: usize, id: *const i32) -> usize {
     (*((gerente + 0x86e) as *const usize) as isize + *id as isize * 8) as usize
 }
 
@@ -30,7 +30,7 @@ unsafe fn registro_da_pessoa(gerente: usize, id: *const i32) -> usize {
 /// da seleção: os bits dos últimos jogos (+3, 16 bits) andam um por jogo desde o último registrado
 /// (+5), o mais novo é ligado e o número fica em +5.
 unsafe extern "thiscall" fn record_international_appearance(gerente: usize, id: *const i32, numero: i16) {
-    let r = registro_da_pessoa(gerente, id);
+    let r = staff_flags_entry(gerente, id);
     let bits = (r + 3) as *mut u16;
     let ultimo = (r + 5) as *mut i16;
     let d = numero.wrapping_sub(core::ptr::read_unaligned(ultimo));
@@ -64,8 +64,8 @@ unsafe extern "thiscall" fn find_held_ban(disciplina: usize, id: i32, vaga: i8) 
 }
 
 unsafe extern "thiscall" fn comparar_get_agreed_contract_club(gerente: usize, id: *const i32, clube: *mut usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const i32, *mut usize) -> u32>(%%I0%%);
-    let mut reg = vec![(registro_da_pessoa(gerente, id), 1)];
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, *mut usize) -> u32>(%%I0%%);
+    let mut reg = vec![(staff_flags_entry(gerente, id), 1)];
     if !clube.is_null() {
         reg.push((clube as usize, 4));
     }
@@ -75,14 +75,14 @@ unsafe extern "thiscall" fn comparar_get_agreed_contract_club(gerente: usize, id
 }
 
 unsafe extern "thiscall" fn comparar_record_international_appearance(gerente: usize, id: *const i32, numero: i16) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const i32, i16)>(%%I1%%);
-    let reg = [(registro_da_pessoa(gerente, id) + 3, 4)];
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, i16)>(%%I1%%);
+    let reg = [(staff_flags_entry(gerente, id) + 3, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(gerente, id, numero), || record_international_appearance(gerente, id, numero));
     PLACAR.registrar(igual, || format!("record_international_appearance({}, {}) {:x?} x {:x?}", *id, numero, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_find_held_ban(disciplina: usize, id: i32, vaga: i8) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i8) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8) -> usize>(%%I2%%);
     // a lista guarda o cursor: as duas partem do mesmo e têm de deixá-lo igual
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(disciplina + 0x1c, 0x12)], || o(disciplina, id, vaga), || find_held_ban(disciplina, id, vaga));
     PLACAR.registrar(igual && ro == rr, || format!("find_held_ban({}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", id, vaga, ro, rr, mo, mr));

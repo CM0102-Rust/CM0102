@@ -13,7 +13,7 @@ unsafe fn cpz6_b(a: usize) -> u8 {
 }
 
 /// O clube do time das estrelas `g` ([0x9d00a4] ou [0x9d00a8]): o registro de 0x245 bytes em [0xae23b4].
-unsafe fn cpz6_estrelas(g: usize) -> usize {
+unsafe fn all_star_club(g: usize) -> usize {
     cpz6_d(0xae23b4).wrapping_add(cpz6_d(g).wrapping_mul(0x245))
 }
 
@@ -146,12 +146,12 @@ unsafe extern "thiscall" fn get_international_duty_club(this: usize, jogador: us
     }
     for i in 0..0x32usize {
         for g in [0x9d00a8usize, 0x9d00a4] {
-            if cpz6_d(cpz6_estrelas(g) + 0xd7 + 4 * i) == jogador {
+            if cpz6_d(all_star_club(g) + 0xd7 + 4 * i) == jogador {
                 if comentario != 0 {
                     texto(0xde1f64, 0xa62fa4, 0xad9c64usize);
                 }
                 crate::comparacao::ramo("cpz_6 time das estrelas");
-                return sai(cpz6_estrelas(g));
+                return sai(all_star_club(g));
             }
         }
     }
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn get_international_duty_club(this: usize, jogador: us
 /// uma com a sua lista provisória (como a original); no texto de 0xde1f64 (0x80) e no do comentário (0x40) e na devolução.
 unsafe extern "thiscall" fn comparar_get_international_duty_club(this: usize, jogador: usize, data: usize, clube: usize, comentario: usize,
                                                                adversario: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize) -> usize>(%%I0%%);
     let regioes = [(0xde1f64usize, 0x80usize), (comentario, 0x40)];
     let reg = if comentario != 0 { &regioes[..] } else { &regioes[..1] };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg,|| o(this, jogador, data, clube, comentario, adversario),
@@ -224,7 +224,7 @@ unsafe extern "stdcall" fn national_teams_player_is_eligible(jogador: usize, tec
 
 /// Comparador da 0x76d9b0: pela devolução (só lê).
 unsafe extern "stdcall" fn comparar_national_teams_player_is_eligible(jogador: usize, tecnico: usize) -> u32 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(jogador, tecnico);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(jogador, tecnico);
     let n = national_teams_player_is_eligible(jogador, tecnico);
     PLACAR.registrar(r == n, || format!("national_teams_player_is_eligible(jogador {:x}, tecnico {:x}) original={} rust={}", jogador, tecnico, r, n));
     r
@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn collect_duty_competitions(this: usize, saida: usize)
 }
 
 /// Os valores dos nós de uma lista (cabeça em +2, nó: +0 o item, +6 o próximo), sem mexer no cursor (+0xa).
-unsafe fn cpz6_itens(lista: usize) -> Vec<usize> {
+unsafe fn national_teams_list_items(lista: usize) -> Vec<usize> {
     let mut v = Vec::new();
     let mut no = cpz6_d(lista + 2);
     while no != 0 {
@@ -280,23 +280,23 @@ unsafe fn cpz6_itens(lista: usize) -> Vec<usize> {
 // cursores): as competições das convocações que ainda não estão em `saida`, na ordem, sem repetir; depois, a devolução
 // é quantas e os últimos itens de `saida` (4 bytes cada) são elas.
 unsafe extern "thiscall" fn comparar_collect_duty_competitions(this: usize, saida: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let conv = cpz6_d(this);
     if conv == 0 || saida == 0 {
         let r = o(this, saida);
         PLACAR.registrar(r == 0, || format!("collect_duty_competitions(saida {:x}) sem lista original={}", saida, r));
         return r;
     }
-    let mut tem: Vec<usize> = cpz6_itens(saida).iter().map(|&x| cpz6_d(x)).collect();
+    let mut tem: Vec<usize> = national_teams_list_items(saida).iter().map(|&x| cpz6_d(x)).collect();
     let antes = tem.len();
-    for e in cpz6_itens(conv) {
+    for e in national_teams_list_items(conv) {
         let c = cpz6_d(e + 4);
         if !tem.contains(&c) {
             tem.push(c);
         }
     }
     let r = o(this, saida);
-    let depois: Vec<usize> = cpz6_itens(saida).iter().map(|&x| cpz6_d(x)).collect();
+    let depois: Vec<usize> = national_teams_list_items(saida).iter().map(|&x| cpz6_d(x)).collect();
     let igual = r == (tem.len() - antes) as u8 && depois == tem;
     PLACAR.registrar(igual, || format!("collect_duty_competitions(saida {:x}) original={} plano={:x?} depois={:x?}", saida, r, tem, depois));
     r

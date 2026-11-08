@@ -7,15 +7,15 @@
 # nao caem.
 MUTACOES = [
     ('cqm9_j1_girada',
-     'cqm9_japao(this, 0x9cf65c, 0, "cqm_9 j1 cheia")',
-     'cqm9_japao(this, 0x9cf65c, 1, "cqm_9 j1 cheia")',
+     'fill_japanese_table(this, 0x9cf65c, 0, "cqm_9 j1 cheia")',
+     'fill_japanese_table(this, 0x9cf65c, 1, "cqm_9 j1 cheia")',
      'cqm_9 j1 cheia'),
     ('cqm9_j2_girada',
-     'cqm9_japao(this, 0x9cf768, 0, "cqm_9 j2 cheia")',
-     'cqm9_japao(this, 0x9cf768, 1, "cqm_9 j2 cheia")',
+     'fill_japanese_table(this, 0x9cf768, 0, "cqm_9 j2 cheia")',
+     'fill_japanese_table(this, 0x9cf768, 1, "cqm_9 j2 cheia")',
      'cqm_9 j2 cheia'),
     ('cqm9_nsl_girada',
-     'cqm9_linha(this, k as u8, cqm9_w(this + 0x3e), 0, clube); // cqm9: a linha da NSL',
-     'cqm9_linha(this, k as u8, cqm9_w(this + 0x3e), 1, clube); // mutacao: a linha da NSL',
+     'jap_j1_init_table_row(this, k as u8, cqm9_w(this + 0x3e), 0, clube); // cqm9: a linha da NSL',
+     'jap_j1_init_table_row(this, k as u8, cqm9_w(this + 0x3e), 1, clube); // mutacao: a linha da NSL',
      'cqm_9 nsl cheia'),
 ]

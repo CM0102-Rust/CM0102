@@ -24,7 +24,7 @@ unsafe fn cpw1_pessoa(id: usize) -> usize {
 
 /// O valor de um contrato para a pessoa (STAFF_CONTRACT::calc_contract_value 0x866830: thiscall(contrato, pessoa,
 /// oferta), ret 8).
-unsafe fn cpw1_valor(contrato: usize, pessoa: usize, oferta: usize) -> i32 {
+unsafe fn calc_contract_value(contrato: usize, pessoa: usize, oferta: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x866830usize);
     f(contrato, pessoa, oferta)
 }
@@ -60,25 +60,25 @@ unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pessoa: usize
         atual as u32
     };
     desejado(l, pessoa, cpw1_clube(cpw1_d(this + 4)), -1, situacao, 0xb, 0, 0);
-    let v1 = cpw1_valor(this, pessoa, l) as f32;
-    let v2 = cpw1_valor(l, pessoa, l) as f64;
-    let mut razao = if v2 == f32_em(0x968970) as f64 {
-        f32_em(0x968970) as f64
+    let v1 = calc_contract_value(this, pessoa, l) as f32;
+    let v2 = calc_contract_value(l, pessoa, l) as f64;
+    let mut razao = if v2 == read_f32_at(0x968970) as f64 {
+        read_f32_at(0x968970) as f64
     } else {
-        v1 as f64 * f32_em(0x968960) as f64 / v2
+        v1 as f64 * read_f32_at(0x968960) as f64 / v2
     };
     let anos = (cpw1_w(0xae2c92) as u16 as i32).wrapping_sub(cpw1_w(this + 0x27) as u16 as i32);
     let dias = anos.wrapping_mul(365).wrapping_sub(cpw1_w(this + 0x25) as i32).wrapping_add(cpw1_w(0xae2c90) as i32).clamp(0, 500);
     let adapt = cpw1_b(pessoa + 0x59) as i8 as i32;
     if dias < adapt.wrapping_mul(15).wrapping_add(100) {
         crate::comparacao::ramo("cpw_1 contratado ha pouco");
-        razao = razao + f32_em(0x969560) as f64 + adapt as f64 * f64_em(0x968eb0) - (dias / 2) as f64; // cpw1: o desconto do recém-contratado
+        razao = razao + read_f32_at(0x969560) as f64 + adapt as f64 * read_f64_at(0x968eb0) - (dias / 2) as f64; // cpw1: o desconto do recém-contratado
     }
     crate::comparacao::ramo("cpw_1 satisfacao avaliada");
-    if !(razao >= f32_em(0x969560) as f64) { // cpw1: o limite da insatisfação
+    if !(razao >= read_f32_at(0x969560) as f64) { // cpw1: o limite da insatisfação
         return 1;
     }
-    if razao < f32_em(0x96ff70) as f64 { // cpw1: o limite da satisfação
+    if razao < read_f32_at(0x96ff70) as f64 { // cpw1: o limite da satisfação
         3
     } else {
         2
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pessoa: usize
 /// Comparador: a original e a cópia a partir do mesmo estado (o sorteio, o último contrato pedido [0xae1080] que a
 /// 0x85fc50 grava e o contrato); a devolução e a memória.
 unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: usize, pessoa: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize), (this, 0x50)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: usize, pess
 }
 
 /// Os dados da pessoa numa notícia: o id na vaga 2 e as três chaves (+0x33 de +4, +8 e +0xc) nas vagas 3 a 5.
-unsafe fn cpw1_dados_da_pessoa(n: usize, p: usize) {
+unsafe fn set_news_staff_slots(n: usize, p: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     gravar(n, 2, cpw1_d(p) as u32);
     gravar(n, 3, cpw1_d(cpw1_d(p + 4) + 0x33) as u32);
@@ -120,7 +120,7 @@ unsafe fn cpw1_dados_da_pessoa(n: usize, p: usize) {
 unsafe extern "thiscall" fn post_wants_new_contract_news(this: usize, contrato: usize) {
     let _ = this;
     if contrato == 0 {
-        return aviso_em(0x9a8190, 0x2d91);
+        return show_error_at(0x9a8190, 0x2d91);
     }
     let in_list: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x8c1870usize);
     let ofertas: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c5cf0usize);
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn post_wants_new_contract_news(this: usize, contrato: 
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbc2, 0);
     gravar(n, 0, cpw1_d(clube) as u32);
-    cpw1_dados_da_pessoa(n, p);
+    set_news_staff_slots(n, p);
     gravar(n, 6, (cpw1_b(contrato + 0x4f) >> 4) as u32);
     gravar(n, 7, 0);
     gravar(n, 8, cpw1_w(contrato + 0x2d) as i32 as u32);
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn post_wants_new_contract_news(this: usize, contrato: 
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_wants_new_contract_news(this: usize, contrato: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, contrato)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, contrato)
 }
 
 /// { 0x4d9460 } (thiscall, ret 8, contract_manager.cpp, quadro SEH da notícia local): `CONTRACT_MANAGER::
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_post_wants_new_contract_news(this: usize, c
 unsafe extern "thiscall" fn post_transfer_request_withdrawn_news(this: usize, contrato: usize, motivo: u32) {
     let _ = this;
     if contrato == 0 {
-        return aviso_em(0x9a8190, 0x2ba6);
+        return show_error_at(0x9a8190, 0x2ba6);
     }
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn post_transfer_request_withdrawn_news(this: usize, co
     let clube = cpw1_clube(cpw1_d(contrato + 4));
     let p = cpw1_pessoa(cpw1_d(contrato));
     gravar(n, 0, cpw1_d(clube) as u32);
-    cpw1_dados_da_pessoa(n, p);
+    set_news_staff_slots(n, p);
     gravar(n, 6, motivo);
     gravar(n, 7, ((cpw1_b(contrato + 0x3f) as i8) > 1) as u32);
     entregar(cpw1_d(0xb7431c), n, clube);
@@ -183,5 +183,5 @@ unsafe extern "thiscall" fn post_transfer_request_withdrawn_news(this: usize, co
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_transfer_request_withdrawn_news(this: usize, contrato: usize, motivo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, contrato, motivo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, contrato, motivo)
 }

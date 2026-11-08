@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn build_international_date_table(this: usize) {
     if t == 0 {
         // ponytail: sem memória, a caixa; a original refaz a conta e cai nela (raro demais para copiar a caixa)
         *((this + 0x34f0) as *mut i32) = 0xc8;
-        return orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+        return original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     }
     let preencher: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32) = core::mem::transmute(0x5cb9b0usize);
     for (k, &(semana, dia, mes, ano, continente, competicao)) in CQB3_DATAS.iter().enumerate() {
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn build_international_date_table(this: usize) {
 /// depois a original a partir dos mesmos +0x34ec..+0x34f5; confere a conta, o último dia feito e as 110 datas. Roda
 /// uma vez, no construtor dos amistosos.
 unsafe extern "thiscall" fn comparar_build_international_date_table(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let campos = crate::comparacao::Memoria::ler(&[(this + 0x34ec, 10)]);
     build_international_date_table(this);
     let (t, n) = (cqb3_d(this + 0x34ec), cqb3_i(this + 0x34f0));
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
 
 /// Comparador da 0x5cc510: lado a lado nas datas da tabela (só grava nelas; o qsort e a 0x54a130 não sorteiam).
 unsafe extern "thiscall" fn comparar_resolve_international_dates(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let (t, n) = (cqb3_d(this + 0x34ec), cqb3_i(this + 0x34f0));
     let reg = if t != 0 && n > 0 { vec![(t, n as usize * 0x14)] } else { Vec::new() };
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || resolve_international_dates(this));

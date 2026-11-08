@@ -55,14 +55,14 @@ unsafe fn cqw10_torneio(this: usize, ano: i16, comp: usize, vtable: usize, fases
     cqw10_pd(this + 0x2c, fases as usize);
     cqw10_pd(this + 0xc, alocar(fases * 4));
     if montar_regras(this) == 0 {
-        aviso_em(arquivo, linhas.0);
+        show_error_at(arquivo, linhas.0);
         return this;
     }
     let p = novo(0x5ce);
     let e = if p != 0 { estatisticas(p, this) } else { 0 };
     cqw10_pd(this + 8, e);
     if e == 0 {
-        aviso_em(arquivo, linhas.1);
+        show_error_at(arquivo, linhas.1);
     }
     this
 }
@@ -88,7 +88,7 @@ unsafe fn cqw10_comparar(nome: &str, this: usize, comp: usize, vtable: usize, an
 }
 
 unsafe extern "thiscall" fn comparar_cqw10_africana(this: usize, ano: u32, comp: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     cqw10_comparar("cqw10_africana", this, comp, 0x967270, cqw10_edicao((ano as i16).wrapping_add(1), 0), || o(this, ano, comp))
 }
 
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn cqw10_copa_america(this: usize, ano: u32, comp: usiz
 }
 
 unsafe extern "thiscall" fn comparar_cqw10_copa_america(this: usize, ano: u32, comp: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     cqw10_comparar("cqw10_copa_america", this, comp, 0x96b400, cqw10_edicao(ano as i16, 1), || o(this, ano, comp))
 }
 
@@ -116,6 +116,6 @@ unsafe extern "thiscall" fn cqw10_oceania_nacoes(this: usize, ano: u32, comp: us
 }
 
 unsafe extern "thiscall" fn comparar_cqw10_oceania_nacoes(this: usize, ano: u32, comp: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
     cqw10_comparar("cqw10_oceania_nacoes", this, comp, 0x96e0cc, cqw10_edicao((ano as i16).max(0x7d2), 0), || o(this, ano, comp))
 }

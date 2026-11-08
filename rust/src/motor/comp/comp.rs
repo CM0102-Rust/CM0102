@@ -36,12 +36,12 @@ pub(crate) unsafe extern "thiscall" fn club_in_competition(this: usize, clube: u
         } else {
             outra = fase;
         }
-        let (f, tabela, passo) = if grupo != 0 { (grupo, 0xb1, 0x3b) } else { (outra, 0xa7, 6) };
+        let (f, tabela, step_towards) = if grupo != 0 { (grupo, 0xb1, 0x3b) } else { (outra, 0xa7, 6) };
         let quantos = *((f + 0x3e) as *const i16);
         let lista = d(f, tabela);
         let mut k = 0i16;
         while k < quantos {
-            if d(lista, passo * k as usize) == clube {
+            if d(lista, step_towards * k as usize) == clube {
                 return 1;
             }
             k += 1;
@@ -66,9 +66,12 @@ pub(crate) unsafe extern "stdcall" fn special_club(clube: usize) -> u32 {
 // ---------- 281a leva: o fim da temporada das ligas: a cadeia de acessos e rebaixamentos; as notícias do prêmio e da TV de uma competição (league.cpp, comp.cpp) ----------
 
 
-/// O slot 0xa4 da vtable da liga (thiscall, sem argumentos) [inferência: fecha a classificação final da temporada e
+/// Calls the league's vtable slot 0xa4 with no arguments [inference: finalizes the season standings and marks
+/// promoted/relegated clubs, +0x37].
+///
+/// [pt] O slot 0xa4 da vtable da liga (thiscall, sem argumentos) [inferência: fecha a classificação final da temporada e
 /// marca os que sobem e descem (+0x37 dos clubes), que a 0x689c80 lê].
-pub(crate) unsafe fn cqp1_fechar(liga: usize) {
+pub(crate) unsafe fn finalize_league_table(liga: usize) {
     let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(liga) + 0xa4));
     f(liga)
 }
@@ -89,7 +92,7 @@ pub(crate) unsafe fn cqp1_fechar(liga: usize) {
 /// rodada, 7 o tipo; com a partida, 5 o adversário e 6 se o clube venceu (+0x3d/+0x3e o vencedor nos pênaltis
 /// [inferência], senão +0x4b/+0x4c, senão +0x43/+0x44 o placar); sem ela −1 e 0. Entregue a ele (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
-    if !cqa2_humano(clube) {
+    if !club_has_human_manager(clube) {
         return;
     }
     let minimo = *((clube + club::REPUTATION) as *const i16) as i64 * 50;
@@ -129,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, clube:
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_send_prize_money_news(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(IDX_SEND_PRIZE_MONEY_NEWS)(this, clube, lo, hi, posicao, rodada, partida, tipo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(IDX_SEND_PRIZE_MONEY_NEWS)(this, clube, lo, hi, posicao, rodada, partida, tipo)
 }
 
 /// the TV rights news to the club's human manager: the club, the competition, the amount and the year
@@ -139,7 +142,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_prize_money_news(this: usiz
 /// para o técnico humano do clube (0x7875e0), a notícia 0x1f (0x77bbe0): 0 o clube, 1 a competição ([this+4]), 2 o
 /// valor, 3 o ano da competição (+0x40), entregue a ele (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, clube: usize, valor: u32) {
-    if !cqa2_humano(clube) {
+    if !club_has_human_manager(clube) {
         return;
     }
     crate::comparacao::ramo("cqp_1 noticia da tv");
@@ -158,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, clube: u
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_send_tv_rights_news(this: usize, clube: usize, valor: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_SEND_TV_RIGHTS_NEWS)(this, clube, valor)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_SEND_TV_RIGHTS_NEWS)(this, clube, valor)
 }
 
 // ---------- 272a leva: a competição: todas as fases completas, a lista dos clubes e o progresso do clube (comp.cpp) ----------
@@ -198,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
 /// Só a original (o método +0x10 marca a liga completa, grava recordes e paga prêmios: não roda duas vezes): a cópia
 /// leva os ramos.
 pub(crate) unsafe extern "thiscall" fn comparar_all_stages_complete(this: usize) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_ALL_STAGES_COMPLETE)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_ALL_STAGES_COMPLETE)(this)
 }
 
 /// the vector of the distinct clubs of all stages (up to 200) and the count
@@ -213,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, lista
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let v = alocar(0x320);
     if v == 0 {
-        aviso_em(0x99b80c, 0x681);
+        show_error_at(0x99b80c, 0x681);
         *lista = 0;
         return 0;
     }
@@ -241,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, lista
 /// Lado a lado: a original com a saída de quem chama, a cópia com saída própria, a partir do mesmo [0xb67a34]; a conta
 /// e os clubes das duas listas iguais (a da cópia é liberada).
 pub(crate) unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usize, lista: *mut usize, x: u32) -> u16 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_COMP_COLLECT_CLUB_LIST);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_COMP_COLLECT_CLUB_LIST);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut l2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
@@ -317,7 +320,7 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, clube: us
 /// Lado a lado nas três saídas (a original e a cópia com saídas próprias, começando dos valores de quem chama).
 pub(crate) unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, clube: usize, fase_id: *mut i16, rodada: *mut i16, situacao: *mut u8) {
     let (mut f2, mut r2, mut s2) = (*fase_id, *rodada, *situacao);
-    orig::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(IDX_FIND_CLUB_PROGRESS)(this, clube, fase_id, rodada, situacao);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(IDX_FIND_CLUB_PROGRESS)(this, clube, fase_id, rodada, situacao);
     find_club_progress(this, clube, &mut f2, &mut r2, &mut s2);
     let ok = f2 == *fase_id && r2 == *rodada && s2 == *situacao;
     PLACAR.registrar(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *fase_id, *rodada, *situacao, f2, r2, s2));
@@ -331,23 +334,30 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, 
 
 
 
-/// O confronto `p` (0x35 bytes) da rodada `r` da copa (vetores em [+0xad]).
-pub(crate) unsafe fn cqd7_confronto(copa: usize, r: i32, p: i32) -> usize {
+/// Address of tie p (0x35 bytes) of cup round r (per-round arrays at [+0xad]).
+///
+/// [pt] O confronto `p` (0x35 bytes) da rodada `r` da copa (vetores em [+0xad]).
+pub(crate) unsafe fn cup_tie(copa: usize, r: i32, p: i32) -> usize {
     read_u32_as_usize(read_u32_as_usize(copa + 0xad) + (r as isize * 4) as usize).wrapping_add((p as isize * 0x35) as usize)
 }
 
-/// A rodada `r` da copa (0x68 bytes na tabela [+0xa3]).
-pub(crate) unsafe fn cqd7_rodada(copa: usize, r: i32) -> usize {
+/// Address of cup round r (0x68 bytes in table [+0xa3]).
+///
+/// [pt] A rodada `r` da copa (0x68 bytes na tabela [+0xa3]).
+pub(crate) unsafe fn comp_cup_round(copa: usize, r: i32) -> usize {
     read_u32_as_usize(copa + 0xa3).wrapping_add((r as isize * 0x68) as usize)
 }
 
 
 
-/// A fase `k` da competição como a original a lê no meio das rotinas: −1 a própria, 0..+0x30 em [+0xc]; fora disso a
+/// Stage k of the competition as the original reads it: -1 itself, 0..+0x30 from [+0xc]; out of range shows the
+/// comp.cpp box and returns 0.
+///
+/// [pt] A fase `k` da competição como a original a lê no meio das rotinas: −1 a própria, 0..+0x30 em [+0xc]; fora disso a
 /// caixa da linha 0x36e de comp.cpp e 0.
-pub(crate) unsafe fn cqd7_fase(comp: usize, k: i32) -> usize {
+pub(crate) unsafe fn comp_stage(comp: usize, k: i32) -> usize {
     if k < -1 || k > read_u32_as_usize(comp + 0x30) as i32 {
-        aviso_em(0x99b80c, 0x36e);
+        show_error_at(0x99b80c, 0x36e);
         return 0;
     }
     if k == -1 { comp } else { read_u32_as_usize(read_u32_as_usize(comp + 0xc) + k as usize * 4) }
@@ -362,10 +372,10 @@ pub(crate) unsafe fn cqd7_fase(comp: usize, k: i32) -> usize {
 pub(crate) unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: i32) -> i32 {
     let grupo: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_COMP_UTIL_GET_PARENT_STAGE_ID);
     let mut e = k;
-    let g = grupo(read_i16(cqd7_fase(this, e) + 0x3a) as i32);
+    let g = grupo(read_i16(comp_stage(this, e) + 0x3a) as i32);
     if g > -1 && e > -1 {
         loop {
-            let f = cqd7_fase(this, e - 1);
+            let f = comp_stage(this, e - 1);
             if grupo(read_i16(f + 0x3a) as i32) != g {
                 break;
             }
@@ -381,7 +391,7 @@ pub(crate) unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: 
 /// O comparador da primeira fase do grupo: com o índice válido (−1..+0x30), as duas (só leem) e o mesmo índice; fora
 /// dele só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn comparar_get_first_stage_of_group(this: usize, k: i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_GET_FIRST_STAGE_OF_GROUP);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_GET_FIRST_STAGE_OF_GROUP);
     if k < -1 || k > read_u32_as_usize(this + 0x30) as i32 {
         return o(this, k);
     }
@@ -405,7 +415,7 @@ pub(crate) unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
     let fase: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_COMP_GET_STAGE);
     let voltar = |s0: i32| -> i32 {
         let mut s = s0;
-        let g = grupo(read_i16(cqd7_fase(this, s) + 0x3a) as i32);
+        let g = grupo(read_i16(comp_stage(this, s) + 0x3a) as i32);
         if g > -1 && s > -1 {
             loop {
                 let f = fase(this, s - 1);
@@ -422,7 +432,7 @@ pub(crate) unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
     };
     let fim = |s: i32| -> usize {
         if s < -1 || s > read_u32_as_usize(this + 0x30) as i32 {
-            aviso_em(0x99b80c, 0x36e);
+            show_error_at(0x99b80c, 0x36e);
             return this;
         }
         let f = if s == -1 { this } else { read_u32_as_usize(read_u32_as_usize(this + 0xc) + s as usize * 4) };
@@ -431,7 +441,7 @@ pub(crate) unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
     let mut e: i32 = -1;
     if read_u32_as_usize(this + 0x30) as i32 >= -1 {
         loop {
-            let f = cqd7_fase(this, e);
+            let f = comp_stage(this, e);
             let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(f) + 0x10));
             if acabou(f, 0, 1) as u8 == 0 {
                 if f == 0 {
@@ -454,21 +464,25 @@ pub(crate) unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
 /// O comparador da fase atual: só a original (ponytail: o método 0x10 das fases pode refazer a tabela; não roda duas
 /// vezes); a cópia se prova no modo Rust pelas telas.
 pub(crate) unsafe extern "thiscall" fn comparar_get_current_stage(this: usize) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_GET_CURRENT_STAGE)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_GET_CURRENT_STAGE)(this)
 }
 
 // ---------- 264a leva: as nações-chave das competições: a do clube, a do estádio e a entrada da tabela pelo índice ativo (comp.cpp) ----------
 
-/// A entrada `k` (72 bytes) da tabela das 35 nações-chave em 0xb63d60: +0 a nação, +0x14 o índice ativo.
-pub(crate) fn cqb12_entrada(k: i8) -> usize {
+/// Address of entry k (72 bytes) of the 35 key nations table at 0xb63d60 (+0 nation, +0x14 active index).
+///
+/// [pt] A entrada `k` (72 bytes) da tabela das 35 nações-chave em 0xb63d60: +0 a nação, +0x14 o índice ativo.
+pub(crate) fn key_nation_entry(k: i8) -> usize {
     0xb63d60 + k as i32 as usize * 72
 }
 
-/// O índice `k` da nação `nacao` na tabela das nações-chave (entrada com nação ativa, +0x11c da nação), ou None.
-pub(crate) unsafe fn cqb12_achar(nacao: usize) -> Option<i8> {
+/// Index k of the nation in the key nations table (active nation entry), or None.
+///
+/// [pt] O índice `k` da nação `nacao` na tabela das nações-chave (entrada com nação ativa, +0x11c da nação), ou None.
+pub(crate) unsafe fn find_key_nation_index(nacao: usize) -> Option<i8> {
     let mut k: i8 = 0;
     while k < 0x23 {
-        let e = *(cqb12_entrada(k) as *const usize);
+        let e = *(key_nation_entry(k) as *const usize);
         if e != 0 && *((e + 0x11c) as *const u8) != 0 && e == nacao {
             return Some(k);
         }
@@ -487,9 +501,9 @@ pub(crate) unsafe fn cqb12_achar(nacao: usize) -> Option<i8> {
 pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(clube: usize) -> u8 {
     let nacao = core::ptr::read_unaligned((clube + club::NATION) as *const usize);
     if nacao != 0 {
-        if let Some(k) = cqb12_achar(nacao) {
+        if let Some(k) = find_key_nation_index(nacao) {
             crate::comparacao::ramo("cqb_12 nacao chave do clube");
-            return *((cqb12_entrada(k) + 0x14) as *const u8); // cqb12: o índice ativo da nação do clube
+            return *((key_nation_entry(k) + 0x14) as *const u8); // cqb12: o índice ativo da nação do clube
         }
     }
     // 0x53b900: push clube; add esp, 4 -> cdecl
@@ -503,7 +517,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(clube: usize) -> 
 
 /// Comparador: rotina pura; compara o byte devolvido.
 pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_club(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_CLUB)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_CLUB)(clube);
     let n = comp_active_key_nation_of_club(clube);
     PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_club({:#x}) original={} rust={}", clube, r, n));
     r
@@ -520,10 +534,10 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(estadio: usize
     if estadio == 0 || u(estadio + stadium::STADIUM_CITY) == 0 || u(u(estadio + stadium::STADIUM_CITY) + 0x1f) == 0 {
         return 3;
     }
-    match cqb12_achar(u(u(estadio + stadium::STADIUM_CITY) + 0x1f)) {
+    match find_key_nation_index(u(u(estadio + stadium::STADIUM_CITY) + 0x1f)) {
         Some(k) => {
             crate::comparacao::ramo("cqb_12 nacao chave do estadio");
-            *((cqb12_entrada(k) + 0x14) as *const u8) // cqb12: o índice ativo da nação do estádio
+            *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: o índice ativo da nação do estádio
         }
         None => 3,
     }
@@ -531,15 +545,17 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(estadio: usize
 
 /// Comparador: rotina pura; compara o byte devolvido.
 pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_STADIUM)(estadio);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_STADIUM)(estadio);
     let n = comp_active_key_nation_of_stadium(estadio);
     PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_stadium({:#x}) original={} rust={}", estadio, r, n));
     r
 }
 
-/// A entrada da tabela das nações-chave cujo índice ativo (+0x14) é `ativo`, se houver.
-pub(crate) unsafe fn cqb12_pelo_ativo(ativo: i8) -> Option<i8> {
-    (0..0x23i8).find(|&k| *((cqb12_entrada(k) + 0x14) as *const i8) == ativo)
+/// Index of the key nations entry whose active index (+0x14) is ativo, if any.
+///
+/// [pt] A entrada da tabela das nações-chave cujo índice ativo (+0x14) é `ativo`, se houver.
+pub(crate) unsafe fn key_nation_by_active_index(ativo: i8) -> Option<i8> {
+    (0..0x23i8).find(|&k| *((key_nation_entry(k) + 0x14) as *const i8) == ativo)
 }
 
 /// the first key nation table entry with that active index; none, the error box and 3
@@ -548,10 +564,10 @@ pub(crate) unsafe fn cqb12_pelo_ativo(ativo: i8) -> Option<i8> {
 /// [pt] { 0x48dcd0 } (cdecl, comp.cpp): `comp_key_nation_entry_from_active_index(ativo)`: a primeira entrada da tabela das
 /// nações-chave com aquele índice ativo; nenhuma, a caixa da linha 0x543 de comp.cpp (o jogo segue) e 3.
 pub(crate) unsafe extern "C" fn comp_key_nation_entry_from_active_index(ativo: i8) -> i32 {
-    match cqb12_pelo_ativo(ativo) {
+    match key_nation_by_active_index(ativo) {
         Some(k) => k as i32,
         None => {
-            aviso_em(0x99b80c, 0x543); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\comp.cpp"
+            show_error_at(0x99b80c, 0x543); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\comp.cpp"
             3
         }
     }
@@ -559,8 +575,8 @@ pub(crate) unsafe extern "C" fn comp_key_nation_entry_from_active_index(ativo: i
 
 /// Comparador: rotina pura; compara a entrada devolvida. Sem entrada (a caixa): só a original.
 pub(crate) unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index(ativo: i8) -> i32 {
-    let o = orig::<unsafe extern "C" fn(i8) -> i32>(IDX_COMP_KEY_NATION_ENTRY_FROM_ACTIVE_INDEX);
-    if cqb12_pelo_ativo(ativo).is_none() {
+    let o = original_fn::<unsafe extern "C" fn(i8) -> i32>(IDX_COMP_KEY_NATION_ENTRY_FROM_ACTIVE_INDEX);
+    if key_nation_by_active_index(ativo).is_none() {
         return o(ativo); // ponytail: a caixa não roda duas vezes
     }
     let r = o(ativo);
@@ -572,10 +588,13 @@ pub(crate) unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index
 // ---------- 259a leva: os convocados por clube na data do jogo da seleção, a importância do jogo e a fase da competição (national_teams.cpp, comp.cpp) ----------
 
 
-/// O registro de convocações do clube `c` em [this + 0x20] (6 bytes: +0 vetor de entradas de 9 bytes, +4 capacidade,
+/// Club c's national call-up record in [this + 0x20] (6 bytes: entries, capacity, count), if the club counts (in range,
+/// marked nation, not the excluded one).
+///
+/// [pt] O registro de convocações do clube `c` em [this + 0x20] (6 bytes: +0 vetor de entradas de 9 bytes, +4 capacidade,
 /// +5 quantas), se o clube conta: id dentro dos [0xae235c] − 2 × [0xae2350] registros, com nação (+0x53) marcada
 /// (+0x11c) e que não é a de [0x9cf260].
-pub(crate) unsafe fn cpw13_registro(this: usize, c: usize) -> Option<usize> {
+pub(crate) unsafe fn club_callup_record(this: usize, c: usize) -> Option<usize> {
     let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let id = read_usize(c) as i32;
     if id >= n || id < 0 {
@@ -588,11 +607,14 @@ pub(crate) unsafe fn cpw13_registro(this: usize, c: usize) -> Option<usize> {
     Some(read_usize(this + 0x20).wrapping_add(6 * id as usize))
 }
 
-/// Soma `conta` convocados do clube `c` na data `d` (dia +0, ano +2): na entrada da mesma data, se houver; senão uma
+/// Adds conta call-ups for club c on date d: to that date's entry or a new one (growing the array, re-sorting by date);
+/// false on out of memory (error box).
+///
+/// [pt] Soma `conta` convocados do clube `c` na data `d` (dia +0, ano +2): na entrada da mesma data, se houver; senão uma
 /// entrada nova (com o vetor cheio, mais 3 vagas por 0x945667) com a data e a conta, e o vetor reordenado pela data
 /// (qsort 0x945333 com 0x778e90). Sem memória: a caixa (linha 0x21c8) e false (a rotina para).
-pub(crate) unsafe fn cpw13_somar(this: usize, c: usize, conta: u8, d: *mut u8) -> bool {
-    let rec = match cpw13_registro(this, c) {
+pub(crate) unsafe fn add_club_callups(this: usize, c: usize, conta: u8, d: *mut u8) -> bool {
+    let rec = match club_callup_record(this, c) {
         Some(r) => r,
         None => return true,
     };
@@ -615,7 +637,7 @@ pub(crate) unsafe fn cpw13_somar(this: usize, c: usize, conta: u8, d: *mut u8) -
         let v = realocar(read_usize(rec), (cap as i8 as i32 * 9) as u32);
         core::ptr::write_unaligned(rec as *mut usize, v);
         if v == 0 {
-            aviso_em(0xa5b2a4, 0x21c8);
+            show_error_at(0xa5b2a4, 0x21c8);
             return false;
         }
     }
@@ -634,15 +656,17 @@ pub(crate) unsafe fn cpw13_somar(this: usize, c: usize, conta: u8, d: *mut u8) -
 }
 
 
-/// O registro de algum clube que a 0x7771c0 pode somar está com o vetor cheio (capacidade = quantas, inclusive sem
+/// True when some club that 0x7771c0 may add to has its call-up array full (capacity = count), so it may reallocate.
+///
+/// [pt] O registro de algum clube que a 0x7771c0 pode somar está com o vetor cheio (capacidade = quantas, inclusive sem
 /// vetor)? Então ela pode realocar.
-pub(crate) unsafe fn cpw13_pode_realocar(this: usize, time: usize) -> bool {
+pub(crate) unsafe fn callup_array_full(this: usize, time: usize) -> bool {
     (0..0x32usize).any(|i| {
         let s = read_usize(time + 0xd7 + 4 * i);
         if s == 0 || read_usize(s) as i32 >= read_usize(G_STAFF_COUNT) as i32 || read_usize(s + 0x39) == 0 {
             return false;
         }
-        match cpw13_registro(this, read_usize(s + 0x39)) {
+        match club_callup_record(this, read_usize(s + 0x39)) {
             Some(rec) => *((rec + 4) as *const i8) == *((rec + 5) as *const i8),
             None => false,
         }
@@ -664,7 +688,7 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_match_importance(this: usize,
 
 /// Comparador: pelo valor (a virtual da fase só lê; roda duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_GET_FIXTURE_MATCH_IMPORTANCE)(this, p, a, b);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_GET_FIXTURE_MATCH_IMPORTANCE)(this, p, a, b);
     let n = get_fixture_match_importance(this, p, a, b);
     PLACAR.registrar(r == n, || format!("get_fixture_match_importance({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
     r
@@ -677,7 +701,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_match_importance(thi
 /// [+0xc] + 4 × k; fora disso a caixa (linha 0x36e) e 0, pela original.
 pub(crate) unsafe extern "thiscall" fn get_stage(this: usize, k: i32) -> usize {
     if k < -1 || k > read_usize(this + 0x30) as i32 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_GET_STAGE)(this, k);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_GET_STAGE)(this, k);
     }
     if k == -1 {
         return this;
@@ -687,7 +711,7 @@ pub(crate) unsafe extern "thiscall" fn get_stage(this: usize, k: i32) -> usize {
 
 /// Comparador: pelo valor (só lê). A caixa: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_get_stage(this: usize, k: i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_GET_STAGE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_GET_STAGE);
     if k < -1 || k > read_usize(this + 0x30) as i32 {
         return o(this, k); // ponytail: a caixa, só a original
     }
@@ -754,7 +778,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
 }
 
 pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_FIXTURE)(comp, partida);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_FIXTURE)(comp, partida);
     let n = comp_active_key_nation_of_fixture(comp, partida);
     PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
     r
@@ -772,7 +796,7 @@ pub(crate) unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, fas
         return 0;
     }
     if fase < -1 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN)(this, fase, rodada);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN)(this, fase, rodada);
     }
     let c = if fase == -1 { this } else { read_usize(read_usize(this + 0xc).wrapping_add(4 * fase as usize)) };
     if *((c + 0x43) as *const u8) == 2 {
@@ -795,7 +819,7 @@ pub(crate) unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, fas
 
 /// Comparador: pelo valor (só lê). A caixa: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: usize, fase: i32, rodada: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN);
     if fase < -1 && fase <= read_usize(this + 0x30) as i32 {
         return o(this, fase, rodada); // ponytail: a caixa, só a original
     }
@@ -817,7 +841,7 @@ pub(crate) unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, jo
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, jogo: usize, outro: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, jogo, outro);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, jogo, outro);
     let n = counts_for_fixture_clash(this, jogo, outro);
     PLACAR.registrar(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", read_i16(jogo + 0x30), r, n));
     r

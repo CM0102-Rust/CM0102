@@ -30,33 +30,33 @@ unsafe fn cqg7_sortear(n: i32) -> i32 {
 }
 
 /// Uma chamada thiscall de um argumento pelo endereço (as rotinas de limpeza da pessoa).
-unsafe fn cqg7_com(rotina: usize, this: usize, a: usize) {
+unsafe fn call_thiscall_1(rotina: usize, this: usize, a: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(rotina);
     f(this, a);
 }
 
 /// O byte `k` do registro de 79 bytes da pessoa ([0xae2d0c] + 0x4f × id).
-unsafe fn cqg7_r79(p: usize, k: usize) -> *mut u8 {
+unsafe fn staff_state_byte(p: usize, k: usize) -> *mut u8 {
     (cqg7_d(0xae2d0c) as isize + cqg7_i(p) as isize * 0x4f + k as isize) as *mut u8
 }
 
 /// O inteiro × a constante double do .rdata, truncado (fild; fmul qword; _ftol), em 16 bits.
-unsafe fn cqg7_mul(v: i16, k: usize) -> i16 {
-    ftol(v as f64 * f64_em(k)) as i16
+unsafe fn mul_rdata_const(v: i16, k: usize) -> i16 {
+    match_pl_ftol(v as f64 * read_f64_at(k)) as i16
 }
 
 /// A habilidade (ficha +5) pelo sorteio: r = sorteio(trunc(PA × m1)); trunc(r + PA × m2) (fild r; fild PA; fmul m2;
 /// faddp; _ftol), a PA na ficha +7.
-unsafe fn cqg7_habilidade(f: usize, m1: usize, m2: usize) {
+unsafe fn roll_current_ability(f: usize, m1: usize, m2: usize) {
     let pa = cqg7_w(f + 7) as f64;
-    let r = cqg7_sortear(ftol(pa * f64_em(m1)));
+    let r = cqg7_sortear(match_pl_ftol(pa * read_f64_at(m1)));
     crate::comparacao::ramo("cqg_7 habilidade");
-    cqg7_pw(f + 5, ftol(r as f64 + pa * f64_em(m2)) as i16); // cqg7: a habilidade sorteada pela PA
+    cqg7_pw(f + 5, match_pl_ftol(r as f64 + pa * read_f64_at(m2)) as i16); // cqg7: a habilidade sorteada pela PA
 }
 
 /// O acerto de um atributo de personalidade de 1..20: acima de 15 cai sorteio(`cai`); abaixo de `a1` sobe sorteio(`s1`);
 /// abaixo de `a2` sobe sorteio(`s2`) (0 = nada).
-unsafe fn cqg7_acertar(a: usize, cai: i32, a1: i8, s1: i32, a2: i8, s2: i32) {
+unsafe fn adjust_personality_attribute(a: usize, cai: i32, a1: i8, s1: i32, a2: i8, s2: i32) {
     let v = cqg7_b(a);
     if v > 0xf {
         let r = cqg7_sortear(cai);
@@ -71,7 +71,7 @@ unsafe fn cqg7_acertar(a: usize, cai: i32, a1: i8, s1: i32, a2: i8, s2: i32) {
 }
 
 /// Abaixo de `lim`: soma sorteio(n).
-unsafe fn cqg7_subir_abaixo(a: usize, lim: i8, n: i32) {
+unsafe fn add_random_if_below(a: usize, lim: i8, n: i32) {
     if cqg7_b(a) < lim {
         let r = cqg7_sortear(n);
         cqg7_pb(a, cqg7_b(a).wrapping_add(r as i8));
@@ -79,13 +79,13 @@ unsafe fn cqg7_subir_abaixo(a: usize, lim: i8, n: i32) {
 }
 
 /// Tira sorteio(n).
-unsafe fn cqg7_tirar(a: usize, n: i32) {
+unsafe fn subtract_random(a: usize, n: i32) {
     let r = cqg7_sortear(n);
     cqg7_pb(a, cqg7_b(a).wrapping_sub(r as i8));
 }
 
 /// O teto da habilidade: acima de `teto` e sorteio(n) diferente de 0, o teto.
-unsafe fn cqg7_teto(f: usize, teto: i16, n: i32) {
+unsafe fn cap_current_ability(f: usize, teto: i16, n: i32) {
     if cqg7_w(f + 5) > teto && cqg7_sortear(n) != 0 {
         cqg7_pw(f + 5, teto);
     }
@@ -108,45 +108,45 @@ unsafe fn cqg7_teto(f: usize, teto: i16, n: i32) {
 /// o auxiliar pode gostar dele); senão, com chance, um clube da nação (0x7ad590). Sem clube e abaixo de 20 anos, as
 /// reputações até 1250 e +0xd = 1. No fim, os atributos normalizados (0x538ec0, 0x538bc0).
 unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
-    let marca = cqg7_r79(p, 0xb);
+    let marca = staff_state_byte(p, 0xb);
     let b = *marca;
     if b & 0x30 == 0 || cqg7_d(p + 0x39) != 0 {
         *marca = b & 0xcf;
         return;
     }
-    cqg7_com(0x775ba0, cqg7_d(0xb74318), p);
+    call_thiscall_1(0x775ba0, cqg7_d(0xb74318), p);
     let banco = cqg7_d(this + 0x3c);
     let (ficha_id, nacao_id, nacao2_id) = (cqg7_i(banco), cqg7_i(banco + 4), cqg7_i(banco + 8));
     let tirar_do_banco: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x7a8470usize);
     tirar_do_banco(this, ficha_id);
     *((p + 0x5f) as *mut u8) = 2;
     core::ptr::write_unaligned((p + 0x61) as *mut usize, cqg7_d(0xae23c4).wrapping_add((ficha_id as isize * 0x46) as usize));
-    *cqg7_r79(p, 0xb) |= 0x40;
-    *cqg7_r79(p, 0xd) = 0;
-    *cqg7_r79(p, 0xc) &= 0xfd;
-    *cqg7_r79(p, 0xb) &= 0x7f;
-    *cqg7_r79(p, 0xc) &= 0xfe;
-    *cqg7_r79(p, 9) = 0x9c;
+    *staff_state_byte(p, 0xb) |= 0x40;
+    *staff_state_byte(p, 0xd) = 0;
+    *staff_state_byte(p, 0xc) &= 0xfd;
+    *staff_state_byte(p, 0xb) &= 0x7f;
+    *staff_state_byte(p, 0xc) &= 0xfe;
+    *staff_state_byte(p, 9) = 0x9c;
     if cqg7_d(0xae2a60) != 0 && *(0x9cc270 as *const u8) != 0 {
-        cqg7_com(0x5afd00, cqg7_d(0xae2a60), p);
+        call_thiscall_1(0x5afd00, cqg7_d(0xae2a60), p);
     }
-    cqg7_com(0x7c6650, cqg7_d(0xb74350), p);
-    cqg7_com(0x86fb80, cqg7_d(0xdd7f00), p);
-    cqg7_com(0x55e1d0, cqg7_d(0xae28f0), p);
-    cqg7_com(0x631f90, cqg7_d(0xb63d28), p);
-    cqg7_com(0x56a090, cqg7_d(0xae2a30), p);
-    cqg7_com(0x556830, cqg7_d(0xae28f0), cqg7_d(p));
-    cqg7_com(0x62bfa0, cqg7_d(0xb63d28), cqg7_d(p));
-    cqg7_com(0x4d0b50, cqg7_d(0xae1050), p);
-    cqg7_com(0x4d0bd0, cqg7_d(0xae1050), p);
+    call_thiscall_1(0x7c6650, cqg7_d(0xb74350), p);
+    call_thiscall_1(0x86fb80, cqg7_d(0xdd7f00), p);
+    call_thiscall_1(0x55e1d0, cqg7_d(0xae28f0), p);
+    call_thiscall_1(0x631f90, cqg7_d(0xb63d28), p);
+    call_thiscall_1(0x56a090, cqg7_d(0xae2a30), p);
+    call_thiscall_1(0x556830, cqg7_d(0xae28f0), cqg7_d(p));
+    call_thiscall_1(0x62bfa0, cqg7_d(0xb63d28), cqg7_d(p));
+    call_thiscall_1(0x4d0b50, cqg7_d(0xae1050), p);
+    call_thiscall_1(0x4d0bd0, cqg7_d(0xae1050), p);
     *((p + 0x22) as *mut u8) = 0;
     *((p + 0x23) as *mut u8) = 0;
     if cqg7_d(p + 0x69) != 0 {
         core::ptr::write_unaligned((p + 0x69) as *mut u32, 0);
     }
-    *cqg7_r79(p, 0xb) &= 0xf0;
-    *cqg7_r79(p, 8) = 0;
-    *cqg7_r79(p, 9) = 0x9c;
+    *staff_state_byte(p, 0xb) &= 0xf0;
+    *staff_state_byte(p, 8) = 0;
+    *staff_state_byte(p, 9) = 0x9c;
     let nacoes = cqg7_d(0xae23a8);
     let nac = nacoes.wrapping_add((nacao_id as isize * 0x122) as usize);
     core::ptr::write_unaligned((p + 0x1a) as *mut usize, nac);
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
     core::ptr::write_unaligned((p + 8) as *mut usize, v);
     let v = nome3(cqg7_d(p + 0x1a));
     core::ptr::write_unaligned((p + 0xc) as *mut usize, v);
-    cqg7_com(0x5fff30, cqg7_d(0xb63c98), p);
+    call_thiscall_1(0x5fff30, cqg7_d(0xb63c98), p);
     cqg7_pw(p + 0x40, cqg7_w(0xae2c92));
     cqg7_pw(p + 0x3e, cqg7_w(0xae2c90));
     core::ptr::write_unaligned((p + 0x39) as *mut u32, 0);
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
     }
     *((p + 0x3d) as *mut u8) = 0xb;
     *((p + 0x28) as *mut u8) = 0xb;
-    *cqg7_r79(p, 0xb) &= 0xcf;
+    *staff_state_byte(p, 0xb) &= 0xcf;
     let f = cqg7_d(p + 0x61);
     let nac = cqg7_d(p + 0x1a);
     let idade: i8;
@@ -218,19 +218,19 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
         };
         crate::comparacao::ramo("cqg_7 nacao pequena");
         if idade > 0x14 {
-            cqg7_habilidade(f, 0x96a5d8, 0x9689e0);
+            roll_current_ability(f, 0x96a5d8, 0x9689e0);
         } else if idade > 0x1a {
-            cqg7_habilidade(f, 0x968918, 0x968e48);
+            roll_current_ability(f, 0x968918, 0x968e48);
         } else if idade > 0x17 {
-            cqg7_habilidade(f, 0x968fb0, 0x96a688);
+            roll_current_ability(f, 0x968fb0, 0x96a688);
         } else {
-            cqg7_habilidade(f, 0x968e48, 0x9689e0);
+            roll_current_ability(f, 0x968e48, 0x9689e0);
         }
         let r = cqg7_sortear(0x2ee);
         cqg7_pw(f + 9, (r as i16).wrapping_add(cqg7_w(f + 5).wrapping_mul(0x1e)).wrapping_add(0xfa));
         let mut l121 = idade <= 0x12;
         if !l121 && cqg7_w(f + 7) > 0x8c && cqg7_w(f + 5) > 0x64 && cqg7_w(f + 9) < 0x1964 && idade < 0x16 && cqg7_sortear(4) != 0 {
-            cqg7_pw(f + 9, cqg7_mul(cqg7_w(f + 9), 0x968978));
+            cqg7_pw(f + 9, mul_rdata_const(cqg7_w(f + 9), 0x968978));
         }
         if idade <= 0x12 {
             l121 = true;
@@ -270,51 +270,51 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
         cqg7_pw(f + 0xb, (r as i16).wrapping_add(cqg7_w(f + 9)));
         if idade > 0x17 {
             if cqg7_w(f + 9) < 0x1770 {
-                cqg7_pw(f + 9, cqg7_mul(cqg7_w(f + 9), 0x969588));
+                cqg7_pw(f + 9, mul_rdata_const(cqg7_w(f + 9), 0x969588));
             }
             if cqg7_w(f + 0xb) < 0x1770 {
-                cqg7_pw(f + 0xb, cqg7_mul(cqg7_w(f + 0xb), 0x969588));
+                cqg7_pw(f + 0xb, mul_rdata_const(cqg7_w(f + 0xb), 0x969588));
             }
             let a = cqg7_w(f + 5);
-            if a < cqg7_mul(a, 0x96a5d0) && cqg7_sortear(4) != 0 {
-                cqg7_pw(f + 5, cqg7_mul(cqg7_w(f + 5), 0x96a5d0));
+            if a < mul_rdata_const(a, 0x96a5d0) && cqg7_sortear(4) != 0 {
+                cqg7_pw(f + 5, mul_rdata_const(cqg7_w(f + 5), 0x96a5d0));
             }
         } else if idade < 0x14 {
-            if cqg7_w(f + 5) < cqg7_mul(cqg7_w(f + 7), 0x968968) && cqg7_sortear(4) != 0 {
-                cqg7_pw(f + 5, cqg7_mul(cqg7_w(f + 7), 0x968968));
+            if cqg7_w(f + 5) < mul_rdata_const(cqg7_w(f + 7), 0x968968) && cqg7_sortear(4) != 0 {
+                cqg7_pw(f + 5, mul_rdata_const(cqg7_w(f + 7), 0x968968));
             }
             if idade < 0x12 {
-                cqg7_teto(f, 0x78, 0x96);
+                cap_current_ability(f, 0x78, 0x96);
             } else {
-                cqg7_teto(f, 0x78, 0x32);
+                cap_current_ability(f, 0x78, 0x32);
             }
         } else {
             if cqg7_w(f + 9) < 0x1676 {
-                cqg7_pw(f + 9, cqg7_mul(cqg7_w(f + 9), 0x968928));
+                cqg7_pw(f + 9, mul_rdata_const(cqg7_w(f + 9), 0x968928));
             }
             if cqg7_w(f + 0xb) < 0x1676 {
-                cqg7_pw(f + 0xb, cqg7_mul(cqg7_w(f + 0xb), 0x968928));
+                cqg7_pw(f + 0xb, mul_rdata_const(cqg7_w(f + 0xb), 0x968928));
             }
-            if cqg7_w(f + 5) < cqg7_mul(cqg7_w(f + 7), 0x968e48) && cqg7_sortear(4) != 0 {
-                cqg7_pw(f + 5, cqg7_mul(cqg7_w(f + 7), 0x968e48));
+            if cqg7_w(f + 5) < mul_rdata_const(cqg7_w(f + 7), 0x968e48) && cqg7_sortear(4) != 0 {
+                cqg7_pw(f + 5, mul_rdata_const(cqg7_w(f + 7), 0x968e48));
             }
-            cqg7_teto(f, 0x8c, 0x32);
+            cap_current_ability(f, 0x8c, 0x32);
         }
     } else {
         // a nação grande ou sem nação: a habilidade pela posição e a idade por sorteio(10000)
         if *((f + 0x15) as *const u8) == 0x14 {
-            cqg7_habilidade(f, 0x968e48, 0x968e80);
+            roll_current_ability(f, 0x968e48, 0x968e80);
         } else if *((f + 0x11) as *const u8) == 0x14 || *((f + 0x10) as *const u8) == 0x14 {
-            cqg7_habilidade(f, 0x96a5d8, 0x9689e0);
+            roll_current_ability(f, 0x96a5d8, 0x9689e0);
         } else if *((f + 0xf) as *const u8) == 0x14 {
-            cqg7_habilidade(f, 0x968968, 0x9689e0);
+            roll_current_ability(f, 0x968968, 0x9689e0);
         } else {
-            cqg7_habilidade(f, 0x968e48, 0x9689e0);
+            roll_current_ability(f, 0x968e48, 0x9689e0);
         }
         if cqg7_sortear(0xfa) != 0 {
             let r = cqg7_sortear(0x2ee) as i16;
             cqg7_pw(f + 9, r.wrapping_add(cqg7_w(f + 5).wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: a reputação +9 do regen
-            crate::comparacao::ramo("cqg_7 reputacao do regen");
+            crate::comparacao::ramo("cqg_7 injury_word_0c do regen");
             let r = cqg7_sortear(0x14) as i16;
             cqg7_pw(f + 0xd, r.wrapping_add(cqg7_w(f + 5).wrapping_mul(5)).wrapping_add(1));
         } else {
@@ -333,26 +333,26 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
         if s == 0 {
             idade = (cqg7_sortear(4) as i8).wrapping_add(0xf);
             if idade == 0xf {
-                cqg7_teto(f, 0x50, 0xfa);
+                cap_current_ability(f, 0x50, 0xfa);
             } else {
-                cqg7_teto(f, 0x64, 0x96);
+                cap_current_ability(f, 0x64, 0x96);
             }
         } else if s < 0x1388 {
             idade = (cqg7_sortear(3) as i8).wrapping_add(0x10); // cqg7: a idade de 16 a 18
             crate::comparacao::ramo("cqg_7 idade 16 a 18");
             if idade < 0x12 {
-                cqg7_teto(f, 0x50, 0xfa);
+                cap_current_ability(f, 0x50, 0xfa);
             } else {
-                cqg7_teto(f, 0x64, 0x96);
+                cap_current_ability(f, 0x64, 0x96);
             }
         } else if s > 0x26f7 {
             idade = (cqg7_sortear(6) as i8).wrapping_add(0x15);
         } else {
             idade = (cqg7_sortear(4) as i8).wrapping_add(0x11);
             if idade == 0x11 {
-                cqg7_teto(f, 0x5a, 0xfa);
+                cap_current_ability(f, 0x5a, 0xfa);
             } else {
-                cqg7_teto(f, 0x6e, 0x96);
+                cap_current_ability(f, 0x6e, 0x96);
             }
         }
     }
@@ -361,7 +361,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
         if idade < 0x19 && cqg7_w(f + 5) < 0x78 {
             cqg7_pw(f + 0xd, 1);
         } else {
-            cqg7_pw(f + 0xd, cqg7_mul(cqg7_w(f + 0xd), 0x96a5d0));
+            cqg7_pw(f + 0xd, mul_rdata_const(cqg7_w(f + 0xd), 0x96a5d0));
         }
     }
     cqg7_pw(p + 0x12, cqg7_w(0xae2c92).wrapping_sub(idade as i16)); // cqg7: o ano do nascimento
@@ -389,7 +389,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
         let r = cqg7_sortear(0x10);
         cqg7_pb(f + 0x1b, (r as i8).wrapping_add(5));
     }
-    cqg7_acertar(f + 0x1b, 5, 5, 0xa, 0xa, 8);
+    adjust_personality_attribute(f + 0x1b, 5, 5, 0xa, 0xa, 8);
     // +0x36 pelo +0x1b
     let a = cqg7_b(f + 0x1b);
     let v = if a > 0xf {
@@ -416,7 +416,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
     } else {
         let r = cqg7_sortear(0x14);
         cqg7_pb(f + 0x1d, (r as i8).wrapping_add(1));
-        cqg7_acertar(f + 0x1d, 6, 5, 6, 0, 0);
+        adjust_personality_attribute(f + 0x1d, 6, 5, 6, 0, 0);
     }
     // +0x2e
     let mut k: i8 = -5;
@@ -436,33 +436,33 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
     // +0x34
     let r = cqg7_sortear(0x14);
     cqg7_pb(f + 0x34, (r as i8).wrapping_add(1));
-    cqg7_acertar(f + 0x34, 6, 8, 0xa, 0, 0);
+    adjust_personality_attribute(f + 0x34, 6, 8, 0xa, 0, 0);
     // +0x44
     let r = cqg7_sortear(0x14);
     cqg7_pb(f + 0x44, (r as i8).wrapping_add(1));
     if cqg7_b(f + 0x44) > 0xf && cqg7_sortear(3) != 0 {
-        cqg7_tirar(f + 0x44, 5);
+        subtract_random(f + 0x44, 5);
     } else {
         let a = cqg7_b(f + 0x44);
         if a < 5 {
-            cqg7_subir_abaixo(f + 0x44, 5, 0xa);
+            add_random_if_below(f + 0x44, 5, 0xa);
         } else if a < 0xa {
-            cqg7_subir_abaixo(f + 0x44, 0xa, 5);
+            add_random_if_below(f + 0x44, 0xa, 5);
         }
     }
     // +0x3c pela idade
     if idade < 0x12 {
         let r = cqg7_sortear(0x14);
         cqg7_pb(f + 0x3c, (r as i8).wrapping_add(1));
-        cqg7_acertar(f + 0x3c, 8, 5, 8, 0xa, 6);
+        adjust_personality_attribute(f + 0x3c, 8, 5, 8, 0xa, 6);
     } else if idade < 0x18 {
         let r = cqg7_sortear(0x12);
         cqg7_pb(f + 0x3c, (r as i8).wrapping_add(3));
-        cqg7_acertar(f + 0x3c, 5, 5, 0xa, 0xa, 5);
+        adjust_personality_attribute(f + 0x3c, 5, 5, 0xa, 0xa, 5);
     } else {
         let r = cqg7_sortear(0xf);
         cqg7_pb(f + 0x3c, (r as i8).wrapping_add(6));
-        cqg7_acertar(f + 0x3c, 3, 0xa, 8, 0, 0);
+        adjust_personality_attribute(f + 0x3c, 3, 0xa, 8, 0, 0);
     }
     if cqg7_b(f + 0x3c) < 0xa && cqg7_b(f + 0x44) > 0xf {
         let r = cqg7_sortear(5);
@@ -472,11 +472,11 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
     let r = cqg7_sortear(0x14);
     cqg7_pb(f + 0x3d, (r as i8).wrapping_add(1));
     if idade < 0x12 {
-        cqg7_acertar(f + 0x3d, 0xa, 5, 6, 0, 0);
+        adjust_personality_attribute(f + 0x3d, 0xa, 5, 6, 0, 0);
     } else if idade < 0x18 {
-        cqg7_acertar(f + 0x3d, 8, 5, 8, 0, 0);
+        adjust_personality_attribute(f + 0x3d, 8, 5, 8, 0, 0);
     } else {
-        cqg7_acertar(f + 0x3d, 5, 5, 0xa, 0, 0);
+        adjust_personality_attribute(f + 0x3d, 5, 5, 0xa, 0, 0);
     }
     if (cqg7_b(f + 0x11) == 0x14 || cqg7_b(f + 0x12) == 0x14) && cqg7_b(f + 0x3d) < 0xa {
         let r = cqg7_sortear(5);
@@ -489,48 +489,48 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
     // +0x1e, +0x24, +0x2c, +0x2f (e +0x21) pela idade
     if idade < 0x18 {
         if idade < 0x12 {
-            cqg7_tirar(f + 0x1e, 0x28);
-            cqg7_tirar(f + 0x24, 0x28);
+            subtract_random(f + 0x1e, 0x28);
+            subtract_random(f + 0x24, 0x28);
             let a = cqg7_b(f + 0x2c);
             if a > 0xf {
-                cqg7_tirar(f + 0x2c, 8);
+                subtract_random(f + 0x2c, 8);
             } else if a > 0xa {
-                cqg7_tirar(f + 0x2c, 5);
+                subtract_random(f + 0x2c, 5);
             }
             let a = cqg7_b(f + 0x2f);
             if a > 0xf {
-                cqg7_tirar(f + 0x2f, 0xa);
+                subtract_random(f + 0x2f, 0xa);
             } else if a > 0xa {
-                cqg7_tirar(f + 0x2f, 8);
+                subtract_random(f + 0x2f, 8);
             }
         } else {
-            cqg7_tirar(f + 0x1e, 0x14);
-            cqg7_tirar(f + 0x24, 0x14);
+            subtract_random(f + 0x1e, 0x14);
+            subtract_random(f + 0x24, 0x14);
             if cqg7_b(f + 0x2c) > 0xf {
-                cqg7_tirar(f + 0x2c, 5);
+                subtract_random(f + 0x2c, 5);
             }
             let a = cqg7_b(f + 0x2f);
             if a > 0xf {
-                cqg7_tirar(f + 0x2f, 8);
+                subtract_random(f + 0x2f, 8);
             } else if a > 0xa {
-                cqg7_tirar(f + 0x2f, 5);
+                subtract_random(f + 0x2f, 5);
             }
         }
         if cqg7_b(f + 0x2f) > 0xf {
-            cqg7_tirar(f + 0x2f, 8);
+            subtract_random(f + 0x2f, 8);
         }
     } else if idade > 0x19 && idade < 0x1d {
-        cqg7_subir_abaixo(f + 0x3d, 5, 8);
-        cqg7_subir_abaixo(f + 0x21, 5, 8);
-        cqg7_subir_abaixo(f + 0x3c, 5, 8);
-        cqg7_tirar(f + 0x1e, 0xa);
-        cqg7_tirar(f + 0x24, 0xa);
-        cqg7_subir_abaixo(f + 0x2c, 5, 8);
+        add_random_if_below(f + 0x3d, 5, 8);
+        add_random_if_below(f + 0x21, 5, 8);
+        add_random_if_below(f + 0x3c, 5, 8);
+        subtract_random(f + 0x1e, 0xa);
+        subtract_random(f + 0x24, 0xa);
+        add_random_if_below(f + 0x2c, 5, 8);
         let a = cqg7_b(f + 0x2f);
         if a > 0xf {
-            cqg7_tirar(f + 0x2f, 5);
+            subtract_random(f + 0x2f, 5);
         } else if a > 0xa {
-            cqg7_tirar(f + 0x2f, 3);
+            subtract_random(f + 0x2f, 3);
         }
     }
     // o clube
@@ -585,7 +585,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
 /// contrato e manda notícia; não pode rodar duas vezes). A cópia roda no modo Rust (contadores "cqg_7 ...") e é provada
 /// pelas mutações e pelas duas carreiras Rust.
 unsafe extern "thiscall" fn comparar_regenerate_as_youth_player(this: usize, p: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, p)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, p)
 }
 
 /// { 0x56a090 } (thiscall, ret 4, dispute.cpp): `DISPUTE::remove_dispute(pessoa)`: sem pessoa ou sem a tabela de marcas
@@ -626,7 +626,7 @@ unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
 /// plano: a marca zerada e a conta da lista uma a menos quando a pessoa está nela (a procura feita antes, com o cursor
 /// devolvido).
 unsafe extern "thiscall" fn comparar_remove_dispute(this: usize, p: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if p == 0 || cqg7_d(this + 4) == 0 {
         return o(this, p);
     }

@@ -5,8 +5,8 @@
 unsafe extern "thiscall" fn game_average(t: usize, segunda: u8) -> f64 {
     let d = |o: usize| core::ptr::read_unaligned((t + o) as *const f64);
     let (n, q) = if segunda != 0 { (d(0x20), d(0x28)) } else { (d(0x10), d(0x18)) };
-    if q == f64_em(0x9689a0) || q.is_nan() {
-        return f64_em(0x968998);
+    if q == read_f64_at(0x9689a0) || q.is_nan() {
+        return read_f64_at(0x968998);
     }
     n / q
 }
@@ -51,7 +51,7 @@ unsafe extern "stdcall" fn national_team_level(j: usize, rep: *const i16, base: 
 }
 
 unsafe extern "thiscall" fn comparar_game_average(t: usize, segunda: u8) -> f64 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u8) -> f64>(%%I0%%)(t, segunda);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> f64>(%%I0%%)(t, segunda);
     let n = game_average(t, segunda);
     PLACAR.registrar(o.to_bits() == n.to_bits(), || format!("game_average({:#x}, {}) original={} rust={}", t, segunda, o, n));
     o
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn comparar_game_average(t: usize, segunda: u8) -> f64 
 comparar_valor!(comparar_contract_value, contract_value, %%I1%%, (p: *const i32) -> u32);
 
 unsafe extern "stdcall" fn comparar_national_team_level(j: usize, rep: *const i16, base: u8) -> u8 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8>(%%I2%%)(j, rep, base);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8>(%%I2%%)(j, rep, base);
     let n = national_team_level(j, rep, base);
     PLACAR.registrar(r == n, || format!("national_team_level({:#x}, {}, {}) original={} rust={}", j, *rep, base, r, n));
     r

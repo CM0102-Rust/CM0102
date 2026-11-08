@@ -9,14 +9,14 @@ unsafe fn cpp12_i(a: usize) -> i32 {
 }
 
 /// Dia (palavra com sinal) e ano (palavra sem sinal) de uma data de 8 bytes.
-unsafe fn cpp12_data(p: usize) -> (i16, u16) {
+unsafe fn national_teams_date_day_year(p: usize) -> (i16, u16) {
     (core::ptr::read_unaligned(p as *const i16), core::ptr::read_unaligned((p + 2) as *const u16))
 }
 
 /// Os convocados do clube (id < [0xae235c] − 2 × [0xae2350]: clube comum, não seleção) entre as datas `a` e `b`: a
 /// lista do clube em [this + 0x20] + 6 × id (+0 os registros de 9 bytes em ordem de data, +5 a conta em byte com sinal);
 /// pula os antes de `a`, para no primeiro depois de `b` e soma os bytes +8 (em byte, com a volta). Mais de 2: demais.
-unsafe fn cpp12_muitos_convocados(this: usize, clube: usize, a: usize, b: usize) -> bool {
+unsafe fn has_too_many_called_up(this: usize, clube: usize, a: usize, b: usize) -> bool {
     if clube == 0 {
         return false;
     }
@@ -28,13 +28,13 @@ unsafe fn cpp12_muitos_convocados(this: usize, clube: usize, a: usize, b: usize)
     let rec = cpp12_d(this + 0x20).wrapping_add((id as usize).wrapping_mul(6));
     let n = *((rec + 5) as *const i8);
     let lista = cpp12_d(rec);
-    let (a_dia, a_ano) = cpp12_data(a);
-    let (b_dia, b_ano) = cpp12_data(b);
+    let (a_dia, a_ano) = national_teams_date_day_year(a);
+    let (b_dia, b_ano) = national_teams_date_day_year(b);
     let mut soma: i8 = 0;
     let mut k: i8 = 0;
     while k < n {
         let e = lista.wrapping_add(k as isize as usize * 9);
-        let (dia, ano) = cpp12_data(e);
+        let (dia, ano) = national_teams_date_day_year(e);
         k = k.wrapping_add(1);
         if a_ano > ano || (a_ano == ano && a_dia > dia) {
             continue; // antes da janela
@@ -67,10 +67,10 @@ unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, jogo: usize) 
         return 1;
     }
     let (pa, pb) = (a.as_ptr() as usize, b.as_ptr() as usize);
-    if cpp12_muitos_convocados(this, cpp12_d(jogo + 0x1c), pa, pb) {
+    if has_too_many_called_up(this, cpp12_d(jogo + 0x1c), pa, pb) {
         return 0;
     }
-    if cpp12_muitos_convocados(this, cpp12_d(jogo + 0x20), pa, pb) {
+    if has_too_many_called_up(this, cpp12_d(jogo + 0x20), pa, pb) {
         crate::comparacao::ramo("cpp_12 visitante convocado");
         return 0; // o visitante com convocados demais
     }
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn add_qualified_nation(this: usize, nacao: usize, fase
 
 /// Comparador: pelo valor (só lê; as datas são locais).
 unsafe extern "thiscall" fn comparar_can_schedule_club_fixture(this: usize, jogo: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, jogo);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, jogo);
     let n = can_schedule_club_fixture(this, jogo);
     PLACAR.registrar(r == n, || format!("can_schedule_club_fixture({:x}) original={} rust={}", jogo, r, n));
     r
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn comparar_can_schedule_club_fixture(this: usize, jogo
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "C" fn comparar_compare_call_up_records_by_date(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_call_up_records_by_date(a, b);
     PLACAR.registrar(r == n, || format!("compare_call_up_records_by_date({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -122,7 +122,7 @@ unsafe extern "C" fn comparar_compare_call_up_records_by_date(a: usize, b: usize
 /// sobe 1 com as duas não nulas e fica igual senão.
 unsafe extern "thiscall" fn comparar_add_qualified_nation(this: usize, nacao: usize, fase_final: usize) {
     let antes = *((this + 0x28) as *const i16) as i32;
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, nacao, fase_final);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, nacao, fase_final);
     let depois = *((this + 0x28) as *const i16) as i32;
     let esperado = antes + (nacao != 0 && fase_final != 0) as i32;
     PLACAR.registrar(depois == esperado, || format!("add_qualified_nation({:x}, {:x}) conta {} -> {}", nacao, fase_final, antes, depois));

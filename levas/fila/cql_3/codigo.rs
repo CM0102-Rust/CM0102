@@ -10,7 +10,7 @@ static mut CQL3_PLANO: Option<Vec<usize>> = None;
 
 /// As ligas que a 0x859dc0 numera: as competições da tabela [0xadadfc] (conta [0xadadf8], relida a cada volta) que
 /// são liga de divisão (0x4b0700 com o id [[+4]], cdecl de 1) e usam números (bit 2 do +0x52).
-unsafe fn cql3_ligas_a_numerar(mut cada: impl FnMut(usize)) {
+unsafe fn for_each_numbered_league(mut cada: impl FnMut(usize)) {
     let divisao: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x4b0700usize);
     let mut i = 0i32;
     while i < cql3_d(0xadadf8) as i32 {
@@ -24,20 +24,20 @@ unsafe fn cql3_ligas_a_numerar(mut cada: impl FnMut(usize)) {
 }
 
 /// { 0x859dc0 } (thiscall, ret 0, squad_manager.cpp, `SQUAD_MANAGER::init_new_game`): zera o ano das inscrições (+0,
-/// word) e numera (0x859e20(this, liga, 1, 0)) cada liga de divisão que usa números (`cql3_ligas_a_numerar`).
+/// word) e numera (0x859e20(this, liga, 1, 0)) cada liga de divisão que usa números (`for_each_numbered_league`).
 unsafe extern "thiscall" fn init_new_game(this: usize) {
     let numerar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x859e20usize);
     *(this as *mut u16) = 0;
-    cql3_ligas_a_numerar(|c| numerar(this, c, 1, 0));
+    for_each_numbered_league(|c| numerar(this, c, 1, 0));
 }
 
 /// Só a original (ela numera as ligas pela 0x859e20, que manda notícia ao técnico humano: não roda duas vezes); o plano
 /// da cópia (as ligas, achadas antes, sem numerar) tem de ser o que a original fez (gravado pelo comparador da
 /// 0x859e20) e o +0 zerado.
 unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let mut plano = Vec::new();
-    cql3_ligas_a_numerar(|c| plano.push(c));
+    for_each_numbered_league(|c| plano.push(c));
     CQL3_PLANO = Some(Vec::new());
     o(this);
     let feito = CQL3_PLANO.take().unwrap_or_default();
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, liga: usize
 /// no do clube ligado, e a marca da caixa. Com algum clube de técnico humano sem `automatico` (a notícia do pedido não
 /// roda duas vezes), só a original. A lista dos clubes vem do mesmo método +0x58 (solta depois).
 unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, liga: usize, inicial: u32, automatico: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%);
     if let Some(v) = (*core::ptr::addr_of_mut!(CQL3_PLANO)).as_mut() {
         v.push(liga);
     }
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usiz
 /// Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
 /// e a devolução.
 unsafe extern "thiscall" fn comparar_select_euro_registered_players(this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(%%I2%%);
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let mut sq = [0usize; 50];
     elenco(c, sq.as_mut_ptr(), 0);

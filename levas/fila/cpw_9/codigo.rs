@@ -26,18 +26,18 @@ unsafe fn cpw9_sortear(n: i32) -> i32 {
 }
 
 /// Soma `delta` ao byte `a` (o `add`/`dec` de 8 bits da original).
-unsafe fn cpw9_somar_byte(a: usize, delta: u8) {
+unsafe fn add_to_byte(a: usize, delta: u8) {
     *(a as *mut u8) = (*(a as *const u8)).wrapping_add(delta);
 }
 
 /// O registro de 31 bytes da pessoa de índice `idx` em [this].
-unsafe fn cpw9_registro(this: usize, idx: i32) -> usize {
+unsafe fn physical_record_by_index(this: usize, idx: i32) -> usize {
     cpw9_d(this).wrapping_add((idx as u32).wrapping_mul(31) as usize)
 }
 
 /// A categoria da recorrência (+0x12 do registro, com sinal) é a da tabela de tipos (0x9e7ad9, 13 bytes por tipo)?
-unsafe fn cpw9_recorrente(this: usize, idx: i32, categoria: u8) -> bool {
-    let r = cpw9_b(cpw9_registro(this, idx) + 0x12);
+unsafe fn is_recurring_category(this: usize, idx: i32, categoria: u8) -> bool {
+    let r = cpw9_b(physical_record_by_index(this, idx) + 0x12);
     r > -1 && *((0x9e7ad9 + (r as isize * 13) as usize) as *const u8) == categoria
 }
 
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn injury_daily_update(this: usize) {
     let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x54a3f0usize);
     if semana(0xae2c90) as i16 != 6 && semana(0xae2c90) as i16 != 5 { // cpw9: sábado e domingo sem treino
         crate::comparacao::ramo("cpw_9 dia de treino");
-        cpw9_treino(this);
+        roll_training_injuries(this);
     }
     if CPW9_ENSAIO {
         return;
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn injury_daily_update(this: usize) {
 }
 
 /// As lesões no treino do dia (o meio da 0x62b7b0).
-unsafe fn cpw9_treino(this: usize) {
+unsafe fn roll_training_injuries(this: usize) {
     let ausente: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x418f60usize);
     let fora_da_temporada: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x62ce30usize);
     let escolher: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8 = core::mem::transmute(0x62d140usize);
@@ -149,12 +149,12 @@ unsafe fn cpw9_treino(this: usize) {
                     break 'proximo;
                 }
             }
-            let rec = cpw9_registro(this, idx);
+            let rec = physical_record_by_index(this, idx);
             if cpw9_i(rec + 0xe) != -1 {
                 break 'proximo;
             }
             if cpw9_b(rec + 0x12) > -1 {
-                let rec = cpw9_registro(this, idx);
+                let rec = physical_record_by_index(this, idx);
                 let r = cpw9_sortear(100);
                 let lim = ((cpw9_b(cpw9_d(p + 0x61) + 0x2d) as i32 - 3) * 5 + cpw9_b(rec + 0x1e) as i32 + cpw9_b(rec + 0x13) as i32) * 2;
                 if r > lim {
@@ -162,7 +162,7 @@ unsafe fn cpw9_treino(this: usize) {
                 }
             } else {
                 let r = cpw9_sortear(0xa0);
-                let lim = ((cpw9_b(cpw9_d(p + 0x61) + 0x2d) as i32 - 3) * 5 + cpw9_b(cpw9_registro(this, idx) + 0x1e) as i32) * 2; // cpw9: o risco sem recorrência
+                let lim = ((cpw9_b(cpw9_d(p + 0x61) + 0x2d) as i32 - 3) * 5 + cpw9_b(physical_record_by_index(this, idx) + 0x1e) as i32) * 2; // cpw9: o risco sem recorrência
                 if r > lim {
                     break 'proximo;
                 }
@@ -171,7 +171,7 @@ unsafe fn cpw9_treino(this: usize) {
             if cpw9_sortear(3) != 0 {
                 break 'proximo;
             }
-            let rec = cpw9_registro(this, idx);
+            let rec = physical_record_by_index(this, idx);
             if cpw9_b(rec + 0x1e) < 0x14 {
                 break 'proximo;
             }
@@ -181,7 +181,7 @@ unsafe fn cpw9_treino(this: usize) {
                 let r1 = cpw9_sortear(cpw9_b(rec + 0x13) as i32 + 2);
                 let r2 = cpw9_sortear(3);
                 if r1 > r2 {
-                    let r = cpw9_b(cpw9_registro(this, idx) + 0x12) as isize;
+                    let r = cpw9_b(physical_record_by_index(this, idx) + 0x12) as isize;
                     categoria = *((0x9e7ad9 + (r * 13) as usize) as *const u8);
                     sortear_categoria = false;
                 }
@@ -217,7 +217,7 @@ unsafe fn cpw9_treino(this: usize) {
                 CPW9_PAROU = true;
                 return;
             }
-            cpw9_gasto_da_lesao(this, idx, p, categoria, caso);
+            apply_injury_attribute_loss(this, idx, p, categoria, caso);
             let nova: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x62d250usize);
             // ponytail: a original empurra o tipo num dword cujos bytes de cima não têm valor; a 0x62d250 lê um char
             nova(this, tipo as u32, 0, p, 0, 1, 0xffff_ffff, 0, 0);
@@ -227,39 +227,39 @@ unsafe fn cpw9_treino(this: usize) {
 }
 
 /// Os atributos que a lesão gasta (os casos 0, 2, 3 e 4 do switch da 0x62b7b0): a ficha (+0x61) é relida a cada vez.
-unsafe fn cpw9_gasto_da_lesao(this: usize, idx: i32, p: usize, categoria: u8, caso: u8) {
+unsafe fn apply_injury_attribute_loss(this: usize, idx: i32, p: usize, categoria: u8, caso: u8) {
     let ficha = || cpw9_d(p + 0x61);
     match caso {
         0 => {
             let a = cpw9_b(ficha() + 0x1b);
             if a == 0x14 {
-                if cpw9_recorrente(this, idx, categoria) {
+                if is_recurring_category(this, idx, categoria) {
                     let f = ficha();
                     let r = cpw9_sortear(3) as u8;
-                    cpw9_somar_byte(f + 0x1b, 0xffu8.wrapping_sub(r));
+                    add_to_byte(f + 0x1b, 0xffu8.wrapping_sub(r));
                 } else if cpw9_sortear(3) != 0 {
                     let f = ficha();
                     let r = cpw9_sortear(2) as u8;
-                    cpw9_somar_byte(f + 0x1b, 0xffu8.wrapping_sub(r));
+                    add_to_byte(f + 0x1b, 0xffu8.wrapping_sub(r));
                 }
             } else if a > 0xf && cpw9_sortear(3) == 0 {
-                cpw9_somar_byte(ficha() + 0x1b, 0xff);
+                add_to_byte(ficha() + 0x1b, 0xff);
             }
             if cpw9_b(ficha() + 0x36) == 0x14 {
-                if cpw9_recorrente(this, idx, categoria) {
+                if is_recurring_category(this, idx, categoria) {
                     let f = ficha();
                     let r = cpw9_sortear(3) as u8;
-                    cpw9_somar_byte(f + 0x36, 0xffu8.wrapping_sub(r));
+                    add_to_byte(f + 0x36, 0xffu8.wrapping_sub(r));
                 } else if cpw9_sortear(3) != 0 {
-                    cpw9_somar_byte(ficha() + 0x36, 0xff);
+                    add_to_byte(ficha() + 0x36, 0xff);
                 }
             } else if cpw9_b(ficha() + 0x1b) > 0x11 && cpw9_sortear(3) == 0 {
-                cpw9_somar_byte(ficha() + 0x1b, 0xff);
+                add_to_byte(ficha() + 0x1b, 0xff);
             }
         }
         2 => {
-            if cpw9_recorrente(this, idx, categoria) && cpw9_b(ficha() + 0x1b) == 0x14 && cpw9_sortear(3) == 0 {
-                cpw9_somar_byte(ficha() + 0x1b, 0xff);
+            if is_recurring_category(this, idx, categoria) && cpw9_b(ficha() + 0x1b) == 0x14 && cpw9_sortear(3) == 0 {
+                add_to_byte(ficha() + 0x1b, 0xff);
             }
         }
         3 => {
@@ -267,17 +267,17 @@ unsafe fn cpw9_gasto_da_lesao(this: usize, idx: i32, p: usize, categoria: u8, ca
             if c == 0x14 {
                 *((ficha() + 0x1d) as *mut u8) = 0x13;
             } else if c > 0xf && cpw9_sortear(3) == 0 {
-                cpw9_somar_byte(ficha() + 0x1d, 0xff);
+                add_to_byte(ficha() + 0x1d, 0xff);
             }
         }
         4 => {
             let c = cpw9_b(ficha() + 0x1d);
             if c == 0x14 {
                 if cpw9_sortear(3) != 0 {
-                    cpw9_somar_byte(ficha() + 0x1d, 0xff);
+                    add_to_byte(ficha() + 0x1d, 0xff);
                 }
             } else if c > 0xf && cpw9_sortear(3) == 0 {
-                cpw9_somar_byte(ficha() + 0x1d, 0xff);
+                add_to_byte(ficha() + 0x1d, 0xff);
             }
         }
         _ => {}
@@ -289,7 +289,7 @@ unsafe fn cpw9_gasto_da_lesao(this: usize, idx: i32, p: usize, categoria: u8, ca
 /// conferida quando chega às notícias da volta (0x62e010, desviada no mesmo item), antes das rotinas do fim. Com lesão
 /// nova (aloca e manda notícia) ou com o físico de todos (dia 180 da primeira temporada): só a original.
 unsafe extern "thiscall" fn comparar_injury_daily_update(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let mut reg = vec![(this, 0x2c)];
     let n = cpw9_i(this + 8);
     if n > 0 && cpw9_d(this + 4) != 0 {
@@ -338,7 +338,7 @@ unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
             if p == 0 || cpw9_i(p) >= cpw9_i(0xae2364) {
                 continue;
             }
-            let i = cpw9_i(cpw9_registro(this, cpw9_i(p)) + 0xe);
+            let i = cpw9_i(physical_record_by_index(this, cpw9_i(p)) + 0xe);
             if i == -1 {
                 continue;
             }
@@ -347,7 +347,7 @@ unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
             let mut t = [0u8; 8];
             let r = mais(inj + 0x20, t.as_mut_ptr(), cpw9_uw(inj + 0x2a) as u32);
             if ano == cpw9_uw(r + 2) && dia == cpw9_w(r) && cpw9_w(inj + 0x2a) > 5 {
-                let marca = cpw9_registro(this, cpw9_i(p)) + 0x1c;
+                let marca = physical_record_by_index(this, cpw9_i(p)) + 0x1c;
                 if *(marca as *const u8) == 0 {
                     *(marca as *mut u8) = 1;
                     let dias = cpw9_uw(inj + 0x28).wrapping_sub(cpw9_uw(inj + 0x2a));
@@ -471,7 +471,7 @@ unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usize) {
         let mo = crate::comparacao::Memoria::ler(&reg);
         PLACAR.registrar(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
 /// { 0x55d360 } (thiscall, ret 8, discipline.cpp): `Discipline::is_one_booking_from_ban(pessoa, competicao)`: com id
@@ -498,7 +498,7 @@ unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pessoa: usize, 
 }
 
 unsafe extern "thiscall" fn comparar_is_one_booking_from_ban(this: usize, pessoa: usize, competicao: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, pessoa, competicao);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, pessoa, competicao);
     let n = is_one_booking_from_ban(this, pessoa, competicao);
     PLACAR.registrar(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", pessoa, competicao, r, n));
     r

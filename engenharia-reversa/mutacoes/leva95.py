@@ -9,5 +9,5 @@ MUTACOES = [
     ('s_marcado', "                        if tx <= 2 {\n                            tx += 1;", "                        if tx <= 2 {\n                            tx += 2;"),
     ('s_avanca', "        let r = sortear(d as i32 * 5).wrapping_add(byte(j, 0x107) as i32);", "        let r = sortear(d as i32 * 4).wrapping_add(byte(j, 0x107) as i32);"),
     ('s_fica', "            *w(0x198) = 0x76;", "            *w(0x198) = 0x77;"),
-    ('s_ftol', "    let n = ftol(*((j + 0xe1) as *const f32) as f64 + f32_em(0x968a78) as f64);", "    let n = ftol(*((j + 0xe1) as *const f32) as f64 + f32_em(0x968a78) as f64 + 1.0);"),
+    ('s_ftol', "    let n = match_pl_ftol(*((j + 0xe1) as *const f32) as f64 + read_f32_at(0x968a78) as f64);", "    let n = match_pl_ftol(*((j + 0xe1) as *const f32) as f64 + read_f32_at(0x968a78) as f64 + 1.0);"),
 ]

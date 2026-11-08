@@ -8,51 +8,67 @@ use super::*;
 
 
 
-/// Soma `v` nos dois acumuladores do ano e do mês (`ano`, `mes`) e o tira do saldo (i64; o cdq/sub/sbb da original).
-pub(crate) unsafe fn cqc1_cobrar(fin: usize, mes: usize, ano: usize, v: i32) {
-    cpv5_somar(fin + mes, v);
-    cpv5_somar(fin + ano, v);
-    core::ptr::write_unaligned(fin as *mut i64, cpv6_saldo(fin).wrapping_sub(v as i64));
+/// Adds v to the month and year expense accumulators of a finance record and subtracts it from the i64 balance.
+///
+/// [pt] Soma `v` nos dois acumuladores do ano e do mês (`ano`, `mes`) e o tira do saldo (i64; o cdq/sub/sbb da original).
+pub(crate) unsafe fn charge_expense(fin: usize, mes: usize, ano: usize, v: i32) {
+    add_to_i32(fin + mes, v);
+    add_to_i32(fin + ano, v);
+    core::ptr::write_unaligned(fin as *mut i64, balance(fin).wrapping_sub(v as i64));
 }
 
 
-/// O clube humano (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(clube, 0, 1, 0, 0)).
-pub(crate) unsafe fn cqc1_humano(clube: usize) -> u32 {
+/// Calls FN_HUMAN_MANAGER_IS_HUMAN_CLUB (0x600a50) with (club, 0, 1, 0, 0).
+///
+/// [pt] O clube humano (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(clube, 0, 1, 0, 0)).
+pub(crate) unsafe fn fin_prm_is_human_club(clube: usize) -> u32 {
     let f: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     f(clube, 0, 1, 0, 0)
 }
 
-/// O registro de finanças do clube (0x167 bytes) pelo parceiro: 0x540a50 (3 pushes; add esp, 0xc -> cdecl(clube, &a,
+/// Finance record (0x167 bytes) of the club, using the linked parent when the club is a B team (0x540a50); writes the
+/// original's local flag.
+///
+/// [pt] O registro de finanças do clube (0x167 bytes) pelo parceiro: 0x540a50 (3 pushes; add esp, 0xc -> cdecl(clube, &a,
 /// 1)); o parceiro quando ele existe e o clube é o B (a = 0). `a` é a local da original (a 0x540a50 a grava).
-pub(crate) unsafe fn cqc1_financas_do_parceiro(this: usize, clube: usize, a: &mut u32) -> usize {
+pub(crate) unsafe fn finance_of_parent_club(this: usize, clube: usize, a: &mut u32) -> usize {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let p = parceiro(clube, a, 1);
     let c = if p != 0 && *a == 0 { p } else { clube };
     read_usize(this).wrapping_add((read_i32(c) as u32).wrapping_mul(0x167) as usize)
 }
 
-/// A notícia das obras e do treino (0x59ffb0: ecx = tabela; 3 pushes (tipo, valor, clube); sem add esp -> thiscall,
+/// Posts the stadium works / training news (FN_FINANCE_POST_STADIUM_WORKS_NEWS) with club, value and type.
+///
+/// [pt] A notícia das obras e do treino (0x59ffb0: ecx = tabela; 3 pushes (tipo, valor, clube); sem add esp -> thiscall,
 /// ret 0xc).
-pub(crate) unsafe fn cqc1_noticia(this: usize, clube: usize, valor: i32, tipo: i32) {
+pub(crate) unsafe fn post_works_news(this: usize, clube: usize, valor: i32, tipo: i32) {
     let f: unsafe extern "thiscall" fn(usize, usize, i32, i32) = core::mem::transmute(FN_FINANCE_POST_STADIUM_WORKS_NEWS);
     f(this, clube, valor, tipo);
 }
 
-/// A notícia da obra recusada (0x59fae0: ecx = tabela; 3 pushes; sem add esp -> thiscall, ret 0xc; sorteia 2 fora do
+/// Posts the refused/cancelled works news (FN_FINANCE_POST_WORKS_CANCELLED_NEWS, may draw random numbers).
+///
+/// [pt] A notícia da obra recusada (0x59fae0: ecx = tabela; 3 pushes; sem add esp -> thiscall, ret 0xc; sorteia 2 fora do
 /// motivo 2).
-pub(crate) unsafe fn cqc1_recusa(this: usize, clube: usize, assunto: i32, motivo: i32) {
+pub(crate) unsafe fn post_works_refused_news(this: usize, clube: usize, assunto: i32, motivo: i32) {
     let f: unsafe extern "thiscall" fn(usize, usize, i32, i32) = core::mem::transmute(FN_FINANCE_POST_WORKS_CANCELLED_NEWS);
     f(this, clube, assunto, motivo);
 }
 
-/// A linha do clube na tabela dos técnicos ([[0xb67a44]] + id × 0x49); o byte +2 tem os pedidos à diretoria (bit 6:
+/// Club's row in the MANAGER_MANAGER board table ([[G_MANAGER_MANAGER]] + id × 0x49); byte +2 holds the board requests
+/// (bit 6 stadium, bit 7 training ground).
+///
+/// [pt] A linha do clube na tabela dos técnicos ([[0xb67a44]] + id × 0x49); o byte +2 tem os pedidos à diretoria (bit 6:
 /// estádio; bit 7: centro de treino).
-pub(crate) unsafe fn cqc1_linha_dos_pedidos(clube: usize) -> usize {
+pub(crate) unsafe fn board_requests_row(clube: usize) -> usize {
     read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_i32(clube) as u32).wrapping_mul(0x49) as usize)
 }
 
-/// O técnico do clube (+0xcf) é humano (entre as 16 últimas pessoas): a notícia vai para ele (0x7861e0).
-pub(crate) unsafe fn cqc1_tecnico_humano(clube: usize) -> bool {
+/// True if the club's manager (club::MANAGER) is one of the 16 human managers.
+///
+/// [pt] O técnico do clube (+0xcf) é humano (entre as 16 últimas pessoas): a notícia vai para ele (0x7861e0).
+pub(crate) unsafe fn fin_prm_has_human_manager(clube: usize) -> bool {
     let t = read_usize(clube + club::MANAGER);
     t != 0 && read_i32(t) >= read_i32(0xae2364).wrapping_sub(0x10)
 }
@@ -76,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize
         return;
     }
     if entrada == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIN_PRM_END_SEASON_FOR_NATION)(this, entrada); // a caixa
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIN_PRM_END_SEASON_FOR_NATION)(this, entrada); // a caixa
     }
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
@@ -116,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize
 /// ano (+0x110, 0x50 bytes) zerados. Ponytail: os anteriores podem ganhar valores pela 0x59cfa0 de um clube seguinte
 /// (o B que usa o registro do A, o estádio dividido); conferir todos pede o plano dessas exceções.
 pub(crate) unsafe extern "thiscall" fn comparar_fin_prm_end_season_for_nation(this: usize, entrada: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIN_PRM_END_SEASON_FOR_NATION);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIN_PRM_END_SEASON_FOR_NATION);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
     if entrada == 0 || depois(0xae2c90, read_usize(G_GAME_START_DATE) as u32, read_usize(G_GAME_START_DATE_FLAGS) as u32) != 0 {
         return o(this, entrada);
@@ -170,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fin_prm_end_season_for_nation(th
 /// sorteio(501) nos dois ramos maiores.
 pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube: usize) {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, clube); // a caixa
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, clube); // a caixa
     }
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if selecao(clube) != 0 {
@@ -178,9 +194,9 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
     }
     let mut local = 0u32; // o [esp + 0x20] da original (a 0x540a50 do dono e a média de público)
     let mut a = 0u32;
-    let fin = cqc1_financas_do_parceiro(this, clube, &mut a);
+    let fin = finance_of_parent_club(this, clube, &mut a);
     if fin == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, clube); // a caixa
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, clube); // a caixa
     }
     let mut saldo = read_i32(fin);
     let mut aviso = false;
@@ -204,20 +220,20 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
                 k += 1;
                 outro += 0x245;
             }
-            let f2 = if dono != 0 { cqc1_financas_do_parceiro(this, dono, &mut local) } else { 0 };
+            let f2 = if dono != 0 { finance_of_parent_club(this, dono, &mut local) } else { 0 };
             if dono == 0 || f2 == 0 {
                 *((clube + club::OWN_STADIUM) as *mut u8) = 1;
-                cqc1_cobrar(fin, 0x8c, 0x12c, 20_000_000);
-                cqc1_noticia(this, clube, read_i32(read_usize(clube + club::STADIUM)), 4);
+                charge_expense(fin, 0x8c, 0x12c, 20_000_000);
+                post_works_news(this, clube, read_i32(read_usize(clube + club::STADIUM)), 4);
             } else if read_u8(f2 + 0x165) == 1 || read_u8(f2 + 0x165) == 2 {
                 *((clube + club::OWN_STADIUM) as *mut u8) = 1;
                 *((dono + 0x6d) as *mut u8) = 0;
-                cqc1_cobrar(fin, 0x8c, 0x12c, 20_000_000);
-                cpv5_somar(f2 + 0xb4, 20_000_000);
-                cpv5_somar(f2 + 0x154, 20_000_000);
-                core::ptr::write_unaligned(f2 as *mut i64, cpv6_saldo(f2).wrapping_add(20_000_000));
-                cqc1_noticia(this, clube, read_i32(read_usize(clube + club::STADIUM)), 4);
-                cqc1_noticia(this, dono, read_i32(read_usize(clube + club::STADIUM)), 5);
+                charge_expense(fin, 0x8c, 0x12c, 20_000_000);
+                add_to_i32(f2 + 0xb4, 20_000_000);
+                add_to_i32(f2 + 0x154, 20_000_000);
+                core::ptr::write_unaligned(f2 as *mut i64, balance(f2).wrapping_add(20_000_000));
+                post_works_news(this, clube, read_i32(read_usize(clube + club::STADIUM)), 4);
+                post_works_news(this, dono, read_i32(read_usize(clube + club::STADIUM)), 5);
             }
             break 'obras;
         }
@@ -227,14 +243,14 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
         let aperto = read_u8(fin + 0x166) as i8;
         if saldo > 0xb71b0 && aperto > 10 {
             let v = 10i32.wrapping_sub((aperto as i32).wrapping_mul(10000));
-            cpv5_somar(fin + 0x12c, v);
+            add_to_i32(fin + 0x12c, v);
             saldo = saldo.wrapping_sub(v);
-            cpv5_somar(fin + 0x8c, v);
-            core::ptr::write_unaligned(fin as *mut i64, cpv6_saldo(fin).wrapping_sub(v as i64));
+            add_to_i32(fin + 0x8c, v);
+            core::ptr::write_unaligned(fin as *mut i64, balance(fin).wrapping_sub(v as i64));
         }
-        cqc1_centro_de_treino(this, clube, saldo);
-        let pedidos = cqc1_linha_dos_pedidos(clube) + 2;
-        if read_u8(pedidos) & 0x40 != 0 && cqc1_humano(clube) != 0 {
+        upgrade_ai_training_ground(this, clube, saldo);
+        let pedidos = board_requests_row(clube) + 2;
+        if read_u8(pedidos) & 0x40 != 0 && fin_prm_is_human_club(clube) != 0 {
             aviso = true;
             *(pedidos as *mut u8) &= 0xbf;
         }
@@ -242,20 +258,20 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
         if est != 0 {
             if saldo > 0x10b0760 && read_i16(clube + club::REPUTATION) > 0x1d4c && read_i32(est + 0x3c) > 0x61a8 && read_u8(est + 0x4d) == 0 {
                 *((est + 0x4d) as *mut u8) = 1;
-                cqc1_cobrar(fin, 0x8c, 0x12c, 1_500_000);
-                cqc1_noticia(this, clube, read_i32(read_usize(clube + club::STADIUM)), 6);
+                charge_expense(fin, 0x8c, 0x12c, 1_500_000);
+                post_works_news(this, clube, read_i32(read_usize(clube + club::STADIUM)), 6);
                 break 'obras;
             }
             if saldo > 0x47868c0 && read_i16(clube + club::REPUTATION) > 0x2422 && read_i32(est + 0x3c) > 0xe09c && read_u8(clube + club::TRAINING) == 0x14 && read_u8(est + 0x4c) == 0 {
                 *((est + 0x4c) as *mut u8) = 1;
-                cqc1_cobrar(fin, 0x8c, 0x12c, 7_500_000);
+                charge_expense(fin, 0x8c, 0x12c, 7_500_000);
                 break 'obras;
             }
         }
-        let pode = saldo > 0x501bd0 || (cqc1_humano(clube) != 0 && saldo.wrapping_add((read_i16(clube + club::REPUTATION) as i32).wrapping_mul(1000)) > 0x501bd0);
+        let pode = saldo > 0x501bd0 || (fin_prm_is_human_club(clube) != 0 && saldo.wrapping_add((read_i16(clube + club::REPUTATION) as i32).wrapping_mul(1000)) > 0x501bd0);
         if !pode {
             if aviso {
-                cqc1_recusa(this, clube, 2, -1);
+                post_works_refused_news(this, clube, 2, -1);
             }
             break 'obras;
         }
@@ -277,10 +293,10 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
         }
         let rep = read_i16(clube + club::REPUTATION);
         let expandir = aviso
-            || (cap as f64 * f64_em(0x96a720)) < (local as i16 as i32) as f64
+            || (cap as f64 * read_f64_at(0x96a720)) < (local as i16 as i32) as f64
             || (rep.wrapping_mul(2) as i32 > cap && rep > 0x109a);
         if !expandir {
-            if cpe1_sorteio(0x14).wrapping_add(5) >= read_i16(read_usize(clube + club::DIVISION) + 0x69) as i32 {
+            if friendly_random(0x14).wrapping_add(5) >= read_i16(read_usize(clube + club::DIVISION) + 0x69) as i32 {
                 break 'obras;
             }
             let est = read_usize(clube + club::STADIUM);
@@ -288,7 +304,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
             if livre <= 0 {
                 break 'obras;
             }
-            let t = ftol(saldo as f64 * f64_em(0x968918));
+            let t = match_pl_ftol(saldo as f64 * read_f64_at(0x968918));
             let mut v = ((t / 75) as i16 as i32 / 500) as i16 as i32 * 500;
             if v >= livre {
                 v = livre;
@@ -297,25 +313,25 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
                 if read_i32(est + 0x3c) >= 0x7530 {
                     break 'obras;
                 }
-                cpv5_somar(est + 0x44, 0x5dc);
-                cqc1_recusa(this, clube, 2, 2);
+                add_to_i32(est + 0x44, 0x5dc);
+                post_works_refused_news(this, clube, 2, 2);
                 break 'obras;
             }
             let v = v as i16 as i32;
-            cpv5_somar(est + 0x3c, v);
-            cpv5_somar(read_usize(clube + club::STADIUM) + 0x40, v);
+            add_to_i32(est + 0x3c, v);
+            add_to_i32(read_usize(clube + club::STADIUM) + 0x40, v);
             crate::comparacao::ramo("cqc_1 lugares sentados");
-            cqc1_cobrar(fin, 0x8c, 0x12c, (v / 1000 + 1).wrapping_mul(50000).wrapping_add(v.wrapping_mul(75))); // cqc1: os lugares sentados
-            cqc1_noticia(this, clube, v, 3);
+            charge_expense(fin, 0x8c, 0x12c, (v / 1000 + 1).wrapping_mul(50000).wrapping_add(v.wrapping_mul(75))); // cqc1: os lugares sentados
+            post_works_news(this, clube, v, 3);
             break 'obras;
         }
         let tipo1 = read_u8(clube + club::PROFESSIONAL_STATUS) == 1;
         let base = if saldo > 0x1312d00 {
             if tipo1 { 16000 } else { 21000 }
         } else if tipo1 {
-            ftol(saldo as f64 * f64_em(0x967880)) / 125
+            match_pl_ftol(saldo as f64 * read_f64_at(0x967880)) / 125
         } else {
-            ftol(saldo as f64 * f64_em(0x968918)) / 50
+            match_pl_ftol(saldo as f64 * read_f64_at(0x968918)) / 50
         };
         let lim = (base as i16 as i32) / 500 * 500;
         let teto = read_i32(est + 0x44);
@@ -334,53 +350,56 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
         }
         if (n as i16) < 0x3e8 {
             if cap < 0x7530 {
-                cpv5_somar(est + 0x44, 0x5dc);
+                add_to_i32(est + 0x44, 0x5dc);
             }
             if aviso {
-                cqc1_recusa(this, clube, 2, 2);
+                post_works_refused_news(this, clube, 2, 2);
             }
             break 'obras;
         }
         let n = n as i16 as i32;
         core::ptr::write_unaligned((est + 0x3c) as *mut i32, n.wrapping_add(cap));
         if tipo1 {
-            cpv5_somar(read_usize(clube + club::STADIUM) + 0x40, n);
-            cqc1_cobrar(fin, 0x8c, 0x12c, (n / 1000 + 1).wrapping_mul(6000).wrapping_add(n).wrapping_mul(125));
-            cqc1_noticia(this, clube, n, 1);
+            add_to_i32(read_usize(clube + club::STADIUM) + 0x40, n);
+            charge_expense(fin, 0x8c, 0x12c, (n / 1000 + 1).wrapping_mul(6000).wrapping_add(n).wrapping_mul(125));
+            post_works_news(this, clube, n, 1);
         } else {
-            cqc1_cobrar(fin, 0x8c, 0x12c, n.wrapping_add((n / 1000 + 1).wrapping_mul(1000)).wrapping_mul(50));
-            cqc1_noticia(this, clube, n, 2);
+            charge_expense(fin, 0x8c, 0x12c, n.wrapping_add((n / 1000 + 1).wrapping_mul(1000)).wrapping_mul(50));
+            post_works_news(this, clube, n, 2);
         }
     }
-    let pedidos = cqc1_linha_dos_pedidos(clube) + 2;
+    let pedidos = board_requests_row(clube) + 2;
     if read_u8(pedidos) & 0x80 != 0 {
         if saldo > (500 - read_i16(clube + club::REPUTATION) as i32).wrapping_mul(500) {
             let melhorar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FINANCETABLE_UPGRADE_TRAINING_FACILITIES);
             melhorar(this, clube);
-            cqc1_noticia(this, clube, -1, 8);
+            post_works_news(this, clube, -1, 8);
         } else {
-            cqc1_recusa(this, clube, 8, -1);
+            post_works_refused_news(this, clube, 8, -1);
         }
-        *((cqc1_linha_dos_pedidos(clube) + 2) as *mut u8) &= 0x7f;
+        *((board_requests_row(clube) + 2) as *mut u8) &= 0x7f;
     }
-    cqc1_dividendo(this, clube, fin);
+    pay_dividend(this, clube, fin);
 }
 
-/// O centro de treino do clube da máquina no fim da temporada (o trecho 0x59d32a..0x59d54d da 0x59cfa0), cobrado nas
+/// End-of-season training ground upgrade for AI clubs (part of 0x59cfa0): raises club::TRAINING by chance and
+/// reputation and charges the cost to the club's own finances.
+///
+/// [pt] O centro de treino do clube da máquina no fim da temporada (o trecho 0x59d32a..0x59d54d da 0x59cfa0), cobrado nas
 /// finanças do próprio clube ([tabela] + id × 0x167, sem o parceiro).
-pub(crate) unsafe fn cqc1_centro_de_treino(this: usize, clube: usize, saldo: i32) {
+pub(crate) unsafe fn upgrade_ai_training_ground(this: usize, clube: usize, saldo: i32) {
     let tecnico = read_usize(clube + club::MANAGER);
     if tecnico == 0 || read_i16(clube + club::REPUTATION) == 0 || read_u8(clube + club::TRAINING) as i8 >= 0x14 || read_usize(tecnico + 0x69) == 0 {
         return;
     }
-    if cqc1_humano(clube) != 0 {
+    if fin_prm_is_human_club(clube) != 0 {
         return;
     }
     let q = ((read_i16(clube + club::REPUTATION) as i32) / 500) as i8 as i32 + 8;
     if (read_u8(clube + club::TRAINING) as i8 as i32) <= q || saldo <= 0x225510 {
         return;
     }
-    if cpe1_sorteio(0x28) >= read_u8(read_usize(read_usize(clube + club::MANAGER) + 0x69) + 0x22) as i8 as i32 {
+    if friendly_random(0x28) >= read_u8(read_usize(read_usize(clube + club::MANAGER) + 0x69) + 0x22) as i8 as i32 {
         return;
     }
     let nivel = (clube + club::TRAINING) as *mut i8;
@@ -390,33 +409,36 @@ pub(crate) unsafe fn cqc1_centro_de_treino(this: usize, clube: usize, saldo: i32
     if cl < 0x14 {
         *nivel = cl + 1;
     }
-    cqc1_cobrar(proprio(), 0x8c, 0x12c, custo);
+    charge_expense(proprio(), 0x8c, 0x12c, custo);
     let cl = *nivel;
     let rep = read_i16(clube + club::REPUTATION);
-    if cl < 0x14 && (rep > 0x203a || cpv6_saldo(proprio()) > 0xe4e1c0) {
+    if cl < 0x14 && (rep > 0x203a || balance(proprio()) > 0xe4e1c0) {
         let custo = (4_500_000 - 200_000 * cl as i32).max(1_000_000);
         *nivel = 0x14;
-        cqc1_cobrar(proprio(), 0x8c, 0x12c, custo);
+        charge_expense(proprio(), 0x8c, 0x12c, custo);
         return;
     }
     if (cl < 0x10 && rep > 0x1482) || (cl < 0x14 && rep > 0x1c52) {
         let custo = (cl as i32) * 50000 + 75000;
         *nivel = cl + 1;
-        cqc1_cobrar(proprio(), 0x8c, 0x12c, custo);
+        charge_expense(proprio(), 0x8c, 0x12c, custo);
     }
 }
 
-/// O dividendo do fim da temporada (o trecho 0x59db6f..0x59dd25 da 0x59cfa0), pelo saldo i64 das finanças.
-pub(crate) unsafe fn cqc1_dividendo(this: usize, clube: usize, fin: usize) {
+/// End-of-season dividend (part of 0x59cfa0) by the i64 balance, reputation, PLC flag and chairman, charged to the
+/// finance record.
+///
+/// [pt] O dividendo do fim da temporada (o trecho 0x59db6f..0x59dd25 da 0x59cfa0), pelo saldo i64 das finanças.
+pub(crate) unsafe fn pay_dividend(this: usize, clube: usize, fin: usize) {
     let rep = read_i16(clube + club::REPUTATION) as i32;
     let mut lim = rep.wrapping_mul(8000);
     if lim < 0x7a120 {
         lim = 0x7a120;
     }
-    let s = cpv6_saldo(fin);
+    let s = balance(fin);
     let v;
     if s > lim as i64 && read_u8(clube + club::PLC) != 0 {
-        let r = cpe1_sorteio(0x1f5);
+        let r = friendly_random(0x1f5);
         if (rep as i16) < 0xfa0 {
             v = r.wrapping_add(0x5dc).wrapping_mul(rep).max(0xc350);
         } else {
@@ -434,7 +456,7 @@ pub(crate) unsafe fn cqc1_dividendo(this: usize, clube: usize, fin: usize) {
         }
         let sv = s16 as i32;
         if s > sv.wrapping_mul(6000) as i64 {
-            let r = cpe1_sorteio(0x1f5);
+            let r = friendly_random(0x1f5);
             if read_i16(clube + club::REPUTATION) < 0xfa0 {
                 crate::comparacao::ramo("cqc_1 dividendo do pequeno pelo presidente");
                 v = r.wrapping_add(0x3e8).wrapping_mul(rep); // cqc1: o dividendo do pequeno pelo presidente
@@ -448,9 +470,9 @@ pub(crate) unsafe fn cqc1_dividendo(this: usize, clube: usize, fin: usize) {
         }
     }
     crate::comparacao::ramo("cqc_1 dividendo");
-    cpv5_somar(fin + 0x94, v);
-    cpv5_somar(fin + 0x134, v);
-    core::ptr::write_unaligned(fin as *mut i64, cpv6_saldo(fin).wrapping_sub(v as i64)); // cqc1: o dividendo sai do saldo
+    add_to_i32(fin + 0x94, v);
+    add_to_i32(fin + 0x134, v);
+    core::ptr::write_unaligned(fin as *mut i64, balance(fin).wrapping_sub(v as i64)); // cqc1: o dividendo sai do saldo
     let noticia: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(FN_FINANCE_POST_DIVIDEND_NEWS);
     noticia(this, clube, v);
 }
@@ -461,19 +483,19 @@ pub(crate) unsafe fn cqc1_dividendo(this: usize, clube: usize, fin: usize) {
 /// máquina elas não deixam nada além do sorteio(2) da recusa, que as duas rodadas fazem. Só a original: o técnico
 /// humano (a notícia entra na caixa dele) e o estádio dividido (mexe noutro clube e nas finanças dele).
 pub(crate) unsafe extern "thiscall" fn comparar_season_end_club_update(this: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if clube == 0 || selecao(clube) != 0 || cqc1_tecnico_humano(clube) {
+    if clube == 0 || selecao(clube) != 0 || fin_prm_has_human_manager(clube) {
         return o(this, clube);
     }
     let mut a = 0u32;
-    let fin = cqc1_financas_do_parceiro(this, clube, &mut a);
+    let fin = finance_of_parent_club(this, clube, &mut a);
     let estadio = read_usize(clube + club::STADIUM);
     if fin == 0 || (estadio != 0 && read_u8(clube + club::OWN_STADIUM) == 0 && read_usize(clube + club::DIVISION) != 0 && read_i32(fin) > 0x2160ec0) {
         return o(this, clube); // ponytail: a compra do estádio pode mexer no dono; só a original
     }
     let proprio = read_usize(this).wrapping_add((read_i32(clube) as u32).wrapping_mul(0x167) as usize);
-    let mut reg = vec![(fin, 0x167), (clube, 0x245), (cqc1_linha_dos_pedidos(clube), 0x49)];
+    let mut reg = vec![(fin, 0x167), (clube, 0x245), (board_requests_row(clube), 0x49)];
     if proprio != fin {
         reg.push((proprio, 0x167));
     }
@@ -508,7 +530,7 @@ pub(crate) unsafe extern "thiscall" fn news_dividend(_this: usize, clube: usize,
 /// O comparador da notícia do dividendo: só a original (ponytail: a notícia vai para a caixa do técnico humano e não
 /// pode ser entregue duas vezes; com técnico da máquina não deixa nada).
 pub(crate) unsafe extern "thiscall" fn comparar_news_dividend(this: usize, clube: usize, valor: i32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_NEWS_DIVIDEND)(this, clube, valor)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_NEWS_DIVIDEND)(this, clube, valor)
 }
 
 // ---------- 266a leva: o teto salarial: o salário máximo que o clube oferece e as notícias das obras e das obras recusadas (fin_prm.cpp) ----------
@@ -517,37 +539,49 @@ pub(crate) unsafe extern "thiscall" fn comparar_news_dividend(this: usize, clube
 
 
 
-pub(crate) unsafe fn cqc2_q(a: usize) -> i64 {
+/// Reads the i64 at address a.
+pub(crate) unsafe fn read_i64(a: usize) -> i64 {
     core::ptr::read_unaligned(a as *const i64)
 }
 
-/// `v` × a constante f64 em `k`, truncado (_ftol).
-pub(crate) unsafe fn cqc2_vezes(v: i32, k: usize) -> i32 {
-    ftol(v as f64 * f64_em(k))
+/// Multiplies v by the exe double constant at k and truncates (_ftol).
+///
+/// [pt] `v` × a constante f64 em `k`, truncado (_ftol).
+pub(crate) unsafe fn mul_exe_f64(v: i32, k: usize) -> i32 {
+    match_pl_ftol(v as f64 * read_f64_at(k))
 }
 
-/// O clube humano (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(clube, a, 1, 0, 0)).
-pub(crate) unsafe fn cqc2_humano(clube: usize, a: u32) -> u32 {
+/// Calls FN_HUMAN_MANAGER_IS_HUMAN_CLUB (0x600a50) with (club, a, 1, 0, 0) (passes argument a as the second parameter).
+///
+/// [pt] O clube humano (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(clube, a, 1, 0, 0)).
+pub(crate) unsafe fn is_human_club_with(clube: usize, a: u32) -> u32 {
     let f: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     f(clube, a, 1, 0, 0)
 }
 
 
-/// A seleção (0x53b900: push; add esp, 4 -> cdecl).
-pub(crate) unsafe fn cqc2_selecao(clube: usize) -> bool {
+/// True if the club is a national team (0x53b900).
+///
+/// [pt] A seleção (0x53b900: push; add esp, 4 -> cdecl).
+pub(crate) unsafe fn fin_prm_is_national_team(clube: usize) -> bool {
     let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     f(clube) != 0
 }
 
-/// O valor do contrato da pessoa (0x4d0c20: mov ecx, [0xae1050]; push pessoa -> thiscall, ret 4), com sinal.
-pub(crate) unsafe fn cqc2_valor(pessoa: usize) -> i32 {
+/// Person's contract wage via CONTRACT_MANAGER (0x4d0c20, FN_CONTRACT_MANAGER_GET_WAGE), signed.
+///
+/// [pt] O valor do contrato da pessoa (0x4d0c20: mov ecx, [0xae1050]; push pessoa -> thiscall, ret 4), com sinal.
+pub(crate) unsafe fn contract_wage(pessoa: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_WAGE);
     f(read_usize(G_CONTRACT_MANAGER), pessoa) as i32
 }
 
-/// O bônus de quem paga mais (o trecho 0x596c0d..0x597238): clube da Inglaterra, Itália ou Espanha, reputação acima
+/// Wage bonus for big-spending clubs (England, Italy or Spain, reputation above 4750, wealth band 0..2) by wage factor
+/// w and the PLC flag.
+///
+/// [pt] O bônus de quem paga mais (o trecho 0x596c0d..0x597238): clube da Inglaterra, Itália ou Espanha, reputação acima
 /// de 4750, faixa 0 a 2, pelo fator salarial `w` (a palavra, com sinal) e pela marca +0x82.
-pub(crate) unsafe fn cqc2_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
+pub(crate) unsafe fn big_spender_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
     let nac = read_usize(clube + club::NATION);
     if nac == 0 {
         return 0;
@@ -571,9 +605,12 @@ pub(crate) unsafe fn cqc2_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
     }
 }
 
-/// O teto do técnico humano pelas reputações (+0xb, +0xd) e pela experiência (+5) do não-jogador `np`, pela idade
+/// Wage cap of a human manager from the non-player reputations (+0xb, +0xd), experience (+5), the person's age, flag
+/// and job.
+///
+/// [pt] O teto do técnico humano pelas reputações (+0xb, +0xd) e pela experiência (+5) do não-jogador `np`, pela idade
 /// (+0x18) e pela marca +0x22 da pessoa e pelo cargo (o trecho 0x597405..0x597566).
-pub(crate) unsafe fn cqc2_teto_do_humano(pessoa: usize, np: usize, cargo: i8) -> i32 {
+pub(crate) unsafe fn human_manager_wage_cap(pessoa: usize, np: usize, cargo: i8) -> i32 {
     let idade = read_u8(pessoa + staff::YEAR_OF_BIRTH) as i8;
     let marca = read_u8(pessoa + staff::INT_APPS) != 0;
     let cx = read_i16(np + 0xb);
@@ -630,7 +667,7 @@ pub(crate) unsafe fn cqc2_teto_do_humano(pessoa: usize, np: usize, cargo: i8) ->
 pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u32) -> i32 {
     let mut cargo = cargo_arg as u8;
     let clube = read_usize(G_CLUB_TABLE).wrapping_add((read_i32(fin + 8) as u32).wrapping_mul(0x245) as usize);
-    let verba = ftol(cqc2_q(fin) as f64 * f64_em(0x968de8));
+    let verba = match_pl_ftol(read_i64(fin) as f64 * read_f64_at(0x968de8));
     let mut liga: i32 = 100;
     let mut fator: f64 = 0.25; // [esp + 0x3c]: 0x3fd00000_00000000
     let mut contrato: usize = 0;
@@ -639,7 +676,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
     }
     let rep = read_i16(clube + club::REPUTATION);
     let mut di: i32 = rep as i32 / 50;
-    let faixa: i8 = if cqc2_selecao(clube) { 0 } else { cpv6_faixa(fin) };
+    let faixa: i8 = if fin_prm_is_national_team(clube) { 0 } else { wealth_band(fin) };
     let nac = read_usize(clube + club::NATION);
     let e = |g: usize| read_i32(nac) == read_i32(g);
     let tabela: usize = if nac == 0 || e(KEY_NATION_WALES) || e(KEY_NATION_REPUBLIC_OF_IRELAND) || e(KEY_NATION_NORTHERN_IRELAND) || e(KEY_NATION_AUSTRALIA) {
@@ -666,14 +703,14 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
         }
         _ => {}
     }
-    let mut s = ftol((di as i16) as f64 * f64_em(0x96a5e0));
+    let mut s = match_pl_ftol((di as i16) as f64 * read_f64_at(0x96a5e0));
     if (s as i16) > 0x2710 {
         s = 0x2710;
     }
     if (di as i16) > 0xd2 {
         di = 0xd2;
     }
-    let humano = cqc2_humano(clube, 0);
+    let humano = is_human_club_with(clube, 0);
     if humano != 0 && cargo == 0xff {
         let com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
         contrato = com_clube(read_usize(G_CONTRACT_MANAGER), pessoa, clube);
@@ -686,7 +723,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
     if pessoa != 0 {
         r = 0;
         if read_usize(pessoa + staff::CLUB_JOB) == clube {
-            r = cqc2_valor(pessoa);
+            r = contract_wage(pessoa);
             let t = read_i32(fin + 0x14).wrapping_mul(2);
             if r > t {
                 r = t;
@@ -707,7 +744,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
                 r = cap;
             }
         }
-        b20 = cqc2_bonus(clube, faixa, s);
+        b20 = big_spender_bonus(clube, faixa, s);
     } else {
         let mut f = fator;
         if nac != 0 {
@@ -722,9 +759,9 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
             f = q;
             if dl == 1 {
                 let m = if e(KEY_NATION_ENGLAND) || e(KEY_NATION_ITALY) || e(KEY_NATION_SPAIN) || e(KEY_NATION_JAPAN) {
-                    f64_em(0x967890)
+                    read_f64_at(0x967890)
                 } else if e(KEY_NATION_UNITED_STATES) {
-                    f64_em(0x969040)
+                    read_f64_at(0x969040)
                 } else {
                     let (k, tres) = if e(KEY_NATION_GERMANY) || e(KEY_NATION_FRANCE) || e(KEY_NATION_SCOTLAND) || e(KEY_NATION_HOLLAND) {
                         (0x96a5d0, false)
@@ -737,14 +774,14 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
                     };
                     let d16 = di as i16 as i32;
                     if d16 <= (bl as i32).wrapping_mul(10) {
-                        f64_em(k)
+                        read_f64_at(k)
                     } else {
                         let div = if bl < 1 { 1 } else { bl as i32 };
-                        let mut m = d16 as f64 / div as f64 * f64_em(0x967880) * f64_em(k);
-                        if tres && !(m <= f64_em(0x969040)) {
-                            m = f64_em(0x969040);
-                        } else if !(m <= f64_em(0x967890)) {
-                            m = f64_em(0x967890);
+                        let mut m = d16 as f64 / div as f64 * read_f64_at(0x967880) * read_f64_at(k);
+                        if tres && !(m <= read_f64_at(0x969040)) {
+                            m = read_f64_at(0x969040);
+                        } else if !(m <= read_f64_at(0x967890)) {
+                            m = read_f64_at(0x967890);
                         }
                         m
                     }
@@ -758,11 +795,11 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
                 let c16 = read_i16(lc + 0x69);
                 let cubo = |x: i32| x.wrapping_mul(x).wrapping_mul(x);
                 let v = if d2 != 0 && read_i16(d2 + 0x69) > c16 {
-                    let t1 = ftol(cubo(c16 as i32) as f64 * f * f64_em(0x96a5c8));
-                    let t2 = ftol(cubo(read_i16(d2 + 0x69) as i32) as f64 * f * f64_em(0x968928));
+                    let t1 = match_pl_ftol(cubo(c16 as i32) as f64 * f * read_f64_at(0x96a5c8));
+                    let t2 = match_pl_ftol(cubo(read_i16(d2 + 0x69) as i32) as f64 * f * read_f64_at(0x968928));
                     t2.wrapping_sub(t1)
                 } else {
-                    ftol(cubo(c16 as i32) as f64 * f * f64_em(0x968e18))
+                    match_pl_ftol(cubo(c16 as i32) as f64 * f * read_f64_at(0x968e18))
                 };
                 liga = if v < 0xc8 { 0xc8 } else { v };
             }
@@ -773,44 +810,44 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
             q10 = 1;
         }
         let a = d16 as f64;
-        let t = ftol(a * a * a * f / q10 as f64);
+        let t = match_pl_ftol(a * a * a * f / q10 as f64);
         crate::comparacao::ramo("cqc_2 teto pela tabela");
         let menos = read_i32(fin + 0xc).wrapping_sub(t.wrapping_add(verba) / 52); // cqc2: a folha e a verba por semana
         let idx = ((d16 / 10) * 8) as isize as usize;
-        let vv = cqc2_q(tabela.wrapping_add(idx)).wrapping_sub(menos as i64) as f64 * f;
-        let piso = cqc2_q((if padrao { 0x9c83e8usize } else { 0x9c8338 }).wrapping_add(idx)) as f64 * f;
-        r = if vv <= piso { ftol(piso) } else { ftol(vv) };
-        if !cqc2_selecao(clube) {
-            match cpv6_faixa(fin) {
-                1 => r = cqc2_vezes(r, 0x9689b8),
-                2 => r = cqc2_vezes(r, 0x9689c0),
+        let vv = read_i64(tabela.wrapping_add(idx)).wrapping_sub(menos as i64) as f64 * f;
+        let piso = read_i64((if padrao { 0x9c83e8usize } else { 0x9c8338 }).wrapping_add(idx)) as f64 * f;
+        r = if vv <= piso { match_pl_ftol(piso) } else { match_pl_ftol(vv) };
+        if !fin_prm_is_national_team(clube) {
+            match wealth_band(fin) {
+                1 => r = mul_exe_f64(r, 0x9689b8),
+                2 => r = mul_exe_f64(r, 0x9689c0),
                 _ => {}
             }
             if nac != 0 {
                 let ita_esp = e(KEY_NATION_ITALY) || e(KEY_NATION_SPAIN);
                 if ita_esp {
                     if rep > 0x1e46 {
-                        r = cqc2_vezes(r, 0x9689b8);
+                        r = mul_exe_f64(r, 0x9689b8);
                     }
                 } else if e(KEY_NATION_ENGLAND) && rep > 0x1e46 {
-                    r = cqc2_vezes(r, 0x968fa0);
+                    r = mul_exe_f64(r, 0x968fa0);
                 }
                 if read_u8(clube + club::PLC) == 0 && rep > 0x1e46 && ita_esp {
-                    r = cqc2_vezes(r, 0x9689b8);
+                    r = mul_exe_f64(r, 0x9689b8);
                 }
             }
         }
-        b20 = cqc2_bonus(clube, faixa, s);
+        b20 = big_spender_bonus(clube, faixa, s);
     }
     if pessoa != 0 {
         let repf = rep as i32 as f64;
-        let t = repf * repf * fator * f64_em(0x96a5c0) + read_i32(fin + 0x10) as f64;
-        let v = cqc2_valor(pessoa);
+        let t = repf * repf * fator * read_f64_at(0x96a5c0) + read_i32(fin + 0x10) as f64;
+        let v = contract_wage(pessoa);
         s = if (v as f64) < t {
-            crate::comparacao::ramo("cqc_2 teto pela reputacao");
-            ftol(repf * repf * fator * f64_em(0x96a5c0) + read_i32(fin + 0x10) as f64) // cqc2: a reputação ao quadrado
+            crate::comparacao::ramo("cqc_2 teto pela injury_word_0c");
+            match_pl_ftol(repf * repf * fator * read_f64_at(0x96a5c0) + read_i32(fin + 0x10) as f64) // cqc2: a reputação ao quadrado
         } else {
-            cqc2_valor(pessoa)
+            contract_wage(pessoa)
         };
         let np = read_usize(pessoa + staff::PLAYER);
         let c = cargo as i8;
@@ -818,25 +855,25 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
             let np2 = || read_usize(pessoa + staff::PLAYER);
             if c == 3 {
                 let bf = b20 as f64;
-                let lim = bf * f64_em(0x9689b0);
+                let lim = bf * read_f64_at(0x9689b0);
                 if (r as f64) < lim {
-                    r = if cqc2_humano(clube, 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1c52 { ftol(bf * f64_em(0x9689d8)) } else { ftol(lim) };
+                    r = if is_human_club_with(clube, 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1c52 { match_pl_ftol(bf * read_f64_at(0x9689d8)) } else { match_pl_ftol(lim) };
                 }
             } else if c == 2 {
-                let lim = b20 as f64 * f64_em(0x9689d8);
+                let lim = b20 as f64 * read_f64_at(0x9689d8);
                 if (r as f64) < lim {
-                    r = if cqc2_humano(clube, 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1e46 { b20 } else { ftol(lim) };
+                    r = if is_human_club_with(clube, 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1e46 { b20 } else { match_pl_ftol(lim) };
                 }
             } else if r < b20 {
                 r = b20;
             }
         }
-        if cqc2_humano(clube, 0) != 0 {
+        if is_human_club_with(clube, 0) != 0 {
             let np = read_usize(pessoa + staff::PLAYER);
             if np != 0 {
-                let teto = cqc2_teto_do_humano(pessoa, np, cargo as i8);
+                let teto = human_manager_wage_cap(pessoa, np, cargo as i8);
                 if teto < r {
-                    r = teto.wrapping_sub(ftol(r.wrapping_sub(teto) as f64 * f64_em(0x969518)));
+                    r = teto.wrapping_sub(match_pl_ftol(r.wrapping_sub(teto) as f64 * read_f64_at(0x969518)));
                 }
             }
         }
@@ -845,7 +882,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
             if nac != 0 && (e(KEY_NATION_ITALY) || e(KEY_NATION_ENGLAND) || e(KEY_NATION_GERMANY) || e(KEY_NATION_FRANCE) || e(KEY_NATION_SPAIN)) {
                 let basco: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_BASQUE_CLUB);
                 if basco(clube) != 0 {
-                    s = cqc2_vezes(s, 0x9689b8);
+                    s = mul_exe_f64(s, 0x9689b8);
                 }
                 let tm = read_usize(G_TRANSFER_MANAGER);
                 if tm != 0 {
@@ -854,12 +891,12 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
                     let tab = read_usize(read_usize(tm + 0x856) + 0xdc);
                     let x = read_i16(tab.wrapping_add((read_i32(clube) as usize).wrapping_mul(9)) + 5) as i32;
                     let mut m = x as f64 / div as f64;
-                    if !(f64_em(0x967890) < m || f64_em(0x967890) == m) {
-                        m = f64_em(0x967890);
-                    } else if f64_em(0x968978) < m {
-                        m = f64_em(0x968978);
+                    if !(read_f64_at(0x967890) < m || read_f64_at(0x967890) == m) {
+                        m = read_f64_at(0x967890);
+                    } else if read_f64_at(0x968978) < m {
+                        m = read_f64_at(0x968978);
                     }
-                    s = ftol(s as f64 * m);
+                    s = match_pl_ftol(s as f64 * m);
                 }
                 // o contrato perto do fim (0x54cdb0: lea ecx, contrato + 0x2d; push [0xae2c94]; push [0xae2c90] ->
                 // thiscall, ret 8), menos de 200 dias
@@ -912,18 +949,18 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
                     None
                 };
                 if let Some(k) = k {
-                    s = cqc2_vezes(s, k);
+                    s = mul_exe_f64(s, k);
                 }
             }
             let pres = read_usize(clube + club::CHAIRMAN);
             if pres != 0 && read_usize(pres + 0x69) != 0 && (read_i16(clube + club::REPUTATION) as i32) < read_i16(read_usize(pessoa + staff::PLAYER) + 0xb) as i32 + 0x4e2 {
                 crate::comparacao::ramo("cqc_2 presidente");
-                s = ftol(((read_u8(pres + 0x57) as i8 as i32) as f64 * f64_em(0x967898) + f64_em(0x9689d8)) * s as f64); // cqc2: o presidente
+                s = match_pl_ftol(((read_u8(pres + 0x57) as i8 as i32) as f64 * read_f64_at(0x967898) + read_f64_at(0x9689d8)) * s as f64); // cqc2: o presidente
                 // 0x547810 (push pres; push pessoa; add esp, 8 -> cdecl), 0x547790 (push clube; push pessoa; add esp, 8 -> cdecl)
                 let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_FAVOURED_BY);
                 let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_FAVOURS_STAFF);
                 if gosta(pessoa, pres) != 0 || favorito(pessoa, clube) != 0 {
-                    s = ftol(((read_u8(read_usize(clube + club::CHAIRMAN) + 0x57) as i8 as i32) as f64 * f64_em(0x967898) + f64_em(0x967890)) * s as f64);
+                    s = match_pl_ftol(((read_u8(read_usize(clube + club::CHAIRMAN) + 0x57) as i8 as i32) as f64 * read_f64_at(0x967898) + read_f64_at(0x967890)) * s as f64);
                 }
                 let pres = read_usize(clube + club::CHAIRMAN);
                 let pc = read_usize(pres + 0x69);
@@ -931,9 +968,9 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
                 if perfil < 6 {
                     let t = read_usize(clube + club::MANAGER);
                     let k = if t != 0 && (read_u8(t + 0x57) as i8) > 0xf && read_usize(t + 0x69) != 0 && read_i16(read_usize(t + 0x69) + 0xa) > 0x1c52 { 0x9689c0 } else { 0x9689b8 };
-                    s = cqc2_vezes(s, k);
+                    s = mul_exe_f64(s, k);
                 } else if perfil > 0xf {
-                    s = cqc2_vezes(s, 0x9689d0);
+                    s = mul_exe_f64(s, 0x9689d0);
                 }
                 if read_u8(clube + club::PLC) == 0 && (read_u8(pc + 0x20) as i8) > 0xf && (read_u8(pres + 0x57) as i8) > 0xf {
                     let rr = read_i16(clube + club::REPUTATION);
@@ -942,52 +979,52 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
                     } else {
                         0x9689b8
                     };
-                    s = cqc2_vezes(s, k);
+                    s = mul_exe_f64(s, k);
                 }
             }
             let c = cargo as i8;
             let np = read_usize(pessoa + staff::PLAYER);
             match c {
-                1 => s = cqc2_vezes(s, 0x968928),
+                1 => s = mul_exe_f64(s, 0x968928),
                 2 => {
-                    if cqc2_humano(clube, 1) == 0 && read_i16(np + 0xb) > 0x1a5e {
-                        s = cqc2_vezes(s, 0x968928);
+                    if is_human_club_with(clube, 1) == 0 && read_i16(np + 0xb) > 0x1a5e {
+                        s = mul_exe_f64(s, 0x968928);
                     } else {
-                        s = ftol(s as f64);
-                        let ok = cqc2_humano(clube, 1) != 0 || {
+                        s = match_pl_ftol(s as f64);
+                        let ok = is_human_club_with(clube, 1) != 0 || {
                             let np = read_usize(pessoa + staff::PLAYER);
                             np != 0 && read_i16(np + 0xb) < 0x1e46
                         };
                         if ok && s > 0x14c08 {
-                            s = ftol(s.wrapping_sub(0x14c08) as f64 * f64_em(0x968918) + f64_em(0x96a5a0));
+                            s = match_pl_ftol(s.wrapping_sub(0x14c08) as f64 * read_f64_at(0x968918) + read_f64_at(0x96a5a0));
                         }
                     }
                 }
                 3 => {
-                    if cqc2_humano(clube, 1) == 0 && read_i16(np + 0xb) > 0x1a5e {
-                        s = cqc2_vezes(s, 0x968928);
+                    if is_human_club_with(clube, 1) == 0 && read_i16(np + 0xb) > 0x1a5e {
+                        s = mul_exe_f64(s, 0x968928);
                     } else {
-                        s = cqc2_vezes(s, 0x9689d0);
+                        s = mul_exe_f64(s, 0x9689d0);
                         if s > 0xd6d8 {
                             s = 0xd6d8;
                         }
                     }
                 }
                 4 => {
-                    let k = if cqc2_humano(clube, 1) == 0 && read_i16(np + 0xb) > 0x1a5e { 0x9689d0 } else { 0x969040 };
-                    s = cqc2_vezes(s, k);
+                    let k = if is_human_club_with(clube, 1) == 0 && read_i16(np + 0xb) > 0x1a5e { 0x9689d0 } else { 0x969040 };
+                    s = mul_exe_f64(s, k);
                     if s > 0x927c {
                         s = 0x927c;
                     }
                 }
                 5 => {
-                    s = if s > 0xc80 { ftol(s.wrapping_sub(0xc80) as f64 * f64_em(0x968e80) + f64_em(0x96a598)) } else { cqc2_vezes(s, 0x968e48) };
+                    s = if s > 0xc80 { match_pl_ftol(s.wrapping_sub(0xc80) as f64 * read_f64_at(0x968e80) + read_f64_at(0x96a598)) } else { mul_exe_f64(s, 0x968e48) };
                     if s > 0x30d4 {
                         s = 0x30d4;
                     }
                 }
                 6 => {
-                    s = if s > 0xc80 { ftol(s.wrapping_sub(0xc80) as f64 * f64_em(0x968f20) + f64_em(0x96a590)) } else { cqc2_vezes(s, 0x968968) };
+                    s = if s > 0xc80 { match_pl_ftol(s.wrapping_sub(0xc80) as f64 * read_f64_at(0x968f20) + read_f64_at(0x96a590)) } else { mul_exe_f64(s, 0x968968) };
                     if s > 0x203a {
                         s = 0x203a;
                     }
@@ -997,26 +1034,26 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
         }
     } else {
         let x = (s as i16) as i32 as f64;
-        s = ftol(x * x * fator * f64_em(0x96a5c0) + read_i32(fin + 0x10) as f64);
+        s = match_pl_ftol(x * x * fator * read_f64_at(0x96a5c0) + read_i32(fin + 0x10) as f64);
         if s < b20 {
-            s = ftol(s as f64 * f64_em(0x969040) + b20 as f64 * f64_em(0x9689e0));
+            s = match_pl_ftol(s as f64 * read_f64_at(0x969040) + b20 as f64 * read_f64_at(0x9689e0));
         }
-        if !cqc2_selecao(clube) && nac != 0 {
+        if !fin_prm_is_national_team(clube) && nac != 0 {
             if e(KEY_NATION_GERMANY) || e(KEY_NATION_FRANCE) {
-                match cpv6_faixa(fin) {
-                    1 => s = cqc2_vezes(s, 0x9689b8),
-                    2 => s = cqc2_vezes(s, 0x9689c0),
+                match wealth_band(fin) {
+                    1 => s = mul_exe_f64(s, 0x9689b8),
+                    2 => s = mul_exe_f64(s, 0x9689c0),
                     _ => {}
                 }
             } else if e(KEY_NATION_ITALY) || e(KEY_NATION_ENGLAND) || e(KEY_NATION_SPAIN) {
-                match cpv6_faixa(fin) {
+                match wealth_band(fin) {
                     0 => {
                         if read_i16(clube + club::REPUTATION) > 0x109a {
-                            s = cqc2_vezes(s, 0x968fa0);
+                            s = mul_exe_f64(s, 0x968fa0);
                         }
                     }
-                    1 => s = cqc2_vezes(s, 0x9689b8),
-                    2 => s = cqc2_vezes(s, 0x9689c0),
+                    1 => s = mul_exe_f64(s, 0x9689b8),
+                    2 => s = mul_exe_f64(s, 0x9689c0),
                     _ => {}
                 }
             }
@@ -1028,12 +1065,12 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
             s = 0xfa;
         }
         if read_i16(clube + club::REPUTATION) < 0x8ca && s > 0x834 {
-            s = ftol((s as f64 - f32_em(0x96a5b8) as f64) * f64_em(0x968918) + f64_em(0x96a5b0));
+            s = match_pl_ftol((s as f64 - read_f32_at(0x96a5b8) as f64) * read_f64_at(0x968918) + read_f64_at(0x96a5b0));
         }
     } else if tipo == 2 {
-        s = cqc2_vezes(s, 0x969040);
+        s = mul_exe_f64(s, 0x969040);
         if read_i16(clube + club::REPUTATION) < 0xabe && s > 0x4b0 {
-            s = ftol((s as f64 - f32_em(0x96a588) as f64) * f64_em(0x968918) + f64_em(0x96a580));
+            s = match_pl_ftol((s as f64 - read_f32_at(0x96a588) as f64) * read_f64_at(0x968918) + read_f64_at(0x96a580));
         }
         if s < 0x96 {
             s = 0x96;
@@ -1050,7 +1087,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
 
 /// O comparador do teto salarial: pela devolução (a rotina só lê; as chamadas de dentro também).
 pub(crate) unsafe extern "thiscall" fn comparar_get_max_wage(fin: usize, pessoa: usize, cargo: u32) -> i32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_GET_MAX_WAGE)(fin, pessoa, cargo);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_GET_MAX_WAGE)(fin, pessoa, cargo);
     let n = get_max_wage(fin, pessoa, cargo);
     PLACAR.registrar(r == n, || format!("get_max_wage(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, pessoa, cargo as u8 as i8, r, n));
     r
@@ -1081,7 +1118,7 @@ pub(crate) unsafe extern "thiscall" fn news_ground_works(_this: usize, clube: us
 /// O comparador da notícia das obras: só a original (ponytail: a notícia vai para a caixa do técnico humano e não pode
 /// ser entregue duas vezes; com técnico da máquina não deixa nada).
 pub(crate) unsafe extern "thiscall" fn comparar_news_ground_works(this: usize, clube: usize, valor: u32, tipo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_NEWS_GROUND_WORKS)(this, clube, valor, tipo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_NEWS_GROUND_WORKS)(this, clube, valor, tipo)
 }
 
 /// no club, nothing; news 0x1788 with the subject and the reason (2, or a draw of 2), sent to the club manager
@@ -1112,13 +1149,14 @@ pub(crate) unsafe extern "thiscall" fn news_request_refused(_this: usize, clube:
 /// O comparador da notícia da obra recusada: só a original (ponytail: entrega ao técnico humano e sorteia; não pode
 /// rodar duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_news_request_refused(this: usize, clube: usize, assunto: u32, motivo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_NEWS_REQUEST_REFUSED)(this, clube, assunto, motivo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_NEWS_REQUEST_REFUSED)(this, clube, assunto, motivo)
 }
 
 // ---------- 265a leva: o save das finanças e do gerente de elencos: gravar e carregar o finance.dat e gravar o squad_manager.dat (fin_prm.cpp, squad_manager.cpp) ----------
 
 
-pub(crate) unsafe fn cpx5_clubes() -> u32 {
+/// Returns the number of clubs (G_CLUB_COUNT).
+pub(crate) unsafe fn club_count() -> u32 {
     *(G_CLUB_COUNT as *const u32)
 }
 
@@ -1140,11 +1178,11 @@ pub(crate) unsafe extern "thiscall" fn save_finance_dat(this: usize, save: usize
     }
     let mut z = abrir_item(save, 0x9c87b0, 1, 0x16, 4);
     if z == 0 {
-        aviso_em(0x9c8784, 0x115e);
+        show_error_at(0x9c8784, 0x115e);
         return;
     }
-    if gravar_item(read_usize(this), 0x167, cpx5_clubes(), z) != cpx5_clubes() { // cpx5: os registros das finanças
-        aviso_em(0x9c8784, 0x1166);
+    if gravar_item(read_usize(this), 0x167, club_count(), z) != club_count() { // cpx5: os registros das finanças
+        show_error_at(0x9c8784, 0x1166);
         return;
     }
     fechar_item(&mut z);
@@ -1154,7 +1192,7 @@ pub(crate) unsafe extern "thiscall" fn save_finance_dat(this: usize, save: usize
 pub(crate) unsafe extern "thiscall" fn comparar_save_finance_dat(this: usize, save: usize) {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     // (o .qst gravado no modo rust com e sem a leva, item a item)
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SAVE_FINANCE_DAT)(this, save)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SAVE_FINANCE_DAT)(this, save)
 }
 
 /// reads the finances of every club from the finance.dat item into [this] and returns 1; no container 0; on error the
@@ -1175,11 +1213,11 @@ pub(crate) unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) 
     }
     let mut z = abrir_item(save, 0x9c87b0, 0, 0x16, 4);
     if z == 0 {
-        aviso_em(0x9c8784, 0x1137);
+        show_error_at(0x9c8784, 0x1137);
         return 0;
     }
-    if ler_item(read_usize(this), 0x167, cpx5_clubes(), z) != cpx5_clubes() {
-        aviso_em(0x9c8784, 0x113f);
+    if ler_item(read_usize(this), 0x167, club_count(), z) != club_count() {
+        show_error_at(0x9c8784, 0x113f);
         return 0;
     }
     fechar_item(&mut z);
@@ -1190,7 +1228,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) 
 pub(crate) unsafe extern "thiscall" fn comparar_load_from_save(this: usize, save: usize) -> u32 {
     // ponytail: lê do contêiner (a posição do item anda; não pode rodar duas vezes); a cópia é provada pela carga
     // do save de férias na prova do save (levas/N/CARGA)
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_LOAD_FROM_SAVE)(this, save)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_LOAD_FROM_SAVE)(this, save)
 }
 
 
@@ -1202,11 +1240,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_load_from_save(this: usize, save
 
 
 
-/// O registro de finanças (0x167 bytes) do clube da partida em `campo` (+0x1c o mandante, +0x20 o visitante), como a
+/// Finance record of the match club at field (+0x1c home, +0x20 away), via the linked parent for B teams; Some(0)
+/// without club, None for a national team.
+///
+/// [pt] O registro de finanças (0x167 bytes) do clube da partida em `campo` (+0x1c o mandante, +0x20 o visitante), como a
 /// original o acha sem a 0x5a0590: o clube parceiro (0x540a50: 3 pushes; add esp, 0xc -> cdecl(clube, &a, 1)) se ele
 /// existe e o clube é o B (a = 0), e [tabela] + id × 0x167. Some(0) sem clube; None se for seleção (0x53b900: push;
 /// add esp, 4 -> cdecl): a original sai sem fazer nada.
-pub(crate) unsafe fn cqb1_financas(tabela: usize, partida: usize, campo: usize) -> Option<usize> {
+pub(crate) unsafe fn match_club_finance(tabela: usize, partida: usize, campo: usize) -> Option<usize> {
     let clube = read_usize(partida + campo);
     if clube == 0 {
         return Some(0);
@@ -1222,8 +1263,10 @@ pub(crate) unsafe fn cqb1_financas(tabela: usize, partida: usize, campo: usize) 
     Some(read_usize(tabela).wrapping_add((read_i32(c) as usize).wrapping_mul(0x167)))
 }
 
-/// A divisão com o arredondamento para zero da original (os imul por constante mágica e o cdq/sar).
-pub(crate) fn cqb1_div(a: i32, b: i32) -> i32 {
+/// Signed division truncated toward zero, as the original's magic-number divisions.
+///
+/// [pt] A divisão com o arredondamento para zero da original (os imul por constante mágica e o cdq/sar).
+pub(crate) fn div_trunc(a: i32, b: i32) -> i32 {
     a.wrapping_div(b)
 }
 
@@ -1246,23 +1289,23 @@ pub(crate) fn cqb1_div(a: i32, b: i32) -> i32 {
 /// estádio (+0x12c, +0x8c, menos no saldo). Fora dela: metade de cada um para os dois.
 pub(crate) unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, resultado: usize) {
     if resultado == 0 || partida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME)(tabela, partida, resultado); // a caixa
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME)(tabela, partida, resultado); // a caixa
     }
-    let Some(mandante) = cqb1_financas(tabela, partida, 0x1c) else { return };
-    let Some(visitante) = cqb1_financas(tabela, partida, 0x20) else { return };
+    let Some(mandante) = match_club_finance(tabela, partida, 0x1c) else { return };
+    let Some(visitante) = match_club_finance(tabela, partida, 0x20) else { return };
     let (mut tv, mut publico, mut renda) = (0i32, 0i32, 0i32);
     if read_i32(resultado + 0x34) != 0 {
         publico = read_i32(resultado + 0x34);
         renda = read_i32(resultado + 0x38);
-        let q = cqb1_div(1, cpe1_sorteio(10).wrapping_add(2));
+        let q = div_trunc(1, friendly_random(10).wrapping_add(2));
         crate::comparacao::ramo("cqb_1 publico pagante");
-        tv = ftol((q as f64 + f64_em(0x968f98)) * publico as f64); // cqb1: a TV pelo público (1,75)
+        tv = match_pl_ftol((q as f64 + read_f64_at(0x968f98)) * publico as f64); // cqb1: a TV pelo público (1,75)
     }
     let casa = read_usize(partida + 0x1c);
     let fora = read_usize(partida + 0x20);
     let mut custo; // o ebp da original
     if read_u8(casa + 0x64) != 1 && read_u8(fora + 0x64) != 1 {
-        custo = ftol(publico as f64 * f64_em(0x9689e0));
+        custo = match_pl_ftol(publico as f64 * read_f64_at(0x9689e0));
     } else {
         let est = read_usize(partida + 0x18);
         let x = if est == 0 {
@@ -1275,7 +1318,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(tabela: usize, parti
             } else {
                 0x968968
             };
-            publico as f64 * f64_em(k)
+            publico as f64 * read_f64_at(k)
         } else {
             let cap = read_i32(est + 0x3c);
             let k = if cap > 17500 {
@@ -1287,9 +1330,9 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(tabela: usize, parti
             } else {
                 0x969510
             };
-            cap as f64 * f64_em(k)
+            cap as f64 * read_f64_at(k)
         };
-        custo = ftol(x);
+        custo = match_pl_ftol(x);
         if read_u8(partida + 0x40) != 0 && custo < 500 {
             custo = 500;
         }
@@ -1299,22 +1342,22 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(tabela: usize, parti
     if read_u8(casa + 0x64) == 1 {
         let rep = read_i16(casa + 0x80);
         if rep != 0 {
-            let r = cpe1_sorteio(0xc8);
-            let x = (r as f64 + publico as f64 * f64_em(0x968928)) + rep as f64 * f64_em(0x968968) + f64_em(0x96a6b0);
-            gastos = ftol(x);
+            let r = friendly_random(0xc8);
+            let x = (r as f64 + publico as f64 * read_f64_at(0x968928)) + rep as f64 * read_f64_at(0x968968) + read_f64_at(0x96a6b0);
+            gastos = match_pl_ftol(x);
             if rep > 0x128e {
-                gastos = ftol(gastos as f64 * f64_em(0x968928));
+                gastos = match_pl_ftol(gastos as f64 * read_f64_at(0x968928));
             }
         } else {
-            let r = cpe1_sorteio(0x190);
-            gastos = ftol((r as f64 + publico as f64 * f64_em(0x968928)) + f64_em(0x96a690));
+            let r = friendly_random(0x190);
+            gastos = match_pl_ftol((r as f64 + publico as f64 * read_f64_at(0x968928)) + read_f64_at(0x96a690));
         }
     } else {
         let rep = read_i16(casa + 0x80);
-        let r1 = if rep != 0 { cpe1_sorteio(ftol(rep as i32 as f64 * f64_em(0x9689e0))) } else { cpe1_sorteio(0xfa) };
+        let r1 = if rep != 0 { friendly_random(match_pl_ftol(rep as i32 as f64 * read_f64_at(0x9689e0))) } else { friendly_random(0xfa) };
         let r1f = r1 as f32; // fstp dword: o primeiro sorteio guardado em float
-        let r2 = cpe1_sorteio(0xfa);
-        gastos = ftol((r2 as f64 + r1f as f64) + publico as f64);
+        let r2 = friendly_random(0xfa);
+        gastos = match_pl_ftol((r2 as f64 + r1f as f64) + publico as f64);
     }
     let mut dinheiro = 0i32; // o [esp+0x1c] da original
     let tipo_ok = match (read_u8(partida + 0x3b) as i8 as i32).wrapping_add(1) as u32 {
@@ -1346,59 +1389,59 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(tabela: usize, parti
         } else if t == 6 || t == 4 {
             let w = read_i16(read_usize(partida + 0x14) + 0x69);
             let m = if w > 5 { w as i32 } else { 5 };
-            dinheiro = cqb1_div(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
+            dinheiro = div_trunc(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
         }
     }
     let nac = read_usize(casa + 0x53);
     let tipo = if nac != 0 { read_u8(nac + 0x7e) as i8 } else { 3 };
     if tipo == 2 {
-        dinheiro = cqb1_div(dinheiro, 5);
-        tv = cqb1_div(tv, 2);
-        custo = cqb1_div(custo, 4);
-        gastos = cqb1_div(gastos, 2);
+        dinheiro = div_trunc(dinheiro, 5);
+        tv = div_trunc(tv, 2);
+        custo = div_trunc(custo, 4);
+        gastos = div_trunc(gastos, 2);
     } else if tipo != 1 {
-        dinheiro = cqb1_div(dinheiro, 10);
-        tv = cqb1_div(tv, 10);
-        custo = cqb1_div(custo, 15);
-        gastos = cqb1_div(gastos, 10);
+        dinheiro = div_trunc(dinheiro, 10);
+        tv = div_trunc(tv, 10);
+        custo = div_trunc(custo, 15);
+        gastos = div_trunc(gastos, 10);
     }
     if casa != 0 && nac != 0 {
         let n = read_i32(nac);
         if n == read_i32(KEY_NATION_WALES) || n == read_i32(KEY_NATION_REPUBLIC_OF_IRELAND) || n == read_i32(KEY_NATION_NORTHERN_IRELAND) {
-            dinheiro = cqb1_div(dinheiro, 5);
-            tv = cqb1_div(tv, 2);
-            custo = cqb1_div(custo, 4);
-            gastos = cqb1_div(gastos, 2);
+            dinheiro = div_trunc(dinheiro, 5);
+            tv = div_trunc(tv, 2);
+            custo = div_trunc(custo, 4);
+            gastos = div_trunc(gastos, 2);
         }
     }
     let liquido = tv.wrapping_sub(gastos).wrapping_sub(custo).wrapping_add(renda);
     let somar = |fin: usize, a: usize, b: usize, v: i32| {
-        cpz12_somar32(fin + a, v);
-        cpz12_somar32(fin + b, v);
-        cpz13_somar_saldo(fin, v as i64);
+        fin_prm_add_i32(fin + a, v);
+        fin_prm_add_i32(fin + b, v);
+        add_to_balance(fin, v as i64);
     };
     if read_u8(partida + 0x3c) == 0 && read_usize(read_usize(partida + 0x1c) + 0x57) == read_usize(partida + 0x14) {
         let x = dinheiro as f64;
-        somar(mandante, 0x158, 0xb8, ftol(x * f64_em(0x969040)));
-        somar(visitante, 0x158, 0xb8, ftol(x * f64_em(0x9689e0)));
+        somar(mandante, 0x158, 0xb8, match_pl_ftol(x * read_f64_at(0x969040)));
+        somar(visitante, 0x158, 0xb8, match_pl_ftol(x * read_f64_at(0x9689e0)));
         crate::comparacao::ramo("cqb_1 liquido ao mandante");
         somar(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante
         let casa = read_usize(partida + 0x1c);
         let est = read_usize(casa + 0x69);
         if read_u8(casa + 0x6d) != 0 && est != 0 {
             let base = read_i32(est + 0x3c);
-            let r = cpe1_sorteio(0xf).wrapping_add(1);
-            let c = ftol((r as f64 * f64_em(0x967898) + f64_em(0x969520)) * base as f64);
-            cpz12_somar32(mandante + 0x12c, c);
-            cpz12_somar32(mandante + 0x8c, c);
-            cpz13_somar_saldo(mandante, -(c as i64));
+            let r = friendly_random(0xf).wrapping_add(1);
+            let c = match_pl_ftol((r as f64 * read_f64_at(0x967898) + read_f64_at(0x969520)) * base as f64);
+            fin_prm_add_i32(mandante + 0x12c, c);
+            fin_prm_add_i32(mandante + 0x8c, c);
+            add_to_balance(mandante, -(c as i64));
         }
         return;
     }
-    let metade = ftol(dinheiro as f64 * f64_em(0x968968));
+    let metade = match_pl_ftol(dinheiro as f64 * read_f64_at(0x968968));
     somar(mandante, 0x158, 0xb8, metade);
     somar(visitante, 0x158, 0xb8, metade);
-    let l2 = cqb1_div(liquido, 2);
+    let l2 = div_trunc(liquido, 2);
     somar(mandante, 0x140, 0xa0, l2);
     somar(visitante, 0x140, 0xa0, l2);
 }
@@ -1406,11 +1449,11 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(tabela: usize, parti
 /// Comparador da 0x59a5d0: lado a lado nos dois registros de finanças e no estado do sorteio (os sorteios de 10, dos
 /// gastos e da manutenção). Sem resultado, sem partida, sem um dos clubes ou com seleção: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_process_match_income(tabela: usize, partida: usize, resultado: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME);
     if resultado == 0 || partida == 0 || read_usize(partida + 0x1c) == 0 || read_usize(partida + 0x20) == 0 {
         return o(tabela, partida, resultado);
     }
-    let (Some(fm), Some(fv)) = (cqb1_financas(tabela, partida, 0x1c), cqb1_financas(tabela, partida, 0x20)) else {
+    let (Some(fm), Some(fv)) = (match_club_finance(tabela, partida, 0x1c), match_club_finance(tabela, partida, 0x20)) else {
         return o(tabela, partida, resultado); // seleção: a original não faz nada
     };
     if fm == fv {
@@ -1437,26 +1480,26 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_match_income(tabela: usi
 /// (1,3), 0x9d0248 (0,75) e 0x9d0244 (0,9), e × 1,2 na nação de 0x9cf314.
 pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, publico: i32) -> i32 {
     if partida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(IDX_CALC_GATE_RECEIPTS)(tabela, partida, publico); // a caixa
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(IDX_CALC_GATE_RECEIPTS)(tabela, partida, publico); // a caixa
     }
     if publico == 0 {
         return 0;
     }
-    let Some(fin) = cqb1_financas(tabela, partida, 0x1c) else { return 0 };
+    let Some(fin) = match_club_finance(tabela, partida, 0x1c) else { return 0 };
     let comp = read_usize(partida + 0x14);
     let mut v: i32;
     if read_u8(partida + 0x3c) != 0 && comp != 0 {
         v = (read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32).wrapping_add(8).wrapping_mul(publico);
     } else {
         let casa = read_usize(partida + 0x1c);
-        crate::comparacao::ramo("cqb_1 preco pela reputacao");
-        let preco = cqb1_div(read_i16(casa + 0x80) as i32, 500); // cqb1: o preço pela reputação
+        crate::comparacao::ramo("cqb_1 preco pela injury_word_0c");
+        let preco = div_trunc(read_i16(casa + 0x80) as i32, 500); // cqb1: o preço pela reputação
         let amistoso = comp != 0 && {
             let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
             f(read_usize(G_FRIENDLY), comp) != 0
         };
         if comp == 0 || amistoso {
-            v = ftol(preco as f64 * f64_em(0x968968) * publico as f64);
+            v = match_pl_ftol(preco as f64 * read_f64_at(0x968968) * publico as f64);
         } else if read_u8(casa + 0x64) == 1 || read_u8(read_usize(partida + 0x20) + 0x64) == 1 {
             v = preco.wrapping_add(4).wrapping_mul(publico);
         } else {
@@ -1464,16 +1507,16 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida
         }
         if fin != 0 && read_usize(casa + 0x57) == comp {
             let desconto = *((fin + 0x160) as *const f32) as f64;
-            v = ftol(v as f64 - desconto * v as f64);
+            v = match_pl_ftol(v as f64 - desconto * v as f64);
         }
     }
     let casa = read_usize(partida + 0x1c);
     let nac = read_usize(casa + 0x53);
     let tipo = if nac != 0 { read_u8(nac + 0x7e) as i8 } else { 3 };
     if tipo == 2 {
-        v = cqb1_div(v, 4);
+        v = div_trunc(v, 4);
     } else if tipo != 1 {
-        v = cqb1_div(v, 10);
+        v = div_trunc(v, 10);
     }
     let liga = read_usize(casa + 0x57);
     let k = if liga != 0 && read_i32(liga) == read_i32(KEY_CLUB_COMP_ITALIAN_SERIE_A) {
@@ -1495,10 +1538,10 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida
         }
     };
     if let Some(k) = k {
-        v = ftol(v as f64 * f64_em(k));
+        v = match_pl_ftol(v as f64 * read_f64_at(k));
     }
     if nac != 0 && read_i32(nac) == read_i32(KEY_NATION_GERMANY) {
-        v = ftol(v as f64 * f64_em(0x968978));
+        v = match_pl_ftol(v as f64 * read_f64_at(0x968978));
     }
     v
 }
@@ -1506,7 +1549,7 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida
 /// Comparador da 0x59af40: a devolução (só lê; a 0x540a50 pode zerar a marca +0x244 do clube, igual nas duas). Sem
 /// partida: só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn comparar_calc_gate_receipts(tabela: usize, partida: usize, publico: i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(IDX_CALC_GATE_RECEIPTS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(IDX_CALC_GATE_RECEIPTS);
     if partida == 0 {
         return o(tabela, partida, publico);
     }
@@ -1522,14 +1565,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_calc_gate_receipts(tabela: usize
 /// [pt] { 0x599850 } (thiscall, ret 4, fin_prm.cpp): `Finance::pay_league_fine(valor)`, pelas multas da liga (0x49f570,
 /// 0x6a9e60): soma o valor às multas do ano (+0x128) e do mês (+0x88) e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_league_fine(this: usize, valor: i32) {
-    cpz12_somar32(this + 0x128, valor);
-    cpz12_somar32(this + 0x88, valor);
-    cpz13_somar_saldo(this, -(valor as i64));
+    fin_prm_add_i32(this + 0x128, valor);
+    fin_prm_add_i32(this + 0x88, valor);
+    add_to_balance(this, -(valor as i64));
 }
 
 /// Comparador da 0x599850: lado a lado no registro de finanças (0x167 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_pay_league_fine(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_LEAGUE_FINE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_LEAGUE_FINE);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_league_fine(this, valor));
     PLACAR.registrar(igual, || format!("pay_league_fine(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
 }
@@ -1538,20 +1581,26 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_league_fine(this: usize, val
 
 
 
-/// O saldo (i64 em +0) separado em (baixo, alto), como a original o lê em dois dwords.
-pub(crate) unsafe fn cqb2_saldo(fin: usize) -> (u32, i32) {
+/// Returns the finance i64 balance (+0) split as (low u32, high i32).
+///
+/// [pt] O saldo (i64 em +0) separado em (baixo, alto), como a original o lê em dois dwords.
+pub(crate) unsafe fn balance_halves(fin: usize) -> (u32, i32) {
     (core::ptr::read_unaligned(fin as *const u32), core::ptr::read_unaligned((fin + 4) as *const i32))
 }
 
-/// O valor entra em +0x154, +0xb4 e no saldo (estendido com sinal).
-pub(crate) unsafe fn cqb2_creditar(fin: usize, v: i32) {
-    cpv5_somar(fin + 0x154, v);
-    cpv5_somar(fin + 0xb4, v);
-    cpv6_somar_saldo(fin, v);
+/// Adds v to finance fields +0x154 and +0xb4 and to the i64 balance.
+///
+/// [pt] O valor entra em +0x154, +0xb4 e no saldo (estendido com sinal).
+pub(crate) unsafe fn credit_income(fin: usize, v: i32) {
+    add_to_i32(fin + 0x154, v);
+    add_to_i32(fin + 0xb4, v);
+    credit_balance(fin, v);
 }
 
-/// A nação do clube é uma das de 0x9cf4a8, 0x9cf408 ou 0x9cf2c0 (o valor do evento cai a um terço).
-pub(crate) unsafe fn cqb2_nacao_de_um_terco(clube: usize) -> bool {
+/// True if the club's nation is Sweden, Norway or Denmark (event value drops to one third).
+///
+/// [pt] A nação do clube é uma das de 0x9cf4a8, 0x9cf408 ou 0x9cf2c0 (o valor do evento cai a um terço).
+pub(crate) unsafe fn is_scandinavian_club(clube: usize) -> bool {
     let nac = read_usize(clube + club::NATION);
     if nac == 0 {
         return false;
@@ -1594,43 +1643,43 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
     let rep = read_i16(clube + club::REPUTATION);
     let pres = read_usize(clube + club::CHAIRMAN);
     let forte = |a: usize, b: usize| a != 0 && b != 0; // (ponteiros conferidos antes dos bytes)
-    let div = match cpv6_faixa(fin) {
-        -2 => f64_em(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
-        -1 => f64_em(if rep > 0x1482 { 0x967880 } else if rep > 0xcb2 { 0x96a730 } else { 0x967878 }),
+    let div = match wealth_band(fin) {
+        -2 => read_f64_at(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
+        -1 => read_f64_at(if rep > 0x1482 { 0x967880 } else if rep > 0xcb2 { 0x96a730 } else { 0x967878 }),
         0 => {
             if rep <= 0x109a {
                 let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
                 if forte(pres, ficha) && read_i8(pres + 0x57) > 0xf && read_i8(ficha + 0x20) > 0xf {
-                    f64_em(0x96a740)
+                    read_f64_at(0x96a740)
                 } else {
                     crate::comparacao::ramo("cqb_2 divisor da faixa 0 baixa");
-                    f64_em(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
+                    read_f64_at(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
                 }
             } else if rep < 0x186a {
                 let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
                 if forte(pres, ficha) && read_i8(ficha + 0x20) > 0xf && read_i8(pres + 0x57) > 0xf {
-                    f64_em(0x967888)
+                    read_f64_at(0x967888)
                 } else {
-                    f64_em(0x967878)
+                    read_f64_at(0x967878)
                 }
             } else {
-                f64_em(0x967878)
+                read_f64_at(0x967878)
             }
         }
-        _ => f64_em(0x96a350),
+        _ => read_f64_at(0x96a350),
     };
     let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
     let valor;
     if pres != 0 && ficha != 0 {
         crate::comparacao::ramo("cqb_2 com a ficha");
-        let r1 = cpe1_sorteio(ftol(f64_em(0x968dd8) / div)); // cqb2: o sorteio com a ficha
-        let r2 = cpe1_sorteio(read_i8(ficha + 0xf) as i32);
+        let r1 = friendly_random(match_pl_ftol(read_f64_at(0x968dd8) / div)); // cqb2: o sorteio com a ficha
+        let r2 = friendly_random(read_i8(ficha + 0xf) as i32);
         if r2 <= r1 {
             return 0;
         }
-        let (lo, hi) = cqb2_saldo(fin);
+        let (lo, hi) = balance_halves(fin);
         let n = read_i8(read_usize(read_usize(clube + club::CHAIRMAN) + 0x69) + 0x20) as i32;
-        let r3 = cpe1_sorteio(n.wrapping_mul(1_000_000)) as i64;
+        let r3 = friendly_random(n.wrapping_mul(1_000_000)) as i64;
         let divida = ((hi as i64) << 32 | lo as i64).wrapping_neg();
         if r3 <= divida {
             return 0;
@@ -1641,7 +1690,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
             return 0;
         }
         // ponytail: a original faz pow(+0x20, 2,0) (0x945ff0); o quadrado de um byte é exato nos dois
-        let mut v = ftol(((n as f64 * n as f64) * f64_em(0x968930) + f64_em(0x96a5f0)) * rep as f64 + f64_em(0x9688d8));
+        let mut v = match_pl_ftol(((n as f64 * n as f64) * read_f64_at(0x968930) + read_f64_at(0x96a5f0)) * rep as f64 + read_f64_at(0x9688d8));
         v = if hi < 0 { v.wrapping_sub(lo as i32) } else { v.wrapping_add(lo as i32) };
         if read_i16(clube + club::REPUTATION) < 0x7d0 {
             let teto = rep.wrapping_mul(rep).wrapping_add(0x16e360);
@@ -1649,40 +1698,40 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
                 v = teto;
             }
         }
-        if cqb2_nacao_de_um_terco(clube) {
+        if is_scandinavian_club(clube) {
             v /= 3;
         }
         valor = v;
     } else {
         crate::comparacao::ramo("cqb_2 sem a ficha");
-        let r = cpe1_sorteio(ftol(f64_em(0x96a728) / div)); // cqb2: o sorteio sem a ficha
+        let r = friendly_random(match_pl_ftol(read_f64_at(0x96a728) / div)); // cqb2: o sorteio sem a ficha
         if rep as i32 <= r {
             return 0;
         }
-        if cpe1_sorteio(8) != 0 {
+        if friendly_random(8) != 0 {
             return 0;
         }
         let mut v = (read_i16(clube + club::REPUTATION) as i32).wrapping_add(1000).wrapping_mul(1000);
-        if cqb2_nacao_de_um_terco(clube) {
+        if is_scandinavian_club(clube) {
             v /= 3;
         }
         valor = v;
     }
-    cqb2_creditar(fin, valor);
-    let verba = cpv6_verba(fin) as i32;
+    credit_income(fin, valor);
+    let verba = transfer_budget(fin) as i32;
     let marca = read_u8(clube + club::PLC);
     let com_ficha = pres != 0 && ficha != 0;
     let mut tipo = 0u32;
     if verba <= 0 && marca == 0 {
         tipo = 3;
-    } else if marca != 0 && cpe1_sorteio(4) == 0 {
+    } else if marca != 0 && friendly_random(4) == 0 {
         tipo = 5;
     }
     if tipo == 0 {
-        if cpe1_sorteio(4) == 0 {
+        if friendly_random(4) == 0 {
             if com_ficha {
                 let r2 = read_i16(clube + club::REPUTATION) as i32;
-                let t = ftol(r2.wrapping_mul(r2) as f64 * f64_em(0x968e80));
+                let t = match_pl_ftol(r2.wrapping_mul(r2) as f64 * read_f64_at(0x968e80));
                 if valor < t && valor > 50000 {
                     tipo = 6;
                 }
@@ -1693,10 +1742,10 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
     }
     if tipo == 0 {
         let nac = read_usize(clube + club::NATION);
-        if read_u8(clube + club::PLC) == 0 && read_i16(clube + club::REPUTATION) > 0x128e && cpe1_sorteio(4) == 0
+        if read_u8(clube + club::PLC) == 0 && read_i16(clube + club::REPUTATION) > 0x128e && friendly_random(4) == 0
             && (!com_ficha || (nac != 0 && read_i32(nac) != read_i32(KEY_NATION_ITALY)))
         {
-            cpv6_noticia(this, clube, valor, verba as u32, 7);
+            post_finance_boost_news(this, clube, valor, verba as u32, 7);
             *((clube + club::PLC) as *mut u8) = 1;
             tipo = 7;
         } else {
@@ -1704,7 +1753,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         }
     }
     if tipo != 7 {
-        cpv6_noticia(this, clube, valor, verba as u32, tipo);
+        post_finance_boost_news(this, clube, valor, verba as u32, tipo);
     }
     if com_ficha {
         let f = read_usize(read_usize(clube + club::CHAIRMAN) + 0x69);
@@ -1717,11 +1766,14 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
     1
 }
 
-/// O comparador dos eventos raros, em ensaio (modelo CPV6_ENSAIO: a cópia sem a notícia nem a verba, que alocam; sem a
+/// Rehearsal comparer for rare finance events: copy without news/budget vs original from the same state, comparing
+/// return, balance, +0xb4, +0x154, +0x165 and extra regions.
+///
+/// [pt] O comparador dos eventos raros, em ensaio (modelo CPV6_ENSAIO: a cópia sem a notícia nem a verba, que alocam; sem a
 /// troca do presidente na 0x59e940): a cópia e a original a partir do mesmo estado (o registro de finanças, o sorteio e
 /// os `extras`). Sem evento: tudo igual; com evento: a devolução, o saldo, +0xb4, +0x154, +0x165 e os `conferir` (a
 /// tipo da notícia e a marca +0x82 dependem da verba, e os sorteios depois dela também).
-pub(crate) unsafe fn cqb2_comparar(nome: &str, fin: usize, extras: &[(usize, usize)], conferir: &[usize], original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn compare_rare_finance_event(nome: &str, fin: usize, extras: &[(usize, usize)], conferir: &[usize], original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let mut regioes = vec![(fin, 0x167)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     regioes.extend_from_slice(extras);
@@ -1745,7 +1797,7 @@ pub(crate) unsafe fn cqb2_comparar(nome: &str, fin: usize, extras: &[(usize, usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: usize, clube: usize, fin: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_FINANCE_BOOST_EVENT);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_FINANCE_BOOST_EVENT);
     let pres = if clube != 0 { read_usize(clube + club::CHAIRMAN) } else { 0 };
     let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
     if clube == 0 || fin == 0 {
@@ -1757,7 +1809,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: us
         extras.push((ficha + 0x20, 1)); // o +0x20 da ficha cai em todo evento com ela
         conferir.push(1);
     }
-    cqb2_comparar("try_finance_boost_event", fin, &extras, &conferir, || o(this, clube, fin), || try_finance_boost_event(this, clube, fin))
+    compare_rare_finance_event("try_finance_boost_event", fin, &extras, &conferir, || o(this, clube, fin), || try_finance_boost_event(this, clube, fin))
 }
 
 /// the divisor by band and the factor by reputation and league; draws by the chairman record and by 15000 / divisor;
@@ -1776,50 +1828,50 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: us
 /// notícia (0x59f300, tipo 2, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
 pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: usize) -> u32 {
     let rep = read_i16(clube + club::REPUTATION);
-    let div = match cpv6_faixa(fin) {
+    let div = match wealth_band(fin) {
         -2 => if rep > 0x109a { 0.4f64 } else { 0.25 },
         -1 => if rep > 0x109a { 0.2 } else { 0.05 },
         _ => 0.001,
     };
     let liga = read_usize(clube + club::DIVISION);
     let mut fator = if liga != 0 {
-        let k = rep as i32 as f64 * f64_em(0x969048) / read_i16(liga + 0x69) as i32 as f64;
-        if !(k >= f64_em(0x969040)) { f64_em(0x969040) } else { k } // fcomp: menor ou sem ordem (NaN) vira 0,75
+        let k = rep as i32 as f64 * read_f64_at(0x969048) / read_i16(liga + 0x69) as i32 as f64;
+        if !(k >= read_f64_at(0x969040)) { read_f64_at(0x969040) } else { k } // fcomp: menor ou sem ordem (NaN) vira 0,75
     } else {
         0.5
     };
     let pres = read_usize(clube + club::CHAIRMAN);
     let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
     let com_ficha = pres != 0 && ficha != 0;
-    let primeiro = if com_ficha { cpe1_sorteio(read_i8(ficha + 0x16) as i32) } else { cpe1_sorteio(0x14) };
+    let primeiro = if com_ficha { friendly_random(read_i8(ficha + 0x16) as i32) } else { friendly_random(0x14) };
     if primeiro != 0 {
         return 0;
     }
     fator *= read_i16(clube + club::REPUTATION) as i32 as f64;
-    let r = cpe1_sorteio(ftol(f64_em(0x96a728) / div));
+    let r = friendly_random(match_pl_ftol(read_f64_at(0x96a728) / div));
     if r as f64 >= fator {
         return 0;
     }
     crate::comparacao::ramo("cqb_2 troca do presidente");
-    let (lo, _) = cqb2_saldo(fin);
+    let (lo, _) = balance_halves(fin);
     let mut v = (read_i16(clube + club::REPUTATION) as i32).wrapping_add(1000).wrapping_mul(1000).wrapping_sub(lo as i32);
     if v > 0x2625a00 {
-        let s = cpe1_sorteio(0x9c4);
+        let s = friendly_random(0x9c4);
         if (read_i16(clube + club::REPUTATION) as i32) < s.wrapping_add(0x7d0) {
-            v = (cqb2_saldo(fin).0 as i32).wrapping_neg();
+            v = (balance_halves(fin).0 as i32).wrapping_neg();
         }
     }
-    cpv5_somar(fin + 0xb4, v);
-    cpv5_somar(fin + 0x154, v);
-    cpv6_somar_saldo(fin, v);
-    let verba = cpv6_verba(fin);
+    add_to_i32(fin + 0xb4, v);
+    add_to_i32(fin + 0x154, v);
+    credit_balance(fin, v);
+    let verba = transfer_budget(fin);
     if com_ficha && !CPV6_ENSAIO {
         let pres = read_usize(clube + club::CHAIRMAN);
         let nac = read_usize(clube + club::NATION);
-        let nova = if nac != 0 && cpe1_sorteio(0x3e8) != 0 {
+        let nova = if nac != 0 && friendly_random(0x3e8) != 0 {
             nac
         } else {
-            let k = cpe1_sorteio(read_i32(0xae2350));
+            let k = friendly_random(read_i32(0xae2350));
             read_usize(G_NATION_TABLE).wrapping_add((k as usize).wrapping_mul(0x122))
         };
         core::ptr::write_unaligned((pres + 0x1a) as *mut usize, nova);
@@ -1835,26 +1887,26 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: us
         core::ptr::write_unaligned((read_usize(clube + club::CHAIRMAN) + 8) as *mut u32, x);
         if read_usize(read_usize(clube + club::CHAIRMAN) + 0x69) != 0 {
             for o in [0x1dusize, 0xf, 0x16, 0x20] {
-                let x = (cpe1_sorteio(0x14) as u8).wrapping_add(1);
+                let x = (friendly_random(0x14) as u8).wrapping_add(1);
                 *((read_usize(read_usize(clube + club::CHAIRMAN) + 0x69) + o) as *mut u8) = x;
             }
             if read_i8(read_usize(read_usize(clube + club::CHAIRMAN) + 0x69) + 0x20) < 5 {
-                let x = (cpe1_sorteio(0x14) as u8).wrapping_add(1);
+                let x = (friendly_random(0x14) as u8).wrapping_add(1);
                 *((read_usize(read_usize(clube + club::CHAIRMAN) + 0x69) + 0x20) as *mut u8) = x;
             }
         }
     }
-    cpv6_noticia(this, clube, v, verba, 2);
+    post_finance_boost_news(this, clube, v, verba, 2);
     *((fin + 0x165) as *mut u8) = 0;
     1
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_try_board_takeover(this: usize, clube: usize, fin: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_BOARD_TAKEOVER);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_BOARD_TAKEOVER);
     if clube == 0 || fin == 0 {
         return o(this, clube, fin); // ponytail: sem clube ou sem finanças, só a original
     }
-    cqb2_comparar("try_board_takeover", fin, &[], &[], || o(this, clube, fin), || try_board_takeover(this, clube, fin))
+    compare_rare_finance_event("try_board_takeover", fin, &[], &[], || o(this, clube, fin), || try_board_takeover(this, clube, fin))
 }
 
 /// adds the amount to the season (+0x120) and month (+0x80) other costs and takes it from the balance
@@ -1863,14 +1915,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_board_takeover(this: usize, 
 /// [pt] { 0x5999e0 } (thiscall, ret 4, fin_prm.cpp): `Finance::pay_other_costs(valor)`, pela 0x7e5b10: soma o valor aos
 /// outros custos do ano (+0x120) e do mês (+0x80) e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_other_costs(this: usize, valor: i32) {
-    cpv5_somar(this + 0x120, valor);
-    cpv5_somar(this + 0x80, valor);
-    cpz13_somar_saldo(this, -(valor as i64));
+    add_to_i32(this + 0x120, valor);
+    add_to_i32(this + 0x80, valor);
+    add_to_balance(this, -(valor as i64));
 }
 
 /// Comparador da 0x5999e0: lado a lado no registro de finanças (0x167 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_pay_other_costs(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_OTHER_COSTS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_OTHER_COSTS);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_other_costs(this, valor));
     PLACAR.registrar(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
 }
@@ -1919,7 +1971,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         }
         let mut w = read_i32(c + 0xc);
         if w == -1 {
-            w = ftol(padrao(c, p, clube, 0, -1, 0xb, 0));
+            w = match_pl_ftol(padrao(c, p, clube, 0, -1, 0xb, 0));
         }
         if ficha(read_usize(G_CONTRACT_MANAGER), p) != 0 && read_u8(c + 0x35) & 0x3f != 6 {
             w = w.wrapping_sub(read_i32(ficha(read_usize(G_CONTRACT_MANAGER), p) + 0xc)); // a parte do outro contrato
@@ -1958,12 +2010,12 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         let mut v = if rep > 0x128e {
             rep - 0x79e
         } else if rep > 0x8ca {
-            ftol((rep - 0x8ca) as f64 * f64_em(0x968968) + f64_em(0x96a620))
+            match_pl_ftol((rep - 0x8ca) as f64 * read_f64_at(0x968968) + read_f64_at(0x96a620))
         } else {
-            ftol(rep as f64 * f64_em(0x9689e0))
+            match_pl_ftol(rep as f64 * read_f64_at(0x9689e0))
         };
         if !tipo1 {
-            v = ftol(v as f64 * f64_em(0x968968));
+            v = match_pl_ftol(v as f64 * read_f64_at(0x968968));
         }
         let nacao = read_usize(clube + club::NATION);
         if nacao != 0 {
@@ -1990,8 +2042,8 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
     } else {
         0x96a5c0
     };
-    crate::comparacao::ramo("cpz_11 folha pela reputacao");
-    let folha = ftol(rep.wrapping_mul(rep) as f64 * f64_em(k) + read_i32(this + 0xc) as f64); // cpz11: a reputação na folha
+    crate::comparacao::ramo("cpz_11 folha pela injury_word_0c");
+    let folha = match_pl_ftol(rep.wrapping_mul(rep) as f64 * read_f64_at(k) + read_i32(this + 0xc) as f64); // cpz11: a reputação na folha
     write_i32(this + 0xc, folha);
     let t = teto(this, 0, -1);
     write_i32(this + 0x14, t);
@@ -2000,7 +2052,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
 /// Comparador: lado a lado na folha (+0xc), no maior salário (+0x10), no teto (+0x14) e no último contrato consultado
 /// ([0xae1080], que o salário padrão 0x864550 grava); as outras chamadas (contratos, teto 0x5968d0) só leem.
 pub(crate) unsafe extern "thiscall" fn comparar_update_wage_bill(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_UPDATE_WAGE_BILL);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UPDATE_WAGE_BILL);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 12), (0xae1080, 4)], || o(this), || update_wage_bill(this));
     PLACAR.registrar(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
@@ -2029,7 +2081,7 @@ pub(crate) unsafe extern "thiscall" fn refresh_all_wage_bills(this: usize) {
 
 /// Comparador: lado a lado na tabela de finanças inteira ([this], [0xae235c] × 0x167 bytes) e em [0xae1080].
 pub(crate) unsafe extern "thiscall" fn comparar_refresh_all_wage_bills(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_REFRESH_ALL_WAGE_BILLS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REFRESH_ALL_WAGE_BILLS);
     let n = (read_i32(0xae235c).max(0) as usize).wrapping_mul(0x167);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(read_usize(this), n), (0xae1080, 4)], || o(this), || refresh_all_wage_bills(this));
     PLACAR.registrar(igual, || format!("refresh_all_wage_bills({:#x}) original={:x?} rust={:x?}", this, mo, mr));
@@ -2052,7 +2104,7 @@ pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: u
     *passou = 0;
     let k = linha(clube) as i8;
     if k < 0 {
-        aviso_em(0x9c8784, 0x1185);
+        show_error_at(0x9c8784, 0x1185);
         return 0;
     }
     let e = 0xb63d60usize.wrapping_add((k as isize * 72) as usize);
@@ -2087,7 +2139,7 @@ pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: u
 /// Comparador: sem linha da nação, só a original (a caixa); senão lado a lado na saída `passou` e na data estática da
 /// 0x54cdb0 (0xae2470), com a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_finance_get_days_to_season_start(this: usize, clube: usize, passou: *mut u32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> i32>(IDX_FINANCE_GET_DAYS_TO_SEASON_START);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> i32>(IDX_FINANCE_GET_DAYS_TO_SEASON_START);
     let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     if (linha(clube) as i8) < 0 {
         return o(this, clube, passou);
@@ -2099,18 +2151,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_finance_get_days_to_season_start
 
 // ---------- 262a leva: o dinheiro das transferências: a venda de jogador, a compra de jogador e as luvas (finance.cpp) ----------
 
-/// Soma `v` (64 bits) ao i64 em `a` (o add/adc da original).
-pub(crate) unsafe fn cpz12_somar64(a: usize, v: i64) {
+/// Adds v to the i64 at address a.
+///
+/// [pt] Soma `v` (64 bits) ao i64 em `a` (o add/adc da original).
+pub(crate) unsafe fn fin_prm_add_i64(a: usize, v: i64) {
     core::ptr::write_unaligned(a as *mut i64, core::ptr::read_unaligned(a as *const i64).wrapping_add(v));
 }
 
-/// Soma `v` ao i32 em `a`.
-pub(crate) unsafe fn cpz12_somar32(a: usize, v: i32) {
+/// Adds v to the i32 at address a.
+///
+/// [pt] Soma `v` ao i32 em `a`.
+pub(crate) unsafe fn fin_prm_add_i32(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, core::ptr::read_unaligned(a as *const i32).wrapping_add(v));
 }
 
-/// O valor de 64 bits que a original recebe em dois dwords (baixo primeiro).
-pub(crate) fn cpz12_valor(baixo: u32, alto: u32) -> i64 {
+/// Builds an i64 from low and high dwords.
+///
+/// [pt] O valor de 64 bits que a original recebe em dois dwords (baixo primeiro).
+pub(crate) fn i64_from_halves(baixo: u32, alto: u32) -> i64 {
     ((alto as u64) << 32 | baixo as u64) as i64
 }
 
@@ -2122,20 +2180,20 @@ pub(crate) fn cpz12_valor(baixo: u32, alto: u32) -> i64 {
 /// parte dos clubes anteriores (0x8e4f20): soma o valor às vendas do mês (+0x78) e do ano (+0x118), em 64 bits, e ao
 /// saldo (i64 em +0).
 pub(crate) unsafe extern "thiscall" fn add_players_sold(this: usize, baixo: u32, alto: u32) {
-    let v = cpz12_valor(baixo, alto);
-    cpz12_somar64(this + 0x78, v);
-    cpz12_somar64(this + 0x118, v);
+    let v = i64_from_halves(baixo, alto);
+    fin_prm_add_i64(this + 0x78, v);
+    fin_prm_add_i64(this + 0x118, v);
     if v != 0 {
         crate::comparacao::ramo("cpz_12 venda recebida"); // só valor diferente de zero muda o saldo
     }
-    cpz12_somar64(this, v); // cpz12: a venda entra no saldo
+    fin_prm_add_i64(this, v); // cpz12: a venda entra no saldo
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_add_players_sold(this: usize, baixo: u32, alto: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_ADD_PLAYERS_SOLD);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_ADD_PLAYERS_SOLD);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, baixo, alto), || add_players_sold(this, baixo, alto));
-    PLACAR.registrar(igual, || format!("add_players_sold(fin {:#x}, {}) original={:x?} rust={:x?}", this, cpz12_valor(baixo, alto), mo, mr));
+    PLACAR.registrar(igual, || format!("add_players_sold(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
 }
 
 /// adds the amount (64 bits) to the purchases of the month (+0x70) and of the year (+0x110) and takes it from the
@@ -2146,20 +2204,20 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_players_sold(this: usize, ba
 /// da transferência (0x8ca8a0) e pelas parcelas (0x8caf.., 0x8cb3..): soma o valor às compras do mês (+0x70) e do ano
 /// (+0x110), em 64 bits, e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_players_bought(this: usize, baixo: u32, alto: u32) {
-    let v = cpz12_valor(baixo, alto);
-    cpz12_somar64(this + 0x70, v);
-    cpz12_somar64(this + 0x110, v);
+    let v = i64_from_halves(baixo, alto);
+    fin_prm_add_i64(this + 0x70, v);
+    fin_prm_add_i64(this + 0x110, v);
     if v != 0 {
         crate::comparacao::ramo("cpz_12 compra paga"); // só valor diferente de zero muda o saldo
     }
-    cpz12_somar64(this, v.wrapping_neg()); // cpz12: a compra sai do saldo
+    fin_prm_add_i64(this, v.wrapping_neg()); // cpz12: a compra sai do saldo
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_pay_players_bought(this: usize, baixo: u32, alto: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_PAY_PLAYERS_BOUGHT);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_PAY_PLAYERS_BOUGHT);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, baixo, alto), || pay_players_bought(this, baixo, alto));
-    PLACAR.registrar(igual, || format!("pay_players_bought(fin {:#x}, {}) original={:x?} rust={:x?}", this, cpz12_valor(baixo, alto), mo, mr));
+    PLACAR.registrar(igual, || format!("pay_players_bought(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
 }
 
 /// adds the amount to the signing-on fees of the month (+0x9c) and of the year (+0x13c) and takes it from the balance
@@ -2169,17 +2227,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_players_bought(this: usize, 
 /// (0x8c38b0) e pela mudança do jogador de clube (0x8c9720): soma o valor às luvas do ano (+0x13c) e do mês (+0x9c) e o
 /// tira do saldo (estendido com sinal).
 pub(crate) unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, valor: i32) {
-    cpz12_somar32(this + 0x13c, valor);
-    cpz12_somar32(this + 0x9c, valor);
+    fin_prm_add_i32(this + 0x13c, valor);
+    fin_prm_add_i32(this + 0x9c, valor);
     if valor != 0 {
         crate::comparacao::ramo("cpz_12 luvas pagas"); // só valor diferente de zero muda o saldo
     }
-    cpz12_somar64(this, (valor as i64).wrapping_neg()); // cpz12: as luvas saem do saldo
+    fin_prm_add_i64(this, (valor as i64).wrapping_neg()); // cpz12: as luvas saem do saldo
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_pay_sign_on_fee(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_SIGN_ON_FEE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_SIGN_ON_FEE);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_sign_on_fee(this, valor));
     PLACAR.registrar(igual, || format!("pay_sign_on_fee(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
@@ -2187,8 +2245,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_sign_on_fee(this: usize, val
 // ---------- 262a leva: as receitas e a compensação: o prêmio em dinheiro, os direitos de TV e o salário pago (finance.cpp) ----------
 
 
-/// Soma `v` (estendido com sinal: o cdq/adc da original) ao saldo, i64 em +0.
-pub(crate) unsafe fn cpz13_somar_saldo(fin: usize, v: i64) {
+/// Adds v to the i64 balance at +0 of a finance record.
+///
+/// [pt] Soma `v` (estendido com sinal: o cdq/adc da original) ao saldo, i64 em +0.
+pub(crate) unsafe fn add_to_balance(fin: usize, v: i64) {
     core::ptr::write_unaligned(fin as *mut i64, core::ptr::read_unaligned(fin as *const i64).wrapping_add(v));
 }
 
@@ -2199,17 +2259,17 @@ pub(crate) unsafe fn cpz13_somar_saldo(fin: usize, v: i64) {
 /// 0x51a150, EuropeanCup::process_fixture 0x583b10, os sorteios das fases), pelo fim das ligas (League::pay_prize_money
 /// 0x682e10) e pelas honras da temporada: soma o valor aos prêmios do ano (+0x148) e do mês (+0xa8) e ao saldo.
 pub(crate) unsafe extern "thiscall" fn add_prize_money(this: usize, valor: i32) {
-    cpz12_somar32(this + 0x148, valor);
-    cpz12_somar32(this + 0xa8, valor);
+    fin_prm_add_i32(this + 0x148, valor);
+    fin_prm_add_i32(this + 0xa8, valor);
     if valor != 0 {
         crate::comparacao::ramo("cpz_13 premio recebido"); // só valor diferente de zero muda o saldo
     }
-    cpz13_somar_saldo(this, valor as i64); // cpz13: o prêmio entra no saldo
+    add_to_balance(this, valor as i64); // cpz13: o prêmio entra no saldo
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_add_prize_money(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_ADD_PRIZE_MONEY);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_ADD_PRIZE_MONEY);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || add_prize_money(this, valor));
     PLACAR.registrar(igual, || format!("add_prize_money(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
@@ -2221,17 +2281,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_prize_money(this: usize, val
 /// (League::pay_tv_rights 0x683010, pela montagem da tabela de cada liga na temporada nova): soma o valor à TV do ano
 /// (+0x158) e do mês (+0xb8) e ao saldo.
 pub(crate) unsafe extern "thiscall" fn add_tv_revenue(this: usize, valor: i32) {
-    cpz12_somar32(this + 0x158, valor);
-    cpz12_somar32(this + 0xb8, valor);
+    fin_prm_add_i32(this + 0x158, valor);
+    fin_prm_add_i32(this + 0xb8, valor);
     if valor != 0 {
         crate::comparacao::ramo("cpz_13 tv recebida"); // só valor diferente de zero muda o saldo
     }
-    cpz13_somar_saldo(this, valor as i64); // cpz13: a TV entra no saldo
+    add_to_balance(this, valor as i64); // cpz13: a TV entra no saldo
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_add_tv_revenue(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_ADD_TV_REVENUE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_ADD_TV_REVENUE);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || add_tv_revenue(this, valor));
     PLACAR.registrar(igual, || format!("add_tv_revenue(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
@@ -2244,17 +2304,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_tv_revenue(this: usize, valo
 /// (TRANSFER_MANAGER::free_transfer_staff 0x8c1af0: a compensação do contrato ao clube): soma o valor aos salários do ano
 /// (+0x130) e do mês (+0x90) e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_wages(this: usize, valor: i32) {
-    cpz12_somar32(this + 0x130, valor);
-    cpz12_somar32(this + 0x90, valor);
+    fin_prm_add_i32(this + 0x130, valor);
+    fin_prm_add_i32(this + 0x90, valor);
     if valor != 0 {
         crate::comparacao::ramo("cpz_13 salario pago"); // só valor diferente de zero muda o saldo
     }
-    cpz13_somar_saldo(this, (valor as i64).wrapping_neg()); // cpz13: o salário sai do saldo
+    add_to_balance(this, (valor as i64).wrapping_neg()); // cpz13: o salário sai do saldo
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_pay_wages(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_WAGES);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_WAGES);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_wages(this, valor));
     PLACAR.registrar(igual, || format!("pay_wages(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
@@ -2265,19 +2325,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_wages(this: usize, valor: i3
 
 
 
-pub(crate) unsafe fn cpv5_somar(a: usize, v: i32) {
+/// Adds v to the i32 at address a (duplicate of fin_prm_add_i32).
+pub(crate) unsafe fn add_to_i32(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, read_i32(a).wrapping_add(v));
 }
 
-/// O saldo (i64 em +0 do registro de finanças) mais `v` (estendido com sinal, como o cdq/adc da original).
-pub(crate) unsafe fn cpv5_somar_saldo(fin: usize, v: i32) {
+/// Adds sign-extended v to the i64 balance at +0 of a finance record (i32 amount).
+///
+/// [pt] O saldo (i64 em +0 do registro de finanças) mais `v` (estendido com sinal, como o cdq/adc da original).
+pub(crate) unsafe fn add_i32_to_balance(fin: usize, v: i32) {
     let s = core::ptr::read_unaligned(fin as *const i64);
     core::ptr::write_unaligned(fin as *mut i64, s.wrapping_add(v as i64));
 }
 
 
-/// O registro de finanças (0x167 bytes) do clube na tabela `this` (FinanceTable), pelo id (+0) do clube.
-pub(crate) unsafe fn cpv5_financas(this: usize, clube: usize) -> usize {
+/// Returns the club's finance record (0x167 bytes) in FinanceTable this: [this] + club id × 0x167.
+///
+/// [pt] O registro de finanças (0x167 bytes) do clube na tabela `this` (FinanceTable), pelo id (+0) do clube.
+pub(crate) unsafe fn fin_prm_club_finance(this: usize, clube: usize) -> usize {
     read_usize(this).wrapping_add((read_usize(clube) as u32).wrapping_mul(0x167) as usize)
 }
 
@@ -2298,7 +2363,7 @@ pub(crate) unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usi
         let s = (read_u8(est + 0xf) as i8 as i32).wrapping_mul(25);
         let mut v = rep.wrapping_add(s);
         if read_u8(clube + club::OWN_STADIUM) == 0 {
-            v = ftol(v as f64 * f64_em(0x96a5d0));
+            v = match_pl_ftol(v as f64 * read_f64_at(0x96a5d0));
         }
         if v > 0x157c {
             0x96a6d0
@@ -2320,20 +2385,20 @@ pub(crate) unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usi
             0x96a6b8
         }
     };
-    let base = ftol(read_i32(clube + club::ATTENDANCE) as f64 * rep as f64 * f64_em(fator));
+    let base = match_pl_ftol(read_i32(clube + club::ATTENDANCE) as f64 * rep as f64 * read_f64_at(fator));
     crate::comparacao::ramo("cpv_5 merchandising");
-    let r = cpe1_sorteio(0xb); // cpv5: o sorteio do merchandising
-    let v = ftol((r + 0x5f).wrapping_mul(base) as f64 * f64_em(0x967898));
-    let fin = cpv5_financas(this, clube);
-    cpv5_somar(fin + 0x15c, v);
-    cpv5_somar(fin + 0xbc, v);
-    cpv5_somar_saldo(fin, v);
+    let r = friendly_random(0xb); // cpv5: o sorteio do merchandising
+    let v = match_pl_ftol((r + 0x5f).wrapping_mul(base) as f64 * read_f64_at(0x967898));
+    let fin = fin_prm_club_finance(this, clube);
+    add_to_i32(fin + 0x15c, v);
+    add_to_i32(fin + 0xbc, v);
+    add_i32_to_balance(fin, v);
 }
 
 /// Comparador: lado a lado no registro de finanças do clube e no estado do sorteio.
 pub(crate) unsafe extern "thiscall" fn comparar_add_weekly_merchandising_income(this: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_WEEKLY_MERCHANDISING_INCOME);
-    let mut regioes = vec![(cpv5_financas(this, clube), 0x167)];
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_WEEKLY_MERCHANDISING_INCOME);
+    let mut regioes = vec![(fin_prm_club_finance(this, clube), 0x167)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube), || crate::aleatorio::sem_contar(|| add_weekly_merchandising_income(this, clube)));
     PLACAR.registrar(igual, || format!("add_weekly_merchandising_income(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
@@ -2357,12 +2422,12 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar:
     let id = read_usize(this + 8);
     let clube = read_usize(G_CLUB_TABLE).wrapping_add(id.wrapping_mul(0x245));
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_SELL_SEASON_TICKETS)(this, aplicar);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_SELL_SEASON_TICKETS)(this, aplicar);
     }
     let rep = read_i16(clube + club::REPUTATION) as i32;
     let est = read_usize(clube + club::STADIUM);
     if est != 0 && read_i32(est + 0x3c) < 0x5dc {
-        core::ptr::write_unaligned((est + 0x3c) as *mut i32, ftol(rep as f64 * f64_em(0x968e18)));
+        core::ptr::write_unaligned((est + 0x3c) as *mut i32, match_pl_ftol(rep as f64 * read_f64_at(0x968e18)));
         let est = read_usize(clube + club::STADIUM);
         if read_i32(est + 0x3c) < 0x5dc {
             core::ptr::write_unaligned((est + 0x3c) as *mut i32, 0x5dc);
@@ -2370,19 +2435,19 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar:
     }
     let gerente = read_usize(read_usize(G_MANAGER_MANAGER));
     let valor = read_i16(gerente.wrapping_add((read_usize(clube) as u32).wrapping_mul(73) as usize) + 8);
-    let mut f = valor as f64 * f64_em(0x96a5c0);
-    if !(f > f64_em(0x968f20)) {
-        f = f64_em(0x968f20);
+    let mut f = valor as f64 * read_f64_at(0x96a5c0);
+    if !(f > read_f64_at(0x968f20)) {
+        f = read_f64_at(0x968f20);
     }
-    let t = ftol(read_i32(clube + club::ATTENDANCE) as f64 * f);
-    let mut g = rep as f64 * f64_em(0x96a680);
-    if !(g > f64_em(0x968968)) {
-        g = f64_em(0x968968);
+    let t = match_pl_ftol(read_i32(clube + club::ATTENDANCE) as f64 * f);
+    let mut g = rep as f64 * read_f64_at(0x96a680);
+    if !(g > read_f64_at(0x968968)) {
+        g = read_f64_at(0x968968);
     }
-    let u = ftol(t as f64 * g);
+    let u = match_pl_ftol(t as f64 * g);
     let est = read_usize(clube + club::STADIUM);
-    let teto = |e: usize| if e != 0 { read_i32(e + 0x3c) as f64 * f64_em(0x96a678) } else { f64_em(0x96a5e8) };
-    let n = ftol(if (u as f64) < teto(est) { u as f64 } else { teto(est) });
+    let teto = |e: usize| if e != 0 { read_i32(e + 0x3c) as f64 * read_f64_at(0x96a678) } else { read_f64_at(0x96a5e8) };
+    let n = match_pl_ftol(if (u as f64) < teto(est) { u as f64 } else { teto(est) });
     if n == 0 {
         return;
     }
@@ -2390,25 +2455,25 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar:
     if ja >= n {
         return;
     }
-    let mut passo = (read_u8(this + 0x164) as i8).wrapping_add(1);
-    if passo < 0 || passo > 8 {
-        passo = 8;
+    let mut step_towards = (read_u8(this + 0x164) as i8).wrapping_add(1);
+    if step_towards < 0 || step_towards > 8 {
+        step_towards = 8;
     }
-    *((this + 0x164) as *mut i8) = passo;
-    let b = ftol(n.wrapping_sub(ja) as f64 * f32_em(0x9c8758 + passo as usize * 4) as f64);
+    *((this + 0x164) as *mut i8) = step_towards;
+    let b = match_pl_ftol(n.wrapping_sub(ja) as f64 * read_f32_at(0x9c8758 + step_towards as usize * 4) as f64);
     crate::comparacao::ramo("cpv_5 ingressos vendidos");
-    let r = cpe1_sorteio(0xb);
+    let r = friendly_random(0xb);
     let novos = (r + 0x5f).wrapping_mul(b) / 100;
     let total = ja.wrapping_add(novos);
     core::ptr::write_unaligned((this + 0x18) as *mut i32, total); // cpv5: os ingressos vendidos
-    let preco = ftol((rep as f64 * f64_em(0x969048) + f64_em(0x968938)) * f64_em(0x968ea8));
+    let preco = match_pl_ftol((rep as f64 * read_f64_at(0x969048) + read_f64_at(0x968938)) * read_f64_at(0x968ea8));
     let mut receita = preco.wrapping_mul(novos);
     let est = read_usize(clube + club::STADIUM);
     let lugares = if est != 0 { read_i32(est + 0x3c) } else { 0 };
-    let den = if lugares != 0 { lugares as f64 * f64_em(0x96a678) } else { f64_em(0x96a5e8) };
+    let den = if lugares != 0 { lugares as f64 * read_f64_at(0x96a678) } else { read_f64_at(0x96a5e8) };
     let razao = total as f64 / den;
     core::ptr::write_unaligned((this + 0x160) as *mut f32, razao as f32);
-    if razao > f64_em(0x96a678) {
+    if razao > read_f64_at(0x96a678) {
         core::ptr::write_unaligned((this + 0x160) as *mut u32, 0x3f600000);
     }
     let nac = read_usize(clube + club::NATION);
@@ -2438,26 +2503,26 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar:
         0
     };
     if fator != 0 {
-        receita = ftol(receita as f64 * f64_em(fator));
+        receita = match_pl_ftol(receita as f64 * read_f64_at(fator));
     }
     if aplicar != 0 { // cpv5: a receita dos ingressos
-        cpv5_somar(this + 0xac, receita);
-        cpv5_somar(this + 0x14c, receita);
-        cpv5_somar_saldo(this, receita);
+        add_to_i32(this + 0xac, receita);
+        add_to_i32(this + 0x14c, receita);
+        add_i32_to_balance(this, receita);
     }
-    let r1 = cpe1_sorteio(rep);
-    let r2 = cpe1_sorteio(rep); // cpv5: o segundo sorteio da loja
+    let r1 = friendly_random(rep);
+    let r2 = friendly_random(rep); // cpv5: o segundo sorteio da loja
     let k = r1.wrapping_add(r2).wrapping_add(1);
-    let v = ftol((k as f64 * f64_em(0x96a350) + f64_em(0x967890)) * novos as f64);
-    cpv5_somar(this + 0x15c, v);
-    cpv5_somar(this + 0xbc, v);
-    cpv5_somar_saldo(this, v);
+    let v = match_pl_ftol((k as f64 * read_f64_at(0x96a350) + read_f64_at(0x967890)) * novos as f64);
+    add_to_i32(this + 0x15c, v);
+    add_to_i32(this + 0xbc, v);
+    add_i32_to_balance(this, v);
 }
 
 /// Comparador: lado a lado no registro de finanças (this), nos lugares do estádio (+0x3c) e no estado do sorteio
 /// (clube nulo: só a original).
 pub(crate) unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize, aplicar: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_SELL_SEASON_TICKETS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_SELL_SEASON_TICKETS);
     let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(this + 8).wrapping_mul(0x245));
     if clube == 0 {
         return o(this, aplicar);
@@ -2472,12 +2537,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize,
     PLACAR.registrar(igual, || format!("sell_season_tickets(fin {:#x}, {}) original={:x?} rust={:x?}", this, aplicar, mo, mr));
 }
 
-/// O custo da obra (+0x8c e +0x12c, menos no saldo) no registro de finanças do clube.
-pub(crate) unsafe fn cpv5_cobrar_obra(this: usize, clube: usize, custo: i32) {
-    let fin = cpv5_financas(this, clube);
-    cpv5_somar(fin + 0x12c, custo);
-    cpv5_somar(fin + 0x8c, custo);
-    cpv5_somar_saldo(fin, custo.wrapping_neg());
+/// Charges a works cost to the club's finance record (+0x8c, +0x12c and minus the balance).
+///
+/// [pt] O custo da obra (+0x8c e +0x12c, menos no saldo) no registro de finanças do clube.
+pub(crate) unsafe fn charge_works_cost(this: usize, clube: usize, custo: i32) {
+    let fin = fin_prm_club_finance(this, clube);
+    add_to_i32(fin + 0x12c, custo);
+    add_to_i32(fin + 0x8c, custo);
+    add_i32_to_balance(fin, custo.wrapping_neg());
 }
 
 /// the training facilities level (+0x7f) rises by reputation (up to 20) and each step charges the works to +0x8c,
@@ -2494,7 +2561,7 @@ pub(crate) unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, 
     let nivel = (clube + club::TRAINING) as *mut i8;
     let custo = (*nivel as i32).wrapping_mul(50000).wrapping_add(75000);
     *nivel = if *nivel < 0x13 { (*nivel).wrapping_add(2) } else { (*nivel).wrapping_add(1) };
-    cpv5_cobrar_obra(this, clube, custo);
+    charge_works_cost(this, clube, custo);
     let n = *nivel;
     let rep = read_i16(clube + club::REPUTATION);
     let segundo = if n < 0x14 && rep > 0x203a {
@@ -2521,7 +2588,7 @@ pub(crate) unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, 
         None
     };
     if let Some(c) = segundo {
-        cpv5_cobrar_obra(this, clube, c);
+        charge_works_cost(this, clube, c);
     }
     if *nivel > 0x14 {
         *nivel = 0x14;
@@ -2530,8 +2597,8 @@ pub(crate) unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, 
 
 /// Comparador: lado a lado no nível do centro de treino (+0x7f) e no registro de finanças do clube.
 pub(crate) unsafe extern "thiscall" fn comparar_upgrade_training_facilities(this: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPGRADE_TRAINING_FACILITIES);
-    let regioes = [(clube + club::TRAINING, 1), (cpv5_financas(this, clube), 0x167)];
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPGRADE_TRAINING_FACILITIES);
+    let regioes = [(clube + club::TRAINING, 1), (fin_prm_club_finance(this, clube), 0x167)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube), || upgrade_training_facilities(this, clube));
     PLACAR.registrar(igual, || format!("upgrade_training_facilities(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
 }
@@ -2543,23 +2610,29 @@ pub(crate) unsafe extern "thiscall" fn comparar_upgrade_training_facilities(this
 
 
 
-pub(crate) unsafe fn cpv6_saldo(fin: usize) -> i64 {
+/// Returns the i64 balance at +0 of a finance record.
+pub(crate) unsafe fn balance(fin: usize) -> i64 {
     core::ptr::read_unaligned(fin as *const i64)
 }
 
-/// O saldo (i64 em +0) mais `v` estendido com sinal (o cdq/adc da original).
-pub(crate) unsafe fn cpv6_somar_saldo(fin: usize, v: i32) {
-    core::ptr::write_unaligned(fin as *mut i64, cpv6_saldo(fin).wrapping_add(v as i64));
+/// Adds sign-extended v to the i64 balance at +0 of a finance record (duplicate of add_i32_to_balance).
+///
+/// [pt] O saldo (i64 em +0) mais `v` estendido com sinal (o cdq/adc da original).
+pub(crate) unsafe fn credit_balance(fin: usize, v: i32) {
+    core::ptr::write_unaligned(fin as *mut i64, balance(fin).wrapping_add(v as i64));
 }
 
 
-pub(crate) unsafe fn cpv6_faixa(fin: usize) -> i8 {
+/// Returns the finance record's wealth band (FN_FINANCE_GET_WEALTH_BAND), signed.
+pub(crate) unsafe fn wealth_band(fin: usize) -> i8 {
     let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
     f(fin) as i8
 }
 
-/// Um evento da semana (0x59e050, 0x59dd40, 0x59e5a0, 0x59e940): thiscall(tabela, clube, finanças), 1 se aconteceu.
-pub(crate) unsafe fn cpv6_evento(rotina: usize, this: usize, clube: usize, fin: usize) -> u32 {
+/// Calls a weekly finance event routine (thiscall(table, club, finance)); returns 1 if it happened.
+///
+/// [pt] Um evento da semana (0x59e050, 0x59dd40, 0x59e5a0, 0x59e940): thiscall(tabela, clube, finanças), 1 se aconteceu.
+pub(crate) unsafe fn run_weekly_event(rotina: usize, this: usize, clube: usize, fin: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(rotina);
     f(this, clube, fin)
 }
@@ -2568,8 +2641,10 @@ pub(crate) unsafe fn cpv6_evento(rotina: usize, this: usize, clube: usize, fin: 
 /// rodar duas vezes.
 pub(crate) static mut CPV6_ENSAIO: bool = false;
 
-/// A notícia do evento (0x59f300: thiscall(tabela, clube, valor, verba, tipo), ret 0x10); no ensaio, nada.
-pub(crate) unsafe fn cpv6_noticia(this: usize, clube: usize, valor: i32, verba: u32, tipo: u32) {
+/// Posts the finance event news (FN_FINANCE_POST_FINANCE_BOOST_NEWS); nothing in rehearsal.
+///
+/// [pt] A notícia do evento (0x59f300: thiscall(tabela, clube, valor, verba, tipo), ret 0x10); no ensaio, nada.
+pub(crate) unsafe fn post_finance_boost_news(this: usize, clube: usize, valor: i32, verba: u32, tipo: u32) {
     if CPV6_ENSAIO {
         return;
     }
@@ -2577,9 +2652,11 @@ pub(crate) unsafe fn cpv6_noticia(this: usize, clube: usize, valor: i32, verba: 
     f(this, clube, valor, verba, tipo);
 }
 
-/// A verba de transferências (Finance::get_transfer_budget 0x598800 com 0, 0, 0, 1, 0) que vai na notícia; no
+/// Transfer budget for the news (Finance::get_transfer_budget 0x598800 with 0, 0, 0, 1, 0); 0 in rehearsal.
+///
+/// [pt] A verba de transferências (Finance::get_transfer_budget 0x598800 com 0, 0, 0, 1, 0) que vai na notícia; no
 /// ensaio, 0 (a notícia não sai).
-pub(crate) unsafe fn cpv6_verba(fin: usize) -> u32 {
+pub(crate) unsafe fn transfer_budget(fin: usize) -> u32 {
     if CPV6_ENSAIO {
         return 0;
     }
@@ -2587,27 +2664,33 @@ pub(crate) unsafe fn cpv6_verba(fin: usize) -> u32 {
     f(fin, 0, 0, 0, 1, 0)
 }
 
-/// O fim da semana do clube no estado de crise (0x5a02f0: thiscall(tabela, id)).
-pub(crate) unsafe fn cpv6_fim_da_crise(this: usize, clube: usize) {
+/// Posts the end-of-crisis news (0x5a02f0, receivers appeased) for the club id.
+///
+/// [pt] O fim da semana do clube no estado de crise (0x5a02f0: thiscall(tabela, id)).
+pub(crate) unsafe fn post_receivers_appeased(this: usize, clube: usize) {
     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_FINANCE_POST_RECEIVERS_APPEASED_NEWS);
     f(this, read_usize(clube) as u32);
 }
 
-/// O estado (+0x165) volta a 0; se era 1 (crise), a notícia do fim da crise (0x5a02f0) antes.
-pub(crate) unsafe fn cpv6_sair_da_crise(this: usize, clube: usize, fin: usize) {
+/// Resets the finance state (+0x165) to 0 from 1 or 2; from 1 (crisis) posts the end-of-crisis news first.
+///
+/// [pt] O estado (+0x165) volta a 0; se era 1 (crise), a notícia do fim da crise (0x5a02f0) antes.
+pub(crate) unsafe fn leave_crisis(this: usize, clube: usize, fin: usize) {
     let s = read_u8(fin + 0x165);
     if s == 1 {
-        cpv6_fim_da_crise(this, clube);
+        post_receivers_appeased(this, clube);
     }
     if s == 1 || s == 2 {
         *((fin + 0x165) as *mut u8) = 0;
     }
 }
 
-/// O centro de treino no máximo (20) cai um nível com sorteio(10) zero, se a reputação for menor que 7250.
-pub(crate) unsafe fn cpv6_desgaste_do_centro(clube: usize) {
+/// A maxed training ground (club::TRAINING = 20) drops one level on random(10) = 0 if reputation is below 7250.
+///
+/// [pt] O centro de treino no máximo (20) cai um nível com sorteio(10) zero, se a reputação for menor que 7250.
+pub(crate) unsafe fn decay_training_ground(clube: usize) {
     let nivel = (clube + club::TRAINING) as *mut i8;
-    if *nivel == 0x14 && read_i16(clube + club::REPUTATION) < 0x1c52 && cpe1_sorteio(10) == 0 {
+    if *nivel == 0x14 && read_i16(clube + club::REPUTATION) < 0x1c52 && friendly_random(10) == 0 {
         *nivel = (*nivel).wrapping_sub(1);
     }
 }
@@ -2630,7 +2713,7 @@ pub(crate) unsafe fn cpv6_desgaste_do_centro(clube: usize) {
 /// treino cai pelo sorteio.
 pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usize, semana: u32) {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_CLUB_FINANCE_EVENTS)(this, clube, semana);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_CLUB_FINANCE_EVENTS)(this, clube, semana);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut eh_a: u32 = 0;
@@ -2638,12 +2721,12 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
     let c = if p != 0 && eh_a == 0 { p } else { clube };
     let fin = read_usize(this).wrapping_add((read_usize(c) as u32).wrapping_mul(0x167) as usize);
     let aperto = (fin + 0x166) as *mut i8;
-    match cpv6_faixa(fin) {
+    match wealth_band(fin) {
         -1 => {
             let s = read_u8(fin + 0x165);
             if s != 2 {
                 if s == 1 {
-                    cpv6_fim_da_crise(this, clube);
+                    post_receivers_appeased(this, clube);
                 }
                 *((fin + 0x165) as *mut u8) = 2;
             }
@@ -2653,9 +2736,9 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
             if read_u8(clube + club::OWN_STADIUM) != 0 {
                 *aperto = (*aperto).wrapping_add(1);
             }
-            cpv6_desgaste_do_centro(clube);
-            if cpv6_evento(0x59dd40, this, clube, fin) == 0 && cpv6_evento(0x59e5a0, this, clube, fin) == 0 {
-                cpv6_evento(0x59e940, this, clube, fin);
+            decay_training_ground(clube);
+            if run_weekly_event(0x59dd40, this, clube, fin) == 0 && run_weekly_event(0x59e5a0, this, clube, fin) == 0 {
+                run_weekly_event(0x59e940, this, clube, fin);
             }
         }
         -2 => {
@@ -2698,28 +2781,28 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
             if semana == 0 {
                 return;
             }
-            if cpv6_evento(0x59e940, this, clube, fin) == 0 && cpv6_evento(0x59e5a0, this, clube, fin) == 0 {
-                cpv6_evento(0x59e050, this, clube, fin);
+            if run_weekly_event(0x59e940, this, clube, fin) == 0 && run_weekly_event(0x59e5a0, this, clube, fin) == 0 {
+                run_weekly_event(0x59e050, this, clube, fin);
             }
-            cpv6_desgaste_do_centro(clube);
+            decay_training_ground(clube);
             if read_u8(clube + club::OWN_STADIUM) != 0 {
                 *aperto = (*aperto).wrapping_add(3);
             }
         }
         1 => {
-            cpv6_sair_da_crise(this, clube, fin);
+            leave_crisis(this, clube, fin);
             if semana == 0 {
                 return;
             }
             if *aperto > 0 {
                 *aperto -= 1;
             }
-            if cpv6_evento(0x59e050, this, clube, fin) == 0 && cpv6_evento(0x59dd40, this, clube, fin) == 0 {
-                cpv6_evento(0x59e5a0, this, clube, fin);
+            if run_weekly_event(0x59e050, this, clube, fin) == 0 && run_weekly_event(0x59dd40, this, clube, fin) == 0 {
+                run_weekly_event(0x59e5a0, this, clube, fin);
             }
         }
         2 => {
-            cpv6_sair_da_crise(this, clube, fin);
+            leave_crisis(this, clube, fin);
             if semana == 0 {
                 return;
             }
@@ -2728,7 +2811,7 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
             }
         }
         _ => {
-            cpv6_sair_da_crise(this, clube, fin);
+            leave_crisis(this, clube, fin);
             if semana == 0 {
                 return;
             }
@@ -2736,9 +2819,9 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
                 *aperto -= 1;
             }
             crate::comparacao::ramo("cpv_6 impulso na faixa 0");
-            let ok = cpv6_evento(0x59e050, this, clube, fin) != 0; // cpv6: o impulso na faixa 0
-            if !ok && cpv6_evento(0x59dd40, this, clube, fin) == 0 {
-                cpv6_evento(0x59e5a0, this, clube, fin);
+            let ok = run_weekly_event(0x59e050, this, clube, fin) != 0; // cpv6: o impulso na faixa 0
+            if !ok && run_weekly_event(0x59dd40, this, clube, fin) == 0 {
+                run_weekly_event(0x59e5a0, this, clube, fin);
             }
         }
     }
@@ -2758,21 +2841,21 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
         *((read_usize(clube + club::STADIUM) + 0x4d) as *mut u8) = 0;
         let n = *nivel;
         if n == 0x14 {
-            let r = cpe1_sorteio(4) as u8;
+            let r = friendly_random(4) as u8;
             *nivel = (*nivel).wrapping_add(0xffu8.wrapping_sub(r) as i8);
             return;
         }
-        if n <= 1 || cpe1_sorteio(n as i32) == 0 {
+        if n <= 1 || friendly_random(n as i32) == 0 {
             return;
         }
         *nivel = (*nivel).wrapping_sub(1);
         return;
     }
     let lugares = read_i32(est + 0x3c);
-    if lugares <= 0xabe || cpe1_sorteio(read_i16(clube + club::REPUTATION) as i32) >= lugares {
+    if lugares <= 0xabe || friendly_random(read_i16(clube + club::REPUTATION) as i32) >= lugares {
         return;
     }
-    let t = ftol(lugares as f64 * f64_em(0x967880)) as i16 as i32;
+    let t = match_pl_ftol(lugares as f64 * read_f64_at(0x967880)) as i16 as i32;
     let dez = (t / 10).wrapping_mul(10);
     let fechar = dez as i16 as i32;
     let resto = read_i32(est + 0x40);
@@ -2785,17 +2868,17 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
     let fechados: unsafe extern "thiscall" fn(usize, usize, i32, u32) = core::mem::transmute(FN_FINANCE_POST_STAND_CLOSED_NEWS);
     fechados(this, clube, dez, tirou);
     let est = read_usize(clube + club::STADIUM);
-    cpv5_somar(est + 0x3c, fechar.wrapping_neg());
+    add_to_i32(est + 0x3c, fechar.wrapping_neg());
     let est = read_usize(clube + club::STADIUM);
-    cpv5_somar(est + 0x44, fechar);
+    add_to_i32(est + 0x44, fechar);
     *aperto = 0x14;
     let n = *nivel;
     if n > 0xf {
-        let r = cpe1_sorteio(5) as u8;
+        let r = friendly_random(5) as u8;
         *nivel = (*nivel).wrapping_add(0xffu8.wrapping_sub(r) as i8);
         return;
     }
-    if n <= 7 && (n <= 1 || cpe1_sorteio(n as i32) == 0) {
+    if n <= 7 && (n <= 1 || friendly_random(n as i32) == 0) {
         return;
     }
     *nivel = (*nivel).wrapping_sub(1);
@@ -2803,7 +2886,7 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
 
 // ponytail: chama originais que sorteiam, alocam notícias e mexem nos contratos: só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_process_club_finance_events(this: usize, clube: usize, semana: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_CLUB_FINANCE_EVENTS)(this, clube, semana)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_CLUB_FINANCE_EVENTS)(this, clube, semana)
 }
 
 /// poor club (band −2/−1, or 0 with a low balance): three random draws; the board pays 450, 300 or 150 × reputation and
@@ -2818,7 +2901,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_club_finance_events(this
 /// saldo; a notícia (0x59f300, tipo 4); devolve 1.
 pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fin: usize) -> u32 {
     let rep = read_i16(clube + club::REPUTATION) as i32;
-    let div = match cpv6_faixa(fin) {
+    let div = match wealth_band(fin) {
         -2 => 2.0f64,
         -1 => {
             if rep >= 0xdac {
@@ -2828,7 +2911,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube
             }
         }
         0 => {
-            if rep > 0xdac || cpv6_saldo(fin) >= rep.wrapping_mul(25) as i64 {
+            if rep > 0xdac || balance(fin) >= rep.wrapping_mul(25) as i64 {
                 return 0;
             }
             0.4
@@ -2836,30 +2919,30 @@ pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube
         _ => return 0,
     };
     crate::comparacao::ramo("cpv_6 sorteio da divida");
-    let r = cpe1_sorteio(7000); // cpv6: o sorteio da dívida
+    let r = friendly_random(7000); // cpv6: o sorteio da dívida
     if rep >= r.wrapping_add(0xdac) {
         return 0;
     }
-    let n = ftol(f64_em(0x969000) / div);
+    let n = match_pl_ftol(read_f64_at(0x969000) / div);
     let outro = read_usize(clube + club::CHAIRMAN);
     if outro != 0 && read_usize(outro + 0x69) != 0 {
-        if cpe1_sorteio(n) != 0 {
+        if friendly_random(n) != 0 {
             return 0;
         }
         let est = read_usize(read_usize(clube + club::CHAIRMAN) + 0x69);
-        if cpe1_sorteio(read_u8(est + 0x20) as i8 as i32) == 0 {
+        if friendly_random(read_u8(est + 0x20) as i8 as i32) == 0 {
             return 0;
         }
     } else {
-        if cpe1_sorteio(n) != 0 {
+        if friendly_random(n) != 0 {
             return 0;
         }
-        if cpe1_sorteio(10) == 0 {
+        if friendly_random(10) == 0 {
             return 0;
         }
     }
     let rep = read_i16(clube + club::REPUTATION) as i32;
-    let saldo = cpv6_saldo(fin);
+    let saldo = balance(fin);
     let valor = if rep < 0x4e2 && saldo < rep.wrapping_mul(-450) as i64 {
         rep.wrapping_mul(450)
     } else if saldo >= rep.wrapping_mul(-300) as i64 {
@@ -2867,17 +2950,20 @@ pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube
     } else {
         rep.wrapping_mul(300)
     };
-    cpv5_somar(fin + 0x154, valor);
-    cpv5_somar(fin + 0xb4, valor);
-    cpv6_somar_saldo(fin, valor);
-    cpv6_noticia(this, clube, valor, 0, 4);
+    add_to_i32(fin + 0x154, valor);
+    add_to_i32(fin + 0xb4, valor);
+    credit_balance(fin, valor);
+    post_finance_boost_news(this, clube, valor, 0, 4);
     1
 }
 
-/// O comparador dos eventos: a cópia em ensaio (sem notícia nem verba) e a original a partir do mesmo estado (registro de
+/// Rehearsal comparer for weekly finance events: copy without news/budget vs original from the same state, comparing
+/// return and balance, +0xb4, +0x154, +0x165.
+///
+/// [pt] O comparador dos eventos: a cópia em ensaio (sem notícia nem verba) e a original a partir do mesmo estado (registro de
 /// finanças e sorteio). Sem evento: tudo igual, inclusive o sorteio; com evento: a devolução e os campos que o evento
 /// grava (saldo, +0xb4, +0x154, +0x165), porque a notícia e a verba da original podem sortear e gravar.
-pub(crate) unsafe fn cpv6_comparar(nome: &str, fin: usize, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn compare_finance_event(nome: &str, fin: usize, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let mut regioes = vec![(fin, 0x167)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
@@ -2899,8 +2985,8 @@ pub(crate) unsafe fn cpv6_comparar(nome: &str, fin: usize, original: impl FnOnce
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_try_board_debt_payment(this: usize, clube: usize, fin: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_BOARD_DEBT_PAYMENT);
-    cpv6_comparar("try_board_debt_payment", fin, || o(this, clube, fin), || try_board_debt_payment(this, clube, fin))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_BOARD_DEBT_PAYMENT);
+    compare_finance_event("try_board_debt_payment", fin, || o(this, clube, fin), || try_board_debt_payment(this, clube, fin))
 }
 
 /// club of reputation 4750 outside Wales and the Irelands: draws by the band and the stadium of the +0xbf club; the
@@ -2931,27 +3017,27 @@ pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: us
         }
     }
     crate::comparacao::ramo("cpv_6 injecao avaliada");
-    let div = match cpv6_faixa(fin) {
-        -2 => f64_em(0x9689e0),
-        -1 => f64_em(0x967880),
-        _ => f64_em(0x96a350),
+    let div = match wealth_band(fin) {
+        -2 => read_f64_at(0x9689e0),
+        -1 => read_f64_at(0x967880),
+        _ => read_f64_at(0x96a350),
     };
     let rep = read_i16(clube + club::REPUTATION) as i32;
     let outro = read_usize(clube + club::CHAIRMAN);
     let mut valor;
     if outro != 0 && read_usize(outro + 0x69) != 0 && read_u8(clube + club::PLC) == 0 {
-        let r = cpe1_sorteio(ftol(f64_em(0x968dd8) / div));
+        let r = friendly_random(match_pl_ftol(read_f64_at(0x968dd8) / div));
         let est = read_usize(read_usize(clube + club::CHAIRMAN) + 0x69);
         if (read_u8(est + 0xf) as i8 as i32) <= r {
             return 0;
         }
         let e = read_u8(read_usize(read_usize(clube + club::CHAIRMAN) + 0x69) + 0x20) as i8 as i32;
-        if e <= cpe1_sorteio(5).wrapping_add(10) {
+        if e <= friendly_random(5).wrapping_add(10) {
             return 0;
         }
         valor = e.wrapping_mul(20).wrapping_add(0x96).wrapping_mul(rep).wrapping_add(0xb71b0);
     } else {
-        if cpe1_sorteio(ftol(f64_em(0x968938) / div)) != 0 {
+        if friendly_random(match_pl_ftol(read_f64_at(0x968938) / div)) != 0 {
             return 0;
         }
         if read_u8(clube + club::PLC) != 0 {
@@ -2959,9 +3045,9 @@ pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: us
         }
         valor = rep.wrapping_mul(5).wrapping_add(0x3a98).wrapping_mul(50);
     }
-    let saldo = cpv6_saldo(fin);
+    let saldo = balance(fin);
     if (valor.wrapping_mul(10) as i64) < saldo.wrapping_neg() {
-        valor = ftol(-(saldo as f64 * f64_em(0x967880)));
+        valor = match_pl_ftol(-(saldo as f64 * read_f64_at(0x967880)));
     }
     if read_i16(clube + club::REPUTATION) < 0x7d0 {
         let teto = rep.wrapping_mul(rep).wrapping_add(0x16e360);
@@ -2969,23 +3055,23 @@ pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: us
             valor = teto;
         }
     } else {
-        let maior = (valor as f64 > rep.wrapping_mul(rep) as f64 * f64_em(0x9689e0)) as i32;
+        let maior = (valor as f64 > rep.wrapping_mul(rep) as f64 * read_f64_at(0x9689e0)) as i32;
         if valor > 0x3d0900 + maior {
             valor = 0x3d0900 + maior;
         }
     }
-    cpv5_somar(fin + 0x154, valor);
-    cpv5_somar(fin + 0xb4, valor);
-    cpv6_somar_saldo(fin, valor);
-    let verba = cpv6_verba(fin);
-    cpv6_noticia(this, clube, valor, verba, 3);
+    add_to_i32(fin + 0x154, valor);
+    add_to_i32(fin + 0xb4, valor);
+    credit_balance(fin, valor);
+    let verba = transfer_budget(fin);
+    post_finance_boost_news(this, clube, valor, verba, 3);
     *((fin + 0x165) as *mut u8) = 0;
     1
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_try_cash_injection(this: usize, clube: usize, fin: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_CASH_INJECTION);
-    cpv6_comparar("try_cash_injection", fin, || o(this, clube, fin), || try_cash_injection(this, clube, fin))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_CASH_INJECTION);
+    compare_finance_event("try_cash_injection", fin, || o(this, clube, fin), || try_cash_injection(this, clube, fin))
 }
 
 // ---------- 258a leva: os salários do pessoal e os bônus: o teto salarial do pessoal, o pagamento dos bônus e o ajuste do teto salarial (finance.cpp) ----------
@@ -3029,23 +3115,23 @@ pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8
     let nac = read_usize(clube + club::NATION);
     let mut w;
     if nac == 0 {
-        w = ftol(padrao as f64 * f64_em(0x9689e0));
+        w = match_pl_ftol(padrao as f64 * read_f64_at(0x9689e0));
     } else {
         let tipo = (read_u8(nac + 0x7e) as i8).clamp(1, 3);
         let k = read_u8(nac + 0x85) as i8 as i32;
-        w = ftol(k as f64 / (tipo as i32 * 20) as f64 * padrao as f64);
+        w = match_pl_ftol(k as f64 / (tipo as i32 * 20) as f64 * padrao as f64);
         if tipo == 1 {
             let n = read_i32(nac);
             let e = |a: usize| n == read_i32(a);
             if e(KEY_NATION_ENGLAND) || e(KEY_NATION_ITALY) || e(KEY_NATION_SPAIN) {
                 if read_i16(clube + club::REPUTATION) > 0x1c52 {
                     crate::comparacao::ramo("cpv_7 clube grande");
-                    w = ftol(w as f64 * f64_em(0x9689b8)); // cpv7: o clube grande da Inglaterra, Itália e Espanha
+                    w = match_pl_ftol(w as f64 * read_f64_at(0x9689b8)); // cpv7: o clube grande da Inglaterra, Itália e Espanha
                 }
             } else if e(KEY_NATION_JAPAN) {
             } else if e(KEY_NATION_UNITED_STATES) {
                 if w > 0x6d6 {
-                    w = ftol(w.wrapping_sub(0x6d6) as f64 * f64_em(0x969040) + f64_em(0x96a5f8));
+                    w = match_pl_ftol(w.wrapping_sub(0x6d6) as f64 * read_f64_at(0x969040) + read_f64_at(0x96a5f8));
                 }
             } else {
                 let (base, limiar, soma) = if e(KEY_NATION_GERMANY) || e(KEY_NATION_FRANCE) || e(KEY_NATION_SCOTLAND) || e(KEY_NATION_HOLLAND) {
@@ -3055,29 +3141,29 @@ pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8
                 } else {
                     (0x968e80, 0x2ee, 0x96a5f0)
                 };
-                let mut f = f64_em(base);
+                let mut f = read_f64_at(base);
                 if r50 > k.wrapping_mul(10) {
                     let d = if k >= 1 { k } else { 1 };
-                    f = r50 as f64 / d as f64 * f64_em(0x967880) * f64_em(base);
+                    f = r50 as f64 / d as f64 * read_f64_at(0x967880) * read_f64_at(base);
                 }
                 if w > limiar {
-                    if f > f64_em(0x967890) {
-                        f = f64_em(0x967890);
+                    if f > read_f64_at(0x967890) {
+                        f = read_f64_at(0x967890);
                     }
-                    w = ftol(w.wrapping_sub(limiar) as f64 * f + f64_em(soma));
+                    w = match_pl_ftol(w.wrapping_sub(limiar) as f64 * f + read_f64_at(soma));
                 }
             }
         }
         let liga = read_usize(clube + club::DIVISION);
         if liga != 0 {
             crate::comparacao::ramo("cpv_7 peso da liga");
-            w = ftol(read_i16(liga + 0x69) as f64 * w as f64 * f64_em(0x968918)); // cpv7: o peso da liga
+            w = match_pl_ftol(read_i16(liga + 0x69) as f64 * w as f64 * read_f64_at(0x968918)); // cpv7: o peso da liga
         }
     }
     match faixa(this) as i8 {
-        -2 => w = ftol(w as f64 * f64_em(0x969040)),
-        -1 => w = ftol(w as f64 * f64_em(0x9689d0)),
-        1 => w = ftol(w as f64 * f64_em(0x968940)),
+        -2 => w = match_pl_ftol(w as f64 * read_f64_at(0x969040)),
+        -1 => w = match_pl_ftol(w as f64 * read_f64_at(0x9689d0)),
+        1 => w = match_pl_ftol(w as f64 * read_f64_at(0x968940)),
         2 => w = w.wrapping_add(w),
         _ => {}
     }
@@ -3104,7 +3190,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8
 
 /// Comparador: pelo valor.
 pub(crate) unsafe extern "thiscall" fn comparar_get_max_staff_wage(this: usize, cargo: i8) -> i32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> i32>(IDX_GET_MAX_STAFF_WAGE)(this, cargo);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> i32>(IDX_GET_MAX_STAFF_WAGE)(this, cargo);
     let n = get_max_staff_wage(this, cargo);
     PLACAR.registrar(r == n, || format!("get_max_staff_wage(fin {:#x}, cargo {}) original={} rust={}", this, cargo, r, n));
     r
@@ -3127,7 +3213,7 @@ pub(crate) unsafe extern "thiscall" fn pay_bonuses(this: usize, valor: i32) {
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_pay_bonuses(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_BONUSES);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_BONUSES);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_bonuses(this, valor));
     PLACAR.registrar(igual, || format!("pay_bonuses(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
@@ -3138,16 +3224,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_bonuses(this: usize, valor: 
 /// [pt] { 0x598340 } (thiscall, ret 4, finance.cpp): `Finance::adjust_max_wage(percentual)`, pela resposta da diretoria
 /// (MANAGER_MANAGER::handle_board_request 0x6a91b0) e pela 0x6acee8: o teto salarial (+0x14) vira (percentual + 100) ×
 /// 0,01 × teto, truncado.
-pub(crate) unsafe extern "thiscall" fn adjust_max_wage(this: usize, percentual: i8) {
-    let v = ftol((percentual as i32 + 100) as f64 * f64_em(0x967898) * read_i32(this + 0x14) as f64);
+pub(crate) unsafe extern "thiscall" fn adjust_max_wage(this: usize, write_percent_pair: i8) {
+    let v = match_pl_ftol((write_percent_pair as i32 + 100) as f64 * read_f64_at(0x967898) * read_i32(this + 0x14) as f64);
     core::ptr::write_unaligned((this + 0x14) as *mut i32, v);
 }
 
 /// Comparador: lado a lado no teto salarial (+0x14).
-pub(crate) unsafe extern "thiscall" fn comparar_adjust_max_wage(this: usize, percentual: i8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i8)>(IDX_ADJUST_MAX_WAGE);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x14, 4)], || o(this, percentual), || adjust_max_wage(this, percentual));
-    PLACAR.registrar(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this, percentual, mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_adjust_max_wage(this: usize, write_percent_pair: i8) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_ADJUST_MAX_WAGE);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x14, 4)], || o(this, write_percent_pair), || adjust_max_wage(this, write_percent_pair));
+    PLACAR.registrar(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this, write_percent_pair, mo, mr));
 }
 
 // ---------- 257a leva: a riqueza do clube e duas ordens: a faixa das finanças, a ordem dos jogadores pela habilidade e a dos estádios pela capacidade (finance.cpp, game.cpp, stadium.cpp) ----------
@@ -3191,7 +3277,7 @@ pub(crate) unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
 
 /// Comparador: pelo valor.
 pub(crate) unsafe extern "thiscall" fn comparar_get_wealth_band(this: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_GET_WEALTH_BAND)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_GET_WEALTH_BAND)(this);
     let n = get_wealth_band(this);
     PLACAR.registrar(r == n, || format!("get_wealth_band(financas {:#x}) original={} rust={}", this, r as i8, n as i8));
     r

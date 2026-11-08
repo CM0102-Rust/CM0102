@@ -13,7 +13,7 @@ unsafe fn cpt11_pd(a: usize, v: usize) {
 }
 
 /// A data `a` é depois da `b` (+2 o ano, sem sinal; +0 o dia, com sinal), como as comparações da original.
-unsafe fn cpt11_depois(a: usize, b: usize) -> bool {
+unsafe fn friendly_date_after(a: usize, b: usize) -> bool {
     let (aa, ab) = (cpt11_w(a + 2), cpt11_w(b + 2));
     aa > ab || (aa == ab && cpt11_w(a) as i16 > cpt11_w(b) as i16)
 }
@@ -47,7 +47,7 @@ unsafe extern "thiscall" fn friendly_update_for_date(this: usize, hoje: usize, a
     if dia == cpt11_w(this + 0x34ea) as i32 || dia == cpt11_w(this + 0x34e8) as i32 {
         let mut t = [0u8; 8];
         let limite = semanas(hoje, &mut t, 8);
-        if cpt11_depois(0xdd6ec8, limite) {
+        if friendly_date_after(0xdd6ec8, limite) {
             return 1;
         }
         copiar(this + 0xa7, &mut t, hoje);
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn friendly_update_for_date(this: usize, hoje: usize, a
                 tirar(cpt11_d(this + 0x34c8), p);
             }
             // ponytail: como a original, a data do pedido é olhada mesmo depois de tirá-lo (o bloco já tirado)
-            if cpt11_depois(hoje, p) {
+            if friendly_date_after(hoje, p) {
                 tirar(cpt11_d(this + 0x34c8), p);
             }
             p = proximo(cpt11_d(this + 0x34c8));
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn friendly_update_for_date(this: usize, hoje: usize, a
         if cpt11_d(e) != 0 && cpt11_d(e + 0x65) == 0 {
             let mut t = [0u8; 8];
             let fim = menos_dias(e + 4, &mut t, 2);
-            if cpt11_depois(hoje, fim) {
+            if friendly_date_after(hoje, fim) {
                 cancelar(this, e, 0);
             }
         }
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn friendly_update_for_date(this: usize, hoje: usize, a
                 let s = item + 0x15 + k * 0x19;
                 let mut t = [0u8; 8];
                 let fim = menos_dias(s - 0xc, &mut t, 2);
-                if cpt11_depois(hoje, fim) {
+                if friendly_date_after(hoje, fim) {
                     cpt11_pd(s, 0);
                 }
             }
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize) {
     let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let v = alocar((cpt11_d(0xae235c) as u32).wrapping_mul(0x16));
     if v == 0 {
-        return aviso_em(0x9cd0a0, 0x18a);
+        return show_error_at(0x9cd0a0, 0x18a);
     }
     let mut n: i16 = 0;
     let mut clube = cpt11_d(0xae23b4);
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize) {
 /// o clube for da nação (sem o último do vetor, como a original); o primeiro e o último clube da tabela da liga (+0xa7
 /// da competição de tipo 1) ganham uma lista nova (0x944cf1 + 0x68d020) em +0x12. Com `gravar` falso só monta a lista
 /// (candidato, começo, fim, lista nova). A original calcula a data de início da liga (e + dias, tipo 2) e não usa.
-unsafe fn cpt11_janelas(ptrs: usize, n: i32, gravar: bool) -> Vec<(usize, i16, i16, bool)> {
+unsafe fn set_friendly_windows(ptrs: usize, n: i32, gravar: bool) -> Vec<(usize, i16, i16, bool)> {
     let menos_semanas: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54cab0usize);
     let data_nova: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
     let mais_dias: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c5b0usize);
@@ -306,29 +306,29 @@ unsafe fn cpt11_janelas(ptrs: usize, n: i32, gravar: bool) -> Vec<(usize, i16, i
 }
 
 /// { 0x5c2d40 } (thiscall, ret 8, friendly.cpp): `Friendly::set_preseason_windows(candidatos, n)`: a janela da
-/// pré-temporada de cada nação nos candidatos dela (ver `cpt11_janelas`); o `this` não é lido. A original constrói e
+/// pré-temporada de cada nação nos candidatos dela (ver `set_friendly_windows`); o `this` não é lido. A original constrói e
 /// destrói duas datas locais que não usa (0x9463af / 0x9462bb com 0x54a110 / 0x5a53c0).
 unsafe extern "thiscall" fn set_preseason_windows(_this: usize, ptrs: usize, n: i32) {
-    cpt11_janelas(ptrs, n, true);
+    set_friendly_windows(ptrs, n, true);
 }
 
 /// Comparador: anda o calendário e planeja (aloca, sorteia): só a original.
 unsafe extern "thiscall" fn comparar_friendly_update_for_date(this: usize, hoje: usize, ativo: u32) -> u32 {
     // ponytail: cancela torneios, tira pedidos e cria amistosos (não roda duas vezes); a cópia se prova pela carreira
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, hoje, ativo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, hoje, ativo)
 }
 
 /// Comparador: monta e planeja os amistosos da IA (aloca, sorteia): só a original.
 unsafe extern "thiscall" fn comparar_plan_ai_preseason_friendlies(this: usize) {
     // ponytail: os torneios, as excursões e os amistosos sorteiam e alocam; a cópia se prova pela carreira
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
 /// Comparador: grava as janelas e cria listas (não roda duas vezes): o plano antes (sem gravar), a original grava;
 /// cada candidato planejado tem de ter a janela e, quando é a ponta da tabela, uma lista em +0x12.
 unsafe extern "thiscall" fn comparar_set_preseason_windows(this: usize, ptrs: usize, n: i32) {
-    let plano = cpt11_janelas(ptrs, n, false);
-    orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I2%%)(this, ptrs, n);
+    let plano = set_friendly_windows(ptrs, n, false);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I2%%)(this, ptrs, n);
     let erros: Vec<String> = plano.iter()
         .filter(|&&(c, ini, fim, nova)| {
             core::ptr::read_unaligned((c + 0xe) as *const i16) != ini || core::ptr::read_unaligned((c + 0x10) as *const i16) != fim

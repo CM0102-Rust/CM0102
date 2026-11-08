@@ -31,12 +31,12 @@ unsafe fn cqv2_previstas(this: usize, e: &Cqv2Estadual) {
     let ordenar: unsafe extern "C" fn(usize, i32) = core::mem::transmute(0x4c08f0usize);
     let gravar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
     if cqv2_d(this + 8) == 0 {
-        return aviso_em(e.arquivo, e.linhas[0]);
+        return show_error_at(e.arquivo, e.linhas[0]);
     }
     let n = core::ptr::read_unaligned((this + 0x3e) as *const i16);
     let v = alocar(((n as i32) << 2) as u32);
     if v == 0 {
-        return aviso_em(e.arquivo, e.linhas[1]);
+        return show_error_at(e.arquivo, e.linhas[1]);
     }
     let mut i = 0i16;
     while i < n {
@@ -57,7 +57,7 @@ unsafe fn cqv2_previstas(this: usize, e: &Cqv2Estadual) {
 }
 
 /// O comparador: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não pode rodar duas vezes),
-/// com o plano feito antes: os clubes da tabela ordenados pelo núcleo da 0x4c08f0 (cpt13_ordenar_com); depois, o
+/// com o plano feito antes: os clubes da tabela ordenados pelo núcleo da 0x4c08f0 (sort_clubs_by_strength); depois, o
 /// registro de cada clube (a última vez que ele aparece) tem de ter em +0x72 o lugar previsto.
 unsafe fn cqv2_comparar(nome: &str, this: usize, e: &Cqv2Estadual, original: impl FnOnce()) {
     let n = core::ptr::read_unaligned((this + 0x3e) as *const i16) as i32;
@@ -66,7 +66,7 @@ unsafe fn cqv2_comparar(nome: &str, this: usize, e: &Cqv2Estadual, original: imp
     }
     let mut v: Vec<u32> = (0..n as usize).map(|i| cqv2_d(cqv2_d(this + 0xb1) + 0x3b * i) as u32).collect();
     let mut k = vec![0i32; n as usize];
-    cpt13_ordenar_com(v.as_mut_ptr(), k.as_mut_ptr(), n);
+    sort_clubs_by_strength(v.as_mut_ptr(), k.as_mut_ptr(), n);
     original();
     let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let mut erros = Vec::new();
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn cqv2_previstas_pernambucano(this: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_cqv2_previstas_pernambucano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     cqv2_comparar("cqv2_previstas_pernambucano", this, &CQV2_PERNAMBUCANO, || o(this));
 }
 
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn cqv2_previstas_carioca(this: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_cqv2_previstas_carioca(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqv2_comparar("cqv2_previstas_carioca", this, &CQV2_CARIOCA, || o(this));
 }
 
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn cqv2_previstas_catarinense(this: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_cqv2_previstas_catarinense(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqv2_comparar("cqv2_previstas_catarinense", this, &CQV2_CATARINENSE, || o(this));
 }
 
@@ -127,6 +127,6 @@ unsafe extern "thiscall" fn cqv2_previstas_paulista(this: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_cqv2_previstas_paulista(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
     cqv2_comparar("cqv2_previstas_paulista", this, &CQV2_PAULISTA, || o(this));
 }

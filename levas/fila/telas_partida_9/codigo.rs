@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: as telas da partida (9): a cópia do bloco do time e da linha do jogador e o placar ao vivo (match_screens.cpp) ----------
 
 /// Copia de `s` para `d` os campos de `tam` bytes (1, 2 ou 4) de `ini` a `fim`, em ordem crescente, como a original.
-unsafe fn copiar_campos(d: usize, s: usize, ini: usize, fim: usize, tam: usize) {
+unsafe fn copy_fields(d: usize, s: usize, ini: usize, fim: usize, tam: usize) {
     let mut k = ini;
     while k < fim {
         match tam {
@@ -18,12 +18,12 @@ unsafe fn copiar_campos(d: usize, s: usize, ini: usize, fim: usize, tam: usize) 
 /// listas de 11 palavras (0x35, 0x4b), as duplas 0x61/0x65, as palavras 0x69..0x71 e as 20 linhas de
 /// jogador de 0x49 bytes (0x71df00). Devolve `this`.
 unsafe extern "thiscall" fn match_team_block_assign(this: usize, src: usize) -> usize {
-    copiar_campos(this, src, 0, 0x11, 1);
-    copiar_campos(this, src, 0x11, 0x1f, 2);
-    copiar_campos(this, src, 0x1f, 0x35, 1);
-    copiar_campos(this, src, 0x35, 0x61, 2);
-    copiar_campos(this, src, 0x61, 0x69, 4);
-    copiar_campos(this, src, 0x69, 0x71, 2);
+    copy_fields(this, src, 0, 0x11, 1);
+    copy_fields(this, src, 0x11, 0x1f, 2);
+    copy_fields(this, src, 0x1f, 0x35, 1);
+    copy_fields(this, src, 0x35, 0x61, 2);
+    copy_fields(this, src, 0x61, 0x69, 4);
+    copy_fields(this, src, 0x69, 0x71, 2);
     let linha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x71df00usize);
     for i in 0..20 {
         linha(this + 0x71 + i * 0x49, src + 0x71 + i * 0x49);
@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn match_team_block_assign(this: usize, src: usize) -> 
 }
 
 unsafe extern "thiscall" fn comparar_match_team_block_assign(this: usize, src: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x625)], || o(this, src), || match_team_block_assign(this, src));
     PLACAR.registrar(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
@@ -42,18 +42,18 @@ unsafe extern "thiscall" fn comparar_match_team_block_assign(this: usize, src: u
 /// duplas 0..0x14, a data em +0x14 pela Date::operator= (0x417c10, com o retorno numa local), bytes
 /// 0x1c..0x36, palavras 0x36..0x3e e bytes 0x3e..0x49. Devolve `this`.
 unsafe extern "thiscall" fn match_player_row_assign(this: usize, src: usize) -> usize {
-    copiar_campos(this, src, 0, 0x14, 4);
+    copy_fields(this, src, 0, 0x14, 4);
     let atribuir_data: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut volta = [0u8; 8];
     atribuir_data(this + 0x14, &mut volta, src + 0x14);
-    copiar_campos(this, src, 0x1c, 0x36, 1);
-    copiar_campos(this, src, 0x36, 0x3e, 2);
-    copiar_campos(this, src, 0x3e, 0x49, 1);
+    copy_fields(this, src, 0x1c, 0x36, 1);
+    copy_fields(this, src, 0x36, 0x3e, 2);
+    copy_fields(this, src, 0x3e, 0x49, 1);
     this
 }
 
 unsafe extern "thiscall" fn comparar_match_player_row_assign(this: usize, src: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x49)], || o(this, src), || match_player_row_assign(this, src));
     PLACAR.registrar(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
@@ -112,7 +112,7 @@ unsafe extern "C" fn match_screens_tally_live_score(partida: usize, indice: u32,
 }
 
 unsafe extern "C" fn comparar_match_screens_tally_live_score(partida: usize, indice: u32, res: usize) {
-    let o = orig::<unsafe extern "C" fn(usize, u32, usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32, usize)>(%%I2%%);
     if res == 0 {
         return o(partida, indice, res);
     }

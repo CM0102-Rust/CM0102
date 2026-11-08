@@ -31,14 +31,14 @@ unsafe fn cqw12_fim(this: usize, arquivo: usize) -> bool {
     let tabela: unsafe extern "thiscall" fn(usize, i32, usize, usize, u32) -> usize = core::mem::transmute(cqw12_d(cqw12_d(this) + 0x3c));
     cqw12_pd(this + 0xa3, tabela(this, -1, this + 0x3c, this + 0x3a, 0));
     if arvore(this) < 0 {
-        aviso_em(arquivo, 0x4f);
+        show_error_at(arquivo, 0x4f);
         return false;
     }
     let p = novo(0x5ce);
     let e = if p != 0 { estatisticas(p, this) } else { 0 };
     cqw12_pd(this + 8, e);
     if e == 0 {
-        aviso_em(arquivo, 0x56);
+        show_error_at(arquivo, 0x56);
         return false;
     }
     true
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn cqw12_concacaf(this: usize, ano: u32, comp: usize) -
     let t = calloc(8, 6);
     cqw12_pd(this + 0xa7, t);
     if t == 0 {
-        aviso_em(0x9a7d30, 0x41);
+        show_error_at(0x9a7d30, 0x41);
         return this;
     }
     cqw12_pd(this + 0x28, 0x1e8480);
@@ -97,7 +97,7 @@ unsafe fn cqw12_comparar(nome: &str, this: usize, ano: u32, comp: usize, vtable:
 }
 
 unsafe extern "thiscall" fn comparar_cqw12_concacaf(this: usize, ano: u32, comp: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     cqw12_comparar("cqw12_concacaf", this, ano, comp, 0x968aa0, || o(this, ano, comp))
 }
 
@@ -123,7 +123,7 @@ unsafe fn cqw12_dois_clubes(this: usize, ano: u32, comp: usize, vtable: usize, b
         return this;
     }
     if escolher(this) < 0 {
-        aviso_em(arquivo, 0x41);
+        show_error_at(arquivo, 0x41);
         return this;
     }
     if cqw12_fim(this, arquivo) {
@@ -141,6 +141,6 @@ unsafe extern "thiscall" fn cqw12_intercontinental(this: usize, ano: u32, comp: 
 }
 
 unsafe extern "thiscall" fn comparar_cqw12_intercontinental(this: usize, ano: u32, comp: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     cqw12_comparar("cqw12_intercontinental", this, ano, comp, 0x971250, || o(this, ano, comp))
 }

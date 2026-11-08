@@ -10,7 +10,7 @@ unsafe fn cql7_w(a: usize) -> i16 {
 
 /// O clube está na competição do global `g`: o ponteiro do clube em `campo` (+0x57 a divisão nacional) não é nulo e o
 /// id do registro (+0) é o do global.
-unsafe fn cql7_da_divisao(clube: usize, campo: usize, g: usize) -> bool {
+unsafe fn club_in_comp_global(clube: usize, campo: usize, g: usize) -> bool {
     let comp = cql7_d(clube + campo);
     comp != 0 && cql7_d(comp) == cql7_d(g)
 }
@@ -20,13 +20,13 @@ unsafe fn cql7_da_divisao(clube: usize, campo: usize, g: usize) -> bool {
 /// bytes, [0xae235c] deles) da competição do global `g`, na ordem do banco, cada um na linha seguinte
 /// (League::init_table_row 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve 1 se encheu.
 /// `girar` é 0 (o original: a linha k recebe o k-ésimo clube); existe só para as mutações de cada divisão.
-unsafe fn cql7_tabela(this: usize, n: i16, arquivo: usize, linha: u32, campo: usize, g: usize, girar: u8, ramo: &'static str) -> u32 {
+unsafe fn create_division_table(this: usize, n: i16, arquivo: usize, linha: u32, campo: usize, g: usize, girar: u8, ramo: &'static str) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return 0;
     }
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
@@ -34,7 +34,7 @@ unsafe fn cql7_tabela(this: usize, n: i16, arquivo: usize, linha: u32, campo: us
     let mut i: i16 = 0;
     let mut clube = cql7_d(0xae23b4);
     while (i as i32) < cql7_d(0xae235c) as i32 {
-        if cql7_da_divisao(clube, campo, g) {
+        if club_in_comp_global(clube, campo, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
             // o byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
@@ -59,7 +59,7 @@ unsafe fn cql7_tabela(this: usize, n: i16, arquivo: usize, linha: u32, campo: us
 /// push 0; push 0x249f0; mov ecx, edi -> thiscall(liga, valor, filtro), ret 8; manda a notícia da TV) e devolve 1.
 /// Fonte 0x98aa30, linha 0x1a1.
 unsafe extern "thiscall" fn bra_nat_first_create_table(this: usize) -> u32 {
-    if cql7_tabela(this, 0x1c, 0x98aa30, 0x1a1, 0x57, 0x9cf9ec, 0, "cql_7 serie a cheia") == 0 {
+    if create_division_table(this, 0x1c, 0x98aa30, 0x1a1, 0x57, 0x9cf9ec, 0, "cql_7 serie a cheia") == 0 {
         return 0;
     }
     let pagar: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(0x683010usize);
@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn bra_nat_first_create_table(this: usize) -> u32 {
 /// { 0x42ca70 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_table()`: a Série B tem 28 clubes (+0x57 =
 /// [0x9cf9e0]), sem dinheiro da TV. Fonte 0x98ab64, linha 0x1aa.
 unsafe extern "thiscall" fn bra_nat_first_create_table_42ca70(this: usize) -> u32 {
-    cql7_tabela(this, 0x1c, 0x98ab64, 0x1aa, 0x57, 0x9cf9e0, 0, "cql_7 serie b cheia")
+    create_division_table(this, 0x1c, 0x98ab64, 0x1aa, 0x57, 0x9cf9e0, 0, "cql_7 serie b cheia")
 }
 
 /// { 0x42dc90 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::create_table()`: +0x3e = 7; a lista dos
@@ -93,13 +93,13 @@ unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -> u32 {
     let lista = alocar(0xe0);
     core::ptr::write_unaligned((this + 0xee) as *mut usize, lista);
     if lista == 0 {
-        aviso_em(0x98aba4, 0x18f);
+        show_error_at(0x98aba4, 0x18f);
         return 1;
     }
     let t = alocar((cql7_w(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(0x98aba4, 0x196);
+        show_error_at(0x98aba4, 0x196);
         return 0;
     }
     let mut k: u8 = 0;
@@ -125,12 +125,12 @@ unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -> u32 {
 }
 
 /// Os clubes da competição do global `g` (ponteiro em `campo`), na ordem do banco, até `n`.
-unsafe fn cql7_plano(n: usize, campo: usize, g: usize) -> Vec<usize> {
+unsafe fn division_clubs_plan(n: usize, campo: usize, g: usize) -> Vec<usize> {
     let mut plano = Vec::new();
     let mut i: i32 = 0;
     while i < cql7_d(0xae235c) as i32 && plano.len() < n {
         let clube = cql7_d(0xae23b4) + (i as usize) * 0x245;
-        if cql7_da_divisao(clube, campo, g) {
+        if club_in_comp_global(clube, campo, g) {
             plano.push(clube);
         }
         i += 1;
@@ -141,8 +141,8 @@ unsafe fn cql7_plano(n: usize, campo: usize, g: usize) -> Vec<usize> {
 /// O comparador da Série A e da Série B: a original aloca a tabela (e na A paga a TV com notícia): só ela. O plano,
 /// feito antes: os clubes da divisão na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano
 /// encheu (senão 0) e as linhas da tabela (+0 o clube, 0x3b bytes) com os clubes do plano, na ordem.
-unsafe fn cql7_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
-    let plano = cql7_plano(n as usize, 0x57, g);
+unsafe fn compare_division_table(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
+    let plano = division_clubs_plan(n as usize, 0x57, g);
     let r = original();
     let t = cql7_d(this + 0xb1);
     let esperado = (plano.len() as i16 == n) as u32;
@@ -157,20 +157,20 @@ unsafe fn cql7_comparar(nome: &str, this: usize, n: i16, g: usize, original: imp
 }
 
 unsafe extern "thiscall" fn comparar_bra_nat_first_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cql7_comparar("bra_nat_first_create_table", this, 0x1c, 0x9cf9ec, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    compare_division_table("bra_nat_first_create_table", this, 0x1c, 0x9cf9ec, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_nat_first_create_table_42ca70(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cql7_comparar("bra_nat_first_create_table_42ca70", this, 0x1c, 0x9cf9e0, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    compare_division_table("bra_nat_first_create_table_42ca70", this, 0x1c, 0x9cf9e0, || o(this))
 }
 
 /// O comparador da Série C: a original libera e aloca e sorteia: só ela. O plano, feito antes: os clubes cuja divisão é
 /// [this+4], na ordem do banco, até 56. Depois: a devolução 1, +0x3e = 7, a lista (+0xee) com os clubes do plano em
 /// alguma ordem (o sorteio) e as linhas 0..6 da tabela com os 7 primeiros da lista.
 unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let mut plano = Vec::new();
     let mut i: i32 = 0;
     while i < cql7_d(0xae235c) as i32 && plano.len() < 0x38 {

@@ -9,7 +9,7 @@ unsafe fn cpt12_w(a: usize) -> u16 {
 }
 
 /// A data `a` (+2 o ano sem sinal, +0 o dia com sinal) comparada à `b`: -1, 0 ou 1.
-unsafe fn cpt12_ordem(a: usize, b: usize) -> i32 {
+unsafe fn compare_dates(a: usize, b: usize) -> i32 {
     let (aa, ab) = (cpt12_w(a + 2), cpt12_w(b + 2));
     if aa != ab {
         return if aa < ab { -1 } else { 1 };
@@ -19,7 +19,7 @@ unsafe fn cpt12_ordem(a: usize, b: usize) -> i32 {
 }
 
 /// Uma lista nova (0x944cf1 de 0xe bytes + 0x68d020) ou 0 sem memória.
-unsafe fn cpt12_lista_nova() -> usize {
+unsafe fn alloc_list() -> usize {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let m = novo(0xe);
@@ -85,11 +85,11 @@ unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: usize, adv:
         let mut item = proximo(cpt12_d(cand + 0x12));
         while item != 0 {
             let antes = menos_dias(d1.as_ptr() as usize, &mut t, 2);
-            let estraga = if cpt12_ordem(antes, item) < 0 {
+            let estraga = if compare_dates(antes, item) < 0 {
                 true
             } else {
                 let depois = mais_dias(d2.as_ptr() as usize, &mut u, 2);
-                cpt12_ordem(depois, item) > 0
+                compare_dates(depois, item) > 0
             };
             if estraga {
                 ok = false;
@@ -112,11 +112,11 @@ unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: usize, adv:
                 crate::comparacao::ramo("cpt_12 jogo da excursão marcado");
                 pedir(this, m);
                 if cpt12_d(cand + 0x12) == 0 {
-                    let l = cpt12_lista_nova();
+                    let l = alloc_list();
                     core::ptr::write_unaligned((cand + 0x12) as *mut u32, l as u32);
                 }
                 if cpt12_d(cpt12_d(p) + 0x12) == 0 {
-                    let l = cpt12_lista_nova();
+                    let l = alloc_list();
                     core::ptr::write_unaligned((cpt12_d(p) + 0x12) as *mut u32, l as u32);
                 }
                 guardar(cpt12_d(cand + 0x12), &mut d1, 8);
@@ -157,12 +157,12 @@ unsafe extern "C" fn compare_friendly_candidate_ptrs_by_nation(a: usize, b: usiz
 /// Comparador: sorteia, monta amistosos e cria listas (não roda duas vezes): só a original.
 unsafe extern "thiscall" fn comparar_schedule_tour_matches(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
     // ponytail: o sorteio e os amistosos novos não rodam duas vezes; a cópia se prova pela carreira
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%)(this, cand, adv, n)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%)(this, cand, adv, n)
 }
 
 /// Comparador: rotina pura, pela devolução.
 unsafe extern "C" fn comparar_compare_friendly_candidates_by_band(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_friendly_candidates_by_band(a, b);
     PLACAR.registrar(r == n, || format!("compare_friendly_candidates_by_band({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -170,7 +170,7 @@ unsafe extern "C" fn comparar_compare_friendly_candidates_by_band(a: usize, b: u
 
 /// Comparador: rotina pura, pela devolução.
 unsafe extern "C" fn comparar_compare_friendly_candidate_ptrs_by_nation(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_friendly_candidate_ptrs_by_nation(a, b);
     PLACAR.registrar(r == n, || format!("compare_friendly_candidate_ptrs_by_nation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r

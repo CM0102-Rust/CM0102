@@ -10,7 +10,7 @@
 MUTACOES = [
     ('cqa5_vendedor_sem_troca_sem_vaga',
      'return 1; // cqa5: o vendedor sem troca tem vaga',
-     'return cqa5_falha(clube, o, motivo, 4); // mutacao: o vendedor sem troca nao tem vaga',
+     'return fail_with_reason(clube, o, motivo, 4); // mutacao: o vendedor sem troca nao tem vaga',
      'cqa_5 vendedor sem troca'),
     ('cqa5_elenco_conta_dois',
      '*n = n.wrapping_add(1); // cqa5: cada um do elenco conta',

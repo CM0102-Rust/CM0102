@@ -10,14 +10,14 @@ unsafe fn cpk1_por(a: usize, v: usize) {
 
 /// A entrada do clube (0x6a bytes, pelo id +0 do clube) na tabela [this+0x1c]: +0 o índice dos recordes de sempre,
 /// +4 o dos da temporada (−1 = ainda sem).
-unsafe fn cpk1_entrada(this: usize, clube: usize) -> usize {
+unsafe fn club_records_entry(this: usize, clube: usize) -> usize {
     cpk1_d(this + 0x1c).wrapping_add(cpk1_d(clube).wrapping_mul(0x6a))
 }
 
 /// A falta de memória das tabelas dos recordes (club_records.cpp, linha `linha`): caixa e fim, como a original.
-unsafe fn cpk1_sem_memoria(linha: u32) -> ! {
-    aviso_em(0x98b6a0, linha);
-    erro_fatal()
+unsafe fn records_out_of_memory(linha: u32) -> ! {
+    show_error_at(0x98b6a0, linha);
+    fatal_exit()
 }
 
 /// { 0x452710 } (thiscall, ret 8, club_records.cpp): `Club_Records::get_all_time_record(clube, criar)`: os recordes
@@ -27,9 +27,9 @@ unsafe fn cpk1_sem_memoria(linha: u32) -> ! {
 /// sem índice. Clube nulo: a original (caixa 0x1680, 0).
 unsafe extern "thiscall" fn get_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, clube, criar);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, clube, criar);
     }
-    let e = cpk1_entrada(this, clube);
+    let e = club_records_entry(this, clube);
     if cpk1_d(e) as i32 == -1 && criar != 0 {
         crate::comparacao::ramo("cpk_1 recordes de sempre novos");
         if cpk1_d(this + 0xc) == cpk1_d(this + 8) {
@@ -39,7 +39,7 @@ unsafe extern "thiscall" fn get_all_time_record(this: usize, clube: usize, criar
             let p = realocar(cpk1_d(this + 4), cap.wrapping_mul(0x38b) as u32);
             cpk1_por(this + 4, p);
             if p == 0 {
-                cpk1_sem_memoria(0x1694);
+                records_out_of_memory(0x1694);
             }
         }
         let n = cpk1_d(this + 0xc);
@@ -60,9 +60,9 @@ unsafe extern "thiscall" fn get_all_time_record(this: usize, clube: usize, criar
 /// 0x16c9 e fim). Clube nulo: a original (caixa 0x16b5, 0).
 unsafe extern "thiscall" fn get_season_record(this: usize, clube: usize, criar: u32) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%)(this, clube, criar);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%)(this, clube, criar);
     }
-    let e = cpk1_entrada(this, clube) + 4;
+    let e = club_records_entry(this, clube) + 4;
     if cpk1_d(e) as i32 == -1 && criar != 0 {
         crate::comparacao::ramo("cpk_1 recordes da temporada novos");
         if cpk1_d(this + 0x18) == cpk1_d(this + 0x14) {
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn get_season_record(this: usize, clube: usize, criar: 
             let p = realocar(cpk1_d(this + 0x10), cap.wrapping_mul(0x38b) as u32);
             cpk1_por(this + 0x10, p);
             if p == 0 {
-                cpk1_sem_memoria(0x16c9);
+                records_out_of_memory(0x16c9);
             }
         }
         let n = cpk1_d(this + 0x18);
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, tipo: u32) -
         let p = realocar(cpk1_d(this + 0x24), cap.wrapping_mul(6) as u32);
         cpk1_por(this + 0x24, p);
         if p == 0 {
-            aviso_em(0x98b6a0, 0x174f);
+            show_error_at(0x98b6a0, 0x174f);
             return 0;
         }
     }
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, tipo: u32) -
 
 /// O plano dos recordes (de sempre ou da temporada) antes da original: o índice esperado (o novo é a conta), a conta
 /// esperada e se o registro é novo.
-unsafe fn cpk1_plano(e: usize, conta: usize, criar: u32) -> (i32, usize, bool) {
+unsafe fn record_index_plan(e: usize, conta: usize, criar: u32) -> (i32, usize, bool) {
     let i = cpk1_d(e) as i32;
     let n = cpk1_d(conta);
     if i == -1 && criar != 0 { (n as i32, n.wrapping_add(1), true) } else { (i, n, false) }
@@ -123,7 +123,7 @@ unsafe fn cpk1_plano(e: usize, conta: usize, criar: u32) -> (i32, usize, bool) {
 
 /// Confere o resultado da original com o plano: o índice da entrada, a conta, o registro devolvido e, se novo, as
 /// marcas da 0x452fe0 (−1.0f em +0x1f1, −1 em +0x313).
-unsafe fn cpk1_conferir(nome: &str, clube: usize, e: usize, conta: usize, vetor: usize, plano: (i32, usize, bool), r: usize) {
+unsafe fn check_record_plan(nome: &str, clube: usize, e: usize, conta: usize, vetor: usize, plano: (i32, usize, bool), r: usize) {
     let (i, n, novo) = plano;
     let esperado = if i <= -1 { 0 } else { cpk1_d(vetor).wrapping_add((i as usize).wrapping_mul(0x38b)) };
     let reiniciado = !novo || (r != 0 && cpk1_d(r + 0x1f1) == 0xbf800000 && cpk1_d(r + 0x313) as i32 == -1);
@@ -135,34 +135,34 @@ unsafe fn cpk1_conferir(nome: &str, clube: usize, e: usize, conta: usize, vetor:
 
 /// Comparador: a criação realoca e não pode rodar duas vezes: o plano da cópia antes, a original roda, confere.
 unsafe extern "thiscall" fn comparar_get_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%);
     if clube == 0 {
         return o(this, clube, criar);
     }
-    let e = cpk1_entrada(this, clube);
-    let plano = cpk1_plano(e, this + 0xc, criar);
+    let e = club_records_entry(this, clube);
+    let plano = record_index_plan(e, this + 0xc, criar);
     let r = o(this, clube, criar);
-    cpk1_conferir("get_all_time_record", clube, e, this + 0xc, this + 4, plano, r);
+    check_record_plan("get_all_time_record", clube, e, this + 0xc, this + 4, plano, r);
     r
 }
 
 /// Comparador: o mesmo pelos recordes da temporada.
 unsafe extern "thiscall" fn comparar_get_season_record(this: usize, clube: usize, criar: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%);
     if clube == 0 {
         return o(this, clube, criar);
     }
-    let e = cpk1_entrada(this, clube) + 4;
-    let plano = cpk1_plano(e, this + 0x18, criar);
+    let e = club_records_entry(this, clube) + 4;
+    let plano = record_index_plan(e, this + 0x18, criar);
     let r = o(this, clube, criar);
-    cpk1_conferir("get_season_record", clube, e, this + 0x18, this + 0x10, plano, r);
+    check_record_plan("get_season_record", clube, e, this + 0x18, this + 0x10, plano, r);
     r
 }
 
 /// Comparador: a original acrescenta (pode realocar); confere a conta, o item novo (id, tipo) e a devolução.
 unsafe extern "thiscall" fn comparar_queue_record_news(this: usize, id: u32, tipo: u32) -> u32 {
     let n = cpk1_d(this + 0x2c);
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%)(this, id, tipo);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%)(this, id, tipo);
     if r == 0 {
         return r; // sem memória: a caixa já saiu
     }

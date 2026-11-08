@@ -25,7 +25,7 @@ unsafe fn cqb1_sortear(n: i32) -> i32 {
 /// original o acha sem a 0x5a0590: o clube parceiro (0x540a50: 3 pushes; add esp, 0xc -> cdecl(clube, &a, 1)) se ele
 /// existe e o clube é o B (a = 0), e [tabela] + id × 0x167. Some(0) sem clube; None se for seleção (0x53b900: push;
 /// add esp, 4 -> cdecl): a original sai sem fazer nada.
-unsafe fn cqb1_financas(tabela: usize, partida: usize, campo: usize) -> Option<usize> {
+unsafe fn match_club_finance(tabela: usize, partida: usize, campo: usize) -> Option<usize> {
     let clube = cqb1_d(partida + campo);
     if clube == 0 {
         return Some(0);
@@ -42,7 +42,7 @@ unsafe fn cqb1_financas(tabela: usize, partida: usize, campo: usize) -> Option<u
 }
 
 /// A divisão com o arredondamento para zero da original (os imul por constante mágica e o cdq/sar).
-fn cqb1_div(a: i32, b: i32) -> i32 {
+fn div_trunc(a: i32, b: i32) -> i32 {
     a.wrapping_div(b)
 }
 
@@ -60,23 +60,23 @@ fn cqb1_div(a: i32, b: i32) -> i32 {
 /// estádio (+0x12c, +0x8c, menos no saldo). Fora dela: metade de cada um para os dois.
 unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, resultado: usize) {
     if resultado == 0 || partida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(tabela, partida, resultado); // a caixa
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(tabela, partida, resultado); // a caixa
     }
-    let Some(mandante) = cqb1_financas(tabela, partida, 0x1c) else { return };
-    let Some(visitante) = cqb1_financas(tabela, partida, 0x20) else { return };
+    let Some(mandante) = match_club_finance(tabela, partida, 0x1c) else { return };
+    let Some(visitante) = match_club_finance(tabela, partida, 0x20) else { return };
     let (mut tv, mut publico, mut renda) = (0i32, 0i32, 0i32);
     if cqb1_i(resultado + 0x34) != 0 {
         publico = cqb1_i(resultado + 0x34);
         renda = cqb1_i(resultado + 0x38);
-        let q = cqb1_div(1, cqb1_sortear(10).wrapping_add(2));
+        let q = div_trunc(1, cqb1_sortear(10).wrapping_add(2));
         crate::comparacao::ramo("cqb_1 publico pagante");
-        tv = ftol((q as f64 + f64_em(0x968f98)) * publico as f64); // cqb1: a TV pelo público (1,75)
+        tv = match_pl_ftol((q as f64 + read_f64_at(0x968f98)) * publico as f64); // cqb1: a TV pelo público (1,75)
     }
     let casa = cqb1_d(partida + 0x1c);
     let fora = cqb1_d(partida + 0x20);
     let mut custo; // o ebp da original
     if cqb1_b(casa + 0x64) != 1 && cqb1_b(fora + 0x64) != 1 {
-        custo = ftol(publico as f64 * f64_em(0x9689e0));
+        custo = match_pl_ftol(publico as f64 * read_f64_at(0x9689e0));
     } else {
         let est = cqb1_d(partida + 0x18);
         let x = if est == 0 {
@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
             } else {
                 0x968968
             };
-            publico as f64 * f64_em(k)
+            publico as f64 * read_f64_at(k)
         } else {
             let cap = cqb1_i(est + 0x3c);
             let k = if cap > 17500 {
@@ -101,9 +101,9 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
             } else {
                 0x969510
             };
-            cap as f64 * f64_em(k)
+            cap as f64 * read_f64_at(k)
         };
-        custo = ftol(x);
+        custo = match_pl_ftol(x);
         if cqb1_b(partida + 0x40) != 0 && custo < 500 {
             custo = 500;
         }
@@ -114,21 +114,21 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
         let rep = cqb1_w(casa + 0x80);
         if rep != 0 {
             let r = cqb1_sortear(0xc8);
-            let x = (r as f64 + publico as f64 * f64_em(0x968928)) + rep as f64 * f64_em(0x968968) + f64_em(0x96a6b0);
-            gastos = ftol(x);
+            let x = (r as f64 + publico as f64 * read_f64_at(0x968928)) + rep as f64 * read_f64_at(0x968968) + read_f64_at(0x96a6b0);
+            gastos = match_pl_ftol(x);
             if rep > 0x128e {
-                gastos = ftol(gastos as f64 * f64_em(0x968928));
+                gastos = match_pl_ftol(gastos as f64 * read_f64_at(0x968928));
             }
         } else {
             let r = cqb1_sortear(0x190);
-            gastos = ftol((r as f64 + publico as f64 * f64_em(0x968928)) + f64_em(0x96a690));
+            gastos = match_pl_ftol((r as f64 + publico as f64 * read_f64_at(0x968928)) + read_f64_at(0x96a690));
         }
     } else {
         let rep = cqb1_w(casa + 0x80);
-        let r1 = if rep != 0 { cqb1_sortear(ftol(rep as i32 as f64 * f64_em(0x9689e0))) } else { cqb1_sortear(0xfa) };
+        let r1 = if rep != 0 { cqb1_sortear(match_pl_ftol(rep as i32 as f64 * read_f64_at(0x9689e0))) } else { cqb1_sortear(0xfa) };
         let r1f = r1 as f32; // fstp dword: o primeiro sorteio guardado em float
         let r2 = cqb1_sortear(0xfa);
-        gastos = ftol((r2 as f64 + r1f as f64) + publico as f64);
+        gastos = match_pl_ftol((r2 as f64 + r1f as f64) + publico as f64);
     }
     let mut dinheiro = 0i32; // o [esp+0x1c] da original
     let tipo_ok = match (cqb1_b(partida + 0x3b) as i8 as i32).wrapping_add(1) as u32 {
@@ -160,41 +160,41 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
         } else if t == 6 || t == 4 {
             let w = cqb1_w(cqb1_d(partida + 0x14) + 0x69);
             let m = if w > 5 { w as i32 } else { 5 };
-            dinheiro = cqb1_div(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
+            dinheiro = div_trunc(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
         }
     }
     let nac = cqb1_d(casa + 0x53);
     let tipo = if nac != 0 { cqb1_b(nac + 0x7e) as i8 } else { 3 };
     if tipo == 2 {
-        dinheiro = cqb1_div(dinheiro, 5);
-        tv = cqb1_div(tv, 2);
-        custo = cqb1_div(custo, 4);
-        gastos = cqb1_div(gastos, 2);
+        dinheiro = div_trunc(dinheiro, 5);
+        tv = div_trunc(tv, 2);
+        custo = div_trunc(custo, 4);
+        gastos = div_trunc(gastos, 2);
     } else if tipo != 1 {
-        dinheiro = cqb1_div(dinheiro, 10);
-        tv = cqb1_div(tv, 10);
-        custo = cqb1_div(custo, 15);
-        gastos = cqb1_div(gastos, 10);
+        dinheiro = div_trunc(dinheiro, 10);
+        tv = div_trunc(tv, 10);
+        custo = div_trunc(custo, 15);
+        gastos = div_trunc(gastos, 10);
     }
     if casa != 0 && nac != 0 {
         let n = cqb1_i(nac);
         if n == cqb1_i(0x9cf510) || n == cqb1_i(0x9cf2dc) || n == cqb1_i(0x9cf3e4) {
-            dinheiro = cqb1_div(dinheiro, 5);
-            tv = cqb1_div(tv, 2);
-            custo = cqb1_div(custo, 4);
-            gastos = cqb1_div(gastos, 2);
+            dinheiro = div_trunc(dinheiro, 5);
+            tv = div_trunc(tv, 2);
+            custo = div_trunc(custo, 4);
+            gastos = div_trunc(gastos, 2);
         }
     }
     let liquido = tv.wrapping_sub(gastos).wrapping_sub(custo).wrapping_add(renda);
     let somar = |fin: usize, a: usize, b: usize, v: i32| {
         cpz13_somar32(fin + a, v);
         cpz13_somar32(fin + b, v);
-        cpz13_somar_saldo(fin, v as i64);
+        add_to_balance(fin, v as i64);
     };
     if cqb1_b(partida + 0x3c) == 0 && cqb1_d(cqb1_d(partida + 0x1c) + 0x57) == cqb1_d(partida + 0x14) {
         let x = dinheiro as f64;
-        somar(mandante, 0x158, 0xb8, ftol(x * f64_em(0x969040)));
-        somar(visitante, 0x158, 0xb8, ftol(x * f64_em(0x9689e0)));
+        somar(mandante, 0x158, 0xb8, match_pl_ftol(x * read_f64_at(0x969040)));
+        somar(visitante, 0x158, 0xb8, match_pl_ftol(x * read_f64_at(0x9689e0)));
         crate::comparacao::ramo("cqb_1 liquido ao mandante");
         somar(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante
         let casa = cqb1_d(partida + 0x1c);
@@ -202,17 +202,17 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
         if cqb1_b(casa + 0x6d) != 0 && est != 0 {
             let base = cqb1_i(est + 0x3c);
             let r = cqb1_sortear(0xf).wrapping_add(1);
-            let c = ftol((r as f64 * f64_em(0x967898) + f64_em(0x969520)) * base as f64);
+            let c = match_pl_ftol((r as f64 * read_f64_at(0x967898) + read_f64_at(0x969520)) * base as f64);
             cpz13_somar32(mandante + 0x12c, c);
             cpz13_somar32(mandante + 0x8c, c);
-            cpz13_somar_saldo(mandante, -(c as i64));
+            add_to_balance(mandante, -(c as i64));
         }
         return;
     }
-    let metade = ftol(dinheiro as f64 * f64_em(0x968968));
+    let metade = match_pl_ftol(dinheiro as f64 * read_f64_at(0x968968));
     somar(mandante, 0x158, 0xb8, metade);
     somar(visitante, 0x158, 0xb8, metade);
-    let l2 = cqb1_div(liquido, 2);
+    let l2 = div_trunc(liquido, 2);
     somar(mandante, 0x140, 0xa0, l2);
     somar(visitante, 0x140, 0xa0, l2);
 }
@@ -220,11 +220,11 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
 /// Comparador da 0x59a5d0: lado a lado nos dois registros de finanças e no estado do sorteio (os sorteios de 10, dos
 /// gastos e da manutenção). Sem resultado, sem partida, sem um dos clubes ou com seleção: só a original.
 unsafe extern "thiscall" fn comparar_process_match_income(tabela: usize, partida: usize, resultado: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if resultado == 0 || partida == 0 || cqb1_d(partida + 0x1c) == 0 || cqb1_d(partida + 0x20) == 0 {
         return o(tabela, partida, resultado);
     }
-    let (Some(fm), Some(fv)) = (cqb1_financas(tabela, partida, 0x1c), cqb1_financas(tabela, partida, 0x20)) else {
+    let (Some(fm), Some(fv)) = (match_club_finance(tabela, partida, 0x1c), match_club_finance(tabela, partida, 0x20)) else {
         return o(tabela, partida, resultado); // seleção: a original não faz nada
     };
     if fm == fv {
@@ -246,26 +246,26 @@ unsafe extern "thiscall" fn comparar_process_match_income(tabela: usize, partida
 /// (1,3), 0x9d0248 (0,75) e 0x9d0244 (0,9), e × 1,2 na nação de 0x9cf314.
 unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, publico: i32) -> i32 {
     if partida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(%%I1%%)(tabela, partida, publico); // a caixa
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(%%I1%%)(tabela, partida, publico); // a caixa
     }
     if publico == 0 {
         return 0;
     }
-    let Some(fin) = cqb1_financas(tabela, partida, 0x1c) else { return 0 };
+    let Some(fin) = match_club_finance(tabela, partida, 0x1c) else { return 0 };
     let comp = cqb1_d(partida + 0x14);
     let mut v: i32;
     if cqb1_b(partida + 0x3c) != 0 && comp != 0 {
         v = (cqb1_w(comp + 0x69) as i32).wrapping_add(8).wrapping_mul(publico);
     } else {
         let casa = cqb1_d(partida + 0x1c);
-        crate::comparacao::ramo("cqb_1 preco pela reputacao");
-        let preco = cqb1_div(cqb1_w(casa + 0x80) as i32, 500); // cqb1: o preço pela reputação
+        crate::comparacao::ramo("cqb_1 preco pela injury_word_0c");
+        let preco = div_trunc(cqb1_w(casa + 0x80) as i32, 500); // cqb1: o preço pela reputação
         let amistoso = comp != 0 && {
             let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
             f(cqb1_d(0xae2c74), comp) != 0
         };
         if comp == 0 || amistoso {
-            v = ftol(preco as f64 * f64_em(0x968968) * publico as f64);
+            v = match_pl_ftol(preco as f64 * read_f64_at(0x968968) * publico as f64);
         } else if cqb1_b(casa + 0x64) == 1 || cqb1_b(cqb1_d(partida + 0x20) + 0x64) == 1 {
             v = preco.wrapping_add(4).wrapping_mul(publico);
         } else {
@@ -273,16 +273,16 @@ unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, pu
         }
         if fin != 0 && cqb1_d(casa + 0x57) == comp {
             let desconto = *((fin + 0x160) as *const f32) as f64;
-            v = ftol(v as f64 - desconto * v as f64);
+            v = match_pl_ftol(v as f64 - desconto * v as f64);
         }
     }
     let casa = cqb1_d(partida + 0x1c);
     let nac = cqb1_d(casa + 0x53);
     let tipo = if nac != 0 { cqb1_b(nac + 0x7e) as i8 } else { 3 };
     if tipo == 2 {
-        v = cqb1_div(v, 4);
+        v = div_trunc(v, 4);
     } else if tipo != 1 {
-        v = cqb1_div(v, 10);
+        v = div_trunc(v, 10);
     }
     let liga = cqb1_d(casa + 0x57);
     let k = if liga != 0 && cqb1_i(liga) == cqb1_i(0x9cf570) {
@@ -304,10 +304,10 @@ unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, pu
         }
     };
     if let Some(k) = k {
-        v = ftol(v as f64 * f64_em(k));
+        v = match_pl_ftol(v as f64 * read_f64_at(k));
     }
     if nac != 0 && cqb1_i(nac) == cqb1_i(0x9cf314) {
-        v = ftol(v as f64 * f64_em(0x968978));
+        v = match_pl_ftol(v as f64 * read_f64_at(0x968978));
     }
     v
 }
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, pu
 /// Comparador da 0x59af40: a devolução (só lê; a 0x540a50 pode zerar a marca +0x244 do clube, igual nas duas). Sem
 /// partida: só a original (a caixa).
 unsafe extern "thiscall" fn comparar_calc_gate_receipts(tabela: usize, partida: usize, publico: i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(%%I1%%);
     if partida == 0 {
         return o(tabela, partida, publico);
     }
@@ -330,12 +330,12 @@ unsafe extern "thiscall" fn comparar_calc_gate_receipts(tabela: usize, partida: 
 unsafe extern "thiscall" fn pay_league_fine(this: usize, valor: i32) {
     cpz13_somar32(this + 0x128, valor);
     cpz13_somar32(this + 0x88, valor);
-    cpz13_somar_saldo(this, -(valor as i64));
+    add_to_balance(this, -(valor as i64));
 }
 
 /// Comparador da 0x599850: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_pay_league_fine(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_league_fine(this, valor));
     PLACAR.registrar(igual, || format!("pay_league_fine(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
 }

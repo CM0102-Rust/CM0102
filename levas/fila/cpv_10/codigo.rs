@@ -5,7 +5,7 @@ unsafe fn cpv10_d(a: usize) -> i32 {
 }
 
 /// O registro de 31 bytes da pessoa `id` em [lesoes] (o físico e a lesão atual em +0xe).
-unsafe fn cpv10_registro(lesoes: usize, id: i32) -> usize {
+unsafe fn physical_record_of_id(lesoes: usize, id: i32) -> usize {
     (cpv10_d(lesoes) as u32).wrapping_add((id as u32).wrapping_mul(31)) as usize
 }
 
@@ -17,7 +17,7 @@ unsafe fn cpv10_registro(lesoes: usize, id: i32) -> usize {
 /// de erro (linha 0xc87).
 unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, noticia: u32) {
     if pessoa == 0 {
-        aviso_em(0x9e7f28, 0xc87);
+        show_error_at(0x9e7f28, 0xc87);
         return;
     }
     let id = cpv10_d(pessoa);
@@ -27,7 +27,7 @@ unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, notici
     if id >= cpv10_d(0xae2364) / 2 {
         crate::comparacao::ramo("cpv_10 metade de cima");
     }
-    let r = cpv10_registro(this, id);
+    let r = physical_record_of_id(this, id);
     let i = cpv10_d(r + 0xe);
     if i == -1 { // cpv10: a lesão atual
         return;
@@ -51,18 +51,18 @@ unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, notici
     }
     crate::comparacao::ramo("cpv_10 fim da lesao");
     *(e as *mut u8) = 0xff; // cpv10: a entrada fica livre
-    core::ptr::write_unaligned((cpv10_registro(this, cpv10_d(pessoa)) + 0xe) as *mut i32, -1); // cpv10: sem lesão atual
+    core::ptr::write_unaligned((physical_record_of_id(this, cpv10_d(pessoa)) + 0xe) as *mut i32, -1); // cpv10: sem lesão atual
 }
 
 /// Comparador: lado a lado na entrada (tipo) e no +0xe do registro quando nada sai da rotina (férias e sem notícia);
 /// com o histórico (arquivo) ou a notícia: só a original, conferindo o plano (tipo 0xff e +0xe −1). Sem pessoa: a
 /// original (caixa).
 unsafe extern "thiscall" fn comparar_end_player_injury(this: usize, pessoa: usize, noticia: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     if pessoa == 0 || cpv10_d(pessoa) >= cpv10_d(0xae2364) {
         return o(this, pessoa, noticia);
     }
-    let r = cpv10_registro(this, cpv10_d(pessoa));
+    let r = physical_record_of_id(this, cpv10_d(pessoa));
     let i = cpv10_d(r + 0xe);
     if i == -1 {
         return o(this, pessoa, noticia);
@@ -73,8 +73,8 @@ unsafe extern "thiscall" fn comparar_end_player_injury(this: usize, pessoa: usiz
     let fora = *(e as *const u8) != 0x51 || (noticia != 0 && clube != 0 && humano(clube, 0, 1, 0, 0) != 0);
     if fora {
         o(this, pessoa, noticia);
-        let ok = *(e as *const u8) == 0xff && cpv10_d(cpv10_registro(this, cpv10_d(pessoa)) + 0xe) == -1;
-        PLACAR.registrar(ok, || format!("end_player_injury({:x}, {}) plano: tipo {:x} e +0xe {}", pessoa, noticia, *(e as *const u8), cpv10_d(cpv10_registro(this, cpv10_d(pessoa)) + 0xe)));
+        let ok = *(e as *const u8) == 0xff && cpv10_d(physical_record_of_id(this, cpv10_d(pessoa)) + 0xe) == -1;
+        PLACAR.registrar(ok, || format!("end_player_injury({:x}, {}) plano: tipo {:x} e +0xe {}", pessoa, noticia, *(e as *const u8), cpv10_d(physical_record_of_id(this, cpv10_d(pessoa)) + 0xe)));
         return;
     }
     let reg = [(e, 1), (r + 0xe, 4)];
@@ -116,7 +116,7 @@ unsafe extern "stdcall" fn media_queue_player_apology_news(jogador: usize, clube
 
 /// Comparador: a notícia sorteia e vai para a caixa do técnico: só a original (a prova é a carreira e o modo Rust).
 unsafe extern "stdcall" fn comparar_media_queue_player_apology_news(jogador: usize, clube: usize, historia: i16) {
-    orig::<unsafe extern "stdcall" fn(usize, usize, i16)>(%%I1%%)(jogador, clube, historia)
+    original_fn::<unsafe extern "stdcall" fn(usize, usize, i16)>(%%I1%%)(jogador, clube, historia)
 }
 
 /// { 0x787630 } (thiscall, ret 4, news.cpp): `News::clear_inbox(tecnico)`, pela 0x6b28b0 e pela carga do jogo
@@ -126,12 +126,12 @@ unsafe extern "stdcall" fn comparar_media_queue_player_apology_news(jogador: usi
 /// ou com índice negativo: a caixa de erro (linhas 0x24c1 e 0x24cc).
 unsafe extern "thiscall" fn clear_inbox(this: usize, tecnico: usize) {
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x24c1);
+        show_error_at(0xa693ec, 0x24c1);
         return;
     }
     let h = cpv10_d(tecnico).wrapping_sub(cpv10_d(0xae2364)).wrapping_add(0x10);
     if h < 0 {
-        aviso_em(0xa693ec, 0x24cc);
+        show_error_at(0xa693ec, 0x24cc);
         return;
     }
     let caixa = (cpv10_d(this + 8) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn clear_inbox(this: usize, tecnico: usize) {
 }
 
 /// As regiões que a 0x787630 grava (a caixa e, com a primeira notícia, +0xd6..+0xde das 100 notícias).
-unsafe fn cpv10_regioes_da_caixa(this: usize, caixa: usize) -> Vec<(usize, usize)> {
+unsafe fn news_box_regions(this: usize, caixa: usize) -> Vec<(usize, usize)> {
     let mut reg = vec![(caixa, 12)];
     let primeira = cpv10_d(caixa);
     if primeira != -1 {
@@ -170,7 +170,7 @@ unsafe fn cpv10_regioes_da_caixa(this: usize, caixa: usize) -> Vec<(usize, usize
 /// Comparador: lado a lado na caixa e nas 100 notícias; com resposta padrão a dar (clube ou seleção), só a original,
 /// conferindo o plano depois dela (+4 = +0, +8 = 0 e os dois campos das 100 notícias). Erros: a original.
 unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, tecnico: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     if tecnico == 0 {
         return o(this, tecnico);
     }
@@ -182,13 +182,13 @@ unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, tecnico: usize) {
     if cpv10_d(tecnico + 0x39) != 0 || cpv10_d(tecnico + 0x24) != 0 {
         o(this, tecnico);
         let primeira = cpv10_d(caixa);
-        let noticias = cpv10_regioes_da_caixa(this, caixa);
+        let noticias = news_box_regions(this, caixa);
         let ok = cpv10_d(caixa + 4) == primeira && cpv10_d(caixa + 8) == 0
             && noticias[1..].iter().all(|&(n, _)| cpv10_d(n) == 0 && cpv10_d(n + 4) == 1);
         PLACAR.registrar(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", tecnico, (primeira, cpv10_d(caixa + 4), cpv10_d(caixa + 8))));
         return;
     }
-    let reg = cpv10_regioes_da_caixa(this, caixa);
+    let reg = news_box_regions(this, caixa);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tecnico), || clear_inbox(this, tecnico));
     PLACAR.registrar(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", tecnico, mo, mr));
 }

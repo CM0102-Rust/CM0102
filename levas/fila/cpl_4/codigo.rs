@@ -12,7 +12,7 @@ unsafe fn cpl4_por(a: usize, v: usize) {
 /// contract_manager.cpp 0x9a8190, `linha`, `texto`) em 0xae24d0; o título "Memory Allocation Error" (0x9a8108)
 /// traduzido (0x66f4e0) em 0xae28bc, o corpo 0x9a7ff8 com o texto em 0xae26c4 e a caixa 0x5e8290. O jogo segue
 /// ([0xb67a34] fica como está).
-unsafe fn cpl4_sem_espaco(linha: u32, texto: usize) {
+unsafe fn show_cannot_create_space_box(linha: u32, texto: usize) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn get_free_staff_contract_space(this: usize, so_no_fim
         };
         cpl4_por(this, q);
         if q == 0 {
-            cpl4_sem_espaco(0x175, 0x9a81c4);
+            show_cannot_create_space_box(0x175, 0x9a81c4);
             return -1;
         }
     }
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn add_staff_contract(this: usize, pessoa: usize, valor
 /// inline: sem contrato a original lê o endereço 0x44 e cai, como aqui); L ≤ 0x50 sem lembrete; L > 0x96 um a
 /// L × 90 / 200 dias antes; e um a L / 4 dias antes (sem o registro de jogador, L = 100). As datas pela
 /// Date::sub_days (0x54c8e0), na ordem da original.
-unsafe fn cpl4_lembretes(this: usize, pessoa: usize, data: usize, tipo: u8) -> ([[u8; 8]; 2], usize) {
+unsafe fn decision_reminder_dates(this: usize, pessoa: usize, data: usize, tipo: u8) -> ([[u8; 8]; 2], usize) {
     let mut v = [[0u8; 8]; 2];
     let mut k = 0usize;
     if tipo != 1 {
@@ -128,7 +128,7 @@ unsafe fn cpl4_lembretes(this: usize, pessoa: usize, data: usize, tipo: u8) -> (
 /// tipo)`: acrescenta ao vetor de 14 bytes [this+0xc] (capacidade +0x10, conta +0x14; cresce de 100 em 100 quando a
 /// conta passa da capacidade − 4, realloc 0x945667 ou malloc 0x944e46; sem memória, caixa 0x103e e nada) a entrada
 /// (id da pessoa +0, data +4, fatia do dia +0xc, tipo +0xd). O tipo 1 leva antes os lembretes de tipo 2
-/// (`cpl4_lembretes`), sem fatia (+0xc fica como está). Pelas propostas: a decisão da pessoa (0x4cd230, 0x4ce4e0).
+/// (`decision_reminder_dates`), sem fatia (+0xc fica como está). Pelas propostas: a decisão da pessoa (0x4cd230, 0x4ce4e0).
 /// As cópias das datas (0x417c10, sem outro efeito) viram cópias de 8 bytes.
 unsafe extern "thiscall" fn add_decision_date(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
     crate::comparacao::ramo("cpl_4 data de decisao");
@@ -145,11 +145,11 @@ unsafe extern "thiscall" fn add_decision_date(this: usize, pessoa: usize, data: 
         };
         cpl4_por(this + 0xc, q);
         if q == 0 {
-            cpl4_sem_espaco(0x103e, 0x9a83e0);
+            show_cannot_create_space_box(0x103e, 0x9a83e0);
             return;
         }
     }
-    let (lembretes, k) = cpl4_lembretes(this, pessoa, data, tipo as u8);
+    let (lembretes, k) = decision_reminder_dates(this, pessoa, data, tipo as u8);
     for d in &lembretes[..k] {
         let n = cpl4_d(this + 0x14);
         let e = cpl4_d(this + 0xc).wrapping_add(n.wrapping_mul(14));
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn comparar_get_free_staff_contract_space(this: usize, 
             }
         }
     }
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> i32>(%%I0%%)(this, so_no_fim);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> i32>(%%I0%%)(this, so_no_fim);
     if r == -1 && cpl4_d(this) == 0 {
         return r; // sem memória: a caixa já saiu
     }
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn comparar_get_free_staff_contract_space(this: usize, 
 /// Comparador: a vaga é a do fim (a conta de antes); confere a ligação da pessoa, o id no contrato e a conta.
 unsafe extern "thiscall" fn comparar_add_staff_contract(this: usize, pessoa: usize, valor: u32) -> u32 {
     let n = cpl4_d(this + 8);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, pessoa, valor);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, pessoa, valor);
     if cpl4_d(this) == 0 {
         return r; // sem memória
     }
@@ -214,10 +214,10 @@ unsafe extern "thiscall" fn comparar_add_staff_contract(this: usize, pessoa: usi
 /// Comparador: os lembretes e a entrada esperados antes da original; confere a conta e cada entrada nova.
 unsafe extern "thiscall" fn comparar_add_decision_date(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
     let n = cpl4_d(this + 0x14);
-    let (lembretes, k) = cpl4_lembretes(this, pessoa, data, tipo as u8);
+    let (lembretes, k) = decision_reminder_dates(this, pessoa, data, tipo as u8);
     let d = core::ptr::read_unaligned(data as *const [u8; 8]);
     let id = cpl4_d(pessoa);
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, pessoa, data, fatia, tipo);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, pessoa, data, fatia, tipo);
     if cpl4_d(this + 0xc) == 0 {
         return; // sem memória: a caixa já saiu
     }

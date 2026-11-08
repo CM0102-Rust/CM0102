@@ -51,7 +51,7 @@ unsafe extern "C" fn league_compare_table_rows_h2h(a: usize, b: usize) -> i32 {
 }
 
 unsafe extern "C" fn comparar_league_compare_table_rows_h2h(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = league_compare_table_rows_h2h(a, b);
     PLACAR.registrar(r == n, || format!("league_compare_table_rows_h2h({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -76,7 +76,7 @@ unsafe extern "C" fn league_compare_dates(a: usize, b: usize) -> i32 {
 }
 
 unsafe extern "C" fn comparar_league_compare_dates(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = league_compare_dates(a, b);
     PLACAR.registrar(r == n, || format!("league_compare_dates({:x}, {:x}) original={} rust={}", a, b, r, n));
     r

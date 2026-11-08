@@ -4,7 +4,7 @@ unsafe fn cpx5_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
 }
 
-unsafe fn cpx5_clubes() -> u32 {
+unsafe fn club_count() -> u32 {
     *(0xae235c as *const u32)
 }
 
@@ -22,11 +22,11 @@ unsafe extern "thiscall" fn save_finance_dat(this: usize, save: usize) {
     }
     let mut z = abrir_item(save, 0x9c87b0, 1, 0x16, 4);
     if z == 0 {
-        aviso_em(0x9c8784, 0x115e);
+        show_error_at(0x9c8784, 0x115e);
         return;
     }
-    if gravar_item(cpx5_d(this), 0x167, cpx5_clubes(), z) != cpx5_clubes() { // cpx5: os registros das finanças
-        aviso_em(0x9c8784, 0x1166);
+    if gravar_item(cpx5_d(this), 0x167, club_count(), z) != club_count() { // cpx5: os registros das finanças
+        show_error_at(0x9c8784, 0x1166);
         return;
     }
     fechar_item(&mut z);
@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn save_finance_dat(this: usize, save: usize) {
 unsafe extern "thiscall" fn comparar_save_finance_dat(this: usize, save: usize) {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     // (o .qst gravado no modo rust com e sem a leva, item a item)
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, save)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, save)
 }
 
 /// { 0x59b2a0 } (thiscall, ret 4, fin_prm.cpp): `FinanceTable::load_from_save(save)`: lê do item `finance.dat`
@@ -53,11 +53,11 @@ unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) -> u32 {
     }
     let mut z = abrir_item(save, 0x9c87b0, 0, 0x16, 4);
     if z == 0 {
-        aviso_em(0x9c8784, 0x1137);
+        show_error_at(0x9c8784, 0x1137);
         return 0;
     }
-    if ler_item(cpx5_d(this), 0x167, cpx5_clubes(), z) != cpx5_clubes() {
-        aviso_em(0x9c8784, 0x113f);
+    if ler_item(cpx5_d(this), 0x167, club_count(), z) != club_count() {
+        show_error_at(0x9c8784, 0x113f);
         return 0;
     }
     fechar_item(&mut z);
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_load_from_save(this: usize, save: usize) -> u32 {
     // ponytail: lê do contêiner (a posição do item anda; não pode rodar duas vezes); a cópia é provada pela carga
     // do save de férias na prova do save (levas/N/CARGA)
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, save)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, save)
 }
 
 /// { 0x859cc0 } (thiscall, ret 4, squad_manager.cpp): `SQUAD_MANAGER::save(save)`: grava no item `squad_manager.dat`
@@ -83,11 +83,11 @@ unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usize) -> u32 
     let mut v = *(this as *const u16) as u32; // cpx5: o valor do gerente de elencos
     let mut z = abrir_item(save, 0xa82bc0, 1, 0x16, 4);
     if z == 0 {
-        aviso_em(0xa82b88, 0x68);
+        show_error_at(0xa82b88, 0x68);
         return 0;
     }
     if gravar_item(&mut v as *mut u32 as usize, 4, 1, z) != 1 {
-        aviso_em(0xa82b88, 0x6f);
+        show_error_at(0xa82b88, 0x6f);
         return 0;
     }
     fechar_item(&mut z);
@@ -97,5 +97,5 @@ unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usize) -> u32 
 /// Comparador da 0x859cc0: só a original.
 unsafe extern "thiscall" fn comparar_squad_manager_save(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, save)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, save)
 }

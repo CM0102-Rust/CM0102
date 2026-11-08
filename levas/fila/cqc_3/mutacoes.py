@@ -5,12 +5,12 @@
 # condicoes do trecho.
 MUTACOES = [
     ('cqc3_mesma_fatia_nao_entra',
-     'cqc3_entra_pelo_tipo(grav, lista, x, true); // cqc3: o mesmo clube na mesma fatia',
+     'add_clash_by_type(grav, lista, x, true); // cqc3: o mesmo clube na mesma fatia',
      '{} // mutacao: o jogo nao entra',
      'cqc_3 mesmo clube na mesma fatia'),
     ('cqc3_outra_fatia_um',
-     'cqc3_sem_gravidade(grav, true); // cqc3: o mesmo clube noutra fatia',
-     'cqc3_sem_gravidade(grav, false); // mutacao: 1 no lugar de 0x14',
+     'default_clash_severity(grav, true); // cqc3: o mesmo clube noutra fatia',
+     'default_clash_severity(grav, false); // mutacao: 1 no lugar de 0x14',
      'cqc_3 mesmo clube noutra fatia'),
     ('cqc3_sem_dia_seguinte',
      'do_dia(this, jogo, &mut g, lista, pa, n as u32, pd, 1); // cqc3: o dia seguinte',

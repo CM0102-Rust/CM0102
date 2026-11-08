@@ -17,6 +17,6 @@ MUTACOES = [
      'cqd_7 time na primeira rodada'),
     ('cqd7_vaga_inicial_adiante',
      'let (mut s, inicio) = (s, inicio); // cqd7: a vaga inicial na rodada seguinte',
-     'let (mut s, inicio) = { let n = (cqd7_w(cqd7_rodada(this, r) + 0x82) as i32).max(1); let x = (s as i16 as i32 + 1) % n; (x, x) }; // mutacao: a vaga seguinte',
+     'let (mut s, inicio) = { let n = (cqd7_w(comp_cup_round(this, r) + 0x82) as i32).max(1); let x = (s as i16 as i32 + 1) % n; (x, x) }; // mutacao: a vaga seguinte',
      'cqd_7 vaga na rodada seguinte'),
 ]

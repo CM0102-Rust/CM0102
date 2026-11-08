@@ -31,7 +31,7 @@ unsafe fn cqg6_nacao(clube: usize) -> usize {
 
 /// Copia a entrada de 7 bytes `de` (+0 o clube, +4 os da mesma nação, +5 o grupo da primeira fase, +6 0 vencedor / 1
 /// segundo) para `para`, como a original: o dword, o word +4 e o byte +6.
-unsafe fn cqg6_copiar(para: usize, de: usize) {
+unsafe fn copy_group_entry(para: usize, de: usize) {
     cqg6_pd(para, cqg6_d(de));
     cqg6_pw(para + 4, cqg6_w(de + 4) as u16);
     cqg6_pb(para + 6, cqg6_b(de + 6));
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
     let regras_b: [u8; 4] = [2, 0, 0, 0];
     let w = zerada(0x10, 7);
     if w == 0 {
-        aviso_em(0x9c4900, 0x61c);
+        show_error_at(0x9c4900, 0x61c);
         return;
     }
     let e7 = |l: usize, i: i32| l.wrapping_add((i * 7) as usize);
@@ -111,12 +111,12 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
     }
     let r = zerada(0x10, 7);
     if r == 0 {
-        aviso_em(0x9c4900, 0x649);
+        show_error_at(0x9c4900, 0x649);
         return;
     }
     let g = zerada(0x10, 7);
     if g == 0 {
-        aviso_em(0x9c4900, 0x651);
+        show_error_at(0x9c4900, 0x651);
         return;
     }
     let mut k = 0i8;
@@ -126,14 +126,14 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
             continue;
         }
         let c = k as i32;
-        cqg6_copiar(e7(r, if cqg6_b(e + 6) != 0 { c + 1 } else { c }), e);
+        copy_group_entry(e7(r, if cqg6_b(e + 6) != 0 { c + 1 } else { c }), e);
         cqg6_pd(e, 0);
         for a in 0..16i32 {
             if i != a && cqg6_b(e + 5) == cqg6_b(e7(w, a) + 5) {
                 let o = e7(w, a);
                 let destino = if cqg6_d(e7(r, c)) != 0 { e7(r, c + 1) } else { e7(r, c) };
                 crate::comparacao::ramo("cqg_6 par do mesmo grupo");
-                cqg6_copiar(destino, o); // cqg6: o outro do grupo
+                copy_group_entry(destino, o); // cqg6: o outro do grupo
                 k = k.wrapping_add(2);
                 cqg6_pd(o, 0);
                 break;
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
             crate::comparacao::ramo("cqg_6 grupo escolhido");
             let base = melhor as i8 as i32 * 4;
             let v = if cqg6_d(e7(g, s + base)) == 0 { e7(g, s + base) } else { e7(g, s + 1 + base) };
-            cqg6_copiar(v, p);
+            copy_group_entry(v, p);
             cqg6_pd(p, 0);
         }
     }
@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
             return;
         }
         if let Some(v) = (0..16).map(|j| e7(g, j)).find(|&v| cqg6_d(v) == 0) {
-            cqg6_copiar(v, p);
+            copy_group_entry(v, p);
         }
     }
     let t = alocar(0x40);
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
         let slot = cqg6_d(this + 0xc) + (h + 8) as usize * 4;
         cqg6_pd(slot, fase);
         if cqg6_d(cqg6_d(this + 0xc) + (h + 8) as usize * 4) == 0 {
-            aviso_em(0x9c4900, 0x715);
+            show_error_at(0x9c4900, 0x715);
             return;
         }
         soltar(tabela);
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
     soltar(t);
     let uefa = cqg6_d(cqg6_d(0xadadfc) + cqg6_d(0x9cf6f0) * 4);
     if uefa == 0 {
-        aviso_em(0x9c4900, 0x729);
+        show_error_at(0x9c4900, 0x729);
         return;
     }
     let mut destino = ((cqg6_w(uefa + 0x3e) as i32 - 1) * 6) as usize;
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
 }
 
 /// Os 16 clubes que vão para a segunda fase (o primeiro e o segundo de cada grupo da primeira).
-unsafe fn cqg6_plano(this: usize) -> Vec<usize> {
+unsafe fn second_stage_clubs(this: usize) -> Vec<usize> {
     let linha: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x6826d0usize);
     let mut v = Vec::with_capacity(16);
     for b in 0..8usize {
@@ -302,11 +302,11 @@ unsafe fn cqg6_plano(this: usize) -> Vec<usize> {
 /// chamada de fora (tentativa 0), as fases 8..11 existem, +0x30 = 11 e os clubes das tabelas delas (+0xb1, linhas de
 /// 0x3b bytes) são os 16 classificados.
 unsafe extern "thiscall" fn comparar_draw_phase2_groups(this: usize, tentativa: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     if tentativa as u8 != 0 || cqg6_d(cqg6_d(0xadadfc) + cqg6_d(0x9cf6f0) * 4) == 0 {
         return o(this, tentativa);
     }
-    let plano = cqg6_plano(this);
+    let plano = second_stage_clubs(this);
     o(this, tentativa);
     let mut vistos = Vec::with_capacity(16);
     let mut ok = cqg6_d(this + 0x30) == 11;
@@ -342,7 +342,7 @@ unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usize, b: usize
 
 /// Pura: a devolução.
 unsafe extern "C" fn comparar_european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = european_cup_compare_phase2_draw_entries(a, b);
     PLACAR.registrar(r == n, || format!("european_cup_compare_phase2_draw_entries: original={} rust={}", r, n));
     r
@@ -396,7 +396,7 @@ unsafe extern "C" fn comp_util_get_parent_stage_id(id: i32) -> i32 {
 
 /// Pura: a devolução.
 unsafe extern "C" fn comparar_comp_util_get_parent_stage_id(id: i32) -> i32 {
-    let r = orig::<unsafe extern "C" fn(i32) -> i32>(%%I2%%)(id);
+    let r = original_fn::<unsafe extern "C" fn(i32) -> i32>(%%I2%%)(id);
     let n = comp_util_get_parent_stage_id(id);
     PLACAR.registrar(r == n, || format!("comp_util_get_parent_stage_id({:#x}): original={:#x} rust={:#x}", id, r, n));
     r

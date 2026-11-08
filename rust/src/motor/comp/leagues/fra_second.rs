@@ -18,7 +18,11 @@ pub(crate) struct Cqm5Divisao {
     pub(crate) baixo: bool,
 }
 
-/// O corpo dos quatro construtores (thiscall(this, ano, registro), ret 8, quadro SEH só para os operator new): a base
+/// Shared body of four league constructors: League::League, record, vtable, year, discipline; loads saved state or
+/// builds rules, table, fixtures, order, Comp_Stats, predicted positions; for Primera also the Spanish lower division
+/// at +0xee.
+///
+/// [pt] O corpo dos quatro construtores (thiscall(this, ano, registro), ret 8, quadro SEH só para os operator new): a base
 /// (League::League 0x682200: mov ecx -> thiscall, ret 0), o registro (+4), a vtable, o ano (+0x40) e a disciplina
 /// (+0x50); tenta carregar o estado (League::load_from_temp_file 0x687b10: push 1; mov ecx -> thiscall, ret 4).
 /// Carregou: pronto. Senão, a liga nova, só a liga: fase 0xff (+0x44), fase atual −1 (+0x30), +0x2c = 0, +0xc = 0; as
@@ -29,7 +33,7 @@ pub(crate) struct Cqm5Divisao {
 /// ([+4]+0x5d) não tem o bit 4 de +0x11c [inferência: a divisão de baixo jogável], a divisão de baixo espanhola
 /// (operator new de 0xee; SpaLower::SpaLower 0x851020: push ano; mov ecx, novo -> thiscall, ret 4) vai para +0xee
 /// (0 sem memória); com o bit, +0xee = 0. Devolve this.
-pub(crate) unsafe fn cqm5_construir(this: usize, ano: u32, registro: usize, p: &Cqm5Divisao) -> usize {
+pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: usize, p: &Cqm5Divisao) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.regras);
@@ -54,26 +58,26 @@ pub(crate) unsafe fn cqm5_construir(this: usize, ano: u32, registro: usize, p: &
     write_u32_from_usize(this + 0x2c, 0);
     write_u32_from_usize(this + 0xc, 0);
     if regras(this) == 0 {
-        aviso_em(p.arquivo, p.linhas[0]);
+        show_error_at(p.arquivo, p.linhas[0]);
         return this;
     }
     if tabela(this) == 0 {
-        aviso_em(p.arquivo, p.linhas[1]);
+        show_error_at(p.arquivo, p.linhas[1]);
         return this;
     }
     if jogos(this) == 0 {
-        aviso_em(p.arquivo, p.linhas[2]);
+        show_error_at(p.arquivo, p.linhas[2]);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        aviso_em(p.arquivo, p.linhas[3]);
+        show_error_at(p.arquivo, p.linhas[3]);
         return this;
     }
     let e = novo(0x5ce);
     let s = if e != 0 { estatisticas(e, this) } else { 0 };
     write_u32_from_usize(this + 8, s);
     if s == 0 {
-        aviso_em(p.arquivo, p.linhas[4]);
+        show_error_at(p.arquivo, p.linhas[4]);
         return this;
     }
     previstas(this);
@@ -137,16 +141,19 @@ pub(crate) const CQM5_PRIMERA: Cqm5Divisao = Cqm5Divisao {
 /// [pt] { 0x5be330 } (thiscall, ret 8, fra_second.cpp): `FraSecond::FraSecond(ano, registro)`: a segunda divisão francesa
 /// (a Division 2), disciplina 0xc, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
-    cqm5_construir(this, ano, registro, &CQM5_FRANCA_2)
+    construct_division_league(this, ano, registro, &CQM5_FRANCA_2)
 }
 
 
 
 
-/// O comparador dos quatro: alocam: só a original, conferindo a devolução, a vtable, o ano, o registro e a disciplina;
+/// Comparer for the four constructors: only the original runs; checks return, vtable, year, record, discipline, stage
+/// fields and the lower division at +0xee.
+///
+/// [pt] O comparador dos quatro: alocam: só a original, conferindo a devolução, a vtable, o ano, o registro e a disciplina;
 /// na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c = 0 e +0xc = 0; na Primera, a divisão de baixo em +0xee
 /// conforme o bit 4 da nação.
-pub(crate) unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: usize, p: &Cqm5Divisao, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn compare_division_league_ctor(nome: &str, this: usize, ano: u32, registro: usize, p: &Cqm5Divisao, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == p.disciplina;
@@ -163,8 +170,8 @@ pub(crate) unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_SECOND);
-    cqm5_comparar("construct_fra_second", this, ano, registro, &CQM5_FRANCA_2, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_SECOND);
+    compare_division_league_ctor("construct_fra_second", this, ano, registro, &CQM5_FRANCA_2, || o(this, ano, registro))
 }
 
 /// the second: 4 go up and 2 go down in 2001, then 3 up and 3 down; the rest as the top division
@@ -175,12 +182,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_second(this: usize
 /// terceira abaixo ([0x9cf5d4]), +0x52 = 2 e 5 reservas.
 pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras da segunda");
-    cqj5_regras(this, &cqj5_segunda(this))
+    fra_first_apply_league_rules(this, &fra_first_second_division_rules(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_second_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_SECOND_SET_UP_RULES);
-    cqj5_comparar("fra_second_set_up_rules", this, cqj5_segunda(this), || o(this), || fra_second_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_SECOND_SET_UP_RULES);
+    fra_first_compare_league_rules("fra_second_set_up_rules", this, fra_first_second_division_rules(this), || o(this), || fra_second_set_up_rules(this))
 }
 
 /// the second has 20 clubs; no prize fund; TV pays by the division the club came from: 2,000,000 to those relegated
@@ -193,21 +200,21 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_second_set_up_rules(this: us
 /// National ([0x9cf5d4]); 1. Fonte 0x9ccc0c, linha 0x171.
 pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
-    if cqj6_encher(this, 0x9ccc0c, 0x171, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION) != Some(true) {
+    if fra_first_fill_league_table(this, 0x9ccc0c, 0x171, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION) != Some(true) {
         return 0;
     }
     crate::comparacao::ramo("cqj_6 tabela da segunda");
     core::ptr::write_unaligned((this + 0x28) as *mut i32, 0);
     *((this + 0xe1) as *mut u8) = 2;
-    cqi5_pagar(this, 0x1e8480, cqi5_registro(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)); // cqj6: a TV de quem caiu da primeira
-    cqi5_pagar(this, 0x16e360, cqi5_registro(KEY_CLUB_COMP_FRENCH_SECOND_DIVISION));
-    cqi5_pagar(this, 0x16e360, cqi5_registro(KEY_CLUB_COMP_FRENCH_NATIONAL));
+    eng_prm_pay_tv_rights(this, 0x1e8480, comp_record_of(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)); // cqj6: a TV de quem caiu da primeira
+    eng_prm_pay_tv_rights(this, 0x16e360, comp_record_of(KEY_CLUB_COMP_FRENCH_SECOND_DIVISION));
+    eng_prm_pay_tv_rights(this, 0x16e360, comp_record_of(KEY_CLUB_COMP_FRENCH_NATIONAL));
     1
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_SECOND_CREATE_TABLE);
-    cqj6_comparar("fra_second_create_table", this, 0x14, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION, None, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_SECOND_CREATE_TABLE);
+    fra_first_compare_league_table("fra_second_create_table", this, 0x14, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION, None, || o(this))
 }
 
 /// the second division schedule: 38 rounds, from 31 July to 20 May; in 18 rounds one match goes to a TV slot (day 5,
@@ -217,10 +224,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_table(this: us
 /// [pt] { 0x5be620 } (thiscall, ret 0x10, fra_second.cpp, 2.275 bytes, método +0x3c): `FraSecond::create_schedule`: a segunda divisão,
 /// 38 rodadas (`CQO4_SEGUNDA`). Fonte 0x9ccc0c, linha 0xa7.
 pub(crate) unsafe extern "thiscall" fn fra_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo4_calendario(this, fase, rodadas, extra, liga, &CQO4_LIGA_SEGUNDA)
+    create_league_schedule(this, fase, rodadas, extra, liga, &CQO4_LIGA_SEGUNDA)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SECOND_CREATE_SCHEDULE);
-    cqo4_comparar("fra_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_second_create_schedule(this, fase, r, e, l))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SECOND_CREATE_SCHEDULE);
+    compare_league_schedule("fra_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_second_create_schedule(this, fase, r, e, l))
 }

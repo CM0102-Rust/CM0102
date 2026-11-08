@@ -10,7 +10,7 @@ static mut CQJ5_ENSAIO: bool = false;
 /// Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
 /// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
 /// resultado em +0xba. Devolve 1.
-unsafe fn cqj5_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
+unsafe fn fra_first_apply_league_rules(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
     for &(d, t, v) in escritas {
         match t {
             1 => *((this + d) as *mut u8) = v as u8,
@@ -27,7 +27,7 @@ unsafe fn cqj5_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
 }
 
 /// A temporada 2001 (+0x40, o ano da liga, = 0x7d1): a última com 18 clubes na primeira divisão.
-unsafe fn cqj5_em_2001(this: usize) -> bool {
+unsafe fn is_2001_season(this: usize) -> bool {
     core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1
 }
 
@@ -35,7 +35,7 @@ unsafe fn cqj5_em_2001(this: usize) -> bool {
 /// = 1), os desempates 1, 2 e 3 (+0xc5..+0xc7), nenhum play-off (+0xbf = +0xc0 = 0), os bits de regra +0xd9 = 0x83
 /// (a liga tem campeão, as vagas de cima são de acesso e a ordem das rodadas tackle ao meio) e 3 substituições
 /// (+0x4a).
-fn cqj5_comuns() -> Vec<(usize, u8, u32)> {
+fn common_rules() -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0x42, 1, 1), (0xc5, 1, 1), (0xc6, 1, 2), (0xc7, 1, 3), (0xbf, 1, 0), (0xc0, 1, 0), (0xd9, 2, 0x83), (0x4a, 1, 3)]
 }
 
@@ -44,13 +44,13 @@ fn cqj5_comuns() -> Vec<(usize, u8, u32)> {
 /// (+0x49), nenhuma liga acima (+0x1c = −1), +0x52 = 2 [sem nome] e a segunda abaixo (+0x20 = [0x9cf5d0]).
 unsafe extern "thiscall" fn fra_first_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras da primeira");
-    cqj5_regras(this, &cqj5_primeira(this))
+    fra_first_apply_league_rules(this, &fra_first_first_division_rules(this))
 }
 
-unsafe fn cqj5_primeira(this: usize) -> Vec<(usize, u8, u32)> {
-    let mut v = cqj5_comuns();
+unsafe fn fra_first_first_division_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3), (0xab, 2, 0), (0xdb, 2, 0), (0xbe, 1, 0)]);
-    let caem = if cqj5_em_2001(this) { 2 } else { 3 }; // cqj5: a primeira rebaixa 2 em 2001
+    let caem = if is_2001_season(this) { 2 } else { 3 }; // cqj5: a primeira rebaixa 2 em 2001
     v.extend_from_slice(&[(0xc1, 1, caem), (0x49, 1, 5), (0x1c, 4, 0xffff_ffff), (0x52, 1, 2), (0x20, 4, cqj5_d(0x9cf5d0) as u32)]);
     v
 }
@@ -60,13 +60,13 @@ unsafe fn cqj5_primeira(this: usize) -> Vec<(usize, u8, u32)> {
 /// terceira abaixo ([0x9cf5d4]), +0x52 = 2 e 5 reservas.
 unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras da segunda");
-    cqj5_regras(this, &cqj5_segunda(this))
+    fra_first_apply_league_rules(this, &fra_first_second_division_rules(this))
 }
 
-unsafe fn cqj5_segunda(this: usize) -> Vec<(usize, u8, u32)> {
-    let mut v = cqj5_comuns();
+unsafe fn fra_first_second_division_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqj5: a segunda dá 3 pontos pela vitória
-    let (sobem, caem) = if cqj5_em_2001(this) { (4, 2) } else { (3, 3) };
+    let (sobem, caem) = if is_2001_season(this) { (4, 2) } else { (3, 3) };
     v.extend_from_slice(&[(0xbe, 1, sobem), (0xc1, 1, caem), (0x1c, 4, cqj5_d(0x9cf5cc) as u32), (0x52, 1, 2), (0x20, 4, cqj5_d(0x9cf5d4) as u32), (0x49, 1, 5)]);
     v
 }
@@ -76,13 +76,13 @@ unsafe fn cqj5_segunda(this: usize) -> Vec<(usize, u8, u32)> {
 /// = −1), +0xa7 (os jogos da temporada) = −1 (recalculado pela 0x687430) e 3 reservas (+0x49).
 unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras do national");
-    cqj5_regras(this, &cqj5_terceira(this))
+    fra_first_apply_league_rules(this, &national_division_rules(this))
 }
 
-unsafe fn cqj5_terceira(this: usize) -> Vec<(usize, u8, u32)> {
-    let mut v = cqj5_comuns();
+unsafe fn national_division_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqj5: o National joga 2 turnos
-    let sobem = if cqj5_em_2001(this) { 4 } else { 3 };
+    let sobem = if is_2001_season(this) { 4 } else { 3 };
     v.extend_from_slice(&[(0xbe, 1, sobem), (0xc1, 1, 4), (0x1c, 4, cqj5_d(0x9cf5d0) as u32), (0x49, 1, 3), (0x20, 4, 0xffff_ffff), (0xa7, 2, 0xffff)]);
     v
 }
@@ -90,7 +90,7 @@ unsafe fn cqj5_terceira(this: usize) -> Vec<(usize, u8, u32)> {
 /// O comparador das três (ensaio, como o da cqi_4): a original roda inteira; a faixa +0x1c..+0xec volta e a cópia
 /// grava as regras sem a virtual +0x3c; os campos que a cópia grava saem iguais aos da original, e a devolução 1; no
 /// fim fica a faixa da original.
-unsafe fn cqj5_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
+unsafe fn fra_first_compare_league_rules(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let faixa = [(this + 0x1c, 0xd0)];
     let antes = crate::comparacao::Memoria::ler(&faixa);
     let r = original();
@@ -115,16 +115,16 @@ unsafe fn cqj5_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>
 }
 
 unsafe extern "thiscall" fn comparar_fra_first_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqj5_comparar("fra_first_set_up_rules", this, cqj5_primeira(this), || o(this), || fra_first_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    fra_first_compare_league_rules("fra_first_set_up_rules", this, fra_first_first_division_rules(this), || o(this), || fra_first_set_up_rules(this))
 }
 
 unsafe extern "thiscall" fn comparar_fra_second_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqj5_comparar("fra_second_set_up_rules", this, cqj5_segunda(this), || o(this), || fra_second_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    fra_first_compare_league_rules("fra_second_set_up_rules", this, fra_first_second_division_rules(this), || o(this), || fra_second_set_up_rules(this))
 }
 
 unsafe extern "thiscall" fn comparar_fra_third_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqj5_comparar("fra_third_set_up_rules", this, cqj5_terceira(this), || o(this), || fra_third_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    fra_first_compare_league_rules("fra_third_set_up_rules", this, national_division_rules(this), || o(this), || fra_third_set_up_rules(this))
 }

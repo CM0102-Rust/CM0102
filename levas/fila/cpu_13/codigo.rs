@@ -29,7 +29,7 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
         esi = *forcada as i32;
     } else {
         let rep = cpu13_w(clube + 0x80) as i32;
-        let t = ftol(cpu13_d(clube + 0x77) as f64 * f64_em(0x96e2b0) - f64_em(0x96e2a8)) as i16 as i32;
+        let t = match_pl_ftol(cpu13_d(clube + 0x77) as f64 * read_f64_at(0x96e2b0) - read_f64_at(0x96e2a8)) as i16 as i32;
         let ebx = (if rep > t { rep } else if t > 10000 { 10000 } else { t }) as i16 as i32;
         let mut n = rep;
         let mut l = rep;
@@ -60,14 +60,14 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
     let mut edi: i32 = if esi > 9000 {
         esi.wrapping_mul(3).wrapping_add(7500)
     } else if esi > 7000 {
-        ftol(esi as f64 * f64_em(0x96d688) - f64_em(0x96d760))
+        match_pl_ftol(esi as f64 * read_f64_at(0x96d688) - read_f64_at(0x96d760))
     } else if esi > 5000 {
-        ftol(esi as f64 * f64_em(0x968e18) + f64_em(0x9690b8))
+        match_pl_ftol(esi as f64 * read_f64_at(0x968e18) + read_f64_at(0x9690b8))
     } else if esi > 3000 {
         crate::comparacao::ramo("cpu_13 faixa de 3000 a 5000");
         esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: a faixa do meio
     } else {
-        ftol(esi as f64 * f64_em(0x969018) + f64_em(0x9688e8))
+        match_pl_ftol(esi as f64 * read_f64_at(0x969018) + read_f64_at(0x9688e8))
     };
     if forcada.is_null() {
         let elenco = contar(clube, 0, 0);
@@ -79,18 +79,18 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
             if fin != 0 {
                 match riqueza(fin) as i8 {
                     -2 => edi /= 2,
-                    -1 => edi = ftol(edi as f64 * f64_em(0x96a670)),
+                    -1 => edi = match_pl_ftol(edi as f64 * read_f64_at(0x96a670)),
                     _ => {}
                 }
             }
         } else {
             let nacao = cpu13_d(clube + 0x57) as usize;
             if com_nacao(nacao) {
-                let t2 = ftol(cpu13_w(nacao + 0x69) as i32 as f64 * f64_em(0x969588) + f64_em(0x968ea8)) as u8;
+                let t2 = match_pl_ftol(cpu13_w(nacao + 0x69) as i32 as f64 * read_f64_at(0x969588) + read_f64_at(0x968ea8)) as u8;
                 let falta = (elenco as u8).wrapping_sub(t2) as i8;
                 if falta < 0 {
                     let v = if falta > -10 { falta as i32 } else { -10 };
-                    edi = ftol((v as f64 * f64_em(0x967888) + f64_em(0x967890)) * edi as f64);
+                    edi = match_pl_ftol((v as f64 * read_f64_at(0x967888) + read_f64_at(0x967890)) * edi as f64);
                 }
             }
             let fin = financas(cpu13_d(0xae2a38) as usize, clube);
@@ -98,21 +98,21 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
                 let v = edi as f64;
                 match riqueza(fin) as i8 {
                     -2 => {
-                        let (x, y) = (v * f64_em(0x96d718), edi.wrapping_sub(1000) as f64);
-                        edi = ftol(if x < y { x } else { y });
+                        let (x, y) = (v * read_f64_at(0x96d718), edi.wrapping_sub(1000) as f64);
+                        edi = match_pl_ftol(if x < y { x } else { y });
                     }
                     -1 => {
-                        let (x, y) = (v * f64_em(0x96e2a0), edi.wrapping_sub(500) as f64);
-                        edi = ftol(if x < y { x } else { y });
+                        let (x, y) = (v * read_f64_at(0x96e2a0), edi.wrapping_sub(500) as f64);
+                        edi = match_pl_ftol(if x < y { x } else { y });
                     }
                     1 => {
-                        let (x, y) = (v * f64_em(0x96d6b8), edi.wrapping_add(125) as f64);
-                        edi = ftol(if x > y { x } else { y });
+                        let (x, y) = (v * read_f64_at(0x96d6b8), edi.wrapping_add(125) as f64);
+                        edi = match_pl_ftol(if x > y { x } else { y });
                     }
                     2 => {
                         crate::comparacao::ramo("cpu_13 clube rico");
-                        let (x, y) = (v * f64_em(0x968fa0), edi.wrapping_add(250) as f64); // cpu13: o rico
-                        edi = ftol(if x > y { x } else { y });
+                        let (x, y) = (v * read_f64_at(0x968fa0), edi.wrapping_add(250) as f64); // cpu13: o rico
+                        edi = match_pl_ftol(if x > y { x } else { y });
                     }
                     _ => {}
                 }
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn player_search_slot_sum_goals(this: usize) -> u16 {
 
 /// Comparador: pura (lê o clube, o elenco e as finanças; grava só `*base`): as duas sobre bases próprias.
 unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize, base: *mut i32, forcada: *const i16) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, *mut i32, *const i16) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, *mut i32, *const i16) -> i32>(%%I0%%);
     let (mut bo, mut br) = (0x7fff_0001_i32, 0x7fff_0002_i32);
     let r = o(clube, &mut bo, forcada);
     let n = player_search_get_club_target_rating(clube, &mut br, forcada);
@@ -174,7 +174,7 @@ unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize,
 
 /// Comparador: pura: compara a devolução.
 unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%)(this, i);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%)(this, i);
     let n = player_search_slot_get_match_entry(this, i);
     PLACAR.registrar(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
     r
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: us
 
 /// Comparador: pura: compara a devolução.
 unsafe extern "thiscall" fn comparar_player_search_slot_sum_goals(this: usize) -> u16 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u16>(%%I2%%)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(%%I2%%)(this);
     let n = player_search_slot_sum_goals(this);
     PLACAR.registrar(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));
     r

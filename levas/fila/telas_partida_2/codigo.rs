@@ -6,7 +6,7 @@ const GERENTE_DE_TELAS: usize = 0xb74450;
 
 /// As regiões que a montagem de uma tela mexe: o gerente de telas (0x3840 bytes) e o `Display` da tela
 /// atual (a lista de exibição: itens de 0x18c bytes em +0xba95e, quantos em +0x12e9a0; 0x12f550 bytes).
-unsafe fn regioes_da_tela() -> Vec<(usize, usize)> {
+unsafe fn screen_build_regions() -> Vec<(usize, usize)> {
     let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16);
     let mut r = vec![(GERENTE_DE_TELAS, 0x3840)];
     if (0..64).contains(&vaga) {
@@ -24,7 +24,7 @@ unsafe fn regioes_da_tela() -> Vec<(usize, usize)> {
 /// (caixa de erro).
 unsafe extern "C" fn open_latest_scores(vaga: u32, entrada: usize) {
     if vaga == 0 || entrada == 0 {
-        return orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, entrada);
+        return original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, entrada);
     }
     crate::comparacao::ramo("telas abrir os ultimos placares");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
@@ -118,14 +118,14 @@ unsafe extern "C" fn latest_scores_input(item: u32) -> i32 {
 // ponytail: abrir e respond mexem em telas, menu e hora (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 unsafe extern "C" fn comparar_open_latest_scores(vaga: u32, entrada: usize) {
-    orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, entrada)
+    original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, entrada)
 }
 
 /// A montagem é comparada de verdade: as duas montam a tela a partir do mesmo estado e o gerente de
 /// telas, o `Display` da tela atual (a lista de exibição) e o título (0xde1f64) têm de sair iguais.
 unsafe extern "C" fn comparar_build_latest_scores() {
-    let o = orig::<unsafe extern "C" fn()>(%%I1%%);
-    let mut reg = regioes_da_tela();
+    let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
+    let mut reg = screen_build_regions();
     reg.push((0xde1f64, 0x100));
     // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
     // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
@@ -142,5 +142,5 @@ unsafe extern "C" fn comparar_build_latest_scores() {
 }
 
 unsafe extern "C" fn comparar_latest_scores_input(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(%%I2%%)(item)
+    original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I2%%)(item)
 }

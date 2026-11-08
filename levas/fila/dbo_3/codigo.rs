@@ -4,7 +4,7 @@
 /// (INJURY 0x62c400 em [0xb63d28] ≠ 2), id (+0) < [0xae2364] (com sinal), habilidade atual (+5, curto com sinal)
 /// acima de reputação/75 + 25 (de 40 a 135) e o `atributo` (byte com sinal) acima de reputação/500 + 5 (no máximo
 /// `teto`). Reputação: +0x80 do clube, curto com sinal. Na ordem da original. Contador de 8 bits (no máximo 50).
-unsafe fn dbo3_contar(clube: usize, posicao: usize, atributo: usize, teto: i32) -> u8 {
+unsafe fn count_natural_at_position(clube: usize, posicao: usize, atributo: usize, teto: i32) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let rep = core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32;
@@ -37,11 +37,11 @@ unsafe extern "C" fn club_lacks_aerial_strikers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    (dbo3_contar(clube, 0x15, 0x2e, 13) <= 1) as u8 // atacantes pelo alto (dbo)
+    (count_natural_at_position(clube, 0x15, 0x2e, 13) <= 1) as u8 // atacantes pelo alto (dbo)
 }
 
 unsafe extern "C" fn comparar_club_lacks_aerial_strikers(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_lacks_aerial_strikers(clube);
     PLACAR.registrar(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", clube, r, n));
     r
@@ -54,11 +54,11 @@ unsafe extern "C" fn club_lacks_aerial_defenders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    (dbo3_contar(clube, 0x11, 0x2e, 13) <= 1) as u8 // zagueiros pelo alto (dbo)
+    (count_natural_at_position(clube, 0x11, 0x2e, 13) <= 1) as u8 // zagueiros pelo alto (dbo)
 }
 
 unsafe extern "C" fn comparar_club_lacks_aerial_defenders(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_lacks_aerial_defenders(clube);
     PLACAR.registrar(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", clube, r, n));
     r
@@ -71,11 +71,11 @@ unsafe extern "C" fn club_lacks_fast_defenders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    (dbo3_contar(clube, 0x11, 0x36, 10) <= 1) as u8 // zagueiros rapidos (dbo)
+    (count_natural_at_position(clube, 0x11, 0x36, 10) <= 1) as u8 // zagueiros rapidos (dbo)
 }
 
 unsafe extern "C" fn comparar_club_lacks_fast_defenders(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     let n = club_lacks_fast_defenders(clube);
     PLACAR.registrar(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", clube, r, n));
     r

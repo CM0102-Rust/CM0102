@@ -1,27 +1,27 @@
 // ---------- %%LEVA%%a leva: a criação do jogo: inicializar os jogadores e as pessoas (Database.cpp) ----------
 
 /// Uma célula (3 bytes: palavra com sinal + peso) dos vetores de atributos da 0x535a80.
-fn cel_dbv1(v: &[u8; 189], k: isize) -> i16 {
+fn attr_cell_value(v: &[u8; 189], k: isize) -> i16 {
     let i = (k * 3) as usize;
     i16::from_le_bytes([v[i], v[i + 1]])
 }
 
-fn por_dbv1(v: &mut [u8; 189], k: isize, x: i16) {
+fn set_attr_cell_value(v: &mut [u8; 189], k: isize, x: i16) {
     let i = (k * 3) as usize;
     v[i..i + 2].copy_from_slice(&x.to_le_bytes());
 }
 
-fn peso_dbv1(v: &[u8; 189], k: isize) -> u8 {
+fn attr_cell_weight(v: &[u8; 189], k: isize) -> u8 {
     v[(k * 3) as usize + 2]
 }
 
 /// O peso que manda sortear de novo: 2 com a célula 0 (goleiro) a partir de 15, senão 1.
-fn peso_alvo_dbv1(v: &[u8; 189]) -> u8 {
-    if cel_dbv1(v, 0) >= 0xf { 2 } else { 1 }
+fn reroll_weight(v: &[u8; 189]) -> u8 {
+    if attr_cell_value(v, 0) >= 0xf { 2 } else { 1 }
 }
 
 /// Os 63 terminadores (palavra 0xff81, peso 0x81), como a 0x535a80 prepara os vetores.
-unsafe fn limpar_vetor_dbv1(v: usize) {
+unsafe fn clear_attr_vector(v: usize) {
     for k in 0..63 {
         core::ptr::write_unaligned((v + 3 * k) as *mut u16, 0xff81);
         *((v + 3 * k + 2) as *mut u8) = 0x81;
@@ -30,20 +30,20 @@ unsafe fn limpar_vetor_dbv1(v: usize) {
 
 /// A idade da 0x535a80: byte do ano da data − byte do ano de nascimento (+0x12), menos 1 se o dia do ano de
 /// nascimento (+0x10) passa o da data.
-unsafe fn idade_dbv1(p: usize, data: usize) -> i8 {
+unsafe fn age_at_date(p: usize, data: usize) -> i8 {
     let a = (*((data + 2) as *const u8)).wrapping_sub(*((p + 0x12) as *const u8));
     let d = core::ptr::read_unaligned((p + 0x10) as *const i16) as i32 - core::ptr::read_unaligned(data as *const i16) as i32;
     (if d > 0 { a.wrapping_sub(1) } else { a }) as i8
 }
 
 /// O ajuste do livre (sem clube) da 0x535a80: x − x × 0,25 (com +0x22) ou x − x × 0,6, truncado.
-unsafe fn livre_dbv1(p: usize, x: i16) -> i16 {
+unsafe fn free_agent_adjust(p: usize, x: i16) -> i16 {
     let x = x as f64;
     let k = if *((p + 0x22) as *const u8) != 0 { 0x9689e0 } else { 0x968e48 };
-    ftol(x - x * f64_em(k)) as i16
+    match_pl_ftol(x - x * read_f64_at(k)) as i16
 }
 
-fn faixa_dbv1(x: i16, a: i16, b: i16) -> bool {
+fn in_range(x: i16, a: i16, b: i16) -> bool {
     x >= a && x <= b
 }
 
@@ -64,7 +64,7 @@ fn faixa_dbv1(x: i16, a: i16, b: i16) -> bool {
 /// A local de [esp+0x114] (1, zerada com clube de reputação 0) nunca é lida.
 unsafe extern "C" fn database_player_initialisation(data: usize) {
     if *(0xae2364 as *const i32) == 0 || *(0xae23bc as *const usize) == 0 {
-        return orig::<unsafe extern "C" fn(usize)>(%%I0%%)(data);
+        return original_fn::<unsafe extern "C" fn(usize)>(%%I0%%)(data);
     }
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
@@ -88,7 +88,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
-    let sb = |a: usize| *(a as *const i8);
+    let signed_byte_at = |a: usize| *(a as *const i8);
     let b = |a: usize| *(a as *const u8);
     let wd = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut usize, v);
     let ww = |a: usize, v: i16| core::ptr::write_unaligned(a as *mut i16, v);
@@ -104,8 +104,8 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
     mostrar(0xb74450, 0xde1f64, 0, 100, -1);
     let mut v1 = [0u8; 189];
     let mut v2 = [0u8; 189];
-    limpar_vetor_dbv1(v1.as_mut_ptr() as usize);
-    limpar_vetor_dbv1(v2.as_mut_ptr() as usize);
+    clear_attr_vector(v1.as_mut_ptr() as usize);
+    clear_attr_vector(v2.as_mut_ptr() as usize);
     let (mut barra, mut e0c, mut e10) = (0i8, 0i32, -0x7961i32);
     let (mut e19, mut e05, mut e11, mut e1a) = (0u8, 0u8, 0u8, 0u8);
 
@@ -189,7 +189,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
         }
         // os atributos de pessoa: −1 sorteia 5..20; fora de 1..20, o menor (min) ou a média de dois sorteios
         for &(o, min) in &[(0x56usize, true), (0x57, false), (0x58, false), (0x59, true), (0x5a, false), (0x5b, false), (0x5c, true)] {
-            let v = sb(p + o);
+            let v = signed_byte_at(p + o);
             if v < 1 || v > 20 {
                 let n = if v == -1 {
                     s8(0x10).wrapping_add(5)
@@ -205,7 +205,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 wb(p + o, n as u8);
             }
         }
-        let v = sb(p + 0x5d);
+        let v = signed_byte_at(p + 0x5d);
         if v < 1 || v > 20 {
             let n = if v == -1 {
                 s8(0xb).wrapping_add(10)
@@ -221,7 +221,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
         if nac != 0 {
             let menos = |o: usize, n: i32| wb(p + o, b(p + o).wrapping_sub(sorteio(n) as u8));
             let mais = |o: usize, n: i32| wb(p + o, b(p + o).wrapping_add(sorteio(n) as u8));
-            let t = sb(nac + 0x76) as i32;
+            let t = signed_byte_at(nac + 0x76) as i32;
             if (t - 4) as u32 <= 9 {
                 match t {
                     6 | 8 => menos(0x5c, 10),
@@ -241,7 +241,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 }
             }
             for o in [0x5cusize, 0x5d] {
-                let v = sb(p + o);
+                let v = signed_byte_at(p + o);
                 wb(p + o, if v < 1 { 1 } else if v > 20 { 20 } else { v as u8 });
             }
         }
@@ -277,7 +277,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             let mut e20 = w(j + 0xb);
             wb(j + 0x45, 10);
             let nac = rd(p + 0x1a);
-            let mut rn = sb(nac + 0x8e);
+            let mut rn = signed_byte_at(nac + 0x8e);
             if rn == 0 {
                 formatar(0xde1f64, 0x9b63f0, w(nac + 0x8e) as i32);
                 rn = s8(10).wrapping_add(1);
@@ -285,33 +285,33 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             let rc: i8 = if rd(p + 0x39) == 0 {
                 s8(2).wrapping_add(1)
             } else {
-                let v = sb(rd(p + 0x39) + 0x80);
+                let v = signed_byte_at(rd(p + 0x39) + 0x80);
                 if v != 0 { v } else { s8(4).wrapping_add(1) }
             };
             let e30 = rc as i32;
             let di = ((((e30 * 3 + rn as i32) >> 2) * 10) as i16).min(0x50);
-            if !faixa_dbv1(e20, 1, 200) {
+            if !in_range(e20, 1, 200) {
                 let c = rd(p + 0x39);
-                let mut x: i16 = if faixa_dbv1(e2c, 1, 200) && c != 0 && rd(p + 0x1a) == rd(c + 0x53) {
+                let mut x: i16 = if in_range(e2c, 1, 200) && c != 0 && rd(p + 0x1a) == rd(c + 0x53) {
                     let r = s16(10);
                     let y = e2c.wrapping_sub(r).wrapping_add(s16(10));
                     if y < 1 { 1 } else if y > 200 { 200 } else { y }
-                } else if faixa_dbv1(e34, 1, 200) {
+                } else if in_range(e34, 1, 200) {
                     if e34 < 0xb4 { e34.wrapping_sub(s16(10)).wrapping_add(0x14) } else { s16(10).wrapping_add(0xaa) }
                 } else if e24 == -1 && ca0 > 100 {
                     s16(0x28).wrapping_add(0x3c)
-                } else if faixa_dbv1(ca0, 1, 200) {
+                } else if in_range(ca0, 1, 200) {
                     if ca0 > 0x4b { ca0.wrapping_sub(s16(0x32)) } else { s16(0x19).wrapping_add(1) }
                 } else {
                     s16(di as i32).wrapping_add(1).min(0x19)
                 };
                 if rd(p + 0x39) == 0 {
-                    x = livre_dbv1(p, x);
+                    x = free_agent_adjust(p, x);
                 }
                 e20 = if x < 1 { 1 } else if x > 200 { 200 } else { x };
             }
-            if !faixa_dbv1(e2c, 1, 200) {
-                let mut x: i16 = if faixa_dbv1(e20, 1, 200) {
+            if !in_range(e2c, 1, 200) {
+                let mut x: i16 = if in_range(e20, 1, 200) {
                     if e20 < 10 {
                         s16(5).wrapping_add(1)
                     } else if e20 > 0xbe {
@@ -320,34 +320,34 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                         let y = e20.wrapping_sub(s16(10));
                         y.wrapping_add(s16(10))
                     }
-                } else if faixa_dbv1(e34, 1, 200) {
+                } else if in_range(e34, 1, 200) {
                     if e34 > 0xb4 { s16(10).wrapping_add(0xb4) } else { e34.wrapping_sub(s16(10)).wrapping_add(0x14) }
                 } else if e24 == -1 {
                     s16(0x14).wrapping_add(0x50)
-                } else if faixa_dbv1(ca0, 1, 200) {
+                } else if in_range(ca0, 1, 200) {
                     if ca0 > 0x32 { ca0.wrapping_sub(s16(0x32)) } else { s16(0x19).wrapping_add(1) }
                 } else {
                     s16(di as i32).wrapping_add(1).min(0x19)
                 };
                 if rd(p + 0x39) == 0 {
-                    x = livre_dbv1(p, x);
+                    x = free_agent_adjust(p, x);
                 }
                 e2c = if x < 1 { 1 } else if x > 200 { 200 } else { x };
             }
-            if !faixa_dbv1(e34, 1, 200) {
-                let mut x: i16 = if faixa_dbv1(e2c, 1, 200) {
-                    if e2c > 100 { ftol(e2c as f64 * f64_em(0x9689e0)) as i16 } else { s16(3).wrapping_add(1) }
-                } else if faixa_dbv1(e20, 1, 200) {
-                    ftol(e20 as f64 * f64_em(if e20 < 0xaf { 0x968f20 } else { 0x9689e0 })) as i16
-                } else if faixa_dbv1(ca0, 1, 200) {
-                    let t = ftol(ca0 as f64 * f64_em(0x9689e0));
+            if !in_range(e34, 1, 200) {
+                let mut x: i16 = if in_range(e2c, 1, 200) {
+                    if e2c > 100 { match_pl_ftol(e2c as f64 * read_f64_at(0x9689e0)) as i16 } else { s16(3).wrapping_add(1) }
+                } else if in_range(e20, 1, 200) {
+                    match_pl_ftol(e20 as f64 * read_f64_at(if e20 < 0xaf { 0x968f20 } else { 0x9689e0 })) as i16
+                } else if in_range(ca0, 1, 200) {
+                    let t = match_pl_ftol(ca0 as f64 * read_f64_at(0x9689e0));
                     let r = sorteio(t);
                     s16(r).wrapping_add(1)
                 } else {
                     ((di as i32 / 3) as i16).min(5)
                 };
                 if rd(p + 0x39) == 0 {
-                    x = livre_dbv1(p, x);
+                    x = free_agent_adjust(p, x);
                 }
                 e34 = if x < 1 { 1 } else if x > 200 { 200 } else { x };
             }
@@ -356,14 +356,14 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 e2c = e20;
             }
             // a idade (nascimento sorteado fora de 14..50)
-            let mut idade = idade_dbv1(p, data);
+            let mut idade = age_at_date(p, data);
             if idade < 0xe || idade > 0x32 {
                 let a18 = w(p + 0x18);
                 let ano: u32 = if a18 > 0x76c { a18 as u16 as u32 } else if rd(p + 0x69) != 0 { 0x7af } else { 0x7bc };
                 let mes = sorteio(0xb);
                 let dia = sorteio(0x1b) + 1;
                 acertar(p + 0x10, dia as u32, mes as u32, ano, -1);
-                idade = idade_dbv1(p, data);
+                idade = age_at_date(p, data);
             }
             ww(p + 0x18, idade as i16);
             // o potencial (+7)
@@ -391,7 +391,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                     s = s.wrapping_sub(s16(0x1e));
                 }
                 e24 = teto(s, ca0);
-            } else if !faixa_dbv1(e24, 1, 200) || (idade < 0x19 && sorteio(0x19) == 0) {
+            } else if !in_range(e24, 1, 200) || (idade < 0x19 && sorteio(0x19) == 0) {
                 let mut k: i8 = if sorteio(100) == 0 {
                     s8(0x15)
                 } else if sorteio(2) == 0 {
@@ -410,7 +410,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             }
             // a atual (+5)
             let mut ca = ca0;
-            if !faixa_dbv1(ca0, 1, 200) {
+            if !in_range(ca0, 1, 200) {
                 let k = s8(10).wrapping_add(0x14);
                 let pa = e24 as i32;
                 let a = s16(pa);
@@ -425,9 +425,9 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                     ca = s16(pa / 5).wrapping_add(1);
                 }
             }
-            if rd(p + 0x39) == 0 && (b(p + 0x22) == 0 || idade_dbv1(p, data) > 0x20) {
+            if rd(p + 0x39) == 0 && (b(p + 0x22) == 0 || age_at_date(p, data) > 0x20) {
                 let r = sorteio(6); // a original guarda ca em [0x20] só para o fild
-                let f = ftol(ca as f64 * f64_em(0x969518));
+                let f = match_pl_ftol(ca as f64 * read_f64_at(0x969518));
                 ca = ca.wrapping_add(r.wrapping_mul(f) as i16);
                 ca = if ca < 1 { 1 } else if ca > 200 { 200 } else { ca };
             }
@@ -445,10 +445,10 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             wb(rd(0xae2d0c).wrapping_add((gi(p) as usize).wrapping_mul(0x4f)) + 9, 0x9c);
             // ---- as posições (células 0..8) e os lados (9..11) ----
             vet_j(j, p, v1.as_mut_ptr() as usize, &mut e19, &mut e05, &mut e11);
-            if cel_dbv1(&v1, 0) > 0xf && cel_dbv1(&v1, 0) < 0x14 {
-                por_dbv1(&mut v1, 0, 0x14);
+            if attr_cell_value(&v1, 0) > 0xf && attr_cell_value(&v1, 0) < 0x14 {
+                set_attr_cell_value(&mut v1, 0, 0x14);
                 for k in [1isize, 2, 3, 4, 5, 6, 10, 11, 9] {
-                    por_dbv1(&mut v1, k, 1);
+                    set_attr_cell_value(&mut v1, k, 1);
                 }
             }
             let rf = || (s8(6).wrapping_add(0xf)) as i16;
@@ -457,22 +457,22 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             let mut melhor: i8 = -1;
             let mut tem20 = false;
             for k in 0..8isize {
-                let a = cel_dbv1(&v1, k);
+                let a = attr_cell_value(&v1, k);
                 if a == 0x14 {
                     tem20 = true;
                     break;
                 }
-                if a > 5 && a < 0x14 && (melhor == -1 || a > cel_dbv1(&v1, melhor as isize)) {
+                if a > 5 && a < 0x14 && (melhor == -1 || a > attr_cell_value(&v1, melhor as isize)) {
                     melhor = k as i8;
                 }
             }
             if !tem20 {
                 if melhor > -1 {
-                    por_dbv1(&mut v1, melhor as isize, 0x14);
+                    set_attr_cell_value(&mut v1, melhor as isize, 0x14);
                 } else if sorteio(0x14) == 0 {
-                    por_dbv1(&mut v1, 0, 0x14);
+                    set_attr_cell_value(&mut v1, 0, 0x14);
                     for k in [1isize, 2, 3, 5, 6, 10, 11, 9] {
-                        por_dbv1(&mut v1, k, 1);
+                        set_attr_cell_value(&mut v1, k, 1);
                     }
                     ac = Some((1, 1));
                 } else {
@@ -526,112 +526,112 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                         (&[], &[6])
                     };
                     for &k in vinte {
-                        por_dbv1(&mut v1, k, 0x14);
+                        set_attr_cell_value(&mut v1, k, 0x14);
                     }
                     for &k in sorteadas {
                         let x = rf();
-                        por_dbv1(&mut v1, k, x);
+                        set_attr_cell_value(&mut v1, k, x);
                     }
                 }
             }
             if ac.is_none() {
                 // os lados: direito (9), esquerdo (10), centro (11)
-                if cel_dbv1(&v1, 0) != 0x14 {
+                if attr_cell_value(&v1, 0) != 0x14 {
                     let mut lados = true;
-                    if cel_dbv1(&v1, 1) >= 0xf {
-                        por_dbv1(&mut v1, 11, 0x14);
-                    } else if cel_dbv1(&v1, 7) >= 0xf && cel_dbv1(&v1, 9) < 0xf && cel_dbv1(&v1, 10) < 0xf {
+                    if attr_cell_value(&v1, 1) >= 0xf {
+                        set_attr_cell_value(&mut v1, 11, 0x14);
+                    } else if attr_cell_value(&v1, 7) >= 0xf && attr_cell_value(&v1, 9) < 0xf && attr_cell_value(&v1, 10) < 0xf {
                         if sorteio(10) >= 3 {
-                            por_dbv1(&mut v1, 9, 0x14);
+                            set_attr_cell_value(&mut v1, 9, 0x14);
                             lados = false;
                         } else {
-                            por_dbv1(&mut v1, 10, 0x14);
+                            set_attr_cell_value(&mut v1, 10, 0x14);
                         }
                     }
                     while lados {
-                        if cel_dbv1(&v1, 9) >= 0x14 || cel_dbv1(&v1, 10) >= 0x14 || cel_dbv1(&v1, 11) >= 0x14 {
+                        if attr_cell_value(&v1, 9) >= 0x14 || attr_cell_value(&v1, 10) >= 0x14 || attr_cell_value(&v1, 11) >= 0x14 {
                             break;
                         }
-                        if sorteio(0xb) < 4 || sorteio(cel_dbv1(&v1, 11) as i32) > 5 {
-                            por_dbv1(&mut v1, 11, 0x14);
+                        if sorteio(0xb) < 4 || sorteio(attr_cell_value(&v1, 11) as i32) > 5 {
+                            set_attr_cell_value(&mut v1, 11, 0x14);
                         }
-                        if sorteio(0xb) > 8 || sorteio(cel_dbv1(&v1, 10) as i32) > 5 {
-                            por_dbv1(&mut v1, 10, 0x14);
+                        if sorteio(0xb) > 8 || sorteio(attr_cell_value(&v1, 10) as i32) > 5 {
+                            set_attr_cell_value(&mut v1, 10, 0x14);
                         }
-                        if sorteio(0xb) < 4 || sorteio(cel_dbv1(&v1, 9) as i32) > 5 {
-                            por_dbv1(&mut v1, 9, 0x14);
+                        if sorteio(0xb) < 4 || sorteio(attr_cell_value(&v1, 9) as i32) > 5 {
+                            set_attr_cell_value(&mut v1, 9, 0x14);
                             break;
                         }
                     }
                 }
-                let a = cel_dbv1(&v1, 5);
-                let mut c = cel_dbv1(&v1, 4);
-                if a >= 0xf && c < 0xf && cel_dbv1(&v1, 11) < 0xf {
+                let a = attr_cell_value(&v1, 5);
+                let mut c = attr_cell_value(&v1, 4);
+                if a >= 0xf && c < 0xf && attr_cell_value(&v1, 11) < 0xf {
                     c = a;
                 }
                 ac = Some((a, c));
             }
             let (a, c) = ac.unwrap();
             let m = (a as i32 / 2).max(c as i32);
-            por_dbv1(&mut v1, 4, m as i8 as i16);
-            let m = (cel_dbv1(&v1, 1) as i32 / 2).max(cel_dbv1(&v1, 2) as i32);
-            por_dbv1(&mut v1, 2, m as i8 as i16);
-            if cel_dbv1(&v1, 6) >= 0xf && cel_dbv1(&v1, 11) < 0xf {
+            set_attr_cell_value(&mut v1, 4, m as i8 as i16);
+            let m = (attr_cell_value(&v1, 1) as i32 / 2).max(attr_cell_value(&v1, 2) as i32);
+            set_attr_cell_value(&mut v1, 2, m as i8 as i16);
+            if attr_cell_value(&v1, 6) >= 0xf && attr_cell_value(&v1, 11) < 0xf {
                 let x = s8(0xb).wrapping_add(10);
                 let y = s8(7).wrapping_add(0xe) as i16;
-                let v5 = cel_dbv1(&v1, 5);
-                por_dbv1(&mut v1, 5, (if y > v5 { y } else { v5 }) as i8 as i16);
-                let v4 = cel_dbv1(&v1, 4);
-                por_dbv1(&mut v1, 4, (if x as i16 > v4 { x as i16 } else { v4 }) as i8 as i16);
+                let v5 = attr_cell_value(&v1, 5);
+                set_attr_cell_value(&mut v1, 5, (if y > v5 { y } else { v5 }) as i8 as i16);
+                let v4 = attr_cell_value(&v1, 4);
+                set_attr_cell_value(&mut v1, 4, (if x as i16 > v4 { x as i16 } else { v4 }) as i8 as i16);
             }
             // as células 12 e 13
             let um_a_vinte = || (s8(sorteio(0x14)).wrapping_add(1)) as i16;
-            let mut a = cel_dbv1(&v1, 12);
-            let mut c = cel_dbv1(&v1, 13);
+            let mut a = attr_cell_value(&v1, 12);
+            let mut c = attr_cell_value(&v1, 13);
             let mut conferir_c = true;
             if a == 0x14 || c == 0x14 {
-            } else if faixa_dbv1(a, 1, 20) {
-                if faixa_dbv1(c, 1, 20) && c <= a {
+            } else if in_range(a, 1, 20) {
+                if in_range(c, 1, 20) && c <= a {
                     a = 0x14;
-                    por_dbv1(&mut v1, 12, a);
+                    set_attr_cell_value(&mut v1, 12, a);
                 } else {
                     c = 0x14;
-                    por_dbv1(&mut v1, 13, c);
+                    set_attr_cell_value(&mut v1, 13, c);
                     conferir_c = false;
                 }
-            } else if faixa_dbv1(c, 1, 20) {
+            } else if in_range(c, 1, 20) {
                 a = 0x14;
-                por_dbv1(&mut v1, 12, a);
-            } else if cel_dbv1(&v1, 10) > cel_dbv1(&v1, 9) {
-                por_dbv1(&mut v1, 12, 0x14);
+                set_attr_cell_value(&mut v1, 12, a);
+            } else if attr_cell_value(&v1, 10) > attr_cell_value(&v1, 9) {
+                set_attr_cell_value(&mut v1, 12, 0x14);
                 c = um_a_vinte();
-                a = cel_dbv1(&v1, 12);
-                por_dbv1(&mut v1, 13, c);
+                a = attr_cell_value(&v1, 12);
+                set_attr_cell_value(&mut v1, 13, c);
             } else {
-                por_dbv1(&mut v1, 13, 0x14);
+                set_attr_cell_value(&mut v1, 13, 0x14);
                 let n = um_a_vinte();
-                c = cel_dbv1(&v1, 13);
-                por_dbv1(&mut v1, 12, n);
+                c = attr_cell_value(&v1, 13);
+                set_attr_cell_value(&mut v1, 12, n);
                 a = n;
             }
-            if conferir_c && !faixa_dbv1(c, 1, 20) {
+            if conferir_c && !in_range(c, 1, 20) {
                 c = um_a_vinte();
-                a = cel_dbv1(&v1, 12);
-                por_dbv1(&mut v1, 13, c);
+                a = attr_cell_value(&v1, 12);
+                set_attr_cell_value(&mut v1, 13, c);
             }
-            if !faixa_dbv1(a, 1, 20) {
+            if !in_range(a, 1, 20) {
                 let n = um_a_vinte();
-                c = cel_dbv1(&v1, 13);
-                por_dbv1(&mut v1, 12, n);
+                c = attr_cell_value(&v1, 13);
+                set_attr_cell_value(&mut v1, 12, n);
                 a = n;
             }
             if a != 0x14 && c != 0x14 {
                 if sorteio(4) != 0 {
-                    a = cel_dbv1(&v1, 12);
-                    por_dbv1(&mut v1, 13, 0x14);
+                    a = attr_cell_value(&v1, 12);
+                    set_attr_cell_value(&mut v1, 13, 0x14);
                 } else {
                     a = 0x14;
-                    por_dbv1(&mut v1, 12, a);
+                    set_attr_cell_value(&mut v1, 12, a);
                 }
             }
             // ---- os atributos fora de 1..20 (da célula 12 em diante): pelo molde ----
@@ -639,13 +639,13 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             if a != -0x7f {
                 let mut k = 12isize;
                 loop {
-                    let x = cel_dbv1(&v1, k);
+                    let x = attr_cell_value(&v1, k);
                     if x < 1 || x > 20 {
                         fora = true;
                         break;
                     }
                     k += 1;
-                    if cel_dbv1(&v1, k) == -0x7f {
+                    if attr_cell_value(&v1, k) == -0x7f {
                         break;
                     }
                 }
@@ -657,17 +657,17 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                     let r = sorteio(gi(0xae2364));
                     let q = rd(0xae23bc).wrapping_add((r as usize).wrapping_mul(110));
                     let cj = rd(q + 0x61);
-                    if cj != 0 && faixa_dbv1(w(cj + 5), 1, 200) {
+                    if cj != 0 && in_range(w(cj + 5), 1, 200) {
                         let mut e35 = 0i8;
                         if b(0x9b59b8) != 0 {
-                            limpar_vetor_dbv1(0xae2044);
-                            limpar_vetor_dbv1(0xae2114);
+                            clear_attr_vector(0xae2044);
+                            clear_attr_vector(0xae2114);
                             wb(0x9b59b8, 0);
                         }
                         vet_j(j, p, 0xae2044, &mut e1a, core::ptr::null_mut(), core::ptr::null_mut());
                         vet_j(cj, q, 0xae2114, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
                         let dif = (w(j + 5) as i32 - w(cj + 5) as i32).abs();
-                        let mut esc = ftol(dif as f64 * f64_em(0x968e18));
+                        let mut esc = match_pl_ftol(dif as f64 * read_f64_at(0x968e18));
                         let g0 = w(0xae2044);
                         let comparar = if g0 == 0x14 {
                             if w(0xae2114) == g0 {
@@ -687,7 +687,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                                     esc += 100;
                                 } else {
                                     let sv = w((0xae2044 + o) as usize);
-                                    if faixa_dbv1(sv, 1, 20) {
+                                    if in_range(sv, 1, 20) {
                                         if e35 == 0 {
                                             esc += (g0 as i32 - w(0xae2114) as i32).abs() * 1000;
                                         } else if e35 < e1a as i8 {
@@ -717,15 +717,15 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 let ini = e19 as i8 as isize;
                 if molde == 0 {
                     let mut k = ini;
-                    while cel_dbv1(&v1, k) != -0x7f {
-                        let x = cel_dbv1(&v1, k);
+                    while attr_cell_value(&v1, k) != -0x7f {
+                        let x = attr_cell_value(&v1, k);
                         if x < 1 || x > 20 {
                             let r = s8(7);
                             let c = r.wrapping_add(((w(j + 5) as i32 / 10) as i8).wrapping_sub(3));
                             let n = if c < 1 { s8(8).wrapping_add(1) as i16 } else if c > 20 { 0x14 } else { c as i16 };
-                            por_dbv1(&mut v1, k, n);
-                            if peso_dbv1(&v1, k) == peso_alvo_dbv1(&v1) {
-                                por_dbv1(&mut v1, k, s16(5).wrapping_add(1));
+                            set_attr_cell_value(&mut v1, k, n);
+                            if attr_cell_weight(&v1, k) == reroll_weight(&v1) {
+                                set_attr_cell_value(&mut v1, k, s16(5).wrapping_add(1));
                             }
                         }
                         k += 1;
@@ -733,22 +733,22 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 } else {
                     vet_j(molde, p, v2.as_mut_ptr() as usize, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
                     let mut hj = w(j + 5);
-                    if !faixa_dbv1(hj, 1, 200) {
+                    if !in_range(hj, 1, 200) {
                         hj = s16(100).wrapping_add(1);
                     }
                     let mut hm = w(molde + 5);
-                    if !faixa_dbv1(hm, 1, 200) {
+                    if !in_range(hm, 1, 200) {
                         hm = hj;
                     }
                     let mut k = ini;
-                    while cel_dbv1(&v1, k) != -0x7f {
-                        let x = cel_dbv1(&v1, k);
-                        if faixa_dbv1(x, 1, 20) {
-                            if peso_dbv1(&v1, k) == peso_alvo_dbv1(&v1) {
-                                por_dbv1(&mut v1, k, (x as i32 - 10).max(1) as i8 as i16);
+                    while attr_cell_value(&v1, k) != -0x7f {
+                        let x = attr_cell_value(&v1, k);
+                        if in_range(x, 1, 20) {
+                            if attr_cell_weight(&v1, k) == reroll_weight(&v1) {
+                                set_attr_cell_value(&mut v1, k, (x as i32 - 10).max(1) as i8 as i16);
                             }
                         } else {
-                            let t = cel_dbv1(&v2, k);
+                            let t = attr_cell_value(&v2, k);
                             let n = if t > 0 && t < 0x15 {
                                 let mut c: i8 = if k < e11 as i8 as isize {
                                     (((hj as i32 - hm as i32) / 10) as i8).wrapping_add(t as u8 as i8)
@@ -769,19 +769,19 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                                 let c = r.wrapping_add(((w(j + 5) as i32 / 10) as i8).wrapping_sub(5));
                                 if c < 1 { s8(8).wrapping_add(1) as i16 } else if c > 20 { 0x14 } else { c as i16 }
                             };
-                            por_dbv1(&mut v1, k, n);
+                            set_attr_cell_value(&mut v1, k, n);
                             let o = k * 3;
                             if o == 0x9c || o == 0x9f {
-                                let x = cel_dbv1(&v1, k);
+                                let x = attr_cell_value(&v1, k);
                                 if x < 0xc {
-                                    por_dbv1(&mut v1, k, x.wrapping_add(s8(0xd - x as i32) as i16));
+                                    set_attr_cell_value(&mut v1, k, x.wrapping_add(s8(0xd - x as i32) as i16));
                                 }
-                            } else if (o == 0x6c || o == 0x6f || o == 0x78) && idade < 0x16 && cel_dbv1(&v1, k) > 0xf {
-                                let x = cel_dbv1(&v1, k).wrapping_sub(s8(5) as i16);
-                                por_dbv1(&mut v1, k, x);
+                            } else if (o == 0x6c || o == 0x6f || o == 0x78) && idade < 0x16 && attr_cell_value(&v1, k) > 0xf {
+                                let x = attr_cell_value(&v1, k).wrapping_sub(s8(5) as i16);
+                                set_attr_cell_value(&mut v1, k, x);
                             }
-                            if peso_dbv1(&v1, k) == peso_alvo_dbv1(&v1) {
-                                por_dbv1(&mut v1, k, s16(10).wrapping_add(1));
+                            if attr_cell_weight(&v1, k) == reroll_weight(&v1) {
+                                set_attr_cell_value(&mut v1, k, s16(10).wrapping_add(1));
                             }
                         }
                         k += 1;
@@ -789,12 +789,12 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 }
             }
             de_vet_j(j, p, v1.as_mut_ptr() as usize);
-            if b(j + 0xf) == 0x14 && sb(j + 0x2e) < 8 {
+            if b(j + 0xf) == 0x14 && signed_byte_at(j + 0x2e) < 8 {
                 wb(j + 0x2e, (sorteio(6) as u8).wrapping_add(5));
             }
         } else {
             // ---- só não jogador: a idade fora de 29..75 sorteia o nascimento ----
-            let idade = idade_dbv1(p, data);
+            let idade = age_at_date(p, data);
             if idade < 0x1d || idade > 0x4b {
                 let a18 = w(p + 0x18);
                 let ano: u32 = if a18 > 0x76c && a18 < 0x7af { a18 as u16 as u32 } else { (sorteio(0x1a) + 0x794) as u32 };
@@ -802,7 +802,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 let dia = sorteio(0x1b) + 1;
                 acertar(p + 0x10, dia as u32, mes as u32, ano, -1);
             }
-            ww(p + 0x18, idade_dbv1(p, data) as i16);
+            ww(p + 0x18, age_at_date(p, data) as i16);
         }
 
         let nj = rd(p + 0x69);
@@ -815,8 +815,8 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             ww(nj + 0xc, a);
             ww(nj + 8, bp);
             let rep = |x: usize| w(x + 0x80);
-            let vezes = |x: usize, k: usize| ftol(rep(x) as f64 * f64_em(k)) as i16;
-            if !faixa_dbv1(a, 1, 10000) {
+            let vezes = |x: usize, k: usize| match_pl_ftol(rep(x) as f64 * read_f64_at(k)) as i16;
+            if !in_range(a, 1, 10000) {
                 let c = rd(p + 0x39);
                 let s = rd(p + 0x24);
                 ww(nj + 0xc, if c != 0 && rep(c) > 0x1676 {
@@ -830,12 +830,12 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             let x = w(nj + 0xc);
             let bx = if x < 1 { 1 } else if x > 10000 { 10000 } else { x };
             ww(nj + 0xc, bx);
-            if !faixa_dbv1(di, 1, 10000) {
+            if !in_range(di, 1, 10000) {
                 let c = rd(p + 0x39);
                 let s = rd(p + 0x24);
-                ww(nj + 0xa, if faixa_dbv1(bp, 1, 10000) {
+                ww(nj + 0xa, if in_range(bp, 1, 10000) {
                     bp
-                } else if faixa_dbv1(bx, 1, 10000) {
+                } else if in_range(bx, 1, 10000) {
                     bx
                 } else if c != 0 {
                     rep(c)
@@ -848,12 +848,12 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             let x = w(nj + 0xa);
             let di2 = if x < 1 { 1 } else if x > 10000 { 10000 } else { x };
             ww(nj + 0xa, di2);
-            if !faixa_dbv1(bp, 1, 10000) {
+            if !in_range(bp, 1, 10000) {
                 let c = rd(p + 0x39);
                 let s = rd(p + 0x24);
-                ww(nj + 8, if faixa_dbv1(di2, 1, 10000) {
+                ww(nj + 8, if in_range(di2, 1, 10000) {
                     di2
-                } else if faixa_dbv1(bx, 1, 10000) {
+                } else if in_range(bx, 1, 10000) {
                     bx
                 } else if c != 0 {
                     vezes(c, 0x9689d8)
@@ -869,7 +869,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             if c == 0 || rd(c + 0x53) == rd(p + 0x1a) {
                 ww(nj + 8, di2);
             }
-            if !faixa_dbv1(w(nj + 4), 1, 200) {
+            if !in_range(w(nj + 4), 1, 200) {
                 let c = rd(p + 0x39);
                 let s = rd(p + 0x24);
                 ww(nj + 4, if c != 0 {
@@ -880,7 +880,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                     s16(100).wrapping_add(1)
                 });
             }
-            if !faixa_dbv1(w(nj + 6), 1, 200) {
+            if !in_range(w(nj + 6), 1, 200) {
                 let r = s16(200).wrapping_add(1);
                 let x = w(nj + 4);
                 ww(nj + 6, if x > r { x } else { r });
@@ -901,16 +901,16 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             // ---- os atributos fora de 1..20: pelo molde ----
             vet_nj(nj, p, v1.as_mut_ptr() as usize, core::ptr::null_mut());
             let mut fora = false;
-            if cel_dbv1(&v1, 0) != -0x7f {
+            if attr_cell_value(&v1, 0) != -0x7f {
                 let mut k = 0isize;
                 loop {
-                    let x = cel_dbv1(&v1, k);
+                    let x = attr_cell_value(&v1, k);
                     if x < 1 || x > 20 {
                         fora = true;
                         break;
                     }
                     k += 1;
-                    if cel_dbv1(&v1, k) == -0x7f {
+                    if attr_cell_value(&v1, k) == -0x7f {
                         break;
                     }
                 }
@@ -920,7 +920,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 if b(p + 0x3d) == 5 && c != 0 && rep(c) > 0x186a {
                     // o treinador de clube grande
                     let e_360 = || rd(p + 0x1a) != 0 && gi(rd(p + 0x1a)) == gi(0x9cf360);
-                    let fora20 = |o: usize| sb(nj + o) < 1 || sb(nj + o) > 20;
+                    let fora20 = |o: usize| signed_byte_at(nj + o) < 1 || signed_byte_at(nj + o) > 20;
                     if fora20(0x13) {
                         wb(nj + 0x13, (if e_360() { s8(0x10).wrapping_add(1) } else { s8(0xe).wrapping_add(7) }) as u8);
                     }
@@ -954,17 +954,17 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                     let r = sorteio(gi(0xae2364));
                     let q = rd(0xae23bc).wrapping_add((r as usize).wrapping_mul(110));
                     let cn = rd(q + 0x69);
-                    if cn != 0 && faixa_dbv1(w(cn + 4), 1, 200) {
+                    if cn != 0 && in_range(w(cn + 4), 1, 200) {
                         let mut e35 = 0i8;
                         if b(0x9b59b9) != 0 {
-                            limpar_vetor_dbv1(0xae18bc);
-                            limpar_vetor_dbv1(0xae2238);
+                            clear_attr_vector(0xae18bc);
+                            clear_attr_vector(0xae2238);
                             wb(0x9b59b9, 0);
                         }
                         vet_nj(nj, p, 0xae18bc, core::ptr::null_mut());
                         vet_nj(cn, q, 0xae2238, core::ptr::null_mut());
                         let dif = (w(nj + 4) as i32 - w(cn + 4) as i32).abs();
-                        let mut esc = ftol(dif as f64 * f64_em(0x968e18));
+                        let mut esc = match_pl_ftol(dif as f64 * read_f64_at(0x968e18));
                         if w(0xae18bc) != -0x7f {
                             let mut o = 0isize;
                             loop {
@@ -973,7 +973,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                                     esc += 100;
                                 } else {
                                     let sv = w((0xae18bc + o) as usize);
-                                    if faixa_dbv1(sv, 1, 20) {
+                                    if in_range(sv, 1, 20) {
                                         esc += (sv as i32 - dv as i32).abs() * 16;
                                     }
                                 }
@@ -998,45 +998,45 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 if molde != 0 {
                     vet_nj(molde, p, v2.as_mut_ptr() as usize, core::ptr::null_mut());
                     let mut hn = w(nj + 4);
-                    if !faixa_dbv1(hn, 1, 200) {
+                    if !in_range(hn, 1, 200) {
                         hn = s16(100).wrapping_add(1);
                     }
                     let mut hm = w(molde + 4);
-                    if !faixa_dbv1(hm, 1, 200) {
+                    if !in_range(hm, 1, 200) {
                         hm = hn;
                     }
-                    if cel_dbv1(&v1, 0) != -0x7f {
+                    if attr_cell_value(&v1, 0) != -0x7f {
                         let mut k = 0isize;
                         loop {
-                            let x = cel_dbv1(&v1, k);
+                            let x = attr_cell_value(&v1, k);
                             if x < 1 || x > 20 {
-                                let t = cel_dbv1(&v2, k);
-                                let c = if faixa_dbv1(t, 1, 20) {
+                                let t = attr_cell_value(&v2, k);
+                                let c = if in_range(t, 1, 20) {
                                     let d = (((hn as i32 - hm as i32) / 10) as i8).wrapping_add(t as u8 as i8);
                                     d.wrapping_add(s8(6).wrapping_sub(3))
                                 } else {
                                     let r = s8(6);
                                     r.wrapping_add(((w(nj + 4) as i32 / 10) as i8).wrapping_sub(3))
                                 };
-                                por_dbv1(&mut v1, k, if c < 1 { s8(8).wrapping_add(1) as i16 } else if c > 20 { 0x14 } else { c as i16 });
+                                set_attr_cell_value(&mut v1, k, if c < 1 { s8(8).wrapping_add(1) as i16 } else if c > 20 { 0x14 } else { c as i16 });
                             }
                             k += 1;
-                            if cel_dbv1(&v1, k) == -0x7f {
+                            if attr_cell_value(&v1, k) == -0x7f {
                                 break;
                             }
                         }
                     }
-                } else if cel_dbv1(&v1, 0) != -0x7f {
+                } else if attr_cell_value(&v1, 0) != -0x7f {
                     let mut k = 0isize;
                     loop {
-                        let x = cel_dbv1(&v1, k);
+                        let x = attr_cell_value(&v1, k);
                         if x < 1 || x > 20 {
                             let r = s8(7);
                             let c = r.wrapping_add(((w(nj + 4) as i32 / 10) as i8).wrapping_sub(3));
-                            por_dbv1(&mut v1, k, if c < 1 { s8(8).wrapping_add(1) as i16 } else if c > 20 { 0x14 } else { c as i16 });
+                            set_attr_cell_value(&mut v1, k, if c < 1 { s8(8).wrapping_add(1) as i16 } else if c > 20 { 0x14 } else { c as i16 });
                         }
                         k += 1;
-                        if cel_dbv1(&v1, k) == -0x7f {
+                        if attr_cell_value(&v1, k) == -0x7f {
                             break;
                         }
                     }
@@ -1045,19 +1045,19 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             de_vet_nj(nj, p, v1.as_mut_ptr() as usize);
             // ---- o cargo: olheiro (9), fisioterapeuta (8), treinador (10) ----
             let ate = |o: usize, max: i8, n: i32, base: u8| {
-                if sb(nj + o) > max {
+                if signed_byte_at(nj + o) > max {
                     wb(nj + o, (sorteio(n) as u8).wrapping_add(base));
                 }
             };
             let cargo = b(p + 0x3d);
             if cargo == 9 && sorteio(100) != 0 {
-                let a17 = sb(nj + 0x17);
+                let a17 = signed_byte_at(nj + 0x17);
                 wb(nj + 0xf, 1);
                 wb(nj + 0x1e, 1);
                 if a17 < 5 {
                     wb(nj + 0x17, (sorteio(5) as u8).wrapping_add(4));
                 }
-                if sb(nj + 0x18) < 4 {
+                if signed_byte_at(nj + 0x18) < 4 {
                     wb(nj + 0x18, (sorteio(5) as u8).wrapping_add(3));
                 }
                 ate(0x10, 8, 8, 1);
@@ -1069,7 +1069,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 wb(nj + 0xf, 1);
                 wb(nj + 0x1e, 1);
             } else if cargo == 0xa && sorteio(100) != 0 {
-                let a1e = sb(nj + 0x1e);
+                let a1e = signed_byte_at(nj + 0x1e);
                 wb(nj + 0xf, 1);
                 if a1e < 5 {
                     wb(nj + 0x1e, (sorteio(10) as u8).wrapping_add(4));
@@ -1091,7 +1091,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             } else if nome(0x9b634c) {
                 wb(nj + 0x43, 6);
             } else {
-                let x = sb(nj + 0x43);
+                let x = signed_byte_at(nj + 0x43);
                 if x == 0 || x >= 10 {
                     let r = sorteio(0x1a);
                     if (r as u32) <= 0x19 {
@@ -1105,7 +1105,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             }
             // ---- o cargo que falta ----
             if b(p + 0x3d) == 0 && b(p + 0x28) == 0 {
-                let (c21, c1b, a10, a11) = (sb(nj + 0x21), sb(nj + 0x1b), sb(nj + 0x10), sb(nj + 0x11));
+                let (c21, c1b, a10, a11) = (signed_byte_at(nj + 0x21), signed_byte_at(nj + 0x1b), signed_byte_at(nj + 0x10), signed_byte_at(nj + 0x11));
                 wb(p + 0x3d, if rd(p + 0x61) != 0 {
                     0xb
                 } else if c21 > 10 && c1b > 10 {
@@ -1113,13 +1113,13 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                 } else if (a10 > 6 || a11 > 6) && c1b > 10 && c21 > 10 {
                     6
                 } else if a10 <= 6 && a11 <= 6 {
-                    9 + (sb(nj + 0x1e) > 10) as u8
+                    9 + (signed_byte_at(nj + 0x1e) > 10) as u8
                 } else {
                     8
                 });
             }
         }
-        ww(p + 0x18, idade_dbv1(p, data) as i16);
+        ww(p + 0x18, age_at_date(p, data) as i16);
         i += 1;
         p += 110;
     }
@@ -1132,16 +1132,16 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
         let jj = rd(q + 0x61);
         let nn = rd(q + 0x69);
         if jj != 0 {
-            limpar_vetor_dbv1(v3.as_mut_ptr() as usize);
+            clear_attr_vector(v3.as_mut_ptr() as usize);
             let (mut fim_l, mut fim_p, mut fim_q) = (0u8, 0u8, 0u8);
             vet_j(jj, q, v3.as_mut_ptr() as usize, &mut fim_l, &mut fim_p, &mut fim_q);
             let a = fim_l.wrapping_add(2) as i8;
             let f = fim_q as i8;
             if a < f {
                 for c in a as isize..f as isize {
-                    let x = cel_dbv1(&v3, c).wrapping_mul(10).wrapping_sub(w(jj + 5));
+                    let x = attr_cell_value(&v3, c).wrapping_mul(10).wrapping_sub(w(jj + 5));
                     let x = if x > 200 { 200 } else if x < -200 { -200 } else { x };
-                    por_dbv1(&mut v3, c, (x as i32 / 2) as i16);
+                    set_attr_cell_value(&mut v3, c, (x as i32 / 2) as i16);
                 }
             }
             de_vet_j(jj, q, v3.as_mut_ptr() as usize);
@@ -1149,14 +1149,14 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             norm_jogador(q);
         }
         if nn != 0 {
-            limpar_vetor_dbv1(v3.as_mut_ptr() as usize);
+            clear_attr_vector(v3.as_mut_ptr() as usize);
             let mut fim = 0u8;
             vet_nj(nn, q, v3.as_mut_ptr() as usize, &mut fim);
             let mut c = fim as i8;
-            while cel_dbv1(&v3, c as isize) != -0x7f {
-                let x = cel_dbv1(&v3, c as isize).wrapping_mul(10).wrapping_sub(w(nn + 4));
+            while attr_cell_value(&v3, c as isize) != -0x7f {
+                let x = attr_cell_value(&v3, c as isize).wrapping_mul(10).wrapping_sub(w(nn + 4));
                 let x = if x > 200 { 200 } else if x < -200 { -200 } else { x };
-                por_dbv1(&mut v3, c as isize, (x as i32 / 2) as i16);
+                set_attr_cell_value(&mut v3, c as isize, (x as i32 / 2) as i16);
                 c = c.wrapping_add(1);
             }
             de_vet_nj(nn, q, v3.as_mut_ptr() as usize);
@@ -1172,7 +1172,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
 /// vetores globais dos moldes, o texto de 0xde1f64, a data guardada da 0x54cab0 e o estado do sorteador (a cópia sem
 /// contar sorteios). Sem pessoas (caixa e fim): só a original.
 unsafe extern "C" fn comparar_database_player_initialisation(data: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize)>(%%I0%%);
     let gi = |a: usize| (*(a as *const i32)).max(0) as usize;
     let rd = |a: usize| *(a as *const usize);
     if gi(0xae2364) == 0 || rd(0xae23bc) == 0 {

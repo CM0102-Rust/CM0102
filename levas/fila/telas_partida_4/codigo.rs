@@ -2,7 +2,7 @@
 
 /// O bloco de parâmetros da tela atual ([gerente + 0x7e2 + 0x300 x vaga]; o parâmetro k em +0x14 + 8k,
 /// a marca de "liberar ao trocar" em +0x18 + 8k, 60 parâmetros) e as marcas 0xb6b7a8/ac/b0.
-unsafe fn regioes_dos_parametros() -> Vec<(usize, usize)> {
+unsafe fn screen_param_regions() -> Vec<(usize, usize)> {
     let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;
     let bloco = core::ptr::read_unaligned((GERENTE_DE_TELAS as isize + 0x7e2 + vaga * 0x300) as *const usize);
     let mut r = vec![(0xb6b7a8, 12)];
@@ -13,7 +13,7 @@ unsafe fn regioes_dos_parametros() -> Vec<(usize, usize)> {
 }
 
 /// O id do item `item` na lista de exibição do humano da vez (0 vira o padrão [0xdd6bde]).
-unsafe fn id_do_item(item: i16) -> u16 {
+unsafe fn display_item_id(item: i16) -> u16 {
     let display = *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
     let w = core::ptr::read_unaligned((display as isize + item as isize * 0x18c + 0xba966) as *const u16);
     if w == 0 { *(0xdd6bde as *const u16) } else { w }
@@ -26,7 +26,7 @@ unsafe fn id_do_item(item: i16) -> u16 {
 /// confirmou, grava 2 no parâmetro 1. Vaga ou partida nula: a original (caixa de erro).
 unsafe extern "C" fn open_match_screen(vaga: u32, partida: usize) {
     if vaga == 0 || partida == 0 {
-        return orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, partida);
+        return original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, partida);
     }
     crate::comparacao::ramo("telas abrir a partida");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
@@ -68,15 +68,15 @@ unsafe extern "C" fn open_match_screen(vaga: u32, partida: usize) {
 /// seguinte (em círculo), 7 para ou solta a troca automática; cada um liga [0xb6b7b0]. Devolve 0.
 unsafe extern "C" fn match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
     crate::comparacao::ramo("telas respond ao painel dos placares");
-    let pagina = parametro_da_tela(0x11) as u8 as i8;
-    let parado = parametro_da_tela(0x12);
-    let paginas = parametro_da_tela(0x13) as u8 as i8;
-    let quando = parametro_da_tela(0x14) as u32;
+    let pagina = get_screen_param(0x11) as u8 as i8;
+    let parado = get_screen_param(0x12);
+    let paginas = get_screen_param(0x13) as u8 as i8;
+    let quando = get_screen_param(0x14) as u32;
     let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x90c510usize);
     let seguinte = if pagina == paginas { 1 } else { (pagina as i32 + 1) as usize };
     if agora() >= quando.wrapping_add(5000) {
         if paginas > 1 && parado == 0 {
-            gravar_parametro_da_tela(0x11, seguinte);
+            set_screen_param(0x11, seguinte);
         }
         if *(0xb6b7b0 as *const u32) == 0 {
             let redesenhar: unsafe extern "C" fn() = core::mem::transmute(0x724520usize);
@@ -89,24 +89,24 @@ unsafe extern "C" fn match_screens_handle_latest_scores_cycle(item: u32) -> i32 
         return 0;
     }
     let b0 = 0xb6b7b0 as *mut u32;
-    if id_do_item(item16) == 5 {
+    if display_item_id(item16) == 5 {
         let display = *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
         let dado = core::ptr::read_unaligned((display as isize + item16 as isize * 0x18c + 0xba9a6) as *const usize);
-        gravar_parametro_da_tela(0xe, dado);
-        gravar_parametro_da_tela(0x11, 1);
+        set_screen_param(0xe, dado);
+        set_screen_param(0x11, 1);
         *b0 = 1;
     }
-    if id_do_item(item16) == 6 {
+    if display_item_id(item16) == 6 {
         // a página lida no início (a original não relê depois do item 5)
-        gravar_parametro_da_tela(0x11, if pagina == 1 { paginas as i32 as usize } else { (pagina as i32 - 1) as usize });
+        set_screen_param(0x11, if pagina == 1 { paginas as i32 as usize } else { (pagina as i32 - 1) as usize });
         *b0 = 1;
     }
-    if id_do_item(item16) == 7 {
-        gravar_parametro_da_tela(0x12, (parado == 0) as usize);
+    if display_item_id(item16) == 7 {
+        set_screen_param(0x12, (parado == 0) as usize);
         *b0 = 1;
     }
-    if id_do_item(item16) == 8 {
-        gravar_parametro_da_tela(0x11, seguinte);
+    if display_item_id(item16) == 8 {
+        set_screen_param(0x11, seguinte);
         *b0 = 1;
     }
     0
@@ -118,8 +118,8 @@ unsafe extern "C" fn match_screens_handle_latest_scores_cycle(item: u32) -> i32 
 /// linha do parâmetro 0x1c e ligam [0xb6b7b0]. Devolve 0.
 unsafe extern "C" fn handle_team_stats_input(item: u32) -> i32 {
     crate::comparacao::ramo("telas respond as estatisticas do time");
-    let p0 = parametro_da_tela(0);
-    let linha = parametro_da_tela(0x1c) as u8 as i8;
+    let p0 = get_screen_param(0);
+    let linha = get_screen_param(0x1c) as u8 as i8;
     if *(0xb6b7ac as *const u32) != 0 && *(*((p0 + 0x5b) as *const usize) as *const u8) & 4 != 0 && *(0xb6b7b0 as *const u32) == 0 {
         let redesenhar: unsafe extern "C" fn(u32, i32) = core::mem::transmute(0x721cd0usize);
         redesenhar(0, -1);
@@ -129,12 +129,12 @@ unsafe extern "C" fn handle_team_stats_input(item: u32) -> i32 {
     if item16 == -1 {
         return 0;
     }
-    if id_do_item(item16) == 9 {
-        gravar_parametro_da_tela(0x1c, (linha as i32 - 1) as usize);
+    if display_item_id(item16) == 9 {
+        set_screen_param(0x1c, (linha as i32 - 1) as usize);
         *(0xb6b7b0 as *mut u32) = 1;
     }
-    if id_do_item(item16) == 0xa {
-        gravar_parametro_da_tela(0x1c, (linha as i32 + 1) as usize);
+    if display_item_id(item16) == 0xa {
+        set_screen_param(0x1c, (linha as i32 + 1) as usize);
         *(0xb6b7b0 as *mut u32) = 1;
     }
     0
@@ -142,7 +142,7 @@ unsafe extern "C" fn handle_team_stats_input(item: u32) -> i32 {
 
 // ponytail: abrir a tela mexe em telas e na rede (não roda duas vezes): no modo comparação só a original
 unsafe extern "C" fn comparar_open_match_screen(vaga: u32, partida: usize) {
-    orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, partida)
+    original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, partida)
 }
 
 /// As duas respostas são comparadas de verdade nos cliques (o bloco de parâmetros da tela e as marcas
@@ -153,7 +153,7 @@ unsafe fn comparar_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) 
     if item as u16 == 0xffff || redesenha {
         return o(item);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes_dos_parametros(), || o(item), || r(item));
+    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&screen_param_regions(), || o(item), || r(item));
     PLACAR.registrar(igual && ro == rr, || format!("{}(item {:#x}) original={} rust={} {:?} x {:?}", nome, item, ro, rr, mo, mr));
     ro
 }
@@ -161,12 +161,12 @@ unsafe fn comparar_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) 
 unsafe extern "C" fn comparar_match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
     let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x90c510usize);
     // folga de 1 s: a hora pode virar entre os dois lados
-    let redesenha = agora().wrapping_add(1000) >= (parametro_da_tela(0x14) as u32).wrapping_add(5000);
-    comparar_resposta("match_screens_handle_latest_scores_cycle", item, orig(%%I1%%), match_screens_handle_latest_scores_cycle, redesenha)
+    let redesenha = agora().wrapping_add(1000) >= (get_screen_param(0x14) as u32).wrapping_add(5000);
+    comparar_resposta("match_screens_handle_latest_scores_cycle", item, original_fn(%%I1%%), match_screens_handle_latest_scores_cycle, redesenha)
 }
 
 unsafe extern "C" fn comparar_handle_team_stats_input(item: u32) -> i32 {
-    let p0 = parametro_da_tela(0);
+    let p0 = get_screen_param(0);
     let redesenha = *(0xb6b7ac as *const u32) != 0 && *(*((p0 + 0x5b) as *const usize) as *const u8) & 4 != 0;
-    comparar_resposta("handle_team_stats_input", item, orig(%%I2%%), handle_team_stats_input, redesenha)
+    comparar_resposta("handle_team_stats_input", item, original_fn(%%I2%%), handle_team_stats_input, redesenha)
 }

@@ -8,7 +8,7 @@
 /// subir. Devolve 1 se o moral mudou. Delta 0: 0, sem ler nada.
 unsafe extern "C" fn staff_adjust_morale(pessoa: usize, delta: u32, limitar: u32) -> u32 {
     let aleatorio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let d = delta as u8 as i8;
     if d == 0 {
         return 0;
@@ -28,7 +28,7 @@ unsafe extern "C" fn staff_adjust_morale(pessoa: usize, delta: u32, limitar: u32
     };
     novo = if novo < 1 { 1 } else if novo > 20 { 20 } else { novo };
     if limitar != 0 && d > 0 {
-        let v = vinculo(*(0xae1050 as *const usize), pessoa, core::ptr::read_unaligned((pessoa + 0x39) as *const usize));
+        let v = contract_bond(*(0xae1050 as *const usize), pessoa, core::ptr::read_unaligned((pessoa + 0x39) as *const usize));
         if v != 0 && core::ptr::read_unaligned((v + 0x45) as *const u32) != 0 && novo >= moral {
             novo = moral;
         }
@@ -73,7 +73,7 @@ unsafe extern "C" fn staff_set_squad_flags(pessoa: usize, elenco: u32) -> usize 
 }
 
 unsafe extern "C" fn comparar_staff_adjust_morale(pessoa: usize, delta: u32, limitar: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(%%I0%%);
     if delta as u8 == 0 {
         let r = o(pessoa, delta, limitar);
         PLACAR.registrar(r == 0, || format!("staff_adjust_morale({:x}, 0) original={}", pessoa, r));
@@ -89,7 +89,7 @@ unsafe extern "C" fn comparar_staff_adjust_morale(pessoa: usize, delta: u32, lim
 }
 
 unsafe extern "C" fn comparar_database_non_player_to_attribute_vector(nao_jogador: usize, pessoa: usize, vetor: usize, fim: *mut u8) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, *mut u8) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8) -> u32>(%%I1%%);
     let mut regioes = vec![(vetor, 21 * 3)];
     if !fim.is_null() {
         regioes.push((fim as usize, 1));
@@ -101,7 +101,7 @@ unsafe extern "C" fn comparar_database_non_player_to_attribute_vector(nao_jogado
 }
 
 unsafe extern "C" fn comparar_staff_set_squad_flags(pessoa: usize, elenco: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pessoa + 0x5e, 1)], || o(pessoa, elenco),
         || staff_set_squad_flags(pessoa, elenco));
     PLACAR.registrar(igual && r == n, || format!("staff_set_squad_flags({:x}, {:x}) {:x?} x {:x?}", pessoa, elenco as u8, mo, mr));

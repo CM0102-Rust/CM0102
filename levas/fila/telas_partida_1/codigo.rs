@@ -6,7 +6,7 @@
 /// quando o botão fica desligado). Sem partida, sem saída, com menos de 100 bytes ou estado fora: a
 /// original (caixa de erro). Devolve 1.
 unsafe extern "C" fn match_control_label(estado: u8, m: usize, saida: *mut u8, tam: i32, marcas: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(%%I0%%);
     if m == 0 || saida.is_null() || tam < 100 || !(1..=5).contains(&estado) {
         return o(estado, m, saida, tam, marcas);
     }
@@ -67,7 +67,7 @@ unsafe extern "C" fn close_match_screen() {
 /// (0x7fe4a0 com o desenho 0x727fa0 e a resposta 0x727fb0). Vaga 0: a original (caixa de erro).
 unsafe extern "C" fn open_waiting_screen(vaga: u32) {
     if vaga == 0 {
-        return orig::<unsafe extern "C" fn(u32)>(%%I2%%)(vaga);
+        return original_fn::<unsafe extern "C" fn(u32)>(%%I2%%)(vaga);
     }
     crate::comparacao::ramo("telas abrir a espera");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) = core::mem::transmute(0x7fe4a0usize);
@@ -75,7 +75,7 @@ unsafe extern "C" fn open_waiting_screen(vaga: u32) {
 }
 
 unsafe extern "C" fn comparar_match_control_label(estado: u8, m: usize, saida: *mut u8, tam: i32, marcas: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(%%I0%%);
     if m == 0 || saida.is_null() || tam < 100 || marcas.is_null() {
         return o(estado, m, saida, tam, marcas);
     }
@@ -89,9 +89,9 @@ unsafe extern "C" fn comparar_match_control_label(estado: u8, m: usize, saida: *
 // comparação só a original roda; as cópias se provam no jogo do Lucas em modo Rust (JOGAR.bat), com
 // os contadores "telas ..." no ddraw.log
 unsafe extern "C" fn comparar_close_match_screen() {
-    orig::<unsafe extern "C" fn()>(%%I1%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I1%%)()
 }
 
 unsafe extern "C" fn comparar_open_waiting_screen(vaga: u32) {
-    orig::<unsafe extern "C" fn(u32)>(%%I2%%)(vaga)
+    original_fn::<unsafe extern "C" fn(u32)>(%%I2%%)(vaga)
 }

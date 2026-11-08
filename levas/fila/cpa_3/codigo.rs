@@ -10,14 +10,14 @@ unsafe fn cpa3_b(a: usize) -> u8 {
 
 /// A nota de um clube na estatística da liga (0x4b02e0): pesos 1 nos 4 atributos (+0x72..+0x75; +0x75 e +0x74 com
 /// o peso [0x968968]) ou, com menos de 25 jogos (+4), proporcionais aos jogos; a média ponderada, na ordem do x87.
-unsafe fn cpa3_nota(e: usize, b73: f64) -> f64 {
-    let (mut p, mut k73, mut k72) = (f64_em(0x968968), 1.0f64, 1.0f64);
+unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
+    let (mut p, mut k73, mut k72) = (read_f64_at(0x968968), 1.0f64, 1.0f64);
     let jogos = cpa3_b(e + 4);
     if jogos < 0x19 {
         let v = jogos as f64;
-        p = v * f64_em(0x968a98);
-        k73 = v * f64_em(0x968a90);
-        k72 = f64_em(0x968938) - v * f64_em(0x968a88);
+        p = v * read_f64_at(0x968a98);
+        k73 = v * read_f64_at(0x968a90);
+        k72 = read_f64_at(0x968938) - v * read_f64_at(0x968a88);
     }
     let s = cpa3_b(e + 0x75) as f64 * p + cpa3_b(e + 0x72) as f64 * k72 + b73 * k73 + cpa3_b(e + 0x74) as f64 * p;
     s / (p + p + k72 + k73)
@@ -26,7 +26,7 @@ unsafe fn cpa3_nota(e: usize, b73: f64) -> f64 {
 /// { 0x4b02e0 } (cdecl, comp_util.cpp): `comp_util_get_league_clash_type(a, b)`: os dois clubes na mesma divisão
 /// (+0x57, não reserva nem menor: 0x7e6f20), a liga dela ([0xadadfc][id]) com estatística (+8, 0x4a4850 dos dois),
 /// sem fases (+0x30 = −1) e com +0x43 = 2, e a diferença de +0x73 até um quarto dos clubes (+0x3e). Com as notas
-/// (cpa3_nota): 1 = briga pelo título (virtual +0x98 = 0, as duas abaixo de um terço dos clubes e cada uma não abaixo
+/// (league_stats_rating): 1 = briga pelo título (virtual +0x98 = 0, as duas abaixo de um terço dos clubes e cada uma não abaixo
 /// do +0x74 do outro); 3 = briga na zona (+0x98 ≠ 0, as duas até 0,2 × clubes + +0xbe, ou com +0xbf até 0,2 × clubes
 /// + +0xbe + +0xbf, e o mesmo cruzamento do +0x74); senão 0. Devolve só `al`. Sem SEH, sem sorteio; a virtual +0x98
 /// é chamada até três vezes, como na original.
@@ -51,10 +51,10 @@ unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     }
     let (a73, b73) = (cpa3_b(ea + 0x73) as i32, cpa3_b(eb + 0x73) as i32);
     let clubes = core::ptr::read_unaligned((liga + 0x3e) as *const i16) as i32;
-    if (a73 - b73).abs() > ftol(clubes as f64 * f64_em(0x9689e0)) as i16 as i32 {
+    if (a73 - b73).abs() > match_pl_ftol(clubes as f64 * read_f64_at(0x9689e0)) as i16 as i32 {
         return 0;
     }
-    let (na, nb) = (cpa3_nota(ea, a73 as f64), cpa3_nota(eb, b73 as f64));
+    let (na, nb) = (league_stats_rating(ea, a73 as f64), league_stats_rating(eb, b73 as f64));
     let (a74, b74) = (cpa3_b(ea + 0x74) as f64, cpa3_b(eb + 0x74) as f64);
     let virtual98 = || {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cpa3_d(cpa3_d(liga) + 0x98));
@@ -63,14 +63,14 @@ unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     // as comparações do x87: NaN conta como "menor" (C0) e "menor ou igual" (C0|C3)
     let cruzadas = !(a74 > nb) && !(b74 > na);
     if virtual98() == 0 {
-        let t = clubes as f64 * f64_em(0x968a80);
+        let t = clubes as f64 * read_f64_at(0x968a80);
         if !(na >= t) && !(nb >= t) && cruzadas {
             return 1; // briga pelo título
         }
     }
     let be = cpa3_b(liga + 0xbe) as i8 as f64;
     if virtual98() != 0 {
-        let t = clubes as f64 * f64_em(0x968918) + be;
+        let t = clubes as f64 * read_f64_at(0x968918) + be;
         if !(na > t) && !(nb > t) && cruzadas {
             return 3;
         }
@@ -82,7 +82,7 @@ unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     if bf == 0 {
         return 0;
     }
-    let t = clubes as f64 * f64_em(0x968918) + be + bf as f64;
+    let t = clubes as f64 * read_f64_at(0x968918) + be + bf as f64;
     if !(na > t) && !(nb > t) && cruzadas {
         3
     } else {
@@ -93,7 +93,7 @@ unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
 // ponytail: ~4 milhões de chamadas na carreira: comparação só do valor, sem regiões (a rotina só lê; a 0x4a4850 pode
 // reordenar a estatística, e a original já deixa ordenada para a cópia).
 unsafe extern "C" fn comparar_comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(a, b);
     let n = comp_util_get_league_clash_type(a, b);
     PLACAR.registrar(r == n, || format!("comp_util_get_league_clash_type({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -148,7 +148,7 @@ unsafe extern "C" fn comp_util_get_club_strength_score(clube: usize) -> i32 {
 // ponytail: 1.117 chamadas; só o valor. A escalação e as notas têm comparadores próprios, e o físico que a nota
 // atualiza uma vez (0x62ed70, com sorteio) a original já deixa pronto para a cópia.
 unsafe extern "C" fn comparar_comp_util_get_club_strength_score(clube: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> i32>(%%I1%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> i32>(%%I1%%)(clube);
     let n = comp_util_get_club_strength_score(clube);
     PLACAR.registrar(r == n, || format!("comp_util_get_club_strength_score({:x}) original={} rust={}", clube, r, n));
     r
@@ -162,7 +162,7 @@ unsafe extern "C" fn comparar_comp_util_get_club_strength_score(clube: usize) ->
 unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, lugar: u32) -> usize {
     let lugar = lugar as u8;
     if lugar > 2 {
-        return orig::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%)(comp, lugar as u32); // caixa: só a original
+        return original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%)(comp, lugar as u32); // caixa: só a original
     }
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
     let buscar: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
@@ -187,7 +187,7 @@ unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, lugar: u32) -
 }
 
 unsafe extern "C" fn comparar_comp_util_get_latest_placed_club(comp: usize, lugar: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%);
     if lugar as u8 > 2 {
         return o(comp, lugar);
     }

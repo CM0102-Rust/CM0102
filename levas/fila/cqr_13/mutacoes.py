@@ -12,7 +12,7 @@ MUTACOES = [
      'let dia = (cqr13_w(this + 0xb6) as u16).wrapping_add(7); // mutacao: uma semana depois',
      'cqr_13 sorteio da copa america'),
     ('cqr13_times_de_tras_para_frente',
-     'cqr13_pd(times + n * 4, cqr13_sorteado(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo',
-     'cqr13_pd(times + (3 - n) * 4, cqr13_sorteado(this, (g + 1) as usize + n * 3)); // mutacao: de tras para a frente',
+     'cqr13_pd(times + n * 4, drawn_team(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo',
+     'cqr13_pd(times + (3 - n) * 4, drawn_team(this, (g + 1) as usize + n * 3)); // mutacao: de tras para a frente',
      'cqr_13 time do grupo'),
 ]

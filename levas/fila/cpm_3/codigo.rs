@@ -60,7 +60,7 @@ unsafe fn cpm3_por(a: usize, v: usize) {
 
 /// As trocas de `vezes` pares sorteados (0x90cfc0(n) duas vezes; a primeira dá o índice que recebe o item do segundo)
 /// no vetor de ponteiros `itens`, como as duas originais (índices de 16 bits com sinal).
-unsafe fn cpm3_trocar(itens: usize, n: i32) {
+unsafe fn swap_random_pair(itens: usize, n: i32) {
     let a = cpm3_sorteio(n) as i16 as isize;
     let b = cpm3_sorteio(n) as i16 as isize;
     let pa = (itens as isize + 4 * a) as usize;
@@ -80,7 +80,7 @@ unsafe extern "C" fn comp_util_shuffle_pointer_array(itens: usize, n: u32) {
     crate::comparacao::ramo("cpm_3 embaralhar ponteiros");
     let mut k = 0i16;
     loop {
-        cpm3_trocar(itens, n);
+        swap_random_pair(itens, n);
         k = k.wrapping_add(1); // mais uma troca
         if k as i32 >= 3 * n {
             break;
@@ -95,7 +95,7 @@ unsafe extern "C" fn comp_util_shuffle_pointer_array(itens: usize, n: u32) {
 unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubes: usize, n: u32, escolhas: u32) {
     let (nn, e) = (n as u16 as i16, escolhas as u16 as i16);
     if nn < 0 || nn < e {
-        return orig::<unsafe extern "C" fn(usize, u32, u32)>(%%I2%%)(clubes, n, escolhas); // a caixa
+        return original_fn::<unsafe extern "C" fn(usize, u32, u32)>(%%I2%%)(clubes, n, escolhas); // a caixa
     }
     if e < 1 {
         return;
@@ -111,7 +111,7 @@ unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubes: usize, n: u32,
     }
     crate::comparacao::ramo("cpm_3 embaralhar os melhores");
     for _ in 0..m as i32 { // m trocas
-        cpm3_trocar(clubes, m as i32);
+        swap_random_pair(clubes, m as i32);
     }
 }
 
@@ -119,12 +119,12 @@ unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubes: usize, n: u32,
 /// prova é a carreira e o modo Rust).
 unsafe extern "thiscall" fn comparar_move_club_to_division(this: usize, clube: usize, divisao: usize, vaga: u32) {
     crate::comparacao::ramo("move_club_to_division");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, clube, divisao, vaga)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, clube, divisao, vaga)
 }
 
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pelo vetor, a cópia em sem_contar.
 unsafe extern "C" fn comparar_comp_util_shuffle_pointer_array(itens: usize, n: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32)>(%%I1%%);
     let k = (n as u16 as i16).max(0) as usize;
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if k > 0 {
@@ -138,7 +138,7 @@ unsafe extern "C" fn comparar_comp_util_shuffle_pointer_array(itens: usize, n: u
 /// Comparador: ordena (qsort, determinístico) e sorteia: lado a lado pelo estado do sorteio e pelos `n` clubes, a cópia
 /// em sem_contar. Caixa (`n` negativo ou menor que `escolhas`): só a original.
 unsafe extern "C" fn comparar_comp_util_sort_and_shuffle_top_clubs(clubes: usize, n: u32, escolhas: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32, u32)>(%%I2%%);
     let (nn, e) = (n as u16 as i16, escolhas as u16 as i16);
     if nn < 0 || nn < e {
         return o(clubes, n, escolhas);

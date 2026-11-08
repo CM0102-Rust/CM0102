@@ -21,19 +21,19 @@ unsafe fn cpx9_pd(a: usize, v: u32) {
 }
 
 /// A linha do clube na tabela tática (0x8982b0, stdcall(clube, humano); −1 sem linha).
-unsafe fn cpx9_linha(clube: usize, humano: u32) -> i32 {
+unsafe fn club_tactics_index(clube: usize, humano: u32) -> i32 {
     let f: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
     f(clube, humano)
 }
 
 /// O começo da linha `l` (0x91 bytes cada, a partir de [this+0x601]).
-unsafe fn cpx9_inicio(this: usize, l: i32) -> usize {
+unsafe fn tactics_row_start(this: usize, l: i32) -> usize {
     cpx9_d(this + 0x601).wrapping_add(l.wrapping_mul(0x91) as usize)
 }
 
 /// As 16 cópias para desfazer (0x5c bytes a partir de this+0x30: +0 clube, +4 time, +8 a cópia; conta em +0x5f0): a do
 /// clube e do time some (+8 = 0) e a conta desce.
-unsafe fn cpx9_soltar_copias(this: usize, clube: usize, time: u32) {
+unsafe fn drop_undo_copies(this: usize, clube: usize, time: u32) {
     if cpx9_b(this + 0x5f0) == 0 {
         return;
     }
@@ -47,11 +47,11 @@ unsafe fn cpx9_soltar_copias(this: usize, clube: usize, time: u32) {
 }
 
 /// As regiões da escalação do clube: a linha dele na tabela tática (se houver) e as cópias para desfazer com a conta.
-unsafe fn cpx9_regioes(this: usize, clube: usize, time: u32) -> Vec<(usize, usize)> {
+unsafe fn lineup_regions(this: usize, clube: usize, time: u32) -> Vec<(usize, usize)> {
     let mut reg = vec![(this + 0x30, 0x5c1)];
-    let l = cpx9_linha(clube, time);
+    let l = club_tactics_index(clube, time);
     if l != -1 {
-        reg.push((cpx9_inicio(this, l), 0x91));
+        reg.push((tactics_row_start(this, l), 0x91));
     }
     reg
 }
@@ -65,15 +65,15 @@ unsafe fn cpx9_regioes(this: usize, clube: usize, time: u32) -> Vec<(usize, usiz
 /// Clube ou pessoa nulos: a original (caixa "Error", 0).
 unsafe extern "thiscall" fn remove_player_from_selection(this: usize, clube: usize, pessoa: usize, time: u32, papeis: u32) -> u32 {
     if clube == 0 || pessoa == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%)(this, clube, pessoa, time, papeis); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%)(this, clube, pessoa, time, papeis); // caixa: só a original
     }
-    let l = cpx9_linha(clube, time);
+    let l = club_tactics_index(clube, time);
     if l == -1 {
         return 0;
     }
     let mut achou = 0;
     for k in 0..20usize { // cpx9: as vagas da escalação
-        let vaga = cpx9_inicio(this, l) + 2 + 4 * k;
+        let vaga = tactics_row_start(this, l) + 2 + 4 * k;
         if cpx9_i(vaga) == cpx9_i(pessoa) {
             crate::comparacao::ramo(if k < 11 { "cpx_9 tirou titular" } else { "cpx_9 tirou reserva" });
             cpx9_pd(vaga, u32::MAX); // cpx9: a vaga fica vazia
@@ -102,18 +102,18 @@ unsafe extern "thiscall" fn remove_player_from_selection(this: usize, clube: usi
             }
         }
     }
-    cpx9_soltar_copias(this, clube, time);
+    drop_undo_copies(this, clube, time);
     achou
 }
 
 /// Comparador: lado a lado pela devolução, pela linha do clube na tabela tática (as vagas, as extras e os batedores) e
 /// pelas cópias para desfazer com a conta. Clube ou pessoa nulos (caixa): só a original.
 unsafe extern "thiscall" fn comparar_remove_player_from_selection(this: usize, clube: usize, pessoa: usize, time: u32, papeis: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%);
     if clube == 0 || pessoa == 0 {
         return o(this, clube, pessoa, time, papeis);
     }
-    let reg = cpx9_regioes(this, clube, time);
+    let reg = lineup_regions(this, clube, time);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, pessoa, time, papeis), || remove_player_from_selection(this, clube, pessoa, time, papeis));
     PLACAR.registrar(igual && r == n, || format!("remove_player_from_selection(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", clube, pessoa, time, papeis, r, mo, n, mr));
     r
@@ -126,28 +126,28 @@ unsafe extern "thiscall" fn comparar_remove_player_from_selection(this: usize, c
 unsafe extern "thiscall" fn swap_selection_slots(this: usize, clube: usize, a: u32, b: u32, time: u32) -> u32 {
     let (va, vb) = (a as u8 as i8, b as u8 as i8);
     if clube == 0 || !(0..=0x13).contains(&va) || !(0..=0x13).contains(&vb) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(%%I1%%)(this, clube, a, b, time); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(%%I1%%)(this, clube, a, b, time); // caixa: só a original
     }
-    let l = cpx9_linha(clube, time);
+    let l = club_tactics_index(clube, time);
     if l == -1 {
         return 0;
     }
     let trocar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x90ba90usize);
-    let inicio = cpx9_inicio(this, l);
+    let inicio = tactics_row_start(this, l);
     trocar(inicio + 2 + 4 * va as usize, inicio + 2 + 4 * vb as usize, 4);
-    cpx9_soltar_copias(this, clube, time);
+    drop_undo_copies(this, clube, time);
     1
 }
 
 /// Comparador: lado a lado pela devolução, pela linha tática do clube e pelas cópias para desfazer. Clube nulo ou vaga
 /// fora (caixa): só a original.
 unsafe extern "thiscall" fn comparar_swap_selection_slots(this: usize, clube: usize, a: u32, b: u32, time: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(%%I1%%);
     let (va, vb) = (a as u8 as i8, b as u8 as i8);
     if clube == 0 || !(0..=0x13).contains(&va) || !(0..=0x13).contains(&vb) {
         return o(this, clube, a, b, time);
     }
-    let reg = cpx9_regioes(this, clube, time);
+    let reg = lineup_regions(this, clube, time);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, a, b, time), || swap_selection_slots(this, clube, a, b, time));
     PLACAR.registrar(igual && r == n, || format!("swap_selection_slots(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", clube, va, vb, time, r, mo, n, mr));
     r
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: usize, time: 
 
 /// Comparador: a devolução (rotina pura).
 unsafe extern "thiscall" fn comparar_has_selection_undo(this: usize, clube: usize, time: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%)(this, clube, time);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%)(this, clube, time);
     let n = has_selection_undo(this, clube, time);
     PLACAR.registrar(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, time, r, n));
     r

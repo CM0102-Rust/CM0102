@@ -5,13 +5,13 @@
 # a faixa das financas (0x5986b0) e os sorteios dos eventos da semana. A terceira escapa se nenhuma compensacao for
 # paga ate 2002-06-01 (o contador mostra).
 MUTACOES = [
-    ('cpz13_premio_fora_do_saldo', '    cpz13_somar_saldo(this, valor as i64); // cpz13: o prêmio entra no saldo',
+    ('cpz13_premio_fora_do_saldo', '    add_to_balance(this, valor as i64); // cpz13: o prêmio entra no saldo',
      '    let _ = valor; // mutacao: o premio nao entra no saldo',
      'cpz_13 premio recebido'),
-    ('cpz13_tv_fora_do_saldo', '    cpz13_somar_saldo(this, valor as i64); // cpz13: a TV entra no saldo',
+    ('cpz13_tv_fora_do_saldo', '    add_to_balance(this, valor as i64); // cpz13: a TV entra no saldo',
      '    let _ = valor; // mutacao: a TV nao entra no saldo',
      'cpz_13 tv recebida'),
-    ('cpz13_salario_no_saldo', '    cpz13_somar_saldo(this, (valor as i64).wrapping_neg()); // cpz13: o salário sai do saldo',
-     '    cpz13_somar_saldo(this, valor as i64); // mutacao: o salario entra no saldo',
+    ('cpz13_salario_no_saldo', '    add_to_balance(this, (valor as i64).wrapping_neg()); // cpz13: o salário sai do saldo',
+     '    add_to_balance(this, valor as i64); // mutacao: o salario entra no saldo',
      'cpz_13 salario pago'),
 ]

@@ -17,13 +17,13 @@ unsafe fn cqc12_pd(a: usize, v: usize) {
 }
 
 /// A data `r` é a de hoje (o ano e o dia)?
-unsafe fn cqc12_e_hoje(r: usize, hoje: usize) -> bool {
+unsafe fn is_today(r: usize, hoje: usize) -> bool {
     cqc12_uw(r + 2) == cqc12_uw(hoje + 2) && cqc12_w(r) == cqc12_w(hoje)
 }
 
 /// Marca os clubes com jogo na data `d` e nos dias vizinhos (0x7775c0 na data, na véspera e no dia seguinte; a data
 /// volta a ser a mesma no fim: 0x54c8e0/0x54c5b0 e 0x417c10).
-unsafe fn cqc12_marcar_tres_dias(this: usize, d: usize) {
+unsafe fn mark_clubs_three_days(this: usize, d: usize) {
     let marcar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7775c0usize);
     let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c8e0usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
@@ -45,7 +45,7 @@ unsafe fn cqc12_marcar_tres_dias(this: usize, d: usize) {
 /// 0x9cf78c, 0x9cf964), com mandante que não é a seleção B (0x5409b0) e a marca +0x40: os convocados por clube
 /// (0x7771c0) das duas seleções; com o bit 0x200 de +0x4d, também os das seleções B (0x53b4f0 da nação +0x53 de cada
 /// uma) e, sem ele e com o 0x100, os das duas com `b` = 1.
-unsafe fn cqc12_jogos(this: usize, l: usize) {
+unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let convocar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x76bab0usize);
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
@@ -85,7 +85,7 @@ unsafe fn cqc12_jogos(this: usize, l: usize) {
 /// (0x54c770); a tabela dos clubes com jogo (+0x24) sai (0x9452ca) e zera. Em 1º de janeiro, 15 de abril e 1º de agosto
 /// (0x549f70 no ano de hoje), as reservas das seleções se refazem (0x76abf0). Nas 3 fatias do dia daqui a duas
 /// semanas, as listas dos grupos 0 e 1 (0x5abf10): com jogo em alguma e sem a tabela, os clubes com jogo em volta da
-/// data são marcados (cqc12_marcar_tres_dias); os jogos das duas listas (cqc12_jogos). Com a tabela, os jogos dos clubes
+/// data são marcados (mark_clubs_three_days); os jogos das duas listas (select_squads_for_fixtures). Com a tabela, os jogos dos clubes
 /// com convocados se remarcam (0x7777e0). Da lista em +0 saem (0x68d1f0) os itens do dia de hoje (+0x10). Com o ranking
 /// (+0x1c), a atualização dele (0x58d460); no dia múltiplo de 70, a poda dos registros de convocação (0x7774b0); por fim
 /// as notícias dos classificados (0x7779e0).
@@ -117,9 +117,9 @@ unsafe extern "thiscall" fn national_teams_daily_update(this: usize, hoje: usize
     let ano = cqc12_uw(hoje + 2) as u32;
     let mut t = [0u8; 8];
     let pt = t.as_mut_ptr() as usize;
-    if cqc12_e_hoje(dma(pt, 1, 0, ano, u32::MAX), hoje) // cqc12: 1º de janeiro
-        || cqc12_e_hoje(dma(pt, 0xf, 3, ano, u32::MAX), hoje)
-        || cqc12_e_hoje(dma(pt, 1, 7, ano, u32::MAX), hoje)
+    if is_today(dma(pt, 1, 0, ano, u32::MAX), hoje) // cqc12: 1º de janeiro
+        || is_today(dma(pt, 0xf, 3, ano, u32::MAX), hoje)
+        || is_today(dma(pt, 1, 7, ano, u32::MAX), hoje)
     {
         crate::comparacao::ramo("cqc_12 refaz as reservas");
         refazer(this);
@@ -131,13 +131,13 @@ unsafe extern "thiscall" fn national_teams_daily_update(this: usize, hoje: usize
         let l0 = lista(fixman, cqc12_d(d + 2) as u32, cqc12_d(d) as u32, fatia, 0);
         let l1 = lista(fixman, cqc12_d(d + 2) as u32, cqc12_d(d) as u32, fatia, 1);
         if ((l0 != 0 && cqc12_w(l0) != 0) || (l1 != 0 && cqc12_w(l1) != 0)) && cqc12_d(this + 0x24) == 0 {
-            cqc12_marcar_tres_dias(this, d); // cqc12: os clubes com jogo em volta da data
+            mark_clubs_three_days(this, d); // cqc12: os clubes com jogo em volta da data
         }
         if l0 != 0 {
-            cqc12_jogos(this, l0);
+            select_squads_for_fixtures(this, l0);
         }
         if l1 != 0 {
-            cqc12_jogos(this, l1);
+            select_squads_for_fixtures(this, l1);
         }
     }
     if cqc12_d(this + 0x24) != 0 {
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn national_teams_daily_update(this: usize, hoje: usize
 }
 
 /// Quantos itens da lista em +0 são do dia `dia` (+0x10), percorrendo os nós sem mexer no cursor.
-unsafe fn cqc12_do_dia(this: usize, dia: i16) -> u32 {
+unsafe fn count_items_on_day(this: usize, dia: i16) -> u32 {
     let l = cqc12_d(this);
     if l == 0 {
         return 0;
@@ -185,17 +185,17 @@ unsafe fn cqc12_do_dia(this: usize, dia: i16) -> u32 {
 /// e libera itens (0x68d1f0): não pode rodar duas vezes. Só ela roda, conferindo o plano do que a própria rotina grava:
 /// nenhum item do dia de hoje sobra na lista em +0.
 unsafe extern "thiscall" fn comparar_national_teams_daily_update(this: usize, hoje: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let dia = cqc12_w(hoje);
-    let antes = cqc12_do_dia(this, dia);
+    let antes = count_items_on_day(this, dia);
     o(this, hoje);
-    let sobra = cqc12_do_dia(this, dia);
+    let sobra = count_items_on_day(this, dia);
     PLACAR.registrar(sobra == 0, || format!("national_teams_daily_update(dia {}) itens do dia antes {} depois {}", dia, antes, sobra));
 }
 
 /// O índice (0..15) do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]]) pela conta de um byte da original
 /// ((id − [0xae2364]) + 16 em 8 bits); Err(()) sem técnico, Ok(None) fora (a caixa).
-unsafe fn cqc12_indice() -> Result<Option<usize>, ()> {
+unsafe fn current_human_index() -> Result<Option<usize>, ()> {
     let t = cqc12_d(0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as i32 as usize).wrapping_mul(0x300)));
     if t == 0 {
         return Err(());
@@ -205,7 +205,7 @@ unsafe fn cqc12_indice() -> Result<Option<usize>, ()> {
 }
 
 /// O registro de busca `k` (0x2b0 bytes) da sessão `s`.
-unsafe fn cqc12_busca(s: usize, k: i32) -> usize {
+unsafe fn search_record(s: usize, k: i32) -> usize {
     s.wrapping_add((k as usize).wrapping_mul(0x2b0))
 }
 
@@ -214,22 +214,22 @@ unsafe fn cqc12_busca(s: usize, k: i32) -> usize {
 /// em +0 da sessão) sem clube (+0x191 = −2). Sem técnico ou sem sessão: 0; índice fora: a caixa (linha 0x454; a
 /// original) e 0.
 unsafe extern "thiscall" fn current_search_has_no_club(this: usize) -> u32 {
-    let i = match cqc12_indice() {
+    let i = match current_human_index() {
         Err(()) => return 0,
-        Ok(None) => return orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), // a caixa
+        Ok(None) => return original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), // a caixa
         Ok(Some(i)) => i,
     };
     let s = cqc12_d(this + 0xc + i * 4);
     if s == 0 {
         return 0;
     }
-    (cqc12_d(cqc12_busca(s, *(s as *const i8) as i32) + 0x191) as i32 == -2) as u32
+    (cqc12_d(search_record(s, *(s as *const i8) as i32) + 0x191) as i32 == -2) as u32
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
 unsafe extern "thiscall" fn comparar_current_search_has_no_club(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    if matches!(cqc12_indice(), Ok(None)) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    if matches!(current_human_index(), Ok(None)) {
         return o(this);
     }
     let r = o(this);
@@ -242,9 +242,9 @@ unsafe extern "thiscall" fn comparar_current_search_has_no_club(this: usize) -> 
 /// (0x482aaf, 0x483040, 0x7b34e1). Alguma das 10 buscas da sessão do técnico humano da vez tem o clube (+0x191 = +0
 /// do clube): 1. Sem técnico ou sem sessão: 0; índice fora: a caixa (linha 0x480; a original) e 0.
 unsafe extern "thiscall" fn is_club_in_session_searches(this: usize, clube: usize) -> u32 {
-    let i = match cqc12_indice() {
+    let i = match current_human_index() {
         Err(()) => return 0,
-        Ok(None) => return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, clube), // a caixa
+        Ok(None) => return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, clube), // a caixa
         Ok(Some(i)) => i,
     };
     let s = cqc12_d(this + 0xc + i * 4);
@@ -253,13 +253,13 @@ unsafe extern "thiscall" fn is_club_in_session_searches(this: usize, clube: usiz
     }
     let id = cqc12_d(clube);
     // ponytail: a original testa o contador contra 0xff (nunca) para usar a busca atual (+0); fica o contador
-    (0..10).any(|k| cqc12_d(cqc12_busca(s, k) + 0x191) == id) as u32
+    (0..10).any(|k| cqc12_d(search_record(s, k) + 0x191) == id) as u32
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
 unsafe extern "thiscall" fn comparar_is_club_in_session_searches(this: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
-    if matches!(cqc12_indice(), Ok(None)) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
+    if matches!(current_human_index(), Ok(None)) {
         return o(this, clube);
     }
     let r = o(this, clube);
@@ -302,7 +302,7 @@ const CQC12_EXTRAS: [u16; 3] = [0x202, 0x88, 0x808];
 /// confere todas), e cada vaga a mais vai na direção da tabela maior seguinte. O elenco de 25 parte da tabela de 22
 /// e não da de 24 porque é a que a original usa para ele (só 24 e 26 têm tabela própria). Outros tamanhos: como a
 /// original nas 22 primeiras; as demais com código 0 (ninguém passa no filtro). ponytail: o jogo só pede 23, 24 e 26.
-unsafe fn cqc12_codigos(tam: u8) -> [u16; 50] {
+unsafe fn squad_position_codes(tam: u8) -> [u16; 50] {
     let mut c = [0u16; 50];
     match tam {
         0x1a => c[..26].copy_from_slice(&CQC12_26),
@@ -319,7 +319,7 @@ unsafe fn cqc12_codigos(tam: u8) -> [u16; 50] {
 }
 
 /// O registro da nação nas seleções (+4 da tabela, 0x6e bytes pelo id da nação).
-unsafe fn cqc12_registro(this: usize, nacao: usize) -> usize {
+unsafe fn squad_nation_record(this: usize, nacao: usize) -> usize {
     cqc12_d(this + 4).wrapping_add(cqc12_d(nacao).wrapping_mul(0x6e))
 }
 
@@ -327,7 +327,7 @@ unsafe fn cqc12_registro(this: usize, nacao: usize) -> usize {
 /// ([0x9cf224]); para ela, pela competição da partida (amistoso 0x5c6710 de [0xae2c74], ou a da Oceania: 0x8ca/0x2134;
 /// Copa das Confederações 0xabe/0x222e; eliminatórias da Oceania 0x8ca e 9000, 8000 ou 10001 pelo byte +0x42; Copa
 /// do Mundo 0xabe/10000).
-unsafe fn cqc12_limites(nacao: usize, p: usize) -> (i16, i16) {
+unsafe fn reputation_limits(nacao: usize, p: usize) -> (i16, i16) {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     // 0x5c6710: push [p + 0x14]; mov ecx, [0xae2c74] -> thiscall ret 4
     if cqc12_d(nacao) != cqc12_d(0x9cf224) {
@@ -352,7 +352,7 @@ unsafe fn cqc12_limites(nacao: usize, p: usize) -> (i16, i16) {
 
 /// O time do tipo (0x53b3d0 a principal nos tipos 0 e 1, 0x53b4f0 o sub-21), a marca de elenco (+0x5e: 8 no tipo
 /// 1, 4 nos outros) e o time da tática (1 no tipo 1).
-unsafe fn cqc12_time(nacao: usize, t: i8) -> (usize, u8, u32) {
+unsafe fn squad_team_for_type(nacao: usize, t: i8) -> (usize, u8, u32) {
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     // 0x53b3d0 e 0x53b4f0: push nacao; add esp, 4 -> cdecl
@@ -365,7 +365,7 @@ unsafe fn cqc12_time(nacao: usize, t: i8) -> (usize, u8, u32) {
 
 /// Os tipos de reserva percorridos: só o do tipo, fora o sub-21 (2) dos Jogos Olímpicos ([0x9cf7a0]), que olha as
 /// reservas 0 e 1; o sub-21 fora deles olha a 1.
-unsafe fn cqc12_faixa(t: i8, p: usize) -> (usize, usize) {
+unsafe fn reserve_type_range(t: i8, p: usize) -> (usize, usize) {
     if t != 2 {
         (0, 0)
     } else if p != 0 && cqc12_d(p) == cqc12_d(0x9cf7a0) {
@@ -378,7 +378,7 @@ unsafe fn cqc12_faixa(t: i8, p: usize) -> (usize, usize) {
 /// As entradas das reservas do tipo `k`, grupo `g`: (vetor [this + 0xc + 4k] a partir do início, quantas). O início é
 /// o dword +8 + 0x15k do registro mais os bytes +0xe + 0x15k + 4j dos grupos anteriores; a quantidade, o byte +0xd +
 /// 0x15k + 4g (como a original lê: a soma e a quantidade saem de bytes vizinhos).
-unsafe fn cqc12_grupo(this: usize, reg: usize, k: usize, g: usize) -> (usize, i32, i32) {
+unsafe fn reserve_group(this: usize, reg: usize, k: usize, g: usize) -> (usize, i32, i32) {
     let base = reg + 0xd + 0x15 * k;
     let mut ini = cqc12_d(base - 5) as i32;
     for j in 0..g {
@@ -390,7 +390,7 @@ unsafe fn cqc12_grupo(this: usize, reg: usize, k: usize, g: usize) -> (usize, i3
 
 /// O jogador `j` das reservas entra na lista da escala? (0x76cb84..0x76cf6c)
 #[allow(clippy::too_many_arguments)]
-unsafe fn cqc12_candidato(this: usize, nacao: usize, t: i8, data: usize, p: usize, elenco: usize, reg: usize, lim: (i16, i16), j: usize) -> bool {
+unsafe fn is_squad_candidate(this: usize, nacao: usize, t: i8, data: usize, p: usize, elenco: usize, reg: usize, lim: (i16, i16), j: usize) -> bool {
     let tipo_ok: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x53b620usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let bits: unsafe extern "stdcall" fn(usize) -> u8 = core::mem::transmute(0x7a7eb0usize);
@@ -518,16 +518,16 @@ unsafe fn cqc12_candidato(this: usize, nacao: usize, t: i8, data: usize, p: usiz
 /// A lista da escala (0x76cae5..0x76cfe6): as reservas dos tipos da faixa, grupo a grupo; devolve a quantidade (byte,
 /// como a original) e deixa em `cursor` o ponteiro da última entrada percorrida mais 4 (a original o lê depois).
 #[allow(clippy::too_many_arguments)]
-unsafe fn cqc12_candidatos(this: usize, nacao: usize, t: i8, data: usize, p: usize, elenco: usize, reg: usize, lim: (i16, i16), cand: &mut [usize; 200], cursor: &mut usize) -> u8 {
+unsafe fn collect_squad_candidates(this: usize, nacao: usize, t: i8, data: usize, p: usize, elenco: usize, reg: usize, lim: (i16, i16), cand: &mut [usize; 200], cursor: &mut usize) -> u8 {
     let mut n = 0u8;
-    let (lo, hi) = cqc12_faixa(t, p);
+    let (lo, hi) = reserve_type_range(t, p);
     for k in lo..=hi {
         for g in 0..4 {
-            let (v, ini, fim) = cqc12_grupo(this, reg, k, g);
+            let (v, ini, fim) = reserve_group(this, reg, k, g);
             *cursor = v;
             for _ in ini..fim {
                 let j = cqc12_d(*cursor);
-                if cqc12_candidato(this, nacao, t, data, p, elenco, reg, lim, j) {
+                if is_squad_candidate(this, nacao, t, data, p, elenco, reg, lim, j) {
                     // ponytail: a original grava em local_32c[(char) n]; de 128 em diante ela escreveria antes do vetor
                     if (n as i8) >= 0 {
                         cand[n as usize] = j;
@@ -551,9 +551,9 @@ unsafe fn cqc12_candidatos(this: usize, nacao: usize, t: i8, data: usize, p: usi
 /// [this + 0x36] nos Jogos Olímpicos ou dispensam o sub-21 marcado, 0x76d880) e a de hoje (+0x32); as idades e o
 /// tamanho (0x76d430 em +0x42/+0x43). Com técnico humano que decide (0x600a50, 0x5fd6b0; ou pela seleção principal
 /// de uma seleção B sem técnico): os machucados por mais de 10 dias (0x62c400 = 2, 0x62ed70 +0x2e) saem do elenco; se
-/// ainda for dele, o pedido ao técnico (0x76f1a0) e fim. Senão: os códigos das vagas (cqc12_codigos, com a correção
+/// ainda for dele, o pedido ao técnico (0x76f1a0) e fim. Senão: os códigos das vagas (squad_position_codes, com a correção
 /// de 23 e 25); saem do elenco os de outro time, os com a marca e, no tipo 0 com o bit 1 de +0x4e da partida, os sem
-/// ela (0x896c60 e +0x5e/+0x24/+0x28); a lista das reservas (cqc12_candidatos) vai à escala (0x6e2000, modo 0x2100914
+/// ela (0x896c60 e +0x5e/+0x24/+0x28); a lista das reservas (collect_squad_candidates) vai à escala (0x6e2000, modo 0x2100914
 /// no tipo 1, 0x2000814 no 0 e 0x814 no 2); cada escalado que serve na vaga (0x5b7d20) entra no elenco: sai do time
 /// anterior (vaga, 0x76db00, 0x896c60) ou das vagas da tática do próprio (0x8968f0/0x896e90, 0x76db00), ganha a marca
 /// (0x540980), o time e +0x28 (0xc de 5 ou 0xc, senão 0xb) e o +9 do registro de 79 bytes vai a 0..100. Por fim o
@@ -599,9 +599,9 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
     // 0x540980: push marca; push j; add esp, 8 -> cdecl; 0x945333 (qsort): 4 pushes; add esp, 0x10 -> cdecl; 0x76e0b0:
     // 7 pushes; mov ecx, this -> ret 0x1c
     let t = tipo as u8 as i8;
-    let reg = cqc12_registro(this, nacao);
-    let lim = cqc12_limites(nacao, p);
-    let (elenco, marca, time) = cqc12_time(nacao, t);
+    let reg = squad_nation_record(this, nacao);
+    let lim = reputation_limits(nacao, p);
+    let (elenco, marca, time) = squad_team_for_type(nacao, t);
     let chaves = [0x9cf79cusize, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964];
     let finais = p != 0 && cqc12_d(p + 0x14) != 0 && chaves.iter().any(|&k| cqc12_d(cqc12_d(p + 0x14)) == cqc12_d(k));
     let r = reg.wrapping_add((t as i32 * 0x14) as usize);
@@ -688,7 +688,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
         }
     }
     let tam = r + 0x42;
-    let codigos = cqc12_codigos(cqc12_b(tam));
+    let codigos = squad_position_codes(cqc12_b(tam));
     // saem do elenco: os de outro time; os com a marca; no tipo 0 com o bit 1 de +0x4e da partida, os sem ela
     for k in 0..50 {
         let s = elenco + 0xd7 + 4 * k;
@@ -715,7 +715,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
     }
     let mut cand = [0usize; 200];
     let mut cursor = 0usize;
-    let n = cqc12_candidatos(this, nacao, t, data, p, elenco, reg, lim, &mut cand, &mut cursor);
+    let n = collect_squad_candidates(this, nacao, t, data, p, elenco, reg, lim, &mut cand, &mut cursor);
     let modo: u32 = if t == 1 { 0x2100914 } else if t != 2 { 0x2000814 } else { 0x814 };
     let mut saida = [0usize; 50];
     crate::comparacao::ramo("cqc_12 escala do elenco");
@@ -742,7 +742,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
                             cqc12_pb(reg + 0x43 + c3 as usize * 0x14, 0);
                             break;
                         }
-                        aviso_em(0xa5b2a4, 0x748);
+                        show_error_at(0xa5b2a4, 0x748);
                     }
                     c += 4;
                 }
@@ -762,7 +762,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
                         cqc12_pb(reg + 0x43 + c3 as usize * 0x14, 0);
                         break;
                     }
-                    aviso_em(0xa5b2a4, 0x76b);
+                    show_error_at(0xa5b2a4, 0x76b);
                 }
             }
             marcar(j, marca as u32);
@@ -787,13 +787,13 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
 
 /// O que a escala da 0x76c120 lê e a original muda depois dela: o registro da nação (0x6e bytes) e, de cada jogador
 /// das reservas percorridas, +0x24..+0x28 (time, estado) e +0x5e (marcas de elenco).
-unsafe fn cqc12_regioes(this: usize, nacao: usize, t: i8, p: usize) -> Vec<(usize, usize)> {
-    let reg = cqc12_registro(this, nacao);
+unsafe fn squad_selection_regions(this: usize, nacao: usize, t: i8, p: usize) -> Vec<(usize, usize)> {
+    let reg = squad_nation_record(this, nacao);
     let mut v = vec![(reg, 0x6e)];
-    let (lo, hi) = cqc12_faixa(t, p);
+    let (lo, hi) = reserve_type_range(t, p);
     for k in lo..=hi {
         for g in 0..4 {
-            let (a, ini, fim) = cqc12_grupo(this, reg, k, g);
+            let (a, ini, fim) = reserve_group(this, reg, k, g);
             for i in 0..(fim - ini).max(0) as usize {
                 let j = cqc12_d(a + 4 * i);
                 if j != 0 {
@@ -807,44 +807,44 @@ unsafe fn cqc12_regioes(this: usize, nacao: usize, t: i8, p: usize) -> Vec<(usiz
 }
 
 /// Comparador: a original aloca (0x68d020/0x68d0d0), mexe nos elencos, nas vagas da tática e manda notícias (0x76e0b0,
-/// 0x76f1a0): não pode rodar duas vezes. Só ela roda, com uma gravação da fita aberta nas regiões de cqc12_regioes:
+/// 0x76f1a0): não pode rodar duas vezes. Só ela roda, com uma gravação da fita aberta nas regiões de squad_selection_regions:
 /// a escala (0x6e2000) entra nela como unidade com os vetores de entrada (a lista e os códigos) e o estado das
-/// regiões logo antes. Depois, com esse estado de volta, a cópia Rust monta a lista (cqc12_candidatos) e os códigos
-/// (cqc12_codigos), que têm de bater com os da original, junto com a quantidade, o modo e o time; o estado de depois
+/// regiões logo antes. Depois, com esse estado de volta, a cópia Rust monta a lista (collect_squad_candidates) e os códigos
+/// (squad_position_codes), que têm de bater com os da original, junto com a quantidade, o modo e o time; o estado de depois
 /// da original volta no fim. Nos elencos de 23 e 25 a original passa a sobra da pilha nas vagas a partir da 22ª: elas
 /// ficam fora (correção conhecida, o ramo); as 22 primeiras e o resto conferem. Sem escala (técnico humano), nada a
 /// comparar. Dentro de uma gravação de fora, só a original.
 unsafe extern "thiscall" fn comparar_select_squad(this: usize, nacao: usize, tipo: u32, data: usize, p: usize, forcado: u32) {
     use std::sync::atomic::Ordering::Relaxed;
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32)>(%%I3%%);
-    if gravando() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32)>(%%I3%%);
+    if is_recording() {
         return o(this, nacao, tipo, data, p, forcado);
     }
     let t = tipo as u8 as i8;
-    let regioes = cqc12_regioes(this, nacao, t, p);
-    let externa = fita().take();
-    *fita() = Some((regioes.clone(), Vec::new()));
+    let regioes = squad_selection_regions(this, nacao, t, p);
+    let externa = tape_lock().take();
+    *tape_lock() = Some((regioes.clone(), Vec::new()));
     let nivel = DENTRO.swap(0, Relaxed);
     o(this, nacao, tipo, data, p, forcado);
-    let gravadas = fita().take().map_or(Vec::new(), |f| f.1);
+    let gravadas = tape_lock().take().map_or(Vec::new(), |f| f.1);
     DENTRO.store(nivel, Relaxed);
-    *fita() = externa;
+    *tape_lock() = externa;
     let Some((_, _, a, _, antes, _, (ent, _))) = gravadas.iter().find(|c| c.0 == 0x6e2000) else {
         return;
     };
     let depois = crate::comparacao::Memoria::ler(&regioes);
     let sorteio = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     antes.escrever();
-    let reg = cqc12_registro(this, nacao);
+    let reg = squad_nation_record(this, nacao);
     let r = reg.wrapping_add((t as i32 * 0x14) as usize);
     let tam = cqc12_b(r + 0x42);
-    let (elenco, _, _) = cqc12_time(nacao, t);
+    let (elenco, _, _) = squad_team_for_type(nacao, t);
     let modo: u32 = if t == 1 { 0x2100914 } else if t != 2 { 0x2000814 } else { 0x814 };
     let mut cand = [0usize; 200];
     let mut cursor = 0usize;
     let (n, codigos) = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| {
-        let n = cqc12_candidatos(this, nacao, t, data, p, elenco, reg, cqc12_limites(nacao, p), &mut cand, &mut cursor);
-        (n, cqc12_codigos(tam))
+        let n = collect_squad_candidates(this, nacao, t, data, p, elenco, reg, reputation_limits(nacao, p), &mut cand, &mut cursor);
+        (n, squad_position_codes(tam))
     }));
     sorteio.escrever();
     depois.escrever();

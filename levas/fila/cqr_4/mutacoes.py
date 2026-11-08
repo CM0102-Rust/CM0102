@@ -6,12 +6,12 @@
 # - a final com os finalistas trocados (o segundo vencedor primeiro na lista): outro mandante [inferencia], outro jogo.
 MUTACOES = [
     ('cqr4_play_off_com_o_sexto',
-     'poe(0, cqr4_clube(&r, 4)); // cqr4: o quinto melhor dos outros',
-     'poe(0, cqr4_clube(&r, 5)); // mutacao: o sexto melhor dos outros',
+     'poe(0, club_of_record(&r, 4)); // cqr4: o quinto melhor dos outros',
+     'poe(0, club_of_record(&r, 5)); // mutacao: o sexto melhor dos outros',
      'cqr_4 play-off'),
     ('cqr4_play_off_pares_trocados',
-     '    poe(2, cqr4_clube(&r, 3));\n    poe(0, cqr4_clube(&r, 4));',
-     '    poe(2, cqr4_clube(&r, 4)); // mutacao: pares trocados\n    poe(0, cqr4_clube(&r, 3));',
+     '    poe(2, club_of_record(&r, 3));\n    poe(0, club_of_record(&r, 4));',
+     '    poe(2, club_of_record(&r, 4)); // mutacao: pares trocados\n    poe(0, club_of_record(&r, 3));',
      'cqr_4 play-off'),
     ('cqr4_final_trocada',
      'core::ptr::write_unaligned((lista + 4 * n as usize) as *mut usize, cqr4_d(e)); // cqr4: os finalistas',

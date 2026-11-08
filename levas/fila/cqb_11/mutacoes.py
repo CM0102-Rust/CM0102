@@ -12,7 +12,7 @@ MUTACOES = [
     ('cqb11_lado_visitante', '                        lado = Some(true); // cqb11: o lado sorteado',
      '                        lado = Some(false); // mutacao: sempre visitante',
      'cqb_11 semente lado sorteado'),
-    ('cqb11_sem_conta_da_nacao', '                    *((e + 6) as *mut u8) = cqb11_b(cpq11_us(nacao).wrapping_add(contas)); // cqb11: o nível vira a conta da nação',
+    ('cqb11_sem_conta_da_nacao', '                    *((e + 6) as *mut u8) = cqb11_b(read_ptr(nacao).wrapping_add(contas)); // cqb11: o nível vira a conta da nação',
      '                    *((e + 6) as *mut u8) = cqb11_b(e + 6); // mutacao: fica a semente',
      'cqb_11 conta da nacao'),
 ]

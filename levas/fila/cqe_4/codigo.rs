@@ -32,14 +32,14 @@ unsafe fn cqe4_kf(a: usize) -> f32 {
 
 /// A conta dos dias entre o ano e o dia de hoje ([0xae2c92], [0xae2c90]) e os de uma data (ano em `ano`, dia em
 /// `dia`), como a original: (ano − ano de hoje) × 365 − dia de hoje + dia.
-unsafe fn cqe4_dias_para(ano: usize, dia: usize) -> i32 {
+unsafe fn days_until_date(ano: usize, dia: usize) -> i32 {
     ((cqe4_w(ano) as i32 - cqe4_w(0xae2c92) as i32) * 365 - cqe4_h(0xae2c90) as i32) + cqe4_h(dia) as i32
 }
 
 /// Hoje menos 150 dias (0x54c8e0: push 0x96; push saída; mov ecx, 0xae2c90 -> thiscall, ret 8) já passou da data
 /// guardada em +0x3e (dia) / +0x40 (ano) do técnico `t`: ano maior (sem sinal), ou o mesmo ano e o dia maior (com
 /// sinal).
-unsafe fn cqe4_depois_de(t: usize) -> bool {
+unsafe fn is_150_days_since(t: usize) -> bool {
     let menos: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(0x54c8e0usize);
     let mut d = [0u8; 8];
     menos(0xae2c90, &mut d, 0x96);
@@ -50,30 +50,30 @@ unsafe fn cqe4_depois_de(t: usize) -> bool {
 }
 
 /// A distância entre as cidades `a` e `b` (coordenadas f64 em +0x23 e +0x2b), × 55.
-unsafe fn cqe4_distancia(a: usize, b: usize) -> f64 {
+unsafe fn shortlist_manager_city_distance(a: usize, b: usize) -> f64 {
     let dx = cqe4_k(a + 0x2b) - cqe4_k(b + 0x2b);
     let dy = cqe4_k(a + 0x23) - cqe4_k(b + 0x23);
     (dy * dy + dx * dx).sqrt() * cqe4_k(0x96d1b8)
 }
 
 /// O máximo da original nas contas de reputação: `x` se ele passa `y`, senão `y`.
-fn cqe4_max(x: f64, y: f64) -> f64 {
+fn max_f64(x: f64, y: f64) -> f64 {
     if x > y { x } else { y }
 }
 
 /// A média das três reputações da ficha do jogador (+9, +0xb, +0xd), truncada.
-unsafe fn cqe4_media3(f: usize) -> i32 {
+unsafe fn average_reputation3(f: usize) -> i32 {
     (cqe4_h(f + 0xd) as i32 + cqe4_h(f + 0xb) as i32 + cqe4_h(f + 9) as i32) / 3
 }
 
 /// A reputação do clube pelo estádio: sem estádio ou sem cidade (+0x69, +0x38), trunc(rep × 2/7); com a cidade de
 /// importância 0 (+0x33), rep / 2; senão o maior entre rep × 2/7 e rep × importância / 15, truncado.
-unsafe fn cqe4_pelo_estadio(clube: usize) -> i32 {
+unsafe fn reputation_by_stadium(clube: usize) -> i32 {
     let rep = cqe4_h(clube + 0x80) as i32;
     let e = cqe4_d(clube + 0x69);
     let cidade = if e != 0 { cqe4_d(e + 0x38) } else { 0 };
     if cidade == 0 {
-        return ftol(rep as f64 * cqe4_k(0x96d5e0));
+        return match_pl_ftol(rep as f64 * cqe4_k(0x96d5e0));
     }
     let imp = cqe4_c(cidade + 0x33);
     if imp == 0 {
@@ -81,13 +81,13 @@ unsafe fn cqe4_pelo_estadio(clube: usize) -> i32 {
     }
     let q = (imp as i32).wrapping_mul(rep) / 15;
     let x = rep as f64 * cqe4_k(0x96d5e0);
-    ftol(cqe4_max(x, q as f64))
+    match_pl_ftol(max_f64(x, q as f64))
 }
 
 /// A reputação do clube pela divisão (+0x57, o +0x69 dela): sem divisão, a própria (o resto do registrador vem do
 /// ponteiro; só a palavra conta); com reputação de 7500 e público acima de 35000 (+0x73), o maior entre a reputação e
 /// 500 × a da divisão; senão o maior entre rep/2 + 250 × a da divisão e 500 × a da divisão.
-unsafe fn cqe4_pela_divisao(clube: usize) -> i16 {
+unsafe fn reputation_by_division(clube: usize) -> i16 {
     let rep = cqe4_h(clube + 0x80) as i32;
     let comp = cqe4_d(clube + 0x57);
     if comp == 0 {
@@ -107,7 +107,7 @@ unsafe fn cqe4_pela_divisao(clube: usize) -> i16 {
 /// [0x9cf6f8] com reputação de 5000): o registro de [0xae23d0] (0x6b bytes; 15000 para a [0x9cf6e8], senão 600 × +0x69
 /// em 16 bits) e, com o clube na tabela dela (0x4a4850) em 1º a 16º sem a marca +4, (1,32 − 0,02 × posição) × isso.
 /// Sem registro: o mínimo entre 0,8 × `pela_divisao` e 7000. Devolve (valor, registro).
-unsafe fn cqe4_pela_competicao(clube: usize, pela_divisao: i16) -> (i32, usize) {
+unsafe fn reputation_by_competition(clube: usize, pela_divisao: i16) -> (i32, usize) {
     let rep = cqe4_h(clube + 0x80);
     let mut idx = cqe4_d(clube + 0x1db) as i32;
     let mut tem = true;
@@ -128,7 +128,7 @@ unsafe fn cqe4_pela_competicao(clube: usize, pela_divisao: i16) -> (i32, usize) 
             let r = achar(cqe4_d(cqe4_d(cqe4_d(0xadadfc).wrapping_add(id.wrapping_mul(4))) + 8), clube);
             if r != 0 && cqe4_b(r + 4) == 0 && (1..=0x10).contains(&cqe4_b(r + 0x72)) {
                 let p = cqe4_b(r + 0x72) as f64;
-                return (ftol((cqe4_k(0x96af38) - p * cqe4_k(0x968a98)) * s as f64), reg);
+                return (match_pl_ftol((cqe4_k(0x96af38) - p * cqe4_k(0x968a98)) * s as f64), reg);
             }
             return (s as i32, reg);
         }
@@ -137,40 +137,40 @@ unsafe fn cqe4_pela_competicao(clube: usize, pela_divisao: i16) -> (i32, usize) 
     if !(x < cqe4_k(0x96d470)) {
         x = cqe4_k(0x96d470);
     }
-    (ftol(x), reg)
+    (match_pl_ftol(x), reg)
 }
 
 /// A reputação vista pelo técnico ([0xb67a44] + id × 0x49: (+0xa + +8) × 0,25 + +6 × 0,5): abaixo de 5000, o maior
 /// entre r / (5 − 0,0008 v) e r − 1000 × (5 − 0,0008 v); senão o menor entre r × (0,5 + 0,0001 v) e r + 1000 × isso.
-unsafe fn cqe4_pelo_tecnico(clube: usize, r: i16) -> i32 {
+unsafe fn reputation_by_manager(clube: usize, r: i16) -> i32 {
     let t = cqe4_d(cqe4_d(0xb67a44)).wrapping_add(cqe4_d(clube).wrapping_mul(0x49));
-    let v = ftol((cqe4_h(t + 0xa) as f64 + cqe4_h(t + 8) as f64) * cqe4_k(0x9689e0) + cqe4_h(t + 6) as f64 * cqe4_k(0x968968)) as i16;
+    let v = match_pl_ftol((cqe4_h(t + 0xa) as f64 + cqe4_h(t + 8) as f64) * cqe4_k(0x9689e0) + cqe4_h(t + 6) as f64 * cqe4_k(0x968968)) as i16;
     let dd = r as f64;
     if v < 0x1388 {
         let t = cqe4_k(0x9688a0) - v as f64 * cqe4_k(0x96a618);
         let q1 = dd / t;
         let m = dd - t * cqe4_k(0x968908);
-        ftol(if q1 > m { q1 } else { m })
+        match_pl_ftol(if q1 > m { q1 } else { m })
     } else {
         let t = v as f64 * cqe4_k(0x96a5c0) + cqe4_k(0x968968);
         let q1 = t * dd;
         let m = t * cqe4_k(0x968908) + dd;
-        ftol(if q1 < m { q1 } else { m })
+        match_pl_ftol(if q1 < m { q1 } else { m })
     }
 }
 
 /// O teto da reputação pelas finanças (0x5a0590 e 0x5986b0): faixa 1, o maior entre 1,25 r e r + 750; faixa 2, o maior
 /// entre 1,5 r e r + 1500.
-fn cqe4_pela_faixa(faixa: i8, r: i16) -> i16 {
+fn reputation_cap_by_finances(faixa: i8, r: i16) -> i16 {
     match faixa {
-        1 => ftol(cqe4_max(r as f64 * 1.25, (r as i32 + 0x2ee) as f64)) as i16,
-        2 => ftol(cqe4_max(r as f64 * 1.5, (r as i32 + 0x5dc) as f64)) as i16,
+        1 => match_pl_ftol(max_f64(r as f64 * 1.25, (r as i32 + 0x2ee) as f64)) as i16,
+        2 => match_pl_ftol(max_f64(r as f64 * 1.5, (r as i32 + 0x5dc) as f64)) as i16,
         _ => r,
     }
 }
 
 /// min(h / 2, h − 2000) sobre a palavra, a correção pelo +0x64 do clube (diferente de 1; e mais uma vez com 3).
-fn cqe4_metade(h: i16) -> i16 {
+fn half_or_minus_2000(h: i16) -> i16 {
     let a = h as i32 / 2;
     let e = h as i32 - 2000;
     (if a < e { a } else { e }) as i16
@@ -179,14 +179,14 @@ fn cqe4_metade(h: i16) -> i16 {
 /// A fluência: max(F × 0,1, L / (12000 − 200 F)) + 0,2, com L = (s + 5000)² × 1/15000 e F a fluência da pessoa no
 /// idioma da nação do clube (0x7c6830: push 1; push idioma; push clube; push pessoa; mov ecx, [0xb74350] -> thiscall,
 /// ret 0x10; o idioma vai num registrador com lixo acima, a cópia passa só o byte). Devolve (fator, F).
-unsafe fn cqe4_fluencia(p1: usize, clube: usize, s: i16) -> (f64, f64) {
+unsafe fn language_fluency_factor(p1: usize, clube: usize, s: i16) -> (f64, f64) {
     let q = (s as i32 + 0x1388) as f64;
     let l = q * cqe4_k(0x968d78) * q;
     let fluencia: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8 = core::mem::transmute(0x7c6830usize);
     let f = fluencia(cqe4_d(0xb74350), p1, clube, cqe4_b(cqe4_d(clube + 0x53) + 0x77) as u32, 1) as i8 as i32 as f64;
     let a = f * cqe4_k(0x967880);
     let b = l / (cqe4_k(0x96f938) - f * cqe4_k(0x96a648));
-    (cqe4_max(a, b) + cqe4_k(0x968918), f)
+    (max_f64(a, b) + cqe4_k(0x968918), f)
 }
 
 /// { 0x846920 } (thiscall, ret 0x18, shortlist_manager.cpp): `Shortlist_Manager::staff_interest_in_joining_club(pessoa,
@@ -294,9 +294,9 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
     if p2 != 0 && p2 == d4 && c != 0 {
         let dias = dias_ate(c + 0x2d, cqe4_d(0xae2c90) as u32, cqe4_d(0xae2c94) as u32);
         let r1 = cqe4_h(r61 + 0xb) as i32;
-        let mut s = ftol((cqe4_h(p2 + 0x80) as i32 - r1) as f64 * k(0x968968)) as i16;
+        let mut s = match_pl_ftol((cqe4_h(p2 + 0x80) as i32 - r1) as f64 * k(0x968968)) as i16;
         if a0 & 0x10 != 0 {
-            s = ftol(s as f64 * k(0x968968)) as i16;
+            s = match_pl_ftol(s as f64 * k(0x968968)) as i16;
         }
         let lim = cqe4_c(p1 + 0x59) as i32 * 10 + 0x465;
         let s: i32 = if s < 0 { 0 } else if s as i32 > lim { lim as i16 as i32 } else { s as i32 };
@@ -328,7 +328,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
         ramo("cqe_4 base de outro clube");
         f8 = 2.75; // cqe4: a base para outro clube
         if c != 0 && cqe4_b(c + 0x49) != 0 {
-            let dd = cqe4_dias_para(c + 0x2f, c + 0x2d);
+            let dd = days_until_date(c + 0x2f, c + 0x2d);
             let v = k(0x9689c0) - dd as f64 * k(0x969048);
             if !p6.is_null() && v < cqe4_c(p1 + 0x5a) as i32 as f64 * k(0x968a98) + k(0x968e48) {
                 *p6 |= 1;
@@ -477,7 +477,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
         if p2 == d4 {
             f8 = (e44 as f64 * k(0x969028) + k(0x967890)) * f8;
             ea = p5b;
-            if cqe4_d(p2 + 0xcf) != 0 && cqe4_depois_de(cqe4_d(p2 + 0xcf)) {
+            if cqe4_d(p2 + 0xcf) != 0 && is_150_days_since(cqe4_d(p2 + 0xcf)) {
                 ea = categoria(cqe4_d(0xae1050), p1, c) as i8;
             }
         } else {
@@ -502,7 +502,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
                     *p6 |= 0x800;
                 }
             }
-            if d4 != 0 && cqe4_d(d4 + 0xcf) != 0 && cqe4_depois_de(cqe4_d(d4 + 0xcf)) {
+            if d4 != 0 && cqe4_d(d4 + 0xcf) != 0 && is_150_days_since(cqe4_d(d4 + 0xcf)) {
                 ea = categoria(cqe4_d(0xae1050), p1, c) as i8;
             } else {
                 ea = (cqe4_b(c + 0x4f) >> 4) as i8;
@@ -515,7 +515,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
     }
     let pos20 = || cqe4_b(cqe4_d(p1 + 0x61) + 0xf) == 0x14;
     let jovem = idade < 0x20 && cqe4_c(p1 + 0x22) != 0;
-    let mut sb: i16; // ebx: a reputação do clube atual (ou a da pessoa sem clube) na escala da comparação
+    let mut signed_byte_at: i16; // ebx: a reputação do clube atual (ou a da pessoa sem clube) na escala da comparação
     let mut e8: i32 = 0; // [base+0x1c]: a do clube novo
     let mut h68: i16 = 0;
     let mut h6c4: i32 = 0;
@@ -657,42 +657,42 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
             adv = 3;
         }
         ad = adv.wrapping_mul(adv);
-        let h34 = cqe4_pelo_estadio(p2);
-        h68 = cqe4_pela_divisao(p2);
-        let (h6c, reg) = cqe4_pela_competicao(p2, h68);
+        let h34 = reputation_by_stadium(p2);
+        h68 = reputation_by_division(p2);
+        let (h6c, reg) = reputation_by_competition(p2, h68);
         l84 = reg;
         let t = cqe4_d(p2 + 0xcf);
         let mut rv: i16 = 0;
         if t != 0 && cqe4_d(t + 0x69) != 0 {
             rv = vista(t, p1, 1);
             if cqe4_d(0xb67a44) != 0 {
-                rv = cqe4_pelo_tecnico(p2, rv) as i16;
+                rv = reputation_by_manager(p2, rv) as i16;
             }
         }
         let mut si: i16 = cqe4_h(p2 + 0x80);
         let fin = financas(cqe4_d(0xae2a38), p2);
         if fin != 0 && ad == 1 {
-            si = cqe4_pela_faixa(faixa(fin) as i8, si);
+            si = reputation_cap_by_finances(faixa(fin) as i8, si);
         }
         let ax = cqe4_h(cqe4_d(this + 0xdc).wrapping_add(cqe4_d(p2).wrapping_mul(9)) + 5);
         let m = if si > ax { si } else { ax };
-        let cx = ftol(si as f64 * k(0x96a5d0) + m as f64 * k(0x969510)) as i16;
+        let cx = match_pl_ftol(si as f64 * k(0x96a5d0) + m as f64 * k(0x969510)) as i16;
         let den0 = ((b4 as f64 + a88 as f64) + aa8 as f64) + cqe4_kf(0x9689a8) as f64;
         den = if den0 > zero { den0 as f32 } else { 0.5 };
         let s = (((h6c as i16 as f64 * b4 as f64 + h68 as f64 * a88 as f64) + h34 as i16 as f64 * aa8 as f64) + cx as f64) + rv as f64;
-        let mut w = ftol(s / den as f64) as i16;
+        let mut w = match_pl_ftol(s / den as f64) as i16;
         let cl = cqe4_b(p2 + 0x64);
         if cl != 1 {
             if !(cf10 && cqe4_b(p1 + 0x22) == 0) {
-                w = cqe4_metade(w);
+                w = half_or_minus_2000(w);
             }
             if cl == 3 {
-                w = cqe4_metade(w);
+                w = half_or_minus_2000(w);
             }
         }
-        e8 = ftol(w as f64 * k(0x968940) - k(0x9688e8));
+        e8 = match_pl_ftol(w as f64 * k(0x968940) - k(0x9688e8));
         if cqe4_d(p2 + 0x53) != 0 {
-            let (m, f) = cqe4_fluencia(p1, p2, e8 as i16);
+            let (m, f) = language_fluency_factor(p1, p2, e8 as i16);
             if idade < 0x12 && f < k(0x9688a0) && cqe4_d(cqe4_d(p1 + 0x1a) + 0x71) != cqe4_d(cqe4_d(p2 + 0x53) + 0x71) {
                 return zero;
             }
@@ -727,7 +727,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
                     g *= k(0x968930);
                 }
                 if cid2 != 0 && cid4 != 0 {
-                    let dd = cqe4_distancia(cid2, cid4);
+                    let dd = shortlist_manager_city_distance(cid2, cid4);
                     if dd < k(0x968e30) {
                         f8 = g * k(0x96f978);
                         fl(0x20000);
@@ -753,7 +753,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
                     break 'n Segue::Fatores;
                 }
                 if cid2 != 0 && cid4 != 0 {
-                    let dd = cqe4_distancia(cid2, cid4);
+                    let dd = shortlist_manager_city_distance(cid2, cid4);
                     if dd < k(0x968e30) {
                         f8 *= k(0x96f978);
                         fl(0x20000);
@@ -881,7 +881,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
         }
     } else {
         // o próprio clube: a situação no elenco pela pedida, com o técnico há mais de 150 dias
-        if humano(p2, 0, 1, 0, 0) != 0 && cqe4_depois_de(cqe4_d(p2 + 0xcf)) {
+        if humano(p2, 0, 1, 0, 0) != 0 && is_150_days_since(cqe4_d(p2 + 0xcf)) {
             let lim = 0xceu8.wrapping_sub(cqe4_b(p1 + 0x59)) as i8;
             if c1 < lim && ea != 5 && ea != 6 {
                 ea = 7;
@@ -938,7 +938,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
             aev = 3;
         }
         ae = aev.wrapping_mul(aev);
-        sb = ftol(cqe4_media3(cqe4_d(p1 + 0x61)) as i16 as f64 * k(0x968940) - k(0x9688e8)) as i16;
+        signed_byte_at = match_pl_ftol(average_reputation3(cqe4_d(p1 + 0x61)) as i16 as f64 * k(0x968940) - k(0x9688e8)) as i16;
     } else {
         let n4 = cqe4_d(d4 + 0x53);
         let mut aev = if n4 != 0 { cqe4_c(n4 + 0x7e) } else { 3 };
@@ -946,17 +946,17 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
             aev = 3;
         }
         ae = aev.wrapping_mul(aev);
-        let h44 = cqe4_pelo_estadio(d4);
-        h6c4 = cqe4_pela_divisao(d4) as i32;
-        let (bx, reg) = cqe4_pela_competicao(d4, h6c4 as i16);
+        let h44 = reputation_by_stadium(d4);
+        h6c4 = reputation_by_division(d4) as i32;
+        let (bx, reg) = reputation_by_competition(d4, h6c4 as i16);
         l8c = reg;
         let t4 = cqe4_d(d4 + 0xcf);
         let si: i16 = if t4 == 0 || cqe4_d(t4 + 0x69) == 0 {
-            ftol(h6c4 as i16 as f64 * k(0x969040)) as i16
+            match_pl_ftol(h6c4 as i16 as f64 * k(0x969040)) as i16
         } else if cqe4_d(0xb67a44) == 0 {
             cqe4_h(cqe4_d(t4 + 0x69) + 0xa)
         } else {
-            cqe4_pelo_tecnico(d4, cqe4_h(cqe4_d(t4 + 0x69) + 0xa)) as i16
+            reputation_by_manager(d4, cqe4_h(cqe4_d(t4 + 0x69) + 0xa)) as i16
         };
         let mut di: i16 = cqe4_h(d4 + 0x80);
         let fin = financas(cqe4_d(0xae2a38), d4);
@@ -965,34 +965,34 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
             if m == 0xfe {
                 fl(0x40000000);
             } else {
-                di = cqe4_pela_faixa(m as i8, di);
+                di = reputation_cap_by_finances(m as i8, di);
             }
         }
         let ax = cqe4_h(cqe4_d(this + 0xdc).wrapping_add(cqe4_d(d4).wrapping_mul(9)) + 5);
         let m = if di > ax { di } else { ax };
-        let axv = ftol(di as f64 * k(0x96a5d0) + m as f64 * k(0x969510)) as i16;
+        let axv = match_pl_ftol(di as f64 * k(0x96a5d0) + m as f64 * k(0x969510)) as i16;
         // ponytail: no próprio clube (p2 == d4) a original divide pelo float [base+0x58] que ninguém gravou (sobra de
         // pilha); o resultado não é usado depois (o caminho vai direto ao fim), e a cópia divide por 1.
         let s = (((bx as i16 as f64 * b4 as f64 + h6c4 as i16 as f64 * a88 as f64) + h44 as i16 as f64 * aa8 as f64) + axv as f64) + si as f64;
-        let mut di = ftol(s / den as f64) as i16;
+        let mut di = match_pl_ftol(s / den as f64) as i16;
         if !p4b && in_list(p1, 0) != 0 {
-            di = ftol(di as f64 * k(0x9689d8)) as i16;
+            di = match_pl_ftol(di as f64 * k(0x9689d8)) as i16;
         }
         let cl = cqe4_b(d4 + 0x64);
         if cl != 1 {
             if !(c != 0 && cqe4_b(c + 0x45) & 0x10 != 0 && cqe4_b(p1 + 0x22) == 0) {
-                di = cqe4_metade(di);
+                di = half_or_minus_2000(di);
             }
             if cl == 3 {
-                di = cqe4_metade(di);
+                di = half_or_minus_2000(di);
             }
         }
         if lugar(cqe4_d(0xae1050), p1, d4) == 3 {
-            di = ftol(di as f64 * k(0x968e40)) as i16;
+            di = match_pl_ftol(di as f64 * k(0x968e40)) as i16;
         }
-        sb = ftol(di as f64 * k(0x968940) - k(0x9688e8)) as i16;
+        signed_byte_at = match_pl_ftol(di as f64 * k(0x968940) - k(0x9688e8)) as i16;
         if n4 != 0 && p2 != d4 {
-            let (m, _) = cqe4_fluencia(p1, d4, sb);
+            let (m, _) = language_fluency_factor(p1, d4, signed_byte_at);
             f8 = f8 / m;
         }
     }
@@ -1003,9 +1003,9 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
         } else if cqe4_d(p1 + 0x39) == p2 && r61 != 0 && cqe4_c(r61 + 0x45) > 0xa {
             f8 = cqe4_c(r61 + 0x45) as i32 as f64 * f8 * k(0x967880);
         }
-        let mut a8 = (cqe4_h(p2 + 0x80) as i32 - cqe4_media3(r61)) as f64 * k(0x96a6b8) + k(0x967890);
+        let mut a8 = (cqe4_h(p2 + 0x80) as i32 - average_reputation3(r61)) as f64 * k(0x96a6b8) + k(0x967890);
         let e8s = e8 as i16 as i32;
-        let sbs = sb as i32;
+        let sbs = signed_byte_at as i32;
         let cf10 = c != 0 && cqe4_b(c + 0x45) & 0x10 != 0;
         let mut longo = false;
         if p4b && (cf10 || na_lista_emp(p1, 0) != 0) {
@@ -1069,7 +1069,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
                 *p6 |= 0x100000;
             }
         }
-        ramo("cqe_4 fator da reputacao");
+        ramo("cqe_4 fator da injury_word_0c");
         let mut e0 = dv * k(0x96f960) + k(0x967890); // cqe4: o fator da reputação comparada
         if e0 < k(0x96a350) {
             e0 = f64::from_bits(0x3f50624dd2f1a9fc);
@@ -1106,7 +1106,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
             }
         }
         if p4b {
-            if cqe4_h(r61 + 0xb) > sb && sbs > e8s {
+            if cqe4_h(r61 + 0xb) > signed_byte_at && sbs > e8s {
                 a8 = ((e8s - sbs) as f64 * k(0x96a600) + k(0x967890)) * a8;
                 if a8 < k(0x967880) {
                     a8 = f64::from_bits(0x3fb999999999999a);
@@ -1252,7 +1252,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
 /// Comparador: lado a lado na nota (os bits do f64), nos motivos e em [0xae1080] (que a original e o salário padrão
 /// 0x864550 gravam); o resto das chamadas só lê, e o STAFF_CONTRACT do salário é local.
 unsafe extern "thiscall" fn comparar_staff_interest_in_joining_club(this: usize, p1: usize, p2: usize, p3: u32, p4: u32, p5: u32, p6: *mut u32) -> f64 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, *mut u32) -> f64>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, *mut u32) -> f64>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     if !p6.is_null() {
         regioes.push((p6 as usize, 4));
@@ -1281,7 +1281,7 @@ unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> usize {
 
 /// Comparador: lado a lado nos 0x4f bytes do contrato e na devolução.
 unsafe extern "thiscall" fn comparar_construct_staff_contract(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
     PLACAR.registrar(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));
     ro

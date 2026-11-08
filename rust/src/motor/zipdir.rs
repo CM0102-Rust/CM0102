@@ -55,7 +55,7 @@ pub(crate) unsafe extern "C" fn zipdir_match_filename_pattern(padrao: *const u8,
 }
 
 pub(crate) unsafe extern "C" fn comparar_zipdir_match_filename_pattern(padrao: *const u8, nome: *const u8) -> u32 {
-    let r = orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(IDX_ZIPDIR_MATCH_FILENAME_PATTERN)(padrao, nome);
+    let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(IDX_ZIPDIR_MATCH_FILENAME_PATTERN)(padrao, nome);
     let n = zipdir_match_filename_pattern(padrao, nome);
     PLACAR.registrar(r == n, || {
         let t = |p: *const u8| String::from_utf8_lossy(core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes()).into_owned();
@@ -64,11 +64,14 @@ pub(crate) unsafe extern "C" fn comparar_zipdir_match_filename_pattern(padrao: *
     r
 }
 
-/// O cabeçalho (12 bytes: tipo, a4, quantos) e o índice (1000 itens de 0x10c; 250 nos tipos antigos
+/// Reads the container's 12-byte header and index (1000 items, or 250 for old types 1/2 converted to 3/4) into the copy
+/// h.
+///
+/// [pt] O cabeçalho (12 bytes: tipo, a4, quantos) e o índice (1000 itens de 0x10c; 250 nos tipos antigos
 /// 1/2, que viram 3/4) do contêiner aberto `f`, numa cópia `h` de 0x416ec bytes, como as consultas
 /// do zipdir.cpp fazem (cada uma tem a sua cópia do trecho). Se o cabeçalho não vier, `h` fica
 /// como estava (memória da alocação, sem zerar, como na original).
-pub(crate) unsafe fn ler_cabecalho_avulso(h: usize, f: usize) {
+pub(crate) unsafe fn read_header_copy(h: usize, f: usize) {
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
     if ler(h, 0xc, 1, f) == 0 {
         return;
@@ -99,7 +102,7 @@ pub(crate) unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let h = novo(0x416ec);
     if h == 0 {
-        aviso_em(0xad6ab0, 0x250);
+        show_error_at(0xad6ab0, 0x250);
         return 0x14;
     }
     let f = abrir(caminho, 0x98f928);
@@ -107,7 +110,7 @@ pub(crate) unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
         liberar(h);
         return 0x14;
     }
-    ler_cabecalho_avulso(h, f);
+    read_header_copy(h, f);
     fechar(f);
     let tipo = *(h as *const u32);
     if tipo != 3 && tipo != 4 {
@@ -121,7 +124,7 @@ pub(crate) unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
 
 // O id e o tamanho só leem o arquivo e liberam o que alocam: as duas rodam lado a lado.
 pub(crate) unsafe extern "C" fn comparar_zget_archive_id(caminho: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_ZGET_ARCHIVE_ID)(caminho);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_ZGET_ARCHIVE_ID)(caminho);
     let n = zget_archive_id(caminho);
     PLACAR.registrar(r == n, || format!("zget_archive_id {:#x} x {:#x}", r, n));
     r
@@ -144,7 +147,7 @@ pub(crate) unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize
     let casar: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_ZIPDIR_MATCH_FILENAME_PATTERN);
     let h = novo(0x416ec);
     if h == 0 {
-        aviso_em(0xad6ab0, 0x351);
+        show_error_at(0xad6ab0, 0x351);
         return 0;
     }
     let f = abrir(caminho, 0x98f928);
@@ -152,7 +155,7 @@ pub(crate) unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize
         liberar(h);
         return 0;
     }
-    ler_cabecalho_avulso(h, f);
+    read_header_copy(h, f);
     fechar(f);
     let tipo = *(h as *const u32);
     if tipo != 3 && tipo != 4 {
@@ -173,7 +176,7 @@ pub(crate) unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize
 }
 
 pub(crate) unsafe extern "C" fn comparar_zget_matching_size(caminho: usize, padrao: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ZGET_MATCHING_SIZE)(caminho, padrao);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ZGET_MATCHING_SIZE)(caminho, padrao);
     let n = zget_matching_size(caminho, padrao);
     PLACAR.registrar(r == n, || format!("zget_matching_size {} x {}", r, n));
     r
@@ -181,16 +184,20 @@ pub(crate) unsafe extern "C" fn comparar_zget_matching_size(caminho: usize, padr
 
 // ---------- 218a leva: o contêiner do save: empacotar e desempacotar os arquivos da pasta e limpar a pasta temporária (zipdir.cpp, utils.cpp) ----------
 
-/// strcpy: copia o texto `origem` (com o zero) para `destino`.
-pub(crate) unsafe fn copiar_texto_c(destino: *mut u8, origem: *const u8) {
+/// strcpy: copies C string origem (with terminator) to destino.
+///
+/// [pt] strcpy: copia o texto `origem` (com o zero) para `destino`.
+pub(crate) unsafe fn zipdir_c_strcpy(destino: *mut u8, origem: *const u8) {
     let t = core::ffi::CStr::from_ptr(origem as *const core::ffi::c_char).to_bytes_with_nul();
     core::ptr::copy(t.as_ptr(), destino, t.len());
 }
 
-/// strcat: acrescenta o texto `origem` ao fim de `destino`.
-pub(crate) unsafe fn juntar_texto_c(destino: *mut u8, origem: *const u8) {
+/// strcat: appends C string origem to destino.
+///
+/// [pt] strcat: acrescenta o texto `origem` ao fim de `destino`.
+pub(crate) unsafe fn zipdir_c_strcat(destino: *mut u8, origem: *const u8) {
     let n = core::ffi::CStr::from_ptr(destino as *const core::ffi::c_char).to_bytes().len();
-    copiar_texto_c(destino.add(n), origem);
+    zipdir_c_strcpy(destino.add(n), origem);
 }
 
 /// each folder file matching the pattern (FindFirstFile) becomes a container item: zopen for writing, fread/zwrite in
@@ -227,12 +234,12 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize
         juntar_caminho(busca.as_mut_ptr(), 0, pasta, achado_p + 0x10, 0);
         let f = abrir(busca.as_mut_ptr() as usize, 0x98f928);
         if f == 0 {
-            aviso_em(0xad6ab0, 0x31d);
+            show_error_at(0xad6ab0, 0x31d);
             return 0;
         }
         let mut z = abrir_item(caminho, achado_p + 0x10, 1, a4, tipo);
         if z == 0 {
-            aviso_em(0xad6ab0, 0x325);
+            show_error_at(0xad6ab0, 0x325);
             fechar(f);
             return 0;
         }
@@ -254,7 +261,7 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize
 // ponytail: cria itens no contêiner (e o arquivo, se não existir); não roda duas vezes. A prova do
 // save compara o .qst gravado com e sem a leva.
 pub(crate) unsafe extern "C" fn comparar_zadd_matching_files(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
-    orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_ZADD_MATCHING_FILES)(caminho, pasta, padrao, a4, tipo)
+    original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_ZADD_MATCHING_FILES)(caminho, pasta, padrao, a4, tipo)
 }
 
 /// each container item whose name matches the pattern becomes a folder file (zopen for reading, zread in 0x30d40
@@ -302,7 +309,7 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: u
     }
     let h = novo(0x416ec);
     if h == 0 {
-        aviso_em(0xad6ab0, 0x282);
+        show_error_at(0xad6ab0, 0x282);
         // ponytail: o nome do fonte que a 0x944cff separa cai na casa da resposta
         resposta = u32::from_le_bytes(*b"zipd");
     } else {
@@ -332,7 +339,7 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: u
         }
         for i in 0..0x3e8usize {
             let origem = if (i as i32) < *((h + 8) as *const i32) { h + 0x14 + 0x10c * i } else { 0xad6ad8 };
-            copiar_texto_c((nomes + 0x104 * i) as *mut u8, origem as *const u8);
+            zipdir_c_strcpy((nomes + 0x104 * i) as *mut u8, origem as *const u8);
         }
         liberar(h);
     }
@@ -367,7 +374,7 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: u
 // ponytail: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
 // (--sav) passa por aqui; a gravação não.
 pub(crate) unsafe extern "C" fn comparar_zextract_matching_files(caminho: usize, pasta: usize, padrao: usize) -> u32 {
-    orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_ZEXTRACT_MATCHING_FILES)(caminho, pasta, padrao)
+    original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_ZEXTRACT_MATCHING_FILES)(caminho, pasta, padrao)
 }
 
 /// builds the CM3_TEMP folder path in [0xde279c] and deletes its files matching the pattern, in groups of 100
@@ -392,12 +399,12 @@ pub(crate) unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
     let mut sufixo = [0u8; 0x100];
     copiar_limitado(0xad9c64, sufixo.as_mut_ptr());
     if variavel != 0 && *(variavel as *const u8) != 0 {
-        copiar_texto_c(global, variavel as *const u8);
-        juntar_texto_c(global, 0x9c3730 as *const u8);
+        zipdir_c_strcpy(global, variavel as *const u8);
+        zipdir_c_strcat(global, 0x9c3730 as *const u8);
     }
-    juntar_texto_c(global, sufixo.as_ptr());
+    zipdir_c_strcat(global, sufixo.as_ptr());
     let mut pasta = [0u8; 0x104];
-    copiar_texto_c(pasta.as_mut_ptr(), global);
+    zipdir_c_strcpy(pasta.as_mut_ptr(), global);
     let mut busca = [0u8; 0x104];
     let mut achado = [0u8; 0x114];
     let mut nomes = [0u8; 0x6400];
@@ -406,7 +413,7 @@ pub(crate) unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
         let mut n = 0usize;
         if primeiro(busca.as_mut_ptr(), achado.as_mut_ptr(), 0) == 0 {
             loop {
-                copiar_texto_c(nomes.as_mut_ptr().add(0x100 * n), achado.as_ptr().add(0x10));
+                zipdir_c_strcpy(nomes.as_mut_ptr().add(0x100 * n), achado.as_ptr().add(0x10));
                 n += 1;
                 if n == 100 || proximo(achado.as_mut_ptr()) != 0 {
                     break;
@@ -426,7 +433,7 @@ pub(crate) unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
 
 // ponytail: apaga arquivos; não roda duas vezes. A gravação do .qst passa por aqui (create_game).
 pub(crate) unsafe extern "C" fn comparar_utils_clear_temp_folder(padrao: usize) {
-    orig::<unsafe extern "C" fn(usize)>(IDX_UTILS_CLEAR_TEMP_FOLDER)(padrao)
+    original_fn::<unsafe extern "C" fn(usize)>(IDX_UTILS_CLEAR_TEMP_FOLDER)(padrao)
 }
 
 // ---------- 218a leva: o contêiner do save: ler, gravar e fechar um item (o RLE do tipo 4) (zipdir.cpp) ----------
@@ -438,31 +445,37 @@ pub(crate) unsafe extern "C" fn comparar_utils_clear_temp_folder(padrao: usize) 
 // escrita +0x72445 (0x30d40 cada), cursores +0xa3185 (leitura), +0xa3189 (escrita), +0xa318d (lidos).
 // RLE: byte <= 0x80 sai como está; > 0x80 = (byte − 0x80) cópias do byte seguinte (1 a 0x7f).
 
-/// Lê um dword sem alinhamento no ZFILE.
-pub(crate) unsafe fn zf_u(z: usize, o: usize) -> i32 {
+/// Reads an unaligned i32 at offset o of the ZFILE.
+///
+/// [pt] Lê um dword sem alinhamento no ZFILE.
+pub(crate) unsafe fn zf_read_i32(z: usize, o: usize) -> i32 {
     core::ptr::read_unaligned((z + o) as *const i32)
 }
 
-/// Grava um dword sem alinhamento no ZFILE.
-pub(crate) unsafe fn zf_por(z: usize, o: usize, v: i32) {
+/// Writes an unaligned i32 at offset o of the ZFILE.
+///
+/// [pt] Grava um dword sem alinhamento no ZFILE.
+pub(crate) unsafe fn zf_write_i32(z: usize, o: usize, v: i32) {
     core::ptr::write_unaligned((z + o) as *mut i32, v)
 }
 
-/// O próximo byte comprimido do item: do buffer de leitura (+0x41705, cursor +0xa3185 até +0xa318d)
+/// Next compressed byte from the read buffer, refilling it with an fread of 0x30d40 bytes when exhausted.
+///
+/// [pt] O próximo byte comprimido do item: do buffer de leitura (+0x41705, cursor +0xa3185 até +0xa318d)
 /// ou, acabado, de um `fread` de 0x30d40 bytes (o primeiro byte do bloco novo, mesmo se veio vazio).
-pub(crate) unsafe fn zf_proximo_byte(z: usize) -> u8 {
+pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
-    let c = zf_u(z, 0xa3185);
-    if c < zf_u(z, 0xa318d) {
+    let c = zf_read_i32(z, 0xa3185);
+    if c < zf_read_i32(z, 0xa318d) {
         let b = *((z + 0x41705 + c as usize) as *const u8);
-        zf_por(z, 0xa3185, c + 1);
+        zf_write_i32(z, 0xa3185, c + 1);
         return b;
     }
     // ponytail: o ramo marca o bloco, nao cada chamada (a zread roda milhoes de vezes na carga)
     crate::comparacao::ramo("save zread bloco");
-    zf_por(z, 0xa318d, ler(z + 0x41705, 1, 0x30d40, zf_u(z, 0) as usize));
+    zf_write_i32(z, 0xa318d, ler(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize));
     let b = *((z + 0x41705) as *const u8);
-    zf_por(z, 0xa3185, 1);
+    zf_write_i32(z, 0xa3185, 1);
     b
 }
 
@@ -476,41 +489,41 @@ pub(crate) unsafe fn zf_proximo_byte(z: usize) -> u8 {
 /// como a original: `tam` 0 derruba as duas).
 pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
     let ler: unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
-    if z == 0 || zf_u(z, 4) != 0 {
+    if z == 0 || zf_read_i32(z, 4) != 0 {
         return 0;
     }
-    let tamanho_do_item = zf_u(z, 0x29 + 0x10c * zf_u(z, 0xc) as usize);
+    let tamanho_do_item = zf_read_i32(z, 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize);
     let mut pedido = tam.wrapping_mul(quantos);
-    let pos = zf_u(z, 8);
+    let pos = zf_read_i32(z, 8);
     if pos > tamanho_do_item.wrapping_sub(pedido) {
         pedido = tamanho_do_item.wrapping_sub(pos);
         if pedido <= 0 {
             return 0;
         }
     }
-    let fim = zf_u(z, 8).wrapping_add(pedido);
-    zf_por(z, 8, fim);
-    if zf_u(z, 0x19) != 4 {
+    let fim = zf_read_i32(z, 8).wrapping_add(pedido);
+    zf_write_i32(z, 8, fim);
+    if zf_read_i32(z, 0x19) != 4 {
         crate::comparacao::ramo("save zread tipo 3");
         let q = pedido / tam;
-        zf_por(z, 8, tam.wrapping_mul(q).wrapping_sub(pedido).wrapping_add(fim));
-        return ler(buf, tam, q, zf_u(z, 0) as usize);
+        zf_write_i32(z, 8, tam.wrapping_mul(q).wrapping_sub(pedido).wrapping_add(fim));
+        return ler(buf, tam, q, zf_read_i32(z, 0) as usize);
     }
     let mut k = 0i32;
     if pedido > 0 {
         'fora: loop {
             // o resto da repetição pendente
-            let n = zf_u(z, 0x14);
-            if n != 0 && zf_u(z, 0x10) < n {
+            let n = zf_read_i32(z, 0x14);
+            if n != 0 && zf_read_i32(z, 0x10) < n {
                 loop {
                     if k >= pedido {
                         break 'fora;
                     }
                     *buf.add(k as usize) = *((z + 0x18) as *const u8);
                     k += 1;
-                    let e = zf_u(z, 0x10) + 1;
-                    zf_por(z, 0x10, e);
-                    if e >= zf_u(z, 0x14) {
+                    let e = zf_read_i32(z, 0x10) + 1;
+                    zf_write_i32(z, 0x10, e);
+                    if e >= zf_read_i32(z, 0x14) {
                         break;
                     }
                 }
@@ -518,18 +531,18 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i3
             if k >= pedido {
                 break;
             }
-            zf_por(z, 0x14, 0);
-            zf_por(z, 0x10, 0);
+            zf_write_i32(z, 0x14, 0);
+            zf_write_i32(z, 0x10, 0);
             loop {
-                let b = zf_proximo_byte(z);
+                let b = zf_next_byte(z);
                 if b <= 0x80 {
                     *buf.add(k as usize) = b;
                     k += 1;
                 } else {
-                    zf_por(z, 0x14, b as i32 - 0x80);
-                    *((z + 0x18) as *mut u8) = zf_proximo_byte(z);
+                    zf_write_i32(z, 0x14, b as i32 - 0x80);
+                    *((z + 0x18) as *mut u8) = zf_next_byte(z);
                 }
-                if zf_u(z, 0x14) == 0 {
+                if zf_read_i32(z, 0x14) == 0 {
                     if k >= pedido {
                         break 'fora;
                     }
@@ -548,23 +561,25 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i3
 // ponytail: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
 // (carga, --sav) e a gravação (o zseek relê pela zread) passam por aqui.
 pub(crate) unsafe extern "C" fn comparar_zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    orig::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(IDX_ZIPDIR_ZREAD)(buf, tam, quantos, z)
+    original_fn::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(IDX_ZIPDIR_ZREAD)(buf, tam, quantos, z)
 }
 
-/// Um byte comprimido para o buffer de escrita (+0x72445, cursor +0xa3189); cheio, grava o buffer
+/// Puts a compressed byte in the write buffer, flushing it with fwrite when full.
+///
+/// [pt] Um byte comprimido para o buffer de escrita (+0x72445, cursor +0xa3189); cheio, grava o buffer
 /// inteiro (`fwrite`) e o byte vai para o começo.
-pub(crate) unsafe fn zf_soltar(z: usize, b: u8) {
+pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
     let escrever: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-    let p = zf_u(z, 0xa3189);
+    let p = zf_read_i32(z, 0xa3189);
     if p < 0x30d40 {
         *((z + 0x72445 + p as usize) as *mut u8) = b;
-        zf_por(z, 0xa3189, p + 1);
+        zf_write_i32(z, 0xa3189, p + 1);
         return;
     }
     // ponytail: o ramo marca o bloco, nao cada chamada (a zwrite roda milhoes de vezes no save)
     crate::comparacao::ramo("save zwrite bloco");
-    escrever(z + 0x72445, 1, p, zf_u(z, 0) as usize);
-    zf_por(z, 0xa3189, 1);
+    escrever(z + 0x72445, 1, p, zf_read_i32(z, 0) as usize);
+    zf_write_i32(z, 0xa3189, 1);
     *((z + 0x72445) as *mut u8) = b;
 }
 
@@ -579,42 +594,42 @@ pub(crate) unsafe fn zf_soltar(z: usize, b: u8) {
 /// byte <= 0x80 sai literal, senão o par 0x80 + n, byte); a 0x7f sai o par e recomeça. Devolve `quantos`.
 pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
     let escrever: unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FWRITE);
-    if z == 0 || zf_u(z, 4) != 1 {
+    if z == 0 || zf_read_i32(z, 4) != 1 {
         return 0;
     }
-    let item = 0x29 + 0x10c * zf_u(z, 0xc) as usize;
+    let item = 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize;
     let total = tam.wrapping_mul(quantos);
-    zf_por(z, item, zf_u(z, item).wrapping_add(total));
-    zf_por(z, 8, zf_u(z, 8).wrapping_add(total));
-    if zf_u(z, 0x19) != 4 {
+    zf_write_i32(z, item, zf_read_i32(z, item).wrapping_add(total));
+    zf_write_i32(z, 8, zf_read_i32(z, 8).wrapping_add(total));
+    if zf_read_i32(z, 0x19) != 4 {
         crate::comparacao::ramo("save zwrite tipo 3");
-        return escrever(buf, tam, quantos, zf_u(z, 0) as usize);
+        return escrever(buf, tam, quantos, zf_read_i32(z, 0) as usize);
     }
     let repetido = (z + 0x18) as *mut u8;
     let mut k = 0i32;
     while k < total {
-        let n = zf_u(z, 0x14);
+        let n = zf_read_i32(z, 0x14);
         if n != 0 {
             let c = *repetido;
             if *buf.add(k as usize) == c {
                 if n.wrapping_add(0x80) < 0xff {
-                    zf_por(z, 0x14, n + 1);
+                    zf_write_i32(z, 0x14, n + 1);
                     k += 1;
                     continue;
                 }
                 // 0x7f cópias: sai o par e recomeça
                 crate::comparacao::ramo("save zwrite par 0x7f");
-                zf_soltar(z, (n as u8).wrapping_add(0x80));
-                zf_soltar(z, *repetido);
+                zf_put_byte(z, (n as u8).wrapping_add(0x80));
+                zf_put_byte(z, *repetido);
             } else if n <= 1 && c <= 0x80 {
-                zf_soltar(z, c);
+                zf_put_byte(z, c);
             } else {
                 let contagem = (n as u8).wrapping_add(0x80);
-                zf_soltar(z, contagem);
-                zf_soltar(z, *repetido);
+                zf_put_byte(z, contagem);
+                zf_put_byte(z, *repetido);
             }
         }
-        zf_por(z, 0x14, 1);
+        zf_write_i32(z, 0x14, 1);
         *repetido = *buf.add(k as usize);
         k += 1;
     }
@@ -624,7 +639,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos:
 // ponytail: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
 // compara o .qst tipo 4 gravado com e sem a leva.
 pub(crate) unsafe extern "C" fn comparar_zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    orig::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(IDX_ZIPDIR_ZWRITE)(buf, tam, quantos, z)
+    original_fn::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(IDX_ZIPDIR_ZWRITE)(buf, tam, quantos, z)
 }
 
 /// when writing: flushes the buffer, closes the pending RLE run and rewrites header and index at the start; closes the
@@ -645,20 +660,20 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
         return;
     }
     crate::comparacao::ramo("save zclose");
-    let f = || zf_u(z, 0) as usize;
-    if zf_u(z, 4) == 1 {
-        let n = zf_u(z, 0xa3189);
+    let f = || zf_read_i32(z, 0) as usize;
+    if zf_read_i32(z, 4) == 1 {
+        let n = zf_read_i32(z, 0xa3189);
         if n > 0 {
             escrever(z + 0x72445, 1, n, f());
-            zf_por(z, 0xa3189, 0);
+            zf_write_i32(z, 0xa3189, 0);
         }
     } else {
-        zf_por(z, 0xa318d, 0);
-        zf_por(z, 0xa3185, 0);
+        zf_write_i32(z, 0xa318d, 0);
+        zf_write_i32(z, 0xa3185, 0);
     }
-    if zf_u(z, 4) == 1 && zf_u(z, 0x29 + 0x10c * zf_u(z, 0xc) as usize) != 0 {
-        let n = zf_u(z, 0x14);
-        if zf_u(z, 0x19) == 4 && n != 0 {
+    if zf_read_i32(z, 4) == 1 && zf_read_i32(z, 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize) != 0 {
+        let n = zf_read_i32(z, 0x14);
+        if zf_read_i32(z, 0x19) == 4 && n != 0 {
             if n <= 1 && *((z + 0x18) as *const u8) <= 0x80 {
                 escrever(z + 0x18, 1, 1, f());
             } else {
@@ -671,13 +686,13 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
         escrever(z + 0x19, 0x416ec, 1, f());
     }
     fechar(f());
-    zf_por(z, 0, 0);
+    zf_write_i32(z, 0, 0);
     liberar(z);
     *zz = 0;
 }
 
 // ponytail: grava, fecha o arquivo e libera; efeito único. A prova do save compara o .qst gravado.
 pub(crate) unsafe extern "C" fn comparar_zclose(zz: *mut usize) {
-    orig::<unsafe extern "C" fn(*mut usize)>(IDX_ZCLOSE)(zz)
+    original_fn::<unsafe extern "C" fn(*mut usize)>(IDX_ZCLOSE)(zz)
 }
 

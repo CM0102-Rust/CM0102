@@ -5,8 +5,8 @@
 # estadio da nacao [0x9cf510] e passam pela busca com sorteios, e a busca deixa de pular Wembley. A reserva invertida: a
 # busca neutra que confere as reservas (0x85c800, marcas fora de 0x20) recusa os livres e aceita os reservados.
 MUTACOES = [
-    ('cps7_selecao_com_casa', '            cps7_pd(cps7_selecao(cps7_inglaterra()) + 0x69, 0); // cps7: a seleção sem casa',
-     '            let _ = cps7_selecao(cps7_inglaterra()); // mutacao: a seleção fica com o estádio',
+    ('cps7_selecao_com_casa', '            cps7_pd(nation_national_team(england_nation()) + 0x69, 0); // cps7: a seleção sem casa',
+     '            let _ = nation_national_team(england_nation()); // mutacao: a seleção fica com o estádio',
      'cps_7 fecha o estadio nacional'),
     ('cps7_sem_o_id', '            cps7_pd(0xa835a4, cps7_d(e) as u32); // cps7: guarda o id do estádio fechado',
      '            // mutacao: o id do estádio fechado não é guardado',

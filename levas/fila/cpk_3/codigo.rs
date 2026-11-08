@@ -6,7 +6,7 @@ unsafe fn cpk3_d(a: usize) -> usize {
 
 /// O contrato (registro de 80 bytes em [this], pelo índice +0 do registro de 79 bytes em [0xae2d0c]) da pessoa `p`
 /// com o clube `clube` (+4 = id do clube) e a cláusula de rebaixamento ainda por acionar (+0x1f = 1); senão 0.
-unsafe fn cpk3_clausula(this: usize, clube: usize, p: usize) -> usize {
+unsafe fn contract_with_relegation_clause(this: usize, clube: usize, p: usize) -> usize {
     if p == 0 || cpk3_d(p) as i32 >= cpk3_d(0xae2364) as i32 {
         return 0;
     }
@@ -23,7 +23,7 @@ unsafe fn cpk3_clausula(this: usize, clube: usize, p: usize) -> usize {
 
 /// O clube e o parceiro (time A/B, 0x540a50 ativo): o clube B não aciona (o A cuida dos dois). Clube nulo ou B:
 /// nenhum.
-unsafe fn cpk3_clubes(clube: usize) -> [usize; 2] {
+unsafe fn club_and_b_team(clube: usize) -> [usize; 2] {
     if clube == 0 {
         return [0, 0];
     }
@@ -42,13 +42,13 @@ unsafe fn cpk3_clubes(clube: usize) -> [usize; 2] {
 /// [0xde1f54] com o tipo 3).
 unsafe extern "thiscall" fn trigger_relegation_clauses(this: usize, clube: usize, liga: usize) {
     let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize) -> u32 = core::mem::transmute(0x8e3db0usize);
-    for c in cpk3_clubes(clube) {
+    for c in club_and_b_team(clube) {
         if c == 0 {
             continue;
         }
         for k in 0..50 {
             let p = cpk3_d(c + 0xd7 + k * 4);
-            let contrato = cpk3_clausula(this, c, p);
+            let contrato = contract_with_relegation_clause(this, c, p);
             if contrato != 0 {
                 crate::comparacao::ramo("cpk_3 clausula de rebaixamento");
                 *((contrato + 0x1f) as *mut u8) = 2; // a cláusula acionada
@@ -59,8 +59,8 @@ unsafe extern "thiscall" fn trigger_relegation_clauses(this: usize, clube: usize
 }
 
 /// A primeira oferta de contrato da lista `l` (sem mexer no cursor) da pessoa `p` (+0) ao clube `c` (+4).
-unsafe fn cpk3_oferta(l: usize, p: usize, c: usize) -> Option<usize> {
-    cpd1_itens(l).into_iter().find(|&e| cpk3_d(e) == p && cpk3_d(e + 4) == c)
+unsafe fn first_offer_for_staff_club(l: usize, p: usize, c: usize) -> Option<usize> {
+    list_items_capped(l).into_iter().find(|&e| cpk3_d(e) == p && cpk3_d(e + 4) == c)
 }
 
 /// { 0x4cca70 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::remove_contract_offer(pessoa, clube)`: a
@@ -145,12 +145,12 @@ unsafe extern "thiscall" fn is_player_suspended(this: usize, jogador: usize, com
 /// confere que todos ficaram com 2.
 unsafe extern "thiscall" fn comparar_trigger_relegation_clauses(this: usize, clube: usize, liga: usize) {
     let mut alvos = Vec::new();
-    for c in cpk3_clubes(clube) {
+    for c in club_and_b_team(clube) {
         if c != 0 {
-            alvos.extend((0..50).map(|k| cpk3_clausula(this, c, cpk3_d(c + 0xd7 + k * 4))).filter(|&x| x != 0));
+            alvos.extend((0..50).map(|k| contract_with_relegation_clause(this, c, cpk3_d(c + 0xd7 + k * 4))).filter(|&x| x != 0));
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, clube, liga);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, clube, liga);
     let fora: Vec<usize> = alvos.iter().copied().filter(|&x| *((x + 0x1f) as *const u8) != 2).collect();
     PLACAR.registrar(fora.is_empty(), || format!("trigger_relegation_clauses({:x}) {} contratos, sem acionar {:x?}", clube, alvos.len(), fora));
 }
@@ -160,20 +160,20 @@ unsafe extern "thiscall" fn comparar_trigger_relegation_clauses(this: usize, clu
 unsafe extern "thiscall" fn comparar_remove_contract_offer(this: usize, pessoa: *const u32, clube: *const u32) {
     let l = cpk3_d(this + 0x34);
     if l == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(%%I1%%)(this, pessoa, clube);
+        return original_fn::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(%%I1%%)(this, pessoa, clube);
     }
     let n = (cpk3_d(0xae2d0c).wrapping_add((*pessoa as usize).wrapping_mul(79)) + 8) as *const u8;
-    let alvo = cpk3_oferta(l, *pessoa as usize, *clube as usize);
-    let esperado: Vec<usize> = cpd1_itens(l).into_iter().filter(|&e| Some(e) != alvo).collect();
+    let alvo = first_offer_for_staff_club(l, *pessoa as usize, *clube as usize);
+    let esperado: Vec<usize> = list_items_capped(l).into_iter().filter(|&e| Some(e) != alvo).collect();
     let pendentes = if alvo.is_some() { (*n).wrapping_sub(1) } else { *n };
-    orig::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(%%I1%%)(this, pessoa, clube);
-    let depois = cpd1_itens(l);
+    original_fn::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(%%I1%%)(this, pessoa, clube);
+    let depois = list_items_capped(l);
     PLACAR.registrar(depois == esperado && *n == pendentes, || format!("remove_contract_offer({}, {}) itens {} (esperava {}), pendentes {} (esperava {})", *pessoa, *clube, depois.len(), esperado.len(), *n, pendentes));
 }
 
 /// Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
 unsafe extern "thiscall" fn comparar_is_player_suspended(this: usize, jogador: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(%%I2%%);
     let clube = if jogador != 0 { cpk3_d(jogador + 0x39) } else { 0 };
     let regioes: &[(usize, usize)] = if clube != 0 { &[(clube + 0x1e0, 80)] } else { &[] };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(this, jogador, comp, extra, partida), || is_player_suspended(this, jogador, comp, extra, partida));

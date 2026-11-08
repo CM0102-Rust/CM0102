@@ -18,14 +18,14 @@ unsafe fn cqb8_sortear(n: i32) -> i32 {
 }
 
 /// O vínculo da `pessoa` com o `clube` (0x4cf5f0: thiscall em [0xae1050], 2 na pilha; grava [0xae1080]).
-unsafe fn cqb8_vinculo(pessoa: usize, clube: usize) -> usize {
+unsafe fn media_contract_for_club(pessoa: usize, clube: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     f(cqb8_d(0xae1050), pessoa, clube)
 }
 
 /// O contrato inteiro (+0 a +0x4f) da `pessoa` no `clube`, como região do comparador.
-unsafe fn cqb8_contrato(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
-    let c = cqb8_vinculo(pessoa, clube);
+unsafe fn contract_region(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
+    let c = media_contract_for_club(pessoa, clube);
     (c != 0).then_some((c, 0x50))
 }
 
@@ -33,13 +33,13 @@ unsafe fn cqb8_contrato(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
 /// alcança a 0x600a50 e portas): na comparação pela fita, a original grava essas chamadas internas no nível de cima
 /// (com o comparador da rotina, a original e a cópia dele gravam cada uma a sua). A cópia roda a rotina numa fita de
 /// rascunho e pede as mesmas chamadas por `chamar`, na ordem. Fora da comparação (sem GRAVAR_POS) só chama.
-unsafe fn cqb8_pela_fita<R>(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, f: impl FnOnce() -> R) -> R {
+unsafe fn replay_inner_tape_calls<R>(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, f: impl FnOnce() -> R) -> R {
     if !GRAVAR_POS.load(std::sync::atomic::Ordering::Relaxed) {
         return f();
     }
-    let externa = fita().replace((Vec::new(), Vec::new()));
+    let externa = tape_lock().replace((Vec::new(), Vec::new()));
     let r = f();
-    let gravadas = core::mem::replace(&mut *fita(), externa).map_or(Vec::new(), |g| g.1);
+    let gravadas = core::mem::replace(&mut *tape_lock(), externa).map_or(Vec::new(), |g| g.1);
     for c in gravadas {
         chamar(c.0, c.1, c.2);
     }
@@ -49,7 +49,7 @@ unsafe fn cqb8_pela_fita<R>(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u3
 /// O vetor que a 0x755340 monta na pilha (58 dwords, ela percorre 57): os 50 do elenco (0x541f90 com 0, cdecl), o
 /// +0xbf do clube, o técnico (+0xcf) só sem humano no clube (0x600a50 com 0, 1, 0, 0, cdecl, por `chamar`: unidade da
 /// fita) e fora dos tipos 11 a 15 (0x53b620, cdecl, o byte +0x3d), o +0xd3 e os cinco dwords de +0x19f.
-unsafe fn cqb8_vetor(clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> [usize; 58] {
+unsafe fn club_staff_vector(clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> [usize; 58] {
     let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let tipo: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x53b620usize);
     let mut v = [0usize; 58];
@@ -75,15 +75,15 @@ unsafe fn cqb8_vetor(clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]
 /// (0x4b02e0), 15 se o clube é rival dele (+0xb3/+0xb7/+0xbb), 5 se é da mesma divisão (fora da divisão inferior).
 /// Sorteio(chance) acima de sorteio(10): o clube rejeita o jogador (0x547940 com 1). Listado (0x544520): −25; sem
 /// vínculo: −15; senão −10 no fim de contrato (0x867d30) e mais a felicidade (+0x3d) / 10; no mínimo 5. Para cada uma
-/// das 57 pessoas do vetor (cqb8_vetor) com preferências (+0x65): a nota (10, o +0x1d da ficha de técnico + 10, ou pelo
+/// das 57 pessoas do vetor (club_staff_vector) com preferências (+0x65): a nota (10, o +0x1d da ficha de técnico + 10, ou pelo
 /// +0x5d, idade, +0x5b e lista a pedido do jogador do elenco), ajustada pelo tópico 0x20/0x1e, pelo +0x59/+0x5a/+0x5b,
 /// por gostar ou não do jogador (0x547810/0x547840) e pelo jogador ser favorito ou rejeitado do clube, no mínimo 5;
 /// sorteio(chance) acima de sorteio(nota): a pessoa passa a não gostar do jogador (0x547af0 com 1) e, com vínculo e
 /// sorteio(nota) abaixo de sorteio(10), a marca 1 do contrato (0x867560) ou, nos tópicos 0x1e/0x20 ou com sorteio(nota)
 /// zero, as queixas 0x800 (0x867700). As três com efeito vão por `chamar` (as portas do pós-jogo), e também as units_digit
 /// da fita que a original chama: o vínculo 0x4cf5f0 (0x75551e, 0x7557dc), o humano 0x600a50 (0x755598) e as 0x4cf5f0
-/// de dentro da 0x544520 (0x7554e8) e da 0x544600 (0x75567f, 0x7556ad), estas por `cqb8_pela_fita`.
-unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize, n: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+/// de dentro da 0x544520 (0x7554e8) e da 0x544600 (0x75567f, 0x7556ad), estas por `replay_inner_tape_calls`.
+unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize, ids: usize, n: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547790usize);
     let rejeitado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5477d0usize);
     let confronto: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x4b02e0usize);
@@ -135,7 +135,7 @@ unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize,
         rejeitar(clube, jogador, 1);
     }
     // cqb8: a 0x4cf5f0 (de dentro da 0x544520 e direta) é unidade da fita: vai por `chamar`
-    if cqb8_pela_fita(chamar, || listada(jogador, 0)) != 0 {
+    if replay_inner_tape_calls(chamar, || listada(jogador, 0)) != 0 {
         chance -= 0x19;
     } else {
         let c = chamar(0x4cf5f0, cqb8_d(0xae1050), [jogador as u32, clube as u32, 0, 0, 0]) as usize;
@@ -151,7 +151,7 @@ unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize,
     if chance < 5 {
         chance = 5;
     }
-    let v = cqb8_vetor(clube, chamar);
+    let v = club_staff_vector(clube, chamar);
     let topico = topico as u16;
     for &p in v.iter().take(57) {
         if p == 0 || p == jogador || cqb8_d(p + 0x65) == 0 {
@@ -174,12 +174,12 @@ unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize,
             if m == 0x14 {
                 nota = nota.wrapping_add(1);
             } else if m == 1 {
-                nota = nota.wrapping_sub(if cqb8_pela_fita(chamar, || a_pedido(p, 0)) != 0 { 0xf } else { 10 });
+                nota = nota.wrapping_sub(if replay_inner_tape_calls(chamar, || a_pedido(p, 0)) != 0 { 0xf } else { 10 });
                 if cqb8_w(cqb8_d(p + 0x61) + 0xb) > 0x1676 {
                     nota = nota.wrapping_sub(10);
                 }
             } else if m < 6 {
-                nota = nota.wrapping_sub(if cqb8_pela_fita(chamar, || a_pedido(p, 0)) != 0 { 10 } else { 5 });
+                nota = nota.wrapping_sub(if replay_inner_tape_calls(chamar, || a_pedido(p, 0)) != 0 { 10 } else { 5 });
                 if cqb8_w(cqb8_d(p + 0x61) + 0xb) > 0x1676 {
                     nota = nota.wrapping_sub(5);
                 }
@@ -244,7 +244,7 @@ unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize,
 }
 
 unsafe extern "thiscall" fn apply_squad_reaction_to_player_story(_this: usize, topico: u32, jogador: usize, clube: usize, ids: usize, n: u32) {
-    cqb8_reacao_com(topico, jogador, clube, ids, n, &mut |r, t, a| despachar_pos(r, t, a))
+    squad_reaction_to_story_with(topico, jogador, clube, ids, n, &mut |r, t, a| dispatch_post_match_call(r, t, a))
 }
 
 /// Comparador: pela fita das portas do pós-jogo (comparar_pos): as desafeições (0x547af0), a marca (0x867560) e as
@@ -252,13 +252,13 @@ unsafe extern "thiscall" fn apply_squad_reaction_to_player_story(_this: usize, t
 /// sorteador, [0xae1080], as seis pessoas do clube (+0x9b, a 0x547940), o contrato do jogador e, de cada pessoa do
 /// vetor, as preferências (+0x1c..+0x33), o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_story(this: usize, topico: u32, jogador: usize, clube: usize, ids: usize, n: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, u32)>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((0xae1080, 4));
     if clube != 0 && jogador != 0 {
         reg.push((clube + 0x9b, 24));
-        reg.extend(cqb8_contrato(jogador, clube));
-        for &p in cqb8_vetor(clube, &mut |r, t, a| despachar_pos(r, t, a)).iter().take(57) {
+        reg.extend(contract_region(jogador, clube));
+        for &p in club_staff_vector(clube, &mut |r, t, a| dispatch_post_match_call(r, t, a)).iter().take(57) {
             if p == 0 {
                 continue;
             }
@@ -267,11 +267,11 @@ unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_story(this: 
                 reg.push((pref + 0x1c, 24));
             }
             reg.push((p + 0x58, 6));
-            reg.extend(cqb8_contrato(p, clube));
+            reg.extend(contract_region(p, clube));
         }
     }
     comparar_pos("apply_squad_reaction_to_player_story", reg, || o(this, topico, jogador, clube, ids, n),
-        |chamar| cqb8_reacao_com(topico, jogador, clube, ids, n, chamar));
+        |chamar| squad_reaction_to_story_with(topico, jogador, clube, ids, n, chamar));
 }
 
 /// { 0x758010 } (thiscall, ret 0x10, media.cpp): `Media::warn_squad_of_position_rival(jogador, clube, _, _)`, pelo
@@ -282,9 +282,9 @@ unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_story(this: 
 /// (0x544520), acima de 20 anos, do tipo 0x10/0x20/0x30 (+0x4f & 0xf0), com +0x5a abaixo de n + 5 e +0x5b abaixo de
 /// n + 10, sorteio(+0x5a) abaixo de sorteio(n), a mesma máscara e reputação acima de 3750: a primeira vez, a história
 /// 0x25 dele (0x72c1f0 em [0xb6b7c8]); sem a marca 0x800 (0x8676f0), a marca 0x800 (0x867560). As duas com efeito vão
-/// por `chamar`, e também o vínculo 0x4cf5f0 (0x7580c2, unidade da fita) e, por `cqb8_pela_fita`, o que a 0x62c400
+/// por `chamar`, e também o vínculo 0x4cf5f0 (0x7580c2, unidade da fita) e, por `replay_inner_tape_calls`, o que a 0x62c400
 /// (0x7580ee) e a 0x544520 (0x75810a) chamam de units_digit por dentro.
-unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+unsafe fn warn_position_rivals_with(jogador: usize, clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let mascara: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5481a0usize);
     let contar: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(0x548150usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
@@ -317,8 +317,8 @@ unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut dyn FnMut(us
         if c == 0 || cqb8_d(p + 0x61) == 0 || cqb8_b(c + 0x3d) <= 0 {
             continue;
         }
-        if cqb8_pela_fita(chamar, || lesao(cqb8_d(0xb63d28), jogador)) == 2 || cqb8_d(c + 0x45) & 0x101 != 0
-            || cqb8_pela_fita(chamar, || listada(p, clube)) != 0
+        if replay_inner_tape_calls(chamar, || lesao(cqb8_d(0xb63d28), jogador)) == 2 || cqb8_d(c + 0x45) & 0x101 != 0
+            || replay_inner_tape_calls(chamar, || listada(p, clube)) != 0
         {
             continue;
         }
@@ -353,13 +353,13 @@ unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut dyn FnMut(us
 }
 
 unsafe extern "thiscall" fn warn_squad_of_position_rival(_this: usize, jogador: usize, clube: usize, _a: u32, _b: u32) {
-    cqb8_rival_com(jogador, clube, &mut |r, t, a| despachar_pos(r, t, a))
+    warn_position_rivals_with(jogador, clube, &mut |r, t, a| dispatch_post_match_call(r, t, a))
 }
 
 /// Comparador: pela fita das portas do pós-jogo (a história 0x72c1f0 e a marca 0x867560 rodam só na original). Regiões:
 /// o sorteador, [0xae1080] e, de cada um dos 50 do elenco, o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(this: usize, jogador: usize, clube: usize, a: u32, b: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((0xae1080, 4));
     if clube != 0 {
@@ -367,11 +367,11 @@ unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(this: usize, j
             let p = cqb8_d(clube + 0xd7 + 4 * i);
             if p != 0 {
                 reg.push((p + 0x58, 6));
-                reg.extend(cqb8_contrato(p, clube));
+                reg.extend(contract_region(p, clube));
             }
         }
     }
-    comparar_pos("warn_squad_of_position_rival", reg, || o(this, jogador, clube, a, b), |chamar| cqb8_rival_com(jogador, clube, chamar));
+    comparar_pos("warn_squad_of_position_rival", reg, || o(this, jogador, clube, a, b), |chamar| warn_position_rivals_with(jogador, clube, chamar));
 }
 
 /// As respostas 1 e 2 de cada caso da tabela de saltos da 0x735160 (a 3ª, de todos, é "No Comment", 0xa27808); o caso
@@ -405,7 +405,7 @@ unsafe extern "stdcall" fn media_format_response_option_label(tipo: u32, opcao: 
 
 /// Comparador: lado a lado nos primeiros bytes da saída (até 0x50, o maior rótulo tem 61).
 unsafe extern "stdcall" fn comparar_media_format_response_option_label(tipo: u32, opcao: u32, saida: usize, tamanho: u32) {
-    let o = orig::<unsafe extern "stdcall" fn(u32, u32, usize, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(u32, u32, usize, u32)>(%%I2%%);
     let reg = if saida != 0 && (tamanho as i16) >= 0xf { vec![(saida, (tamanho as u16 as usize).min(0x50))] } else { Vec::new() };
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(tipo, opcao, saida, tamanho), || media_format_response_option_label(tipo, opcao, saida, tamanho));
     PLACAR.registrar(igual, || format!("media_format_response_option_label({}, {}) {:x?} x {:x?}", tipo as i16, opcao as i8, mo, mr));

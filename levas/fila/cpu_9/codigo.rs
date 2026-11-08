@@ -19,7 +19,7 @@ unsafe extern "thiscall" fn init_player_entries(this: usize) {
     let p = calloc(cpu9_d(0xae236c) as u32, 6);
     *((this + 0x651d) as *mut u32) = p as u32;
     if p == 0 {
-        aviso_em(0xa8ccd0, 0x6e3);
+        show_error_at(0xa8ccd0, 0x6e3);
         return;
     }
     let mut f = cpu9_d(0xae23c4);
@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn init_player_entries(this: usize) {
 /// Comparador: a original aloca (não pode rodar duas vezes): roda só ela e confere cada ficha pela regra (a vaga 6
 /// ou 1 pela nota de goleiro e o bit 0x20 do +5 apagado).
 unsafe extern "thiscall" fn comparar_init_player_entries(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let base = cpu9_d(this + 0x651d);
     if base == 0 {
         return;
@@ -70,11 +70,11 @@ unsafe extern "thiscall" fn comparar_init_player_entries(this: usize) {
 /// deixa de jogar.
 unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, pessoa: i32, nacao: u32, segunda: u32) {
     if cpk2_d(this + 0x40) == cpk2_d(this + 0x44).wrapping_sub(1) {
-        let p = cpk2_realocar(cpk2_d(this + 0x3c), cpk2_d(this + 0x44).wrapping_add(250) << 4);
+        let p = crt_realloc(cpk2_d(this + 0x3c), cpk2_d(this + 0x44).wrapping_add(250) << 4);
         cpk2_por(this + 0x3c, p);
         cpk2_por(this + 0x44, cpk2_d(this + 0x44).wrapping_add(250));
         if p == 0 {
-            cpk2_sem_memoria(0xa0a);
+            regen_out_of_memory(0xa0a);
         }
     }
     crate::comparacao::ramo("cpu_9 banco de jogadores");
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, pessoa: i32, na
 unsafe extern "thiscall" fn comparar_add_player_data_to_pool(this: usize, pessoa: i32, nacao: u32, segunda: u32) {
     let n = cpk2_d(this + 0x40);
     let id = cpk2_d(cpk2_d(cpk2_d(0xae23bc).wrapping_add((pessoa as u32).wrapping_mul(0x6e) as usize) + 0x61)) as u32;
-    orig::<unsafe extern "thiscall" fn(usize, i32, u32, u32)>(%%I1%%)(this, pessoa, nacao, segunda);
+    original_fn::<unsafe extern "thiscall" fn(usize, i32, u32, u32)>(%%I1%%)(this, pessoa, nacao, segunda);
     let item = cpk2_d(this + 0x3c).wrapping_add(n << 4);
     let g = [cpk2_d(item) as u32, cpk2_d(item + 4) as u32, cpk2_d(item + 8) as u32];
     PLACAR.registrar(cpk2_d(this + 0x40) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn has_spare_non_player_record(this: usize) -> u32 {
 
 /// Comparador: a devolução.
 unsafe extern "thiscall" fn comparar_has_spare_non_player_record(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let n = has_spare_non_player_record(this);
     PLACAR.registrar(r == n, || format!("has_spare_non_player_record({:x}) original={:x} rust={:x}", this, r, n));
     r

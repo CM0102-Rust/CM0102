@@ -4,13 +4,18 @@ use super::*;
 
 
 
-/// A virtual `o` da copa (thiscall, sem argumentos; mov edx, [esi]; mov ecx, esi; call [edx + o]).
-pub(crate) unsafe fn cqr5_virtual(this: usize, o: usize) -> i32 {
+/// Calls a no-argument thiscall virtual method of the cup at vtable offset o.
+///
+/// [pt] A virtual `o` da copa (thiscall, sem argumentos; mov edx, [esi]; mov ecx, esi; call [edx + o]).
+pub(crate) unsafe fn call_cup_virtual(this: usize, o: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + o));
     f(this)
 }
 
-/// A virada da temporada de uma copa de mata-mata (`start_new_season`, slot 3, +0x08; o mesmo molde nas copas, conferido
+/// start_new_season of a knockout cup: frees entrant, round and tie tables, archives stats, bumps the year and rebuilds
+/// entrants, round table, tie tree and predicted positions.
+///
+/// [pt] A virada da temporada de uma copa de mata-mata (`start_new_season`, slot 3, +0x08; o mesmo molde nas copas, conferido
 /// instrução a instrução: só mudam o fonte das caixas, as linhas e a rotina dos inscritos): +0x4c = 0; a lista dos
 /// inscritos (+0xa7) e a das rodadas (+0xa3) liberadas (0x9452ca, cdecl) e zeradas; os confrontos por rodada (+0xad: um
 /// vetor por rodada, +0x3c rodadas, word com sinal) liberados e zerados um a um e o vetor liberado e zerado; com
@@ -18,7 +23,7 @@ pub(crate) unsafe fn cqr5_virtual(this: usize, o: usize) -> i32 {
 /// word) sobe `ano` (1); +0xab = 0 e +0xb1 = 0 (bytes); então, cada um com a sua caixa se devolver negativo: os inscritos
 /// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c, create_round_table pela fase
 /// −1) e a árvore dos confrontos (virtual +0x94); por fim as posições previstas (virtual +0x5c), cujo eax ela devolve.
-pub(crate) unsafe fn cqr5_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, ramo: &'static str) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     for o in [0xa7usize, 0xa3] {
@@ -54,23 +59,25 @@ pub(crate) unsafe fn cqr5_virada(this: usize, inscritos: usize, arquivo: usize, 
     let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
     // ponytail: nas caixas a original sai com o eax da caixa (0x5e8290); quem chama a virada não lê a devolução
     if inscritos(this) < 0 {
-        aviso_em(arquivo, linhas[0]);
+        show_error_at(arquivo, linhas[0]);
         return 0;
     }
-    if cqr5_virtual(this, 0x8c) < 0 {
-        aviso_em(arquivo, linhas[1]);
+    if call_cup_virtual(this, 0x8c) < 0 {
+        show_error_at(arquivo, linhas[1]);
         return 0;
     }
-    if cqr5_virtual(this, 0x94) < 0 {
-        aviso_em(arquivo, linhas[2]);
+    if call_cup_virtual(this, 0x94) < 0 {
+        show_error_at(arquivo, linhas[2]);
         return 0;
     }
-    cqr5_virtual(this, 0x5c) as u32
+    call_cup_virtual(this, 0x5c) as u32
 }
 
-/// O comparador da virada: só a original (ponytail: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
+/// Comparer for the cup season change: only the original runs; checks the year (+0x40) went up by one.
+///
+/// [pt] O comparador da virada: só a original (ponytail: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
 /// alocam e sorteiam; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
-pub(crate) unsafe fn cqr5_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn compare_cup_new_season(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
     let antes = read_i16(this + 0x40);
     let r = original();
     let depois = read_i16(this + 0x40);
@@ -84,15 +91,15 @@ pub(crate) unsafe fn cqr5_comparar(nome: &str, this: usize, original: impl FnOnc
 /// Original: `BraCup::start_new_season` (0x427d10, bra_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x427d10 } (thiscall, ret 0, bra_cup.cpp; a virtual +0x08 da Copa do Brasil): `BraCup::start_new_season()`, a
-/// virada (`cqr5_virada`) com os inscritos de BraCup::build_team_table (0x427c20) e as caixas do bra_cup.cpp nas linhas
+/// virada (`start_new_cup_season`) com os inscritos de BraCup::build_team_table (0x427c20) e as caixas do bra_cup.cpp nas linhas
 /// 0x189, 0x190 e 0x197.
 pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season(this: usize) -> u32 {
-    cqr5_virada(this, 0x427c20, 0x98a3bc, [0x189, 0x190, 0x197], 1, "cqr_5 virada da copa do brasil") // cqr5: a Copa do Brasil
+    start_new_cup_season(this, 0x427c20, 0x98a3bc, [0x189, 0x190, 0x197], 1, "cqr_5 virada da copa do brasil") // cqr5: a Copa do Brasil
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_start_new_season(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CUP_START_NEW_SEASON);
-    cqr5_comparar("bra_cup_start_new_season", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CUP_START_NEW_SEASON);
+    compare_cup_new_season("bra_cup_start_new_season", this, || o(this))
 }
 
 /// rule: the same turn in the Emperor's Cup (Japan): tables freed, history archived, year +1, the entrants
@@ -100,15 +107,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_start_new_season(this: u
 /// Original: `JapEmpCup::start_new_season` (0x662950, jap_emp_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x662950 } (thiscall, ret 0, jap_emp_cup.cpp; a virtual +0x08 da Copa do Imperador): `JapEmpCup::start_new_season()`,
-/// a virada (`cqr5_virada`) com os inscritos de JapEmpCup::collect_entrants (0x6624f0) e as caixas do jap_emp_cup.cpp nas
+/// a virada (`start_new_cup_season`) com os inscritos de JapEmpCup::collect_entrants (0x6624f0) e as caixas do jap_emp_cup.cpp nas
 /// linhas 0x217, 0x21e e 0x225.
 pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season_662950(this: usize) -> u32 {
-    cqr5_virada(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: a Copa do Imperador
+    start_new_cup_season(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: a Copa do Imperador
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_start_new_season_662950(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CUP_START_NEW_SEASON_662950);
-    cqr5_comparar("bra_cup_start_new_season_662950", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CUP_START_NEW_SEASON_662950);
+    compare_cup_new_season("bra_cup_start_new_season_662950", this, || o(this))
 }
 
 
@@ -139,27 +146,30 @@ pub(crate) const CQO12_COPA_DO_BRASIL: [Cql10R; 7] = [
 /// [pt] { 0x427700 } (thiscall, ret 0x10, bra_cup.cpp; a virtual +0x3c da Copa do Brasil): `BraCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa4 sem memória.
 pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql10_tabela(this, fase, rodadas, extra, saida, &CQO12_COPA_DO_BRASIL, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQO12_COPA_DO_BRASIL, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_CUP_CREATE_ROUND_TABLE);
-    cql10_comparar("bra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_CUP_CREATE_ROUND_TABLE);
+    eng_cc_cup_compare_round_table("bra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| bra_cup_create_round_table(this, fase, r, e, s))
 }
 
 
 
-/// { 0x427c20 } (thiscall, ret 0, bra_cup.cpp): `BraCup::build_team_table()`: +0x3e = 71 e a tabela dos times (0x944e46
+/// BraCup::build_team_table (0x427c20): +0x3e = 71 and the team table (+0xa7) from the entrant list +0x14, status 0xff,
+/// class 0; returns 1.
+///
+/// [pt] { 0x427c20 } (thiscall, ret 0, bra_cup.cpp): `BraCup::build_team_table()`: +0x3e = 71 e a tabela dos times (0x944e46
 /// de 0x1aa em +0xa7; sem memória, a caixa da linha 0x143 e −1); cada vaga i (6 bytes) recebe o clube da inscrição i da
 /// lista +0x14 (6 bytes), a situação +5 = 0xff e a classe +4 = 0. Devolve 1.
-pub(crate) unsafe fn cqo12_times(this: usize) -> i32 {
+pub(crate) unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x47);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0x1aa);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
-        aviso_em(0x98a3bc, 0x143);
+        show_error_at(0x98a3bc, 0x143);
         return -1;
     }
     crate::comparacao::ramo("cqo_12 times da copa do brasil");
@@ -184,13 +194,13 @@ pub(crate) unsafe fn cqo12_times(this: usize) -> i32 {
 /// [pt] regra: a Copa do Brasil tem 71 vagas, uma por inscrito, na ordem da lista dos inscritos, todas com a classe 0 e a
 /// situação 0xff (ainda sem jogo [inferência])
 pub(crate) unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> i32 {
-    cqo12_times(this)
+    build_brazil_cup_teams(this)
 }
 
 /// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a tabela dela em +0xa7, a cópia faz a
 /// sua, comparada nas 71 vagas (com a devolução 1) e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_BUILD_TEAM_TABLE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_BUILD_TEAM_TABLE);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
@@ -199,7 +209,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: u
         lo.set(read_u32_as_usize(this + 0xa7));
         r
     }, || {
-        let r = cqo12_times(this);
+        let r = build_brazil_cup_teams(this);
         lr.set(read_u32_as_usize(this + 0xa7));
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
         r
@@ -219,10 +229,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: u
     a
 }
 
-/// { 0x427ec0 } (thiscall, ret 0, bra_cup.cpp; uma virtual da copa): `BraCup::set_up_rounds()`: 7 reservas (+0x49), 3
+/// BraCup::set_up_rounds (0x427ec0): 7 subs on bench, 3 substitutions, 500,000 prize fund and the round table (virtual
+/// +0x3c) in +0xa3; returns 1.
+///
+/// [pt] { 0x427ec0 } (thiscall, ret 0, bra_cup.cpp; uma virtual da copa): `BraCup::set_up_rounds()`: 7 reservas (+0x49), 3
 /// substituições (+0x4a), o fundo de prêmios de 500 mil (+0x28) e a tabela das rodadas (a virtual +0x3c com a fase −1,
 /// as rodadas em +0x3c e o extra em +0x3a, sem saída) em +0xa3. Devolve 1.
-pub(crate) unsafe fn cqo12_regras(this: usize) -> i32 {
+pub(crate) unsafe fn set_up_brazil_cup_rounds(this: usize) -> i32 {
     crate::comparacao::ramo("cqo_12 regras da copa do brasil");
     *((this + 0x49) as *mut u8) = 7;
     *((this + 0x4a) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil
@@ -240,13 +253,13 @@ pub(crate) unsafe fn cqo12_regras(this: usize) -> i32 {
 /// [pt] regra: os jogos da Copa do Brasil têm 7 reservas no banco e 3 substituições; o fundo de prêmios é de 500 mil; monta
 /// a tabela das rodadas
 pub(crate) unsafe extern "thiscall" fn bra_cup_set_up_rounds(this: usize) -> i32 {
-    cqo12_regras(this)
+    set_up_brazil_cup_rounds(this)
 }
 
 /// Lado a lado: +0x28, +0x3a..+0x3d, +0x49/+0x4a e o [0xb67a34] a partir do mesmo estado; as tabelas das rodadas das
-/// duas (+0xa3) comparadas nos bytes gravados (cql10_gravados) e a da cópia liberada.
+/// duas (+0xa3) comparadas nos bytes gravados (eng_cc_cup_written_round_bytes) e a da cópia liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_set_up_rounds(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_SET_UP_ROUNDS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_SET_UP_ROUNDS);
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);
     let antes = read_u32_as_usize(this + 0xa3);
@@ -257,14 +270,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_set_up_rounds(this: usiz
         core::ptr::write_unaligned((this + 0xa3) as *mut u32, antes as u32);
         r
     }, || {
-        let r = cqo12_regras(this);
+        let r = set_up_brazil_cup_rounds(this);
         tr.set(read_u32_as_usize(this + 0xa3));
         core::ptr::write_unaligned((this + 0xa3) as *mut u32, to.get() as u32);
         r
     });
     let (to, tr) = (to.get(), tr.get());
     let n = read_i16(this + 0x3c);
-    let tabela = if to != 0 && tr != 0 { cql10_gravados(to, n) == cql10_gravados(tr, n) } else { to == 0 && tr == 0 };
+    let tabela = if to != 0 && tr != 0 { eng_cc_cup_written_round_bytes(to, n) == eng_cc_cup_written_round_bytes(tr, n) } else { to == 0 && tr == 0 };
     if tr != 0 && tr != to {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(tr);

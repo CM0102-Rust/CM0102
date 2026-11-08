@@ -17,20 +17,20 @@ unsafe fn cpy6_b(a: usize) -> u8 {
 }
 
 /// O registro de finanças do clube (0x5a0590: thiscall(tabela [0xae2a38], clube), ret 4).
-unsafe fn cpy6_financas(clube: usize) -> usize {
+unsafe fn european_cup_club_finance(clube: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     f(cpy6_d(0xae2a38), clube)
 }
 
 /// Soma no saldo, em +0xa8 e em +0x148 (0x5999a0: thiscall(finanças, valor), ret 4).
-unsafe fn cpy6_somar(fin: usize, valor: i32) {
+unsafe fn european_cup_add_prize_money(fin: usize, valor: i32) {
     let f: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x5999a0usize);
     f(fin, valor)
 }
 
 /// Os pontos do coeficiente da UEFA para a nação (0x9058b0: thiscall(tabela [0xde1f58], nação, pontos), ret 8; soma
 /// o byte dos pontos na palavra +0xf + 18 × índice (+0x1df da seleção 0x53b3d0 da nação)).
-unsafe fn cpy6_coeficiente(nacao: usize, pontos: u32) {
+unsafe fn add_uefa_coefficient(nacao: usize, pontos: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x9058b0usize);
     f(cpy6_d(0xde1f58), nacao, pontos);
 }
@@ -40,7 +40,7 @@ unsafe fn cpy6_coeficiente(nacao: usize, pontos: u32) {
 static mut CPY6_ENSAIO: bool = false;
 
 /// A notícia do prêmio (Comp 0x48e3e0: thiscall(this, clube, valor, 0, −1, 0, jogo, −2), ret 0x1c); no ensaio, nada.
-unsafe fn cpy6_noticia(this: usize, clube: usize, valor: u32, jogo: usize) {
+unsafe fn european_cup_send_prize_money_news(this: usize, clube: usize, valor: u32, jogo: usize) {
     if CPY6_ENSAIO {
         return;
     }
@@ -61,14 +61,14 @@ unsafe extern "thiscall" fn process_fixture(this: usize, jogo: usize, arg: u32) 
     };
     let (a, b) = (cpy6_d(jogo + 0x1c), cpy6_d(jogo + 0x20));
     let (vencedor, perdedor) = if ga > gb {
-        cpy6_coeficiente(cpy6_d(a + 0x53), 2);
+        add_uefa_coefficient(cpy6_d(a + 0x53), 2);
         (cpy6_d(jogo + 0x1c), cpy6_d(jogo + 0x20))
     } else if ga < gb {
-        cpy6_coeficiente(cpy6_d(b + 0x53), 2);
+        add_uefa_coefficient(cpy6_d(b + 0x53), 2);
         (cpy6_d(jogo + 0x20), cpy6_d(jogo + 0x1c))
     } else {
-        cpy6_coeficiente(cpy6_d(a + 0x53), 1);
-        cpy6_coeficiente(cpy6_d(cpy6_d(jogo + 0x20) + 0x53), 1);
+        add_uefa_coefficient(cpy6_d(a + 0x53), 1);
+        add_uefa_coefficient(cpy6_d(cpy6_d(jogo + 0x20) + 0x53), 1);
         (0, 0)
     };
     let _ = perdedor;
@@ -76,14 +76,14 @@ unsafe extern "thiscall" fn process_fixture(this: usize, jogo: usize, arg: u32) 
     if fase > -1 && fase < 0xc {
         if vencedor != 0 {
             crate::comparacao::ramo("cpy_6 premio da vitoria");
-            cpy6_somar(cpy6_financas(vencedor), 0x30d40); // cpy6: o prêmio da vitória
-            cpy6_noticia(this, vencedor, 0x30d40, jogo);
+            european_cup_add_prize_money(european_cup_club_finance(vencedor), 0x30d40); // cpy6: o prêmio da vitória
+            european_cup_send_prize_money_news(this, vencedor, 0x30d40, jogo);
         } else {
             crate::comparacao::ramo("cpy_6 premio do empate");
-            cpy6_somar(cpy6_financas(cpy6_d(jogo + 0x1c)), 0x186a0); // cpy6: o prêmio do empate do mandante
-            cpy6_somar(cpy6_financas(cpy6_d(jogo + 0x20)), 0x186a0);
-            cpy6_noticia(this, cpy6_d(jogo + 0x1c), 0x186a0, jogo);
-            cpy6_noticia(this, cpy6_d(jogo + 0x20), 0x186a0, jogo);
+            european_cup_add_prize_money(european_cup_club_finance(cpy6_d(jogo + 0x1c)), 0x186a0); // cpy6: o prêmio do empate do mandante
+            european_cup_add_prize_money(european_cup_club_finance(cpy6_d(jogo + 0x20)), 0x186a0);
+            european_cup_send_prize_money_news(this, cpy6_d(jogo + 0x1c), 0x186a0, jogo);
+            european_cup_send_prize_money_news(this, cpy6_d(jogo + 0x20), 0x186a0, jogo);
         }
     }
     if CPY6_ENSAIO {
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn process_fixture(this: usize, jogo: usize, arg: u32) 
 
 /// A palavra do coeficiente da nação do clube: [0xde1f58] + 18 × (+0x1df da seleção 0x53b3d0 da nação +0x53) + 0xf,
 /// como a 0x9058b0 calcula; 0 sem tabela, sem nação ou sem seleção.
-unsafe fn cpy6_casa_do_coeficiente(clube: usize) -> usize {
+unsafe fn nation_coefficient_word(clube: usize) -> usize {
     let tabela = cpy6_d(0xde1f58);
     let nacao = cpy6_d(clube + 0x53);
     if tabela == 0 || nacao == 0 {
@@ -116,13 +116,13 @@ unsafe fn cpy6_casa_do_coeficiente(clube: usize) -> usize {
 /// finanças não entram (a base paga o prêmio da rodada da copa nos mesmos campos, 0x51a2fe); o prêmio segue o ramo do
 /// placar que os pontos do coeficiente já conferem. Sem clube, nação, seleção ou finanças: só a original.
 unsafe extern "thiscall" fn comparar_process_fixture(this: usize, jogo: usize, arg: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let (a, b) = if jogo != 0 { (cpy6_d(jogo + 0x1c), cpy6_d(jogo + 0x20)) } else { (0, 0) };
     if a == 0 || b == 0 {
         return o(this, jogo, arg); // ponytail: sem clube, só a original
     }
-    let (ca, cb) = (cpy6_casa_do_coeficiente(a), cpy6_casa_do_coeficiente(b));
-    let (fa, fb) = (cpy6_financas(a), cpy6_financas(b));
+    let (ca, cb) = (nation_coefficient_word(a), nation_coefficient_word(b));
+    let (fa, fb) = (european_cup_club_finance(a), european_cup_club_finance(b));
     if ca == 0 || cb == 0 || fa == 0 || fb == 0 {
         return o(this, jogo, arg); // ponytail: sem nação, seleção ou finanças, só a original (cai do mesmo jeito)
     }
@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn european_cup_set_club_progress(this: usize, clube: u
 /// Comparador da 0x586c00: lado a lado nos três bytes do registro do clube (+0x73..+0x75); sem registro (a original
 /// cai), só a original.
 unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(this: usize, clube: usize, fase: u32, p1: u32, p2: u32, p3: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
     let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let e = buscar(cpy6_d(this + 8), clube);
     if e == 0 {
@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, jogo: usize, 
 }
 
 unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, jogo: usize, outro: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, jogo, outro);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, jogo, outro);
     let n = counts_for_fixture_clash(this, jogo, outro);
     PLACAR.registrar(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", cpy6_w(jogo + 0x30), r, n));
     r

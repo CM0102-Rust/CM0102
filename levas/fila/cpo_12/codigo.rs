@@ -10,7 +10,7 @@ unsafe fn cpo12_por(a: usize, v: u32) {
 
 /// O registro de idioma (6 bytes: +0 id da pessoa, +4 idioma, +5 fluência) da `pessoa` no `idioma`: bsearch
 /// (0x946464, comparação 0x7c6d40) na tabela [this+0x3c], [this+0x44] registros. 0 sem achar.
-unsafe fn cpo12_idioma(this: usize, pessoa: usize, idioma: u8) -> usize {
+unsafe fn find_language_record(this: usize, pessoa: usize, idioma: u8) -> usize {
     let bsearch: unsafe extern "C" fn(*const u8, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
     let mut chave = [0u8; 8];
     core::ptr::write_unaligned(chave.as_mut_ptr() as *mut u32, cpo12_d(pessoa) as u32);
@@ -28,8 +28,8 @@ unsafe extern "thiscall" fn add_language(this: usize, pessoa: usize, idioma: u32
         let p = malloc(0x258);
         cpo12_por(this + 0x3c, p as u32);
         if p == 0 {
-            aviso_em(0xa78310, 0x11fd);
-            erro_fatal();
+            show_error_at(0xa78310, 0x11fd);
+            fatal_exit();
         }
         cpo12_por(this + 0x40, 0x64);
     }
@@ -39,8 +39,8 @@ unsafe extern "thiscall" fn add_language(this: usize, pessoa: usize, idioma: u32
         let p = realloc(cpo12_d(this + 0x3c), (cap as u32).wrapping_mul(3).wrapping_add(0x12c).wrapping_mul(2));
         cpo12_por(this + 0x3c, p as u32);
         if p == 0 {
-            aviso_em(0xa78310, 0x1208);
-            erro_fatal();
+            show_error_at(0xa78310, 0x1208);
+            fatal_exit();
         }
         cpo12_por(this + 0x40, (cpo12_d(this + 0x40) as u32).wrapping_add(0x64));
     }
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn add_language(this: usize, pessoa: usize, idioma: u32
 }
 
 /// { 0x7c6ca0 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::improve_language(pessoa, idioma, aumento,
-/// ordenar)`: sem tabela, ou sem o registro da pessoa no idioma (`cpo12_idioma`), acrescenta-o com a fluência
+/// ordenar)`: sem tabela, ou sem o registro da pessoa no idioma (`find_language_record`), acrescenta-o com a fluência
 /// `aumento` (0x7c6a30); com ele, soma o aumento à fluência (byte), no máximo 10 (com sinal).
 unsafe extern "thiscall" fn improve_language(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(0x7c6a30usize);
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn improve_language(this: usize, pessoa: usize, idioma:
         acrescentar(this, pessoa, idioma, aumento, ordenar);
         return;
     }
-    let r = cpo12_idioma(this, pessoa, idioma as u8);
+    let r = find_language_record(this, pessoa, idioma as u8);
     if r == 0 {
         acrescentar(this, pessoa, idioma, aumento, ordenar);
         return;
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn improve_language(this: usize, pessoa: usize, idioma:
 /// (+0x61): a original (caixa fatal). Devolve o que a 0x58f110 devolve. Do regen (0x7a59e0).
 unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pessoa: usize) -> usize {
     if pessoa == 0 || cpo12_d(pessoa + 0x61) == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%)(this, pessoa); // caixa fatal: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%)(this, pessoa); // caixa fatal: só a original
     }
     let r = cpo12_d(this + 0x30).wrapping_add(cpo12_d(pessoa).wrapping_mul(39));
     for k in 0..6usize {
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn comparar_add_language(this: usize, pessoa: usize, id
     let cap = if cap == n { cap.wrapping_add(100) } else { cap };
     let f = fluencia as u8;
     let novo = (cpo12_d(pessoa) as u32, idioma as u8, if (f as i8) > 10 { 10 } else { f });
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I0%%)(this, pessoa, idioma, fluencia, ordenar);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I0%%)(this, pessoa, idioma, fluencia, ordenar);
     let base = cpo12_d(this + 0x3c);
     let e = |i: usize| {
         let r = base.wrapping_add(i * 6);
@@ -135,8 +135,8 @@ unsafe extern "thiscall" fn comparar_add_language(this: usize, pessoa: usize, id
 /// Comparador: sem tabela ou sem o registro, só a original (o acréscimo 0x7c6a30 tem o comparador dele); com o
 /// registro, lado a lado nos 6 bytes dele.
 unsafe extern "thiscall" fn comparar_improve_language(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I1%%);
-    let r = if cpo12_d(this + 0x3c) == 0 { 0 } else { cpo12_idioma(this, pessoa, idioma as u8) };
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I1%%);
+    let r = if cpo12_d(this + 0x3c) == 0 { 0 } else { find_language_record(this, pessoa, idioma as u8) };
     if r == 0 {
         return o(this, pessoa, idioma, aumento, ordenar);
     }
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_improve_language(this: usize, pessoa: usize
 /// Comparador: lado a lado no registro de 39 bytes, na conta dos livres (+0x38) e na marca +0xe dos registros de
 /// categoria liberados (a 0x58f110 só grava +0x1c, dentro do registro). Pessoa nula ou não jogadora: só a original.
 unsafe extern "thiscall" fn comparar_player_stats_reset_player(this: usize, pessoa: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     if pessoa == 0 || cpo12_d(pessoa + 0x61) == 0 {
         return o(this, pessoa);
     }

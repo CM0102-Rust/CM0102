@@ -18,10 +18,10 @@ unsafe fn cpt7_sortear(n: i32) -> i32 {
 }
 
 /// A distância entre duas cidades (x em +0x23, y em +0x2b, doubles) × 44,44, truncada (_ftol).
-unsafe fn cpt7_distancia(a: usize, b: usize) -> i32 {
+unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
     let dx = (cpt7_f(a + 0x23) - cpt7_f(b + 0x23)).abs();
     let dy = (cpt7_f(a + 0x2b) - cpt7_f(b + 0x2b)).abs();
-    ftol((dy * dy + dx * dx).sqrt() * f64_em(0x96fe40))
+    match_pl_ftol((dy * dy + dx * dx).sqrt() * read_f64_at(0x96fe40))
 }
 
 /// { 0x85da00 } (thiscall, ret 0x14, stadium.cpp): `Stadium::score_venue_for_fixture(estadio, marcas, casa, fora,
@@ -49,9 +49,9 @@ unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, ma
         let (cidc, cidf) = (if cc != 0 { cpt7_d(cc + 0x38) } else { 0 }, if cf != 0 { cpt7_d(cf + 0x38) } else { 0 });
         let cide = cpt7_d(est + 0x38);
         if cc != 0 && cidc != 0 && cf != 0 && cidf != 0 && cide != 0 && cpt7_i(est + 0x3c) > 0x2710 {
-            let d1 = cpt7_distancia(cidc, cidf);
-            let d2 = cpt7_distancia(cidc, cide);
-            let d3 = cpt7_distancia(cidf, cide);
+            let d1 = stadium_city_distance(cidc, cidf);
+            let d2 = stadium_city_distance(cidc, cide);
+            let d3 = stadium_city_distance(cidf, cide);
             if d1 < 0x1e {
                 if d2 < 0xf && d3 < 0xf {
                     nota = 200000;
@@ -64,8 +64,8 @@ unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, ma
                 }
             } else {
                 let (f1, f2, f3) = (d1 as f64, d2 as f64, d3 as f64);
-                let perto = f1 * f64_em(0x96fe38);
-                let longe = f1 * f64_em(0x969088);
+                let perto = f1 * read_f64_at(0x96fe38);
+                let longe = f1 * read_f64_at(0x969088);
                 if f2 < perto && f3 < perto {
                     nota = 200000;
                 } else if !(f2 < longe && f3 < longe) {
@@ -101,32 +101,32 @@ unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, ma
             }
         }
         if lugares > esperado {
-            nota = ftol(nota as f64 * f64_em(0x968978));
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968978));
         }
         let (l, e) = (lugares as f64, esperado as f64);
-        let t = e * f64_em(0x968940);
+        let t = e * read_f64_at(0x968940);
         if l > t {
-            nota = ftol(nota as f64 / ((l - t) * f64_em(0x96fe30) + f64_em(0x967890)));
-        } else if l < e * f64_em(0x968e80) {
-            nota = ftol(nota as f64 * f64_em(0x967880));
-        } else if l < e * f64_em(0x968968) {
-            nota = ftol(nota as f64 * f64_em(0x968e80));
-        } else if l < e * f64_em(0x968e40) {
-            nota = ftol(nota as f64 * f64_em(0x968e40));
-        } else if l < e * f64_em(0x9689d8) {
-            nota = ftol(nota as f64 * f64_em(0x9689d8));
+            nota = match_pl_ftol(nota as f64 / ((l - t) * read_f64_at(0x96fe30) + read_f64_at(0x967890)));
+        } else if l < e * read_f64_at(0x968e80) {
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x967880));
+        } else if l < e * read_f64_at(0x968968) {
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e80));
+        } else if l < e * read_f64_at(0x968e40) {
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e40));
+        } else if l < e * read_f64_at(0x9689d8) {
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x9689d8));
         }
     } else if m & 4 != 0 {
         nota = cpt7_sortear(lugares);
     }
     crate::comparacao::ramo("cpt_7 nota do estadio");
     let r = cpt7_sortear(100); // cpt7: o sorteio da nota
-    ftol((r as f64 * f64_em(0x968d60) + f64_em(0x9689b0)) * nota as f64)
+    match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * nota as f64)
 }
 
 // ponytail: sorteia (e, com a marca 4, sorteia os lugares): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_score_venue_for_fixture(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(%%I0%%)(this, est, marcas, casa, fora, jogo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(%%I0%%)(this, est, marcas, casa, fora, jogo)
 }
 
 /// { 0x85d8a0 } (thiscall, ret 0x14, stadium.cpp): `Stadium::get_travel_distance_factor(jogo, cidade_do_estadio,
@@ -143,37 +143,37 @@ unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, jogo: usize
     let mut d = (dx * dx + dy * dy).sqrt();
     let tipo = *((jogo + 0x3a) as *const u8);
     if core::ptr::read_unaligned((jogo + 0x30) as *const u16) == 0xa0 && tipo == 5 {
-        d *= f64_em(0x968968);
+        d *= read_f64_at(0x968968);
     }
-    let mut f = f64_em(0x967890) - d * f64_em(0x96afe0);
+    let mut f = read_f64_at(0x967890) - d * read_f64_at(0x96afe0);
     if *((jogo + 0x3c) as *const u8) == 0 {
         f *= f;
     }
-    if d > f64_em(0x9689a0) && r > f64_em(0x9689a0) {
-        let q = r + f64_em(0x967890);
+    if d > read_f64_at(0x9689a0) && r > read_f64_at(0x9689a0) {
+        let q = r + read_f64_at(0x967890);
         f /= q * q;
     }
-    if base > f64_em(0x969558) {
-        let minimo = f64_em(0x967890) - (f64_em(0x968ea8) - base) * f64_em(0x968f20);
+    if base > read_f64_at(0x969558) {
+        let minimo = read_f64_at(0x967890) - (read_f64_at(0x968ea8) - base) * read_f64_at(0x968f20);
         if f < minimo {
             return minimo;
         }
     }
-    if tipo == 0xa && f < f64_em(0x968918) {
-        return f64_em(0x968918);
+    if tipo == 0xa && f < read_f64_at(0x968918) {
+        return read_f64_at(0x968918);
     }
-    if f < f64_em(0x967888) && cpt7_d(cpt7_d(jogo + 0x1c) + 0x53) == nacao {
-        return f64_em(0x967888);
+    if f < read_f64_at(0x967888) && cpt7_d(cpt7_d(jogo + 0x1c) + 0x53) == nacao {
+        return read_f64_at(0x967888);
     }
-    if f < f64_em(0x96d2c8) {
-        return f64_em(0x96d2c8);
+    if f < read_f64_at(0x96d2c8) {
+        return read_f64_at(0x96d2c8);
     }
     f
 }
 
 /// Comparador: pelo valor (os bits do double).
 unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(%%I1%%)(this, jogo, cid_est, cid_clube, base);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(%%I1%%)(this, jogo, cid_est, cid_clube, base);
     let n = get_travel_distance_factor(this, jogo, cid_est, cid_clube, base);
     PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
     r
@@ -195,30 +195,30 @@ unsafe extern "thiscall" fn load_config(this: usize) {
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
     let f = abrir(pasta(0x9b5348, 0xad4e18), 0x9899fc);
     if f == 0 {
-        erro_em(0xad4dec, 0x68);
+        fatal_error_at(0xad4dec, 0x68);
     }
     let mut linha = [0u8; 1000];
     if ler_linha(f, linha.as_mut_ptr()) == 0 {
-        erro_em(0xad4dec, 0x6f);
+        fatal_error_at(0xad4dec, 0x6f);
     }
     if ler(linha.as_ptr(), 0x98c11c, this + 8) != 1 {
-        erro_em(0xad4dec, 0x75);
+        fatal_error_at(0xad4dec, 0x75);
     }
     let r = malloc(cpt7_d(this + 8).wrapping_mul(0x6e));
     *(this as *mut usize) = r;
     if r == 0 {
-        erro_em(0xad4dec, 0x7e);
+        fatal_error_at(0xad4dec, 0x7e);
     }
     let c = malloc(cpt7_d(0xae2354).wrapping_mul(4));
     *((this + 4) as *mut usize) = c;
     if c == 0 {
-        erro_em(0xad4dec, 0x86);
+        fatal_error_at(0xad4dec, 0x86);
     }
     let mut i = 0i32;
     while i < cpt7_i(this + 8) {
         if regiao(this, f, cpt7_d(this) + i as usize * 0x6e) == 0 {
             if i == 0 {
-                erro_em(0xad4dec, 0x92);
+                fatal_error_at(0xad4dec, 0x92);
             }
             break;
         }
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn load_config(this: usize) {
         for j in 0..3usize {
             let a = cpt7_sortear(100);
             let b = cpt7_sortear(100); // cpt7: o segundo sorteio da medida
-            *((cpt7_d(this + 4) + k * 4 + j) as *mut u8) = ftol(a.wrapping_add(b) as f64 * f64_em(0x968968)) as u8;
+            *((cpt7_d(this + 4) + k * 4 + j) as *mut u8) = match_pl_ftol(a.wrapping_add(b) as f64 * read_f64_at(0x968968)) as u8;
         }
         let v = cpt7_sortear(3); // cpt7: o vento inicial
         *((cpt7_d(this + 4) + k * 4 + 3) as *mut u8) = v as u8;
@@ -241,5 +241,5 @@ unsafe extern "thiscall" fn load_config(this: usize) {
 
 // ponytail: abre o arquivo, aloca e sorteia: só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_load_config(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

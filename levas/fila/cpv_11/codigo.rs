@@ -9,13 +9,13 @@ unsafe fn cpv11_b(a: usize) -> u8 {
 }
 
 /// O registro da nação no gerenciador das seleções: [this + 4] + 0x6e × id.
-unsafe fn cpv11_registro(this: usize, nacao: usize) -> usize {
+unsafe fn nation_record(this: usize, nacao: usize) -> usize {
     cpv11_d(this + 4).wrapping_add((cpv11_d(nacao) as i32).wrapping_mul(0x6e) as usize)
 }
 
 /// O tipo de convocação do jogador no clube da seleção `clube`: 2 no segundo conjunto de seleções (0x5409b0), senão o
 /// bit 3 das marcas de elenco (+0x5e).
-unsafe fn cpv11_tipo(clube: usize, p: usize) -> u8 {
+unsafe fn call_up_type(clube: usize, p: usize) -> u8 {
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
     if segunda(clube) != 0 {
         2
@@ -25,7 +25,7 @@ unsafe fn cpv11_tipo(clube: usize, p: usize) -> u8 {
 }
 
 /// Os dados 0..3 da notícia: o id do jogador e os de +4, +8 e +0xc dele (+0x33 de cada).
-unsafe fn cpv11_quem(n: usize, p: usize) {
+unsafe fn set_news_player_slots(n: usize, p: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     gravar(n, 0, cpv11_d(p) as u32);
     for k in 0..3usize {
@@ -34,7 +34,7 @@ unsafe fn cpv11_quem(n: usize, p: usize) {
 }
 
 /// O dado 6 da notícia: a gravidade da lesão do jogador (0x62ec00 sobre o tipo do registro 0x62ed70), ou 0.
-unsafe fn cpv11_gravidade(n: usize, p: usize) {
+unsafe fn set_news_injury_severity(n: usize, p: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     let gravidade: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x62ec00usize);
@@ -48,7 +48,7 @@ unsafe fn cpv11_gravidade(n: usize, p: usize) {
 }
 
 /// O clube do contrato do jogador (0x4cf5a0, guardado em [0xae1080]; registros de 0x245 bytes), ou 0.
-unsafe fn cpv11_clube_do_contrato(p: usize) -> usize {
+unsafe fn club_of_player_contract(p: usize) -> usize {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contrato(cpv11_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: usize, dias_
     }
     let clube = cpv11_d(p + 0x24);
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, p, dias_arg);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, p, dias_arg);
     }
     if cpv11_b(p + 0x28) != 0xb {
         return;
@@ -92,10 +92,10 @@ unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: usize, dias_
     let substituto: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize) = core::mem::transmute(0x775f90usize);
     let repetidos: unsafe extern "stdcall" fn(usize) = core::mem::transmute(0x76c060usize);
     let nacao = cpv11_d(clube + 0x53);
-    let rec = cpv11_registro(this, nacao);
+    let rec = nation_record(this, nacao);
     // ponytail: a original empurra o dword da local com o tipo só no byte de baixo (os outros são sobra de pilha); as
     // chamadas leem só o byte
-    let tipo = cpv11_tipo(clube, p);
+    let tipo = call_up_type(clube, p);
     let inj = lesao(cpv11_d(0xb63d28), p);
     if inj != 0 && cpv11_b(inj) == 0x51 {
         crate::comparacao::ramo("cpv_11 doença");
@@ -156,19 +156,19 @@ unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: usize, dias_
 
 /// O caminho que a 0x775cd0 vai tomar, só lendo (a lista [this] percorrida pelos nós, sem mexer no cursor): 0 nada, 1
 /// doença (só sai), 2 sai com notícia. O clube (+0x24) já conferido.
-unsafe fn cpv11_plano(this: usize, p: usize, dias: u32) -> u8 {
+unsafe fn release_plan(this: usize, p: usize, dias: u32) -> u8 {
     if (dias as u16 as i16) < 0xe || cpv11_b(p + 0x28) != 0xb {
         return 0;
     }
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     let maior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     let clube = cpv11_d(p + 0x24);
-    let tipo = cpv11_tipo(clube, p);
+    let tipo = call_up_type(clube, p);
     let inj = lesao(cpv11_d(0xb63d28), p);
     if inj != 0 && cpv11_b(inj) == 0x51 {
         return 1;
     }
-    let vaga = cpv11_registro(this, cpv11_d(clube + 0x53)).wrapping_add((tipo as i8 as i32 * 20) as usize);
+    let vaga = nation_record(this, cpv11_d(clube + 0x53)).wrapping_add((tipo as i8 as i32 * 20) as usize);
     if maior(vaga + 0x3a, cpv11_d(0xae2c90) as u32, cpv11_d(0xae2c94) as u32) == 0 {
         return 0;
     }
@@ -202,10 +202,10 @@ unsafe extern "thiscall" fn national_teams_post_player_withdrawn_news(_this: usi
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let b_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     if cpv11_d(p + 0x39) == 0 || humano(cpv11_d(p + 0x39)) == 0 {
-        if cpv11_clube_do_contrato(p) == 0 {
+        if club_of_player_contract(p) == 0 {
             return;
         }
-        if humano(cpv11_clube_do_contrato(p)) == 0 {
+        if humano(club_of_player_contract(p)) == 0 {
             return;
         }
     }
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn national_teams_post_player_withdrawn_news(_this: usi
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x20, 0);
-    cpv11_quem(n, p);
+    set_news_player_slots(n, p);
     let (sel, um) = match tipo as u8 {
         0 => (principal(nacao), 0),
         1 => (principal(nacao), 1),
@@ -221,13 +221,13 @@ unsafe extern "thiscall" fn national_teams_post_player_withdrawn_news(_this: usi
     };
     gravar(n, 4, cpv11_d(sel) as u32);
     gravar(n, 5, um);
-    cpv11_gravidade(n, p);
+    set_news_injury_severity(n, p);
     let noticias = cpv11_d(0xb7431c);
     if cpv11_d(p + 0x39) != 0 {
         entregar(noticias, n, cpv11_d(p + 0x39));
     }
-    if cpv11_clube_do_contrato(p) != cpv11_d(p + 0x39) {
-        entregar(noticias, n, cpv11_clube_do_contrato(p));
+    if club_of_player_contract(p) != cpv11_d(p + 0x39) {
+        entregar(noticias, n, club_of_player_contract(p));
     }
 }
 
@@ -253,10 +253,10 @@ unsafe extern "thiscall" fn national_teams_post_replacement_needed_news(_this: u
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x22, 0);
-    cpv11_quem(n, p);
+    set_news_player_slots(n, p);
     gravar(n, 4, cpv11_d(time) as u32);
     gravar(n, 5, um);
-    cpv11_gravidade(n, p);
+    set_news_injury_severity(n, p);
     gravar(n, 7, 0);
     // ponytail: a marca vai num dword da local com só o byte de baixo gravado; a 0x53c590 lê só o byte
     gravar(n, 8, contar(time, marca, 0) as i8 as i32 as u32);
@@ -272,17 +272,17 @@ unsafe extern "thiscall" fn national_teams_post_replacement_needed_news(_this: u
 }
 
 /// Comparador: a retirada chama a notícia (aloca), a saída da tática e o substituto (originais com efeitos): só a
-/// original roda. O caminho é decidido antes, só lendo (cpv11_plano), e conferido depois: sem retirada, o clube da
+/// original roda. O caminho é decidido antes, só lendo (release_plan), e conferido depois: sem retirada, o clube da
 /// seleção (+0x24) e a marca de convocado (+0x28) ficam; com retirada, o jogador que estava numa das 50 vagas do time
 /// sai delas (+0x24 zerado pela 0x7762f0). Sem clube (a caixa): só a original.
 unsafe extern "thiscall" fn comparar_withdraw_injured_player(this: usize, p: usize, dias: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let clube = cpv11_d(p + 0x24);
     if (dias as u16 as i16) < 0xe || clube == 0 {
         return o(this, p, dias);
     }
-    let plano = cpv11_plano(this, p, dias);
-    let time = cpd2_time(cpv11_d(clube + 0x53), cpv11_tipo(clube, p));
+    let plano = release_plan(this, p, dias);
+    let time = national_team_for_type(cpv11_d(clube + 0x53), call_up_type(clube, p));
     let estava = time != 0 && (0..50usize).any(|c| cpv11_d(time + 0xd7 + 4 * c) == p);
     let antes = (clube, cpv11_b(p + 0x28));
     o(this, p, dias);
@@ -297,11 +297,11 @@ unsafe extern "thiscall" fn comparar_withdraw_injured_player(this: usize, p: usi
 /// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
 unsafe extern "thiscall" fn comparar_national_teams_post_player_withdrawn_news(this: usize, p: usize, nacao: usize, tipo: u32) {
     crate::comparacao::ramo("national_teams_post_player_withdrawn_news");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, p, nacao, tipo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, p, nacao, tipo)
 }
 
 /// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
 unsafe extern "thiscall" fn comparar_national_teams_post_replacement_needed_news(this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
     crate::comparacao::ramo("national_teams_post_replacement_needed_news");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, p, nacao, tipo, nivel)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, p, nacao, tipo, nivel)
 }

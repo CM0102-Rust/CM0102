@@ -7,11 +7,11 @@
 # 3) sem ordenar a tabela depois de acrescentar (contador "cpy_9 ordenar"): as fichas novas ficam no fim e a montagem
 #    calcula o primeiro de cada nacao pelo id.
 MUTACOES = [
-    ('cpy9_nota_mais_dois', '    cpy9_pw(r + 0x22, cpy9_s(0x50, 1) as i8 as i16); // cpy9: a nota +0x22',
-     '    cpy9_pw(r + 0x22, cpy9_s(0x50, 2) as i8 as i16); // mutacao: +2',
+    ('cpy9_nota_mais_dois', '    cpy9_pw(r + 0x22, random_byte_plus(0x50, 1) as i8 as i16); // cpy9: a nota +0x22',
+     '    cpy9_pw(r + 0x22, random_byte_plus(0x50, 2) as i8 as i16); // mutacao: +2',
      'cpy_9 arbitro novo'),
-    ('cpy9_atributo_28_mais_oito', '    cpy9_pb(r + 0x28, cpy9_s(10, 7)); // cpy9: o atributo +0x28',
-     '    cpy9_pb(r + 0x28, cpy9_s(10, 8)); // mutacao: +8',
+    ('cpy9_atributo_28_mais_oito', '    cpy9_pb(r + 0x28, random_byte_plus(10, 7)); // cpy9: o atributo +0x28',
+     '    cpy9_pb(r + 0x28, random_byte_plus(10, 8)); // mutacao: +8',
      'cpy_9 arbitro novo'),
     ('cpy9_sem_ordenar', '    ordenar(cpy9_d(0xae23e8), n, 0x2b, 0x79d480); // cpy9: ordenar a tabela',
      '    let _ = (ordenar, n); // mutacao: sem ordenar',

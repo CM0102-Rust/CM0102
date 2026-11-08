@@ -22,11 +22,11 @@ pub unsafe fn trocar_importacao(dll: &str, funcao: &str, nova: usize) -> Option<
         }
         let nome_dll = cstr(base + nome_rva);
         if nome_dll.eq_ignore_ascii_case(dll) {
-            let orig = *(desc as *const u32) as usize; // OriginalFirstThunk (nomes)
+            let original_fn = *(desc as *const u32) as usize; // OriginalFirstThunk (nomes)
             let iat = *((desc + 16) as *const u32) as usize; // FirstThunk (enderecos)
             let mut i = 0;
             loop {
-                let thunk = *((base + orig + i * 4) as *const u32) as usize;
+                let thunk = *((base + original_fn + i * 4) as *const u32) as usize;
                 if thunk == 0 {
                     break;
                 }
@@ -59,11 +59,11 @@ pub unsafe fn para_cada_importacao(mut f: impl FnMut(&str, Option<&str>, usize) 
     let mut trocadas = 0;
     while *((desc + 12) as *const u32) != 0 {
         let dll = cstr(base + *((desc + 12) as *const u32) as usize);
-        let orig = *(desc as *const u32) as usize;
+        let original_fn = *(desc as *const u32) as usize;
         let iat = *((desc + 16) as *const u32) as usize;
         let mut i = 0;
         loop {
-            let thunk = *((base + orig + i * 4) as *const u32) as usize;
+            let thunk = *((base + original_fn + i * 4) as *const u32) as usize;
             if thunk == 0 {
                 break;
             }

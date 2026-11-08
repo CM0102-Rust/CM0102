@@ -2,10 +2,10 @@
 # O quarto campo e o ramo (marca ramo("...") no motor.rs): sem passagem na base, a mutacao e pulada.
 MUTACOES = [
     ('j_ataque', "        1 => sortear(400),\n        2 => sortear(500),", "        1 => sortear(401),\n        2 => sortear(500),"),
-    ('j_altura', "ataque = ftol(ataque as i16 as f64 / st);", "ataque = ftol(ataque as i16 as f64 / (st + 0.1));"),
+    ('j_altura', "ataque = match_pl_ftol(ataque as i16 as f64 / st);", "ataque = match_pl_ftol(ataque as i16 as f64 / (st + 0.1));"),
     ('j_proprio', "if sortear(ataque as i16 as i32 + 100) != 0 {\n            return 0;\n        }\n        crate::comparacao::ramo(\"play bola", "if sortear(ataque as i16 as i32 + 101) != 0 {\n            return 0;\n        }\n        crate::comparacao::ramo(\"play bola", "play bola do proprio lado"),
     ('j_cabeca', "((*w(j, 0x164)).wrapping_shl(1), 0x25)", "(*w(j, 0x164), 0x25)", "play cabecada"),
-    ('j_forte', "valor = ftol(valor as f64 * 0.85) as i16;", "valor = ftol(valor as f64 * 0.86) as i16;", "play forte"),
+    ('j_forte', "valor = match_pl_ftol(valor as f64 * 0.85) as i16;", "valor = match_pl_ftol(valor as f64 * 0.86) as i16;", "play forte"),
     ('j_nota', "let nota = (v - forca as i32 / 3 - ataque) as i16;", "let nota = (v - forca as i32 / 2 - ataque) as i16;"),
     ('j_baixa', "crate::comparacao::ramo(\"play nota muito baixa\");\n        *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(sortear(2) as u8);", "crate::comparacao::ramo(\"play nota muito baixa\");\n        *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(sortear(3) as u8);", "play nota muito baixa"),
     ('j_falta_forte', "let falta_forte = forca as i32 > sortear(0x96) + 0xc8;", "let falta_forte = forca as i32 > sortear(0x97) + 0xc8;"),

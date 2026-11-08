@@ -68,11 +68,11 @@ unsafe extern "thiscall" fn cqu12_oceania_dia(this: usize, hoje: usize, completo
             k = k.wrapping_add(1);
         }
         if jogos(this) == 0 {
-            aviso_em(0xad4afc, 0x3a4);
+            show_error_at(0xad4afc, 0x3a4);
             return 0;
         }
         if ordenar(this, 0) == 0 {
-            aviso_em(0xad4afc, 0x3ab);
+            show_error_at(0xad4afc, 0x3ab);
             return 0;
         }
         segundo_grupo(this);
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn cqu12_oceania_dia(this: usize, hoje: usize, completo
 // ponytail: as entradas nas competições, os jogos, a fase e o dia de liga não rodam duas vezes. Só a original; o plano
 // na montagem (a condição da cópia): +0x45 = 1, a fase do segundo grupo em [+0xc][0] e a fase atual (+0x30) = 0.
 unsafe extern "thiscall" fn comparar_cqu12_oceania_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let monta = cqu12_d(this + 0x45) == 0 && completo != 0 && {
         let (dia, ano) = cqu12_comeco(this);
         let (dh, ah) = (core::ptr::read_unaligned(hoje as *const u16), core::ptr::read_unaligned((hoje + 2) as *const u16));
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn cqu12_oceania_primeiro_grupo(this: usize) -> u32 {
     let t = novo(0x127);
     cqu12_pd(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0xad4afc, 0x24b);
+        show_error_at(0xad4afc, 0x24b);
         return 0;
     }
     let mut i = 0i8;
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn cqu12_oceania_primeiro_grupo(this: usize) -> u32 {
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só
 // a original; o plano: devolve 1, +0x3e = 5 e na linha i (0x3b bytes) a seleção 2i da lista com a posição i (+4).
 unsafe extern "thiscall" fn comparar_cqu12_oceania_primeiro_grupo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqu12_d(this + 0xef);
     if lista == 0 {
         return o(this);
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn cqu12_oceania_segundo_grupo(this: usize) -> u32 {
     let n = 4 + (*((this + 0xee) as *const u8) != 1) as usize;
     let times = alocar((n * 4) as u32);
     if times == 0 {
-        aviso_em(0xad4afc, 0x355);
+        show_error_at(0xad4afc, 0x355);
         return 0;
     }
     for i in 0..n {
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn cqu12_oceania_segundo_grupo(this: usize) -> u32 {
     soltar(tabela);
     let f = cqu12_d(cqu12_d(this + 0xc));
     if f == 0 {
-        aviso_em(0xad4afc, 0x36b);
+        show_error_at(0xad4afc, 0x36b);
         return 0;
     }
     cqu12_pd(this + 0x30, 0);
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn cqu12_oceania_segundo_grupo(this: usize) -> u32 {
 // fase em [+0xc][0], +0x30 = 0, a fase com n times e o ano da eliminatória e, na tabela dela (+0xb1, linhas de 0x3b
 // bytes), as seleções das vagas ímpares da lista (em qualquer ordem: o construtor ordena a tabela).
 unsafe extern "thiscall" fn comparar_cqu12_oceania_segundo_grupo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let lista = cqu12_d(this + 0xef);
     if lista == 0 {
         return o(this);

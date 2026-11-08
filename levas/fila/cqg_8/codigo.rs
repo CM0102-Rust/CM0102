@@ -9,34 +9,34 @@ unsafe fn cqg8_pd(a: usize, v: u32) {
 }
 
 /// fread (0x945bfe, cdecl): `n` registros de `tam` bytes; devolve quantos leu.
-unsafe fn cqg8_ler(buf: usize, tam: u32, f: usize) -> u32 {
+unsafe fn crt_fread_one(buf: usize, tam: u32, f: usize) -> u32 {
     let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
     fread(buf, tam, 1, f)
 }
 
 /// fclose (0x945a09, cdecl).
-unsafe fn cqg8_fechar(f: usize) {
+unsafe fn cash_crt_fclose(f: usize) {
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
     fclose(f);
 }
 
 /// A caixa de erro de formation.cpp (0x9cc3dc) na linha `linha`. A original também formata a mensagem num texto local
 /// (sprintf 0x944c9f) que não sai dali.
-unsafe fn cqg8_erro(linha: u32) {
-    aviso_em(0x9cc3dc, linha);
+unsafe fn formation_error_box(linha: u32) {
+    show_error_at(0x9cc3dc, linha);
 }
 
 /// A troca dos bytes de um dword (a original faz em linha).
-fn cqg8_inverter(v: u32) -> u32 {
+fn swap_bytes_u32(v: u32) -> u32 {
     v.swap_bytes()
 }
 
 /// A leitura que falha e encerra: sem `quieto`, a caixa; o arquivo fecha e devolve 0.
-unsafe fn cqg8_falhou(quieto: u32, linha: u32, f: usize) -> u32 {
+unsafe fn fail_read(quieto: u32, linha: u32, f: usize) -> u32 {
     if quieto == 0 {
-        cqg8_erro(linha);
+        formation_error_box(linha);
     }
-    cqg8_fechar(f);
+    cash_crt_fclose(f);
     0
 }
 
@@ -58,7 +58,7 @@ unsafe fn cqg8_falhou(quieto: u32, linha: u32, f: usize) -> u32 {
 unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
     if caminho == 0 {
         if quieto == 0 {
-            cqg8_erro(0x8d8);
+            formation_error_box(0x8d8);
         }
         return 0;
     }
@@ -66,33 +66,33 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
     let f = fopen(caminho, 0x98f928);
     if f == 0 {
         if quieto == 0 {
-            cqg8_erro(0x8e0);
+            formation_error_box(0x8e0);
         }
         return 0;
     }
     let marcador: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x90c140usize);
     let nativo = marcador(f) != 0xf1ff_fff1;
     let mut id_ = [0u8; 4];
-    if cqg8_ler(id_.as_mut_ptr() as usize, 4, f) != 1 {
-        return cqg8_falhou(quieto, 0x8ea, f);
+    if crt_fread_one(id_.as_mut_ptr() as usize, 4, f) != 1 {
+        return fail_read(quieto, 0x8ea, f);
     }
     let mut id = u32::from_le_bytes(id_);
     if !nativo {
-        id = cqg8_inverter(id);
+        id = swap_bytes_u32(id);
     }
     if ofuscado != 0 {
         id = id.wrapping_sub(0x75bcd15);
     }
     let id = id as i32;
     if !(0x98ec54..=0x98ec5e).contains(&id) {
-        return cqg8_falhou(quieto, 0x8f7, f);
+        return fail_read(quieto, 0x8f7, f);
     }
     if id < 0x98ec59 {
-        return cqg8_falhou(quieto, 0x900, f);
+        return fail_read(quieto, 0x900, f);
     }
     let senha = this + 0x33;
-    if cqg8_ler(senha, 0x32, f) != 1 {
-        return cqg8_falhou(quieto, 0x909, f);
+    if crt_fread_one(senha, 0x32, f) != 1 {
+        return fail_read(quieto, 0x909, f);
     }
     let strlen = |a: usize| (0..).take_while(|&k| *((a + k) as *const u8) != 0).count();
     if strlen(senha) != 0 {
@@ -106,22 +106,22 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
             }
         }
     }
-    if cqg8_ler(this + 0x65, 200, f) != 1 {
-        return cqg8_falhou(quieto, 0x915, f);
+    if crt_fread_one(this + 0x65, 200, f) != 1 {
+        return fail_read(quieto, 0x915, f);
     }
     let troca16: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x43f2d0usize);
     if id >= 0x98ec5a {
-        if cqg8_ler(this + 0x187b, 4, f) != 1 {
-            return cqg8_falhou(quieto, 0x920, f);
+        if crt_fread_one(this + 0x187b, 4, f) != 1 {
+            return fail_read(quieto, 0x920, f);
         }
         if !nativo {
-            cqg8_pd(this + 0x187b, cqg8_inverter(cqg8_d(this + 0x187b)));
+            cqg8_pd(this + 0x187b, swap_bytes_u32(cqg8_d(this + 0x187b)));
         }
     } else {
         cqg8_pd(this + 0x187b, 0);
     }
-    if cqg8_ler(this + 0x12d, 0x16, f) != 1 {
-        return cqg8_falhou(quieto, 0x930, f);
+    if crt_fread_one(this + 0x12d, 0x16, f) != 1 {
+        return fail_read(quieto, 0x930, f);
     }
     if !nativo {
         troca16(this + 0x12d, 0xb);
@@ -129,68 +129,68 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
     let mascara: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5b59a0usize);
     mascara(this);
     if id >= 0x98ec5c {
-        if cqg8_ler(this + 0x143, 0xb, f) != 1 {
-            return cqg8_falhou(quieto, 0x940, f);
+        if crt_fread_one(this + 0x143, 0xb, f) != 1 {
+            return fail_read(quieto, 0x940, f);
         }
     } else {
         core::ptr::write_bytes((this + 0x143) as *mut u8, 0, 0xb);
     }
-    if cqg8_ler(this + 0x14e, 0x16, f) != 1 {
-        return cqg8_falhou(quieto, 0x94f, f);
+    if crt_fread_one(this + 0x14e, 0x16, f) != 1 {
+        return fail_read(quieto, 0x94f, f);
     }
     if !nativo {
         troca16(this + 0x14e, 0xb);
     }
-    if cqg8_ler(this + 0x164, 0x420, f) != 1 {
-        return cqg8_falhou(quieto, 0x959, f);
+    if crt_fread_one(this + 0x164, 0x420, f) != 1 {
+        return fail_read(quieto, 0x959, f);
     }
     if !nativo {
         troca16(this + 0x164, 0x210);
     }
     if id == 0x98ec59 || id == 0x98ec5a {
         let mut descarte = [0u8; 0x108];
-        if cqg8_ler(descarte.as_mut_ptr() as usize, 0x108, f) != 1 {
-            return cqg8_falhou(quieto, 0x968, f);
+        if crt_fread_one(descarte.as_mut_ptr() as usize, 0x108, f) != 1 {
+            return fail_read(quieto, 0x968, f);
         }
         if !nativo {
             troca16(descarte.as_mut_ptr() as usize, 0x84);
         }
     }
     let time = this + 0x584;
-    if cqg8_ler(time, 4, f) == 1 {
+    if crt_fread_one(time, 4, f) == 1 {
         if !nativo {
-            cqg8_pd(time, cqg8_inverter(cqg8_d(time)));
+            cqg8_pd(time, swap_bytes_u32(cqg8_d(time)));
         }
     } else if quieto == 0 {
-        cqg8_erro(0x971);
+        formation_error_box(0x971);
     }
     if id < 0x98ec5e {
         // ponytail: a original copia o vetor local mesmo quando a leitura falha (sobra de pilha num arquivo truncado);
         // a cópia começa com zeros
         let mut v = [0u32; 11];
-        if cqg8_ler(v.as_mut_ptr() as usize, 0x2c, f) == 1 {
+        if crt_fread_one(v.as_mut_ptr() as usize, 0x2c, f) == 1 {
             if !nativo {
                 let troca32: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x43f300usize);
                 troca32(v.as_mut_ptr() as usize, 0xb);
             }
         } else if quieto == 0 {
-            cqg8_erro(0x97b);
+            formation_error_box(0x97b);
         }
         for (k, x) in v.iter().enumerate() {
             cqg8_pd(this + 0x188b + 8 * k, *x);
             cqg8_pd(this + 0x188b + 8 * k + 4, 0xa); // cqg8: a instrução padrão das versões antigas
         }
         crate::comparacao::ramo("cqg_8 instructions antigas");
-    } else if cqg8_ler(this + 0x188b, 0x58, f) == 1 {
+    } else if crt_fread_one(this + 0x188b, 0x58, f) == 1 {
         if !nativo {
             let troca64: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x43f350usize);
             troca64(this + 0x188b, 0xb);
         }
     } else if quieto == 0 {
-        cqg8_erro(0x988);
+        formation_error_box(0x988);
     }
-    if cqg8_ler(this + 0x5b4, 0xb, f) != 1 && quieto == 0 {
-        cqg8_erro(0x98f);
+    if crt_fread_one(this + 0x5b4, 0xb, f) != 1 && quieto == 0 {
+        formation_error_box(0x98f);
     }
     let mut v = cqg8_d(time);
     if v & 0x4000 == 0 {
@@ -216,14 +216,14 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
     cqg8_pd(this + 0x187f, 1);
     cqg8_pd(this + 0x1883, (*((this + 0x33) as *const u8) != 0) as u32);
     cqg8_pd(this + 0x1887, 1);
-    cqg8_fechar(f);
+    cash_crt_fclose(f);
     1
 }
 
 /// Comparador: lado a lado na formação (0x18e3 bytes: até as instruções dos jogadores em +0x188b + 0x58) e na
 /// devolução; o arquivo é aberto e lido pelas duas (só leitura).
 unsafe extern "thiscall" fn comparar_load_from_disk(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
     if this == 0 {
         return o(this, caminho, quieto, ofuscado);
     }
@@ -247,7 +247,7 @@ unsafe extern "C" fn swap_bytes_16_array(p: usize, conta: u32) {
 
 /// Comparador: lado a lado no vetor (até 0x420 palavras conferidas).
 unsafe extern "C" fn comparar_swap_bytes_16_array(p: usize, conta: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32)>(%%I1%%);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }
@@ -258,13 +258,13 @@ unsafe extern "C" fn comparar_swap_bytes_16_array(p: usize, conta: u32) {
 /// { 0x43f300 } (cdecl, cash.cpp): `swap_bytes_32_array(dwords, conta)`: inverte os quatro bytes de cada dword.
 unsafe extern "C" fn swap_bytes_32_array(p: usize, conta: u32) {
     for k in 0..conta as usize {
-        cqg8_pd(p + 4 * k, cqg8_inverter(cqg8_d(p + 4 * k)));
+        cqg8_pd(p + 4 * k, swap_bytes_u32(cqg8_d(p + 4 * k)));
     }
 }
 
 /// Comparador: lado a lado no vetor.
 unsafe extern "C" fn comparar_swap_bytes_32_array(p: usize, conta: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32)>(%%I2%%);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }

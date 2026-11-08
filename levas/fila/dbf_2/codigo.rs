@@ -9,7 +9,7 @@ unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i32, registr
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I0%%)(stream, use_zip, registros, entrada);
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I0%%)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler estádios");
     let lidos = if use_zip != 0 {
@@ -25,7 +25,7 @@ unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i32, registr
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_db_files_read_stadiums(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I0%%)(stream, use_zip, registros, entrada)
+    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I0%%)(stream, use_zip, registros, entrada)
 }
 
 /// { 0x54e780 } (cdecl, Db_files.cpp): `db_files_read_staff_v1(stream, use_zip, registros, entrada)`: com a versão da
@@ -37,7 +37,7 @@ unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i32, registr
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I1%%)(stream, use_zip, registros, entrada);
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I1%%)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler pessoas 157");
     let lidos = if use_zip != 0 {
@@ -53,7 +53,7 @@ unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i32, registr
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_db_files_read_staff_v1(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I1%%)(stream, use_zip, registros, entrada)
+    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I1%%)(stream, use_zip, registros, entrada)
 }
 
 /// { 0x54fd60 } (cdecl, Db_files.cpp): `db_files_read_staff_history(stream, use_zip, registros, entrada)`: com a versão da
@@ -65,7 +65,7 @@ unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_zip: i32, re
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I2%%)(stream, use_zip, registros, entrada);
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I2%%)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler histórico de pessoas");
     let lidos = if use_zip != 0 {
@@ -81,5 +81,5 @@ unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_zip: i32, re
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_db_files_read_staff_history(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I2%%)(stream, use_zip, registros, entrada)
+    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I2%%)(stream, use_zip, registros, entrada)
 }

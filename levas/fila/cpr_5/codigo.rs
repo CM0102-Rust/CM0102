@@ -30,26 +30,26 @@ unsafe fn cpr5_sortear(n: i32) -> i32 {
 }
 
 /// O técnico (ou o selecionador) do clube (0x53ca90).
-unsafe fn cpr5_tecnico(clube: usize) -> usize {
+unsafe fn club_manager(clube: usize) -> usize {
     let f: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
     f(clube)
 }
 
-unsafe fn cpr5_humano(clube: usize, qualquer: u8, pessoa: usize) -> u32 {
+unsafe fn manager_manager_is_human_club(clube: usize, qualquer: u8, pessoa: usize) -> u32 {
     let f: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     f(clube, 0, qualquer, pessoa, 0)
 }
 
 /// Uma das confianças da linha (+6..+0xc): sorteio(`n1`) + `h` guardado em float, menos sorteio(500), truncado.
-unsafe fn cpr5_confianca(c: usize, n1: i32, h: f32) {
+unsafe fn roll_confidence(c: usize, n1: i32, h: f32) {
     let r1 = cpr5_sortear(n1);
     let s = (r1 as f64 + h as f64) as f32;
     let r2 = cpr5_sortear(0x1f4);
-    cpr5_pw(c, ftol(s as f64 - r2 as f64) as i16);
+    cpr5_pw(c, match_pl_ftol(s as f64 - r2 as f64) as i16);
 }
 
 /// Abaixo de 5500: 5500 + sorteio(250); acima de 10000: 10000.
-unsafe fn cpr5_prender_5500(c: usize) {
+unsafe fn clamp_confidence_5500(c: usize) {
     if cpr5_w(c) < 0x157c {
         cpr5_pw(c, (cpr5_sortear(0xfa) + 0x157c) as i16);
     } else if cpr5_w(c) > 0x2710 {
@@ -58,7 +58,7 @@ unsafe fn cpr5_prender_5500(c: usize) {
 }
 
 /// Os campos da linha que as duas saídas zeram (+0x10..+0x16, os bits de +2, +3, +4, +5, +0x28 e +0x40).
-unsafe fn cpr5_zerar_marcas(l: usize) {
+unsafe fn clear_board_flags(l: usize) {
     for k in [0x10usize, 0x12, 0x14, 0x16] {
         cpr5_pw(l + k, 0);
     }
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn init_club_board_records(this: usize) {
         core::ptr::write_unaligned((l + 0x30) as *mut f64, rep.wrapping_mul(rep) as f64 * 0.25);
         cpr5_pd(l + 0x38, 0);
         cpr5_pd(l + 0x3c, 0);
-        if cpr5_tecnico(clube) == 0 {
+        if club_manager(clube) == 0 {
             // sem técnico
             let parceiro_de: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
             if parceiro_de(clube, &mut parceiro, 1) != 0 && parceiro != 0 {
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn init_club_board_records(this: usize) {
                 cpr5_pw(l + c, 0x1388);
             }
             cpr5_pw(l + 0xe, 0x10);
-            cpr5_zerar_marcas(l);
+            clear_board_flags(l);
             let dirigivel: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
             if dirigivel(clube) == 0 {
                 if is_national_team(clube) != 0 {
@@ -199,21 +199,21 @@ unsafe extern "thiscall" fn init_club_board_records(this: usize) {
         copia(cpr5_d(this).wrapping_add(cpr5_d(clube).wrapping_mul(0x49)) + 0x20, t.as_mut_ptr() as usize, r);
         let mut f: f32;
         let mut direto = false; // a 4500 salta o teste do zero e do 500
-        if cpr5_d(cpr5_tecnico(clube) + 0x69) == 0 && cpr5_humano(clube, 1, 0) == 0 {
+        if cpr5_d(club_manager(clube) + 0x69) == 0 && manager_manager_is_human_club(clube, 1, 0) == 0 {
             f = rep as f32;
-        } else if cpr5_humano(clube, 1, 0) != 0 {
-            if cpr5_d(clube + 0xcf) != 0 && cpr5_d(cpr5_tecnico(clube) + 0x69) != 0 {
-                f = cpr5_w(cpr5_d(cpr5_tecnico(clube) + 0x69) + 0xa) as f32;
+        } else if manager_manager_is_human_club(clube, 1, 0) != 0 {
+            if cpr5_d(clube + 0xcf) != 0 && cpr5_d(club_manager(clube) + 0x69) != 0 {
+                f = cpr5_w(cpr5_d(club_manager(clube) + 0x69) + 0xa) as f32;
             } else {
                 f = 4500.0;
                 direto = true;
             }
         } else {
-            f = cpr5_w(cpr5_d(cpr5_tecnico(clube) + 0x69) + 0xa) as f32;
+            f = cpr5_w(cpr5_d(club_manager(clube) + 0x69) + 0xa) as f32;
             let teto = rep as f64 * 0.75;
-            if (cpr5_w(cpr5_d(cpr5_tecnico(clube) + 0x69) + 0xa) as f64) < teto {
-                let v = ftol(teto) as i16;
-                cpr5_pw(cpr5_d(cpr5_tecnico(clube) + 0x69) + 0xa, v); // a nota da diretoria cai a 0,75 × reputação
+            if (cpr5_w(cpr5_d(club_manager(clube) + 0x69) + 0xa) as f64) < teto {
+                let v = match_pl_ftol(teto) as i16;
+                cpr5_pw(cpr5_d(club_manager(clube) + 0x69) + 0xa, v); // a nota da diretoria cai a 0,75 × reputação
             }
         }
         if !direto {
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn init_club_board_records(this: usize) {
         }
         crate::comparacao::ramo("cpr_5 diretoria com tecnico");
         let h = ((f as f64 / g) * 7500.0) as f32;
-        cpr5_confianca(l + 6, 0x1f4, h);
+        roll_confidence(l + 6, 0x1f4, h);
         let c = cpr5_w(l + 6);
         if c < 0x1676 {
             crate::comparacao::ramo("cpr_5 confianca baixa");
@@ -240,17 +240,17 @@ unsafe extern "thiscall" fn init_club_board_records(this: usize) {
         } else if c > 0x251c {
             cpr5_pw(l + 6, (0x2710 - cpr5_sortear(0x1f4)) as i16);
         }
-        cpr5_confianca(l + 8, 0x1f4, h);
+        roll_confidence(l + 8, 0x1f4, h);
         if cpr5_w(l + 8) < 0x1676 {
             cpr5_pw(l + 8, (cpr5_sortear(0x1f4) + 0x1676) as i16);
         } else if cpr5_w(l + 8) > 0x2710 {
             cpr5_pw(l + 8, 0x2710);
         }
-        cpr5_confianca(l + 0xa, 0x6d6, h);
-        cpr5_prender_5500(l + 0xa);
-        cpr5_confianca(l + 0xc, 0x9c4, h);
-        cpr5_prender_5500(l + 0xc);
-        cpr5_zerar_marcas(l);
+        roll_confidence(l + 0xa, 0x6d6, h);
+        clamp_confidence_5500(l + 0xa);
+        roll_confidence(l + 0xc, 0x9c4, h);
+        clamp_confidence_5500(l + 0xc);
+        clear_board_flags(l);
         expectativas(this, clube, 1);
     }
 }
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn init_club_board_records(this: usize) {
 // ponytail: sorteia, põe as expectativas (0x6a3770) e abre vagas (0x69ba50, aloca): só a original; a cópia leva os
 // ramos (roda uma vez, no começo da carreira).
 unsafe extern "thiscall" fn comparar_init_club_board_records(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// { 0x6abef0 } (thiscall, ret 0, manager_manager.cpp): `MANAGER_MANAGER::process_ban_appeals()`: percorre a lista das
@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn process_ban_appeals(this: usize) {
     while k < cpr5_w(lista()) as i32 {
         let item = proximo(lista());
         if item == 0 {
-            return aviso_em(0x9f18a4, 0x57f5);
+            return show_error_at(0x9f18a4, 0x57f5);
         }
         if depois(item + 5, cpr5_d(0xae2c90) as u32, cpr5_d(0xae2c94) as u32) == 0 {
             crate::comparacao::ramo("cpr_5 apelacao decidida");
@@ -304,7 +304,7 @@ unsafe extern "thiscall" fn process_ban_appeals(this: usize) {
 
 // ponytail: aplica a disciplina, solta a notícia e libera a apelação: só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_process_ban_appeals(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
 /// { 0x5fe700 } (thiscall, ret 8, human_manager.cpp): `HUMAN_MANAGER::can_watch_fixture(partida, humano)`: o humano
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn comparar_process_ban_appeals(this: usize) {
 /// da partida (0x5fe500).
 unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: usize, humano: usize) -> u32 {
     if partida == 0 {
-        aviso_em(0x9cf11c, 0x707);
+        show_error_at(0x9cf11c, 0x707);
         return 0;
     }
     let mut humano = humano;
@@ -328,8 +328,8 @@ unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: usize, human
     if cpr5_b(partida + 0x43) as i8 > -1 {
         return 0;
     }
-    let dele = |p: usize| cpr5_humano(cpr5_d(p + 0x1c), cpr5_b(p + 0x40), humano) != 0
-        || cpr5_humano(cpr5_d(p + 0x20), cpr5_b(p + 0x41), humano) != 0;
+    let dele = |p: usize| manager_manager_is_human_club(cpr5_d(p + 0x1c), cpr5_b(p + 0x40), humano) != 0
+        || manager_manager_is_human_club(cpr5_d(p + 0x20), cpr5_b(p + 0x41), humano) != 0;
     if dele(partida) {
         return 0;
     }
@@ -360,7 +360,7 @@ unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: usize, human
 
 /// Comparador: a original e a cópia (as duas só leem; a volta da lista recomeça o cursor), pelo valor.
 unsafe extern "thiscall" fn comparar_can_watch_fixture(this: usize, partida: usize, humano: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano);
     if partida == 0 {
         return r;
     }

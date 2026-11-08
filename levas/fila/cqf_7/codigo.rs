@@ -13,12 +13,12 @@ unsafe fn cqf7_sb(a: usize) -> i8 {
 }
 
 /// O registro da pessoa `id` (tabela [0xae23bc], 0x6e bytes).
-unsafe fn cqf7_pessoa(id: i32) -> usize {
+unsafe fn training_manager_staff_by_id(id: i32) -> usize {
     cqf7_d(0xae23bc).wrapping_add((id as isize * 0x6e) as usize)
 }
 
 /// A vaga de 9 bytes da comissão (+0 id do treinador, +4..+8 as notas das cinco categorias) volta a vazia: −1, 0, 0.
-unsafe fn cqf7_limpar(e: usize) {
+unsafe fn clear_coach_slot(e: usize) {
     core::ptr::write_unaligned(e as *mut i32, -1);
     core::ptr::write_unaligned((e + 4) as *mut u32, 0);
     *((e + 8) as *mut u8) = 0;
@@ -30,7 +30,7 @@ const CQF7_DIVISORES: [u32; 5] = [0x3f80_0000, 0x3f99_999a, 0x3fb3_3333, 0x3fcc_
 
 /// A chance de conhecer (0x544410, cdecl: a ficha de não jogador e o byte do atributo; a original empurra o
 /// registrador com lixo em cima: a chamada lê o byte).
-unsafe fn cqf7_chance(f: usize, k: usize) -> i32 {
+unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
     let c: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(0x544410usize);
     c(f, cqf7_sb(f + k)) as i8 as i32 // a original estende o al (movsx)
 }
@@ -69,15 +69,15 @@ unsafe extern "thiscall" fn update_coach_assignments(this: usize, clube: usize, 
         if id == -1 {
             continue;
         }
-        if cqf7_d(cqf7_pessoa(id) + 0x69) == 0 {
-            cqf7_limpar(e);
+        if cqf7_d(training_manager_staff_by_id(id) + 0x69) == 0 {
+            clear_coach_slot(e);
             continue;
         }
         if !(-1..5).any(|k| {
             let p = candidato(k);
             p != 0 && cqf7_i(p) == id
         }) {
-            cqf7_limpar(e);
+            clear_coach_slot(e);
         }
     }
     for k in -1..5 {
@@ -101,9 +101,9 @@ unsafe extern "thiscall" fn update_coach_assignments(this: usize, clube: usize, 
         if id == -1 {
             continue;
         }
-        let f = cqf7_d(cqf7_pessoa(id) + 0x69);
+        let f = cqf7_d(training_manager_staff_by_id(id) + 0x69);
         if f == 0 {
-            cqf7_limpar(e);
+            clear_coach_slot(e);
             continue;
         }
         let n = (0..5).filter(|&j| *((e + 4 + j) as *const u8) != 0).count();
@@ -113,17 +113,17 @@ unsafe extern "thiscall" fn update_coach_assignments(this: usize, clube: usize, 
             }
             let b = |k: usize| cqf7_sb(f + k) as i32;
             let x = match j {
-                0 => (cqf7_chance(f, 0x10) - b(0x12) + 0x15) / 2, // cqf7: a nota de goleiros
+                0 => (non_player_attribute_rating(f, 0x10) - b(0x12) + 0x15) / 2, // cqf7: a nota de goleiros
                 1 => {
-                    let a = cqf7_chance(f, 0x21);
-                    (a + cqf7_chance(f, 0x10) + b(0x12)) / 3 // cqf7: a nota de tática
+                    let a = non_player_attribute_rating(f, 0x21);
+                    (a + non_player_attribute_rating(f, 0x10) + b(0x12)) / 3 // cqf7: a nota de tática
                 }
-                2 => (cqf7_chance(f, 0x10) + b(0xe) + b(0x12)) / 3,
-                3 => (cqf7_chance(f, 0x10) + b(0x12)) / 2,
-                _ => cqf7_chance(f, 0x11),
+                2 => (non_player_attribute_rating(f, 0x10) + b(0xe) + b(0x12)) / 3,
+                3 => (non_player_attribute_rating(f, 0x10) + b(0x12)) / 2,
+                _ => non_player_attribute_rating(f, 0x11),
             };
             // o byte de baixo, com sinal, em float dividido pelo float da quantidade (precisão dupla do x87)
-            let q = ftol(x as i8 as f64 / f32::from_bits(CQF7_DIVISORES[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade
+            let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(CQF7_DIVISORES[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade
             crate::comparacao::ramo("cqf_7 nota do treinador");
             *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
         }
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn update_coach_assignments(this: usize, clube: usize, 
 /// 0x540a50 podem zerá-la). Sem humano ou clube de seleção: lado a lado só na marca. Técnico fora dos 16 humanos
 /// (a 0x8b4cd0 mostra a caixa e a original escreveria no nulo): só a original.
 unsafe extern "thiscall" fn comparar_update_coach_assignments(this: usize, clube: usize, tecnico: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if clube == 0 {
         return o(this, clube, tecnico);
     }
@@ -154,10 +154,10 @@ unsafe extern "thiscall" fn comparar_update_coach_assignments(this: usize, clube
 
 /// O programa `vaga` (0..9; fora disso o 1) do técnico humano `tec`: this + (vaga + 7 + 10 × ([0xae2364] − id − 1)) ×
 /// 0x9b; fora dos 16 humanos, a caixa "Error" (linha 0x68f) e 0 (a original lê então o byte +0x15 do nulo).
-unsafe fn cqf7_programa(this: usize, tec: usize, vaga: i8) -> usize {
+unsafe fn human_training_schedule(this: usize, tec: usize, vaga: i8) -> usize {
     let k = cqf7_i(0xae2364).wrapping_sub(cqf7_i(tec)).wrapping_sub(1);
     if !(0..0x10).contains(&k) {
-        aviso_em(0xa8ccd0, 0x68f);
+        show_error_at(0xa8ccd0, 0x68f);
         return 0;
     }
     let v = if (0..10).contains(&vaga) { vaga as i32 } else { 1 };
@@ -165,7 +165,7 @@ unsafe fn cqf7_programa(this: usize, tec: usize, vaga: i8) -> usize {
 }
 
 /// A entrada de 6 bytes do treino da ficha `f` (+0 a vaga do programa).
-unsafe fn cqf7_entrada(this: usize, f: usize) -> usize {
+unsafe fn training_entry_of_player_data(this: usize, f: usize) -> usize {
     cqf7_d(this + 0x651d).wrapping_add((cqf7_i(f) as isize * 6) as usize)
 }
 
@@ -191,19 +191,19 @@ unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec: usize, an
             gravar_carga(cqf7_d(0xb63d28), p, 0x32);
             let f = cqf7_d(p + 0x61);
             if f == 0 {
-                aviso_em(0xa8ccd0, 0x34c);
+                show_error_at(0xa8ccd0, 0x34c);
                 continue;
             }
-            *(cqf7_entrada(this, f) as *mut u8) = if cqf7_sb(f + 0xf) >= 0xf { 6 } else { 1 };
+            *(training_entry_of_player_data(this, f) as *mut u8) = if cqf7_sb(f + 0xf) >= 0xf { 6 } else { 1 };
         }
     }
     if novo == 0 {
         return;
     }
     for vaga in 0..10i8 {
-        if *((cqf7_programa(this, tec, vaga) + 0x15) as *const u8) == 6 {
+        if *((human_training_schedule(this, tec, vaga) + 0x15) as *const u8) == 6 {
             gol = vaga;
-        } else if *((cqf7_programa(this, tec, vaga) + 0x15) as *const u8) == 1 {
+        } else if *((human_training_schedule(this, tec, vaga) + 0x15) as *const u8) == 1 {
             geral = vaga;
         }
     }
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec: usize, an
         if f == 0 || cqf7_i(p) >= cqf7_i(0xae2364) {
             continue;
         }
-        let e = cqf7_entrada(this, f) as *mut i8;
+        let e = training_entry_of_player_data(this, f) as *mut i8;
         *e = if cqf7_sb(f + 0xf) >= 0xf && gol != -1 {
             gol // cqf7: o programa dos goleiros
         } else if geral != -1 {
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec: usize, an
             1
         };
         crate::comparacao::ramo("cqf_7 programa do elenco novo");
-        let c = carga(cqf7_programa(this, tec, *e));
+        let c = carga(human_training_schedule(this, tec, *e));
         gravar_carga(cqf7_d(0xb63d28), p, c as u32);
     }
     let comissao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8b2880usize);
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec: usize, an
 /// técnico (a 0x8b2880 do fim) e na marca +0x244 dos clubes (a 0x541f90 pela 0x540a50). Com caixa (jogador sem
 /// ficha no elenco antigo ou técnico fora dos 16 humanos com clube novo): só a original.
 unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: usize, tec: usize, antigo: usize, novo: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
     let k = if tec == 0 { -1 } else { cqf7_i(0xae2364).wrapping_sub(cqf7_i(tec)).wrapping_sub(1) };
     if novo != 0 && !(0..0x10).contains(&k) {
         return o(this, tec, antigo, novo);
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: usize, tec: 
                 }
                 continue;
             }
-            reg.push((cqf7_entrada(this, f), 6));
+            reg.push((training_entry_of_player_data(this, f), 6));
             reg.push((les.wrapping_add((cqf7_i(p) as isize * 31 + 0x1e) as usize), 1));
         }
     }
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn training_manager_cpp_0x8b2230(this: usize) {
 
 /// Comparador: lado a lado nos 167 programas (0x9b bytes cada).
 unsafe extern "thiscall" fn comparar_training_manager_cpp_0x8b2230(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0xa7 * 0x9b)], || o(this), || training_manager_cpp_0x8b2230(this));
     PLACAR.registrar(igual, || format!("training_manager_cpp_0x8b2230({:x})", this));
 }

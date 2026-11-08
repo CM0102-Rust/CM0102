@@ -23,7 +23,7 @@ static mut CQC3_ACRESCIMOS: Vec<usize> = Vec::new();
 
 /// Acrescenta a cópia dos 0x4f bytes do jogo no fim da lista (0x68d0d0: ecx = lista; push 0x4f; push jogo -> thiscall,
 /// ret 8); no ensaio, só guarda o jogo.
-unsafe fn cqc3_acrescentar(lista: usize, jogo: usize) {
+unsafe fn append_fixture(lista: usize, jogo: usize) {
     if CQC3_ENSAIO {
         CQC3_ACRESCIMOS.push(jogo);
         return;
@@ -33,7 +33,7 @@ unsafe fn cqc3_acrescentar(lista: usize, jogo: usize) {
 }
 
 /// Os dados dos nós da lista (cabeça em +2, o próximo em +6 do nó, o dado em +0), na ordem.
-unsafe fn cqc3_itens(lista: usize) -> Vec<usize> {
+unsafe fn fix_man_list_items(lista: usize) -> Vec<usize> {
     let mut v = Vec::new();
     if lista == 0 {
         return v;
@@ -47,7 +47,7 @@ unsafe fn cqc3_itens(lista: usize) -> Vec<usize> {
 }
 
 /// O conteúdo (0x4f bytes por jogo) de uma sequência de jogos.
-unsafe fn cqc3_conteudo(jogos: &[usize]) -> Vec<u8> {
+unsafe fn fixtures_bytes(jogos: &[usize]) -> Vec<u8> {
     let mut v = Vec::new();
     for &j in jogos {
         v.extend_from_slice(core::slice::from_raw_parts(j as *const u8, 0x4f));
@@ -57,7 +57,7 @@ unsafe fn cqc3_conteudo(jogos: &[usize]) -> Vec<u8> {
 
 /// A data (dia do mês, mês 0..11) do ano dado (0x549f70: lea ecx, local; push −1; push ano; push mês; push dia ->
 /// thiscall, ret 0x10): (dia do ano, ano).
-unsafe fn cqc3_dma(dia: u32, mes: u32, ano: u32) -> (u16, u16) {
+unsafe fn day_of_year(dia: u32, mes: u32, ano: u32) -> (u16, u16) {
     let f: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32, u32, u32) -> *mut [u8; 8] = core::mem::transmute(0x549f70usize);
     let mut t = [0u8; 8];
     let r = f(&mut t, dia, mes, ano, 0xffff_ffff);
@@ -65,14 +65,14 @@ unsafe fn cqc3_dma(dia: u32, mes: u32, ano: u32) -> (u16, u16) {
 }
 
 /// O jogo `x` está na liga de id [0x9cf590] por um dos clubes (+0x57 → +0).
-unsafe fn cqc3_na_liga(clube: usize, id: i32) -> bool {
+unsafe fn is_in_league(clube: usize, id: i32) -> bool {
     let l = cqc3_d(clube + 0x57);
     l != 0 && cqc3_i(l) == id
 }
 
 /// A regra de conflito da competição (método +0x60 da competição [0xadadfc][id]: push b; push a; ecx = comp ->
 /// thiscall): 0 sem a tabela ou sem a competição.
-unsafe fn cqc3_regra(id_de: usize, a: usize, b: usize) -> u32 {
+unsafe fn comp_clash_rule(id_de: usize, a: usize, b: usize) -> u32 {
     let tab = cqc3_d(0xadadfc);
     if tab == 0 {
         return 0;
@@ -86,12 +86,12 @@ unsafe fn cqc3_regra(id_de: usize, a: usize, b: usize) -> u32 {
 }
 
 /// O jogo `x` entra (0x16 se já foi jogado, +0x43 diferente de 0xff) e a gravidade sobe ao tipo dele (+0x3a).
-unsafe fn cqc3_entra_pelo_tipo(grav: *mut i32, lista: usize, x: usize, conferir_jogado: bool) {
+unsafe fn add_clash_by_type(grav: *mut i32, lista: usize, x: usize, conferir_jogado: bool) {
     if conferir_jogado && cqc3_b(x + 0x43) != 0xff {
         *grav = 0x16;
         return;
     }
-    cqc3_acrescentar(lista, x);
+    append_fixture(lista, x);
     let t = cqc3_b(x + 0x3a) as i8 as i32;
     if t > *grav {
         *grav = t;
@@ -99,7 +99,7 @@ unsafe fn cqc3_entra_pelo_tipo(grav: *mut i32, lista: usize, x: usize, conferir_
 }
 
 /// O fim comum dos ramos do mesmo clube e do mesmo estádio (0x5adf91/0x5ae060): sem gravidade, 0x14 (`vinte`) ou 1.
-unsafe fn cqc3_sem_gravidade(grav: *mut i32, vinte: bool) {
+unsafe fn default_clash_severity(grav: *mut i32, vinte: bool) {
     if *grav == 0 {
         *grav = if vinte { 0x14 } else { 1 };
     }
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
         let comp = cqc3_d(jogo + 0x14);
         let nc = if comp != 0 { cqc3_d(comp + 0x5d) } else { 0 };
         let e_da = |g: usize| nc != 0 && cqc3_i(nc) == cqc3_i(g);
-        if mesma(cqc3_dma(0x19, 0xb, ano())) && !e_da(0x9cf36c) {
+        if mesma(day_of_year(0x19, 0xb, ano())) && !e_da(0x9cf36c) {
             crate::comparacao::ramo("cqc_3 natal");
             return dezenove();
         }
@@ -161,9 +161,9 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
             return dezenove();
         }
         if e_da(0x9cf31c) {
-            let t = cqc3_dma(10, 3, ano());
+            let t = day_of_year(10, 3, ano());
             if t.1 < cqc3_w(d + 2) || (t.1 == cqc3_w(d + 2) && (t.0 as i16) < cqc3_w(d) as i16) {
-                let t = cqc3_dma(0x14, 3, ano());
+                let t = day_of_year(0x14, 3, ano());
                 if t.1 > cqc3_w(d + 2) || (t.1 == cqc3_w(d + 2) && (t.0 as i16) > cqc3_w(d) as i16) {
                     return dezenove();
                 }
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
     }
     let nac = cqc3_d(0xae23a8).wrapping_add((cqc3_i(0x9cf408) as usize).wrapping_mul(0x122));
     if cqc3_d(cqc3_d(jogo + 0x1c) + 0x53) == nac || cqc3_d(cqc3_d(jogo + 0x20) + 0x53) == nac {
-        if mesma(cqc3_dma(0x11, 4, ano())) && flag == 0 {
+        if mesma(day_of_year(0x11, 4, ano())) && flag == 0 {
             return dezenove();
         }
     }
@@ -192,43 +192,43 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
                         let a = cqc3_d(jogo + 0x20);
                         if c1 == 0 || h == 0 || a == 0 {
                             // a caixa (linha 0xcc8) e o fim do jogo: a original
-                            return orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(%%I0%%)(this, jogo, grav, lista, nacoes, n, data, desloc);
+                            return original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(%%I0%%)(this, jogo, grav, lista, nacoes, n, data, desloc);
                         }
                         let c2 = cqc3_d(x + 0x20);
                         let (sx0, sx1, s0, s1b) = (cqc3_b(x + 0x40), cqc3_b(x + 0x41), cqc3_b(jogo + 0x40), cqc3_b(jogo + 0x41));
                         if (c1 == h && sx0 == s0) || (c1 == a && sx0 == s1b) || (c2 == h && sx1 == s0) || (c2 == a && sx1 == s1b) {
                             crate::comparacao::ramo("cqc_3 mesmo clube na mesma fatia");
-                            cqc3_entra_pelo_tipo(grav, lista, x, true); // cqc3: o mesmo clube na mesma fatia
+                            add_clash_by_type(grav, lista, x, true); // cqc3: o mesmo clube na mesma fatia
                         } else if (flag == 0 && c1 == h && sx0 != s0) || (c1 == a && sx0 != s1b) || (c2 == h && sx1 != s0) || (c2 == a && sx1 != s1b) {
                             if cqc3_b(x + 0x43) != 0xff {
                                 *grav = 0x16;
                             } else {
-                                cqc3_acrescentar(lista, x);
+                                append_fixture(lista, x);
                                 if cqc3_b(jogo + 0x3f) == cqc3_b(x + 0x3f) || cqc3_b(x + 0x3a) != 1 {
                                     if *grav == 0 {
                                         crate::comparacao::ramo("cqc_3 mesmo clube noutra fatia");
                                     }
-                                    cqc3_sem_gravidade(grav, true); // cqc3: o mesmo clube noutra fatia
+                                    default_clash_severity(grav, true); // cqc3: o mesmo clube noutra fatia
                                 } else if cqc3_b(jogo + 0x3a) != 1 {
-                                    cqc3_sem_gravidade(grav, false);
+                                    default_clash_severity(grav, false);
                                 }
                             }
                         } else if flag == 0 && cqc3_d(x + 0x18) != 0 && cqc3_d(jogo + 0x18) == cqc3_d(x + 0x18) && cqc3_i(x) != cqc3_i(0x9cf76c) && cqc3_i(jogo) != cqc3_i(0x9cf76c) {
                             if cqc3_b(x + 0x43) != 0xff {
                                 *grav = 0x16;
                             } else {
-                                cqc3_acrescentar(lista, x);
+                                append_fixture(lista, x);
                                 let t = cqc3_b(x + 0x3a);
                                 if cqc3_b(jogo + 0x3f) == cqc3_b(x + 0x3f) {
                                     if t != 1 {
-                                        cqc3_sem_gravidade(grav, true);
+                                        default_clash_severity(grav, true);
                                     } else if *grav < 1 {
                                         *grav = 1;
                                     }
                                 } else if t != 1 {
-                                    cqc3_sem_gravidade(grav, true);
+                                    default_clash_severity(grav, true);
                                 } else if cqc3_b(jogo + 0x3a) != 1 {
-                                    cqc3_sem_gravidade(grav, false);
+                                    default_clash_severity(grav, false);
                                 }
                             }
                         } else {
@@ -243,13 +243,13 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
                                 || c2 == s1
                                 || c2 == s2;
                             if selecoes {
-                                if (cqc3_w(h + 0x80) as i16 > 0x1388 || cqc3_w(a + 0x80) as i16 > 0x1388) && cqc3_regra(jogo, jogo, x) != 0 {
-                                    cqc3_entra_pelo_tipo(grav, lista, x, true);
+                                if (cqc3_w(h + 0x80) as i16 > 0x1388 || cqc3_w(a + 0x80) as i16 > 0x1388) && comp_clash_rule(jogo, jogo, x) != 0 {
+                                    add_clash_by_type(grav, lista, x, true);
                                 }
-                            } else if cqc3_i(x) == cqc3_i(0x9cf690) && (cqc3_na_liga(h, cqc3_i(0x9cf590)) || cqc3_na_liga(a, cqc3_i(0x9cf590))) {
+                            } else if cqc3_i(x) == cqc3_i(0x9cf690) && (is_in_league(h, cqc3_i(0x9cf590)) || is_in_league(a, cqc3_i(0x9cf590))) {
                                 *grav = 0x13;
-                            } else if cqc3_i(jogo) == cqc3_i(0x9cf690) && (cqc3_na_liga(c1, cqc3_i(0x9cf590)) || cqc3_na_liga(c2, cqc3_i(0x9cf590))) {
-                                cqc3_entra_pelo_tipo(grav, lista, x, false);
+                            } else if cqc3_i(jogo) == cqc3_i(0x9cf690) && (is_in_league(c1, cqc3_i(0x9cf590)) || is_in_league(c2, cqc3_i(0x9cf590))) {
+                                add_clash_by_type(grav, lista, x, false);
                             } else if e_sel != 0
                                 && especial(cqc3_d(0xb74318), cqc3_d(jogo + 0x14)) == 0
                                 && abs_flag < 2
@@ -260,9 +260,9 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
                                 if (nx1 == n1 || nx2 == n1 || nx1 == n2 || nx2 == n2)
                                     && (cqc3_w(c1 + 0x80) as i16 > 0x1388 || cqc3_w(c2 + 0x80) as i16 > 0x1388)
                                     && (cqc3_b(x + 0x3a) as i8) < 5
-                                    && cqc3_regra(x, x, jogo) != 0
+                                    && comp_clash_rule(x, x, jogo) != 0
                                 {
-                                    cqc3_entra_pelo_tipo(grav, lista, x, true);
+                                    add_clash_by_type(grav, lista, x, true);
                                 }
                             }
                         }
@@ -280,7 +280,7 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
 /// própria) e a original a partir do mesmo estado; confere a gravidade e os nós novos no fim da lista (os 0x4f bytes de
 /// cada jogo, na ordem). As listas dos dias (0x5abf10) têm o cursor refeito nas duas.
 unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(%%I0%%);
     if jogo == 0 || lista == 0 || grav.is_null() || cqc3_d(jogo + 0x1c) == 0 || cqc3_d(jogo + 0x20) == 0 {
         return o(this, jogo, grav, lista, nacoes, n, data, desloc);
     }
@@ -289,12 +289,12 @@ unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize, jogo: usiz
     CQC3_ENSAIO = true;
     collect_day_clashes(this, jogo, &mut g, lista, nacoes, n, data, desloc);
     CQC3_ENSAIO = false;
-    let esperado = cqc3_conteudo(&CQC3_ACRESCIMOS);
+    let esperado = fixtures_bytes(&CQC3_ACRESCIMOS);
     let ne = CQC3_ACRESCIMOS.len();
-    let antes = cqc3_itens(lista);
+    let antes = fix_man_list_items(lista);
     o(this, jogo, grav, lista, nacoes, n, data, desloc);
-    let depois = cqc3_itens(lista);
-    let igual = *grav == g && depois.len() == antes.len() + ne && depois[..antes.len()] == antes[..] && cqc3_conteudo(&depois[antes.len()..]) == esperado;
+    let depois = fix_man_list_items(lista);
+    let igual = *grav == g && depois.len() == antes.len() + ne && depois[..antes.len()] == antes[..] && fixtures_bytes(&depois[antes.len()..]) == esperado;
     PLACAR.registrar(igual, || format!("collect_day_clashes(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", jogo, desloc as u8 as i8, *grav, g, depois.len().saturating_sub(antes.len()), ne));
 }
 
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize, jogo: usiz
 /// push jogo -> thiscall, ret 4) e 0. Senão a gravidade na saída e a lista.
 unsafe extern "thiscall" fn find_fixture_clashes(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
     if jogo == 0 || saida.is_null() {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I1%%)(this, jogo, saida, dois_dias); // a caixa
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I1%%)(this, jogo, saida, dois_dias); // a caixa
     }
     let chave_do_jogo: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x48dd70usize);
     let do_estadio: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x48df40usize);
@@ -372,7 +372,7 @@ unsafe extern "thiscall" fn find_fixture_clashes(this: usize, jogo: usize, saida
     let bloco = novo(0xe);
     let lista = if bloco != 0 { construir(bloco) } else { 0 };
     if lista == 0 {
-        aviso_em(0x9cc208, 0xc1d); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
+        show_error_at(0x9cc208, 0xc1d); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
         return 0;
     }
     let mut data = [0u8; 8];
@@ -408,7 +408,7 @@ unsafe extern "thiscall" fn find_fixture_clashes(this: usize, jogo: usize, saida
 /// devolução (lista ou 0), a saída e os jogos das duas listas (0x4f bytes cada, na ordem), e destrói e libera a lista
 /// da cópia como o calendário faz (0x68d040, 0x944c94).
 unsafe extern "thiscall" fn comparar_find_fixture_clashes(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I1%%);
     if jogo == 0 || saida.is_null() {
         return o(this, jogo, saida, dois_dias);
     }
@@ -416,7 +416,7 @@ unsafe extern "thiscall" fn comparar_find_fixture_clashes(this: usize, jogo: usi
     let go = *saida;
     let mut gr: i32 = 0;
     let nr = find_fixture_clashes(this, jogo, &mut gr, dois_dias);
-    let (lo, lr) = (cqc3_conteudo(&cqc3_itens(r)), cqc3_conteudo(&cqc3_itens(nr)));
+    let (lo, lr) = (fixtures_bytes(&fix_man_list_items(r)), fixtures_bytes(&fix_man_list_items(nr)));
     let igual = (r == 0) == (nr == 0) && go == gr && lo == lr;
     PLACAR.registrar(igual, || format!("find_fixture_clashes(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", jogo, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
     if nr != 0 {
@@ -453,7 +453,7 @@ unsafe extern "C" fn fix_man_load_fixture_leg_checks() {
     let mut k: i16 = 0;
     while k < conta {
         if ler(reg.as_mut_ptr(), 0xf, 1, f) != 1 {
-            aviso_em(0x9cc208, 0x10b9);
+            show_error_at(0x9cc208, 0x10b9);
         }
         acrescentar(0xae2a48, reg.as_ptr(), 0xf);
         k = k.wrapping_add(1);
@@ -464,5 +464,5 @@ unsafe extern "C" fn fix_man_load_fixture_leg_checks() {
 /// O comparador da carga das conferências: só a original (ponytail: lê o arquivo e aloca os nós da lista; não pode rodar
 /// duas vezes).
 unsafe extern "C" fn comparar_fix_man_load_fixture_leg_checks() {
-    orig::<unsafe extern "C" fn()>(%%I2%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

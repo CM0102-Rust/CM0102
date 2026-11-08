@@ -16,12 +16,12 @@ unsafe fn cpo1_por(a: usize, v: usize) {
     core::ptr::write_unaligned(a as *mut usize, v);
 }
 
-unsafe fn cpo1_ou(a: usize, v: u8) {
+unsafe fn or_byte(a: usize, v: u8) {
     *(a as *mut u8) |= v;
 }
 
 /// Soma `v` à palavra de 16 bits (com a volta do `add word`).
-unsafe fn cpo1_somar(a: usize, v: i16) {
+unsafe fn manager_manager_add_i16(a: usize, v: i16) {
     core::ptr::write_unaligned(a as *mut i16, cpo1_w(a).wrapping_add(v));
 }
 
@@ -35,20 +35,20 @@ unsafe fn cpo1_f_por(a: usize, v: f64) {
 }
 
 /// A constante `double` do próprio exe.
-unsafe fn cpo1_k(a: usize) -> f64 {
+unsafe fn exe_f64(a: usize) -> f64 {
     cpo1_f(a)
 }
 
 /// A linha do clube na tabela da diretoria do MANAGER_MANAGER ([this] + 0x49 × id): +2 marcas, +6 confiança (1..10000),
 /// +0x14 e +0x16 os humores da diretoria, +0x38 o gasto líquido (double).
-unsafe fn cpo1_linha(this: usize, id: usize) -> usize {
+unsafe fn board_row_at(this: usize, id: usize) -> usize {
     cpo1_d(this).wrapping_add(id.wrapping_mul(0x49))
 }
 
 /// O valor do jogador para o clube (CONTRACT_MANAGER 0x4d0c60 em [0xae1050], pode sortear) como a 0x696570 o pede:
 /// com o clube do jogador (+0x39) quando ele tem; senão o `clube`, com o último argumento 1 se o `clube` é de humano
 /// (0x600a50).
-unsafe fn cpo1_valor(pessoa: usize, clube: usize) -> i32 {
+unsafe fn player_value_for_club(pessoa: usize, clube: usize) -> i32 {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x600a50usize);
     let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(0x4d0c60usize);
     let h = humano(clube, 0, 1, 0, 0);
@@ -64,9 +64,9 @@ unsafe fn cpo1_valor(pessoa: usize, clube: usize) -> i32 {
 }
 
 /// O limite da taxa pela reputação (+0x80) do clube: (reputação × 0,2)² truncado (_ftol 0x945640).
-unsafe fn cpo1_limite(clube: usize) -> i32 {
-    let x = cpo1_w(clube + 0x80) as i32 as f64 * cpo1_k(0x968918);
-    ftol(x * x)
+unsafe fn fee_limit(clube: usize) -> i32 {
+    let x = cpo1_w(clube + 0x80) as i32 as f64 * exe_f64(0x968918);
+    match_pl_ftol(x * x)
 }
 
 /// { 0x696570 } (thiscall, ret 0xc, manager_manager.cpp): `MANAGER_MANAGER::assess_transfer_deal(transf, f1, f2)`:
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1:
         return;
     }
     let comprador = cpo1_d(0xae23b4).wrapping_add(cpo1_d(transf + 8).wrapping_mul(0x245));
-    let mut valor = cpo1_valor(pessoa, comprador);
+    let mut valor = player_value_for_club(pessoa, comprador);
     if valor == 0 {
         valor = 1;
     }
@@ -99,89 +99,89 @@ unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1:
     let favorito_do_presidente: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
     let rejeitado_do_presidente: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
     if comprador != 0 {
-        let g = cpo1_linha(this, cpo1_d(comprador)) + 0x38;
+        let g = board_row_at(this, cpo1_d(comprador)) + 0x38;
         cpo1_f_por(g, valor as f64 + cpo1_f(g));
-        let limite = cpo1_limite(comprador);
+        let limite = fee_limit(comprador);
         let razao = if valor == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / valor as f64 };
         if taxa <= limite {
             crate::comparacao::ramo("cpo_1 comprador no limite");
-            cpo1_ou(f1, 4); // o comprador: taxa dentro do limite
+            or_byte(f1, 4); // o comprador: taxa dentro do limite
         } else if valor > 0x3d090 {
-            let m = if razao < cpo1_k(0x968918) {
+            let m = if razao < exe_f64(0x968918) {
                 0x10
-            } else if razao < cpo1_k(0x968968) {
+            } else if razao < exe_f64(0x968968) {
                 8
-            } else if razao < cpo1_k(0x968950) {
+            } else if razao < exe_f64(0x968950) {
                 4
-            } else if razao < cpo1_k(0x969000) {
+            } else if razao < exe_f64(0x969000) {
                 2
             } else {
                 1
             };
-            cpo1_ou(f1, m);
+            or_byte(f1, m);
         } else {
-            let m = if razao < cpo1_k(0x968fd0) { 8 } else if razao < cpo1_k(0x968f10) { 4 } else { 2 };
-            cpo1_ou(f1, m);
+            let m = if razao < exe_f64(0x968fd0) { 8 } else if razao < exe_f64(0x968f10) { 4 } else { 2 };
+            or_byte(f1, m);
         }
         if favorito(pessoa, comprador) != 0 {
-            cpo1_ou(f1, 0x40);
+            or_byte(f1, 0x40);
         } else if rejeitado(pessoa, comprador) != 0 {
-            cpo1_ou(f1 + 1, 1);
+            or_byte(f1 + 1, 1);
         }
         if favorito_do_presidente(pessoa, cpo1_d(comprador + 0xbf)) != 0 {
-            cpo1_ou(f1, 0x40);
+            or_byte(f1, 0x40);
         } else if rejeitado_do_presidente(pessoa, cpo1_d(comprador + 0xbf)) != 0 {
-            cpo1_ou(f1 + 1, 1);
+            or_byte(f1 + 1, 1);
         }
     }
     let vendedor = cpo1_d(pessoa + 0x39);
     if vendedor == 0 {
         return;
     }
-    let v2 = cpo1_valor(pessoa, vendedor); // aqui sem o mínimo 1
-    let g = cpo1_linha(this, cpo1_d(vendedor)) + 0x38;
+    let v2 = player_value_for_club(pessoa, vendedor); // aqui sem o mínimo 1
+    let g = board_row_at(this, cpo1_d(vendedor)) + 0x38;
     cpo1_f_por(g, cpo1_f(g) - v2 as f64);
-    let limite = cpo1_limite(vendedor);
+    let limite = fee_limit(vendedor);
     let razao = if v2 == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / v2 as f64 };
     if taxa <= limite {
         crate::comparacao::ramo("cpo_1 vendedor no limite");
-        cpo1_ou(f2, 4); // o vendedor: taxa dentro do limite
+        or_byte(f2, 4); // o vendedor: taxa dentro do limite
     } else if v2 > 0x3d090 {
-        let m = if razao < cpo1_k(0x9689e0) {
+        let m = if razao < exe_f64(0x9689e0) {
             1
-        } else if razao < cpo1_k(0x968968) {
+        } else if razao < exe_f64(0x968968) {
             2
-        } else if razao < cpo1_k(0x968950) {
+        } else if razao < exe_f64(0x968950) {
             4
-        } else if razao < cpo1_k(0x968938) {
+        } else if razao < exe_f64(0x968938) {
             8
         } else {
             0x10
         };
-        cpo1_ou(f2, m);
+        or_byte(f2, m);
     } else {
-        let m = if razao < cpo1_k(0x968fd0) { 2 } else if razao < cpo1_k(0x968f10) { 4 } else { 8 };
-        cpo1_ou(f2, m);
+        let m = if razao < exe_f64(0x968fd0) { 2 } else if razao < exe_f64(0x968f10) { 4 } else { 8 };
+        or_byte(f2, m);
     }
     if favorito(pessoa, vendedor) != 0 {
-        cpo1_ou(f2, 0x20);
+        or_byte(f2, 0x20);
         return;
     }
     if rejeitado(pessoa, vendedor) != 0 {
-        cpo1_ou(f2, 0x80);
+        or_byte(f2, 0x80);
         return;
     }
     if favorito_do_presidente(pessoa, cpo1_d(vendedor + 0xbf)) != 0 {
-        cpo1_ou(f2, 0x20);
+        or_byte(f2, 0x20);
         return;
     }
     if rejeitado_do_presidente(pessoa, cpo1_d(vendedor + 0xbf)) != 0 {
-        cpo1_ou(f2, 0x80);
+        or_byte(f2, 0x80);
     }
 }
 
 /// As faixas de confiança (+6, 1..10000) e o limite de baixo do humor +0x16 (−10000).
-unsafe fn cpo1_limitar(e: usize) {
+unsafe fn clamp_board_row(e: usize) {
     if cpo1_w(e + 6) < 1 {
         core::ptr::write_unaligned((e + 6) as *mut i16, 1);
     }
@@ -194,21 +194,21 @@ unsafe fn cpo1_limitar(e: usize) {
 }
 
 /// A parte da razão nas marcas (bits 1..0x10, o primeiro que vale): a confiança (+6) e o humor +0x14.
-unsafe fn cpo1_pela_razao(e: usize, f: u32) {
+unsafe fn apply_reason_flags(e: usize, f: u32) {
     if f & 1 != 0 {
-        cpo1_somar(e + 6, -0x7d);
-        cpo1_somar(e + 0x14, -500);
+        manager_manager_add_i16(e + 6, -0x7d);
+        manager_manager_add_i16(e + 0x14, -500);
     } else if f & 2 != 0 {
-        cpo1_somar(e + 6, -0x19);
-        cpo1_somar(e + 0x14, -250);
+        manager_manager_add_i16(e + 6, -0x19);
+        manager_manager_add_i16(e + 0x14, -250);
     } else if f & 4 != 0 {
         // o negócio justo: nada
     } else if f & 8 != 0 {
-        cpo1_somar(e + 6, 0x19);
-        cpo1_somar(e + 0x14, 0x19);
+        manager_manager_add_i16(e + 6, 0x19);
+        manager_manager_add_i16(e + 0x14, 0x19);
     } else if f & 0x10 != 0 {
-        cpo1_somar(e + 6, 0x4b);
-        cpo1_somar(e + 0x14, 0x4b);
+        manager_manager_add_i16(e + 6, 0x4b);
+        manager_manager_add_i16(e + 0x14, 0x4b);
     }
 }
 
@@ -226,20 +226,20 @@ unsafe extern "thiscall" fn apply_transfer_confidence_changes(this: usize, trans
     let avaliar: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x696570usize);
     avaliar(this, transf, &mut fc as *mut usize as usize, &mut fv as *mut usize as usize);
     let f = fc as u32;
-    let e = cpo1_linha(this, cpo1_d(transf + 8));
-    cpo1_pela_razao(e, f);
+    let e = board_row_at(this, cpo1_d(transf + 8));
+    apply_reason_flags(e, f);
     if f & 0x20 != 0 {
-        cpo1_somar(e + 0x14, -100);
-        cpo1_somar(e + 0x16, -100);
+        manager_manager_add_i16(e + 0x14, -100);
+        manager_manager_add_i16(e + 0x16, -100);
     } else if f & 0x40 != 0 {
-        cpo1_somar(e + 0x16, 0x32);
+        manager_manager_add_i16(e + 0x16, 0x32);
     } else if f & 0x80 != 0 {
-        cpo1_somar(e + 0x16, 0xa);
+        manager_manager_add_i16(e + 0x16, 0xa);
     } else if f & 0x100 != 0 {
-        cpo1_somar(e + 0x16, -100);
-        cpo1_somar(e + 0x14, -0x32);
+        manager_manager_add_i16(e + 0x16, -100);
+        manager_manager_add_i16(e + 0x14, -0x32);
     }
-    cpo1_limitar(e);
+    clamp_board_row(e);
     let vendedor = cpo1_d(pessoa + 0x39);
     if vendedor == 0 {
         return;
@@ -255,20 +255,20 @@ unsafe extern "thiscall" fn apply_transfer_confidence_changes(this: usize, trans
         return;
     }
     let f = fv as u32;
-    let e = cpo1_linha(this, id);
-    cpo1_pela_razao(e, f);
+    let e = board_row_at(this, id);
+    apply_reason_flags(e, f);
     if f & 0x20 != 0 {
-        cpo1_somar(e + 0x16, -100);
-        cpo1_somar(e + 0x14, -0x19);
+        manager_manager_add_i16(e + 0x16, -100);
+        manager_manager_add_i16(e + 0x14, -0x19);
     } else if f & 0x40 != 0 {
-        cpo1_somar(e + 0x16, 0x32);
-        cpo1_somar(e + 0x14, 0x19);
+        manager_manager_add_i16(e + 0x16, 0x32);
+        manager_manager_add_i16(e + 0x14, 0x19);
     } else if f & 0x80 != 0 {
-        cpo1_somar(e + 0x16, 0xa);
+        manager_manager_add_i16(e + 0x16, 0xa);
     } else if f & 0x100 != 0 {
-        cpo1_somar(e + 0x16, -100);
+        manager_manager_add_i16(e + 0x16, -100);
     }
-    cpo1_limitar(e);
+    clamp_board_row(e);
     let tirar: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x547c10usize);
     crate::comparacao::ramo("cpo_1 tirar favorito");
     tirar(cpo1_d(cpo1_d(pessoa + 0x39) + 0xbf), pessoa); // o presidente do vendedor
@@ -314,7 +314,7 @@ unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, clube: usize) -
                 reg[1] = motivo;
                 let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x68d0d0usize);
                 acrescentar(cpo1_d(this + 4), reg.as_mut_ptr() as usize, 6);
-                cpo1_ou(cpo1_linha(this, cpo1_d(clube)) + 2, 2);
+                or_byte(board_row_at(this, cpo1_d(clube)) + 2, 2);
                 return 1;
             }
         }
@@ -326,15 +326,15 @@ unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, clube: usize) -
 /// Comparador: a avaliação pede o valor do jogador (0x4d0c60, que sorteia): lado a lado com o estado do sorteador, as
 /// duas palavras de marcas e os gastos líquidos do comprador e do vendedor; a cópia sem contar os sorteios.
 unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(f1, 2), (f2, 2)]);
     let pessoa = cpo1_d(0xae23bc).wrapping_add(cpo1_d(transf + 0xc).wrapping_mul(0x6e));
     let comprador = cpo1_d(0xae23b4).wrapping_add(cpo1_d(transf + 8).wrapping_mul(0x245));
-    reg.push((cpo1_linha(this, cpo1_d(comprador)) + 0x38, 8));
+    reg.push((board_row_at(this, cpo1_d(comprador)) + 0x38, 8));
     let vendedor = cpo1_d(pessoa + 0x39);
     if vendedor != 0 {
-        reg.push((cpo1_linha(this, cpo1_d(vendedor)) + 0x38, 8));
+        reg.push((board_row_at(this, cpo1_d(vendedor)) + 0x38, 8));
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, transf, f1, f2),
         || crate::aleatorio::sem_contar(|| assess_transfer_deal(this, transf, f1, f2)));
@@ -344,14 +344,14 @@ unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize, transf: u
 /// Comparador: lado a lado com o estado do sorteador (a avaliação 0x696570 sorteia), as linhas da diretoria do
 /// comprador e do vendedor e as três pessoas favoritas do presidente do vendedor (0x547c10); a cópia sem contar.
 unsafe extern "thiscall" fn comparar_apply_transfer_confidence_changes(this: usize, transf: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let pessoa = cpo1_d(0xae23bc).wrapping_add(cpo1_d(transf + 0xc).wrapping_mul(0x6e));
-    reg.push((cpo1_linha(this, cpo1_d(transf + 8)), 0x49));
+    reg.push((board_row_at(this, cpo1_d(transf + 8)), 0x49));
     let vendedor = cpo1_d(pessoa + 0x39);
     if vendedor != 0 {
-        reg.push((cpo1_linha(this, cpo1_d(vendedor)), 0x49));
-        let pref = dbp_preferencias(cpo1_d(vendedor + 0xbf));
+        reg.push((board_row_at(this, cpo1_d(vendedor)), 0x49));
+        let pref = staff_preferences(cpo1_d(vendedor + 0xbf));
         if pref != 0 {
             reg.push((pref + 0x1c, 12));
         }
@@ -364,7 +364,7 @@ unsafe extern "thiscall" fn comparar_apply_transfer_confidence_changes(this: usi
 /// Comparador: a original tira o item da lista (e o libera) e acrescenta a saída: roda só ela e confere o plano: a
 /// lista das saídas (+4) cresce de 1 quando devolve 1 (e a linha da diretoria fica com o bit 2) e fica igual com 0.
 unsafe extern "thiscall" fn comparar_resolve_board_ultimatum(this: usize, clube: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let saidas = cpo1_d(this + 4);
     if saidas == 0 || cpo1_d(this + 0x10) == 0 {
         return o(this, clube);
@@ -372,7 +372,7 @@ unsafe extern "thiscall" fn comparar_resolve_board_ultimatum(this: usize, clube:
     let antes = cpo1_w(saidas) as i32;
     let r = o(this, clube);
     let depois = cpo1_w(cpo1_d(this + 4)) as i32;
-    let ok = depois == antes + (r != 0) as i32 && (r == 0 || *((cpo1_linha(this, cpo1_d(clube)) + 2) as *const u8) & 2 != 0);
+    let ok = depois == antes + (r != 0) as i32 && (r == 0 || *((board_row_at(this, cpo1_d(clube)) + 2) as *const u8) & 2 != 0);
     PLACAR.registrar(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", clube, r, antes, depois));
     r
 }

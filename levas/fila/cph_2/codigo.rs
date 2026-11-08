@@ -6,7 +6,7 @@ unsafe fn cph2_d(a: usize) -> u32 {
 
 /// O contrato da pessoa como a 0x4cbb60 acha por dentro (sem chamar a 0x4cf5a0): pessoa não nula, id abaixo de
 /// [0xae2364], índice da tabela [0xae2d0c] (79 bytes por pessoa) não negativo; registro de 80 bytes em [objeto].
-unsafe fn cph2_contrato(objeto: usize, pessoa: usize) -> usize {
+unsafe fn squad_contract_of_staff(objeto: usize, pessoa: usize) -> usize {
     if pessoa == 0 {
         return 0;
     }
@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn get_squad_placement(this: usize, pessoa: usize, club
             }
         }
     }
-    let c = cph2_contrato(cph2_d(0xae1050) as usize, pessoa);
+    let c = squad_contract_of_staff(cph2_d(0xae1050) as usize, pessoa);
     *(0xae1080 as *mut usize) = c; // a ficha do contrato
     if c == 0 {
         return 0;
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn get_squad_placement(this: usize, pessoa: usize, club
     if outro == 0 || outro == cph2_d(pessoa + 0x39) as usize || outro == b {
         return 0;
     }
-    let c2 = cph2_contrato(this, pessoa);
+    let c2 = squad_contract_of_staff(this, pessoa);
     let marca = (*((c2 + 0x35) as *const u8) << 1) as i8 >> 7; // o bit 6, estendido
     if outro == clube && reservas(clube) != 0 {
         return if marca == 0 { 2 } else { 1 };
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn get_squad_placement(this: usize, pessoa: usize, club
 }
 
 /// A 0x4cbb60 pelo endereço (passa pelo desvio) e a troca 0x4cbd20 (com 0 na saída do novo clube).
-unsafe fn cph2_mover(this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u32 {
+unsafe fn toggle_placement_if_in(this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u32 {
     let lugar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x4cbb60usize);
     let l = lugar(this, pessoa, clube);
     if l != de[0] && l != de[1] {
@@ -92,18 +92,18 @@ unsafe fn cph2_mover(this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u
 /// { 0x4cc0b0 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::move_to_first_team(pessoa, clube)`: nos
 /// reservas (1) ou no time B (3), troca (0x4cbd20) e devolve o que ela devolve; senão 0.
 unsafe extern "thiscall" fn move_to_first_team(this: usize, pessoa: usize, clube: usize) -> u32 {
-    cph2_mover(this, pessoa, clube, [1, 3]) // reservas ou time B
+    toggle_placement_if_in(this, pessoa, clube, [1, 3]) // reservas ou time B
 }
 
 /// { 0x4cc0f0 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::move_to_reserves(pessoa, clube)`: no
 /// principal (2) ou no clube com time B (4), troca (0x4cbd20) e devolve o que ela devolve; senão 0.
 unsafe extern "thiscall" fn move_to_reserves(this: usize, pessoa: usize, clube: usize) -> u32 {
-    cph2_mover(this, pessoa, clube, [2, 4]) // principal ou clube com time B
+    toggle_placement_if_in(this, pessoa, clube, [2, 4]) // principal ou clube com time B
 }
 
 /// Comparador: lado a lado pela ficha [0xae1080] (a vaga da saída é o argumento na pilha de cada uma).
 unsafe extern "thiscall" fn comparar_get_squad_placement(this: usize, pessoa: usize, clube: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, pessoa, clube), || get_squad_placement(this, pessoa, clube));
     PLACAR.registrar(igual && r == n, || format!("get_squad_placement({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
@@ -111,8 +111,8 @@ unsafe extern "thiscall" fn comparar_get_squad_placement(this: usize, pessoa: us
 
 /// Comparador das duas trocas: o lugar (0x4cbb60, pelo desvio) decide antes; fora dos lugares da troca, lado a lado
 /// pela ficha [0xae1080] (as duas devolvem 0); nos lugares da troca, só a original (a 0x4cbd20 mexe no elenco).
-unsafe fn cph2_comparar(i: usize, nome: &str, this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(i);
+unsafe fn compare_placement_toggle(i: usize, nome: &str, this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(i);
     let lugar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x4cbb60usize);
     let ficha = cph2_d(0xae1080);
     let l = lugar(this, pessoa, clube);
@@ -120,15 +120,15 @@ unsafe fn cph2_comparar(i: usize, nome: &str, this: usize, pessoa: usize, clube:
     if l == de[0] || l == de[1] {
         return o(this, pessoa, clube);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, pessoa, clube), || cph2_mover(this, pessoa, clube, de));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, pessoa, clube), || toggle_placement_if_in(this, pessoa, clube, de));
     PLACAR.registrar(igual && r == n, || format!("{}({:x}, {:x}) lugar {} original={} rust={} {:x?} x {:x?}", nome, pessoa, clube, l, r, n, mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_move_to_first_team(this: usize, pessoa: usize, clube: usize) -> u32 {
-    cph2_comparar(%%I1%%, "move_to_first_team", this, pessoa, clube, [1, 3])
+    compare_placement_toggle(%%I1%%, "move_to_first_team", this, pessoa, clube, [1, 3])
 }
 
 unsafe extern "thiscall" fn comparar_move_to_reserves(this: usize, pessoa: usize, clube: usize) -> u32 {
-    cph2_comparar(%%I2%%, "move_to_reserves", this, pessoa, clube, [2, 4])
+    compare_placement_toggle(%%I2%%, "move_to_reserves", this, pessoa, clube, [2, 4])
 }

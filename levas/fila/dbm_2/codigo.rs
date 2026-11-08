@@ -11,14 +11,14 @@ unsafe extern "C" fn stadium_get_english_name(estadio: usize) -> usize {
     let t = *(0xae2408 as *const usize);
     if t == 0 {
         // ponytail: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%)(estadio);
+        return original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%)(estadio);
     }
     let id = *(estadio as *const i32);
     (*((t + 0x34) as *const usize)).wrapping_add((id as usize).wrapping_mul(52)) // estádio na tabela
 }
 
 unsafe extern "C" fn comparar_stadium_get_english_name(estadio: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
         return o(estadio); // primeiro uso (aloca e carrega): só a original
@@ -49,14 +49,14 @@ unsafe extern "C" fn database_language_file_exists(idioma: i32) -> i32 {
 /// Comparador: as duas a partir do mesmo buffer do caminho (0xde279c, 0x104 bytes); compara a resposta e o caminho
 /// montado (acusa o nome trocado mesmo sem o arquivo na pasta).
 unsafe extern "C" fn comparar_database_language_file_exists(idioma: i32) -> i32 {
-    let o = orig::<unsafe extern "C" fn(i32) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(i32) -> i32>(%%I1%%);
     let (r, x, igual, _, _) = crate::comparacao::lado_a_lado(&[(0xde279c, 0x104)], || o(idioma), || database_language_file_exists(idioma));
     PLACAR.registrar(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", idioma, r, x, igual));
     r
 }
 
 /// As 8 linhas da tabela do eng.lng (+0x20 .. +0x3c), na ordem, cada uma não nula entregue a `soltar`.
-unsafe fn soltar_tabelas_em_ingles(t: usize, mut soltar: impl FnMut(usize)) {
+unsafe fn for_each_english_table(t: usize, mut soltar: impl FnMut(usize)) {
     for k in 0..8 {
         let p = *((t + 0x20 + 4 * k) as *const usize); // linha da tabela em inglês
         if p != 0 {
@@ -70,13 +70,13 @@ unsafe fn soltar_tabelas_em_ingles(t: usize, mut soltar: impl FnMut(usize)) {
 /// 0x533aa6, apaga a tabela com `delete` 0x944c94 e zera [0xae2408]).
 unsafe extern "thiscall" fn eng_lng_free_tables(t: usize) {
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    soltar_tabelas_em_ingles(t, |p| free(p));
+    for_each_english_table(t, |p| free(p));
 }
 
 /// Comparador: soltar duas vezes soltaria os mesmos blocos duas vezes.
 // ponytail: só a original (como as da 232a); a cópia é provada pelo autoteste_dbm_2 (a ordem dos blocos soltos).
 unsafe extern "thiscall" fn comparar_eng_lng_free_tables(t: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(t)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(t)
 }
 
 /// Autoteste (CM_AUTOTESTE=1 ou =banco, modo comparação). (1) O estádio: 256 casos com o idioma de 0 a 13 e uma
@@ -112,7 +112,7 @@ pub unsafe fn autoteste_dbm_2() {
         }
         let esperado: Vec<usize> = tabela[8..].iter().copied().filter(|&p| p != 0).collect();
         let mut soltos = Vec::new();
-        soltar_tabelas_em_ingles(tabela.as_ptr() as usize, |p| soltos.push(p));
+        for_each_english_table(tabela.as_ptr() as usize, |p| soltos.push(p));
         PLACAR.registrar(soltos == esperado, || format!("eng_lng_free_tables: soltos {:x?} esperados {:x?}", soltos, esperado));
     }
     let (t1, d1) = PLACAR.contagem();

@@ -6,7 +6,10 @@ use super::*;
 
 
 
-/// A virada da temporada de uma copa (`start_new_season`, slot 3, +0x08; o molde das copas de mata-mata, conferido
+/// Knockout cup start_new_season: frees entrants, rounds and ties, archives stats, bumps the year, rebuilds entrants,
+/// rounds, tie tree and predictions.
+///
+/// [pt] A virada da temporada de uma copa (`start_new_season`, slot 3, +0x08; o molde das copas de mata-mata, conferido
 /// instrução a instrução: só mudam o fonte das caixas, as linhas e a rotina dos inscritos): +0x4c = 0; a lista dos
 /// inscritos (+0xa7) e a das rodadas (+0xa3) liberadas (0x9452ca, cdecl) e zeradas; os confrontos por rodada (+0xad: um
 /// vetor por rodada, +0x3c rodadas, word com sinal) liberados e zerados um a um e o vetor liberado e zerado; com
@@ -15,7 +18,7 @@ use super::*;
 /// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c) e a árvore dos confrontos
 /// (virtual +0x94); por fim, com `previstas`, as posições previstas (virtual +0x5c), cujo eax ela devolve (o Jogo das
 /// Estrelas não as tem: devolve o eax da árvore).
-pub(crate) unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, previstas: bool, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, previstas: bool, ramo: &'static str) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     write_u32_from_usize(this + 0x4c, 0);
     for o in [0xa7usize, 0xa3] {
@@ -51,22 +54,22 @@ pub(crate) unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, 
     let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
     // ponytail: nas caixas a original sai com o eax da caixa (0x5e8290); quem chama a virada não lê a devolução
     if inscritos(this) < 0 {
-        aviso_em(arquivo, linhas[0]);
+        show_error_at(arquivo, linhas[0]);
         return 0;
     }
-    if cqr5_virtual(this, 0x8c) < 0 {
-        aviso_em(arquivo, linhas[1]);
+    if call_cup_virtual(this, 0x8c) < 0 {
+        show_error_at(arquivo, linhas[1]);
         return 0;
     }
-    let r = cqr5_virtual(this, 0x94);
+    let r = call_cup_virtual(this, 0x94);
     if r < 0 {
-        aviso_em(arquivo, linhas[2]);
+        show_error_at(arquivo, linhas[2]);
         return 0;
     }
     if !previstas {
         return r as u32;
     }
-    cqr5_virtual(this, 0x5c) as u32
+    call_cup_virtual(this, 0x5c) as u32
 }
 
 
@@ -76,15 +79,15 @@ pub(crate) unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, 
 /// Original: `JapSuper::start_new_season` (0x6664e0, jap_super.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x6664e0 } (thiscall, ret 0, jap_super.cpp; a virtual +0x08 da Supercopa japonesa): `JapSuper::start_new_season()`,
-/// a virada (`cqr6_virada`) com os dois clubes de JapSuper::select_teams (0x666160) e as caixas do jap_super.cpp nas
+/// a virada (`usa_mls_all_stars_cup_start_new_season`) com os dois clubes de JapSuper::select_teams (0x666160) e as caixas do jap_super.cpp nas
 /// linhas 0x14b, 0x152 e 0x159.
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season(this: usize) -> u32 {
-    cqr6_virada(this, 0x666160, 0x9eaf4c, [0x14b, 0x152, 0x159], 1, true, "cqr_6 virada da supercopa japonesa") // cqr6: a Supercopa japonesa
+    usa_mls_all_stars_cup_start_new_season(this, 0x666160, 0x9eaf4c, [0x14b, 0x152, 0x159], 1, true, "cqr_6 virada da supercopa japonesa") // cqr6: a Supercopa japonesa
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON);
-    cqr5_comparar("usa_mls_all_stars_start_new_season", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON);
+    compare_cup_new_season("usa_mls_all_stars_start_new_season", this, || o(this))
 }
 
 /// rule: the same turn in the US Open Cup: tables freed, history archived, year +1, the entrants
@@ -92,15 +95,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_seas
 /// Original: `UsaOpenCup::start_new_season` (0x90b790, usa_open_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x90b790 } (thiscall, ret 0, usa_open_cup.cpp; a virtual +0x08 da Copa dos EUA): `UsaOpenCup::start_new_season()`,
-/// a virada (`cqr6_virada`) com os inscritos de UsaOpenCup::collect_entrants (0x90b530) e as caixas do usa_open_cup.cpp
+/// a virada (`usa_mls_all_stars_cup_start_new_season`) com os inscritos de UsaOpenCup::collect_entrants (0x90b530) e as caixas do usa_open_cup.cpp
 /// nas linhas 0x198, 0x19f e 0x1a6.
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90b790(this: usize) -> u32 {
-    cqr6_virada(this, 0x90b530, 0xaa20e0, [0x198, 0x19f, 0x1a6], 1, true, "cqr_6 virada da copa dos eua") // cqr6: a Copa dos EUA
+    usa_mls_all_stars_cup_start_new_season(this, 0x90b530, 0xaa20e0, [0x198, 0x19f, 0x1a6], 1, true, "cqr_6 virada da copa dos eua") // cqr6: a Copa dos EUA
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season_90b790(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON_90B790);
-    cqr5_comparar("usa_mls_all_stars_start_new_season_90b790", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON_90B790);
+    compare_cup_new_season("usa_mls_all_stars_start_new_season_90b790", this, || o(this))
 }
 
 /// rule: the MLS All-Star Game turn: tables freed, history archived, year +1, the two all-star teams, the rounds and
@@ -108,23 +111,28 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_seas
 /// Original: `UsaMlsAllStars::start_new_season` (0x90a760, usa_mls_all_stars.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x90a760 } (thiscall, ret 0, usa_mls_all_stars.cpp; a virtual +0x08 do Jogo das Estrelas): `UsaMlsAllStars::
-/// start_new_season()`, a virada (`cqr6_virada`) com os dois times de UsaMlsAllStars::set_up_teams (0x90a540) e as caixas
+/// start_new_season()`, a virada (`usa_mls_all_stars_cup_start_new_season`) com os dois times de UsaMlsAllStars::set_up_teams (0x90a540) e as caixas
 /// do usa_mls_all_stars.cpp nas linhas 0x133, 0x13a e 0x141, sem as posições previstas.
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
-    cqr6_virada(this, 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: o Jogo das Estrelas
+    usa_mls_all_stars_cup_start_new_season(this, 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: o Jogo das Estrelas
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON_90A760);
-    cqr5_comparar("usa_mls_all_stars_start_new_season_90a760", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON_90A760);
+    compare_cup_new_season("usa_mls_all_stars_start_new_season_90a760", this, || o(this))
 }
 
-/// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
-pub(crate) unsafe fn cqr6_clube(i: usize) -> usize {
+/// Club record i of G_CLUB_TABLE (0x245 bytes each).
+///
+/// [pt] O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
+pub(crate) unsafe fn usa_mls_all_stars_club_by_index(i: usize) -> usize {
     read_u32_as_usize(G_CLUB_TABLE).wrapping_add(i.wrapping_mul(0x245))
 }
 
-/// { 0x90a540 } (thiscall, ret 0, usa_mls_all_stars.cpp): `UsaMlsAllStars::set_up_teams()`, os dois times do Jogo das
+/// 0x90a540 UsaMlsAllStars::set_up_teams: the two All-Star clubs (home side by year parity), a random MLS stadium of
+/// that conference and the US nation; returns 1.
+///
+/// [pt] { 0x90a540 } (thiscall, ret 0, usa_mls_all_stars.cpp): `UsaMlsAllStars::set_up_teams()`, os dois times do Jogo das
 /// Estrelas: +0x3e = 2; a lista (0x944e46 de 0xc, cdecl; sem memória, a caixa da linha 0xc6 e −1) com os dois clubes das
 /// estrelas ([0x9d00a4] e [0x9d00a8], índices na tabela dos clubes): no ano ímpar (+0x40, com sinal) o de [0x9d00a4] é o
 /// primeiro (o mandante) e a conferência dos estádios é 0x413; no ano par o de [0x9d00a8] é o primeiro e a conferência é
@@ -133,23 +141,23 @@ pub(crate) unsafe fn cqr6_clube(i: usize) -> usize {
 /// da tabela: o primeiro time das estrelas fica com o estádio dele (+0x69) e +0x6d = 0 (sem o k-ésimo, nada muda). Os
 /// dois ficam com a nação [0xae23a8] + 0x122 × [0x9cf4f8] (+0x53, os EUA [inferência]) e os quatro bytes da lista (+4,
 /// +5, +0xa, +0xb) zerados. Devolve 1.
-pub(crate) unsafe fn cqr6_times(this: usize) -> i32 {
+pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xc);
     write_u32_from_usize(this + 0xa7, l);
     if l == 0 {
-        aviso_em(0xaa20a0, 0xc6);
+        show_error_at(0xaa20a0, 0xc6);
         return -1;
     }
     let (a, b) = (read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST), read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST));
     let conferencia = if read_i16(this + 0x40) % 2 != 0 {
-        write_u32_from_usize(l, cqr6_clube(a));
-        write_u32_from_usize(read_u32_as_usize(this + 0xa7) + 6, cqr6_clube(b));
+        write_u32_from_usize(l, usa_mls_all_stars_club_by_index(a));
+        write_u32_from_usize(read_u32_as_usize(this + 0xa7) + 6, usa_mls_all_stars_club_by_index(b));
         0x413
     } else {
-        write_u32_from_usize(l + 6, cqr6_clube(a));
-        write_u32_from_usize(read_u32_as_usize(this + 0xa7), cqr6_clube(b));
+        write_u32_from_usize(l + 6, usa_mls_all_stars_club_by_index(a));
+        write_u32_from_usize(read_u32_as_usize(this + 0xa7), usa_mls_all_stars_club_by_index(b));
         0x414
     };
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
@@ -157,7 +165,7 @@ pub(crate) unsafe fn cqr6_times(this: usize) -> i32 {
     let divisao: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
     let mut i = 0usize;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
-        let c = cqr6_clube(i);
+        let c = usa_mls_all_stars_club_by_index(i);
         let liga = read_u32_as_usize(c + 0x57);
         if liga != 0 && read_u32_as_usize(liga) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && divisao(c) as i32 == conferencia {
             if k == 0 {
@@ -192,17 +200,17 @@ pub(crate) unsafe fn cqr6_times(this: usize) -> i32 {
 /// sorteado (1 em 6, pela ordem da tabela) entre os da conferência do mandante (0x413 no ano ímpar, 0x414 no par); os
 /// dois times ficam com a nação dos EUA [inferência]
 pub(crate) unsafe extern "thiscall" fn set_up_teams(this: usize) -> i32 {
-    cqr6_times(this)
+    set_up_all_star_teams(this)
 }
 
 /// Lado a lado a partir do mesmo estado (o sorteador, +0x3e, os dois clubes das estrelas e [0xb67a34]); a original deixa
 /// a lista dela em +0xa7, a cópia faz a sua (sem contar o sorteio), comparada nos 12 bytes e liberada. A lista antiga
 /// (+0xa7 na entrada) não é liberada por nenhuma das duas (a virada já a liberou).
 pub(crate) unsafe extern "thiscall" fn comparar_set_up_teams(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SET_UP_TEAMS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SET_UP_TEAMS);
     let antes = read_u32_as_usize(this + 0xa7);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend([(this + 0x3e, 2usize), (0xb67a34, 4), (cqr6_clube(read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST)), 0x245), (cqr6_clube(read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST)), 0x245)]);
+    reg.extend([(this + 0x3e, 2usize), (0xb67a34, 4), (usa_mls_all_stars_club_by_index(read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST)), 0x245), (usa_mls_all_stars_club_by_index(read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST)), 0x245)]);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
@@ -211,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_teams(this: usize) -> i32
         write_u32_from_usize(this + 0xa7, antes);
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| cqr6_times(this));
+        let r = crate::aleatorio::sem_contar(|| set_up_all_star_teams(this));
         lr.set(read_u32_as_usize(this + 0xa7));
         write_u32_from_usize(this + 0xa7, lo.get());
         r
@@ -241,17 +249,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_teams(this: usize) -> i32
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     // ponytail: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
     let ano = read_i16(hoje + 2) as u16 as u32;
-    let d = cqn10_data(0x1a, 6, ano, 6); // cqn10: a convocação do Jogo das Estrelas
-    if fase != 0 && cqn10_e_hoje(d, hoje) {
+    let d = make_date_dword(0x1a, 6, ano, 6); // cqn10: a convocação do Jogo das Estrelas
+    if fase != 0 && is_date_today(d, hoje) {
         crate::comparacao::ramo("cqn_10 convocacao do jogo das estrelas");
         let convocar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_USAMLSALLSTARS_SELECT_SQUADS);
         convocar(this);
     }
-    cqn10_base(this, hoje, fase)
+    eng_cc_cup_cup_update_for_date(this, hoje, fase)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ALL_STARS_UPDATE_FOR_DATE)(this, hoje, fase)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ALL_STARS_UPDATE_FOR_DATE)(this, hoje, fase)
 }
 
 /// rule: the MLS All-Star game is a single match between the two conference selections, drawn on 15/6 and played on 2/8
@@ -277,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(0x68);
     if t == 0 {
-        aviso_em(0xaa20a0, 0x9a);
+        show_error_at(0xaa20a0, 0x9a);
         return 0;
     }
     crate::comparacao::ramo("cqm_12 tabela do jogo das estrelas");
@@ -311,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da
 /// fase −1, só a original (nenhuma grava nada).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_USA_MLS_ALL_STARS_CREATE_ROUND_TABLE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_USA_MLS_ALL_STARS_CREATE_ROUND_TABLE);
     if fase as u8 != 0xff {
         let a = o(this, fase, rodadas, extra, saida);
         PLACAR.registrar(a == 0, || format!("usa_mls_all_stars_create_round_table(fase {}) devolveu {:#x}", fase as u8 as i8, a));
@@ -323,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_create_round_t
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, fase, rodadas, extra, saida),
         || usa_mls_all_stars_create_round_table(this, fase, &mut r2, &mut e2, if saida.is_null() { core::ptr::null_mut() } else { &mut s2 }));
     let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
-    let tabela = if a != 0 && b != 0 { cqm12_gravados(a) == cqm12_gravados(b) } else { a == 0 && b == 0 };
+    let tabela = if a != 0 && b != 0 { spa_super_written_round_bytes(a) == spa_super_written_round_bytes(b) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);

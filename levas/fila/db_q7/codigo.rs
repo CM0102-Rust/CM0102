@@ -2,20 +2,20 @@
 
 /// rand() da CRT (0x946a04) escalado a `n`: rand × n / 0x8000. As rotinas de nomes fazem a conta em
 /// 64 bits (0x945e40 multiplica, 0x945e80 divide com sinal) e ficam com os 32 bits de baixo.
-unsafe fn sorteio_escalado(n: i32) -> i32 {
+unsafe fn scaled_crt_rand(n: i32) -> i32 {
     let rand: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x946a04usize);
     ((rand() as i64 * n as i64) / 0x8000) as i32
 }
 
 /// O total de nomes da global `a` ([0xae2398] primeiros, [0xae239c] segundos), no máximo 0x7fff.
-unsafe fn total_de_nomes_limitado(a: usize) -> i32 {
+unsafe fn name_count_capped(a: usize) -> i32 {
     let t = *(a as *const i32);
     if t > 0x7fff { 0x7fff } else { t }
 }
 
 /// O índice de nomes da nação `n` (id em +0): [0xae2338] + id × 36 (+0 primeiro nome de onde começam os
 /// primeiros nomes, +4 o dos segundos, +0x18 quantos primeiros, +0x1c quantos segundos).
-unsafe fn indice_de_nomes_da_nacao(n: usize) -> usize {
+unsafe fn nation_name_index(n: usize) -> usize {
     (*(0xae2338 as *const usize)).wrapping_add((*(n as *const i32) as usize).wrapping_mul(36))
 }
 
@@ -32,7 +32,7 @@ const NACOES_DO_GRUPO_DE_LINGUA: [usize; 32] = [
 /// 40 nações sorteadas ([0xae2350], 0x122 bytes cada em [0xae23a8]) até achar uma do mesmo grupo com
 /// mais de 5 primeiros nomes (+0x18, nos dois casos). Devolve (quantos em `conta`, primeiro em `inicio`)
 /// se a nação escolhida tem ≥ 5 nomes; senão `None` (sorteio na tabela inteira).
-unsafe fn nacao_que_empresta_nomes(nacao: usize, conta: usize, inicio: usize) -> Option<(i32, i32)> {
+unsafe fn name_donor_nation(nacao: usize, conta: usize, inicio: usize) -> Option<(i32, i32)> {
     let g = |a: usize| *(a as *const i32);
     let nacoes = *(0xae23a8 as *const usize);
     let nacao_de = |id: i32| nacoes.wrapping_add((id as usize).wrapping_mul(0x122));
@@ -42,20 +42,20 @@ unsafe fn nacao_que_empresta_nomes(nacao: usize, conta: usize, inicio: usize) ->
     let mut direto = false;
     if k <= 0x1f {
         let id = if k == 16 {
-            if sorteio_escalado(2) != 0 { g(0x9cf484) } else { g(0x9cf404) }
+            if scaled_crt_rand(2) != 0 { g(0x9cf484) } else { g(0x9cf404) }
         } else {
             g(NACOES_DO_GRUPO_DE_LINGUA[k as usize])
         };
         esi = nacao_de(id);
         if esi != 0 {
-            let minimo = sorteio_escalado(0x14).wrapping_add(0xf);
-            direto = g(indice_de_nomes_da_nacao(esi) + conta) >= minimo;
+            let minimo = scaled_crt_rand(0x14).wrapping_add(0xf);
+            direto = g(nation_name_index(esi) + conta) >= minimo;
         }
     }
     if !direto {
         for _ in 0..40 {
-            esi = nacao_de(sorteio_escalado(g(0xae2350)));
-            if *((esi + 0x77) as *const i8) == grupo && g(indice_de_nomes_da_nacao(esi) + 0x18) > 5 {
+            esi = nacao_de(scaled_crt_rand(g(0xae2350)));
+            if *((esi + 0x77) as *const i8) == grupo && g(nation_name_index(esi) + 0x18) > 5 {
                 break;
             }
         }
@@ -63,7 +63,7 @@ unsafe fn nacao_que_empresta_nomes(nacao: usize, conta: usize, inicio: usize) ->
             return None;
         }
     }
-    let e = indice_de_nomes_da_nacao(esi);
+    let e = nation_name_index(esi);
     let quantos = g(e + conta);
     if quantos < 5 {
         return None;
@@ -72,7 +72,7 @@ unsafe fn nacao_que_empresta_nomes(nacao: usize, conta: usize, inicio: usize) ->
 }
 
 /// Nome aceito no sorteio de 0x539c60: nulo ou vazio sim; uma letra só ou com ponto não.
-unsafe fn nome_aceito(nome: usize) -> bool {
+unsafe fn is_acceptable_name(nome: usize) -> bool {
     if nome == 0 || *(nome as *const u8) == 0 {
         return true;
     }
@@ -82,24 +82,24 @@ unsafe fn nome_aceito(nome: usize) -> bool {
 
 /// { 0x539c60 } (cdecl, Database.cpp): um primeiro nome (linha de 60 bytes em [0xae23f0]) para a `nacao`.
 /// Sem nação: sorteio na tabela inteira. Nação com mais de 100 primeiros nomes: 20 sorteios na faixa
-/// dela, fica o de maior peso (+0x3b, com sinal) entre os aceitos (`nome_aceito`). Com até 100: grupo de
+/// dela, fica o de maior peso (+0x3b, com sinal) entre os aceitos (`is_acceptable_name`). Com até 100: grupo de
 /// língua 0 sorteia na tabela inteira, mas devolve a linha da tabela dos SEGUNDOS nomes ([0xae23f4],
-/// assim na original); senão `nacao_que_empresta_nomes`. Só o rand() da CRT (não o 0x90cfc0).
+/// assim na original); senão `name_donor_nation`. Só o rand() da CRT (não o 0x90cfc0).
 unsafe extern "C" fn database_pick_first_name_for_nation(nacao: usize) -> usize {
     let linha = |t: usize, i: i32| (*(t as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao == 0 {
-        return linha(0xae23f0, sorteio_escalado(total_de_nomes_limitado(0xae2398)));
+        return linha(0xae23f0, scaled_crt_rand(name_count_capped(0xae2398)));
     }
-    let e = indice_de_nomes_da_nacao(nacao);
+    let e = nation_name_index(nacao);
     let quantos = *((e + 0x18) as *const i32);
     if quantos > 100 {
         let inicio = *(e as *const i32);
         let (mut melhor, mut escolhido) = (-1i8, 0i32);
         for _ in 0..20 { // 20 sorteios do primeiro nome
-            let i = sorteio_escalado(quantos).wrapping_add(inicio);
+            let i = scaled_crt_rand(quantos).wrapping_add(inicio);
             let nome = linha(0xae23f0, i);
             let peso = *((nome + 0x3b) as *const i8);
-            if peso > melhor && nome_aceito(nome) {
+            if peso > melhor && is_acceptable_name(nome) {
                 melhor = peso;
                 escolhido = i;
             }
@@ -107,11 +107,11 @@ unsafe extern "C" fn database_pick_first_name_for_nation(nacao: usize) -> usize 
         return linha(0xae23f0, escolhido);
     }
     if *((nacao + 0x77) as *const u8) == 0 {
-        return linha(0xae23f4, sorteio_escalado(total_de_nomes_limitado(0xae2398)));
+        return linha(0xae23f4, scaled_crt_rand(name_count_capped(0xae2398)));
     }
-    match nacao_que_empresta_nomes(nacao, 0x18, 0) {
-        Some((n, inicio)) => linha(0xae23f0, sorteio_escalado(n).wrapping_add(inicio)),
-        None => linha(0xae23f0, sorteio_escalado(total_de_nomes_limitado(0xae2398))),
+    match name_donor_nation(nacao, 0x18, 0) {
+        Some((n, inicio)) => linha(0xae23f0, scaled_crt_rand(n).wrapping_add(inicio)),
+        None => linha(0xae23f0, scaled_crt_rand(name_count_capped(0xae2398))),
     }
 }
 
@@ -121,15 +121,15 @@ unsafe extern "C" fn database_pick_first_name_for_nation(nacao: usize) -> usize 
 unsafe extern "C" fn database_pick_second_name_for_nation(nacao: usize) -> usize {
     let linha = |i: i32| (*(0xae23f4 as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao == 0 {
-        return linha(sorteio_escalado(total_de_nomes_limitado(0xae239c)));
+        return linha(scaled_crt_rand(name_count_capped(0xae239c)));
     }
-    let e = indice_de_nomes_da_nacao(nacao);
+    let e = nation_name_index(nacao);
     let quantos = *((e + 0x1c) as *const i32);
     if quantos > 100 {
         let inicio = *((e + 4) as *const i32);
         let (mut melhor, mut escolhido) = (-1i8, 0i32);
         for _ in 0..20 { // 20 sorteios do segundo nome
-            let i = sorteio_escalado(quantos).wrapping_add(inicio);
+            let i = scaled_crt_rand(quantos).wrapping_add(inicio);
             let peso = *((linha(i) + 0x3b) as *const i8);
             if peso > melhor {
                 melhor = peso;
@@ -139,21 +139,21 @@ unsafe extern "C" fn database_pick_second_name_for_nation(nacao: usize) -> usize
         return linha(escolhido);
     }
     if *((nacao + 0x77) as *const u8) == 0 {
-        return linha(sorteio_escalado(total_de_nomes_limitado(0xae239c)));
+        return linha(scaled_crt_rand(name_count_capped(0xae239c)));
     }
-    match nacao_que_empresta_nomes(nacao, 0x1c, 4) {
-        Some((n, inicio)) => linha(sorteio_escalado(n).wrapping_add(inicio)),
-        None => linha(sorteio_escalado(total_de_nomes_limitado(0xae239c))),
+    match name_donor_nation(nacao, 0x1c, 4) {
+        Some((n, inicio)) => linha(scaled_crt_rand(n).wrapping_add(inicio)),
+        None => linha(scaled_crt_rand(name_count_capped(0xae239c))),
     }
 }
 
 /// Texto não nulo e não vazio.
-unsafe fn tem_texto(p: usize) -> bool {
+unsafe fn has_text(p: usize) -> bool {
     p != 0 && *(p as *const u8) != 0
 }
 
 /// strcpy (a original copia com rep movsd/movsb o texto e o zero final).
-unsafe fn copiar_nome_formatado(destino: usize, origem: usize) {
+unsafe fn copy_formatted_name(destino: usize, origem: usize) {
     let mut i = 0;
     loop {
         let b = *((origem + i) as *const u8);
@@ -173,7 +173,7 @@ unsafe fn copiar_nome_formatado(destino: usize, origem: usize) {
 unsafe extern "C" fn database_format_staff_name(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
     let e = estilo as u8;
     if pessoa == 0 || destino == 0 || (tamanho as i16) < 0x69 || !(1..=7).contains(&e) {
-        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%)(pessoa, destino, tamanho, estilo);
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%)(pessoa, destino, tamanho, estilo);
     }
     let deu_apelido: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x600740usize);
     let apelido: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x6005e0usize);
@@ -183,9 +183,9 @@ unsafe extern "C" fn database_format_staff_name(pessoa: usize, destino: usize, t
     let apelidos = *(0xb63c98 as *const usize);
     let comum = if apelidos != 0 && deu_apelido(apelidos, pessoa, 0) != 0 { apelido(apelidos, pessoa, 0) } else { ler(0xc) };
     *(destino as *mut u8) = 0;
-    let (c, n, s) = (tem_texto(comum), tem_texto(nome), tem_texto(sobrenome));
+    let (c, n, s) = (has_text(comum), has_text(nome), has_text(sobrenome));
     let letra = |p: usize| *(p as *const i8) as i32;
-    let copiar = |p: usize| copiar_nome_formatado(destino, p);
+    let copiar = |p: usize| copy_formatted_name(destino, p);
     // os recuos da original voltam a testar o comum depois do sobrenome: sem efeito (já era vazio)
     match e {
         1 | 7 => {
@@ -243,7 +243,7 @@ unsafe extern "C" fn database_format_staff_name(pessoa: usize, destino: usize, t
 
 unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
         || crate::aleatorio::sem_contar(|| database_pick_first_name_for_nation(nacao)));
     PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
@@ -251,7 +251,7 @@ unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nacao: usize) 
 }
 
 unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nacao: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
         || crate::aleatorio::sem_contar(|| database_pick_second_name_for_nation(nacao)));
     PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
@@ -259,7 +259,7 @@ unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nacao: usize)
 }
 
 unsafe extern "C" fn comparar_database_format_staff_name(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%);
     if pessoa == 0 || destino == 0 || (tamanho as i16) < 0x69 || !(1..=7).contains(&(estilo as u8)) {
         return o(pessoa, destino, tamanho, estilo); // caixa: só a original
     }

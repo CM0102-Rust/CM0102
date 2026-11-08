@@ -6,12 +6,12 @@
 #   da liga (o saldo muda: o banco da carreira acusa).
 MUTACOES = [
     ('cqo7_vice_do_primeiro_turno_na_final',
-     '    let a = cqo7_campeao_do_turno(this, 0);\n',
+     '    let a = half_champion(this, 0);\n',
      '    let a = cqo7_d(cqo7_d(cqo7_d(cqo7_d(this + 0xc)) + 0xb1) + 0x3b); // mutacao: o vice do primeiro turno\n',
      'cqo_7 final'),
     ('cqo7_finalistas_trocados',
-     '    core::ptr::write_unaligned(lista as *mut usize, a);\n    let b = cqo7_campeao_do_turno(this, 1);\n    core::ptr::write_unaligned((lista + 4) as *mut usize, b);\n',
-     '    let b = cqo7_campeao_do_turno(this, 1);\n    core::ptr::write_unaligned(lista as *mut usize, b); // mutacao: o campeao do segundo turno primeiro\n    core::ptr::write_unaligned((lista + 4) as *mut usize, a);\n',
+     '    core::ptr::write_unaligned(lista as *mut usize, a);\n    let b = half_champion(this, 1);\n    core::ptr::write_unaligned((lista + 4) as *mut usize, b);\n',
+     '    let b = half_champion(this, 1);\n    core::ptr::write_unaligned(lista as *mut usize, b); // mutacao: o campeao do segundo turno primeiro\n    core::ptr::write_unaligned((lista + 4) as *mut usize, a);\n',
      'cqo_7 final'),
     ('cqo7_fim_sem_final',
      '    if cqo7_d(this + 0x30) == 2 {\n',

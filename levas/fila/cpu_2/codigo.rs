@@ -9,7 +9,7 @@ unsafe fn cpu2_w(a: usize) -> i16 {
 }
 
 /// Grava em `dst` (se não nulo) a data (dia, ano) montada pela 0x549ef0 (com o bissexto), como a cópia 0x417c10.
-unsafe fn cpu2_data(dst: usize, dia: i16, ano: u16) {
+unsafe fn write_date(dst: usize, dia: i16, ano: u16) {
     if dst == 0 {
         return;
     }
@@ -44,38 +44,38 @@ unsafe extern "C" fn key_nation_club_in_season(clube: usize, inicio: usize, fim:
     let y = *(0xae2c92 as *const u16);
     if a > c {
         if t > a {
-            cpu2_data(inicio, a, y);
+            write_date(inicio, a, y);
             if fim != 0 {
-                cpu2_data(fim, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte
+                write_date(fim, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte
             }
             return 1;
         }
         if t < c {
-            cpu2_data(inicio, a, y.wrapping_sub(1));
-            cpu2_data(fim, c, y);
+            write_date(inicio, a, y.wrapping_sub(1));
+            write_date(fim, c, y);
             return 1; // cpu2: antes do fim, na temporada
         }
-        cpu2_data(inicio, a, y);
-        cpu2_data(fim, c, y);
+        write_date(inicio, a, y);
+        write_date(fim, c, y);
         return 0; // cpu2: entre o fim e o inicio, fora
     }
     if t < a {
-        cpu2_data(inicio, a, y);
-        cpu2_data(fim, c, y);
+        write_date(inicio, a, y);
+        write_date(fim, c, y);
         return 0;
     }
     if t > c {
-        cpu2_data(inicio, a, y.wrapping_add(1));
-        cpu2_data(fim, c, y.wrapping_add(1));
+        write_date(inicio, a, y.wrapping_add(1));
+        write_date(fim, c, y.wrapping_add(1));
         return 1;
     }
-    cpu2_data(inicio, a, y);
-    cpu2_data(fim, c, y);
+    write_date(inicio, a, y);
+    write_date(fim, c, y);
     1 // cpu2: entre o inicio e o fim do ano
 }
 
 unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%)(clube, inicio, fim);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%)(clube, inicio, fim);
     let (mut i, mut f) = ([0u8; 8], [0u8; 8]);
     let n = key_nation_club_in_season(
         clube,
@@ -108,7 +108,7 @@ unsafe extern "C" fn key_nation_get_main_continent() -> usize {
 }
 
 unsafe extern "C" fn comparar_key_nation_get_main_continent() -> usize {
-    let r = orig::<unsafe extern "C" fn() -> usize>(%%I1%%)();
+    let r = original_fn::<unsafe extern "C" fn() -> usize>(%%I1%%)();
     let n = key_nation_get_main_continent();
     PLACAR.registrar(r == n, || format!("key_nation_get_main_continent() original={:x} rust={:x}", r, n));
     r
@@ -131,7 +131,7 @@ unsafe extern "C" fn key_nation_get_main_nation() -> usize {
 }
 
 unsafe extern "C" fn comparar_key_nation_get_main_nation() -> usize {
-    let r = orig::<unsafe extern "C" fn() -> usize>(%%I2%%)();
+    let r = original_fn::<unsafe extern "C" fn() -> usize>(%%I2%%)();
     let n = key_nation_get_main_nation();
     PLACAR.registrar(r == n, || format!("key_nation_get_main_nation() original={:x} rust={:x}", r, n));
     r

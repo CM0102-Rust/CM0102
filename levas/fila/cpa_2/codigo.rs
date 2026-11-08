@@ -9,7 +9,7 @@ unsafe fn cpa2_w(a: usize) -> i16 {
 }
 
 /// O pagamento da 0x683010 (`noticia` falso: sem a notícia da 0x48ea40, para o comparador).
-unsafe fn cpa2_pagar_tv(liga: usize, valor: i32, filtro: usize, noticia: bool) {
+unsafe fn pay_tv_money(liga: usize, valor: i32, filtro: usize, noticia: bool) {
     let financas = *(0xae2a38 as *const usize);
     if financas == 0 || cpa2_w(liga + 0x3e) <= 0 {
         return;
@@ -40,13 +40,13 @@ unsafe fn cpa2_pagar_tv(liga: usize, valor: i32, filtro: usize, noticia: bool) {
 /// (0x5a0590 → 0x5987c0) e manda a notícia (Comp::send_tv_rights_news 0x48ea40, só para clube de técnico humano).
 /// Sem SEH, sem sorteio, sem locais.
 unsafe extern "thiscall" fn pay_tv_rights(liga: usize, valor: i32, filtro: usize) {
-    cpa2_pagar_tv(liga, valor, filtro, true)
+    pay_tv_money(liga, valor, filtro, true)
 }
 
 /// Comparador: as finanças (0x167 bytes) de cada clube da tabela; a cópia roda sem a notícia (a da original fica, uma
 /// vez só). Clube nulo na tabela (a caixa da 0x5a0590): só a original.
 unsafe extern "thiscall" fn comparar_pay_tv_rights(liga: usize, valor: i32, filtro: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(%%I0%%);
     let financas = *(0xae2a38 as *const usize);
     let n = cpa2_w(liga + 0x3e).max(0) as usize;
     let clubes: Vec<usize> = (0..n).map(|i| cpa2_d(cpa2_d(liga + 0xb1) + 0x3b * i)).collect();
@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn comparar_pay_tv_rights(liga: usize, valor: i32, filt
     }
     let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let reg: Vec<(usize, usize)> = clubes.iter().map(|&c| (get_club_finance(financas, c), 0x167)).collect();
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(liga, valor, filtro), || cpa2_pagar_tv(liga, valor, filtro, false));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(liga, valor, filtro), || pay_tv_money(liga, valor, filtro, false));
     PLACAR.registrar(igual, || format!("pay_tv_rights({:x}, {}, {:x}) {:x?} x {:x?}", liga, valor, filtro, mo, mr));
 }
 
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn league_record_season_honours(liga: usize) -> usize {
 }
 
 /// As regiões do histórico de competições: contagem, ponteiro e as linhas (26 bytes).
-unsafe fn cpa2_regioes_do_historico() -> Vec<(usize, usize)> {
+unsafe fn comp_history_regions() -> Vec<(usize, usize)> {
     let n = (*(0xae237c as *const i32)).max(0) as usize;
     vec![(0xae237c, 4), (0xae23d4, 4), (*(0xae23d4 as *const usize), 26 * n)]
 }
@@ -111,11 +111,11 @@ unsafe fn cpa2_regioes_do_historico() -> Vec<(usize, usize)> {
 /// Comparador: os clubes (o +0x5b) e o histórico de competições. Sem linha livre no histórico (a 0x4afce0 faria
 /// realloc): só a original.
 unsafe extern "thiscall" fn comparar_league_record_season_honours(liga: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
-    if cpa2_linha_livre() == 0 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
+    if free_comp_history_row() == 0 {
         return o(liga);
     }
-    let mut reg = cpa2_regioes_do_historico();
+    let mut reg = comp_history_regions();
     let quantos = (*(0xae235c as *const i32)).wrapping_sub(*(0xae2350 as *const i32)).max(0) as usize;
     reg.push((*(0xae23b4 as *const usize), 0x245 * quantos));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(liga), || league_record_season_honours(liga));
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn comparar_league_record_season_honours(liga: usize) -
 
 /// A linha livre do histórico de competições ([0xae23d4], [0xae237c] linhas de 26 bytes): a seguinte à última com
 /// +4 (competição) preenchido; nenhuma preenchida, ou a última preenchida: 0 (falta crescer).
-unsafe fn cpa2_linha_livre() -> usize {
+unsafe fn free_comp_history_row() -> usize {
     let n = *(0xae237c as *const i32);
     let t = *(0xae23d4 as *const usize);
     let mut i = n - 1;
@@ -146,7 +146,7 @@ unsafe fn cpa2_linha_livre() -> usize {
 /// memória, 0) recebe a competição (+4 da liga), o ano [0xae2c92] (+8), e os quatro valores em +0xa, +0xe, +0x12,
 /// +0x16. Devolve a linha. Sem SEH, sem sorteio, sem locais.
 unsafe extern "C" fn comp_util_add_history_record(liga: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
-    let mut r = cpa2_linha_livre();
+    let mut r = free_comp_history_row();
     if r == 0 {
         crate::comparacao::ramo("histórico de competições crescer");
         let crescer: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x527f60usize);
@@ -165,11 +165,11 @@ unsafe extern "C" fn comp_util_add_history_record(liga: usize, a: u32, b: u32, c
 }
 
 unsafe extern "C" fn comparar_comp_util_add_history_record(liga: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, u32) -> usize>(%%I2%%);
-    if cpa2_linha_livre() == 0 {
+    let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32) -> usize>(%%I2%%);
+    if free_comp_history_row() == 0 {
         return o(liga, a, b, c, d); // cresce (realloc): só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&cpa2_regioes_do_historico(), || o(liga, a, b, c, d), || comp_util_add_history_record(liga, a, b, c, d));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&comp_history_regions(), || o(liga, a, b, c, d), || comp_util_add_history_record(liga, a, b, c, d));
     PLACAR.registrar(igual && r == n, || format!("comp_util_add_history_record({:x}, {:x}, {:x}, {:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", liga, a, b, c, d, r, n, mo, mr));
     r
 }

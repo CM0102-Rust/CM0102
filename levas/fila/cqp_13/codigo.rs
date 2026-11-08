@@ -12,12 +12,12 @@ const CQP13_INTERTOTO: [Cql10R; 5] = [
 /// { 0x633300 } (thiscall, ret 0x10, intertoto_cup.cpp; a virtual +0x3c): `IntertotoCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0xe4 sem memória.
 unsafe extern "thiscall" fn intertoto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql10_tabela(this, fase, rodadas, extra, saida, &CQP13_INTERTOTO, 0x9e9e14, 0xe4, "cqp_13 tabela da intertoto")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP13_INTERTOTO, 0x9e9e14, 0xe4, "cqp_13 tabela da intertoto")
 }
 
 unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cql10_comparar("intertoto_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    eng_cc_cup_compare_round_table("intertoto_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| intertoto_cup_create_round_table(this, fase, r, e, s))
 }
 
@@ -29,12 +29,12 @@ const CQP13_INTERCONTINENTAL: [Cql10R; 1] = [
 /// { 0x92b770 } (thiscall, ret 0x10, world_club_cup.cpp; a virtual +0x3c): `WorldClubCup::create_round_table(...)`:
 /// na fase −1, a rodada única; a caixa da linha 0x9a sem memória.
 unsafe extern "thiscall" fn intertoto_cup_create_round_table_92b770(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql10_tabela(this, fase, rodadas, extra, saida, &CQP13_INTERCONTINENTAL, 0xad5848, 0x9a, "cqp_13 tabela da intercontinental")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP13_INTERCONTINENTAL, 0xad5848, 0x9a, "cqp_13 tabela da intercontinental")
 }
 
 unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table_92b770(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cql10_comparar("intertoto_cup_create_round_table_92b770", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    eng_cc_cup_compare_round_table("intertoto_cup_create_round_table_92b770", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| intertoto_cup_create_round_table_92b770(this, fase, r, e, s))
 }
 
@@ -46,12 +46,12 @@ const CQP13_INTERAMERICANA: [Cql10R; 1] = [
 /// { 0x632340 } (thiscall, ret 0x10, inter_amer_cup.cpp; a virtual +0x3c): `InterAmerCup::create_round_table(...)`:
 /// na fase −1, a rodada única; a caixa da linha 0x9a sem memória.
 unsafe extern "thiscall" fn intertoto_cup_create_round_table_632340(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql10_tabela(this, fase, rodadas, extra, saida, &CQP13_INTERAMERICANA, 0x9e9d94, 0x9a, "cqp_13 tabela da interamericana")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP13_INTERAMERICANA, 0x9e9d94, 0x9a, "cqp_13 tabela da interamericana")
 }
 
 unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table_632340(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
-    cql10_comparar("intertoto_cup_create_round_table_632340", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
+    eng_cc_cup_compare_round_table("intertoto_cup_create_round_table_632340", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| intertoto_cup_create_round_table_632340(this, fase, r, e, s))
 }
 
@@ -78,14 +78,14 @@ unsafe extern "thiscall" fn con_champ_create_round_table(this: usize, fase: u32,
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar(0x138);
     if t == 0 {
-        aviso_em(0x9a7d30, 0x97);
+        show_error_at(0x9a7d30, 0x97);
         return 0;
     }
     crate::comparacao::ramo("cqp_13 tabela da concacaf");
     let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(0x521f10usize);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in CQP13_CONCACAF.iter().enumerate() {
-        cql10_rodada(t, i as u32, r, ano);
+        eng_cc_cup_write_cup_round(t, i as u32, r, ano);
         if i < 2 {
             elo(t, i as i32, 0, -1, -1, -1, 0);
         }
@@ -94,10 +94,10 @@ unsafe extern "thiscall" fn con_champ_create_round_table(this: usize, fase: u32,
 }
 
 unsafe extern "thiscall" fn comparar_con_champ_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I3%%);
-    let a = cql10_comparar("con_champ_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I3%%);
+    let a = eng_cc_cup_compare_round_table("con_champ_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| con_champ_create_round_table(this, fase, r, e, s));
-    // ponytail: a cql10_comparar não olha os dias dos confrontos (+0x23..); o dia 0 das duas primeiras rodadas é
+    // ponytail: a eng_cc_cup_compare_round_table não olha os dias dos confrontos (+0x23..); o dia 0 das duas primeiras rodadas é
     // conferido aqui contra o valor fixo que a cópia grava
     if a != 0 {
         let ok = (0..2usize).all(|r| {

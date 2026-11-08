@@ -17,7 +17,7 @@ unsafe fn cps1_b(a: usize) -> u8 {
 /// e a força do pedido sobe ânimo × 5 + 56, presa em ±100.
 unsafe extern "thiscall" fn handle_transfer_request(this: usize, contrato: usize) {
     if contrato == 0 {
-        return aviso_em(0x9a8190, 0x2999);
+        return show_error_at(0x9a8190, 0x2999);
     }
     let clube = cps1_d(0xae23b4).wrapping_add(cps1_d(contrato + 4).wrapping_mul(0x245));
     let pessoa = cps1_d(0xae23bc).wrapping_add(cps1_d(contrato).wrapping_mul(0x6e));
@@ -28,7 +28,7 @@ unsafe extern "thiscall" fn handle_transfer_request(this: usize, contrato: usize
     if humano(cps1_d(0xb7431c), clube) != 0 {
         // ponytail: o clube humano recebe a notícia montada na pilha (0x77bbe0 e a entrega estão desligadas): esse
         // caso fica com a original (que refaz a pergunta 0x7875e0, sem efeito).
-        return orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, contrato);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, contrato);
     }
     let moral: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x544710usize);
     if cps1_b(contrato + 0x4f) & 0xf0 != 0x10 {
@@ -94,12 +94,12 @@ unsafe extern "stdcall" fn staff_is_not_board_member(pessoa: usize) -> u32 {
 // ponytail: sorteia (0x90cfc0), põe na lista (0x842c00, 0x4d71b0), muda moral e queixas (que podem chamar o pedido de
 // novo): só a original; a cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_handle_transfer_request(this: usize, contrato: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, contrato)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, contrato)
 }
 
 /// Comparador: pelo valor.
 unsafe extern "stdcall" fn comparar_is_contract_staff_job(cargo: u32) -> u32 {
-    let r = orig::<unsafe extern "stdcall" fn(u32) -> u32>(%%I1%%)(cargo);
+    let r = original_fn::<unsafe extern "stdcall" fn(u32) -> u32>(%%I1%%)(cargo);
     let n = is_contract_staff_job(cargo);
     PLACAR.registrar(r == n, || format!("is_contract_staff_job({}) original={} rust={}", cargo as u8, r, n));
     r
@@ -107,7 +107,7 @@ unsafe extern "stdcall" fn comparar_is_contract_staff_job(cargo: u32) -> u32 {
 
 /// Comparador: pelo valor.
 unsafe extern "stdcall" fn comparar_staff_is_not_board_member(pessoa: usize) -> u32 {
-    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
     let n = staff_is_not_board_member(pessoa);
     PLACAR.registrar(r == n, || format!("staff_is_not_board_member(pessoa {}, cargo {}) original={} rust={}", cps1_d(pessoa), cps1_b(pessoa + 0x3d), r, n));
     r

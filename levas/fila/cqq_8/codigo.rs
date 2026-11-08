@@ -5,12 +5,12 @@ unsafe fn cqq8_d(a: usize) -> usize {
 }
 
 /// A competição de id [`global`] (a tabela das competições [0xadadfc]).
-unsafe fn cqq8_comp(global: usize) -> usize {
+unsafe fn comp_by_global(global: usize) -> usize {
     cqq8_d(cqq8_d(0xadadfc) + 4 * cqq8_d(global))
 }
 
 /// A virtual `deslocamento` de `c`, thiscall sem argumentos.
-unsafe fn cqq8_virtual(c: usize, deslocamento: usize) -> u32 {
+unsafe fn bra_nat_first_call_virtual_no_args(c: usize, deslocamento: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqq8_d(cqq8_d(c) + deslocamento));
     f(c)
 }
@@ -22,7 +22,7 @@ unsafe fn cqq8_virtual(c: usize, deslocamento: usize) -> u32 {
 /// cada um com a sua caixa se devolver 0: as regras (virtual +0x8c), a tabela (`tabela`, thiscall, ret 0), os jogos
 /// (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem da tabela (League::sort_table 0x6827d0, thiscall(this,
 /// 0), ret 4); por fim as posições previstas (virtual +0x5c). Devolve falso depois de uma caixa.
-unsafe fn cqq8_refazer(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 4], ano: i16) -> bool {
+unsafe fn rebuild_season(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 4], ano: i16) -> bool {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     liberar_tabela(this, 0);
@@ -53,33 +53,33 @@ unsafe fn cqq8_refazer(this: usize, tabela: usize, arquivo: usize, linhas: [u32;
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    if cqq8_virtual(this, 0x8c) == 0 {
-        aviso_em(arquivo, linhas[0]);
+    if bra_nat_first_call_virtual_no_args(this, 0x8c) == 0 {
+        show_error_at(arquivo, linhas[0]);
         return false;
     }
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(tabela);
     if tabela(this) == 0 {
-        aviso_em(arquivo, linhas[1]);
+        show_error_at(arquivo, linhas[1]);
         return false;
     }
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
     if jogos(this) == 0 {
-        aviso_em(arquivo, linhas[2]);
+        show_error_at(arquivo, linhas[2]);
         return false;
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
     if ordenar(this, 0) == 0 {
-        aviso_em(arquivo, linhas[3]);
+        show_error_at(arquivo, linhas[3]);
         return false;
     }
-    cqq8_virtual(this, 0x5c);
+    bra_nat_first_call_virtual_no_args(this, 0x5c);
     true
 }
 
 /// O fim comum: as expectativas da diretoria de cada clube (League::set_club_season_expectations 0x68aa80, thiscall,
 /// ret 0) e a renovação dos árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4),
 /// cujo eax a virada devolve.
-unsafe fn cqq8_expectativas_e_arbitros(this: usize) -> u32 {
+unsafe fn set_expectations_and_renew_officials(this: usize) -> u32 {
     let expectativas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68aa80usize);
     expectativas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
@@ -110,17 +110,17 @@ unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usize) -> u32 {
     }
     let nivel: unsafe extern "thiscall" fn(usize, u32, u32, i32, u32) = core::mem::transmute(0x68a980usize);
     nivel(this, 1, 3, -3, 1);
-    nivel(cqq8_comp(0x9cf9e0), 1, 3, -3, 1);
-    if !cqq8_refazer(this, 0x42a480, 0x98aa30, [0x223, 0x22a, 0x230, 0x237], 1) {
+    nivel(comp_by_global(0x9cf9e0), 1, 3, -3, 1);
+    if !rebuild_season(this, 0x42a480, 0x98aa30, [0x223, 0x22a, 0x230, 0x237], 1) {
         return 0;
     }
     for (k, g) in CQQ8_VIRADAS.iter().enumerate() {
         if k == 13 {
             crate::comparacao::ramo("cqq_8 virada do paulista");
         }
-        cqq8_virtual(cqq8_comp(*g), 8); // cqq8: a virada de cada uma
+        bra_nat_first_call_virtual_no_args(comp_by_global(*g), 8); // cqq8: a virada de cada uma
     }
-    cqq8_expectativas_e_arbitros(this)
+    set_expectations_and_renew_officials(this)
 }
 
 /// { 0x42ae90 } (thiscall, ret 4, bra_nat_first.cpp): `BraNatFirst::process_promotion_relegation_chain(int)` (slot 45,
@@ -131,18 +131,18 @@ unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usize) -> u32 {
 /// eax da última.
 unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegation_chain(this: usize, _pares: u32) -> u32 {
     let (a, b, c) = (0x9cf9ec, 0x9cf9e0, 0x9cf9ac);
-    cqq8_virtual(cqq8_comp(a), 0xa4);
-    cqq8_virtual(cqq8_comp(b), 0xa4);
-    cqq8_virtual(cqq8_comp(c), 0xa4);
+    bra_nat_first_call_virtual_no_args(comp_by_global(a), 0xa4);
+    bra_nat_first_call_virtual_no_args(comp_by_global(b), 0xa4);
+    bra_nat_first_call_virtual_no_args(comp_by_global(c), 0xa4);
     for k in 0..7 {
-        cqq8_virtual(cqq8_d(cqq8_d(cqq8_comp(c) + 0xc) + 4 * k), 0xa4);
+        bra_nat_first_call_virtual_no_args(cqq8_d(cqq8_d(comp_by_global(c) + 0xc) + 4 * k), 0xa4);
     }
     let trocar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, i32, i32) -> u32 = core::mem::transmute(0x689c80usize);
     crate::comparacao::ramo("cqq_8 acesso e rebaixamento");
-    trocar(this, cqq8_comp(a), cqq8_comp(b), 1, 1, -1, -1); // cqq8: A e B
-    let mut r = trocar(this, cqq8_comp(b), cqq8_comp(c), 1, 1, -1, -1); // cqq8: B e C
+    trocar(this, comp_by_global(a), comp_by_global(b), 1, 1, -1, -1); // cqq8: A e B
+    let mut r = trocar(this, comp_by_global(b), comp_by_global(c), 1, 1, -1, -1); // cqq8: B e C
     for k in 0..7 {
-        r = trocar(this, cqq8_comp(b), cqq8_d(cqq8_d(cqq8_comp(c) + 0xc) + 4 * k), 1, 1, -1, -1);
+        r = trocar(this, comp_by_global(b), cqq8_d(cqq8_d(comp_by_global(c) + 0xc) + 4 * k), 1, 1, -1, -1);
     }
     r
 }
@@ -152,11 +152,11 @@ unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegation_chain(thi
 /// expectativas e os árbitros.
 unsafe extern "thiscall" fn bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
-    if !cqq8_refazer(this, 0x42ca70, 0x98ab64, [0x20c, 0x213, 0x219, 0x220], 1) {
+    if !rebuild_season(this, 0x42ca70, 0x98ab64, [0x20c, 0x213, 0x219, 0x220], 1) {
         return 0;
     }
     crate::comparacao::ramo("cqq_8 virada da serie b");
-    cqq8_expectativas_e_arbitros(this)
+    set_expectations_and_renew_officials(this)
 }
 
 /// Comparador das viradas: só a original (ponytail: libera e aloca tabelas e fases, sorteia jogos e árbitros e roda as
@@ -170,17 +170,17 @@ unsafe fn cqq8_comparar_virada(nome: &str, this: usize, original: impl FnOnce() 
 }
 
 unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     cqq8_comparar_virada("bra_nat_first_start_new_season", this, || o(this))
 }
 
 /// Comparador do acesso e rebaixamento: só a original (ponytail: move clubes entre as listas das ligas, que realocam).
 /// A cópia roda no modo Rust (contador "cqq_8 acesso e rebaixamento") e é provada pelas mutações e pelas carreiras.
 unsafe extern "thiscall" fn comparar_bra_nat_first_process_promotion_relegation_chain(this: usize, pares: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, pares)
+    original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, pares)
 }
 
 unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     cqq8_comparar_virada("bra_nat_first_start_new_season_42cc10", this, || o(this))
 }

@@ -9,12 +9,12 @@ unsafe fn cpl7_por(a: usize, v: usize) {
 }
 
 /// A chave da 0x754740: {id do jogador, id do clube ou −1} (os 8 bytes que a 0x757ea0 lê).
-unsafe fn cpl7_chave(jogador: usize, clube: usize) -> [u32; 2] {
+unsafe fn interest_key(jogador: usize, clube: usize) -> [u32; 2] {
     [cpl7_d(jogador) as u32, if clube != 0 { cpl7_d(clube) as u32 } else { u32::MAX }]
 }
 
 /// O interesse já está no vetor? (bsearch 0x946464 com 0x757ea0; sem vetor, não).
-unsafe fn cpl7_ja_esta(this: usize, chave: &[u32; 2]) -> bool {
+unsafe fn has_interest(this: usize, chave: &[u32; 2]) -> bool {
     let base = cpl7_d(this + 0xc);
     if base == 0 {
         return false;
@@ -24,7 +24,7 @@ unsafe fn cpl7_ja_esta(this: usize, chave: &[u32; 2]) -> bool {
 }
 
 /// O valor que a 0x754740 grava: o `valor` limitado a 50.000.000.
-fn cpl7_valor(valor: i32) -> i32 {
+fn cap_interest_value(valor: i32) -> i32 {
     if valor < 0x2faf080 { valor } else { 0x2faf080 }
 }
 
@@ -39,8 +39,8 @@ unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogador: usize, c
     let mut data = [0u8; 8];
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     padrao(data.as_mut_ptr() as usize);
-    let chave = cpl7_chave(jogador, clube);
-    if cpl7_ja_esta(this, &chave) {
+    let chave = interest_key(jogador, clube);
+    if has_interest(this, &chave) {
         crate::comparacao::ramo("cpl_7 interesse repetido");
         return; // o interesse já está
     }
@@ -50,8 +50,8 @@ unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogador: usize, c
         let p = alocar(0x1f4);
         cpl7_por(this + 0xc, p);
         if p == 0 {
-            aviso_em(0xa17bec, 0x665d);
-            erro_fatal();
+            show_error_at(0xa17bec, 0x665d);
+            fatal_exit();
         }
         cpl7_por(this + 0x10, 0x14);
     }
@@ -61,8 +61,8 @@ unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogador: usize, c
         let p = realocar(cpl7_d(this + 0xc), cap.wrapping_add(0x14).wrapping_mul(0x19) as u32);
         cpl7_por(this + 0xc, p);
         if p == 0 {
-            aviso_em(0xa17bec, 0x6668);
-            erro_fatal();
+            show_error_at(0xa17bec, 0x6668);
+            fatal_exit();
         }
         cpl7_por(this + 0x10, cpl7_d(this + 0x10).wrapping_add(0x14));
     }
@@ -71,8 +71,8 @@ unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogador: usize, c
     cpl7_por(item() + 4, cpl7_d(clube));
     cph3_data(item() + 8, 0xae2c90);
     *((item() + 0x10) as *mut u8) = 0; // o boato ainda não saiu
-    cpl7_por(item() + 0x11, cpl7_valor(valor) as usize);
-    cpl7_por(item() + 0x15, ftol(avaliacao * 100.0) as usize); // [0x9688a8] = 100.0
+    cpl7_por(item() + 0x11, cap_interest_value(valor) as usize);
+    cpl7_por(item() + 0x15, match_pl_ftol(avaliacao * 100.0) as usize); // [0x9688a8] = 100.0
     let n = cpl7_d(this + 0x14).wrapping_add(1);
     cpl7_por(this + 0x14, n); // mais um interesse
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
@@ -120,13 +120,13 @@ unsafe extern "C" fn compare_story_log_records(a: usize, b: usize) -> i32 {
 }
 
 /// Os 25 bytes que a 0x754740 acrescenta.
-unsafe fn cpl7_interesse(jogador: usize, clube: usize, valor: i32, avaliacao: f64) -> [u8; 0x19] {
+unsafe fn build_interest_record(jogador: usize, clube: usize, valor: i32, avaliacao: f64) -> [u8; 0x19] {
     let mut r = [0u8; 0x19];
     r[..4].copy_from_slice(&(cpl7_d(jogador) as u32).to_le_bytes());
     r[4..8].copy_from_slice(&(cpl7_d(clube) as u32).to_le_bytes());
     r[8..0x10].copy_from_slice(core::slice::from_raw_parts(0xae2c90 as *const u8, 8));
-    r[0x11..0x15].copy_from_slice(&cpl7_valor(valor).to_le_bytes());
-    r[0x15..].copy_from_slice(&ftol(avaliacao * 100.0).to_le_bytes());
+    r[0x11..0x15].copy_from_slice(&cap_interest_value(valor).to_le_bytes());
+    r[0x15..].copy_from_slice(&match_pl_ftol(avaliacao * 100.0).to_le_bytes());
     r
 }
 
@@ -134,9 +134,9 @@ unsafe fn cpl7_interesse(jogador: usize, clube: usize, valor: i32, avaliacao: f6
 /// confere a conta e que o registro novo está no vetor (a ordem é a do qsort).
 unsafe extern "thiscall" fn comparar_add_transfer_interest(this: usize, jogador: usize, clube: usize, valor: i32, avaliacao: f64) {
     let n = cpl7_d(this + 0x14);
-    let ja_esta = cpl7_ja_esta(this, &cpl7_chave(jogador, clube));
-    let esperado = if ja_esta { None } else { Some(cpl7_interesse(jogador, clube, valor, avaliacao)) };
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, i32, f64)>(%%I0%%)(this, jogador, clube, valor, avaliacao);
+    let ja_esta = has_interest(this, &interest_key(jogador, clube));
+    let esperado = if ja_esta { None } else { Some(build_interest_record(jogador, clube, valor, avaliacao)) };
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, f64)>(%%I0%%)(this, jogador, clube, valor, avaliacao);
     let m = cpl7_d(this + 0x14);
     let ok = match &esperado {
         None => m == n,
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn comparar_add_transfer_interest(this: usize, jogador:
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_id_pair_keys(a, b);
     PLACAR.registrar(r == n, || format!("compare_id_pair_keys({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -157,7 +157,7 @@ unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize) -> i32 {
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "C" fn comparar_compare_story_log_records(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_story_log_records(a, b);
     PLACAR.registrar(r == n, || format!("compare_story_log_records({:x}, {:x}) original={} rust={}", a, b, r, n));
     r

@@ -5,7 +5,7 @@ unsafe fn cpu8_i(a: usize) -> i32 {
 }
 
 /// Os cinco níveis (+4..+8) de um programa de treino.
-unsafe fn cpu8_niveis(this: usize, n: [u8; 5]) {
+unsafe fn set_schedule_levels(this: usize, n: [u8; 5]) {
     for (k, v) in n.iter().enumerate() {
         *((this + 4 + k) as *mut u8) = *v;
     }
@@ -22,24 +22,24 @@ unsafe extern "thiscall" fn set_type(this: usize, vaga: i8, tipo: i8) {
     match tipo {
         1 => {
             crate::comparacao::ramo("cpu_8 geral");
-            cpu8_niveis(this, [0x19, 0x19, 0x19, 0x19, 0]); // cpu8: o treino geral
+            set_schedule_levels(this, [0x19, 0x19, 0x19, 0x19, 0]); // cpu8: o treino geral
         }
-        2 => cpu8_niveis(this, [0x32, 0xa, 0xa, 0xa, 0]),
-        3 => cpu8_niveis(this, [0xa, 0xa, 0x32, 0xa, 0]),
-        4 => cpu8_niveis(this, [0xa, 0xa, 0xa, 0x32, 0]),
-        5 => cpu8_niveis(this, [0xa, 0x32, 0xa, 0xa, 0]),
+        2 => set_schedule_levels(this, [0x32, 0xa, 0xa, 0xa, 0]),
+        3 => set_schedule_levels(this, [0xa, 0xa, 0x32, 0xa, 0]),
+        4 => set_schedule_levels(this, [0xa, 0xa, 0xa, 0x32, 0]),
+        5 => set_schedule_levels(this, [0xa, 0x32, 0xa, 0xa, 0]),
         6 => {
             crate::comparacao::ramo("cpu_8 goleiros");
-            cpu8_niveis(this, [0xa, 0xa, 0, 0xa, 0x32]); // cpu8: o treino dos goleiros
+            set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x32]); // cpu8: o treino dos goleiros
         }
-        0 | 7 => cpu8_niveis(this, [0; 5]),
+        0 | 7 => set_schedule_levels(this, [0; 5]),
         _ => {}
     }
 }
 
 /// Comparador: lado a lado nos 0x16 bytes do programa (a vaga, os níveis e o tipo).
 unsafe extern "thiscall" fn comparar_set_type(this: usize, vaga: i8, tipo: i8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8)>(%%I1%%);
     let regioes = [(this, 0x16)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, vaga, tipo), || set_type(this, vaga, tipo));
     PLACAR.registrar(igual, || format!("set_type({:x}, {}, {}) {:x?} x {:x?}", this, vaga, tipo, mo, mr));
@@ -47,10 +47,10 @@ unsafe extern "thiscall" fn comparar_set_type(this: usize, vaga: i8, tipo: i8) {
 
 /// O programa `vaga` (0..=9) do técnico humano `pessoa` como a 0x8b3d40 o calcula sem chamar a 0x8b3930 (vagas 0 a
 /// 5): this + 0x43d + 0x9b × vaga + 0x60e × humano; fora dos 16 humanos, a caixa (linha 0x68f) e 0.
-unsafe fn cpu8_vaga_do_humano(this: usize, pessoa: usize, vaga: usize) -> usize {
+unsafe fn human_schedule_slot(this: usize, pessoa: usize, vaga: usize) -> usize {
     let v = cpu8_i(0xae2364).wrapping_sub(cpu8_i(pessoa)).wrapping_sub(1);
     if !(0..0x10).contains(&v) {
-        aviso_em(0xa8ccd0, 0x68f);
+        show_error_at(0xa8ccd0, 0x68f);
         return 0;
     }
     this + 0x43d + 0x9b * vaga + 0x60e * v as usize
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn set_default_schedules(this: usize) {
         let id = cpu8_i(0xae2364).wrapping_sub(h).wrapping_sub(1);
         let pessoa = (*(0xae23bc as *const usize)).wrapping_add((id as u32).wrapping_mul(0x6e) as usize);
         for (vaga, t) in [(0usize, -1i8), (1, 0), (2, 1), (3, 2), (4, 3), (5, 4)] {
-            tipo(cpu8_vaga_do_humano(this, pessoa, vaga), vaga as i8, t);
+            tipo(human_schedule_slot(this, pessoa, vaga), vaga as i8, t);
         }
         // ponytail: a original empurra a vaga 8 e 9 num dword só com o byte baixo gravado; as duas chamadas leem o byte.
         for (vaga, t) in [(6i8, 5i8), (7, 6), (8, 7), (9, 7)] {
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn set_default_schedules(this: usize) {
 
 /// Comparador: lado a lado nos 167 programas (0x651d bytes a partir de this; nomes incluídos) e no marcador de erro.
 unsafe extern "thiscall" fn comparar_set_default_schedules(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let regioes = [(this, 0x651d), (0xb67a34, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this), || set_default_schedules(this));
     PLACAR.registrar(igual, || {
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn comparar_set_default_schedules(this: usize) {
 unsafe extern "thiscall" fn get_manager_schedule(this: usize, tecnico: usize, vaga: i8) -> usize {
     let v = cpu8_i(0xae2364).wrapping_sub(cpu8_i(tecnico)).wrapping_sub(1);
     if !(0..0x10).contains(&v) {
-        aviso_em(0xa8ccd0, 0x68f);
+        show_error_at(0xa8ccd0, 0x68f);
         return 0;
     }
     let vaga = if (0..0xa).contains(&vaga) { vaga } else { 1 };
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn get_manager_schedule(this: usize, tecnico: usize, va
 
 /// Comparador: a devolução, sem os casos de erro (só a original).
 unsafe extern "thiscall" fn comparar_get_manager_schedule(this: usize, tecnico: usize, vaga: i8) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> usize>(%%I2%%);
     if !(0..0x10).contains(&cpu8_i(0xae2364).wrapping_sub(cpu8_i(tecnico)).wrapping_sub(1)) {
         return o(this, tecnico, vaga);
     }

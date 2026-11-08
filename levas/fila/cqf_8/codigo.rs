@@ -47,12 +47,12 @@ impl Cqf8Reg {
 }
 
 /// A caixa "Error" de player_stats.cpp (0xa78310) na linha `linha`.
-unsafe fn cqf8_erro(linha: u32) {
-    aviso_em(0xa78310, linha);
+unsafe fn show_player_stats_error(linha: u32) {
+    show_error_at(0xa78310, linha);
 }
 
 /// A entrada `k` (contando de 1) a partir da conta `n`: buf + (n + k) × 0x2b − 0x2b.
-fn cqf8_lugar(buf: usize, n: i32, k: i32) -> usize {
+fn history_entry_at(buf: usize, n: i32, k: i32) -> usize {
     buf.wrapping_add(((n + k) as isize * CQF8_E as isize - CQF8_E as isize) as usize)
 }
 
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
     let categoria: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x7c3920usize);
     *conta = 0;
     if p == 0 {
-        cqf8_erro(0xb98);
+        show_player_stats_error(0xb98);
         return 0;
     }
     if cqf8_i(p) >= cqf8_i(0xae2364) {
@@ -88,12 +88,12 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
     }
     let f = cqf8_d(p + 0x61);
     if f == 0 {
-        cqf8_erro(0xbaa);
+        show_player_stats_error(0xbaa);
         return 0;
     }
     let mut buf = malloc(0x53fc);
     if buf == 0 {
-        cqf8_erro(0xbb2);
+        show_player_stats_error(0xbb2);
         return 0;
     }
     let mut cap: i32 = 500;
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
         if c != 0 {
             core::ptr::copy_nonoverlapping(c as *const u8, r.0.as_mut_ptr().add(6), 32);
         }
-        r.gravar(cqf8_lugar(buf, *conta, cat as i32));
+        r.gravar(history_entry_at(buf, *conta, cat as i32));
         ultimo = r;
     }
     // o ano, o clube e o tipo do grupo aberto (o tipo começa em 0xff: o primeiro nó sempre abre grupo)
@@ -137,11 +137,11 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
                                 cap += 500;
                                 buf = realloc(buf, tam);
                                 if buf == 0 {
-                                    cqf8_erro(0xc00);
+                                    show_player_stats_error(0xc00);
                                     return 0;
                                 }
                             }
-                            r.gravar(cqf8_lugar(buf, *conta, cat as i32));
+                            r.gravar(history_entry_at(buf, *conta, cat as i32));
                         }
                         *conta += 6;
                         if *conta > 500 {
@@ -165,11 +165,11 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
                         cap += 500;
                         buf = realloc(buf, tam);
                         if buf == 0 {
-                            cqf8_erro(0xc26);
+                            show_player_stats_error(0xc26);
                             return 0;
                         }
                     }
-                    r.gravar(cqf8_lugar(buf, *conta, cat as i32));
+                    r.gravar(history_entry_at(buf, *conta, cat as i32));
                 }
                 ano_atual = cqf8_w(no);
                 clube_atual = cqf8_d(no + 2) as u32;
@@ -179,11 +179,11 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
                 cap += 500;
                 buf = realloc(buf, cap as usize * CQF8_E);
                 if buf == 0 {
-                    cqf8_erro(0xc41);
+                    show_player_stats_error(0xc41);
                     return 0;
                 }
             }
-            core::ptr::copy_nonoverlapping(no as *const u8, cqf8_lugar(buf, *conta, (tipo >> 3) as i32) as *mut u8, CQF8_E);
+            core::ptr::copy_nonoverlapping(no as *const u8, history_entry_at(buf, *conta, (tipo >> 3) as i32) as *mut u8, CQF8_E);
             no = anterior(lista);
         }
         let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
 /// lido) e comparam a conta e as entradas; a da cópia é liberada (0x9452ca) e o jogo segue com a da original. Os casos
 /// de erro (caixa): só a original.
 unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize, conta: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(%%I0%%);
     if p == 0 || (cqf8_i(p) < cqf8_i(0xae2364) && cqf8_d(p + 0x61) == 0) {
         return o(this, p, conta);
     }
@@ -334,11 +334,11 @@ unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize,
 /// automática: passageira).
 unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
     if p == 0 {
-        cqf8_erro(0x133f);
+        show_player_stats_error(0x133f);
         return -1;
     }
     if clube == 0 {
-        cqf8_erro(0x1347);
+        show_player_stats_error(0x1347);
         return -1;
     }
     if cqf8_i(p) >= cqf8_i(0xae2364) {
@@ -348,7 +348,7 @@ unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize, clube: usi
         return 0;
     }
     if cqf8_d(p + 0x61) == 0 {
-        cqf8_erro(0x135f);
+        show_player_stats_error(0x135f);
         return -1;
     }
     let montar: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(0x7c3e40usize);
@@ -377,7 +377,7 @@ unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize, clube: usi
 
 /// Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
 unsafe extern "stdcall" fn comparar_player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> i16>(%%I1%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i16>(%%I1%%);
     if p == 0 || clube == 0 || (cqf8_i(p) < cqf8_i(0xae2364) && cqf8_d(p + 0x39) != clube && cqf8_d(p + 0x61) == 0) {
         return o(p, clube);
     }
@@ -416,7 +416,7 @@ unsafe extern "C" fn player_stats_compare_history_by_staff(a: usize, b: usize) -
 
 /// Comparador: a devolução (só lê).
 unsafe extern "C" fn comparar_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = player_stats_compare_history_by_staff(a, b);
     PLACAR.registrar(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));
     r

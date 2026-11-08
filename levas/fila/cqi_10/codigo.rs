@@ -13,13 +13,13 @@ unsafe fn cqi10_b(a: usize) -> u8 {
 }
 
 /// O objeto da Copa da UEFA ([[0xadadfc] + 4 × [0x9cf6f0]]), ou 0.
-unsafe fn cqi10_uefa() -> usize {
+unsafe fn uefa_cup_object() -> usize {
     cqi10_d(cqi10_d(0xadadfc).wrapping_add(cqi10_d(0x9cf6f0).wrapping_mul(4)))
 }
 
 /// Os vencedores do Intertoto (+5 = 1 no registro de 6 bytes de +0xa7) que cabem nas três últimas vagas da UEFA, na
 /// ordem em que a 0x633d40 os põe: as vagas vão de +0x3e da UEFA − 27 até + 3 (palavras com sinal).
-unsafe fn cqi10_vencedores(this: usize, uefa: usize) -> ([usize; 3], usize) {
+unsafe fn intertoto_winners_for_uefa(this: usize, uefa: usize) -> ([usize; 3], usize) {
     let mut v = [0usize; 3];
     let mut k = 0usize;
     let mut vaga = cqi10_w(uefa + 0x3e).wrapping_sub(0x1b);
@@ -57,9 +57,9 @@ unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, hoje: usi
     if cqi10_d(this + 0xb2) == 0 {
         let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(cqi10_d(cqi10_d(this) + 0x10));
         if acabou(this, 0, 1) as u8 != 0 {
-            let uefa = cqi10_uefa();
+            let uefa = uefa_cup_object();
             if uefa == 0 {
-                aviso_em(0x9e9e14, 0x29e);
+                show_error_at(0x9e9e14, 0x29e);
             } else {
                 let mut vaga = cqi10_w(uefa + 0x3e).wrapping_sub(0x1b);
                 let limite = vaga.wrapping_add(3);
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, hoje: usi
                 let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqi10_d(cqi10_d(uefa) + 0x5c));
                 prever(uefa);
                 core::ptr::write_unaligned((this + 0xb2) as *mut u32, 1);
-                let uefa = cqi10_uefa();
+                let uefa = uefa_cup_object();
                 let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqi10_d(cqi10_d(uefa) + 0x5c));
                 prever(uefa);
                 let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x51f890usize);
@@ -105,15 +105,15 @@ unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, hoje: usi
 }
 
 // ponytail: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano, feito
-// antes: se +0xb2 passa de 0 a 1 com a Copa da UEFA, o livro dela (+0x14) ganha os vencedores (cqi10_vencedores), em
+// antes: se +0xb2 passa de 0 a 1 com a Copa da UEFA, o livro dela (+0x14) ganha os vencedores (intertoto_winners_for_uefa), em
 // ordem e com a situação 4, e +0x36 sobe tanto quanto; senão o livro não cresce.
 unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
-    let uefa = cqi10_uefa();
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let uefa = uefa_cup_object();
     if uefa == 0 || cqi10_d(this + 0xb2) != 0 {
         return o(this, hoje, fase);
     }
-    let (v, k) = cqi10_vencedores(this, uefa);
+    let (v, k) = intertoto_winners_for_uefa(this, uefa);
     let n36 = cqi10_w(uefa + 0x36);
     let r = o(this, hoje, fase);
     let passou = cqi10_d(this + 0xb2) == 1;
@@ -142,9 +142,9 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(this: usize, 
 unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     match desfecho as u8 {
         1 => {
-            let peso = cpz4_escala(0x3c, 0x64, cqi10_w(jogo + 0x34), cqi10_w(this + 0x3c) as u16 as u32);
+            let peso = scale_by_round(0x3c, 0x64, cqi10_w(jogo + 0x34), cqi10_w(this + 0x3c) as u16 as u32);
             let uefa = cqi10_d(0xae23d0).wrapping_add(cqi10_d(0x9cf6f0).wrapping_mul(0x6b));
-            cpz4_classificado(clube, uefa, 0, 0xa, peso);
+            european_cup_add_qualified_record(clube, uefa, 0, 0xa, peso);
             crate::comparacao::ramo("cqi_10 vencedor do intertoto");
             core::ptr::write_unaligned((clube + 0x1db) as *mut u32, cqi10_d(0x9cf6f0) as u32); // cqi10: o vencedor passa à UEFA
         }
@@ -157,20 +157,20 @@ unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_status(this: 
             }
             let div = n as i32 - 1;
             if div == 0 {
-                return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, desfecho, a3, a4, jogo, a6); // ponytail: a original cai na divisão
+                return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, desfecho, a3, a4, jogo, a6); // ponytail: a original cai na divisão
             }
             let q = (r as i32 * 99) / div;
             let peso = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32; // inc al
             let rodada = core::ptr::read_unaligned((cqi10_d(this + 0xa3).wrapping_add((seguinte as isize * 0x68) as usize) + 7) as *const u16) as u32;
             // ponytail: a fase vai num registrador cujos 16 bits altos são os do movsx da rodada seguinte (zero); limpa
-            cpz4_classificado(clube, cqi10_d(this + 4), core::ptr::read_unaligned((jogo + 0x32) as *const u16) as u32, rodada, peso);
+            european_cup_add_qualified_record(clube, cqi10_d(this + 4), core::ptr::read_unaligned((jogo + 0x32) as *const u16) as u32, rodada, peso);
         }
         0xff | 2 => {
-            let peso = cpz4_escala(0x14, 0x50, cqi10_w(jogo + 0x34), cqi10_w(this + 0x3c) as u16 as u32);
+            let peso = scale_by_round(0x14, 0x50, cqi10_w(jogo + 0x34), cqi10_w(this + 0x3c) as u16 as u32);
             // ponytail: a rodada +0x30 vai num registrador com lixo nos 16 bits altos; a 0x86c000 só usa a palavra
-            cpz4_eliminado(clube, cqi10_d(this + 4), 0, core::ptr::read_unaligned((jogo + 0x30) as *const u16) as u32, peso);
+            european_cup_add_knocked_out_record(clube, cqi10_d(this + 4), 0, core::ptr::read_unaligned((jogo + 0x30) as *const u16) as u32, peso);
             crate::comparacao::ramo("cqi_10 caiu no intertoto");
-            cpz4_sair(clube); // cqi10: quem cai no Intertoto sai da competição europeia
+            leave_euro_competition(clube); // cqi10: quem cai no Intertoto sai da competição europeia
         }
         _ => {}
     }
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_status(this: 
 // ponytail: os registros vão para o histórico das pessoas (reputação, moral): não rodam duas vezes. Só a original roda;
 // o plano confere o +0x1db do clube: [0x9cf6f0] para o vencedor, −1 para quem cai, intacto nos outros.
 unsafe extern "thiscall" fn comparar_intertoto_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%);
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }
@@ -215,7 +215,7 @@ unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize
 // ponytail: a base grava os registros (histórico, reputação, moral) e pode dar a vaga da UEFA ao campeão: não roda duas
 // vezes. Só a original roda; o plano confere o +0x1db do clube (−1 nos desfechos 1, 2 e 0xff, intacto nos outros).
 unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%);
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }

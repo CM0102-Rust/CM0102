@@ -7,10 +7,12 @@ use super::*;
 /// quantos jogos; a lista termina em −1).
 pub(crate) type Cqo4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
-/// As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
+/// Writes league rounds from `first` in table t: date (0x68a160) and match slots (0x68a1c0) of each round.
+///
+/// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn cqo4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqo4Rodada]) {
+pub(crate) unsafe fn fra_third_write_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqo4Rodada]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -22,10 +24,13 @@ pub(crate) unsafe fn cqo4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[C
     }
 }
 
-/// Os bytes que a tabela de `n` rodadas tem gravados e que o jogo lê: de cada rodada, a data (+0..+4) e +0x3d..+0x40,
+/// Collects the bytes of an n-round league table the game reads: date, +0x3d..+0x40 and match slots up to the
+/// terminator in the guide table.
+///
+/// [pt] Os bytes que a tabela de `n` rodadas tem gravados e que o jogo lê: de cada rodada, a data (+0..+4) e +0x3d..+0x40,
 /// e as faixas até a que termina a lista (a de dia −1 na tabela `guia`, a da original); o resto da memória alocada não
 /// é escrito.
-pub(crate) unsafe fn cqo4_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
+pub(crate) unsafe fn written_league_round_bytes(t: usize, guia: usize, n: usize) -> Vec<u8> {
     let mut v = Vec::new();
     for r in 0..n {
         let e = t + r * 0x41;
@@ -50,11 +55,14 @@ pub(crate) struct Cqo4Liga {
     pub(crate) ramo: &'static str,
 }
 
-/// O corpo comum (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): só a fase principal
+/// Common create_schedule body: at stage −1 sets outputs, allocates rounds × 0x41 bytes and writes the league's dates
+/// and slots; returns the table (0 at other stages).
+///
+/// [pt] O corpo comum (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): só a fase principal
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn cqo4_calendario(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo4Liga) -> usize {
+pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo4Liga) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -66,18 +74,20 @@ pub(crate) unsafe fn cqo4_calendario(this: usize, fase: u32, rodadas: *mut i16, 
     *extra = 0;
     let t = alocar(p.rodadas as u32 * 0x41);
     if t == 0 {
-        aviso_em(p.arquivo, p.linha);
+        show_error_at(p.arquivo, p.linha);
         return 0;
     }
     crate::comparacao::ramo(p.ramo);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-    cqo4_rodadas(t, ano, 0, p.tabela);
+    fra_third_write_league_rounds(t, ano, 0, p.tabela);
     t
 }
 
-/// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do mesmo [0xb67a34]; as
+/// Side-by-side comparer for create_schedule: same outputs and same written round bytes; frees the copy's table.
+///
+/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do mesmo [0xb67a34]; as
 /// saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada: 0x9452ca, cdecl).
-pub(crate) unsafe fn cqo4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+pub(crate) unsafe fn compare_league_schedule(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -87,7 +97,7 @@ pub(crate) unsafe fn cqo4_comparar(nome: &str, fase: u32, rodadas: *mut i16, ext
     let saidas = fase as u8 != 0xff || (*rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2));
     let tabela = if a != 0 && b != 0 {
         let n = *rodadas as usize;
-        cqo4_gravados(a, a, n) == cqo4_gravados(b, a, n)
+        written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
     } else {
         a == 0 && b == 0
     };
@@ -235,12 +245,12 @@ pub(crate) const CQO4_LIGA_BAIXO: Cqo4Liga = Cqo4Liga { rodadas: 0x26, arquivo: 
 /// [pt] { 0x5bfe30 } (thiscall, ret 0x10, fra_third.cpp, 1.948 bytes, método +0x3c): `FraThird::create_schedule(fase, &rodadas, &extra,
 /// &é_liga)`: o National, 38 rodadas (`CQO4_TERCEIRA`). Fonte 0x9ccc80, linha 0xa6.
 pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo4_calendario(this, fase, rodadas, extra, liga, &CQO4_LIGA_TERCEIRA)
+    create_league_schedule(this, fase, rodadas, extra, liga, &CQO4_LIGA_TERCEIRA)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_THIRD_CREATE_SCHEDULE);
-    cqo4_comparar("fra_third_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_third_create_schedule(this, fase, r, e, l))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_THIRD_CREATE_SCHEDULE);
+    compare_league_schedule("fra_third_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_third_create_schedule(this, fase, r, e, l))
 }
 
 
@@ -252,12 +262,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_schedule(this: 
 /// [pt] { 0x5bd920 } (thiscall, ret 0x10, fra_lower.cpp, 2.311 bytes, método +0x3c): `FraLower::create_schedule`: a divisão de
 /// baixo, 38 rodadas (`CQO4_BAIXO`). Fonte 0x9ccbd0, linha 0xa9.
 pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule_5bd920(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo4_calendario(this, fase, rodadas, extra, liga, &CQO4_LIGA_BAIXO)
+    create_league_schedule(this, fase, rodadas, extra, liga, &CQO4_LIGA_BAIXO)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_schedule_5bd920(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_THIRD_CREATE_SCHEDULE_5BD920);
-    cqo4_comparar("fra_third_create_schedule_5bd920", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_third_create_schedule_5bd920(this, fase, r, e, l))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_THIRD_CREATE_SCHEDULE_5BD920);
+    compare_league_schedule("fra_third_create_schedule_5bd920", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_third_create_schedule_5bd920(this, fase, r, e, l))
 }
 
 /// the National: 4 go up in 2001 and 3 afterwards, 4 go down (no league below in the game); 3 substitutes and 3
@@ -269,12 +279,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_schedule_5bd920
 /// = −1), +0xa7 (os jogos da temporada) = −1 (recalculado pela 0x687430) e 3 reservas (+0x49).
 pub(crate) unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras do national");
-    cqj5_regras(this, &cqj5_terceira(this))
+    fra_first_apply_league_rules(this, &national_division_rules(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_third_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_THIRD_SET_UP_RULES);
-    cqj5_comparar("fra_third_set_up_rules", this, cqj5_terceira(this), || o(this), || fra_third_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_THIRD_SET_UP_RULES);
+    fra_first_compare_league_rules("fra_third_set_up_rules", this, national_division_rules(this), || o(this), || fra_third_set_up_rules(this))
 }
 
 /// the National has 20 clubs; prize fund of 20,000 per place; TV pays 200,000 to each club
@@ -284,17 +294,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_third_set_up_rules(this: usi
 /// pela cota de 20.000 e a TV de 200.000 a cada clube; 1. Fonte 0x9ccc80, linha 0x15d.
 pub(crate) unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
-    if cqj6_encher(this, 0x9ccc80, 0x15d, KEY_CLUB_COMP_FRENCH_NATIONAL) != Some(true) {
+    if fra_first_fill_league_table(this, 0x9ccc80, 0x15d, KEY_CLUB_COMP_FRENCH_NATIONAL) != Some(true) {
         return 0;
     }
-    cqj4_fundo(this, 0x4e20);
-    cqi5_pagar(this, 0x30d40, 0);
+    set_prize_fund(this, 0x4e20);
+    eng_prm_pay_tv_rights(this, 0x30d40, 0);
     1
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_THIRD_CREATE_TABLE);
-    cqj6_comparar("fra_third_create_table", this, 0x14, KEY_CLUB_COMP_FRENCH_NATIONAL, Some(0x4e20), || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_THIRD_CREATE_TABLE);
+    fra_first_compare_league_table("fra_third_create_table", this, 0x14, KEY_CLUB_COMP_FRENCH_NATIONAL, Some(0x4e20), || o(this))
 }
 
 /// the French third division (the National): discipline 0xc, only the league
@@ -303,10 +313,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_table(this: usi
 /// [pt] { 0x5bfb40 } (thiscall, ret 8, fra_third.cpp): `FraThird::FraThird(ano, registro)`: a terceira divisão francesa (o
 /// National), disciplina 0xc, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
-    cqm5_construir(this, ano, registro, &CQM5_FRANCA_3)
+    construct_division_league(this, ano, registro, &CQM5_FRANCA_3)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_THIRD);
-    cqm5_comparar("construct_fra_third", this, ano, registro, &CQM5_FRANCA_3, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_THIRD);
+    compare_division_league_ctor("construct_fra_third", this, ano, registro, &CQM5_FRANCA_3, || o(this, ano, registro))
 }

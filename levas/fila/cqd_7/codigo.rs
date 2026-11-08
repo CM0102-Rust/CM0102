@@ -25,12 +25,12 @@ unsafe fn cqd7_pb(a: usize, v: u8) {
 }
 
 /// O confronto `p` (0x35 bytes) da rodada `r` da copa (vetores em [+0xad]).
-unsafe fn cqd7_confronto(copa: usize, r: i32, p: i32) -> usize {
+unsafe fn cup_tie(copa: usize, r: i32, p: i32) -> usize {
     cqd7_d(cqd7_d(copa + 0xad) + (r as isize * 4) as usize).wrapping_add((p as isize * 0x35) as usize)
 }
 
 /// A rodada `r` da copa (0x68 bytes na tabela [+0xa3]).
-unsafe fn cqd7_rodada(copa: usize, r: i32) -> usize {
+unsafe fn comp_cup_round(copa: usize, r: i32) -> usize {
     cqd7_d(copa + 0xa3).wrapping_add((r as isize * 0x68) as usize)
 }
 
@@ -55,19 +55,19 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
     let t = reservar((cqd7_w(this + 0x3c) as i32 as u32) << 2);
     cqd7_pd(this + 0xad, t);
     if t == 0 {
-        cpq11_sem_memoria(0x8b, 0x9b5600);
+        fatal_memory_error_box(0x8b, 0x9b5600);
     }
     let mut i = 0i32;
     while i < cqd7_w(this + 0x3c) as i32 {
-        let n = cqd7_w(cqd7_rodada(this, i) + 0x1a);
+        let n = cqd7_w(comp_cup_round(this, i) + 0x1a);
         if n < 1 {
-            aviso_em(0x9b55ac, 0x95);
+            show_error_at(0x9b55ac, 0x95);
             return -1;
         }
         let v = reservar((n as i32 * 0x35) as u32);
         cqd7_pd(cqd7_d(this + 0xad) + i as usize * 4, v);
         if cqd7_d(cqd7_d(this + 0xad) + i as usize * 4) == 0 {
-            cpq11_sem_memoria(0x9e, 0x9b55d8);
+            fatal_memory_error_box(0x9e, 0x9b55d8);
         }
         i += 1;
     }
@@ -86,8 +86,8 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
     let mut i = 0i32;
     while i < cqd7_w(this + 0x3c) as i32 {
         let mut j = 0i32;
-        while j < cqd7_w(cqd7_rodada(this, i) + 0x1a) as i32 {
-            let c = cqd7_confronto(this, i, j);
+        while j < cqd7_w(comp_cup_round(this, i) + 0x1a) as i32 {
+            let c = cup_tie(this, i, j);
             for k in [0usize, 2, 6, 0xa, 0xc, 0xe, 0x10, 0x12] {
                 cqd7_pw(c + k, 0xffff);
             }
@@ -103,36 +103,36 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
         i += 1;
     }
     let nr = cqd7_w(this + 0x3c);
-    let m = (if cqd7_w(cqd7_rodada(this, nr as i32).wrapping_sub(0x61)) == 0x8c { nr.wrapping_sub(1) } else { nr }) as i32;
+    let m = (if cqd7_w(comp_cup_round(this, nr as i32).wrapping_sub(0x61)) == 0x8c { nr.wrapping_sub(1) } else { nr }) as i32;
     let mut r = 0i32;
     while r < m - 1 {
-        let n = cqd7_w(cqd7_rodada(this, r) + 0x1a);
+        let n = cqd7_w(comp_cup_round(this, r) + 0x1a);
         let ordem = if n != 0 { reservar(n as i32 as u32) } else { 0 };
         let mut k = 0i32;
-        while k < cqd7_w(cqd7_rodada(this, r) + 0x1a) as i32 {
+        while k < cqd7_w(comp_cup_round(this, r) + 0x1a) as i32 {
             cqd7_pb(ordem + k as usize, k as u8);
             k += 1;
         }
-        let nn = cqd7_w(cqd7_rodada(this, r) + 0x1a) as i32;
-        let prox = cqd7_w(cqd7_rodada(this, r) + 0x82) as i32;
+        let nn = cqd7_w(comp_cup_round(this, r) + 0x1a) as i32;
+        let prox = cqd7_w(comp_cup_round(this, r) + 0x82) as i32;
         if prox < nn / 2 && nn > 0 {
             let (mut q, mut conta) = (0i32, nn);
             loop {
                 let a = sorteio(conta) as usize;
-                let b = sorteio(cqd7_w(cqd7_rodada(this, r) + 0x1a) as i32) as usize;
+                let b = sorteio(cqd7_w(comp_cup_round(this, r) + 0x1a) as i32) as usize;
                 let x = cqd7_b(ordem + a);
                 cqd7_pb(ordem + a, cqd7_b(ordem + b));
                 cqd7_pb(ordem + b, x);
                 q += 1;
-                conta = cqd7_w(cqd7_rodada(this, r) + 0x1a) as i32;
+                conta = cqd7_w(comp_cup_round(this, r) + 0x1a) as i32;
                 if q >= conta {
                     break;
                 }
             }
         }
         let mut k = 0i32;
-        while k < cqd7_w(cqd7_rodada(this, r) + 0x1a) as i32 {
-            let rr = cqd7_rodada(this, r);
+        while k < cqd7_w(comp_cup_round(this, r) + 0x1a) as i32 {
+            let rr = comp_cup_round(this, r);
             let p = cqd7_b(ordem + k as usize) as i8 as i32;
             let mut s: i32;
             let mut inicio: i32;
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                 inicio = s;
                 if cqd7_w(rr + 0x75) as u16 & 0x400 != 0 {
                     loop {
-                        let v = cqd7_confronto(this, r + 1, s as i16 as i32);
+                        let v = cup_tie(this, r + 1, s as i16 as i32);
                         if cqd7_w(v + 0xa) == -1 && cqd7_w(v + 0xc) == -1 {
                             inicio = s;
                             break;
@@ -160,10 +160,10 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                 }
             }
             let (mut s, inicio) = (s, inicio); // cqd7: a vaga inicial na rodada seguinte
-            let c = cqd7_confronto(this, r, p);
+            let c = cup_tie(this, r, p);
             loop {
                 let moeda = sorteio(2);
-                let v = cqd7_confronto(this, r + 1, s as i16 as i32);
+                let v = cup_tie(this, r + 1, s as i16 as i32);
                 let primeiro_a = moeda != 0; // cqd7: a moeda do lado na rodada seguinte
                 let lado = if primeiro_a {
                     if cqd7_w(v + 0xa) == -1 { Some(true) } else if cqd7_w(v + 0xc) == -1 { Some(false) } else { None }
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                     cqd7_pw(c + 0x12, (r + 1) as u16);
                     break;
                 }
-                if (s as i16 as i32) < cqd7_w(cqd7_rodada(this, r) + 0x82) as i32 - 1 {
+                if (s as i16 as i32) < cqd7_w(comp_cup_round(this, r) + 0x82) as i32 - 1 {
                     s += 1;
                 } else {
                     s = 0;
@@ -191,24 +191,24 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                 if inicio as i16 == s as i16 {
                     // sem vaga livre: uma vaga sorteada duas rodadas adiante
                     if r >= m - 2 {
-                        erro_em(0x9b55ac, 0x175);
+                        fatal_error_at(0x9b55ac, 0x175);
                     }
-                    let mut t = sorteio(cqd7_w(cqd7_rodada(this, r) + 0xea) as i32);
+                    let mut t = sorteio(cqd7_w(comp_cup_round(this, r) + 0xea) as i32);
                     let ini = t;
                     loop {
-                        let v = cqd7_confronto(this, r + 2, t as i16 as i32);
+                        let v = cup_tie(this, r + 2, t as i16 as i32);
                         let a = if cqd7_w(v + 0xa) == -1 {
                             true
                         } else if cqd7_w(v + 0xc) == -1 {
                             false
                         } else {
-                            if (t as i16 as i32) < cqd7_w(cqd7_rodada(this, r) + 0xea) as i32 - 1 {
+                            if (t as i16 as i32) < cqd7_w(comp_cup_round(this, r) + 0xea) as i32 - 1 {
                                 t += 1;
                             } else {
                                 t = 0;
                             }
                             if t as i16 == ini as i16 {
-                                erro_em(0x9b55ac, 0x1a0);
+                                fatal_error_at(0x9b55ac, 0x1a0);
                             }
                             continue;
                         };
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
         }
         r += 1;
     }
-    if cqd7_w(cqd7_rodada(this, 0) + 0x1a) == 0 {
+    if cqd7_w(comp_cup_round(this, 0) + 0x1a) == 0 {
         cqd7_pb(this + 0xb1, 1);
         return 1;
     }
@@ -237,24 +237,24 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
     let mut inicio: i32 = -1;
     let mut r = 0i32;
     while r < m {
-        if cqd7_w(cqd7_rodada(this, r) + 0x1c) > 0 {
+        if cqd7_w(comp_cup_round(this, r) + 0x1c) > 0 {
             let mut q = 0i32;
             loop {
-                let rr = cqd7_rodada(this, r);
+                let rr = comp_cup_round(this, r);
                 let mut di: i32;
                 if cqd7_w(rr + 0xd) as u16 & 0x200 != 0 {
                     di = 0;
                     if cqd7_w(rr + 0x1a) <= 0 {
-                        aviso_em(0x9b55ac, 0x1c2);
+                        show_error_at(0x9b55ac, 0x1c2);
                         return -1;
                     }
                 } else {
                     di = sorteio(cqd7_w(rr + 0x1a) as i32);
                     inicio = di;
-                    let rr = cqd7_rodada(this, r);
+                    let rr = comp_cup_round(this, r);
                     if cqd7_w(rr + 0xd) as u16 & 0x400 != 0 {
                         loop {
-                            let c = cqd7_confronto(this, r, di as i16 as i32);
+                            let c = cup_tie(this, r, di as i16 as i32);
                             if cqd7_w(c) == -1 && cqd7_w(c + 2) == -1 {
                                 inicio = di;
                                 break;
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                 loop {
                     let moeda = sorteio(2);
                     let x = di as i16 as i32;
-                    let c = cqd7_confronto(this, r, x);
+                    let c = cup_tie(this, r, x);
                     let livre2 = || cqd7_w(c + 2) == -1 && cqd7_w(c + 0xc) == -1;
                     let primeiro_0 = moeda != 0; // cqd7: a moeda do lado na primeira rodada
                     let v0 = cqd7_w(c) as u16;
@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                     };
                     if let Some(o) = lado {
                         crate::comparacao::ramo("cqd_7 time na primeira rodada");
-                        cqd7_pw(c + o, (cqd7_w(cqd7_rodada(this, r) + 0x1e) as u16).wrapping_add(q as u16));
+                        cqd7_pw(c + o, (cqd7_w(comp_cup_round(this, r) + 0x1e) as u16).wrapping_add(q as u16));
                         break;
                     }
                     // a vaga ocupada: o time da nação +0x24 no lado de fora vira mandante
@@ -305,18 +305,18 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                             }
                         }
                     }
-                    if x < cqd7_w(cqd7_rodada(this, r) + 0x1a) as i32 - 1 {
+                    if x < cqd7_w(comp_cup_round(this, r) + 0x1a) as i32 - 1 {
                         di += 1;
                     } else {
                         di = 0;
                     }
                     if inicio as i16 == di as i16 {
-                        aviso_em(0x9b55ac, 0x222);
+                        show_error_at(0x9b55ac, 0x222);
                         return -1;
                     }
                 }
                 q += 1;
-                if q >= cqd7_w(cqd7_rodada(this, r) + 0x1c) as i32 {
+                if q >= cqd7_w(comp_cup_round(this, r) + 0x1c) as i32 {
                     break;
                 }
             }
@@ -324,20 +324,20 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
         r += 1;
     }
     let nr = cqd7_w(this + 0x3c);
-    if nr > 0 && cqd7_w(cqd7_rodada(this, nr as i32).wrapping_sub(0x61)) == 0x8c {
+    if nr > 0 && cqd7_w(comp_cup_round(this, nr as i32).wrapping_sub(0x61)) == 0x8c {
         let mut k = nr.wrapping_sub(3) as i32;
         let mut n: u8 = 5;
         while k >= 0 {
-            cqd7_pb(cqd7_rodada(this, k) + 0x5b, n);
-            n = n.wrapping_add(cqd7_b(cqd7_rodada(this, k) + 0x1a));
+            cqd7_pb(comp_cup_round(this, k) + 0x5b, n);
+            n = n.wrapping_add(cqd7_b(comp_cup_round(this, k) + 0x1a));
             k -= 1;
         }
     } else {
-        let mut n = cqd7_b(cqd7_rodada(this, nr as i32).wrapping_sub(0x50)).wrapping_add(1);
+        let mut n = cqd7_b(comp_cup_round(this, nr as i32).wrapping_sub(0x50)).wrapping_add(1);
         let mut k = nr.wrapping_sub(2) as i32;
         while k >= 0 {
-            cqd7_pb(cqd7_rodada(this, k) + 0x5b, n);
-            n = n.wrapping_add(cqd7_b(cqd7_rodada(this, k) + 0x1a));
+            cqd7_pb(comp_cup_round(this, k) + 0x5b, n);
+            n = n.wrapping_add(cqd7_b(comp_cup_round(this, k) + 0x1a));
             k -= 1;
         }
     }
@@ -349,21 +349,21 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
 /// (+6 vaga, +8 lado, +0x12 rodada uma ou duas adiante) uma vaga que aponta de volta para ele (+0xa/+0xe mandante,
 /// +0xc/+0x10 visitante).
 unsafe extern "thiscall" fn comparar_map_fixture_tree(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     let r = o(this);
     if r != 1 || cqd7_d(this + 0x45) == 0 {
         return r;
     }
     let nr = cqd7_w(this + 0x3c);
-    let m = (if cqd7_w(cqd7_rodada(this, nr as i32).wrapping_sub(0x61)) == 0x8c { nr.wrapping_sub(1) } else { nr }) as i32;
+    let m = (if cqd7_w(comp_cup_round(this, nr as i32).wrapping_sub(0x61)) == 0x8c { nr.wrapping_sub(1) } else { nr }) as i32;
     let mut erro: Option<(i32, i32)> = None;
     'fora: for rd in 0..(m - 1).max(0) {
-        for p in 0..cqd7_w(cqd7_rodada(this, rd) + 0x1a) as i32 {
-            let c = cqd7_confronto(this, rd, p);
+        for p in 0..cqd7_w(comp_cup_round(this, rd) + 0x1a) as i32 {
+            let c = cup_tie(this, rd, p);
             let destino = cqd7_w(c + 0x12) as i32;
             let a = cqd7_w(c + 8) == 1;
             let ok = (destino == rd + 1 || destino == rd + 2) && {
-                let v = cqd7_confronto(this, destino, cqd7_w(c + 6) as i32);
+                let v = cup_tie(this, destino, cqd7_w(c + 6) as i32);
                 cqd7_w(v + if a { 0xa } else { 0xc }) as i32 == p && cqd7_w(v + if a { 0xe } else { 0x10 }) as i32 == rd
             };
             if !ok {
@@ -378,9 +378,9 @@ unsafe extern "thiscall" fn comparar_map_fixture_tree(this: usize) -> i32 {
 
 /// A fase `k` da competição como a original a lê no meio das rotinas: −1 a própria, 0..+0x30 em [+0xc]; fora disso a
 /// caixa da linha 0x36e de comp.cpp e 0.
-unsafe fn cqd7_fase(comp: usize, k: i32) -> usize {
+unsafe fn comp_stage(comp: usize, k: i32) -> usize {
     if k < -1 || k > cqd7_d(comp + 0x30) as i32 {
-        aviso_em(0x99b80c, 0x36e);
+        show_error_at(0x99b80c, 0x36e);
         return 0;
     }
     if k == -1 { comp } else { cqd7_d(cqd7_d(comp + 0xc) + k as usize * 4) }
@@ -392,10 +392,10 @@ unsafe fn cqd7_fase(comp: usize, k: i32) -> usize {
 unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: i32) -> i32 {
     let grupo: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x4b01d0usize);
     let mut e = k;
-    let g = grupo(cqd7_w(cqd7_fase(this, e) + 0x3a) as i32);
+    let g = grupo(cqd7_w(comp_stage(this, e) + 0x3a) as i32);
     if g > -1 && e > -1 {
         loop {
-            let f = cqd7_fase(this, e - 1);
+            let f = comp_stage(this, e - 1);
             if grupo(cqd7_w(f + 0x3a) as i32) != g {
                 break;
             }
@@ -411,7 +411,7 @@ unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: i32) -> i32
 /// O comparador da primeira fase do grupo: com o índice válido (−1..+0x30), as duas (só leem) e o mesmo índice; fora
 /// dele só a original (a caixa).
 unsafe extern "thiscall" fn comparar_get_first_stage_of_group(this: usize, k: i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(%%I1%%);
     if k < -1 || k > cqd7_d(this + 0x30) as i32 {
         return o(this, k);
     }
@@ -431,7 +431,7 @@ unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
     let fase: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x48d200usize);
     let voltar = |s0: i32| -> i32 {
         let mut s = s0;
-        let g = grupo(cqd7_w(cqd7_fase(this, s) + 0x3a) as i32);
+        let g = grupo(cqd7_w(comp_stage(this, s) + 0x3a) as i32);
         if g > -1 && s > -1 {
             loop {
                 let f = fase(this, s - 1);
@@ -448,7 +448,7 @@ unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
     };
     let fim = |s: i32| -> usize {
         if s < -1 || s > cqd7_d(this + 0x30) as i32 {
-            aviso_em(0x99b80c, 0x36e);
+            show_error_at(0x99b80c, 0x36e);
             return this;
         }
         let f = if s == -1 { this } else { cqd7_d(cqd7_d(this + 0xc) + s as usize * 4) };
@@ -457,7 +457,7 @@ unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
     let mut e: i32 = -1;
     if cqd7_d(this + 0x30) as i32 >= -1 {
         loop {
-            let f = cqd7_fase(this, e);
+            let f = comp_stage(this, e);
             let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(cqd7_d(cqd7_d(f) + 0x10));
             if acabou(f, 0, 1) as u8 == 0 {
                 if f == 0 {
@@ -480,5 +480,5 @@ unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
 /// O comparador da fase atual: só a original (ponytail: o método 0x10 das fases pode refazer a tabela; não roda duas
 /// vezes); a cópia se prova no modo Rust pelas telas.
 unsafe extern "thiscall" fn comparar_get_current_stage(this: usize) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%)(this)
 }

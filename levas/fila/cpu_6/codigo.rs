@@ -13,7 +13,7 @@ unsafe fn cpu6_s(a: usize) -> i8 {
 }
 
 /// A região do clima de uma cidade (+0x34) se for válida (0 ≤ r < [this + 8]): [this] + r × 0x6e.
-unsafe fn cpu6_regiao(this: usize, cidade: usize) -> Option<usize> {
+unsafe fn weather_region(this: usize, cidade: usize) -> Option<usize> {
     let r = cpu6_i(cidade + 0x34);
     if r >= 0 && r < cpu6_i(this + 8) {
         Some(cpu6_d(this).wrapping_add(r as usize * 0x6e))
@@ -63,14 +63,14 @@ unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, jogo: usi
     if cid != 0 {
         let leituras = cidades.wrapping_add(cpu6_d(cid).wrapping_mul(4));
         *s.add(3) = *((leituras + 3) as *const u8);
-        if let Some(r) = cpu6_regiao(this, cid) {
+        if let Some(r) = weather_region(this, cid) {
             reg = r;
         } else {
             let n = cpu6_d(cid + 0x1f);
             if n != 0 {
                 let capital = cpu6_d(n + 0x7a);
                 if capital != 0 {
-                    if let Some(r) = cpu6_regiao(this, capital) {
+                    if let Some(r) = weather_region(this, capital) {
                         reg = r;
                     }
                 }
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, jogo: usi
 
 /// Comparador: lado a lado nos 4 bytes da saída.
 unsafe extern "thiscall" fn comparar_get_match_weather(this: usize, s: *mut u8, jogo: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(%%I0%%);
     let regioes = [(s as usize, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, s, jogo), || get_match_weather(this, s, jogo));
     PLACAR.registrar(igual, || format!("get_match_weather(jogo {:#x}) {:x?} x {:x?}", jogo, mo.0, mr.0));
@@ -210,14 +210,14 @@ unsafe extern "thiscall" fn get_temperature(_this: usize, faixa: u32, jogo: usiz
         if t < 10 {
             return (t as u8).wrapping_sub(2);
         }
-        return ftol(t as f64 * f64_em(0x9689b0)) as u8;
+        return match_pl_ftol(t as f64 * read_f64_at(0x9689b0)) as u8;
     }
     t as u8
 }
 
 /// Comparador: pelo valor.
 unsafe extern "thiscall" fn comparar_get_temperature(this: usize, faixa: u32, jogo: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(%%I1%%)(this, faixa, jogo);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(%%I1%%)(this, faixa, jogo);
     let n = get_temperature(this, faixa, jogo);
     PLACAR.registrar(r == n, || format!("get_temperature(faixa {}, jogo {:#x}) original={} rust={}", faixa as u8 as i8, jogo, r as i8, n as i8));
     r
@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: *const u8, 
 
 /// Comparador: pelo valor.
 unsafe extern "thiscall" fn comparar_get_pitch_condition(this: usize, clima: *const u8, jogo: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *const u8, usize) -> u8>(%%I2%%)(this, clima, jogo);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u8, usize) -> u8>(%%I2%%)(this, clima, jogo);
     let n = get_pitch_condition(this, clima, jogo);
     PLACAR.registrar(r == n, || format!("get_pitch_condition(clima {:x?}, jogo {:#x}) original={:#x} rust={:#x}", core::slice::from_raw_parts(clima, 4), jogo, r, n));
     r

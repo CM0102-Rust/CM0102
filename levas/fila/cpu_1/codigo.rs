@@ -18,7 +18,7 @@ unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
 }
 
 unsafe extern "C" fn comparar_key_nation_index_of_nation(nacao: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(nacao);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(nacao);
     let n = key_nation_index_of_nation(nacao);
     PLACAR.registrar(r == n, || format!("key_nation_index_of_nation(nação {:x}) original={} rust={}", nacao, r, n));
     r
@@ -39,7 +39,7 @@ unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
                     return k as u8; // cpu1: a linha da nacao escolhida
                 }
             }
-            aviso_em(0x9eaff4, 0x26d);
+            show_error_at(0x9eaff4, 0x26d);
             return 0;
         }
     }
@@ -56,7 +56,7 @@ unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
 }
 
 /// Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
-unsafe fn cpu1_caixa(clube: usize) -> bool {
+unsafe fn hits_key_nation_error(clube: usize) -> bool {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let nacao = cpu1_d(clube + 0x53);
     selecao(clube) == 0
@@ -66,8 +66,8 @@ unsafe fn cpu1_caixa(clube: usize) -> bool {
 }
 
 unsafe extern "C" fn comparar_key_nation_index_of_club(clube: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%);
-    if cpu1_caixa(clube) {
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%);
+    if hits_key_nation_error(clube) {
         return o(clube);
     }
     let r = o(clube);
@@ -97,8 +97,8 @@ unsafe extern "C" fn key_nation_get_club_season_year(clube: usize) -> u16 {
 }
 
 unsafe extern "C" fn comparar_key_nation_get_club_season_year(clube: usize) -> u16 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u16>(%%I2%%);
-    if clube != 0 && cpu1_caixa(clube) {
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u16>(%%I2%%);
+    if clube != 0 && hits_key_nation_error(clube) {
         return o(clube);
     }
     let r = o(clube);

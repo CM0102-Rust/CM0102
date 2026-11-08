@@ -32,13 +32,13 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
             return -1;
         }
         let l = read_usize(this + 4);
-        cpz8_inicio(l);
+        list_rewind(l);
         if read_i16_as_i32(l) <= 0 {
             return -1;
         }
         let mut i = 0;
         loop {
-            let p = cpj2_proximo(l);
+            let p = contract_manager_list_next(l);
             if p == 0 {
                 break;
             }
@@ -57,13 +57,13 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
         }
     } else {
         let l = read_usize(this);
-        cpz8_inicio(l);
+        list_rewind(l);
         if read_i16_as_i32(l) <= 0 {
             return -1;
         }
         let mut i = 0;
         loop {
-            let p = cpj2_proximo(l);
+            let p = contract_manager_list_next(l);
             if p == 0 {
                 break;
             }
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
 
 /// O comparador: lado a lado nos cabeçalhos das duas listas (o cursor) e no sorteio, e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(IDX_PICK_RANDOM_PUNDIT);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(IDX_PICK_RANDOM_PUNDIT);
     let mut regioes = Vec::new();
     for l in [read_usize(this), read_usize(this + 4)] {
         if l != 0 {
@@ -116,9 +116,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, 
     r
 }
 
-/// O nome padrão do veículo pelo tipo (as três tabelas da original são iguais): 2 jornal local, 3 rádio, 4 rádio
+/// Default media outlet name by type: 2 local paper, 3 radio, 4 local radio, 5 magazine, else national paper.
+///
+/// [pt] O nome padrão do veículo pelo tipo (as três tabelas da original são iguais): 2 jornal local, 3 rádio, 4 rádio
 /// local, 5 revista; os outros, jornal nacional.
-pub(crate) fn cpz10_veiculo_padrao(tipo: i8) -> usize {
+pub(crate) fn default_media_name(tipo: i8) -> usize {
     match tipo {
         2 => 0xa24284,
         3 => 0xa794cc,
@@ -145,11 +147,11 @@ pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, tipo: u32, i
     let id = id as i16;
     if id != -1 {
         let l = read_usize(this + if t == 2 || t == 4 { 4 } else { 0 });
-        cpz8_inicio(l);
+        list_rewind(l);
         if read_i16_as_i32(l) > 0 {
             let mut i = 0;
             loop {
-                let p = cpj2_proximo(l);
+                let p = contract_manager_list_next(l);
                 if p == 0 {
                     break;
                 }
@@ -165,14 +167,14 @@ pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, tipo: u32, i
             }
         }
     }
-    sprintf(nome, 0x991944, cpz10_veiculo_padrao(t));
+    sprintf(nome, 0x991944, default_media_name(t));
     *marca = 0;
 }
 
 /// O comparador: lado a lado no nome (até 0xd4 bytes: o nome do comentarista tem 0xd1 e o padrão menos), na marca e
 /// nos cabeçalhos das listas (o cursor).
 pub(crate) unsafe extern "thiscall" fn comparar_get_pundit_name(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, *mut u8)>(IDX_GET_PUNDIT_NAME);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, *mut u8)>(IDX_GET_PUNDIT_NAME);
     let mut regioes = vec![(marca as usize, 1)];
     if nome != 0 {
         regioes.push((nome, 0xd4));

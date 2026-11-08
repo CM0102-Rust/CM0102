@@ -4,7 +4,7 @@ unsafe fn cpq11_d(a: usize) -> u32 {
     core::ptr::read_unaligned(a as *const u32)
 }
 
-unsafe fn cpq11_us(a: usize) -> usize {
+unsafe fn read_ptr(a: usize) -> usize {
     cpq11_d(a) as usize
 }
 
@@ -17,31 +17,31 @@ unsafe fn cpq11_por_w(a: usize, v: u16) {
 }
 
 /// `base + i × tam` (o índice com sinal, como o movsx do original).
-fn cpq11_em(base: usize, i: i32, tam: usize) -> usize {
+fn index_addr(base: usize, i: i32, tam: usize) -> usize {
     base.wrapping_add((i as isize).wrapping_mul(tam as isize) as usize)
 }
 
 /// O confronto `k` (0x35 bytes) da rodada `r` da copa: [[copa + 0xad] + 4r] + 0x35k.
-unsafe fn cpq11_confronto(copa: usize, r: i32, k: i32) -> usize {
-    cpq11_em(cpq11_us(cpq11_em(cpq11_us(copa + 0xad), r, 4)), k, 0x35)
+unsafe fn tie_of_round(copa: usize, r: i32, k: i32) -> usize {
+    index_addr(read_ptr(index_addr(read_ptr(copa + 0xad), r, 4)), k, 0x35)
 }
 
 /// A entrada da rodada `r` (0x68 bytes) em [copa + 0xa3]: +0x18 vagas de times, +0x1a confrontos.
-unsafe fn cpq11_rodada(copa: usize, r: i32) -> usize {
-    cpq11_em(cpq11_us(copa + 0xa3), r, 0x68)
+unsafe fn round_entry(copa: usize, r: i32) -> usize {
+    index_addr(read_ptr(copa + 0xa3), r, 0x68)
 }
 
 /// O clube do time `t` da copa (6 bytes em [copa + 0xa7]: +0 clube, +4 nível).
-unsafe fn cpq11_time(copa: usize, t: i16) -> usize {
-    cpq11_em(cpq11_us(copa + 0xa7), t as i32, 6)
+unsafe fn cup_team_entry(copa: usize, t: i16) -> usize {
+    index_addr(read_ptr(copa + 0xa7), t as i32, 6)
 }
 
 /// Os confrontos de todas as rodadas da copa (rodadas em +0x3c), para os comparadores.
-unsafe fn cpq11_confrontos(copa: usize) -> Vec<(usize, usize)> {
+unsafe fn all_ties_regions(copa: usize) -> Vec<(usize, usize)> {
     let mut v = vec![(0xb67a34, 4)];
     for r in 0..(cpq11_w(copa + 0x3c) as i32).max(0) {
-        let f = cpq11_us(cpq11_em(cpq11_us(copa + 0xad), r, 4));
-        let n = cpq11_w(cpq11_rodada(copa, r) + 0x1a) as i32;
+        let f = read_ptr(index_addr(read_ptr(copa + 0xad), r, 4));
+        let n = cpq11_w(round_entry(copa, r) + 0x1a) as i32;
         if f != 0 && n > 0 {
             v.push((f, n as usize * 0x35));
         }
@@ -50,7 +50,7 @@ unsafe fn cpq11_confrontos(copa: usize) -> Vec<(usize, usize)> {
 }
 
 /// A caixa "Memory Allocation Error" ("v%s %s.%s %d (%s)" de Cup.cpp na linha `linha`) e o jogo para (como a original).
-unsafe fn cpq11_sem_memoria(linha: u32, texto: usize) -> ! {
+unsafe fn fatal_memory_error_box(linha: u32, texto: usize) -> ! {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -90,18 +90,18 @@ unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    let vagas = cpq11_w(cpq11_rodada(copa, r) + 0x18) as i32;
+    let vagas = cpq11_w(round_entry(copa, r) + 0x18) as i32;
     let vetor = alocar(vagas.wrapping_mul(7) as u32);
     if vetor == 0 {
-        cpq11_sem_memoria(0xe7f, 0x9b574c); // "CUP::randomize_round_teams() : Cannot allocate memory"
+        fatal_memory_error_box(0xe7f, 0x9b574c); // "CUP::randomize_round_teams() : Cannot allocate memory"
     }
-    let entrada = |i: i16| cpq11_em(vetor, i as i32, 7);
+    let entrada = |i: i16| index_addr(vetor, i as i32, 7);
     // 1) os times saem dos confrontos
     let mut n: i16 = 0;
     let mut k: i32 = 0;
-    while (k as i16) < cpq11_w(cpq11_rodada(copa, r) + 0x1a) {
+    while (k as i16) < cpq11_w(round_entry(copa, r) + 0x1a) {
         for (lado, ligado, jogo) in [(0usize, 0xeusize, 0xausize), (2, 0x10, 0xc)] {
-            let t = cpq11_confronto(copa, r, k as i16 as i32);
+            let t = tie_of_round(copa, r, k as i16 as i32);
             let e = entrada(n);
             n = n.wrapping_add(1);
             let time = cpq11_w(t + lado);
@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
                 cpq11_por_w(e, time as u16);
                 cpq11_por_w(e + 2, cpq11_w(t + ligado) as u16);
                 cpq11_por_w(e + 4, cpq11_w(t + jogo) as u16);
-                *((e + 6) as *mut u8) = *((cpq11_time(copa, time) + 4) as *const u8); // o nível do time
+                *((e + 6) as *mut u8) = *((cup_team_entry(copa, time) + 4) as *const u8); // o nível do time
                 cpq11_por_w(t + lado, 0xfffe); // a vaga fica livre
             } else {
                 cpq11_por_w(e, 0xffff);
@@ -142,10 +142,10 @@ unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
         if cpq11_w(e) == -1 {
             continue;
         }
-        let mut s = sorteio(cpq11_w(cpq11_rodada(copa, r) + 0x1a) as i32) as i16;
+        let mut s = sorteio(cpq11_w(round_entry(copa, r) + 0x1a) as i32) as i16;
         let inicio = s;
         let mandante = loop {
-            let t = cpq11_confronto(copa, r, s as i32);
+            let t = tie_of_round(copa, r, s as i32);
             let (casa, fora) = (cpq11_w(t), cpq11_w(t + 2));
             if segunda_volta || (casa < 0 && fora < 0) {
                 let casa_livre = casa == -2;
@@ -161,26 +161,26 @@ unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
                 }
             }
             s = s.wrapping_add(1);
-            if s >= cpq11_w(cpq11_rodada(copa, r) + 0x1a) {
+            if s >= cpq11_w(round_entry(copa, r) + 0x1a) {
                 s = 0;
             }
             if s == inicio {
                 if segunda_volta {
-                    aviso_em(0x9b55ac, 0xf4c);
+                    show_error_at(0x9b55ac, 0xf4c);
                     liberar(vetor);
                     return;
                 }
                 segunda_volta = true;
             }
         };
-        let t = cpq11_confronto(copa, r, s as i32);
+        let t = tie_of_round(copa, r, s as i32);
         let (lado, ligado, jogo) = if mandante { (0usize, 0xeusize, 0xausize) } else { (2, 0x10, 0xc) };
         cpq11_por_w(t + lado, cpq11_w(e) as u16);
         cpq11_por_w(t + ligado, cpq11_w(e + 2) as u16);
         cpq11_por_w(t + jogo, cpq11_w(e + 4) as u16);
         let seguinte = cpq11_w(e + 2);
         if seguinte != -1 {
-            let v = cpq11_confronto(copa, seguinte as i32, cpq11_w(e + 4) as i32);
+            let v = tie_of_round(copa, seguinte as i32, cpq11_w(e + 4) as i32);
             cpq11_por_w(v + 0x12, rodada as u16);
             cpq11_por_w(v + 6, s as u16);
             cpq11_por_w(v + 8, mandante as u16);
@@ -192,9 +192,9 @@ unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
 /// Comparador: sorteia (0x90cfc0) e só usa um vetor temporário: lado a lado pelo estado do sorteador e pelos
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
 unsafe extern "thiscall" fn comparar_randomize_round_teams(copa: usize, rodada: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend(cpq11_confrontos(copa));
+    reg.extend(all_ties_regions(copa));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada),
         || crate::aleatorio::sem_contar(|| randomize_round_teams(copa, rodada)));
     PLACAR.registrar(igual, || {
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn comparar_randomize_round_teams(copa: usize, rodada: 
 }
 
 /// Os pares de palavras do confronto `t` que a 0x522610 troca: mandante/visitante (+0/+2), +0xa/+0xc e +0xe/+0x10.
-unsafe fn cpq11_inverter(t: usize) {
+unsafe fn swap_tie_sides(t: usize) {
     for (a, b) in [(0usize, 2usize), (0xe, 0x10), (0xa, 0xc)] {
         let (x, y) = (cpq11_w(t + a), cpq11_w(t + b));
         cpq11_por_w(t + a, y as u16);
@@ -220,51 +220,51 @@ unsafe fn cpq11_inverter(t: usize) {
 /// +0x10/+0xc fica 0. Os dois jogos no mesmo estádio deixam de cair no mesmo lado.
 unsafe extern "thiscall" fn separate_shared_stadium_ties(copa: usize, rodada: u32) {
     let r = rodada as i16 as i32;
-    let estadio = |t: i16| cpq11_d(cpq11_us(cpq11_time(copa, t)) as usize + 0x69);
-    let mut n = cpq11_w(cpq11_rodada(copa, r) + 0x1a);
+    let estadio = |t: i16| cpq11_d(read_ptr(cup_team_entry(copa, t)) as usize + 0x69);
+    let mut n = cpq11_w(round_entry(copa, r) + 0x1a);
     let mut i: i32 = 0;
     while (i as i16) < n {
-        let fi = cpq11_confronto(copa, r, i as i16 as i32);
+        let fi = tie_of_round(copa, r, i as i16 as i32);
         let casa_i = cpq11_w(fi);
         let mut j = i + 1;
         while (j as i16) < n {
-            let fj = cpq11_confronto(copa, r, j as i16 as i32);
+            let fj = tie_of_round(copa, r, j as i16 as i32);
             let mut dividem = false;
             for lado in [0usize, 2] {
                 let a = if lado == 0 { casa_i } else { cpq11_w(fi + 2) };
                 let b = cpq11_w(fj + lado);
                 if a != -1 && b != -1 {
                     crate::comparacao::ramo("cpq_11 estadio comparado");
-                    let (sa, sb) = (estadio(a), estadio(b));
-                    if sa == sb && sa != 0 {
+                    let (sa, signed_byte_at) = (estadio(a), estadio(b));
+                    if sa == signed_byte_at && sa != 0 {
                         dividem = true;
                         break;
                     }
                 }
             }
             if dividem {
-                cpq11_inverter(fj);
+                swap_tie_sides(fj);
                 let seguinte = cpq11_w(fj + 0xe);
                 if seguinte != -1 {
-                    cpq11_por_w(cpq11_confronto(copa, seguinte as i32, cpq11_w(fj + 0xa) as i32) + 8, 1);
+                    cpq11_por_w(tie_of_round(copa, seguinte as i32, cpq11_w(fj + 0xa) as i32) + 8, 1);
                 }
                 let seguinte = cpq11_w(fj + 0x10);
                 if seguinte != -1 {
-                    cpq11_por_w(cpq11_confronto(copa, seguinte as i32, cpq11_w(fj + 0xc) as i32) + 8, 0);
+                    cpq11_por_w(tie_of_round(copa, seguinte as i32, cpq11_w(fj + 0xc) as i32) + 8, 0);
                 }
                 break;
             }
             j += 1;
         }
-        n = cpq11_w(cpq11_rodada(copa, r) + 0x1a);
+        n = cpq11_w(round_entry(copa, r) + 0x1a);
         i += 1;
     }
 }
 
 /// Comparador: só grava confrontos (da rodada e das seguintes): lado a lado pelos confrontos de todas as rodadas.
 unsafe extern "thiscall" fn comparar_separate_shared_stadium_ties(copa: usize, rodada: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
-    let reg = cpq11_confrontos(copa);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
+    let reg = all_ties_regions(copa);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada), || separate_shared_stadium_ties(copa, rodada));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn comparar_separate_shared_stadium_ties(copa: usize, r
 
 /// A conta da 0x4bf850 sem efeitos: o eax da original e o byte devolvido. Com uma rodada só, (baixo + alto) / 2
 /// (truncada para o zero) sobre a soma; senão o quociente (alto − baixo) × rodada / (rodadas − 1), sem somar o baixo.
-fn cpq11_escala(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> (u32, i8) {
+fn interpolate_by_round(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> (u32, i8) {
     let (b, a) = (baixo as u8 as i8 as i32, alto as u8 as i8 as i32);
     let n = rodadas as u16 as i16 as i32;
     if n == 1 {
@@ -295,9 +295,9 @@ fn cpq11_escala(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> (u32, i8) {
 /// 0x256e, devolve 0 ou 100). Devolve o eax inteiro da original (quem chama empurra o registrador todo para
 /// 0x86bdd0/0x86c000): o byte em al sobre a soma (rodada única) ou o quociente.
 unsafe extern "C" fn comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
-    let (eax, v) = cpq11_escala(baixo, alto, rodada, rodadas);
+    let (eax, v) = interpolate_by_round(baixo, alto, rodada, rodadas);
     if !(0..=100).contains(&v) {
-        return orig::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%)(baixo, alto, rodada, rodadas);
+        return original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%)(baixo, alto, rodada, rodadas);
     }
     if rodadas as u16 != 1 {
         crate::comparacao::ramo("cpq_11 escala pela rodada");
@@ -307,8 +307,8 @@ unsafe extern "C" fn comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32
 
 /// Comparador: pura (pelo eax inteiro). Fora da faixa (a caixa de erro) só a original.
 unsafe extern "C" fn comparar_comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%);
-    if !(0..=100).contains(&cpq11_escala(baixo, alto, rodada, rodadas).1) {
+    let o = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%);
+    if !(0..=100).contains(&interpolate_by_round(baixo, alto, rodada, rodadas).1) {
         return o(baixo, alto, rodada, rodadas);
     }
     let r = o(baixo, alto, rodada, rodadas);

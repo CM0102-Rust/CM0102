@@ -10,7 +10,7 @@ unsafe fn cqd12_i(a: usize) -> i32 {
 
 /// Contador de ramo para a rotina quente (~27 milhões de chamadas até 2002-06-01): o `ramo` só a cada 4096 passagens
 /// (a primeira inclusive), para não pesar na carreira.
-fn cqd12_contar(n: &core::sync::atomic::AtomicU32, nome: &'static str) {
+fn count_hot_branch(n: &core::sync::atomic::AtomicU32, nome: &'static str) {
     // ponytail: rotina quente; o contador do ramo conta de 4096 em 4096
     if n.fetch_add(1, core::sync::atomic::Ordering::Relaxed) & 0xfff == 0 {
         crate::comparacao::ramo(nome);
@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, 
     if bosman(gerente, pessoa(contrato)) == 0 { // cqd12: sem a lei Bosman
         return 0;
     }
-    cqd12_contar(&CQD12_BOSMAN, "cqd_12 com lei Bosman");
+    count_hot_branch(&CQD12_BOSMAN, "cqd_12 com lei Bosman");
     let t = compensacao(gerente, pessoa(contrato), clube, 1);
     *taxa = t;
     if t > cqd12_i(pessoa(contrato) + 0x52) {
@@ -68,18 +68,18 @@ unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, 
         5 | 6 => 0.8,
         7 | 8 => 0.9,
         _ => {
-            cqd12_contar(&CQD12_LONGE, "cqd_12 faixa longe");
+            count_hot_branch(&CQD12_LONGE, "cqd_12 faixa longe");
             return 1; // cqd12: as faixas 9-14
         }
     };
-    cqd12_contar(&CQD12_FAIXA, "cqd_12 faixa pelo fator");
+    count_hot_branch(&CQD12_FAIXA, "cqd_12 faixa pelo fator");
     // fild [vaga+0xb]; fild [vaga+3]; fmul fator; fcompp: 1 se o +3 × fator passa do +0xb (precisão dupla)
     (cqd12_i(vaga + 3) as f64 * fator > cqd12_i(vaga + 0xb) as f64) as u32
 }
 
 /// Comparador: lado a lado (rotina pura: só a taxa e a devolução), pelas cópias leves.
 unsafe extern "thiscall" fn comparar_shortlist_manager_is_compensation_deal(this: usize, vaga: usize, contrato: usize, clube: usize, taxa: *mut i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32) -> u32>(%%I0%%);
     let reg = [(taxa as usize, 4)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, vaga, contrato, clube, taxa),
         || shortlist_manager_is_compensation_deal(this, vaga, contrato, clube, taxa));
@@ -98,7 +98,7 @@ unsafe extern "C" fn shortlist_compare_slots_by_index(a: usize, b: usize) -> i32
 
 /// Comparador: a devolução (pura).
 unsafe extern "C" fn comparar_shortlist_compare_slots_by_index(a: usize, b: usize) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
     let n = shortlist_compare_slots_by_index(a, b);
     PLACAR.registrar(r == n, || format!("shortlist_compare_slots_by_index({:#x}, {:#x}) original={} rust={}", a, b, r, n));
@@ -107,7 +107,7 @@ unsafe extern "C" fn comparar_shortlist_compare_slots_by_index(a: usize, b: usiz
 
 /// Os clubes interessados no jogador, como a 0x84b580 os pede (0x842180 com modo 1 numa lista local; os itens de 8
 /// bytes: id do jogador, id do clube).
-unsafe fn cqd12_interessados(this: usize, jogador: usize) -> Vec<usize> {
+unsafe fn interested_clubs(this: usize, jogador: usize) -> Vec<usize> {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let juntar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x842180usize);
@@ -188,8 +188,8 @@ unsafe extern "thiscall" fn mark_player_under_offer(this: usize, jogador: usize,
 /// Comparador: lado a lado pelas listas de 40 vagas dos clubes interessados (a cópia e a original montam e soltam a
 /// mesma lista local) e pelo cursor da lista `troca`.
 unsafe extern "thiscall" fn comparar_mark_player_under_offer(this: usize, jogador: usize, comprador: usize, troca: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
-    let mut reg: Vec<(usize, usize)> = cqd12_interessados(this, jogador).into_iter()
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
+    let mut reg: Vec<(usize, usize)> = interested_clubs(this, jogador).into_iter()
         .map(|k| cqd12_d(cqd12_d(this + 0xdc).wrapping_add(k.wrapping_mul(9))))
         .filter(|&t| t != 0)
         .map(|t| (t, 40 * 0x25))

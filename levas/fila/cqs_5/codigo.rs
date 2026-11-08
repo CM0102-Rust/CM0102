@@ -13,13 +13,13 @@ unsafe fn cqs5_pd(a: usize, v: usize) {
 }
 
 /// O clube `c` está na competição de id [`g`] (+0x57 a divisão, ponteiro para o registro; +0 o id)?
-unsafe fn cqs5_na(c: usize, g: usize) -> bool {
+unsafe fn eng_auto_cup_is_in_comp(c: usize, g: usize) -> bool {
     let l = cqs5_d(c + 0x57);
     l != 0 && cqs5_d(l) == cqs5_d(g)
 }
 
 /// Põe o clube `c` na vaga `k` da lista (+0xb2, relida a cada vez) e conta.
-unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
+unsafe fn push_section_club(this: usize, k: &mut i32, c: usize) {
     *k += 1;
     cqs5_pd(cqs5_d(this + 0xb2) + (*k as usize - 1) * 4, c);
 }
@@ -39,13 +39,13 @@ unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
 ///    -> cdecl; sorteia), e deles os primeiros que faltam.
 /// Cheia, a lista é ordenada pela latitude da cidade do estádio (qsort 0x945333 com 0x53fd40) e cada metade (a do Norte e
 /// a do Sul [inferência]) pela reputação, da menor para a maior (qsort com 0x4b0810); devolve 1. Sem encher, 0.
-unsafe fn cqs5_selecao(this: usize) -> u32 {
+unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     cqs5_pd(this + 0xb6, 0x38);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let l = alocar(0xe0);
     cqs5_pd(this + 0xb2, l);
     if l == 0 {
-        aviso_em(0x9c4180, 0x24c);
+        show_error_at(0x9c4180, 0x24c);
         return 0;
     }
     let base = cqs5_d(0xae23b4);
@@ -57,8 +57,8 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
     if n > 0 {
         loop {
             let c = base + i as u16 as usize * 0x245;
-            if cqs5_na(c, 0x9cf5c4) || cqs5_na(c, 0x9cf5c8) {
-                cqs5_por(this, &mut k, c);
+            if eng_auto_cup_is_in_comp(c, 0x9cf5c4) || eng_auto_cup_is_in_comp(c, 0x9cf5c8) {
+                push_section_club(this, &mut k, c);
             }
             if cheia(k) {
                 break;
@@ -77,9 +77,9 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
         loop {
             let c = base + i as u16 as usize * 0x245;
             let antes = cqs5_d(c + 0x5b);
-            if cqs5_na(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8) {
+            if eng_auto_cup_is_in_comp(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8) {
                 crate::comparacao::ramo("cqs_5 rebaixado para a conference");
-                cqs5_por(this, &mut k, c); // cqs5: o rebaixado entra
+                push_section_club(this, &mut k, c); // cqs5: o rebaixado entra
                 achado = c;
                 break;
             }
@@ -106,10 +106,10 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
                         }
                         let c = base + i as u16 as usize * 0x245;
                         let antes = cqs5_d(c + 0x5b);
-                        if antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf69c) && cqs5_na(c, 0x9cf69c) {
+                        if antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf69c) && eng_auto_cup_is_in_comp(c, 0x9cf69c) {
                             let v = *((c + 0x5f) as *const i8);
                             if ((cat == 6 && v <= cat) || v == cat) && c != 0 && c != achado {
-                                cqs5_por(this, &mut k, c);
+                                push_section_club(this, &mut k, c);
                             }
                         }
                         i = i.wrapping_add(1);
@@ -132,7 +132,7 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
         if n > 0 {
             loop {
                 let c = base + i as u16 as usize * 0x245;
-                if cqs5_na(c, 0x9cf69c) && achado != c {
+                if eng_auto_cup_is_in_comp(c, 0x9cf69c) && achado != c {
                     local[m as u8 as usize] = c;
                     m = m.wrapping_add(1);
                     if m == 0x1e {
@@ -152,7 +152,7 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
                 loop {
                     let c = base + j as u16 as usize * 0x245;
                     let nac = cqs5_d(c + 0x53);
-                    if nac != 0 && cqs5_d(nac) == cqs5_d(0x9cf2e4) && !cqs5_na(c, 0x9cf764) {
+                    if nac != 0 && cqs5_d(nac) == cqs5_d(0x9cf2e4) && !eng_auto_cup_is_in_comp(c, 0x9cf764) {
                         local[m as u8 as usize] = c;
                         m = m.wrapping_add(1);
                         if m == 0x1e {
@@ -171,7 +171,7 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
         embaralhar(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (cqs5_w(this + 0xb6).wrapping_sub(k as i16)) as u16 as u32);
         let mut a: i16 = 0;
         while k < cqs5_d(this + 0xb6) as i32 {
-            cqs5_por(this, &mut k, local[a as u16 as usize]);
+            push_section_club(this, &mut k, local[a as u16 as usize]);
             a = a.wrapping_add(1);
         }
     }
@@ -189,19 +189,19 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
 }
 
 unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 {
-    cqs5_selecao(this)
+    eng_auto_cup_select_section_clubs(this)
 }
 
 /// Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
 /// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
 /// caso em que ela lê a dword sem valor da pilha), só a original.
 unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let base = cqs5_d(0xae23b4);
     let tem_rebaixado = (0..cqs5_d(0xae235c) as i32).any(|i| {
         let c = base + i as usize * 0x245;
         let antes = cqs5_d(c + 0x5b);
-        cqs5_na(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8)
+        eng_auto_cup_is_in_comp(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8)
     });
     if !tem_rebaixado {
         return o(this);
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize) -> u32 {
         cqs5_pd(this + 0xb2, antes);
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| cqs5_selecao(this));
+        let r = crate::aleatorio::sem_contar(|| eng_auto_cup_select_section_clubs(this));
         lr.set(cqs5_d(this + 0xb2));
         cqs5_pd(this + 0xb2, lo.get());
         r
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn create_section_stage(this: usize) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let times = alocar(((cqs5_w(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
-        return aviso_em(0x9c4180, 0x2e9);
+        return show_error_at(0x9c4180, 0x2e9);
     }
     let mut i = 0i32;
     while i < cqs5_w(this + 0x3e) as i32 {
@@ -274,7 +274,7 @@ unsafe extern "thiscall" fn create_section_stage(this: usize) {
     soltar(times);
     soltar(tabela);
     if cqs5_d(cqs5_d(this + 0xc)) == 0 {
-        return aviso_em(0x9c4180, 0x300);
+        return show_error_at(0x9c4180, 0x300);
     }
     crate::comparacao::ramo("cqs_5 fase das chaves do trofeu");
     cqs5_pd(this + 0x30, 0);
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn create_section_stage(this: usize) {
 
 /// Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
 unsafe extern "thiscall" fn comparar_create_section_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     o(this);
     let f = cqs5_d(cqs5_d(this + 0xc));
     PLACAR.registrar(f != 0 && cqs5_d(this + 0x30) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, cqs5_d(this + 0x30) as i32));
@@ -294,7 +294,7 @@ unsafe extern "thiscall" fn comparar_create_section_stage(this: usize) {
 unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     let fase = cqs5_d(this + 0x30) as i32;
     if fase >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x9c4180, 0x314);
+        return show_error_at(0x9c4180, 0x314);
     }
     let fase = fase + 1;
     cqs5_pd(this + 0x30, fase as usize);
@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
 
 /// Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
 unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let antes = cqs5_d(this + 0x30) as i32;
     let ultima = antes >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);

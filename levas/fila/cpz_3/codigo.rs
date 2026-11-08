@@ -25,30 +25,30 @@ unsafe fn cpz3_s(a: usize) -> i8 {
 static mut CPZ3_ENSAIO: bool = false;
 
 /// A linha `i` da tabela (+0xb1, 0x3b bytes).
-unsafe fn cpz3_linha(liga: usize, i: i32) -> usize {
+unsafe fn league_table_row(liga: usize, i: i32) -> usize {
     cpz3_d(liga + 0xb1).wrapping_add((i as usize).wrapping_mul(0x3b))
 }
 
 /// A virtual +0x40 da liga (League::announce_team_status: thiscall(liga, clube, situação, fase, 0, 0), ret 0x14), com
 /// o clube da linha `i`. `alto` = os bits de cima do registrador que a original empurra com a fase (+0x44) no byte de
 /// baixo (o ponteiro da linha ou a devolução das cláusulas: reproduzidos).
-unsafe fn cpz3_anunciar(liga: usize, i: i32, situacao: u32, alto: u32) {
+unsafe fn league_announce_team_status(liga: usize, i: i32, situacao: u32, alto: u32) {
     if CPZ3_ENSAIO {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(cpz3_d(cpz3_d(liga) + 0x40));
-    f(liga, cpz3_d(cpz3_linha(liga, i)), situacao, alto | cpz3_b(liga + 0x44) as u32, 0, 0);
+    f(liga, cpz3_d(league_table_row(liga, i)), situacao, alto | cpz3_b(liga + 0x44) as u32, 0, 0);
 }
 
 /// Grava a situação `v` no +0x37 da linha `i` e a anuncia.
-unsafe fn cpz3_situacao(liga: usize, i: i32, v: u8, alto: u32) {
-    *((cpz3_linha(liga, i) + 0x37) as *mut u8) = v;
-    cpz3_anunciar(liga, i, v as i8 as i32 as u32, alto);
+unsafe fn set_row_status(liga: usize, i: i32, v: u8, alto: u32) {
+    *((league_table_row(liga, i) + 0x37) as *mut u8) = v;
+    league_announce_team_status(liga, i, v as i8 as i32 as u32, alto);
 }
 
 /// O máximo de pontos da linha: (jogos da temporada +0xa7 − jogos feitos +0x11) × pontos da vitória (+0xc2) + pontos
 /// (+0x19).
-unsafe fn cpz3_maximo(liga: usize, l: usize) -> i32 {
+unsafe fn max_points(liga: usize, l: usize) -> i32 {
     ((cpz3_w(liga + 0xa7) as i32) - (cpz3_s(l + 0x11) as i32)).wrapping_mul(cpz3_s(liga + 0xc2) as i32).wrapping_add(cpz3_w(l + 0x19) as i32)
 }
 
@@ -83,7 +83,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let mapa = alocar(cpz3_w(this + 0x3e) as i32 as u32);
     if mapa == 0 {
-        return aviso_em(0x9f15f4, 0x7c9);
+        return show_error_at(0x9f15f4, 0x7c9);
     }
     let n = cpz3_w(this + 0x3e);
     core::ptr::write_bytes(mapa as *mut u8, 0xff, n as i32 as usize);
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
     if cpz3_b(this + 0xd9) & 1 != 0 {
         let mut i: i16 = 0;
         while i < n {
-            let s = cpz3_b(cpz3_linha(this, i as i32) + 0x37);
+            let s = cpz3_b(league_table_row(this, i as i32) + 0x37);
             if s != 0xfe && s != 0xfc && s != 3 {
                 primeiro = i as i8;
                 break;
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
         while k <= 1 {
             if contas[k as usize] != 0 {
                 while (i as i16) < n {
-                    let s = cpz3_b(cpz3_linha(this, i as i16 as i32) + 0x37);
+                    let s = cpz3_b(league_table_row(this, i as i16 as i32) + 0x37);
                     if s != 0xfe && s != 0xfc && s != 3 {
                         *m(i as i16 as i32) = k as u8;
                         contas[k as usize] = contas[k as usize].wrapping_sub(1);
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
     while (i as i16) >= 0 && k >= 2 {
         if contas[k as usize] != 0 {
             while (i as i16) >= 0 {
-                let s = cpz3_b(cpz3_linha(this, i as i16 as i32) + 0x37);
+                let s = cpz3_b(league_table_row(this, i as i16 as i32) + 0x37);
                 if s != 0 && s != 1 && s != 5 {
                     *m(i as i16 as i32) = k as u8;
                     contas[k as usize] = contas[k as usize].wrapping_sub(1);
@@ -147,15 +147,15 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
     // a melhor (+0x39) e a pior (+0x3a) posição possível
     let mut i: i32 = 0;
     while (i as i16) < cpz3_w(this + 0x3e) {
-        let li = cpz3_linha(this, i as i16 as i32);
+        let li = league_table_row(this, i as i16 as i32);
         if cpz3_b(li + 0x39) != cpz3_b(li + 0x3a) {
             let pos = (i as u8).wrapping_add(1);
             *((li + 0x39) as *mut u8) = pos;
             // os de cima (j < i): a melhor cai um para cada um que o máximo de i alcança
-            let max_i = cpz3_maximo(this, li);
+            let max_i = max_points(this, li);
             let mut j: i32 = 0;
             while (j as i16) < (i as i16) {
-                let lj = cpz3_linha(this, j);
+                let lj = league_table_row(this, j);
                 let jogos = cpz3_w(this + 0xa7);
                 let fim_i = (cpz3_s(li + 0x11) as i16) >= jogos;
                 let fim_j = (cpz3_s(lj + 0x11) as i16) >= jogos;
@@ -178,10 +178,10 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
             *((li + 0x3a) as *mut u8) = pos;
             let mut j: i32 = pos as i8 as i32;
             while (j as i16) < cpz3_w(this + 0x3e) {
-                let lj = cpz3_linha(this, j as i16 as i32);
+                let lj = league_table_row(this, j as i16 as i32);
                 let jogos = cpz3_w(this + 0xa7);
                 let pj = cpz3_w(lj + 0x19) as i32;
-                let max_j = cpz3_maximo(this, lj);
+                let max_j = max_points(this, lj);
                 let fim_i = (cpz3_s(li + 0x11) as i16) >= jogos;
                 let fim_j = (cpz3_s(lj + 0x11) as i16) >= jogos;
                 let pi = cpz3_w(li + 0x19) as i32;
@@ -207,14 +207,14 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
     let mut i: i32 = 0;
     while (i as i16) < cpz3_w(this + 0x3e) {
         let ii = i as i16 as i32;
-        let li = cpz3_linha(this, ii);
+        let li = league_table_row(this, ii);
         let alto_linha = (li as u32) & !0xff;
         let pior = cpz3_s(li + 0x3a) as i32;
         let s = cpz3_b(li + 0x37);
         if pior == um_depois {
             if s != 3 && s != 0xfe && s != 0xfc && s != 5 {
                 crate::comparacao::ramo("cpz_3 titulo");
-                cpz3_situacao(this, ii, 5, alto_linha); // cpz3: o título na pior posição = o primeiro + 1
+                set_row_status(this, ii, 5, alto_linha); // cpz3: o título na pior posição = o primeiro + 1
             }
         } else {
             let f = *m(pior - 1);
@@ -223,22 +223,22 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
                     let d9 = cpz3_b(this + 0xd9);
                     if d9 & 2 != 0 {
                         if s != 0 {
-                            cpz3_situacao(this, ii, 0, alto_linha);
+                            set_row_status(this, ii, 0, alto_linha);
                         }
                     } else if d9 & 4 != 0 {
                         if s != 7 {
-                            cpz3_situacao(this, ii, 7, alto_linha);
+                            set_row_status(this, ii, 7, alto_linha);
                         }
                     } else if d9 & 8 != 0 {
                         if s != 6 {
-                            cpz3_situacao(this, ii, 6, alto_linha);
+                            set_row_status(this, ii, 6, alto_linha);
                         }
                     }
                 }
             } else if f == 1 {
                 if s == 0xff {
                     crate::comparacao::ramo("cpz_3 vaga no mata-mata");
-                    cpz3_situacao(this, ii, 1, alto_linha); // cpz3: a vaga no mata-mata (situação 1)
+                    set_row_status(this, ii, 1, alto_linha); // cpz3: a vaga no mata-mata (situação 1)
                 }
             } else {
                 let g = *m(cpz3_s(li + 0x39) as i32 - 1);
@@ -249,21 +249,21 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
                         let clausulas: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x4cd030usize);
                         alto = clausulas(cpz3_d(0xae1050), cpz3_d(li), cpz3_d(this + 4)) & !0xff; // cpz3: as cláusulas de rebaixamento
                     }
-                    let li = cpz3_linha(this, ii);
+                    let li = league_table_row(this, ii);
                     let s = cpz3_b(li + 0x37);
                     if s == 0xff || s == 2 || s == 0xfc {
-                        cpz3_situacao(this, ii, 3, alto);
+                        set_row_status(this, ii, 3, alto);
                     }
                 } else if g == 2 {
                     if s == 0xff || s == 0xfe {
-                        cpz3_situacao(this, ii, 2, alto_linha);
+                        set_row_status(this, ii, 2, alto_linha);
                     }
                 }
             }
         }
         // entre as faixas, sem faixa no meio: 0xfe
         if cpz3_b(this + 0xd9) & 0x20 != 0 {
-            let li = cpz3_linha(this, ii);
+            let li = league_table_row(this, ii);
             let c0 = cpz3_s(this + 0xbe) as i32;
             let c2 = cpz3_s(this + 0xc0) as i32;
             let melhor = cpz3_s(li + 0x39);
@@ -284,13 +284,13 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
                     }
                     if livre && cpz3_b(li + 0x37) == 0xff {
                         *((li + 0x37) as *mut u8) = 0xfe;
-                        cpz3_anunciar(this, ii, 0xffff_fffe, (li as u32) & 0xffff_0000);
+                        league_announce_team_status(this, ii, 0xffff_fffe, (li as u32) & 0xffff_0000);
                     }
                 }
             }
         }
         // a vaga europeia de quem já tem a posição decidida
-        let li = cpz3_linha(this, ii);
+        let li = league_table_row(this, ii);
         let melhor = cpz3_s(li + 0x39);
         if melhor == cpz3_s(li + 0x3a) && melhor < 9 && cpz3_b(this + 0x44) == 0xff {
             let conta: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x4b0700usize);
@@ -304,7 +304,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
                         let (mut cl, mut uefa) = (0i8, 0i8);
                         let vagas: unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8) = core::mem::transmute(0x905c60usize);
                         vagas(cpz3_d(0xde1f58), nacao, &mut cl, &mut uefa);
-                        let li = cpz3_linha(this, ii);
+                        let li = league_table_row(this, ii);
                         let melhor = cpz3_s(li + 0x39) as i32;
                         let vaga = cpz3_d(0xae2d14) + (cpz3_i(cpz3_d(li)) as usize).wrapping_mul(6);
                         if melhor <= cl as i32 {
@@ -318,7 +318,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
         }
         // a situação nas estatísticas (virtual +0x68)
         if !CPZ3_ENSAIO {
-            let li = cpz3_linha(this, ii);
+            let li = league_table_row(this, ii);
             // ponytail: a original empurra a pior, a melhor, a posição e a fase em registradores com lixo nos bits de
             // cima; as +0x68 (0x573260, 0x578660, Comp::set_club_progress 0x48e380) só leem o byte.
             let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(cpz3_d(cpz3_d(this) + 0x68));
@@ -332,7 +332,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
 
 /// As regiões que a 0x684cd0 grava: a tabela inteira (+0xb1, +0x3e linhas de 0x3b bytes), +0xa7 e a vaga europeia
 /// ([0xae2d14] + 6 × id, 4 bytes) de cada clube da tabela.
-unsafe fn cpz3_regioes(this: usize) -> Vec<(usize, usize)> {
+unsafe fn table_status_regions(this: usize) -> Vec<(usize, usize)> {
     let n = cpz3_w(this + 0x3e).max(0) as usize;
     let mut v = vec![(this + 0xa7, 2)];
     let tab = cpz3_d(this + 0xb1);
@@ -359,11 +359,11 @@ unsafe fn cpz3_regioes(this: usize) -> Vec<(usize, usize)> {
 /// As duas a partir do mesmo estado da tabela, de +0xa7 e das vagas europeias dos clubes da tabela, que têm de sair
 /// iguais (as virtuais e as cláusulas não gravam nelas). Sem linhas ou com +0xdd: só a original.
 unsafe extern "thiscall" fn comparar_update_positions_and_status(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpz3_d(this + 0xdd) != 0 || cpz3_w(this + 0x3e) <= 0 || cpz3_d(this + 0xb1) == 0 {
         return o(this);
     }
-    let regioes = cpz3_regioes(this);
+    let regioes = table_status_regions(this);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPZ3_ENSAIO = true;
     crate::aleatorio::pausar_rastro(|| update_positions_and_status(this));
@@ -377,10 +377,10 @@ unsafe extern "thiscall" fn comparar_update_positions_and_status(this: usize) {
 
 /// A fase seguinte das ligas com mata-mata (o corpo de 0x572ff0 e 0x5769e0): na última fase (+0x30 ≥ +0x2c − 1, com
 /// sinal) a caixa da linha `linha`; senão +0x30 + 1 e, se chegou a 0, o mata-mata (`mata_mata`, thiscall(this)).
-unsafe fn cpz3_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata: usize, nome: &'static str) {
+unsafe fn advance_league_stage(this: usize, arquivo: usize, linha: u32, mata_mata: usize, nome: &'static str) {
     let f = cpz3_i(this + 0x30);
     if f >= cpz3_i(this + 0x2c).wrapping_sub(1) {
-        return aviso_em(arquivo, linha);
+        return show_error_at(arquivo, linha);
     }
     let f = f.wrapping_add(1);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
@@ -394,18 +394,18 @@ unsafe fn cpz3_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata:
 /// { 0x572ff0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::advance_stage()` (a virtual +0x28): fonte 0x9c4374,
 /// linha 0x2ce; o mata-mata 0x573080.
 unsafe extern "thiscall" fn eng_first_advance_stage(this: usize) {
-    cpz3_fase_seguinte(this, 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
+    advance_league_stage(this, 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
 }
 
 /// { 0x5769e0 } (thiscall, ret 0, eng_second.cpp): `EngSecond::advance_stage()` (a virtual +0x28): fonte 0x9c43e8,
 /// linha 0x294; o mata-mata 0x576a70.
 unsafe extern "thiscall" fn eng_second_advance_stage(this: usize) {
-    cpz3_fase_seguinte(this, 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
+    advance_league_stage(this, 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
 }
 
 /// O comparador das duas: na fase que não chega a 0 (só +0x30 muda) a original e a cópia lado a lado em +0x30; na
 /// última fase (a caixa) e na que chega a 0 (o mata-mata aloca a fase): só a original.
-unsafe fn cpz3_comparar_fase(nome: &str, this: usize, original: impl FnOnce(), copia: impl FnOnce()) {
+unsafe fn compare_stage_advance(nome: &str, this: usize, original: impl FnOnce(), copia: impl FnOnce()) {
     let f = cpz3_i(this + 0x30);
     if f >= cpz3_i(this + 0x2c).wrapping_sub(1) || f.wrapping_add(1) == 0 {
         return original();
@@ -415,11 +415,11 @@ unsafe fn cpz3_comparar_fase(nome: &str, this: usize, original: impl FnOnce(), c
 }
 
 unsafe extern "thiscall" fn comparar_eng_first_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cpz3_comparar_fase("eng_first_advance_stage", this, || o(this), || eng_first_advance_stage(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    compare_stage_advance("eng_first_advance_stage", this, || o(this), || eng_first_advance_stage(this))
 }
 
 unsafe extern "thiscall" fn comparar_eng_second_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cpz3_comparar_fase("eng_second_advance_stage", this, || o(this), || eng_second_advance_stage(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    compare_stage_advance("eng_second_advance_stage", this, || o(this), || eng_second_advance_stage(this))
 }

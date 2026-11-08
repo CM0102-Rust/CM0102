@@ -39,24 +39,24 @@ unsafe extern "C" fn get_adjective_form_index(indice: u32, idioma: u32) -> u8 {
 unsafe extern "C" fn staff_get_non_player_attribute(pessoa: usize, atributo: u32) -> u8 {
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=12).contains(&a) {
-        return orig::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%)(pessoa, atributo);
+        return original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%)(pessoa, atributo);
     }
     let calcular: unsafe extern "C" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x543fd0usize);
     let nao_jogador = core::ptr::read_unaligned((pessoa + 0x69) as *const usize);
     calcular(pessoa, nao_jogador, atributo)
 }
 
-/// { 0x5442f0 } (cdecl, Database.cpp): a nota de 1 a 20 (`nota_do_atributo`) de 2 × `valor` (byte com
+/// { 0x5442f0 } (cdecl, Database.cpp): a nota de 1 a 20 (`attribute_rating`) de 2 × `valor` (byte com
 /// sinal) + habilidade atual (+5) do `jogador` × 0,1 ([0x967880]); a de 0x544380 com a habilidade
 /// reduzida (os goleiros de 0x543540). Termina no `_ftol`.
 unsafe extern "C" fn player_attribute_rating_with_scaled_ability(jogador: usize, valor: u32) -> u32 {
     let habilidade = core::ptr::read_unaligned((jogador + 5) as *const i16) as f64;
     let v = (valor as u8 as i8) as f64;
-    nota_do_atributo(habilidade * f64_em(0x967880) + (v + v)) as u32
+    attribute_rating(habilidade * read_f64_at(0x967880) + (v + v)) as u32
 }
 
 unsafe extern "C" fn comparar_get_adjective_form_index(indice: u32, idioma: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(u32, u32) -> u8>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u8>(%%I0%%);
     let r = o(indice, idioma);
     let n = get_adjective_form_index(indice, idioma);
     PLACAR.registrar(r == n, || format!("get_adjective_form_index({}, idioma {}) original={} rust={}", indice as u8 as i8, idioma, r, n));
@@ -64,7 +64,7 @@ unsafe extern "C" fn comparar_get_adjective_form_index(indice: u32, idioma: u32)
 }
 
 unsafe extern "C" fn comparar_staff_get_non_player_attribute(pessoa: usize, atributo: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%);
     let r = o(pessoa, atributo);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=12).contains(&a) {
@@ -76,7 +76,7 @@ unsafe extern "C" fn comparar_staff_get_non_player_attribute(pessoa: usize, atri
 }
 
 unsafe extern "C" fn comparar_player_attribute_rating_with_scaled_ability(jogador: usize, valor: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%);
     let r = o(jogador, valor);
     let n = player_attribute_rating_with_scaled_ability(jogador, valor);
     PLACAR.registrar(r == n, || format!("player_attribute_rating_with_scaled_ability({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));

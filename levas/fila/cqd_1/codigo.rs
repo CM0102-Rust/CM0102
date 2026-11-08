@@ -32,7 +32,7 @@ unsafe fn cqd1_clube(id: usize) -> usize {
 
 /// O contrato da pessoa (0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4), guardado em [0xae1080] como
 /// a original faz, e o clube dele (+4); sem contrato, ou com o tipo 5 em +0x35 quando `sem_5`: 0.
-unsafe fn cqd1_clube_do_contrato(pessoa: usize, sem_5: bool) -> usize {
+unsafe fn contract_club_filtered(pessoa: usize, sem_5: bool) -> usize {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contrato(cqd1_d(0xae1050), pessoa);
     cqd1_pd(0xae1080, c);
@@ -44,19 +44,19 @@ unsafe fn cqd1_clube_do_contrato(pessoa: usize, sem_5: bool) -> usize {
 }
 
 /// O clube é humano (0x600a50: push 0; push 0; push 1; push 0; push clube; add esp, 0x14 -> cdecl(clube, 0, 1, 0, 0)).
-unsafe fn cqd1_humano(clube: usize) -> bool {
+unsafe fn transfer_manager_is_human_club(clube: usize) -> bool {
     let f: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     f(clube, 0, 1, 0, 0) != 0
 }
 
 /// Reagenda a oferta (0x8c6220: push 0; push dias; push oferta; mov ecx, this -> thiscall, ret 0xc).
-unsafe fn cqd1_agendar(this: usize, o: usize, dias: u32) {
+unsafe fn schedule_offer_days(this: usize, o: usize, dias: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
     f(this, o, dias, 0);
 }
 
 /// O próximo da lista (0x68d1b0: mov ecx, lista -> thiscall, ret 0).
-unsafe fn cqd1_proximo(l: usize) -> usize {
+unsafe fn transfer_manager_llist_next(l: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x68d1b0usize);
     f(l) as usize
 }
@@ -64,10 +64,10 @@ unsafe fn cqd1_proximo(l: usize) -> usize {
 /// O bloco que a 0x8c63a0 repete: o clube do contrato do alvo (sem olhar o tipo 5), os lances do comprador (+8) pelo
 /// alvo (+0xc) desmarcados na lista de observação (0x84aeb0: push jogador; push clube; mov ecx, [this+0x856] ->
 /// thiscall, ret 8) e os do clube do contrato por cada jogador da troca (lista em +4, cursor no começo).
-unsafe fn cqd1_desmarcar(this: usize, o: usize) {
+unsafe fn clear_offer_bid_markers(this: usize, o: usize) {
     let desmarcar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
     let alvo = cqd1_pessoa(cqd1_d(o + 0xc));
-    let atual = cqd1_clube_do_contrato(alvo, false);
+    let atual = contract_club_filtered(alvo, false);
     desmarcar(cqd1_d(this + 0x856), cqd1_clube(cqd1_d(o + 8)), alvo);
     let l = cqd1_d(o + 4);
     if l == 0 {
@@ -75,7 +75,7 @@ unsafe fn cqd1_desmarcar(this: usize, o: usize) {
     }
     cqd1_pd(l + 0xa, cqd1_d(l + 2));
     loop {
-        let p = cqd1_proximo(cqd1_d(o + 4));
+        let p = transfer_manager_llist_next(cqd1_d(o + 4));
         if p == 0 {
             break;
         }
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn transfer_manager_daily_update(this: usize, hoje: usi
                 let vencida = ha > oa || (ha == oa && cqd1_w(hoje) > cqd1_w(o + 0x12));
                 let s = cqd1_b(o + 0x2c);
                 if vencida && s != 0x13 && s != 7 && s != 8 && s != 0xa {
-                    cqd1_agendar(this, o, 1);
+                    schedule_offer_days(this, o, 1);
                 }
             }
             i += 1;
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn transfer_manager_daily_update(this: usize, hoje: usi
     let l = balde(this);
     cqd1_pd(l + 0xa, cqd1_d(l + 2));
     loop {
-        let p = cqd1_proximo(balde(this));
+        let p = transfer_manager_llist_next(balde(this));
         if p == 0 {
             break;
         }
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn transfer_manager_daily_update(this: usize, hoje: usi
     let mut s = cqd1_d(0xae23bc);
     let mut i: i32 = 0;
     while i < cqd1_d(0xae2364) as i32 {
-        if cqd1_naturaliza(s, p2, p5, p10, comunitaria) {
+        if meets_residency_naturalisation(s, p2, p5, p10, comunitaria) {
             cqd1_pd(s + 0x1e, cqd1_d(cqd1_d(s + 0x39) + 0x53));
         }
         i += 1;
@@ -223,7 +223,7 @@ unsafe extern "thiscall" fn transfer_manager_daily_update(this: usize, hoje: usi
 
 /// A condição do dia 100 da 0x8c5880 (também para o comparador): a data +0x3e (dia com sinal)/+0x40 (ano sem sinal) da
 /// pessoa antes da de 2 anos, o clube na nação [0x9cfa10] sem ser comunitária, e o caso pelo id do clube.
-unsafe fn cqd1_naturaliza(s: usize, p2: usize, p5: usize, p10: usize, comunitaria: unsafe extern "C" fn(usize, usize) -> u32) -> bool {
+unsafe fn meets_residency_naturalisation(s: usize, p2: usize, p5: usize, p10: usize, comunitaria: unsafe extern "C" fn(usize, usize) -> u32) -> bool {
     let antes = |d: usize| {
         let (da, sa) = (cqd1_w(d + 2) as u16, cqd1_w(s + 0x40) as u16);
         da > sa || (da == sa && cqd1_w(d) > cqd1_w(s + 0x3e))
@@ -259,7 +259,7 @@ unsafe fn cqd1_naturaliza(s: usize, p2: usize, p5: usize, p10: usize, comunitari
 /// cada pessoa que cumpre a condição (o laço é o último passo, então o estado de depois é o dele) fica com +0x1e (a
 /// segunda nacionalidade) = a nação do clube: a naturalização do dia 100.
 unsafe extern "thiscall" fn comparar_transfer_manager_daily_update(this: usize, hoje: usize, fatia: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let f = fatia as u8;
     let sem_base = cqd1_w(this + 0x84f) == 0;
     let roda = if sem_base {
@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_daily_update(this: usize, 
         let p10 = nova(d10.as_mut_ptr() as usize, 100, ano.wrapping_sub(10) as u32);
         let mut s = cqd1_d(0xae23bc);
         for _ in 0..(cqd1_d(0xae2364) as i32).max(0) {
-            if cqd1_naturaliza(s, p2, p5, p10, comunitaria) && cqd1_d(s + 0x1e) != cqd1_d(cqd1_d(s + 0x39) + 0x53) {
+            if meets_residency_naturalisation(s, p2, p5, p10, comunitaria) && cqd1_d(s + 0x1e) != cqd1_d(cqd1_d(s + 0x39) + 0x53) {
                 erradas += 1;
             }
             s += 0x6e;
@@ -313,7 +313,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_daily_update(this: usize, 
 /// destruídas pela 0x68d040 na mesma ordem): `TRANSFER_MANAGER::process_due_offer(vaga)`, a oferta que vence hoje, pelo
 /// status +0x2c. O vendedor é o clube do contrato do alvo (+0xc; fora o tipo 5), o comprador o +8.
 /// - 0: sem vendedor, a aceitação do lance (0x8c0080: push 0; push vaga -> thiscall, ret 8). Vendedor humano: status 4,
-///   14 dias (0x8c6220) e os lances desmarcados (cqd1_desmarcar). Senão, sem a marca +0x1f = 1, a resposta da IA
+///   14 dias (0x8c6220) e os lances desmarcados (clear_offer_bid_markers). Senão, sem a marca +0x1f = 1, a resposta da IA
 ///   (0x8c8090: push 0; push vaga, ret 8); com ela, a previsão do vendedor (0x84af00, stdcall(vendedor, alvo, 0 i64,
 ///   comprador, −1 i64, 1): o ecx = [this+0x856] não é lido): recusa, a do empréstimo (0x8bfa30: push 0; push 0; push
 ///   vaga -> thiscall, ret 0xc); aceita, a decisão (0x4cc930: push oferta; mov ecx, [0xae1050] -> thiscall, ret 4),
@@ -340,11 +340,11 @@ unsafe extern "thiscall" fn process_due_offer(this: usize, vaga: usize) {
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let mut l1 = [0u8; 0x10];
     lista_nova(l1.as_mut_ptr() as usize);
-    cqd1_processar(this, vaga);
+    process_due_offer_body(this, vaga);
     destruir(l1.as_mut_ptr() as usize);
 }
 
-unsafe fn cqd1_processar(this: usize, vaga: usize) {
+unsafe fn process_due_offer_body(this: usize, vaga: usize) {
     let aceitar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8c0080usize);
     let respond: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8c8090usize);
     let prever: unsafe extern "stdcall" fn(usize, usize, i64, usize, i64, u32) -> u8 = core::mem::transmute(0x84af00usize);
@@ -361,12 +361,12 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
     let permissoes: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8c7690usize);
     let concluir: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8c34e0usize);
     let pass_ball: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c2f50usize);
-    let tecnico_humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
+    let human_manager_record_checked: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let noticia_feita: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8d3090usize);
     let valor: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x8e7b50usize);
     let o = cqd1_d(vaga);
     let alvo = cqd1_pessoa(cqd1_d(o + 0xc));
-    let vendedor = cqd1_clube_do_contrato(alvo, true);
+    let vendedor = contract_club_filtered(alvo, true);
     let comprador = cqd1_clube(cqd1_d(o + 8));
     let s = cqd1_b(o + 0x2c);
     if s == 0 {
@@ -374,10 +374,10 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
             aceitar(this, vaga, 0);
             return;
         }
-        if cqd1_humano(vendedor) {
+        if transfer_manager_is_human_club(vendedor) {
             cqd1_pb(o + 0x2c, 4);
-            cqd1_agendar(this, o, 0xe);
-            cqd1_desmarcar(this, o);
+            schedule_offer_days(this, o, 0xe);
+            clear_offer_bid_markers(this, o);
             return;
         }
         if cqd1_b(cqd1_d(vaga) + 0x1f) != 1 {
@@ -398,8 +398,8 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
         recusa_mudar(this, cqd1_d(vaga), 0);
         cqd1_pb(cqd1_d(vaga) + 0x2c, 0xf);
         cqd1_pb(cqd1_d(vaga) + 0x2e, 3);
-        cqd1_desmarcar(this, cqd1_d(vaga));
-        cqd1_agendar(this, cqd1_d(vaga), 0xa);
+        clear_offer_bid_markers(this, cqd1_d(vaga));
+        schedule_offer_days(this, cqd1_d(vaga), 0xa);
         let o3 = cqd1_d(vaga);
         if fechada(o3) == 0 {
             return;
@@ -408,7 +408,7 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
         if l != 0 {
             cqd1_pd(l + 0xa, cqd1_d(l + 2));
             loop {
-                let p = cqd1_proximo(cqd1_d(o3));
+                let p = transfer_manager_llist_next(cqd1_d(o3));
                 if p == 0 {
                     break;
                 }
@@ -426,17 +426,17 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
     if matches!(s, 2 | 3 | 4 | 0xf | 0x10 | 0x14) {
         if s == 0xf && cqd1_b(o + 0x2e) < 3 {
             cqd1_pb(o + 0x2e, 3);
-            cqd1_agendar(this, o, 0xa);
+            schedule_offer_days(this, o, 0xa);
         } else {
             tirar(this, o);
         }
         return;
     }
     if s == 1 {
-        if cqd1_humano(comprador) {
+        if transfer_manager_is_human_club(comprador) {
             cqd1_pb(o + 0x2c, 4);
-            cqd1_desmarcar(this, o);
-            cqd1_agendar(this, o, 0xa);
+            clear_offer_bid_markers(this, o);
+            schedule_offer_days(this, o, 0xa);
         } else if cqd1_b(cqd1_d(vaga) + 0x1f) == 1 {
             ia_1a(this, vaga);
         } else {
@@ -445,9 +445,9 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
         return;
     }
     if s == 5 || s == 6 {
-        if cqd1_humano(comprador) {
+        if transfer_manager_is_human_club(comprador) {
             cqd1_pb(o + 0x2c, 9);
-            cqd1_agendar(this, o, 0xa);
+            schedule_offer_days(this, o, 0xa);
         } else {
             crate::comparacao::ramo("cqd_1 contrato ao jogador");
             contrato(this, comprador, cqd1_pessoa(cqd1_d(o + 0xc)), o); // cqd1: o contrato ao alvo
@@ -455,9 +455,9 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
         return;
     }
     if cqd1_d(o + 4) != 0 && s == 7 {
-        if cqd1_humano(vendedor) {
+        if transfer_manager_is_human_club(vendedor) {
             cqd1_pb(o + 0x2c, 8);
-            cqd1_agendar(this, o, 0xa);
+            schedule_offer_days(this, o, 0xa);
             return;
         }
         let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
@@ -469,7 +469,7 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
         copiar(l, cqd1_d(o + 4));
         cqd1_pd(l + 0xa, cqd1_d(l + 2));
         loop {
-            let p = cqd1_proximo(l);
+            let p = transfer_manager_llist_next(l);
             if p == 0 {
                 break;
             }
@@ -498,10 +498,10 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
         pass_ball(this, o);
         return;
     }
-    let clube = cqd1_clube_do_contrato(cqd1_pessoa(cqd1_d(o + 0xc)), false);
-    if tecnico_humano(clube) != 0 {
+    let clube = contract_club_filtered(cqd1_pessoa(cqd1_d(o + 0xc)), false);
+    if human_manager_record_checked(clube) != 0 {
         noticia_feita(this, o);
-        cqd1_agendar(this, o, 0x1c);
+        schedule_offer_days(this, o, 0x1c);
         return;
     }
     let v = valor(o, 0, 0, 0, 0, 1);
@@ -515,7 +515,7 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
 
 /// Comparador da 0x8c63a0: só a original (cada ramo muda o status, reagenda, aloca notícias, conclui ou tira a oferta).
 unsafe extern "thiscall" fn comparar_process_due_offer(this: usize, vaga: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, vaga) // ponytail: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, vaga) // ponytail: só a original
 }
 
 /// { 0x8cfc90 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH: a data e a lista locais, a lista construída pela
@@ -544,7 +544,7 @@ unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: usize, deci
     let veto: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, *mut u16) -> u32 = core::mem::transmute(0x8cdb80usize);
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let orcamento: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> i64 = core::mem::transmute(0x598800usize);
-    let degrau: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x43f4e0usize);
+    let apply_attribute_step: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x43f4e0usize);
     let total: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x8e7a70usize);
     let vaga: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u16) -> u32 = core::mem::transmute(0x8cd450usize);
     let mut data = [0u8; 8];
@@ -552,7 +552,7 @@ unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: usize, deci
     padrao(pd);
     let comprador = cqd1_clube(cqd1_d(o + 8));
     let alvo = cqd1_pessoa(cqd1_d(o + 0xc));
-    let vendedor = cqd1_clube_do_contrato(alvo, true);
+    let vendedor = contract_club_filtered(alvo, true);
     if cqd1_b(o + 0x30) & 0xf != 0 && cqd1_b(o + 0x2c) != 0x13 {
         let r = conclusao(this, o, pd);
         if !motivo.is_null() {
@@ -582,7 +582,7 @@ unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: usize, deci
         b = 0;
     }
     let mut dinheiro = b as u32;
-    let v = degrau(&mut dinheiro as *mut u32 as usize, 4) as i64;
+    let v = apply_attribute_step(&mut dinheiro as *mut u32 as usize, 4) as i64;
     let t = total(o, 0, 1, 1, 0);
     if decide == comprador {
         crate::comparacao::ramo("cqd_1 orçamento");
@@ -590,7 +590,7 @@ unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: usize, deci
             if !motivo.is_null() {
                 *motivo = 3;
             }
-            if cqd1_humano(comprador) {
+            if transfer_manager_is_human_club(comprador) {
                 return 1;
             }
             let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
@@ -604,7 +604,7 @@ unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: usize, deci
             cqd1_pd(pl + 0xa, cqd1_d(pl + 2));
             let mut soma = v;
             loop {
-                let p = cqd1_proximo(pl);
+                let p = transfer_manager_llist_next(pl);
                 if p == 0 {
                     break;
                 }
@@ -652,5 +652,5 @@ unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: usize, deci
 /// Comparador da 0x8cfc90: só a original (a vaga no elenco, 0x8cd450, pode liberar o jogador mais barato, e a lista de
 /// observação aloca nós).
 unsafe extern "thiscall" fn comparar_check_offer_restrictions(this: usize, o: usize, decide: usize, motivo: *mut u16, sem_elenco: u32) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u16, u32) -> u8>(%%I2%%)(this, o, decide, motivo, sem_elenco) // ponytail: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u16, u32) -> u8>(%%I2%%)(this, o, decide, motivo, sem_elenco) // ponytail: só a original
 }

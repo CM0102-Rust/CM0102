@@ -49,22 +49,22 @@ unsafe fn cqp9_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqp9_d(cqp9_d(this) + 0x8c));
     if regras(this) == 0 {
-        aviso_em(arquivo, linhas[0]);
+        show_error_at(arquivo, linhas[0]);
         return 0;
     }
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(tabela);
     if tabela(this) == 0 {
-        aviso_em(arquivo, linhas[1]);
+        show_error_at(arquivo, linhas[1]);
         return 0;
     }
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
     if jogos(this) == 0 {
-        aviso_em(arquivo, linhas[2]);
+        show_error_at(arquivo, linhas[2]);
         return 0;
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
     if ordenar(this, 0) == 0 {
-        aviso_em(arquivo, linhas[3]);
+        show_error_at(arquivo, linhas[3]);
         return 0;
     }
     let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqp9_d(cqp9_d(this) + 0x5c));
@@ -79,7 +79,7 @@ unsafe fn cqp9_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
 unsafe fn cqp9_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata: usize) {
     let fase = cqp9_d(this + 0x30) as i32;
     if fase >= (cqp9_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(arquivo, linha);
+        return show_error_at(arquivo, linha);
     }
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
@@ -146,31 +146,31 @@ unsafe extern "thiscall" fn bra_reg_pern_advance_stage_43cef0(this: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_pern_start_new_season(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     cqp9_comparar_virada("bra_reg_pern_start_new_season", this, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_pern_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqp9_comparar_fase_seguinte("bra_reg_pern_advance_stage", this, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_pern_start_new_season_43bd10(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     cqp9_comparar_virada("bra_reg_pern_start_new_season_43bd10", this, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_pern_advance_stage_43bec0(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
     cqp9_comparar_fase_seguinte("bra_reg_pern_advance_stage_43bec0", this, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_pern_start_new_season_43cd40(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I4%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I4%%);
     cqp9_comparar_virada("bra_reg_pern_start_new_season_43cd40", this, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_pern_advance_stage_43cef0(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I5%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I5%%);
     cqp9_comparar_fase_seguinte("bra_reg_pern_advance_stage_43cef0", this, || o(this))
 }

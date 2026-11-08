@@ -8,5 +8,5 @@ MUTACOES = [
     ('b_esc_desl', "                    let desl = if proprio == (l == 0) { 0x3b } else { 0x30 };", "                    let desl = if proprio { 0x3b } else { 0x30 };"),
     ('b_esc_band', "    let x = if byte(this, 0x8ea7) as i32 > 4 - r { 0 } else { 8 };", "    let x = if byte(this, 0x8ea7) as i32 >= 4 - r { 0 } else { 8 };"),
     ('b_pen_linha', "    let linha: i8 = if t != 0 { 1 } else { 10 };", "    let linha: i8 = if t != 0 { 2 } else { 10 };"),
-    ('b_pen_9', "                } else if y > 9 {\n                    mover(j, byte(j, 0x102), 9);", "                } else if y > 10 {\n                    mover(j, byte(j, 0x102), 9);"),
+    ('b_pen_9', "                } else if y > 9 {\n                    move_to_cell(j, byte(j, 0x102), 9);", "                } else if y > 10 {\n                    move_to_cell(j, byte(j, 0x102), 9);"),
 ]

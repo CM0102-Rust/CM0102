@@ -21,7 +21,7 @@ unsafe fn cpy3_f64(a: usize) -> f64 {
 }
 
 /// A pessoa de índice `i` ([0xae23bc], 0x6e bytes; a conta da original em 32 bits, com índice negativo inclusive).
-unsafe fn cpy3_pessoa(i: i32) -> usize {
+unsafe fn shortlist_manager_staff_by_index(i: i32) -> usize {
     cpy3_d(0xae23bc).wrapping_add((i as usize).wrapping_mul(0x6e))
 }
 
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
                         resto = resto.wrapping_sub(cpy3_i(l + 0x1b));
                     }
                 } else {
-                    resto = resto.wrapping_sub(cpy3_i(cpy3_pessoa(alvo) + 0x52));
+                    resto = resto.wrapping_sub(cpy3_i(shortlist_manager_staff_by_index(alvo) + 0x52));
                 }
                 continue;
             }
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
             } else {
                 let base = if repartido >= 1000 { repartido } else { 1000 };
                 let e = cpy3_i(v + 7);
-                let x = ftol((e as f64) / (base as f64) * (resto as f64) * cpy3_f64(0x969540));
+                let x = match_pl_ftol((e as f64) / (base as f64) * (resto as f64) * cpy3_f64(0x969540));
                 crate::comparacao::ramo("cpy_3 reducao pela sobra");
                 cpy3_pi(v + 7, e.wrapping_sub(x)); // cpy3: a redução da vaga pela sobra
             }
@@ -169,14 +169,14 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
                     let s = if soma >= 1 { soma } else { 1 };
                     let b = cpy3_i(v + 0xb);
                     let b = if b >= 1 { b } else { 1 };
-                    let x = ftol((resto as f64) / (s as f64) * (b as f64));
+                    let x = match_pl_ftol((resto as f64) / (s as f64) * (b as f64));
                     cpy3_pi(v + 7, cpy3_i(v + 7).wrapping_add(x));
                 }
             } else {
                 let s = if soma >= 1 { soma } else { 1 };
                 let b = cpy3_i(v + 0xb);
                 let b = if b >= 1 { b } else { 1 };
-                let x = ftol((resto as f64) / (s as f64) * (b as f64) * cpy3_f64(0x968968));
+                let x = match_pl_ftol((resto as f64) / (s as f64) * (b as f64) * cpy3_f64(0x968968));
                 cpy3_pi(v + 7, cpy3_i(v + 7).wrapping_add(x));
             }
             *((v + 0x24) as *mut u8) &= 0xfe;
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
             preencher(this, v, clube, 0); // cpy3: a vaga é preenchida
             let alvo = cpy3_i(v + 0xf);
             if alvo > -1 && cpy3_b(v + 0x24) & 1 == 0 {
-                resto = resto.wrapping_add(ftol(cpy3_i(cpy3_pessoa(alvo) + 0x52) as f64 * cpy3_f64(0x96f878)));
+                resto = resto.wrapping_add(match_pl_ftol(cpy3_i(shortlist_manager_staff_by_index(alvo) + 0x52) as f64 * cpy3_f64(0x96f878)));
             }
             soma = soma.wrapping_sub(cpy3_i(v + 0xb));
         }
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
             if cpy3_b(v) != 0xb || alvo <= -1 || cpy3_i(v + 0x17) != -1 {
                 break 'c false;
             }
-            let p = cpy3_pessoa(alvo);
+            let p = shortlist_manager_staff_by_index(alvo);
             if cpy3_d(p + 0x39) != clube {
                 break 'c false;
             }
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
 // ponytail: a 0x83f3a0 (chamada por cada vaga ainda sem alvo) sorteia, acrescenta pares aos vetores com realocação e dá
 // notícias: não pode rodar duas vezes. Só a original; a cópia leva os ramos e as mutações.
 unsafe extern "thiscall" fn comparar_allocate_transfer_budget(this: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube)
 }
 
 /// { 0x84b4d0 } (stdcall, ret 8, shortlist_manager.cpp; chamada com ecx = o Shortlist_Manager, que ela não lê):
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn comparar_allocate_transfer_budget(this: usize, clube
 /// (+0x61): a original (caixa "Error", 0).
 unsafe extern "stdcall" fn shortlist_manager_squad_status_allowed(pessoa: usize, estatuto: u32) -> u32 {
     if cpy3_d(pessoa + 0x61) == 0 {
-        return orig::<unsafe extern "stdcall" fn(usize, u32) -> u32>(%%I1%%)(pessoa, estatuto); // caixa: só a original
+        return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u32>(%%I1%%)(pessoa, estatuto); // caixa: só a original
     }
     match estatuto as u8 {
         5 | 6 => ((cpy3_b(pessoa + 0x18) as i8) < 0x18) as u32,
@@ -279,7 +279,7 @@ unsafe extern "stdcall" fn shortlist_manager_squad_status_allowed(pessoa: usize,
 
 /// Comparador: a devolução (rotina pura); sem ficha de jogador, só a original (caixa).
 unsafe extern "stdcall" fn comparar_shortlist_manager_squad_status_allowed(pessoa: usize, estatuto: u32) -> u32 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u32>(%%I1%%);
     if cpy3_d(pessoa + 0x61) == 0 {
         return o(pessoa, estatuto);
     }
@@ -297,7 +297,7 @@ unsafe extern "C" fn scout_manager_write_list_name(indice: u32, texto: usize, ta
     // 0x66f4e0: cdecl(texto, formato, ...) (add esp, 8 ou 0xc)
     let k = indice as u8 as i8;
     if !(0..=9).contains(&k) || texto == 0 || tamanho < 0x32 {
-        return orig::<unsafe extern "C" fn(u32, usize, i32) -> u32>(%%I2%%)(indice, texto, tamanho); // caixa: só a original
+        return original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u32>(%%I2%%)(indice, texto, tamanho); // caixa: só a original
     }
     let traduzir: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     match k {
@@ -312,7 +312,7 @@ unsafe extern "C" fn scout_manager_write_list_name(indice: u32, texto: usize, ta
 /// Comparador: lado a lado pelo texto (até 0x100 bytes do tamanho dado), e a devolução; nos casos de erro, só a
 /// original (caixa).
 unsafe extern "C" fn comparar_scout_manager_write_list_name(indice: u32, texto: usize, tamanho: i32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, i32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u32>(%%I2%%);
     let k = indice as u8 as i8;
     if !(0..=9).contains(&k) || texto == 0 || tamanho < 0x32 {
         return o(indice, texto, tamanho);

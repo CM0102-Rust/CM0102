@@ -9,7 +9,7 @@ unsafe fn cqd11_w(a: usize) -> i16 {
 }
 
 /// Os itens da lista (o ponteiro em +0 de cada nó, da cabeça +2 seguindo o +6), sem mexer no cursor.
-unsafe fn cqd11_itens(lista: usize) -> Vec<usize> {
+unsafe fn llist_items(lista: usize) -> Vec<usize> {
     let mut v = Vec::new();
     if lista == 0 {
         return v;
@@ -26,7 +26,7 @@ unsafe fn cqd11_itens(lista: usize) -> Vec<usize> {
 /// `or bit` da original nunca dá zero) e, com a lista ([this + `lista`]), o cursor volta à cabeça e, entre os primeiros
 /// `conta` (+0, palavra com sinal) itens, o primeiro com o id da pessoa em +0 sai (0x68d1f0, que libera o nó). Uma lista
 /// que acaba antes da conta encerra.
-unsafe fn cqd11_tirar(this: usize, pessoa: usize, bit: u8, lista: usize, falta: bool) {
+unsafe fn toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, lista: usize, falta: bool) {
     if pessoa == 0 {
         return;
     }
@@ -78,21 +78,21 @@ unsafe fn cqd11_tirar(this: usize, pessoa: usize, bit: u8, lista: usize, falta: 
 /// pelas aposentadorias (0x7a59e0) e pelas transferências (0x8c1af0, 0x8c2180, 0x8c9720). Pessoa e tabela de marcas
 /// ([this+0xc]) não nulas e o bit 1 da marca: troca o bit e tira o registro da pessoa da lista das ausências ([this]).
 unsafe extern "thiscall" fn clear_awol(this: usize, pessoa: usize) {
-    cqd11_tirar(this, pessoa, 1, 0, false);
+    toggle_mark_and_unlist(this, pessoa, 1, 0, false);
 }
 
 /// { 0x4197c0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_missed_training(pessoa)`, pela falta ao treino de quem ficou
 /// sem contrato (0x418ff0, que os jogadores do dia consultam) e pelas aposentadorias (0x7a59e0). Pessoa e tabela de
 /// marcas não nulas e o bit 2 da marca: troca o bit e tira o registro da pessoa da lista das faltas ([this+4]).
 unsafe extern "thiscall" fn clear_missed_training(this: usize, pessoa: usize) {
-    cqd11_tirar(this, pessoa, 2, 4, true);
+    toggle_mark_and_unlist(this, pessoa, 2, 4, true);
 }
 
 /// O plano das duas: a marca depois e os itens que ficam na lista (o primeiro com o id da pessoa entre os `conta`
 /// primeiros sai). Sem nada a fazer: o estado de antes.
-unsafe fn cqd11_plano(this: usize, pessoa: usize, bit: u8, lista: usize) -> (Option<(usize, u8)>, usize, Vec<usize>) {
+unsafe fn plan_toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, lista: usize) -> (Option<(usize, u8)>, usize, Vec<usize>) {
     let l = cqd11_d(this + lista);
-    let itens = cqd11_itens(l);
+    let itens = llist_items(l);
     if pessoa == 0 || cqd11_d(this + 0xc) == 0 {
         return (None, l, itens);
     }
@@ -114,21 +114,21 @@ unsafe fn cqd11_plano(this: usize, pessoa: usize, bit: u8, lista: usize) -> (Opt
 
 /// Comparador das duas: a original tira e libera o nó da lista (não pode rodar duas vezes): só ela roda, com o plano
 /// montado antes (a marca e os itens que ficam, sem ler o item tirado depois).
-unsafe fn cqd11_comparar(this: usize, pessoa: usize, bit: u8, lista: usize, o: unsafe extern "thiscall" fn(usize, usize), nome: &str) {
-    let (marca, l, fica) = cqd11_plano(this, pessoa, bit, lista);
+unsafe fn compare_toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, lista: usize, o: unsafe extern "thiscall" fn(usize, usize), nome: &str) {
+    let (marca, l, fica) = plan_toggle_mark_and_unlist(this, pessoa, bit, lista);
     o(this, pessoa);
-    let depois = cqd11_itens(l);
+    let depois = llist_items(l);
     let marca_ok = marca.map_or(true, |(p, m)| *(p as *const u8) == m);
     PLACAR.registrar(marca_ok && depois == fica, || format!("{}(pessoa {:#x}) marca plano {:x?} agora {:x?}; lista plano {:x?} agora {:x?}",
         nome, pessoa, marca, marca.map(|(p, _)| *(p as *const u8)), fica, depois));
 }
 
 unsafe extern "thiscall" fn comparar_clear_awol(this: usize, pessoa: usize) {
-    cqd11_comparar(this, pessoa, 1, 0, orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%), "clear_awol");
+    compare_toggle_mark_and_unlist(this, pessoa, 1, 0, original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%), "clear_awol");
 }
 
 unsafe extern "thiscall" fn comparar_clear_missed_training(this: usize, pessoa: usize) {
-    cqd11_comparar(this, pessoa, 2, 4, orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%), "clear_missed_training");
+    compare_toggle_mark_and_unlist(this, pessoa, 2, 4, original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%), "clear_missed_training");
 }
 
 /// O ensaio da notícia: os sorteios vêm da fita da original (n e resposta) e, em vez de entregar, a cópia anota o
@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn comparar_clear_missed_training(this: usize, pessoa: 
 static mut CQD11_FITA: Option<(Vec<(i32, i32)>, usize, bool)> = None;
 static mut CQD11_DESTINO: (u32, usize) = (0, 0);
 
-unsafe fn cqd11_sortear(n: i32) -> i32 {
+unsafe fn taped_random(n: i32) -> i32 {
     let f = &mut *core::ptr::addr_of_mut!(CQD11_FITA);
     match f {
         Some((v, k, falhou)) => match v.get(*k) {
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador:
     gravar(nt, 3, cqd11_d(cqd11_d(jogador + 0xc) + 0x33) as u32);
     gravar(nt, 4, cqd11_d(clube) as u32);
     crate::comparacao::ramo("cqd_11 noticia da falta");
-    let r = cqd11_sortear(3); // cqd11: o sorteio da notícia
+    let r = taped_random(3); // cqd11: o sorteio da notícia
     gravar(nt, 5, r as u32);
     gravar(nt, 6, humano(clube, 0, 1, 0, 0));
     let tecnico = cqd11_d(clube + 0xcf);
@@ -195,11 +195,11 @@ unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador:
         gravar(nt, 9, cqd11_d(cqd11_d(t + 8) + 0x33) as u32);
         gravar(nt, 0xa, cqd11_d(cqd11_d(t + 0xc) + 0x33) as u32);
     } else {
-        let quem = if cqd11_sortear(2) != 0 {
+        let quem = if taped_random(2) != 0 {
             let mut k;
             let mut voltas = 0;
             loop {
-                k = cqd11_sortear(5);
+                k = taped_random(5);
                 voltas += 1;
                 if voltas >= 1000 || cqd11_d(clube.wrapping_add(k as usize * 4) + 0x19f) != 0 {
                     break;
@@ -252,10 +252,10 @@ unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador:
 /// a cópia em ensaio refaz o caminho com os sorteios da fita, sem entregar. Confere que os sorteios do ensaio são o
 /// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
 unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize, jogador: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
-    let ((), fita) = crate::aleatorio::rastrear(|| o(this, jogador, clube));
-    let n = fita.len();
-    *core::ptr::addr_of_mut!(CQD11_FITA) = Some((fita, 0, false));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
+    let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, jogador, clube));
+    let n = tape_lock.len();
+    *core::ptr::addr_of_mut!(CQD11_FITA) = Some((tape_lock, 0, false));
     CQD11_DESTINO = (0, 0);
     crate::aleatorio::sem_contar(|| awol_post_missed_training_news(this, jogador, clube));
     let (k, falhou) = match &*core::ptr::addr_of!(CQD11_FITA) {
@@ -264,6 +264,6 @@ unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize,
     };
     *core::ptr::addr_of_mut!(CQD11_FITA) = None;
     let destino = CQD11_DESTINO;
-    PLACAR.registrar(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) fita de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
+    PLACAR.registrar(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
         jogador, clube, n, k, falhou, destino));
 }

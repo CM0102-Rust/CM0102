@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: tirar das preferências: o clube favorito da pessoa, a pessoa favorita do clube e a pessoa favorita da pessoa (Database.cpp) ----------
 
 /// Zera a primeira das três posições (`reg`, +4, +8) que tem `alvo` (a ordem da original: achou, zera e sai).
-unsafe fn dbp_tirar_de_tres(reg: usize, alvo: usize) {
+unsafe fn remove_from_list3(reg: usize, alvo: usize) {
     for k in 0..3 {
         let a = (reg + 4 * k) as *mut usize;
         if core::ptr::read_unaligned(a) == alvo {
@@ -12,7 +12,7 @@ unsafe fn dbp_tirar_de_tres(reg: usize, alvo: usize) {
 }
 
 /// As preferências (+0x65) da pessoa não nula; pessoa nula: 0 (o eax que as 0x547c10/0x547c50/0x547f50 devolvem).
-unsafe fn dbp_preferencias(pessoa: usize) -> usize {
+unsafe fn staff_preferences(pessoa: usize) -> usize {
     if pessoa == 0 {
         0
     } else {
@@ -25,16 +25,16 @@ unsafe fn dbp_preferencias(pessoa: usize) -> usize {
 /// Devolve o eax da original (as preferências; pessoa nula: 0). No diário das pessoas (0x5ce2d0), quando o
 /// apego ao clube acaba.
 unsafe extern "C" fn staff_remove_favoured_club(pessoa: usize, clube: usize) -> usize {
-    let pref = dbp_preferencias(pessoa);
+    let pref = staff_preferences(pessoa);
     if pref != 0 && clube != 0 {
-        dbp_tirar_de_tres(pref + 4, clube); // os clubes favoritos
+        remove_from_list3(pref + 4, clube); // os clubes favoritos
     }
     pref
 }
 
 unsafe extern "C" fn comparar_staff_remove_favoured_club(pessoa: usize, clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I0%%);
-    let pref = dbp_preferencias(pessoa);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I0%%);
+    let pref = staff_preferences(pessoa);
     if pref == 0 {
         return o(pessoa, clube); // não escreve nada
     }
@@ -48,13 +48,13 @@ unsafe extern "C" fn comparar_staff_remove_favoured_club(pessoa: usize, clube: u
 /// da original). Nas audiências das disputas (DISPUTE::process_hearings 0x569ed0).
 unsafe extern "C" fn club_remove_favoured_staff(clube: usize, pessoa: usize) -> usize {
     if clube != 0 && pessoa != 0 {
-        dbp_tirar_de_tres(clube + 0x9b, pessoa); // os favoritos do clube
+        remove_from_list3(clube + 0x9b, pessoa); // os favoritos do clube
     }
     clube
 }
 
 unsafe extern "C" fn comparar_club_remove_favoured_staff(clube: usize, pessoa: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%);
     if clube == 0 {
         return o(clube, pessoa);
     }
@@ -69,16 +69,16 @@ unsafe extern "C" fn comparar_club_remove_favoured_staff(clube: usize, pessoa: u
 /// elenco (game_update_squad_relationships 0x5d6d10, diária), na volta da lesão (0x630ee0), no MANAGER_MANAGER
 /// (0x697a7a) e na mídia (0x75a340).
 unsafe extern "C" fn staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> usize {
-    let pref = dbp_preferencias(pessoa);
+    let pref = staff_preferences(pessoa);
     if pref != 0 && alvo != 0 {
-        dbp_tirar_de_tres(pref + 0x1c, alvo); // as pessoas favoritas
+        remove_from_list3(pref + 0x1c, alvo); // as pessoas favoritas
     }
     pref
 }
 
 unsafe extern "C" fn comparar_staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%);
-    let pref = dbp_preferencias(pessoa);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%);
+    let pref = staff_preferences(pessoa);
     if pref == 0 {
         return o(pessoa, alvo);
     }

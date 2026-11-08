@@ -10,7 +10,7 @@ MUTACOES = [
     ('cpm_melhores_trocas', 'for _ in 0..m as i32 { // m trocas', 'for _ in 1..m as i32 { // mutacao: uma troca a menos', 'cpm_3 embaralhar os melhores'),
     ('cpm_ponteiros_trocas', 'k = k.wrapping_add(1); // mais uma troca', 'k = k.wrapping_add(2); // mutacao: metade das trocas', 'cpm_3 embaralhar ponteiros'),
     ('cpm4_jogo_cumprido_dois', 'let n = (*((s + 1) as *const u8)).wrapping_add(1); // mais um jogo cumprido', 'let n = (*((s + 1) as *const u8)).wrapping_add(2); // mutacao: dois jogos', 'cpm_4 jogo cumprido'),
-    ('cpm4_orgao_nao_esquece', 'esquecer(cpm4_orgao(this, regra), id); // o órgão esquece a suspensão', '// mutacao: o orgao nao esquece', 'cpm_4 soltar do orgao'),
+    ('cpm4_orgao_nao_esquece', 'esquecer(ruling_body_for_rule(this, regra), id); // o órgão esquece a suspensão', '// mutacao: o orgao nao esquece', 'cpm_4 soltar do orgao'),
     ('cpm4_antes_do_inicio', 'if ano < ano0 || (ano == ano0 && dia < dia0) { // ainda não começou', 'if ano < ano0 && dia < dia0 && false { // mutacao: conta antes do comeco', 'cpm_4 antes do inicio'),
     ('cpm5_recorrente_um_em_dez', 'if s != 0 { // 1 em 20', 'if s > 1 { // mutacao: 1 em 10', 'cpm_5 lesao recorrente'),
     ('cpm5_recorrente_sem_parar', 'if melhor >= 0x5f { // forte o bastante: para', 'if melhor >= 0x5f && false { // mutacao: nao para', 'cpm_5 recorrente forte'),

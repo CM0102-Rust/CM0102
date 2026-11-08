@@ -35,7 +35,7 @@ unsafe fn cpv2_contrato(p: usize) -> usize {
 }
 
 /// O clube do contrato (id em +4); com `filtro`, nenhum para o contrato de tipo 5 (+0x35 & 0x3f).
-unsafe fn cpv2_clube_do_contrato(c: usize, filtro: bool) -> usize {
+unsafe fn manager_manager_contract_club(c: usize, filtro: bool) -> usize {
     if c != 0 && (!filtro || cpv2_b(c + 0x35) & 0x3f != 5) {
         cpv2_clube(cpv2_d(c + 4))
     } else {
@@ -55,7 +55,7 @@ unsafe fn cpv2_proximo(l: usize) -> usize {
 }
 
 /// A oferta já resolvida pelo status (+0x2c): 2, 3, 4, 0x10 ou 0x14, ou 0xf com +0x2e ≥ 3.
-unsafe fn cpv2_resolvida(o: usize) -> bool {
+unsafe fn is_offer_resolved(o: usize) -> bool {
     match cpv2_b(o + 0x2c) {
         2 | 3 | 4 | 0x10 | 0x14 => true,
         0xf => cpv2_b(o + 0x2e) >= 3,
@@ -91,10 +91,10 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
     let resposta_do_comprador: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8c0810usize);
     let seguir: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c2f50usize);
     if indice < 0 {
-        return aviso_em(0xa8d514, 0xf49);
+        return show_error_at(0xa8d514, 0xf49);
     }
     if indice >= cpv2_d(this + 4) as i32 {
-        return aviso_em(0xa8d514, 0xf4e);
+        return show_error_at(0xa8d514, 0xf4e);
     }
     let vaga = || cpv2_d(this).wrapping_add(indice as usize * 4);
     let o = cpv2_d(vaga());
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
     if cpv2_d(pessoa) == cpv2_d(o + 0xc) {
         cpv2_pb(o + 0x10, 4);
         let comprador = cpv2_clube(cpv2_d(o + 8));
-        let vendedor = cpv2_clube_do_contrato(cpv2_contrato(pessoa), true);
+        let vendedor = manager_manager_contract_club(cpv2_contrato(pessoa), true);
         cpv2_pb(o + 0x2c, 0xf);
         if silencioso == 0 && human_club(comprador, 1, 1, 0, 0) != 0 && cpv2_b(o + 0x1f) != 1 {
             cpv2_pb(o + 0x2e, cpv2_b(o + 0x2e).wrapping_add(1));
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
             cpv2_pb(o + 0x2e, 3);
         }
         let p = cpv2_pessoa(cpv2_d(o + 0xc));
-        let dono = cpv2_clube_do_contrato(cpv2_contrato(p), false);
+        let dono = manager_manager_contract_club(cpv2_contrato(p), false);
         limpar_marcas(cpv2_d(this + 0x856), cpv2_clube(cpv2_d(o + 8)), p);
         let l = cpv2_d(o + 4);
         if l != 0 {
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
         }
         crate::comparacao::ramo("cpv_2 recusa do jogador");
         agendar(this, o, 0xa, 0); // cpv2: de volta em 10 dias
-        if cpv2_resolvida(o) {
+        if is_offer_resolved(o) {
             let rivais = cpv2_d(o);
             let mut todas = true;
             if rivais != 0 {
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
                     if x == 0 {
                         break;
                     }
-                    if !cpv2_resolvida(cpv2_d(cpv2_d(this) + cpv2_d(x) * 4)) {
+                    if !is_offer_resolved(cpv2_d(cpv2_d(this) + cpv2_d(x) * 4)) {
                         todas = false;
                         break;
                     }
@@ -181,8 +181,8 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
                     } else {
                         core::ptr::read_unaligned(0x967878 as *const f64)
                     };
-                    crate::comparacao::ramo("cpv_2 reputacao do jogador");
-                    let soma = ftol(dif * k) as i16; // cpv2: a reputação sobe
+                    crate::comparacao::ramo("cpv_2 injury_word_0c do jogador");
+                    let soma = match_pl_ftol(dif * k) as i16; // cpv2: a reputação sobe
                     let r = (ficha + 0xb) as *mut i16;
                     core::ptr::write_unaligned(r, core::ptr::read_unaligned(r).wrapping_add(soma));
                     let f2 = cpv2_d(pessoa + 0x61);
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
     }
     let troca = cpv2_d(o + 4);
     if troca == 0 {
-        aviso_em(0xa8d514, 0x101f);
+        show_error_at(0xa8d514, 0x101f);
         return seguir(this, o);
     }
     cpv2_inicio(troca);
@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
     crate::comparacao::ramo("cpv_2 jogador saiu da troca");
     let comprador = cpv2_clube(cpv2_d(o + 8));
     let novo_preco = valor(cpv2_d(0xae1050), pessoa, comprador, 0, -1, 0).wrapping_add(cpv2_d(o + 0x1b) as i32);
-    let vendedor = cpv2_clube_do_contrato(cpv2_contrato(cpv2_pessoa(cpv2_d(o + 0xc))), false);
+    let vendedor = manager_manager_contract_club(cpv2_contrato(cpv2_pessoa(cpv2_d(o + 0xc))), false);
     let comprador = cpv2_clube(cpv2_d(o + 8));
     tirar(cpv2_d(o + 4), x);
     let l = cpv2_d(o + 4);
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
     core::ptr::write_unaligned((o + 0x1b) as *mut i32, novo_preco);
     if vendedor != 0 && human_club(vendedor, 0, 1, 0, 0) == 0 {
         resposta_do_vendedor(this, vaga(), 1);
-        if cpv2_resolvida(o) {
+        if is_offer_resolved(o) {
             return;
         }
     }
@@ -238,14 +238,14 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
         return seguir(this, o);
     }
     resposta_do_comprador(cpv2_d(0xde1f54), vaga(), 1);
-    if cpv2_resolvida(o) {
+    if is_offer_resolved(o) {
         return;
     }
     seguir(this, o);
 }
 
 /// Antes da data das notícias ([0xdd6ec8]: dia +0 com sinal, ano +2) em relação a hoje ([0xae2c90])?
-unsafe fn cpv2_antes_das_noticias() -> bool {
+unsafe fn news_date_not_reached() -> bool {
     let dia = *(0xdd6ec8 as *const i16);
     let ano = *(0xdd6eca as *const u16);
     let hoje_ano = *(0xae2c92 as *const u16);
@@ -257,7 +257,7 @@ unsafe fn cpv2_antes_das_noticias() -> bool {
 /// clube, 1 = os dias do técnico (+0xcf) no cargo (desde a data +0x3e, 365 dias por ano) ou 100 sem técnico; pelo
 /// alcance (0x786090) com o clube.
 unsafe extern "thiscall" fn post_board_confidence_update_news(_this: usize, clube: usize) {
-    if cpv2_antes_das_noticias() {
+    if news_date_not_reached() {
         return;
     }
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn post_board_confidence_update_news(_this: usize, club
 /// post_board_expectations_news(clube, expectativas)`: antes da data das notícias, nada. A notícia 0x1771 (local): 0 =
 /// o id do clube, 1 = as expectativas (palavra com sinal); ao técnico do clube (0x7861e0).
 unsafe extern "thiscall" fn post_board_expectations_news(_this: usize, clube: usize, expectativas: u32) {
-    if cpv2_antes_das_noticias() {
+    if news_date_not_reached() {
         return;
     }
     crate::comparacao::ramo("cpv_2 noticia das expectativas");
@@ -301,15 +301,15 @@ unsafe extern "thiscall" fn post_board_expectations_news(_this: usize, clube: us
 // oferta seguinte (0x8c2f50): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e
 // pelas mutações.
 unsafe extern "thiscall" fn comparar_handle_player_rejected_terms(this: usize, pessoa: usize, indice: i32, silencioso: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, i32, u32)>(%%I0%%)(this, pessoa, indice, silencioso)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32)>(%%I0%%)(this, pessoa, indice, silencioso)
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original. Quente (40 mil chamadas): sem contador.
 unsafe extern "thiscall" fn comparar_post_board_confidence_update_news(this: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_board_expectations_news(this: usize, clube: usize, expectativas: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, clube, expectativas)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, clube, expectativas)
 }

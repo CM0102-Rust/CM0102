@@ -13,12 +13,12 @@ unsafe fn cpt2_w(a: usize) -> u16 {
 }
 
 /// A entrada da nação `nacao` (id em [nacao]) na tabela do ranking [this] (0x2c bytes cada).
-unsafe fn cpt2_entrada(this: usize, nacao: usize) -> usize {
+unsafe fn ranking_entry(this: usize, nacao: usize) -> usize {
     cpt2_d(this).wrapping_add((cpt2_d(nacao) as u32).wrapping_mul(0x2c) as usize)
 }
 
 /// O mês e o ano do jogo `partida`: a data (0x549ef0) do dia do ano (+0x2a) e do ano (+0x28), o mês dela (0x54cfb0).
-unsafe fn cpt2_mes_e_ano(partida: usize) -> (u8, u16) {
+unsafe fn match_month_year(partida: usize) -> (u8, u16) {
     let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
     let mes_de: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x54cfb0usize);
     let mut d = [0u8; 8];
@@ -32,7 +32,7 @@ unsafe fn cpt2_mes_e_ano(partida: usize) -> (u8, u16) {
 /// alocado (0x944e46) com capacidade × 5 bytes. A entrada nova, no lugar da conta antiga: os pontos (16 bits), o mês do
 /// jogo (+2) e o ano (+3).
 unsafe extern "thiscall" fn append_result(this: usize, nacao: usize, pontos: u32, partida: usize) {
-    let e = cpt2_entrada(this, nacao);
+    let e = ranking_entry(this, nacao);
     if cpt2_w(e + 0xa) == cpt2_w(e + 8) {
         *((e + 8) as *mut u16) = cpt2_w(e + 8).wrapping_add(5);
         let h = cpt2_d(e + 4);
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn append_result(this: usize, nacao: usize, pontos: u32
     *((e + 0xa) as *mut i16) = c.wrapping_add(1); // cpt2: mais um resultado
     let p = cpt2_d(e + 4).wrapping_add(c as isize as usize * 5);
     *(p as *mut u16) = pontos as u16;
-    let (mes, ano) = cpt2_mes_e_ano(partida);
+    let (mes, ano) = match_month_year(partida);
     *((p + 2) as *mut u8) = mes; // cpt2: o mes do jogo
     core::ptr::write_unaligned((p + 3) as *mut u16, ano); // cpt2: o ano do jogo
     crate::comparacao::ramo("cpt_2 resultado");
@@ -59,10 +59,10 @@ unsafe extern "thiscall" fn append_result(this: usize, nacao: usize, pontos: u32
 // ponytail: a original pode realocar o histórico (não roda duas vezes): o plano antes (conta, capacidade, pontos, mês e
 // ano), a original roda e a entrada nova é conferida; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_append_result(this: usize, nacao: usize, pontos: u32, partida: usize) {
-    let e = cpt2_entrada(this, nacao);
+    let e = ranking_entry(this, nacao);
     let (conta, cap) = (cpt2_h(e + 0xa), cpt2_h(e + 8));
-    let (mes, ano) = cpt2_mes_e_ano(partida);
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I0%%)(this, nacao, pontos, partida);
+    let (mes, ano) = match_month_year(partida);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I0%%)(this, nacao, pontos, partida);
     let p = cpt2_d(e + 4).wrapping_add(conta as isize as usize * 5);
     let cap_n = if conta == cap { cap.wrapping_add(5) } else { cap };
     let lido = (cpt2_h(e + 0xa), cpt2_h(e + 8), cpt2_w(p), *((p + 2) as *const u8), cpt2_w(p + 3));
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn comparar_append_result(this: usize, nacao: usize, po
 /// reputação abaixo de 6000 e posição abaixo de 15: 2; senão pela posição: abaixo de 21, 1; de 61, 2; de 101, 3; 4.
 unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nacao: usize) -> u8 {
     let rep = cpt2_h(nacao + 0x8e);
-    let pos = || cpt2_h(cpt2_entrada(this, nacao) + 0x10);
+    let pos = || cpt2_h(ranking_entry(this, nacao) + 0x10);
     if rep < 0xbb8 && pos() < 0x32 {
         return 3;
     }
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nacao: usize) 
 }
 
 unsafe extern "thiscall" fn comparar_get_nation_strength_tier(this: usize, nacao: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, nacao);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, nacao);
     let n = get_nation_strength_tier(this, nacao);
     PLACAR.registrar(r == n, || format!("get_nation_strength_tier(nação {}) original={} rust={}", cpt2_d(nacao), r, n));
     r
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn recalculate_scores(this: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_recalculate_scores(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let reg = [(cpt2_d(this), cpt2_d(0xae2350) * 0x2c)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || recalculate_scores(this));
     PLACAR.registrar(igual, || {

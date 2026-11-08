@@ -4,27 +4,35 @@ use super::*;
 
 
 
-/// A nação `id` (registro de 0x122 bytes em [0xae23a8]).
-pub(crate) unsafe fn cqo1_nacao(id: usize) -> usize {
+/// Returns nation id's record ([G_NATION_TABLE] + id × 0x122).
+///
+/// [pt] A nação `id` (registro de 0x122 bytes em [0xae23a8]).
+pub(crate) unsafe fn nation_by_id(id: usize) -> usize {
     read_u32_as_usize(G_NATION_TABLE).wrapping_add(id.wrapping_mul(0x122))
 }
 
 
-/// `Stadium::add_booking` (0x85de20, thiscall, ret 8, já em Rust): a reserva do estádio na data.
-pub(crate) unsafe fn cqo1_reservar(this: usize, estadio: usize, data: usize) {
+/// Calls Stadium::add_booking (0x85de20): books the stadium on the date.
+///
+/// [pt] `Stadium::add_booking` (0x85de20, thiscall, ret 8, já em Rust): a reserva do estádio na data.
+pub(crate) unsafe fn add_stadium_booking(this: usize, estadio: usize, data: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STADIUM_ADD_BOOKING);
     f(this, estadio, data)
 }
 
-/// `Stadium::is_stadium_free_on_date` (0x85ddb0, thiscall, ret 8, já em Rust).
-pub(crate) unsafe fn cqo1_livre(this: usize, estadio: usize, data: usize) -> bool {
+/// Calls Stadium::is_stadium_free_on_date (0x85ddb0).
+///
+/// [pt] `Stadium::is_stadium_free_on_date` (0x85ddb0, thiscall, ret 8, já em Rust).
+pub(crate) unsafe fn is_stadium_free(this: usize, estadio: usize, data: usize) -> bool {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_IS_STADIUM_FREE_ON_DATE);
     f(this, estadio, data) != 0
 }
 
-/// Os comparadores das listas (cdecl, (a, b) -> int): 0x85e2f0 pela nação (+0), 0x85e320 pelo continente (+4), os
+/// Calls a cdecl list comparer (0x85e2f0 by nation, 0x85e320 by continent, 0x85e350 by capacity) on (a, b).
+///
+/// [pt] Os comparadores das listas (cdecl, (a, b) -> int): 0x85e2f0 pela nação (+0), 0x85e320 pelo continente (+4), os
 /// dois desempatando pelos lugares do estádio (+0xc → +0x3c, quando os dois têm estádio); 0x85e350 só pelos lugares.
-pub(crate) unsafe fn cqo1_cmp(f: usize, a: usize, b: usize) -> i32 {
+pub(crate) unsafe fn call_stadium_compare(f: usize, a: usize, b: usize) -> i32 {
     let f: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(f);
     f(a, b)
 }
@@ -85,7 +93,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marcas:
                     break;
                 }
                 e -= 0x10;
-                if cqo1_cmp(cmp, e, k) != 0 {
+                if call_stadium_compare(cmp, e, k) != 0 {
                     e += 0x10;
                     break;
                 }
@@ -115,13 +123,13 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marcas:
                     contar = false;
                     break 'vaga;
                 }
-                if casa != 0 && fora != 0 && !cqc2_selecao(casa) && (marcas as i32) < 0x40 {
+                if casa != 0 && fora != 0 && !fin_prm_is_national_team(casa) && (marcas as i32) < 0x40 {
                     let s = read_u32_as_usize(e + 0xc);
                     if s == read_u32_as_usize(casa + 0x69) || s == read_u32_as_usize(fora + 0x69) {
                         break 'vaga;
                     }
                 }
-                if (nacao != 0 || cont != 0) && cqo1_cmp(cmp, e, k) != 0 {
+                if (nacao != 0 || cont != 0) && call_stadium_compare(cmp, e, k) != 0 {
                     // outra chave: fim da busca
                     i = 0x1e;
                     contar = false;
@@ -136,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marcas:
                         contar = false;
                         break 'vaga;
                     }
-                    if !cqo1_livre(this, read_u32_as_usize(e + 0xc), data) {
+                    if !is_stadium_free(this, read_u32_as_usize(e + 0xc), data) {
                         break 'vaga;
                     }
                     let nota: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32 = core::mem::transmute(FN_STADIUM_SCORE_VENUE_FOR_FIXTURE);
@@ -160,9 +168,9 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marcas:
                         || (marcas & 0x1000 != 0 && p == 6)
                         || (marcas & 0x2000 != 0 && p == 7)
                         || (marcas & 0x4000 != 0 && p == 8);
-                    if vez && ((partida != 0 && read_u32_as_usize(partida) == read_u32_as_usize(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION)) || cqo1_livre(this, read_u32_as_usize(e + 0xc), data)) {
+                    if vez && ((partida != 0 && read_u32_as_usize(partida) == read_u32_as_usize(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION)) || is_stadium_free(this, read_u32_as_usize(e + 0xc), data)) {
                         crate::comparacao::ramo("cqo_1 rodizio");
-                        cqo1_reservar(this, read_u32_as_usize(e + 0xc), data);
+                        add_stadium_booking(this, read_u32_as_usize(e + 0xc), data);
                         return read_u32_as_usize(e + 0xc);
                     }
                 }
@@ -181,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marcas:
         if melhor > 0 {
             crate::comparacao::ramo("cqo_1 neutro pela nota");
             if partida != 0 {
-                cqo1_reservar(this, read_u32_as_usize(escolhida + 0xc), data);
+                add_stadium_booking(this, read_u32_as_usize(escolhida + 0xc), data);
             }
             return read_u32_as_usize(escolhida + 0xc);
         }
@@ -192,9 +200,12 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marcas:
     0
 }
 
-/// As regiões da escolha do estádio: o estado do sorteador, o cabeçalho (0x1c bytes), a lista dos estádios (a ordem muda) e as reservas com
+/// Memory regions of the stadium choice: RNG state, header, stadium list and bookings; None when a booking could
+/// allocate.
+///
+/// [pt] As regiões da escolha do estádio: o estado do sorteador, o cabeçalho (0x1c bytes), a lista dos estádios (a ordem muda) e as reservas com
 /// a vaga da nova. `None` quando uma reserva pode alocar (sem lista ou cheia): então só a original.
-pub(crate) unsafe fn cqo1_regioes(this: usize, extra: Option<(usize, usize)>) -> Option<([(usize, usize); 6], usize)> {
+pub(crate) unsafe fn stadium_choice_regions(this: usize, extra: Option<(usize, usize)>) -> Option<([(usize, usize); 6], usize)> {
     let nr = read_u32_as_usize(this + 4);
     if read_u32_as_usize(this) == 0 || nr == read_u32_as_usize(this + 8) {
         return None;
@@ -222,10 +233,10 @@ pub(crate) unsafe fn cqo1_regioes(this: usize, extra: Option<(usize, usize)>) ->
     Some((r, m))
 }
 
-/// Lado a lado (a cópia sem contar os sorteios) pelas regiões de `cqo1_regioes` e pela devolução; com reserva que pode alocar, só a original.
+/// Lado a lado (a cópia sem contar os sorteios) pelas regiões de `stadium_choice_regions` e pela devolução; com reserva que pode alocar, só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(IDX_FIND_AVAILABLE_VENUE);
-    let Some((r, m)) = cqo1_regioes(this, None) else {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(IDX_FIND_AVAILABLE_VENUE);
+    let Some((r, m)) = stadium_choice_regions(this, None) else {
         // ponytail: a reserva pode alocar a lista; só a original
         return o(this, marcas, cont, nacao, data, casa, fora, partida);
     };
@@ -265,7 +276,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize
 ///   achar, na alternativa (marcas 0x40..0x200 → 0x400..0x2000).
 pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
     if partida == 0 {
-        return aviso_em(0xa835b0, 0x1f0);
+        return show_error_at(0xa835b0, 0x1f0);
     }
     let fx = partida;
     write_u32_from_usize(fx + 0x18, 0);
@@ -280,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     let neutro = (fx + 0x3c) as *mut u8;
     let mut f = marcas;
     // 0 = as regras gerais (0x85c5a7); 1 = a regra inglesa de 4 (0x85c38e)
-    let mut passo = 0;
+    let mut step_towards = 0;
     if f == 0x8000 {
         let monaco = read_u32_as_usize(G_KEY_CLUB_AS_MONACO);
         if read_u32_as_usize(read_u32_as_usize(fx + 0x1c)) != monaco && read_u32_as_usize(read_u32_as_usize(fx + 0x20)) != monaco {
@@ -288,19 +299,19 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             return;
         }
         f = 4;
-        passo = 1;
+        step_towards = 1;
     } else if f == 4 {
-        passo = 1;
+        step_towards = 1;
     } else if f == 0 {
         let casa = read_u32_as_usize(fx + 0x1c);
-        if d.ano < 0x7d3 && cqc2_selecao(casa) && read_u32_as_usize(read_u32_as_usize(casa + 0x53)) == read_u32_as_usize(KEY_NATION_ENGLAND) {
+        if d.ano < 0x7d3 && fin_prm_is_national_team(casa) && read_u32_as_usize(read_u32_as_usize(casa + 0x53)) == read_u32_as_usize(KEY_NATION_ENGLAND) {
             f = 0x20;
         }
         let casa = read_u32_as_usize(fx + 0x1c);
         let n = read_u32_as_usize(casa + 0x53);
         let fin = read_u32_as_usize(KEY_NATION_FINLAND);
         if n != 0 && read_u32_as_usize(n) == fin && *((fx + 0x42) as *const u8) != 0xff && read_u32_as_usize(fx) == read_u32_as_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) && read_u32_as_usize(casa + 0x69) != 0 {
-            let st = read_u32_as_usize(cqo1_nacao(fin) + 0x80);
+            let st = read_u32_as_usize(nation_by_id(fin) + 0x80);
             let mut livre = true;
             if read_u32_as_usize(this) != 0 {
                 let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
@@ -312,8 +323,8 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             }
             if livre && (read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(fx + 0x1c) + 0x69) + 0x3c) as i32) < 40000 {
                 *neutro = 1;
-                fixar(read_u32_as_usize(cqo1_nacao(fin) + 0x80));
-                cqo1_reservar(this, read_u32_as_usize(fx + 0x18), pd);
+                fixar(read_u32_as_usize(nation_by_id(fin) + 0x80));
+                add_stadium_booking(this, read_u32_as_usize(fx + 0x18), pd);
                 return;
             }
         }
@@ -331,20 +342,20 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
                 fixar(read_u32_as_usize(read_u32_as_usize(fx + 0x1c) + 0x69)); // cqo1: o estádio do mandante
                 return;
             }
-        } else if !cqc2_selecao(read_u32_as_usize(fx + 0x1c)) {
+        } else if !fin_prm_is_national_team(read_u32_as_usize(fx + 0x1c)) {
             write_u32_from_usize(fx + 0x18, 0);
             write_u32_from_usize(fx + 4, u32::MAX as usize);
             return;
         }
         f = 0x20;
     }
-    if passo == 1 {
+    if step_towards == 1 {
         let comp = read_u32_as_usize(fx + 0x14);
         if comp != 0 {
             let n = read_u32_as_usize(comp + competition::CLUB_COMP_NATION);
-            if n != 0 && read_u32_as_usize(n) == read_u32_as_usize(KEY_NATION_ENGLAND) && !cqc2_selecao(read_u32_as_usize(fx + 0x1c)) && read_u32_as_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
+            if n != 0 && read_u32_as_usize(n) == read_u32_as_usize(KEY_NATION_ENGLAND) && !fin_prm_is_national_team(read_u32_as_usize(fx + 0x1c)) && read_u32_as_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
                 *neutro = 1;
-                fixar(read_u32_as_usize(cqo1_nacao(read_u32_as_usize(KEY_NATION_WALES)) + 0x80));
+                fixar(read_u32_as_usize(nation_by_id(read_u32_as_usize(KEY_NATION_WALES)) + 0x80));
                 return;
             }
         }
@@ -374,7 +385,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     let mut alvo;
     let mut alt = 0usize;
     if r == 2 {
-        let (na, nb) = (cqo1_nacao(a as usize), cqo1_nacao(b as usize));
+        let (na, nb) = (nation_by_id(a as usize), nation_by_id(b as usize));
         alvo = nb;
         if f & 0x80 == 0 && f & 0x2a00 == 0 {
             if f & 0x40 != 0 || f & 0x5500 != 0 {
@@ -406,11 +417,11 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         }
     } else if r == 1 {
         crate::comparacao::ramo("cqo_1 uma sede");
-        alvo = cqo1_nacao(a as usize); // cqo1: a sede única
+        alvo = nation_by_id(a as usize); // cqo1: a sede única
     } else {
         alvo = read_u32_as_usize(comp + competition::CLUB_COMP_NATION);
     }
-    if f & 0x20 != 0 && cqc2_selecao(read_u32_as_usize(fx + 0x1c)) {
+    if f & 0x20 != 0 && fin_prm_is_national_team(read_u32_as_usize(fx + 0x1c)) {
         alvo = read_u32_as_usize(read_u32_as_usize(fx + 0x1c) + 0x53);
     }
     if f & 4 != 0 && alvo != 0 {
@@ -418,10 +429,10 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         if st != 0 {
             crate::comparacao::ramo("cqo_1 estadio nacional");
             fixar(st);
-            cqo1_reservar(this, read_u32_as_usize(fx + 0x18), pd);
+            add_stadium_booking(this, read_u32_as_usize(fx + 0x18), pd);
             return;
         }
-        f = if cqc2_selecao(read_u32_as_usize(fx + 0x1c)) { 0x20 } else { 0x40 };
+        f = if fin_prm_is_national_team(read_u32_as_usize(fx + 0x1c)) { 0x20 } else { 0x40 };
     }
     let buscar: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_STADIUM_FIND_AVAILABLE_VENUE);
     let r = buscar(this, f, read_u32_as_usize(comp + competition::CLUB_COMP_CONTINENT), alvo, pd, read_u32_as_usize(fx + 0x1c), read_u32_as_usize(fx + 0x20), fx);
@@ -445,14 +456,14 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     }
 }
 
-/// Lado a lado pela partida (0x44 bytes) e pelas regiões de `cqo1_regioes`; partida nula ou reserva que pode alocar:
+/// Lado a lado pela partida (0x44 bytes) e pelas regiões de `stadium_choice_regions`; partida nula ou reserva que pode alocar:
 /// só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(IDX_SET_FIXTURE_VENUE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(IDX_SET_FIXTURE_VENUE);
     if partida == 0 {
         return o(this, marcas, partida, estadio);
     }
-    let Some((r, m)) = cqo1_regioes(this, Some((partida, 0x44))) else {
+    let Some((r, m)) = stadium_choice_regions(this, Some((partida, 0x44))) else {
         // ponytail: a reserva pode alocar a lista; só a original
         return o(this, marcas, partida, estadio);
     };
@@ -466,25 +477,32 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, m
 
 
 
-/// O sorteio do jogo (0x90cfc0, cdecl): 0..n-1.
-pub(crate) unsafe fn cqo2_sortear(n: u32) -> i32 {
+/// Game random number 0..n−1 (FN_UTILS_RANDOM, 0x90cfc0).
+///
+/// [pt] O sorteio do jogo (0x90cfc0, cdecl): 0..n-1.
+pub(crate) unsafe fn random_below(n: u32) -> i32 {
     let f: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
-/// A cidade (registro de 0x38 bytes em [0xae23ac]) do estádio `est` (+0x38); sem estádio ou sem cidade, uma sorteada
+/// Returns the stadium's city (+0x38); without stadium or city, a random city from G_CITY_TABLE.
+///
+/// [pt] A cidade (registro de 0x38 bytes em [0xae23ac]) do estádio `est` (+0x38); sem estádio ou sem cidade, uma sorteada
 /// entre as [0xae2354].
-pub(crate) unsafe fn cqo2_cidade(est: usize) -> usize {
+pub(crate) unsafe fn stadium_city(est: usize) -> usize {
     if est != 0 && read_u32_as_usize(est + 0x38) != 0 {
         return read_u32_as_usize(est + 0x38);
     }
-    let r = cqo2_sortear(read_u32_as_usize(G_CITY_COUNT) as u32);
+    let r = random_below(read_u32_as_usize(G_CITY_COUNT) as u32);
     read_u32_as_usize(G_CITY_TABLE).wrapping_add((r as usize).wrapping_mul(0x38))
 }
 
-/// O piso do fator de cada lado na competição de tipo `t` (+0x3a da partida), pelos limites +0x30/+0x32 da partida e
+/// Raises the side's factor to a floor by competition type (+0x3a), stage limits (+0x30/+0x32) and the side club's
+/// reputation thresholds (4250, 5750).
+///
+/// [pt] O piso do fator de cada lado na competição de tipo `t` (+0x3a da partida), pelos limites +0x30/+0x32 da partida e
 /// pela reputação (/500) `rep` do clube do lado (0x109a = 4250, 0x1676 = 5750).
-pub(crate) unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
+pub(crate) unsafe fn apply_side_factor_floor(jogo: usize, lado: u8, f: &mut [f64; 2]) {
     let t = read_u8(jogo + 0x3a);
     let rep = |l: u8| read_i16(read_u32_as_usize(jogo + if l == 0 { 0x1c } else { 0x20 }) + 0x80);
     let k = lado as usize;
@@ -501,59 +519,59 @@ pub(crate) unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
         let a = read_i16(jogo + 0x30) as u16;
         if a == 0x96 {
             if alto(0x1676) {
-                piso(&mut f[k], f64_em(0x9690a8));
+                piso(&mut f[k], read_f64_at(0x9690a8));
             } else {
-                piso(&mut f[k], f64_em(0x968e38));
+                piso(&mut f[k], read_f64_at(0x968e38));
             }
-        } else if a == 0x82 && f[k] < f64_em(0x968e18) {
+        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) {
             if alto(0x1676) {
-                piso(&mut f[k], f64_em(0x968ec8));
+                piso(&mut f[k], read_f64_at(0x968ec8));
             } else {
-                piso(&mut f[k], f64_em(0x968930));
+                piso(&mut f[k], read_f64_at(0x968930));
             }
         } else if lado > 1 || rep(lado) >= 0x1676 {
-            piso(&mut f[k], f64_em(0x9689b8));
+            piso(&mut f[k], read_f64_at(0x9689b8));
         } else if rep(lado) >= 0x109a {
-            piso(&mut f[k], f64_em(0x968928));
+            piso(&mut f[k], read_f64_at(0x968928));
         } else {
-            piso(&mut f[k], f64_em(0x968f98));
+            piso(&mut f[k], read_f64_at(0x968f98));
         }
     }
     if t == 6 {
         let a = read_i16(jogo + 0x30) as u16;
         if a == 0x96 {
             if alto(0x109a) {
-                piso(&mut f[k], f64_em(0x9690a8));
+                piso(&mut f[k], read_f64_at(0x9690a8));
             } else {
-                piso(&mut f[k], f64_em(0x968e38));
+                piso(&mut f[k], read_f64_at(0x968e38));
             }
-        } else if a == 0x82 && f[k] < f64_em(0x968e18) {
-            f[k] = f64_em(0x968e18);
+        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) {
+            f[k] = read_f64_at(0x968e18);
         } else {
-            piso(&mut f[k], f64_em(0x968928));
+            piso(&mut f[k], read_f64_at(0x968928));
         }
     } else if read_i16(jogo + 0x30) as u16 == 0x96 && t == 5 {
         if alto(0x109a) {
-            piso(&mut f[k], f64_em(0x9690a8));
+            piso(&mut f[k], read_f64_at(0x9690a8));
         } else {
-            piso(&mut f[k], f64_em(0x968e38));
+            piso(&mut f[k], read_f64_at(0x968e38));
         }
     } else if read_i16(jogo + 0x32) as u16 == 0xa0 && t == 5 {
         if lado == 0 {
-            if rep(0) < 0x109a && f[0] < f64_em(0x96fe20) {
-                f[0] = f64_em(0x96fe20);
+            if rep(0) < 0x109a && f[0] < read_f64_at(0x96fe20) {
+                f[0] = read_f64_at(0x96fe20);
             } else {
-                piso(&mut f[0], f64_em(0x968e18));
+                piso(&mut f[0], read_f64_at(0x968e18));
             }
         } else {
-            piso(&mut f[k], f64_em(0x968e18));
+            piso(&mut f[k], read_f64_at(0x968e18));
         }
-    } else if t == 10 && f[k] < f64_em(0x968928) {
-        f[k] = f64_em(0x968928);
-    } else if t == 9 && f[k] < f64_em(0x9689b0) {
-        f[k] = f64_em(0x9689b0);
+    } else if t == 10 && f[k] < read_f64_at(0x968928) {
+        f[k] = read_f64_at(0x968928);
+    } else if t == 9 && f[k] < read_f64_at(0x9689b0) {
+        f[k] = read_f64_at(0x9689b0);
     } else {
-        piso(&mut f[k], f64_em(0x967880));
+        piso(&mut f[k], read_f64_at(0x967880));
     }
 }
 
@@ -574,7 +592,7 @@ pub(crate) unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
 /// 0x7e6f20, sem +0x43 = 2) mais a diferença (+0x34 da partida − +0x3c da liga, entre −6 e 5). O fator do mandante vezes
 /// R do visitante / R dele (se ele tem R < 15 ou abaixo do outro), ×1,1 com o outro acima de 17, ×1,25 com o outro
 /// acima de 12 e ele abaixo de 14; dividido pelo número de clubes da liga do clube (+0x57 → +0x69), sem ela ×0,2 (tipo
-/// 10) ou ×0,05. O do visitante, o mesmo com os papéis trocados. Pisos por tipo de competição (cqo2_piso: copas 8, 6 e
+/// 10) ou ×0,05. O do visitante, o mesmo com os papéis trocados. Pisos por tipo de competição (apply_side_factor_floor: copas 8, 6 e
 /// 5 com os limites +0x30/+0x32 e a reputação; 10 1,25; 9 0,8; senão 0,1). Com estádio fora de campo neutro: as
 /// cidades do estádio e dos dois clubes (sorteadas sem cidade), o fator da distância (0x85d8a0, no mínimo 0,15); o
 /// mandante leva a média (+0x73) × fator × distância, o visitante (+0x73 + +0x77) × fator × distância × 0,5; na
@@ -609,7 +627,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         let comp = read_u32_as_usize(jogo + 0x14);
         if comp != 0 {
             f[k] = read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32 as f64;
-            if f[k] < f64_em(0x967890) {
+            if f[k] < read_f64_at(0x967890) {
                 f[k] = 1.0;
             }
         } else {
@@ -617,22 +635,22 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         }
         let t = read_u8(jogo + 0x3a);
         if t == 8 || t == 10 || t == 6 {
-            f[k] += f64_em(0x968950);
+            f[k] += read_f64_at(0x968950);
         }
         let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-        let mut ajuste = f64_em(0x9689a0);
+        let mut ajuste = read_f64_at(0x9689a0);
         if amistoso(read_u32_as_usize(G_FRIENDLY), comp) == 0 && read_u32_as_usize(G_COMP_OBJECT_TABLE) != 0 && read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(comp) * 4) != 0 && read_u32_as_usize(G_RESERVE_COMP) != 0 {
             let grupo: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
             if grupo(read_u32_as_usize(jogo + 0x14)) == 0 {
                 let liga = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(read_u32_as_usize(jogo + 0x14)) * 4);
                 if read_u8(liga + 0x43) != 2 {
                     let x = (read_u8(jogo + 0x34).wrapping_sub(read_u8(liga + 0x3c)) as i8) as i32 as f64;
-                    ajuste = if x < f64_em(0x96fe28) {
-                        f64_em(0x96fe28)
-                    } else if x <= f64_em(0x9688a0) {
+                    ajuste = if x < read_f64_at(0x96fe28) {
+                        read_f64_at(0x96fe28)
+                    } else if x <= read_f64_at(0x9688a0) {
                         x
                     } else {
-                        f64_em(0x9688a0)
+                        read_f64_at(0x9688a0)
                     };
                 }
             }
@@ -646,42 +664,42 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
                 f[k] = outro as i32 as f64 / eu as i32 as f64 * v;
             }
             if outro > 0x11 {
-                f[k] *= f64_em(0x9689c0);
+                f[k] *= read_f64_at(0x9689c0);
             }
             if outro > 0xc && eu < 0xe {
-                f[k] *= f64_em(0x968928);
+                f[k] *= read_f64_at(0x968928);
             }
             let _ = clube;
             let lg = read_u32_as_usize(read_u32_as_usize(jogo + if lado == 0 { 0x1c } else { 0x20 }) + 0x57);
             if lg != 0 && read_i16(lg + 0x69) != 0 {
                 f[k] /= read_i16(lg + 0x69) as i32 as f64;
             } else if read_u8(jogo + 0x3a) == 0xa {
-                f[k] *= f64_em(0x968918);
+                f[k] *= read_f64_at(0x968918);
             } else {
-                f[k] *= f64_em(0x967888); // cqo2: o fator sem a liga do clube
+                f[k] *= read_f64_at(0x967888); // cqo2: o fator sem a liga do clube
             }
         }
-        cqo2_piso(jogo, lado, &mut f);
+        apply_side_factor_floor(jogo, lado, &mut f);
         lado += 1;
     }
     let mut pc: i32; // o público do mandante ([esp+0x14] / esi)
     let mut pf: i32; // o do visitante ([esp+0x18])
     let est = read_u32_as_usize(jogo + 0x18);
     if est != 0 && read_u8(jogo + 0x3c) == 0 {
-        let c_est = cqo2_cidade(est);
-        let c_casa = cqo2_cidade(read_u32_as_usize(casa + 0x69));
-        let c_fora = cqo2_cidade(read_u32_as_usize(fora + 0x69));
+        let c_est = stadium_city(est);
+        let c_casa = stadium_city(read_u32_as_usize(casa + 0x69));
+        let c_fora = stadium_city(read_u32_as_usize(fora + 0x69));
         let fator: unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64 = core::mem::transmute(FN_STADIUM_GET_TRAVEL_DISTANCE_FACTOR);
         let mut d = fator(this, jogo, c_est, c_casa, f[0]);
-        if d < f64_em(0x968f20) {
-            d = f64_em(0x968f20);
+        if d < read_f64_at(0x968f20) {
+            d = read_f64_at(0x968f20);
         }
-        pc = ftol(read_i32(casa + 0x73) as f64 * f[0] * d);
+        pc = match_pl_ftol(read_i32(casa + 0x73) as f64 * f[0] * d);
         let mut d = fator(this, jogo, c_est, c_fora, f[1]);
-        if d < f64_em(0x968f20) {
-            d = f64_em(0x968f20);
+        if d < read_f64_at(0x968f20) {
+            d = read_f64_at(0x968f20);
         }
-        pf = ftol(read_i32(fora + 0x77).wrapping_add(read_i32(fora + 0x73)) as f64 * f[1] * d * f64_em(0x968968));
+        pf = match_pl_ftol(read_i32(fora + 0x77).wrapping_add(read_i32(fora + 0x73)) as f64 * f[1] * d * read_f64_at(0x968968));
         let comp = read_u32_as_usize(jogo + 0x14);
         if comp != 0 && casa != 0 && read_u32_as_usize(casa + 0x57) == comp {
             let liga = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(comp) * 4);
@@ -718,7 +736,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
                             } else if cl < 4 {
                                 2
                             } else {
-                                ftol(ax as i32 as f64 * f64_em(0x9689e0)) as i16
+                                match_pl_ftol(ax as i32 as f64 * read_f64_at(0x9689e0)) as i16
                             };
                         }
                         let m = if bl < 4 && dl == 1 { 25 } else { 15 };
@@ -744,24 +762,24 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             }
         }
     } else {
-        pc = ftol(read_i32(casa + 0x73) as f64 * f[0]);
-        pf = ftol(read_i32(fora + 0x73) as f64 * f[1]);
+        pc = match_pl_ftol(read_i32(casa + 0x73) as f64 * f[0]);
+        pf = match_pl_ftol(read_i32(fora + 0x73) as f64 * f[1]);
     }
     // os clássicos
     let (casa, fora) = (read_u32_as_usize(jogo + 0x1c), read_u32_as_usize(jogo + 0x20));
     let rival = |a: usize, b: usize| read_u32_as_usize(a + 0xb3) == b || read_u32_as_usize(a + 0xb7) == b || read_u32_as_usize(a + 0xbb) == b;
     if rival(casa, fora) {
         crate::comparacao::ramo("cqo_2 classico");
-        pc = ftol(pc as f64 * f64_em(0x968940)); // cqo2: o clássico
+        pc = match_pl_ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico
     } else if read_u32_as_usize(casa + 0x69) != 0 && read_u32_as_usize(fora + 0x69) != 0 && read_u32_as_usize(read_u32_as_usize(casa + 0x69) + 0x38) == read_u32_as_usize(read_u32_as_usize(fora + 0x69) + 0x38) {
-        pc = ftol(pc as f64 * f64_em(0x969588));
+        pc = match_pl_ftol(pc as f64 * read_f64_at(0x969588));
     }
     if rival(fora, casa) {
-        pf = ftol(pf as f64 * f64_em(0x969588));
+        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969588));
     }
     if read_u8(jogo + 0x3c) == 0 && read_u8(jogo + 0x3b) != 0xff {
-        pc = ftol(pc as f64 * f64_em(0x9689b8));
-        pf = ftol(pf as f64 * f64_em(0x969520));
+        pc = match_pl_ftol(pc as f64 * read_f64_at(0x9689b8));
+        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969520));
     }
     let comp = read_u32_as_usize(jogo + 0x14);
     if comp != 0 && casa != 0 && read_u32_as_usize(casa + 0x57) == comp && read_u8(casa + 0x6d) != 0 {
@@ -786,7 +804,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             if pc < n * 250 {
                 pc = n * 250;
             } else if pc > n * 1500 {
-                pc = n * 1500 - ftol((pc - n * 1500) as f64 * f64_em(0x968f30));
+                pc = n * 1500 - match_pl_ftol((pc - n * 1500) as f64 * read_f64_at(0x968f30));
             }
         }
     }
@@ -804,10 +822,10 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             let vis = if read_u8(jogo + 0x3c) == 0 {
                 let a = lot as f64;
                 let x = a - read_i32(read_u32_as_usize(jogo + 0x20) + 0x73) as f64 * f[0];
-                let y = a * f64_em(0x968f20);
+                let y = a * read_f64_at(0x968f20);
                 let z = if x < y { x } else { y };
-                let w = a * f64_em(0x967888);
-                ftol(if w > z { w } else { z })
+                let w = a * read_f64_at(0x967888);
+                match_pl_ftol(if w > z { w } else { z })
             } else {
                 lot / 2
             };
@@ -827,13 +845,13 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             }
         }
     } else {
-        pc = cqo2_sortear(0x32) + 1;
-        pf = cqo2_sortear(0xf) + 1;
+        pc = random_below(0x32) + 1;
+        pf = random_below(0xf) + 1;
     }
-    let r = cqo2_sortear(0x32); // cqo2: o sorteio do total
+    let r = random_below(0x32); // cqo2: o sorteio do total
     let mut total = pf.wrapping_add(pc).wrapping_sub(r);
     if total < 0 {
-        total = cqo2_sortear(0x96) + 0x2d;
+        total = random_below(0x96) + 0x2d;
     }
     if !saida.is_null() {
         *saida = total;
@@ -846,7 +864,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
 /// Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
 /// ela pode subir para 1.500) e pela devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(IDX_CALCULATE_MATCH_ATTENDANCE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(IDX_CALCULATE_MATCH_ATTENDANCE);
     if jogo == 0 {
         return o(this, jogo, saida);
     }
@@ -868,11 +886,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_calculate_match_attendance(this:
 
 
 
-/// A distância entre duas cidades (x em +0x23, y em +0x2b, doubles) × 44,44, truncada (_ftol).
-pub(crate) unsafe fn cpt7_distancia(a: usize, b: usize) -> i32 {
+/// Distance between two cities (x at +0x23, y at +0x2b, doubles) × 44.44, truncated.
+///
+/// [pt] A distância entre duas cidades (x em +0x23, y em +0x2b, doubles) × 44,44, truncada (_ftol).
+pub(crate) unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
     let dx = (read_f64(a + 0x23) - read_f64(b + 0x23)).abs();
     let dy = (read_f64(a + 0x2b) - read_f64(b + 0x2b)).abs();
-    ftol((dy * dy + dx * dx).sqrt() * f64_em(0x96fe40))
+    match_pl_ftol((dy * dy + dx * dx).sqrt() * read_f64_at(0x96fe40))
 }
 
 /// the English national stadium before 2004 scores 0; the score starts at 100000, changes with the city distances (flag
@@ -905,9 +925,9 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
         let (cidc, cidf) = (if cc != 0 { read_usize(cc + 0x38) } else { 0 }, if cf != 0 { read_usize(cf + 0x38) } else { 0 });
         let cide = read_usize(est + 0x38);
         if cc != 0 && cidc != 0 && cf != 0 && cidf != 0 && cide != 0 && read_i32(est + 0x3c) > 0x2710 {
-            let d1 = cpt7_distancia(cidc, cidf);
-            let d2 = cpt7_distancia(cidc, cide);
-            let d3 = cpt7_distancia(cidf, cide);
+            let d1 = stadium_city_distance(cidc, cidf);
+            let d2 = stadium_city_distance(cidc, cide);
+            let d3 = stadium_city_distance(cidf, cide);
             if d1 < 0x1e {
                 if d2 < 0xf && d3 < 0xf {
                     nota = 200000;
@@ -920,8 +940,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
                 }
             } else {
                 let (f1, f2, f3) = (d1 as f64, d2 as f64, d3 as f64);
-                let perto = f1 * f64_em(0x96fe38);
-                let longe = f1 * f64_em(0x969088);
+                let perto = f1 * read_f64_at(0x96fe38);
+                let longe = f1 * read_f64_at(0x969088);
                 if f2 < perto && f3 < perto {
                     nota = 200000;
                 } else if !(f2 < longe && f3 < longe) {
@@ -957,32 +977,32 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
             }
         }
         if lugares > esperado {
-            nota = ftol(nota as f64 * f64_em(0x968978));
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968978));
         }
         let (l, e) = (lugares as f64, esperado as f64);
-        let t = e * f64_em(0x968940);
+        let t = e * read_f64_at(0x968940);
         if l > t {
-            nota = ftol(nota as f64 / ((l - t) * f64_em(0x96fe30) + f64_em(0x967890)));
-        } else if l < e * f64_em(0x968e80) {
-            nota = ftol(nota as f64 * f64_em(0x967880));
-        } else if l < e * f64_em(0x968968) {
-            nota = ftol(nota as f64 * f64_em(0x968e80));
-        } else if l < e * f64_em(0x968e40) {
-            nota = ftol(nota as f64 * f64_em(0x968e40));
-        } else if l < e * f64_em(0x9689d8) {
-            nota = ftol(nota as f64 * f64_em(0x9689d8));
+            nota = match_pl_ftol(nota as f64 / ((l - t) * read_f64_at(0x96fe30) + read_f64_at(0x967890)));
+        } else if l < e * read_f64_at(0x968e80) {
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x967880));
+        } else if l < e * read_f64_at(0x968968) {
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e80));
+        } else if l < e * read_f64_at(0x968e40) {
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e40));
+        } else if l < e * read_f64_at(0x9689d8) {
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x9689d8));
         }
     } else if m & 4 != 0 {
-        nota = cpe1_sorteio(lugares);
+        nota = friendly_random(lugares);
     }
     crate::comparacao::ramo("cpt_7 nota do estadio");
-    let r = cpe1_sorteio(100); // cpt7: o sorteio da nota
-    ftol((r as f64 * f64_em(0x968d60) + f64_em(0x9689b0)) * nota as f64)
+    let r = friendly_random(100); // cpt7: o sorteio da nota
+    match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * nota as f64)
 }
 
 // ponytail: sorteia (e, com a marca 4, sorteia os lugares): só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_score_venue_for_fixture(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(IDX_SCORE_VENUE_FOR_FIXTURE)(this, est, marcas, casa, fora, jogo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(IDX_SCORE_VENUE_FOR_FIXTURE)(this, est, marcas, casa, fora, jogo)
 }
 
 /// 1 − distance × k (squared without +0x3c), divided by (reputation + 1)² when far and with reputation; with minimums
@@ -1003,37 +1023,37 @@ pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, 
     let mut d = (dx * dx + dy * dy).sqrt();
     let tipo = *((jogo + 0x3a) as *const u8);
     if core::ptr::read_unaligned((jogo + 0x30) as *const u16) == 0xa0 && tipo == 5 {
-        d *= f64_em(0x968968);
+        d *= read_f64_at(0x968968);
     }
-    let mut f = f64_em(0x967890) - d * f64_em(0x96afe0);
+    let mut f = read_f64_at(0x967890) - d * read_f64_at(0x96afe0);
     if *((jogo + 0x3c) as *const u8) == 0 {
         f *= f;
     }
-    if d > f64_em(0x9689a0) && r > f64_em(0x9689a0) {
-        let q = r + f64_em(0x967890);
+    if d > read_f64_at(0x9689a0) && r > read_f64_at(0x9689a0) {
+        let q = r + read_f64_at(0x967890);
         f /= q * q;
     }
-    if base > f64_em(0x969558) {
-        let minimo = f64_em(0x967890) - (f64_em(0x968ea8) - base) * f64_em(0x968f20);
+    if base > read_f64_at(0x969558) {
+        let minimo = read_f64_at(0x967890) - (read_f64_at(0x968ea8) - base) * read_f64_at(0x968f20);
         if f < minimo {
             return minimo;
         }
     }
-    if tipo == 0xa && f < f64_em(0x968918) {
-        return f64_em(0x968918);
+    if tipo == 0xa && f < read_f64_at(0x968918) {
+        return read_f64_at(0x968918);
     }
-    if f < f64_em(0x967888) && read_usize(read_usize(jogo + 0x1c) + 0x53) == nacao {
-        return f64_em(0x967888);
+    if f < read_f64_at(0x967888) && read_usize(read_usize(jogo + 0x1c) + 0x53) == nacao {
+        return read_f64_at(0x967888);
     }
-    if f < f64_em(0x96d2c8) {
-        return f64_em(0x96d2c8);
+    if f < read_f64_at(0x96d2c8) {
+        return read_f64_at(0x96d2c8);
     }
     f
 }
 
 /// Comparador: pelo valor (os bits do double).
 pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(IDX_GET_TRAVEL_DISTANCE_FACTOR)(this, jogo, cid_est, cid_clube, base);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(IDX_GET_TRAVEL_DISTANCE_FACTOR)(this, jogo, cid_est, cid_clube, base);
     let n = get_travel_distance_factor(this, jogo, cid_est, cid_clube, base);
     PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
     r
@@ -1047,23 +1067,30 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this:
 
 
 
-/// A nação da Inglaterra ([0x9cf2e4]; registros de 0x122 bytes em [0xae23a8]).
-pub(crate) unsafe fn cps7_inglaterra() -> usize {
+/// Returns England's nation record ([G_NATION_TABLE] + KEY_NATION_ENGLAND × 0x122).
+///
+/// [pt] A nação da Inglaterra ([0x9cf2e4]; registros de 0x122 bytes em [0xae23a8]).
+pub(crate) unsafe fn england_nation() -> usize {
     read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(0x122))
 }
 
-/// A seleção principal da nação (0x53b3d0).
-pub(crate) unsafe fn cps7_selecao(nacao: usize) -> usize {
+/// Returns the nation's main national team (FN_DATABASE_GET_NATIONAL_TEAM, 0x53b3d0).
+///
+/// [pt] A seleção principal da nação (0x53b3d0).
+pub(crate) unsafe fn nation_national_team(nacao: usize) -> usize {
     let f: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     f(nacao)
 }
 
-/// O estádio de id `id` (registros de 0x4e bytes em [0xae23b0]).
-pub(crate) unsafe fn cps7_estadio(id: usize) -> usize {
+/// Returns stadium id's record ([G_STADIUM_TABLE] + id × 0x4e).
+///
+/// [pt] O estádio de id `id` (registros de 0x4e bytes em [0xae23b0]).
+pub(crate) unsafe fn stadium_by_id(id: usize) -> usize {
     read_usize(G_STADIUM_TABLE).wrapping_add(id.wrapping_mul(0x4e))
 }
 
-pub(crate) unsafe fn cps7_ordenar(lista: usize, n: u32) {
+/// qsorts a list of n 12-byte stadium entries with the comparer 0x85e380.
+pub(crate) unsafe fn sort_stadium_list(lista: usize, n: u32) {
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     qsort(lista, n, 0xc, 0x85e380);
 }
@@ -1086,13 +1113,13 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, hoje: u
         refazer(this);
     }
     if read_u16(hoje + 2) < 0x7d3 {
-        let nacao = cps7_inglaterra();
+        let nacao = england_nation();
         let e = read_usize(nacao + nation::NATIONAL_STADIUM);
         if e != 0 {
             crate::comparacao::ramo("cps_7 fecha o estadio nacional");
             write_u32(G_STADIUM_STASHED_VENUE_ID, read_usize(e) as u32); // cps7: guarda o id do estádio fechado
             write_u32(nacao + nation::NATIONAL_STADIUM, 0);
-            write_u32(cps7_selecao(cps7_inglaterra()) + 0x69, 0); // cps7: a seleção sem casa
+            write_u32(nation_national_team(england_nation()) + 0x69, 0); // cps7: a seleção sem casa
         }
     }
     let nova: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
@@ -1101,11 +1128,11 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, hoje: u
     let reabre = read_usize(r) as u32;
     if (reabre >> 16) as u16 == read_u16(hoje + 2) && reabre as u16 == read_u16(hoje) && read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
         crate::comparacao::ramo("cps_7 reabre o estadio nacional");
-        write_u32(cps7_inglaterra() + 0x80, cps7_estadio(read_usize(G_STADIUM_STASHED_VENUE_ID)) as u32);
-        let nacao = cps7_inglaterra();
-        write_u32(cps7_selecao(nacao) + 0x69, read_usize(nacao + nation::NATIONAL_STADIUM) as u32);
-        write_u32(cps7_estadio(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x3c, 0x15f90);
-        write_u32(cps7_estadio(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x40, 0x15f90);
+        write_u32(england_nation() + 0x80, stadium_by_id(read_usize(G_STADIUM_STASHED_VENUE_ID)) as u32);
+        let nacao = england_nation();
+        write_u32(nation_national_team(nacao) + 0x69, read_usize(nacao + nation::NATIONAL_STADIUM) as u32);
+        write_u32(stadium_by_id(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x3c, 0x15f90);
+        write_u32(stadium_by_id(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x40, 0x15f90);
         write_u32(G_STADIUM_STASHED_VENUE_ID, 0xffff_ffff);
     }
     if (read_u16(hoje) as i16 as i32) % 0x1e != 0 {
@@ -1146,14 +1173,14 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, hoje: u
         }
     }
     write_u32(this + 4, (n - k) as u32);
-    cps7_ordenar(read_usize(this), (n - k) as u32);
+    sort_stadium_list(read_usize(this), (n - k) as u32);
 }
 
 /// Comparador: no dia 0 do ano (refaz a lista dos estádios, aloca) só a original. Nos outros, lado a lado pelo cabeçalho
 /// (0x1c bytes), pelas reservas, por [0xa835a4], pelo estádio nacional da Inglaterra, pela casa da seleção e pelos
 /// lugares do estádio fechado.
 pub(crate) unsafe extern "thiscall" fn comparar_stadium_daily_update(this: usize, hoje: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STADIUM_DAILY_UPDATE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STADIUM_DAILY_UPDATE);
     if read_u16(hoje) == 0 {
         return o(this, hoje);
     }
@@ -1168,16 +1195,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_stadium_daily_update(this: usize
     }
     regioes[m] = (0xa835a4, 4);
     m += 1;
-    let nacao = cps7_inglaterra();
+    let nacao = england_nation();
     regioes[m] = (nacao + nation::NATIONAL_STADIUM, 4);
     m += 1;
-    let s = cps7_selecao(nacao);
+    let s = nation_national_team(nacao);
     if s != 0 {
         regioes[m] = (s + 0x69, 4);
         m += 1;
     }
     if read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
-        regioes[m] = (cps7_estadio(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x3c, 8);
+        regioes[m] = (stadium_by_id(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x3c, 8);
         m += 1;
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes[..m], || o(this, hoje), || stadium_daily_update(this, hoje));
@@ -1193,14 +1220,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_stadium_daily_update(this: usize
 /// caixa "Error" (linhas 0x810, 0x81b, 0x82b). Pela escolha do estádio (0x85c260, 0x85c800).
 pub(crate) unsafe extern "thiscall" fn add_booking(this: usize, estadio: usize, data: usize) {
     if estadio == 0 || data == 0 {
-        return aviso_em(0xa835b0, 0x810);
+        return show_error_at(0xa835b0, 0x810);
     }
     if read_usize(this) == 0 {
         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
         let l = alocar(0x168);
         write_u32(this, l as u32);
         if l == 0 {
-            return aviso_em(0xa835b0, 0x81b);
+            return show_error_at(0xa835b0, 0x81b);
         }
         write_u32(this + 8, 0x1e);
     } else if read_usize(this + 4) == read_usize(this + 8) {
@@ -1208,7 +1235,7 @@ pub(crate) unsafe extern "thiscall" fn add_booking(this: usize, estadio: usize, 
         let l = realocar(read_usize(this), (read_usize(this + 8) as u32).wrapping_mul(3).wrapping_add(0x5a).wrapping_mul(4));
         write_u32(this, l as u32);
         if l == 0 {
-            return aviso_em(0xa835b0, 0x82b);
+            return show_error_at(0xa835b0, 0x82b);
         }
         write_u32(this + 8, (read_usize(this + 8) as u32).wrapping_add(0x1e));
     }
@@ -1219,13 +1246,13 @@ pub(crate) unsafe extern "thiscall" fn add_booking(this: usize, estadio: usize, 
     copia(e + 4, t.as_mut_ptr() as usize, data);
     let n = (read_usize(this + 4) as u32).wrapping_add(1);
     write_u32(this + 4, n);
-    cps7_ordenar(read_usize(this), n);
+    sort_stadium_list(read_usize(this), n);
 }
 
 /// Comparador: com lista e vaga (não aloca), lado a lado pelo cabeçalho (0xc bytes) e pelas reservas com a nova; senão
 /// (aloca, realoca ou a caixa) só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_add_booking(this: usize, estadio: usize, data: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_BOOKING);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_BOOKING);
     let n = read_usize(this + 4);
     if estadio == 0 || data == 0 || read_usize(this) == 0 || n == read_usize(this + 8) {
         return o(this, estadio, data);
@@ -1258,7 +1285,7 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, esta
 
 /// Comparador: a original e a cópia (as duas só leem), pelo valor.
 pub(crate) unsafe extern "thiscall" fn comparar_is_stadium_free_on_date(this: usize, estadio: usize, data: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_STADIUM_FREE_ON_DATE)(this, estadio, data);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_STADIUM_FREE_ON_DATE)(this, estadio, data);
     let n = is_stadium_free_on_date(this, estadio, data);
     PLACAR.registrar(r == n, || format!("is_stadium_free_on_date(estadio {:x}) original={} rust={}", estadio, r, n));
     r
@@ -1285,7 +1312,7 @@ pub(crate) unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> 
 
 /// Comparador: pelo valor.
 pub(crate) unsafe extern "C" fn comparar_stadium_compare_bookings(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STADIUM_COMPARE_BOOKINGS)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STADIUM_COMPARE_BOOKINGS)(a, b);
     let n = stadium_compare_bookings(a, b);
     PLACAR.registrar(r == n, || format!("stadium_compare_bookings({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
@@ -1321,7 +1348,7 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
     }
     let hc = read_u32(G_HOST_COUNTRY) as usize;
     if hc == 0 {
-        aviso_em(0xa835b0, 0x858);
+        show_error_at(0xa835b0, 0x858);
     } else {
         // as sedes: só achadas (a original não as usa depois); as saídas se sobrepõem como na original
         let mut s = [0u32; 8];
@@ -1351,14 +1378,14 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
         if *lista == 0 {
             *lista = alocar(0x1e0);
             if *lista == 0 {
-                aviso_em(0xa835b0, 0x89c);
+                show_error_at(0xa835b0, 0x89c);
                 return;
             }
             *cap = 0x1e;
         } else if *conta == *cap {
             *lista = realocar(*lista, ((*cap + 0x1e) << 4) as u32);
             if *lista == 0 {
-                aviso_em(0xa835b0, 0x8ac);
+                show_error_at(0xa835b0, 0x8ac);
                 return;
             }
             *cap += 0x1e;
@@ -1379,7 +1406,7 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
 /// lista velha zerada (a original já a soltou); iguais os campos (fora o ponteiro +0xc) e as listas (a do rascunho é
 /// solta). Sem o HostCountry (a caixa), só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_build_venue_list(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_VENUE_LIST);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_VENUE_LIST);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if read_u32(G_HOST_COUNTRY) == 0 {
         return o(this);
@@ -1424,7 +1451,7 @@ pub(crate) unsafe extern "C" fn stadium_compare_venues_by_capacity(a: usize, b: 
 
 /// Comparador: pelo valor.
 pub(crate) unsafe extern "C" fn comparar_stadium_compare_venues_by_capacity(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STADIUM_COMPARE_VENUES_BY_CAPACITY)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STADIUM_COMPARE_VENUES_BY_CAPACITY)(a, b);
     let n = stadium_compare_venues_by_capacity(a, b);
     PLACAR.registrar(r == n, || format!("stadium_compare_venues_by_capacity({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r

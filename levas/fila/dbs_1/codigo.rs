@@ -5,7 +5,7 @@ unsafe fn dbs1_u32(a: usize) -> usize {
 }
 
 /// Texto não nulo e não vazio (os `repne scasb` da original).
-unsafe fn dbs1_cheio(t: usize) -> bool {
+unsafe fn is_nonempty_text(t: usize) -> bool {
     t != 0 && *(t as *const u8) != 0
 }
 
@@ -17,7 +17,7 @@ unsafe fn dbs1_cheio(t: usize) -> bool {
 /// bytes só servem à mensagem da caixa. As chamadas pelo endereço do jogo. ~126 chamadores (notícias, telas, contratos).
 unsafe extern "C" fn database_format_name_from_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
     if texto == 0 || (tamanho as i16) < 0x69 {
-        return orig::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(%%I0%%)(nome, sobrenome, comum, texto, tamanho, forma, pessoa);
+        return original_fn::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(%%I0%%)(nome, sobrenome, comum, texto, tamanho, forma, pessoa);
     }
     let deu_apelido: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x600740usize);
     let confere: unsafe extern "C" fn(usize, i32, i32, i32, u32) -> u32 = core::mem::transmute(0x53e990usize);
@@ -38,7 +38,7 @@ unsafe extern "C" fn database_format_name_from_ids(nome: i32, sobrenome: i32, co
 }
 
 unsafe extern "C" fn comparar_database_format_name_from_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(%%I0%%);
     if texto == 0 || (tamanho as i16) < 0x69 {
         return o(nome, sobrenome, comum, texto, tamanho, forma, pessoa); // caixa: só a original
     }
@@ -57,7 +57,7 @@ unsafe extern "C" fn comparar_database_format_name_from_ids(nome: i32, sobrenome
 /// forma. Devolve 1. Oficial ou texto nulos, tamanho (palavra) < 0x69 ou forma fora de 1..6: a original (caixa). Nos
 /// eventos e no painel da partida (0x6d8d10, 0x6d7b00, 0x71c270).
 unsafe extern "C" fn database_format_official_name(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if oficial == 0 || texto == 0 || (tamanho as i16) < 0x69 {
         return o(oficial, texto, tamanho, forma);
     }
@@ -84,13 +84,13 @@ unsafe extern "C" fn database_format_official_name(oficial: usize, texto: usize,
     *(texto as *mut u8) = 0;
     // o que sobra quando falta um dos dois: o sobrenome, senão o nome
     let um_so = || {
-        if dbs1_cheio(b) {
+        if is_nonempty_text(b) {
             copiar(b);
-        } else if dbs1_cheio(a) {
+        } else if is_nonempty_text(a) {
             copiar(a);
         }
     };
-    let os_dois = dbs1_cheio(a) && dbs1_cheio(b);
+    let os_dois = is_nonempty_text(a) && is_nonempty_text(b);
     if so_sobrenome || f == 5 || (!os_dois && f != 6) {
         um_so();
     } else {
@@ -102,9 +102,9 @@ unsafe extern "C" fn database_format_official_name(oficial: usize, texto: usize,
             _ => {
                 if os_dois {
                     sprintf(texto, 0x9b7418, inicial(a), inicial(b)); // "%c %c"
-                } else if dbs1_cheio(b) {
+                } else if is_nonempty_text(b) {
                     sprintf(texto, 0x99ec1c, inicial(b)); // "%c"
-                } else if dbs1_cheio(a) {
+                } else if is_nonempty_text(a) {
                     sprintf(texto, 0x99ec1c, inicial(a));
                 }
             }
@@ -114,7 +114,7 @@ unsafe extern "C" fn database_format_official_name(oficial: usize, texto: usize,
 }
 
 unsafe extern "C" fn comparar_database_format_official_name(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if oficial == 0 || texto == 0 || (tamanho as i16) < 0x69 {
         return o(oficial, texto, tamanho, forma); // caixa: só a original
     }
@@ -185,7 +185,7 @@ unsafe extern "C" fn position_mask_get_text(mascara: u32, texto: usize, maiuscul
 }
 
 unsafe extern "C" fn comparar_position_mask_get_text(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, u32) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(u32, usize, u32) -> u8>(%%I2%%);
     if texto == 0 {
         return o(mascara, texto, maiuscula);
     }

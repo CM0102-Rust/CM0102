@@ -8,7 +8,7 @@ MUTACOES = [
      'cqg_10 amistoso fora do calendario'),
     ('cqg10_rodada_invertida',
      'if cqg10_b(jogo + 0x43) == 0xff { // cqg10: jogo sem rodada',
-     'if cqg10_b(jogo + 0x43) != 0xff { // mutacao: a condicao da rodada invertida',
+     'if cqg10_b(jogo + 0x43) != 0xff { // mutacao: a match_condition da rodada invertida',
      'cqg_10 amistoso fora do calendario'),
     ('cqg10_dois_dias_antes',
      'let v = menos(p0, p1, 1); // cqg10: a véspera',

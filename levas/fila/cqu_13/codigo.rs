@@ -36,7 +36,7 @@ unsafe fn cqu13_comp(chave: usize) -> usize {
 /// false); sem nenhum, a
 /// caixa da linha `linha` e o campeão da competição, que a original grava SEMPRE na vaga 1 (+6), mesmo na busca da
 /// vaga 0 (um defeito: a vaga 0 fica com o que a memória alocada tinha); devolve (clube, false, true).
-unsafe fn cqu13_vaga(this: usize, continente: usize, reputacao: i16, comp: usize, lugar: u32, arquivo: usize, linha: u32) -> (usize, bool, bool) {
+unsafe fn cqu13_vaga(this: usize, continente: usize, injury_word_0c: i16, comp: usize, lugar: u32, arquivo: usize, linha: u32) -> (usize, bool, bool) {
     let carregado: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x6699d0usize);
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
@@ -51,7 +51,7 @@ unsafe fn cqu13_vaga(this: usize, continente: usize, reputacao: i16, comp: usize
         if selecao(c) != 0 {
             break;
         }
-        if cqu13_w(c + 0x80) > reputacao && cqu13_do_continente(c, continente) {
+        if cqu13_w(c + 0x80) > injury_word_0c && cqu13_do_continente(c, continente) {
             lista.push(c);
         }
         c += 0x245;
@@ -60,7 +60,7 @@ unsafe fn cqu13_vaga(this: usize, continente: usize, reputacao: i16, comp: usize
         embaralhar(lista.as_mut_ptr() as usize, lista.len() as u32, 1);
         return (lista[0], false, false);
     }
-    aviso_em(arquivo, linha);
+    show_error_at(arquivo, linha);
     (colocado(cqu13_comp(comp), 0), false, true)
 }
 
@@ -72,7 +72,7 @@ unsafe fn cqu13_tabela(this: usize, arquivo: usize) -> Option<usize> {
     let t = alocar(0xc);
     cqu13_pd(this + 0xa7, t);
     if t == 0 {
-        aviso_em(arquivo, 0xc6);
+        show_error_at(arquivo, 0xc6);
         return None;
     }
     Some(t)
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn cqu13_intercontinental_clubes(this: usize) -> i32 {
     if pelo_campeao {
         crate::comparacao::ramo("cqu_13 clube europeu");
         if europa == 0 {
-            aviso_em(0xad5848, 0xd1);
+            show_error_at(0xad5848, 0xd1);
             return 0;
         }
     }
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn cqu13_intercontinental_clubes(this: usize) -> i32 {
     cqu13_pd(cqu13_d(this + 0xa7) + 6, sul);
     if pelo_campeao {
         if sul == 0 {
-            aviso_em(0xad5848, 0xff);
+            show_error_at(0xad5848, 0xff);
             return 0;
         }
         if cqu13_do_continente(sul, 0x9cfa1c) {
@@ -139,7 +139,7 @@ unsafe fn cqu13_comparar_clubes(nome: &str, this: usize, continentes: (usize, us
 }
 
 unsafe extern "thiscall" fn comparar_cqu13_intercontinental_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     cqu13_comparar_clubes("cqu13_intercontinental_clubes", this, (0x9cfa10, 0x9cfa1c), || o(this))
 }
 
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn cqu13_interamericana_clubes(this: usize) -> i32 {
     if pelo_campeao {
         crate::comparacao::ramo("cqu_13 clube norte-americano");
         if norte == 0 {
-            aviso_em(0x9e9d94, 0xd1);
+            show_error_at(0x9e9d94, 0xd1);
             return 0;
         }
     }
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn cqu13_interamericana_clubes(this: usize) -> i32 {
     if pelo_campeao {
         crate::comparacao::ramo("cqu_13 clube sul-americano da interamericana");
         if sul == 0 {
-            aviso_em(0x9e9d94, 0xff);
+            show_error_at(0x9e9d94, 0xff);
             return 0;
         }
     }
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn cqu13_interamericana_clubes(this: usize) -> i32 {
 }
 
 unsafe extern "thiscall" fn comparar_cqu13_interamericana_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
     cqu13_comparar_clubes("cqu13_interamericana_clubes", this, (0x9cfa14, 0x9cfa1c), || o(this))
 }
 
@@ -234,7 +234,7 @@ unsafe fn cqu13_previstas(this: usize, fase: u32, grupo: u32, arquivo: usize, li
     let gravar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     if cqu13_d(this + 8) == 0 {
-        return aviso_em(arquivo, linha);
+        return show_error_at(arquivo, linha);
     }
     ordenar(cqu13_d(this + 0xee), cqu13_d(this + 0xf2) as u32, 4, 0x4b07d0);
     let tabela_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqu13_d(cqu13_d(this) + 0x3c));
@@ -277,6 +277,6 @@ unsafe fn cqu13_comparar_previstas(nome: &str, this: usize, _fase: u32, _grupo: 
 }
 
 unsafe extern "thiscall" fn comparar_cqu13_merconorte_previstas(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqu13_comparar_previstas("cqu13_merconorte_previstas", this, 3, 4, || o(this))
 }

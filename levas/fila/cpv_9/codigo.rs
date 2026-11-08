@@ -9,7 +9,7 @@ unsafe fn cpv9_por(a: usize, v: i32) {
 }
 
 /// A primeira vaga livre (dword 0) das 50 do elenco do clube (+0xd7); 0x32 sem vaga.
-unsafe fn cpv9_vaga_livre(clube: usize) -> usize {
+unsafe fn first_free_squad_slot(clube: usize) -> usize {
     (0..0x32usize).find(|&k| cpv9_d(clube + 0xd7 + 4 * k) == 0).unwrap_or(0x32)
 }
 
@@ -23,7 +23,7 @@ unsafe fn cpv9_vaga_livre(clube: usize) -> usize {
 /// baixo) do contrato. Com contrato: o salário padrão (0x8626e0), +0x3a = 0 e, fora do humano, o fim (+0x2f) até o ano de
 /// hoje + 5 (com o dia +0x2d = 0). No fim os números do elenco ([0xdd7ef0], 0x85add0 e 0x85a470). Devolve 1.
 unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usize) -> u8 {
-    let k = cpv9_vaga_livre(clube);
+    let k = first_free_squad_slot(clube);
     if k == 0x32 {
         return 0;
     }
@@ -101,8 +101,8 @@ unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usiz
 /// Comparador: o contrato novo aloca e o valor sorteia: só a original, conferindo o plano (a vaga, o clube da pessoa, a
 /// devolução e o +0x3a do contrato).
 unsafe extern "stdcall" fn comparar_player_regen_sign_for_club(pessoa: usize, clube: usize) -> u8 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I0%%);
-    let k = cpv9_vaga_livre(clube);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I0%%);
+    let k = first_free_squad_slot(clube);
     let r = o(pessoa, clube);
     if k == 0x32 {
         PLACAR.registrar(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) sem vaga original={}", pessoa, clube, r));
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn schedule_injury_retirement(this: usize, pessoa: usiz
 /// Comparador: lado a lado no estado do sorteio, na tabela (ponteiro, conta e capacidade, e as entradas até a
 /// capacidade). Com a tabela cheia (conta = capacidade − 1, a 0x7a8510 realoca): só a original.
 unsafe extern "thiscall" fn comparar_schedule_injury_retirement(this: usize, pessoa: usize, dias: i16) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i16)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i16)>(%%I1%%);
     let (n, cap) = (cpv9_d(this + 8), cpv9_d(this + 0xc));
     if pessoa == 0 || n >= cap.wrapping_sub(1) || cap <= 0 {
         return o(this, pessoa, dias);
@@ -217,5 +217,5 @@ unsafe extern "stdcall" fn player_regen_post_retirement_announcement_news(pessoa
 
 /// Comparador: a notícia vai para as caixas dos técnicos: só a original (a prova é a carreira e o modo Rust).
 unsafe extern "stdcall" fn comparar_player_regen_post_retirement_announcement_news(pessoa: usize, motivo: i8) {
-    orig::<unsafe extern "stdcall" fn(usize, i8)>(%%I2%%)(pessoa, motivo)
+    original_fn::<unsafe extern "stdcall" fn(usize, i8)>(%%I2%%)(pessoa, motivo)
 }

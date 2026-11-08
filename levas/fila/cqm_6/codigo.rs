@@ -13,12 +13,12 @@ unsafe fn cqm6_w(a: usize) -> i16 {
 }
 
 /// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes).
-unsafe fn cqm6_registro(g: usize) -> usize {
+unsafe fn comp_record_of_key(g: usize) -> usize {
     cqm6_d(0xae23d0).wrapping_add(cqm6_d(g).wrapping_mul(0x6b))
 }
 
 /// A competição do clube (+0x57, o id no +0) é a de id [g]?
-unsafe fn cqm6_na(c: usize, g: usize) -> bool {
+unsafe fn spa_lower_is_in_comp(c: usize, g: usize) -> bool {
     let comp = cqm6_d(c + 0x57);
     comp != 0 && cqm6_d(comp) == cqm6_d(g)
 }
@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn construct_spa_lower(this: usize, ano: u32) -> usize 
     cqm6_pd(this, 0x96fb1c);
     core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
     *((this + 0x50) as *mut u8) = 0xff;
-    cqm6_pd(this + 4, cqm6_registro(0x9cf6b0));
+    cqm6_pd(this + 4, comp_record_of_key(0x9cf6b0));
     if carregar(this, 1) != 0 {
         return this;
     }
@@ -49,36 +49,36 @@ unsafe extern "thiscall" fn construct_spa_lower(this: usize, ano: u32) -> usize 
     cqm6_pd(this + 0x30, 0xffff_ffff);
     cqm6_pd(this + 0x2c, 0);
     if regras(this) == 0 {
-        aviso_em(0xa82880, 0x3f);
+        show_error_at(0xa82880, 0x3f);
         return this;
     }
     if tabela(this) == 0 {
-        aviso_em(0xa82880, 0x46);
+        show_error_at(0xa82880, 0x46);
         return this;
     }
     if jogos(this) == 0 {
-        aviso_em(0xa82880, 0x4d);
+        show_error_at(0xa82880, 0x4d);
     }
     this
 }
 
 /// Aloca e sorteia (pela tabela): só a original, conferindo a devolução, a vtable, o ano, a disciplina e o registro.
 unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize, ano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I0%%);
     let r = o(this, ano);
     let ok = r == this && cqm6_d(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && *((this + 0x50) as *const u8) == 0xff && cqm6_d(this + 4) == cqm6_registro(0x9cf6b0);
+        && *((this + 0x50) as *const u8) == 0xff && cqm6_d(this + 4) == comp_record_of_key(0x9cf6b0);
     PLACAR.registrar(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, cqm6_d(this), cqm6_d(this + 4)));
     r
 }
 
 /// O clube de cima do clube `c` (club_get_linked_b_team 0x540a50: push 1; push &eh_a; push c; add esp, 0xc -> cdecl),
 /// se `c` é o time B dele (eh_a = 0) e ele está na competição de id [g].
-unsafe fn cqm6_time_b_de(c: usize, g: usize) -> bool {
+unsafe fn is_b_team_of_comp_club(c: usize, g: usize) -> bool {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let mut eh_a: u32 = 0;
     let p = parceiro(c, &mut eh_a, 1);
-    p != 0 && eh_a == 0 && cqm6_na(p, g)
+    p != 0 && eh_a == 0 && spa_lower_is_in_comp(p, g)
 }
 
 /// { 0x855b40 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::create_table()`: a Segunda tem 22 clubes (+0x3e),
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
     let t = alocar(0x512);
     cqm6_pd(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0xa828bc, 0x298);
+        show_error_at(0xa828bc, 0x298);
         return 0;
     }
     let mut k: u8 = 0;
@@ -105,9 +105,9 @@ unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * 0x245; // cqm6: o clube i do banco
-        if cqm6_na(c, 0x9cf628) {
+        if spa_lower_is_in_comp(c, 0x9cf628) {
             iniciar(this, k as u32, c, 0, 0);
-            if cqm6_time_b_de(c, 0x9cf624) {
+            if is_b_team_of_comp_club(c, 0x9cf624) {
                 crate::comparacao::ramo("cqm_6 time b na segunda");
                 *((cqm6_d(this + 0xb1) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
             }
@@ -131,14 +131,14 @@ unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
 /// Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
 unsafe extern "thiscall" fn comparar_spa_second_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let n = cqm6_d(0xae235c) as i32;
     let base = cqm6_d(0xae23b4);
     let mut plano: Vec<(usize, bool)> = Vec::new();
     for i in 0..n.max(0) as usize {
         let c = base + i * 0x245;
-        if cqm6_na(c, 0x9cf628) {
-            plano.push((c, cqm6_time_b_de(c, 0x9cf624)));
+        if spa_lower_is_in_comp(c, 0x9cf628) {
+            plano.push((c, is_b_team_of_comp_club(c, 0x9cf624)));
             if plano.len() == 0x16 {
                 break;
             }
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn comparar_spa_second_create_table(this: usize) -> u32
 /// banco, até 100) das competições de id [0x9cf62c], [0x9cf630], [0x9cf634], [0x9cf638] [inferência: os 4 grupos da
 /// Segunda B] ou, se espanhóis, da de id [0x9cf764] [inferência: a divisão genérica de baixo], que não são time B nem
 /// time A de ninguém (club_get_linked_b_team devolve 0).
-unsafe fn cqm6_candidatos() -> Vec<usize> {
+unsafe fn spanish_lower_candidates() -> Vec<usize> {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let mut v = Vec::new();
     let n = cqm6_d(0xae235c) as i32;
@@ -189,7 +189,7 @@ unsafe fn cqm6_candidatos() -> Vec<usize> {
 /// Os times B espanhóis (fora da Primera e da Segunda) cujo clube de cima está na competição de id [g], na ordem do
 /// banco, até 22 linhas (`k` já usadas). Os últimos `2 × [0xae2350]` clubes do banco ficam de fora [inferência: os
 /// clubes criados depois, sem divisão].
-unsafe fn cqm6_times_b(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(usize, bool)) {
+unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(usize, bool)) {
     let n = (cqm6_d(0xae235c) as i32).wrapping_sub((cqm6_d(0xae2350) as i32).wrapping_mul(2));
     let base = cqm6_d(0xae23b4);
     let mut i: i16 = 0;
@@ -216,7 +216,7 @@ unsafe fn cqm6_times_b(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(us
 /// nela (a competição de id [0x9cf6b0]) passam à de id [0x9cf764] [inferência: a divisão genérica]. Depois enche, na
 /// ordem do banco: os times B espanhóis cujo clube de cima está na Primera, depois os da Segunda (cada um com +0x60 =
 /// o registro desta competição; os outros times espanhóis de fora das duas, com +0x60 = 0); o resto com os
-/// candidatos (cqm6_candidatos), ordenados pela reputação e com os 3 × faltam primeiros embaralhados
+/// candidatos (spanish_lower_candidates), ordenados pela reputação e com os 3 × faltam primeiros embaralhados
 /// (comp_util_sort_and_shuffle_top_clubs 0x4afbd0: push faltam; push quantos; push lista; add esp, 0xc -> cdecl; sorteia),
 /// cada um com +0x60 = o registro. As linhas: League::init_table_row 0x687430 (push 0; push 0; push clube; push eax
 /// (al = a linha, os bits de cima são lixo de outra conta; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
     let t = alocar(0x512);
     cqm6_pd(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0xa82880, 0x2ac);
+        show_error_at(0xa82880, 0x2ac);
         return 0;
     }
     // os clubes desta divisão passam à genérica
@@ -238,8 +238,8 @@ unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * 0x245;
-        if cqm6_na(c, 0x9cf6b0) {
-            cqm6_pd(c + 0x57, cqm6_registro(0x9cf764));
+        if spa_lower_is_in_comp(c, 0x9cf6b0) {
+            cqm6_pd(c + 0x57, comp_record_of_key(0x9cf764));
         }
         i = i.wrapping_add(1);
     }
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
         let linhas = cqm6_w(this + 0x3e);
         // a conta das linhas para a condição anda junto com `k`
         let mut kk = k;
-        cqm6_times_b(g, &mut kk, linhas, |c, entra| {
+        for_each_spanish_b_team(g, &mut kk, linhas, |c, entra| {
             if entra {
                 iniciar(this, k as u32, c, 0, 0);
                 k = k.wrapping_add(1);
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
         });
     }
     crate::comparacao::ramo("cqm_6 tabela da divisao de baixo");
-    let mut lista = cqm6_candidatos();
+    let mut lista = spanish_lower_candidates();
     let quantos = lista.len() as u16 as u32;
     let faltam = (cqm6_w(this + 0x3e) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
     lista.resize(100, 0);
@@ -280,11 +280,11 @@ unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
 /// +0x60 de todo time espanhol que não entra nela, inclusive os da Primera que a primeira acabou de pôr na tabela
 /// (comportamento da original, que a cópia repete; achado pela comparação de 8 ligas, 05/11/2026).
 unsafe extern "thiscall" fn comparar_spa_lower_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let mut plano: Vec<usize> = Vec::new();
     let mut k: u8 = 0;
     for g in [0x9cf624usize, 0x9cf628] {
-        cqm6_times_b(g, &mut k, 0x16, |c, entra| {
+        for_each_spanish_b_team(g, &mut k, 0x16, |c, entra| {
             if entra {
                 plano.push(c);
             }

@@ -34,7 +34,7 @@ unsafe fn cpp10_clube(i: i32) -> usize {
 /// A nota da torcida para o jogador `p` do clube pela estatística `st` (0x452da0): média (+0xe com sinal / jogos +0)
 /// + 0,025 × +2 + 1/60 × +6; o clube gosta dele (0x547790) +0,2, não gosta (0x5477d0) −2 (guardada); ele gosta do
 /// clube (0x547d60) +0,2, não gosta (0x547d30) −1,5 (só na comparação).
-unsafe fn cpp10_nota_da_torcida(p: usize, clube: usize, st: usize) -> f64 {
+unsafe fn fan_rating(p: usize, clube: usize, st: usize) -> f64 {
     let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547790usize);
     let desafeto: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5477d0usize);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d60usize);
@@ -62,7 +62,7 @@ unsafe fn cpp10_nota_da_torcida(p: usize, clube: usize, st: usize) -> f64 {
 /// Com o fator 0,6 caindo de 0,1 enquanto ninguém foi escolhido e passa de 0,2: o mínimo de jogos é +0x10 × fator
 /// (_ftol); dos 50 do elenco (+0xd7) jogadores (+0x61, id abaixo de [0xae2364]) do clube (+0x39) com a estatística 6
 /// (0x7c3920 sobre [0xb74350]) de jogos acima de 0 e do mínimo (16 bits com sinal), o de maior nota
-/// (`cpp10_nota_da_torcida`, acima de −1000). Ninguém: 0; senão a referência dele (0x7e4920) em registro +0x371 e 1.
+/// (`fan_rating`, acima de −1000). Ninguém: 0; senão a referência dele (0x7e4920) em registro +0x371 e 1.
 unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clube: usize, registro: usize) -> u32 {
     let jogos_do_clube = || cpp10_b(cpp10_d(this + 0x1c).wrapping_add((cpp10_i(clube) as usize).wrapping_mul(106)) + 0x10) as i8;
     if jogos_do_clube() == 0 && cpp10_w(clube + 0x80) < 0xbb8 {
@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clube: usize, 
     let mut melhor = -1000.0f64;
     let mut escolhido = 0usize;
     while escolhido == 0 {
-        let minimo = ftol(jogos_do_clube() as i32 as f64 * fator) as i16;
+        let minimo = match_pl_ftol(jogos_do_clube() as i32 as f64 * fator) as i16;
         for s in 0..50usize {
             let p = cpp10_d(clube + 0xd7 + 4 * s);
             if p == 0 || cpp10_i(p) >= cpp10_i(0xae2364) {
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clube: usize, 
             if (jogos as i16) < minimo || jogos == 0 {
                 continue;
             }
-            let nota = cpp10_nota_da_torcida(p, clube, st);
+            let nota = fan_rating(p, clube, st);
             if nota > melhor {
                 melhor = nota;
                 escolhido = p;
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clube: usize, 
 /// arquivadas (0x7c5fe0 com −1, 0, 0, −1, 0). Devolve 1.
 unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, nacao: usize) -> u32 {
     if nacao == 0 {
-        aviso_em(0xa78310, 0x396);
+        show_error_at(0xa78310, 0x396);
         return 0;
     }
     let indice: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x669360usize);
@@ -148,18 +148,18 @@ unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, nacao: usize)
 }
 
 /// O recorde de transferência já está na fila de notícias (6 bytes: id do clube, tipo) de [this+0x24], conta +0x2c?
-unsafe fn cpp10_na_fila(this: usize, id: usize, tipo: u8) -> bool {
+unsafe fn record_news_queued(this: usize, id: usize, tipo: u8) -> bool {
     let fila = cpp10_d(this + 0x24);
     (0..cpp10_i(this + 0x2c).max(0) as usize).any(|k| cpp10_d(fila + 6 * k) == id && cpp10_b(fila + 6 * k + 4) == tipo)
 }
 
 /// A transferência de recorde do clube passa de 1000 × (reputação (+0x80) + 300)?
-unsafe fn cpp10_grande(valor: i32, clube: usize) -> bool {
+unsafe fn is_big_transfer(valor: i32, clube: usize) -> bool {
     valor >= (cpp10_w(clube + 0x80) as i32 + 300).wrapping_mul(1000)
 }
 
 /// Copia o bloco de recorde de `o` (+`d`: valor, a referência de 0x18 bytes, o clube, a data, a marca) para `a`.
-unsafe fn cpp10_copiar_recorde(a: usize, o: usize, d: usize) {
+unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
     let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut rascunho = [0u8; 8];
     for k in 0..5 {
@@ -205,10 +205,10 @@ unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -
         copiar(s + 0x333, rascunho.as_mut_ptr(), 0xae2c90);
         *((s + 0x33b) as *mut u8) = (cpp10_d(t + 4) != 0) as u8;
         if cpp10_i(t + 0x1b) > cpp10_i(a + 0x313) {
-            cpp10_copiar_recorde(a, s, 0x313);
-            if cpp10_grande(cpp10_i(a + 0x313), comprador) {
+            copy_transfer_record(a, s, 0x313);
+            if is_big_transfer(cpp10_i(a + 0x313), comprador) {
                 crate::comparacao::ramo("cpp_10 transferencia grande");
-                if !cpp10_na_fila(this, cpp10_d(comprador), 0x1c) {
+                if !record_news_queued(this, cpp10_d(comprador), 0x1c) {
                     noticia(this, cpp10_d(comprador) as u32, 0x1c);
                 }
                 let gostar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547a10usize);
@@ -228,8 +228,8 @@ unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -
     copiar(s + 0x35c, rascunho.as_mut_ptr(), 0xae2c90);
     *((s + 0x364) as *mut u8) = (cpp10_d(t + 4) != 0) as u8;
     if cpp10_i(t + 0x1b) > cpp10_i(a + 0x33c) {
-        cpp10_copiar_recorde(a, s, 0x33c);
-        if cpp10_grande(cpp10_i(a + 0x33c), vendedor) && !cpp10_na_fila(this, cpp10_d(vendedor), 0x1d) {
+        copy_transfer_record(a, s, 0x33c);
+        if is_big_transfer(cpp10_i(a + 0x33c), vendedor) && !record_news_queued(this, cpp10_d(vendedor), 0x1d) {
             noticia(this, cpp10_d(vendedor) as u32, 0x1d);
         }
     }
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -
 
 /// Comparador: lado a lado pela referência do escolhido (registro +0x371, 0x18 bytes) e pela devolução.
 unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, clube: usize, registro: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(registro + 0x371, 0x18)], || o(this, clube, registro), || pick_fans_player_of_year(this, clube, registro));
     PLACAR.registrar(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", cpp10_d(clube), r, mo, n, mr));
     r
@@ -247,7 +247,7 @@ unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, clube
 /// Comparador: a 0x7c5fe0 move as estatísticas para o histórico (aloca): roda só a original e confere a devolução
 /// (1, ou 0 sem nação).
 unsafe extern "thiscall" fn comparar_end_season_for_key_nation(this: usize, nacao: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, nacao);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, nacao);
     PLACAR.registrar(r == (nacao != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nacao, r));
     r
 }
@@ -256,7 +256,7 @@ unsafe extern "thiscall" fn comparar_end_season_for_key_nation(this: usize, naca
 /// criados na mesma ordem da original, e os recordes pago e recebido esperados); a original roda; pega os registros
 /// de novo (o vetor pode ter sido realocado) e confere os valores e o clube de cada recorde e o [0xae1080].
 unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this: usize, t: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let pessoa = cpp10_d(0xae23bc).wrapping_add((cpp10_i(t + 0xc) as usize).wrapping_mul(0x6e));
     let comprador = cpp10_clube(cpp10_i(t + 8));
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
@@ -281,7 +281,7 @@ unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this: usize, t:
             plano[0] = (valor, cpp10_d(vendedor));
             if valor > plano[1].0 {
                 plano[1] = plano[0];
-                if cpp10_grande(valor, comprador) && !cpp10_na_fila(this, cpp10_d(comprador), 0x1c) {
+                if is_big_transfer(valor, comprador) && !record_news_queued(this, cpp10_d(comprador), 0x1c) {
                     fila += 1;
                 }
             }
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this: usize, t:
             plano[2] = (valor, cpp10_d(comprador));
             if valor > plano[3].0 {
                 plano[3] = plano[2];
-                if cpp10_grande(valor, vendedor) && !cpp10_na_fila(this, cpp10_d(vendedor), 0x1d) {
+                if is_big_transfer(valor, vendedor) && !record_news_queued(this, cpp10_d(vendedor), 0x1d) {
                     fila += 1;
                 }
             }

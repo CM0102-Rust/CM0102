@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn find_next_window_open_date(this: usize, clube: usize
     loop {
         let (la, da) = (cps3_w(lp + 2), cps3_w(dp + 2));
         if !(la > da || (la == da && (cps3_w(lp) as i16) > (cps3_w(dp) as i16))) {
-            return aviso_em(0xa8d514, 0x32c6);
+            return show_error_at(0xa8d514, 0x32c6);
         }
         if regra == 0 || aberta(regra, dp, 0) != 0 {
             copiar(saida, p2, dp);
@@ -160,20 +160,20 @@ unsafe extern "thiscall" fn find_negotiated_loan_contract(this: usize, pessoa: u
 // ponytail: sorteia (0x90cfc0) e libera os jogadores (0x8c1af0, 0x8df9b0), limpando a fila: só a original; a cópia
 // leva os ramos.
 unsafe extern "thiscall" fn comparar_process_free_transfer_queue(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// Comparador: lado a lado pela data de saída (a data estática da 0x54c5b0 é rascunho). Sem janela num ano, a caixa
 /// sairia duas vezes (não acontece com as regras do jogo).
 unsafe extern "thiscall" fn comparar_find_next_window_open_date(this: usize, clube: usize, saida: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, 8)], || o(this, clube, saida), || find_next_window_open_date(this, clube, saida));
     PLACAR.registrar(igual, || format!("find_next_window_open_date(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
 }
 
 /// Comparador: pelo valor (as duas voltas deixam o cursor da lista no mesmo lugar).
 unsafe extern "thiscall" fn comparar_find_negotiated_loan_contract(this: usize, pessoa: usize, clube: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%)(this, pessoa, clube);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%)(this, pessoa, clube);
     let n = find_negotiated_loan_contract(this, pessoa, clube);
     PLACAR.registrar(r == n, || format!("find_negotiated_loan_contract(pessoa {}, clube {}) original={:x} rust={:x}", cps3_d(pessoa), cps3_d(clube), r, n));
     r

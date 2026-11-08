@@ -12,7 +12,7 @@ MUTACOES = [
      'let dia = (cqr10_w(this + 0xb6) as u16).wrapping_add(7); // mutacao: uma semana depois',
      'cqr_10 sorteio da libertadores'),
     ('cqr10_times_de_tras_para_frente',
-     'cqr10_pd(times + n * 4, cqr10_sorteado(this, k as usize)); // cqr10: o time na vaga do grupo',
-     'cqr10_pd(times + (3 - n) * 4, cqr10_sorteado(this, k as usize)); // mutacao: de tras para a frente',
+     'cqr10_pd(times + n * 4, conmebol_liber_drawn_club(this, k as usize)); // cqr10: o time na vaga do grupo',
+     'cqr10_pd(times + (3 - n) * 4, conmebol_liber_drawn_club(this, k as usize)); // mutacao: de tras para a frente',
      'cqr_10 time do grupo'),
 ]

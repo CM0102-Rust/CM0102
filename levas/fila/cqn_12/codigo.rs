@@ -9,7 +9,7 @@ unsafe fn cqn12_w(a: usize) -> i16 {
 }
 
 /// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
-unsafe fn cqn12_clube(i: i32) -> usize {
+unsafe fn jap_j_cup_club_by_index(i: i32) -> usize {
     cqn12_d(0xae23b4).wrapping_add((i as isize * 0x245) as usize)
 }
 
@@ -28,14 +28,14 @@ unsafe fn cqn12_inscrever(this: usize, k: i32, clube: usize, classe: u8) {
 }
 
 /// O sorteio de 0 a n − 1 (0x90cfc0: push n; add esp, 4 -> cdecl).
-unsafe fn cqn12_sortear(n: i32) -> i32 {
+unsafe fn jap_j_cup_random(n: i32) -> i32 {
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     sortear(n)
 }
 
 /// Ordena `n` clubes do vetor pela reputação e embaralha os melhores (0x4afbd0: push escolhas; push n; push vetor; add
 /// esp, 0xc -> cdecl; já em Rust).
-unsafe fn cqn12_embaralhar(v: *mut usize, n: i32, escolhas: u32) {
+unsafe fn sort_and_shuffle_top_clubs(v: *mut usize, n: i32, escolhas: u32) {
     let f: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
     // ponytail: a original empurra a conta com lixo nos 16 bits altos; a 0x4afbd0 lê a palavra
     f(v as usize, n as i16 as u16 as u32, escolhas);
@@ -43,7 +43,7 @@ unsafe fn cqn12_embaralhar(v: *mut usize, n: i32, escolhas: u32) {
 
 /// O qsort de `n` inscritos a partir de `base` (0x945333 com 0x522190: push 0x522190; push 6; push n; push base; add
 /// esp, 0x10 -> cdecl; 0x522190 já em Rust).
-unsafe fn cqn12_ordenar(base: usize, n: u32) {
+unsafe fn sort_entrants(base: usize, n: u32) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     ordenar(base, n, 6, 0x522190);
 }
@@ -52,19 +52,19 @@ unsafe fn cqn12_ordenar(base: usize, n: u32) {
 /// +0xa7; sem memória, a caixa da linha 0x11a e −1). Os clubes da J2 ([0x9cf768]) enquanto cabem, classe 0; os da J1
 /// ([0x9cf65c]) enquanto cabem, cada um com a classe sorteada de 0 a 19 (0x90cfc0(20), depois de gravar o clube); o
 /// qsort (0x522190) das 16 inscrições a partir da 11ª (+0x42). Devolve 1 com a lista cheia, senão 0.
-unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
+unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x1c);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let l = alocar(0xa8);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
-        aviso_em(0x9eaf14, 0x11a);
+        show_error_at(0x9eaf14, 0x11a);
         return (-1, 0);
     }
     let mut n = 0i32;
     let mut i: i16 = 0;
     while (i as i32) < cqn12_d(0xae235c) as i32 {
-        let c = cqn12_clube(i as i32);
+        let c = jap_j_cup_club_by_index(i as i32);
         if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf768)) && n < cqn12_w(this + 0x3e) as i32 {
             cqn12_inscrever(this, n, c, 0);
             n += 1;
@@ -76,12 +76,12 @@ unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
     }
     let mut i: i16 = 0;
     while (i as i32) < cqn12_d(0xae235c) as i32 {
-        let c = cqn12_clube(i as i32);
+        let c = jap_j_cup_club_by_index(i as i32);
         if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf65c)) && n < cqn12_w(this + 0x3e) as i32 {
             let e = cqn12_d(this + 0xa7) + n as usize * 6;
             core::ptr::write_unaligned(e as *mut u32, c as u32);
             crate::comparacao::ramo("cqn_12 semente da j1");
-            let s = cqn12_sortear(0x14); // cqn12: a classe sorteada dos clubes da J1
+            let s = jap_j_cup_random(0x14); // cqn12: a classe sorteada dos clubes da J1
             *((e + 4) as *mut u8) = s as u8;
             *((e + 5) as *mut u8) = 0;
             n += 1;
@@ -91,18 +91,18 @@ unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
         }
         i = i.wrapping_add(1);
     }
-    cqn12_ordenar(cqn12_d(this + 0xa7) + 0x42, 0x10);
+    sort_entrants(cqn12_d(this + 0xa7) + 0x42, 0x10);
     ((n == cqn12_w(this + 0x3e) as i32) as i32, n)
 }
 
 unsafe extern "thiscall" fn jap_j_cup_collect_entrants(this: usize) -> i32 {
-    cqn12_copa_da_liga(this).0
+    collect_j_cup_entrants(this).0
 }
 
 /// Lado a lado para as rotinas que alocam a lista +0xa7 e sorteiam: o +0x3e, o [0xb67a34] e o estado do sorteador a
 /// partir do mesmo estado (a cópia sorteia sem contar); a original deixa a lista dela em +0xa7, a cópia faz a sua,
 /// comparada nos inscritos que ela gravou e liberada.
-unsafe fn cqn12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
+unsafe fn jap_j_cup_compare_entrant_list(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
@@ -135,8 +135,8 @@ unsafe fn cqn12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
 }
 
 unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
-    cqn12_comparar("jap_j_cup_collect_entrants", this, || o(this), || cqn12_copa_da_liga(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
+    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants", this, || o(this), || collect_j_cup_entrants(this))
 }
 
 /// { 0x90b530 } (thiscall, ret 0, usa_open_cup.cpp): `UsaOpenCup::collect_entrants()`: +0x3e = 32. Os clubes cuja
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants(this: usize) -> 
 /// até 50 (a passada para quando os dois enchem); cada vetor é ordenado e embaralhado (0x4afbd0, 10 escolhas). A lista
 /// (0x945501, o calloc de +0x3e × 6, em +0xa7; sem memória, a caixa da linha 0x138 e −1) leva os 10 primeiros de cada
 /// vetor com a classe 2 e depois todos os clubes da MLS ([0x9cf590]) com a classe 1 (sem conferir o espaço). Devolve 1.
-unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
+unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x20);
     let comp = |id: usize| cqn12_d(0xae23d0).wrapping_add(cqn12_d(id).wrapping_mul(0x6b));
     let (a, b) = (comp(0x9cf594), comp(0x9cf598));
@@ -158,7 +158,7 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
         if na == 0x32 && nb == 0x32 {
             break;
         }
-        let c = cqn12_clube(i);
+        let c = jap_j_cup_club_by_index(i);
         let d = cqn12_d(c + 0x57);
         if d == a && na < 0x32 {
             va[na as usize] = c;
@@ -169,13 +169,13 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
         }
         i += 1;
     }
-    cqn12_embaralhar(va.as_mut_ptr(), na as i32, 10);
-    cqn12_embaralhar(vb.as_mut_ptr(), nb as i32, 10);
+    sort_and_shuffle_top_clubs(va.as_mut_ptr(), na as i32, 10);
+    sort_and_shuffle_top_clubs(vb.as_mut_ptr(), nb as i32, 10);
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let l = calloc(cqn12_w(this + 0x3e) as i32 as u32, 6);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
-        aviso_em(0xaa20e0, 0x138);
+        show_error_at(0xaa20e0, 0x138);
         return (-1, 0);
     }
     let mut k = 0i8;
@@ -186,7 +186,7 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
     crate::comparacao::ramo("cqn_12 inscritos da copa dos eua");
     let mut i = 0i32;
     while i < cqn12_d(0xae235c) as i32 {
-        let c = cqn12_clube(i);
+        let c = jap_j_cup_club_by_index(i);
         if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf590)) {
             cqn12_inscrever(this, k as i32, c, 1);
             k = k.wrapping_add(1);
@@ -197,12 +197,12 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
 }
 
 unsafe extern "thiscall" fn jap_j_cup_collect_entrants_90b530(this: usize) -> i32 {
-    cqn12_copa_dos_eua(this).0
+    collect_us_open_cup_entrants(this).0
 }
 
 unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants_90b530(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
-    cqn12_comparar("jap_j_cup_collect_entrants_90b530", this, || o(this), || cqn12_copa_dos_eua(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
+    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants_90b530", this, || o(this), || collect_us_open_cup_entrants(this))
 }
 
 /// { 0x6624f0 } (thiscall, ret 0, jap_emp_cup.cpp): `JapEmpCup::collect_entrants()`: +0x3e = 80; a lista (0x944e46 de
@@ -213,13 +213,13 @@ unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants_90b530(this: usi
 /// (0x4afbd0 com 47, 2, 3 e 1 escolhas); a lista leva os 47, os 2 e os 3 primeiros (o último vetor não entra), classe 0;
 /// depois os da J2 enquanto cabem (classe 0) e os da J1 enquanto cabem, com a classe = a posição da temporada anterior
 /// (+0x5f), até encher; o qsort (0x522190) das 16 últimas inscrições. Devolve 1 com a lista cheia, senão 0.
-unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
+unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x50);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let l = alocar(0x1e0);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
-        aviso_em(0x9eab90, 0x147);
+        show_error_at(0x9eab90, 0x147);
         return (-1, 0);
     }
     let mut va = [0usize; 100];
@@ -230,7 +230,7 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
     if cqn12_d(0xae235c) as i32 > 0 {
         let mut i: i16 = 0;
         while (i as i32) < cqn12_d(0xae235c) as i32 {
-            let c = cqn12_clube(i as i32);
+            let c = jap_j_cup_club_by_index(i as i32);
             if cqn12_d(c + 0x57) != 0 && cqn12_comp(c, 0x53) == Some(cqn12_d(0x9cf36c)) {
                 let d = cqn12_d(cqn12_d(c + 0x57));
                 if d == cqn12_d(0x9cf678) {
@@ -267,13 +267,13 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
         vd[0] = 0;
     }
     if na < 0x2f || nb < 2 || nc < 3 || nd < 1 {
-        aviso_em(0x9eab90, 0x178);
+        show_error_at(0x9eab90, 0x178);
         return (0, 0);
     }
-    cqn12_embaralhar(va.as_mut_ptr(), na as i32, 0x2f);
-    cqn12_embaralhar(vb.as_mut_ptr(), nb as i32, 2);
-    cqn12_embaralhar(vc.as_mut_ptr(), nc as i32, 3);
-    cqn12_embaralhar(vd.as_mut_ptr(), nd as i32, 1);
+    sort_and_shuffle_top_clubs(va.as_mut_ptr(), na as i32, 0x2f);
+    sort_and_shuffle_top_clubs(vb.as_mut_ptr(), nb as i32, 2);
+    sort_and_shuffle_top_clubs(vc.as_mut_ptr(), nc as i32, 3);
+    sort_and_shuffle_top_clubs(vd.as_mut_ptr(), nd as i32, 1);
     crate::comparacao::ramo("cqn_12 inscritos da copa do imperador");
     let mut n = 0i32;
     for &c in va.iter().take(0x2f).chain(vb.iter().take(2)).chain(vc.iter().take(3)) {
@@ -282,7 +282,7 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
     }
     let mut i: i16 = 0;
     while (i as i32) < cqn12_d(0xae235c) as i32 {
-        let c = cqn12_clube(i as i32);
+        let c = jap_j_cup_club_by_index(i as i32);
         if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf768)) && n < cqn12_w(this + 0x3e) as i32 {
             cqn12_inscrever(this, n, c, 0);
             n += 1;
@@ -291,7 +291,7 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
     }
     let mut i: i16 = 0;
     while (i as i32) < cqn12_d(0xae235c) as i32 {
-        let c = cqn12_clube(i as i32);
+        let c = jap_j_cup_club_by_index(i as i32);
         if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf65c)) && n < cqn12_w(this + 0x3e) as i32 {
             crate::comparacao::ramo("cqn_12 classe da j1 na copa do imperador");
             cqn12_inscrever(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: a classe dos clubes da J1 na Copa do Imperador
@@ -302,15 +302,15 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
         }
         i = i.wrapping_add(1);
     }
-    cqn12_ordenar(cqn12_d(this + 0xa7).wrapping_add(((n * 3 - 0x30) * 2) as isize as usize), 0x10);
+    sort_entrants(cqn12_d(this + 0xa7).wrapping_add(((n * 3 - 0x30) * 2) as isize as usize), 0x10);
     ((n == cqn12_w(this + 0x3e) as i32) as i32, n)
 }
 
 unsafe extern "thiscall" fn jap_j_cup_collect_entrants_6624f0(this: usize) -> i32 {
-    cqn12_copa_do_imperador(this).0
+    collect_emperors_cup_entrants(this).0
 }
 
 unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants_6624f0(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
-    cqn12_comparar("jap_j_cup_collect_entrants_6624f0", this, || o(this), || cqn12_copa_do_imperador(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
+    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants_6624f0", this, || o(this), || collect_emperors_cup_entrants(this))
 }

@@ -6,8 +6,8 @@
 # efeito.
 MUTACOES = [
     ('cqn12_semente_da_j1_ate_18',
-     'let s = cqn12_sortear(0x14); // cqn12: a classe sorteada dos clubes da J1',
-     'let s = cqn12_sortear(0x13); // mutacao: de 0 a 18',
+     'let s = jap_j_cup_random(0x14); // cqn12: a classe sorteada dos clubes da J1',
+     'let s = jap_j_cup_random(0x13); // mutacao: de 0 a 18',
      'cqn_12 semente da j1'),
     ('cqn12_copa_dos_eua_segunda_liga_antes',
      'for &c in va.iter().take(10).chain(vb.iter().take(10)) {',

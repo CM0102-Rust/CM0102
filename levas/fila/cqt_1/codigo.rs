@@ -27,7 +27,7 @@ struct Cqt1Estadual {
 /// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
-unsafe fn cqt1_construir(this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -54,26 +54,26 @@ unsafe fn cqt1_construir(this: usize, ano: u32, registro: usize, e: &Cqt1Estadua
     let v = alocar(e.fases * 4);
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     if regras(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[0]);
+        show_error_at(e.arquivo, e.linhas[0]);
         return this;
     }
     if tabela(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[1]);
+        show_error_at(e.arquivo, e.linhas[1]);
         return this;
     }
     if jogos(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[2]);
+        show_error_at(e.arquivo, e.linhas[2]);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        aviso_em(e.arquivo, e.linhas[3]);
+        show_error_at(e.arquivo, e.linhas[3]);
         return this;
     }
     let n = novo(0x5ce);
     let s = if n != 0 { estatisticas(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
-        aviso_em(e.arquivo, e.linhas[4]);
+        show_error_at(e.arquivo, e.linhas[4]);
         return this;
     }
     if previstas_sim {
@@ -85,7 +85,7 @@ unsafe fn cqt1_construir(this: usize, ano: u32, registro: usize, e: &Cqt1Estadua
 /// O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
 /// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
 /// fases e a importância +0x51 = 0xf.
-unsafe fn cqt1_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, original: impl FnOnce() -> usize) -> usize {
+unsafe fn bra_reg_bahia_compare_state_league_ctor(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && cqt1_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && cqt1_d(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
@@ -128,30 +128,30 @@ const CQT1_GAUCHO: Cqt1Estadual = Cqt1Estadual {
 
 /// { 0x42f2d0 } (thiscall, ret 8, bra_reg_bahia.cpp): `BraRegBahia::BraRegBahia(ano, registro)`: o Baiano (uma fase além da liga).
 unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, ano: u32, registro: usize) -> usize {
-    cqt1_construir(this, ano, registro, &CQT1_BAIANO, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
+    bra_reg_bahia_construct_state_league(this, ano, registro, &CQT1_BAIANO, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
 }
 
 /// { 0x4304b0 } (thiscall, ret 8, bra_reg_central.cpp): `BraRegCentral::BraRegCentral(ano, registro)`: o Centro-Oeste (uma fase além da liga).
 unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
-    cqt1_construir(this, ano, registro, &CQT1_CENTRO_OESTE, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
+    bra_reg_bahia_construct_state_league(this, ano, registro, &CQT1_CENTRO_OESTE, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
 }
 
 /// { 0x4317c0 } (thiscall, ret 8, bra_reg_gaucho.cpp): `BraRegGaucho::BraRegGaucho(ano, registro)`: o Gaúcho (uma fase além da liga).
 unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, ano: u32, registro: usize) -> usize {
-    cqt1_construir(this, ano, registro, &CQT1_GAUCHO, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
+    bra_reg_bahia_construct_state_league(this, ano, registro, &CQT1_GAUCHO, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
 }
 
 unsafe extern "thiscall" fn comparar_construct_bra_reg_bahia(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    cqt1_comparar("construct_bra_reg_bahia", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
+    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_bahia", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    cqt1_comparar("construct_bra_reg_central", this, ano, registro, &CQT1_CENTRO_OESTE, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
+    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_central", this, ano, registro, &CQT1_CENTRO_OESTE, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_bra_reg_gaucho(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
-    cqt1_comparar("construct_bra_reg_gaucho", this, ano, registro, &CQT1_GAUCHO, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
+    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_gaucho", this, ano, registro, &CQT1_GAUCHO, || o(this, ano, registro))
 }

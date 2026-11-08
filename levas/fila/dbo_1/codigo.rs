@@ -4,7 +4,7 @@
 /// nula com jogador (+0x61) da `posicao`, sem lesão grave (INJURY 0x62c400 em [0xb63d28] ≠ 2), id (+0) < [0xae2364]
 /// (com sinal) e habilidade atual (+5 do jogador, curto com sinal) acima do `limite`. A ordem dos testes é a da
 /// original (a 0x62c400 só é chamada para os da posição). Contador de 8 bits (no máximo 50).
-unsafe fn dbo1_contar(clube: usize, limite: i32, posicao: impl Fn(usize) -> bool) -> u8 {
+unsafe fn count_squad_above_ability(clube: usize, limite: i32, posicao: impl Fn(usize) -> bool) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let mut n = 0u8;
@@ -28,7 +28,7 @@ unsafe fn dbo1_contar(clube: usize, limite: i32, posicao: impl Fn(usize) -> bool
 }
 
 /// O limite de habilidade das três: reputação do clube (+0x80, curto com sinal) / 65 + 40, entre 40 e `teto`.
-unsafe fn dbo1_limite(clube: usize, teto: i32) -> i32 {
+unsafe fn squad_ability_threshold(clube: usize, teto: i32) -> i32 {
     (core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32 / 65 + 40).clamp(40, teto)
 }
 
@@ -36,7 +36,7 @@ unsafe fn dbo1_limite(clube: usize, teto: i32) -> i32 {
 /// no +8 da competição [[0xadadfc] + 4·id]); `None` sem competição, sem estatística ou sem jogos (+4); senão o byte
 /// `campo` / jogos (inteiros sem sinal). A 0x4a4850 ordena a tabela da competição na primeira chamada (marca +0x18)
 /// e guarda a competição em [0xadae10]: na comparação a original vem antes e a cópia acha a tabela já ordenada.
-unsafe fn dbo1_gols_por_jogo(clube: usize, campo: usize) -> Option<i32> {
+unsafe fn club_goals_per_game(clube: usize, campo: usize) -> Option<i32> {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let comp = rd(clube + 0x57);
     if comp == 0 {
@@ -66,17 +66,17 @@ unsafe extern "C" fn club_has_enough_defenders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    if let Some(v) = dbo1_gols_por_jogo(clube, 0x6a) {
+    if let Some(v) = club_goals_per_game(clube, 0x6a) {
         if v as f64 > *(0x969588 as *const f64) {
             return 0; // a defesa toma gols demais
         }
     }
-    let limite = dbo1_limite(clube, 0x91);
-    (dbo1_contar(clube, limite, |j| *((j + 0x11) as *const u8) == 20) > 2) as u8 // zagueiros (dbo)
+    let limite = squad_ability_threshold(clube, 0x91);
+    (count_squad_above_ability(clube, limite, |j| *((j + 0x11) as *const u8) == 20) > 2) as u8 // zagueiros (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_enough_defenders(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_has_enough_defenders(clube);
     PLACAR.registrar(r == n, || format!("club_has_enough_defenders({:x}) original={} rust={}", clube, r, n));
     r
@@ -88,13 +88,13 @@ unsafe extern "C" fn club_has_enough_midfielders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    let limite = dbo1_limite(clube, 0x91);
+    let limite = squad_ability_threshold(clube, 0x91);
     let meia = |j: usize| *((j + 0x14) as *const u8) == 20 || *((j + 0x12) as *const u8) == 20 || *((j + 0x13) as *const u8) == 20;
-    (dbo1_contar(clube, limite, meia) > 2) as u8 // meias (dbo)
+    (count_squad_above_ability(clube, limite, meia) > 2) as u8 // meias (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_enough_midfielders(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_has_enough_midfielders(clube);
     PLACAR.registrar(r == n, || format!("club_has_enough_midfielders({:x}) original={} rust={}", clube, r, n));
     r
@@ -107,17 +107,17 @@ unsafe extern "C" fn club_has_enough_strikers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    if let Some(v) = dbo1_gols_por_jogo(clube, 0x69) {
+    if let Some(v) = club_goals_per_game(clube, 0x69) {
         if (v as f64) < *(0x968940 as *const f64) {
             return 0; // o ataque faz poucos gols
         }
     }
-    let limite = dbo1_limite(clube, 0x96);
-    (dbo1_contar(clube, limite, |j| *((j + 0x15) as *const u8) == 20) > 1) as u8 // atacantes (dbo)
+    let limite = squad_ability_threshold(clube, 0x96);
+    (count_squad_above_ability(clube, limite, |j| *((j + 0x15) as *const u8) == 20) > 1) as u8 // atacantes (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_enough_strikers(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     let n = club_has_enough_strikers(clube);
     PLACAR.registrar(r == n, || format!("club_has_enough_strikers({:x}) original={} rust={}", clube, r, n));
     r

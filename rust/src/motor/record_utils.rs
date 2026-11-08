@@ -17,15 +17,15 @@ use super::*;
 /// se ele não for negativo, senão o normal (+0x43/+0x44); visitante: +0x15 o +0xc e o placar ao contrário. Devolve 1.
 pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
     if jogo == 0 {
-        aviso_em(0xa7a088, 0x29);
+        show_error_at(0xa7a088, 0x29);
         return 0;
     }
     if clube == 0 {
-        aviso_em(0xa7a088, 0x31);
+        show_error_at(0xa7a088, 0x31);
         return 0;
     }
     if saida == 0 {
-        aviso_em(0xa7a088, 0x39);
+        show_error_at(0xa7a088, 0x39);
         return 0;
     }
     let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, club
 /// Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
 /// só a original.
 pub(crate) unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_FILL_MATCH_RECORD_FROM_FIXTURE);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_FILL_MATCH_RECORD_FROM_FIXTURE);
     if jogo == 0 || clube == 0 || saida == 0 {
         return o(jogo, clube, saida);
     }
@@ -78,8 +78,10 @@ pub(crate) unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: us
     r
 }
 
-/// O id do nome (+0x33 do registro de nome) ou −1 sem nome.
-pub(crate) unsafe fn cpz7_nome(p: u32) -> u32 {
+/// Name id (+0x33 of a name record), or -1 without name.
+///
+/// [pt] O id do nome (+0x33 do registro de nome) ou −1 sem nome.
+pub(crate) unsafe fn name_id(p: u32) -> u32 {
     if p != 0 { read_u32(p as usize + 0x33) } else { u32::MAX }
 }
 
@@ -92,15 +94,15 @@ pub(crate) unsafe fn cpz7_nome(p: u32) -> u32 {
 /// nascimento (+0x10, 0x417c10); devolve 1.
 pub(crate) unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
     if pessoa == 0 {
-        aviso_em(0xa7a088, 0x80);
+        show_error_at(0xa7a088, 0x80);
         return 0;
     }
     if saida == 0 {
-        aviso_em(0xa7a088, 0x88);
+        show_error_at(0xa7a088, 0x88);
         return 0;
     }
     for k in 0..3 {
-        core::ptr::write_unaligned((saida + 4 * k) as *mut u32, cpz7_nome(read_u32(pessoa + 4 + 4 * k)));
+        core::ptr::write_unaligned((saida + 4 * k) as *mut u32, name_id(read_u32(pessoa + 4 + 4 * k)));
     }
     core::ptr::write_unaligned((saida + 0xc) as *mut u32, read_u32(pessoa));
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
@@ -111,7 +113,7 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize)
 
 /// Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
 pub(crate) unsafe extern "C" fn comparar_fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FILL_STAFF_NAME_REF);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FILL_STAFF_NAME_REF);
     if pessoa == 0 || saida == 0 {
         return o(pessoa, saida);
     }
@@ -128,7 +130,7 @@ pub(crate) unsafe extern "C" fn comparar_fill_staff_name_ref(pessoa: usize, said
 /// empate com gols: 2; empate sem gols: 1; derrota: −3 (só o byte conta: quem chama lê al).
 pub(crate) unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 {
     if registro == 0 {
-        aviso_em(0xa7a088, 0x25a);
+        show_error_at(0xa7a088, 0x25a);
         return 0;
     }
     let (p, c) = (read_u8(registro + 0x19) as i8, read_u8(registro + 0x1a) as i8);
@@ -145,7 +147,7 @@ pub(crate) unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 
 
 /// Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
 pub(crate) unsafe extern "C" fn comparar_match_record_result_code(registro: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_MATCH_RECORD_RESULT_CODE);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_MATCH_RECORD_RESULT_CODE);
     if registro == 0 {
         return o(registro);
     }
@@ -159,20 +161,23 @@ pub(crate) unsafe extern "C" fn comparar_match_record_result_code(registro: usiz
 
 
 
-/// O corpo da 0x86c390; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.
-pub(crate) unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32, gravar: bool) {
-    let mut e = cpq4_entrada();
-    cpq4_datar(e.as_mut_ptr());
+/// Body of Staff_Records::add_year_award_record (0x86c390); without gravar (the comparer's copy) skips the history file
+/// entry.
+///
+/// [pt] O corpo da 0x86c390; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.
+pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32, gravar: bool) {
+    let mut e = history_entry();
+    stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x34;
-    cpq4_por(&mut e, 8, if clube != 0 { read_usize(clube) as i32 } else { -1 });
-    cpq4_por(&mut e, 0xd, read_usize(premio) as i32);
-    cpq4_por(&mut e, 0x11, (a4 & 0xffff) as i32);
-    cpq4_por(&mut e, 0x15, a5 as u8 as i8 as i32);
-    cpq4_por(&mut e, 0x19, credito as u8 as i8 as i32);
-    cpq4_historico(gravar, this, read_usize(p), &e);
+    put_i32(&mut e, 8, if clube != 0 { read_usize(clube) as i32 } else { -1 });
+    put_i32(&mut e, 0xd, read_usize(premio) as i32);
+    put_i32(&mut e, 0x11, (a4 & 0xffff) as i32);
+    put_i32(&mut e, 0x15, a5 as u8 as i8 as i32);
+    put_i32(&mut e, 0x19, credito as u8 as i8 as i32);
+    append_person_history_by_id(gravar, this, read_usize(p), &e);
     let (t3d, t28) = (read_u8(p + 0x3d), read_u8(p + 0x28));
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
-        let r = cpq4_registro(this, p);
+        let r = staff_records_manager_record(this, p);
         if r != 0 {
             crate::comparacao::ramo("cpy_10 prêmio do técnico");
             let a = (r + 0x9e) as *mut u16;
@@ -193,7 +198,7 @@ pub(crate) unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: u
         return;
     }
     let do_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let k = do_clube(read_usize(G_CONTRACT_MANAGER), p, cpv13_clube_do_contrato(p));
+    let k = do_clube(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p));
     if k == 0 {
         return;
     }
@@ -201,11 +206,11 @@ pub(crate) unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: u
         let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
         if dias(0xae2c90, read_usize(k + 0x25), read_usize(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
             let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
-            let dono = cpv13_clube_do_contrato(p);
+            let dono = contract_club_except_type5(p);
             let x = entrada(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), dono, p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p) {
                 crate::comparacao::ramo("cpy_10 renovação");
-                cpq3_renovar(p);
+                offer_renewal(p);
             }
         }
     }
@@ -241,19 +246,19 @@ pub(crate) unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: u
 /// diferença maior que a de `b`, ou igual com mais gols feitos. Registro nulo: a original (caixa "Error", 0).
 pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
+        return original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
     }
-    let (fa, sa, fb, sb) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
+    let (fa, sa, fb, signed_byte_at) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
     if fa <= sa {
         return 0;
     }
-    let (da, db) = (fa as i32 - sa as i32, fb as i32 - sb as i32);
+    let (da, db) = (fa as i32 - sa as i32, fb as i32 - signed_byte_at as i32);
     (da > db || (da == db && fa > fb)) as u32
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
 pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
     if a == 0 || b == 0 {
         return r;
     }
@@ -270,19 +275,19 @@ pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b:
 /// sofridos. Registro nulo: a original (caixa "Error", 0).
 pub(crate) unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);
+        return original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);
     }
-    let (fa, sa, fb, sb) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
+    let (fa, sa, fb, signed_byte_at) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
     if fa >= sa {
         return 0;
     }
-    let (da, db) = (sa as i32 - fa as i32, sb as i32 - fb as i32);
-    (da > db || (da == db && sa > sb)) as u32
+    let (da, db) = (sa as i32 - fa as i32, signed_byte_at as i32 - fb as i32);
+    (da > db || (da == db && sa > signed_byte_at)) as u32
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
 pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);
     if a == 0 || b == 0 {
         return r;
     }

@@ -45,8 +45,10 @@ pub(crate) unsafe extern "C" fn won_the_match(jogo: usize, clube: u32) -> u8 {
 
 // ---------- centesima quadragesima nona leva: a escalacao de cada lado e o dia de jogos (0x6db500, 0x6b4190, 0x6b42a0) ----------
 
-/// A caixa de erro "v%s %s.%s %d" de match_man.cpp na linha `linha`, e o jogo para (como a original).
-pub(crate) unsafe fn erro_de_match_man(linha: u32) -> ! {
+/// Shows the "v%s %s.%s %d" error box for match_man.cpp at a line and exits the game, as the original.
+///
+/// [pt] A caixa de erro "v%s %s.%s %d" de match_man.cpp na linha `linha`, e o jogo para (como a original).
+pub(crate) unsafe fn match_man_fatal_error(linha: u32) -> ! {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let juntar: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
@@ -171,10 +173,10 @@ pub(crate) unsafe extern "thiscall" fn pick_day_match(dia: usize) -> u32 {
 // dia de jogos libera motores e listas: sem comparacao propria, validados pela carreira (Rust x
 // original), como o nascimento e o fim do motor. As rotinas que chamam seguem comparadas.
 pub(crate) unsafe extern "thiscall" fn comparar_end_day(dia: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_END_DAY)(dia)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_END_DAY)(dia)
 }
 pub(crate) unsafe extern "thiscall" fn comparar_pick_day_match(dia: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_PICK_DAY_MATCH)(dia)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_PICK_DAY_MATCH)(dia)
 }
 
 // ---------- centesima quinquagesima primeira leva: o andamento do dia de jogos (0x6b5a70, 0x6b5ce0, 0x6b5f00) ----------
@@ -206,7 +208,7 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(dia: usize) -> u32 {
         return 0;
     }
     if atual > -1 && u(u(dia, 0x19).wrapping_add((atual as isize * 0x69) as usize), 0x57) != 0 {
-        aviso_em(0xa15708, 0x68d);
+        show_error_at(0xa15708, 0x68d);
         return 0;
     }
     loop {
@@ -232,7 +234,7 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(dia: usize) -> u32 {
                     crate::comparacao::ramo("dia partida iniciada");
                     return 1;
                 }
-                aviso_em(0xa15708, 0x6b2);
+                show_error_at(0xa15708, 0x6b2);
             }
             k += 1;
         }
@@ -292,7 +294,7 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(dia: usize, ate_o_fim: u32
     let estado = (p + 0x67) as *mut u8;
     crate::comparacao::ramo("andar com motor");
     let fim = |e: u8| e == 2 || e == 8;
-    let passo = |n: i32| {
+    let step_towards = |n: i32| {
         let e = laco(u(p, 0x57), n) as u8;
         *estado = e;
         if fim(e) {
@@ -302,11 +304,11 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(dia: usize, ate_o_fim: u32
     if ate_o_fim != 0 {
         crate::comparacao::ramo("andar ate o fim");
         while !fim(*estado) {
-            passo(-1);
+            step_towards(-1);
         }
     } else {
-        passo(1);
-        crate::comparacao::ramo("andar um passo");
+        step_towards(1);
+        crate::comparacao::ramo("andar um step_towards");
     }
     if !fim(*estado) {
         return 0;
@@ -318,7 +320,7 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(dia: usize, ate_o_fim: u32
     }
     *((p + 0x5f) as *mut usize) = mem;
     if mem == 0 {
-        aviso_em(0xa15708, 0x713);
+        show_error_at(0xa15708, 0x713);
         return 0;
     }
     registrar(u(G_MATCH_STATS, 0), u(p, 0x57), mem);
@@ -350,7 +352,7 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(dia: usize, ate_o_fim: u32
 pub(crate) unsafe extern "thiscall" fn close_day_match(_dia: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| *((q + o) as *const usize);
     if p == 0 {
-        aviso_em(0xa15708, 0x73f);
+        show_error_at(0xa15708, 0x73f);
         return 0;
     }
     let jogo = u(p, 0);
@@ -439,13 +441,13 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(_dia: usize, p: usize) ->
 // ponytail: o dia de jogos cria e libera motores e resumos e chama dezenas de rotinas ainda
 // originais; sem comparacao propria, validadas pela carreira (Rust x original), como as da 149a.
 pub(crate) unsafe extern "thiscall" fn comparar_start_next_match(dia: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_START_NEXT_MATCH)(dia)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_START_NEXT_MATCH)(dia)
 }
 pub(crate) unsafe extern "thiscall" fn comparar_step_day_match(dia: usize, ate_o_fim: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_STEP_DAY_MATCH)(dia, ate_o_fim)
+    original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_STEP_DAY_MATCH)(dia, ate_o_fim)
 }
 pub(crate) unsafe extern "thiscall" fn comparar_close_day_match(dia: usize, p: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CLOSE_DAY_MATCH)(dia, p)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CLOSE_DAY_MATCH)(dia, p)
 }
 
 // ---------- centesima quinquagesima segunda leva: o laco do dia de jogos (0x6b4360) ----------
@@ -570,7 +572,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(dia: usize) -> u32 {
                     let r = novo(0x11d);
                     por(p, 0x5b, r);
                     if r == 0 {
-                        aviso_em(0xa15708, 0x250);
+                        show_error_at(0xa15708, 0x250);
                     } else {
                         *(r as *mut u8) = 0;
                         for o in [5usize, 0x45, 0x85, 0xc5] {
@@ -720,7 +722,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(dia: usize) -> u32 {
                 tirar_da_fila(u(G_VIRTUAL_STAFF, 0), p + 4, -2, 0);
                 let m = novo_motor(p);
                 if m == 0 {
-                    aviso_em(0xa15708, 0x39d);
+                    show_error_at(0xa15708, 0x39d);
                 } else {
                     let r = rapida(p + 4);
                     crate::comparacao::ramo("partida sem humano");
@@ -729,7 +731,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(dia: usize) -> u32 {
                     ate_o_fim(p);
                     let resumo = novo_resumo(p);
                     if resumo == 0 {
-                        aviso_em(0xa15708, 0x3b5);
+                        show_error_at(0xa15708, 0x3b5);
                     } else {
                         registrar(u(G_MATCH_STATS, 0), u(p, 0x57), resumo);
                         sem_motor(p);
@@ -766,7 +768,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(dia: usize) -> u32 {
             let p = partida(k);
             if byte(p, 0x47) != -2 {
                 if u(p, 0x5f) == 0 {
-                    aviso_em(0xa15708, 0x3fb);
+                    show_error_at(0xa15708, 0x3fb);
                 } else {
                     fechar(dia, p);
                     crate::comparacao::ramo("match_wrap_up");
@@ -800,7 +802,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(dia: usize) -> u32 {
 // ponytail: o laco do dia cria e libera motores e resumos e mexe na tela; sem comparacao propria,
 // validado pela carreira (Rust x original), como as da 151a.
 pub(crate) unsafe extern "thiscall" fn comparar_play_the_day(dia: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_PLAY_THE_DAY)(dia)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_PLAY_THE_DAY)(dia)
 }
 
 // ---------- centesima quinquagesima terceira leva: a montagem do dia de jogos (0x6b3c10, 0x714d30, 0x6d8c70) ----------
@@ -852,7 +854,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(dia: usize, data: usize, m
     por(dia, 0x34, 0);
     *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *mut usize) = 0;
     if data == 0 || modo8 > 2 {
-        aviso_em(0xa15708, 0x93);
+        show_error_at(0xa15708, 0x93);
         return dia;
     }
     preparar_historia(u(G_RESERVE_COMP, 0));
@@ -897,7 +899,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(dia: usize, data: usize, m
                     if grupo == 0 {
                         crate::comparacao::ramo("montagem grupo novo");
                         if !crescer(1, 24) {
-                            aviso_em(0xa15708, 0xd6);
+                            show_error_at(0xa15708, 0xd6);
                             return dia;
                         }
                         grupo = u(dia, 1) + ler(9) as usize * 24;
@@ -909,7 +911,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(dia: usize, data: usize, m
                         por(dia, 9, (ler(9) + 1) as u32);
                     }
                     if !crescer(0x19, 0x69) {
-                        aviso_em(0xa15708, 0xf4);
+                        show_error_at(0xa15708, 0xf4);
                         return dia;
                     }
                     let p = u(dia, 0x19) + ler(0x21) as usize * 0x69;
@@ -938,7 +940,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(dia: usize, data: usize, m
                     if id != ultima {
                         crate::comparacao::ramo("montagem competicao nova");
                         if !crescer(0xd, 0x54) {
-                            aviso_em(0xa15708, 0x140);
+                            show_error_at(0xa15708, 0x140);
                             return dia;
                         }
                         let c = u(dia, 0xd) + ler(0x15) as usize * 0x54;
@@ -988,14 +990,17 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(dia: usize, data: usize, m
 // ponytail: a montagem do dia aloca os vetores e chama rotinas ainda originais; o lado e os sons sao
 // so leitura e tela. Sem comparacao propria, validadas pela carreira (Rust x original).
 pub(crate) unsafe extern "thiscall" fn comparar_set_up_the_day(dia: usize, data: usize, modo: u32) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_SET_UP_THE_DAY)(dia, data, modo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_SET_UP_THE_DAY)(dia, data, modo)
 }
 
 // ---------- centesima trigesima quarta leva: o interesse do humano no dia de jogos (0x6b5040) ----------
 
-/// As regioes que a 0x6b5040 marca no dia `d`: +0x29 a +0x2e do dia, +0x14 de cada grupo, +0xc a
+/// Memory regions 0x6b5040 marks for a match day: day +0x29..+0x2e, each group +0x14, each competition +0xc..+0x13 and
+/// each match +0x53.
+///
+/// [pt] As regioes que a 0x6b5040 marca no dia `d`: +0x29 a +0x2e do dia, +0x14 de cada grupo, +0xc a
 /// +0x13 de cada competicao e +0x53 de cada partida.
-pub(crate) unsafe fn marcas_do_dia(d: usize) -> Vec<(usize, usize)> {
+pub(crate) unsafe fn match_day_marked_regions(d: usize) -> Vec<(usize, usize)> {
     let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let mut v = vec![(d + 0x29, 6)];
     for gi in 0..ler(d + 9).max(0) as usize {
@@ -1094,12 +1099,12 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_match_day_interest(d: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_MATCH_DAY_INTEREST);
-    if gravando_no_topo() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_MATCH_DAY_INTEREST);
+    if is_recording_top_level() {
         return o(d);
     }
     // ponytail: a 0x5fe8d0 (lista dos humanos) roda nas duas; ela refaz a lista do zero
-    let reg = marcas_do_dia(d);
+    let reg = match_day_marked_regions(d);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(d), || match_day_interest(d));
     PLACAR.registrar(igual && r == n, || format!("match_day_interest original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
@@ -1107,10 +1112,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_match_day_interest(d: usize) -> 
 
 // ---------- centesima trigesima terceira leva: a partida sem o humano (0x6b66a0) ----------
 
-/// As marcas das selecoes dos tecnicos humanos (0xb67a58 + id), que a 0x6b66a0 poe uma vez
+/// Addresses of the national-team marks (0xb67a58 + id) of human managers with flag bit 2 and a national team.
+///
+/// [pt] As marcas das selecoes dos tecnicos humanos (0xb67a58 + id), que a 0x6b66a0 poe uma vez
 /// (com [0xa15704] ligado): para cada vaga de humano em 0xb63d60 (de 0x48 em 0x48 ate 0xb64738) com
 /// +0x11c bit 2 e selecao (+0x71).
-pub(crate) unsafe fn marcas_das_selecoes() -> Vec<usize> {
+pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
     let mut v = Vec::new();
     for e in (0xb63d60usize..0xb64738).step_by(0x48) {
         let p = *(e as *const usize);
@@ -1145,7 +1152,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16) as i32;
     if g(0xa15704) != 0 {
-        for e in marcas_das_selecoes() {
+        for e in human_national_team_marks() {
             crate::comparacao::ramo("sem humano selecao de humano");
             *(e as *mut u8) = 1;
         }
@@ -1195,7 +1202,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         }
     }
     if (selecao(c2) == 0 && f5c2990(g(0xae2c74), ler(partida + 0x14) as u32) != 0) || comp == ler(KEY_CLUB_COMP_INTER_TOTO_CUP) {
-        crate::comparacao::ramo("sem humano pela reputacao");
+        crate::comparacao::ramo("sem humano pela injury_word_0c");
         return if w(c2 + 0x80) + w(c1 + 0x80) > 0x2ee0 { 0 } else { final_() };
     }
     let mut x = vaga_de(ler(partida + 0x14) as u32, partida) as u8;
@@ -1223,13 +1230,13 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_match_without_human(partida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_MATCH_WITHOUT_HUMAN);
-    if gravando_no_topo() {
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MATCH_WITHOUT_HUMAN);
+    if is_recording_top_level() {
         return o(partida);
     }
     let mut reg = vec![(0xa15704usize, 4usize)];
     if *(G_QUICK_SIM_COMP_FLAGS_PENDING as *const usize) != 0 {
-        reg.extend(marcas_das_selecoes().into_iter().map(|e| (e, 1)));
+        reg.extend(human_national_team_marks().into_iter().map(|e| (e, 1)));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(partida), || match_without_human(partida));
     PLACAR.registrar(igual && r == n, || format!("match_without_human original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
@@ -1238,7 +1245,10 @@ pub(crate) unsafe extern "C" fn comparar_match_without_human(partida: usize) -> 
 
 // ---------- centesima trigesima segunda leva: o clube no pos-jogo (0x6b79a0) ----------
 
-/// { 0x6b79a0 } (cdecl, match_day.cpp; chamada duas vezes em 0x6b61a9/0x6b61bd, uma por clube): o
+/// 0x6b79a0 with calls injected: a club's post-match news after a match against `outro` (turnaround story for a senior
+/// player, or a pleased youngster favouring the club).
+///
+/// [pt] { 0x6b79a0 } (cdecl, match_day.cpp; chamada duas vezes em 0x6b61a9/0x6b61bd, uma por clube): o
 /// `clube` depois da partida contra `outro`. Sem clube, outro ou partida: caixa de erro. Sem tecnico
 /// (+0xcf) nada; sem 0x600a50, com +0x80 abaixo de 4750 e sorteio(100) != 0, nada. Com 0x6b7cf0,
 /// partida +0x40 e +0x41 e o clube nao fora (0x53b900): entre os 50 de +0xd7, com contrato (0x4cf5a0)
@@ -1249,7 +1259,7 @@ pub(crate) unsafe extern "C" fn comparar_match_without_human(partida: usize) -> 
 /// partida da competicao do clube (+0x14 = +0x57, com +0x40/+0x41), o clube nao fora, +0x59 acima
 /// de 15, +0x57 acima de sorteio(5) + 10, +0xb da ficha abaixo de 4250 e 0x7c3a40 zero: 0x589bc0 e,
 /// sem 0x547d60, 0x547d90(pessoa, clube, 1), e fim.
-pub(crate) unsafe fn clube_do_pos_jogo_com(clube: usize, outro: usize, partida: usize, n: u32, t: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn post_match_club_with(clube: usize, outro: usize, partida: usize, n: u32, t: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let teste_547d60: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
     let ch = core::cell::RefCell::new(chamar);
@@ -1339,23 +1349,25 @@ pub(crate) unsafe fn clube_do_pos_jogo_com(clube: usize, outro: usize, partida: 
     }
 }
 
-/// { 0x6b74a0 }: ver `eventos_do_pos_jogo_com`.
+/// { 0x6b74a0 }: ver `post_match_events_injected`.
 pub(crate) unsafe extern "C" fn post_match_events(partida: usize) {
-    eventos_do_pos_jogo_com(partida, &mut |r, t, a| despachar_pos(r, t, a))
+    post_match_events_injected(partida, &mut |r, t, a| dispatch_post_match_call(r, t, a))
 }
 
-/// { 0x6b6cc0 }: ver `jogadores_do_pos_jogo_com`.
+/// { 0x6b6cc0 }: ver `post_match_players_with`.
 pub(crate) unsafe extern "C" fn post_match_players(partida: usize, t: usize) {
-    jogadores_do_pos_jogo_com(partida, t, &mut |r, tt, a| despachar_pos(r, tt, a))
+    post_match_players_with(partida, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
 }
 
-/// { 0x6b79a0 }: ver `clube_do_pos_jogo_com`.
+/// { 0x6b79a0 }: ver `post_match_club_with`.
 pub(crate) unsafe extern "C" fn post_match_club(clube: usize, outro: usize, partida: usize, n: u32, t: usize) {
-    clube_do_pos_jogo_com(clube, outro, partida, n, t, &mut |r, tt, a| despachar_pos(r, tt, a))
+    post_match_club_with(clube, outro, partida, n, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
 }
 
-/// As rotinas do banco com efeitos chamadas pelo pos-jogo, pelo endereco do jogo (`this` 0: cdecl).
-pub(crate) unsafe fn despachar_pos(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+/// Calls one of the post-match routines with effects by game address, with the right convention and argument count.
+///
+/// [pt] As rotinas do banco com efeitos chamadas pelo pos-jogo, pelo endereco do jogo (`this` 0: cdecl).
+pub(crate) unsafe fn dispatch_post_match_call(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
     type T1 = unsafe extern "thiscall" fn(usize, u32) -> u32;
     type T2 = unsafe extern "thiscall" fn(usize, u32, u32) -> u32;
     type T3 = unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32;
@@ -1399,17 +1411,21 @@ pub(crate) const PROLOGOS_POS: [Prologo; 15] = [
     Prologo { endereco: 0x7c3a40, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
 ];
 
-/// Dentro de uma comparacao do pos-jogo, com a fita aberta.
-pub(crate) fn gravando_pos() -> bool {
-    GRAVAR_POS.load(std::sync::atomic::Ordering::Relaxed) && gravando()
+/// True inside a post-match comparison with the tape open.
+///
+/// [pt] Dentro de uma comparacao do pos-jogo, com a fita aberta.
+pub(crate) fn is_recording_post_match() -> bool {
+    GRAVAR_POS.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
 }
 
-/// Repassa ou grava (durante uma comparacao do pos-jogo, no nivel de cima da fita).
-pub(crate) unsafe fn passar_pos(rotina: usize, this: usize, a: [u32; 5], f: impl FnOnce() -> u64) -> u64 {
+/// Runs a post-match call directly, or records it on the tape during a post-match comparison.
+///
+/// [pt] Repassa ou grava (durante uma comparacao do pos-jogo, no nivel de cima da fita).
+pub(crate) unsafe fn pass_or_record_post_match(rotina: usize, this: usize, a: [u32; 5], f: impl FnOnce() -> u64) -> u64 {
     use std::sync::atomic::Ordering::Relaxed;
-    if GRAVAR_POS.load(Relaxed) && gravando() {
+    if GRAVAR_POS.load(Relaxed) && is_recording() {
         let mut r = 0u64;
-        chamar_gravando(rotina, this, a, || {
+        call_recording(rotina, this, a, || {
             r = f();
             r as u32
         });
@@ -1418,75 +1434,91 @@ pub(crate) unsafe fn passar_pos(rotina: usize, this: usize, a: [u32; 5], f: impl
     f()
 }
 
-pub(crate) unsafe extern "thiscall" fn porta_8676d0(c: usize, a: u32) -> u64 {
+/// Gate for STAFF_CONTRACT::clear_flags (0x8676d0) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_clear_contract_flags(c: usize, a: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(PORTAS_POS[0]);
-    passar_pos(0x8676d0, c, [a, 0, 0, 0, 0], || f(c, a))
+    pass_or_record_post_match(0x8676d0, c, [a, 0, 0, 0, 0], || f(c, a))
 }
-pub(crate) unsafe extern "thiscall" fn porta_8674e0(c: usize, a: u32) -> u64 {
+/// Gate for STAFF_CONTRACT::clear_grievances (0x8674e0) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_clear_grievances(c: usize, a: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(PORTAS_POS[1]);
-    passar_pos(0x8674e0, c, [a, 0, 0, 0, 0], || f(c, a))
+    pass_or_record_post_match(0x8674e0, c, [a, 0, 0, 0, 0], || f(c, a))
 }
-pub(crate) unsafe extern "thiscall" fn porta_867560(c: usize, a: u32) -> u64 {
+/// Gate for STAFF_CONTRACT::set_flags (0x867560) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_set_contract_flags(c: usize, a: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(PORTAS_POS[2]);
-    passar_pos(0x867560, c, [a, 0, 0, 0, 0], || f(c, a))
+    pass_or_record_post_match(0x867560, c, [a, 0, 0, 0, 0], || f(c, a))
 }
-pub(crate) unsafe extern "thiscall" fn porta_867700(c: usize, a: u32, b: u32) -> u64 {
+/// Gate for STAFF_CONTRACT::apply_event_flags (0x867700) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_apply_event_flags(c: usize, a: u32, b: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[3]);
-    passar_pos(0x867700, c, [a, b, 0, 0, 0], || f(c, a, b))
+    pass_or_record_post_match(0x867700, c, [a, b, 0, 0, 0], || f(c, a, b))
 }
-pub(crate) unsafe extern "thiscall" fn porta_733a60(c: usize, a: u32, b: u32) -> u64 {
+/// Gate for Media::create_player_outburst_story (0x733a60) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_player_outburst_story(c: usize, a: u32, b: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[4]);
-    passar_pos(0x733a60, c, [a, b, 0, 0, 0], || f(c, a, b))
+    pass_or_record_post_match(0x733a60, c, [a, b, 0, 0, 0], || f(c, a, b))
 }
-pub(crate) unsafe extern "thiscall" fn porta_5afe00(c: usize, a: u32, b: u32) -> u64 {
+/// Gate for fog_of_war_reveal_match_players (0x5afe00) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_reveal_match_players(c: usize, a: u32, b: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[5]);
-    passar_pos(0x5afe00, c, [a, b, 0, 0, 0], || f(c, a, b))
+    pass_or_record_post_match(0x5afe00, c, [a, b, 0, 0, 0], || f(c, a, b))
 }
-pub(crate) unsafe extern "thiscall" fn porta_759610(c: usize, a: u32, b: u32, d: u32) -> u64 {
+/// Gate for Media::queue_player_sent_off_story (0x759610) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_sent_off_story(c: usize, a: u32, b: u32, d: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[6]);
-    passar_pos(0x759610, c, [a, b, d, 0, 0], || f(c, a, b, d))
+    pass_or_record_post_match(0x759610, c, [a, b, d, 0, 0], || f(c, a, b, d))
 }
-pub(crate) unsafe extern "thiscall" fn porta_744240(c: usize, a: u32, b: u32, d: u32, e: u32) -> u64 {
+/// Gate for Media::post_player_praise_story (0x744240) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_player_praise_story(c: usize, a: u32, b: u32, d: u32, e: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[7]);
-    passar_pos(0x744240, c, [a, b, d, e, 0], || f(c, a, b, d, e))
+    pass_or_record_post_match(0x744240, c, [a, b, d, e, 0], || f(c, a, b, d, e))
 }
-pub(crate) unsafe extern "thiscall" fn porta_72c1f0(c: usize, a: u32, b: u32, d: u32, e: u32, g: u32) -> u64 {
+/// Gate for Media::create_player_media_story (0x72c1f0) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_player_media_story(c: usize, a: u32, b: u32, d: u32, e: u32, g: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[8]);
-    passar_pos(0x72c1f0, c, [a, b, d, e, g], || f(c, a, b, d, e, g))
+    pass_or_record_post_match(0x72c1f0, c, [a, b, d, e, g], || f(c, a, b, d, e, g))
 }
-pub(crate) unsafe extern "C" fn porta_7daf50(a: u32, b: u32, d: u32) -> u64 {
+/// Gate for apply_obscene_gesture_ban (0x7daf50) in post-match recording.
+pub(crate) unsafe extern "C" fn gate_obscene_gesture_ban(a: u32, b: u32, d: u32) -> u64 {
     let f: unsafe extern "C" fn(u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[9]);
-    passar_pos(0x7daf50, 0, [a, b, d, 0, 0], || f(a, b, d))
+    pass_or_record_post_match(0x7daf50, 0, [a, b, d, 0, 0], || f(a, b, d))
 }
-pub(crate) unsafe extern "C" fn porta_547af0(a: u32, b: u32, d: u32) -> u64 {
+/// Gate for staff_add_disliked_staff (0x547af0) in post-match recording.
+pub(crate) unsafe extern "C" fn gate_add_disliked_staff(a: u32, b: u32, d: u32) -> u64 {
     let f: unsafe extern "C" fn(u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[10]);
-    passar_pos(0x547af0, 0, [a, b, d, 0, 0], || f(a, b, d))
+    pass_or_record_post_match(0x547af0, 0, [a, b, d, 0, 0], || f(a, b, d))
 }
-pub(crate) unsafe extern "C" fn porta_5896d0(a: u32, b: u32, d: u32, e: u32) -> u64 {
+/// Gate for news_post_player_ecstatic_at_turnaround (0x5896d0) in post-match recording.
+pub(crate) unsafe extern "C" fn gate_news_ecstatic_turnaround(a: u32, b: u32, d: u32, e: u32) -> u64 {
     let f: unsafe extern "C" fn(u32, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[11]);
-    passar_pos(0x5896d0, 0, [a, b, d, e, 0], || f(a, b, d, e))
+    pass_or_record_post_match(0x5896d0, 0, [a, b, d, e, 0], || f(a, b, d, e))
 }
-pub(crate) unsafe extern "C" fn porta_589bc0(a: u32, b: u32) -> u64 {
+/// Gate for news_post_player_pleased_with_chance (0x589bc0) in post-match recording.
+pub(crate) unsafe extern "C" fn gate_news_pleased_with_chance(a: u32, b: u32) -> u64 {
     let f: unsafe extern "C" fn(u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[12]);
-    passar_pos(0x589bc0, 0, [a, b, 0, 0, 0], || f(a, b))
+    pass_or_record_post_match(0x589bc0, 0, [a, b, 0, 0, 0], || f(a, b))
 }
-pub(crate) unsafe extern "C" fn porta_547d90(a: u32, b: u32, d: u32) -> u64 {
+/// Gate for staff_add_favoured_club (0x547d90) in post-match recording.
+pub(crate) unsafe extern "C" fn gate_add_favoured_club(a: u32, b: u32, d: u32) -> u64 {
     let f: unsafe extern "C" fn(u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[13]);
-    passar_pos(0x547d90, 0, [a, b, d, 0, 0], || f(a, b, d))
+    pass_or_record_post_match(0x547d90, 0, [a, b, d, 0, 0], || f(a, b, d))
 }
 
-pub(crate) unsafe extern "thiscall" fn porta_7c3a40(c: usize, a: u32, b: u32) -> u64 {
+/// Gate for player_stats_get_apps_for_club (0x7c3a40) in post-match recording.
+pub(crate) unsafe extern "thiscall" fn gate_apps_for_club(c: usize, a: u32, b: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[14]);
-    passar_pos(0x7c3a40, c, [a, b, 0, 0, 0], || f(c, a, b))
+    pass_or_record_post_match(0x7c3a40, c, [a, b, 0, 0, 0], || f(c, a, b))
 }
 
-pub(crate) fn portas_pos() -> [usize; 15] {
+/// Addresses of the 15 post-match gate functions, in PORTAS_POS order.
+pub(crate) fn post_match_gates() -> [usize; 15] {
     [
-        porta_8676d0 as *const () as usize, porta_8674e0 as *const () as usize, porta_867560 as *const () as usize,
-        porta_867700 as *const () as usize, porta_733a60 as *const () as usize, porta_5afe00 as *const () as usize,
-        porta_759610 as *const () as usize, porta_744240 as *const () as usize, porta_72c1f0 as *const () as usize,
-        porta_7daf50 as *const () as usize, porta_547af0 as *const () as usize, porta_5896d0 as *const () as usize,
-        porta_589bc0 as *const () as usize, porta_547d90 as *const () as usize, porta_7c3a40 as *const () as usize,
+        gate_clear_contract_flags as *const () as usize, gate_clear_grievances as *const () as usize, gate_set_contract_flags as *const () as usize,
+        gate_apply_event_flags as *const () as usize, gate_player_outburst_story as *const () as usize, gate_reveal_match_players as *const () as usize,
+        gate_sent_off_story as *const () as usize, gate_player_praise_story as *const () as usize, gate_player_media_story as *const () as usize,
+        gate_obscene_gesture_ban as *const () as usize, gate_add_disliked_staff as *const () as usize, gate_news_ecstatic_turnaround as *const () as usize,
+        gate_news_pleased_with_chance as *const () as usize, gate_add_favoured_club as *const () as usize, gate_apps_for_club as *const () as usize,
     ]
 }
 
@@ -1496,18 +1528,20 @@ pub(crate) unsafe fn comparar_pos(nome: &str, reg: Vec<(usize, usize)>, original
     let gravar = GRAVAR_POS.swap(true, Relaxed);
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, original, |chamar| rust(&mut |r, t, a| chamar(r, t, a, [u32::MAX; 5])));
     GRAVAR_POS.store(gravar, Relaxed);
-    PLACAR.registrar(igual && sequencia, || format!("{} ({} chamadas): {}", nome, k, detalhe_fita()));
+    PLACAR.registrar(igual && sequencia, || format!("{} ({} chamadas): {}", nome, k, tape_detail()));
 }
 
-/// As flags do contrato (+0x40 a +0x48) de `pessoa` no `clube`, como regiao.
-pub(crate) unsafe fn regiao_do_contrato(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
+/// The flags (+0x40..+0x48) of the person's contract at a club as a comparer region, or None.
+///
+/// [pt] As flags do contrato (+0x40 a +0x48) de `pessoa` no `clube`, como regiao.
+pub(crate) unsafe fn contract_flags_region(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let c = contrato(*(G_CONTRACT_MANAGER as *const usize), pessoa, clube);
     (c != 0).then_some((c + 0x40, 9))
 }
 
 pub(crate) unsafe extern "C" fn comparar_post_match_events(partida: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(IDX_POST_MATCH_EVENTS);
+    let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_POST_MATCH_EVENTS);
     // o cursor da lista, as linhas dos dois clubes em [[0xb67a44]] e as flags dos contratos dos eventos
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let lista = *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *const usize);
@@ -1525,7 +1559,7 @@ pub(crate) unsafe extern "C" fn comparar_post_match_events(partida: usize) {
             }
             let clube = (*(G_CLUB_TABLE as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
             if clube == *((partida + 0x1c) as *const usize) || clube == *((partida + 0x20) as *const usize) {
-                reg.extend(regiao_do_contrato(pessoa(core::ptr::read_unaligned(ev as *const i32)), clube));
+                reg.extend(contract_flags_region(pessoa(core::ptr::read_unaligned(ev as *const i32)), clube));
             }
         }
     }
@@ -1538,11 +1572,11 @@ pub(crate) unsafe extern "C" fn comparar_post_match_events(partida: usize) {
             }
         }
     }
-    comparar_pos("post_match_events", reg, || o(partida), |chamar| eventos_do_pos_jogo_com(partida, chamar));
+    comparar_pos("post_match_events", reg, || o(partida), |chamar| post_match_events_injected(partida, chamar));
 }
 
 pub(crate) unsafe extern "C" fn comparar_post_match_players(partida: usize, t: usize) {
-    let o = orig::<unsafe extern "C" fn(usize, usize)>(IDX_POST_MATCH_PLAYERS);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize)>(IDX_POST_MATCH_PLAYERS);
     // as fichas dos jogadores (+0x45, +9 a +0xe), os contratos, +0x80 dos clubes e as fichas do
     // tecnico e dos auxiliares (+8 a +0xd)
     let g = |a: usize| *(a as *const usize);
@@ -1561,7 +1595,7 @@ pub(crate) unsafe extern "C" fn comparar_post_match_players(partida: usize, t: u
             let f = g(p + 0x61);
             if f != 0 {
                 reg.extend([(f + 0x45, 1), (f + 9, 6)]);
-                reg.extend(regiao_do_contrato(p, clube));
+                reg.extend(contract_flags_region(p, clube));
             }
         }
         let id = ler(ts + 0x184);
@@ -1578,14 +1612,14 @@ pub(crate) unsafe extern "C" fn comparar_post_match_players(partida: usize, t: u
             }
         }
     }
-    comparar_pos("post_match_players", reg, || o(partida, t), |chamar| jogadores_do_pos_jogo_com(partida, t, chamar));
+    comparar_pos("post_match_players", reg, || o(partida, t), |chamar| post_match_players_with(partida, t, chamar));
 }
 
 pub(crate) unsafe extern "C" fn comparar_post_match_club(clube: usize, outro: usize, partida: usize, n: u32, t: usize) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(IDX_POST_MATCH_CLUB);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(IDX_POST_MATCH_CLUB);
     // a copia nao escreve no banco: so as chamadas e o sorteio
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    comparar_pos("post_match_club", reg, || o(clube, outro, partida, n, t), |chamar| clube_do_pos_jogo_com(clube, outro, partida, n, t, chamar));
+    comparar_pos("post_match_club", reg, || o(clube, outro, partida, n, t), |chamar| post_match_club_with(clube, outro, partida, n, t, chamar));
 }
 
 // ---------- 215a leva: o fim das telas da partida: a partida que o humano deixa e a ficha do jogo de um registro de estatística (match_day.cpp, match_screens.cpp) ----------
@@ -1665,7 +1699,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         let m = if mem != 0 { construir(mem) } else { 0 };
         core::ptr::write_unaligned(motor, m);
         if m == 0 {
-            aviso_em(0xa15708, 0xa4b);
+            show_error_at(0xa15708, 0xa4b);
             return;
         }
         preparar(m, jogo + 4, 0, 0, 0);
@@ -1685,7 +1719,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         }
         core::ptr::write_unaligned((jogo + 0x5f) as *mut usize, mem);
         if mem == 0 {
-            aviso_em(0xa15708, 0xa68);
+            show_error_at(0xa15708, 0xa68);
             return;
         }
         registrar(u(G_MATCH_STATS, 0), core::ptr::read_unaligned(motor), mem);
@@ -1709,7 +1743,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
 /// fora de 0..[this+0x1c] ou saída nula: a original (caixa de erro, 0).
 pub(crate) unsafe extern "thiscall" fn find_record_fixture(estat: usize, k: i32, saida: usize) -> u32 {
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FIND_RECORD_FIXTURE)(estat, k, saida);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FIND_RECORD_FIXTURE)(estat, k, saida);
     }
     let jogos: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
@@ -1743,11 +1777,11 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(estat: usize, k: i32,
 // temporário: rodar duas vezes não dá, então o comparador só chama a original; a cópia se prova no
 // modo Rust (o ramo), na sessão do Lucas com rede (só um jogador da rede saindo a chama).
 pub(crate) unsafe extern "C" fn comparar_match_day_drop_viewer_and_finish_match() {
-    orig::<unsafe extern "C" fn()>(IDX_MATCH_DAY_DROP_VIEWER_AND_FINISH_MATCH)()
+    original_fn::<unsafe extern "C" fn()>(IDX_MATCH_DAY_DROP_VIEWER_AND_FINISH_MATCH)()
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_find_record_fixture(estat: usize, k: i32, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FIND_RECORD_FIXTURE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FIND_RECORD_FIXTURE);
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
         return o(estat, k, saida);
     }
@@ -1793,7 +1827,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(dia: usize, p: usize) -> u32
         return seguir();
     }
     let pl = u(p, 0x5b);
-    crate::comparacao::ramo("passo em rede");
+    crate::comparacao::ramo("step_towards em rede");
     let motor = u(p, 0x57);
     let estado = pl as *mut u8;
     let eu = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
@@ -1913,7 +1947,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(dia: usize, p: usize) -> u32
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_network_step(dia: usize, p: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_NETWORK_STEP)(dia, p)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_NETWORK_STEP)(dia, p)
 }
 
 /// each human confirms the network match; with all of them, creates the engine and prepares it for watching, or plays
@@ -1942,7 +1976,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(_dia: usize, p: usi
     let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_VIRTUAL_STAFF_RELEASE_FIXTURE);
     const FONTE: usize = 0xa15708; // match_day.cpp
     if p == 0 {
-        aviso_em(FONTE, 0x4b8);
+        show_error_at(FONTE, 0x4b8);
         return 0;
     }
     let pl = u(p, 0x5b);
@@ -1960,7 +1994,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(_dia: usize, p: usi
     let motor = if mem != 0 { construir(mem) } else { 0 };
     por(p, 0x57, motor);
     if motor == 0 {
-        aviso_em(FONTE, 0x4d0);
+        show_error_at(FONTE, 0x4d0);
         return 0;
     }
     let novo_resumo = || {
@@ -1983,7 +2017,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(_dia: usize, p: usi
         }
         let r = novo_resumo();
         if r == 0 {
-            aviso_em(FONTE, 0x4ea);
+            show_error_at(FONTE, 0x4ea);
             return 0;
         }
         registrar(u(G_MATCH_STATS, 0), u(p, 0x57), r);
@@ -2003,7 +2037,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(_dia: usize, p: usi
     }
     let r = novo_resumo();
     if r == 0 {
-        aviso_em(FONTE, 0x511);
+        show_error_at(FONTE, 0x511);
         return 0;
     }
     registrar_para_ver(u(G_MATCH_STATS, 0), u(p, 0x57), r, 1);
@@ -2011,7 +2045,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(_dia: usize, p: usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_confirm_network_match(dia: usize, p: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CONFIRM_NETWORK_MATCH)(dia, p)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CONFIRM_NETWORK_MATCH)(dia, p)
 }
 
 /// the number by code (0: 5/4, 1: 11/10, 0x1ef: 1/0, 0x3de: 3/2, 0x483: 7/6, 0x528: 9/8; the first with the second
@@ -2031,12 +2065,12 @@ pub(crate) unsafe extern "C" fn competition_number(codigo: u32, segunda: u32) ->
         0x3de => 2 + s,
         0x483 => 6 + s,
         0x528 => 8 + s,
-        _ => orig::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_COMPETITION_NUMBER)(codigo, segunda),
+        _ => original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_COMPETITION_NUMBER)(codigo, segunda),
     }
 }
 
 pub(crate) unsafe extern "C" fn comparar_competition_number(codigo: u32, segunda: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_COMPETITION_NUMBER);
+    let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_COMPETITION_NUMBER);
     let r = o(codigo, segunda);
     if matches!(codigo as u16 as i16, 0 | 1 | 0x1ef | 0x3de | 0x483 | 0x528) {
         let n = competition_number(codigo, segunda);

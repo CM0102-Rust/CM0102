@@ -52,12 +52,12 @@ unsafe fn cqc9_linha(this: usize, clube: usize) -> usize {
 }
 
 /// O objeto da competição da divisão do clube: [[0xadadfc] + [+0x57] × 4].
-unsafe fn cqc9_comp(clube: usize) -> usize {
+unsafe fn club_division_comp(clube: usize) -> usize {
     cqc9_d(cqc9_d(0xadadfc).wrapping_add((cqc9_i(cqc9_d(clube + 0x57)) as usize).wrapping_mul(4)))
 }
 
 /// Método virtual sem argumentos da competição (+0x98 ou +0x9c da tabela), thiscall.
-unsafe fn cqc9_virtual(obj: usize, desloc: usize) -> u32 {
+unsafe fn call_comp_virtual(obj: usize, desloc: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqc9_d(cqc9_d(obj) + desloc));
     f(obj)
 }
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
         if !feita && noticia as u8 != 0 {
             federacao(this, clube, 0, 0xffff_ffff);
         }
-        cqc9_fim(this, clube);
+        finish_board_update(this, clube);
         return;
     }
     // as vagas da UEFA da nação: campeão (o byte do 2º argumento) e as outras (o 3º)
@@ -168,25 +168,25 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
     let vagas = vagas as u8 as i8 as i32;
     let outras = outras as i8 as i32;
     if cqc9_d(clube + 0xcf) == 0 {
-        cqc9_fim(this, clube);
+        finish_board_update(this, clube);
         return;
     }
     let div = cqc9_d(clube + 0x57);
     let nacao = cqc9_d(clube + 0x53);
-    if div == 0 || nacao == 0 || cqc9_u(nacao + 0x11c) == 0 || cqc9_comp(clube) == 0 {
+    if div == 0 || nacao == 0 || cqc9_u(nacao + 0x11c) == 0 || club_division_comp(clube) == 0 {
         cqc9_pw(ln() + 0xe, 0x10);
-        cqc9_noticia(this, clube, noticia);
-        cqc9_fim(this, clube);
+        post_expectations_news(this, clube, noticia);
+        finish_board_update(this, clube);
         return;
     }
-    let linha_da_liga: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-    let lg = linha_da_liga(cqc9_d(cqc9_comp(clube) + 8), clube);
+    let league_row: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
+    let lg = league_row(cqc9_d(club_division_comp(clube) + 8), clube);
     let mut copa: usize = 0;
     let id = cqc9_i(clube + 0x1db);
     if id > -1 && id != cqc9_i(0x9cf6f8) {
         let cid = cqc9_i(cqc9_d(0xae23d0).wrapping_add((id as usize).wrapping_mul(0x6b)));
         let co = cqc9_d(cqc9_d(0xadadfc).wrapping_add((cid as usize).wrapping_mul(4)));
-        copa = linha_da_liga(cqc9_d(co + 8), clube);
+        copa = league_row(cqc9_d(co + 8), clube);
     }
     if lg == 0 || cqc9_u(lg + 0x72) < 1 {
         cqc9_pd(ln() + 0x2c, 8);
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
     let meta = || cqc9_i(ln() + 0x2c);
     let por = |v: i32| cqc9_pd(ln() + 0x2c, v as u32);
     por(cqc9_u(lg + 0x72) as i32); // cqc9: a meta pela posição de perigo
-    let n = cqc9_w(cqc9_comp(clube) + 0x3e) as i32;
+    let n = cqc9_w(club_division_comp(clube) + 0x3e) as i32;
     if meta() == n {
         por(n - 1);
     }
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
     let x = if x < 1 {
         1
     } else {
-        let lim = cqc9_w(cqc9_comp(clube) + 0x3e) as i32 - 1;
+        let lim = cqc9_w(club_division_comp(clube) + 0x3e) as i32 - 1;
         if lim < x { lim } else { x }
     };
     por(x as i8 as i32);
@@ -274,24 +274,24 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
         por(x as i8 as i32);
     }
     // as marcas pela meta
-    let co = cqc9_comp(clube);
+    let co = club_division_comp(clube);
     let ou = |m: u8| cqc9_pb(ln() + 0xe, cqc9_u(ln() + 0xe) | m);
     'marcas: {
-        if cqc9_virtual(co, 0x98) == 0 && meta() <= vagas {
+        if call_comp_virtual(co, 0x98) == 0 && meta() <= vagas {
             ou(2);
             break 'marcas;
         }
         let na = cqc9_d(clube + 0x53);
-        if na != 0 && cqc9_i(na) != cqc9_i(0x9cf224) && cqc9_virtual(cqc9_comp(clube), 0x98) == 0 && meta() <= vagas + outras {
+        if na != 0 && cqc9_i(na) != cqc9_i(0x9cf224) && call_comp_virtual(club_division_comp(clube), 0x98) == 0 && meta() <= vagas + outras {
             ou(1);
             break 'marcas;
         }
-        let co = cqc9_comp(clube);
-        if cqc9_virtual(co, 0x98) != 0 && meta() <= cqc9_b(cqc9_comp(clube) + 0xbe) as i32 {
+        let co = club_division_comp(clube);
+        if call_comp_virtual(co, 0x98) != 0 && meta() <= cqc9_b(club_division_comp(clube) + 0xbe) as i32 {
             ou(4);
             break 'marcas;
         }
-        let co = cqc9_comp(clube);
+        let co = club_division_comp(clube);
         let bf = cqc9_b(co + 0xbf);
         if bf != 0 && meta() <= bf as i32 {
             ou(8);
@@ -301,19 +301,19 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
             cqc9_pw(ln() + 0xe, 0x40);
             break 'marcas;
         }
-        if cqc9_virtual(co, 0x9c) != 0 {
-            let co = cqc9_comp(clube);
+        if call_comp_virtual(co, 0x9c) != 0 {
+            let co = club_division_comp(clube);
             if meta() >= cqc9_w(co + 0x3e) as i32 - cqc9_b(co + 0xc1) as i32 {
                 ou(0x20);
                 break 'marcas;
             }
         }
-        let r = cqc9_virtual(cqc9_comp(clube), 0x9c);
+        let r = call_comp_virtual(club_division_comp(clube), 0x9c);
         cqc9_pw(ln() + 0xe, if r != 0 { 0x10 } else { 0 });
     }
     // os sorteios do presidente e a liga da copa
     let bf = cqc9_d(clube + 0xbf);
-    if cqc9_u(ln() + 2) & 1 == 0 && cqc9_virtual(cqc9_comp(clube), 0x98) == 0 && bf != 0 && cqc9_d(bf + 0x69) != 0 {
+    if cqc9_u(ln() + 2) & 1 == 0 && call_comp_virtual(club_division_comp(clube), 0x98) == 0 && bf != 0 && cqc9_d(bf + 0x69) != 0 {
         let p1d = || cqc9_b(cqc9_d(cqc9_d(clube + 0xbf) + 0x69) + 0x1d) as i32;
         crate::comparacao::ramo("cqc_9 sorteio do presidente");
         let r = cqc9_sortear(0x32); // cqc9: o sorteio do presidente
@@ -342,12 +342,12 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
             }
         }
     }
-    cqc9_noticia(this, clube, noticia);
-    cqc9_fim(this, clube);
+    post_expectations_news(this, clube, noticia);
+    finish_board_update(this, clube);
 }
 
 /// A notícia das expectativas (0x6a4a20 com as marcas +0xe) quando pedida.
-unsafe fn cqc9_noticia(this: usize, clube: usize, noticia: u32) {
+unsafe fn post_expectations_news(this: usize, clube: usize, noticia: u32) {
     if noticia as u8 != 0 {
         let diretoria: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a4a20usize);
         // ponytail: a original empurra a palavra com a metade alta do registro (lixo); a 0x6a4a20 lê a palavra
@@ -357,7 +357,7 @@ unsafe fn cqc9_noticia(this: usize, clube: usize, noticia: u32) {
 
 /// O fim comum da 0x6a3770 (a partir de 0x6a415f): as confianças, a riqueza, a ficha do técnico, as marcas zeradas e as
 /// multas.
-unsafe fn cqc9_fim(this: usize, clube: usize) {
+unsafe fn finish_board_update(this: usize, clube: usize) {
     let ln = || cqc9_linha(this, clube);
     if cqc9_w(ln() + 6) < 0x1964 {
         crate::comparacao::ramo("cqc_9 confianca de volta");
@@ -432,39 +432,39 @@ unsafe fn cqc9_fim(this: usize, clube: usize) {
 // ponytail: acrescenta na lista das saídas (0x68d0d0, aloca), posta as notícias (0x6a44a0, 0x6a4a20) e sorteia: não roda
 // duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
 unsafe extern "thiscall" fn comparar_set_season_expectations(this: usize, clube: usize, noticia: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, noticia)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, noticia)
 }
 
 /// A pessoa de índice `k` ([0xae23bc] + k × 0x6e).
-unsafe fn cqc9_pessoa(k: i32) -> usize {
+unsafe fn manager_manager_staff_by_index(k: i32) -> usize {
     cqc9_d(0xae23bc).wrapping_add((k as usize).wrapping_mul(0x6e))
 }
 
 /// O byte +0xb do estado da pessoa de índice `k` ([0xae2d0c] + k × 0x4f).
-unsafe fn cqc9_estado(k: i32) -> u8 {
+unsafe fn staff_state_byte_b(k: i32) -> u8 {
     cqc9_u(cqc9_d(0xae2d0c).wrapping_add((k as usize).wrapping_mul(0x4f)) + 0xb)
 }
 
 /// A nota do candidato (0x69d1b0: thiscall, 4: pessoa, clube, 0, 5; original).
-unsafe fn cqc9_nota(this: usize, p: usize, clube: usize) -> i32 {
+unsafe fn score_candidate(this: usize, p: usize, clube: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> i32 = core::mem::transmute(0x69d1b0usize);
     f(this, p, clube, 0, 5)
 }
 
 /// 0x69f810 (thiscall, 4: pessoa, clube e a nota mínima em double, em dois dwords).
-unsafe fn cqc9_serve(this: usize, p: usize, clube: usize, minimo: f64) -> u8 {
+unsafe fn is_staff_suitable(this: usize, p: usize, clube: usize, minimo: f64) -> u8 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8 = core::mem::transmute(0x69f810usize);
     f(this, p, clube, minimo)
 }
 
 /// 0x4cf6d0 (thiscall em [0xae1050], 1): a pessoa tem ficha de contrato.
-unsafe fn cqc9_com_contrato(p: usize) -> usize {
+unsafe fn loan_contract_of(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     f(cqc9_d(0xae1050), p)
 }
 
 /// 0x69fc60 (thiscall, 1): a pessoa já está numa lista de vagas.
-unsafe fn cqc9_na_lista(this: usize, p: usize) -> u8 {
+unsafe fn is_vacancy_candidate(this: usize, p: usize) -> u8 {
     let f: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x69fc60usize);
     f(this, p)
 }
@@ -557,7 +557,7 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
     let dirigivel: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
     let mut k = 0i32;
     while k < cqc9_i(0xae2364) {
-        let p = cqc9_pessoa(k);
+        let p = manager_manager_staff_by_index(k);
         let ultimos = cqc9_i(0xae2364) - 0x10;
         let ok = 'c: {
             if cqc9_d(p + 0x69) == 0 || (k >= ultimos && cqc9_u(p + 0x5f) == 0) || saiu == p {
@@ -571,7 +571,7 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
             if k >= cqc9_i(0xae2364) - 0x10 && dirigivel(clube) == 0 {
                 break 'c false;
             }
-            if cqc9_estado(k) & 0x30 != 0 || cqc9_com_contrato(p) != 0 || cqc9_na_lista(this, p) != 0 {
+            if staff_state_byte_b(k) & 0x30 != 0 || loan_contract_of(p) != 0 || is_vacancy_candidate(this, p) != 0 {
                 break 'c false;
             }
             let (n1, n2) = (cqc9_d(clube + 0x53), cqc9_d(p + 0x1a));
@@ -583,7 +583,7 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
             {
                 break 'c false;
             }
-            if cqc9_serve(this, p, clube, 3.5) == 0 {
+            if is_staff_suitable(this, p, clube, 3.5) == 0 {
                 break 'c false;
             }
             if cqc9_d(p + 0x61) != 0 && cqc9_d(p + 0x39) != 0 && matches!(cqc9_u(p + 0x3d), 0xb | 0xc | 0xd | 0xf) {
@@ -598,7 +598,7 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
             true
         };
         if ok {
-            let s = cqc9_nota(this, p, clube);
+            let s = score_candidate(this, p, clube);
             if s > melhor {
                 crate::comparacao::ramo("cqc_9 candidato melhor");
                 v.d(6, k); // cqc9: o candidato escolhido
@@ -637,26 +637,26 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
                     }
                 }
                 v.d(6, i);
-                if cqc9_estado(i) & 0x30 != 0 || i >= cqc9_i(0xae2364) - 0x10 {
+                if staff_state_byte_b(i) & 0x30 != 0 || i >= cqc9_i(0xae2364) - 0x10 {
                     v.d(6, -1);
                     continue;
                 }
-                let p = cqc9_pessoa(i);
+                let p = manager_manager_staff_by_index(i);
                 if cqc9_d(p + 0x69) == 0 || !matches!(cqc9_u(p + 0x3d), 0 | 0xb | 0xc | 5 | 8 | 0xf | 7 | 6) {
                     v.d(6, -1);
                     continue;
                 }
-                if cqc9_com_contrato(p) != 0 || cqc9_na_lista(this, cqc9_pessoa(v.rd(6))) != 0 {
+                if loan_contract_of(p) != 0 || is_vacancy_candidate(this, manager_manager_staff_by_index(v.rd(6))) != 0 {
                     v.d(6, -1);
                     continue;
                 }
-                let q = cqc9_pessoa(v.rd(6));
+                let q = manager_manager_staff_by_index(v.rd(6));
                 if cqc9_d(q + 0x24) != 0 && cqc9_u(q + 0x28) == 5 {
                     v.d(6, -1);
                     continue;
                 }
                 if cqc9_selecao(clube) == 0 {
-                    let q = cqc9_pessoa(v.rd(6));
+                    let q = manager_manager_staff_by_index(v.rd(6));
                     let c = cqc9_d(q + 0x39);
                     if c != 0 {
                         let na = cqc9_d(c + 0x53);
@@ -689,15 +689,15 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
         let mut k = 0i32;
         while k < cqc9_i(0xae2364) {
             let r = cqc9_sortear(cqc9_i(0xae2364));
-            let p = cqc9_pessoa(r);
+            let p = manager_manager_staff_by_index(r);
             // ponytail: o estado lido é o do contador `k`, não o da pessoa sorteada, como na original
-            if cqc9_d(p + 0x69) != 0 && saiu != p && cqc9_estado(k) & 0x30 == 0
-                && cqc9_serve(this, p, clube, f64::from_bits(0x4009_3333_3333_3333)) != 0
+            if cqc9_d(p + 0x69) != 0 && saiu != p && staff_state_byte_b(k) & 0x30 == 0
+                && is_staff_suitable(this, p, clube, f64::from_bits(0x4009_3333_3333_3333)) != 0
                 && (cqc9_i(p) < cqc9_i(0xae2364) - 0x10 || cqc9_u(p + 0x5f) != 0)
             {
                 let ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
-                if ate(0xae2c90, cqc9_d(p + 0x3e) as u32, cqc9_d(p + 0x42) as u32) >= 0x96 && cqc9_na_lista(this, p) == 0 {
-                    let s = cqc9_nota(this, p, clube);
+                if ate(0xae2c90, cqc9_d(p + 0x3e) as u32, cqc9_d(p + 0x42) as u32) >= 0x96 && is_vacancy_candidate(this, p) == 0 {
+                    let s = score_candidate(this, p, clube);
                     if s > melhor {
                         v.b(0, 1);
                         v.d(2, cqc9_i(p));
@@ -709,7 +709,7 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
         }
     }
     let ultimos = cqc9_i(0xae2364) - 0x10;
-    if cqc9_i(cqc9_pessoa(v.rd(6))) >= ultimos && saiu != 0 && cqc9_i(saiu) < ultimos {
+    if cqc9_i(manager_manager_staff_by_index(v.rd(6))) >= ultimos && saiu != 0 && cqc9_i(saiu) < ultimos {
         let rejeitar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547e70usize);
         rejeitar(saiu, clube, 1);
     }
@@ -743,12 +743,12 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
             v.w(0x1e, r as u16);
         }
         v.w(0x18, v.rw(0x20));
-        let q = cqc9_pessoa(v.rd(6));
+        let q = manager_manager_staff_by_index(v.rd(6));
         let c = cqc9_d(q + 0x39);
         let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-        if c != 0 && humano(c, 0, 1, 0, 0) != 0 && cqc9_u(cqc9_pessoa(v.rd(6)) + 0x3d) != 5 {
+        if c != 0 && humano(c, 0, 1, 0, 0) != 0 && cqc9_u(manager_manager_staff_by_index(v.rd(6)) + 0x3d) != 5 {
             let oferta: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x6a0540usize);
-            oferta(this, cqc9_pessoa(v.rd(6)), clube);
+            oferta(this, manager_manager_staff_by_index(v.rd(6)), clube);
             let r = cqc9_sortear(5);
             v.w(0x16, (r as u16).wrapping_add(v.rw(0x1e)).wrapping_add(10));
         }
@@ -777,7 +777,7 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
         let candidatar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x69ca00usize);
         let mut i = cqc9_i(0xae2364) - 0x10;
         while i < cqc9_i(0xae2364) {
-            let p = cqc9_pessoa(i);
+            let p = manager_manager_staff_by_index(i);
             if cqc9_u(p + 0x5f) != 0 && ativo(cqc9_d(0xb63c98), p) != 0 && quer(cqc9_d(0xb63c98), 1, p) != 0 {
                 let c = cqc9_d(p + 0x39);
                 if c == 0 || cqc9_w(c + 0x80) < cqc9_w(clube + 0x80) {
@@ -793,7 +793,7 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
 // candidaturas (0x69ca00): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas
 // mutações.
 unsafe extern "thiscall" fn comparar_add_job_vacancy(this: usize, clube: usize, saiu: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, clube, saiu)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, clube, saiu)
 }
 
 /// { 0x6a0540 } (thiscall, ret 8, manager_manager.cpp, quadro SEH sem destrutor no caminho normal):
@@ -829,5 +829,5 @@ unsafe extern "thiscall" fn post_job_offer_news(_this: usize, pessoa: usize, clu
 
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_job_offer_news(this: usize, pessoa: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, pessoa, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, pessoa, clube)
 }

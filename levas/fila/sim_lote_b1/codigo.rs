@@ -119,13 +119,13 @@ unsafe extern "stdcall" fn league_build_round_robin_grid(grade: *const *mut i32,
 }
 
 /// A linha `i` (59 bytes) da tabela [+0xb1] da liga.
-unsafe fn linha_da_liga(liga: usize, i: i32) -> usize {
+unsafe fn league_row(liga: usize, i: i32) -> usize {
     (*((liga + 0xb1) as *const usize)).wrapping_add((i as isize * 59) as usize)
 }
 
 /// A margem de gols (+1, mínimo 1, senão 0xff) que falta para alcançar a linha `alvo` pelo critério da
 /// liga (+0xc5): 1 saldo (+0x15 − +0x17), 2 gols pró (+0x15).
-unsafe fn margem_para(liga: usize, linha: usize, alvo: usize) -> u8 {
+unsafe fn goal_margin_to_reach(liga: usize, linha: usize, alvo: usize) -> u8 {
     let b = |r: usize, o: usize| *((r + o) as *const u8);
     let c = if *((liga + 0xc5) as *const u8) == 1 {
         b(alvo, 0x15).wrapping_sub(b(alvo, 0x17)).wrapping_sub(b(linha, 0x15)).wrapping_add(b(linha, 0x17))
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linha: usize, s
             return Some(0xff);
         }
         if extra == 0 && (criterio == 1 || criterio == 2) {
-            return Some(margem_para(liga, linha, alvo));
+            return Some(goal_margin_to_reach(liga, linha, alvo));
         }
         None
     };
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linha: usize, s
     let decidir = |de: i16, ate: i16| -> Option<u8> {
         let mut i = de;
         while i < ate {
-            let r = linha_da_liga(liga, i as i32);
+            let r = league_row(liga, i as i32);
             if *((r + 0x37) as *const u8) == 0xff {
                 let v = p(r) + extra;
                 if v > p(linha) {
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linha: usize, s
                 return 0xff;
             }
             if v == p(tabela) && (criterio == 1 || criterio == 2) {
-                return margem_para(liga, linha, tabela);
+                return goal_margin_to_reach(liga, linha, tabela);
             }
         } else if clubes > 1 {
             let v = core::ptr::read_unaligned((tabela + 0x54) as *const i16) as i32 + extra;
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linha: usize, s
         } else {
             let mut i = 0i16;
             while i < vagas as i16 {
-                let r = linha_da_liga(liga, i as i32);
+                let r = league_row(liga, i as i32);
                 if *((r + 0x37) as *const u8) == 0xff {
                     if let Some(m) = ver(r) {
                         return m;
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linha: usize, s
     }
     let mut i = 0i16;
     while (i as i32) < limite {
-        let r = linha_da_liga(liga, i as i32);
+        let r = league_row(liga, i as i32);
         if *((r + 0x37) as *const u8) == 0xff {
             if let Some(m) = ver(r) {
                 return m;
@@ -248,14 +248,14 @@ unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linha: usize, s
 
 unsafe extern "C" fn comparar_league_compare_table_rows(a: usize, b: usize) -> i32 {
     // a comparação particular de [0xb67a00] (se houver) roda nos dois lados: só lê as linhas
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = league_compare_table_rows(a, b);
     PLACAR.registrar(r == n, || format!("league_compare_table_rows original={} rust={}", r, n));
     r
 }
 
 unsafe extern "stdcall" fn comparar_league_build_round_robin_grid(grade: *const *mut i32, n: i32) -> u32 {
-    let o = orig::<unsafe extern "stdcall" fn(*const *mut i32, i32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(*const *mut i32, i32) -> u32>(%%I1%%);
     let regioes: Vec<(usize, usize)> = (1..=n.max(0)).map(|i| (*grade.offset(i as isize) as usize + 4, (n.max(1) as usize - 1) * 4)).collect();
     let (r, s, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(grade, n), || league_build_round_robin_grid(grade, n));
     PLACAR.registrar(igual && r == s, || format!("league_build_round_robin_grid({}) {:x?} x {:x?}", n, mo, mr));
@@ -263,7 +263,7 @@ unsafe extern "stdcall" fn comparar_league_build_round_robin_grid(grade: *const 
 }
 
 unsafe extern "thiscall" fn comparar_final_day_margin_needed(liga: usize, linha: usize, saida: *mut u8) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u8>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida as usize, 1)], || o(liga, linha, saida),
         || final_day_margin_needed(liga, linha, saida));
     PLACAR.registrar(igual && r == n, || format!("final_day_margin_needed original={:#x} rust={:#x} {:x?} x {:x?}", r, n, mo, mr));

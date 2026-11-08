@@ -4,7 +4,7 @@
 #   nao e selecao: sem um deles a fila do sorteio anda uma casa a menos e todos os sorteios seguintes mudam.
 # - A confianca da diretoria (+6) cai 10 x o +0x57 do tecnico pelos jogadores rejeitados com nota abaixo de 7: sem a
 #   queda, a confianca fica outra (pesa na demissao do tecnico). Pode escapar: o ramo e raro (pass_ball no sorteio, ter
-#   rejeitado do clube abaixo da reputacao e com nota baixa); o contador "cqa_10 diretoria culpa" diz se rodou.
+#   rejeitado do clube abaixo da injury_word_0c e com nota baixa); o contador "cqa_10 diretoria culpa" diz se rodou.
 MUTACOES = [
     ('cqa10_diretoria_sem_sorteio', '    let r2 = sorteio(10); // cqa10: o sorteio da diretoria',
      '    let r2 = 0; // mutacao: sem o sorteio da diretoria',

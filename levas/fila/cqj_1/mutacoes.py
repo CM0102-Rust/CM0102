@@ -6,12 +6,12 @@
 #   "cqj_1 ja com vaga").
 MUTACOES = [
     ('cqj1_sem_vaga_da_cota',
-     'cqj1_entra(c, 2); // cqj1: a vaga da cota',
+     'enter_libertadores(c, 2); // cqj1: a vaga da cota',
      '// mutacao: sem a vaga da cota',
      'cqj_1 cota da nacao'),
     ('cqj1_sao_paulo_no_lugar_do_palmeiras',
-     'if cqj1_entra(cqj1_clube(cqj1_d(0x9d0274)), 2) {',
-     'if cqj1_entra(cqj1_clube(cqj1_d(0x9d0270)), 2) { // mutacao: o São Paulo',
+     'if enter_libertadores(cqj1_clube(cqj1_d(0x9d0274)), 2) {',
+     'if enter_libertadores(cqj1_clube(cqj1_d(0x9d0270)), 2) { // mutacao: o São Paulo',
      'cqj_1 brasil fixo'),
     ('cqj1_sem_pular_ja_com_vaga',
      'p += 12; // cqj1: pula o clube que já tem vaga',

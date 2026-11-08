@@ -78,15 +78,15 @@ unsafe extern "stdcall" fn contract_manager_raise_match_morale(pessoa: usize, cl
         return;
     }
     let a = core::ptr::read_unaligned((jogador + 0xb) as *const i16) as i32 - core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32;
-    let x = (a as f64 + cph3_b(pessoa + 0x18) as i8 as f64 * f64_em(0x968d90)) - f64_em(0x968d88);
-    let mut y = (if x < f64_em(0x9689a0) { x * f64_em(0x968d80) } else { x * f64_em(0x968d78) }) + f64_em(0x967890);
-    if y < f64_em(0x967898) {
-        y = f64_em(0x967898);
-    } else if y > f64_em(0x968950) {
-        y = f64_em(0x968950);
+    let x = (a as f64 + cph3_b(pessoa + 0x18) as i8 as f64 * read_f64_at(0x968d90)) - read_f64_at(0x968d88);
+    let mut y = (if x < read_f64_at(0x9689a0) { x * read_f64_at(0x968d80) } else { x * read_f64_at(0x968d78) }) + read_f64_at(0x967890);
+    if y < read_f64_at(0x967898) {
+        y = read_f64_at(0x967898);
+    } else if y > read_f64_at(0x968950) {
+        y = read_f64_at(0x968950);
     }
     let felicidade = (cph3_b(contrato + 0x3f) as i8 as i32 + 5) as f64; // +0x3f + 5
-    let mut ganho = ftol(felicidade / y) as u8 as i8;
+    let mut ganho = match_pl_ftol(felicidade / y) as u8 as i8;
     if ganho > 10 {
         ganho = 10;
     }
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn remove_talks_records(this: usize, pessoa: usize, tec
 }
 
 unsafe extern "thiscall" fn comparar_contract_manager_operator(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x50)], || o(this, origem), || contract_manager_operator(this, origem));
     PLACAR.registrar(igual && r == n, || format!("contract_manager_operator {:x?} x {:x?}", mo, mr));
     r
@@ -176,11 +176,11 @@ unsafe extern "thiscall" fn comparar_contract_manager_operator(this: usize, orig
 /// vezes): só a original; a prova é a carreira e o ramo da cópia no modo Rust.
 // ponytail: só a original (153.222 chamadas); comparar pedia separar a moral das chamadas do fim.
 unsafe extern "stdcall" fn comparar_contract_manager_raise_match_morale(pessoa: usize, clube: usize, contrato: usize) {
-    orig::<unsafe extern "stdcall" fn(usize, usize, usize)>(%%I1%%)(pessoa, clube, contrato)
+    original_fn::<unsafe extern "stdcall" fn(usize, usize, usize)>(%%I1%%)(pessoa, clube, contrato)
 }
 
 unsafe extern "thiscall" fn comparar_remove_talks_records(this: usize, pessoa: usize, tecnico: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
     let n = (*((this + 0x2c) as *const i32)).max(0) as usize;
     let reg = [(this + 0x28, 8), (cph3_d(this + 0x28) as usize, n * 21)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, tecnico, clube), || remove_talks_records(this, pessoa, tecnico, clube));

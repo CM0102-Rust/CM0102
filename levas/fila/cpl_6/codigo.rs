@@ -13,7 +13,7 @@ unsafe fn cpl6_w(a: usize) -> u16 {
 }
 
 /// A data `a` é anterior à `b`? Como a original: a palavra +2 sem sinal e, igual, a palavra +0 com sinal.
-unsafe fn cpl6_antes(a: usize, b: usize) -> bool {
+unsafe fn media_date_before(a: usize, b: usize) -> bool {
     let (x, y) = (cpl6_w(a + 2), cpl6_w(b + 2));
     if x != y {
         return x < y;
@@ -22,23 +22,23 @@ unsafe fn cpl6_antes(a: usize, b: usize) -> bool {
 }
 
 /// O id (+0) do sujeito, ou −1 sem ele.
-unsafe fn cpl6_id(p: usize) -> usize {
+unsafe fn media_id_or_minus_one(p: usize) -> usize {
     if p != 0 { cpl6_d(p) } else { usize::MAX }
 }
 
 /// Os 23 bytes que a 0x757a50 grava no registro (data de hoje [0xae2c90], ids, resposta, subtipo, tipo).
-unsafe fn cpl6_registro(a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) -> [u8; 0x17] {
+unsafe fn build_news_log_record(a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) -> [u8; 0x17] {
     let mut r = [0u8; 0x17];
     r[..8].copy_from_slice(core::slice::from_raw_parts(0xae2c90 as *const u8, 8));
-    r[8..0xc].copy_from_slice(&(cpl6_id(a) as u32).to_le_bytes());
-    r[0xc..0x10].copy_from_slice(&(cpl6_id(b) as u32).to_le_bytes());
+    r[8..0xc].copy_from_slice(&(media_id_or_minus_one(a) as u32).to_le_bytes());
+    r[0xc..0x10].copy_from_slice(&(media_id_or_minus_one(b) as u32).to_le_bytes());
     r[0x10] = resposta as u8;
     r[0x11..0x13].copy_from_slice(&(subtipo as u8 as i8 as i16).to_le_bytes());
     r[0x13..].copy_from_slice(&tipo.to_le_bytes());
     r
 }
 
-unsafe fn cpl6_ordenar(base: usize, n: usize) {
+unsafe fn sort_news_log(base: usize, n: usize) {
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     qsort(base, n as u32, 0x17, 0x757ee0);
 }
@@ -55,8 +55,8 @@ unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize, tipo: u32
         let p = alocar(0x1cc);
         cpl6_por(this, p);
         if p == 0 {
-            aviso_em(0xa17bec, 0x6e11);
-            erro_fatal();
+            show_error_at(0xa17bec, 0x6e11);
+            fatal_exit();
         }
         cpl6_por(this + 4, 0x14);
     }
@@ -66,21 +66,21 @@ unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize, tipo: u32
         let p = realocar(cpl6_d(this), cap.wrapping_add(0x14).wrapping_mul(0x17) as u32);
         cpl6_por(this, p);
         if p == 0 {
-            aviso_em(0xa17bec, 0x6e1c);
-            erro_fatal();
+            show_error_at(0xa17bec, 0x6e1c);
+            fatal_exit();
         }
         cpl6_por(this + 4, cpl6_d(this + 4).wrapping_add(0x14));
     }
     let item = || cpl6_d(this).wrapping_add(cpl6_d(this + 8).wrapping_mul(0x17));
-    cpl6_por(item() + 8, cpl6_id(a));
-    cpl6_por(item() + 0xc, cpl6_id(b));
+    cpl6_por(item() + 8, media_id_or_minus_one(a));
+    cpl6_por(item() + 0xc, media_id_or_minus_one(b));
     cph3_data(item(), 0xae2c90);
     cpl6_por(item() + 0x13, tipo as usize);
     core::ptr::write_unaligned((item() + 0x11) as *mut i16, subtipo as u8 as i8 as i16);
     *((item() + 0x10) as *mut u8) = resposta as u8;
     let n = cpl6_d(this + 8).wrapping_add(1);
     cpl6_por(this + 8, n); // mais uma história
-    cpl6_ordenar(cpl6_d(this), n);
+    sort_news_log(cpl6_d(this), n);
 }
 
 /// { 0x757c70 } (thiscall, ret 0, media.cpp): `Media::expire_story_log()`: cada história do registro anterior ao
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn expire_story_log(this: usize) {
         };
         let mut local = [0u8; 8];
         let limite = datar(0xae2c90, &mut local, dias);
-        if cpl6_antes(r, limite) {
+        if media_date_before(r, limite) {
             let n = cpl6_d(this + 8);
             let ultimo = cpl6_d(this).wrapping_add(n.wrapping_mul(0x17)).wrapping_sub(0x17);
             core::ptr::copy(ultimo as *const u8, r as *mut u8, 0x17);
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn expire_story_log(this: usize) {
         i += 1;
     }
     if cpl6_d(this + 8) != 0 {
-        cpl6_ordenar(cpl6_d(this), cpl6_d(this + 8));
+        sort_news_log(cpl6_d(this), cpl6_d(this + 8));
     }
 }
 
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b: usize, ti
         }
         return 0;
     }
-    chave[8..0xc].copy_from_slice(&(cpl6_id(a) as u32).to_le_bytes());
+    chave[8..0xc].copy_from_slice(&(media_id_or_minus_one(a) as u32).to_le_bytes());
     chave[0x13..].copy_from_slice(&tipo.to_le_bytes());
     chave[0xc..0x10].copy_from_slice(&(cpl6_d(b) as u32).to_le_bytes());
     chave[0x11..0x13].copy_from_slice(&s.to_le_bytes());
@@ -152,15 +152,15 @@ unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b: usize, ti
     if desde == 0 {
         return 1;
     }
-    if cpl6_antes(e, desde) { 0 } else { 1 }
+    if media_date_before(e, desde) { 0 } else { 1 }
 }
 
 /// Comparador: a original pode alocar e realocar (não roda duas vezes): o registro esperado antes; confere a conta e
 /// que o registro esperado está na lista (a ordem é a do qsort).
 unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
     let n = cpl6_d(this + 8);
-    let esperado = cpl6_registro(a, b, tipo, subtipo, resposta);
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I0%%)(this, a, b, tipo, subtipo, resposta);
+    let esperado = build_news_log_record(a, b, tipo, subtipo, resposta);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I0%%)(this, a, b, tipo, subtipo, resposta);
     let m = cpl6_d(this + 8);
     let achou = (0..m).any(|k| {
         core::slice::from_raw_parts(cpl6_d(this).wrapping_add(k * 0x17) as *const u8, 0x17) == &esperado[..]
@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize, b: usize, 
 /// Comparador: lado a lado pelo registro (ponteiro, capacidade e conta; as histórias) e o estado do sorteio (a cópia
 /// sem contar os sorteios).
 unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     if cpl6_d(this) == 0 {
         return o(this);
     }
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
 
 /// Comparador: pelo valor (a busca e a data padrão da chave só leem).
 unsafe extern "thiscall" fn comparar_has_logged_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(%%I2%%)(this, a, b, tipo, subtipo, desde);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(%%I2%%)(this, a, b, tipo, subtipo, desde);
     let n = has_logged_story(this, a, b, tipo, subtipo, desde);
     PLACAR.registrar(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));
     r

@@ -34,22 +34,22 @@ unsafe fn cqq13_italia(this: usize, clube: usize, desfecho: u32, fase: u32, jogo
     if f < limite {
         if d == 6 {
             crate::comparacao::ramo(nome);
-            cpz4_classificado(clube, comp, 0, rodada_g, peso_g);
+            european_cup_add_qualified_record(clube, comp, 0, rodada_g, peso_g);
         } else if d == 0xfe {
-            cpz4_nao_classificado(clube, comp, 0x41c, 0x28); // cqq13: não passou dos grupos
+            european_cup_add_failed_to_qualify_record(clube, comp, 0x41c, 0x28); // cqq13: não passou dos grupos
         }
     } else if f == limite {
         match d {
             0xff => {
-                let peso = cpz4_escala(0x32, 0x64, cqq13_w(jogo + 0x34), 5);
+                let peso = scale_by_round(0x32, 0x64, cqq13_w(jogo + 0x34), 5);
                 // ponytail: +0x30 vai num registrador com lixo nos 16 bits altos; a 0x86c000 só usa a palavra
-                cpz4_eliminado(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, cqq13_w(jogo + 0x30) as u16 as u32, peso);
+                european_cup_add_knocked_out_record(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, cqq13_w(jogo + 0x30) as u16 as u32, peso);
             }
             0 => {
-                let peso = cpz4_escala(0x32, 0x64, cqq13_w(jogo + 0x34), 5);
+                let peso = scale_by_round(0x32, 0x64, cqq13_w(jogo + 0x34), 5);
                 let mata = cqq13_d(cqq13_d(this + 0xc) + limite as usize * 4);
                 let rodada = (mata as u32 & 0xffff_0000) | cqq13_nome_da_rodada(cqq13_d(mata + 0xa3), jogo);
-                cpz4_classificado(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, rodada, peso);
+                european_cup_add_qualified_record(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, rodada, peso);
             }
             1 => cqq13_final(0x86a800, clube, jogo, a6),
             2 => cqq13_final(0x86b0b0, clube, jogo, a6),
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn cqq13_copa_da_italia_registros(this: usize, clube: u
 
 // ponytail: os registros (histórico, reputação, moral) não rodam duas vezes. Só a original; o plano: a devolução 0.
 unsafe extern "thiscall" fn comparar_cqq13_copa_da_italia_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, desfecho, fase, a4, jogo, a6);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, desfecho, fase, a4, jogo, a6);
     PLACAR.registrar(r == 0, || format!("cqq13_copa_da_italia_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn cqq13_copa_c_registros(this: usize, clube: usize, de
 
 // ponytail: os registros não rodam duas vezes. Só a original; o plano: a devolução 0.
 unsafe extern "thiscall" fn comparar_cqq13_copa_c_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, desfecho, fase, a4, jogo, a6);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, desfecho, fase, a4, jogo, a6);
     PLACAR.registrar(r == 0, || format!("cqq13_copa_c_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }
@@ -97,16 +97,16 @@ unsafe extern "thiscall" fn cqq13_trofeu_registros(this: usize, clube: usize, de
         match d {
             0xff | 2 => {
                 crate::comparacao::ramo("cqq_13 eliminado no trofeu");
-                let peso = cpz4_escala(1, 0x50, cqq13_w(jogo + 0x34), 5); // cqq13: o peso da eliminação no LDV
-                cpz4_eliminado(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, cqq13_w(jogo + 0x30) as u16 as u32, peso);
+                let peso = scale_by_round(1, 0x50, cqq13_w(jogo + 0x34), 5); // cqq13: o peso da eliminação no LDV
+                european_cup_add_knocked_out_record(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, cqq13_w(jogo + 0x30) as u16 as u32, peso);
             }
             0 => {
-                let peso = cpz4_escala(1, 0x50, cqq13_w(jogo + 0x34), 5);
+                let peso = scale_by_round(1, 0x50, cqq13_w(jogo + 0x34), 5);
                 // os 16 bits altos que a original empurra com a palavra do nome e com +0x32 vêm de contas pequenas
                 // com a rodada (3r e 13r): zero
-                cpz4_classificado(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, cqq13_nome_da_rodada(cqq13_d(this + 0xa3), jogo), peso);
+                european_cup_add_qualified_record(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, cqq13_nome_da_rodada(cqq13_d(this + 0xa3), jogo), peso);
             }
-            1 => cpz4_classificado(clube, comp, 0, 0x96, 0x5a),
+            1 => european_cup_add_qualified_record(clube, comp, 0, 0x96, 0x5a),
             _ => {}
         }
     } else if f == 1 {
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn cqq13_trofeu_registros(this: usize, clube: usize, de
 
 // ponytail: os registros não rodam duas vezes. Só a original; o plano: a devolução 0.
 unsafe extern "thiscall" fn comparar_cqq13_trofeu_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%)(this, clube, desfecho, fase, a4, jogo, a6);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%)(this, clube, desfecho, fase, a4, jogo, a6);
     PLACAR.registrar(r == 0, || format!("cqq13_trofeu_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }

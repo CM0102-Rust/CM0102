@@ -20,7 +20,7 @@ fn cqi3_e(this: usize, i: i32) -> usize {
 
 /// O clube `c` (com nação e ainda sem vaga) entra na Copa da UEFA na fase `fase`; um clube a mais da nação `r`. Devolve
 /// se entrou. (O caso da nação −1, que a original procura pela nação do clube, não acontece: `r` vem da volta.)
-unsafe fn cqi3_entra(this: usize, c: usize, fase: u8, r: i32, colocados: &mut i32) -> bool {
+unsafe fn enter_uefa_cup(this: usize, c: usize, fase: u8, r: i32, colocados: &mut i32) -> bool {
     if cqi3_d(c + 0x53) == 0 || cqi3_d(c + 0x1db) != u32::MAX {
         return false;
     }
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubes: usize, c
                         } else {
                             let copa = cqi3_d(0xb63d7e + (linha(nacao) as i32 * 0x48) as usize) as usize;
                             if copa == 0 {
-                                aviso_em(0xaa1a1c, 0x418);
+                                show_error_at(0xaa1a1c, 0x418);
                                 tentar_de_novo = true;
                                 0
                             } else {
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubes: usize, c
                     } else {
                         escolhidos = escolhidos.wrapping_add(1);
                         if c != 0 {
-                            cqi3_entra(this, c, f, r as i32, &mut colocados);
+                            enter_uefa_cup(this, c, f, r as i32, &mut colocados);
                             if colocados as i16 as i32 - conta_extra as i32 + 1 >= 0x76 {
                                 return;
                             }
@@ -219,17 +219,17 @@ unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubes: usize, c
             if !a && !b {
                 let c = um();
                 if c != 0 {
-                    cqi3_entra(this, c, ultima_fase, r as i32, &mut colocados);
+                    enter_uefa_cup(this, c, ultima_fase, r as i32, &mut colocados);
                 }
             } else if a && b {
                 let fase = (conta_extra as u8).wrapping_mul(10).wrapping_add(3);
                 ultima_fase = fase;
                 if cqi3_d(vencedor + 0x53) != 0 {
-                    cqi3_entra(this, vencedor, fase, r as i32, &mut colocados);
+                    enter_uefa_cup(this, vencedor, fase, r as i32, &mut colocados);
                 }
-                cqi3_entra(this, vice, fase, r as i32, &mut colocados);
+                enter_uefa_cup(this, vice, fase, r as i32, &mut colocados);
             } else {
-                cqi3_entra(this, if a { vencedor } else { vice }, ultima_fase, r as i32, &mut colocados);
+                enter_uefa_cup(this, if a { vencedor } else { vice }, ultima_fase, r as i32, &mut colocados);
             }
         }
         r += 1;
@@ -245,7 +245,7 @@ fn cqi3_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) ->
 /// Lado a lado: a classificação (com a tabela das finais em +0x440), os clubes, o sorteio (a cópia sem contar) e a marca
 /// da caixa.
 unsafe extern "thiscall" fn comparar_assign_uefa_cup_places(this: usize, clubes: usize, conta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let n = (cqi3_d(0xae235c) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
     let mut reg = vec![(this, 0x698), (cqi3_d(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (cqi3_d(0xae23d4) as usize, (cqi3_d(0xae237c) as i32).max(0) as usize * 0x1a)];
@@ -294,7 +294,7 @@ unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) -> usize {
                 let l = alocar(0x78);
                 core::ptr::write_unaligned((this + 0x43b) as *mut u32, l as u32);
                 if l == 0 {
-                    aviso_em(0xaa1a1c, 0xf9);
+                    show_error_at(0xaa1a1c, 0xf9);
                     continue;
                 }
             }
@@ -344,7 +344,7 @@ unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) -> usize {
 /// Em 2001 (devolve 0 sem efeito): a devolução das duas. Fora de 2001 só a original (sorteia, aloca a lista e entrega a
 /// notícia).
 unsafe extern "thiscall" fn comparar_pick_english_intertoto_club(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     if cqi3_w(0xae2c92) != 0x7d1 {
         return o(this);
     }
@@ -382,7 +382,7 @@ unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
         let mut t = 0usize;
         let n = juntar(this, &mut t);
         if n as u16 == 0 {
-            aviso_em(0xaa1a1c, 0x2b7);
+            show_error_at(0xaa1a1c, 0x2b7);
         } else {
             campeoes(this, t, n);
             copa_uefa(this, t, n);
@@ -426,5 +426,5 @@ unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
 /// Só a original (refaz as vagas pelas rotinas de dentro, solta a tabela, entrega notícias); a cópia leva o contador.
 unsafe extern "thiscall" fn comparar_update_season(this: usize, diario: u32) {
     // ponytail: refaz a classificação inteira e entrega notícias: não dá para rodar duas vezes
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(this, diario)
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(this, diario)
 }

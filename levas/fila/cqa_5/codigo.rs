@@ -25,26 +25,26 @@ unsafe extern "thiscall" fn reject_loan_offer(this: usize, vaga: *mut usize, mar
     }
     *((o + 0x2c) as *mut u8) = 2;
     crate::comparacao::ramo("cqa_5 emprestimo recusado");
-    let vendedor = cpx1_clube_do_contrato(cpx1_pessoa(cpx1_d(o + 0xc)));
-    cpx1_desmarcar_lances(this, o, vendedor);
-    cpx1_noticia(this, o, motivo);
-    cpx1_agendar(this, o, 0xa);
-    cpx1_tirar_marca(this, o);
+    let vendedor = contract_club_stored(cpx1_pessoa(cpx1_d(o + 0xc)));
+    clear_offer_and_exchange_markers(this, o, vendedor);
+    transfer_manager_post_offer_rejected_news(this, o, motivo);
+    schedule_offer_unless_dry_run(this, o, 0xa);
+    clear_offer_mark_if_closed(this, o);
     // vendedor 0: sem a parte dos jogadores da troca na lista do comprador, que esta rotina não tem
-    cpx1_ofertas_de_contrato(this, o, 0, 0);
+    withdraw_offer_contract_offers(this, o, 0, 0);
     let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
     let comprador = cpx1_clube(cpx1_d(o + 8));
     let p = cpx1_pessoa(cpx1_d(o + 0xc));
-    if entrada(cpx1_listas(this), comprador, p, (cpx1_b(o + 0x11) != 0xb) as u32, 0) != 0 {
-        cpx1_situacao_na_lista(this, p, comprador, 1, 0);
+    if entrada(shortlist_manager_of(this), comprador, p, (cpx1_b(o + 0x11) != 0xb) as u32, 0) != 0 {
+        update_shortlist_status(this, p, comprador, 1, 0);
     }
 }
 
-/// Comparador da 0x8bfa30: o da recusa e da retirada (`cpx1_comparar`: a cópia em ensaio e a original do mesmo estado;
+/// Comparador da 0x8bfa30: o da recusa e da retirada (`compare_reject_withdraw`: a cópia em ensaio e a original do mesmo estado;
 /// iguais o estado, +0x10, a marca +4 dos jogadores da troca e a marca de oferta da pessoa).
 unsafe extern "thiscall" fn comparar_reject_loan_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I0%%);
-    cpx1_comparar("reject_loan_offer", this, vaga, || o(this, vaga, marcar, motivo), || reject_loan_offer(this, vaga, marcar, motivo))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I0%%);
+    compare_reject_withdraw("reject_loan_offer", this, vaga, || o(this, vaga, marcar, motivo), || reject_loan_offer(this, vaga, marcar, motivo))
 }
 
 /// O ensaio do comparador da 0x8cd450: a cópia roda sem liberar o jogador escolhido (0x86d800 e 0x8c1af0 mexem no
@@ -53,19 +53,19 @@ static mut CQA5_ENSAIO: bool = false;
 static mut CQA5_LIBERADO: usize = 0;
 
 /// Os tipos 0x53b620 (11 a 15: jogador) e 0x53b610 (não 11), cdecl com o byte.
-unsafe fn cqa5_jogador(t: u8) -> bool {
+unsafe fn transfer_manager_is_player_job(t: u8) -> bool {
     let f: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(0x53b620usize);
     f(t as i8) != 0
 }
 
-unsafe fn cqa5_nao_11(t: u8) -> bool {
+unsafe fn is_not_plain_player_job(t: u8) -> bool {
     let f: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(0x53b610usize);
     f(t as i8) != 0
 }
 
 /// As quatro contas de vagas da comissão pelo tipo da pessoa: [0] treinadores (8 e 0xf, +0x19f), [1] olheiros (9,
 /// +0x1b3), [2] fisioterapeutas (0xa, +0x1cf), [3] auxiliar (6 e 0xd, +0xd3).
-unsafe fn cqa5_comissao(t: u8) -> Option<usize> {
+unsafe fn staff_role_slot_group(t: u8) -> Option<usize> {
     match t {
         8 | 0xf => Some(0),
         9 => Some(1),
@@ -76,12 +76,12 @@ unsafe fn cqa5_comissao(t: u8) -> Option<usize> {
 }
 
 /// O id da pessoa no vetor (dword com sinal) abaixo de [0xae2364]: a pessoa ainda existe.
-unsafe fn cqa5_viva(p: usize) -> bool {
+unsafe fn staff_id_in_range(p: usize) -> bool {
     p != 0 && (cqa5_d(p) as i32) < cqa5_d(0xae2364) as i32
 }
 
 /// A falha com o motivo: (clube ≠ comprador) + `base` na palavra do motivo, se houver; 0.
-unsafe fn cqa5_falha(clube: usize, o: usize, motivo: *mut u16, base: u16) -> u32 {
+unsafe fn fail_with_reason(clube: usize, o: usize, motivo: *mut u16, base: u16) -> u32 {
     if !motivo.is_null() {
         *motivo = (cqa5_d(clube) != cqa5_d(o + 8)) as u16 + base;
     }
@@ -90,7 +90,7 @@ unsafe fn cqa5_falha(clube: usize, o: usize, motivo: *mut u16, base: u16) -> u32
 
 /// A pessoa está na fila da transferência livre ([0xde1f54] + 0x92c, LLIST de ids; o cursor +0xa volta a +2 e a busca
 /// para no achado, como na original).
-unsafe fn cqa5_na_fila_livre(p: usize) -> bool {
+unsafe fn in_free_transfer_queue(p: usize) -> bool {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let l = cqa5_d(0xde1f54) + 0x92c;
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cqa5_d(l + 2));
@@ -123,7 +123,7 @@ unsafe fn cqa5_na_fila_livre(p: usize) -> bool {
 /// Devolve 1.
 unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usize, contar_fila: u32, motivo: *mut u16) -> u32 {
     if clube == 0 {
-        aviso_em(0xa8d514, 0x2c3b);
+        show_error_at(0xa8d514, 0x2c3b);
         return 0;
     }
     let parceiro_de: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
@@ -133,10 +133,10 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
     let mut com = [0i8; 4];
     if cqa5_d(clube) == cqa5_d(o + 8) {
         let p = cpx1_pessoa(cqa5_d(o + 0xc));
-        let c = cpx1_contrato(p);
+        let c = transfer_manager_get_contract_and_store(p);
         let mut proprio = false;
         if c != 0 && cqa5_b(c + 0x35) & 0x3f == 5 {
-            proprio = cpx1_clube_do_contrato(p) == clube;
+            proprio = contract_club_stored(p) == clube;
         }
         if !proprio && ficha(cqa5_d(0xae1050), p) != 0 && cqa5_d(ficha(cqa5_d(0xae1050), p) + 4) == cqa5_d(clube) {
             proprio = true;
@@ -145,23 +145,23 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
             n = -1;
         }
         let t = cqa5_b(o + 0x11);
-        if cqa5_jogador(t) {
+        if transfer_manager_is_player_job(t) {
             n = n.wrapping_add(1); // cqa5: o jogador da oferta conta
         }
-        if cqa5_nao_11(t) {
-            if let Some(k) = cqa5_comissao(t) {
+        if is_not_plain_player_job(t) {
+            if let Some(k) = staff_role_slot_group(t) {
                 com[k] = 1;
             }
         }
         let l = cqa5_d(o + 4);
         if l != 0 {
-            for e in cpx1_itens(l) {
+            for e in llist_items_from_start(l) {
                 let t = cqa5_b(cpx1_pessoa(cqa5_d(e)) + 0x3d);
-                if cqa5_jogador(t) {
+                if transfer_manager_is_player_job(t) {
                     n = n.wrapping_sub(1);
                 }
-                if cqa5_nao_11(t) {
-                    if let Some(k) = cqa5_comissao(t) {
+                if is_not_plain_player_job(t) {
+                    if let Some(k) = staff_role_slot_group(t) {
                         com[k] = com[k].wrapping_sub(1);
                     }
                 }
@@ -173,21 +173,21 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
             return 1; // cqa5: o vendedor sem troca tem vaga
         }
         let t = cqa5_b(cpx1_pessoa(cqa5_d(o + 0xc)) + 0x3d);
-        if cqa5_jogador(t) {
+        if transfer_manager_is_player_job(t) {
             n = -1;
         }
-        if cqa5_nao_11(t) {
-            if let Some(k) = cqa5_comissao(t) {
+        if is_not_plain_player_job(t) {
+            if let Some(k) = staff_role_slot_group(t) {
                 com[k] = -1;
             }
         }
-        for e in cpx1_itens(cqa5_d(o + 4)) {
+        for e in llist_items_from_start(cqa5_d(o + 4)) {
             let t = cqa5_b(e + 6);
-            if cqa5_jogador(t) {
+            if transfer_manager_is_player_job(t) {
                 n = n.wrapping_add(1);
             }
-            if cqa5_nao_11(t) {
-                if let Some(k) = cqa5_comissao(t) {
+            if is_not_plain_player_job(t) {
+                if let Some(k) = staff_role_slot_group(t) {
                     com[k] = com[k].wrapping_add(1);
                 }
             }
@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
     if n > 0 {
         let contar = |base: usize, n: &mut i8| {
             for k in 0..0x32 {
-                if cqa5_viva(cqa5_d(base + 0xd7 + 4 * k)) {
+                if staff_id_in_range(cqa5_d(base + 0xd7 + 4 * k)) {
                     *n = n.wrapping_add(1); // cqa5: cada um do elenco conta
                 }
             }
@@ -215,7 +215,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                 let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
                 if cqa5_d(clube) != cqa5_d(o + 8) || humano(clube, 1, 1, 0, 0) != 0 || cqa5_d(o + 4) != 0 {
                     crate::comparacao::ramo("cqa_5 elenco cheio");
-                    return cqa5_falha(clube, o, motivo, 4);
+                    return fail_with_reason(clube, o, motivo, 4);
                 }
                 let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
                 let ofertas: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c5cf0usize);
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                 let mut escolhido = 0usize;
                 for k in 0..0x32 {
                     let p = cqa5_d(clube + 0xd7 + 4 * k);
-                    if !cqa5_viva(p) || ficha(cqa5_d(0xae1050), p) != 0 {
+                    if !staff_id_in_range(p) || ficha(cqa5_d(0xae1050), p) != 0 {
                         continue;
                     }
                     // a primeira consulta do contrato não vai para [0xae1080]
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                     if !(v < melhor) || s > 0 {
                         continue;
                     }
-                    let c = cpx1_contrato(p);
+                    let c = transfer_manager_get_contract_and_store(p);
                     if c != 0 && cqa5_b(c + 0x35) & 0x3f == 5 {
                         continue;
                     }
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                     if ofertas(g, p, 0, 0) != 0 || trocas(g, p, 0) != 0 || futura(g, p, 0) != 0 {
                         continue;
                     }
-                    if cqa5_na_fila_livre(p) {
+                    if in_free_transfer_queue(p) {
                         continue;
                     }
                     if matches!(cqa5_b(p + 0x3d), 0xb | 0xf | 0xd) {
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                     }
                 }
                 if escolhido == 0 {
-                    return cqa5_falha(clube, o, motivo, 4);
+                    return fail_with_reason(clube, o, motivo, 4);
                 }
                 crate::comparacao::ramo("cqa_5 libera o mais barato");
                 if CQA5_ENSAIO {
@@ -285,17 +285,17 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
         }
         if parceiro != 0 {
             for j in 0..vagas {
-                if cqa5_viva(cqa5_d(parceiro + base + 4 * j)) {
+                if staff_id_in_range(cqa5_d(parceiro + base + 4 * j)) {
                     m = m.wrapping_add(1);
                 }
             }
         }
         if m > vagas as i8 {
-            return cqa5_falha(clube, o, motivo, 0x22);
+            return fail_with_reason(clube, o, motivo, 0x22);
         }
     }
     if com[3] > 0 && (cqa5_d(clube + 0xd3) != 0 || (parceiro != 0 && cqa5_d(parceiro + 0xd3) != 0)) {
-        return cqa5_falha(clube, o, motivo, 0x22);
+        return fail_with_reason(clube, o, motivo, 0x22);
     }
     1
 }
@@ -305,7 +305,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
 /// guardou o escolhido): iguais a devolução e o escolhido ter saído do clube (o contrato dele, pela 0x4cf5a0 que só
 /// lê, sem o clube); o resto a original refaz ao liberar. Clube nulo: a caixa, só a original.
 unsafe extern "thiscall" fn comparar_check_squad_limits(this: usize, clube: usize, o: usize, contar_fila: u32, motivo: *mut u16) -> u32 {
-    let f = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u16) -> u32>(%%I1%%);
+    let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u16) -> u32>(%%I1%%);
     if clube == 0 {
         return f(this, clube, o, contar_fila, motivo);
     }
@@ -349,13 +349,13 @@ unsafe extern "thiscall" fn find_next_sale_percentage(this: usize, p: usize) -> 
     if *m & 8 == 0 {
         return 0;
     }
-    if cpx1_clube_do_contrato(p) == 0 {
+    if contract_club_stored(p) == 0 {
         return 0;
     }
     let mut chave = [0u8; 0x10];
     chave[9..13].copy_from_slice(&(cqa5_d(p) as u32).to_le_bytes());
     // ponytail: a original lê o id do clube sem conferir o contrato (acabou de achá-lo); sem ele, aqui 0
-    let c = cpx1_clube_do_contrato(p);
+    let c = contract_club_stored(p);
     let id = if c != 0 { cqa5_d(c) as u32 } else { 0 };
     chave[1..5].copy_from_slice(&id.to_le_bytes());
     let bsearch: unsafe extern "C" fn(*const u8, usize, usize, u32, usize) -> usize = core::mem::transmute(0x946464usize);
@@ -369,7 +369,7 @@ unsafe extern "thiscall" fn find_next_sale_percentage(this: usize, p: usize) -> 
 
 /// Comparador da 0x8d0dd0: lado a lado na marca da pessoa, em [0xae1080] e na devolução (só lê o resto).
 unsafe extern "thiscall" fn comparar_find_next_sale_percentage(this: usize, p: usize) -> usize {
-    let f = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
+    let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa5_d(this + 0x86e).wrapping_add(cqa5_d(p).wrapping_mul(8));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1), (0xae1080, 4)], || f(this, p), || find_next_sale_percentage(this, p));
     PLACAR.registrar(igual && r == n, || format!("find_next_sale_percentage(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));

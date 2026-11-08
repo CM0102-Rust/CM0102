@@ -14,7 +14,7 @@ unsafe fn cqm3_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha:
     let j = alocar((t.len() * 6) as u32);
     core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
     if j == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return;
     }
     for (k, r) in t.iter().enumerate() {
@@ -24,7 +24,7 @@ unsafe fn cqm3_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha:
 
 /// O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
 /// vtable da nação e as janelas.
-unsafe fn cqm3_construir(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
+unsafe fn turkey_rules_construct_nation_transfer_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
     let base: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x8e84a0usize);
     base(this, a[0], a[1], a[2], a[3], a[4]);
     core::ptr::write_unaligned(this as *mut u32, vtable);
@@ -64,7 +64,7 @@ const CQM3_TURQUIA: [[u8; 6]; 2] = [
 /// { 0x9020a0 } (thiscall, ret 0x14, turkey_rules.cpp, `TURKEY_RULES::TURKEY_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Turquia (regra 24): a base (0x8e84a0), a vtable 0x97075c, 1 janela(s) de `CQM3_TURQUIA`; o +0x13 = 8 (o padrão da base é 50) [inferência: o limite de estrangeiros]; o +0x14 = 8 (o padrão é 30). Devolve o objeto.
 unsafe extern "thiscall" fn construct_turkey_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_3 turquia");
-    cqm3_construir(this, [a1, a2, a3, a4, a5], 0x97075c, 1, &CQM3_TURQUIA, 0xaa19a8, 0x52);
+    turkey_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x97075c, 1, &CQM3_TURQUIA, 0xaa19a8, 0x52);
     *((this + 0x13) as *mut u8) = 8;
     *((this + 0x14) as *mut u8) = 8;
     this
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn construct_turkey_rules(this: usize, a1: u32, a2: u32
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqm3_comparar`).
 unsafe extern "thiscall" fn comparar_construct_turkey_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I0%%);
     let mut r = 0usize;
     cqm3_comparar("construct_turkey_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         construct_turkey_rules(s, a1, a2, a3, a4, a5);
@@ -89,7 +89,7 @@ const CQM3_POLONIA: [[u8; 6]; 2] = [
 /// { 0x7cd830 } (thiscall, ret 0x14, poland_rules.cpp, `POLAND_RULES::POLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Polônia (regra 18): a base (0x8e84a0), a vtable 0x96e61c, 1 janela(s) de `CQM3_POLONIA`; o +0x13 = 5 (o padrão da base é 50) [inferência: o limite de estrangeiros]; o +0x14 = 5 (o padrão é 30). Devolve o objeto.
 unsafe extern "thiscall" fn construct_poland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_3 polonia");
-    cqm3_construir(this, [a1, a2, a3, a4, a5], 0x96e61c, 1, &CQM3_POLONIA, 0xa786b8, 0x51);
+    turkey_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96e61c, 1, &CQM3_POLONIA, 0xa786b8, 0x51);
     *((this + 0x13) as *mut u8) = 5;
     *((this + 0x14) as *mut u8) = 5;
     this
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn construct_poland_rules(this: usize, a1: u32, a2: u32
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqm3_comparar`).
 unsafe extern "thiscall" fn comparar_construct_poland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let mut r = 0usize;
     cqm3_comparar("construct_poland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         construct_poland_rules(s, a1, a2, a3, a4, a5);
@@ -114,14 +114,14 @@ const CQM3_FINLANDIA: [[u8; 6]; 2] = [
 /// { 0x5a9950 } (thiscall, ret 0x14, finland_rules.cpp, `FINLAND_RULES::FINLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Finlândia (regra 8): a base (0x8e84a0), a vtable 0x96a75c, 1 janela(s) de `CQM3_FINLANDIA`; o dword +0x15 = 1. Devolve o objeto.
 unsafe extern "thiscall" fn construct_finland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_3 finlandia");
-    cqm3_construir(this, [a1, a2, a3, a4, a5], 0x96a75c, 1, &CQM3_FINLANDIA, 0x9cc134, 0x50);
+    turkey_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96a75c, 1, &CQM3_FINLANDIA, 0x9cc134, 0x50);
     core::ptr::write_unaligned((this + 0x15) as *mut u32, 1);
     this
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqm3_comparar`).
 unsafe extern "thiscall" fn comparar_construct_finland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
     let mut r = 0usize;
     cqm3_comparar("construct_finland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         construct_finland_rules(s, a1, a2, a3, a4, a5);

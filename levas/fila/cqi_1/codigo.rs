@@ -11,7 +11,7 @@ unsafe fn cqi1_f(a: usize) -> f64 {
 /// A entrada `i` da tabela das nações da classificação (registros de 0x12 bytes a partir do objeto: +0 id da nação,
 /// +4 a nação, +8 o coeficiente das 5 temporadas (float), +0xc vagas na Liga dos Campeões, +0xd na Copa da UEFA,
 /// +0xe na Intertoto, +0xf os pontos da temporada (short), +0x11 os clubes da nação nas copas (char)).
-fn cqi1_e(this: usize, i: i32) -> usize {
+fn seeding_nation_entry(this: usize, i: i32) -> usize {
     this.wrapping_add((i * 0x12) as usize)
 }
 
@@ -28,7 +28,7 @@ unsafe extern "thiscall" fn roll_coefficients(this: usize) {
     let ano = *(0xae2c92 as *const i16);
     let mut i = 0i8;
     while i < conta() {
-        let e = cqi1_e(this, i as i32);
+        let e = seeding_nation_entry(this, i as i32);
         let p = cqi1_d(e + 4) as usize;
         if ano != 0x7d1 {
             for k in 0..10usize {
@@ -52,25 +52,25 @@ unsafe extern "thiscall" fn roll_coefficients(this: usize) {
     ordenar(this, conta() as i32 as u32, 0x12, 0x905cb0);
     let mut i = 0i8;
     while i < conta() {
-        let s = selecao(cqi1_d(cqi1_e(this, i as i32) + 4) as usize);
+        let s = selecao(cqi1_d(seeding_nation_entry(this, i as i32) + 4) as usize);
         *((s + 0x1df) as *mut i8) = i;
         i += 1;
     }
 }
 
 /// As diferenças entre duas memórias (os 16 primeiros endereços).
-fn cqi1_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
+fn memory_diff_addresses(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
     let (a, b) = (&mo.0, &mr.0);
     (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
 }
 
 /// A tabela das nações e, de cada nação, as 5 temporadas (+0xe0..+0x110) e o +0x1df da seleção.
-unsafe fn cqi1_regioes(this: usize) -> Vec<(usize, usize)> {
+unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let n = (*((this + 0x438) as *const i8)).max(0) as i32;
     let mut reg = vec![(this, 0x43b)];
     for i in 0..n {
-        let p = cqi1_d(cqi1_e(this, i) + 4) as usize;
+        let p = cqi1_d(seeding_nation_entry(this, i) + 4) as usize;
         reg.push((p + 0xe0, 0x30));
         reg.push((selecao(p) + 0x1df, 1));
     }
@@ -79,10 +79,10 @@ unsafe fn cqi1_regioes(this: usize) -> Vec<(usize, usize)> {
 
 /// Lado a lado: a tabela das nações, as temporadas de cada nação e a posição gravada nas seleções.
 unsafe extern "thiscall" fn comparar_roll_coefficients(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    let reg = cqi1_regioes(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let reg = seeding_regions(this);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || roll_coefficients(this));
-    PLACAR.registrar(igual, || format!("roll_coefficients: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("roll_coefficients: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// { 0x903cc0 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::set_place_counts`): as vagas de cada nação pela
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn set_place_counts(this: usize) {
     let (mut fa, mut fb, mut fc, mut cont) = (-1i8, -1i8, -1i8, 0i8);
     let mut i = 0i8;
     while i < conta() {
-        let e = cqi1_e(this, i as i32);
+        let e = seeding_nation_entry(this, i as i32);
         let id = cqi1_d(e);
         if id == g(0x9cf2fc) {
             fa = i;
@@ -177,10 +177,10 @@ unsafe extern "thiscall" fn set_place_counts(this: usize) {
         *((e + 0xe) as *mut u8) = intertoto;
         i += 1;
     }
-    let italia = |k: i8| cqi1_d(cqi1_e(this, k as i32)) == g(0x9cf360);
+    let italia = |k: i8| cqi1_d(seeding_nation_entry(this, k as i32)) == g(0x9cf360);
     if ano == 0x7d1 {
         if fa == -1 || fb == -1 || fc == -1 {
-            aviso_em(0xaa1a1c, 0x285);
+            show_error_at(0xaa1a1c, 0x285);
         }
     } else {
         fa = -1;
@@ -191,18 +191,18 @@ unsafe extern "thiscall" fn set_place_counts(this: usize) {
         fc = sorteio(conta() as i32) as u8 as i8;
     }
     for k in [fa, fb, fc] {
-        let p = cqi1_e(this, k as i32) + 0xd;
+        let p = seeding_nation_entry(this, k as i32) + 0xd;
         *(p as *mut u8) = (*(p as *const u8)).wrapping_add(1);
     }
 }
 
 /// Lado a lado: a tabela das nações, o sorteio (a cópia sem contar) e a marca da caixa.
 unsafe extern "thiscall" fn comparar_set_place_counts(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let mut reg = vec![(this, 0x43b), (0xb67a34, 4)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| set_place_counts(this)));
-    PLACAR.registrar(igual, || format!("set_place_counts: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("set_place_counts: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// { 0x9050d0 } (thiscall, ret 0x18, uefa_seeding.cpp, `uefa_find_nth_unplaced_club_of_nation`; o this não é lido):
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_this: usize, 
 
 /// A devolução das duas (a rotina só lê).
 unsafe extern "thiscall" fn comparar_uefa_find_nth_unplaced_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     let c = uefa_find_nth_unplaced_club_of_nation(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     PLACAR.registrar(r == c, || format!("uefa_find_nth_unplaced_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));

@@ -21,7 +21,7 @@ unsafe fn cqf5_pw(a: usize, v: u16) {
 }
 
 /// O clube da entrada `i` da lista do sorteio (5 bytes: +0 o id): 0xae23b4 + id × 0x245.
-unsafe fn cqf5_clube(lista: usize, i: usize) -> usize {
+unsafe fn draw_list_club(lista: usize, i: usize) -> usize {
     cqf5_d(0xae23b4).wrapping_add(cqf5_d(lista + i * 5).wrapping_mul(0x245))
 }
 
@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn world_cup_create_group_table(this: usize, lista: usi
     let t = alocar(0xec);
     cqf5_pd(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0xad5888, 0x2b1);
+        show_error_at(0xad5888, 0x2b1);
         return 0;
     }
     let mut linha = 0i8;
@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn world_cup_create_group_table(this: usize, lista: usi
         let e = i as usize; // cqf5: a entrada da lista
         if cqf5_b(lista + e * 5 + 4) == 1 {
             crate::comparacao::ramo("cqf_5 time do grupo um");
-            let clube = cqf5_clube(lista, e);
+            let clube = draw_list_club(lista, e);
             linha_da_tabela(this, linha as u8 as u32, clube, 0, 0);
             linha += 1;
         }
@@ -63,15 +63,15 @@ unsafe extern "thiscall" fn world_cup_create_group_table(this: usize, lista: usi
 }
 
 /// Os clubes do grupo `g` (+4 = g) da lista, na ordem, até 4 (o que a 0x92d0f0 e a 0x92d540 põem nas linhas).
-unsafe fn cqf5_do_grupo(lista: usize, g: i32) -> Vec<usize> {
-    (0..32usize).filter(|&i| cqf5_b(lista + i * 5 + 4) as i8 as i32 == g).map(|i| cqf5_clube(lista, i)).take(4).collect()
+unsafe fn group_clubs(lista: usize, g: i32) -> Vec<usize> {
+    (0..32usize).filter(|&i| cqf5_b(lista + i * 5 + 4) as i8 as i32 == g).map(|i| draw_list_club(lista, i)).take(4).collect()
 }
 
 /// Só a original (aloca a tabela e manda a notícia dos grupos), conferindo o plano feito antes: devolve 1, +0x3e = 4 e
 /// as linhas da tabela (0x3b bytes, +0 o clube) com os clubes do grupo 1 da lista, na ordem.
 unsafe extern "thiscall" fn comparar_world_cup_create_group_table(this: usize, lista: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
-    let plano = cqf5_do_grupo(lista, 1);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
+    let plano = group_clubs(lista, 1);
     let r = o(this, lista);
     if r == 1 {
         let t = cqf5_d(this + 0xb1);
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize, g: i32, li
         core::mem::transmute(0x68b100usize);
     let times = alocar(((cqf5_w(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
-        aviso_em(0xad5888, 0x366);
+        show_error_at(0xad5888, 0x366);
         return 0;
     }
     let mut n = 0i16;
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize, g: i32, li
         let e = lista + i as usize * 5;
         if cqf5_b(e + 4) as i8 as i32 == g + 2 {
             crate::comparacao::ramo("cqf_5 time do grupo");
-            cqf5_pd(times + n as usize * 4, cqf5_clube(lista, i as usize)); // cqf5: o time na vaga do grupo
+            cqf5_pd(times + n as usize * 4, draw_list_club(lista, i as usize)); // cqf5: o time na vaga do grupo
             n += 1;
         }
         i += 1;
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize, g: i32, li
     soltar(times);
     soltar(tabela);
     if cqf5_d(cqf5_d(this + 0xc) + g as usize * 4) == 0 {
-        aviso_em(0xad5888, 0x380);
+        show_error_at(0xad5888, 0x380);
         return 0;
     }
     cqf5_pd(this + 0x30, g as usize);
@@ -169,8 +169,8 @@ unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize, g: i32, li
 /// grupo g+2 da lista (em qualquer ordem: na comparação de 02/11 as linhas da fase não
 /// saíram na ordem da lista [inferência: a fase ordena ou sorteia a tabela dela]).
 unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(this: usize, g: i32, lista: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%);
-    let plano = cqf5_do_grupo(lista, g + 2);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%);
+    let plano = group_clubs(lista, g + 2);
     let r = o(this, g, lista);
     if r == 1 {
         let f = cqf5_d(cqf5_d(this + 0xc) + g as usize * 4);
@@ -206,16 +206,16 @@ unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: usize) {
     let competicao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x775220usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     if cqf5_d(this + 8) == 0 {
-        aviso_em(0xad5888, 0x671);
+        show_error_at(0xad5888, 0x671);
         return;
     }
     if cqf5_w(this + 0x36) < 0x20 {
-        aviso_em(0xad5888, 0x678);
+        show_error_at(0xad5888, 0x678);
         cqf5_pw(this + 0x36, 0x20);
     }
     let v = alocar(((cqf5_w(this + 0x36) as i32) << 2) as u32);
     if v == 0 {
-        aviso_em(0xad5888, 0x680);
+        show_error_at(0xad5888, 0x680);
         return;
     }
     let mut i = 0i16;
@@ -241,7 +241,7 @@ unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: usize) {
 /// antes: o vetor ordenado como ela ordena (a mesma qsort, numa cópia) e, depois, a posição prevista (+0x72 do registro
 /// achado por 0x4a4850) de cada um dos 32 primeiros.
 unsafe extern "thiscall" fn comparar_world_cup_set_predicted_positions(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqf5_d(this + 8) == 0 || cqf5_w(this + 0x36) < 0x20 || cqf5_d(this + 0x14) == 0 {
         return o(this);
     }

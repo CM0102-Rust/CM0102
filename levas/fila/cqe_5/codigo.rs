@@ -13,7 +13,7 @@ unsafe fn cqe5_h(a: usize) -> i16 {
 }
 
 /// O clube de um contrato: +4 é o índice em [0xae23b4] (registros de 0x245 bytes), como as regras calculam.
-unsafe fn cqe5_clube_do_contrato(c: usize) -> usize {
+unsafe fn england_rules_club_of_contract(c: usize) -> usize {
     cqe5_d(0xae23b4).wrapping_add(cqe5_d(c + 4).wrapping_mul(0x245))
 }
 
@@ -28,7 +28,7 @@ unsafe fn cqe5_contrato(p: usize) -> usize {
 
 /// A entrada de 16 bytes do clube na tabela dos empréstimos da temporada ([[0xde1f54] + 0x91c] + id do clube que pega emprestado × 16, o byte +0
 /// é a conta).
-unsafe fn cqe5_conta(clube: usize) -> usize {
+unsafe fn season_loans_entry(clube: usize) -> usize {
     cqe5_d(cqe5_d(0xde1f54) + 0x91c).wrapping_add(cqe5_d(clube).wrapping_mul(16))
 }
 
@@ -41,11 +41,11 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
     // 0x66f4e0: o texto da mensagem (push ...; push formato; push destino; add esp, 0x14) -> cdecl variádica
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let c = cqe5_contrato(jogador);
-    if c == 0 || cqe5_clube_do_contrato(c) == 0 {
+    if c == 0 || england_rules_club_of_contract(c) == 0 {
         return 1;
     }
     let c2 = cqe5_contrato(jogador);
-    let dono = if c2 != 0 { cqe5_clube_do_contrato(c2) } else { 0 };
+    let dono = if c2 != 0 { england_rules_club_of_contract(c2) } else { 0 };
     let comp = cqe5_d(clube + 0x57);
     if comp == cqe5_d(dono + 0x57) && comp != 0 && cqe5_d(comp) == cqe5_d(0x9cf5bc) {
         crate::comparacao::ramo("cqe_5 mesma divisao");
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
         }
         return 0;
     }
-    if cqe5_b(cqe5_conta(clube)) as i8 >= 5 {
+    if cqe5_b(season_loans_entry(clube)) as i8 >= 5 {
         // cqe5: cinco na temporada
         crate::comparacao::ramo("cqe_5 cinco na temporada");
         if msg != 0 {
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
             continue;
         }
         let cp = cqe5_contrato(p);
-        let de = if cp != 0 { cqe5_clube_do_contrato(cp) } else { 0 };
+        let de = if cp != 0 { england_rules_club_of_contract(cp) } else { 0 };
         if de != clube {
             n = n.wrapping_add(1);
         }
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn record_loan(_this: usize, oferta: usize) {
     let nacao = cqe5_d(clube + 0x53);
     if nacao != 0 && cqe5_d(nacao) == cqe5_d(0x9cf2e4) {
         crate::comparacao::ramo("cqe_5 emprestimo contado");
-        let p = cqe5_conta(clube);
+        let p = season_loans_entry(clube);
         *(p as *mut u8) = cqe5_b(p).wrapping_add(1); // cqe5: a conta da temporada
     }
 }
@@ -149,14 +149,14 @@ unsafe extern "thiscall" fn england_rules_daily_update(this: usize, data: usize)
     while i < cqe5_d(0xae235c) as i32 {
         let clube = cqe5_d(0xae23b4).wrapping_add((i as usize).wrapping_mul(0x245));
         if cqe5_d(clube + 0x53) == cqe5_d(this + 0xa) {
-            *(cqe5_conta(clube) as *mut u8) = 0;
+            *(season_loans_entry(clube) as *mut u8) = 0;
         }
         i += 1;
     }
 }
 
 /// O texto da mensagem (até o zero, no máximo 0x200 bytes).
-unsafe fn cqe5_texto(msg: usize) -> Vec<u8> {
+unsafe fn message_text(msg: usize) -> Vec<u8> {
     let mut v = Vec::new();
     if msg == 0 {
         return v;
@@ -174,7 +174,7 @@ unsafe fn cqe5_texto(msg: usize) -> Vec<u8> {
 /// Comparador comum das regras de empréstimo (pode emprestar): lado a lado na devolução, em [0xae1080] e no motivo; a
 /// mensagem, que só é escrita, é conferida pelo texto (antes da cópia o primeiro byte vai a zero, e no fim volta o
 /// texto da original).
-unsafe fn cqe5_comparar_pode(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, nome: &str, this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
+unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, nome: &str, this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     let mut regioes = vec![(0xae1080usize, 4usize)];
     if !motivo.is_null() {
         regioes.push((motivo as usize, 2));
@@ -183,14 +183,14 @@ unsafe fn cqe5_comparar_pode(o: unsafe extern "thiscall" fn(usize, usize, usize,
     let mut tr = Vec::new();
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || {
         let x = o(this, clube, jogador, msg, motivo);
-        to = cqe5_texto(msg);
+        to = message_text(msg);
         x
     }, || {
         if msg != 0 {
             *(msg as *mut u8) = 0;
         }
         let x = r(this, clube, jogador, msg, motivo);
-        tr = cqe5_texto(msg);
+        tr = message_text(msg);
         x
     });
     if msg != 0 {
@@ -201,14 +201,14 @@ unsafe fn cqe5_comparar_pode(o: unsafe extern "thiscall" fn(usize, usize, usize,
 }
 
 unsafe extern "thiscall" fn comparar_england_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe5_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I0%%), england_rules_can_loan_player, "england_rules_can_loan_player", this, clube, jogador, msg, motivo)
+    england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I0%%), england_rules_can_loan_player, "england_rules_can_loan_player", this, clube, jogador, msg, motivo)
 }
 
 /// Comparador: lado a lado no byte da conta do clube da oferta.
 unsafe extern "thiscall" fn comparar_record_loan(this: usize, oferta: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let clube = cqe5_d(0xae23b4).wrapping_add(cqe5_d(oferta + 8).wrapping_mul(0x245));
-    let regioes = [(cqe5_conta(clube), 1usize)];
+    let regioes = [(season_loans_entry(clube), 1usize)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || record_loan(this, oferta));
     PLACAR.registrar(igual, || format!("record_loan(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
 }
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn comparar_record_loan(this: usize, oferta: usize) {
 /// Comparador: lado a lado na tabela das contas inteira ([0xae235c] clubes × 16 bytes) só no dia em que ela muda (20
 /// de junho); nos outros dias as duas rodam sem gravar nada e só a original fica valendo.
 unsafe extern "thiscall" fn comparar_england_rules_daily_update(this: usize, data: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(0x549f70usize);
     let mut d = [0u8; 8];
     let r = data_de(d.as_mut_ptr() as usize, 0x14, 5, 0x7ce, -1);

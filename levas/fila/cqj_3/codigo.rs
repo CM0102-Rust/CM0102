@@ -12,7 +12,7 @@ unsafe fn cqj3_w(a: usize) -> u16 {
 /// (+0xa), +6 + 8 × k as candidaturas k = 0..2 (sede e segunda), +0x1e a escolhida (0..2; −3 a padrão fixa, −1 a
 /// votação aberta, −2 a votação ainda fechada), +0x1f o dia do ano das decisões, +0x21 o intervalo em anos) pela
 /// candidatura `k` (a padrão com `k` < 0): grava as duas e devolve quantas valem (≠ −1).
-unsafe fn cqj3_sedes(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
+unsafe fn host_pair(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
     let off = if k >= 0 { k as i32 * 8 } else { 0 } as usize;
     *a = cqj3_d(e + 6 + off);
     let segunda = cqj3_d(e + 0xa + off);
@@ -34,11 +34,11 @@ unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, ano: u32, a: *mut
             if ae == ano as u16 || ae == 0 {
                 let k = *((e + 0x1e) as *const i8);
                 if k > -1 {
-                    return cqj3_sedes(e, k, a, b) as u32;
+                    return host_pair(e, k, a, b) as u32;
                 }
                 if k == -3 || k == -1 || padrao != 0 {
                     crate::comparacao::ramo("cqj_3 sede padrao");
-                    return cqj3_sedes(e, -1, a, b) as u32; // cqj3: a sede padrão
+                    return host_pair(e, -1, a, b) as u32; // cqj3: a sede padrão
                 }
             }
         }
@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, ano: u32, a: *mut
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
 unsafe extern "thiscall" fn comparar_find_hosts(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32>(%%I0%%);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, ano, a, b, padrao);
     let (oa, ob) = (*a, *b);
@@ -72,10 +72,10 @@ unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a: *mut u32,
         if cqj3_d(e) == comp {
             let k = *((e + 0x1e) as *const i8);
             if k > -1 {
-                return cqj3_sedes(e, k, a, b) as u32;
+                return host_pair(e, k, a, b) as u32;
             }
             if k == -3 {
-                return cqj3_sedes(e, -1, a, b) as u32;
+                return host_pair(e, -1, a, b) as u32;
             }
         }
         e += 0x22;
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a: *mut u32,
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
 unsafe extern "thiscall" fn comparar_find_next_hosts(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u32>(%%I1%%);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, a, b);
     let (oa, ob) = (*a, *b);
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn comparar_find_next_hosts(this: usize, comp: u32, a: 
 }
 
 /// A chave da busca (a 0x5fb3f0 compara o ano +4 e depois o dia +0x1f, sem sinal).
-fn cqj3_compara(e: usize, ano: u16, dia: u16) -> i32 {
+fn compare_year_day(e: usize, ano: u16, dia: u16) -> i32 {
     unsafe {
         let ae = cqj3_w(e + 4);
         if ae != ano {
@@ -111,7 +111,7 @@ fn cqj3_compara(e: usize, ano: u16, dia: u16) -> i32 {
 
 /// A primeira entrada (de `inicio` a `fim`, ordenadas por ano e dia) com o ano e o dia da chave (bsearch 0x946464 com a
 /// 0x5fb3f0 e o recuo até a primeira igual), ou 0.
-unsafe fn cqj3_primeira(inicio: usize, n: i16, ano: u16, dia: u16) -> usize {
+unsafe fn first_entry_for_date(inicio: usize, n: i16, ano: u16, dia: u16) -> usize {
     let busca: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
     let mut chave = [0u8; 0x22];
     chave[4..6].copy_from_slice(&ano.to_le_bytes());
@@ -120,7 +120,7 @@ unsafe fn cqj3_primeira(inicio: usize, n: i16, ano: u16, dia: u16) -> usize {
     if p == 0 {
         return 0;
     }
-    while p > inicio && cqj3_compara(p - 0x22, ano, dia) == 0 {
+    while p > inicio && compare_year_day(p - 0x22, ano, dia) == 0 {
         p -= 0x22;
     }
     p
@@ -157,9 +157,9 @@ unsafe extern "thiscall" fn host_country_daily_update(this: usize, hoje: usize) 
             europeias(this);
         }
     }
-    let mut p = cqj3_primeira(inicio, n, ano.wrapping_add(8), dia);
+    let mut p = first_entry_for_date(inicio, n, ano.wrapping_add(8), dia);
     if p != 0 {
-        while p <= fim && cqj3_compara(p, ano.wrapping_add(8), dia) == 0 {
+        while p <= fim && compare_year_day(p, ano.wrapping_add(8), dia) == 0 {
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xfe {
                 *k = 0xff; // cqj3: a votação abre
@@ -171,9 +171,9 @@ unsafe extern "thiscall" fn host_country_daily_update(this: usize, hoje: usize) 
             p += 0x22;
         }
     }
-    let mut p = cqj3_primeira(inicio, n, ano.wrapping_add(5), dia);
+    let mut p = first_entry_for_date(inicio, n, ano.wrapping_add(5), dia);
     if p != 0 {
-        while p <= fim && cqj3_compara(p, ano.wrapping_add(5), dia) == 0 {
+        while p <= fim && compare_year_day(p, ano.wrapping_add(5), dia) == 0 {
             por(l, &p, 4);
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xff || *k == 0xfe {
@@ -206,5 +206,5 @@ unsafe extern "thiscall" fn host_country_daily_update(this: usize, hoje: usize) 
 /// Só a original (sorteia, monta a lista local e entrega notícias); a cópia leva os contadores.
 unsafe extern "thiscall" fn comparar_host_country_daily_update(this: usize, hoje: usize) {
     // ponytail: entrega notícias pela 0x5faec0 e mexe na lista: não dá para rodar duas vezes
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, hoje)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, hoje)
 }

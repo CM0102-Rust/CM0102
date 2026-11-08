@@ -16,8 +16,8 @@ enum Cqp10F {
 /// A virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret 0x10) pela fase `f` escolhida. Nos
 /// grupos: é_liga (se pedido) = 1, rodadas, extra; a tabela de 0x41 bytes por rodada (0x944e46; sem memória, a caixa e
 /// 0) com as datas, o ano +0x40 em 16 bits. No mata-mata: é_liga = 0, rodadas, extra = 0; a tabela de 0x68 bytes por
-/// rodada (sem memória, a caixa e 0), as rodadas pela `cql10_rodada` com o ano +0x40 com sinal e as palavras a mais.
-unsafe fn cqp10_tabela(this: usize, f: Cqp10F, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+/// rodada (sem memória, a caixa e 0), as rodadas pela `eng_cc_cup_write_cup_round` com o ano +0x40 com sinal e as palavras a mais.
+unsafe fn build_stage_schedule(this: usize, f: Cqp10F, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     match f {
         Cqp10F::Nada => 0,
@@ -31,7 +31,7 @@ unsafe fn cqp10_tabela(this: usize, f: Cqp10F, rodadas: *mut i16, extra: *mut i1
             *extra = id;
             let t = alocar(grupos.len() as u32 * 0x41);
             if t == 0 {
-                aviso_em(arquivo, linha);
+                show_error_at(arquivo, linha);
                 return 0;
             }
             crate::comparacao::ramo(nome);
@@ -52,13 +52,13 @@ unsafe fn cqp10_tabela(this: usize, f: Cqp10F, rodadas: *mut i16, extra: *mut i1
             *extra = 0;
             let t = alocar(mata.len() as u32 * 0x68);
             if t == 0 {
-                aviso_em(arquivo, linha);
+                show_error_at(arquivo, linha);
                 return 0;
             }
             crate::comparacao::ramo(nome);
             let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
             for (i, r) in mata.iter().enumerate() {
-                cql10_rodada(t, i as u32, r, ano);
+                eng_cc_cup_write_cup_round(t, i as u32, r, ano);
             }
             for &(r, o, v) in a_mais {
                 core::ptr::write_unaligned((t + r * 0x68 + o) as *mut u16, v);
@@ -69,8 +69,8 @@ unsafe fn cqp10_tabela(this: usize, f: Cqp10F, rodadas: *mut i16, extra: *mut i1
 }
 
 /// Os bytes que a original grava na tabela de `n` rodadas da fase `f`: nos grupos (0x41 bytes), +0..+0xb e
-/// +0x3d..+0x40 de cada rodada; no mata-mata, os da cql10_gravados e as palavras a mais.
-unsafe fn cqp10_gravados(f: Cqp10F, t: usize, n: i16) -> Vec<u8> {
+/// +0x3d..+0x40 de cada rodada; no mata-mata, os da eng_cc_cup_written_round_bytes e as palavras a mais.
+unsafe fn written_schedule_bytes(f: Cqp10F, t: usize, n: i16) -> Vec<u8> {
     match f {
         Cqp10F::Nada => Vec::new(),
         Cqp10F::Grupos(..) => {
@@ -83,7 +83,7 @@ unsafe fn cqp10_gravados(f: Cqp10F, t: usize, n: i16) -> Vec<u8> {
             v
         }
         Cqp10F::Mata(_, a_mais, ..) => {
-            let mut v = cql10_gravados(t, n);
+            let mut v = eng_cc_cup_written_round_bytes(t, n);
             for &(r, o, _) in a_mais {
                 v.extend_from_slice(core::slice::from_raw_parts((t + r * 0x68 + o) as *const u8, 2));
             }
@@ -95,7 +95,7 @@ unsafe fn cqp10_gravados(f: Cqp10F, t: usize, n: i16) -> Vec<u8> {
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
 /// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
-unsafe fn cqp10_comparar(nome: &str, fase: u32, f: Cqp10F, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+unsafe fn compare_stage_schedule(nome: &str, fase: u32, f: Cqp10F, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if let Cqp10F::Nada = f {
         let a = o();
@@ -107,7 +107,7 @@ unsafe fn cqp10_comparar(nome: &str, fase: u32, f: Cqp10F, rodadas: *mut i16, ex
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let saidas = *rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2);
-    let tabela = if a != 0 && b != 0 { cqp10_gravados(f, a, *rodadas) == cqp10_gravados(f, b, r2) } else { a == 0 && b == 0 };
+    let tabela = if a != 0 && b != 0 { written_schedule_bytes(f, a, *rodadas) == written_schedule_bytes(f, b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(b);
@@ -131,7 +131,7 @@ const CQP10_CAMPEOES_MATA: [Cql10R; 2] = [
 
 /// A fase da Copa dos Campeões pelo byte com sinal: −1 a preliminar (extra 0xe6, caixa 0xaa), abaixo de 2 os grupos
 /// (extra = fase + 0x3fd, caixa 0xcd), 2 em diante o mata-mata (caixa 0xed).
-fn cqp10_campeoes_fase(fase: u32) -> Cqp10F {
+fn champions_cup_stage(fase: u32) -> Cqp10F {
     let f = fase as u8 as i8;
     if f == -1 {
         Cqp10F::Grupos(&CQP10_CAMPEOES_PRELIMINAR, 0xe6, 0xaa, "cqp_10 preliminar da copa dos campeoes")
@@ -143,14 +143,14 @@ fn cqp10_campeoes_fase(fase: u32) -> Cqp10F {
 }
 
 /// { 0x425c10 } (thiscall, ret 0x10, bra_champ_cup.cpp; a virtual +0x3c da Copa dos Campeões): `BraChampCup::
-/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a preliminar, os grupos ou o mata-mata (`cqp10_campeoes_fase`).
+/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a preliminar, os grupos ou o mata-mata (`champions_cup_stage`).
 unsafe extern "thiscall" fn bra_champ_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp10_tabela(this, cqp10_campeoes_fase(fase), rodadas, extra, liga, 0x98a1e8)
+    build_stage_schedule(this, champions_cup_stage(fase), rodadas, extra, liga, 0x98a1e8)
 }
 
 unsafe extern "thiscall" fn comparar_bra_champ_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqp10_comparar("bra_champ_cup_create_schedule", fase, cqp10_campeoes_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    compare_stage_schedule("bra_champ_cup_create_schedule", fase, champions_cup_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| bra_champ_cup_create_schedule(this, fase, r, e, l))
 }
 
@@ -165,7 +165,7 @@ const CQP10_MERCONORTE_MATA: [Cql10R; 2] = [
 
 /// A fase da Merconorte: abaixo de 3 os grupos (extra = fase + 0x3e9, caixa 0x9b), 3 o mata-mata (caixa 0xc1), acima
 /// nada.
-fn cqp10_merconorte_fase(fase: u32) -> Cqp10F {
+fn merconorte_stage(fase: u32) -> Cqp10F {
     let f = fase as u8 as i8;
     if f < 3 {
         Cqp10F::Grupos(&CQP10_MERCONORTE_GRUPOS, (f as i16).wrapping_add(0x3e9), 0x9b, "cqp_10 grupos da merconorte")
@@ -177,14 +177,14 @@ fn cqp10_merconorte_fase(fase: u32) -> Cqp10F {
 }
 
 /// { 0x4c1960 } (thiscall, ret 0x10, con_merc_cup.cpp; a virtual +0x3c da Merconorte): `ConMercCup::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: os grupos ou o mata-mata (`cqp10_merconorte_fase`).
+/// &rodadas, &extra, &é_liga)`: os grupos ou o mata-mata (`merconorte_stage`).
 unsafe extern "thiscall" fn con_merc_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp10_tabela(this, cqp10_merconorte_fase(fase), rodadas, extra, liga, 0x9a7d6c)
+    build_stage_schedule(this, merconorte_stage(fase), rodadas, extra, liga, 0x9a7d6c)
 }
 
 unsafe extern "thiscall" fn comparar_con_merc_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cqp10_comparar("con_merc_cup_create_schedule", fase, cqp10_merconorte_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    compare_stage_schedule("con_merc_cup_create_schedule", fase, merconorte_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| con_merc_cup_create_schedule(this, fase, r, e, l))
 }
 
@@ -196,12 +196,12 @@ const CQP10_SUPERCOPA_EUROPEIA: [Cql10R; 1] = [
 /// { 0x57a3c0 } (thiscall, ret 0x10, eur_super_cup.cpp; a virtual +0x3c da Supercopa Europeia): `EurSuperCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
 unsafe extern "thiscall" fn eur_super_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql10_tabela(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_EUROPEIA, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_EUROPEIA, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
 }
 
 unsafe extern "thiscall" fn comparar_eur_super_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
-    cql10_comparar("eur_super_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
+    eng_cc_cup_compare_round_table("eur_super_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| eur_super_cup_create_round_table(this, fase, r, e, s))
 }
 
@@ -213,11 +213,11 @@ const CQP10_SUPERCOPA_ASIATICA: [Cql10R; 1] = [
 /// { 0x410910 } (thiscall, ret 0x10, asia_super_cup.cpp; a virtual +0x3c da Supercopa Asiática): `AsiaSuperCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x97 sem memória.
 unsafe extern "thiscall" fn bra_champ_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql10_tabela(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_ASIATICA, 0x987be0, 0x97, "cqp_10 tabela da supercopa asiatica")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_ASIATICA, 0x987be0, 0x97, "cqp_10 tabela da supercopa asiatica")
 }
 
 unsafe extern "thiscall" fn comparar_bra_champ_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I3%%);
-    cql10_comparar("bra_champ_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I3%%);
+    eng_cc_cup_compare_round_table("bra_champ_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| bra_champ_cup_create_round_table(this, fase, r, e, s))
 }

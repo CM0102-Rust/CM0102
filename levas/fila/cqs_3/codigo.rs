@@ -28,7 +28,7 @@ type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize
 ///    dword inteiro), o extra (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; words e bytes limpos). Sem memória: 0.
 /// 4) [+0xc][g] = a fase. Sem fase: a caixa da linha 0x487 e volta (sem liberar o vetor nem a tabela). Com ela: o vetor
 ///    e a tabela liberados (free 0x9452ca) e +0x30 = g (o byte com sinal).
-unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
+unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g: u32, pv: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -38,7 +38,7 @@ unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
     let t = tabela(this, g, &mut rodadas, &mut extra, 0);
     let v = alocar(((cqs3_w(this + 0x3e) as i32) << 2) as u32);
     if v == 0 {
-        return aviso_em(0x98aba4, 0x475);
+        return show_error_at(0x98aba4, 0x475);
     }
     let k = g as u8 as i8 as i32;
     for j in 0..7usize {
@@ -54,7 +54,7 @@ unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
     };
     core::ptr::write_unaligned((cqs3_d(this + 0xc) + 4 * k as usize) as *mut usize, fase);
     if cqs3_d(cqs3_d(this + 0xc) + 4 * k as usize) == 0 {
-        return aviso_em(0x98aba4, 0x487);
+        return show_error_at(0x98aba4, 0x487);
     }
     crate::comparacao::ramo("cqs_3 grupo");
     soltar(v);
@@ -64,7 +64,7 @@ unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
 
 /// { 0x42ee80 } (acima): o grupo g da primeira fase da Série C.
 unsafe extern "thiscall" fn bra_nat_third_create_group_stage(this: usize, g: u32) {
-    cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
+    bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
 }
 
 /// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `CQS3_SEMENTES[k]` da lista dos dezesseis.
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
         core::mem::transmute(0x522e00usize);
     let lista = alocar(0x40);
     if lista == 0 {
-        return aviso_em(0x98aba4, 0x2e6);
+        return show_error_at(0x98aba4, 0x2e6);
     }
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
                 c
             }
             None => {
-                aviso_em(0x98aba4, 0x30b);
+                show_error_at(0x98aba4, 0x30b);
                 core::ptr::read_volatile(core::ptr::null::<usize>()) // ponytail: a original lê o endereço 0 aqui e cai
             }
         };
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     };
     core::ptr::write_unaligned((cqs3_d(this + 0xc) + 0x1c) as *mut usize, fase);
     if cqs3_d(cqs3_d(this + 0xc) + 0x1c) == 0 {
-        return aviso_em(0x98aba4, 0x31b);
+        return show_error_at(0x98aba4, 0x31b);
     }
     crate::comparacao::ramo("cqs_3 segunda fase");
     soltar(t);
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         };
         core::ptr::write_unaligned((cqs3_d(this + 0xc) + 4 * k as usize) as *mut usize, fase);
         if cqs3_d(cqs3_d(this + 0xc) + 4 * k as usize) == 0 {
-            return aviso_em(0x98aba4, f);
+            return show_error_at(0x98aba4, f);
         }
         soltar(t);
     }
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage(this: usiz
     for (j, c) in plano.iter_mut().enumerate() {
         *c = cqs3_d(cqs3_d(this + 0xee) + 4 * (7 * (k + 1) as usize + j));
     }
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, g);
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, g);
     let fase = cqs3_d(cqs3_d(this + 0xc) + 4 * k as usize);
     let igual = fase != 0 && cqs3_w(fase + 0x3e) == 7 && cqs3_d(this + 0x30) as i32 == k && {
         let mut nela = [0usize; 7];
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn comparar_create_second_round_stage(this: usize) {
             r[m].0 = 0;
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let fase = cqs3_d(cqs3_d(this + 0xc) + 0x1c);
     let igual = fase != 0 && cqs3_w(fase + 0x3e) == 0x10 && cqs3_d(this + 0x30) == 7 && {
         let mut nela = [0usize; 16];
@@ -270,7 +270,7 @@ unsafe extern "thiscall" fn comparar_create_third_round_groups(this: usize) {
         }
         i += 1;
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let (a, b) = (cqs3_d(cqs3_d(this + 0xc) + 0x20), cqs3_d(cqs3_d(this + 0xc) + 0x24));
     let igual = a != 0 && b != 0 && cqs3_w(a + 0x3e) == 4 && cqs3_w(b + 0x3e) == 4 && cqs3_d(this + 0x30) == 9 && {
         let mut nela = [0usize; 8];

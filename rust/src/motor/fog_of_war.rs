@@ -6,8 +6,8 @@ use super::*;
 /// limitado a 1..20 (NaN vira 1) e truncado.
 pub(crate) unsafe extern "C" fn chance_to_know(pessoa: usize, nivel: i8) -> i32 {
     let x = (*((pessoa + 4) as *const i16) as f64 + (nivel as f64 + nivel as f64)) * 0.05 + 10.0;
-    let y = (x * x * 0.1 + x) * f64_em(0x968a80) + 0.5;
-    ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y })
+    let y = (x * x * 0.1 + x) * read_f64_at(0x968a80) + 0.5;
+    match_pl_ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y })
 }
 
 /// { 0x5b09d0 } (ret 8, fog_of_war.cpp): o que se sabe da pessoa (registros de 9 bytes em [this],

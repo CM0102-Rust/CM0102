@@ -5,8 +5,8 @@
 MUTACOES = [
     ('cpj_diretoria_tecnico', 'if cpj6_d(clube + 0xcf) != 0 { // o lado tem técnico',
      'if cpj6_d(clube + 0xcf) == 0 { // mutacao: os sem tecnico'),
-    ('cpj_disciplina_liga', 'if let Some(t) = cpj6_tribunal(this, cpj6_d(liga) as i32) { // o tribunal da liga do clube',
-     'if let Some(t) = cpj6_tribunal(this, cpj6_d(liga) as i32 + 1) { // mutacao: a liga seguinte'),
+    ('cpj_disciplina_liga', 'if let Some(t) = comp_tribunal(this, cpj6_d(liga) as i32) { // o tribunal da liga do clube',
+     'if let Some(t) = comp_tribunal(this, cpj6_d(liga) as i32 + 1) { // mutacao: a liga seguinte'),
     ('cpj_shortlist_recuo', 'e -= 8; // a anterior também é do clube',
      'break; // mutacao: sem recuar'),
     ('cpj_oferta_empate', 'if v > maior { // a primeira no empate',

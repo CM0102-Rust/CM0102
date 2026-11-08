@@ -49,7 +49,7 @@ unsafe extern "C" fn staff_add_disliked_club(pessoa: usize, clube: usize, forcar
 }
 
 unsafe extern "C" fn comparar_staff_add_disliked_club(pessoa: usize, clube: usize, forcar: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I0%%);
     let pref = if pessoa != 0 { dbq2_u32(pessoa + 0x65) } else { 0 };
     let reg = dbq2_regioes(if pref != 0 { pref + 4 } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, clube, forcar),
@@ -81,7 +81,7 @@ unsafe extern "C" fn staff_fade_staff_relationships(pessoa: usize) {
 }
 
 unsafe extern "C" fn comparar_staff_fade_staff_relationships(pessoa: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize)>(%%I1%%);
     let pref = if pessoa != 0 { dbq2_u32(pessoa + 0x65) } else { 0 };
     let reg = dbq2_regioes(if pref != 0 { pref + 0x1c } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa),
@@ -112,7 +112,7 @@ unsafe extern "C" fn staff_get_disliked_staff(pessoa: usize, saida: usize, n: us
 }
 
 unsafe extern "C" fn comparar_staff_get_disliked_staff(pessoa: usize, saida: usize, n: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> usize>(%%I2%%);
     let mut reg = vec![(n, 1)];
     if saida != 0 {
         reg.push((saida, 12));

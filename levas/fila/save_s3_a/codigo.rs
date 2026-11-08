@@ -1,12 +1,12 @@
 // ---------- %%LEVA%%a leva: o save: criar o jogo pelo arquivo de configuração (o início rápido e a carreira automática) (Setup.cpp) ----------
 
-/// A caixa "Error" de Setup.cpp (`aviso_do_setup`) e o jogo para, como a original: 0x5cc7d0,
+/// A caixa "Error" de Setup.cpp (`setup_warning`) e o jogo para, como a original: 0x5cc7d0,
 /// 0x5a8f60 e `exit(-1)` (0x945934).
-unsafe fn erro_fatal_do_setup(linha: u32) -> ! {
+unsafe fn setup_fatal_error(linha: u32) -> ! {
     let fechar1: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
     let fechar2: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
     let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(0x945934usize);
-    aviso_do_setup(linha);
+    setup_warning(linha);
     fechar1();
     fechar2();
     sair(-1)
@@ -79,16 +79,16 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
     let u = |a: usize| *(a as *const u32);
     let i = |a: usize| *(a as *const i32);
     let mut temporaria = [0u8; 0x104];
-    copiar_texto(temporaria.as_mut_ptr(), pasta(0x987da0, 0xad9c64));
+    copy_text(temporaria.as_mut_ptr(), pasta(0x987da0, 0xad9c64));
     let mut dados = [0u8; 0x104];
-    copiar_texto(dados.as_mut_ptr(), pasta(0x9b5348, 0xad9c64));
+    copy_text(dados.as_mut_ptr(), pasta(0x9b5348, 0xad9c64));
     if cfg.is_null() {
-        aviso_do_setup(0x1c13);
+        setup_warning(0x1c13);
         return 0;
     }
     let f = abrir(cfg, 0x9899fc);
     if f == 0 {
-        aviso_do_setup(0x1c1b);
+        setup_warning(0x1c1b);
         return 0;
     }
     let mut ferias = 0u32;
@@ -97,7 +97,7 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
     // sem banco: carrega, aplica, zera as marcas das nações e as contagens, monta as nações-chave
     let preparar_banco = |de_frente: bool, erro_banco: u32, erro_chave: u32| {
         if carregar_banco(dados.as_ptr(), 1) == 0 {
-            erro_fatal_do_setup(erro_banco);
+            setup_fatal_error(erro_banco);
         }
         aplicar(opcoes());
         let mut k = 0i32;
@@ -113,7 +113,7 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
             *(0xae2d08 as *mut u32) = 0;
         }
         if nacoes_chave() == 0 {
-            erro_fatal_do_setup(erro_chave);
+            setup_fatal_error(erro_chave);
         }
     };
     while ler_linha(f, b) != 0 {
@@ -122,7 +122,7 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
             let mut p = b;
             loop {
                 if *p == b' ' {
-                    copiar_texto(p, p.add(1));
+                    copy_text(p, p.add(1));
                 }
                 p = p.add(1);
                 if *p == 0 {
@@ -247,7 +247,7 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
     *(0xdd7124 as *mut u32) = 1;
     *(0xdd713c as *mut u32) = 1;
     if criar_jogo(!qst.is_null() as u32) == 0 {
-        erro_fatal_do_setup(0x1d11);
+        setup_fatal_error(0x1d11);
     }
     if !qst.is_null() {
         let mut arquivo = [0u8; 0x104];
@@ -256,7 +256,7 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
         liberar(1);
         return 1;
     }
-    copiar_texto((opcoes() + 0x113) as *mut u8, 0xa81288 as *const u8);
+    copy_text((opcoes() + 0x113) as *mut u8, 0xa81288 as *const u8);
     *(0xdd7130 as *mut u32) = 1;
     let mut data = [0u8; 8];
     copia_data(0xdd70a0, data.as_mut_ptr(), 0xae2c90);
@@ -267,7 +267,7 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
     let tabela = u(0xae23bc) as usize;
     let mut p = 0usize;
     if tabela == 0 {
-        aviso_do_setup(0x39b3);
+        setup_warning(0x39b3);
     } else {
         let mut q = tabela.wrapping_add((i(0xae2364) as usize).wrapping_mul(0x6e)).wrapping_sub(0x6e);
         for _ in 0..0x10 {
@@ -312,5 +312,5 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
 // duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst) e pelas
 // carreiras (o auto_setup.cfg).
 unsafe extern "C" fn comparar_create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
-    orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(%%I0%%)(cfg, qst)
+    original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(%%I0%%)(cfg, qst)
 }

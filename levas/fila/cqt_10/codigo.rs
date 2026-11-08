@@ -13,7 +13,7 @@ unsafe fn cqt10_pd(a: usize, v: usize) {
 }
 
 /// O clube k dos 8 escolhidos (+0xee, ponteiros: o grupo A nas vagas 0..3, o B nas 4..7), a que as duas tabelas leem.
-unsafe fn cqt10_escolhido(this: usize, k: usize) -> usize {
+unsafe fn selected_club(this: usize, k: usize) -> usize {
     cqt10_d(cqt10_d(this + 0xee) + k * 4) // cqt10: o escolhido k
 }
 
@@ -51,15 +51,15 @@ unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: usize, hoje
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqt10_d(cqt10_d(this) + 0x5c));
         previstas(this);
         if grupo_a(this) == 0 {
-            aviso_em(0xa6a068, 0x21d);
+            show_error_at(0xa6a068, 0x21d);
             return 1;
         }
         if jogos(this) == 0 {
-            aviso_em(0xa6a068, 0x224);
+            show_error_at(0xa6a068, 0x224);
             return 1;
         }
         if ordenar(this, 0) == 0 {
-            aviso_em(0xa6a068, 0x22b);
+            show_error_at(0xa6a068, 0x22b);
             return 1;
         }
         grupo_b(this);
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: usize, hoje
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e a fase do
 // grupo B criadas e a fase atual (+0x30) = 0.
 unsafe extern "thiscall" fn comparar_oceania_club_champ_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = cqt10_d(this + 0x45) == 0
         && completo == 0
         && (cqt10_w(this + 0xb8) as u16).wrapping_add(cqt10_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -108,14 +108,14 @@ unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 {
     let t = novo(0xec);
     cqt10_pd(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0xa6a068, 0x182);
+        show_error_at(0xa6a068, 0x182);
         return 0;
     }
     let mut i = 0i8;
     while (i as i16) < cqt10_w(this + 0x3e) {
         crate::comparacao::ramo("cqt_10 linha do grupo a");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
-        linha(this, i as u8 as u32, cqt10_escolhido(this, i as usize), 0, 0); // cqt10: a linha i do grupo A
+        linha(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: a linha i do grupo A
         i = i.wrapping_add(1);
     }
     noticia(this);
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 {
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o escolhido i com a posição i (+4).
 unsafe extern "thiscall" fn comparar_create_group_a_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqt10_d(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -163,12 +163,12 @@ unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
         core::mem::transmute(0x68b100usize);
     let times = alocar(0x10);
     if times == 0 {
-        aviso_em(0xa6a068, 0x296);
+        show_error_at(0xa6a068, 0x296);
         return 0;
     }
     for n in 0..4usize {
         crate::comparacao::ramo("cqt_10 time do grupo b");
-        cqt10_pd(times + n * 4, cqt10_escolhido(this, 4 + n)); // cqt10: o time na vaga do grupo B
+        cqt10_pd(times + n * 4, selected_club(this, 4 + n)); // cqt10: o time na vaga do grupo B
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt10_d(cqt10_d(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
     soltar(tabela);
     let f = cqt10_d(cqt10_d(this + 0xc));
     if f == 0 {
-        aviso_em(0xa6a068, 0x2ad);
+        show_error_at(0xa6a068, 0x2ad);
         return 0;
     }
     cqt10_pd(this + 0x30, 0);
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
 // fase em [+0xc][0], +0x30 = 0, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // escolhidos 4 a 7 (em qualquer ordem: o construtor ordena a tabela).
 unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let lista = cqt10_d(this + 0xee);
     if lista == 0 {
         return o(this);

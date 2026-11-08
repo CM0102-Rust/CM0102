@@ -58,7 +58,7 @@ unsafe extern "thiscall" fn construct_cup_stage(this: usize, pai: usize, n: u32,
     let t = alocar(tamanho);
     cqs7_pd(this + 0xa3, t);
     if t == 0 {
-        aviso_em(F, 0x48);
+        show_error_at(F, 0x48);
         return this;
     }
     core::ptr::copy_nonoverlapping(modelo as *const u8, t as *mut u8, tamanho as usize);
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn construct_cup_stage(this: usize, pai: usize, n: u32,
     let l = zerada(n as u16 as i16 as i32 as u32, 6);
     cqs7_pd(this + 0xa7, l);
     if l == 0 {
-        aviso_em(F, 0x53);
+        show_error_at(F, 0x53);
         return this;
     }
     crate::comparacao::ramo("cqs_7 fase de copa");
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn construct_cup_stage(this: usize, pai: usize, n: u32,
     let (mapa, linha) = if arvore != 0 { (0x5241e0usize, 0x62) } else { (0x518790usize, 0x6a) };
     let mapa: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(mapa);
     if mapa(this) < 0 {
-        aviso_em(F, linha);
+        show_error_at(F, linha);
     }
     this
 }
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn construct_cup_stage(this: usize, pai: usize, n: u32,
 unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, por_ordem: u32, a14: u32, sementes: usize) -> usize {
     #[allow(clippy::type_complexity)]
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(%%I0%%);
     let k = (n as u16 as i16).max(0) as usize;
     let plano: Vec<(usize, u8)> = (0..k).map(|i| {
         let s = if sementes != 0 { *((sementes + i) as *const u8) } else if por_ordem != 0 { i as u8 } else { 0 };
@@ -158,5 +158,5 @@ unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
 
 // ponytail: libera as tabelas e destrói a base; não pode rodar duas vezes: só a original
 unsafe extern "thiscall" fn comparar_destroy_cup_stage(this: usize) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%)(this)
 }

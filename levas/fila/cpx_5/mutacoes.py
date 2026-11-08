@@ -8,8 +8,8 @@
 #   cima das lidas; so a carga do FeriasTesteSave (CARGA) acusa, pela impressao ate 2001-08-28 (saldos refeitos mudam
 #   as decisoes de transferencia e os sorteios). Pode escapar se nenhum sorteio ate 2001-08-28 depender do saldo.
 MUTACOES = [
-    ('cpx5_registro_curto', '    if gravar_item(cpx5_d(this), 0x167, cpx5_clubes(), z) != cpx5_clubes() { // cpx5: os registros das finanças',
-     '    if gravar_item(cpx5_d(this), 0x166, cpx5_clubes(), z) != cpx5_clubes() { // mutacao: registro curto'),
+    ('cpx5_registro_curto', '    if gravar_item(cpx5_d(this), 0x167, club_count(), z) != club_count() { // cpx5: os registros das finanças',
+     '    if gravar_item(cpx5_d(this), 0x166, club_count(), z) != club_count() { // mutacao: registro curto'),
     ('cpx5_gerente_mais_um', '    let mut v = *(this as *const u16) as u32; // cpx5: o valor do gerente de elencos',
      '    let mut v = *(this as *const u16) as u32 + 1; // mutacao: o valor mais um'),
     ('cpx5_carga_refeita', '    1 // cpx5: carregou (o construtor não refaz as finanças)',

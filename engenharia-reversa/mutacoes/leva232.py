@@ -8,7 +8,7 @@ MUTACOES = [
     ('dbi_ordem_do_elenco_pela_habilidade_atual', '        palavra(jb, 5) - palavra(ja, 5) // a habilidade atual maior primeiro', '        palavra(ja, 5) - palavra(jb, 5) // mutacao: a menor primeiro'),
     ('dbi_normalizar_atributos_fisicos_do_jogador', '    let alvo = if s < -40 { -40 } else if s > 0 { 0 } else { s }; // alvo físico', '    let alvo = if s < -40 { -40 } else if s > 0 { 0 } else { s }; // alvo físico\n    let alvo = alvo - 1; // mutacao: o alvo do reequilíbrio físico − 1'),
     ('dbi_segundo_nome_pelo_peso', '            return linha(escolhido); // o segundo nome de maior peso', '            return linha(escolhido.wrapping_add(1)); // mutacao: o nome seguinte'),
-    ('dbi_normalizar_atributos_do_jogador', '    reequilibrar_vetor_do_jogador(v, (lados as i8).wrapping_add(2), ponderados as i8, jogador, -20, &[],', '    reequilibrar_vetor_do_jogador(v, (lados as i8).wrapping_add(2), ponderados as i8, jogador, -21, &[], // mutacao: alvo −21'),
+    ('dbi_normalizar_atributos_do_jogador', '    rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, jogador, -20, &[],', '    rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, jogador, -21, &[], // mutacao: alvo −21'),
     ('dbj1_clubes', '|b| (b.max(1) as u16).wrapping_mul(500)', '|b| (b as u16).wrapping_mul(500)'),
     ('dbj1_nao_jogadores', '(0x23, 4, 8)', '(0x23, 4, 7)'),
     ('dbj1_jogadores', '(0xf, 1, 55)', '(0xf, 1, 54)'),

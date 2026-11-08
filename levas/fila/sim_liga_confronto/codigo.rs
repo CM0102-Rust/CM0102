@@ -31,7 +31,7 @@ unsafe extern "C" fn league_compare_h2h_rows(a: usize, b: usize) -> i32 {
 
 /// O registro de 14 bytes do confronto da linha `linha` contra o adversário `adversario` (a linha da
 /// tabela tem 59 bytes; em +5 o ponteiro dos confrontos).
-unsafe fn registro_do_confronto(tabela: usize, linha: i32, adversario: i32) -> usize {
+unsafe fn head_to_head_record(tabela: usize, linha: i32, adversario: i32) -> usize {
     let confrontos = core::ptr::read_unaligned((tabela as isize + linha as isize * 59 + 5) as *const usize);
     (confrontos as isize + adversario as isize * 14) as usize
 }
@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn update_head_to_head(liga: usize, tabela: usize, linh
     if linha < 0 || adversario < 0 {
         return;
     }
-    let e = registro_do_confronto(tabela, linha, adversario);
+    let e = head_to_head_record(tabela, linha, adversario);
     let byte = |o: usize| (e + o) as *mut u8;
     let palavra = |o: usize| (e + o) as *mut i16;
     let somar = |o: usize, v: i16| core::ptr::write_unaligned(palavra(o), core::ptr::read_unaligned(palavra(o)).wrapping_add(v));
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn update_head_to_head(liga: usize, tabela: usize, linh
 /// fora da lista ([+4] ofertas): a original (caixa de erro).
 unsafe extern "thiscall" fn note_terms_offered_to_main_player(gerente: usize, k: i32) {
     if k < 0 || k >= *((gerente + 4) as *const i32) {
-        return orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%)(gerente, k);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%)(gerente, k);
     }
     let oferta = *((*(gerente as *const usize) as isize + k as isize * 4) as *const usize);
     if oferta != 0 && *((oferta + 0x1f) as *const u8) != 1 {
@@ -76,25 +76,25 @@ unsafe extern "thiscall" fn note_terms_offered_to_main_player(gerente: usize, k:
 }
 
 unsafe extern "C" fn comparar_league_compare_h2h_rows(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = league_compare_h2h_rows(a, b);
     PLACAR.registrar(r == n, || format!("league_compare_h2h_rows original={} rust={}", r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_update_head_to_head(liga: usize, tabela: usize, linha: i32, adversario: i32, pro: i8, contra: i8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32, i32, i8, i8)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, i32, i8, i8)>(%%I1%%);
     if linha < 0 || adversario < 0 {
         return o(liga, tabela, linha, adversario, pro, contra);
     }
-    let e = registro_do_confronto(tabela, linha, adversario);
+    let e = head_to_head_record(tabela, linha, adversario);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e, 14)], || o(liga, tabela, linha, adversario, pro, contra),
         || update_head_to_head(liga, tabela, linha, adversario, pro, contra));
     PLACAR.registrar(igual, || format!("update_head_to_head({}, {}, {}x{}) {:x?} x {:x?}", linha, adversario, pro, contra, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_note_terms_offered_to_main_player(gerente: usize, k: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     if k < 0 || k >= *((gerente + 4) as *const i32) {
         return o(gerente, k);
     }

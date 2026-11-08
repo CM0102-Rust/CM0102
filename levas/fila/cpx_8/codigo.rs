@@ -17,7 +17,7 @@ unsafe fn cpx8_b(a: usize) -> u8 {
 }
 
 /// O técnico pedido ou, nulo, o humano da vez ([0xb74c26 + 0x300 × (i16)[0xb77c7a]]).
-unsafe fn cpx8_tecnico(tecnico: usize) -> usize {
+unsafe fn manager_or_current_human(tecnico: usize) -> usize {
     if tecnico != 0 {
         return tecnico;
     }
@@ -26,7 +26,7 @@ unsafe fn cpx8_tecnico(tecnico: usize) -> usize {
 
 /// O índice do registro do técnico humano no gerenciador `this` (id − [0xae2364] + 16), se estiver entre 0 e a conta
 /// ([this+4]) − 1; fora disso a original mostra a caixa "Error".
-unsafe fn cpx8_indice(this: usize, tecnico: usize) -> Option<usize> {
+unsafe fn human_manager_human_manager_index(this: usize, tecnico: usize) -> Option<usize> {
     let k = cpx8_i(tecnico).wrapping_sub(cpx8_i(0xae2364)).wrapping_add(0x10);
     if k < 0 || k > cpx8_i(this + 4).wrapping_sub(1) {
         return None;
@@ -35,7 +35,7 @@ unsafe fn cpx8_indice(this: usize, tecnico: usize) -> Option<usize> {
 }
 
 /// O registro do técnico humano `k` (0xa6ef bytes cada, a partir de [this]).
-unsafe fn cpx8_registro(this: usize, k: usize) -> usize {
+unsafe fn human_manager_record_at(this: usize, k: usize) -> usize {
     cpx8_d(this).wrapping_add(k.wrapping_mul(0xa6ef))
 }
 
@@ -44,19 +44,19 @@ unsafe fn cpx8_registro(this: usize, k: usize) -> usize {
 /// bloco de tática (0x1ecd bytes) da vaga ativa (byte com sinal em +0x9a69 do registro) do técnico (nulo: o humano da
 /// vez). Sem técnico ou fora da conta: a original (caixa "Error", 0).
 unsafe extern "thiscall" fn get_active_tactic(this: usize, tecnico: usize) -> usize {
-    let t = cpx8_tecnico(tecnico);
-    let Some(k) = (if t != 0 { cpx8_indice(this, t) } else { None }) else {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%)(this, tecnico); // caixa: só a original
+    let t = manager_or_current_human(tecnico);
+    let Some(k) = (if t != 0 { human_manager_human_manager_index(this, t) } else { None }) else {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%)(this, tecnico); // caixa: só a original
     };
-    let vaga = cpx8_b(cpx8_registro(this, k) + 0x9a69) as i8 as i32;
+    let vaga = cpx8_b(human_manager_record_at(this, k) + 0x9a69) as i8 as i32;
     cpx8_d(this).wrapping_add(vaga.wrapping_mul(0x1ecd) as usize).wrapping_add(k.wrapping_mul(0xa6ef))
 }
 
 /// Comparador: a devolução (rotina pura); sem técnico ou fora da conta, só a original (caixa).
 unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, tecnico: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
-    let t = cpx8_tecnico(tecnico);
-    if t == 0 || cpx8_indice(this, t).is_none() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
+    let t = manager_or_current_human(tecnico);
+    if t == 0 || human_manager_human_manager_index(this, t).is_none() {
         return o(this, tecnico);
     }
     let r = o(this, tecnico);
@@ -70,12 +70,12 @@ unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, tecnico: usi
 /// (+0x39). A vaga ativa (+0x9a69 do registro): 4 na segunda seleção (0x5409b0), 3 com `reserva` numa seleção
 /// (0x53b900), 2 numa seleção, 1 com `reserva`, 0 no time principal. Fora da conta: a original (caixa "Error").
 unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserva: u32, clube: usize, tecnico: usize) {
-    let t = cpx8_tecnico(tecnico);
+    let t = manager_or_current_human(tecnico);
     if t == 0 {
         return;
     }
-    let Some(k) = cpx8_indice(this, t) else {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(%%I1%%)(this, reserva, clube, tecnico); // caixa: só a original
+    let Some(k) = human_manager_human_manager_index(this, t) else {
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(%%I1%%)(this, reserva, clube, tecnico); // caixa: só a original
     };
     let clube = if clube != 0 { clube } else { cpx8_d(t + 0x39) };
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
@@ -91,18 +91,18 @@ unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserva: u32, clube:
     } else {
         0
     };
-    *((cpx8_registro(this, k) + 0x9a69) as *mut u8) = vaga;
+    *((human_manager_record_at(this, k) + 0x9a69) as *mut u8) = vaga;
 }
 
 /// Comparador: lado a lado pelo byte da vaga ativa do registro; sem técnico (nada) ou fora da conta (caixa), só a
 /// original.
 unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, reserva: u32, clube: usize, tecnico: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(%%I1%%);
-    let t = cpx8_tecnico(tecnico);
-    let Some(k) = (if t != 0 { cpx8_indice(this, t) } else { None }) else {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(%%I1%%);
+    let t = manager_or_current_human(tecnico);
+    let Some(k) = (if t != 0 { human_manager_human_manager_index(this, t) } else { None }) else {
         return o(this, reserva, clube, tecnico);
     };
-    let reg = [(cpx8_registro(this, k) + 0x9a69, 1)];
+    let reg = [(human_manager_record_at(this, k) + 0x9a69, 1)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, reserva, clube, tecnico), || select_tactic_slot(this, reserva, clube, tecnico));
     PLACAR.registrar(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
 }
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, reserva: u3
 /// índice − conta); blocos de 0x18e3 bytes. Clube nulo: a original (caixa "Error", 0).
 unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, time: u32) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, clube, time); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, clube, time); // caixa: só a original
     }
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     if humano(clube, 1, 1, 0, 0) != 0 {
@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, time: u32
 /// Comparador: lado a lado pela devolução e, havendo técnico humano no clube, pelo byte da vaga ativa dele (a 0x5fbe20
 /// grava). Clube nulo (caixa): só a original.
 unsafe extern "thiscall" fn comparar_get_club_tactic(this: usize, clube: usize, time: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%);
     if clube == 0 {
         return o(this, clube, time);
     }
@@ -153,8 +153,8 @@ unsafe extern "thiscall" fn comparar_get_club_tactic(this: usize, clube: usize, 
     let t = cpx8_d(clube + 0xcf);
     let mut reg = Vec::new();
     if gerente != 0 && t != 0 {
-        if let Some(k) = cpx8_indice(gerente, t) {
-            reg.push((cpx8_registro(gerente, k) + 0x9a69, 1));
+        if let Some(k) = human_manager_human_manager_index(gerente, t) {
+            reg.push((human_manager_record_at(gerente, k) + 0x9a69, 1));
         }
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, time), || get_club_tactic(this, clube, time));

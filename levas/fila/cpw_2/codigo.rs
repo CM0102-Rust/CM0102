@@ -31,20 +31,20 @@ unsafe fn cpw2_proximo(l: usize) -> usize {
 
 /// Tira a pessoa das listas de troca das outras ofertas (TRANSFER_MANAGER::remove_exchange_player 0x8c41c0 com a
 /// oferta, 0, 0).
-unsafe fn cpw2_tirar_da_troca(this: usize, pessoa: usize, oferta: usize) {
+unsafe fn remove_from_other_exchanges(this: usize, pessoa: usize, oferta: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x8c41c0usize);
     f(this, pessoa, oferta, 0, 0);
 }
 
 /// Agenda a oferta (0x8c6220: thiscall(this, oferta, dias, fatias)).
-unsafe fn cpw2_agendar(this: usize, oferta: usize, dias: u32, fatias: u32) {
+unsafe fn schedule_offer_with_slices(this: usize, oferta: usize, dias: u32, fatias: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
     f(this, oferta, dias, fatias);
 }
 
 /// O estado (+0x2c) da oferta depois da aprovação do `clube`: o comprador (+8) leva 0xb a 0xd e 0xc a 0xe; o outro
 /// lado (ou sem clube) leva 0xb a 0xc e 0xd a 0xe. Os outros estados ficam.
-unsafe fn cpw2_estado_aprovado(oferta: usize, clube: usize) -> u8 {
+unsafe fn state_after_approval(oferta: usize, clube: usize) -> u8 {
     let s = cpw2_b(oferta + 0x2c);
     if clube != 0 && cpw2_d(clube) == cpw2_d(oferta + 8) {
         match s {
@@ -63,7 +63,7 @@ unsafe fn cpw2_estado_aprovado(oferta: usize, clube: usize) -> u8 {
 
 /// { 0x8c3310 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da lista local): `TRANSFER_MANAGER::
 /// confirm_offer_by_club(oferta, clube)`, pela oferta passada aos clubes (0x8c2f50), pelas notícias e pela tela: a
-/// aprovação do clube muda o estado (`cpw2_estado_aprovado`); com os dois de acordo (0xe): sem prazo (+0x30 & 0xf), a
+/// aprovação do clube muda o estado (`state_after_approval`); com os dois de acordo (0xe): sem prazo (+0x30 & 0xf), a
 /// oferta é agendada para hoje (0x8c6220 com 0, 1); com prazo, a data de conclusão (0x8cee70) ainda por vir faz a
 /// transferência futura: uma LLIST local que não usa (0x68d020/0x68d040), o jogador (+0xc) e os da troca (lista +4)
 /// saem das outras ofertas (0x8c41c0, e 0x8c47d0 para os da troca), as ofertas guardadas pelo jogador saem (0x4cf560),
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn confirm_offer_by_club(this: usize, oferta: usize, cl
     let data_padrao: unsafe extern "thiscall" fn(*mut [u32; 2]) -> usize = core::mem::transmute(0x54a110usize);
     let mut data = [0u32; 2];
     data_padrao(&mut data);
-    let s = cpw2_estado_aprovado(oferta, clube);
+    let s = state_after_approval(oferta, clube);
     *((oferta + 0x2c) as *mut u8) = s;
     if s != 0xe {
         return;
@@ -99,12 +99,12 @@ unsafe extern "thiscall" fn confirm_offer_by_club(this: usize, oferta: usize, cl
         let mut lista = [0u8; 0xe];
         let l = lista.as_mut_ptr() as usize;
         lista_nova(l);
-        cpw2_tirar_da_troca(this, cpw2_pessoa(cpw2_d(oferta + 0xc)), oferta);
+        remove_from_other_exchanges(this, cpw2_pessoa(cpw2_d(oferta + 0xc)), oferta);
         if cpw2_d(oferta + 4) != 0 {
             cpw2_inicio(cpw2_d(oferta + 4));
             let mut x = cpw2_proximo(cpw2_d(oferta + 4));
             while x != 0 {
-                cpw2_tirar_da_troca(this, cpw2_pessoa(cpw2_d(x)), oferta);
+                remove_from_other_exchanges(this, cpw2_pessoa(cpw2_d(x)), oferta);
                 desfazer(this, cpw2_pessoa(cpw2_d(x)));
                 x = cpw2_proximo(cpw2_d(oferta + 4));
             }
@@ -116,15 +116,15 @@ unsafe extern "thiscall" fn confirm_offer_by_club(this: usize, oferta: usize, cl
         return;
     }
     crate::comparacao::ramo("cpw_2 agendar conclusao");
-    cpw2_agendar(this, oferta, 0, 1); // cpw2: a conclusão agendada para hoje
+    schedule_offer_with_slices(this, oferta, 0, 1); // cpw2: a conclusão agendada para hoje
 }
 
 /// Comparador: sem chegar ao acordo dos dois (estado final diferente de 0xe), só o estado muda: lado a lado sobre a
 /// oferta. Com o acordo, a oferta é agendada ou vira transferência futura (mexe nas outras ofertas e aloca): só a
 /// original.
 unsafe extern "thiscall" fn comparar_confirm_offer_by_club(this: usize, oferta: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
-    if cpw2_estado_aprovado(oferta, clube) == 0xe {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    if state_after_approval(oferta, clube) == 0xe {
         return o(this, oferta, clube);
     }
     let regioes = [(oferta, 0x31usize)];
@@ -194,13 +194,13 @@ unsafe extern "thiscall" fn try_complete_offer(this: usize, oferta: usize, no_pr
 // ponytail: conclui transferências, desfaz ofertas e dá notícias (aloca, não roda duas vezes): só a original; a cópia
 // leva os ramos e se prova pela carreira e pelas mutações.
 unsafe extern "thiscall" fn comparar_try_complete_offer(this: usize, oferta: usize, no_prazo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%)(this, oferta, no_prazo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%)(this, oferta, no_prazo)
 }
 
 /// As cláusulas antigas de uma pessoa pelas marcas do registro de 8 bytes em [this+0x86e]: o percentual da próxima
 /// venda (bit 8: 0x8cb0f0 paga, 0x8cb4f0 tira, este da pessoa `tirar`), o prêmio por jogo no time (bit 2: 0x8cb340 com
 /// −1, 2 e tira 0x8cb590) e o pela seleção (bit 4: 0x8cb340 com −1, 5 e tira 0x8cb630).
-unsafe fn cpw2_clausulas(this: usize, pessoa: usize, tirar: usize, oferta: usize) {
+unsafe fn settle_old_clauses(this: usize, pessoa: usize, tirar: usize, oferta: usize) {
     let marca = |p: usize| cpw2_b(cpw2_d(this + 0x86e).wrapping_add(cpw2_d(p).wrapping_mul(8)));
     let pagar_venda: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8cb0f0usize);
     let tirar_venda: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cb4f0usize);
@@ -208,7 +208,7 @@ unsafe fn cpw2_clausulas(this: usize, pessoa: usize, tirar: usize, oferta: usize
     let tirar_jogos: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cb590usize);
     let tirar_selecao: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cb630usize);
     if marca(pessoa) & 8 != 0 {
-        crate::comparacao::ramo("cpw_2 percentual da venda anterior");
+        crate::comparacao::ramo("cpw_2 write_percent_pair da venda anterior");
         pagar_venda(this, pessoa, oferta);
         tirar_venda(this, tirar);
     }
@@ -228,7 +228,7 @@ unsafe fn cpw2_clausulas(this: usize, pessoa: usize, tirar: usize, oferta: usize
 /// cursor recomeçado; a original tira o percentual da próxima venda do jogador da oferta, não o da pessoa da troca).
 unsafe extern "thiscall" fn settle_previous_transfer_clauses(this: usize, oferta: usize) {
     let p = cpw2_pessoa(cpw2_d(oferta + 0xc));
-    cpw2_clausulas(this, p, p, oferta);
+    settle_old_clauses(this, p, p, oferta);
     let l = cpw2_d(oferta + 4);
     if l == 0 {
         return;
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn settle_previous_transfer_clauses(this: usize, oferta
     cpw2_inicio(l);
     let mut x = cpw2_proximo(cpw2_d(oferta + 4));
     while x != 0 {
-        cpw2_clausulas(this, cpw2_pessoa(cpw2_d(x)), p, oferta);
+        settle_old_clauses(this, cpw2_pessoa(cpw2_d(x)), p, oferta);
         x = cpw2_proximo(cpw2_d(oferta + 4));
     }
 }
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn settle_previous_transfer_clauses(this: usize, oferta
 /// Comparador: sem marca de cláusula (bits 2, 4 e 8) no jogador nem nas pessoas da troca, só o cursor da lista muda:
 /// lado a lado sobre a lista e as marcas. Com alguma, paga (finanças, notícias que alocam): só a original.
 unsafe extern "thiscall" fn comparar_settle_previous_transfer_clauses(this: usize, oferta: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let marcas = cpw2_d(this + 0x86e);
     let tem = |id: usize| cpw2_b(marcas.wrapping_add(id.wrapping_mul(8))) & 0xe != 0;
     let l = cpw2_d(oferta + 4);

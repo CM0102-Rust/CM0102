@@ -12,7 +12,7 @@ MUTACOES = [
      'let dia = (cqr11_w(this + 0xb6) as u16).wrapping_add(7); // mutacao: uma semana depois',
      'cqr_11 sorteio da mercosul'),
     ('cqr11_times_de_tras_para_frente',
-     'cqr11_pd(times + n * 4, cqr11_sorteado(this, k as usize)); // cqr11: o time na vaga do grupo',
-     'cqr11_pd(times + (3 - n) * 4, cqr11_sorteado(this, k as usize)); // mutacao: de tras para a frente',
+     'cqr11_pd(times + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: o time na vaga do grupo',
+     'cqr11_pd(times + (3 - n) * 4, conmebol_merc_drawn_club(this, k as usize)); // mutacao: de tras para a frente',
      'cqr_11 time do grupo'),
 ]

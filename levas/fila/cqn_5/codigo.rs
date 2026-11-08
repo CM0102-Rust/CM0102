@@ -9,7 +9,7 @@ unsafe fn cqn5_pd(a: usize, v: usize) {
 }
 
 /// Quantos jogos a liga tem: (clubes +0x3e / 2, com sinal, para zero) × rodadas +0xa9.
-unsafe fn cqn5_jogos(liga: usize) -> i32 {
+unsafe fn league_match_count(liga: usize) -> i32 {
     let clubes = core::ptr::read_unaligned((liga + 0x3e) as *const i16) as i32;
     let rodadas = core::ptr::read_unaligned((liga + 0xa9) as *const i16) as i32;
     (clubes / 2).wrapping_mul(rodadas)
@@ -26,13 +26,13 @@ unsafe fn cqn5_jogos(liga: usize) -> i32 {
 /// vetor é destruído (`eh vector destructor iterator` 0x9462bb: push 0x5a53c0; push conta; push 0x10; push vetor ->
 /// stdcall, ret 0x10; operator delete 0x944c94 do bloco: push; add esp, 4 -> cdecl) e +0xea = 0: a liga volta ao
 /// calendário sorteado.
-unsafe fn cqn5_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: usize, linha: u32) {
+unsafe fn set_up_fixed_fixtures(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: usize, linha: u32) {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let construir: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
     let destruir: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(0x9462bbusize);
     let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let jogo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) = core::mem::transmute(0x68aff0usize);
-    let n = cqn5_jogos(this);
+    let n = league_match_count(this);
     let bloco = novo((n as u32).wrapping_mul(16).wrapping_add(4));
     let vetor = if bloco != 0 {
         cqn5_pd(bloco, n as usize);
@@ -43,14 +43,14 @@ unsafe fn cqn5_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
     };
     cqn5_pd(this + 0xea, vetor);
     if vetor == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return;
     }
     for (k, &(dia, mes, ano, casa, fora)) in tabela.iter().enumerate() {
         jogo(cqn5_d(this + 0xea) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn5: cada jogo fixo
     }
     crate::comparacao::ramo("cqn_5 calendario fixo");
-    let n = cqn5_jogos(this);
+    let n = league_match_count(this);
     if n <= 0 {
         return;
     }
@@ -71,33 +71,33 @@ unsafe fn cqn5_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
 /// { 0x642a70 } (thiscall, ret 0, ita_ser_a.cpp, 11.650 bytes): `ItaSerA::create_fixed_fixtures()`: os 306 jogos da
 /// Série A 2001/02 (34 rodadas de 9, com o dia, o mês (0 = janeiro) e o ano que a original empurra). Fonte 0x9ea2a8, linha 0x60f.
 unsafe extern "thiscall" fn create_fixed_fixtures(this: usize) {
-    cqn5_fixos(this, &CQN5_SERIE_A, 0x9ea2a8, 0x60f)
+    set_up_fixed_fixtures(this, &CQN5_SERIE_A, 0x9ea2a8, 0x60f)
 }
 
 /// { 0x647230 } (thiscall, ret 0, ita_ser_b.cpp, 14.388 bytes): `ItaSerB::set_up_fixed_fixtures()`: os 380 jogos da
 /// Série B 2001/02 (38 rodadas de 10). Fonte 0x9ea384, linha 0x39a.
 unsafe extern "thiscall" fn ita_ser_a_set_up_fixed_fixtures(this: usize) {
-    cqn5_fixos(this, &CQN5_SERIE_B, 0x9ea384, 0x39a)
+    set_up_fixed_fixtures(this, &CQN5_SERIE_B, 0x9ea384, 0x39a)
 }
 
 /// O comparador das duas: alocam: só a original, conferindo o que ela garante: ou a lista ficou (+0xea com a conta n e
 /// cada jogo com os dois clubes achados), ou foi derrubada (+0xea = 0).
-unsafe fn cqn5_comparar(nome: &str, this: usize, original: impl FnOnce()) {
+unsafe fn ita_ser_a_compare_fixed_fixtures(nome: &str, this: usize, original: impl FnOnce()) {
     original();
     let v = cqn5_d(this + 0xea);
-    let n = cqn5_jogos(this);
+    let n = league_match_count(this);
     let ok = v == 0 || (cqn5_d(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| cqn5_d(v + i * 0x10 + 8) != 0xffff_ffff && cqn5_d(v + i * 0x10 + 0xc) != 0xffff_ffff));
     PLACAR.registrar(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", nome, this, v));
 }
 
 unsafe extern "thiscall" fn comparar_create_fixed_fixtures(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqn5_comparar("create_fixed_fixtures", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    ita_ser_a_compare_fixed_fixtures("create_fixed_fixtures", this, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_fixed_fixtures(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqn5_comparar("ita_ser_a_set_up_fixed_fixtures", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    ita_ser_a_compare_fixed_fixtures("ita_ser_a_set_up_fixed_fixtures", this, || o(this))
 }
 
 /// Os jogos fixos (dia, mês com 0 = janeiro, ano, o 5º argumento (casa, pelo mapa), o 6º (fora)), os nomes no .rdata do

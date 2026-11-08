@@ -12,13 +12,13 @@ unsafe fn cqj4_w(a: usize) -> i16 {
 /// `arquivo` na linha `linha` e None); os clubes de [0xae23b4] (0x245 bytes, [0xae235c] deles) cuja competição
 /// (+0x57, o id no +0) é a do global `g`, na ordem do banco, cada um na linha seguinte (League::init_table_row
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve se encheu.
-unsafe fn cqj4_encher(this: usize, n: i16, arquivo: usize, linha: u32, g: usize) -> Option<bool> {
+unsafe fn ita_ser_a_fill_league_table(this: usize, n: i16, arquivo: usize, linha: u32, g: usize) -> Option<bool> {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return None;
     }
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
@@ -45,7 +45,7 @@ unsafe fn cqj4_encher(this: usize, n: i16, arquivo: usize, linha: u32, g: usize)
 
 /// O fundo de prêmios (+0x28 = League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4) e +0xe1 = 1 (o fundo
 /// é pago pela tabela no fim da liga, 0x682e10).
-unsafe fn cqj4_fundo(this: usize, cota: i32) {
+unsafe fn set_prize_fund(this: usize, cota: i32) {
     let premio: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(0x682f70usize);
     let f = premio(this, cota);
     core::ptr::write_unaligned((this + 0x28) as *mut i32, f);
@@ -56,12 +56,12 @@ unsafe fn cqj4_fundo(this: usize, cota: i32) {
 /// pela cota de 250.000 e a TV de 5.000.000 a cada clube (League::pay_tv_rights 0x683010: thiscall(liga, valor, 0),
 /// ret 8); devolve 1 (0 sem encher). Fonte 0x9ea2a8, linha 0x253.
 unsafe extern "thiscall" fn ita_ser_a_create_table(this: usize) -> u32 {
-    match cqj4_encher(this, 0x12, 0x9ea2a8, 0x253, 0x9cf570) {
+    match ita_ser_a_fill_league_table(this, 0x12, 0x9ea2a8, 0x253, 0x9cf570) {
         Some(true) => {}
         _ => return 0,
     }
     crate::comparacao::ramo("cqj_4 tabela da serie a");
-    cqj4_fundo(this, 0x3d090); // cqj4: a cota da Série A
+    set_prize_fund(this, 0x3d090); // cqj4: a cota da Série A
     let pagar: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(0x683010usize);
     pagar(this, 0x4c4b40, 0); // cqj4: a TV da Série A
     1
@@ -70,30 +70,30 @@ unsafe extern "thiscall" fn ita_ser_a_create_table(this: usize) -> u32 {
 /// { 0x646780 } (thiscall, ret 0, ita_ser_b.cpp): `ItaSerB::create_table()`: 20 clubes ([0x9cf574]); cheia, o fundo
 /// pela cota de 70.000 (sem TV) e 1. Fonte 0x9ea384, linha 0x19d.
 unsafe extern "thiscall" fn ita_ser_a_create_table_646780(this: usize) -> u32 {
-    match cqj4_encher(this, 0x14, 0x9ea384, 0x19d, 0x9cf574) {
+    match ita_ser_a_fill_league_table(this, 0x14, 0x9ea384, 0x19d, 0x9cf574) {
         Some(true) => {}
         _ => return 0,
     }
-    cqj4_fundo(this, 0x11170);
+    set_prize_fund(this, 0x11170);
     1
 }
 
 /// { 0x64b670 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::create_table()`: 18 clubes ([0x9cf578]), sem fundo
 /// nem TV; devolve se encheu. Fonte 0x9ea474, linha 0x1bd.
 unsafe extern "thiscall" fn ita_ser_c1a_create_table(this: usize) -> u32 {
-    cqj4_encher(this, 0x12, 0x9ea474, 0x1bd, 0x9cf578).unwrap_or(false) as u32
+    ita_ser_a_fill_league_table(this, 0x12, 0x9ea474, 0x1bd, 0x9cf578).unwrap_or(false) as u32
 }
 
 /// { 0x64f820 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::create_table()`: 18 clubes ([0x9cf57c]); como a
 /// C1/A. Fonte 0x9ea558, linha 0x1be.
 unsafe extern "thiscall" fn ita_ser_a_create_table_64f820(this: usize) -> u32 {
-    cqj4_encher(this, 0x12, 0x9ea558, 0x1be, 0x9cf57c).unwrap_or(false) as u32
+    ita_ser_a_fill_league_table(this, 0x12, 0x9ea558, 0x1be, 0x9cf57c).unwrap_or(false) as u32
 }
 
 /// O comparador das quatro: a original aloca a tabela (e a da A paga a TV, com notícia): só ela. O plano, feito
 /// antes: os clubes da divisão na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu,
 /// as linhas com os clubes do plano na ordem e, com `cota`, cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
-unsafe fn cqj4_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
+unsafe fn ita_ser_a_compare_league_table(nome: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < cqj4_d(0xae235c) as i32 && (plano.len() as i16) < n {
@@ -121,21 +121,21 @@ unsafe fn cqj4_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_a_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqj4_comparar("ita_ser_a_create_table", this, 0x12, 0x9cf570, Some(0x3d090), || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    ita_ser_a_compare_league_table("ita_ser_a_create_table", this, 0x12, 0x9cf570, Some(0x3d090), || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_a_create_table_646780(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqj4_comparar("ita_ser_a_create_table_646780", this, 0x14, 0x9cf574, Some(0x11170), || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    ita_ser_a_compare_league_table("ita_ser_a_create_table_646780", this, 0x14, 0x9cf574, Some(0x11170), || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqj4_comparar("ita_ser_c1a_create_table", this, 0x12, 0x9cf578, None, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    ita_ser_a_compare_league_table("ita_ser_c1a_create_table", this, 0x12, 0x9cf578, None, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_a_create_table_64f820(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
-    cqj4_comparar("ita_ser_a_create_table_64f820", this, 0x12, 0x9cf57c, None, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
+    ita_ser_a_compare_league_table("ita_ser_a_create_table_64f820", this, 0x12, 0x9cf57c, None, || o(this))
 }

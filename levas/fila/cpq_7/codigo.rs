@@ -21,7 +21,7 @@ unsafe fn cpq7_pessoa(id: usize) -> usize {
 /// A permissão de trabalho da `pessoa` (14 bytes, ordenadas pelo id: [this+0x93a], conta +0x93e), como a original
 /// procura: pessoa com id fora de [0xae2364] ou sem a marca (bit 0x20 do registro de 8 bytes em [this+0x86e]), 0; senão
 /// a busca binária (0x946464 com 0x8e55c0).
-unsafe fn cpq7_permissao(this: usize, pessoa: usize) -> usize {
+unsafe fn find_work_permit_record(this: usize, pessoa: usize) -> usize {
     if pessoa != 0 && cpq7_d(pessoa) as i32 >= cpq7_d(0xae2364) as i32 {
         return 0;
     }
@@ -44,12 +44,12 @@ unsafe extern "thiscall" fn update_work_permit_on_move(this: usize, pessoa: usiz
     let precisa: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c7560usize);
     if clube != 0 {
         if precisa(this, pessoa, clube, 1) != 0 {
-            let r = cpq7_permissao(this, pessoa);
+            let r = find_work_permit_record(this, pessoa);
             if r != 0 {
                 let nacao = cpq7_d(0xae23a8).wrapping_add(cpq7_d(r + 0xa).wrapping_mul(0x122));
                 let nc = cpq7_d(clube + 0x53);
                 if nc == 0 {
-                    aviso_em(0xa8d514, 0x1dc2);
+                    show_error_at(0xa8d514, 0x1dc2);
                     return;
                 }
                 if nacao != nc && !(cpq7_b(nacao + 0x76) == 0xe && cpq7_b(nc + 0x76) == 0xe) {
@@ -74,7 +74,7 @@ unsafe extern "thiscall" fn update_work_permit_on_move(this: usize, pessoa: usiz
             return;
         }
     }
-    let r = cpq7_permissao(this, pessoa);
+    let r = find_work_permit_record(this, pessoa);
     if r == 0 {
         return;
     }
@@ -173,17 +173,17 @@ unsafe extern "thiscall" fn offer_contract_to_offer_player(this: usize, clube: u
 /// Comparador: grava as permissões (pode crescer o vetor e reordena): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
 unsafe extern "thiscall" fn comparar_update_work_permit_on_move(this: usize, pessoa: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, pessoa, clube)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, pessoa, clube)
 }
 
 /// Comparador: assina o contrato (aloca), paga e posta notícias: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
 unsafe extern "thiscall" fn comparar_complete_accepted_contract_offer(this: usize, oferta: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, oferta)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, oferta)
 }
 
 /// Comparador: acrescenta ofertas de contrato (aloca), mexe nas listas e retira ofertas: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
 unsafe extern "thiscall" fn comparar_offer_contract_to_offer_player(this: usize, clube: usize, pessoa: usize, oferta: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, clube, pessoa, oferta)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, clube, pessoa, oferta)
 }

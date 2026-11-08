@@ -6,7 +6,7 @@
 #   da temporada inteira mudam;
 # - a ordem dos clubes nao e sorteada (0x686a70): um sorteio a menos por liga e outra tabela.
 # Os contadores ficam colados no efeito: a escolha da TV depois das condicoes; o jogo antes do calendario; o sorteio da
-# ordem dentro da condicao da competicao.
+# ordem dentro da match_condition da competicao.
 MUTACOES = [
     ('cqd5_tv_cinco_semanas',
      'semanas(pd0, px, 4); // cqd5: a TV quatro semanas adiante',

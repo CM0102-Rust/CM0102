@@ -5,7 +5,7 @@ MUTACOES = [
     ('j_fichab', "core::ptr::write_unaligned((f + 0xb) as *mut i16, w(linha + 3));", "core::ptr::write_unaligned((f + 0xb) as *mut i16, w(linha + 5));"),
     ('j_ficha9', "core::ptr::write_unaligned((g(p + 0x61) + 9) as *mut i16, w(linha + 5));", "core::ptr::write_unaligned((g(p + 0x61) + 9) as *mut i16, w(linha + 7));"),
     ('j_tec', "da = w(ts + 0x188).wrapping_sub(w(f + 0xa));", "da = w(ts + 0x18a).wrapping_sub(w(f + 0xa));", "jogadores tecnico"),
-    ('j_aux', "ftol(dv as f64 * 0.25)", "ftol(dv as f64 * 0.3)", "jogadores tecnico"),
+    ('j_aux', "match_pl_ftol(dv as f64 * 0.25)", "match_pl_ftol(dv as f64 * 0.3)", "jogadores tecnico"),
     ('j_limite', "w(f + o).clamp(1, 10000)", "w(f + o).clamp(1, 9000)", "jogadores tecnico"),
     ('j_80', "core::ptr::write_unaligned((clube + club::REPUTATION) as *mut i16, w(ts + 0x18e));", "core::ptr::write_unaligned((clube + club::REPUTATION) as *mut i16, w(ts + 0x18c));"),
     ('j_n11_media', "&& media() + 0.2 > nota11", "&& media() + 0.3 > nota11", "jogadores noticia 0x11"),

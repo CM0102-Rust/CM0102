@@ -9,7 +9,7 @@ unsafe fn cqo1_pd(a: usize, v: usize) {
 }
 
 /// A nação `id` (registro de 0x122 bytes em [0xae23a8]).
-unsafe fn cqo1_nacao(id: usize) -> usize {
+unsafe fn nation_by_id(id: usize) -> usize {
     cqo1_d(0xae23a8).wrapping_add(id.wrapping_mul(0x122))
 }
 
@@ -20,20 +20,20 @@ unsafe fn cqo1_selecao(clube: usize) -> bool {
 }
 
 /// `Stadium::add_booking` (0x85de20, thiscall, ret 8, já em Rust): a reserva do estádio na data.
-unsafe fn cqo1_reservar(this: usize, estadio: usize, data: usize) {
+unsafe fn add_stadium_booking(this: usize, estadio: usize, data: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x85de20usize);
     f(this, estadio, data)
 }
 
 /// `Stadium::is_stadium_free_on_date` (0x85ddb0, thiscall, ret 8, já em Rust).
-unsafe fn cqo1_livre(this: usize, estadio: usize, data: usize) -> bool {
+unsafe fn is_stadium_free(this: usize, estadio: usize, data: usize) -> bool {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x85ddb0usize);
     f(this, estadio, data) != 0
 }
 
 /// Os comparadores das listas (cdecl, (a, b) -> int): 0x85e2f0 pela nação (+0), 0x85e320 pelo continente (+4), os
 /// dois desempatando pelos lugares do estádio (+0xc → +0x3c, quando os dois têm estádio); 0x85e350 só pelos lugares.
-unsafe fn cqo1_cmp(f: usize, a: usize, b: usize) -> i32 {
+unsafe fn call_stadium_compare(f: usize, a: usize, b: usize) -> i32 {
     let f: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(f);
     f(a, b)
 }
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont:
                     break;
                 }
                 e -= 0x10;
-                if cqo1_cmp(cmp, e, k) != 0 {
+                if call_stadium_compare(cmp, e, k) != 0 {
                     e += 0x10;
                     break;
                 }
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont:
                         break 'vaga;
                     }
                 }
-                if (nacao != 0 || cont != 0) && cqo1_cmp(cmp, e, k) != 0 {
+                if (nacao != 0 || cont != 0) && call_stadium_compare(cmp, e, k) != 0 {
                     // outra chave: fim da busca
                     i = 0x1e;
                     contar = false;
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont:
                         contar = false;
                         break 'vaga;
                     }
-                    if !cqo1_livre(this, cqo1_d(e + 0xc), data) {
+                    if !is_stadium_free(this, cqo1_d(e + 0xc), data) {
                         break 'vaga;
                     }
                     let nota: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32 = core::mem::transmute(0x85da00usize);
@@ -163,9 +163,9 @@ unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont:
                         || (marcas & 0x1000 != 0 && p == 6)
                         || (marcas & 0x2000 != 0 && p == 7)
                         || (marcas & 0x4000 != 0 && p == 8);
-                    if vez && ((partida != 0 && cqo1_d(partida) == cqo1_d(0x9cf76c)) || cqo1_livre(this, cqo1_d(e + 0xc), data)) {
+                    if vez && ((partida != 0 && cqo1_d(partida) == cqo1_d(0x9cf76c)) || is_stadium_free(this, cqo1_d(e + 0xc), data)) {
                         crate::comparacao::ramo("cqo_1 rodizio");
-                        cqo1_reservar(this, cqo1_d(e + 0xc), data);
+                        add_stadium_booking(this, cqo1_d(e + 0xc), data);
                         return cqo1_d(e + 0xc);
                     }
                 }
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont:
         if melhor > 0 {
             crate::comparacao::ramo("cqo_1 neutro pela nota");
             if partida != 0 {
-                cqo1_reservar(this, cqo1_d(escolhida + 0xc), data);
+                add_stadium_booking(this, cqo1_d(escolhida + 0xc), data);
             }
             return cqo1_d(escolhida + 0xc);
         }
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont:
 
 /// As regiões da escolha do estádio: o estado do sorteador, o cabeçalho (0x1c bytes), a lista dos estádios (a ordem muda) e as reservas com
 /// a vaga da nova. `None` quando uma reserva pode alocar (sem lista ou cheia): então só a original.
-unsafe fn cqo1_regioes(this: usize, extra: Option<(usize, usize)>) -> Option<([(usize, usize); 6], usize)> {
+unsafe fn stadium_choice_regions(this: usize, extra: Option<(usize, usize)>) -> Option<([(usize, usize); 6], usize)> {
     let nr = cqo1_d(this + 4);
     if cqo1_d(this) == 0 || nr == cqo1_d(this + 8) {
         return None;
@@ -225,10 +225,10 @@ unsafe fn cqo1_regioes(this: usize, extra: Option<(usize, usize)>) -> Option<([(
     Some((r, m))
 }
 
-/// Lado a lado (a cópia sem contar os sorteios) pelas regiões de `cqo1_regioes` e pela devolução; com reserva que pode alocar, só a original.
+/// Lado a lado (a cópia sem contar os sorteios) pelas regiões de `stadium_choice_regions` e pela devolução; com reserva que pode alocar, só a original.
 unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(%%I1%%);
-    let Some((r, m)) = cqo1_regioes(this, None) else {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(%%I1%%);
+    let Some((r, m)) = stadium_choice_regions(this, None) else {
         // ponytail: a reserva pode alocar a lista; só a original
         return o(this, marcas, cont, nacao, data, casa, fora, partida);
     };
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marcas: u
 ///   achar, na alternativa (marcas 0x40..0x200 → 0x400..0x2000).
 unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
     if partida == 0 {
-        return aviso_em(0xa835b0, 0x1f0);
+        return show_error_at(0xa835b0, 0x1f0);
     }
     let fx = partida;
     cqo1_pd(fx + 0x18, 0);
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
     let neutro = (fx + 0x3c) as *mut u8;
     let mut f = marcas;
     // 0 = as regras gerais (0x85c5a7); 1 = a regra inglesa de 4 (0x85c38e)
-    let mut passo = 0;
+    let mut step_towards = 0;
     if f == 0x8000 {
         let monaco = cqo1_d(0x9d0264);
         if cqo1_d(cqo1_d(fx + 0x1c)) != monaco && cqo1_d(cqo1_d(fx + 0x20)) != monaco {
@@ -283,9 +283,9 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
             return;
         }
         f = 4;
-        passo = 1;
+        step_towards = 1;
     } else if f == 4 {
-        passo = 1;
+        step_towards = 1;
     } else if f == 0 {
         let casa = cqo1_d(fx + 0x1c);
         if d.ano < 0x7d3 && cqo1_selecao(casa) && cqo1_d(cqo1_d(casa + 0x53)) == cqo1_d(0x9cf2e4) {
@@ -295,7 +295,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
         let n = cqo1_d(casa + 0x53);
         let fin = cqo1_d(0x9cf2fc);
         if n != 0 && cqo1_d(n) == fin && *((fx + 0x42) as *const u8) != 0xff && cqo1_d(fx) == cqo1_d(0x9cf6e8) && cqo1_d(casa + 0x69) != 0 {
-            let st = cqo1_d(cqo1_nacao(fin) + 0x80);
+            let st = cqo1_d(nation_by_id(fin) + 0x80);
             let mut livre = true;
             if cqo1_d(this) != 0 {
                 let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
@@ -307,8 +307,8 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
             }
             if livre && (cqo1_d(cqo1_d(cqo1_d(fx + 0x1c) + 0x69) + 0x3c) as i32) < 40000 {
                 *neutro = 1;
-                fixar(cqo1_d(cqo1_nacao(fin) + 0x80));
-                cqo1_reservar(this, cqo1_d(fx + 0x18), pd);
+                fixar(cqo1_d(nation_by_id(fin) + 0x80));
+                add_stadium_booking(this, cqo1_d(fx + 0x18), pd);
                 return;
             }
         }
@@ -333,13 +333,13 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
         }
         f = 0x20;
     }
-    if passo == 1 {
+    if step_towards == 1 {
         let comp = cqo1_d(fx + 0x14);
         if comp != 0 {
             let n = cqo1_d(comp + 0x5d);
             if n != 0 && cqo1_d(n) == cqo1_d(0x9cf2e4) && !cqo1_selecao(cqo1_d(fx + 0x1c)) && cqo1_d(0xa835a4) as i32 != -1 {
                 *neutro = 1;
-                fixar(cqo1_d(cqo1_nacao(cqo1_d(0x9cf510)) + 0x80));
+                fixar(cqo1_d(nation_by_id(cqo1_d(0x9cf510)) + 0x80));
                 return;
             }
         }
@@ -369,7 +369,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
     let mut alvo;
     let mut alt = 0usize;
     if r == 2 {
-        let (na, nb) = (cqo1_nacao(a as usize), cqo1_nacao(b as usize));
+        let (na, nb) = (nation_by_id(a as usize), nation_by_id(b as usize));
         alvo = nb;
         if f & 0x80 == 0 && f & 0x2a00 == 0 {
             if f & 0x40 != 0 || f & 0x5500 != 0 {
@@ -401,7 +401,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
         }
     } else if r == 1 {
         crate::comparacao::ramo("cqo_1 uma sede");
-        alvo = cqo1_nacao(a as usize); // cqo1: a sede única
+        alvo = nation_by_id(a as usize); // cqo1: a sede única
     } else {
         alvo = cqo1_d(comp + 0x5d);
     }
@@ -413,7 +413,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
         if st != 0 {
             crate::comparacao::ramo("cqo_1 estadio nacional");
             fixar(st);
-            cqo1_reservar(this, cqo1_d(fx + 0x18), pd);
+            add_stadium_booking(this, cqo1_d(fx + 0x18), pd);
             return;
         }
         f = if cqo1_selecao(cqo1_d(fx + 0x1c)) { 0x20 } else { 0x40 };
@@ -440,14 +440,14 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
     }
 }
 
-/// Lado a lado pela partida (0x44 bytes) e pelas regiões de `cqo1_regioes`; partida nula ou reserva que pode alocar:
+/// Lado a lado pela partida (0x44 bytes) e pelas regiões de `stadium_choice_regions`; partida nula ou reserva que pode alocar:
 /// só a original.
 unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(%%I0%%);
     if partida == 0 {
         return o(this, marcas, partida, estadio);
     }
-    let Some((r, m)) = cqo1_regioes(this, Some((partida, 0x44))) else {
+    let Some((r, m)) = stadium_choice_regions(this, Some((partida, 0x44))) else {
         // ponytail: a reserva pode alocar a lista; só a original
         return o(this, marcas, partida, estadio);
     };

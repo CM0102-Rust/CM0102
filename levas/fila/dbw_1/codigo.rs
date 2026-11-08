@@ -5,7 +5,7 @@ include!("chaves_fixas.rs");
 
 /// Uma cadeia de _stricmp (0x951c50) em linha (cores, continentes): o primeiro texto igual ao `nome` grava `linha` na
 /// global dele e a cadeia acaba.
-unsafe fn cadeia_das_chaves_dbw(nome: usize, pares: &[(u32, u32)], linha: u32) {
+unsafe fn match_key_name_chain(nome: usize, pares: &[(u32, u32)], linha: u32) {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x951c50usize);
     for &(texto, global) in pares {
         if stricmp(nome, texto as usize) == 0 {
@@ -17,7 +17,7 @@ unsafe fn cadeia_das_chaves_dbw(nome: usize, pares: &[(u32, u32)], linha: u32) {
 
 /// Um laço da set_key_ids: `i` de 0 enquanto `i < limite()` (relido a cada volta, com sinal). Devolve se rodou (a
 /// original só põe o -1 de volta no edi depois de um laço que rodou).
-unsafe fn laco_das_chaves_dbw(limite: impl Fn() -> i32, mut f: impl FnMut(i32)) -> bool {
+unsafe fn key_ids_loop(limite: impl Fn() -> i32, mut f: impl FnMut(i32)) -> bool {
     let mut i = 0i32;
     while i < limite() {
         f(i);
@@ -28,7 +28,7 @@ unsafe fn laco_das_chaves_dbw(limite: impl Fn() -> i32, mut f: impl FnMut(i32)) 
 
 /// A caixa fatal do relato (index.cpp, `linha`): "v%s %s.%s %d" em 0xae24d0 (0x90d130 com o nome e a extensão do
 /// index.cpp), a caixa "Error" (0x5e8290), [0xb67a34] = 0, 0x5cc7d0, 0x5a8f60 e exit(marca). Não volta.
-unsafe fn caixa_fatal_das_chaves_dbw(linha: u32, marca: u32) -> ! {
+unsafe fn index_fatal_error(linha: u32, marca: u32) -> ! {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -59,16 +59,16 @@ unsafe fn caixa_fatal_das_chaves_dbw(linha: u32, marca: u32) -> ! {
 /// base: nações (0x60d810), competições de clube até [0xae2378] − 0x7f (0x60efd0), continentes, prêmios (0x6115e0) e
 /// clubes (0x6146b0). 4) O relato (RELATO_DAS_CHAVES): a 0x60d780 (a caixa "Unable to find the %s index"); as 7
 /// fatais saem do jogo se a nação da chave tiver o byte +0x11c.
-unsafe fn chaves_fixas(marca_entrada: u32, relatar: bool) -> u32 {
+unsafe fn set_fixed_key_ids(marca_entrada: u32, relatar: bool) -> u32 {
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const u32);
-    let em = |base: u32, i: i32, passo: u32| base.wrapping_add((i as u32).wrapping_mul(passo)) as usize;
+    let em = |base: u32, i: i32, step_towards: u32| base.wrapping_add((i as u32).wrapping_mul(step_towards)) as usize;
     let clube: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x6146b0usize);
     let nacao: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x60d810usize);
     let competicao: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x60efd0usize);
     let premio: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x6115e0usize);
     let mut marca = marca_entrada;
-    if laco_das_chaves_dbw(|| gi(0xae2394), |i| cadeia_das_chaves_dbw(em(rd(0xae23ec), i, 0x3a) + 4, &CORES_DAS_CHAVES, i as u32)) {
+    if key_ids_loop(|| gi(0xae2394), |i| match_key_name_chain(em(rd(0xae23ec), i, 0x3a) + 4, &CORES_DAS_CHAVES, i as u32)) {
         marca = u32::MAX;
     }
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
@@ -90,14 +90,14 @@ unsafe fn chaves_fixas(marca_entrada: u32, relatar: bool) -> u32 {
             }
         }
         // a tabela de `n` linhas de `passo` bytes: lida e entregue a `f` (o fseek por cima se a memória faltar)
-        let tabela = |n: i32, passo: u32, f_: &mut dyn FnMut(u32)| {
-            let b = alocar((n as u32).wrapping_mul(passo));
+        let tabela = |n: i32, step_towards: u32, f_: &mut dyn FnMut(u32)| {
+            let b = alocar((n as u32).wrapping_mul(step_towards));
             if b != 0 {
-                ler(b, passo, n as u32, f);
+                ler(b, step_towards, n as u32, f);
                 f_(b as u32);
                 liberar(b);
             } else {
-                pular(f, (n as u32).wrapping_mul(passo), 1);
+                pular(f, (n as u32).wrapping_mul(step_towards), 1);
             }
         };
         tabela(c[0], 0x4f, &mut |b| {
@@ -113,13 +113,13 @@ unsafe fn chaves_fixas(marca_entrada: u32, relatar: bool) -> u32 {
             }
         });
         tabela(c[1], 0xba, &mut |b| {
-            laco_das_chaves_dbw(|| c[1], |i| cadeia_das_chaves_dbw(em(b, i, 0xba), &CONTINENTES_DAS_CHAVES, i as u32)); // continentes do eng.lng
+            key_ids_loop(|| c[1], |i| match_key_name_chain(em(b, i, 0xba), &CONTINENTES_DAS_CHAVES, i as u32)); // continentes do eng.lng
         });
         tabela(c[2], 0x53, &mut |b| {
-            laco_das_chaves_dbw(|| c[2], |i| { competicao(em(b, i, 0x53), c[5].wrapping_add(i) as u32); }); // competições do eng.lng depois das c5
+            key_ids_loop(|| c[2], |i| { competicao(em(b, i, 0x53), c[5].wrapping_add(i) as u32); }); // competições do eng.lng depois das c5
         });
         tabela(c[3], 0x6d, &mut |b| {
-            laco_das_chaves_dbw(|| c[3], |i| { nacao(em(b, i, 0x6d), i as u32); }); // nações do eng.lng
+            key_ids_loop(|| c[3], |i| { nacao(em(b, i, 0x6d), i as u32); }); // nações do eng.lng
         });
         // os prêmios: a memória antes de pular as duas tabelas de 0x34
         let b = alocar((c[7] as u32).wrapping_mul(0x4f));
@@ -127,25 +127,25 @@ unsafe fn chaves_fixas(marca_entrada: u32, relatar: bool) -> u32 {
         pular(f, (c[4] as u32).wrapping_mul(0x34), 1);
         if b != 0 {
             ler(b, 0x4f, c[7] as u32, f);
-            laco_das_chaves_dbw(|| c[7], |i| { premio(em(b as u32, i, 0x4f), i as u32); }); // prêmios do eng.lng
+            key_ids_loop(|| c[7], |i| { premio(em(b as u32, i, 0x4f), i as u32); }); // prêmios do eng.lng
             liberar(b);
         } else {
             pular(f, (c[7] as u32).wrapping_mul(0x4f), 1);
         }
         tabela(c[5], 0x53, &mut |b| {
-            laco_das_chaves_dbw(|| c[5], |i| { competicao(em(b, i, 0x53), i as u32); }); // competições do eng.lng
+            key_ids_loop(|| c[5], |i| { competicao(em(b, i, 0x53), i as u32); }); // competições do eng.lng
         });
         fechar(f);
         marca = u32::MAX;
     } else {
-        let mut rodou = laco_das_chaves_dbw(|| gi(0xae2350), |i| { nacao(em(rd(0xae23a8), i, 0x122) + 4, i as u32); });
-        rodou |= laco_das_chaves_dbw(|| gi(0xae2378).wrapping_sub(0x7f), |i| { competicao(em(rd(0xae23d0), i, 0x6b) + 4, i as u32); });
-        rodou |= laco_das_chaves_dbw(|| gi(0xae234c), |i| {
+        let mut rodou = key_ids_loop(|| gi(0xae2350), |i| { nacao(em(rd(0xae23a8), i, 0x122) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(0xae2378).wrapping_sub(0x7f), |i| { competicao(em(rd(0xae23d0), i, 0x6b) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(0xae234c), |i| {
             let nome = em(rd(0xae23a4), i, 0xc6) + 4;
-            cadeia_das_chaves_dbw(nome, &CONTINENTES_DAS_CHAVES, i as u32); // continentes da base
+            match_key_name_chain(nome, &CONTINENTES_DAS_CHAVES, i as u32); // continentes da base
         });
-        rodou |= laco_das_chaves_dbw(|| gi(0xae2388), |i| { premio(em(rd(0xae23e0), i, 0x65) + 4, i as u32); });
-        rodou |= laco_das_chaves_dbw(|| gi(0xae235c), |i| { clube(em(rd(0xae23b4), i, 0x245) + 4, i as u32); }); // clubes da base
+        rodou |= key_ids_loop(|| gi(0xae2388), |i| { premio(em(rd(0xae23e0), i, 0x65) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(0xae235c), |i| { clube(em(rd(0xae23b4), i, 0x245) + 4, i as u32); }); // clubes da base
         if rodou {
             marca = u32::MAX;
         }
@@ -159,7 +159,7 @@ unsafe fn chaves_fixas(marca_entrada: u32, relatar: bool) -> u32 {
             if tipo == 2 {
                 let n = em(rd(0xae23a8), gi(nacao_da_chave as usize), 0x122);
                 if *((n as u32).wrapping_add(0x11c) as *const u8) != 0 {
-                    caixa_fatal_das_chaves_dbw(linha as u32, marca);
+                    index_fatal_error(linha as u32, marca);
                 }
             }
             relato(nome as usize); // tipos 0 e 1 (o 1 é o corpo da 0x60d780 em linha)
@@ -169,14 +169,14 @@ unsafe fn chaves_fixas(marca_entrada: u32, relatar: bool) -> u32 {
 }
 
 /// As globais em -1 na original (MENOS_UM_DAS_CHAVES).
-unsafe fn menos_um_das_chaves_dbw() {
+unsafe fn reset_key_globals() {
     for &g in MENOS_UM_DAS_CHAVES.iter() {
         *(g as *mut i32) = -1;
     }
 }
 
 /// As faixas inteiras em -1 no 1080 (MENOS_UM_DAS_CHAVES_1080, o rep stosd).
-unsafe fn menos_um_das_chaves_1080_dbw() {
+unsafe fn reset_key_ranges_1080() {
     for &(a, n) in MENOS_UM_DAS_CHAVES_1080.iter() {
         core::ptr::write_bytes(a as *mut u8, 0xff, n as usize * 4);
     }
@@ -184,39 +184,39 @@ unsafe fn menos_um_das_chaves_1080_dbw() {
 
 /// { 0x601a40 } (cdecl, index.cpp, set_key_ids): na carga da base (0x528540), as chaves fixas do jogo (cores,
 /// continentes, nações, competições, prêmios, clubes) recebem a linha da base pelo nome; as que ficam sem valor vão ao
-/// relato. A entrada do cm0102.exe: o -1 nas 1.282 globais de MENOS_UM_DAS_CHAVES e o miolo `chaves_fixas`. Devolve 1.
+/// relato. A entrada do cm0102.exe: o -1 nas 1.282 globais de MENOS_UM_DAS_CHAVES e o miolo `set_fixed_key_ids`. Devolve 1.
 unsafe extern "C" fn set_key_ids() -> u32 {
-    menos_um_das_chaves_dbw();
-    chaves_fixas(u32::MAX, true)
+    reset_key_globals();
+    set_fixed_key_ids(u32::MAX, true)
 }
 
 /// { 0x603834 } (cdecl, só no cm0102-1080.exe): a mesma rotina pela entrada do 1080 (a chamada de 0x52d8fa vai para
 /// ela): o -1 nas faixas inteiras 0x9cf178..0x9d0527 e 0xb63c9c..0xb63d03 (também as 4 globais que a original não toca)
 /// e o mesmo miolo. Devolve 1.
 unsafe extern "C" fn set_key_ids_1080() -> u32 {
-    menos_um_das_chaves_1080_dbw();
-    chaves_fixas(MARCA_DAS_CHAVES_1080, true)
+    reset_key_ranges_1080();
+    set_fixed_key_ids(MARCA_DAS_CHAVES_1080, true)
 }
 
 /// As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
 const REGIOES_DAS_CHAVES_DBW: [(usize, usize); 3] = [(0x9cf178, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
 unsafe extern "C" fn comparar_set_key_ids() -> u32 {
-    let o = orig::<unsafe extern "C" fn() -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn() -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
-        menos_um_das_chaves_dbw();
-        chaves_fixas(u32::MAX, false)
+        reset_key_globals();
+        set_fixed_key_ids(u32::MAX, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
+    PLACAR.registrar(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
     r
 }
 
 unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
-    let o = orig::<unsafe extern "C" fn() -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn() -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
-        menos_um_das_chaves_1080_dbw();
-        chaves_fixas(MARCA_DAS_CHAVES_1080, false)
+        reset_key_ranges_1080();
+        set_fixed_key_ids(MARCA_DAS_CHAVES_1080, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
+    PLACAR.registrar(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
     r
 }

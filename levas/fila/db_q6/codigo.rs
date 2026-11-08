@@ -5,7 +5,7 @@
 /// guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
 unsafe extern "C" fn staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     if pessoa == 0 {
         return 0;
     }
@@ -22,15 +22,15 @@ unsafe extern "C" fn staff_is_listed_by_request(pessoa: usize, clube: usize) -> 
             return 0;
         }
     }
-    let v = vinculo(*(0xae1050 as *const usize), pessoa, clube);
+    let v = contract_bond(*(0xae1050 as *const usize), pessoa, clube);
     (v != 0 && *((v + 0x4e) as *const u8) & 8 != 0) as u32
 }
 
-/// { 0x544380 } (cdecl, Database.cpp): a nota de 1 a 20 (`nota_do_atributo`) de 2 × `valor` (byte com
+/// { 0x544380 } (cdecl, Database.cpp): a nota de 1 a 20 (`attribute_rating`) de 2 × `valor` (byte com
 /// sinal) + habilidade atual (+5) do `jogador`. Termina no `_ftol` (eax inteiro, 1..20).
 unsafe extern "C" fn player_attribute_rating(jogador: usize, valor: u32) -> u32 {
     let habilidade = core::ptr::read_unaligned((jogador + 5) as *const i16) as i32;
-    nota_do_atributo((habilidade + 2 * (valor as u8 as i8 as i32)) as f64) as u32
+    attribute_rating((habilidade + 2 * (valor as u8 as i8 as i32)) as f64) as u32
 }
 
 /// { 0x542740 } (cdecl, Database.cpp): 1 se o `clube` pode ter time reserva. Não: seleções (id ≥
@@ -40,7 +40,7 @@ unsafe extern "C" fn player_attribute_rating(jogador: usize, valor: u32) -> u32 
 /// Portugal. Clube nulo: caixa "Error" e 0 (a original).
 unsafe extern "C" fn database_club_has_reserve_squad(clube: usize) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(clube);
+        return original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(clube);
     }
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let g = |a: usize| *(a as *const u32);
@@ -75,7 +75,7 @@ unsafe extern "C" fn database_club_has_reserve_squad(clube: usize) -> u32 {
 
 unsafe extern "C" fn comparar_staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
         || staff_is_listed_by_request(pessoa, clube));
     PLACAR.registrar(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
@@ -83,14 +83,14 @@ unsafe extern "C" fn comparar_staff_is_listed_by_request(pessoa: usize, clube: u
 }
 
 unsafe extern "C" fn comparar_player_attribute_rating(jogador: usize, valor: u32) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%)(jogador, valor);
+    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%)(jogador, valor);
     let n = player_attribute_rating(jogador, valor);
     PLACAR.registrar(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
     r
 }
 
 unsafe extern "C" fn comparar_database_club_has_reserve_squad(clube: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }

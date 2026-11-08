@@ -6,38 +6,38 @@ unsafe fn cpr12_d(a: usize) -> u32 {
 
 /// A lista dos jogos de um ano, dia, fatia e nação-chave no calendário `fm` (0x5abf10; cria o bloco do ano se a
 /// corrente não o tem). A original compara o ano como palavra e mascara o dia, a fatia e a nação.
-unsafe fn cpr12_lista(fm: usize, ano: u32, dia: u32, fatia: u32, nacao: u32) -> usize {
+unsafe fn fix_man_get_fixture_list(fm: usize, ano: u32, dia: u32, fatia: u32, nacao: u32) -> usize {
     let lista: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(0x5abf10usize);
     lista(fm, ano, dia, fatia, nacao)
 }
 
 /// O próximo item da lista (0x68d1b0: o cursor +0xa anda).
-unsafe fn cpr12_proximo(l: usize) -> usize {
+unsafe fn fix_man_list_next(l: usize) -> usize {
     let prox: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     prox(l)
 }
 
 /// Põe o cursor da lista no começo (+0xa = +2) e devolve o primeiro item.
-unsafe fn cpr12_primeiro(l: usize) -> usize {
+unsafe fn list_first(l: usize) -> usize {
     core::ptr::write_unaligned((l + 0xa) as *mut u32, cpr12_d(l + 2));
-    cpr12_proximo(l)
+    fix_man_list_next(l)
 }
 
 /// Acrescenta à lista `l` uma cópia dos 0x4f bytes do jogo `f` (0x68d0d0); 0 se falhou.
-unsafe fn cpr12_copiar(l: usize, f: usize) -> usize {
+unsafe fn list_append_fixture(l: usize, f: usize) -> usize {
     let copiar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
     copiar(l, f, 0x4f)
 }
 
 /// A nação-chave ativa da competição `comp` (0x48dd70 sobre o registro [0xae23d0] + 0x6b × comp, sem jogo).
-unsafe fn cpr12_nacao_da_competicao(comp: u32) -> u8 {
+unsafe fn comp_key_nation(comp: u32) -> u8 {
     let nacao: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x48dd70usize);
     nacao((cpr12_d(0xae23d0).wrapping_add(comp.wrapping_mul(0x6b))) as usize, 0) as u8
 }
 
 /// O jogo `f` passa nos filtros da 0x5acbe0: tipo (+0x42; 0xfe qualquer), clube em casa (+0xc) ou fora (+0x10; −1
 /// qualquer) com o lado dele (+0x40 em casa, +0x41 fora; 0xff qualquer) e a competição (+0; −1 qualquer).
-unsafe fn cpr12_passa(f: usize, clube: u32, comp: u32, tipo: u8, lado: u8) -> bool {
+unsafe fn fixture_matches_filter(f: usize, clube: u32, comp: u32, tipo: u8, lado: u8) -> bool {
     if tipo != 0xfe && tipo != *((f + 0x42) as *const u8) {
         return false;
     }
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn find_fixtures(this: usize, dia0: u32, ano0: u32, dia
             }
         }
     } else if (comp as i32) > -1 {
-        nacoes[0] = cpr12_nacao_da_competicao(comp);
+        nacoes[0] = comp_key_nation(comp);
         n = 1;
     }
     let (mut dia, mut ano, mut total) = (dia0, ano0, 0u32);
@@ -108,20 +108,20 @@ unsafe extern "thiscall" fn find_fixtures(this: usize, dia0: u32, ano0: u32, dia
                 if nacao == 0xff {
                     continue;
                 }
-                let l = cpr12_lista(this, ano, dia, fatia, nacao as u32);
+                let l = fix_man_get_fixture_list(this, ano, dia, fatia, nacao as u32);
                 if l == 0 {
                     continue;
                 }
-                let mut f = cpr12_primeiro(l);
+                let mut f = list_first(l);
                 while f != 0 {
-                    if cpr12_passa(f, clube, comp, tipo, lado) {
-                        if lista != 0 && cpr12_copiar(lista, f) == 0 {
-                            aviso_em(0x9cc208, 0x93b);
+                    if fixture_matches_filter(f, clube, comp, tipo, lado) {
+                        if lista != 0 && list_append_fixture(lista, f) == 0 {
+                            show_error_at(0x9cc208, 0x93b);
                             return total & 0xffff;
                         }
                         total = total.wrapping_add(1);
                     }
-                    f = cpr12_proximo(l);
+                    f = fix_man_list_next(l);
                 }
             }
         }
@@ -139,13 +139,13 @@ unsafe extern "thiscall" fn collect_comp_fixtures_on_day(this: usize, ano: u32, 
                                                        tipo: u32, lista: usize) -> u32 {
     let tipo = tipo as u8;
     // ponytail: a original empurra o local da nação com bytes altos de sobra de pilha; a 0x5abf10 só lê o byte
-    let nacao = if comp != u32::MAX { cpr12_nacao_da_competicao(comp) } else { 0 };
+    let nacao = if comp != u32::MAX { comp_key_nation(comp) } else { 0 };
     let mut total = 0u32;
-    let l = cpr12_lista(this, ano, dia, fatia, nacao as u32);
+    let l = fix_man_get_fixture_list(this, ano, dia, fatia, nacao as u32);
     if l == 0 {
         return 0;
     }
-    let mut f = cpr12_primeiro(l);
+    let mut f = list_first(l);
     while f != 0 {
         let mut ok = true;
         if comp != u32::MAX && comp != cpr12_d(f) {
@@ -155,14 +155,14 @@ unsafe extern "thiscall" fn collect_comp_fixtures_on_day(this: usize, ano: u32, 
             ok = false; // outra rodada
         }
         if (tipo == 0xfe || *((f + 0x42) as *const u8) == tipo) && ok {
-            if cpr12_copiar(lista, f) == 0 {
-                aviso_em(0x9cc208, 0x634);
+            if list_append_fixture(lista, f) == 0 {
+                show_error_at(0x9cc208, 0x634);
                 return total & 0xffff;
             }
             crate::comparacao::ramo("cpr_12 jogo da rodada");
             total = total.wrapping_add(1);
         }
-        f = cpr12_proximo(l);
+        f = fix_man_list_next(l);
     }
     total & 0xffff
 }
@@ -175,9 +175,9 @@ unsafe extern "stdcall" fn fix_man_comp_has_fixture_on_date(data: usize, comp: u
     if (comp as i32) <= -1 {
         return 0;
     }
-    let nacao = cpr12_nacao_da_competicao(comp);
+    let nacao = comp_key_nation(comp);
     if data == 0 {
-        aviso_em(0x9cc208, 0xe89);
+        show_error_at(0x9cc208, 0xe89);
         return 0;
     }
     let fm = cpr12_d(0xae2a58) as usize;
@@ -186,16 +186,16 @@ unsafe extern "stdcall" fn fix_man_comp_has_fixture_on_date(data: usize, comp: u
     // carreira estão na corrente desde a criação do jogo)
     let (ano, dia) = (*((data + 2) as *const u16) as u32, *(data as *const u16) as u32);
     for fatia in 0..3u32 {
-        let l = cpr12_lista(fm, ano, dia, fatia, nacao as u32);
+        let l = fix_man_get_fixture_list(fm, ano, dia, fatia, nacao as u32);
         if l == 0 {
             continue;
         }
-        let mut f = cpr12_primeiro(l);
+        let mut f = list_first(l);
         while f != 0 {
             if cpr12_d(f) == comp {
                 return 1;
             }
-            f = cpr12_proximo(l);
+            f = fix_man_list_next(l);
         }
     }
     0
@@ -203,7 +203,7 @@ unsafe extern "stdcall" fn fix_man_comp_has_fixture_on_date(data: usize, comp: u
 
 /// Os itens que a original acrescentou à `lista` (depois da cauda de antes) são os da lista provisória `nova`, na
 /// mesma ordem, 0x4f bytes cada?
-unsafe fn cpr12_mesmos_itens(lista: usize, conta_antes: u16, cauda_antes: u32, nova: usize) -> bool {
+unsafe fn appended_items_match(lista: usize, conta_antes: u16, cauda_antes: u32, nova: usize) -> bool {
     let acrescentados = (*(lista as *const u16)).wrapping_sub(conta_antes);
     if acrescentados != *(nova as *const u16) {
         return false;
@@ -226,14 +226,14 @@ unsafe fn cpr12_mesmos_itens(lista: usize, conta_antes: u16, cauda_antes: u32, n
 
 /// Roda a cópia com uma lista provisória (0x68d020; destruída pela 0x68d040) e confere os itens contra os que a
 /// original acrescentou à lista real.
-unsafe fn cpr12_com_lista_nova(lista: usize, conta_antes: u16, cauda_antes: u32, copia: impl FnOnce(usize) -> u32) -> (u32, bool) {
+unsafe fn run_with_temp_list(lista: usize, conta_antes: u16, cauda_antes: u32, copia: impl FnOnce(usize) -> u32) -> (u32, bool) {
     let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let mut nova = [0u8; 0x10];
     let p = nova.as_mut_ptr() as usize;
     criar(p);
     let n = copia(p);
-    let iguais = cpr12_mesmos_itens(lista, conta_antes, cauda_antes, p);
+    let iguais = appended_items_match(lista, conta_antes, cauda_antes, p);
     destruir(p);
     (n, iguais)
 }
@@ -243,7 +243,7 @@ unsafe fn cpr12_com_lista_nova(lista: usize, conta_antes: u16, cauda_antes: u32,
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
                                                                lista: usize, comp: u32, tipo: u32, lado: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32>(%%I0%%);
     if lista == 0 {
         let r = o(this, dia0, ano0, dia1, ano1, clube, 0, comp, tipo, lado);
         let n = find_fixtures(this, dia0, ano0, dia1, ano1, clube, 0, comp, tipo, lado);
@@ -253,7 +253,7 @@ unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0: u32, ano0:
     }
     let (conta, cauda) = (*(lista as *const u16), cpr12_d(lista + 6));
     let r = o(this, dia0, ano0, dia1, ano1, clube, lista, comp, tipo, lado);
-    let (n, iguais) = cpr12_com_lista_nova(lista, conta, cauda,
+    let (n, iguais) = run_with_temp_list(lista, conta, cauda,
         |p| find_fixtures(this, dia0, ano0, dia1, ano1, clube, p, comp, tipo, lado));
     PLACAR.registrar(iguais && r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}, com lista) original={} rust={} itens iguais {}",
         dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, clube as i32, comp as i32, tipo as u8, lado as u8, r as u16, n as u16, iguais));
@@ -264,10 +264,10 @@ unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0: u32, ano0:
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
                                                                 tipo: u32, lista: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32>(%%I1%%);
     let (conta, cauda) = (*(lista as *const u16), cpr12_d(lista + 6));
     let r = o(this, ano, dia, fatia, comp, rodada, tipo, lista);
-    let (n, iguais) = cpr12_com_lista_nova(lista, conta, cauda,
+    let (n, iguais) = run_with_temp_list(lista, conta, cauda,
         |p| collect_comp_fixtures_on_day(this, ano, dia, fatia, comp, rodada, tipo, p));
     PLACAR.registrar(iguais && r as u16 == n as u16, || format!("collect_comp_fixtures_on_day({}/{} fatia {}, comp {}, rodada {}, tipo {:x}) original={} rust={} itens iguais {}",
         dia as u16, ano as u16, fatia as u8, comp as i32, rodada as i32, tipo as u8, r as u16, n as u16, iguais));
@@ -276,7 +276,7 @@ unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(this: usize, a
 
 /// Comparador: pela devolução (só anda os cursores das listas do calendário).
 unsafe extern "stdcall" fn comparar_fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, u32) -> u8>(%%I2%%)(data, comp);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u8>(%%I2%%)(data, comp);
     let n = fix_man_comp_has_fixture_on_date(data, comp);
     PLACAR.registrar(r == n, || format!("fix_man_comp_has_fixture_on_date(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
     r

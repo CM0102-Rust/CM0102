@@ -4,10 +4,12 @@ use super::*;
 
 
 
-/// A entrada `i` da tabela das nações da classificação (registros de 0x12 bytes a partir do objeto: +0 id da nação,
+/// Address of entry i (0x12 bytes) in the UEFA seeding nation table.
+///
+/// [pt] A entrada `i` da tabela das nações da classificação (registros de 0x12 bytes a partir do objeto: +0 id da nação,
 /// +4 a nação, +8 o coeficiente das 5 temporadas (float), +0xc vagas na Liga dos Campeões, +0xd na Copa da UEFA,
 /// +0xe na Intertoto, +0xf os pontos da temporada (short), +0x11 os clubes da nação nas copas (char)).
-pub(crate) fn cqi1_e(this: usize, i: i32) -> usize {
+pub(crate) fn seeding_nation_entry(this: usize, i: i32) -> usize {
     this.wrapping_add((i * 0x12) as usize)
 }
 
@@ -30,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
     let ano = *(G_CURRENT_DATE_YEAR as *const i16);
     let mut i = 0i8;
     while i < conta() {
-        let e = cqi1_e(this, i as i32);
+        let e = seeding_nation_entry(this, i as i32);
         let p = read_u32(e + 4) as usize;
         if ano != 0x7d1 {
             for k in 0..10usize {
@@ -54,25 +56,29 @@ pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
     ordenar(this, conta() as i32 as u32, 0x12, 0x905cb0);
     let mut i = 0i8;
     while i < conta() {
-        let s = selecao(read_u32(cqi1_e(this, i as i32) + 4) as usize);
+        let s = selecao(read_u32(seeding_nation_entry(this, i as i32) + 4) as usize);
         *((s + 0x1df) as *mut i8) = i;
         i += 1;
     }
 }
 
-/// As diferenças entre duas memórias (os 16 primeiros endereços).
-pub(crate) fn cqi1_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
+/// Up to 16 differing addresses between two memory snapshots.
+///
+/// [pt] As diferenças entre duas memórias (os 16 primeiros endereços).
+pub(crate) fn memory_diff_addresses(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
     let (a, b) = (&mo.0, &mr.0);
     (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
 }
 
-/// A tabela das nações e, de cada nação, as 5 temporadas (+0xe0..+0x110) e o +0x1df da seleção.
-pub(crate) unsafe fn cqi1_regioes(this: usize) -> Vec<(usize, usize)> {
+/// Comparer regions: the nation table and each nation's 5 seasons (+0xe0..+0x110) and national team +0x1df.
+///
+/// [pt] A tabela das nações e, de cada nação, as 5 temporadas (+0xe0..+0x110) e o +0x1df da seleção.
+pub(crate) unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let n = (*((this + 0x438) as *const i8)).max(0) as i32;
     let mut reg = vec![(this, 0x43b)];
     for i in 0..n {
-        let p = read_u32(cqi1_e(this, i) + 4) as usize;
+        let p = read_u32(seeding_nation_entry(this, i) + 4) as usize;
         reg.push((p + 0xe0, 0x30));
         reg.push((selecao(p) + 0x1df, 1));
     }
@@ -81,10 +87,10 @@ pub(crate) unsafe fn cqi1_regioes(this: usize) -> Vec<(usize, usize)> {
 
 /// Lado a lado: a tabela das nações, as temporadas de cada nação e a posição gravada nas seleções.
 pub(crate) unsafe extern "thiscall" fn comparar_roll_coefficients(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ROLL_COEFFICIENTS);
-    let reg = cqi1_regioes(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ROLL_COEFFICIENTS);
+    let reg = seeding_regions(this);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || roll_coefficients(this));
-    PLACAR.registrar(igual, || format!("roll_coefficients: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("roll_coefficients: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// places by coefficient position. Champions League: 1st to 3rd 4 places, 4th to 6th 3, 7th to 15th 2, 16th to 48th 1.
@@ -115,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
     let (mut fa, mut fb, mut fc, mut cont) = (-1i8, -1i8, -1i8, 0i8);
     let mut i = 0i8;
     while i < conta() {
-        let e = cqi1_e(this, i as i32);
+        let e = seeding_nation_entry(this, i as i32);
         let id = read_u32(e);
         if id == g(KEY_NATION_FINLAND) {
             fa = i;
@@ -189,10 +195,10 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
         *((e + 0xe) as *mut u8) = intertoto;
         i += 1;
     }
-    let italia = |k: i8| read_u32(cqi1_e(this, k as i32)) == g(KEY_NATION_ITALY);
+    let italia = |k: i8| read_u32(seeding_nation_entry(this, k as i32)) == g(KEY_NATION_ITALY);
     if ano == 0x7d1 {
         if fa == -1 || fb == -1 || fc == -1 {
-            aviso_em(0xaa1a1c, 0x285);
+            show_error_at(0xaa1a1c, 0x285);
         }
     } else {
         fa = -1;
@@ -203,18 +209,18 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
         fc = sorteio(conta() as i32) as u8 as i8;
     }
     for k in [fa, fb, fc] {
-        let p = cqi1_e(this, k as i32) + 0xd;
+        let p = seeding_nation_entry(this, k as i32) + 0xd;
         *(p as *mut u8) = (*(p as *const u8)).wrapping_add(1);
     }
 }
 
 /// Lado a lado: a tabela das nações, o sorteio (a cópia sem contar) e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn comparar_set_place_counts(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_SET_PLACE_COUNTS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_PLACE_COUNTS);
     let mut reg = vec![(this, 0x43b), (0xb67a34, 4)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| set_place_counts(this)));
-    PLACAR.registrar(igual, || format!("set_place_counts: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("set_place_counts: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// in the European club table sorted by nation, the nth club of the nation, skipping on request those already holding a
@@ -278,7 +284,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_th
 
 /// A devolução das duas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_uefa_find_nth_unplaced_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_UEFA_FIND_NTH_UNPLACED_CLUB_OF_NATION);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_UEFA_FIND_NTH_UNPLACED_CLUB_OF_NATION);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     let c = uefa_find_nth_unplaced_club_of_nation(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     PLACAR.registrar(r == c, || format!("uefa_find_nth_unplaced_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));
@@ -289,21 +295,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_uefa_find_nth_unplaced_club_of_n
 
 
 
-pub(crate) unsafe fn cqi2_mais_um(a: usize) {
+/// Increments the byte at an address.
+pub(crate) unsafe fn increment_byte(a: usize) {
     *(a as *mut u8) = read_u8(a).wrapping_add(1);
 }
 
 
-/// O clube `c` ganha a vaga na competição `comp`, na fase `fase`, se tem nação e ainda não tem vaga (+0x1db = −1):
+/// Gives club c a place in competition comp at a phase if it has a nation and no place yet; counts it for nation i.
+///
+/// [pt] O clube `c` ganha a vaga na competição `comp`, na fase `fase`, se tem nação e ainda não tem vaga (+0x1db = −1):
 /// +0x1db = comp, +0x1df = fase e um clube a mais da nação `i` (+0x11). Devolve se ganhou. (O caso da nação sem entrada,
 /// −1, que a original procura pela nação do clube, não acontece: `i` vem sempre da volta pelas nações.)
-pub(crate) unsafe fn cqi2_vaga(this: usize, c: usize, comp: u32, fase: u8, i: i32) -> bool {
+pub(crate) unsafe fn assign_comp_place(this: usize, c: usize, comp: u32, fase: u8, i: i32) -> bool {
     if c == 0 || read_u32(c + 0x53) == 0 || read_u32(c + 0x1db) != u32::MAX {
         return false;
     }
     *((c + 0x1df) as *mut u8) = fase;
     *((c + 0x1db) as *mut u32) = comp;
-    cqi2_mais_um(cqi1_e(this, i) + 0x11);
+    increment_byte(seeding_nation_entry(this, i) + 0x11);
     true
 }
 
@@ -329,7 +338,7 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, saida
     let t = alocar((read_u32(G_CLUB_COUNT) as i32).wrapping_mul(12) as u32);
     *saida = t;
     if t == 0 {
-        aviso_em(0xaa1a1c, 0x2ed);
+        show_error_at(0xaa1a1c, 0x2ed);
         return 0;
     }
     let mut k = 0u32;
@@ -380,8 +389,10 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, saida
 }
 
 
-/// Os clubes do jogo, a linha de cada clube em [0xae2d14], a marca da caixa e o histórico das competições ([0xae23d4],\n/// [0xae237c] linhas de 0x1a: a 0x4afd80 o reordena, e com linhas empatadas a ordem de antes muda o clube achado).
-pub(crate) unsafe fn cqi2_regioes_dos_clubes() -> Vec<(usize, usize)> {
+/// Comparer regions: club table, club state table, random seed and competition history table.
+///
+/// [pt] Os clubes do jogo, a linha de cada clube em [0xae2d14], a marca da caixa e o histórico das competições ([0xae23d4],\n/// [0xae237c] linhas de 0x1a: a 0x4afd80 o reordena, e com linhas empatadas a ordem de antes muda o clube achado).
+pub(crate) unsafe fn club_regions() -> Vec<(usize, usize)> {
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     vec![(read_u32(G_CLUB_TABLE) as usize, n * 0x245), (read_u32(G_CLUB_STATE_TABLE) as usize, n * 6), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
 }
@@ -389,10 +400,10 @@ pub(crate) unsafe fn cqi2_regioes_dos_clubes() -> Vec<(usize, usize)> {
 /// Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// linha de cada um em [0xae2d14], a devolução e os registros das duas tabelas.
 pub(crate) unsafe extern "thiscall" fn comparar_collect_european_clubs(this: usize, saida: *mut usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize) -> u32>(IDX_COLLECT_EUROPEAN_CLUBS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> u32>(IDX_COLLECT_EUROPEAN_CLUBS);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t2 = 0usize;
-    let reg = cqi2_regioes_dos_clubes();
+    let reg = club_regions();
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, saida), || collect_european_clubs(this, &mut t2));
     let (n, m) = (a as u16 as i16, b as u16 as i16);
     let t1 = *saida;
@@ -400,7 +411,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_european_clubs(this: usi
     if t2 != 0 {
         soltar(t2);
     }
-    PLACAR.registrar(igual && tabela, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqi1_dif(&mo, &mr)));
+    PLACAR.registrar(igual && tabela, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, memory_diff_addresses(&mo, &mr)));
     a
 }
 
@@ -435,15 +446,15 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
         let n = *((this + 0x438) as *const i8) as i32;
         let mut i = -1i32;
         for k in 0..n {
-            if read_u32(cqi1_e(this, k)) == id {
+            if read_u32(seeding_nation_entry(this, k)) == id {
                 i = k;
                 break;
             }
         }
-        cqi2_mais_um(cqi1_e(this, i) + 0x11);
+        increment_byte(seeding_nation_entry(this, i) + 0x11);
         cap[1] = 0xf;
     } else {
-        aviso_em(0xaa1a1c, 0x35d);
+        show_error_at(0xaa1a1c, 0x35d);
     }
     let mut r = 0i8;
     while r < *((this + 0x438) as *const i8) {
@@ -466,7 +477,7 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
             ([0, 0, 0, 0], 1)
         };
         let mut vagas = [faixa[0], faixa[1], faixa[2], faixa[3], ultima];
-        let e = cqi1_e(this, r as i32);
+        let e = seeding_nation_entry(this, r as i32);
         let mut k = 1u8;
         while k < 8 {
             let c = enesimo(this, clubes, conta, read_u32(e), k as u32, 0, 0);
@@ -485,7 +496,7 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
                 f += 1;
             }
             if f < 5 {
-                if cqi2_vaga(this, c, lc, f as u8, r as i32) {
+                if assign_comp_place(this, c, lc, f as u8, r as i32) {
                     cap[f] = cap[f].wrapping_sub(1);
                 }
                 vagas[f] = vagas[f].wrapping_sub(1);
@@ -498,11 +509,11 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
 
 /// Lado a lado: a tabela das nações, os clubes e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn comparar_assign_champions_league_places(this: usize, clubes: usize, conta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CHAMPIONS_LEAGUE_PLACES);
-    let mut reg = cqi2_regioes_dos_clubes();
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CHAMPIONS_LEAGUE_PLACES);
+    let mut reg = club_regions();
     reg.push((this, 0x440));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || assign_champions_league_places(this, clubes, conta));
-    PLACAR.registrar(igual, || format!("assign_champions_league_places: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("assign_champions_league_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// the Intertoto rule: 60 clubs; it cycles through the nations in coefficient order, each nation with its places (from
@@ -530,13 +541,13 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
         if cl == read_u8(this + 0x438) {
             i = 0;
         }
-        let e = cqi1_e(this, i as i8 as i32);
+        let e = seeding_nation_entry(this, i as i8 as i32);
         if read_u32(e) == read_u32(KEY_NATION_ENGLAND) {
             let mut c = voluntario(this);
             if c == 0 {
                 c = enesimo(this, clubes, conta, read_u32(e), 1, 1, 1);
             }
-            if cqi2_vaga(this, c, it, fase, i as i8 as i32) {
+            if assign_comp_place(this, c, it, fase, i as i8 as i32) {
                 colocados += 1;
             }
             if read_u8(e + 0xe) == 2 {
@@ -544,7 +555,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
                 if c == 0 {
                     c = enesimo(this, clubes, conta, read_u32(e), 1, 1, 1);
                 }
-                if cqi2_vaga(this, c, it, fase.wrapping_add(1), i as i8 as i32) {
+                if assign_comp_place(this, c, it, fase.wrapping_add(1), i as i8 as i32) {
                     colocados += 1;
                 }
             }
@@ -561,7 +572,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
                     break;
                 }
                 let c = enesimo(this, clubes, conta, read_u32(e), 1, 1, 0);
-                if cqi2_vaga(this, c, it, (j as u8).wrapping_add(fase), i as i8 as i32) {
+                if assign_comp_place(this, c, it, (j as u8).wrapping_add(fase), i as i8 as i32) {
                     crate::comparacao::ramo("cqi_2 clube na intertoto");
                     colocados += 1; // cqi2: mais um na Intertoto
                 }
@@ -582,15 +593,15 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
 /// a tabela das nações, os clubes e o sorteio (a cópia sem contar). Fora disso, só a original (a 0x903890 sorteia e
 /// entrega notícia).
 pub(crate) unsafe extern "thiscall" fn comparar_assign_intertoto_places(this: usize, clubes: usize, conta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_INTERTOTO_PLACES);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_INTERTOTO_PLACES);
     if *(G_CURRENT_DATE_YEAR as *const i16) != 0x7d1 || read_u32(this + 0x43b) != 0 {
         return o(this, clubes, conta);
     }
-    let mut reg = cqi2_regioes_dos_clubes();
+    let mut reg = club_regions();
     reg.push((this, 0x440));
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| assign_intertoto_places(this, clubes, conta)));
-    PLACAR.registrar(igual, || format!("assign_intertoto_places: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("assign_intertoto_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 // ---------- 273a leva: a classificação da UEFA: as vagas da Copa da UEFA, o voluntário inglês da Intertoto e a virada do ano (uefa_seeding.cpp) ----------
@@ -599,16 +610,18 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_intertoto_places(this: us
 
 
 
-/// O clube `c` (com nação e ainda sem vaga) entra na Copa da UEFA na fase `fase`; um clube a mais da nação `r`. Devolve
+/// Club c (with nation, no place) enters the UEFA Cup at a phase; counts it for nation r.
+///
+/// [pt] O clube `c` (com nação e ainda sem vaga) entra na Copa da UEFA na fase `fase`; um clube a mais da nação `r`. Devolve
 /// se entrou. (O caso da nação −1, que a original procura pela nação do clube, não acontece: `r` vem da volta.)
-pub(crate) unsafe fn cqi3_entra(this: usize, c: usize, fase: u8, r: i32, colocados: &mut i32) -> bool {
+pub(crate) unsafe fn enter_uefa_cup(this: usize, c: usize, fase: u8, r: i32, colocados: &mut i32) -> bool {
     if read_u32(c + 0x53) == 0 || read_u32(c + 0x1db) != u32::MAX {
         return false;
     }
     *((c + 0x1db) as *mut u32) = read_u32(KEY_CLUB_COMP_UEFA_CUP);
     *((c + 0x1df) as *mut u8) = fase;
     *colocados += 1;
-    let p = cqi1_e(this, r) + 0x11;
+    let p = seeding_nation_entry(this, r) + 0x11;
     *(p as *mut u8) = read_u8(p).wrapping_add(1);
     true
 }
@@ -655,12 +668,12 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clube
         let id = read_u32(read_u32(h + 0x53) as usize);
         let mut i = -1i32;
         for k in 0..n8() as i32 {
-            if read_u32(cqi1_e(this, k)) == id {
+            if read_u32(seeding_nation_entry(this, k)) == id {
                 i = k;
                 break;
             }
         }
-        let p = cqi1_e(this, i) + 0x11;
+        let p = seeding_nation_entry(this, i) + 0x11;
         *(p as *mut u8) = read_u8(p).wrapping_add(1);
         nacao_do_campeao = read_u32(h + 0x53) as usize;
     }
@@ -691,7 +704,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clube
             (0, 1)
         };
         let mut vagas = [0u8, f1, f2];
-        let e = cqi1_e(this, r as i32);
+        let e = seeding_nation_entry(this, r as i32);
         let nacao = read_u32(e + 4) as usize;
         if nacao == nacao_do_campeao {
             vagas[1] = vagas[1].wrapping_sub(1);
@@ -717,7 +730,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clube
                         } else {
                             let copa = read_u32(G_LEAGUE_WORLD_CUP_CUP_COMP + (linha(nacao) as i32 * 0x48) as usize) as usize;
                             if copa == 0 {
-                                aviso_em(0xaa1a1c, 0x418);
+                                show_error_at(0xaa1a1c, 0x418);
                                 tentar_de_novo = true;
                                 0
                             } else {
@@ -790,7 +803,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clube
                     } else {
                         escolhidos = escolhidos.wrapping_add(1);
                         if c != 0 {
-                            cqi3_entra(this, c, f, r as i32, &mut colocados);
+                            enter_uefa_cup(this, c, f, r as i32, &mut colocados);
                             if colocados as i16 as i32 - conta_extra as i32 + 1 >= 0x76 {
                                 return;
                             }
@@ -810,17 +823,17 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clube
             if !a && !b {
                 let c = um();
                 if c != 0 {
-                    cqi3_entra(this, c, ultima_fase, r as i32, &mut colocados);
+                    enter_uefa_cup(this, c, ultima_fase, r as i32, &mut colocados);
                 }
             } else if a && b {
                 let fase = (conta_extra as u8).wrapping_mul(10).wrapping_add(3);
                 ultima_fase = fase;
                 if read_u32(vencedor + 0x53) != 0 {
-                    cqi3_entra(this, vencedor, fase, r as i32, &mut colocados);
+                    enter_uefa_cup(this, vencedor, fase, r as i32, &mut colocados);
                 }
-                cqi3_entra(this, vice, fase, r as i32, &mut colocados);
+                enter_uefa_cup(this, vice, fase, r as i32, &mut colocados);
             } else {
-                cqi3_entra(this, if a { vencedor } else { vice }, ultima_fase, r as i32, &mut colocados);
+                enter_uefa_cup(this, if a { vencedor } else { vice }, ultima_fase, r as i32, &mut colocados);
             }
         }
         r += 1;
@@ -831,13 +844,13 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clube
 /// Lado a lado: a classificação (com a tabela das finais em +0x440), os clubes, o sorteio (a cópia sem contar) e a marca
 /// da caixa.
 pub(crate) unsafe extern "thiscall" fn comparar_assign_uefa_cup_places(this: usize, clubes: usize, conta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_UEFA_CUP_PLACES);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_UEFA_CUP_PLACES);
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
     let mut reg = vec![(this, 0x698), (read_u32(G_CLUB_TABLE) as usize, n * 0x245), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| assign_uefa_cup_places(this, clubes, conta)));
-    PLACAR.registrar(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// England's Intertoto club: outside 2001, up to 6 volunteers drawn among Premier clubs without a human manager or a
@@ -885,7 +898,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
                 let l = alocar(0x78);
                 core::ptr::write_unaligned((this + 0x43b) as *mut u32, l as u32);
                 if l == 0 {
-                    aviso_em(0xaa1a1c, 0xf9);
+                    show_error_at(0xaa1a1c, 0xf9);
                     continue;
                 }
             }
@@ -935,7 +948,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
 /// Em 2001 (devolve 0 sem efeito): a devolução das duas. Fora de 2001 só a original (sorteia, aloca a lista e entrega a
 /// notícia).
 pub(crate) unsafe extern "thiscall" fn comparar_pick_english_intertoto_club(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_PICK_ENGLISH_INTERTOTO_CLUB);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_PICK_ENGLISH_INTERTOTO_CLUB);
     if read_i16(G_CURRENT_DATE_YEAR) != 0x7d1 {
         return o(this);
     }
@@ -978,7 +991,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
         let mut t = 0usize;
         let n = juntar(this, &mut t);
         if n as u16 == 0 {
-            aviso_em(0xaa1a1c, 0x2b7);
+            show_error_at(0xaa1a1c, 0x2b7);
         } else {
             campeoes(this, t, n);
             copa_uefa(this, t, n);
@@ -1022,30 +1035,36 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
 /// Só a original (refaz as vagas pelas rotinas de dentro, solta a tabela, entrega notícias); a cópia leva o contador.
 pub(crate) unsafe extern "thiscall" fn comparar_update_season(this: usize, diario: u32) {
     // ponytail: refaz a classificação inteira e entrega notícias: não dá para rodar duas vezes
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_UPDATE_SEASON)(this, diario)
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_UPDATE_SEASON)(this, diario)
 }
 
 // ---------- 265a leva: os temporários do save: as sementes da UEFA e da CONMEBOL e os países anfitriões (uefa_seeding.cpp, conmebol_seeding.cpp, host_country.cpp) ----------
 
 
-/// A contagem de um byte com sinal (a original usa `movsx`).
-pub(crate) unsafe fn cpx6_n8(a: usize) -> u32 {
+/// Reads a signed byte count as u32 (movsx).
+///
+/// [pt] A contagem de um byte com sinal (a original usa `movsx`).
+pub(crate) unsafe fn signed_byte_count(a: usize) -> u32 {
     *(a as *const i8) as i32 as u32
 }
 
-/// Abre `CM3_TEMP\<nome>` para gravar ("wb"): o caminho pela 0x90bde0 e o fopen do jogo (0x945b00).
-pub(crate) unsafe fn cpx6_abrir(nome: usize) -> usize {
+/// Opens CM3_TEMP\<name> with "wb" through the game's path builder and fopen.
+///
+/// [pt] Abre `CM3_TEMP\<nome>` para gravar ("wb"): o caminho pela 0x90bde0 e o fopen do jogo (0x945b00).
+pub(crate) unsafe fn open_temp_file_for_write(nome: usize) -> usize {
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     abrir(caminho(0x987da0, nome), 0x9a7f28)
 }
 
-pub(crate) unsafe fn cpx6_escrever(dados: usize, tamanho: u32, quantos: u32, f: usize) -> u32 {
+/// Calls the exe's CRT fwrite.
+pub(crate) unsafe fn crt_fwrite(dados: usize, tamanho: u32, quantos: u32, f: usize) -> u32 {
     let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     escrever(dados, tamanho, quantos, f)
 }
 
-pub(crate) unsafe fn cpx6_fechar(f: usize) {
+/// Calls the exe's CRT fclose.
+pub(crate) unsafe fn uefa_seeding_crt_fclose(f: usize) {
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     fechar(f);
 }
@@ -1062,43 +1081,43 @@ pub(crate) unsafe fn cpx6_fechar(f: usize) {
 pub(crate) unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0xaa1a1c;
     crate::comparacao::ramo("cpx_6 gravar sementes da uefa");
-    let f = cpx6_abrir(0xaa1a50);
+    let f = open_temp_file_for_write(0xaa1a50);
     if f == 0 {
-        aviso_em(FONTE, 0x64f);
+        show_error_at(FONTE, 0x64f);
         return;
     }
-    if cpx6_escrever(this + 0x438, 1, 1, f) != 1 {
-        aviso_em(FONTE, 0x657);
+    if crt_fwrite(this + 0x438, 1, 1, f) != 1 {
+        show_error_at(FONTE, 0x657);
         return;
     }
-    if cpx6_escrever(this, 0x12, cpx6_n8(this + 0x438), f) != cpx6_n8(this + 0x438) {
-        aviso_em(FONTE, 0x660);
+    if crt_fwrite(this, 0x12, signed_byte_count(this + 0x438), f) != signed_byte_count(this + 0x438) {
+        show_error_at(FONTE, 0x660);
         return;
     }
-    if cpx6_escrever(this + 0x439, 2, 1, f) != 1 {
-        aviso_em(FONTE, 0x668);
+    if crt_fwrite(this + 0x439, 2, 1, f) != 1 {
+        show_error_at(FONTE, 0x668);
         return;
     }
-    if cpx6_escrever(this + 0x43f, 1, 1, f) != 1 {
-        aviso_em(FONTE, 0x66f);
+    if crt_fwrite(this + 0x43f, 1, 1, f) != 1 {
+        show_error_at(FONTE, 0x66f);
         return;
     }
-    if *((this + 0x43f) as *const u8) != 0 && cpx6_escrever(read_usize(this + 0x43b), 4, cpx6_n8(this + 0x43f), f) != cpx6_n8(this + 0x43f) {
-        aviso_em(FONTE, 0x679);
+    if *((this + 0x43f) as *const u8) != 0 && crt_fwrite(read_usize(this + 0x43b), 4, signed_byte_count(this + 0x43f), f) != signed_byte_count(this + 0x43f) {
+        show_error_at(FONTE, 0x679);
         return;
     }
-    if cpx6_escrever(this + 0x440, 0xc, 0x32, f) != 0x32 { // cpx6: os 50 registros fixos
-        aviso_em(FONTE, 0x682);
+    if crt_fwrite(this + 0x440, 0xc, 0x32, f) != 0x32 { // cpx6: os 50 registros fixos
+        show_error_at(FONTE, 0x682);
         return;
     }
-    cpx6_fechar(f);
+    uefa_seeding_crt_fclose(f);
 }
 
 /// Comparador da 0x905510: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_uefa_seeding_save_to_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     // (o .tmp vai no .qst pelo zadd_matching_files)
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_UEFA_SEEDING_SAVE_TO_TEMP_FILE)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UEFA_SEEDING_SAVE_TO_TEMP_FILE)(this)
 }
 
 

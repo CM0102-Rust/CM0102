@@ -24,7 +24,7 @@ unsafe extern "thiscall" fn set_slot_coordinate(this: usize, casa: u32, fase: u3
     if !(0..=10).contains(&s) || !(0..=1).contains(&f) || !(0..=2).contains(&zx) || !(0..=3).contains(&zy)
         || !(0..=0x1a).contains(&cx) || !(0..=0x23).contains(&cy)
     {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%)(this, casa, fase, faixa, coord);
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%)(this, casa, fase, faixa, coord);
     }
     let casa_no: unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32 = core::mem::transmute(0x5b7e60usize);
     let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(0x5b73a0usize);
@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn set_slot_coordinate(this: usize, casa: u32, fase: u3
 unsafe extern "thiscall" fn check_duplicate_position(this: usize, casa: u32, saida: *mut u32) -> u32 {
     let s = casa as u8 as i8;
     if !(0..=10).contains(&s) {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(%%I1%%)(this, casa, saida);
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(%%I1%%)(this, casa, saida);
     }
     *saida = 0;
     let su = s as usize;
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn set_marking_type(this: usize, casa: u32, marca: u32)
     let limpa = match m {
         1 | 2 | 4 => 0xf8u8,
         8 | 0x10 => 0xe7,
-        _ => return orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%)(this, casa, marca),
+        _ => return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%)(this, casa, marca),
     };
     let b = (this as isize + casa as u8 as i8 as isize + 0x5b4) as *mut u8;
     *b = *b & limpa | m;
@@ -204,14 +204,14 @@ unsafe extern "thiscall" fn set_marking_type(this: usize, casa: u32, marca: u32)
 
 /// As regiões da formação que as três gravam: as posições, as marcas, as extras e as coordenadas (+0x12d..+0x584),
 /// os tipos de marcação (+0x5b4, 11) e a máscara com +0x187f (+0x187b, 8).
-fn cpu11_regioes(this: usize) -> [(usize, usize); 3] {
+fn formation_regions(this: usize) -> [(usize, usize); 3] {
     [(this + 0x12d, 0x584 - 0x12d), (this + 0x5b4, 11), (this + 0x187b, 8)]
 }
 
 /// Comparador: grava só a formação (a 0x5b7e60 e a 0x5b73a0 são puras; a 0x5b59a0 refaz a máscara): lado a lado.
 unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32, fase: u32, faixa: u32, coord: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%);
-    let reg = cpu11_regioes(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%);
+    let reg = formation_regions(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, fase, faixa, coord), || set_slot_coordinate(this, casa, fase, faixa, coord));
     PLACAR.registrar(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, faixa, coord, r, n, mo, mr));
     r
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32,
 
 /// Comparador: pura (grava só a saída): as duas sobre saídas próprias.
 unsafe extern "thiscall" fn comparar_check_duplicate_position(this: usize, casa: u32, saida: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(%%I1%%);
     if !(0..=10).contains(&(casa as u8 as i8)) {
         return o(this, casa, saida); // ponytail: a caixa, só a original
     }
@@ -233,7 +233,7 @@ unsafe extern "thiscall" fn comparar_check_duplicate_position(this: usize, casa:
 
 /// Comparador: grava um byte e +0x187f: lado a lado.
 unsafe extern "thiscall" fn comparar_set_marking_type(this: usize, casa: u32, marca: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%);
     if !matches!(marca as u8, 1 | 2 | 4 | 8 | 0x10) {
         return o(this, casa, marca); // ponytail: a caixa, só a original
     }

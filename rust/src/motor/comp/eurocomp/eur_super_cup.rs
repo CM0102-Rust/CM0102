@@ -2,26 +2,28 @@ use super::*;
 
 // ---------- 281a leva: os clubes das supercopas: a Supercopa Europeia, a Supercopa Asiática e a Supercopa da Série C1 (eur_super_cup.cpp, asia_super_cup.cpp, ita_c1_super.cpp) ----------
 
-/// { 0x57a500 } (thiscall, ret 0, eur_super_cup.cpp): `EurSuperCup::select_teams()`: a lista de dois (sem memória, a
+/// EurSuperCup::select_teams (0x57a500): Champions League winner and Cup Winners' Cup (1999) or UEFA Cup winner.
+///
+/// [pt] { 0x57a500 } (thiscall, ret 0, eur_super_cup.cpp): `EurSuperCup::select_teams()`: a lista de dois (sem memória, a
 /// caixa da linha 0xc1 e −1). O campeão da Liga dos Campeões ([0x9cf6e8]; sem ele, a caixa 0xca e 0) e o da Recopa
 /// ([0x9cf6ec]) na copa de 1999, nas outras o da Copa da UEFA ([0x9cf6f0]); sem ele, 0xd5 e 0. Devolve 1.
-pub(crate) unsafe fn cqq11_europeia(this: usize) -> (i32, i32) {
+pub(crate) unsafe fn select_european_super_cup_teams(this: usize) -> (i32, i32) {
     const F: usize = 0x9c45f8;
-    let l = match cqm12_lista(this, F, 0xc1) {
+    let l = match alloc_two_team_list(this, F, 0xc1) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = cqm10_colocado(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE, 0); // cqq11: o campeão da Liga dos Campeões
-    if !cqm12_vaga(l, 0, a, F, 0xca) {
+    let a = latest_placed_club(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE, 0); // cqq11: o campeão da Liga dos Campeões
+    if !set_team_slot(l, 0, a, F, 0xca) {
         return (0, 0);
     }
     let copa = if core::ptr::read_unaligned((this + 0x40) as *const i16) == 0x7cf { KEY_CLUB_COMP_EUROPEAN_CUP_WINNERS_CUP } else { KEY_CLUB_COMP_UEFA_CUP };
-    let b = cqm10_colocado(copa, 0); // cqq11: o campeão da Copa da UEFA
-    if !cqm12_vaga(l, 1, b, F, 0xd5) {
+    let b = latest_placed_club(copa, 0); // cqq11: o campeão da Copa da UEFA
+    if !set_team_slot(l, 1, b, F, 0xd5) {
         return (0, 0);
     }
     crate::comparacao::ramo("cqq_11 clubes da supercopa europeia");
-    cqm12_fim(l)
+    finish_two_team_list(l)
 }
 
 /// rule: the European Super Cup is between the Champions League winner and the Cup Winners' Cup winner in the 1999
@@ -31,38 +33,41 @@ pub(crate) unsafe fn cqq11_europeia(this: usize) -> (i32, i32) {
 /// [pt] regra: a Supercopa Europeia é entre o campeão da Liga dos Campeões e o da Recopa na edição de 1999 (a última Recopa)
 /// e, nas outras, o da Copa da UEFA; sem um dos dois, a caixa de erro
 pub(crate) unsafe extern "thiscall" fn eur_super_cup_select_teams(this: usize) -> i32 {
-    cqq11_europeia(this).0
+    select_european_super_cup_teams(this).0
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_select_teams(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_SELECT_TEAMS);
-    cqm12_comparar("eur_super_cup_select_teams", this, || o(this), || cqq11_europeia(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_SELECT_TEAMS);
+    compare_team_list("eur_super_cup_select_teams", this, || o(this), || select_european_super_cup_teams(this))
 }
 
-/// { 0x410a50 } (thiscall, ret 0, asia_super_cup.cpp): `AsiaSuperCup::select_teams()`: a lista de dois (sem memória, a
+/// AsiaSuperCup::select_teams (0x410a50): Asian Champions Cup and Cup Winners' Cup winners (Champions runner-up if the
+/// same club).
+///
+/// [pt] { 0x410a50 } (thiscall, ret 0, asia_super_cup.cpp): `AsiaSuperCup::select_teams()`: a lista de dois (sem memória, a
 /// caixa da linha 0xc0 e −1). O campeão da Liga dos Campeões asiática ([0x9cf64c]; sem ele, 0xc9 e 0) e o da Recopa
 /// asiática ([0x9cf650]; sem ele, 0xd1 e 0); se é o mesmo clube, o primeiro vira o vice da Liga dos Campeões (sem
 /// conferir, como a original). Devolve 1.
-pub(crate) unsafe fn cqq11_asiatica(this: usize) -> (i32, i32) {
+pub(crate) unsafe fn select_asian_super_cup_teams(this: usize) -> (i32, i32) {
     const F: usize = 0x987be0;
-    let l = match cqm12_lista(this, F, 0xc0) {
+    let l = match alloc_two_team_list(this, F, 0xc0) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = cqm10_colocado(KEY_CLUB_COMP_ASIAN_CHAMPIONS_CUP, 0);
-    if !cqm12_vaga(l, 0, a, F, 0xc9) {
+    let a = latest_placed_club(KEY_CLUB_COMP_ASIAN_CHAMPIONS_CUP, 0);
+    if !set_team_slot(l, 0, a, F, 0xc9) {
         return (0, 0);
     }
-    let b = cqm10_colocado(KEY_CLUB_COMP_ASIAN_CUP_WINNERS_CUP, 0); // cqq11: o campeão da Recopa asiática
-    if !cqm12_vaga(l, 1, b, F, 0xd1) {
+    let b = latest_placed_club(KEY_CLUB_COMP_ASIAN_CUP_WINNERS_CUP, 0); // cqq11: o campeão da Recopa asiática
+    if !set_team_slot(l, 1, b, F, 0xd1) {
         return (0, 0);
     }
     if a == b {
         crate::comparacao::ramo("cqq_11 dobradinha asiatica");
-        core::ptr::write_unaligned(l as *mut u32, cqm10_colocado(KEY_CLUB_COMP_ASIAN_CHAMPIONS_CUP, 1) as u32);
+        core::ptr::write_unaligned(l as *mut u32, latest_placed_club(KEY_CLUB_COMP_ASIAN_CHAMPIONS_CUP, 1) as u32);
     }
     crate::comparacao::ramo("cqq_11 clubes da supercopa asiatica");
-    cqm12_fim(l)
+    finish_two_team_list(l)
 }
 
 /// rule: the Asian Super Cup is between the Asian Club Championship winner and the Asian Cup Winners' Cup winner; if
@@ -72,26 +77,28 @@ pub(crate) unsafe fn cqq11_asiatica(this: usize) -> (i32, i32) {
 /// [pt] regra: a Supercopa Asiática é entre o campeão da Liga dos Campeões asiática e o da Recopa asiática; se o mesmo clube
 /// ganhou as duas, entra o vice da Liga dos Campeões
 pub(crate) unsafe extern "thiscall" fn eur_super_cup_select_teams_410a50(this: usize) -> i32 {
-    cqq11_asiatica(this).0
+    select_asian_super_cup_teams(this).0
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_select_teams_410a50(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_SELECT_TEAMS_410A50);
-    cqm12_comparar("eur_super_cup_select_teams_410a50", this, || o(this), || cqq11_asiatica(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_SELECT_TEAMS_410A50);
+    compare_team_list("eur_super_cup_select_teams_410a50", this, || o(this), || select_asian_super_cup_teams(this))
 }
 
-/// { 0x63c9d0 } (thiscall, ret 0, ita_c1_super.cpp): `ItaC1Super::init_team_list()`: a lista de dois (sem memória, a
+/// ItaC1Super::init_team_list (0x63c9d0): two-entry list with both slots empty.
+///
+/// [pt] { 0x63c9d0 } (thiscall, ret 0, ita_c1_super.cpp): `ItaC1Super::init_team_list()`: a lista de dois (sem memória, a
 /// caixa da linha 0xc2 e −1) com as duas vagas vazias (os clubes entram depois, com os campeões das duas chaves da C1
 /// [inferência]); classe e situação 0. Devolve 1.
-pub(crate) unsafe fn cqq11_c1(this: usize) -> (i32, i32) {
-    let l = match cqm12_lista(this, 0x9ea1c8, 0xc2) {
+pub(crate) unsafe fn init_c1_super_cup_list(this: usize) -> (i32, i32) {
+    let l = match alloc_two_team_list(this, 0x9ea1c8, 0xc2) {
         Some(l) => l,
         None => return (-1, 0),
     };
     crate::comparacao::ramo("cqq_11 vagas da supercopa c1");
     core::ptr::write_unaligned(l as *mut u32, 0);
     core::ptr::write_unaligned((l + 6) as *mut u32, 0);
-    cqm12_fim(l)
+    finish_two_team_list(l)
 }
 
 /// rule: the Serie C1 Super Cup starts with both places empty; the clubs enter at the end of the season [inference: the
@@ -101,12 +108,12 @@ pub(crate) unsafe fn cqq11_c1(this: usize) -> (i32, i32) {
 /// [pt] regra: a Supercopa da Série C1 começa com as duas vagas vazias; os clubes entram no fim da temporada [inferência: os
 /// campeões das duas chaves da C1]
 pub(crate) unsafe extern "thiscall" fn eur_super_cup_init_team_list(this: usize) -> i32 {
-    cqq11_c1(this).0
+    init_c1_super_cup_list(this).0
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_init_team_list(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_INIT_TEAM_LIST);
-    cqm12_comparar("eur_super_cup_init_team_list", this, || o(this), || cqq11_c1(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_INIT_TEAM_LIST);
+    compare_team_list("eur_super_cup_init_team_list", this, || o(this), || init_c1_super_cup_list(this))
 }
 
 /// rule: the European Super Cup is a single match on 24 August (drawn on 4 July) on neutral ground (venue 0x8000:
@@ -116,11 +123,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_init_team_list(thi
 /// [pt] { 0x57a3c0 } (thiscall, ret 0x10, eur_super_cup.cpp; a virtual +0x3c da Supercopa Europeia): `EurSuperCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
 pub(crate) unsafe extern "thiscall" fn eur_super_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql10_tabela(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_EUROPEIA, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_EUROPEIA, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_EUR_SUPER_CUP_CREATE_ROUND_TABLE);
-    cql10_comparar("eur_super_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_EUR_SUPER_CUP_CREATE_ROUND_TABLE);
+    eng_cc_cup_compare_round_table("eur_super_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| eur_super_cup_create_round_table(this, fase, r, e, s))
 }

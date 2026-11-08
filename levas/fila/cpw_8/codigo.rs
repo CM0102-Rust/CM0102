@@ -26,14 +26,14 @@ unsafe fn cpw8_sortear(n: i32) -> i32 {
 }
 
 /// A data `destino` recebe `origem` (0x417c10, com a devolução numa local).
-unsafe fn cpw8_copiar_data(destino: usize, origem: usize) {
+unsafe fn manager_manager_copy_date(destino: usize, origem: usize) {
     let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut t = [0u8; 8];
     copiar(destino, t.as_mut_ptr(), origem);
 }
 
 /// A diferença entre hoje ([0xae2c90]) e a data `d` (0x54cc30): os dias (+0, com sinal) mais 365 × os anos (+2).
-unsafe fn cpw8_dias_desde(d: usize) -> i32 {
+unsafe fn days_since(d: usize) -> i32 {
     let diferenca: unsafe extern "thiscall" fn(usize, *mut u8, u32, u32) -> usize = core::mem::transmute(0x54cc30usize);
     let mut r = [0u8; 8];
     diferenca(0xae2c90, r.as_mut_ptr(), cpw8_d(d) as u32, cpw8_d(d + 4) as u32);
@@ -46,7 +46,7 @@ unsafe fn cpw8_dias_desde(d: usize) -> i32 {
 static mut CPW8_ENSAIO: bool = false;
 static mut CPW8_TERMINOU: bool = false;
 
-unsafe fn cpw8_terminar_lesao(this: usize, pessoa: usize) {
+unsafe fn end_injury(this: usize, pessoa: usize) {
     if CPW8_ENSAIO {
         CPW8_TERMINOU = true;
         return;
@@ -56,7 +56,7 @@ unsafe fn cpw8_terminar_lesao(this: usize, pessoa: usize) {
 }
 
 /// A estática local da guarda [0xb63d10] (bit `bit`): na primeira vez, Data() (0x54a110) e o destrutor vazio no atexit.
-unsafe fn cpw8_estatica(bit: u8, data: usize, destrutor: usize) {
+unsafe fn init_static_date(bit: u8, data: usize, destrutor: usize) {
     let g = 0xb63d10 as *mut u8;
     if *g & bit == 0 {
         *g |= bit;
@@ -68,8 +68,8 @@ unsafe fn cpw8_estatica(bit: u8, data: usize, destrutor: usize) {
 }
 
 /// O trecho da forma acima de `base`: (x − base) × a constante `k` (f64), truncado a 16 bits com sinal, mais `base`.
-unsafe fn cpw8_trecho(x: i32, base: i32, k: usize) -> i32 {
-    (ftol(x.wrapping_sub(base) as f64 * f64_em(k)) as i16 as i32).wrapping_add(base)
+unsafe fn scale_above_base(x: i32, base: i32, k: usize) -> i32 {
+    (match_pl_ftol(x.wrapping_sub(base) as f64 * read_f64_at(k)) as i16 as i32).wrapping_add(base)
 }
 
 /// { 0x62c680 } (thiscall, ret 4, injury.cpp, quadro SEH só das estáticas locais): `Injury::update_player_fitness(
@@ -87,9 +87,9 @@ unsafe fn cpw8_trecho(x: i32, base: i32, k: usize) -> i32 {
 /// (+0xc).
 /// Grava as duas e a data de hoje.
 unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
-    cpw8_estatica(1, 0xb63d08, 0x62ce20);
-    cpw8_estatica(2, 0xb63d18, 0x62ce10);
-    cpw8_estatica(4, 0xb63d20, 0x62ce00);
+    init_static_date(1, 0xb63d08, 0x62ce20);
+    init_static_date(2, 0xb63d18, 0x62ce10);
+    init_static_date(4, 0xb63d20, 0x62ce00);
     if pessoa == 0 {
         return;
     }
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     if cpw8_uw(rec + 2) == cpw8_uw(0xae2c92) && cpw8_w(rec) == cpw8_w(0xae2c90) {
         return; // já atualizado hoje
     }
-    let t = cpw8_dias_desde(rec);
+    let t = days_since(rec);
     let atual = cpw8_i(rec + 0xe);
     if atual > cpw8_i(this + 8) || atual < -1 {
         core::ptr::write_unaligned((rec + 0xe) as *mut i32, -1);
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     let i = cpw8_i(rec + 0xe);
     if i != -1 {
         let inj = cpw8_d(this + 4).wrapping_add((i as u32).wrapping_mul(0x30) as usize);
-        let e = cpw8_dias_desde(inj + 0x20);
+        let e = days_since(inj + 0x20);
         let s = cpw8_w(inj + 0x2a) as i32;
         if e < s {
             l34 = t;
@@ -132,10 +132,10 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
                 l38 = t - f;
                 l3c = (e - s) - l38;
                 l34 = f - l3c;
-                cpw8_terminar_lesao(this, pessoa);
+                end_injury(this, pessoa);
             } else {
                 l38 = t;
-                cpw8_terminar_lesao(this, pessoa);
+                end_injury(this, pessoa);
             }
         }
     } else {
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
                 let r = na_temporada(clube, 0xb63d18, 0xb63d20);
                 *(0xb63d30 as *mut u32) = (r == 0) as u32;
                 *(0xb63d2c as *mut usize) = cpw8_d(pessoa + 0x39);
-                cpw8_copiar_data(0xb63d08, 0xae2c90);
+                manager_manager_copy_date(0xb63d08, 0xae2c90);
             }
             if cpw8_i(0xb63d30) != 0 {
                 l38 = 0;
@@ -248,19 +248,19 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     }
     x = x.wrapping_add(s.wrapping_mul(l38));
     if f > 0x267a {
-        x = cpw8_trecho(x, f, 0x967880);
+        x = scale_above_base(x, f, 0x967880);
     } else if f > 0x2328 {
-        x = cpw8_trecho(x, f, 0x968918);
+        x = scale_above_base(x, f, 0x968918);
         if x > 0x267a {
-            x = cpw8_trecho(x, 0x267a, 0x968968);
+            x = scale_above_base(x, 0x267a, 0x968968);
         }
     } else if x > 0x1b58 {
-        x = cpw8_trecho(x, 0x1b58, 0x96af30);
+        x = scale_above_base(x, 0x1b58, 0x96af30);
         if x > 0x2328 {
-            x = cpw8_trecho(x, 0x2328, 0x96bad0);
+            x = scale_above_base(x, 0x2328, 0x96bad0);
         }
         if x > 0x267a {
-            x = cpw8_trecho(x, 0x267a, 0x968968);
+            x = scale_above_base(x, 0x267a, 0x968968);
         }
     }
     if x > 10000 {
@@ -281,9 +281,9 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     // a condição de jogo, pelo fator do cansaço (+0xc)
     let cansaco = cpw8_w(rec + 0xc);
     let mc = cpw8_w(rec + 0xa) as i32;
-    let teto_k = f64_em(0x9689d0);
+    let teto_k = read_f64_at(0x9689d0);
     let k = if cansaco > 1000 {
-        let kv = f64_em(0x968dc0) - cansaco as f64 * f64_em(0x96a608);
+        let kv = read_f64_at(0x968dc0) - cansaco as f64 * read_f64_at(0x96a608);
         if !(kv > teto_k) {
             kv
         } else if l3c > 0 {
@@ -294,17 +294,17 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     } else if l3c > 0 {
         teto_k
     } else {
-        f64_em(0x967890)
+        read_f64_at(0x967890)
     };
-    let r1 = ftol(l38.wrapping_mul(500) as f64 * k);
-    let r2 = ftol(l3c.wrapping_mul(250) as f64 * k);
+    let r1 = match_pl_ftol(l38.wrapping_mul(500) as f64 * k);
+    let r2 = match_pl_ftol(l3c.wrapping_mul(250) as f64 * k);
     let mut cond = r2.wrapping_add(mc).wrapping_add(r1);
     if cond > 10000 {
         cond = 10000;
     }
     core::ptr::write_unaligned((rec + 8) as *mut i16, forma as i16);
     core::ptr::write_unaligned((rec + 0xa) as *mut i16, cond as i16);
-    cpw8_copiar_data(rec, 0xae2c90);
+    manager_manager_copy_date(rec, 0xae2c90);
 }
 
 /// Comparador lado a lado: o registro de 31 bytes da pessoa, o byte +0xa do registro de 79 bytes, as estáticas e o
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
 /// ela chega lá, fica a original sozinha (já rodou primeiro). Na primeira vez (estáticas por criar, com atexit) e sem
 /// registro (pessoa nula, id fora da tabela, sem ficha): só a original.
 unsafe extern "thiscall" fn comparar_update_player_fitness(this: usize, pessoa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     if *(0xb63d10 as *const u8) & 7 != 7 || pessoa == 0 || cpw8_i(pessoa) < 0 || cpw8_i(pessoa) >= cpw8_i(0xae2364) || cpw8_d(pessoa + 0x61) == 0 {
         return o(this, pessoa); // ponytail: as estáticas e o atexit da primeira vez não podem rodar duas vezes
     }
@@ -358,7 +358,7 @@ unsafe extern "thiscall" fn get_league_confidence_band(this: usize, clube: usize
 }
 
 unsafe extern "thiscall" fn comparar_get_league_confidence_band(this: usize, clube: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
     let n = get_league_confidence_band(this, clube);
     PLACAR.registrar(r == n, || format!("get_league_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
     r
@@ -375,7 +375,7 @@ unsafe extern "thiscall" fn set_board_ratings(this: usize, clube: usize, valor: 
 }
 
 unsafe extern "thiscall" fn comparar_set_board_ratings(this: usize, clube: usize, valor: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     let r = cpw8_d(this).wrapping_add((cpw8_i(clube) as u32).wrapping_mul(0x49) as usize);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 0x49)], || o(this, clube, valor), || set_board_ratings(this, clube, valor));
     PLACAR.registrar(igual, || format!("set_board_ratings(clube {:x}, {:x}) {:x?} x {:x?}", clube, valor, mo, mr));

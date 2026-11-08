@@ -6,7 +6,7 @@ unsafe extern "thiscall" fn is_forward_unavailable(gerente: usize) -> u32 {
     let vaga = *((gerente + 0x382a) as *const i16) as isize;
     let bloco = core::ptr::read_unaligned((gerente as isize + 0x7e2 + vaga * 0x300) as *const usize);
     if bloco == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(gerente);
+        return original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(gerente);
     }
     (*((bloco + 0x1f8) as *const usize) == 0) as u32
 }
@@ -19,7 +19,7 @@ unsafe extern "C" fn get_heading_colour(x: u32) -> u32 {
 }
 
 /// Copia o texto C de `origem` (com o zero) para o texto de trabalho 0xde1f64.
-unsafe fn copiar_para_o_texto(origem: usize) {
+unsafe fn copy_to_work_text(origem: usize) {
     let mut i = 0;
     loop {
         let b = *((origem + i) as *const u8);
@@ -34,7 +34,7 @@ unsafe fn copiar_para_o_texto(origem: usize) {
 /// O nome da competição do registro `c` (107 bytes) no texto 0xde1f64 do jeito do painel: "Friendlies"
 /// e "Reserves" para as dos amistosos ([0x9cf668]) e reservas ([0x9cf684]) com mais de uma rodada
 /// (+8 > +4 de `rodadas`); senão o nome (+0x38).
-unsafe fn nome_da_competicao_no_painel(c: usize, rodadas: usize) {
+unsafe fn panel_competition_name(c: usize, rodadas: usize) {
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let mais_de_uma = core::ptr::read_unaligned((rodadas + 8) as *const i32) > core::ptr::read_unaligned((rodadas + 4) as *const i32);
     let chave = *(c as *const usize);
@@ -43,7 +43,7 @@ unsafe fn nome_da_competicao_no_painel(c: usize, rodadas: usize) {
     } else if chave == *(0x9cf684 as *const usize) && mais_de_uma {
         texto(0xde1f64, 0xa16310);
     } else {
-        copiar_para_o_texto(c + 0x38);
+        copy_to_work_text(c + 0x38);
     }
 }
 
@@ -79,8 +79,8 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
         amistoso(*(0xae2c74 as *const usize), c) == 0 && selecao(*(0xb74434 as *const usize), c) == 0
     };
 
-    let partida = parametro_da_tela(0);
-    let entrada = parametro_da_tela(0xe);
+    let partida = get_screen_param(0);
+    let entrada = get_screen_param(0xe);
     let comp = (*(0xae23d0 as *const usize) as isize + *(entrada as *const i32) as isize * 107) as usize;
     let t = *topo as usize;
     let (esquerda, largura);
@@ -105,7 +105,7 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
     } else {
         esquerda = 0x64;
         largura = 0x316;
-        nome_da_competicao_no_painel(comp, entrada);
+        panel_competition_name(comp, entrada);
         titulo(sm, 0x64, t, 0x316, t + 0x2d, 2, 0, 0xc, 6, cor(0xaebdec), BUF, 1);
         if sem_selo(comp) {
             caixa(sm, 0x91, t, 0x280, t + 0x2d, 1, 0, 0xc, 6, cor(0xaebdec), 0, 0x7d0, comp);
@@ -140,7 +140,7 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
                     _ => {
                         let nacao = *((0xb63d60 + tipo as isize * 72) as *const usize);
                         if nacao != 0 {
-                            copiar_para_o_texto(nacao + 4);
+                            copy_to_work_text(nacao + 4);
                         } else {
                             texto(BUF, 0xa16a90, 0xad9c64);
                         }
@@ -154,7 +154,7 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
                 let m = (core::ptr::read_unaligned((md + 0xd) as *const usize) as isize + k as isize * 84) as usize;
                 if *((m + 0x10) as *const u32) != 0 {
                     let c = (*(0xae23d0 as *const usize) as isize + *(m as *const i32) as isize * 107) as usize;
-                    nome_da_competicao_no_painel(c, m);
+                    panel_competition_name(c, m);
                     linha(display(), 2, 0, 0, 0, 0, 0, 0, 0x10, cor(0xae31aa), cor(0xaebdec), 1, 1, cor(0xaebdea), BUF, 0, 5, m, pai);
                 }
                 k += 1;
@@ -165,7 +165,7 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
     let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x5e5cd0usize);
     let a = altura(3);
     let n = ((*base - *topo - 0x10) / a) as u8;
-    gravar_parametro_da_tela(0xf, n as usize);
+    set_screen_param(0xf, n as usize);
     let mut colunas: [u8; 4] = [0x16, 4, 0x16, 4];
     // a original passa o byte das linhas por cima do ponteiro `base` na pilha (os 3 bytes de cima ficam)
     let linhas = (base as usize & !0xff) | n as usize;
@@ -173,7 +173,7 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
     for s in 0..n as usize {
         let r = celula(sm, tabela, 0, s, 1, 0, 1, 3, cor(0xaebde8), 0, 0, 0) as u16 as i16;
         if s == 0 {
-            gravar_parametro_da_tela(0x10, r as i32 as usize);
+            set_screen_param(0x10, r as i32 as usize);
         }
         for _ in 0..3 {
             texto_da_celula(sm, tabela, 1, s, 1, 0, 0xc, 3, cor(0xaebdec), 0);
@@ -190,14 +190,14 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
 }
 
 unsafe extern "thiscall" fn comparar_is_forward_unavailable(gerente: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(gerente);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(gerente);
     let n = is_forward_unavailable(gerente);
     PLACAR.registrar(r == n, || format!("is_forward_unavailable original={} rust={}", r, n));
     r
 }
 
 unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
-    let r = orig::<unsafe extern "C" fn(u32) -> u32>(%%I2%%)(x);
+    let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(%%I2%%)(x);
     let n = get_heading_colour(x);
     PLACAR.registrar(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
     r
@@ -207,8 +207,8 @@ unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
 /// `Display` da tela atual, os parâmetros (menos o 0x14, a hora que o redesenho 0x724520 grava), o
 /// `*topo` e o texto 0xde1f64 têm de sair iguais.
 unsafe extern "C" fn comparar_draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I0%%);
-    let mut reg = regioes_da_tela();
+    let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I0%%);
+    let mut reg = screen_build_regions();
     let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;
     let bloco = core::ptr::read_unaligned((GERENTE_DE_TELAS as isize + 0x7e2 + vaga * 0x300) as *const usize);
     if bloco != 0 {

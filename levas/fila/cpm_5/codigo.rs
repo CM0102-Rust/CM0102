@@ -10,7 +10,7 @@ unsafe fn cpm5_b(a: usize) -> u8 {
 
 /// O registro de 31 bytes do físico da pessoa `id` em [this] (+0x12 o tipo da lesão recorrente, 0xff sem; +0x13 o
 /// nível; +0x14/+0x18 o começo e o último deslocamento do histórico de lesões).
-unsafe fn cpm5_registro(this: usize, id: usize) -> usize {
+unsafe fn injury_history_record(this: usize, id: usize) -> usize {
     cpm5_d(this).wrapping_add(id.wrapping_mul(31))
 }
 
@@ -34,7 +34,7 @@ enum Cpm5Recorrente {
 /// do jogador; 100 sem jogador, bytes com sinal), parando no primeiro com 95 ou mais. Achado: jogador de clube (+0x39)
 /// de reputação (+0x80) acima de 4250, clube sem humano (0x600a50) e 1 em 3 (sorteio 3): tratar; senão limpar a marca
 /// dele.
-unsafe fn cpm5_plano(this: usize, registro: usize, lesao: *const u8) -> Cpm5Recorrente {
+unsafe fn plan_recurring_injury(this: usize, registro: usize, lesao: *const u8) -> Cpm5Recorrente {
     if cpm5_b(registro + 0x12) != 0xff || cpm5_d((0x9e7ae0isize + *lesao as i8 as isize * 13) as usize) == 0 {
         return Cpm5Recorrente::Nada;
     }
@@ -82,15 +82,15 @@ unsafe fn cpm5_plano(this: usize, registro: usize, lesao: *const u8) -> Cpm5Reco
 }
 
 /// { 0x62e500 } (thiscall, ret 8, injury.cpp): `Injury::roll_recurring_injury(registro, lesao)`: o plano
-/// (`cpm5_plano`); tratar: a lesão nova da pessoa (0x62d250 com 0x4e, 0x4f ou 0x4d pelo tipo recorrente do registro
+/// (`plan_recurring_injury`); tratar: a lesão nova da pessoa (0x62d250 com 0x4e, 0x4f ou 0x4d pelo tipo recorrente do registro
 /// dela, 0xff fora das pessoas ou sem jogador; o tipo vai no byte baixo do argumento `registro`, como a original);
 /// limpar: o registro escolhido sem recorrente (+0x12 = 0xff, +0x13 = 0).
 unsafe extern "thiscall" fn roll_recurring_injury(this: usize, registro: usize, lesao: *const u8) {
-    match cpm5_plano(this, registro, lesao) {
+    match plan_recurring_injury(this, registro, lesao) {
         Cpm5Recorrente::Tratar(p) => {
             let id = cpm5_d(p) as i32;
             let tipo = if id < *(0xae2364 as *const i32) && cpm5_d(p + 0x61) != 0 {
-                cpm5_b(cpm5_registro(this, id as usize) + 0x12)
+                cpm5_b(injury_history_record(this, id as usize) + 0x12)
             } else {
                 0xff
             };
@@ -115,9 +115,9 @@ unsafe extern "thiscall" fn roll_recurring_injury(this: usize, registro: usize, 
 /// 0x58f110 devolve. Pessoa nula: a original (caixa fatal).
 unsafe extern "thiscall" fn reset_player_history(this: usize, pessoa: usize) -> usize {
     if pessoa == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(this, pessoa); // caixa fatal: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(this, pessoa); // caixa fatal: só a original
     }
-    let r = cpm5_registro(this, cpm5_d(pessoa));
+    let r = injury_history_record(this, cpm5_d(pessoa));
     let sem_ultimo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x58f110usize);
     sem_ultimo(cpm5_d(this + 0xc), r + 0x14, r + 0x18)
 }
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32) -> usize {
             e = proximo(cpm5_d(this + 0x28));
         }
     }
-    let r = cpm5_registro(this, id as usize);
+    let r = injury_history_record(this, id as usize);
     let pessoa = cpm5_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
     if cpm5_d(r + 0xe) as i32 != -1 {
         let terminar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x62e700usize);
@@ -172,13 +172,13 @@ unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32) -> usize {
 unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, registro: usize, lesao: *const u8) {
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let marcas = (cpm5_b(registro + 0x12), cpm5_b(registro + 0x13));
-    let plano = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| cpm5_plano(this, registro, lesao)));
+    let plano = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| plan_recurring_injury(this, registro, lesao)));
     let depois_do_plano = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     estado.escrever();
     *((registro + 0x12) as *mut u8) = marcas.0;
     *((registro + 0x13) as *mut u8) = marcas.1;
     let tipo = *lesao;
-    orig::<unsafe extern "thiscall" fn(usize, usize, *const u8)>(%%I0%%)(this, registro, lesao);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, *const u8)>(%%I0%%)(this, registro, lesao);
     let agora = (cpm5_b(registro + 0x12), cpm5_b(registro + 0x13));
     let mesmo_sorteio = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO) == depois_do_plano;
     let ok = match plano {
@@ -196,11 +196,11 @@ unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, registro
 
 /// Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
 unsafe extern "thiscall" fn comparar_reset_player_history(this: usize, pessoa: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if pessoa == 0 {
         return o(this, pessoa);
     }
-    let r = cpm5_registro(this, cpm5_d(pessoa));
+    let r = injury_history_record(this, cpm5_d(pessoa));
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 0x14, 8)], || o(this, pessoa), || reset_player_history(this, pessoa));
     PLACAR.registrar(igual && a == b, || format!("reset_player_history({}) {:x?} x {:x?}", cpm5_d(pessoa), mo, mr));
     a
@@ -210,12 +210,12 @@ unsafe extern "thiscall" fn comparar_reset_player_history(this: usize, pessoa: u
 /// que ficam, o byte do registro de 79 bytes, os bytes do registro que não mudam); a original roda; confere.
 unsafe extern "thiscall" fn comparar_injury_reset_player(this: usize, id: u32) -> usize {
     let l = cpm5_d(this + 0x28);
-    let esperado: Vec<usize> = if l != 0 { cpd1_itens(l).into_iter().filter(|&e| cpm5_d(e) as u32 != id).collect() } else { Vec::new() };
-    let r = cpm5_registro(this, id as usize);
+    let esperado: Vec<usize> = if l != 0 { list_items_capped(l).into_iter().filter(|&e| cpm5_d(e) as u32 != id).collect() } else { Vec::new() };
+    let r = injury_history_record(this, id as usize);
     let g = cpm5_d(0xae2d0c).wrapping_add((id as usize).wrapping_mul(79)) + 0xc;
     let (byte, nivel, b1c) = (cpm5_b(g) & 0xfe, cpm5_b(r + 0x13), cpm5_b(r + 0x1c));
-    let ret = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I2%%)(this, id);
-    let itens = if l != 0 { cpd1_itens(l) } else { Vec::new() };
+    let ret = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I2%%)(this, id);
+    let itens = if l != 0 { list_items_capped(l) } else { Vec::new() };
     let w = |o: usize| core::ptr::read_unaligned((r + o) as *const i16);
     let dd = |o: usize| cpm5_d(r + o) as i32;
     let ok = itens == esperado && ret == g && cpm5_b(g) == byte

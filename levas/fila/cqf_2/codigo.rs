@@ -43,7 +43,7 @@ unsafe fn cqf2_segue(e: usize) -> bool {
 
 /// O bit 0 do registro de 8 bytes do jogador da oferta ([this+0x86e]) apaga quando ela e todas as ofertas pelo jogador
 /// (a lista +0) seguem (`cqf2_segue`).
-unsafe fn cqf2_apagar_marca(this: usize, oferta: usize) {
+unsafe fn clear_under_offer_mark(this: usize, oferta: usize) {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     if !cqf2_segue(oferta) {
         return;
@@ -67,7 +67,7 @@ unsafe fn cqf2_apagar_marca(this: usize, oferta: usize) {
 
 /// A regra de transferência da nação (os 28 objetos em [this+0x8ac], o +0xa de cada um comparado com `nacao`; a
 /// original lê o +0xa sem conferir o ponteiro); None sem nenhuma.
-unsafe fn cqf2_regra(this: usize, nacao: usize) -> Option<usize> {
+unsafe fn nation_transfer_rules_opt(this: usize, nacao: usize) -> Option<usize> {
     for k in 0..0x1c {
         let p = this + 0x8ac + 4 * k;
         if cqf2_d(cqf2_d(p) + 0xa) == nacao {
@@ -87,7 +87,7 @@ unsafe fn cqf2_regra(this: usize, nacao: usize) -> Option<usize> {
 /// seguimento da oferta (0x8c2f50). No empréstimo: elenco de A (0x53c590) + 1 acima de 50, o motivo 4; senão a regra
 /// da nação de A (+0x53) responde (vtable +0x20 com o comprador e o alvo) com o motivo. Com motivo: a recusa
 /// (0x8e23d0), o status 0x10, o fim (0x8c6db0), o alvo sai das listas do comprador e os da troca das do clube do
-/// contrato do alvo (0x84aeb0), 5 dias (0x8c6220) e a marca (`cqf2_apagar_marca`). Sem motivo, o empréstimo na hora:
+/// contrato do alvo (0x84aeb0), 5 dias (0x8c6220) e a marca (`clear_under_offer_mark`). Sem motivo, o empréstimo na hora:
 /// os termos (0x8e1f10), a regra da nação do comprador (vtable +8, ou +4 fora do empréstimo), o contrato assinado
 /// (0x4d01e0), o +0x6d 2 da pessoa vira 0x10, o histórico (0x86da20), a lista de observação (0x842080/0x843e10 com 5),
 /// 0x5563f0, os números (0x85a850, 0x540980, 0x85add0/0x85a470), 0x4196a0, o registro da transferência passada
@@ -119,11 +119,11 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
     let registrar: unsafe extern "thiscall" fn(usize, *mut u8) = core::mem::transmute(0x8cb810usize);
     let suspender: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x842b00usize);
     if vaga < 0 {
-        aviso_em(0xa8d514, 0xe0c);
+        show_error_at(0xa8d514, 0xe0c);
         return;
     }
     if vaga >= cqf2_d(this + 4) as i32 {
-        aviso_em(0xa8d514, 0xe11);
+        show_error_at(0xa8d514, 0xe11);
         return;
     }
     let oferta = cqf2_d(cqf2_d(this).wrapping_add(4 * vaga as usize));
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
         let c = cqf2_contrato(pessoa);
         b = if c == 0 || cqf2_b(c + 0x35) & 0x3f == 5 { 0 } else { cqf2_clube(cqf2_d(c + 4)) };
     } else if cqf2_d(oferta + 4) == 0 {
-        aviso_em(0xa8d514, 0xe4d);
+        show_error_at(0xa8d514, 0xe4d);
     } else {
         let troca = cqf2_d(oferta + 4);
         cqf2_pd(troca + 0xa, cqf2_d(troca + 2));
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
     let mut motivo: u32 = 0;
     if (elenco(a, 0, 0) as i32) + 1 > 0x32 { // cqf2: o elenco cheio
         motivo = 4;
-    } else if let Some(r) = cqf2_regra(this, cqf2_d(a + 0x53)) {
+    } else if let Some(r) = nation_transfer_rules_opt(this, cqf2_d(a + 0x53)) {
         if r != 0 {
             let pode: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u32) = core::mem::transmute(cqf2_d(cqf2_d(r) + 0x20));
             pode(r, cqf2_clube(cqf2_d(oferta + 8)), cqf2_pessoa(cqf2_d(oferta + 0xc)), 0, &mut motivo);
@@ -193,12 +193,12 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
             }
         }
         agendar(this, oferta, 5, 0);
-        cqf2_apagar_marca(this, oferta);
+        clear_under_offer_mark(this, oferta);
         return;
     }
     crate::comparacao::ramo("cqf_2 empréstimo na hora");
     termos(this, oferta, contrato);
-    if let Some(r) = cqf2_regra(this, cqf2_d(cqf2_clube(cqf2_d(oferta + 8)) + 0x53)) {
+    if let Some(r) = nation_transfer_rules_opt(this, cqf2_d(cqf2_clube(cqf2_d(oferta + 8)) + 0x53)) {
         if r != 0 {
             let k = if cqf2_b(oferta + 0x1f) == 0 { 4 } else { 8 };
             let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(cqf2_d(cqf2_d(r) + k));
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
     registrar(this, reg.as_mut_ptr());
     cqf2_pb(oferta + 0x2c, 0x14);
     agendar(this, oferta, 5, 0); // cqf2: o empréstimo concluído em 5 dias
-    cqf2_apagar_marca(this, oferta);
+    clear_under_offer_mark(this, oferta);
     fechar(this, oferta);
     suspender(cqf2_d(this + 0x856), pessoa, 1);
 }
@@ -246,7 +246,7 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
 /// Comparador da 0x8c2180: só a original (entrega notícias, conclui ou recusa o empréstimo, assina contrato, registra a
 /// transferência, mexe nas listas).
 unsafe extern "thiscall" fn comparar_handle_player_accepted_terms(this: usize, pessoa: usize, vaga: i32, contrato: usize, tipo: u32, noticia: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, i32, usize, u32, u32)>(%%I0%%)(this, pessoa, vaga, contrato, tipo, noticia) // ponytail: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, usize, u32, u32)>(%%I0%%)(this, pessoa, vaga, contrato, tipo, noticia) // ponytail: só a original
 }
 
 /// { 0x4d71b0 } (thiscall, ret 8, contract_manager.cpp, quadro SEH da lista local): `CONTRACT_MANAGER::
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, jogador: usiz
         } else {
             let p = pedido(this, clube, 0, jogador, 0, 1, 1);
             let r = sorteio(0x29);
-            let v = ftol((r as f64 * f64_em(0x967898) + f64_em(0x9689b0)) * p as f64); // cqf2: o preço da notícia
+            let v = match_pl_ftol((r as f64 * read_f64_at(0x967898) + read_f64_at(0x9689b0)) * p as f64); // cqf2: o preço da notícia
             if v > 0x2710 && v < 0x30d40 {
                 v / 10000 * 10000
             } else if v < 1_000_000 {
@@ -337,7 +337,7 @@ unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, jogador: usiz
                     true
                 } else {
                     let f = financas(cqf2_d(0xae2a38), cqf2_clube(cqf2_d(no + 4)));
-                    f != 0 && preco as f64 * f64_em(0x9689c0) <= verba(f, 0, 0, 0, 1, 0) as f64
+                    f != 0 && preco as f64 * read_f64_at(0x9689c0) <= verba(f, 0, 0, 0, 1, 0) as f64
                 };
                 if pode && cqf2_d(no + 4) as i32 > -1 {
                     clubes[q as usize] = cqf2_clube(cqf2_d(no + 4));
@@ -396,5 +396,5 @@ unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, jogador: usiz
 
 /// Comparador da 0x4d71b0: só a original (sorteia, entrega a notícia, que aloca).
 unsafe extern "thiscall" fn comparar_post_transfer_listed_news(this: usize, jogador: usize, clube: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, jogador, clube) // ponytail: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, jogador, clube) // ponytail: só a original
 }

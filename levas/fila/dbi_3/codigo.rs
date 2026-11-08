@@ -2,7 +2,7 @@
 
 /// TRAINING_MANAGER::remove_or_restore_training_progress (0x8b3640, thiscall com o gerente [0xde1f44]): tira
 /// (`devolver` = 0) ou devolve (1) o progresso do treino dos atributos da `pessoa`. Sem gerente, nada.
-unsafe fn progresso_do_treino(pessoa: usize, devolver: u32) {
+unsafe fn remove_or_restore_training(pessoa: usize, devolver: u32) {
     let gerente = *(0xde1f44 as *const usize);
     if gerente != 0 {
         let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8b3640usize);
@@ -12,7 +12,7 @@ unsafe fn progresso_do_treino(pessoa: usize, devolver: u32) {
 
 /// O fim comum de 0x538bc0 e 0x538ec0 com o jogador +0xf alto: tira de +0x2a e de +0x3a a média dos dois
 /// (bytes com sinal, divisão truncada).
-unsafe fn tirar_a_media_de_2a_e_3a(jogador: usize) {
+unsafe fn subtract_mean_2a_3a(jogador: usize) {
     let (a, b) = ((jogador + 0x2a) as *mut u8, (jogador + 0x3a) as *mut u8);
     let media = ((*a as i8 as i32 + *b as i8 as i32) / 2) as u8;
     *a = (*a).wrapping_sub(media);
@@ -27,7 +27,7 @@ unsafe fn tirar_a_media_de_2a_e_3a(jogador: usize) {
 /// excesso (as células 0x11 e 0x12 por `excesso`), as demais são marcadas; com a célula 0 < 15, as de peso 1
 /// viram −120; (3) com mais de uma no excesso e soma > 85, tira (soma − 85) / quantas das não marcadas
 /// (mínimo 0). O quadro da original não é lido sem valor: as células do intervalo vêm todas de 0x53a610.
-unsafe fn reequilibrar_vetor_do_jogador(v: *mut u8, inicio: i8, fim: i8, jogador: usize, alvo: i32, pular: &[i8],
+unsafe fn rebalance_attr_vector(v: *mut u8, inicio: i8, fim: i8, jogador: usize, alvo: i32, pular: &[i8],
                                         excesso: impl Fn(i16) -> i32) {
     let w = |i: i8| core::ptr::read_unaligned(v.add(3 * i as usize) as *const i16);
     let pw = |i: i8, x: i16| core::ptr::write_unaligned(v.add(3 * i as usize) as *mut i16, x);
@@ -35,7 +35,7 @@ unsafe fn reequilibrar_vetor_do_jogador(v: *mut u8, inicio: i8, fim: i8, jogador
     let fora = |c: i8| pular.contains(&c);
     let jovem = *((jogador + 0xf) as *const i8) < 0xf;
     let mut marca = [0u32; 64];
-    for passo in 0..2 {
+    for step_towards in 0..2 {
         let (mut quantas, mut soma) = (0i32, 0i32);
         let mut limite = 0x1ei32;
         let (mut total, mut n, mut melhor);
@@ -77,7 +77,7 @@ unsafe fn reequilibrar_vetor_do_jogador(v: *mut u8, inicio: i8, fim: i8, jogador
             if !fora(c) && c != melhor {
                 if marca[c as usize] == 1 {
                     pw(c, w(c).wrapping_add(delta).clamp(-0x7d, 0x7d));
-                } else if passo == 0 && w(c) > 0 && jovem {
+                } else if step_towards == 0 && w(c) > 0 && jovem {
                     quantas += 1;
                     soma = soma.wrapping_add(if c == 0x11 || c == 0x12 { excesso(w(c)) } else { w(c) as i32 });
                 } else {
@@ -104,7 +104,7 @@ unsafe fn reequilibrar_vetor_do_jogador(v: *mut u8, inicio: i8, fim: i8, jogador
 }
 
 /// O vetor de atributos do `jogador` (0x53a610) com os fins de grupo (lados, posições, ponderados).
-unsafe fn vetor_do_jogador_para_reequilibrar(jogador: usize, pessoa: usize, v: *mut u8) -> (u8, u8) {
+unsafe fn player_attr_vector(jogador: usize, pessoa: usize, v: *mut u8) -> (u8, u8) {
     let preencher: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize = core::mem::transmute(0x53a610usize);
     let (mut lados, mut posicoes, mut ponderados) = (0u8, 0u8, 0u8);
     preencher(jogador, pessoa, v as usize, &mut lados, &mut posicoes, &mut ponderados);
@@ -116,7 +116,7 @@ unsafe fn vetor_do_jogador_para_reequilibrar(jogador: usize, pessoa: usize, v: *
 /// físicos × [0x969528]) + 0x37) / 2, a soma com as constantes do .rdata (+0x36, +0x2f, +0x2e, +0x1b, +0x3f,
 /// +0x40, o menor de +0x3b/+0x30, mais +0x44); corte < −14: soma max(corte / 15, −2) a +0x1b, +0x36, +0x40 e
 /// +0x44 (no mínimo 1); alvo = corte − 20 − min((+0x36 × +0x1b) / 2 − habilidade, 25) quando passa da
-/// habilidade, preso em −40..0; vetor (0xff81/0x81) pelo 0x53a610, `reequilibrar_vetor_do_jogador` sem as
+/// habilidade, preso em −40..0; vetor (0xff81/0x81) pelo 0x53a610, `rebalance_attr_vector` sem as
 /// células 0x18 e 0x1e (0x11/0x12 contam em dobro), volta pelo 0x53aa10; jogador +0xf = 20: tira as médias
 /// de +0x2a/+0x3a e o terço de +0x1e, +0x24, +0x39; devolve o progresso do treino.
 unsafe extern "C" fn staff_normalise_player_physical_attributes(pessoa: usize) {
@@ -127,9 +127,9 @@ unsafe extern "C" fn staff_normalise_player_physical_attributes(pessoa: usize) {
     if jogador == 0 {
         return;
     }
-    progresso_do_treino(pessoa, 0);
+    remove_or_restore_training(pessoa, 0);
     let b = |d: usize| *((jogador + d) as *const i8) as i32;
-    let f = |x: i32, k: usize| ftol(x as f64 * f64_em(k));
+    let f = |x: i32, k: usize| match_pl_ftol(x as f64 * read_f64_at(k));
     let menor = b(0x3b).min(b(0x30));
     let t = f(b(0x36), 0x968940) - f(b(0x2f), 0x969548) - f(b(0x2e), 0x969540) - f(b(0x1b), 0x969538)
         + (f(b(0x3f), 0x9689b0) - f(b(0x40), 0x969548) - f(menor, 0x969530)) + b(0x44);
@@ -153,19 +153,19 @@ unsafe extern "C" fn staff_normalise_player_physical_attributes(pessoa: usize) {
         c.copy_from_slice(&[0x81, 0xff, 0x81]);
     }
     let v = vetor.as_mut_ptr();
-    let (lados, ponderados) = vetor_do_jogador_para_reequilibrar(jogador, pessoa, v);
-    reequilibrar_vetor_do_jogador(v, (lados as i8).wrapping_add(2), ponderados as i8, jogador, alvo, &[0x1e, 0x18],
+    let (lados, ponderados) = player_attr_vector(jogador, pessoa, v);
+    rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, jogador, alvo, &[0x1e, 0x18],
         |x| 2 * x as i32);
     let devolver: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x53aa10usize);
     devolver(jogador, pessoa, v as usize);
     if *((jogador + 0xf) as *const i8) == 0x14 {
-        tirar_a_media_de_2a_e_3a(jogador);
+        subtract_mean_2a_3a(jogador);
         let terco = ((b(0x1e) + b(0x24) + b(0x39)) / 3) as u8;
         for off in [0x1e, 0x39, 0x24] {
             *((jogador + off) as *mut u8) = (*((jogador + off) as *const u8)).wrapping_sub(terco);
         }
     }
-    progresso_do_treino(pessoa, 1);
+    remove_or_restore_training(pessoa, 1);
 }
 
 /// Comparador de 0x538bc0 e 0x538ec0: o jogador inteiro (70 bytes) e o byte +0x58 da pessoa, com o gerente
@@ -191,25 +191,25 @@ unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust:
 }
 
 unsafe extern "C" fn comparar_staff_normalise_player_physical_attributes(pessoa: usize) {
-    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(%%I0%%), staff_normalise_player_physical_attributes, pessoa,
+    comparar_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(%%I0%%), staff_normalise_player_physical_attributes, pessoa,
         "staff_normalise_player_physical_attributes");
 }
 
 /// { 0x53a0e0 } (cdecl, Database.cpp): um segundo nome (linha de 60 bytes em [0xae23f4]) pelo peso. Nação com
-/// mais de 10 segundos nomes (`indice_de_nomes_da_nacao` +0x1c): 3 sorteios na faixa dela (a partir de +4),
+/// mais de 10 segundos nomes (`nation_name_index` +0x1c): 3 sorteios na faixa dela (a partir de +4),
 /// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum pass_ball). Sem nação ou com até
 /// 10: sorteio na tabela inteira ([0xae239c], no máximo 0x7fff). Só o rand() da CRT. Chamada por
 /// OfficialsManager::add_random_officials (0x79c6b4), na criação dos árbitros do jogo novo.
 unsafe extern "C" fn database_pick_second_name_by_weight(nacao: usize) -> usize {
     let linha = |i: i32| (*(0xae23f4 as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao != 0 {
-        let e = indice_de_nomes_da_nacao(nacao);
+        let e = nation_name_index(nacao);
         let quantos = *((e + 0x1c) as *const i32);
         if quantos > 0xa {
             let inicio = *((e + 4) as *const i32);
             let (mut melhor, mut escolhido) = (-1i8, 0i32);
             for _ in 0..3 { // 3 sorteios pelo peso
-                let i = sorteio_escalado(quantos).wrapping_add(inicio);
+                let i = scaled_crt_rand(quantos).wrapping_add(inicio);
                 let peso = *((linha(i) + 0x3b) as *const i8);
                 if peso > melhor {
                     melhor = peso;
@@ -219,12 +219,12 @@ unsafe extern "C" fn database_pick_second_name_by_weight(nacao: usize) -> usize 
             return linha(escolhido); // o segundo nome de maior peso
         }
     }
-    linha(sorteio_escalado(total_de_nomes_limitado(0xae239c)))
+    linha(scaled_crt_rand(name_count_capped(0xae239c)))
 }
 
 unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
         || crate::aleatorio::sem_contar(|| database_pick_second_name_by_weight(nacao)));
     PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
@@ -233,7 +233,7 @@ unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nacao: usize) 
 
 /// { 0x538bc0 } (cdecl, Database.cpp): `staff_normalise_player_attributes(pessoa)`: com o jogador (pessoa
 /// +0x61), tira o progresso do treino (0x8b3640), monta o vetor pelo 0x53a610 (sem pré-encher: as células
-/// usadas vêm todas dele), `reequilibrar_vetor_do_jogador` com alvo −20 em todas as células do intervalo
+/// usadas vêm todas dele), `rebalance_attr_vector` com alvo −20 em todas as células do intervalo
 /// (0x11/0x12 contam ftol(valor × [0x968f98])), volta pelo 0x53aa10; jogador +0xf ≥ 15: tira as médias de
 /// +0x2a/+0x3a; devolve o progresso do treino. Roda na criação (depois de 0x538ec0) e na carga e no treino.
 unsafe extern "C" fn staff_normalise_player_attributes(pessoa: usize) {
@@ -244,21 +244,21 @@ unsafe extern "C" fn staff_normalise_player_attributes(pessoa: usize) {
     if jogador == 0 {
         return;
     }
-    progresso_do_treino(pessoa, 0);
+    remove_or_restore_training(pessoa, 0);
     let mut vetor = [0u8; 63 * 3];
     let v = vetor.as_mut_ptr();
-    let (lados, ponderados) = vetor_do_jogador_para_reequilibrar(jogador, pessoa, v);
-    reequilibrar_vetor_do_jogador(v, (lados as i8).wrapping_add(2), ponderados as i8, jogador, -20, &[],
-        |x| ftol(x as f64 * f64_em(0x968f98)));
+    let (lados, ponderados) = player_attr_vector(jogador, pessoa, v);
+    rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, jogador, -20, &[],
+        |x| match_pl_ftol(x as f64 * read_f64_at(0x968f98)));
     let devolver: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x53aa10usize);
     devolver(jogador, pessoa, v as usize);
     if *((jogador + 0xf) as *const i8) >= 0xf {
-        tirar_a_media_de_2a_e_3a(jogador);
+        subtract_mean_2a_3a(jogador);
     }
-    progresso_do_treino(pessoa, 1);
+    remove_or_restore_training(pessoa, 1);
 }
 
 unsafe extern "C" fn comparar_staff_normalise_player_attributes(pessoa: usize) {
-    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(%%I2%%), staff_normalise_player_attributes, pessoa,
+    comparar_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(%%I2%%), staff_normalise_player_attributes, pessoa,
         "staff_normalise_player_attributes");
 }

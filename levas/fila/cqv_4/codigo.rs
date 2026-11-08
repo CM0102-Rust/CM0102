@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn cqv4_construir_fase(this: usize, liga: usize, n: u32
         let c = alocar(t);
         x(0xba, c as u32);
         if c == 0 {
-            aviso_em(0x9f1630, 0x60);
+            show_error_at(0x9f1630, 0x60);
             return this;
         }
         core::ptr::copy_nonoverlapping(rodadas as *const u8, c as *mut u8, t as usize);
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn cqv4_construir_fase(this: usize, liga: usize, n: u32
     let t = alocar((cqv4_w(this + 0x3e) as i32 * 0x3b) as u32);
     x(0xb1, t as u32);
     if t == 0 {
-        aviso_em(0x9f1630, 0x6f);
+        show_error_at(0x9f1630, 0x6f);
         return this;
     }
     let total = cqv4_w(this + 0x3e) as i32;
@@ -106,14 +106,14 @@ unsafe extern "thiscall" fn cqv4_construir_fase(this: usize, liga: usize, n: u32
     }
     if cqv4_d(this + 0xba) != 0 {
         if jogos(this) == 0 {
-            aviso_em(0x9f1630, 0x7f);
+            show_error_at(0x9f1630, 0x7f);
             return this;
         }
     } else {
         let r = alocar(0x41);
         x(0xba, r as u32);
         if r == 0 {
-            aviso_em(0x9f1630, 0x8a);
+            show_error_at(0x9f1630, 0x8a);
             return this;
         }
         crate::comparacao::ramo("cqv_4 fase de uma rodada");
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn comparar_cqv4_construir_fase(this: usize, liga: usiz
     lista.sort_unstable();
     let crit: [u8; 4] = core::array::from_fn(|i| cqv4_b(desempate + i));
     let vag: [u8; 4] = core::array::from_fn(|i| cqv4_b(vagas + i));
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize>(%%I0%%)(
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize>(%%I0%%)(
         this, liga, n, clubes, turnos, registro, rodadas, nrod, pv, pe, cat, desempate, vagas, ano, a13, a14, a15, a16, a17, a18, a19, a20, a21);
     let mut ok = r == this && cqv4_d(this) == 0x96d0f0 && cqv4_d(this + 4) == registro as usize && cqv4_w(this + 0x3e) == n as i16
         && cqv4_w(this + 0x3c) == turnos as i16 && cqv4_w(this + 0x40) == ano as i16 && cqv4_b(this + 0x44) == a13 as u8
@@ -177,6 +177,6 @@ unsafe extern "thiscall" fn cqv4_destruir_fase(this: usize) {
 
 /// O comparador do destrutor: só a original (libera; não roda duas vezes), conferindo o vetor +0x18 zerado.
 unsafe extern "thiscall" fn comparar_cqv4_destruir_fase(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     PLACAR.registrar(cqv4_d(this + 0x18) == 0, || format!("cqv4_destruir_fase({:#x}): +0x18 = {:#x}", this, cqv4_d(this + 0x18)));
 }

@@ -15,19 +15,19 @@ unsafe fn cqk9_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, pe
 }
 
 /// 0x86c1d0 Staff_Records::add_failed_to_qualify_record (thiscall em [0xdd7f00], ret 0x10; já em Rust).
-unsafe fn cqk9_nao_classificou(clube: usize, comp: usize, fase: u32, peso: u32) {
+unsafe fn usa_mls_add_failed_to_qualify_record(clube: usize, comp: usize, fase: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x86c1d0usize);
     f(cqk9_d(0xdd7f00), clube, comp, fase, peso);
 }
 
 /// 0x4bf850 comp_util_scale_by_round (cdecl): o peso de 50 a 70 pela rodada do jogo, em 2 rodadas.
-unsafe fn cqk9_escala(jogo: usize) -> u32 {
+unsafe fn weight_by_round(jogo: usize) -> u32 {
     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x4bf850usize);
     escala(0x32, 0x46, cqk9_w(jogo + 0x34) as u16 as u32, 2)
 }
 
 /// A MLS no fim das fases (0x908200). `fazer` = falso: o ensaio do comparador (só a devolução).
-unsafe fn cqk9_destino(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> u32 {
+unsafe fn mls_stage_outcome(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> u32 {
     let (st, fa) = (situacao as u8, fase as u8 as i8);
     let comp = cqk9_d(this + 4);
     if fa < 2 {
@@ -44,7 +44,7 @@ unsafe fn cqk9_destino(this: usize, clube: usize, situacao: u32, fase: u32, jogo
         }
         if fazer {
             let f = if fa == -1 { 0x413 } else if fa != 0 { 0x414 } else { 0x47b };
-            cqk9_nao_classificou(clube, comp, f, 0x28);
+            usa_mls_add_failed_to_qualify_record(clube, comp, f, 0x28);
         }
         return u32::MAX;
     }
@@ -58,12 +58,12 @@ unsafe fn cqk9_destino(this: usize, clube: usize, situacao: u32, fase: u32, jogo
             if fazer {
                 // ponytail: a original empurra eax/ecx/edx inteiros (lixo acima das palavras: o do chamador, a metade
                 // de cima do this); a 0x4bf850 e a 0x86bdd0 só leem as palavras: vão as palavras.
-                let peso = cqk9_escala(jogo);
+                let peso = weight_by_round(jogo);
                 cqk9_classificou(clube, comp, cqk9_w(jogo + 0x32) as u16 as u32, cqk9_w(jogo + 0x30) as u16 as u32, peso);
             }
         } else if st == 0xff || st == 2 {
             if fazer {
-                let peso = cqk9_escala(jogo);
+                let peso = weight_by_round(jogo);
                 let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86c000usize);
                 elim(cqk9_d(0xdd7f00), clube, comp, cqk9_w(jogo + 0x32) as u16 as u32, cqk9_w(jogo + 0x30) as u16 as u32, peso);
             }
@@ -84,14 +84,14 @@ unsafe fn cqk9_destino(this: usize, clube: usize, situacao: u32, fase: u32, jogo
 /// eliminação, com peso de 50 a 70 pela rodada; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.
 unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
-    cqk9_destino(this, clube, situacao, fase, jogo, true)
+    mls_stage_outcome(this, clube, situacao, fase, jogo, true)
 }
 
 /// Comparador: só a original (os registros alocam e vão para o histórico do técnico; não rodam duas vezes) com a
 /// devolução prevista pelo ensaio.
 unsafe extern "thiscall" fn comparar_usa_mls_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let n = cqk9_destino(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, jogo, a6);
+    let n = mls_stage_outcome(this, clube, situacao, fase, jogo, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, jogo, a6);
     PLACAR.registrar(r == n, || format!("usa_mls_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
     r
 }
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_add_result(this: usize, jogo: usize
     let marca = *((jogo + 0x42) as *const i8);
     let bloco = cqk9_d(this + 8);
     let esperada = if cqk9_d(this + 0x30) == 1 { 1 } else if marca < 2 { -1 } else { marca };
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, estat);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, estat);
     let (m, b) = (*((jogo + 0x42) as *const i8), cqk9_d(this + 8));
     PLACAR.registrar(r == 1 && m == esperada && b == bloco, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, bloco));
     r
@@ -158,12 +158,12 @@ unsafe extern "C" fn usa_mls_get_club_all_star_conference(clube: usize) -> u16 {
     if OESTE.iter().any(|&k| cqk9_d(k) == id) {
         return 0x414;
     }
-    orig::<unsafe extern "C" fn(usize) -> u16>(%%I2%%)(clube)
+    original_fn::<unsafe extern "C" fn(usize) -> u16>(%%I2%%)(clube)
 }
 
 /// Comparador: a devolução (só lê; o caso de erro fica com a original sozinha).
 unsafe extern "C" fn comparar_usa_mls_get_club_all_star_conference(clube: usize) -> u16 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u16>(%%I2%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u16>(%%I2%%)(clube);
     let nacao = cqk9_d(clube + 0x57);
     if nacao != 0 && cqk9_d(nacao) == cqk9_d(0x9cf590) && r == 0 {
         return r; // o caso de erro (a caixa já saiu na original)

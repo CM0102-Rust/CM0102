@@ -278,8 +278,8 @@ unsafe extern "C" fn comparar_apply_squad_rule(
     clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, starters: usize, banco: usize, reserva: usize,
     saida: usize, codigos: usize, curtos: usize, marcas: usize, bytes: usize, lado: usize,
 ) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32, usize, usize, usize, usize, usize, usize, usize, usize, usize)>(%%I0%%);
-    if gravando_no_topo() {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32, usize, usize, usize, usize, usize, usize, usize, usize, usize)>(%%I0%%);
+    if is_recording_top_level() {
         return o(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado);
     }
     let n = |v: u32| (v as u8 as i8).max(0) as usize;
@@ -301,36 +301,36 @@ unsafe extern "C" fn comparar_apply_squad_rule(
 // ---- as notas do jogador do match_man.cpp (0x6e6340 fora da partida, 0x6e2f20 para uma vaga): partes comuns ----
 
 /// A data (dia +0, ano +2) de `a` vem antes da de `b`? (comparação do ano sem sinal, do dia com sinal)
-unsafe fn data_antes(a: usize, b: usize) -> bool {
+unsafe fn match_man_date_is_before(a: usize, b: usize) -> bool {
     let (aa, ab) = (*((a + 2) as *const u16), *((b + 2) as *const u16));
     aa < ab || (aa == ab && *(a as *const i16) < *(b as *const i16))
 }
 
 /// Os dias desde a data de `p` (+0x3e) até hoje ([0xae2c90]), contando 365 por ano.
-unsafe fn dias_desde(p: usize) -> i32 {
+unsafe fn match_man_days_since_date(p: usize) -> i32 {
     let anos = *(0xae2c92 as *const u16) as i32 - *((p + 0x40) as *const u16) as i32;
     anos * 365 - *((p + 0x3e) as *const i16) as i32 + *(0xae2c90 as *const i16) as i32
 }
 
 /// O observador `o` (+0x3e) chegou antes da data do jogador `p` (+0x3e) e esta data é de mais de um
 /// ano atrás (0x54c8e0 com 365)?
-unsafe fn observado_ha_mais_de_um_ano(o: usize, p: usize) -> bool {
-    if !data_antes(o + 0x3e, p + 0x3e) {
+unsafe fn scouted_over_a_year_ago(o: usize, p: usize) -> bool {
+    if !match_man_date_is_before(o + 0x3e, p + 0x3e) {
         return false;
     }
     let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> *const [u8; 8] = core::mem::transmute(0x54c8e0usize);
     let mut d = [0u8; 8];
     let r = datar(0xae2c90, &mut d, 0x16d);
-    data_antes(r as usize, p + 0x3e)
+    match_man_date_is_before(r as usize, p + 0x3e)
 }
 
 /// Byte com sinal em `p + k`.
-unsafe fn sb(p: usize, k: usize) -> i32 {
+unsafe fn signed_byte_at(p: usize, k: usize) -> i32 {
     *((p + k) as *const i8) as i32
 }
 
 /// A 0x7c1e30 das notas ([0xb74350]) da ficha `f`.
-unsafe fn nota_externa(f: usize, k: u32, c: u32, x: f32) -> f64 {
+unsafe fn player_stat(f: usize, k: u32, c: u32, x: f32) -> f64 {
     let g: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
     g(*(0xb74350 as *const usize), f, k, c, x)
 }
@@ -338,8 +338,8 @@ unsafe fn nota_externa(f: usize, k: u32, c: u32, x: f32) -> f64 {
 /// A nota da posição (máscara `m`) pelos atributos da ficha `f` na tabela `tab` (0xa15d50 ou
 /// 0xa15cfc). A posição principal tem os casos de `m` igual a 8 ou 0x10 e a exceção de throw_in
 /// (0x800/0x80) na faixa 0x10; a secundária da 0x6e2f20 não.
-unsafe fn nota_da_posicao(f: usize, m: u32, masc: u32, tab: usize, principal: bool) -> i32 {
-    let fb = |k: usize| sb(f, k);
+unsafe fn position_rating(f: usize, m: u32, masc: u32, tab: usize, principal: bool) -> i32 {
+    let fb = |k: usize| signed_byte_at(f, k);
     let t = |k: i32| *((tab as isize + 4 * k as isize) as *const i32);
     let m16 = m as u16;
     let sem_ala = m & 0x800 == 0 && m & 0x80 == 0;
@@ -370,8 +370,8 @@ unsafe fn nota_da_posicao(f: usize, m: u32, masc: u32, tab: usize, principal: bo
     } else if m & 0x20 != 0 {
         if sem_ala {
             let a = fb(0x14) as f64;
-            let meio = (fb(0x14) + fb(0x1a)) as f64 * f64_em(0x968968);
-            t(ftol(if a <= meio { meio } else { a }))
+            let meio = (fb(0x14) + fb(0x1a)) as f64 * read_f64_at(0x968968);
+            t(match_pl_ftol(if a <= meio { meio } else { a }))
         } else {
             t(fb(0x14))
         }
@@ -383,8 +383,8 @@ unsafe fn nota_da_posicao(f: usize, m: u32, masc: u32, tab: usize, principal: bo
 }
 
 /// O ajuste da posição (máscara `m`) pelos atributos de jogo da ficha `f`; 100 sem nenhum.
-unsafe fn ajuste_da_posicao(f: usize, m: u32) -> i32 {
-    let fb = |k: usize| sb(f, k);
+unsafe fn position_attribute_adjust(f: usize, m: u32) -> i32 {
+    let fb = |k: usize| signed_byte_at(f, k);
     if m & 0x1000 != 0 {
         (fb(0x1a) - 10) * 10
     } else if m & 0x80 != 0 {
@@ -404,18 +404,18 @@ unsafe fn ajuste_da_posicao(f: usize, m: u32) -> i32 {
 
 /// O acréscimo da média das notas (0x7c1950 x 0,2; com o observador `quem` de mais de um ano no
 /// clube do jogador, pesada pelos dias) à soma, por `cont`.
-unsafe fn bonus_da_media(p: usize, f: usize, clube: usize, quem: usize, cont: i8) -> i32 {
+unsafe fn recent_form_bonus(p: usize, f: usize, clube: usize, quem: usize, cont: i8) -> i32 {
     let media: unsafe extern "thiscall" fn(usize, usize) -> i8 = core::mem::transmute(0x7c1950usize);
-    let mut x = (media(*(0xb74350 as *const usize), f) as f64 * f64_em(0x968918)) as f32;
-    if clube == *((p + 0x39) as *const usize) && quem != 0 && observado_ha_mais_de_um_ano(quem, p) {
-        let d = dias_desde(p) as f64;
-        x = (((f64_em(0x969070) - d) * f64_em(0x968eb0) + d * x as f64) * f64_em(0x968e10)) as f32;
+    let mut x = (media(*(0xb74350 as *const usize), f) as f64 * read_f64_at(0x968918)) as f32;
+    if clube == *((p + 0x39) as *const usize) && quem != 0 && scouted_over_a_year_ago(quem, p) {
+        let d = match_man_days_since_date(p) as f64;
+        x = (((read_f64_at(0x969070) - d) * read_f64_at(0x968eb0) + d * x as f64) * read_f64_at(0x968e10)) as f32;
     }
     let x = x as f64;
-    if x > f64_em(0x968998) {
-        ftol((x * f64_em(0x96d638) - f64_em(0x96d630)) * cont as f64) as i8 as i32
-    } else if x > f64_em(0x9689a0) {
-        ftol((x * f64_em(0x96d628) - f64_em(0x96d620)) * cont as f64) as i8 as i32
+    if x > read_f64_at(0x968998) {
+        match_pl_ftol((x * read_f64_at(0x96d638) - read_f64_at(0x96d630)) * cont as f64) as i8 as i32
+    } else if x > read_f64_at(0x9689a0) {
+        match_pl_ftol((x * read_f64_at(0x96d628) - read_f64_at(0x96d620)) * cont as f64) as i8 as i32
     } else {
         0
     }
@@ -425,15 +425,15 @@ unsafe fn bonus_da_media(p: usize, f: usize, clube: usize, quem: usize, cont: i8
 /// limitado para os de mais de 33 anos quando `teto_veterano`, pesado pelos dias com o observador
 /// `quem`, e as notas 0x7c1e30(1) e 0x7c1e30(6, 0x14, `ultimo`) no clube (ou mesma nação).
 #[allow(clippy::too_many_arguments)]
-unsafe fn bonus_da_forma(p: usize, f: usize, clube: usize, quem: usize, idade: i8, cont: i8, soma: i32, l3c: i32, teto_veterano: bool, ultimo: u32) -> i32 {
+unsafe fn form_bonus(p: usize, f: usize, clube: usize, quem: usize, idade: i8, cont: i8, soma: i32, l3c: i32, teto_veterano: bool, ultimo: u32) -> i32 {
     let notas = *(0xb74350 as *const usize);
     let teto = |v: i32| {
-        let y = v as f64 * f32_em(0x96d61c) as f64 + f32_em(0x96d618) as f64;
-        (if y > f64_em(0x96d610) { f64_em(0x96d610) } else { y }) as f32
+        let y = v as f64 * read_f32_at(0x96d61c) as f64 + read_f32_at(0x96d618) as f64;
+        (if y > read_f64_at(0x96d610) { read_f64_at(0x96d610) } else { y }) as f32
     };
     let razao = || {
         let (m10, m18) = (*((notas + 0x10) as *const f64), *((notas + 0x18) as *const f64));
-        if m18 == f64_em(0x9689a0) { f64_em(0x968998) } else { m10 / m18 }
+        if m18 == read_f64_at(0x9689a0) { read_f64_at(0x968998) } else { m10 / m18 }
     };
     let mut x = f32::from_bits(0x40d9999a);
     if cont != 0 && soma / cont as i32 > 0x96 {
@@ -441,45 +441,45 @@ unsafe fn bonus_da_forma(p: usize, f: usize, clube: usize, quem: usize, idade: i
     } else if l3c as i16 > 0x96 {
         x = teto(l3c as i16 as i32 - 0x96);
     }
-    let mut x = nota_externa(f, 6, 0x12, x) as f32;
+    let mut x = player_stat(f, 6, 0x12, x) as f32;
     if teto_veterano && idade > 0x21 {
-        let r = razao() + f64_em(0x968fd0);
+        let r = razao() + read_f64_at(0x968fd0);
         if (x as f64) > r {
             x = r as f32;
         }
     }
-    if clube == *((p + 0x39) as *const usize) && quem != 0 && observado_ha_mais_de_um_ano(quem, p) {
-        let d = dias_desde(p) as f64;
-        x = (((f64_em(0x969070) - d) * f64_em(0x968eb0) + x as f64 * d) * f64_em(0x968e10)) as f32;
-        let fb_p = sb(*((p + 0x61) as *const usize), 0xf);
+    if clube == *((p + 0x39) as *const usize) && quem != 0 && scouted_over_a_year_ago(quem, p) {
+        let d = match_man_days_since_date(p) as f64;
+        x = (((read_f64_at(0x969070) - d) * read_f64_at(0x968eb0) + x as f64 * d) * read_f64_at(0x968e10)) as f32;
+        let fb_p = signed_byte_at(*((p + 0x61) as *const usize), 0xf);
         if idade as i32 > fb_p / 10 + 0x22 && x as f64 > razao() {
-            x = ((razao() + x as f64) * f32_em(0x968f18) as f64) as f32;
+            x = ((razao() + x as f64) * read_f32_at(0x968f18) as f64) as f32;
         }
     }
     let xf = x as f64;
     let c = cont as f64;
     let mut soma = soma;
-    if xf > f64_em(0x968f10) || (xf <= f64_em(0x968998) && xf > f64_em(0x9689a0)) {
-        soma += ftol((xf * f32_em(0x96af88) as f64 - f32_em(0x96d608) as f64) * c) as i8 as i32;
-    } else if xf > f64_em(0x968998) {
-        soma += ftol((xf * f64_em(0x96afc8) - f64_em(0x96d510)) * c) as i8 as i32;
+    if xf > read_f64_at(0x968f10) || (xf <= read_f64_at(0x968998) && xf > read_f64_at(0x9689a0)) {
+        soma += match_pl_ftol((xf * read_f32_at(0x96af88) as f64 - read_f32_at(0x96d608) as f64) * c) as i8 as i32;
+    } else if xf > read_f64_at(0x968998) {
+        soma += match_pl_ftol((xf * read_f64_at(0x96afc8) - read_f64_at(0x96d510)) * c) as i8 as i32;
     }
     let dono = *((p + 0x39) as *const usize);
     if clube != 0 && (clube == dono || (dono != 0 && *((clube + 0x53) as *const usize) == *((dono + 0x53) as *const usize))) {
-        let xk = (xf * f64_em(0x9689d8)) as f32;
-        let r = nota_externa(f, 1, 0x12, xk);
-        if r > f64_em(0x968998) {
-            soma += ftol((r * f64_em(0x96d628) - f64_em(0x96d600)) * c) as i8 as i32;
+        let xk = (xf * read_f64_at(0x9689d8)) as f32;
+        let r = player_stat(f, 1, 0x12, xk);
+        if r > read_f64_at(0x968998) {
+            soma += match_pl_ftol((r * read_f64_at(0x96d628) - read_f64_at(0x96d600)) * c) as i8 as i32;
         } else if r < xk as f64 {
-            soma += ftol((r * f32_em(0x96d5f8) as f64 / xk as f64 - f32_em(0x96d5f8) as f64) * c) as i8 as i32;
+            soma += match_pl_ftol((r * read_f32_at(0x96d5f8) as f64 / xk as f64 - read_f32_at(0x96d5f8) as f64) * c) as i8 as i32;
         }
-        soma += ftol((nota_externa(f, 6, 0x14, f32::from_bits(ultimo)) * f64_em(0x968e30) - f64_em(0x96d5f0)) * c);
+        soma += match_pl_ftol((player_stat(f, 6, 0x14, f32::from_bits(ultimo)) * read_f64_at(0x968e30) - read_f64_at(0x96d5f0)) * c);
     }
     soma
 }
 
 /// O desconto do histórico do jogador (0x62ed70, +0x28).
-unsafe fn desconto_do_historico(p: usize, l4c: i32) -> i32 {
+unsafe fn injury_history_penalty(p: usize, l4c: i32) -> i32 {
     let historico: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     let h = historico(*(0xb63d28 as *const usize), p);
     if h == 0 {
@@ -490,7 +490,7 @@ unsafe fn desconto_do_historico(p: usize, l4c: i32) -> i32 {
 }
 
 /// A reputação do jogador (0x62c3d0 pelo id).
-unsafe fn reputacao(p: usize) -> i16 {
+unsafe fn injury_word_0c(p: usize) -> i16 {
     let g: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(0x62c3d0usize);
     g(*(0xb63d28 as *const usize), *(p as *const u32))
 }
@@ -498,13 +498,13 @@ unsafe fn reputacao(p: usize) -> i16 {
 /// O fim da flag 0x4000 (comum às duas notas): a idade com +0x100, a soma das metades dos
 /// atributos (sem goleiro), +0x2f e o fator do estrangeiro (0x7c6830 e a tabela por continente).
 #[allow(clippy::too_many_arguments)]
-unsafe fn fim_da_idade(p: usize, f: usize, clube: usize, flags: u32, pos: u32, masc: u32, idade: i8, cont: i8, mut l4c: i32) -> i32 {
-    let fb = |k: usize| sb(f, k);
+unsafe fn age_and_foreigner_adjust(p: usize, f: usize, clube: usize, flags: u32, pos: u32, masc: u32, idade: i8, cont: i8, mut l4c: i32) -> i32 {
+    let fb = |k: usize| signed_byte_at(f, k);
     if flags & 0x100 != 0 {
         let cl = if masc & 1 != 0 { 0x1d } else { 0x19 };
-        let y = f64_em(0x968e38) - cont as f64 * f64_em(0x968f80);
-        if idade as i32 > cl && y > f64_em(0x9689a0) {
-            l4c -= ftol((idade as i32 - cl) as f64 * y);
+        let y = read_f64_at(0x968e38) - cont as f64 * read_f64_at(0x968f80);
+        if idade as i32 > cl && y > read_f64_at(0x9689a0) {
+            l4c -= match_pl_ftol((idade as i32 - cl) as f64 * y);
         }
     }
     if pos & 1 == 0 {
@@ -513,7 +513,7 @@ unsafe fn fim_da_idade(p: usize, f: usize, clube: usize, flags: u32, pos: u32, m
             l4c += (s - 20) * (s - 20) / 250;
         }
     }
-    l4c += ftol((fb(0x2f) - 10) as f64 * f64_em(0x96a670));
+    l4c += match_pl_ftol((fb(0x2f) - 10) as f64 * read_f64_at(0x96a670));
     let nac = *((clube + 0x53) as *const usize);
     let pais = *((p + 0x1a) as *const usize);
     if nac == 0 || *((nac + 0x77) as *const u8) == *((pais + 0x77) as *const u8) {
@@ -523,12 +523,12 @@ unsafe fn fim_da_idade(p: usize, f: usize, clube: usize, flags: u32, pos: u32, m
     let mut c = g(*(0xb74350 as *const usize), p, clube, (nac as u32 & !0xff) | *((nac + 0x77) as *const u8) as u32, 1) as u8 as i8;
     if flags & 0x100 != 0 {
         let k = (idade as u8).wrapping_sub((*((p + 0x56) as *const i8) / 2) as u8).wrapping_add(5) as i8;
-        let m = f64_em(0x96d5d0) - k as f64 * f64_em(0x96d0e8);
-        c = ftol(if c as f64 > m { c as f64 } else { m }) as i8;
+        let m = read_f64_at(0x96d5d0) - k as f64 * read_f64_at(0x96d0e8);
+        c = match_pl_ftol(if c as f64 > m { c as f64 } else { m }) as i8;
     } else {
-        let y = l4c as f64 * f64_em(0x96d1e0) - f64_em(0x9688a0);
+        let y = l4c as f64 * read_f64_at(0x96d1e0) - read_f64_at(0x9688a0);
         if (c as f64) < y {
-            c = ftol(y) as i8;
+            c = match_pl_ftol(y) as i8;
         }
     }
     let b22 = *((p + 0x22) as *const u8) as i32;
@@ -539,7 +539,7 @@ unsafe fn fim_da_idade(p: usize, f: usize, clube: usize, flags: u32, pos: u32, m
         const IGUAL: [usize; 10] = [0x96a6a8, 0x96d588, 0x96d590, 0x96d598, 0x96d5a0, 0x96d5a8, 0x96d5b0, 0x96d5b8, 0x96d5c0, 0x96d5c8];
         const OUTRO: [usize; 10] = [0x96d588, 0x96d590, 0x96d598, 0x96d5a0, 0x96d5a8, 0x96d5b0, 0x96d5b8, 0x96d5c0, 0x96d5c8, 0x968e50];
         let t = if *((pais + 0x76) as *const u8) == 0xe { &IGUAL } else { &OUTRO };
-        l4c = ftol(l4c as f64 * f64_em(t[c as usize]));
+        l4c = match_pl_ftol(l4c as f64 * read_f64_at(t[c as usize]));
     }
     l4c
 }
@@ -547,14 +547,14 @@ unsafe fn fim_da_idade(p: usize, f: usize, clube: usize, flags: u32, pos: u32, m
 /// O ajuste pelo contrato (flag 0x2000000): sem clube (+0x39) há mais de 60 dias, o salário (+0x80)
 /// do clube contra o do dono e a satisfação (+0x3d do contrato), a idade e o goleiro, a lesão
 /// (0x5444a0) e a idade com os jogos (+0x22).
-unsafe fn ajuste_do_contrato(p: usize, f: usize, clube: usize, contrato: usize, idade: i8, mut l4c: i32) -> i32 {
-    let fb = |k: usize| sb(f, k);
-    let mul = |l: i32, k: f64| ftol(l as f64 * k);
+unsafe fn contract_adjust(p: usize, f: usize, clube: usize, contrato: usize, idade: i8, mut l4c: i32) -> i32 {
+    let fb = |k: usize| signed_byte_at(f, k);
+    let mul = |l: i32, k: f64| match_pl_ftol(l as f64 * k);
     let dono = *((p + 0x39) as *const usize);
     if dono == 0 {
         let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
         if dias(0xae2c90, *((p + 0x3e) as *const u32), *((p + 0x42) as *const u32)) > 0x3c {
-            l4c = mul(l4c, f64_em(0x969040));
+            l4c = mul(l4c, read_f64_at(0x969040));
         }
     } else {
         let lim = core::ptr::read_unaligned((dono + 0x80) as *const i16) as i32 - 0x4e2;
@@ -566,42 +566,42 @@ unsafe fn ajuste_do_contrato(p: usize, f: usize, clube: usize, contrato: usize, 
             if ax >= 0x7d {
                 None
             } else {
-                let mut st = f32_em(0x96d248) as f64;
+                let mut st = read_f32_at(0x96d248) as f64;
                 if dx != 0 {
-                    st = lim as f64 / dx as f64 * ax as f64 * f32_em(0x96d5d8) as f64;
-                    if st > f64_em(0x967890) {
-                        st = f32_em(0x968e70) as f64;
-                    } else if st < f64_em(0x969040) {
-                        st = f32_em(0x96d248) as f64;
+                    st = lim as f64 / dx as f64 * ax as f64 * read_f32_at(0x96d5d8) as f64;
+                    if st > read_f64_at(0x967890) {
+                        st = read_f32_at(0x968e70) as f64;
+                    } else if st < read_f64_at(0x969040) {
+                        st = read_f32_at(0x96d248) as f64;
                     }
                 }
                 if cl > 0x22 {
-                    st *= f64_em(0x969040);
+                    st *= read_f64_at(0x969040);
                 } else if cl > 0x1e {
-                    st *= f64_em(0x969520);
+                    st *= read_f64_at(0x969520);
                 } else if cl > 0x1b {
-                    st *= f64_em(0x9689d0);
+                    st *= read_f64_at(0x9689d0);
                 }
                 if fb(0xf) == 0x14 {
-                    st *= f64_em(if cl < 0x12 { 0x969040 } else if cl < 0x14 { 0x969520 } else { 0x9689d0 });
+                    st *= read_f64_at(if cl < 0x12 { 0x969040 } else if cl < 0x14 { 0x969520 } else { 0x9689d0 });
                 }
                 Some(st)
             }
         } else if ax >= 0x19 || cl <= 0x1e {
             None
         } else {
-            let mut st = f32_em(if cl > 0x25 { 0x968f18 } else if cl > 0x22 { 0x96d248 } else { 0x96d364 }) as f64;
+            let mut st = read_f32_at(if cl > 0x25 { 0x968f18 } else if cl > 0x22 { 0x96d248 } else { 0x96d364 }) as f64;
             if dx > 0x1482 && cl < 0x14 {
                 if ax < -0x4b {
-                    st = f32_em(0x968f18) as f64;
+                    st = read_f32_at(0x968f18) as f64;
                 } else if ax < -0x19 {
-                    st = f32_em(0x96d320) as f64;
+                    st = read_f32_at(0x96d320) as f64;
                 } else if ax < 0 {
-                    st = f32_em(0x96d364) as f64;
+                    st = read_f32_at(0x96d364) as f64;
                 }
             }
             if fb(0xf) == 0x14 {
-                st *= f64_em(if cl < 0x12 { 0x969040 } else if cl < 0x15 { 0x969520 } else { 0x9689d0 });
+                st *= read_f64_at(if cl < 0x12 { 0x969040 } else if cl < 0x15 { 0x969520 } else { 0x9689d0 });
             }
             Some(st)
         };
@@ -610,7 +610,7 @@ unsafe fn ajuste_do_contrato(p: usize, f: usize, clube: usize, contrato: usize, 
         }
         let lesao: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x5444a0usize);
         if lesao(p, 0) != 0 {
-            l4c = mul(l4c, f64_em(0x9689d0));
+            l4c = mul(l4c, read_f64_at(0x9689d0));
         }
     }
     let (cl, al) = (idade, *((p + 0x22) as *const u8));
@@ -670,7 +670,7 @@ unsafe fn ajuste_do_contrato(p: usize, f: usize, clube: usize, contrato: usize, 
     };
     match fator {
         Some(0) => 5,
-        Some(k) => mul(l4c, f64_em(k)),
+        Some(k) => mul(l4c, read_f64_at(k)),
         None => l4c,
     }
 }
@@ -679,32 +679,32 @@ unsafe fn ajuste_do_contrato(p: usize, f: usize, clube: usize, contrato: usize, 
 /// +0x1a, +0x1f, +0x13), o gosto do jogador pelo clube e por `quem`, e os atributos de cada faixa de
 /// posição; `craque_meia` liga o bônus dos craques também na faixa 0x20 (só na 0x6e6340).
 #[allow(clippy::too_many_arguments)]
-unsafe fn bonus_do_observador(p: usize, f: usize, clube: usize, conhece: usize, obs: usize, quem: usize, pos: u32, masc: u32, idade: i8, mut l4c: i32, craque_meia: bool) -> i32 {
-    let fb = |k: usize| sb(f, k);
-    let kb = |k: usize| sb(conhece, k);
+unsafe fn scout_knowledge_bonus(p: usize, f: usize, clube: usize, conhece: usize, obs: usize, quem: usize, pos: u32, masc: u32, idade: i8, mut l4c: i32, craque_meia: bool) -> i32 {
+    let fb = |k: usize| signed_byte_at(f, k);
+    let kb = |k: usize| signed_byte_at(conhece, k);
     if idade <= 0x17 {
-        l4c += ftol((kb(0x22) - 10) as f64 * f64_em(0x96a670));
+        l4c += match_pl_ftol((kb(0x22) - 10) as f64 * read_f64_at(0x96a670));
     }
     let g = |a: usize| -> unsafe extern "C" fn(usize, usize) -> u32 { core::mem::transmute(a) };
     if g(0x547d30)(p, clube) != 0 {
-        let m = l4c as f64 * f64_em(0x969040);
+        let m = l4c as f64 * read_f64_at(0x969040);
         let x = (l4c - 10) as f64;
-        l4c = ftol(if x < m { x } else { m });
+        l4c = match_pl_ftol(if x < m { x } else { m });
     } else if g(0x547d60)(p, clube) != 0 {
-        let m = l4c as f64 * f64_em(0x9689c0);
+        let m = l4c as f64 * read_f64_at(0x9689c0);
         let x = (l4c + 10) as f64;
-        l4c = ftol(if x > m { x } else { m });
+        l4c = match_pl_ftol(if x > m { x } else { m });
     }
     if g(0x547840)(p, quem) != 0 {
         l4c -= 50;
     } else if g(0x547810)(p, quem) != 0 {
-        let x = l4c as f64 * f64_em(0x968928);
+        let x = l4c as f64 * read_f64_at(0x968928);
         let m = (l4c + 20) as f64;
-        l4c = ftol(if x > m { x } else { m });
+        l4c = match_pl_ftol(if x > m { x } else { m });
     }
     let f44 = fb(0x44);
     let k14 = kb(0x14);
-    let mut ecx = (k14 * (f44 - 10) / 3).min(10) + ((sb(p, 0x5b) - 10) * k14 / 3).min(10) + ((sb(p, 0x59) - 10) * sb(obs, 0x59) / 3).min(10);
+    let mut ecx = (k14 * (f44 - 10) / 3).min(10) + ((signed_byte_at(p, 0x5b) - 10) * k14 / 3).min(10) + ((signed_byte_at(p, 0x59) - 10) * signed_byte_at(obs, 0x59) / 3).min(10);
     if pos & 1 == 0 {
         let fora = pos & 0x80 == 0 && pos & 0x800 == 0;
         let e = kb(0xe);
@@ -751,7 +751,7 @@ unsafe fn bonus_do_observador(p: usize, f: usize, clube: usize, conhece: usize, 
         ecx += (fb(0x36) * fb(0x2e) - 200) * kb(0x13) / 500;
     }
     if ecx != 0 {
-        l4c += ftol((f64_em(0x967890) - l4c as f64 * f64_em(0x96d580)) * ecx as f64).clamp(-0x50, 0x50);
+        l4c += match_pl_ftol((read_f64_at(0x967890) - l4c as f64 * read_f64_at(0x96d580)) * ecx as f64).clamp(-0x50, 0x50);
     }
     l4c
 }
@@ -759,7 +759,7 @@ unsafe fn bonus_do_observador(p: usize, f: usize, clube: usize, conhece: usize, 
 /// Na lista de transferências ([0xde1f54], 0x8c7260/0x8c7560 com o clube do contrato, que fica em
 /// [0xae1080]): a porcentagem +4 / (+4 + +6) em byte (0 sem nenhum); None fora da lista ou de 70 em
 /// diante.
-unsafe fn na_lista_de_transferencias(p: usize) -> Option<i8> {
+unsafe fn work_permit_appearance_pct(p: usize) -> Option<i8> {
     let lista = *(0xde1f54 as *const usize);
     let busca: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8c7260usize);
     let x = busca(lista, p);
@@ -784,16 +784,16 @@ unsafe fn na_lista_de_transferencias(p: usize) -> Option<i8> {
 
 /// O extra do contrato (flag 0x10000): +0x44 pelas bandeiras +0x45, o tipo (+0x4f >> 4) e a lista
 /// de transferências.
-unsafe fn extra_do_contrato(p: usize, contrato: usize, flags: u32, l28: i32) -> i32 {
+unsafe fn contract_extra(p: usize, contrato: usize, flags: u32, l28: i32) -> i32 {
     let e = *((contrato + 0x45) as *const u32);
     let s44 = *((contrato + 0x44) as *const i8) as f64;
     let mut extra = 0i32;
     if e & 0x2808 != 0 {
-        let x = s44 * f64_em(0x96a670);
-        extra = ftol(if f64_em(0x96d578) < x { f64_em(0x96d578) } else { x });
+        let x = s44 * read_f64_at(0x96a670);
+        extra = match_pl_ftol(if read_f64_at(0x96d578) < x { read_f64_at(0x96d578) } else { x });
     } else if e != 0 {
-        let x = s44 * f64_em(0x968e00);
-        extra = ftol(if f64_em(0x96d410) < x { f64_em(0x96d410) } else { x });
+        let x = s44 * read_f64_at(0x968e00);
+        extra = match_pl_ftol(if read_f64_at(0x96d410) < x { read_f64_at(0x96d410) } else { x });
     }
     let t = (*((contrato + 0x4f) as *const u8) >> 4) as i8 as i32 - 1;
     let lista = match t {
@@ -807,7 +807,7 @@ unsafe fn extra_do_contrato(p: usize, contrato: usize, flags: u32, l28: i32) -> 
                 false
             } else {
                 let d = (*((contrato + 0x3e) as *const i8) as i32 - *((contrato + 0x3f) as *const i8) as i32) * 5;
-                extra += ftol(d as f64 + (l28 as i16 as f64 * f64_em(0x968e18) - f64_em(0x96d570)));
+                extra += match_pl_ftol(d as f64 + (l28 as i16 as f64 * read_f64_at(0x968e18) - read_f64_at(0x96d570)));
                 true
             }
         }
@@ -818,7 +818,7 @@ unsafe fn extra_do_contrato(p: usize, contrato: usize, flags: u32, l28: i32) -> 
         _ => false,
     };
     if lista {
-        if let Some(bl) = na_lista_de_transferencias(p) {
+        if let Some(bl) = work_permit_appearance_pct(p) {
             extra += 0x32 - bl as i32 / 2;
         }
     }
@@ -826,14 +826,14 @@ unsafe fn extra_do_contrato(p: usize, contrato: usize, flags: u32, l28: i32) -> 
 }
 
 /// O vínculo (flag 0x20000) pelo tipo do contrato `c`: -25 a +25, ou pela lista de transferências.
-unsafe fn vinculo(p: usize, c: usize, flags: u32) -> i32 {
+unsafe fn contract_bond(p: usize, c: usize, flags: u32) -> i32 {
     let t = (*((c + 0x4f) as *const u8) >> 4) as i8 as i32 - 1;
     match t {
         0..=2 => {
             if flags & 0x800000 != 0 {
                 -25
             } else {
-                match na_lista_de_transferencias(p) {
+                match work_permit_appearance_pct(p) {
                     Some(bl) => bl as i32 / 2 - 0x4b,
                     None => -25,
                 }
@@ -845,18 +845,18 @@ unsafe fn vinculo(p: usize, c: usize, flags: u32) -> i32 {
 }
 
 /// O ajuste pela reputação (0x62c3d0) abaixo de -1000 ou acima de 500.
-unsafe fn ajuste_da_reputacao(p: usize, l4c: i32) -> i32 {
-    if reputacao(p) < -1000 {
-        l4c - ftol(reputacao(p) as f64 * f64_em(0x96a740) + f64_em(0x96afc8))
-    } else if reputacao(p) > 0x1f4 {
-        l4c + ftol(f64_em(0x968890) - reputacao(p) as f64 * f64_em(0x967888))
+unsafe fn injury_word_0c_adjust(p: usize, l4c: i32) -> i32 {
+    if injury_word_0c(p) < -1000 {
+        l4c - match_pl_ftol(injury_word_0c(p) as f64 * read_f64_at(0x96a740) + read_f64_at(0x96afc8))
+    } else if injury_word_0c(p) > 0x1f4 {
+        l4c + match_pl_ftol(read_f64_at(0x968890) - injury_word_0c(p) as f64 * read_f64_at(0x967888))
     } else {
         l4c
     }
 }
 
 /// Os jogos (+0x22, flag 0x100000) ou o clube (flag 4: o dono +0x39 e o +0x69 do treinador dele).
-unsafe fn ajuste_dos_jogos(p: usize, f: usize, flags: u32, da_base: bool, l4c: i32) -> i32 {
+unsafe fn appearances_or_club_adjust(p: usize, f: usize, flags: u32, da_base: bool, l4c: i32) -> i32 {
     if flags & 0x100000 != 0 {
         return l4c - (*((p + 0x22) as *const u8) as i32 * 5).min(0x32);
     }
@@ -871,21 +871,21 @@ unsafe fn ajuste_dos_jogos(p: usize, f: usize, flags: u32, da_base: bool, l4c: i
     if s == 0 {
         return l4c;
     }
-    l4c + ftol((core::ptr::read_unaligned((s + 0x69) as *const i16) as i32 - 0x10) as f64 * f64_em(0x9688a0))
+    l4c + match_pl_ftol((core::ptr::read_unaligned((s + 0x69) as *const i16) as i32 - 0x10) as f64 * read_f64_at(0x9688a0))
 }
 
 /// No próprio clube (+0x39): a nota sobe 5 ou 5%.
-unsafe fn no_proprio_clube(p: usize, clube: usize, l4c: i32) -> i32 {
+unsafe fn own_club_bonus(p: usize, clube: usize, l4c: i32) -> i32 {
     if *((p + 0x39) as *const usize) != clube {
         return l4c;
     }
     let x = (l4c + 5) as f64;
-    let m = l4c as f64 * f64_em(0x9689b8);
-    ftol(if x > m { x } else { m })
+    let m = l4c as f64 * read_f64_at(0x9689b8);
+    match_pl_ftol(if x > m { x } else { m })
 }
 
 /// A combinação da nota da posição `l40` com o ajuste `l4c` (só `l40` com as flags 0x800 sozinhas).
-fn combinar_nota(flags: u32, l40: i32, l4c: i32) -> i32 {
+fn combine_rating(flags: u32, l40: i32, l4c: i32) -> i32 {
     if flags == 0x800 {
         l40
     } else if l40 < 0 {
@@ -910,7 +910,7 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
     if f == 0 {
         return -10000;
     }
-    let fb = |k: usize| sb(f, k);
+    let fb = |k: usize| signed_byte_at(f, k);
     let bd = *(0xb63d28 as *const usize);
     let da_base = *(p as *const i32) < *(0xae2364 as *const i32);
     let ativo = limite > -1;
@@ -938,16 +938,16 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
     let mascara: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5b7d20usize);
     let masc = mascara(f);
     let mut edi: i32 = if masc as u16 == 0 { -100 } else { 0 };
-    edi += if flags & 0x400 != 0 { 100 } else { nota_da_posicao(f, pos, masc, 0xa15d50, true) };
-    let l40 = edi + if flags & 0x200 != 0 { 100 } else { ajuste_da_posicao(f, pos) };
+    edi += if flags & 0x400 != 0 { 100 } else { position_rating(f, pos, masc, 0xa15d50, true) };
+    let l40 = edi + if flags & 0x200 != 0 { 100 } else { position_attribute_adjust(f, pos) };
     let mut cont: i8 = 0;
     let mut soma: i32 = 0;
     let corte = |soma: i32, cont: i8| ativo && soma * 200 / (cont as i32) < limite;
     if flags & 0x40 != 0 {
         cont = 1;
         soma = core::ptr::read_unaligned((f + 0xb) as *const i16) as i32 / 50;
-        if clube == *((p + 0x39) as *const usize) && o != 0 && observado_ha_mais_de_um_ano(o, p) {
-            soma = ftol((f64_em(0x968fa8) - dias_desde(p) as f64 * f64_em(0x96a350)) * soma as f64);
+        if clube == *((p + 0x39) as *const usize) && o != 0 && scouted_over_a_year_ago(o, p) {
+            soma = match_pl_ftol((read_f64_at(0x968fa8) - match_man_days_since_date(p) as f64 * read_f64_at(0x96a350)) * soma as f64);
         }
         if ativo && soma * 200 < limite {
             return -10000;
@@ -957,7 +957,7 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
         cont += 1;
         let a = core::ptr::read_unaligned((f + 9) as *const i16) as f64;
         let b = core::ptr::read_unaligned((*((p + 0x1a) as *const usize) + 0x8e) as *const i16) as f64;
-        soma += ftol(a / ((f64_em(0x96d640) - b * f64_em(0x96a5c0)) * f64_em(0x968ff8)));
+        soma += match_pl_ftol(a / ((read_f64_at(0x96d640) - b * read_f64_at(0x96a5c0)) * read_f64_at(0x968ff8)));
         if corte(soma, cont) {
             return -10000;
         }
@@ -970,7 +970,7 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
         }
     }
     if flags & 4 != 0 && da_base {
-        let v = ftol(nota_externa(f, 5, 0x12, f32::from_bits(0x40d00000)) * f64_em(0x968ea8));
+        let v = match_pl_ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64_at(0x968ea8));
         if v != 0 {
             cont += 1;
             soma += v;
@@ -991,7 +991,7 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
     }
     if flags & 0x100 != 0 {
         if cont != 0 {
-            l3c = do_contrato_ou_media(p, f, clube, soma, cont);
+            l3c = potential_or_average_value(p, f, clube, soma, cont);
         }
         let mut r = habilidade(obs, p, clube, 1, l3c as i16);
         if l34 as i16 > -1 && r < l34 as i16 {
@@ -1005,82 +1005,82 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
     }
     // daqui em diante o original reaproveita o lugar do limite para contas: não corta mais
     if flags & 0x40000 != 0 && da_base {
-        soma += bonus_da_media(p, f, clube, o, cont);
+        soma += recent_form_bonus(p, f, clube, o, cont);
     }
     if flags & 2 != 0 && da_base {
-        soma = bonus_da_forma(p, f, clube, o, idade, cont, soma, l3c, false, 0x3fb66666);
+        soma = form_bonus(p, f, clube, o, idade, cont, soma, l3c, false, 0x3fb66666);
     }
     let mut l4c: i32 = 0;
     if cont != 0 {
         l4c = soma / cont as i32;
         if l4c > 0x96 {
-            l4c = ftol((l4c - 0x96) as f64 * f64_em(0x968940) + f64_em(0x968f50));
+            l4c = match_pl_ftol((l4c - 0x96) as f64 * read_f64_at(0x968940) + read_f64_at(0x968f50));
         }
     }
     if flags & 8 != 0 && da_base {
-        l4c += ftol(fb(0x45) as f64 * f64_em(0x968940) - f64_em(0x968e08));
+        l4c += match_pl_ftol(fb(0x45) as f64 * read_f64_at(0x968940) - read_f64_at(0x968e08));
     }
     if flags & 0x4000 != 0 {
         let q = (0x1b58 - core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32) / 100;
         let k = (if q < 10 { 10 } else { q }) as i8 as i32;
         let lim = if fb(0xf) == 0x14 { 0x24 } else if fb(0x15) == 0x14 || fb(0x14) == 0x14 { 0x22 } else { 0x23 };
         if idade as i32 > lim {
-            let y = (f64_em(0x967890) - (idade as i32 - lim) as f64 / k as f64) * l4c as f64;
+            let y = (read_f64_at(0x967890) - (idade as i32 - lim) as f64 / k as f64) * l4c as f64;
             let m = (l4c - 5) as f64;
-            l4c = ftol(if y < m { y } else { m });
+            l4c = match_pl_ftol(if y < m { y } else { m });
         }
         let historico: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
         let h = historico(bd, p);
         if h != 0 {
             l4c -= core::ptr::read_unaligned((h + 0x2c) as *const i16) as i32;
         }
-        l4c = fim_da_idade(p, f, clube, flags, pos, masc, idade, cont, l4c);
+        l4c = age_and_foreigner_adjust(p, f, clube, flags, pos, masc, idade, cont, l4c);
     }
     if contrato != 0 && clube != 0 && flags & 0x2000000 != 0 && da_base {
-        l4c = ajuste_do_contrato(p, f, clube, contrato, idade, l4c);
+        l4c = contract_adjust(p, f, clube, contrato, idade, l4c);
     }
     if sem_valor == 0 {
         let mut v = l24 as i16 as i32;
-        if flags & 0x200000 == 0 && reputacao(p) > 1000 {
-            v += 500 - reputacao(p) as i32;
+        if flags & 0x200000 == 0 && injury_word_0c(p) > 1000 {
+            v += 500 - injury_word_0c(p) as i32;
         }
         if v < 5000 {
             return v + (l40 * 5 - 10000) * 20;
         }
         l4c += if v < 9000 { v * 3 / 100 - 0x118 } else { (10000 - v) / -100 };
-        l4c = desconto_do_historico(p, l4c);
+        l4c = injury_history_penalty(p, l4c);
     }
     if flags & 0x200000 != 0 {
-        l4c = ajuste_da_fama(f, p, l28, l4c);
+        l4c = fame_adjust(f, p, l28, l4c);
     }
     if flags & 0x1000 != 0 && conhece != 0 && clube != 0 && l40 >= 0x64 {
-        l4c = bonus_do_observador(p, f, clube, conhece, obs, o, pos, masc, idade, l4c, true);
+        l4c = scout_knowledge_bonus(p, f, clube, conhece, obs, o, pos, masc, idade, l4c, true);
     }
-    l4c = fora_da_nacao(p, clube, flags, l4c);
+    l4c = outside_nation_penalty(p, clube, flags, l4c);
     if flags & 0x10000 != 0 {
         if contrato != 0 {
-            l4c += extra_do_contrato(p, contrato, flags, l28);
+            l4c += contract_extra(p, contrato, flags, l28);
         }
     } else if flags & 0x20000 != 0 {
         let c = contrato_com(*(0xae1050 as *const usize), p, clube);
         if c != 0 {
-            l4c += vinculo(p, c, flags);
+            l4c += contract_bond(p, c, flags);
         }
         if sem_valor == 0 {
-            l4c = ajuste_da_reputacao(p, l4c);
+            l4c = injury_word_0c_adjust(p, l4c);
         }
     }
-    l4c = ajuste_dos_jogos(p, f, flags, da_base, l4c);
+    l4c = appearances_or_club_adjust(p, f, flags, da_base, l4c);
     if !da_base {
         l4c -= 0x1e;
     }
-    l4c = no_proprio_clube(p, clube, l4c);
-    combinar_nota(flags, l40, l4c)
+    l4c = own_club_bonus(p, clube, l4c);
+    combine_rating(flags, l40, l4c)
 }
 
 /// O valor para a habilidade potencial (flag 0x100): no clube do contrato (0x4cf5a0, que fica em
 /// [0xae1080]) a média x 25 mais o potencial (+7) x 25 (em 16 bits); fora dele, a média x 50.
-unsafe fn do_contrato_ou_media(p: usize, f: usize, clube: usize, soma: i32, cont: i8) -> i32 {
+unsafe fn potential_or_average_value(p: usize, f: usize, clube: usize, soma: i32, cont: i8) -> i32 {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contract_of(*(0xae1050 as *const usize), p);
     *(0xae1080 as *mut usize) = c;
@@ -1097,9 +1097,9 @@ unsafe fn do_contrato_ou_media(p: usize, f: usize, clube: usize, soma: i32, cont
 
 /// A fama (flag 0x200000): -200 para os famosos (valor/100 >= 99) de +0x3c alto, +0x2d baixo e
 /// reputação abaixo de 500; senão 100 - valor/100.
-unsafe fn ajuste_da_fama(f: usize, p: usize, l28: i32, l4c: i32) -> i32 {
+unsafe fn fame_adjust(f: usize, p: usize, l28: i32, l4c: i32) -> i32 {
     let v = l28 as i16 as i32;
-    if v >= 0x63 && sb(f, 0x3c) > 0xe && sb(f, 0x2d) < 8 && reputacao(p) < 0x1f4 {
+    if v >= 0x63 && signed_byte_at(f, 0x3c) > 0xe && signed_byte_at(f, 0x2d) < 8 && injury_word_0c(p) < 0x1f4 {
         l4c - 200
     } else {
         l4c + 100 - v
@@ -1107,7 +1107,7 @@ unsafe fn ajuste_da_fama(f: usize, p: usize, l28: i32, l4c: i32) -> i32 {
 }
 
 /// Fora da nação do clube (flag 0x1000000): -50 sem nenhuma das duas nacionalidades (+0x1a, +0x1e).
-unsafe fn fora_da_nacao(p: usize, clube: usize, flags: u32, l4c: i32) -> i32 {
+unsafe fn outside_nation_penalty(p: usize, clube: usize, flags: u32, l4c: i32) -> i32 {
     if flags & 0x1000000 == 0 || clube == 0 {
         return l4c;
     }
@@ -1133,7 +1133,7 @@ unsafe extern "C" fn lineup_slot_score(
     if p == 0 || f == 0 {
         return -10000;
     }
-    let fb = |k: usize| sb(f, k);
+    let fb = |k: usize| signed_byte_at(f, k);
     let bd = *(0xb63d28 as *const usize);
     let da_base = *(p as *const i32) < *(0xae2364 as *const i32);
     let idade = *((p + 0x18) as *const i8);
@@ -1169,16 +1169,16 @@ unsafe extern "C" fn lineup_slot_score(
     if flags & 0x400 != 0 {
         edi += 100;
     } else {
-        edi += nota_da_posicao(f, pos, masc, 0xa15cfc, true);
+        edi += position_rating(f, pos, masc, 0xa15cfc, true);
         if segunda {
-            ebp = nota_da_posicao(f, pos2, masc, 0xa15cfc, false);
+            ebp = position_rating(f, pos2, masc, 0xa15cfc, false);
         }
     }
     let l40 = if flags & 0x200 != 0 {
         edi + 100
     } else {
-        edi += ajuste_da_posicao(f, pos);
-        if segunda { (ebp + ajuste_da_posicao(f, pos2) + 2 * edi) / 3 } else { edi }
+        edi += position_attribute_adjust(f, pos);
+        if segunda { (ebp + position_attribute_adjust(f, pos2) + 2 * edi) / 3 } else { edi }
     };
     let mut cont: i8 = 0;
     let mut soma: i32 = 0;
@@ -1186,8 +1186,8 @@ unsafe extern "C" fn lineup_slot_score(
     if flags & 0x40 != 0 {
         cont = 1;
         soma = core::ptr::read_unaligned((f + 0xb) as *const i16) as i32 / 50;
-        if clube == *((p + 0x39) as *const usize) && tecnico != 0 && observado_ha_mais_de_um_ano(tecnico, p) {
-            soma = ftol((f64_em(0x968fa8) - dias_desde(p) as f64 * f64_em(0x96a350)) * soma as f64);
+        if clube == *((p + 0x39) as *const usize) && tecnico != 0 && scouted_over_a_year_ago(tecnico, p) {
+            soma = match_pl_ftol((read_f64_at(0x968fa8) - match_man_days_since_date(p) as f64 * read_f64_at(0x96a350)) * soma as f64);
         }
         if ativo && soma * 200 < limite {
             return -10000;
@@ -1197,7 +1197,7 @@ unsafe extern "C" fn lineup_slot_score(
         cont += 1;
         let a = core::ptr::read_unaligned((f + 9) as *const i16) as f64;
         let b = core::ptr::read_unaligned((*((p + 0x1a) as *const usize) + 0x8e) as *const i16) as f64;
-        soma += ftol(a / ((f64_em(0x968950) - b * f64_em(0x96a5c0)) * f64_em(0x968ff8)));
+        soma += match_pl_ftol(a / ((read_f64_at(0x968950) - b * read_f64_at(0x96a5c0)) * read_f64_at(0x968ff8)));
         if corte(soma, cont) {
             return -10000;
         }
@@ -1211,10 +1211,10 @@ unsafe extern "C" fn lineup_slot_score(
     }
     if flags & 1 != 0 && reg != 0 && masc & 1 == 0 {
         cont += 1;
-        soma += (core::ptr::read_unaligned((reg + 0x35) as *const i16) as i32 - folego_na_partida(reg, fb(0xf))) / 50;
+        soma += (core::ptr::read_unaligned((reg + 0x35) as *const i16) as i32 - match_fatigue_offset(reg, fb(0xf))) / 50;
     }
     if flags & 4 != 0 && da_base {
-        let v = ftol(nota_externa(f, 5, 0x12, f32::from_bits(0x40d00000)) * f64_em(0x968ea8));
+        let v = match_pl_ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64_at(0x968ea8));
         if v != 0 {
             cont += 1;
             soma += v;
@@ -1235,7 +1235,7 @@ unsafe extern "C" fn lineup_slot_score(
     }
     if flags & 0x100 != 0 {
         if cont != 0 {
-            l3c = do_contrato_ou_media(p, f, clube, soma, cont);
+            l3c = potential_or_average_value(p, f, clube, soma, cont);
         }
         let mut r = habilidade(obs, p, clube, 1, l3c as i16);
         if l34 as i16 > -1 && r < l34 as i16 {
@@ -1254,30 +1254,30 @@ unsafe extern "C" fn lineup_slot_score(
         }
     }
     if flags & 0x40000 != 0 && da_base {
-        soma += bonus_da_media(p, f, clube, tecnico, cont);
+        soma += recent_form_bonus(p, f, clube, tecnico, cont);
     }
     if flags & 2 != 0 && da_base {
-        soma = bonus_da_forma(p, f, clube, tecnico, idade, cont, soma, l3c, true, 0x3faccccd);
+        soma = form_bonus(p, f, clube, tecnico, idade, cont, soma, l3c, true, 0x3faccccd);
     }
     let mut l4c: i32 = 0;
     if cont != 0 {
         l4c = soma / cont as i32;
         if l4c > 0x96 {
-            l4c = ftol((l4c - 0x96) as f64 * f64_em(0x968940) + f64_em(0x968f50));
+            l4c = match_pl_ftol((l4c - 0x96) as f64 * read_f64_at(0x968940) + read_f64_at(0x968f50));
         }
     }
     if flags & 8 != 0 && da_base {
-        l4c += ftol((fb(0x45) - 10) as f64 * f64_em(0x9689b0));
+        l4c += match_pl_ftol((fb(0x45) - 10) as f64 * read_f64_at(0x9689b0));
     }
     let marcada = marca & 0x8000 != 0 || (marca & 0x2000 != 0 && tatica & 0x100 != 0);
     if flags & 0x8000 != 0 {
-        l4c = ajuste_da_tatica(f, marca, bytes as u8, tatica, marcada, l4c);
+        l4c = tactic_instruction_adjust(f, marca, bytes as u8, tatica, marcada, l4c);
     }
     if contrato != 0 && clube != 0 && flags & 0x2000000 != 0 && da_base {
-        l4c = ajuste_do_contrato(p, f, clube, contrato, idade, l4c);
+        l4c = contract_adjust(p, f, clube, contrato, idade, l4c);
     }
     if flags & 0x4000 != 0 {
-        l4c = desconto_do_historico_2c(p, l4c);
+        l4c = injury_history_penalty_2c(p, l4c);
         let id = *(p as *const i32);
         let mut edi = l4c;
         if *((*(0xae2d0c as *const usize) as isize + id as isize * 79 + 0xb) as *const u8) & 0x30 != 0 {
@@ -1286,7 +1286,7 @@ unsafe extern "C" fn lineup_slot_score(
             }
             edi -= if idade > 0x22 { 0x4b } else { 0x19 };
             l4c = edi;
-            if sb(*((p + 0x61) as *const usize), 0x3c) < 0xa {
+            if signed_byte_at(*((p + 0x61) as *const usize), 0x3c) < 0xa {
                 edi -= 0x32;
                 l4c = edi;
             }
@@ -1302,7 +1302,7 @@ unsafe extern "C" fn lineup_slot_score(
         } else if i > 0x20 && pos & 0x40 != 0 {
             l4c = edi + (0x20 - i) * 5;
         }
-        l4c = fim_da_idade(p, f, clube, flags, pos, masc, idade, cont, l4c);
+        l4c = age_and_foreigner_adjust(p, f, clube, flags, pos, masc, idade, cont, l4c);
     }
     let mut valor: i32 = 0;
     if sem_valor == 0 {
@@ -1312,37 +1312,37 @@ unsafe extern "C" fn lineup_slot_score(
                 return -1000000;
             }
             let x = core::ptr::read_unaligned((reg + 0x59) as *const f32) as f64;
-            v = ftol(x + x + core::ptr::read_unaligned((reg + 0x4d) as *const f32) as f64) as i16 as i32;
+            v = match_pl_ftol(x + x + core::ptr::read_unaligned((reg + 0x4d) as *const f32) as f64) as i16 as i32;
             if core::ptr::read_unaligned((*((reg + 0x19e) as *const usize) + 0x8ed4) as *const i16) == 0x1ef {
                 v = (v + 0x5dc).min(0x2710);
             }
         } else {
             v = l24 as i16 as i32;
         }
-        if flags & 0x200000 == 0 && reputacao(p) > 1000 {
-            v += 500 - reputacao(p) as i32;
+        if flags & 0x200000 == 0 && injury_word_0c(p) > 1000 {
+            v += 500 - injury_word_0c(p) as i32;
         }
         if v < 0x1676 {
             let r = v + (l40 * 5 - 0x4e2) * 20;
             return if v >= 0xdac { r } else { r - 0x7a120 };
         }
         if marcada {
-            v = ftol(v as f64 * f64_em(0x96a5c0) * v as f64);
+            v = match_pl_ftol(v as f64 * read_f64_at(0x96a5c0) * v as f64);
         }
         l4c += if v < 9000 { v * 3 / 100 - 0x118 } else { (10000 - v) / -100 };
-        l4c = desconto_do_historico(p, l4c);
+        l4c = injury_history_penalty(p, l4c);
         valor = v;
     }
     if flags & 0x200000 != 0 {
-        l4c = ajuste_da_fama(f, p, l28, l4c);
+        l4c = fame_adjust(f, p, l28, l4c);
     }
     if flags & 0x1000 != 0 && conhece != 0 && clube != 0 && l40 >= 0x64 {
-        l4c = bonus_do_observador(p, f, clube, conhece, obs, tecnico, pos, masc, idade, l4c, false);
+        l4c = scout_knowledge_bonus(p, f, clube, conhece, obs, tecnico, pos, masc, idade, l4c, false);
     }
     if flags & 0x2000 != 0 && lado != 0 && *((lado + 0x3b) as *const usize) == p {
         l4c += 100;
     }
-    l4c = fora_da_nacao(p, clube, flags, l4c);
+    l4c = outside_nation_penalty(p, clube, flags, l4c);
     if flags & 0x80000 != 0 && lado != 0 {
         let em = |o: usize| *((lado + o) as *const usize) == p;
         l4c += if em(6) { 0x1e } else if em(0xa) { 0x14 } else if em(0xe) { 0xa } else { 0 };
@@ -1353,26 +1353,26 @@ unsafe extern "C" fn lineup_slot_score(
             v
         } else {
             let minuto = core::ptr::read_unaligned((*((reg + 0x19e) as *const usize) + 0x8ed0) as *const i16) as f64;
-            ftol((f64_em(0x967890) - minuto * f64_em(0x96d268)) * v as f64)
+            match_pl_ftol((read_f64_at(0x967890) - minuto * read_f64_at(0x96d268)) * v as f64)
         }
     };
     if flags & 0x10000 != 0 {
         if contrato != 0 {
-            let mut extra = pelo_minuto(extra_do_contrato(p, contrato, flags, l28));
+            let mut extra = pelo_minuto(contract_extra(p, contrato, flags, l28));
             if ferias != 0 {
-                extra = ftol(extra as f64 * f64_em(0x9689e0));
+                extra = match_pl_ftol(extra as f64 * read_f64_at(0x9689e0));
             }
             l4c += extra;
         }
     } else if flags & 0x20000 != 0 {
         if contrato != 0 {
-            l4c += pelo_minuto(vinculo(p, contrato, flags));
+            l4c += pelo_minuto(contract_bond(p, contrato, flags));
         }
         if sem_valor == 0 {
-            l4c = ajuste_da_reputacao(p, l4c);
+            l4c = injury_word_0c_adjust(p, l4c);
         }
     }
-    l4c = ajuste_dos_jogos(p, f, flags, da_base, l4c);
+    l4c = appearances_or_club_adjust(p, f, flags, da_base, l4c);
     let mut base = l40;
     if !da_base && clube != 0 {
         let nac = *((clube + 0x53) as *const usize);
@@ -1381,16 +1381,16 @@ unsafe extern "C" fn lineup_slot_score(
             base = l40 - 0x78;
         }
     }
-    l4c = no_proprio_clube(p, clube, l4c);
-    l4c = combinar_nota(flags, base, l4c);
+    l4c = own_club_bonus(p, clube, l4c);
+    l4c = combine_rating(flags, base, l4c);
     if ferias != 0 && (pos & 1 == 0 || masc & 1 != 0) {
-        l4c = bonus_das_ferias(p, clube, ferias, pos, base, sem_valor, valor, l4c);
+        l4c = holiday_selection_bonus(p, clube, ferias, pos, base, sem_valor, valor, l4c);
     }
     l4c
 }
 
 /// O desconto da flag 0x4000 pelo histórico (0x62ed70, +0x2c).
-unsafe fn desconto_do_historico_2c(p: usize, l4c: i32) -> i32 {
+unsafe fn injury_history_penalty_2c(p: usize, l4c: i32) -> i32 {
     let historico: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     let h = historico(*(0xb63d28 as *const usize), p);
     if h == 0 { l4c } else { l4c - core::ptr::read_unaligned((h + 0x2c) as *const i16) as i32 }
@@ -1400,7 +1400,7 @@ unsafe fn desconto_do_historico_2c(p: usize, l4c: i32) -> i32 {
 /// (+0x904d do lado, sem 0x5fd210, seleção ou 0x5fd480) com o jogador abaixo de 11 (+0); fora de
 /// campo (+0x19 = -1) os minutos que faltam x 150 (até 3000; goleiro só +3500, os demais pelo menos
 /// -2000); em campo, os minutos jogados (minuto - +0x1f) abaixo de 60 x 40.
-unsafe fn folego_na_partida(reg: usize, goleiro: i32) -> i32 {
+unsafe fn match_fatigue_offset(reg: usize, goleiro: i32) -> i32 {
     let m = *((reg + 0x19e) as *const usize);
     let humano = if core::ptr::read_unaligned((m + 0x8ed4) as *const i16) == 0x1ef {
         true
@@ -1446,9 +1446,9 @@ unsafe fn folego_na_partida(reg: usize, goleiro: i32) -> i32 {
 
 /// As marcas da tática (flag 0x8000): `marca` (o u64 das instruções, parte baixa), `bytes` (o
 /// byte das instruções) e `tatica` contra os atributos da ficha.
-unsafe fn ajuste_da_tatica(f: usize, lo: u32, b1: u8, tatica: u32, marcada: bool, mut l4c: i32) -> i32 {
-    let fb = |k: usize| sb(f, k);
-    let x = |k: usize, c: usize| ftol((fb(k) - 10) as f64 * f64_em(c));
+unsafe fn tactic_instruction_adjust(f: usize, lo: u32, b1: u8, tatica: u32, marcada: bool, mut l4c: i32) -> i32 {
+    let fb = |k: usize| signed_byte_at(f, k);
+    let x = |k: usize, c: usize| match_pl_ftol((fb(k) - 10) as f64 * read_f64_at(c));
     let t13 = tatica as u8;
     let um = lo & 1 != 0;
     if lo & 4 != 0 || (um && t13 & 2 != 0) {
@@ -1461,8 +1461,8 @@ unsafe fn ajuste_da_tatica(f: usize, lo: u32, b1: u8, tatica: u32, marcada: bool
     if marcada {
         let c = fb(0x3c) - 15;
         let d = fb(0x44) - 15;
-        let x1 = ftol((c.abs() * c) as f64 * f64_em(0x968fe8));
-        let x2 = ftol((d.abs() * d) as f64 * f64_em(0x968e00));
+        let x1 = match_pl_ftol((c.abs() * c) as f64 * read_f64_at(0x968fe8));
+        let x2 = match_pl_ftol((d.abs() * d) as f64 * read_f64_at(0x968e00));
         l4c += fb(0x1e) / 10 + (x2 - x1);
     } else if b1 & 1 != 0 {
         l4c += fb(0x33) / 12 + (fb(0x43) / 12 - x(0x28, 0x96d5e8));
@@ -1473,9 +1473,9 @@ unsafe fn ajuste_da_tatica(f: usize, lo: u32, b1: u8, tatica: u32, marcada: bool
         l4c += fb(0x32) / 7;
     }
     if lo & 0x40 != 0 {
-        l4c += ftol((fb(0x3b) - 20) as f64 * f64_em(0x96d5e0));
+        l4c += match_pl_ftol((fb(0x3b) - 20) as f64 * read_f64_at(0x96d5e0));
     } else if lo & 0x100 != 0 {
-        l4c += ftol((fb(0x30) - 20) as f64 * f64_em(0x96d5e0));
+        l4c += match_pl_ftol((fb(0x30) - 20) as f64 * read_f64_at(0x96d5e0));
     }
     if lo & 0x200000 != 0 {
         l4c += fb(0x1a) + fb(0x43) / 10 + fb(0x33) / 9 - 20;
@@ -1509,7 +1509,7 @@ unsafe fn ajuste_da_tatica(f: usize, lo: u32, b1: u8, tatica: u32, marcada: bool
 /// posição (pelo menos 10000) se estiver entre os 11 e o técnico (0x5fea50) aceitar a posição; senão
 /// 200 x a nota (nunca negativa), com a nota negativa pela metade; pesado pelo valor do jogador.
 #[allow(clippy::too_many_arguments)]
-unsafe fn bonus_das_ferias(p: usize, clube: usize, ferias: usize, pos: u32, base: i32, sem_valor: u32, valor: i32, mut l4c: i32) -> i32 {
+unsafe fn holiday_selection_bonus(p: usize, clube: usize, ferias: usize, pos: u32, base: i32, sem_valor: u32, valor: i32, mut l4c: i32) -> i32 {
     let id = *(p as *const i32);
     let Some(k) = (0..16usize).find(|&k| *((ferias + 8 * k) as *const i32) == id) else {
         return l4c;
@@ -1536,15 +1536,15 @@ unsafe fn bonus_das_ferias(p: usize, clube: usize, ferias: usize, pos: u32, base
     }
     if sem_valor == 0 {
         let v = valor as f64;
-        let y = v * f64_em(0x968eb8);
+        let y = v * read_f64_at(0x968eb8);
         let z = if valor >= 0x251c {
-            y * f64_em(0x96d568)
+            y * read_f64_at(0x96d568)
         } else if valor >= 0x222e {
-            y * v * f64_em(0x968910)
+            y * v * read_f64_at(0x968910)
         } else {
             v * (y * v)
         };
-        bonus = ftol((z * f64_em(0x96a600) - f64_em(0x967890)) * bonus as f64);
+        bonus = match_pl_ftol((z * read_f64_at(0x96a600) - read_f64_at(0x967890)) * bonus as f64);
     }
     if bonus > 0 {
         l4c += bonus;
@@ -1553,8 +1553,8 @@ unsafe fn bonus_das_ferias(p: usize, clube: usize, ferias: usize, pos: u32, base
 }
 
 unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
-    let f = orig::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(%%I1%%);
-    if gravando_no_topo() {
+    let f = original_fn::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(%%I1%%);
+    if is_recording_top_level() {
         return f(p, pos, flags, clube, limite, o);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -1569,8 +1569,8 @@ unsafe extern "C" fn comparar_lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limite: i32, marca: u32, marca_alta: u32,
     bytes: u32, tatica: u32, pos2: u32, ferias: usize,
 ) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, usize, i32, u32, u32, u32, u32, u32, usize) -> i32>(%%I2%%);
-    if gravando_no_topo() {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, usize, i32, u32, u32, u32, u32, u32, usize) -> i32>(%%I2%%);
+    if is_recording_top_level() {
         return o(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias);
     }
     let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();

@@ -146,7 +146,7 @@ unsafe fn cqv7_inscritos(this: usize) -> i32 {
     let t = alocar(0x390);
     cqv7_pd(this + 0xa7, t);
     if t == 0 {
-        aviso_em(0x9c42cc, 0x1d2);
+        show_error_at(0x9c42cc, 0x1d2);
         return -1;
     }
     // 3) os premiados
@@ -280,7 +280,7 @@ unsafe extern "thiscall" fn cqv7_inscritos_da_copa_da_inglaterra(this: usize) ->
 /// +0xa7, a cópia faz a sua (sem contar os sorteios), comparada nas vagas preenchidas (o clube de cada uma; a tabela
 /// não é zerada) e liberada; a devolução também.
 unsafe extern "thiscall" fn comparar_cqv7_inscritos_da_copa_da_inglaterra(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     let antes = cqv7_d(this + 0xa7);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(this + 0x3e, 2usize), (this + 0xb3, 2), (0xb67a34, 4)]);

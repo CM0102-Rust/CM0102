@@ -6,7 +6,7 @@ unsafe fn dbu1_cheio(t: usize) -> bool {
 }
 
 /// strcpy (o `repne scasb` e os `rep movsd`/`rep movsb` da original).
-unsafe fn dbu1_copiar(destino: usize, origem: usize) {
+unsafe fn copy_c_string(destino: usize, origem: usize) {
     let mut k = 0;
     loop {
         let c = *((origem + k) as *const u8);
@@ -29,7 +29,7 @@ unsafe fn dbu1_copiar(destino: usize, origem: usize) {
 unsafe extern "C" fn database_format_name_from_strings(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let f = forma as u8;
     if texto == 0 || (tamanho as u16 as i16) < 0x69 || !(1..=7).contains(&f) {
-        return orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(%%I0%%)(nome, sobrenome, comum, texto, tamanho, forma);
+        return original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(%%I0%%)(nome, sobrenome, comum, texto, tamanho, forma);
     }
     let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let (a, b, c) = (nome, sobrenome, comum);
@@ -39,7 +39,7 @@ unsafe extern "C" fn database_format_name_from_strings(nome: usize, sobrenome: u
     // o que sobra: o primeiro cheio da lista
     let um_de = |lista: &[usize]| {
         if let Some(&t) = lista.iter().find(|&&t| dbu1_cheio(t)) {
-            dbu1_copiar(texto, t);
+            copy_c_string(texto, t);
         }
     };
     match f {
@@ -64,7 +64,7 @@ unsafe extern "C" fn database_format_name_from_strings(nome: usize, sobrenome: u
         5 => um_de(&[c, b, a]),
         _ => {
             if dbu1_cheio(c) {
-                dbu1_copiar(texto, c);
+                copy_c_string(texto, c);
             } else if os_dois {
                 match f {
                     1 => { sprintf(texto, 0x98f0b8, a, b); } // "%s %s" (dbu)
@@ -81,7 +81,7 @@ unsafe extern "C" fn database_format_name_from_strings(nome: usize, sobrenome: u
 }
 
 unsafe extern "C" fn comparar_database_format_name_from_strings(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(%%I0%%);
     if texto == 0 || (tamanho as u16 as i16) < 0x69 || !(1..=7).contains(&(forma as u8)) {
         return o(nome, sobrenome, comum, texto, tamanho, forma); // caixa: só a original
     }
@@ -145,7 +145,7 @@ unsafe extern "C" fn database_get_job_name(cargo: u32, curto: u32, maiuscula: u3
 }
 
 unsafe extern "C" fn comparar_database_get_job_name(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(u32, u32, u32, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(u32, u32, u32, usize) -> usize>(%%I1%%);
     // o texto [0xae19b4] e o byte do gênero, se houver
     let regioes = [(0xae19b4usize, 100usize), (genero, 1)];
     let reg = if genero != 0 { &regioes[..] } else { &regioes[..1] };
@@ -180,7 +180,7 @@ unsafe extern "C" fn database_get_language_name(idioma: u32) -> usize {
 }
 
 unsafe extern "C" fn comparar_database_get_language_name(idioma: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(%%I2%%);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae21d4, 100)], || o(idioma), || database_get_language_name(idioma));
     PLACAR.registrar(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
     r

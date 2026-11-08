@@ -5,8 +5,8 @@
 # (0x8c9390) no match_wrap_up da oferta aprovada (0x8c34e0, 739 chamadas; "cpp_7 soltar jogadores" passa de 512), a
 # transferencia nao sai. As tres mudam os elencos.
 MUTACOES = [
-    ('cpw2_agendar_2_dias', '    cpw2_agendar(this, oferta, 0, 1); // cpw2: a conclusão agendada para hoje',
-     '    cpw2_agendar(this, oferta, 2, 1); // mutacao: daqui a 2 dias',
+    ('cpw2_agendar_2_dias', '    schedule_offer_with_slices(this, oferta, 0, 1); // cpw2: a conclusão agendada para hoje',
+     '    schedule_offer_with_slices(this, oferta, 2, 1); // mutacao: daqui a 2 dias',
      'cpw_2 agendar conclusao'),
     ('cpw2_sem_futura', '        if !antes { // cpw2: a data de conclusão ainda por vir',
      '        if antes || !antes { // mutacao: sem a futura',

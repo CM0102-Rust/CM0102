@@ -14,17 +14,17 @@ const CPN2_NOTICIA: usize = 0xdf;
 
 /// A entrada do humano na tabela das caixas (News +8, 12 bytes: início do anel, próxima vaga, conta), ou None (com a
 /// caixa "Error" da `linha`) se a pessoa não está entre as 16 últimas.
-unsafe fn cpn2_entrada(this: usize, tecnico: usize, linha: u32) -> Option<usize> {
+unsafe fn human_inbox_entry(this: usize, tecnico: usize, linha: u32) -> Option<usize> {
     let idx = cpn2_i(tecnico).wrapping_sub(cpn2_i(0xae2364)).wrapping_add(0x10);
     if idx < 0 {
-        aviso_em(0xa693ec, linha);
+        show_error_at(0xa693ec, linha);
         return None;
     }
     Some(cpn2_d(this + 8) + idx as usize * 12)
 }
 
 /// A vaga anterior a `k` no anel que começa em `inicio` (100 vagas).
-fn cpn2_volta(k: i32, inicio: i32) -> i32 {
+fn ring_prev_wrap(k: i32, inicio: i32) -> i32 {
     if k < inicio { inicio + 0x63 } else { k }
 }
 
@@ -34,10 +34,10 @@ fn cpn2_volta(k: i32, inicio: i32) -> i32 {
 /// demitido e ao ser contratado.
 unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: usize, clube: usize) -> u32 {
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x2460);
+        show_error_at(0xa693ec, 0x2460);
         return 0;
     }
-    let e = match cpn2_entrada(this, tecnico, 0x246b) {
+    let e = match human_inbox_entry(this, tecnico, 0x246b) {
         Some(e) => e,
         None => return 0,
     };
@@ -47,7 +47,7 @@ unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: usize, clube:
     let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x784100usize);
     let mut k = cpn2_i(e + 4) - 1;
     loop {
-        k = cpn2_volta(k, cpn2_i(e));
+        k = ring_prev_wrap(k, cpn2_i(e));
         let vaga = cpn2_d(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
         if cpn2_d(vaga + 0xd6) == 0 {
             return 1;
@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: usize, so_urg
         let nao_lidas: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x786fe0usize);
         return (nao_lidas(this, tecnico, 0) > 0) as u32;
     }
-    let e = match cpn2_entrada(this, tecnico, 0x241e) {
+    let e = match human_inbox_entry(this, tecnico, 0x241e) {
         Some(e) => e,
         None => return 0,
     };
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: usize, so_urg
     let texto: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(0x782b70usize);
     let mut k = cpn2_i(e + 4) - 1;
     loop {
-        k = cpn2_volta(k, cpn2_i(e));
+        k = ring_prev_wrap(k, cpn2_i(e));
         let vaga = cpn2_d(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
         if cpn2_d(vaga + 0xd6) == 0 {
             return 0;
@@ -107,11 +107,11 @@ unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: usize, so_urg
 unsafe extern "thiscall" fn set_slot_string(this: usize, campo: u32, texto: *const u8, proximo: *mut u8) -> u32 {
     let campo = campo as u8 as i8;
     if !(0..0x32).contains(&campo) {
-        aviso_em(0xa693ec, 0x1e8d);
+        show_error_at(0xa693ec, 0x1e8d);
         return 0;
     }
     if texto.is_null() {
-        aviso_em(0xa693ec, 0x1e95);
+        show_error_at(0xa693ec, 0x1e95);
         return 0;
     }
     let copiar: unsafe extern "C" fn(usize, *const u8, u32) -> usize = core::mem::transmute(0x9466d0usize);
@@ -138,14 +138,14 @@ unsafe extern "thiscall" fn set_slot_string(this: usize, campo: u32, texto: *con
 /// ou com técnico da máquina; senão 1).
 unsafe extern "thiscall" fn comparar_auto_respond_all(this: usize, tecnico: usize, clube: usize) -> u32 {
     let humano = tecnico != 0 && cpn2_i(tecnico).wrapping_sub(cpn2_i(0xae2364)).wrapping_add(0x10) >= 0;
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, tecnico, clube);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, tecnico, clube);
     PLACAR.registrar(r == humano as u32, || format!("auto_respond_all(técnico {:x}, humano {}) devolveu {}", tecnico, humano, r));
     r
 }
 
 /// Comparador: lado a lado pela devolução e pelo texto montado em 0xde1f64 (a 0x782b70 não sorteia; a caixa não muda).
 unsafe extern "thiscall" fn comparar_has_urgent_items(this: usize, tecnico: usize, so_urgentes: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if so_urgentes != 0 && cpn2_i(tecnico).wrapping_sub(cpn2_i(0xae2364)).wrapping_add(0x10) < 0 {
         return o(this, tecnico, so_urgentes); // a caixa "Error"
     }
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_has_urgent_items(this: usize, tecnico: usiz
 
 /// Comparador: lado a lado pelos campos da notícia (+5..+0xcc) e pelo próximo campo.
 unsafe extern "thiscall" fn comparar_set_slot_string(this: usize, campo: u32, texto: *const u8, proximo: *mut u8) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *const u8, *mut u8) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *const u8, *mut u8) -> u32>(%%I2%%);
     if !(0..0x32).contains(&(campo as u8 as i8)) || texto.is_null() {
         return o(this, campo, texto, proximo); // a caixa "Error"
     }

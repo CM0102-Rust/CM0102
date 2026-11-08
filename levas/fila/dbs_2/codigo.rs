@@ -21,7 +21,7 @@ unsafe fn dbs2_i16(a: usize) -> i32 {
 /// Na mídia, nos contratos, na busca de jogadores, nos olheiros e nas transferências (0x8dc370).
 unsafe extern "C" fn write_position_name(mascara: u32, texto: usize, tamanho: i32) -> u8 {
     if tamanho < 0x1e {
-        return orig::<unsafe extern "C" fn(u32, usize, i32) -> u8>(%%I0%%)(mascara, texto, tamanho);
+        return original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u8>(%%I0%%)(mascara, texto, tamanho);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
@@ -95,7 +95,7 @@ unsafe extern "C" fn write_position_name(mascara: u32, texto: usize, tamanho: i3
 }
 
 unsafe extern "C" fn comparar_write_position_name(mascara: u32, texto: usize, tamanho: i32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, i32) -> u8>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u8>(%%I0%%);
     if tamanho < 0x1e {
         return o(mascara, texto, tamanho); // caixa: só a original
     }
@@ -118,7 +118,7 @@ unsafe extern "C" fn comparar_write_position_name(mascara: u32, texto: usize, ta
 /// cópia não grava). Tamanho < 30: a original (caixa).
 unsafe extern "C" fn write_player_description(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
     if tamanho < 0x1e {
-        return orig::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(%%I1%%)(pessoa, posicao, qualidades, texto, tamanho, genero);
+        return original_fn::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(%%I1%%)(pessoa, posicao, qualidades, texto, tamanho, genero);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
@@ -212,7 +212,7 @@ unsafe extern "C" fn write_player_description(pessoa: i32, posicao: u32, qualida
 }
 
 unsafe extern "C" fn comparar_write_player_description(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(%%I1%%);
     if tamanho < 0x1e {
         return o(pessoa, posicao, qualidades, texto, tamanho, genero); // caixa: só a original
     }
@@ -225,7 +225,7 @@ unsafe extern "C" fn comparar_write_player_description(pessoa: i32, posicao: u32
 
 /// A nota do colega `o` como favorito da `pessoa` no `clube` (os filtros e a nota da 0x548810, iguais aos da 0x548da0),
 /// ou `None` se ele não entra. As chamadas pelo endereço do jogo, na ordem da original.
-unsafe fn dbs2_nota(pessoa: usize, clube: usize, o: usize) -> Option<i32> {
+unsafe fn favourite_colleague_score(pessoa: usize, clube: usize, o: usize) -> Option<i32> {
     let idade: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x54cdb0usize);
     let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let fora: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8cca10usize);
@@ -257,16 +257,16 @@ unsafe fn dbs2_nota(pessoa: usize, clube: usize, o: usize) -> Option<i32> {
     let m1 = media(dbs2_u32(0xb74350), dbs2_u32(o + 0x61), 6, 1, 6.5);
     let dados = dbs2_u32(o + 0x61);
     let mut n = dbs2_i16(dados + 0xb);
-    if m1 > f32_em(0x968990) as f64 {
+    if m1 > read_f32_at(0x968990) as f64 {
         let g = dbs2_u32(0xb74350);
         let razao = || {
-            let d = f64_em(g + 0x18);
-            if d == 0.0 || d.is_nan() { f64_em(0x968998) } else { f64_em(g + 0x10) / d }
+            let d = read_f64_at(g + 0x18);
+            if d == 0.0 || d.is_nan() { read_f64_at(0x968998) } else { read_f64_at(g + 0x10) / d }
         };
         // fcompp: C0 (abaixo ou sem ordem) soma
-        if !(razao() + f64_em(0x968918) >= l0) {
+        if !(razao() + read_f64_at(0x968918) >= l0) {
             n += 500;
-        } else if !(razao() + f64_em(0x967880) >= l0) {
+        } else if !(razao() + read_f64_at(0x967880) >= l0) {
             n += 250;
         }
     }
@@ -323,7 +323,7 @@ unsafe extern "C" fn staff_is_best_favoured_candidate(pessoa: usize, clube: usiz
     if idade(0xae2c90, dbs2_u32(pessoa + 0x3e), dbs2_u32(pessoa + 0x42)) < id % 28 + 14 {
         return 0;
     }
-    let alvo = match dbs2_nota(pessoa, clube, candidato) {
+    let alvo = match favourite_colleague_score(pessoa, clube, candidato) {
         Some(n) => n,
         None => return 0,
     };
@@ -332,7 +332,7 @@ unsafe extern "C" fn staff_is_best_favoured_candidate(pessoa: usize, clube: usiz
         if o == 0 {
             continue;
         }
-        if let Some(n) = dbs2_nota(pessoa, clube, o) {
+        if let Some(n) = favourite_colleague_score(pessoa, clube, o) {
             if n > alvo {
                 return 0; // há um melhor
             }
@@ -344,7 +344,7 @@ unsafe extern "C" fn staff_is_best_favoured_candidate(pessoa: usize, clube: usiz
 unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(pessoa: usize, clube: usize, candidato: usize) -> u8 {
     // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
     // cópia não conta, se alguma delas sortear
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u8>(%%I2%%);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa, clube, candidato),
         || crate::aleatorio::sem_contar(|| staff_is_best_favoured_candidate(pessoa, clube, candidato)));
     PLACAR.registrar(igual && r == x, || format!("staff_is_best_favoured_candidate({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, candidato, r, x, mo, mr));

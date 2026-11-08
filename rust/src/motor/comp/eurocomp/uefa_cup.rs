@@ -5,12 +5,16 @@ use super::*;
 
 
 
-/// Os inscritos menos a metade (truncada, com sinal) dos clubes da preliminar (+0xb2, byte com sinal).
-pub(crate) unsafe fn cqs9_conta(this: usize, k: i16) -> i32 {
+/// Entrants k minus half (truncated) the preliminary-round count (+0xb2).
+///
+/// [pt] Os inscritos menos a metade (truncada, com sinal) dos clubes da preliminar (+0xb2, byte com sinal).
+pub(crate) unsafe fn entrants_minus_half_prelim(this: usize, k: i16) -> i32 {
     k as i32 - (*((this + 0xb2) as *const i8) as i32) / 2
 }
 
-/// { 0x902b90 } (thiscall, ret 0, uefa_cup.cpp; do construtor, 2001-000): `UefaCup::build_entrants()`: +0x3e = 145; a
+/// UefaCup::build_entrants (0x902b90): builds and sorts the 118 entrants list and the Intertoto list; 1, 0 or -1.
+///
+/// [pt] { 0x902b90 } (thiscall, ret 0, uefa_cup.cpp; do construtor, 2001-000): `UefaCup::build_entrants()`: +0x3e = 145; a
 /// lista (calloc 0x945501(161, 6) em +0xa7; sem memória, a caixa da linha 0x1bf e −1); +0xb2 = 0.
 /// 1) Pela ordem da tabela dos clubes, os que as regras europeias puseram na Copa da UEFA (+0x1db = [0x9cf6f0]), cada um
 ///    com a classe = o seu coeficiente (+0x1df) e a situação 0; os de coeficiente 10 ou mais (com sinal) contam em +0xb2
@@ -24,14 +28,14 @@ pub(crate) unsafe fn cqs9_conta(this: usize, k: i16) -> i32 {
 /// os inscritos + 27, a lista dos que vêm da Intertoto [inferência] (0x944e46 de +0x38 × 6 em +0x14; sem memória, a
 /// caixa da linha 0x21a e 0) com os inscritos de classe 1, cada um com a classe 3, contados em +0x36; +0x3e = +0x38;
 /// devolve 1. Com +0xb2 ímpar ou negativo, 0.
-pub(crate) unsafe fn cqs9_inscritos(this: usize) -> i32 {
+pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     const F: usize = 0xaa19e0;
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x91);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let l = zerada(0xa1, 6);
     write_u32_from_usize(this + 0xa7, l);
     if l == 0 {
-        aviso_em(F, 0x1bf);
+        show_error_at(F, 0x1bf);
         return -1;
     }
     *((this + 0xb2) as *mut u8) = 0;
@@ -57,12 +61,12 @@ pub(crate) unsafe fn cqs9_inscritos(this: usize) -> i32 {
             }
         }
     }
-    if cqs9_conta(this, k) < 0x76 {
+    if entrants_minus_half_prelim(this, k) < 0x76 {
         let lim = |_: ()| (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
         let mut j: i16 = 0;
         if lim(()) > 0 {
             loop {
-                if cqs9_conta(this, k) >= 0x76 { // cqs9: completa até 118
+                if entrants_minus_half_prelim(this, k) >= 0x76 { // cqs9: completa até 118
                     break;
                 }
                 let c = base + j as u16 as usize * 0x245;
@@ -83,7 +87,7 @@ pub(crate) unsafe fn cqs9_inscritos(this: usize) -> i32 {
             }
         }
     }
-    while cqs9_conta(this, k) > 0x76 {
+    while entrants_minus_half_prelim(this, k) > 0x76 {
         write_u32_from_usize(read_u32_as_usize(this + 0xa7) + k as i32 as usize * 6 - 6, 0);
         k = k.wrapping_sub(1);
     }
@@ -101,7 +105,7 @@ pub(crate) unsafe fn cqs9_inscritos(this: usize) -> i32 {
     let t = alocar((n as i32 * 6) as u32);
     write_u32_from_usize(this + 0x14, t);
     if t == 0 {
-        aviso_em(F, 0x21a);
+        show_error_at(F, 0x21a);
         return 0;
     }
     if k > 0 {
@@ -121,13 +125,13 @@ pub(crate) unsafe fn cqs9_inscritos(this: usize) -> i32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
-    cqs9_inscritos(this)
+    uefa_cup_build_entrants(this)
 }
 
 /// Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
 pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_ENTRANTS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_ENTRANTS);
     let (a0, t0) = (read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14));
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut reg: Vec<(usize, usize)> = vec![(this + 0x36, 4), (this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)];
@@ -141,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i
         write_u32_from_usize(this + 0x14, t0);
         r
     }, || {
-        let r = cqs9_inscritos(this);
+        let r = uefa_cup_build_entrants(this);
         lr.set((read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14)));
         write_u32_from_usize(this + 0xa7, lo.get().0);
         write_u32_from_usize(this + 0x14, lo.get().1);
@@ -171,7 +175,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i
 ///
 /// [pt] { 0x9025c0 } (thiscall, ret 0x10, uefa_cup.cpp; a virtual +0x3c da Copa da UEFA): `UefaCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 9, extra = 0; a tabela (0x944e46 de 0x3a8;
-/// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `cqq10_uefa_rodadas` e rodadas = as gravadas. Fora da −1,
+/// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `uefa_cup_rounds` e rodadas = as gravadas. Fora da −1,
 /// 0.
 pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     if fase as u8 != 0xff {
@@ -185,22 +189,22 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(0x3a8);
     if t == 0 {
-        aviso_em(0xaa19e0, 0xe0);
+        show_error_at(0xaa19e0, 0xe0);
         return 0;
     }
     crate::comparacao::ramo("cqq_10 tabela da uefa");
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    let (tab, n) = cqq10_uefa_rodadas(*((this + 0xb2) as *const i8));
+    let (tab, n) = uefa_cup_rounds(*((this + 0xb2) as *const i8));
     for (i, r) in tab[..n].iter().enumerate() {
-        cql10_rodada(t, i as u32, r, ano);
+        eng_cc_cup_write_cup_round(t, i as u32, r, ano);
     }
     *rodadas = n as i16;
     t
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_UEFA_CUP_CREATE_ROUND_TABLE);
-    cql10_comparar("uefa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_UEFA_CUP_CREATE_ROUND_TABLE);
+    eng_cc_cup_compare_round_table("uefa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| uefa_cup_create_round_table(this, fase, r, e, s))
 }
 
@@ -226,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_UEFA_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_UEFA_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }

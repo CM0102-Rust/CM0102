@@ -2,7 +2,7 @@
 
 /// Os campos de byte e palavra de uma eliminatória (a virtual +0x8c, set_up_rules, na liga do grupo): (deslocamento,
 /// tamanho 1 ou 2, valor). Os pontos da vitória (+0xc2) e a categoria (+0xc4) vêm à parte, para as mutações.
-unsafe fn cqj12_campos(this: usize, campos: &[(usize, u8, u32)]) {
+unsafe fn wc_europe_league_write_rule_fields(this: usize, campos: &[(usize, u8, u32)]) {
     for &(o, n, v) in campos {
         if n == 1 {
             *((this + o) as *mut u8) = v as u8;
@@ -14,7 +14,7 @@ unsafe fn cqj12_campos(this: usize, campos: &[(usize, u8, u32)]) {
 
 /// A primeira palavra da Date(dia, mês, ano da competição +0x40, dia da semana) (0x549f70: push semana; push ano; push
 /// mês; push dia; lea ecx, local -> thiscall, ret 0x10).
-unsafe fn cqj12_data(this: usize, dia: u32, mes: u32, semana: u32) -> u16 {
+unsafe fn comp_date_word(this: usize, dia: u32, mes: u32, semana: u32) -> u16 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
     let mut d = [0u8; 8];
     // ponytail: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
@@ -24,7 +24,7 @@ unsafe fn cqj12_data(this: usize, dia: u32, mes: u32, semana: u32) -> u16 {
 
 /// O fim comum: +0xb6 = a palavra da data, +0xb8 = `b8`, e a tabela das rodadas da virtual +0x3c (push 0; push &+0x3a;
 /// push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
-unsafe fn cqj12_fim(this: usize, palavra: u16, b8: u16) -> u32 {
+unsafe fn finish_rules_setup(this: usize, palavra: u16, b8: u16) -> u32 {
     core::ptr::write_unaligned((this + 0xb6) as *mut u16, palavra);
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, b8);
     let vt = core::ptr::read_unaligned(this as *const usize);
@@ -35,8 +35,8 @@ unsafe fn cqj12_fim(this: usize, palavra: u16, b8: u16) -> u32 {
 }
 
 /// O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
-unsafe fn cqj12_confere(nome: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
-    let palavra = cqj12_data(this, data.0, data.1, data.2);
+unsafe fn check_qualifier_rules(nome: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
+    let palavra = comp_date_word(this, data.0, data.1, data.2);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
@@ -62,18 +62,18 @@ const CQJ12_EUROPA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x4a, 1, 3), (0x3c,
 /// substituições, começo em 25 do mês 2 num dia da semana 5; depois a tabela das rodadas.
 unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_12 regras da europa");
-    cqj12_campos(this, &CQJ12_EUROPA);
+    wc_europe_league_write_rule_fields(this, &CQJ12_EUROPA);
     *((this + 0xc2) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias europeias
     *((this + 0xc4) as *mut u8) = 0xa; // cqj12: a categoria dos jogos das eliminatórias europeias
     let dia = 0x19; // cqj12: o dia do começo das eliminatórias europeias
-    let palavra = cqj12_data(this, dia, 2, 5);
-    cqj12_fim(this, palavra, 0)
+    let palavra = comp_date_word(this, dia, 2, 5);
+    finish_rules_setup(this, palavra, 0)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqj12_confere("wc_europe_league_set_up_rules", this, &CQJ12_EUROPA, (0x19, 2, 5), 0, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    check_qualifier_rules("wc_europe_league_set_up_rules", this, &CQJ12_EUROPA, (0x19, 2, 5), 0, || o(this))
 }
 
 const CQJ12_SUL: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1, 2), (0xc2, 1, 3), (0xc3, 1, 1), (0xc4, 1, 0xa), (0xab, 2, 0),
@@ -93,18 +93,18 @@ unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this: usize) ->
         }
     }
     crate::comparacao::ramo("cqj_12 regras da america do sul");
-    cqj12_campos(this, &CQJ12_SUL);
+    wc_europe_league_write_rule_fields(this, &CQJ12_SUL);
     *((this + 0xc2) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias sul-americanas
     *((this + 0xbe) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: as vagas diretas da América do Sul
     let dia = 0x19; // cqj12: o dia do começo da eliminatória sul-americana
-    let palavra = cqj12_data(this, dia, 0, 5);
-    cqj12_fim(this, palavra, 0)
+    let palavra = comp_date_word(this, dia, 0, 5);
+    finish_rules_setup(this, palavra, 0)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras e
 // as vagas diretas (4 − +0xef − +0xee, com o +0xef que a própria rotina copia, calculado antes).
 unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_921040(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = core::ptr::read_unaligned(0xadadfc as *const usize);
     let mut ef = *((this + 0xef) as *const u8);
     if lista != 0 {
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_921040(this: 
         }
     }
     let vagas = 4u8.wrapping_sub(ef).wrapping_sub(*((this + 0xee) as *const u8));
-    let r = cqj12_confere("wc_europe_league_set_up_rules_921040", this, &CQJ12_SUL, (0x19, 0, 5), 0, || o(this));
+    let r = check_qualifier_rules("wc_europe_league_set_up_rules_921040", this, &CQJ12_SUL, (0x19, 0, 5), 0, || o(this));
     let (lido_ef, lido_be) = (*((this + 0xef) as *const u8), *((this + 0xbe) as *const u8));
     PLACAR.registrar(lido_ef == ef && lido_be == vagas, || format!("wc_europe_league_set_up_rules_921040({:#x}) +0xef {} previsto {} vagas {} previstas {}", this, lido_ef, ef, lido_be, vagas));
     r
@@ -128,14 +128,14 @@ const CQJ12_ASIA: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2
 /// 3), um classificado por grupo, seleções, começo em 25 do mês 2 num dia da semana 5, +0xb8 = 1.
 unsafe extern "thiscall" fn wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_12 regras da asia");
-    cqj12_campos(this, &CQJ12_ASIA);
+    wc_europe_league_write_rule_fields(this, &CQJ12_ASIA);
     let dia = 0x19; // cqj12: o dia do começo das eliminatórias asiáticas
-    let palavra = cqj12_data(this, dia, 2, 5);
-    cqj12_fim(this, palavra, 1)
+    let palavra = comp_date_word(this, dia, 2, 5);
+    finish_rules_setup(this, palavra, 1)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqj12_confere("wc_europe_league_set_up_rules_912eb0", this, &CQJ12_ASIA, (0x19, 2, 5), 1, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    check_qualifier_rules("wc_europe_league_set_up_rules_912eb0", this, &CQJ12_ASIA, (0x19, 2, 5), 1, || o(this))
 }

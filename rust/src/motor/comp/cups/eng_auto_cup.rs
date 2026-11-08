@@ -5,19 +5,26 @@ use super::*;
 
 
 
-/// O clube `c` está na competição de id [`g`] (+0x57 a divisão, ponteiro para o registro; +0 o id)?
-pub(crate) unsafe fn cqs5_na(c: usize, g: usize) -> bool {
+/// True if the club's division (+0x57) has the competition id in global g.
+///
+/// [pt] O clube `c` está na competição de id [`g`] (+0x57 a divisão, ponteiro para o registro; +0 o id)?
+pub(crate) unsafe fn eng_auto_cup_is_in_comp(c: usize, g: usize) -> bool {
     let l = read_u32_as_usize(c + 0x57);
     l != 0 && read_u32_as_usize(l) == read_u32_as_usize(g)
 }
 
-/// Põe o clube `c` na vaga `k` da lista (+0xb2, relida a cada vez) e conta.
-pub(crate) unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
+/// Puts club c in the next slot of the list at +0xb2 and increments the count.
+///
+/// [pt] Põe o clube `c` na vaga `k` da lista (+0xb2, relida a cada vez) e conta.
+pub(crate) unsafe fn push_section_club(this: usize, k: &mut i32, c: usize) {
     *k += 1;
     write_u32_from_usize(read_u32_as_usize(this + 0xb2) + (*k as usize - 1) * 4, c);
 }
 
-/// { 0x56b730 } (thiscall, ret 0, eng_auto_cup.cpp; da virada, n = 1 até 2002-06-01): `EngAutoCup::select_section_clubs()`:
+/// EngAutoCup::select_section_clubs (0x56b730): 56 League Trophy clubs from the lower English divisions and Conference,
+/// then sorts by stadium latitude and each half by reputation; returns 1 if full.
+///
+/// [pt] { 0x56b730 } (thiscall, ret 0, eng_auto_cup.cpp; da virada, n = 1 até 2002-06-01): `EngAutoCup::select_section_clubs()`:
 /// os 56 clubes do Troféu da Liga (+0xb6 = 0x38) numa lista (0x944e46 de 0xe0 em +0xb2; sem memória, a caixa da linha
 /// 0x24c e 0), em quatro passos, cada um até a lista encher (conta == +0xb6):
 /// 1) pela ordem da tabela dos clubes ([0xae23b4], [0xae235c] clubes), os das divisões [0x9cf5c4] e [0x9cf5c8] (a segunda
@@ -32,13 +39,13 @@ pub(crate) unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
 ///    -> cdecl; sorteia), e deles os primeiros que faltam.
 /// Cheia, a lista é ordenada pela latitude da cidade do estádio (qsort 0x945333 com 0x53fd40) e cada metade (a do Norte e
 /// a do Sul [inferência]) pela reputação, da menor para a maior (qsort com 0x4b0810); devolve 1. Sem encher, 0.
-pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
+pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     write_u32_from_usize(this + 0xb6, 0x38);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xe0);
     write_u32_from_usize(this + 0xb2, l);
     if l == 0 {
-        aviso_em(0x9c4180, 0x24c);
+        show_error_at(0x9c4180, 0x24c);
         return 0;
     }
     let base = read_u32_as_usize(G_CLUB_TABLE);
@@ -50,8 +57,8 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
     if n > 0 {
         loop {
             let c = base + i as u16 as usize * 0x245;
-            if cqs5_na(c, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) || cqs5_na(c, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) {
-                cqs5_por(this, &mut k, c);
+            if eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) || eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) {
+                push_section_club(this, &mut k, c);
             }
             if cheia(k) {
                 break;
@@ -70,9 +77,9 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
         loop {
             let c = base + i as u16 as usize * 0x245;
             let antes = read_u32_as_usize(c + 0x5b);
-            if cqs5_na(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) {
+            if eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) {
                 crate::comparacao::ramo("cqs_5 rebaixado para a conference");
-                cqs5_por(this, &mut k, c); // cqs5: o rebaixado entra
+                push_section_club(this, &mut k, c); // cqs5: o rebaixado entra
                 achado = c;
                 break;
             }
@@ -99,10 +106,10 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
                         }
                         let c = base + i as u16 as usize * 0x245;
                         let antes = read_u32_as_usize(c + 0x5b);
-                        if antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) && cqs5_na(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) {
+                        if antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) && eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) {
                             let v = *((c + 0x5f) as *const i8);
                             if ((cat == 6 && v <= cat) || v == cat) && c != 0 && c != achado {
-                                cqs5_por(this, &mut k, c);
+                                push_section_club(this, &mut k, c);
                             }
                         }
                         i = i.wrapping_add(1);
@@ -125,7 +132,7 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
         if n > 0 {
             loop {
                 let c = base + i as u16 as usize * 0x245;
-                if cqs5_na(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && achado != c {
+                if eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && achado != c {
                     local[m as u8 as usize] = c;
                     m = m.wrapping_add(1);
                     if m == 0x1e {
@@ -145,7 +152,7 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
                 loop {
                     let c = base + j as u16 as usize * 0x245;
                     let nac = read_u32_as_usize(c + 0x53);
-                    if nac != 0 && read_u32_as_usize(nac) == read_u32_as_usize(KEY_NATION_ENGLAND) && !cqs5_na(c, KEY_CLUB_COMP_A_LOWER_DIVISION) {
+                    if nac != 0 && read_u32_as_usize(nac) == read_u32_as_usize(KEY_NATION_ENGLAND) && !eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_A_LOWER_DIVISION) {
                         local[m as u8 as usize] = c;
                         m = m.wrapping_add(1);
                         if m == 0x1e {
@@ -164,7 +171,7 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
         embaralhar(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (read_i16(this + 0xb6).wrapping_sub(k as i16)) as u16 as u32);
         let mut a: i16 = 0;
         while k < read_u32_as_usize(this + 0xb6) as i32 {
-            cqs5_por(this, &mut k, local[a as u16 as usize]);
+            push_section_club(this, &mut k, local[a as u16 as usize]);
             a = a.wrapping_add(1);
         }
     }
@@ -194,19 +201,19 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
 /// ordenados pela reputação e com os melhores embaralhados); a lista é tackle em Norte e Sul pela latitude da cidade
 /// do estádio e cada metade vai da menor reputação para a maior
 pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 {
-    cqs5_selecao(this)
+    eng_auto_cup_select_section_clubs(this)
 }
 
 /// Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
 /// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
 /// caso em que ela lê a dword sem valor da pilha), só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SELECT_SECTION_CLUBS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SELECT_SECTION_CLUBS);
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let tem_rebaixado = (0..read_u32_as_usize(G_CLUB_COUNT) as i32).any(|i| {
         let c = base + i as usize * 0x245;
         let antes = read_u32_as_usize(c + 0x5b);
-        cqs5_na(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION)
+        eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION)
     });
     if !tem_rebaixado {
         return o(this);
@@ -222,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize
         write_u32_from_usize(this + 0xb2, antes);
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| cqs5_selecao(this));
+        let r = crate::aleatorio::sem_contar(|| eng_auto_cup_select_section_clubs(this));
         lr.set(read_u32_as_usize(this + 0xb2));
         write_u32_from_usize(this + 0xb2, lo.get());
         r
@@ -258,7 +265,7 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let times = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
-        return aviso_em(0x9c4180, 0x2e9);
+        return show_error_at(0x9c4180, 0x2e9);
     }
     let mut i = 0i32;
     while i < read_i16(this + 0x3e) as i32 {
@@ -283,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     soltar(times);
     soltar(tabela);
     if read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
-        return aviso_em(0x9c4180, 0x300);
+        return show_error_at(0x9c4180, 0x300);
     }
     crate::comparacao::ramo("cqs_5 fase das chaves do trofeu");
     write_u32_from_usize(this + 0x30, 0);
@@ -291,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
 
 /// Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn comparar_create_section_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECTION_STAGE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECTION_STAGE);
     o(this);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc));
     PLACAR.registrar(f != 0 && read_u32_as_usize(this + 0x30) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, read_u32_as_usize(this + 0x30) as i32));
@@ -307,7 +314,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_section_stage(this: usize
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     let fase = read_u32_as_usize(this + 0x30) as i32;
     if fase >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x9c4180, 0x314);
+        return show_error_at(0x9c4180, 0x314);
     }
     let fase = fase + 1;
     write_u32_from_usize(this + 0x30, fase as usize);
@@ -320,7 +327,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
 
 /// Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_ADVANCE_STAGE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_ADVANCE_STAGE);
     let antes = read_u32_as_usize(this + 0x30) as i32;
     let ultima = antes >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
@@ -333,9 +340,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this:
 
 
 
-/// O primeiro clube da lista de inscritos `l` (entradas de 6 bytes: +0 o clube, +5 a situação) com a situação `s`, entre
+/// First club among the first n 6-byte entrants whose status (+5) is s, or None.
+///
+/// [pt] O primeiro clube da lista de inscritos `l` (entradas de 6 bytes: +0 o clube, +5 a situação) com a situação `s`, entre
 /// as `n` primeiras (n = +0x3e da copa, word com sinal); sem ele, None.
-pub(crate) unsafe fn cqs6_vivo(l: usize, n: i32, s: u8) -> Option<usize> {
+pub(crate) unsafe fn first_entrant_with_status(l: usize, n: i32, s: u8) -> Option<usize> {
     (0..n.max(0) as usize).find(|&i| *((l + i * 6 + 5) as *const u8) == s).map(|i| read_u32_as_usize(l + i * 6))
 }
 
@@ -358,12 +367,12 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let l = alocar(8);
     if l == 0 {
-        return aviso_em(0x9c4180, 0x337);
+        return show_error_at(0x9c4180, 0x337);
     }
-    if let Some(c) = cqs6_vivo(read_u32_as_usize(this + 0xa7), read_i16(this + 0x3e) as i32, 1) { // cqs6: o finalista da copa
+    if let Some(c) = first_entrant_with_status(read_u32_as_usize(this + 0xa7), read_i16(this + 0x3e) as i32, 1) { // cqs6: o finalista da copa
         write_u32_from_usize(l, c);
     }
-    if let Some(c) = cqs6_vivo(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc)) + 0xa7), read_i16(this + 0x3e) as i32, 1) { // cqs6: o finalista das chaves
+    if let Some(c) = first_entrant_with_status(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc)) + 0xa7), read_i16(this + 0x3e) as i32, 1) { // cqs6: o finalista das chaves
         write_u32_from_usize(l + 4, c);
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -384,7 +393,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     soltar(tabela);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
     if f == 0 {
-        return aviso_em(0x9c4180, 0x35a);
+        return show_error_at(0x9c4180, 0x35a);
     }
     crate::comparacao::ramo("cqs_6 final do trofeu");
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
@@ -395,7 +404,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
 /// Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
 /// achados antes, quando há fase).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_CREATE_FINAL_STAGE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_CREATE_FINAL_STAGE);
     o(this);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
     PLACAR.registrar(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
@@ -418,12 +427,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(
 /// dword do byte da posição com lixo da pilha em cima; a 0x4a2540 só lê o byte). O vetor é liberado.
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     if read_u32_as_usize(this + 8) == 0 {
-        return aviso_em(0x9c4180, 0x3bb);
+        return show_error_at(0x9c4180, 0x3bb);
     }
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let v = alocar(((read_i16(this + 0x3e) as i32) << 3) as u32);
     if v == 0 {
-        return aviso_em(0x9c4180, 0x3c3);
+        return show_error_at(0x9c4180, 0x3c3);
     }
     let mut d: i16 = 0;
     while d < read_i16(this + 0x3e) {
@@ -476,7 +485,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
 
 // ponytail: grava nas estatísticas da copa (Comp_Stats, que acha ou acrescenta a entrada do clube: aloca); só a original
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_rank_teams(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_RANK_TEAMS)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_RANK_TEAMS)(this)
 }
 
 /// rule: the League Trophy (Auto Windscreens) has two 28-club sections; the second takes the last 28 of the 56 chosen
@@ -488,12 +497,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_rank_teams(this: us
 /// escolhidos (o vetor em +0xb2, já ordenado pela latitude e pela reputação: a chave do sul [inferência]), na ordem,
 /// classe e situação 0
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_collect_entrants(this: usize) -> i32 {
-    cqm10_trofeu(this).0
+    collect_auto_cup_entrants(this).0
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_collect_entrants(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_AUTO_CUP_COLLECT_ENTRANTS);
-    cqm10_comparar("eng_auto_cup_collect_entrants", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm10_trofeu(this), |_, n| n.max(0) as usize * 6)
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_AUTO_CUP_COLLECT_ENTRANTS);
+    eng_cc_cup_compare_entrant_list("eng_auto_cup_collect_entrants", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || collect_auto_cup_entrants(this), |_, n| n.max(0) as usize * 6)
 }
 
 /// rule: the LDV Vans Trophy has two sections (stages −1 and 0, North and South [inference], ids 0x41d and 0x41e) of
@@ -504,13 +513,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_collect_entrants(th
 /// Original: `EngAutoCup::create_round_table` (0x56ade0, eng_auto_cup.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x56ade0 } (thiscall, ret 0x10, eng_auto_cup.cpp; a virtual +0x3c do LDV Vans Trophy): `EngAutoCup::
-/// create_round_table(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp11_trofeu_fase`.
+/// create_round_table(fase, &rodadas, &extra, &é_liga)`: a fase de `ldv_trophy_stage`.
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqp11_trofeu_fase(fase), rodadas, extra, liga, 0x9c4180)
+    create_round_table(this, ldv_trophy_stage(fase), rodadas, extra, liga, 0x9c4180)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_AUTO_CUP_CREATE_ROUND_TABLE);
-    cqp11_comparar("eng_auto_cup_create_round_table", fase, cqp11_trofeu_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_AUTO_CUP_CREATE_ROUND_TABLE);
+    asia_club_champ_compare_round_table("eng_auto_cup_create_round_table", fase, ldv_trophy_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| eng_auto_cup_create_round_table(this, fase, r, e, l))
 }

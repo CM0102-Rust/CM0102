@@ -17,12 +17,12 @@ unsafe fn cqd6_pd(a: usize, v: usize) {
 }
 
 /// O registro do clube `i` (0x245 bytes em [0xae23b4]; a original calcula base + i + 580·i).
-unsafe fn cqd6_clube(i: usize) -> usize {
+unsafe fn fix_man_club_by_index(i: usize) -> usize {
     cqd6_d(0xae23b4).wrapping_add(i).wrapping_add(i.wrapping_mul(0x244))
 }
 
 /// O clube tem técnico humano (0x600a50: push 0; push 0; push 1; push 1; push clube; add esp, 0x14 -> cdecl).
-unsafe fn cqd6_humano(clube: usize) -> bool {
+unsafe fn fix_man_is_human_club(clube: usize) -> bool {
     let f: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     f(clube, 1, 1, 0, 0) != 0
 }
@@ -72,8 +72,8 @@ unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
         cqd6_pd(l + 0xa, cqd6_d(l + 2));
         let mut n = proximo(l);
         while n != 0 {
-            let ca = cqd6_clube(vaga(n, 0) as usize);
-            let cb = cqd6_clube(vaga(n, 1) as usize);
+            let ca = fix_man_club_by_index(vaga(n, 0) as usize);
+            let cb = fix_man_club_by_index(vaga(n, 1) as usize);
             if vaga(n, 0xe) != 0 {
                 avisar(cqd6_d(0xb7431c), n, ca);
             }
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
                         if cqd6_d(f) != cqd6_d(0x9cf684) || cqd6_b(f + 0x3a) != 1 {
                             break;
                         }
-                        if !cqd6_humano(cqd6_d(f + 0x1c)) && !cqd6_humano(cqd6_d(f + 0x20)) {
+                        if !fix_man_is_human_club(cqd6_d(f + 0x1c)) && !fix_man_is_human_club(cqd6_d(f + 0x20)) {
                             anterior(lista);
                             crate::comparacao::ramo("cqd_6 amistoso descartado");
                             tirar(lista, no); // cqd6: o amistoso de ontem sai da lista
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
 /// das filas são liberados e os jogos de reservas entram no calendário: não roda duas vezes). Confere o que a rotina
 /// garante: a fila das notícias some ([+0x1128] = 0 se havia) e a lista das conferências fica vazia.
 unsafe extern "thiscall" fn comparar_fix_man_daily_update(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let havia = cqd6_d(this + 0x1128);
     let antes = cqd6_w(0xae2a48);
     o(this);
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn get_fixture_list(this: usize, ano: u32, dia: u32, fa
             let r = if m == 0 { 0 } else { construir(m, ano, b, 0) };
             cqd6_pd(b + 0x112c, r);
             if r == 0 {
-                aviso_em(0x9cc208, 0x681);
+                show_error_at(0x9cc208, 0x681);
                 return 0;
             }
         } else if cqd6_w(o + 0x1130) != ano as i16 {
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn get_fixture_list(this: usize, ano: u32, dia: u32, fa
 /// O comparador da lista do dia: com o ano no bloco ou no outro bloco, as duas (só leem) e a mesma lista; senão só a
 /// original (ponytail: troca o bloco do outro ano, que grava e lê o arquivo, ou aloca um bloco novo).
 unsafe extern "thiscall" fn comparar_get_fixture_list(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(%%I1%%);
     let outro = cqd6_d(this + 0x112c);
     let direto = cqd6_w(this + 0x1130) == ano as i16 || (outro != 0 && cqd6_w(outro + 0x1130) == ano as i16);
     if !direto {
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn load_fixtures(this: usize) {
     }
     let mut conta = 0i32;
     if ler(&mut conta as *mut i32 as usize, 4, 1, f) != 1 {
-        aviso_em(0x9cc208, 0x730);
+        show_error_at(0x9cc208, 0x730);
         fechar(f);
         return;
     }
@@ -245,23 +245,23 @@ unsafe extern "thiscall" fn load_fixtures(this: usize) {
     let mut i = 0i32;
     while i < conta {
         if ler(j, 0x4f, 1, f) != 1 {
-            aviso_em(0x9cc208, 0x73e);
+            show_error_at(0x9cc208, 0x73e);
             fechar(f);
             return;
         }
         let a = cqd6_d(j + 0xc);
         if a as u32 == u32::MAX {
-            erro_em(0x9cc208, 0x74b);
+            fatal_error_at(0x9cc208, 0x74b);
         }
-        cqd6_pd(j + 0x1c, cqd6_clube(a));
+        cqd6_pd(j + 0x1c, fix_man_club_by_index(a));
         let b = cqd6_d(j + 0x10);
         if b as u32 == u32::MAX {
-            erro_em(0x9cc208, 0x751);
+            fatal_error_at(0x9cc208, 0x751);
         }
-        cqd6_pd(j + 0x20, cqd6_clube(b));
+        cqd6_pd(j + 0x20, fix_man_club_by_index(b));
         let c = cqd6_d(j);
         if c as u32 == u32::MAX {
-            erro_em(0x9cc208, 0x758);
+            fatal_error_at(0x9cc208, 0x758);
         }
         let comp = cqd6_d(0xae23d0).wrapping_add(c.wrapping_mul(0x6b));
         cqd6_pd(j + 0x14, comp);
@@ -277,7 +277,7 @@ unsafe extern "thiscall" fn load_fixtures(this: usize) {
         let lista = cqd6_d(cqd6_d(this + (dia * 3 + cqd6_b(j + 0x3f) as usize) * 4) + k as isize as usize * 4);
         crate::comparacao::ramo("cqd_6 jogo carregado");
         if acrescentar(lista, j, 0x4f) == 0 {
-            erro_em(0x9cc208, 0x785);
+            fatal_error_at(0x9cc208, 0x785);
         }
         i += 1;
     }
@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn load_fixtures(this: usize) {
 /// O comparador da carga dos jogos do ano: só a original (ponytail: lê o arquivo e aloca os nós das listas; não roda
 /// duas vezes). Confere o nome gravado em +0x1133.
 unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let esperado = format!("fixtures_{}.tmp", cqd6_w(this + 0x1130) as u16);
     let s = core::slice::from_raw_parts((this + 0x1133) as *const u8, esperado.len() + 1);
     PLACAR.registrar(&s[..esperado.len()] == esperado.as_bytes() && s[esperado.len()] == 0,

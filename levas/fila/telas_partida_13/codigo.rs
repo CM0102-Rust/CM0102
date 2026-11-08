@@ -15,10 +15,10 @@ unsafe extern "C" fn refresh_possession_bar() {
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
-    let p0 = parametro_da_tela(0);
-    let copia = parametro_da_tela(0x1d);
-    let item = parametro_da_tela(0x21) as u32;
-    let altura = parametro_da_tela(0x22) as i32;
+    let p0 = get_screen_param(0);
+    let copia = get_screen_param(0x1d);
+    let item = get_screen_param(0x21) as u32;
+    let altura = get_screen_param(0x22) as i32;
     if p0 == 0 {
         return;
     }
@@ -42,20 +42,20 @@ unsafe extern "C" fn refresh_possession_bar() {
             fundo(sm, item.wrapping_add(5), if p < 0x32 { c2 } else { c1 });
         }
     }
-    guardar_estado_da_partida(copia, e);
+    save_match_snapshot(copia, e);
 }
 
 /// A linha (0x49 bytes) do jogador `idx` do lado `lado` no estado da partida `e` (+0x11f + 0x71).
-fn linha_do_jogador_na_partida(e: usize, lado: u8, idx: u8) -> usize {
+fn match_player_row(e: usize, lado: u8, idx: u8) -> usize {
     (e as isize + lado as i8 as isize * 0x625 + idx as i8 as isize * 0x49) as usize
 }
 
 /// A visão geral avisa erro (caixa "Error" de match_screens.cpp e segue)? Na partida, com o período
 /// [estado + 0x4f] fora dos seis conhecidos; ou com um lance (até 50, até o lado 0xff) de tipo fora de
 /// 1 a 8. Nesses casos a cópia e o comparador rodam a original.
-unsafe fn visao_geral_avisa_erro() -> bool {
-    let p0 = parametro_da_tela(0);
-    let e = if p0 != 0 { core::ptr::read_unaligned((p0 + 0x5f) as *const usize) } else { parametro_da_tela(0x20) };
+unsafe fn overview_would_error() -> bool {
+    let p0 = get_screen_param(0);
+    let e = if p0 != 0 { core::ptr::read_unaligned((p0 + 0x5f) as *const usize) } else { get_screen_param(0x20) };
     if p0 != 0 && ![0x1ef, 0x3de, 0, 0x483, 0x528, 1].contains(&core::ptr::read_unaligned((e + 0x4f) as *const u16)) {
         return true;
     }
@@ -83,8 +83,8 @@ unsafe fn visao_geral_avisa_erro() -> bool {
 /// lesão; os minutos do mesmo jogador e tipo juntos, quebrando a linha com mais de 10 letras), a
 /// contest de pênaltis, o árbitro, o público, o tempo, "Match Abandoned" e a barra da posse (0x71d9e0).
 unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
-    if visao_geral_avisa_erro() {
-        return orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%)(topo, base);
+    if overview_would_error() {
+        return original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%)(topo, base);
     }
     let txt: TextoDoGerente = core::mem::transmute(0x803fd0usize);
     let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
@@ -120,8 +120,8 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
 
     let mut colunas3: [u8; 4] = [1, 1, 1, 0];
     let mut colunas4: [u8; 4] = [2, 1, 2, 1];
-    let p0 = parametro_da_tela(0);
-    let periodo = parametro_da_tela(1) as u8;
+    let p0 = get_screen_param(0);
+    let periodo = get_screen_param(1) as u8;
     let base0 = *base;
     *base = base0 - 0x28;
     let (part, e);
@@ -149,7 +149,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
             }
         };
         match rotulo {
-            0 => aviso_em(0xa161d4, if periodo == 4 { 0x1d49 } else { 0x1d5e }),
+            0 => show_error_at(0xa161d4, if periodo == 4 { 0x1d49 } else { 0x1d5e }),
             0xa167b8 => {
                 texto(BUF, rotulo, TEXTO_VAZIO);
             }
@@ -158,48 +158,48 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
             }
         }
         let t = *topo;
-        txt(sm, 0x6e, z(t), 0x30c, z(t + 0x23), 2, 0, 0xc, 3, cor_em(0xaebdec), BUF, 1);
+        txt(sm, 0x6e, z(t), 0x30c, z(t + 0x23), 2, 0, 0xc, 3, colour_word(0xaebdec), BUF, 1);
         *topo += 0x28;
         part = p0 + 4;
         if core::ptr::read_unaligned((e + 0x53) as *const u32) == 0 {
             // a barra da posse
             let b = *base;
-            lista(display_do_humano(), 0x6e, z(b - 0x36), 0x30c, z(b), 1, 0, 1, 0, 2, 0, MAX);
+            lista(current_human_display(), 0x6e, z(b - 0x36), 0x30c, z(b), 1, 0, 1, 0, 2, 0, MAX);
             // 0x53b640 grava u16; o resto da variável da original é lixo da pilha (só a palavra vale)
             let clube = |k: usize| (*(0xae23b4 as *const usize)).wrapping_add(u(e + k).wrapping_mul(0x245));
             let (mut c68, mut c58, mut c5c, mut c64) = (0u32, 0u32, 0u32, 0u32);
             cores_do_clube(clube(0), b8(e + 0x152) as u32, &mut c68, &mut c58);
             cores_do_clube(clube(4), b8(e + 0x777) as u32, &mut c5c, &mut c64);
             let b = *base;
-            let r = txt(sm, 0x96, z(b - 0x2d), 0x2e4, z(b - 0xa), 0x30, cor_em(0xae317e), 0xc, 1, cor_em(0xae3184), 0, 1);
-            gravar_parametro_da_tela(0x21, item16(r));
+            let r = txt(sm, 0x96, z(b - 0x2d), 0x2e4, z(b - 0xa), 0x30, colour_word(0xae317e), 0xc, 1, colour_word(0xae3184), 0, 1);
+            set_screen_param(0x21, item16(r));
             texto(BUF, 0xa16738);
             let b = *base;
-            txt(sm, 0xaf, z(b - 0x2d), 0xfa, z(b - 0xa), 1, 0, 0xc, 1, cor_em(0xae3184), BUF, 1);
+            txt(sm, 0xaf, z(b - 0x2d), 0xfa, z(b - 0xa), 1, 0, 0xc, 1, colour_word(0xae3184), BUF, 1);
             let b = *base;
-            txt(sm, 0x113, z(b - 0x25), 0x2cb, z(b - 0x12), 0x60, cor_em(0xae317e), 0xc, 1, cor_sobre(z(b), 0xae3184), 0, 1);
+            txt(sm, 0x113, z(b - 0x25), 0x2cb, z(b - 0x12), 0x60, colour_word(0xae317e), 0xc, 1, colour_with_high_bits(z(b), 0xae3184), 0, 1);
             txt(sm, 0x115, z(b - 0x23), 0x1ef, z(b - 0x14), 0x10, c58 as usize, 0xc, 1, c68 as usize, 0, 1);
             let r = txt(sm, 0x1ef, z(b - 0x23), 0x2c9, z(b - 0x14), 0x10, c64 as usize, 0xc, 1, c5c as usize, 0, 1);
-            linha(display_do_humano(), 1, 0x1ef, z(b - 0x23), 0x1ef, z(b - 0x20), 0, 0, 0x400, cor_sobre(r, 0xaebdea), 0, 0, 0, 0, 0, 0, 0, 0, MAX);
-            gravar_parametro_da_tela(0x22, z(*base));
+            linha(current_human_display(), 1, 0x1ef, z(b - 0x23), 0x1ef, z(b - 0x20), 0, 0, 0x400, colour_with_high_bits(r, 0xaebdea), 0, 0, 0, 0, 0, 0, 0, 0, MAX);
+            set_screen_param(0x22, z(*base));
             *base -= 0x37;
             // a caixa do comentário
             let t = *topo;
             let y = (*base - t - 0x46) / 2 + t;
-            if parametro_da_tela(7) != 0 {
+            if get_screen_param(7) != 0 {
                 crate::comparacao::ramo("telas visao geral com o narrador");
                 let rel = u(u(p0 + 0x57) + 0x8f7a);
                 let r = txt(sm, 0x8c, z(y), 0x2ee, z(y + 0x46), 1, 0, 0x10c, 5, 0, 0, 1);
                 let m = u(p0 + 0x57);
                 narrar(rel, u(u(p0 + 0x5b) + 1), e, u(u(m + 0x4792)), r, 0x262, 1, 5, 0);
-                gravar_parametro_da_tela(8, item16(r));
+                set_screen_param(8, item16(r));
             } else {
                 let r = txt(sm, 0x8c, z(y), 0x2ee, z(y + 0x46), 1, 0, 0x10c, 5, 0, 0, 1);
-                gravar_parametro_da_tela(8, item16(r));
+                set_screen_param(8, item16(r));
             }
         }
     } else {
-        let g = parametro_da_tela(0x1f);
+        let g = get_screen_param(0x1f);
         let st = u(g + 0x18);
         if st != 0 {
             let cidade = u(st + 0x38);
@@ -207,15 +207,15 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
                 let (a, c) = (i8_(st + 0x37), i8_(cidade + 0x1e));
                 texto(BUF, 0x9902a4, a, a, c, c, st + 4, cidade + 4);
             } else {
-                copiar_para_o_texto(st + 4);
+                copy_to_work_text(st + 4);
             }
         } else {
             texto(BUF, 0x99c1a4);
         }
         let t = *topo;
-        txt(sm, 0x6e, z(t), 0x30c, z(t + 0x23), 2, 0, 0xc, 3, cor_em(0xaebdec), BUF, 1);
+        txt(sm, 0x6e, z(t), 0x30c, z(t + 0x23), 2, 0, 0xc, 3, colour_word(0xaebdec), BUF, 1);
         *topo += 0x28;
-        e = parametro_da_tela(0x20);
+        e = get_screen_param(0x20);
         part = g;
     }
 
@@ -228,24 +228,24 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
         w = 0x7d;
     }
     let t = *topo;
-    txt(sm, 0x6e, z(t), z(w + 0x6e), z(t + 0x14), 2, 0, 0xc, 1, cor_em(0xaebde8), BUF, 1);
+    txt(sm, 0x6e, z(t), z(w + 0x6e), z(t + 0x14), 2, 0, 0xc, 1, colour_word(0xaebde8), BUF, 1);
     placar(part, 3, BUF, 0x7d0);
     let mut aux = [0u8; 0x200];
     let pa = aux.as_mut_ptr() as usize;
     if i8_(part + 0x45) >= 0 {
         texto(pa, 0xa16714, i8_(part + 0x45), i8_(part + 0x46));
-        acrescentar_ao_texto(aux.as_ptr());
+        append_to_text_buffer(aux.as_ptr());
         if i8_(part + 0x47) >= 0 {
             texto(pa, 0xa166d4, i8_(part + 0x43), i8_(part + 0x44), i8_(part + 0x47), i8_(part + 0x48));
-            acrescentar_ao_texto(aux.as_ptr());
+            append_to_text_buffer(aux.as_ptr());
         }
         let pens = if b8(part + 0x38) & 0x20 != 0 { 0xa166b0 } else { 0xa1668c };
         if core::ptr::read_unaligned((e + 0x53) as *const u32) != 0 {
             texto(pa, pens, b8(e + 0x120) as u32, b8(e + 0x745) as u32);
-            acrescentar_ao_texto(aux.as_ptr());
+            append_to_text_buffer(aux.as_ptr());
         } else if i8_(part + 0x49) >= 0 {
             texto(pa, pens, i8_(part + 0x49), i8_(part + 0x4a));
-            acrescentar_ao_texto(aux.as_ptr());
+            append_to_text_buffer(aux.as_ptr());
         }
     }
     let mut x = largura_do_texto(1, BUF) + 0xf;
@@ -257,10 +257,10 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
         let chave = (((*(u(part + 0x14) as *const u32)) << 11 | (core::ptr::read_unaligned((part + 0x32) as *const u16) as u32 & 0x7ff)) << 11)
             | (core::ptr::read_unaligned((part + 0x30) as *const u16) as u32 & 0x7ff);
         let t = *topo;
-        caixa(sm, z(0x30c - x), z(t), 0x30c, z(t + 0x14), 2, 0, 0xc, 1, cor_sobre(chave as usize, 0xaebde8), BUF, 0x7e5, chave as usize);
+        caixa(sm, z(0x30c - x), z(t), 0x30c, z(t + 0x14), 2, 0, 0xc, 1, colour_with_high_bits(chave as usize, 0xaebde8), BUF, 0x7e5, chave as usize);
     } else {
         let t = *topo;
-        txt(sm, z(0x30c - x), z(t), 0x30c, z(t + 0x14), 2, 0, 0xc, 1, cor_em(0xaebde8), BUF, 1);
+        txt(sm, z(0x30c - x), z(t), 0x30c, z(t + 0x14), 2, 0, 0xc, 1, colour_word(0xaebde8), BUF, 1);
     }
 
     // os autores: duas colunas (casa 0, fora 2), uma linha por jogador e tipo com os minutos ao lado
@@ -268,7 +268,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     let (ini, fim) = (*topo, *base);
     let a = altura(4);
     let n = ((fim - ini - 0x10) / a) as u8;
-    let lst = lista(display_do_humano(), 0x6e, z(ini), 0x30c, z(fim), 4, colunas4.as_mut_ptr() as usize, n as usize, 0, 2, 0, MAX);
+    let lst = lista(current_human_display(), 0x6e, z(ini), 0x30c, z(fim), 4, colunas4.as_mut_ptr() as usize, n as usize, 0, 2, 0, MAX);
     let mut marcas = [0u32; 50];
     let mut linhas = [0i32; 2];
     let mut lado_da_linha = 0usize;
@@ -303,7 +303,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
             continue;
         }
         let idx = b8(ev + 1);
-        let fila = linha_do_jogador_na_partida(e, lado, idx);
+        let fila = match_player_row(e, lado, idx);
         let (f198, f19c, f1a0) = (u(fila + 0x198) as u32, u(fila + 0x19c) as u32, u(fila + 0x1a0) as u32);
         let tipo = b8(ev + 2);
         match tipo {
@@ -335,7 +335,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
             }
             7 | 8 => continue,
             _ => {
-                aviso_em(0xa161d4, 0xc04);
+                show_error_at(0xa161d4, 0xc04);
                 continue;
             }
         }
@@ -359,7 +359,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
                 if marcas[j] != 0 {
                     continue;
                 }
-                if core::ptr::read_unaligned((linha_do_jogador_na_partida(e, lj, b8(evj + 1)) + 0x190) as *const i32) != pid {
+                if core::ptr::read_unaligned((match_player_row(e, lj, b8(evj + 1)) + 0x190) as *const i32) != pid {
                     continue;
                 }
                 let tj = b8(evj + 2);
@@ -373,19 +373,19 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
                     formatar(pj, 0xa165d0, BUF, mj);
                 }
                 if junto.iter().position(|&c| c == 0).unwrap_or(0) > 10 {
-                    acrescentar_ao_texto(0xa165cc as *const u8);
+                    append_to_text_buffer(0xa165cc as *const u8);
                     let l = linhas[lado_da_linha];
-                    texto_da_celula(sm, lst, col as usize + 1, z(l), 1, 0, 1, 4, cor_em(0xaebdec), BUF);
+                    texto_da_celula(sm, lst, col as usize + 1, z(l), 1, 0, 1, 4, colour_word(0xaebdec), BUF);
                     linhas[lado_da_linha] = l + 1;
                     minuto(evj);
                 } else {
-                    copiar_para_o_texto(pj);
+                    copy_to_work_text(pj);
                 }
                 marcas[j] = 1;
             }
         }
         let l = linhas[lado_da_linha];
-        texto_da_celula(sm, lst, col as usize + 1, z(l), 1, 0, 1, 4, cor_em(0xaebdec), BUF);
+        texto_da_celula(sm, lst, col as usize + 1, z(l), 1, 0, 1, 4, colour_word(0xaebdec), BUF);
         linhas[lado_da_linha] = l + 1;
         marcas[i - 1] = 1;
     }
@@ -394,7 +394,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     if core::ptr::read_unaligned((e + 0x53) as *const u32) != 0 {
         let m = if linhas[0] > linhas[1] { linhas[0] } else { linhas[1] };
         linhas[lado_da_linha] = m;
-        texto_da_celula(sm, lst, 0, z(m), 1, 0, 1, 3, cor_em(0xaebdec), TEXTO_VAZIO);
+        texto_da_celula(sm, lst, 0, z(m), 1, 0, 1, 3, colour_word(0xaebdec), TEXTO_VAZIO);
         let r = m + 1;
         linhas[lado_da_linha] = r;
         texto(BUF, if b8(part + 0x38) & 0x20 != 0 { 0xa165b8 } else { 0xa165a4 });
@@ -404,8 +404,8 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
         }
         linhas[lado_da_linha] = r + 1;
         // a original empurra edx = o ponteiro da linha com a cor em dx; 0x55f990 só lê a palavra
-        linha(display_do_humano(), 1, 0x73, 0, z(w), 0, 0, z(r), 1, 0, 0, 1, 3, cor_em(0xaebdec), BUF, 0, 0, 0, lst);
-        linha(display_do_humano(), 1, 0x73, 0, z(w), 0, 0, z(r + 1), 0xc400, cor_em(0xaebdec), 0, 0, 0, 0, 0, 0, 0, 0, lst);
+        linha(current_human_display(), 1, 0x73, 0, z(w), 0, 0, z(r), 1, 0, 0, 1, 3, colour_word(0xaebdec), BUF, 0, 0, 0, lst);
+        linha(current_human_display(), 1, 0x73, 0, z(w), 0, 0, z(r + 1), 0xc400, colour_word(0xaebdec), 0, 0, 0, 0, 0, 0, 0, 0, lst);
         linhas[lado_da_linha] = r + 2;
         linhas[0] = r + 2;
         linhas[1] = linhas[lado_da_linha];
@@ -416,7 +416,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
                 break;
             }
             let idx = b8(ev + 1);
-            let fila = linha_do_jogador_na_partida(e, lado, idx);
+            let fila = match_player_row(e, lado, idx);
             let (f198, f19c, f1a0) = (u(fila + 0x198) as u32, u(fila + 0x19c) as u32, u(fila + 0x1a0) as u32);
             let tipo = b8(ev + 2);
             if tipo != 7 && tipo != 8 {
@@ -440,8 +440,8 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
 
     // o árbitro, o público e o tempo
     let base23 = base0 - 0x23;
-    lista(display_do_humano(), 0x6e, z(base23), 0x30c, z(base0), 1, 0, 1, 0, 2, 0, MAX);
-    let l2 = lista(display_do_humano(), 0x78, z(base23), 0x302, z(base0), 3, colunas3.as_mut_ptr() as usize, 1, 0, 1, 0, MAX);
+    lista(current_human_display(), 0x6e, z(base23), 0x30c, z(base0), 1, 0, 1, 0, 2, 0, MAX);
+    let l2 = lista(current_human_display(), 0x78, z(base23), 0x302, z(base0), 3, colunas3.as_mut_ptr() as usize, 1, 0, 1, 0, MAX);
     let arbitro = core::ptr::read_unaligned((part + 0x2e) as *const i16);
     if arbitro > -1 {
         nome_do_arbitro((*(0xae23e8 as *const usize)).wrapping_add(arbitro as usize * 0x2b), aux.as_mut_ptr(), 0xc8, 1);
@@ -449,23 +449,23 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     } else {
         texto(BUF, 0xa1653c);
     }
-    texto_da_celula(sm, l2, 0, 0, 1, 0, 1, 2, cor_em(0xaebdec), BUF);
+    texto_da_celula(sm, l2, 0, 0, 1, 0, 1, 2, colour_word(0xaebdec), BUF);
     let publico = core::ptr::read_unaligned((e + 0x34) as *const u32);
     if publico != 0 {
         let w = core::ptr::read_unaligned((e + 0x4f) as *const i16);
         if w >= 0x3de || w == 0 || w == 1 {
             texto(BUF, 0xa1651c, publico);
-            texto_da_celula(sm, l2, 1, 0, 1, 0, 0xc, 2, cor_em(0xaebde8), BUF);
+            texto_da_celula(sm, l2, 1, 0, 1, 0, 0xc, 2, colour_word(0xaebde8), BUF);
         }
     }
     clima(*(0xde2f74 as *const usize), pa, e + 0xd76);
     texto(BUF, 0xa164f8, aux.as_ptr());
-    texto_da_celula(sm, l2, 2, 0, 1, 0, 0x40, 2, cor_em(0xaebdec), BUF);
+    texto_da_celula(sm, l2, 2, 0, 1, 0, 0x40, 2, colour_word(0xaebdec), BUF);
     if b8(e + 0x11f) == 0xfd {
         let t = *topo;
         let y = (*base - t - 0x46) / 2 + t;
         texto(BUF, 0xa164e8);
-        txt(sm, 0x8c, z(y), 0x2ee, z(y + 0x46), 0x30, cor_em(0xaebdea), 0xc, 3, cor_em(0xae3184), BUF, 1);
+        txt(sm, 0x8c, z(y), 0x2ee, z(y + 0x46), 0x30, colour_word(0xaebdea), 0xc, 3, colour_word(0xae3184), BUF, 1);
     }
     barra();
 }
@@ -484,8 +484,8 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
 /// colunas do registro pelo parâmetro 0x28), a rolagem (parâmetro 0x25) e o item da tabela no 0x26.
 /// Sem liga ou sem o parâmetro 0xe (caixa "Error"): a original.
 unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32, base: i32) {
-    if liga == 0 || parametro_da_tela(0xe) == 0 {
-        return orig::<unsafe extern "C" fn(usize, i32, i32)>(%%I2%%)(liga, topo, base);
+    if liga == 0 || get_screen_param(0xe) == 0 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, i32)>(%%I2%%)(liga, topo, base);
     }
     let txt: TextoDoGerente = core::mem::transmute(0x803fd0usize);
     let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
@@ -537,8 +537,8 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
     liga_nova(local);
     copiar_liga(local, s + 0x1d0, liga);
     liga_fim(s + 0x1d0);
-    let p0 = parametro_da_tela(0);
-    let pe = parametro_da_tela(0xe);
+    let p0 = get_screen_param(0);
+    let pe = get_screen_param(0xe);
     *((s + 0x14) as *mut usize) = pe;
 
     // os jogos do dia do grupo na cópia local
@@ -581,9 +581,9 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
         }
     }
     ordenar(local, 0);
-    parametro_da_tela(0x27);
-    let coluna = parametro_da_tela(0x28);
-    parametro_da_tela(0x29);
+    get_screen_param(0x27);
+    let coluna = get_screen_param(0x28);
+    get_screen_param(0x29);
 
     // o sorteio ainda por vir
     let sorteio = w16(liga + 0xb6);
@@ -600,7 +600,7 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
                     k = c as i32;
                 }
                 nome_da_competicao(BUF, 0x7d0, k as u32, 0);
-                txt(sm, 0x6e, z(topo), 0x30c, z(topo + 0x23), 2, 0, 0xc, 3, cor_em(0xaebdec), BUF, 1);
+                txt(sm, 0x6e, z(topo), 0x30c, z(topo + 0x23), 2, 0, 0xc, 3, colour_word(0xaebdec), BUF, 1);
                 y = topo + 0x28;
             }
             let a = altura(3);
@@ -609,7 +609,7 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
             let d = dia_da_semana(s + 0x30);
             let g = genero_do_dia(idioma(), d);
             texto(BUF, 0x99c2e8, g as u8 as i8 as i32, s + 0x3d0);
-            mensagem(0x6e, z(y), 0x30c, z(base), 2, 0, n as usize, 3, cor_em(0xae3184), BUF, 0);
+            mensagem(0x6e, z(y), 0x30c, z(base), 2, 0, n as usize, 3, colour_word(0xae3184), BUF, 0);
             liga_fim(local);
             return;
         }
@@ -624,7 +624,7 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
     } else {
         texto(titulo, 0xa17b74);
     }
-    txt(sm, 0x6e, z(topo), 0x30c, z(topo + 0x23), 2, 0, 0xc, 3, cor_em(0xaebdec), titulo, 1);
+    txt(sm, 0x6e, z(topo), 0x30c, z(topo + 0x23), 2, 0, 0xc, 3, colour_word(0xaebdec), titulo, 1);
     let y = topo + 0x28;
     let clubes = core::ptr::read_unaligned((liga + 0x3e) as *const i16);
     let (alto, n);
@@ -645,9 +645,9 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
         let a = altura(3);
         n = ((alto - 0x10) / a) as u8;
     }
-    let lst = lista(display_do_humano(), 0x6e, z(y), 0x30c, z(alto + y), 0xb, s + 0x1c, n as usize, 0, 2, 0, MAX);
+    let lst = lista(current_human_display(), 0x6e, z(y), 0x30c, z(alto + y), 0xb, s + 0x1c, n as usize, 0, 2, 0, MAX);
     let cabecalho = |col: usize| {
-        texto_da_celula(sm, lst, col, 0, 0x30, cor_em(0xae317e), 0xc, 1, cor_em(0xae3184), BUF);
+        texto_da_celula(sm, lst, col, 0, 0x30, colour_word(0xae317e), 0xc, 1, colour_word(0xae3184), BUF);
     };
     texto(BUF, 0x990b3c);
     cabecalho(4);
@@ -698,7 +698,7 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
             // [esp+0x14] da original: a cor na palavra de baixo, o parâmetro 0xe na de cima
             *((s + 0x14) as *mut u16) = *(a as *const u16);
             let x2 = if total as i16 <= n as i16 { 0x30a } else { 0x2f4 };
-            linha(display_do_humano(), 1, 0x70, 0, x2, 0, 0, fila, 0x6400, u(s + 0x14), 0, 0, 0, 0, 0, 0, 0, 0, lst);
+            linha(current_human_display(), 1, 0x70, 0, x2, 0, 0, fila, 0x6400, u(s + 0x14), 0, 0, 0, 0, 0, 0, 0, 0, lst);
             fila += 1;
         }
         let r = registro(local, i);
@@ -720,42 +720,42 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
         }
         let pos = por_extenso(b8(r + 4) as i8 as i32 + 1, 3);
         let ret = if core::ptr::read_unaligned((liga + 0x3c) as *const i16) != 0 {
-            celula(sm, lst, 0, fila, 0x30, cor_sobre(pos, 0xaebe04), 0xc, 1, cor_em(0xae3184), pos, 7, r)
+            celula(sm, lst, 0, fila, 0x30, colour_with_high_bits(pos, 0xaebe04), 0xc, 1, colour_word(0xae3184), pos, 7, r)
         } else {
-            texto_da_celula(sm, lst, 0, fila, 0x30, cor_sobre(pos, 0xaebe04), 0xc, 1, cor_em(0xae3184), pos)
+            texto_da_celula(sm, lst, 0, fila, 0x30, colour_with_high_bits(pos, 0xaebe04), 0xc, 1, colour_word(0xae3184), pos)
         };
         let x = u(s + 0x38);
         *(BUF as *mut u8) = 0;
         let (agora, antes) = (b8(r + 4) as i8, b8(x + 4) as i8);
         if agora < antes {
-            linha(display_do_humano(), 0x20001, 0, 0, 0, 0, 1, fila, 1, cor_sobre(ret, 0xaebdcc), 0, 0xc, 0, cor_em(0xaebdec), 0, 0, 0, 0, lst);
+            linha(current_human_display(), 0x20001, 0, 0, 0, 0, 1, fila, 1, colour_with_high_bits(ret, 0xaebdcc), 0, 0xc, 0, colour_word(0xaebdec), 0, 0, 0, 0, lst);
         } else if agora > antes {
-            linha(display_do_humano(), 0x40001, 0, 0, 0, 0, 1, fila, 1, cor_sobre(ret, 0xaebdcc), 0, 0xc, 0, cor_em(0xae31a8), 0, 0, 0, 0, lst);
+            linha(current_human_display(), 0x40001, 0, 0, 0, 0, 1, fila, 1, colour_with_high_bits(ret, 0xaebdcc), 0, 0xc, 0, colour_word(0xae31a8), 0, 0, 0, 0, lst);
         }
-        let cor = if humano(clube, 0, 1, 0, 0) != 0 { cor_em(0xaebdec) } else { cor_em(0xae3184) };
+        let cor = if humano(clube, 0, 1, 0, 0) != 0 { colour_word(0xaebdec) } else { colour_word(0xae3184) };
         celula(sm, lst, 2, fila, 1, 0, 1, 3, cor, clube + 0x38, 0x7d5, clube);
         let d = r + coluna.wrapping_mul(14);
         for (o, col) in [(0x11usize, 4usize), (0x12, 5), (0x13, 6), (0x14, 7)] {
             formatar(BUF, FORMATO_D, b8(d + o) as i8 as i32);
-            texto_da_celula(sm, lst, col, fila, 1, 0, 0xc, 2, cor_em(0xae3184), BUF);
+            texto_da_celula(sm, lst, col, fila, 1, 0, 0xc, 2, colour_word(0xae3184), BUF);
         }
         for (o, col) in [(0x15usize, 8usize), (0x17, 9)] {
             formatar(BUF, FORMATO_D, core::ptr::read_unaligned((d + o) as *const i16) as i32);
-            texto_da_celula(sm, lst, col, fila, 1, 0, 0xc, 2, cor_em(0xae3184), BUF);
+            texto_da_celula(sm, lst, col, fila, 1, 0, 0xc, 2, colour_word(0xae3184), BUF);
         }
         formatar(BUF, FORMATO_D, core::ptr::read_unaligned((d + 0x19) as *const i16) as i32);
-        texto_da_celula(sm, lst, 0xa, fila, 0x30, cor_em(0xae3192), 0xc, 1, cor_em(0xae3184), BUF);
+        texto_da_celula(sm, lst, 0xa, fila, 0x30, colour_word(0xae3192), 0xc, 1, colour_word(0xae3184), BUF);
         fila += 1;
         i += 1;
     }
 
-    let rolagem = parametro_da_tela(0x25);
-    let disp = display_do_humano();
+    let rolagem = get_screen_param(0x25);
+    let disp = current_human_display();
     let id = lst as u16 as i16;
     if id != -1 {
         rolar(disp.wrapping_add((id as isize * 0xbf1) as usize) + 4, rolagem);
     }
-    gravar_parametro_da_tela(0x26, id as i32 as usize);
+    set_screen_param(0x26, id as i32 as usize);
     let t = u(local + 0xb1);
     if t != 0 {
         liberar_tabela(local, t);
@@ -771,21 +771,21 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
 /// é local: o `Display` do gerente, os parâmetros, a cópia (0xd7a bytes) e o texto 0xde1f64. Sem a cópia
 /// (nasce aqui) ou pela rede: só a original.
 unsafe extern "C" fn comparar_refresh_possession_bar() {
-    let o = orig::<unsafe extern "C" fn()>(%%I0%%);
-    let p0 = parametro_da_tela(0);
-    let copia = parametro_da_tela(0x1d);
-    let mut reg = match regioes_da_atualizacao(false) {
+    let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
+    let p0 = get_screen_param(0);
+    let copia = get_screen_param(0x1d);
+    let mut reg = match screen_update_regions(false) {
         Some(r) if p0 == 0 || copia != 0 => r,
         // ponytail: a alocação da cópia e o pacote pela rede não rodam duas vezes; provados no modo Rust
         _ => return o(),
     };
-    reg.extend(regioes_dos_parametros());
+    reg.extend(screen_param_regions());
     if copia != 0 {
         reg.push((copia, 0xd7a));
     }
     reg.push((0xde1f64, 0x100));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || refresh_possession_bar());
-    PLACAR.registrar(igual, || format!("refresh_possession_bar: diferencas em {:?}", diferencas_da_tela(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("refresh_possession_bar: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 /// A visão geral é comparada de verdade pela lista de exibição, com `*topo`, `*base` e a barra da posse
@@ -793,19 +793,19 @@ unsafe extern "C" fn comparar_refresh_possession_bar() {
 /// narrador (parâmetro 7: escreve o lance e toca o som), na partida sem a cópia do estado (a barra a
 /// aloca) e com a atualização pela rede.
 unsafe extern "C" fn comparar_draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
-    let p0 = parametro_da_tela(0);
-    let foto = parametro_da_tela(0x1d);
+    let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
+    let p0 = get_screen_param(0);
+    let foto = get_screen_param(0x1d);
     let narrador = p0 != 0
         && core::ptr::read_unaligned((core::ptr::read_unaligned((p0 + 0x5f) as *const usize) + 0x53) as *const u32) == 0
-        && parametro_da_tela(7) != 0;
-    let reg = regioes_da_atualizacao(false);
-    if visao_geral_avisa_erro() || narrador || (p0 != 0 && foto == 0) || reg.is_none() {
+        && get_screen_param(7) != 0;
+    let reg = screen_update_regions(false);
+    if overview_would_error() || narrador || (p0 != 0 && foto == 0) || reg.is_none() {
         // ponytail: aviso, som, alocação e rede não rodam duas vezes; esses caminhos se provam no modo Rust
         return o(topo, base);
     }
     let mut reg = reg.unwrap_or_default();
-    reg.extend(regioes_dos_parametros());
+    reg.extend(screen_param_regions());
     reg.push((0xde1f64, 0x100));
     reg.push((topo as usize, 4));
     reg.push((base as usize, 4));
@@ -813,15 +813,15 @@ unsafe extern "C" fn comparar_draw_match_overview_panel(topo: *mut i32, base: *m
         reg.push((foto, 0xd7a));
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(topo, base), || draw_match_overview_panel(topo, base));
-    PLACAR.registrar(igual, || format!("draw_match_overview_panel: diferencas em {:?}", diferencas_da_tela(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 /// A tabela ao vivo é comparada de verdade pela lista de exibição, com a liga (0xee bytes: [+0xad]) e a
 /// tabela dela ([+0xb1], 59 bytes por clube), que a rotina reordena. As cópias locais nascem e morrem
 /// dentro dela. Sem liga ou sem o parâmetro 0xe (caixa "Error"): só a original.
 unsafe extern "C" fn comparar_match_screens_draw_live_league_table(liga: usize, topo: i32, base: i32) {
-    let o = orig::<unsafe extern "C" fn(usize, i32, i32)>(%%I2%%);
-    if liga == 0 || parametro_da_tela(0xe) == 0 {
+    let o = original_fn::<unsafe extern "C" fn(usize, i32, i32)>(%%I2%%);
+    if liga == 0 || get_screen_param(0xe) == 0 {
         return o(liga, topo, base);
     }
     let mut extra = vec![(liga, 0xee)];

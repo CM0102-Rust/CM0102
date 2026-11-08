@@ -6,17 +6,20 @@ use super::*;
 
 
 
-pub(crate) unsafe fn cpz9_gravar(n: usize, k: i8, v: u32) {
+/// Writes value v into news item slot k (NEWSITEM set_slot).
+pub(crate) unsafe fn set_news_slot(n: usize, k: i8, v: u32) {
     let f: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     f(n, k, v);
 }
 
-/// O id e as três chaves (+0x33 de +4, +8, +0xc) da pessoa `p` nos dados `k`..`k + 3`.
-pub(crate) unsafe fn cpz9_pessoa_nos_dados(n: usize, k: i8, p: usize) {
-    cpz9_gravar(n, k, read_u32(p));
-    cpz9_gravar(n, k + 1, read_u32(read_usize(p + 4) + 0x33));
-    cpz9_gravar(n, k + 2, read_u32(read_usize(p + 8) + 0x33));
-    cpz9_gravar(n, k + 3, read_u32(read_usize(p + 0xc) + 0x33));
+/// Writes the person's id and the +0x33 keys of +4, +8, +0xc into news slots k..k+3.
+///
+/// [pt] O id e as três chaves (+0x33 de +4, +8, +0xc) da pessoa `p` nos dados `k`..`k + 3`.
+pub(crate) unsafe fn set_news_person_slots(n: usize, k: i8, p: usize) {
+    set_news_slot(n, k, read_u32(p));
+    set_news_slot(n, k + 1, read_u32(read_usize(p + 4) + 0x33));
+    set_news_slot(n, k + 2, read_u32(read_usize(p + 8) + 0x33));
+    set_news_slot(n, k + 3, read_u32(read_usize(p + 0xc) + 0x33));
 }
 
 
@@ -57,7 +60,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, mo
         return;
     }
     let atual = read_usize(jogador + 0x39);
-    if atual != 0 && !cqa2_humano(atual) {
+    if atual != 0 && !club_has_human_manager(atual) {
         return;
     }
     crate::comparacao::ramo("cpz_9 noticia da reacao a multa");
@@ -71,29 +74,29 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, mo
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xbc6, 0);
-    cpz9_pessoa_nos_dados(nt, 0, jogador);
-    cpz9_gravar(nt, 4, motivo as i8 as u32);
-    cpz9_gravar(nt, 5, reacao as i8 as u32);
-    let r = cpe1_sorteio(2);
-    cpz9_gravar(nt, 6, r as u32);
+    set_news_person_slots(nt, 0, jogador);
+    set_news_slot(nt, 4, motivo as i8 as u32);
+    set_news_slot(nt, 5, reacao as i8 as u32);
+    let r = friendly_random(2);
+    set_news_slot(nt, 6, r as u32);
     let p = read_i8_as_i32(jogador + 0x5d) + read_i8_as_i32(jogador + 0x5b) < 0xc
         && read_i8_as_i32(jogador + 0x59) < 6
         && core::ptr::read_unaligned((read_usize(jogador + 0x61) + 0xb) as *const i16) > 0x1482;
-    cpz9_gravar(nt, 7, p as u32);
-    cpz9_gravar(nt, 8, (prazo as u8 == 1) as u32);
+    set_news_slot(nt, 7, p as u32);
+    set_news_slot(nt, 8, (prazo as u8 == 1) as u32);
     let tipo = *((c + 0x4f) as *const u8) & 0xf0;
-    cpz9_gravar(nt, 9, (tipo == 0x70) as u32);
-    cpz9_gravar(nt, 0xa, (futura(read_usize(G_TRANSFER_MANAGER), jogador, 0) != 0) as u32);
-    cpz9_gravar(nt, 0xb, efeitos as i8 as u32);
+    set_news_slot(nt, 9, (tipo == 0x70) as u32);
+    set_news_slot(nt, 0xa, (futura(read_usize(G_TRANSFER_MANAGER), jogador, 0) != 0) as u32);
+    set_news_slot(nt, 0xb, efeitos as i8 as u32);
     let jogo = (read_i8_as_i32(jogador + 0x18) > 0x17 && tipo == 0x10) || tipo == 0x20;
-    cpz9_gravar(nt, 0xc, jogo as u32);
+    set_news_slot(nt, 0xc, jogo as u32);
     entregar(read_usize(G_NEWS), nt, clube);
 }
 
 /// O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
 /// sorteio). Sem notícia, tudo igual; com notícia (que sorteia e vai às caixas), só [0xae1080].
 pub(crate) unsafe extern "stdcall" fn comparar_post_fine_reaction_news(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
-    let o = orig::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(IDX_POST_FINE_REACTION_NEWS);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(IDX_POST_FINE_REACTION_NEWS);
     let mut regioes = vec![(0xae1080, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
@@ -130,17 +133,17 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(jogador: usi
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0x1394, 0);
-    cpz9_pessoa_nos_dados(nt, 0, jogador);
-    cpz9_pessoa_nos_dados(nt, 4, treinador);
-    cpz9_gravar(nt, 8, desfecho as i8 as u32);
-    let r = cpe1_sorteio(5);
-    cpz9_gravar(nt, 9, r as u32);
+    set_news_person_slots(nt, 0, jogador);
+    set_news_person_slots(nt, 4, treinador);
+    set_news_slot(nt, 8, desfecho as i8 as u32);
+    let r = friendly_random(5);
+    set_news_slot(nt, 9, r as u32);
     entregar(read_usize(G_NEWS), nt, read_usize(jogador + 0x39));
 }
 
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem
 // notícia as duas não fazem nada.
 pub(crate) unsafe extern "stdcall" fn comparar_post_coach_fine_feedback_news(jogador: usize, treinador: usize, desfecho: u32) {
-    orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_POST_COACH_FINE_FEEDBACK_NEWS)(jogador, treinador, desfecho)
+    original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_POST_COACH_FINE_FEEDBACK_NEWS)(jogador, treinador, desfecho)
 }
 

@@ -23,17 +23,17 @@ unsafe fn cpy11_pessoa(id: usize) -> usize {
 }
 
 /// O byte das marcas da pessoa no registro de 8 bytes da gerência de transferências ([this+0x86e] + id × 8).
-unsafe fn cpy11_marca(this: usize, p: usize) -> usize {
+unsafe fn staff_flags_record(this: usize, p: usize) -> usize {
     cpy11_d(this + 0x86e).wrapping_add(cpy11_d(p).wrapping_mul(8))
 }
 
 /// A permissão de trabalho da pessoa (0xe bytes, [this+0x93a], conta +0x93e), como a original procura em linha: id fora
 /// dos [0xae2364] (com sinal) ou sem a marca 0x20, 0; senão a busca binária (bsearch 0x946464 com 0x8e55c0).
-unsafe fn cpy11_permissao(this: usize, p: usize) -> usize {
+unsafe fn transfer_manager_find_work_permit(this: usize, p: usize) -> usize {
     if p != 0 && cpy11_d(p) as i32 >= cpy11_d(0xae2364) as i32 {
         return 0;
     }
-    if cpy11_b(cpy11_marca(this, p)) & 0x20 == 0 {
+    if cpy11_b(staff_flags_record(this, p)) & 0x20 == 0 {
         return 0;
     }
     let bsearch: unsafe extern "C" fn(*const u32, usize, usize, u32, usize) -> usize = core::mem::transmute(0x946464usize);
@@ -43,7 +43,7 @@ unsafe fn cpy11_permissao(this: usize, p: usize) -> usize {
 
 /// Soma 1 à palavra `o` da permissão (+4 jogos, +6 faltas). A original soma sem conferir a busca (a marca garante a
 /// permissão); sem ela, a original cairia: aqui nada.
-unsafe fn cpy11_contar(r: usize, o: usize) {
+unsafe fn increment_permit_counter(r: usize, o: usize) {
     if r != 0 {
         let a = (r + o) as *mut u16;
         core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1));
@@ -55,7 +55,7 @@ unsafe fn cpy11_contar(r: usize, o: usize) {
 static mut CPY11_ENSAIO: bool = false;
 
 /// TRANSFER_MANAGER::pay_appearance_money (0x8cb340: thiscall(this, pessoa, jogos, tipo, 0), ret 0x10); no ensaio, 0.
-unsafe fn cpy11_pagar(this: usize, p: usize, jogos: i32, tipo: u32) -> u32 {
+unsafe fn pay_appearance_money_unless_dry_run(this: usize, p: usize, jogos: i32, tipo: u32) -> u32 {
     if CPY11_ENSAIO {
         return 0;
     }
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
         let mut n: i8 = 0;
         if contando {
             for &p in elenco.iter() {
-                if p != 0 && (cpy11_d(p) as i32) < cpy11_d(0xae2364) as i32 && cpy11_b(cpy11_marca(this, p)) & 0x20 != 0 {
+                if p != 0 && (cpy11_d(p) as i32) < cpy11_d(0xae2364) as i32 && cpy11_b(staff_flags_record(this, p)) & 0x20 != 0 {
                     seguidos[n as usize] = p;
                     n += 1;
                 }
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                     break;
                 }
                 if (p == 0 || (cpy11_d(p) as i32) < cpy11_d(0xae2364) as i32) && !(mascara == 2 && ficha(cpy11_d(0xae1050), p) != 0) {
-                    let reg = cpy11_marca(this, p);
+                    let reg = staff_flags_record(this, p);
                     if cpy11_b(reg) & mascara != 0 {
                         let (jogos, tipo): (i16, u8) = if mascara == 4 {
                             ((cpy11_b(p + 0x22) as u16).wrapping_sub(cpy11_b(reg + 7) as u16) as i16, 5)
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                         // ponytail: a original empurra o dword do local do tipo, com os 3 bytes altos de lixo da pilha;
                         // a 0x8cb340 e a notícia só leem o byte: vai limpo
                         if (jogos as i32 % 10 == 0 && jogos <= 0x32) || jogos == 1 { // cpy11: os jogos do prêmio
-                            if cpy11_pagar(this, p, jogos as i32, tipo as u32) != 0 {
+                            if pay_appearance_money_unless_dry_run(this, p, jogos as i32, tipo as u32) != 0 {
                                 crate::comparacao::ramo("cpy_11 premio pago");
                                 if tipo == 5 {
                                     tirar_selecao(this, p);
@@ -147,10 +147,10 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                             }
                         }
                     }
-                    if contando && cpy11_b(cpy11_marca(this, p)) & 0x20 != 0 {
-                        let r = cpy11_permissao(this, p);
+                    if contando && cpy11_b(staff_flags_record(this, p)) & 0x20 != 0 {
+                        let r = transfer_manager_find_work_permit(this, p);
                         crate::comparacao::ramo("cpy_11 jogo contado");
-                        cpy11_contar(r, 4); // cpy11: o jogo conta na permissão
+                        increment_permit_counter(r, 4); // cpy11: o jogo conta na permissão
                         let mut i: i8 = 0;
                         while i < n {
                             if seguidos[i as usize] == p {
@@ -188,9 +188,9 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                         continue;
                     }
                 }
-                let r = cpy11_permissao(this, p);
+                let r = transfer_manager_find_work_permit(this, p);
                 crate::comparacao::ramo("cpy_11 falta contada");
-                cpy11_contar(r, 6); // cpy11: a falta conta na permissão
+                increment_permit_counter(r, 6); // cpy11: a falta conta na permissão
             }
         }
         lado += 1;
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
 /// de trabalho; os jogos (+4) e as faltas (+6) têm de bater. Seleção em casa: o elenco local da original começa com o
 /// lixo da pilha, só a original roda. Os prêmios se provam pela própria 0x8cb340 (comparada) e pela carreira.
 unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_match(this: usize, jogo: usize, partida: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let v = cpy11_d(this + 0x93a);
     let n = cpy11_d(this + 0x93e) as i32;
@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_match(this:
 /// (qsort 0x945333 com 0x8b4e00). A gêmea do time principal é a 0x8cac40.
 unsafe extern "thiscall" fn add_international_team_appearance_money(this: usize, registro: usize) {
     crate::comparacao::ramo("cpy_11 premio na selecao guardado");
-    if !cpl3_crescer(this, 0x898, 4, 50, 0xd, 0x25af, 0xa8ebe0) {
+    if !grow_record_vector(this, 0x898, 4, 50, 0xd, 0x25af, 0xa8ebe0) {
         return;
     }
     let n = cpy11_d(this + 0x8a0);
@@ -246,12 +246,12 @@ unsafe extern "thiscall" fn add_international_team_appearance_money(this: usize,
 unsafe extern "thiscall" fn comparar_add_international_team_appearance_money(this: usize, registro: usize) {
     let n = cpy11_d(this + 0x8a0);
     let alvo = core::slice::from_raw_parts(registro as *const u8, 0xd).to_vec();
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, registro);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, registro);
     if cpy11_d(this + 0x898) == 0 {
         return; // sem memória: a caixa já saiu
     }
     let conta = cpy11_d(this + 0x8a0);
-    let ok = conta == n.wrapping_add(1) && cpl3_tem(cpy11_d(this + 0x898), conta, 0xd, &alvo);
+    let ok = conta == n.wrapping_add(1) && vector_contains_record(cpy11_d(this + 0x898), conta, 0xd, &alvo);
     PLACAR.registrar(ok, || format!("add_international_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }
 
@@ -327,5 +327,5 @@ unsafe extern "thiscall" fn post_transfer_finalised_news(this: usize, o: usize) 
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_transfer_finalised_news(this: usize, o: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, o)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, o)
 }

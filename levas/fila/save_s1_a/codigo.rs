@@ -49,7 +49,7 @@ unsafe extern "C" fn zipdir_match_filename_pattern(padrao: *const u8, nome: *con
 }
 
 unsafe extern "C" fn comparar_zipdir_match_filename_pattern(padrao: *const u8, nome: *const u8) -> u32 {
-    let r = orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(%%I0%%)(padrao, nome);
+    let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(%%I0%%)(padrao, nome);
     let n = zipdir_match_filename_pattern(padrao, nome);
     PLACAR.registrar(r == n, || {
         let t = |p: *const u8| String::from_utf8_lossy(core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes()).into_owned();
@@ -62,7 +62,7 @@ unsafe extern "C" fn comparar_zipdir_match_filename_pattern(padrao: *const u8, n
 /// 1/2, que viram 3/4) do contêiner aberto `f`, numa cópia `h` de 0x416ec bytes, como as consultas
 /// do zipdir.cpp fazem (cada uma tem a sua cópia do trecho). Se o cabeçalho não vier, `h` fica
 /// como estava (memória da alocação, sem zerar, como na original).
-unsafe fn ler_cabecalho_avulso(h: usize, f: usize) {
+unsafe fn read_header_copy(h: usize, f: usize) {
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
     if ler(h, 0xc, 1, f) == 0 {
         return;
@@ -90,7 +90,7 @@ unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
     let h = novo(0x416ec);
     if h == 0 {
-        aviso_em(0xad6ab0, 0x250);
+        show_error_at(0xad6ab0, 0x250);
         return 0x14;
     }
     let f = abrir(caminho, 0x98f928);
@@ -98,7 +98,7 @@ unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
         liberar(h);
         return 0x14;
     }
-    ler_cabecalho_avulso(h, f);
+    read_header_copy(h, f);
     fechar(f);
     let tipo = *(h as *const u32);
     if tipo != 3 && tipo != 4 {
@@ -112,7 +112,7 @@ unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
 
 // O id e o tamanho só leem o arquivo e liberam o que alocam: as duas rodam lado a lado.
 unsafe extern "C" fn comparar_zget_archive_id(caminho: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho);
     let n = zget_archive_id(caminho);
     PLACAR.registrar(r == n, || format!("zget_archive_id {:#x} x {:#x}", r, n));
     r
@@ -131,7 +131,7 @@ unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize) -> i32 {
     let casar: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x933a00usize);
     let h = novo(0x416ec);
     if h == 0 {
-        aviso_em(0xad6ab0, 0x351);
+        show_error_at(0xad6ab0, 0x351);
         return 0;
     }
     let f = abrir(caminho, 0x98f928);
@@ -139,7 +139,7 @@ unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize) -> i32 {
         liberar(h);
         return 0;
     }
-    ler_cabecalho_avulso(h, f);
+    read_header_copy(h, f);
     fechar(f);
     let tipo = *(h as *const u32);
     if tipo != 3 && tipo != 4 {
@@ -160,7 +160,7 @@ unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize) -> i32 {
 }
 
 unsafe extern "C" fn comparar_zget_matching_size(caminho: usize, padrao: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(caminho, padrao);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(caminho, padrao);
     let n = zget_matching_size(caminho, padrao);
     PLACAR.registrar(r == n, || format!("zget_matching_size {} x {}", r, n));
     r

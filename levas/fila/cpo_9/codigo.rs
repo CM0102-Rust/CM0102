@@ -22,7 +22,7 @@ unsafe fn cpo9_w(a: usize, v: u32) {
 
 /// Acrescenta o par (id da pessoa, id do clube) no fim do vetor `[this + vet]` (conta em `this + conta`) e o ordena
 /// (0x945333 com `cmp`).
-unsafe fn cpo9_inserir(this: usize, vet: usize, conta: usize, pessoa: usize, clube: usize, cmp: usize) {
+unsafe fn insert_sorted_pair(this: usize, vet: usize, conta: usize, pessoa: usize, clube: usize, cmp: usize) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let n = cpo9_i(this + conta);
     let e = cpo9_d(this + vet).wrapping_add((n as usize).wrapping_mul(8));
@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn add_shortlist_entry(this: usize, pessoa: usize, club
         let v = alocar(0x320);
         cpo9_w(this, v as u32);
         if v == 0 {
-            erro_em(0xa825a4, 0x1594);
+            fatal_error_at(0xa825a4, 0x1594);
         }
         cpo9_w(this + 8, 100);
     }
@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn add_shortlist_entry(this: usize, pessoa: usize, club
         let v = alocar(0x320);
         cpo9_w(this + 4, v as u32);
         if v == 0 {
-            erro_em(0xa825a4, 0x159d);
+            fatal_error_at(0xa825a4, 0x159d);
         }
         cpo9_w(this + 0xc, 100);
     }
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn add_shortlist_entry(this: usize, pessoa: usize, club
         let v = realocar(cpo9_d(this), (cpo9_i(this + 8) as u32).wrapping_mul(8).wrapping_add(0x320));
         cpo9_w(this, v as u32);
         if v == 0 {
-            erro_em(0xa825a4, 0x15b5);
+            fatal_error_at(0xa825a4, 0x15b5);
         }
         cpo9_w(this + 8, cpo9_i(this + 8).wrapping_add(100) as u32);
     }
@@ -77,12 +77,12 @@ unsafe extern "thiscall" fn add_shortlist_entry(this: usize, pessoa: usize, club
         let v = realocar(cpo9_d(this + 4), (cpo9_i(this + 0xc) as u32).wrapping_mul(8).wrapping_add(0x320));
         cpo9_w(this + 4, v as u32);
         if v == 0 {
-            erro_em(0xa825a4, 0x15be);
+            fatal_error_at(0xa825a4, 0x15be);
         }
         cpo9_w(this + 0xc, cpo9_i(this + 0xc).wrapping_add(100) as u32);
     }
-    cpo9_inserir(this, 0, 0x10, pessoa, clube, 0x757ea0); // o vetor pela pessoa
-    cpo9_inserir(this, 4, 0x14, pessoa, clube, 0x844740); // o vetor pelo clube
+    insert_sorted_pair(this, 0, 0x10, pessoa, clube, 0x757ea0); // o vetor pela pessoa
+    insert_sorted_pair(this, 4, 0x14, pessoa, clube, 0x844740); // o vetor pelo clube
     let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     if humano(clube, 0, 1, 0, 0) == 0 {
         let r = (cpo9_d(0xae2d0c).wrapping_add(cpo9_d(pessoa).wrapping_mul(0x4f)) + 0xb) as *mut u8;
@@ -119,12 +119,12 @@ unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(vende
         }
         let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544590usize);
         let rep = cpo9_h(comprador + 0x80) as f64;
-        if listado(jogador, 0) != 0 && rep * f64_em(0x968928) > cpo9_h(cpo9_d(jogador + 0x61) + 0xb) as f64 {
+        if listado(jogador, 0) != 0 && rep * read_f64_at(0x968928) > cpo9_h(cpo9_d(jogador + 0x61) + 0xb) as f64 {
             return 0;
         }
         let st = cpo9_b(k + 0x4f) & 0xf0;
         if st == 0x60 || st == 0x70 || cpo9_b(cpo9_d(jogador + 0x61) + 0xf) == 0x14 {
-            let v = cpo9_h(cpo9_d(jogador + 0x61) + 0xb) as f64 * f64_em(0x969040);
+            let v = cpo9_h(cpo9_d(jogador + 0x61) + 0xb) as f64 * read_f64_at(0x969040);
             if rep > v && (cpo9_b(k + 0x3d) as i8) < -50 && cpo9_d(vendedor + 0x1db) != cpo9_d(0x9cf6e8) {
                 return 0;
             }
@@ -133,7 +133,7 @@ unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(vende
     }
     let preco: i32 = if humano(vendedor, 0, 1, 0, 0) != 0 {
         let pedido_humano: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> i32 = core::mem::transmute(0x4d42d0usize);
-        let mut v = ftol(pedido_humano(cpo9_d(0xae1050), vendedor, comprador, jogador) as f64 * f64_em(0x9689b0));
+        let mut v = match_pl_ftol(pedido_humano(cpo9_d(0xae1050), vendedor, comprador, jogador) as f64 * read_f64_at(0x9689b0));
         let clausula: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x867b50usize);
         if clausula(k) == 0 {
             let tecnico: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
@@ -163,7 +163,7 @@ unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(vende
     if humano(vendedor, 0, 1, 0, 0) != 0 && (preco.wrapping_sub(0x16e360) as i64) < oferta && listado(jogador, 0) != 0 {
         return 1;
     }
-    if preco as f64 * f64_em(0x96f9c0) > oferta as f64 {
+    if preco as f64 * read_f64_at(0x96f9c0) > oferta as f64 {
         return 2;
     }
     crate::comparacao::ramo("cpo_9 negocia");
@@ -171,7 +171,7 @@ unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(vende
 }
 
 /// O ano da data padrão (0x54a110: dia 40 de 1972).
-unsafe fn cpo9_ano_padrao() -> u16 {
+unsafe fn default_date_year() -> u16 {
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let mut data = [0u8; 8];
     let p = padrao(data.as_mut_ptr() as usize);
@@ -179,7 +179,7 @@ unsafe fn cpo9_ano_padrao() -> u16 {
 }
 
 /// A data (dia do ano +0, ano +2) passa do fim do contrato `c` (+0x2d dia, +0x2f ano)?
-unsafe fn cpo9_depois_do_contrato(dia: i16, ano: u16, c: usize) -> bool {
+unsafe fn is_after_contract_end(dia: i16, ano: u16, c: usize) -> bool {
     let fim = cpo9_h(c + 0x2f) as u16;
     ano > fim || (ano == fim && dia > cpo9_h(c + 0x2d))
 }
@@ -208,12 +208,12 @@ unsafe extern "thiscall" fn transfer_manager_get_loan_period(this: usize, clube:
     let dia = dia_do_mes(0xae2c90);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contract_of(cpo9_d(0xae1050), jogador);
-    if c == 0 || cpo9_b(c + 0x35) & 0x3f != 2 || cpo9_depois_do_contrato(cpo9_h(0xae2c90), cpo9_h(0xae2c92) as u16, c) {
-        *ano = cpo9_ano_padrao();
+    if c == 0 || cpo9_b(c + 0x35) & 0x3f != 2 || is_after_contract_end(cpo9_h(0xae2c90), cpo9_h(0xae2c92) as u16, c) {
+        *ano = default_date_year();
         return;
     }
     if *ano as i32 > cpo9_h(0xae2c92) as u16 as i32 + 5 {
-        *ano = cpo9_ano_padrao();
+        *ano = default_date_year();
         return;
     }
     // ponytail: a original empurra o mês e o ano em registradores com lixo acima; a 0x549f70 lê o byte e a palavra
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn transfer_manager_get_loan_period(this: usize, clube:
     loop {
         let mut data = [0u8; 8];
         let d = data_de(data.as_mut_ptr() as usize, dia, *mes as i32, *ano as u32, -1);
-        if !cpo9_depois_do_contrato(cpo9_h(d), cpo9_h(d + 2) as u16, c) {
+        if !is_after_contract_end(cpo9_h(d), cpo9_h(d + 2) as u16, c) {
             return;
         }
         crate::comparacao::ramo("cpo_9 recua o mes");
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn transfer_manager_get_loan_period(this: usize, clube:
             *ini_ano = *ano;
         }
         if *ano < cpo9_h(0xae2c92) as u16 {
-            *ano = cpo9_ano_padrao();
+            *ano = default_date_year();
             return;
         }
     }
@@ -246,7 +246,7 @@ unsafe extern "thiscall" fn transfer_manager_get_loan_period(this: usize, clube:
 /// (contas + 1, o par achado depois) e o nibble da pessoa soma 1 fora de clube humano.
 // ponytail: a original realoca os vetores (0x945667) e os ordena; não roda duas vezes.
 unsafe extern "thiscall" fn comparar_add_shortlist_entry(this: usize, pessoa: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let chave = [cpo9_d(pessoa) as u32, if clube != 0 { cpo9_d(clube) as u32 } else { 0xffff_ffff }];
@@ -268,7 +268,7 @@ unsafe extern "thiscall" fn comparar_add_shortlist_entry(this: usize, pessoa: us
 
 /// Comparador: pelo valor (o byte baixo) e lado a lado pelo sorteio e [0xae1080] (as chamadas de preço podem sortear).
 unsafe extern "stdcall" fn comparar_shortlist_manager_predict_selling_club_response(vendedor: usize, jogador: usize, oferta: i64, comprador: usize, pedido: i64, emprestimo: u32) -> u8 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize, i64, usize, i64, u32) -> u8>(%%I1%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i64, usize, i64, u32) -> u8>(%%I1%%);
     let mut reg = vec![(0xae1080usize, 4usize)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(
@@ -282,7 +282,7 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_predict_selling_club_respo
 
 /// Comparador: lado a lado pelas quatro saídas, o sorteio e [0xae1080].
 unsafe extern "thiscall" fn comparar_transfer_manager_get_loan_period(this: usize, clube: usize, a2: u32, jogador: usize, ini_mes: *mut i8, ini_ano: *mut u16, mes: *mut i8, ano: *mut u16) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, *mut i8, *mut u16, *mut i8, *mut u16)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, *mut i8, *mut u16, *mut i8, *mut u16)>(%%I2%%);
     let mut reg = vec![(ini_mes as usize, 1usize), (ini_ano as usize, 2), (mes as usize, 1), (ano as usize, 2), (0xae1080, 4)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(

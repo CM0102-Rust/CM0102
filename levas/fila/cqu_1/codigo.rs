@@ -62,26 +62,26 @@ unsafe fn cqu1_construir(this: usize, ano: u32, registro: usize, e: &Cqu1Liga, d
     let v = alocar(e.fases * 4);
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     if regras(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[0]);
+        show_error_at(e.arquivo, e.linhas[0]);
         return this;
     }
     if tabela(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[1]);
+        show_error_at(e.arquivo, e.linhas[1]);
         return this;
     }
     if jogos(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[2]);
+        show_error_at(e.arquivo, e.linhas[2]);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        aviso_em(e.arquivo, e.linhas[3]);
+        show_error_at(e.arquivo, e.linhas[3]);
         return this;
     }
     let n = novo(0x5ce);
     let s = if n != 0 { estatisticas(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
-        aviso_em(e.arquivo, e.linhas[4]);
+        show_error_at(e.arquivo, e.linhas[4]);
         return this;
     }
     previstas(this);
@@ -170,21 +170,21 @@ unsafe extern "thiscall" fn cqu1_construir_nsl(this: usize, ano: u32, registro: 
 }
 
 unsafe extern "thiscall" fn comparar_cqu1_construir_serie_a(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     cqu1_comparar("cqu1_construir_serie_a", this, ano, registro, &CQU1_SERIE_A, 6, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_cqu1_construir_serie_b(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     cqu1_comparar("cqu1_construir_serie_b", this, ano, registro, &CQU1_SERIE_B, 6, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_cqu1_construir_j1(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
     cqu1_comparar("cqu1_construir_j1", this, ano, registro, &CQU1_J1, 0x13, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_cqu1_construir_nsl(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
     cqu1_comparar("cqu1_construir_nsl", this, ano, registro, &CQU1_NSL, 0x22, || o(this, ano, registro))
 }

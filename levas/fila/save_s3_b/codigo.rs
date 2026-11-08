@@ -3,8 +3,8 @@
 /// A caixa de erro da gravação: "v%s %s.%s %d (%s)" (versão 0x90d130, nome e extensão de Setup.cpp,
 /// `linha`, `texto`) em 0xae24d0; o título `titulo` traduzido (0x66f4e0) em 0xae28bc, o corpo
 /// `corpo` (com o texto de 0xae24d0) traduzido em 0xae26c4 e a caixa 0x5e8290. O jogo segue
-/// ([0xb67a34] fica como está, ao contrário do `aviso_do_setup`).
-unsafe fn caixa_do_save(linha: u32, texto: usize, titulo: usize, corpo: usize) {
+/// ([0xb67a34] fica como está, ao contrário do `setup_warning`).
+unsafe fn save_error_box(linha: u32, texto: usize, titulo: usize, corpo: usize) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -145,9 +145,9 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
         }
     }
     let mut temporaria = [0u8; 0x104];
-    copiar_texto(temporaria.as_mut_ptr(), pasta(0x987da0, 0xad9c64));
+    copy_text(temporaria.as_mut_ptr(), pasta(0x987da0, 0xad9c64));
     if caminho.is_null() {
-        aviso_do_setup(0x2958);
+        setup_warning(0x2958);
         return 0;
     }
     let mut local = [0u8; 0x104];
@@ -156,7 +156,7 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
         separar(caminho, unidade.as_mut_ptr(), dir.as_mut_ptr(), nome.as_mut_ptr(), ext.as_mut_ptr());
         juntar(local.as_mut_ptr(), unidade.as_ptr(), dir.as_ptr(), 0xa81cf4, ext.as_ptr());
     } else {
-        copiar_texto(local.as_mut_ptr(), caminho);
+        copy_text(local.as_mut_ptr(), caminho);
     }
     let l = local.as_ptr();
     if existe(l) != 0 && apagar(l) == -1 {
@@ -197,7 +197,7 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
     barra(0xb74450, texto.as_ptr(), 1, 0x25, -1);
     let mut z = abrir_item(l, 0x9c7b84, 1, a4, tipo());
     if z == 0 {
-        caixa_do_save(0x29a3, 0xa81c88, 0xa81c70, 0xa81b5c);
+        save_error_box(0x29a3, 0xa81c88, 0xa81c70, 0xa81b5c);
         return 0;
     }
     // general.dat: (endereço, tamanho, quantidade, linha e texto do erro); o resumo e a nação
@@ -207,7 +207,7 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
         if gravar(buf, tam, n, z) == n {
             return true;
         }
-        caixa_do_save(linha, msg, 0x9c7774, 0x9c7680);
+        save_error_box(linha, msg, 0x9c7774, 0x9c7680);
         fechar_item(&mut z);
         false
     };
@@ -240,7 +240,7 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
         return 0;
     }
     fechar_item(&mut z);
-    for (i, passo) in PASSOS_DO_SAVE.iter().enumerate() {
+    for (i, step_towards) in PASSOS_DO_SAVE.iter().enumerate() {
         let k = i as u32 + 2;
         // antes do passo 0x11 (depois do AWARD_MANAGER) a original não apaga o caminho e pede
         // memória >= 25 (e não >= 1)
@@ -257,7 +257,7 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
             return 0;
         }
         barra(0xb74450, texto.as_ptr(), k, 0x25, -1);
-        match *passo {
+        match *step_towards {
             PassoDoSave::Caminho(g, f) => {
                 if u(g) != 0 {
                     let f: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(f);
@@ -291,7 +291,7 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
             }
             PassoDoSave::Competicoes => {
                 if competicoes() == 0 {
-                    aviso_do_setup(0x2baa);
+                    setup_warning(0x2baa);
                     return 0;
                 }
             }
@@ -303,14 +303,14 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
     barra(0xb74450, texto.as_ptr(), 0x25, 0x25, -1);
     let (t, linha) = if opcoes() & 0x8000 != 0 { (3, 0x2c82) } else { (4, 0x2c8a) };
     if empacotar(l, temporaria.as_ptr(), 0xa813ac, a4, t) == 0 {
-        caixa_do_save(linha, 0xa817a4, 0x9c7774, 0x9c7680);
+        save_error_box(linha, 0xa817a4, 0x9c7774, 0x9c7680);
         return 0;
     }
     hall_da_fama(u(0xb5ded8) as usize);
     regras_fifa(l);
     if opcoes() & 0x20000000 != 0 {
         if existe(caminho) != 0 && apagar(caminho) == -1 {
-            caixa_do_save(0x2ca7, 0xa81cc0, 0x9af90c, 0x9af828);
+            save_error_box(0x2ca7, 0xa81cc0, 0x9af90c, 0x9af828);
         }
         renomear(l, caminho);
     }
@@ -324,5 +324,5 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
 // ponytail: grava o save inteiro (apaga o antigo, cria o contêiner, empacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save.
 unsafe extern "C" fn comparar_save_game_data(caminho: *const u8, a4: u32) -> u32 {
-    orig::<unsafe extern "C" fn(*const u8, u32) -> u32>(%%I0%%)(caminho, a4)
+    original_fn::<unsafe extern "C" fn(*const u8, u32) -> u32>(%%I0%%)(caminho, a4)
 }

@@ -9,7 +9,7 @@ MUTACOES = [
     ('dbs_forcas', '    if b(0x39) > sortear(50) && b(0x3e) > sortear(50) {', '    if b(0x39) >= sortear(50) && b(0x3e) > sortear(50) { // mutacao: >= no primeiro'),
     ('dbs_fraquezas', '    if b(0xf) < 20 { // os de linha', '    if b(0xf) <= 20 { // mutacao: os goleiros tambem'),
     ('dbt_fisioterapeutas', 'validos(clube) + if b != 0 { validos(b) } else { 0 } // os do clube e os do time B (dbt)', 'validos(clube) * 2 + if b != 0 { validos(b) } else { 0 } // mutacao: os do clube contados duas vezes'),
-    ('dbt_time_b', '(dbt1_parceiro(clube, &mut eh_a) != 0 && eh_a == 0) as u32 // é o B (dbt)', '(dbt1_parceiro(clube, &mut eh_a) != 0 && eh_a != 0) as u32 // mutacao: o A em vez do B'),
+    ('dbt_time_b', '(database_linked_b_team(clube, &mut eh_a) != 0 && eh_a == 0) as u32 // é o B (dbt)', '(database_linked_b_team(clube, &mut eh_a) != 0 && eh_a != 0) as u32 // mutacao: o A em vez do B'),
     ('dbt_fora_do_elenco', '*saida.add(n as usize) = p; // (dbt)', '*saida.add(n as usize) = p + 1; // mutacao: o ponteiro errado'),
     ('dbt_atributo_visivel', 'let divisor = if k == 2 { 2 } else { 4 }; // (dbt)', 'let divisor = if k == 2 { 4 } else { 2 }; // mutacao: os divisores trocados'),
     ('dbt_atributo_para_quem_ve', 'return 0xf9; // desconhecido (dbt)', 'return 0xfa; // mutacao: outro desconhecido'),
@@ -18,6 +18,6 @@ MUTACOES = [
     ('dbt_clubes_pela_reputacao', '        1 // a de menor reputação depois (dbt)', '        -1 // mutacao: a de menor reputacao antes'),
     ('dbt_clube_na_cee', '*((nacao + nation::GROUP_MEMBERSHIP) as *const u8) == 2) as u32 // na CEE (dbt)', '*((nacao + 0x7f) as *const u8) != 2) as u32 // mutacao: fora da CEE'),
     ('dbt_regioes_pelo_nome', 'qsort(0xae2104, 14, 1, 0x545e00); // (dbt)', 'qsort(0xae2104, 13, 1, 0x545e00); // mutacao: a ultima regiao fora da ordem'),
-    ('dbt_ordem_das_regioes', '    dbr_comparar_textos(na.as_ptr(), nb.as_ptr()) // (dbt)', '    dbr_comparar_textos(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
+    ('dbt_ordem_das_regioes', '    compare_text_nocase(na.as_ptr(), nb.as_ptr()) // (dbt)', '    compare_text_nocase(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
     ('dbt_pessoa_da_opiniao', '        ler(0x3b) // (dbt)', '        ler(0x27) // mutacao: o indice do outro lado'),
 ]

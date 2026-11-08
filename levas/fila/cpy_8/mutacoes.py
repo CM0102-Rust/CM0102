@@ -14,7 +14,7 @@ MUTACOES = [
     ('cpy8_sem_faixa_da_liga', '                            faixa // cpy8: a faixa da liga',
      '                            { let _ = faixa; (cpy8_i(b + 8), cpy8_i(b + 4)) } // mutacao: o bloco inteiro',
      'cpy_8 faixa da liga'),
-    ('cpy8_neutro_do_comeco', '                    (cpy8_i(b + 8).wrapping_sub(ftol(conta * -0.75)), ftol(conta * 0.25)) // cpy8: o quarto de cima',
-     '                    (cpy8_i(b + 8), ftol(conta * 0.25)) // mutacao: o comeco do bloco',
+    ('cpy8_neutro_do_comeco', '                    (cpy8_i(b + 8).wrapping_sub(match_pl_ftol(conta * -0.75)), match_pl_ftol(conta * 0.25)) // cpy8: o quarto de cima',
+     '                    (cpy8_i(b + 8), match_pl_ftol(conta * 0.25)) // mutacao: o comeco do bloco',
      'cpy_8 arbitro neutro'),
 ]

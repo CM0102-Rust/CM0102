@@ -18,12 +18,12 @@ unsafe fn cpy8_b(a: usize) -> u8 {
 
 /// O bloco de árbitros da nação `nacao` no gerenciador (0x102 bytes em [this+0xc]: +4 conta, +8 primeiro índice, +0x10
 /// palavra com o número de faixas de liga, +0x12 faixas de 16 bytes: +0 primeiro, +4 conta, +0xc id da competição).
-unsafe fn cpy8_bloco(this: usize, nacao: i32) -> usize {
+unsafe fn nation_officials_block(this: usize, nacao: i32) -> usize {
     cpy8_d(this + 0xc).wrapping_add(nacao.wrapping_mul(0x102) as usize)
 }
 
 /// O id da nação do clube (+0x53, ponteiro) ou, sem nação, `sem`.
-unsafe fn cpy8_nacao_do_clube(clube: usize) -> Option<i32> {
+unsafe fn officials_manager_club_nation_id(clube: usize) -> Option<i32> {
     let n = cpy8_d(clube + 0x53);
     if n != 0 { Some(cpy8_i(n)) } else { None }
 }
@@ -47,11 +47,11 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
     let visitante = cpy8_d(jogo + 0x20);
     let comp = cpy8_d(jogo + 0x14);
     let faixa_da_nacao = |nacao: i32| {
-        let b = cpy8_bloco(this, nacao);
+        let b = nation_officials_block(this, nacao);
         (cpy8_i(b + 8), cpy8_i(b + 4))
     };
     let (ini, n) = if comp == 0 {
-        faixa_da_nacao(cpy8_nacao_do_clube(mandante).unwrap_or_else(|| sortear(nacoes)))
+        faixa_da_nacao(officials_manager_club_nation_id(mandante).unwrap_or_else(|| sortear(nacoes)))
     } else {
         let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
         if amistoso(cpy8_d(0xae2c74), comp) != 0 {
@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
         } else {
             let c = cpy8_d(cpy8_d(0xadadfc).wrapping_add(cpy8_i(comp).wrapping_mul(4) as usize));
             if c == 0 {
-                faixa_da_nacao(cpy8_nacao_do_clube(mandante).unwrap_or_else(|| sortear(nacoes)))
+                faixa_da_nacao(officials_manager_club_nation_id(mandante).unwrap_or_else(|| sortear(nacoes)))
             } else {
                 let tipo = cpy8_b(c + 0x42) as i8;
                 if tipo == 2 || tipo == 4 {
@@ -82,8 +82,8 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
                         let nac = cpy8_d(0xae23a8).wrapping_add(k.wrapping_mul(0x122) as usize);
                         let cont = cpy8_d(nac + 0x71);
                         if cont != 0 && cpy8_i(cont) == continente
-                            && cpy8_nacao_do_clube(mandante) != Some(cpy8_i(nac))
-                            && cpy8_nacao_do_clube(visitante) != Some(cpy8_i(nac))
+                            && officials_manager_club_nation_id(mandante) != Some(cpy8_i(nac))
+                            && officials_manager_club_nation_id(visitante) != Some(cpy8_i(nac))
                         {
                             break;
                         }
@@ -95,21 +95,21 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
                             break;
                         }
                     }
-                    let b = cpy8_bloco(this, k);
+                    let b = nation_officials_block(this, k);
                     let conta = cpy8_i(b + 4) as f64;
                     crate::comparacao::ramo("cpy_8 arbitro neutro");
-                    (cpy8_i(b + 8).wrapping_sub(ftol(conta * -0.75)), ftol(conta * 0.25)) // cpy8: o quarto de cima
+                    (cpy8_i(b + 8).wrapping_sub(match_pl_ftol(conta * -0.75)), match_pl_ftol(conta * 0.25)) // cpy8: o quarto de cima
                 } else {
                     let nacao = if cpy8_d(comp + 0x5d) != 0 {
                         cpy8_i(cpy8_d(comp + 0x5d))
-                    } else if let Some(k) = cpy8_nacao_do_clube(mandante) {
+                    } else if let Some(k) = officials_manager_club_nation_id(mandante) {
                         k
-                    } else if let Some(k) = cpy8_nacao_do_clube(visitante) {
+                    } else if let Some(k) = officials_manager_club_nation_id(visitante) {
                         k
                     } else {
                         sortear(nacoes)
                     };
-                    let b = cpy8_bloco(this, nacao);
+                    let b = nation_officials_block(this, nacao);
                     let id = cpy8_i(comp);
                     let mut achou = None;
                     for f in 0..cpy8_w(b + 0x10).max(0) as usize {
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
 
 /// Comparador: lado a lado pela palavra de saída e pelo estado do sorteio, e pela devolução.
 unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, jogo: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((saida, 2));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida),
@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
 
 /// Comparador: lado a lado pelos bytes de ocupado e pela devolução.
 unsafe extern "thiscall" fn comparar_clear_busy_flags(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let n = cpy8_i(this + 4);
     let reg = if n > 0 && cpy8_d(this + 8) != 0 { vec![(cpy8_d(this + 8), n as usize)] } else { Vec::new() };
     let (r, m, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || clear_busy_flags(this));
@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
         return 0;
     }
     let nacao = if cpy8_d(comp + 0x5d) != 0 { cpy8_i(cpy8_d(comp + 0x5d)) } else { sortear(cpy8_i(0xae2350)) };
-    let b = cpy8_bloco(this, nacao);
+    let b = nation_officials_block(this, nacao);
     let mut faixa = None;
     for f in 0..cpy8_w(b + 0x10).max(0) as usize {
         let e = b + 0x12 + f * 0x10;
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
     for k in 0..n.max(0) {
         let ficha = cpy8_d(0xae23e8).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x2b) as usize);
         if ficha == 0 {
-            aviso_em(0xa6a22c, 0xa61);
+            show_error_at(0xa6a22c, 0xa61);
             continue;
         }
         let ano = cpy8_b(0xae2c92);
@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
 /// ([0xae2390] × 17), pelo estado do sorteio e por [0xb67a34], e pela devolução. Sem tabela de árbitros (a caixa a cada
 /// ficha): só a original.
 unsafe extern "thiscall" fn comparar_renew_officials(this: usize, comp: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let total = cpy8_i(0xae2390).max(0) as usize;
     if cpy8_d(0xae23e8) == 0 || cpy8_d(this) == 0 {
         return o(this, comp);

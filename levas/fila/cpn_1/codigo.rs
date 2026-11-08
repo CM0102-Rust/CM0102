@@ -17,7 +17,7 @@ const CPN1_NOTICIA: usize = 0xdf;
 
 /// A entrada do técnico humano na tabela das caixas (News +8, 12 bytes: início do anel, a próxima vaga, a conta):
 /// índice = id da pessoa − [0xae2364] + 16 (os humanos são as 16 últimas pessoas). Negativo: não é humano.
-unsafe fn cpn1_indice_humano(tecnico: usize) -> i32 {
+unsafe fn news_human_manager_index(tecnico: usize) -> i32 {
     cpn1_i(tecnico).wrapping_sub(cpn1_i(0xae2364)).wrapping_add(0x10)
 }
 
@@ -54,7 +54,7 @@ unsafe extern "thiscall" fn send_by_scope(this: usize, noticia: usize, clube: us
             competicao
         }
         _ => {
-            aviso_em(0xa693ec, 0x1fd3);
+            show_error_at(0xa693ec, 0x1fd3);
             return 0;
         }
     };
@@ -66,11 +66,11 @@ unsafe extern "thiscall" fn send_by_scope(this: usize, noticia: usize, clube: us
 /// pessoas). Sem notícia ou sem clube: a caixa "Error" e 0; sem técnico ou técnico da máquina: 0.
 unsafe extern "thiscall" fn send_to_club_manager(this: usize, noticia: usize, clube: usize) -> u32 {
     if noticia == 0 {
-        aviso_em(0xa693ec, 0x2026);
+        show_error_at(0xa693ec, 0x2026);
         return 0;
     }
     if clube == 0 {
-        aviso_em(0xa693ec, 0x202e);
+        show_error_at(0xa693ec, 0x202e);
         return 0;
     }
     let tecnico = cpn1_d(clube + 0xcf);
@@ -95,19 +95,19 @@ unsafe extern "thiscall" fn send_to_club_manager(this: usize, noticia: usize, cl
 /// resposta automática (0x784100) pelo clube (+0x39) e pela seleção (+0x24). Soma 1 na conta e devolve 1.
 unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: usize, tecnico: usize, _livre: u32) -> u32 {
     if noticia == 0 {
-        aviso_em(0xa693ec, 0x1f3f);
+        show_error_at(0xa693ec, 0x1f3f);
         return 0;
     }
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x1f47);
+        show_error_at(0xa693ec, 0x1f47);
         return 0;
     }
     let importante: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x784eb0usize);
     *((noticia + 4) as *mut u8) = importante(noticia, tecnico) as u8;
     cpn1_por(noticia + 0xda, 0);
-    let idx = cpn1_indice_humano(tecnico);
+    let idx = news_human_manager_index(tecnico);
     if idx < 0 {
-        aviso_em(0xa693ec, 0x1f58);
+        show_error_at(0xa693ec, 0x1f58);
         return 0;
     }
     let e = cpn1_d(this + 8) + idx as usize * 12;
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: usize, tecn
         let p = realocar(cpn1_d(this), total.wrapping_mul(CPN1_NOTICIA) as u32);
         cpn1_por(this, p);
         if p == 0 {
-            aviso_em(0xa693ec, 0x1f6d);
+            show_error_at(0xa693ec, 0x1f6d);
             return 0;
         }
         for k in 0..0x64usize {
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: usize, tecn
 /// Comparador: a entrega pode cair na caixa do humano (realloc, ids, resposta automática): roda só a original e confere
 /// o alcance; alcance fora de 0..5 devolve 0.
 unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, noticia: usize, clube: usize, competicao: usize, nacao: usize, continente: usize, alcance: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%)(this, noticia, clube, competicao, nacao, continente, alcance);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%)(this, noticia, clube, competicao, nacao, continente, alcance);
     let fora = !(0..=5).contains(&(alcance as u8 as i8));
     PLACAR.registrar(!fora || r == 0, || format!("send_by_scope alcance {} devolveu {}", alcance as u8 as i8, r));
     r
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, noticia: usize, 
 /// Comparador: roda só a original (a entrega não pode rodar duas vezes) e confere o plano: o alcance zerado e, sem técnico
 /// humano, a devolução 0 (com humano, a entrega devolve 1 ou 0 sem memória).
 unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize, noticia: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if noticia == 0 || clube == 0 {
         return o(this, noticia, clube);
     }
@@ -195,11 +195,11 @@ unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize, noticia: 
 /// Comparador: a original realoca o vetor, numera e responde: roda só ela e confere o plano feito antes: o id da notícia,
 /// o contador de ids (News +0x10), o anel do humano (início, próxima vaga, conta), a vaga escrita com o id e +0xda = 0.
 unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, noticia: usize, tecnico: usize, livre: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
-    if noticia == 0 || tecnico == 0 || cpn1_indice_humano(tecnico) < 0 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
+    if noticia == 0 || tecnico == 0 || news_human_manager_index(tecnico) < 0 {
         return o(this, noticia, tecnico, livre);
     }
-    let idx = cpn1_indice_humano(tecnico) as usize;
+    let idx = news_human_manager_index(tecnico) as usize;
     let e = cpn1_d(this + 8) + idx * 12;
     // o plano
     let novo = cpn1_i(e) == -1;

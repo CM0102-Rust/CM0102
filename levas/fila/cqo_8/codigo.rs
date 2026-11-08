@@ -20,7 +20,7 @@ unsafe fn cqo8_campeao_do_turno(this: usize, k: usize) -> usize {
 unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize) {
     let fase = cqo8_d(this + 0x30) as i32;
     if fase >= (cqo8_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x98af98, 0x202);
+        return show_error_at(0x98af98, 0x202);
     }
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let lista = alocar(8);
     if lista == 0 {
-        return aviso_em(0x98af98, 0x226);
+        return show_error_at(0x98af98, 0x226);
     }
     let a = cqo8_campeao_do_turno(this, 0);
     core::ptr::write_unaligned(lista as *mut usize, a);
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: usize) {
     core::ptr::write_unaligned((cqo8_d(this + 0xc) + 8) as *mut usize, fase);
     let fase = cqo8_d(cqo8_d(this + 0xc) + 8);
     if fase == 0 {
-        return aviso_em(0x98af98, 0x250);
+        return show_error_at(0x98af98, 0x250);
     }
     crate::comparacao::ramo("cqo_8 final");
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this: usize) ->
 unsafe extern "thiscall" fn comparar_bra_reg_parana_advance_stage(this: usize) {
     let antes = cqo8_d(this + 0x30) as i32;
     let ultima = antes >= (cqo8_d(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqo8_d(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
     PLACAR.registrar(igual, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_parana_advance_stage(this: usize) {
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
 unsafe extern "thiscall" fn comparar_bra_reg_parana_create_final_stage(this: usize) {
     let (a, b) = (cqo8_campeao_do_turno(this, 0), cqo8_campeao_do_turno(this, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let igual = if a == b {
         let marca = |k: usize| *((cqo8_d(cqo8_d(cqo8_d(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
         let na_liga = (0..cqo8_w(this + 0x3e).max(0) as usize).all(|i| {
@@ -176,5 +176,5 @@ unsafe extern "thiscall" fn comparar_bra_reg_parana_create_final_stage(this: usi
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_8 historico da final" e "cqo_8 premios") e é provada pelas mutações e pelas duas carreiras Rust.
 unsafe extern "thiscall" fn comparar_bra_reg_parana_record_season_honours(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
 }

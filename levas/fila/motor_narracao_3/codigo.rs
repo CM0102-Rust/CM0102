@@ -3,7 +3,7 @@
 /// Avança a posição de leitura da fila da narração (+0xc, anel de 12): marca a nova vaga (+0x3d =
 /// −1, tira o bit 0x8000 do evento) e, chegando na de escrita (+8, e então +0x2d68 = −1) ou na
 /// guardada (+0xa), desliga a fila (+5 = 0). Devolve se desligou.
-unsafe fn avancar_leitura(t: usize) -> bool {
+unsafe fn advance_commentary_read(t: usize) -> bool {
     let c = (t + 0xc) as *mut i16;
     *c = if c.read().wrapping_add(1) > 0xb { 0 } else { c.read().wrapping_add(1) };
     let p = t + 0x30 + *c as usize * 14;
@@ -37,7 +37,7 @@ unsafe extern "thiscall" fn next_event(t: usize, saida: *mut usize) -> usize {
     let vaga = |t: usize| t + 0x30 + *((t + 0xc) as *const i16) as usize * 14;
     let mut p = vaga(t);
     while *(p as *const u16) == 0 {
-        if avancar_leitura(t) {
+        if advance_commentary_read(t) {
             return 0;
         }
         p = vaga(t);
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn next_event(t: usize, saida: *mut usize) -> usize {
         }
     }
     if n <= s {
-        avancar_leitura(t);
+        advance_commentary_read(t);
     }
     p
 }
@@ -155,14 +155,14 @@ unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, tipo: i8, r
     }
     let mut certeza: i8 = 1;
     if conhece != 0 {
-        let f = ((semente % 101) as f64 * f64_em(0x967898)) as f32 as f64;
+        let f = ((semente % 101) as f64 * read_f64_at(0x967898)) as f32 as f64;
         let x = if semente % 10 == 0 {
-            f * f32_em(0x96afb0) as f64
+            f * read_f32_at(0x96afb0) as f64
         } else {
             let nivel = *((conhece + if tipo == 2 { 0x17 } else { 0x18 }) as *const i8);
             (chance_to_know(conhece, nivel) as i8 as f64) * f
         };
-        certeza = (ftol(x + f64_em(0x968968)) as i8).min(0x14);
+        certeza = (match_pl_ftol(x + read_f64_at(0x968968)) as i8).min(0x14);
     }
     let c32 = certeza as i32;
     let ruido = (semente % ((0x15 - c32) * 2) + c32 - 0x15) as i16 as i32;
@@ -179,14 +179,14 @@ unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, tipo: i8, r
 }
 
 unsafe extern "C" fn comparar_perceived_ability(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(%%I2%%)(o, p, c, tipo, rep);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(%%I2%%)(o, p, c, tipo, rep);
     let n = perceived_ability(o, p, c, tipo, rep);
     PLACAR.registrar(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> usize>(%%I0%%);
     let mut reg = vec![(t, 0x2db4)];
     if !saida.is_null() {
         reg.push((saida as usize, 4));
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> 
 // ponytail: escreve em `buf` e chama a 0x53e140 e a 0x541f90 (efeitos fora); comparação pelo texto
 #[allow(clippy::too_many_arguments)]
 unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, x: u32, longa: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(%%I1%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((buf as usize, tam as usize));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pt, jogador, lado, buf, tam, curto, x, longa), || crate::aleatorio::sem_contar(|| commentary_player_name(pt, jogador, lado, buf, tam, curto, x, longa)));

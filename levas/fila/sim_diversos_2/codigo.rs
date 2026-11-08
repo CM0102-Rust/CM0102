@@ -2,7 +2,7 @@
 
 /// A oferta do gerente de transferências para a pessoa `id`: a primeira das [this+4] em [this] com
 /// +0xc = `id`, ou 0.
-unsafe fn oferta_pelo_jogador(this: usize, id: i32) -> usize {
+unsafe fn offer_for_player(this: usize, id: i32) -> usize {
     let ofertas = *(this as *const usize);
     let n = *((this + 4) as *const i32);
     (0..n.max(0) as usize)
@@ -22,7 +22,7 @@ unsafe extern "thiscall" fn get_offers_for_player(this: usize, pessoa: *const i3
     if !pessoa.is_null() && id >= *(0xae2364 as *const i32) {
         return 0;
     }
-    let e = oferta_pelo_jogador(this, id);
+    let e = offer_for_player(this, id);
     if e == 0 {
         return 0;
     }
@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn get_offers_for_player(this: usize, pessoa: *const i3
 }
 
 /// O registro de 9 bytes do clube (id em +0) na lista de compras [this+0xdc].
-unsafe fn registro_da_lista_de_compras(this: usize, clube: usize) -> usize {
+unsafe fn shopping_list_entry(this: usize, clube: usize) -> usize {
     (*(clube as *const i32) as usize).wrapping_mul(9).wrapping_add(*((this + 0xdc) as *const usize))
 }
 
@@ -73,11 +73,11 @@ unsafe fn registro_da_lista_de_compras(this: usize, clube: usize) -> usize {
 /// multiplica 1 + fator, truncando). Nunca abaixo de +0x80 nem acima de 10000. Devolve o valor.
 unsafe extern "thiscall" fn update_club_target_reputation(this: usize, clube: usize) -> i32 {
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let r = registro_da_lista_de_compras(this, clube);
+    let r = shopping_list_entry(this, clube);
     let alvo = (r + 5) as *mut i16;
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let w = || core::ptr::read_unaligned(alvo) as i32;
-    let por = |dif: i32, k: usize, v: i32| ftol((dif as f64 * f64_em(k) + f64_em(0x967890)) * v as f64);
+    let por = |dif: i32, k: usize, v: i32| match_pl_ftol((dif as f64 * read_f64_at(k) + read_f64_at(0x967890)) * v as f64);
     core::ptr::write_unaligned(alvo, (core::ptr::read_unaligned((clube + 0x73) as *const i32) / 10 + 0x1194) as i16);
     if humano(clube, 1, 1, 0, 0) == 0 {
         let tecnico = u(clube + 0xcf);
@@ -128,13 +128,13 @@ unsafe extern "C" fn comp_util_write_fixture_to_news_slots(jogo: usize, noticia:
 }
 
 unsafe extern "thiscall" fn comparar_get_offers_for_player(this: usize, pessoa: *const i32, lista: usize, todas: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const i32, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, usize, u32) -> u32>(%%I0%%);
     // ponytail: com `lista` a original aloca nós (0x68d0d0) e não pode rodar duas vezes; só ela
     if lista != 0 || pessoa.is_null() {
         return o(this, pessoa, lista, todas);
     }
     // a original só mexe no cursor da lista da oferta achada
-    let e = oferta_pelo_jogador(this, *pessoa);
+    let e = offer_for_player(this, *pessoa);
     let l = if e == 0 { 0 } else { *(e as *const usize) };
     let reg = if l == 0 { vec![] } else { vec![(l, 0xe)] };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, lista, todas), || get_offers_for_player(this, pessoa, lista, todas));
@@ -143,15 +143,15 @@ unsafe extern "thiscall" fn comparar_get_offers_for_player(this: usize, pessoa: 
 }
 
 unsafe extern "thiscall" fn comparar_update_club_target_reputation(this: usize, clube: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%);
-    let reg = [(registro_da_lista_de_compras(this, clube) + 5, 2)];
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%);
+    let reg = [(shopping_list_entry(this, clube) + 5, 2)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || update_club_target_reputation(this, clube));
     PLACAR.registrar(igual && r == n, || format!("update_club_target_reputation({}) original={} rust={} {:x?} x {:x?}", *(clube as *const i32), r, n, mo, mr));
     r
 }
 
 unsafe extern "C" fn comparar_comp_util_write_fixture_to_news_slots(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, *mut u8) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut u8) -> u32>(%%I2%%);
     let k = *cursor as i8;
     // índice fora de 0..49 em algum dos 18: a 0x785790 abre a caixa de erro; só a original
     if !(0..0x32 - 17).contains(&k) {

@@ -30,7 +30,7 @@ unsafe fn cqc8_f(a: usize) -> f64 {
 }
 
 /// _ftol (0x945640): truncado para inteiro (a original usa só eax).
-fn cqc8_ftol(x: f64) -> i32 {
+fn ftol_f64(x: f64) -> i32 {
     x as i64 as i32
 }
 
@@ -40,12 +40,12 @@ unsafe fn cqc8_sortear(n: i32) -> i32 {
 }
 
 /// A linha da diretoria do clube no gerenciador dos técnicos: [this] + id × 0x49.
-unsafe fn cqc8_linha(this: usize, clube: usize) -> usize {
+unsafe fn board_row(this: usize, clube: usize) -> usize {
     cqc8_d(this).wrapping_add((cqc8_i(clube) as usize).wrapping_mul(0x49))
 }
 
 /// 0x53b900 (cdecl, 1): o clube é seleção.
-unsafe fn cqc8_selecao(c: usize) -> u32 {
+unsafe fn manager_manager_is_national_team(c: usize) -> u32 {
     let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     f(c)
 }
@@ -55,7 +55,7 @@ unsafe fn cqc8_selecao(c: usize) -> u32 {
 /// é seleção, senão 0,05; não play (+0x40) 0,1; na liga do mandante 1 com o fator 0,06 × (+0x69 da liga) + 0,27;
 /// senão 1 − |500 × (+0x69) − reputação| / 15000, × 1,25 na copa (+0x3a = 8) e pela fase (+0x30: 0x78 × 1,25, 0x82
 /// × 1,5, 0x8c × 0,75, 0x96 e 0xa0 × 2).
-unsafe fn cqc8_peso(clube: usize, partida: usize, fator: &mut f64) -> f64 {
+unsafe fn match_weight(clube: usize, partida: usize, fator: &mut f64) -> f64 {
     let comp = cqc8_d(partida + 0x14);
     if comp == 0 {
         return cqc8_f(0x967898);
@@ -67,7 +67,7 @@ unsafe fn cqc8_peso(clube: usize, partida: usize, fator: &mut f64) -> f64 {
     }
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     if amistoso(cqc8_d(0xae2c74), comp) != 0 {
-        return if cqc8_selecao(cqc8_d(partida + 0x1c)) != 0 { cqc8_f(0x968f80) } else { cqc8_f(0x967888) };
+        return if manager_manager_is_national_team(cqc8_d(partida + 0x1c)) != 0 { cqc8_f(0x968f80) } else { cqc8_f(0x967888) };
     }
     if cqc8_u(partida + 0x40) == 0 {
         return cqc8_f(0x967880);
@@ -95,7 +95,7 @@ unsafe fn cqc8_peso(clube: usize, partida: usize, fator: &mut f64) -> f64 {
 /// médias (0 = fora). Com +0x4c do jogo, os 11 starters valem 90; reservas (k ≥ 11) só com o byte de entrada
 /// (e − 2 ≠ 0xff) e menos ele. `nota`, `troca` são os deslocamentos dos dois bytes tentados em ordem (o primeiro ≥ 0
 /// vale; senão o +0x4d do jogo).
-unsafe fn cqc8_nota(jogo: usize, e: usize, k: i32, nota: usize, troca: usize, entrada: usize) -> Option<i8> {
+unsafe fn lineup_rating(jogo: usize, e: usize, k: i32, nota: usize, troca: usize, entrada: usize) -> Option<i8> {
     if cqc8_u(jogo + 0x4c) != 0 && k < 11 {
         return Some(0x5a);
     }
@@ -137,12 +137,12 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
     let outro = if mandante != 0 { cqc8_d(partida + 0x20) } else { cqc8_d(partida + 0x1c) };
     let vis = mandante == 0;
     let mut fator: f64 = 0.5;
-    let mut peso = cqc8_peso(clube, partida, &mut fator);
+    let mut peso = match_weight(clube, partida, &mut fator);
     // a contest (pela seleção da partida +0x18)
     let ev = cqc8_d(partida + 0x18);
     let cidade = |p: usize| p != 0 && cqc8_d(p + 0x38) != 0;
     let mut aj: i32 = 0;
-    if cqc8_selecao(clube) != 0 {
+    if manager_manager_is_national_team(clube) != 0 {
         if cidade(ev) && cqc8_d(cqc8_d(ev + 0x38) + 0x1f) == cqc8_d(clube + 0x53) {
             aj = -20;
         } else if cqc8_d(clube + 0x69) == ev {
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
         v += cqc8_f(0x967880);
         v = v * cqc8_f(0x96d1c8) - cqc8_f(0x96d1c0); // cqc8: a nota do jogo (× 67 − 470)
         v *= fator;
-        aj = aj.wrapping_add(cqc8_ftol(v));
+        aj = aj.wrapping_add(ftol_f64(v));
         // a reputação média dos adversários escalados (pela nação do clube)
         let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
         let (mut s1, mut s2) = (0i32, 0i32);
@@ -242,7 +242,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
             } else {
                 cqc8_w(cqc8_d(p + 0x61) + 0xd)
             };
-            let al = match cqc8_nota(jogo, e, k, 4, 0, 2) {
+            let al = match lineup_rating(jogo, e, k, 4, 0, 2) {
                 Some(a) => a,
                 None => continue,
             };
@@ -396,20 +396,20 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
     let mut mult = if segunda(clube) != 0 {
         peso * cqc8_f(0x968968)
     } else {
-        let s = cqc8_selecao(clube);
+        let s = manager_manager_is_national_team(clube);
         if s != 0 { peso + peso } else { peso }
     };
     if cqc8_u(partida + 0x3a) == 8 {
-        if cqc8_u(cqc8_linha(this, clube) + 0xf) & 4 != 0 { // a palavra +0xe & 0x400
+        if cqc8_u(board_row(this, clube) + 0xf) & 4 != 0 { // a palavra +0xe & 0x400
             mult = mult + mult;
             if (aj as i16) < 0 {
-                aj = cqc8_ftol((aj as i16) as f64 * cqc8_f(0x968940));
+                aj = ftol_f64((aj as i16) as f64 * cqc8_f(0x968940));
             }
         } else {
             mult *= cqc8_f(0x968940);
         }
     }
-    let mut dx = cqc8_ftol((aj as i16) as f64 * mult);
+    let mut dx = ftol_f64((aj as i16) as f64 * mult);
     if fl & 0x800 != 0 && (dx as i16) < 0 {
         dx = (dx as i16 as i32) / 3;
     }
@@ -424,7 +424,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
     }
     let aj = dx;
     let d16 = aj as i16;
-    let conf6 = || cqc8_w(cqc8_linha(this, clube) + 6);
+    let conf6 = || cqc8_w(board_row(this, clube) + 6);
     if a + 5 < b {
         fl |= if clube == 0 || conf6() < 0x10b3 { 1 } else { 2 };
     } else if a - 5 > b {
@@ -478,7 +478,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
     let historia: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, i32) = core::mem::transmute(0x74b060usize);
     if fl & 0xa00 == 0 && marcas & 0x2810 == 0 && dirigivel(clube) != 0 {
         let s = aj as i16 as i32;
-        let oito = || cqc8_w(cqc8_linha(this, clube) + 8) as i32;
+        let oito = || cqc8_w(board_row(this, clube) + 8) as i32;
         let r = cqc8_sortear(0x5a);
         let mut sai = false;
         if s < -0x5a - r {
@@ -491,7 +491,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
         }
         if sai {
             historia(cqc8_d(0xb6b7c8), clube, 0x3d, 0, partida, 0, -1);
-            let l = cqc8_linha(this, clube) + 0x16;
+            let l = board_row(this, clube) + 0x16;
             cqc8_pw(l, cqc8_w(l).wrapping_add(-0xfa));
         }
     }
@@ -502,8 +502,8 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
     {
         let co = cqc8_d(cqc8_d(0xadadfc).wrapping_add((id as usize).wrapping_mul(4)));
         if co != 0 && cqc8_d(co + 8) != 0 {
-            let linha_da_liga: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-            let ln = linha_da_liga(cqc8_d(co + 8), clube);
+            let league_row: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
+            let ln = league_row(cqc8_d(co + 8), clube);
             if fl & 0x100 == 0 {
                 let n = cqc8_u(ln + 0x72);
                 if n < 9 && n != 0 && cqc8_u(ln + 0x74) == 1 && (aj as i16 as i32) > (n as i32 * n as i32) / 2 + 0x32 {
@@ -517,19 +517,19 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
         let tec = cqc8_d(clube + 0xcf);
         let marca: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x7a7eb0usize);
         if tec != 0 && marca(cqc8_d(0xb7434c), tec) != 0 {
-            aj = cqc8_ftol((aj as i16) as f64 * cqc8_f(0x968968));
+            aj = ftol_f64((aj as i16) as f64 * cqc8_f(0x968968));
         }
     }
     // a confiança
     let v = (aj as i16) as f64;
     crate::comparacao::ramo("cqc_8 confianca");
     for (o, k) in [(6usize, 0x968e40usize), (0xa, 0x968968), (8, 0x968980), (0xc, 0x968918)] {
-        let l = cqc8_linha(this, clube) + o;
-        let t = cqc8_ftol(v * cqc8_f(k)); // cqc8: a confiança pelo ajuste
+        let l = board_row(this, clube) + o;
+        let t = ftol_f64(v * cqc8_f(k)); // cqc8: a confiança pelo ajuste
         cqc8_pw(l, cqc8_w(l).wrapping_add(t as i16));
     }
     for o in [6usize, 0xa, 8, 0xc] {
-        let l = cqc8_linha(this, clube) + o;
+        let l = board_row(this, clube) + o;
         let x = cqc8_w(l);
         if x > 0x2710 {
             cqc8_pw(l, 0x2710);
@@ -538,7 +538,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
         }
     }
     let piso = |o: usize, v: i16| {
-        let l = cqc8_linha(this, clube) + o;
+        let l = board_row(this, clube) + o;
         if cqc8_w(l) < v {
             cqc8_pw(l, v);
         }
@@ -571,7 +571,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
             }
         }
     } else if (aj as i16) < 0 && comp != 0 && cqc8_w(partida + 0x30) == 0x96 && cqc8_u(partida + 0x3a) == 5 {
-        let l = cqc8_linha(this, clube);
+        let l = board_row(this, clube);
         if cqc8_u(l + 0xe) & 4 != 0 {
             if cqc8_w(l + 6) > 0x10b3 {
                 cqc8_pw(l + 6, 0x10b3);
@@ -586,7 +586,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
             }
         }
     }
-    if cqc8_d(clube + 0xcf) != 0 && (aj as i16) < -0x4b && cqc8_w(cqc8_linha(this, clube) + 8) < 0xbb8 {
+    if cqc8_d(clube + 0xcf) != 0 && (aj as i16) < -0x4b && cqc8_w(board_row(this, clube) + 8) < 0xbb8 {
         let protesto: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x6a5d10usize);
         protesto(this, clube);
     }
@@ -619,7 +619,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
 // protesto, a demissão (0x69aba0) e tira item da lista dos ultimatos (0x68d1f0): alocam, liberam e sorteiam conforme o
 // caminho; não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
 unsafe extern "thiscall" fn comparar_update_board_confidence_after_match(this: usize, clube: usize, partida: usize, jogo: usize, mandante: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I0%%)(this, clube, partida, jogo, mandante)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I0%%)(this, clube, partida, jogo, mandante)
 }
 
 /// { 0x6a5fa0 } (thiscall, ret 0x20, manager_manager.cpp, quadro SEH sem destrutor no caminho normal):
@@ -677,7 +677,7 @@ unsafe extern "thiscall" fn post_board_match_reaction_news(this: usize, clube: u
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_post_board_match_reaction_news(this: usize, clube: usize, outro: usize, partida: usize, marcas: u32, a: i32, b: i32, c: i32, d: i32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, i32, i32, i32, i32)>(%%I1%%)(this, clube, outro, partida, marcas, a, b, c, d)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, i32, i32, i32, i32)>(%%I1%%)(this, clube, outro, partida, marcas, a, b, c, d)
 }
 
 /// { 0x6a5a60 } (thiscall, ret 0xc, manager_manager.cpp, quadro SEH sem destrutor no caminho normal):
@@ -706,5 +706,5 @@ unsafe extern "thiscall" fn post_fa_performance_news(_this: usize, comp: usize, 
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_fa_performance_news(this: usize, comp: usize, selecao: usize, nota: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, comp, selecao, nota)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, comp, selecao, nota)
 }

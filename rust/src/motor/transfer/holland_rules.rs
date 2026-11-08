@@ -4,13 +4,16 @@ use super::*;
 
 
 
-/// O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
+/// Constructor of a nation's transfer rules: TransferRules base with the caller's 5 arguments, the nation's vtable and
+/// its transfer windows.
+///
+/// [pt] O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
 /// vtable da nação e as janelas.
-pub(crate) unsafe fn cqm1_construir(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
+pub(crate) unsafe fn holland_rules_construct_nation_transfer_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
     let base: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_TRANSFER_RULES_TRANSFER_RULES);
     base(this, a[0], a[1], a[2], a[3], a[4]);
     core::ptr::write_unaligned(this as *mut u32, vtable);
-    cqk1_janelas(this, n, t, arquivo, linha);
+    set_transfer_windows(this, n, t, arquivo, linha);
 }
 
 
@@ -27,17 +30,17 @@ pub(crate) const CQM1_HOLANDA: [[u8; 6]; 2] = [
 /// [pt] { 0x5f9690 } (thiscall, ret 0x14, holland_rules.cpp, `HOLLAND_RULES::HOLLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Holanda (regra 12): a base (0x8e84a0), a vtable 0x96ba88, 1 janela(s) de `CQM1_HOLANDA`; o +0x13 = 50 (o padrão da base é 50) [inferência: o limite de estrangeiros]; o +0x14 = 50 (o padrão é 30). Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_holland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_1 holanda");
-    cqm1_construir(this, [a1, a2, a3, a4, a5], 0x96ba88, 1, &CQM1_HOLANDA, 0x9cf04c, 0x52);
+    holland_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96ba88, 1, &CQM1_HOLANDA, 0x9cf04c, 0x52);
     *((this + 0x13) as *mut u8) = 50;
     *((this + 0x14) as *mut u8) = 50;
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_holland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_HOLLAND_RULES);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_HOLLAND_RULES);
     let mut r = 0usize;
-    cqk1_comparar("construct_holland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+    compare_transfer_rules_ctor("construct_holland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         construct_holland_rules(s, a1, a2, a3, a4, a5);
     });
     r
@@ -55,15 +58,15 @@ pub(crate) const CQM1_CROACIA: [[u8; 6]; 2] = [
 /// [pt] { 0x518500 } (thiscall, ret 0x14, croatia_rules.cpp, `CROATIA_RULES::CROATIA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Croácia (regra 5): a base (0x8e84a0), a vtable 0x969394, 1 janela(s) de `CQM1_CROACIA`. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_croatia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_1 croacia");
-    cqm1_construir(this, [a1, a2, a3, a4, a5], 0x969394, 1, &CQM1_CROACIA, 0x9b5570, 0x4e);
+    holland_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x969394, 1, &CQM1_CROACIA, 0x9b5570, 0x4e);
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_croatia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_CROATIA_RULES);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_CROATIA_RULES);
     let mut r = 0usize;
-    cqk1_comparar("construct_croatia_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+    compare_transfer_rules_ctor("construct_croatia_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         construct_croatia_rules(s, a1, a2, a3, a4, a5);
     });
     r
@@ -81,15 +84,15 @@ pub(crate) const CQM1_IRLANDA: [[u8; 6]; 2] = [
 /// [pt] { 0x63c210 } (thiscall, ret 0x14, ireland_rules.cpp, `IRELAND_RULES::IRELAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Irlanda (regra 13): a base (0x8e84a0), a vtable 0x96c190, 1 janela(s) de `CQM1_IRLANDA`. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_1 irlanda");
-    cqm1_construir(this, [a1, a2, a3, a4, a5], 0x96c190, 1, &CQM1_IRLANDA, 0x9ea12c, 0x4e);
+    holland_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96c190, 1, &CQM1_IRLANDA, 0x9ea12c, 0x4e);
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_IRELAND_RULES);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_IRELAND_RULES);
     let mut r = 0usize;
-    cqk1_comparar("construct_ireland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+    compare_transfer_rules_ctor("construct_ireland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         construct_ireland_rules(s, a1, a2, a3, a4, a5);
     });
     r

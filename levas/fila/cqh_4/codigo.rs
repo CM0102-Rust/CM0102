@@ -22,7 +22,7 @@ const CQH4_DATAS: [[(i32, i32, i32, i32, i32); 6]; 4] = [
 unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
     let f = fase as u8 as i8;
     if f == -1 || f >= 0xc {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%)(this, fase, rodadas, id, liga);
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%)(this, fase, rodadas, id, liga);
     }
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(0x68a160usize);
@@ -34,7 +34,7 @@ unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, fase: u
     *id = (f as i16).wrapping_add(0x43d);
     let t = alocar(0x186);
     if t == 0 {
-        aviso_em(0x9c4900, if f < 8 { 0x17a } else { 0x1aa });
+        show_error_at(0x9c4900, if f < 8 { 0x17a } else { 0x1aa });
         return 0;
     }
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as u16 as u32;
@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, fase: u
 
 /// Os bytes que a tabela tem gravados (o resto da memória alocada não é escrito): de cada rodada, +0..+4, +0x3d..+0x40
 /// e o jogo 0 (+5..+0xb).
-unsafe fn cqh4_gravados(t: usize) -> Vec<u8> {
+unsafe fn league_written_table_bytes(t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     for r in 0..6usize {
         let e = t + r * 0x41;
@@ -77,7 +77,7 @@ unsafe fn cqh4_gravados(t: usize) -> Vec<u8> {
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). As
 /// preliminares e o mata-mata: só a original.
 unsafe extern "thiscall" fn comparar_european_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     let f = fase as u8 as i8;
     if f == -1 || f >= 0xc {
         return o(this, fase, rodadas, id, liga);
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn comparar_european_cup_create_round_table(this: usize
         || european_cup_create_round_table(this, fase, &mut r2, &mut i2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }),
     );
     let saidas = *rodadas == r2 && *id == i2 && (liga.is_null() || *liga == l2);
-    let tabela = if a != 0 && b != 0 { cqh4_gravados(a) == cqh4_gravados(b) } else { a == 0 && b == 0 };
+    let tabela = if a != 0 && b != 0 { league_written_table_bytes(a) == league_written_table_bytes(b) } else { a == 0 && b == 0 };
     if b != 0 {
         soltar(b);
     }
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn set_club_season_expectations(this: usize) {
 
 /// Só a original (as expectativas mudam a diretoria e mandam notícias; não rodam duas vezes): a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_set_club_season_expectations(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
 /// { 0x6831a0 } (thiscall, ret 0xc, league.cpp; this não é lido): `League::relegate_club_to_division(clube, divisão,
@@ -157,6 +157,6 @@ unsafe extern "thiscall" fn relegate_club_to_division(_this: usize, clube: usize
 /// a divisão e +0x5b = a competição de antes.
 unsafe extern "thiscall" fn comparar_relegate_club_to_division(this: usize, clube: usize, divisao: usize, x: u32) {
     let antiga = cqh4l_d(clube + 0x57);
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, clube, divisao, x);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, clube, divisao, x);
     PLACAR.registrar(cqh4l_d(clube + 0x57) == divisao && cqh4l_d(clube + 0x5b) == antiga, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", cqh4l_d(clube + 0x57), cqh4l_d(clube + 0x5b)));
 }

@@ -65,7 +65,7 @@ unsafe fn cqu7_plano(this: usize, r: usize, ano: u32, dono: usize, vt: usize, ca
 /// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x96a864, o registro em +4, o ano em +0x40 e
 /// os da tabela CQU7_CAMPOS_COPA_DA_FRANCA); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os 222 inscritos (FraCup::collect_entrants) (0x5baa50, thiscall, ret 0; a caixa da linha 0x4c se devolver 0); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x5b se devolver 0); as estatísticas em +8 (a caixa da linha 0x62 sem elas); a classificação final (Cup::rank_teams) (0x5223a0, thiscall, ret 0, sem conferir); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: tipo 1 (clubes de uma nação); fundo de prêmios de 1.000.000; 3 reservas no banco e 3 substituições; regra de disciplina 12 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqu7_copa_da_franca_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
@@ -90,7 +90,7 @@ unsafe fn cqu7_copa_da_franca_corpo(this: usize, ano: u32, dono: usize) -> usize
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5baa50usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ccb28, 0x4c);
+        show_error_at(0x9ccb28, 0x4c);
         return this;
     }
     cqu7_p32(this + 0x28, 0xf4240);
@@ -98,11 +98,11 @@ unsafe fn cqu7_copa_da_franca_corpo(this: usize, ano: u32, dono: usize) -> usize
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ccb28, 0x5b);
+        show_error_at(0x9ccb28, 0x5b);
         return this;
     }
     if !cqu7_estatisticas(this) {
-        aviso_em(0x9ccb28, 0x62);
+        show_error_at(0x9ccb28, 0x62);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn cqu7_copa_da_franca(this: usize, ano: u32, dono: usi
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu7_plano).
 unsafe extern "thiscall" fn comparar_cqu7_copa_da_franca(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu7_plano(this, r, ano, dono, 0x96a864, &CQU7_CAMPOS_COPA_DA_FRANCA, true);
     PLACAR.registrar(erro.is_none(), || format!("cqu7_copa_da_franca({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn comparar_cqu7_copa_da_franca(this: usize, ano: u32, 
 /// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x96aad8, o registro em +4, o ano em +0x40 e
 /// os da tabela CQU7_CAMPOS_COPA_DA_LIGA_FRANCESA); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os 54 inscritos (FraLgeCup::collect_entrants) (0x5bd160, thiscall, ret 0; a caixa da linha 0x49 se devolver 0); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x57 se devolver 0); as estatísticas em +8 (a caixa da linha 0x5e sem elas); a classificação final (Cup::rank_teams) (0x5223a0, thiscall, ret 0, sem conferir); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: tipo 1 (clubes de uma nação); fundo de prêmios de 500.000; 3 reservas no banco e 3 substituições; regra de disciplina 12 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqu7_copa_da_liga_francesa_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
@@ -154,7 +154,7 @@ unsafe fn cqu7_copa_da_liga_francesa_corpo(this: usize, ano: u32, dono: usize) -
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bd160usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ccb98, 0x49);
+        show_error_at(0x9ccb98, 0x49);
         return this;
     }
     cqu7_p32(this + 0x28, 0x7a120);
@@ -162,11 +162,11 @@ unsafe fn cqu7_copa_da_liga_francesa_corpo(this: usize, ano: u32, dono: usize) -
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
     let r = f(this);
     if r == 0 {
-        aviso_em(0x9ccb98, 0x57);
+        show_error_at(0x9ccb98, 0x57);
         return this;
     }
     if !cqu7_estatisticas(this) {
-        aviso_em(0x9ccb98, 0x5e);
+        show_error_at(0x9ccb98, 0x5e);
         return this;
     }
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn cqu7_copa_da_liga_francesa(this: usize, ano: u32, do
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu7_plano).
 unsafe extern "thiscall" fn comparar_cqu7_copa_da_liga_francesa(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu7_plano(this, r, ano, dono, 0x96aad8, &CQU7_CAMPOS_COPA_DA_LIGA_FRANCESA, true);
     PLACAR.registrar(erro.is_none(), || format!("cqu7_copa_da_liga_francesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn comparar_cqu7_copa_da_liga_francesa(this: usize, ano
 /// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x96ace0, o registro em +4, o ano em +0x40 e
 /// os da tabela CQU7_CAMPOS_SUPERCOPA_FRANCESA); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
 /// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os dois clubes (FraSuper::select_teams) (0x5bf770, thiscall, ret 0; a caixa da linha 0x3f se devolver negativo); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x4d se devolver negativo); as estatísticas em +8 (a caixa da linha 0x54 sem elas); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (aviso_em) e a devolução de this se falhar. Devolve this.
+/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
 /// Regra: tipo 1 (clubes de uma nação); sem fundo de prêmios (+0x28 fica como a base deixou); reservas e substituições da base; regra de disciplina 12 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
 unsafe fn cqu7_supercopa_francesa_corpo(this: usize, ano: u32, dono: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
@@ -216,18 +216,18 @@ unsafe fn cqu7_supercopa_francesa_corpo(this: usize, ano: u32, dono: usize) -> u
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bf770usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0x9ccc48, 0x3f);
+        show_error_at(0x9ccc48, 0x3f);
         return this;
     }
     cqu7_rodadas(this);
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
     let r = f(this);
     if r < 0 {
-        aviso_em(0x9ccc48, 0x4d);
+        show_error_at(0x9ccc48, 0x4d);
         return this;
     }
     if !cqu7_estatisticas(this) {
-        aviso_em(0x9ccc48, 0x54);
+        show_error_at(0x9ccc48, 0x54);
         return this;
     }
     this
@@ -241,7 +241,7 @@ unsafe extern "thiscall" fn cqu7_supercopa_francesa(this: usize, ano: u32, dono:
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu7_plano).
 unsafe extern "thiscall" fn comparar_cqu7_supercopa_francesa(this: usize, ano: u32, dono: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqu7_plano(this, r, ano, dono, 0x96ace0, &CQU7_CAMPOS_SUPERCOPA_FRANCESA, true);
     PLACAR.registrar(erro.is_none(), || format!("cqu7_supercopa_francesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r

@@ -7,7 +7,7 @@
 #   convocacoes das selecoes mudam.
 # Resultado (03/11, carreira Rust ate 2002-06-01 com a 270a publicada): as duas ultimas pegas; a do grupo um do fim
 # escapa (os jogos do grupo A sao de junho de 2002 e a ordem das linhas nao muda o que roda antes).
-# Os contadores ficam colados no efeito: o time do grupo um e o time do grupo depois da condicao do grupo; a competicao
+# Os contadores ficam colados no efeito: o time do grupo um e o time do grupo depois da match_condition do grupo; a competicao
 # da nacao dentro do laco.
 MUTACOES = [
     ('cqf5_grupo_um_do_fim',
@@ -15,8 +15,8 @@ MUTACOES = [
      'let e = 31 - i as usize; // mutacao: a lista do fim para o comeco',
      'cqf_5 time do grupo um'),
     ('cqf5_vagas_do_grupo_invertidas',
-     'cqf5_pd(times + n as usize * 4, cqf5_clube(lista, i as usize)); // cqf5: o time na vaga do grupo',
-     'cqf5_pd(times + (3 - n as usize) * 4, cqf5_clube(lista, i as usize)); // mutacao: as vagas invertidas',
+     'cqf5_pd(times + n as usize * 4, draw_list_club(lista, i as usize)); // cqf5: o time na vaga do grupo',
+     'cqf5_pd(times + (3 - n as usize) * 4, draw_list_club(lista, i as usize)); // mutacao: as vagas invertidas',
      'cqf_5 time do grupo'),
     ('cqf5_metade_das_nacoes',
      'i += 1; // cqf5: a próxima nação',

@@ -4,8 +4,10 @@ use super::*;
 
 
 
-/// O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
-pub(crate) unsafe fn cqo7_campeao_do_turno(this: usize, k: usize) -> usize {
+/// Champion of a half: club in row 0 of stage k's table.
+///
+/// [pt] O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
+pub(crate) unsafe fn half_champion(this: usize, k: usize) -> usize {
     read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
 }
 
@@ -21,7 +23,7 @@ pub(crate) unsafe fn cqo7_campeao_do_turno(this: usize, k: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_advance_stage(this: usize) {
     let fase = read_usize(this + 0x30) as i32;
     if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x98aed0, 0x202);
+        return show_error_at(0x98aed0, 0x202);
     }
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
@@ -54,11 +56,11 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let lista = alocar(8);
     if lista == 0 {
-        return aviso_em(0x98aed0, 0x226);
+        return show_error_at(0x98aed0, 0x226);
     }
-    let a = cqo7_campeao_do_turno(this, 0);
+    let a = half_champion(this, 0);
     core::ptr::write_unaligned(lista as *mut usize, a);
-    let b = cqo7_campeao_do_turno(this, 1);
+    let b = half_champion(this, 1);
     core::ptr::write_unaligned((lista + 4) as *mut usize, b);
     if a == b {
         crate::comparacao::ramo("cqo_7 mesmo campeao");
@@ -96,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
     core::ptr::write_unaligned((read_usize(this + 0xc) + 8) as *mut usize, fase);
     let fase = read_usize(read_usize(this + 0xc) + 8);
     if fase == 0 {
-        return aviso_em(0x98aed0, 0x250);
+        return show_error_at(0x98aed0, 0x250);
     }
     crate::comparacao::ramo("cqo_7 final");
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
@@ -150,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_stage(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_MINAS_GERAIS_ADVANCE_STAGE)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_MINAS_GERAIS_ADVANCE_STAGE)(this);
     let depois = read_usize(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
     PLACAR.registrar(igual, || format!("bra_reg_minas_gerais_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
@@ -161,8 +163,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_sta
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_final_stage(this: usize) {
-    let (a, b) = (cqo7_campeao_do_turno(this, 0), cqo7_campeao_do_turno(this, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_MINAS_GERAIS_CREATE_FINAL_STAGE)(this);
+    let (a, b) = (half_champion(this, 0), half_champion(this, 1));
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_MINAS_GERAIS_CREATE_FINAL_STAGE)(this);
     let igual = if a == b {
         let marca = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
         let na_liga = (0..read_i16(this + 0x3e).max(0) as usize).all(|i| {
@@ -187,19 +189,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_fina
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_7 historico da final" e "cqo_7 premios") e é provada pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_record_season_honours(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_RECORD_SEASON_HONOURS)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_RECORD_SEASON_HONOURS)(this)
 }
 
 // ---------- 274a leva: o progresso do clube nas estatísticas da competição no Mineiro (Paranaense, Carioca), na MLS e na Série C (bra_reg_minas_gerais.cpp, usa_mls.cpp, bra_nat_third.cpp) ----------
 
-/// 0x4a4850 `Comp_Stats::find_club_entry(clube)` (thiscall, ret 4): a entrada do clube nas estatísticas da competição
+/// Comp_Stats::find_club_entry(club) on [this+8] (original routine).
+///
+/// [pt] 0x4a4850 `Comp_Stats::find_club_entry(clube)` (thiscall, ret 4): a entrada do clube nas estatísticas da competição
 /// ([this+8]); ordena a tabela pelo clube quando preciso (marca +0x18) e busca. Original (não portada).
-pub(crate) unsafe fn cqk8_entrada(this: usize, clube: usize) -> usize {
+pub(crate) unsafe fn bra_reg_minas_gerais_comp_stats_club_entry(this: usize, clube: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     f(core::ptr::read_unaligned((this + 8) as *const u32) as usize, clube)
 }
 
-pub(crate) unsafe fn cqk8_gravar(e: usize, atual: u8, minima: u8, maxima: u8) {
+/// Writes the club's current, lowest and highest progress codes (+0x73, +0x74, +0x75).
+pub(crate) unsafe fn write_progress_codes(e: usize, atual: u8, minima: u8, maxima: u8) {
     *((e + 0x73) as *mut u8) = atual;
     *((e + 0x74) as *mut u8) = minima;
     *((e + 0x75) as *mut u8) = maxima;
@@ -215,7 +220,7 @@ pub(crate) unsafe fn cqk8_gravar(e: usize, atual: u8, minima: u8, maxima: u8) {
 /// (+0x73, +0x74, +0x75); na fase de pontos corridos (-1), o segundo abaixo de 3 vira 1 e o terceiro abaixo de 3 vira 2.
 /// Devolve a entrada.
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = cqk8_entrada(this, clube);
+    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
     let (a, mut b, c) = (a as u8, b as u8, c as u8);
     if fase as u8 == 0xff {
         if b < 3 {
@@ -223,26 +228,28 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(th
         }
         if c < 3 {
             crate::comparacao::ramo("cqk_8 mineiro terceiro abaixo de 3");
-            cqk8_gravar(e, a, b, 2); // cqk8: o terceiro código do Mineiro
+            write_progress_codes(e, a, b, 2); // cqk8: o terceiro código do Mineiro
             return e;
         }
     }
     crate::comparacao::ramo("cqk_8 mineiro como vem");
-    cqk8_gravar(e, a, b, c); // cqk8: os códigos do Mineiro como vêm
+    write_progress_codes(e, a, b, c); // cqk8: os códigos do Mineiro como vêm
     e
 }
 
 /// Comparador: lado a lado pela entrada do clube (+0x73..+0x75), achada antes (a 0x4a4850 ordena na primeira vez e só
 /// busca depois; a original e a cópia a chamam de novo); a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = cqk8_entrada(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_REG_MINAS_GERAIS_SET_CLUB_PROGRESS)(this, clube, fase, a, b, c), || bra_reg_minas_gerais_set_club_progress(this, clube, fase, a, b, c));
+    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_REG_MINAS_GERAIS_SET_CLUB_PROGRESS)(this, clube, fase, a, b, c), || bra_reg_minas_gerais_set_club_progress(this, clube, fase, a, b, c));
     PLACAR.registrar(igual && r == n, || format!("bra_reg_minas_gerais_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }
 
-/// O código da MLS na temporada regular: 1..=3 viram `ate_3`, 4 vira 10, os outros ficam.
-pub(crate) fn cqk8_mls(x: u8, ate_3: u8) -> u8 {
+/// MLS regular-season progress code: 1..3 -> ate_3, 4 -> 10, others unchanged.
+///
+/// [pt] O código da MLS na temporada regular: 1..=3 viram `ate_3`, 4 vira 10, os outros ficam.
+pub(crate) fn mls_progress_code(x: u8, ate_3: u8) -> u8 {
     match x {
         1..=3 => ate_3,
         4 => 10,
@@ -252,9 +259,11 @@ pub(crate) fn cqk8_mls(x: u8, ate_3: u8) -> u8 {
 
 
 
-/// O código da Série C nos grupos (fases até 6): 1 e 2 viram `um_dois`, 3 → 0x11, 4 → 0x19, 5 → 0x21, 6 → 0x29,
+/// Serie C group progress code: 1,2 -> um_dois, 3..7 -> 0x11..0x31 in steps of 8, others unchanged.
+///
+/// [pt] O código da Série C nos grupos (fases até 6): 1 e 2 viram `um_dois`, 3 → 0x11, 4 → 0x19, 5 → 0x21, 6 → 0x29,
 /// 7 → 0x31 (a posição no grupo levada para a escala de 49 lugares [inferência]); os outros ficam.
-pub(crate) fn cqk8_serie_c(x: u8, um_dois: u8) -> u8 {
+pub(crate) fn serie_c_progress_code(x: u8, um_dois: u8) -> u8 {
     match x {
         1 | 2 => um_dois,
         3 => 0x11,
@@ -276,13 +285,13 @@ pub(crate) fn cqk8_serie_c(x: u8, um_dois: u8) -> u8 {
 /// devolvem -1; o mata-mata na fase 2 (peso pela escala de uma rodada só: 40). Devolve 0 ou -1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
-    cqk7_mineiro(this, clube, situacao, fase, jogo, true).0
+    mineiro_end_of_stage(this, clube, situacao, fase, jogo, true).0
 }
 
 /// Comparador: como o do Centro-Oeste.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let (n, l, dest) = cqk7_mineiro(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_MINAS_GERAIS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, jogo, a6);
+    let (n, l, dest) = mineiro_end_of_stage(this, clube, situacao, fase, jogo, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_MINAS_GERAIS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_minas_gerais_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
@@ -295,12 +304,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_update_staf
 ///
 /// [pt] { 0x433d50 } (thiscall, ret 8, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::BraRegMinasGerais(ano, registro)`: o Mineiro (três fases além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_minas_gerais(this: usize, ano: u32, registro: usize) -> usize {
-    cqt2_construir(this, ano, registro, &CQT2_MINEIRO, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
+    bra_reg_goias_construct_state_league(this, ano, registro, &CQT2_MINEIRO, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_minas_gerais(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_MINAS_GERAIS);
-    cqt2_comparar("construct_bra_reg_minas_gerais", this, ano, registro, &CQT2_MINEIRO, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_MINAS_GERAIS);
+    bra_reg_goias_compare_state_league_ctor("construct_bra_reg_minas_gerais", this, ano, registro, &CQT2_MINEIRO, || o(this, ano, registro))
 }
 
 /// the Minas Gerais league has 12 clubs: those with it as their reserve division in the database (the field that holds
@@ -310,12 +319,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_minas_gerais(t
 /// [pt] { 0x434810 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_table()`: o Mineiro tem 12 clubes (divisão reserva +0x60 = [0x9cf9d4]).
 /// Fonte 0x98aed0, linha 0x169.
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_table(this: usize) -> u32 {
-    cql9_tabela(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
+    bra_reg_goias_create_state_league_table(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_CREATE_TABLE);
-    cql9_comparar("bra_reg_minas_gerais_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_CREATE_TABLE);
+    bra_reg_goias_compare_state_league_table("bra_reg_minas_gerais_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, || o(this))
 }
 
 /// One half of the Minas Gerais state league: when the first game of a half is processed, it builds that half's
@@ -327,12 +336,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_tabl
 /// [pt] { 0x4351b0 } (thiscall, ret 4, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_half_season_stage(k)`, um turno
 /// do Mineiro (a caixa da linha 0x3d5).
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_half_season_stage(this: usize, k: u32) {
-    cqr1_turno(this, k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: os pontos por vitória no Mineiro
+    create_half_season_stage(this, k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: os pontos por vitória no Mineiro
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_half_season_stage(this: usize, k: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_REG_MINAS_GERAIS_CREATE_HALF_SEASON_STAGE);
-    cqr1_comparar("bra_reg_minas_gerais_create_half_season_stage", this, k, || o(this, k))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_REG_MINAS_GERAIS_CREATE_HALF_SEASON_STAGE);
+    compare_half_season_stage("bra_reg_minas_gerais_create_half_season_stage", this, k, || o(this, k))
 }
 
 /// The Minas Gerais state league turnover: archives the season in the statistics, clears the table, the schedule and
@@ -343,10 +352,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_half
 ///
 /// [pt] { 0x434910 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::start_new_season()`, a virada do Mineiro (a tabela: 0x434810).
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_start_new_season(this: usize) -> u32 {
-    cqr2_virada(this, 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: o ano seguinte do Mineiro
+    start_new_season_two_halves(this, 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: o ano seguinte do Mineiro
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_start_new_season(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_START_NEW_SEASON);
-    cqr2_comparar("bra_reg_minas_gerais_start_new_season", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_START_NEW_SEASON);
+    compare_new_season("bra_reg_minas_gerais_start_new_season", this, || o(this))
 }

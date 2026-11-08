@@ -4,55 +4,55 @@ unsafe fn cpx7_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
 }
 
-unsafe fn cpx7_abrir(save: usize, nome: usize) -> usize {
+unsafe fn zip_open_item(save: usize, nome: usize) -> usize {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     abrir_item(save, nome, 1, 0x16, 4)
 }
 
-unsafe fn cpx7_gravar(dados: usize, tamanho: u32, quantos: u32, z: usize) -> u32 {
+unsafe fn zip_write(dados: usize, tamanho: u32, quantos: u32, z: usize) -> u32 {
     let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
     gravar_item(dados, tamanho, quantos, z)
 }
 
-unsafe fn cpx7_fechar(z: &mut usize) {
+unsafe fn zip_close(z: &mut usize) {
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
     fechar_item(z);
 }
 
 /// { 0x443f50 } (thiscall, ret 4, club_history.cpp): `Club_History::save(save)`: grava no item `club history.dat` a
 /// quantidade (+0xc, u32) e os registros de 0x10 bytes de [+8], e devolve 1. Sem contêiner: a caixa "Error"
-/// (club_history.cpp 0x329) e 0; erro ao abrir ou gravar: a caixa (0x331, 0x338, 0x340) e o jogo para (`erro_em`).
+/// (club_history.cpp 0x329) e 0; erro ao abrir ou gravar: a caixa (0x331, 0x338, 0x340) e o jogo para (`fatal_error_at`).
 unsafe extern "thiscall" fn club_history_save(this: usize, save: usize) -> u32 {
     const FONTE: usize = 0x98b644;
     crate::comparacao::ramo("cpx_7 gravar historico dos clubes");
     if save == 0 {
-        aviso_em(FONTE, 0x329);
+        show_error_at(FONTE, 0x329);
         return 0;
     }
-    let mut z = cpx7_abrir(save, 0x98b68c);
+    let mut z = zip_open_item(save, 0x98b68c);
     if z == 0 {
-        erro_em(FONTE, 0x331);
+        fatal_error_at(FONTE, 0x331);
     }
-    if cpx7_gravar(this + 0xc, 4, 1, z) != 1 {
-        erro_em(FONTE, 0x338);
+    if zip_write(this + 0xc, 4, 1, z) != 1 {
+        fatal_error_at(FONTE, 0x338);
     }
-    if cpx7_gravar(cpx7_d(this + 8), 0x10, cpx7_d(this + 0xc) as u32, z) != cpx7_d(this + 0xc) as u32 { // cpx7: os registros do histórico
-        erro_em(FONTE, 0x340);
+    if zip_write(cpx7_d(this + 8), 0x10, cpx7_d(this + 0xc) as u32, z) != cpx7_d(this + 0xc) as u32 { // cpx7: os registros do histórico
+        fatal_error_at(FONTE, 0x340);
     }
-    cpx7_fechar(&mut z);
+    zip_close(&mut z);
     1
 }
 
 /// Comparador da 0x443f50: só a original.
 unsafe extern "thiscall" fn comparar_club_history_save(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, save)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, save)
 }
 
 /// A caixa de erro do officials_manager.cpp na linha `linha`, fechando o item; devolve 0.
-unsafe fn cpx7_falha_dos_arbitros(linha: u32, z: &mut usize) -> u8 {
-    aviso_em(0xa6a22c, linha);
-    cpx7_fechar(z);
+unsafe fn officials_save_error(linha: u32, z: &mut usize) -> u8 {
+    show_error_at(0xa6a22c, linha);
+    zip_close(z);
     0
 }
 
@@ -67,40 +67,40 @@ unsafe extern "thiscall" fn save_official_stats(this: usize, save: usize) -> u8 
     let nacoes = || *(0xae2350 as *const u32);
     crate::comparacao::ramo("cpx_7 gravar estatisticas dos arbitros");
     if save == 0 {
-        aviso_em(FONTE, 0x142);
+        show_error_at(FONTE, 0x142);
         return 0;
     }
-    let mut z = cpx7_abrir(save, 0xa6a260);
+    let mut z = zip_open_item(save, 0xa6a260);
     if z == 0 {
-        aviso_em(FONTE, 0x14a);
+        show_error_at(FONTE, 0x14a);
         return 0;
     }
-    if cpx7_gravar(0xae2390, 4, 1, z) != 1 {
-        return cpx7_falha_dos_arbitros(0x150, &mut z);
+    if zip_write(0xae2390, 4, 1, z) != 1 {
+        return officials_save_error(0x150, &mut z);
     }
     if arbitros() == 0 {
-        return cpx7_falha_dos_arbitros(0x156, &mut z);
+        return officials_save_error(0x156, &mut z);
     }
-    if cpx7_gravar(cpx7_d(this), 0x11, arbitros(), z) != arbitros() {
-        return cpx7_falha_dos_arbitros(0x15c, &mut z);
+    if zip_write(cpx7_d(this), 0x11, arbitros(), z) != arbitros() {
+        return officials_save_error(0x15c, &mut z);
     }
-    if cpx7_gravar(0xae2350, 4, 1, z) != 1 {
-        return cpx7_falha_dos_arbitros(0x164, &mut z);
+    if zip_write(0xae2350, 4, 1, z) != 1 {
+        return officials_save_error(0x164, &mut z);
     }
-    if cpx7_gravar(cpx7_d(this + 0xc), 0x102, nacoes(), z) != nacoes() { // cpx7: os registros das nações
-        return cpx7_falha_dos_arbitros(0x16c, &mut z);
+    if zip_write(cpx7_d(this + 0xc), 0x102, nacoes(), z) != nacoes() { // cpx7: os registros das nações
+        return officials_save_error(0x16c, &mut z);
     }
-    if cpx7_gravar(cpx7_d(this + 8), 1, arbitros(), z) != arbitros() {
-        return cpx7_falha_dos_arbitros(0x174, &mut z);
+    if zip_write(cpx7_d(this + 8), 1, arbitros(), z) != arbitros() {
+        return officials_save_error(0x174, &mut z);
     }
-    cpx7_fechar(&mut z);
+    zip_close(&mut z);
     1
 }
 
 /// Comparador da 0x79bb80: só a original.
 unsafe extern "thiscall" fn comparar_save_official_stats(this: usize, save: usize) -> u8 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, save)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, save)
 }
 
 /// { 0x84c680 } (thiscall, ret 4, simulated_stats.cpp): `SimulatedStats::save(save)`: grava no item
@@ -109,24 +109,24 @@ unsafe extern "thiscall" fn comparar_save_official_stats(this: usize, save: usiz
 unsafe extern "thiscall" fn club_history_save_84c680(this: usize, save: usize) {
     const FONTE: usize = 0xa8278c;
     crate::comparacao::ramo("cpx_7 gravar estatisticas simuladas");
-    let mut z = cpx7_abrir(save, 0xa827c0);
+    let mut z = zip_open_item(save, 0xa827c0);
     if z == 0 {
-        aviso_em(FONTE, 0x209);
+        show_error_at(FONTE, 0x209);
         return;
     }
-    if cpx7_gravar(this, 4, 1, z) != 1 {
-        aviso_em(FONTE, 0x210);
+    if zip_write(this, 4, 1, z) != 1 {
+        show_error_at(FONTE, 0x210);
         return;
     }
-    if cpx7_gravar(cpx7_d(this + 4), 0x44, cpx7_d(this) as u32, z) != cpx7_d(this) as u32 { // cpx7: os registros simulados
-        aviso_em(FONTE, 0x218);
+    if zip_write(cpx7_d(this + 4), 0x44, cpx7_d(this) as u32, z) != cpx7_d(this) as u32 { // cpx7: os registros simulados
+        show_error_at(FONTE, 0x218);
         return;
     }
-    cpx7_fechar(&mut z);
+    zip_close(&mut z);
 }
 
 /// Comparador da 0x84c680: só a original.
 unsafe extern "thiscall" fn comparar_club_history_save_84c680(this: usize, save: usize) {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, save)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, save)
 }

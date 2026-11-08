@@ -33,7 +33,7 @@ unsafe fn cpx2_contrato_de(pessoa: usize) -> usize {
 }
 
 /// O mesmo, guardado em [0xae1080] como a original faz.
-unsafe fn cpx2_contrato(pessoa: usize) -> usize {
+unsafe fn get_contract_store_lookup(pessoa: usize) -> usize {
     let c = cpx2_contrato_de(pessoa);
     *(0xae1080 as *mut usize) = c;
     c
@@ -56,7 +56,7 @@ static mut CPX2_CHEGOU: bool = false;
 /// (0x547e70). x acima de 10, n < −5000 ou o menor abaixo de 0,75 × o ponderado: antipatia ao técnico (0x547af0).
 unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     let p = cpx2_pessoa(cpx2_d(o + 0xc));
-    let c = cpx2_contrato(p);
+    let c = get_contract_store_lookup(p);
     let do_contrato = if c == 0 { 0 } else { cpx2_clube(cpx2_d(c + 4)) };
     let comprador = cpx2_clube(cpx2_d(o + 8));
     let r = sortear(0x1676);
@@ -75,16 +75,16 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     // ponytail: a original empurra o dword da vaga onde guardou o byte (o resto é sobra de pilha); a 0x846920 só lê o
     // byte
     let x = interesse(listas, p, comprador, 1, 0, e as u32, 0);
-    let pw = pow_do_jogo(x, f64_em(0x968938));
-    let a = x * f64_em(0x96a6b0);
+    let pw = game_pow(x, read_f64_at(0x968938));
+    let a = x * read_f64_at(0x96a6b0);
     let v = if !(pw >= a) { pw } else { a };
-    let mut n = ftol(pow_do_jogo(cpx2_sb(p + 0x5d) as f64, f64_em(0x968950)) * f64_em(0x968f10) - f64_em(0x96a590)) as i16;
+    let mut n = match_pl_ftol(game_pow(cpx2_sb(p + 0x5d) as f64, read_f64_at(0x968950)) * read_f64_at(0x968f10) - read_f64_at(0x96a590)) as i16;
     let ficha = cpx2_d(p + 0x61);
     n = n.wrapping_sub((cpx2_w(ficha + 0xb) as i32 / 40) as i16);
-    n = n.wrapping_sub(ftol(v) as i16);
-    n = n.wrapping_sub(ftol(pow_do_jogo(cpx2_sb(p + 0x57) as f64, f64_em(0x968950))) as i16);
-    n = n.wrapping_add(ftol(pow_do_jogo(cpx2_sb(p + 0x5b) as f64, f64_em(0x968930))) as i16);
-    n = n.wrapping_add(ftol(pow_do_jogo(cpx2_sb(p + 0x59) as f64, f64_em(0x968930))) as i16);
+    n = n.wrapping_sub(match_pl_ftol(v) as i16);
+    n = n.wrapping_sub(match_pl_ftol(game_pow(cpx2_sb(p + 0x57) as f64, read_f64_at(0x968950))) as i16);
+    n = n.wrapping_add(match_pl_ftol(game_pow(cpx2_sb(p + 0x5b) as f64, read_f64_at(0x968930))) as i16);
+    n = n.wrapping_add(match_pl_ftol(game_pow(cpx2_sb(p + 0x59) as f64, read_f64_at(0x968930))) as i16);
     if c2 == 0 {
         return;
     }
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
         n = n.wrapping_add((-2000i32).wrapping_sub(sortear(0x1770)) as i16); // cpx2: o desconto do listado
     }
     crate::comparacao::ramo("cpx_2 interesse avaliado");
-    if !(x >= f64_em(0x96d298)) { // cpx2: o interesse mínimo
+    if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo
         return;
     }
     if n as i32 >= -sortear(0x2bc) {
@@ -108,8 +108,8 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(0x4d0c60usize);
     let preco: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(0x4d1600usize);
     let ponderado: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x8e7b50usize);
-    let a1 = ftol(valor(cpx2_d(0xae1050), p, do_contrato, 0, -1, 0) as f64 * f64_em(0x968940));
-    let b1 = ftol(preco(cpx2_d(0xae1050), do_contrato, comprador, p, 0, 1, 1) as f64 * f64_em(0x9689b0));
+    let a1 = match_pl_ftol(valor(cpx2_d(0xae1050), p, do_contrato, 0, -1, 0) as f64 * read_f64_at(0x968940));
+    let b1 = match_pl_ftol(preco(cpx2_d(0xae1050), do_contrato, comprador, p, 0, 1, 1) as f64 * read_f64_at(0x9689b0));
     let pond = ponderado(o, 0, 0, 0, 1, 1);
     let menor = if a1 < b1 { a1 } else { b1 };
     if pond < menor {
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
             }
         }
     }
-    if x > f64_em(0x9688b0) || n < -5000 || (menor as f64) < pond as f64 * f64_em(0x969040) {
+    if x > read_f64_at(0x9688b0) || n < -5000 || (menor as f64) < pond as f64 * read_f64_at(0x969040) {
         let desafeto: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547af0usize);
         desafeto(p, cpx2_d(do_contrato + 0xcf), 1);
     }
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
 /// à queixa (quase sempre), tudo igual; chegando, só a original (a queixa, a fuga e as antipatias não podem rodar duas
 /// vezes e a original sorteia mais).
 unsafe extern "thiscall" fn comparar_unsettle_player_after_bid(this: usize, o: usize) {
-    let orig_f = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let orig_f = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let mut regioes = vec![(o, 0x30usize), (0xae1080, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn post_offer_collapsed_news(this: usize, o: usize, clu
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     let p = cpx2_pessoa(cpx2_d(o + 0xc));
-    let c = cpx2_contrato(p);
+    let c = get_contract_store_lookup(p);
     let mut do_contrato = if c == 0 || cpx2_b(c + 0x35) & 0x3f == 5 { 0 } else { cpx2_clube(cpx2_d(c + 4)) };
     let comprador = cpx2_clube(cpx2_d(o + 8));
     let mut lista = [0usize; 0x1e];
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn post_offer_collapsed_news(this: usize, o: usize, clu
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_offer_collapsed_news(this: usize, o: usize, clube: usize, motivo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, o, clube, motivo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, o, clube, motivo)
 }
 
 /// { 0x8db8a0 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn post_appearance_money_news(this: usize, clausula: us
         return;
     }
     let p = cpx2_pessoa(cpx2_d(clausula));
-    let c = cpx2_contrato(p);
+    let c = get_contract_store_lookup(p);
     if c == 0 || cpx2_clube(cpx2_d(c + 4)) == 0 {
         return;
     }
@@ -245,16 +245,16 @@ unsafe extern "thiscall" fn post_appearance_money_news(this: usize, clausula: us
     gravar(nt, 5, valor);
     gravar(nt, 6, cpx2_d(clausula + 9) as u32);
     gravar(nt, 7, tipo as i8 as u32);
-    let c = cpx2_contrato(p);
+    let c = get_contract_store_lookup(p);
     // a original lê o id do clube do contrato mesmo sem contrato (o registro 0): nunca acontece aqui
     let clube = if c == 0 { 0 } else { cpx2_clube(cpx2_d(c + 4)) };
     gravar(nt, 8, cpx2_d(clube) as u32);
     entregar(cpx2_d(0xb7431c), nt, cpx2_clube(cpx2_d(clausula + 9)));
-    let c = cpx2_contrato(p);
+    let c = get_contract_store_lookup(p);
     entregar(cpx2_d(0xb7431c), nt, if c == 0 { 0 } else { cpx2_clube(cpx2_d(c + 4)) });
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_appearance_money_news(this: usize, clausula: usize, valor: u32, tipo: u32, calado: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I2%%)(this, clausula, valor, tipo, calado)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I2%%)(this, clausula, valor, tipo, calado)
 }

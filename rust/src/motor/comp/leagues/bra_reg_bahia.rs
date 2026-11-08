@@ -16,7 +16,10 @@ pub(crate) struct Cqt1Estadual {
     pub(crate) linhas: [u32; 5],
 }
 
-/// O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
+/// Shared constructor of the Brazilian state leagues: League base, vtable, year, discipline; loads saved state or sets
+/// up rules, table, fixtures, sorting, stats and predicted positions.
+///
+/// [pt] O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
 /// vtable, as fases, as três rotinas próprias, o fonte e as linhas). League::League (0x682200, thiscall, ret 0); +4 = o
 /// registro da competição; a vtable; o ano (+0x40, word) = `ano`; a regra de disciplina (+0x50) = 7. Se o estado
 /// salvo carrega (League::load_from_temp_file 0x687b10, thiscall(this, 1), ret 4; devolve ≠ 0), devolve this. Senão
@@ -26,7 +29,7 @@ pub(crate) struct Cqt1Estadual {
 /// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn cqt1_construir(this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -53,26 +56,26 @@ pub(crate) unsafe fn cqt1_construir(this: usize, ano: u32, registro: usize, e: &
     let v = alocar(e.fases * 4);
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     if regras(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[0]);
+        show_error_at(e.arquivo, e.linhas[0]);
         return this;
     }
     if tabela(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[1]);
+        show_error_at(e.arquivo, e.linhas[1]);
         return this;
     }
     if jogos(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[2]);
+        show_error_at(e.arquivo, e.linhas[2]);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        aviso_em(e.arquivo, e.linhas[3]);
+        show_error_at(e.arquivo, e.linhas[3]);
         return this;
     }
     let n = novo(0x5ce);
     let s = if n != 0 { estatisticas(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
-        aviso_em(e.arquivo, e.linhas[4]);
+        show_error_at(e.arquivo, e.linhas[4]);
         return this;
     }
     if previstas_sim {
@@ -81,10 +84,13 @@ pub(crate) unsafe fn cqt1_construir(this: usize, ano: u32, registro: usize, e: &
     this
 }
 
-/// O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
+/// Comparer for the state league constructors: runs only the original and checks return, vtable, year, record,
+/// discipline and new-league fields.
+///
+/// [pt] O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
 /// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
 /// fases e a importância +0x51 = 0xf.
-pub(crate) unsafe fn cqt1_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn bra_reg_bahia_compare_state_league_ctor(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && read_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
@@ -132,14 +138,14 @@ pub(crate) const CQT1_GAUCHO: Cqt1Estadual = Cqt1Estadual {
 ///
 /// [pt] { 0x42f2d0 } (thiscall, ret 8, bra_reg_bahia.cpp): `BraRegBahia::BraRegBahia(ano, registro)`: o Baiano (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, ano: u32, registro: usize) -> usize {
-    cqt1_construir(this, ano, registro, &CQT1_BAIANO, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
+    bra_reg_bahia_construct_state_league(this, ano, registro, &CQT1_BAIANO, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
 }
 
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_bahia(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_BAHIA);
-    cqt1_comparar("construct_bra_reg_bahia", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_BAHIA);
+    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_bahia", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
 }
 
 
@@ -147,7 +153,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_bahia(this: us
 // ---------- 280a leva: a virada da temporada e a fase seguinte dos estaduais: Baiano, Centro-Oeste e Gaúcho (bra_reg_bahia.cpp, bra_reg_central.cpp, bra_reg_gaucho.cpp) ----------
 
 
-/// A virada da temporada de um estadual (`start_new_season`, slot 3, +0x08; o mesmo molde nos nove estaduais de pontos
+/// Shared start_new_season of state leagues: frees table/lists/stages, archives stats, bumps year, rebuilds rules,
+/// table, fixtures and renews officials.
+///
+/// [pt] A virada da temporada de um estadual (`start_new_season`, slot 3, +0x08; o mesmo molde nos nove estaduais de pontos
 /// corridos com mata-mata: só mudam o fonte, as linhas das caixas e a rotina da tabela, conferido instrução a instrução):
 /// +0x4c = 0 e a tabela liberada (League::free_table 0x687970, thiscall(this, 0), ret 4); a lista de +0xba liberada
 /// (free 0x9452ca) e zerada; com estatísticas (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1),
@@ -157,7 +166,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_bahia(this: us
 /// (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem da tabela (League::sort_table 0x6827d0, thiscall(this,
 /// 0), ret 4); por fim as posições previstas (virtual +0x5c) e a renovação dos árbitros do estadual
 /// (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
-pub(crate) unsafe fn cqp7_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 4], ano: i16, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn state_league_new_season(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 4], ano: i16, ramo: &'static str) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
@@ -192,22 +201,22 @@ pub(crate) unsafe fn cqp7_virada(this: usize, tabela: usize, arquivo: usize, lin
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
     if regras(this) == 0 {
-        aviso_em(arquivo, linhas[0]);
+        show_error_at(arquivo, linhas[0]);
         return 0;
     }
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(tabela);
     if tabela(this) == 0 {
-        aviso_em(arquivo, linhas[1]);
+        show_error_at(arquivo, linhas[1]);
         return 0;
     }
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     if jogos(this) == 0 {
-        aviso_em(arquivo, linhas[2]);
+        show_error_at(arquivo, linhas[2]);
         return 0;
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     if ordenar(this, 0) == 0 {
-        aviso_em(arquivo, linhas[3]);
+        show_error_at(arquivo, linhas[3]);
         return 0;
     }
     let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
@@ -216,13 +225,16 @@ pub(crate) unsafe fn cqp7_virada(this: usize, tabela: usize, arquivo: usize, lin
     renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 
-/// A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
+/// Shared advance_stage of state leagues: error box at last stage, else +0x30 + 1 and builds the knockout on reaching
+/// 0.
+///
+/// [pt] A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o mata-mata
 /// (`mata_mata`, call direto com o ecx da liga -> thiscall, ret 0).
-pub(crate) unsafe fn cqp7_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata: usize) {
+pub(crate) unsafe fn state_league_advance_stage(this: usize, arquivo: usize, linha: u32, mata_mata: usize) {
     let fase = read_usize(this + 0x30) as i32;
     if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(arquivo, linha);
+        return show_error_at(arquivo, linha);
     }
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
@@ -232,9 +244,11 @@ pub(crate) unsafe fn cqp7_fase_seguinte(this: usize, arquivo: usize, linha: u32,
     }
 }
 
-/// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os
+/// Comparer for the new season: runs only the original and checks that the year (+0x40) went up by one.
+///
+/// [pt] O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os
 /// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
-pub(crate) unsafe fn cqp7_comparar_virada(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn compare_state_league_new_season(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
     let antes = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let r = original();
     let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
@@ -242,9 +256,11 @@ pub(crate) unsafe fn cqp7_comparar_virada(nome: &str, this: usize, original: imp
     r
 }
 
-/// O comparador da fase seguinte: só a original (ponytail: ao chegar a 0 monta o mata-mata, que aloca e sorteia), com o
+/// Comparer for advance_stage: runs only the original and checks +0x30 unchanged at the last stage, else + 1.
+///
+/// [pt] O comparador da fase seguinte: só a original (ponytail: ao chegar a 0 monta o mata-mata, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (o mata-mata grava 0, o mesmo valor).
-pub(crate) unsafe fn cqp7_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
+pub(crate) unsafe fn compare_state_league_advance_stage(nome: &str, this: usize, original: impl FnOnce()) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
@@ -260,7 +276,7 @@ pub(crate) unsafe fn cqp7_comparar_fase_seguinte(nome: &str, this: usize, origin
 /// [pt] { 0x42fe10 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::start_new_season()`, a virada da temporada do Baiano (a tabela:
 /// 0x42fd10; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
 pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_start_new_season(this: usize) -> u32 {
-    cqp7_virada(this, 0x42fd10, 0x98acac, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_7 virada do baiano") // cqp7: o ano seguinte do Baiano
+    state_league_new_season(this, 0x42fd10, 0x98acac, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_7 virada do baiano") // cqp7: o ano seguinte do Baiano
 }
 
 /// The Bahia next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
@@ -270,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_start_new_season(this: usiz
 /// [pt] { 0x42ffc0 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::advance_stage()`, a fase seguinte do Baiano: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x430050); a caixa da linha 0x1f8.
 pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_advance_stage(this: usize) {
-    cqp7_fase_seguinte(this, 0x98acac, 0x1f8, 0x430050);
+    state_league_advance_stage(this, 0x98acac, 0x1f8, 0x430050);
 }
 
 
@@ -278,13 +294,13 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_advance_stage(this: usize) 
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_start_new_season(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_BAHIA_START_NEW_SEASON);
-    cqp7_comparar_virada("bra_reg_bahia_start_new_season", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_BAHIA_START_NEW_SEASON);
+    compare_state_league_new_season("bra_reg_bahia_start_new_season", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_ADVANCE_STAGE);
-    cqp7_comparar_fase_seguinte("bra_reg_bahia_advance_stage", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_ADVANCE_STAGE);
+    compare_state_league_advance_stage("bra_reg_bahia_advance_stage", this, || o(this))
 }
 
 
@@ -295,25 +311,30 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_advance_stage(this
 
 
 
-/// O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
+/// Is the club in the state league of key g (reserve division +0x60, which in Brazil holds the state league)?
+///
+/// [pt] O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
 /// estadual) não é nula e o id do registro (+0) é o do global.
-pub(crate) unsafe fn cql8_do_estadual(clube: usize, g: usize) -> bool {
+pub(crate) unsafe fn is_in_state_league(clube: usize, g: usize) -> bool {
     let comp = read_usize(clube + club::RESERVE_DIVISION);
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 
-/// O corpo comum dos estaduais (o mesmo molde nos doze, só mudam as constantes): +0x3e = `n` clubes; a tabela
+/// Shared table setup of state leagues: allocates n rows and inits them with the state's clubs in database order;
+/// returns 1 when full.
+///
+/// [pt] O corpo comum dos estaduais (o mesmo molde nos doze, só mudam as constantes): +0x3e = `n` clubes; a tabela
 /// (malloc 0x944e46 de n × 0x3b; sem memória: a caixa do fonte `arquivo` na linha `linha` e devolve 0); os clubes de
 /// [0xae23b4] (0x245 bytes, [0xae235c] deles) do estadual do global `g`, na ordem do banco, cada um na linha seguinte
 /// (League::init_table_row 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve 1 se encheu.
 /// `girar` é 0 (o original: a linha k recebe o k-ésimo clube); existe só para as mutações de cada estadual.
-pub(crate) unsafe fn cql8_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn fill_state_league_table(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return 0;
     }
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
@@ -321,7 +342,7 @@ pub(crate) unsafe fn cql8_tabela(this: usize, n: i16, arquivo: usize, linha: u32
     let mut i: i16 = 0;
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        if cql8_do_estadual(clube, g) {
+        if is_in_state_league(clube, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
@@ -348,20 +369,23 @@ pub(crate) unsafe fn cql8_tabela(this: usize, n: i16, arquivo: usize, linha: u32
 /// [pt] { 0x42fd10 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::create_table()`: o Baiano tem 10 clubes (divisão reserva +0x60 = [0x9cf9c0]).
 /// Fonte 0x98acac, linha 0x167.
 pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_table(this: usize) -> u32 {
-    cql8_tabela(this, 0xa, 0x98acac, 0x167, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, 0, "cql_8 baiano cheio")
+    fill_state_league_table(this, 0xa, 0x98acac, 0x167, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, 0, "cql_8 baiano cheio")
 }
 
 
 
-/// O comparador dos três: a original aloca a tabela (não roda duas vezes): só ela. O plano, feito antes: os clubes do
+/// Comparer for the state league table: plans the clubs in database order, runs the original and checks count, return
+/// and table rows.
+///
+/// [pt] O comparador dos três: a original aloca a tabela (não roda duas vezes): só ela. O plano, feito antes: os clubes do
 /// estadual na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0) e as linhas
 /// da tabela (+0 o clube, 0x3b bytes) com os clubes do plano, na ordem.
-pub(crate) unsafe fn cql8_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn bra_reg_bahia_compare_state_league_table(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
         let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
-        if cql8_do_estadual(clube, g) {
+        if is_in_state_league(clube, g) {
             plano.push(clube);
         }
         i += 1;
@@ -380,8 +404,8 @@ pub(crate) unsafe fn cql8_comparar(nome: &str, this: usize, n: i16, g: usize, or
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_BAHIA_CREATE_TABLE);
-    cql8_comparar("bra_reg_bahia_create_table", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_BAHIA_CREATE_TABLE);
+    bra_reg_bahia_compare_state_league_table("bra_reg_bahia_create_table", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, || o(this))
 }
 
 
@@ -390,12 +414,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_table(this:
 
 
 
-/// O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
-pub(crate) unsafe fn cqn7_clube(liga: usize, l: usize) -> usize {
+/// Club of row l of the league table (+0xb1, 0x3b-byte rows).
+///
+/// [pt] O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
+pub(crate) unsafe fn bra_reg_bahia_table_row_club(liga: usize, l: usize) -> usize {
     read_usize(read_usize(liga + 0xb1) + l * 0x3b)
 }
 
-/// O mata-mata montado da tabela (o mesmo molde nas semifinais e nos mata-matas dos estaduais; só mudam o fonte, as
+/// Builds the knockout stage from given table rows: entrant list, round table (virtual +0x3c), Cup_Stage with seeds,
+/// set_up_round, frees, +0x30 = 0.
+///
+/// [pt] O mata-mata montado da tabela (o mesmo molde nas semifinais e nos mata-matas dos estaduais; só mudam o fonte, as
 /// linhas da caixa e o arranjo): a lista dos `linhas.len()` times (malloc 0x944e46 de 4 × n; sem memória: a caixa
 /// `linha_sem_lista` e nada mais) com os clubes das `linhas` da tabela, nesta ordem (as chaves: 0 × 1, 2 × 3...); a
 /// virtual +0x3c (create_round_table: thiscall(this, fase 0, &rodadas, &extra, nulo), ret 0x10) monta a tabela de
@@ -406,7 +435,7 @@ pub(crate) unsafe fn cqn7_clube(liga: usize, l: usize) -> usize {
 /// primeira vaga de fases ([+0xc]). Sem fase: a caixa `linha_sem_fase` e volta (sem liberar). Com ela:
 /// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela de rodadas e a lista liberadas (free 0x9452ca,
 /// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
+pub(crate) unsafe fn bra_reg_bahia_build_knockout_from_table(this: usize, linhas: &[usize], sementes: &[u8], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
     let n = linhas.len();
     // as sementes: a original grava os bytes na pilha antes de alocar (iguais às linhas, mas constantes à parte)
     let mut s = [0u8; 8];
@@ -414,10 +443,10 @@ pub(crate) unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let lista = alocar((n * 4) as u32);
     if lista == 0 {
-        return aviso_em(arquivo, linha_sem_lista);
+        return show_error_at(arquivo, linha_sem_lista);
     }
     for (k, &l) in linhas.iter().enumerate() {
-        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn7_clube(this, l));
+        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
     }
     crate::comparacao::ramo(ramo);
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
@@ -438,7 +467,7 @@ pub(crate) unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u
     core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
     let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
-        return aviso_em(arquivo, linha_sem_fase);
+        return show_error_at(arquivo, linha_sem_fase);
     }
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     montar(fase, 0);
@@ -455,7 +484,7 @@ pub(crate) unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u
 /// [pt] { 0x430050 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98acac, linhas 0x21b (sem lista) e 0x22f (sem fase).
 pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage(this: usize) {
-    cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98acac, 0x21b, 0x22f, "cqn_7 baiano"); // cqn7: 1º × 4º, 2º × 3º Baiano
+    bra_reg_bahia_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98acac, 0x21b, 0x22f, "cqn_7 baiano"); // cqn7: 1º × 4º, 2º × 3º Baiano
 }
 
 /// North: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the seed;
@@ -465,16 +494,19 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage(thi
 /// [pt] { 0x4360c0 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98af14, linhas 0x21b (sem lista) e 0x22f (sem fase).
 pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage_4360c0(this: usize) {
-    cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af14, 0x21b, 0x22f, "cqn_7 norte"); // cqn7: 1º × 4º, 2º × 3º Norte
+    bra_reg_bahia_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af14, 0x21b, 0x22f, "cqn_7 norte"); // cqn7: 1º × 4º, 2º × 3º Norte
 }
 
 
-/// O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
+/// Comparer for the knockout build: runs only the original and checks the stage exists with the planned clubs (as a
+/// set), size and +0x30 = 0.
+///
+/// [pt] O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
 /// plano, feito antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = n, +4 = o +4 da
 /// liga e os n primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como conjunto: o sorteio da rodada
 /// 0x51c800 pode reordenar as chaves), e +0x30 = 0.
-pub(crate) unsafe fn cqn7_comparar(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
-    let mut plano: Vec<usize> = linhas.iter().map(|&l| cqn7_clube(this, l)).collect();
+pub(crate) unsafe fn bra_reg_bahia_compare_knockout_from_table(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
+    let mut plano: Vec<usize> = linhas.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
     original();
     let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
@@ -491,13 +523,13 @@ pub(crate) unsafe fn cqn7_comparar(nome: &str, this: usize, linhas: &[usize], or
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_CREATE_SEMI_FINAL_STAGE);
-    cqn7_comparar("bra_reg_bahia_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_CREATE_SEMI_FINAL_STAGE);
+    bra_reg_bahia_compare_knockout_from_table("bra_reg_bahia_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_stage_4360c0(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_CREATE_SEMI_FINAL_STAGE_4360C0);
-    cqn7_comparar("bra_reg_bahia_create_semi_final_stage_4360c0", this, &[0, 3, 1, 2], || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_CREATE_SEMI_FINAL_STAGE_4360C0);
+    bra_reg_bahia_compare_knockout_from_table("bra_reg_bahia_create_semi_final_stage_4360c0", this, &[0, 3, 1, 2], || o(this))
 }
 
 /// Bahia, Gaucho, North, Northeast, Pernambuco, Santa Catarina and Paulista: at the end of the round robin, the clubs
@@ -513,13 +545,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_
 /// de eliminação com o peso da rodada (0x4bf850: de 30 a 50 pela rodada do jogo) e o destino -2. Devolve 0.
 pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
-    cqj9_baiano(this, clube, situacao, fase, jogo, true).0
+    baiano_staff_records(this, clube, situacao, fase, jogo, true).0
 }
 
 /// Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let (n, l, dest) = cqj9_baiano(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_BAHIA_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, jogo, a6);
+    let (n, l, dest) = baiano_staff_records(this, clube, situacao, fase, jogo, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_BAHIA_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_bahia_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r

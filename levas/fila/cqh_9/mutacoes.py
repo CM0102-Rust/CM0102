@@ -7,8 +7,8 @@
 MUTACOES = [
     ('cqh9_lesao_vira_tecnico', '(0xa6b3a0, 1),      // INJURY',
      '(0xa6b3a0, 2),      // mutacao INJURY', 'cqh_9 tipo da linha'),
-    ('cqh9_elenco_sem_segundo_nome', 'if q != 0 && cqh9_bate(q, 4, primeiro) && cqh9_bate(q, 8, segundo) && cqh9_bate(q, 0xc, comum) {',
-     'if q != 0 && cqh9_bate(q, 4, primeiro) && cqh9_bate(q, 0xc, comum) {', 'cqh_9 jogador do clube pelo nome'),
+    ('cqh9_elenco_sem_segundo_nome', 'if q != 0 && name_matches(q, 4, primeiro) && name_matches(q, 8, segundo) && name_matches(q, 0xc, comum) {',
+     'if q != 0 && name_matches(q, 4, primeiro) && name_matches(q, 0xc, comum) {', 'cqh_9 jogador do clube pelo nome'),
     ('cqh9_texto_minusculo', '*((destino + n) as *mut u8) = c; // cqh9: o caractere do texto',
      '*((destino + n) as *mut u8) = c.to_ascii_lowercase(); // mutacao: o caractere do texto', 'cqh_9 texto entre aspas'),
 ]

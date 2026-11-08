@@ -8,6 +8,6 @@ MUTACOES = [
      'return 0; // mutacao: ninguem sob oferta'),
     ('cpl_bosman_invertida', 'livre(cpl2_d(clube + 0x53)) // a nação do clube',
      '(livre(cpl2_d(clube + 0x53)) == 0) as u32 // mutacao: invertida'),
-    ('cpl_veto_valores', 'core::ptr::write_unaligned(p, ftol(core::ptr::read_unaligned(p) as f64 * f64_em(0x9689d8)) as i16); // 90%',
+    ('cpl_veto_valores', 'core::ptr::write_unaligned(p, match_pl_ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(0x9689d8)) as i16); // 90%',
      'let _ = p; // mutacao: sem cortar', 'cpl_2 veto da diretoria valores'),
 ]

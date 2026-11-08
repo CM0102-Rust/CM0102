@@ -19,7 +19,7 @@ unsafe fn cqa7_k(a: usize) -> f64 {
 
 /// O fim sem valor da 0x840d80 (0x841f62): fora da lista de empréstimos da vaga (bit 0 de +0x24), 0; com ela e a pessoa
 /// listada para empréstimo (0x544590 com 0), a nota vira max(nota + 5000, nota × 1,2) (_ftol) e 0.
-unsafe fn cqa7_sem_valor(p: usize, vaga: usize, saida: *mut i32) -> i32 {
+unsafe fn loan_listed_value_end(p: usize, vaga: usize, saida: *mut i32) -> i32 {
     if cqa7_b(vaga + 0x24) & 1 == 0 {
         return 0;
     }
@@ -28,7 +28,7 @@ unsafe fn cqa7_sem_valor(p: usize, vaga: usize, saida: *mut i32) -> i32 {
         let r = *saida;
         let a = r.wrapping_add(5000) as f64;
         let q = r as f64 * cqa7_k(0x968978);
-        *saida = ftol(if a > q { a } else { q });
+        *saida = match_pl_ftol(if a > q { a } else { q });
     }
     0
 }
@@ -39,7 +39,7 @@ unsafe fn cqa7_sem_valor(p: usize, vaga: usize, saida: *mut i32) -> i32 {
 /// vaga de nota alta (`alta`), acima de 1 ela ainda vai pela reputação do clube na tabela [this+0xdc] (9 bytes por
 /// clube, palavra +5) sobre a reputação do clube (+0x80, pelo menos 1000), entre 1 e 1,2. Acima de 1: `frac` × ela, e o
 /// valor base e a nota × (ela + 1) / 2.
-unsafe fn cqa7_jovem(this: usize, clube: usize, p: usize, saida: *mut i32, minimo: i32, alta: bool, idade: i8, r: i32, frac: &mut f64, e: &mut u32) {
+unsafe fn young_player_adjustment(this: usize, clube: usize, p: usize, saida: *mut i32, minimo: i32, alta: bool, idade: i8, r: i32, frac: &mut f64, e: &mut u32) {
     if idade >= 0x1b || r <= 20000 {
         return;
     }
@@ -76,8 +76,8 @@ unsafe fn cqa7_jovem(this: usize, clube: usize, p: usize, saida: *mut i32, minim
         crate::comparacao::ramo("cqa_7 jovem valorizado");
         *frac = d1 * *frac;
         let h = (d1 + cqa7_k(0x967890)) * cqa7_k(0x968968);
-        *e = ftol(*e as f64 * h) as u32;
-        *saida = ftol(o * h);
+        *e = match_pl_ftol(*e as f64 * h) as u32;
+        *saida = match_pl_ftol(o * h);
     }
 }
 
@@ -92,10 +92,10 @@ unsafe fn cqa7_jovem(this: usize, clube: usize, p: usize, saida: *mut i32, minim
 /// 15000, nota × 1,5); senão a nota com o mínimo² × 0,000025 / divisor. Computador: com a marca 0x100 (ou 0x80) o melhor
 /// observador entre o técnico e os 7 olheiros (+0x1b3) pelo conhecimento (0x544410 com 6 ou 5) menos 5 ou 10 pelo
 /// escopo; a nota com o mínimo e esse observador, × 1,05 para o listado para transferência de outro clube (0x544520).
-/// Nota negativa ou 10000 abaixo do mínimo, ou vaga da lista de empréstimos: o fim sem valor (`cqa7_sem_valor`). A névoa
+/// Nota negativa ou 10000 abaixo do mínimo, ou vaga da lista de empréstimos: o fim sem valor (`loan_listed_value_end`). A névoa
 /// (+0xb do registro de 79 bytes em [0xae2d0c], 4 bits) limita a nota a nota + 5000 por (1 + n²/100) × nota. Pela
 /// posição (0x83bd00) o teto do preço e a fração; o valor base (alto com nota ≥ 35000, +0xb da vaga ≥ nota/8 e +1 ≥
-/// 0x80); o ajuste pelo tipo da vaga (1, 2, 3: os jovens, `cqa7_jovem`; 3, 4, 5, 6: frações); a idade acima do divisor
+/// 0x80); o ajuste pelo tipo da vaga (1, 2, 3: os jovens, `young_player_adjustment`; 3, 4, 5, 6: frações); a idade acima do divisor
 /// (28, 32 sem posição, 19 na vaga 5) e o estrangeiro (0x53d980); o preço pela consistência (+0x2d da ficha +0x61) e o
 /// teto pelo tipo da vaga, pela reputação, pela ficha (+0xd) e pela idade; acima de 1,5 milhão, a habilidade potencial
 /// vista (0x6e86d0 com 2) abaixo de 145 puxa para 1,5 milhão; o limite da divisão do clube (+0x57, +0x69 < 16); a nação
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
     // o mínimo² × 0,000025 / divisor (_ftol)
     let corte = |m: i32, div: i8| {
         let q = m as f64;
-        ftol(q * cqa7_k(0x96d240) * q / div as f64)
+        match_pl_ftol(q * cqa7_k(0x96d240) * q / div as f64)
     };
     if humano(clube, 1, 1, 0, 0) != 0 {
         let tecnico: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
             *saida = r;
             let a = r.wrapping_add(15000) as f64;
             let q = r as f64 * cqa7_k(0x968940);
-            *saida = ftol(if a > q { a } else { q });
+            *saida = match_pl_ftol(if a > q { a } else { q });
         } else {
             let s = substituto(clube);
             let v = corte(minimo, div);
@@ -222,18 +222,18 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
         let transferencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544520usize);
         if clube != cqa7_d(p + 0x39) && transferencia(p, 0) != 0 {
             crate::comparacao::ramo("cqa_7 listado para transferencia");
-            *saida = ftol(*saida as f64 * cqa7_k(0x9689b8)); // cqa7: o listado de outro clube × 1,05
+            *saida = match_pl_ftol(*saida as f64 * cqa7_k(0x9689b8)); // cqa7: o listado de outro clube × 1,05
         }
     }
     let r = *saida;
     if r < 0 || r < minimo.wrapping_sub(10000) || cqa7_b(vaga + 0x24) & 1 != 0 {
-        return cqa7_sem_valor(p, vaga, saida);
+        return loan_listed_value_end(p, vaga, saida);
     }
     let nevoa = cqa7_b(cqa7_d(0xae2d0c).wrapping_add(cqa7_d(p).wrapping_mul(0x4f)) + 0xb) & 0xf;
     if nevoa != 0 {
         let a = r.wrapping_add(5000) as f64;
-        let w = (pow_do_jogo(nevoa as f64, cqa7_k(0x968950)) * cqa7_k(0x967898) + cqa7_k(0x967890)) * r as f64;
-        *saida = ftol(if a < w { a } else { w });
+        let w = (game_pow(nevoa as f64, cqa7_k(0x968950)) * cqa7_k(0x967898) + cqa7_k(0x967890)) * r as f64;
+        *saida = match_pl_ftol(if a < w { a } else { w });
     }
     div = 0x1c;
     let posicao: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(0x83bd00usize);
@@ -254,28 +254,28 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
     let alta = r >= 35000 && bv >= r / 8 && cqa7_w(vaga + 1) >= 0x80;
     let mut e = if alta {
         let v = r as f64;
-        ftol(((v * cqa7_k(0x96d238) - cqa7_k(0x967890)) * v + bv as f64 * cqa7_k(0x9689e0)) * cqa7_k(0x96f918)) as u32
+        match_pl_ftol(((v * cqa7_k(0x96d238) - cqa7_k(0x967890)) * v + bv as f64 * cqa7_k(0x9689e0)) * cqa7_k(0x96f918)) as u32
     } else {
         crate::comparacao::ramo("cqa_7 valor base");
-        ftol((bv as f64 * cqa7_k(0x9689e0) + r as f64 * cqa7_k(0x969040)) * cqa7_k(0x96f918)) as u32 // cqa7: o valor base
+        match_pl_ftol((bv as f64 * cqa7_k(0x9689e0) + r as f64 * cqa7_k(0x969040)) * cqa7_k(0x96f918)) as u32 // cqa7: o valor base
     };
     if e < 1 {
         e = 1;
     }
     let idade = cqa7_b(p + 0x18) as i8;
     match (cqa7_b(vaga + 0x24) >> 1) & 0xf {
-        1 | 2 => cqa7_jovem(this, clube, p, saida, minimo, alta, idade, r, &mut frac, &mut e),
+        1 | 2 => young_player_adjustment(this, clube, p, saida, minimo, alta, idade, r, &mut frac, &mut e),
         3 => {
             let k = if cqa7_w(vaga + 1) < 0x80 { cqa7_k(0x96a670) } else { cqa7_k(0x96d718) };
-            e = ftol(e as f64 * k) as u32;
-            cqa7_jovem(this, clube, p, saida, minimo, alta, idade, r, &mut frac, &mut e);
+            e = match_pl_ftol(e as f64 * k) as u32;
+            young_player_adjustment(this, clube, p, saida, minimo, alta, idade, r, &mut frac, &mut e);
         }
-        4 => e = ftol(e as f64 * cqa7_k(0x968968)) as u32,
+        4 => e = match_pl_ftol(e as f64 * cqa7_k(0x968968)) as u32,
         5 => {
-            e = ftol(e as f64 * cqa7_k(0x968a80)) as u32;
+            e = match_pl_ftol(e as f64 * cqa7_k(0x968a80)) as u32;
             div = div.wrapping_sub(9);
         }
-        6 => e = ftol(e as f64 * cqa7_k(0x968918)) as u32,
+        6 => e = match_pl_ftol(e as f64 * cqa7_k(0x968918)) as u32,
         _ => {}
     }
     let tipo = cqa7_b(vaga + 0x24) & 0x1e;
@@ -297,13 +297,13 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
         crate::comparacao::ramo("cqa_7 idade");
         let um = cqa7_k(0x967890);
         if tipo == 0xa {
-            *saida = ftol(((um - g) * y + g) * *saida as f64);
+            *saida = match_pl_ftol(((um - g) * y + g) * *saida as f64);
         }
-        e = ftol(((um - g) * y + g) * e as f64) as u32;
+        e = match_pl_ftol(((um - g) * y + g) * e as f64) as u32;
     }
     let ficha = cqa7_d(p + 0x61);
     let cons = cqa7_b(ficha + 0x2d) as i8 as f64;
-    let c = ftol((cqa7_k(0x967890) - pow_do_jogo(cons, cqa7_k(0x968950)) * cqa7_k(0x968f40)) * e as f64);
+    let c = match_pl_ftol((cqa7_k(0x967890) - game_pow(cons, cqa7_k(0x968950)) * cqa7_k(0x968f40)) * e as f64);
     let mut kk = (c.wrapping_mul(c) as u32) as f64 * teto_pos * cqa7_k(0x968eb8);
     let ra = cqa7_w(clube + 0x80);
     if tipo == 0xc {
@@ -400,7 +400,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
         let l = lim as f64;
         if !(x <= l) {
             let m2 = if cqa7_k(0x967890) < frac { cqa7_k(0x967890) } else { frac };
-            x = ftol(l * m2) as f64;
+            x = match_pl_ftol(l * m2) as f64;
         }
     }
     // a nação do clube (+0x53 do clube: a original usa edi, que aqui já é o clube)
@@ -412,22 +412,22 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
             x = x * cqa7_k(0x9689d8);
         }
     } else if nacao == cqa7_d(0x9cf300) {
-        x = ftol(x * cqa7_k(0x9689b0)) as f64;
+        x = match_pl_ftol(x * cqa7_k(0x9689b0)) as f64;
     }
     if teto != 0 {
         let c = teto_i as f64;
         if c < x {
             x = c;
         }
-        x = ftol(x) as f64;
+        x = match_pl_ftol(x) as f64;
     }
-    ftol(x)
+    match_pl_ftol(x)
 }
 
 /// Comparador da 0x840d80: lado a lado na nota de saída e na devolução (o resto ela só lê). O técnico do clube sem a
 /// ficha +0x69 (a original sorteia uma): só a original.
 unsafe extern "thiscall" fn comparar_value_player_for_club(this: usize, clube: usize, p: usize, vaga: usize, saida: *mut i32, minimo: i32, teto: u32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32, i32, u32) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32, i32, u32) -> i32>(%%I0%%);
     let obs = cqa7_d(clube + 0xcf);
     if obs != 0 && cqa7_d(obs + 0x69) == 0 {
         return o(this, clube, p, vaga, saida, minimo, teto);
@@ -445,13 +445,13 @@ unsafe extern "thiscall" fn comparar_value_player_for_club(this: usize, clube: u
 /// buscas (0x7f6cd0) com o clube observado (+0x190) igual ao da pessoa e o registro dele (+0x170) dá a vaga da pessoa
 /// nele (0x7bd700 sem reservar); nenhuma, 0.
 unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: usize) -> usize {
-    let m = cps8_gerente_da_vez();
+    let m = scout_manager_current_human_manager();
     if m == 0 || cqa7_d(p + 0x39) == 0 {
         return 0;
     }
     let vaga = cqa7_b(m).wrapping_sub(cqa7_b(0xae2364)).wrapping_add(0x10) as i8;
     if !(0..=15).contains(&vaga) {
-        aviso_em(0xa7b094, 0x4b5);
+        show_error_at(0xa7b094, 0x4b5);
         return 0;
     }
     let busca: unsafe extern "thiscall" fn(usize, u32, usize) -> usize = core::mem::transmute(0x7f6cd0usize);
@@ -469,7 +469,7 @@ unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: usize) -> usi
 
 /// Comparador da 0x7f8610: pela devolução (só lê).
 unsafe extern "thiscall" fn comparar_find_club_search_entry(this: usize, p: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let r = o(this, p);
     let n = find_club_search_entry(this, p);
     PLACAR.registrar(r == n, || format!("find_club_search_entry(pessoa {:x}) original={:x} rust={:x}", p, r, n));
@@ -497,7 +497,7 @@ unsafe extern "thiscall" fn find_international_appearance_money(this: usize, p: 
 
 /// Comparador da 0x8d0f00: lado a lado na marca da pessoa e na devolução.
 unsafe extern "thiscall" fn comparar_find_international_appearance_money(this: usize, p: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa7_d(this + 0x86e).wrapping_add(cqa7_d(p).wrapping_mul(8));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1)], || o(this, p), || find_international_appearance_money(this, p));
     PLACAR.registrar(igual && r == n, || format!("find_international_appearance_money(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));

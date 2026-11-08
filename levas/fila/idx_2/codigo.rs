@@ -893,7 +893,7 @@ fn chaves_de_competicao_diferentes(mo: &crate::comparacao::Memoria, mr: &crate::
 }
 
 unsafe extern "C" fn comparar_match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I0%%);
     let reg: [(usize, usize); 1] = [(0x9cf548, 0x4c0)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_club_comp_key_id(nome, linha));
     PLACAR.registrar(igual && r == n, || {
@@ -904,7 +904,7 @@ unsafe extern "C" fn comparar_match_club_comp_key_id(nome: usize, linha: u32) ->
 }
 
 unsafe extern "C" fn comparar_match_staff_comp_key_id(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%);
     let reg: [(usize, usize); 1] = [(0x9cfa20, 0x684)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_staff_comp_key_id(nome, linha));
     PLACAR.registrar(igual && r == n, || {

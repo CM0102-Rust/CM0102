@@ -8,7 +8,7 @@ unsafe fn cpr9_b(a: usize) -> i8 {
     *(a as *const i8)
 }
 
-unsafe fn cpr9_zerar(a: usize) {
+unsafe fn zero_dword(a: usize) {
     core::ptr::write_unaligned(a as *mut u32, 0);
 }
 
@@ -82,12 +82,12 @@ unsafe extern "thiscall" fn find_new_retirements(this: usize) {
 /// pode ser dirigido (0x544820), a vaga abre (0x69ba50); 6 auxiliar (+0xd3); 8 e 15 as cinco de +0x19f, depois da
 /// distribuição dos treinadores do clube humano (0x600a50 com 1, 1; 0x8b2880 com 0); 9 as sete de +0x1b3 e, no
 /// clube humano, +`campo` = 0 e as listas dos olheiros do técnico (0x7f7270); 10 as três de +0x1cf.
-unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
+unsafe fn leave_job_slot(pessoa: usize, c: usize, cargo: i8, campo: usize) {
     let limpar = |base: usize, n: usize| {
         for k in 0..n {
             let a = c + base + 4 * k;
             if cpr9_d(a) == pessoa {
-                cpr9_zerar(a);
+                zero_dword(a);
             }
         }
     };
@@ -96,7 +96,7 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
         f(c, 1, 1, 0, 0) != 0
     };
     match cargo {
-        1 => cpr9_zerar(c + 0xbf),
+        1 => zero_dword(c + 0xbf),
         2 => limpar(0xc3, 3),
         5 | 12 => {
             if cpr9_d(c + 0xcf) != pessoa {
@@ -115,7 +115,7 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
                 abrir(cpr9_d(0xb67a44), c, pessoa); // cpr9: a vaga do técnico abre
             }
         }
-        6 => cpr9_zerar(c + 0xd3),
+        6 => zero_dword(c + 0xd3),
         8 | 15 => {
             if humano() {
                 let treinadores: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8b2880usize);
@@ -127,7 +127,7 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
         9 => {
             limpar(0x1b3, 7);
             if humano() {
-                cpr9_zerar(pessoa + campo);
+                zero_dword(pessoa + campo);
                 let listas: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7f7270usize);
                 listas(cpr9_d(0xb74448), cpr9_d(c + 0xcf));
             }
@@ -139,17 +139,17 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
 
 /// { 0x7aaeb0 } (stdcall, ret 4, player_regen.cpp): `player_regen_retire_from_non_playing_staff(pessoa)` (pela
 /// 0x7a59e0, na aposentadoria): sai da vaga do cargo (+0x3d) no clube (+0x39) e da do cargo na seleção (+0x28) na
-/// seleção (+0x24) (cpr9_sair_da_vaga); clube e seleção zerados, e os dois tipos de cargo.
+/// seleção (+0x24) (leave_job_slot); clube e seleção zerados, e os dois tipos de cargo.
 unsafe extern "stdcall" fn player_regen_retire_from_non_playing_staff(pessoa: usize) {
     let c = cpr9_d(pessoa + 0x39);
     if c != 0 {
-        cpr9_sair_da_vaga(pessoa, c, cpr9_b(pessoa + 0x3d), 0x39);
-        cpr9_zerar(pessoa + 0x39);
+        leave_job_slot(pessoa, c, cpr9_b(pessoa + 0x3d), 0x39);
+        zero_dword(pessoa + 0x39);
     }
     let s = cpr9_d(pessoa + 0x24);
     if s != 0 {
-        cpr9_sair_da_vaga(pessoa, s, cpr9_b(pessoa + 0x28), 0x24);
-        cpr9_zerar(pessoa + 0x24);
+        leave_job_slot(pessoa, s, cpr9_b(pessoa + 0x28), 0x24);
+        zero_dword(pessoa + 0x24);
     }
     *((pessoa + 0x3d) as *mut u8) = 0;
     *((pessoa + 0x28) as *mut u8) = 0;
@@ -162,37 +162,37 @@ unsafe extern "stdcall" fn player_regen_retire_from_non_playing_staff(pessoa: us
 /// Pessoa nula: a caixa "Error" (linha 0x1010).
 unsafe extern "thiscall" fn add_free_release_records(this: usize, pessoa: usize) {
     crate::comparacao::ramo("cpr_9 liberado");
-    let mut e = cpq4_entrada();
+    let mut e = history_entry();
     let de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = de(cpr9_d(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
     let clube = if c != 0 { cpr9_d(0xae23b4).wrapping_add(cpr9_d(c + 4).wrapping_mul(0x245)) } else { 0 };
     if clube != 0 && cpr9_d(clube + 0xcf) != 0 {
-        cpq4_datar(e.as_mut_ptr());
+        stamp_game_date(e.as_mut_ptr());
         e[0xc] = 0x68;
-        cpq4_por(&mut e, 8, cpq4_i(clube));
-        cpq4_quem(&mut e, 0xd, pessoa);
-        cpq4_historico(true, this, cpr9_d(cpr9_d(clube + 0xcf)), &e);
+        put_i32(&mut e, 8, cpq4_i(clube));
+        put_person_keys(&mut e, 0xd, pessoa);
+        append_person_history_by_id(true, this, cpr9_d(cpr9_d(clube + 0xcf)), &e);
     }
-    cpq4_datar(e.as_mut_ptr());
+    stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x67;
-    cpq4_por(&mut e, 8, cpq4_id_ou_menos_1(clube));
+    put_i32(&mut e, 8, staff_records_id_or_minus_one(clube));
     if pessoa != 0 {
-        cpq4_historico(true, this, cpr9_d(pessoa), &e);
+        append_person_history_by_id(true, this, cpr9_d(pessoa), &e);
     } else {
-        aviso_em(0xa83b78, 0x1010);
+        show_error_at(0xa83b78, 0x1010);
     }
 }
 
 // ponytail: a busca acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo Rust e a
 // carreira provam a cópia.
 unsafe extern "thiscall" fn comparar_find_new_retirements(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// A saída dos cargos só mexe na pessoa e nos dois clubes? Não quando é técnico do clube (5, 12) nem nos cargos que
 /// chamam rotinas do clube humano (8, 15, 9).
-unsafe fn cpr9_so_memoria(pessoa: usize) -> bool {
+unsafe fn job_exit_is_memory_only(pessoa: usize) -> bool {
     for (campo, tipo) in [(0x39usize, 0x3dusize), (0x24, 0x28)] {
         let c = cpr9_d(pessoa + campo);
         if c == 0 {
@@ -208,25 +208,25 @@ unsafe fn cpr9_so_memoria(pessoa: usize) -> bool {
     true
 }
 
-/// Comparador: sem rotinas com efeito (cpr9_so_memoria), lado a lado pela pessoa (0x6e bytes) e pelos dois clubes
+/// Comparador: sem rotinas com efeito (job_exit_is_memory_only), lado a lado pela pessoa (0x6e bytes) e pelos dois clubes
 /// (0x245 bytes cada); senão (vaga do técnico, cancelamento de ofertas, listas do humano) só a original.
 unsafe extern "stdcall" fn comparar_player_regen_retire_from_non_playing_staff(pessoa: usize) {
-    let o = orig::<unsafe extern "stdcall" fn(usize)>(%%I1%%);
-    if !cpr9_so_memoria(pessoa) {
+    let o = original_fn::<unsafe extern "stdcall" fn(usize)>(%%I1%%);
+    if !job_exit_is_memory_only(pessoa) {
         return o(pessoa);
     }
-    let mut reg = cpr9_regioes(pessoa);
+    let mut reg = job_exit_regions(pessoa);
     reg.retain(|r| r.0 != 0);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || player_regen_retire_from_non_playing_staff(pessoa));
     PLACAR.registrar(igual, || format!("player_regen_retire_from_non_playing_staff(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
-unsafe fn cpr9_regioes(pessoa: usize) -> Vec<(usize, usize)> {
+unsafe fn job_exit_regions(pessoa: usize) -> Vec<(usize, usize)> {
     vec![(pessoa, 0x6e), (cpr9_d(pessoa + 0x39), 0x245), (cpr9_d(pessoa + 0x24), 0x245)]
 }
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia sem ele só grava [0xae1080]: só a
 // original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_add_free_release_records(this: usize, pessoa: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, pessoa)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, pessoa)
 }

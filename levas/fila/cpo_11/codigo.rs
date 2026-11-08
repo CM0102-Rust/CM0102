@@ -17,7 +17,7 @@ unsafe fn cpo11_por_w(a: usize, v: u16) {
 }
 
 /// O órgão disciplinar da regra `regra` (byte com sinal): [[this] + 4 × regra].
-unsafe fn cpo11_orgao(this: usize, regra: u8) -> usize {
+unsafe fn ruling_body_of_rule(this: usize, regra: u8) -> usize {
     cpo11_d(cpo11_d(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)))
 }
 
@@ -30,13 +30,13 @@ unsafe fn cpo11_entrada(orgao: usize, id: u32) -> usize {
 
 /// O registro de 29 bytes da pessoa `id` em [this+0x14] (4 vagas de 5 bytes: a regra e o índice da entrada; +0x14/+0x18
 /// o histórico; +0x1c quantas suspensões guardadas).
-unsafe fn cpo11_registro(this: usize, id: u32) -> usize {
+unsafe fn discipline_record(this: usize, id: u32) -> usize {
     cpo11_d(this + 0x14).wrapping_add((id as usize).wrapping_mul(29))
 }
 
 /// O órgão vale para o clube? Com nação (+0x17 ≠ −1): a nação do clube (+0x53) é ela; sem nação, com continente
 /// (+0x1b ≠ −1): o continente da nação do clube (+0x71) é ele; sem os dois, vale sempre. Clube nulo ou sem nação: não.
-unsafe fn cpo11_cobre(orgao: usize, clube: usize) -> bool {
+unsafe fn ruling_body_covers_club(orgao: usize, clube: usize) -> bool {
     let nacao = cpo11_d(orgao + 0x17) as u32;
     if nacao == 0xffff_ffff {
         let continente = cpo11_d(orgao + 0x1b) as u32;
@@ -54,7 +54,7 @@ unsafe fn cpo11_cobre(orgao: usize, clube: usize) -> bool {
 
 /// Solta a suspensão da entrada (se tem: +6 > −1) e libera a vaga `k` do registro da pessoa (regra 0xff, índice −1) e a
 /// entrada (+0 = −1). O índice vai no ax; o alto do eax é o do ponteiro da entrada (a 0x556d00 só lê a palavra).
-unsafe fn cpo11_liberar(this: usize, id: u32, e: usize) {
+unsafe fn release_entry_ban(this: usize, id: u32, e: usize) {
     let i = cpo11_w(e + 6);
     if i > -1 {
         let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
@@ -62,8 +62,8 @@ unsafe fn cpo11_liberar(this: usize, id: u32, e: usize) {
     }
 }
 
-unsafe fn cpo11_limpar_vaga(this: usize, id: u32, k: usize, e: usize) {
-    let v = cpo11_registro(this, id).wrapping_add(k * 5);
+unsafe fn clear_discipline_slot(this: usize, id: u32, k: usize, e: usize) {
+    let v = discipline_record(this, id).wrapping_add(k * 5);
     *(v as *mut u8) = 0xff;
     cpo11_por(v + 1, 0xffff_ffff);
     cpo11_por(e, 0xffff_ffff);
@@ -75,14 +75,14 @@ unsafe fn cpo11_limpar_vaga(this: usize, id: u32, k: usize, e: usize) {
 /// limpo a cada regra sem suspensão) copia a nova (0x556c70) na primeira vaga livre do vetor (+0 = 0xff e +2 = −1), ou
 /// no fim (conta +0xa, capacidade +8; cresce 100, até 0x7d00, malloc/realloc, as vagas novas livres), liga cada regra
 /// ao índice (0x7e8510) e, com a quarta regra, põe {id, nação} no índice das nações (+0xc, capacidade +0x10, conta
-/// +0x12; cresce 20; qsort 0x55e5f0). Caixas "Error" (capacidade no máximo, sem memória) pela aviso_em.
+/// +0x12; cresce 20; qsort 0x55e5f0). Caixas "Error" (capacidade no máximo, sem memória) pela show_error_at.
 unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
     for k in 0..4usize {
         let regra = *((ban + 0xc + k) as *const u8);
         if regra == 0xff {
             continue;
         }
-        let e = cpo11_entrada(cpo11_orgao(this, regra), id);
+        let e = cpo11_entrada(ruling_body_of_rule(this, regra), id);
         if e != 0 && cpo11_w(e + 6) > -1 {
             crate::comparacao::ramo("cpo_11 suspensao estendida");
             let s = cpo11_d(this + 4).wrapping_add((cpo11_w(e + 6) as i32 as usize).wrapping_mul(20));
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
             vaga = cpo11_w(this + 0xa).wrapping_sub(1);
         } else {
             if cap >= 0x7d00 {
-                aviso_em(0x9b8f18, 0x401);
+                show_error_at(0x9b8f18, 0x401);
                 return;
             }
             let nova = cap.wrapping_add(100);
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
             };
             cpo11_por(this + 4, p as u32);
             if p == 0 {
-                aviso_em(0x9b8f18, 0x410);
+                show_error_at(0x9b8f18, 0x410);
                 return;
             }
             vaga = cpo11_w(this + 0xa);
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
     for k in 0..4usize {
         let regra = *((ban + 0xc + k) as *const u8);
         if regra != 0xff {
-            ligar(cpo11_orgao(this, regra), id, vaga as u16 as u32); // liga a regra à suspensão
+            ligar(ruling_body_of_rule(this, regra), id, vaga as u16 as u32); // liga a regra à suspensão
         }
     }
     if *((ban + 0xf) as *const u8) == 0xff {
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
         let p = realloc(cpo11_d(this + 0xc), (nova as i32 as u32).wrapping_mul(8));
         cpo11_por(this + 0xc, p as u32);
         if p == 0 {
-            aviso_em(0x9b8f18, 0x43e);
+            show_error_at(0x9b8f18, 0x43e);
             return;
         }
     }
@@ -183,19 +183,19 @@ unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
 }
 
 /// { 0x556270 } (thiscall, ret 0xc, discipline.cpp): `Discipline::clear_bans_invalid_for_club(pessoa, _, clube)`: cada
-/// vaga ocupada das 4 do registro da pessoa cujo órgão não vale para o clube novo (`cpo11_cobre`) é liberada: a
+/// vaga ocupada das 4 do registro da pessoa cujo órgão não vale para o clube novo (`ruling_body_covers_club`) é liberada: a
 /// suspensão solta (0x556d00), a vaga livre e a entrada do órgão livre. Com suspensões guardadas (+0x1c ≠ 0), a caixa
 /// "Error" antes (e segue). Da troca de clube (0x8c9720).
 unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, pessoa: usize, _nada: u32, clube: usize) {
     let id = cpo11_d(pessoa) as u32;
-    let r = cpo11_registro(this, id);
+    let r = discipline_record(this, id);
     for k in 0..4usize {
         let regra = *((r + k * 5) as *const u8);
         if regra == 0xff {
             continue;
         }
-        let orgao = cpo11_orgao(this, regra);
-        if cpo11_cobre(orgao, clube) {
+        let orgao = ruling_body_of_rule(this, regra);
+        if ruling_body_covers_club(orgao, clube) {
             continue;
         }
         let e = cpo11_entrada(orgao, id);
@@ -203,11 +203,11 @@ unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, pessoa: usi
             continue;
         }
         crate::comparacao::ramo("cpo_11 transferido solta a vaga");
-        cpo11_liberar(this, id, e);
+        release_entry_ban(this, id, e);
         if *((r + 0x1c) as *const u8) != 0 {
-            aviso_em(0x9b8f18, 0x239);
+            show_error_at(0x9b8f18, 0x239);
         }
-        cpo11_limpar_vaga(this, id, k, e);
+        clear_discipline_slot(this, id, k, e);
     }
 }
 
@@ -222,9 +222,9 @@ struct Cpo11Devolver {
 }
 
 /// O plano da 0x556570 (o cursor da lista é zerado pela original na entrada; a busca sem criar só lê).
-unsafe fn cpo11_plano_devolver(this: usize, pessoa: usize) -> Cpo11Devolver {
+unsafe fn return_bans_plan(this: usize, pessoa: usize) -> Cpo11Devolver {
     let id = cpo11_d(pessoa) as u32;
-    let r = cpo11_registro(this, id);
+    let r = discipline_record(this, id);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let contrato = contract_of(cpo11_d(0xae1050), pessoa);
     let clube = if contrato == 0 { 0 } else { cpo11_d(0xae23b4).wrapping_add(cpo11_d(contrato + 4).wrapping_mul(0x245)) };
@@ -252,8 +252,8 @@ unsafe fn cpo11_plano_devolver(this: usize, pessoa: usize) -> Cpo11Devolver {
         if marcas[k] || vagas[k * 5] == 0xff {
             continue;
         }
-        let orgao = cpo11_orgao(this, vagas[k * 5]);
-        if !cpo11_cobre(orgao, clube) {
+        let orgao = ruling_body_of_rule(this, vagas[k * 5]);
+        if !ruling_body_covers_club(orgao, clube) {
             let e = cpo11_entrada(orgao, id);
             if e != 0 {
                 p.soltas.push((k, e));
@@ -271,7 +271,7 @@ unsafe fn cpo11_plano_devolver(this: usize, pessoa: usize) -> Cpo11Devolver {
 /// clube são liberadas.
 unsafe extern "thiscall" fn restore_held_bans(this: usize, pessoa: usize) {
     let id = cpo11_d(pessoa) as u32;
-    let r = cpo11_registro(this, id);
+    let r = discipline_record(this, id);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let contrato = contract_of(cpo11_d(0xae1050), pessoa);
     cpo11_por(0xae1080, contrato as u32);
@@ -287,10 +287,10 @@ unsafe extern "thiscall" fn restore_held_bans(this: usize, pessoa: usize) {
             let k = *((item + 4) as *const u8) as i8 as isize as usize;
             let regra = *(r.wrapping_add(k.wrapping_mul(5)) as *const u8);
             if regra != 0xff {
-                let e = cpo11_entrada(cpo11_orgao(this, regra), id);
+                let e = cpo11_entrada(ruling_body_of_rule(this, regra), id);
                 if e != 0 {
-                    cpo11_liberar(this, id, e);
-                    cpo11_limpar_vaga(this, id, k, e);
+                    release_entry_ban(this, id, e);
+                    clear_discipline_slot(this, id, k, e);
                 }
             }
             crate::comparacao::ramo("cpo_11 guardada devolvida");
@@ -308,15 +308,15 @@ unsafe extern "thiscall" fn restore_held_bans(this: usize, pessoa: usize) {
         if marcas[k] != 0 || k == 3 || regra == 0xff {
             continue;
         }
-        let orgao = cpo11_orgao(this, regra);
-        if cpo11_cobre(orgao, clube) {
+        let orgao = ruling_body_of_rule(this, regra);
+        if ruling_body_covers_club(orgao, clube) {
             continue;
         }
         let e = cpo11_entrada(orgao, id);
         if e != 0 {
             crate::comparacao::ramo("cpo_11 fim do emprestimo solta a vaga");
-            cpo11_liberar(this, id, e);
-            cpo11_limpar_vaga(this, id, k, e);
+            release_entry_ban(this, id, e);
+            clear_discipline_slot(this, id, k, e);
         }
     }
 }
@@ -329,13 +329,13 @@ enum Cpo11Plano {
     Caixa,
 }
 
-unsafe fn cpo11_plano_suspensao(this: usize, id: u32, ban: usize) -> Cpo11Plano {
+unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Cpo11Plano {
     for k in 0..4usize {
         let regra = *((ban + 0xc + k) as *const u8);
         if regra == 0xff {
             continue;
         }
-        let e = cpo11_entrada(cpo11_orgao(this, regra), id);
+        let e = cpo11_entrada(ruling_body_of_rule(this, regra), id);
         if e != 0 && cpo11_w(e + 6) > -1 {
             let s = cpo11_d(this + 4).wrapping_add((cpo11_w(e + 6) as i32 as usize).wrapping_mul(20));
             let (jogos, novos) = (*(s as *const u8), *(ban as *const u8));
@@ -363,11 +363,11 @@ unsafe fn cpo11_plano_suspensao(this: usize, id: u32, ban: usize) -> Cpo11Plano 
 /// roda; confere a velha estendida (jogos, dias, bit 0 das duas), ou a nova na vaga (jogos, dias, as 4 regras), a
 /// conta, as entradas das regras apontando para a vaga e, com a quarta regra, o índice das nações com um a mais.
 unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
-    let plano = cpo11_plano_suspensao(this, id, ban);
+    let plano = add_ban_plan(this, id, ban);
     let indice = cpo11_w(this + 0x12);
     let mut regras = [0u8; 4];
     core::ptr::copy_nonoverlapping((ban + 0xc) as *const u8, regras.as_mut_ptr(), 4);
-    orig::<unsafe extern "thiscall" fn(usize, u32, usize)>(%%I0%%)(this, id, ban);
+    original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(%%I0%%)(this, id, ban);
     let (ok, detalhe) = match plano {
         Cpo11Plano::Caixa => return,
         Cpo11Plano::Estender { s, jogos, dias } => {
@@ -381,7 +381,7 @@ unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
             for k in 0..4usize {
                 ok &= *((s + 0xc + k) as *const u8) == regras[k];
                 if regras[k] != 0xff {
-                    let e = cpo11_entrada(cpo11_orgao(this, regras[k]), id);
+                    let e = cpo11_entrada(ruling_body_of_rule(this, regras[k]), id);
                     ok &= e != 0 && cpo11_w(e + 6) == vaga;
                 }
             }
@@ -399,7 +399,7 @@ unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
 /// entrada repetida em duas vagas não entra na conferência da segunda.
 unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, pessoa: usize, nada: u32, clube: usize) {
     let id = cpo11_d(pessoa) as u32;
-    let r = cpo11_registro(this, id);
+    let r = discipline_record(this, id);
     let mut antes = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, antes.as_mut_ptr(), 29);
     let mut plano: [Option<usize>; 4] = [None; 4];
@@ -409,8 +409,8 @@ unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, pe
         if regra == 0xff {
             continue;
         }
-        let orgao = cpo11_orgao(this, regra);
-        if !cpo11_cobre(orgao, clube) {
+        let orgao = ruling_body_of_rule(this, regra);
+        if !ruling_body_covers_club(orgao, clube) {
             let e = cpo11_entrada(orgao, id);
             if e != 0 {
                 duvida[k] = plano[..k].iter().any(|x| *x == Some(e));
@@ -418,7 +418,7 @@ unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, pe
             }
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I1%%)(this, pessoa, nada, clube);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I1%%)(this, pessoa, nada, clube);
     let mut depois = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, depois.as_mut_ptr(), 29);
     let mut ok = depois[20..] == antes[20..];
@@ -440,11 +440,11 @@ unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, pe
 /// soltas (0xff, −1, a entrada −1), a conta de guardadas e as outras vagas intactas.
 unsafe extern "thiscall" fn comparar_restore_held_bans(this: usize, pessoa: usize) {
     let id = cpo11_d(pessoa) as u32;
-    let r = cpo11_registro(this, id);
-    let p = cpo11_plano_devolver(this, pessoa);
+    let r = discipline_record(this, id);
+    let p = return_bans_plan(this, pessoa);
     let mut antes = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, antes.as_mut_ptr(), 29);
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, pessoa);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, pessoa);
     let mut depois = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, depois.as_mut_ptr(), 29);
     let mut esperado = antes;

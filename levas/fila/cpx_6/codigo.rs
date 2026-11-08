@@ -5,23 +5,23 @@ unsafe fn cpx6_d(a: usize) -> usize {
 }
 
 /// A contagem de um byte com sinal (a original usa `movsx`).
-unsafe fn cpx6_n8(a: usize) -> u32 {
+unsafe fn signed_byte_count(a: usize) -> u32 {
     *(a as *const i8) as i32 as u32
 }
 
 /// Abre `CM3_TEMP\<nome>` para gravar ("wb"): o caminho pela 0x90bde0 e o fopen do jogo (0x945b00).
-unsafe fn cpx6_abrir(nome: usize) -> usize {
+unsafe fn open_temp_file_for_write(nome: usize) -> usize {
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
     abrir(caminho(0x987da0, nome), 0x9a7f28)
 }
 
-unsafe fn cpx6_escrever(dados: usize, tamanho: u32, quantos: u32, f: usize) -> u32 {
+unsafe fn crt_fwrite(dados: usize, tamanho: u32, quantos: u32, f: usize) -> u32 {
     let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
     escrever(dados, tamanho, quantos, f)
 }
 
-unsafe fn cpx6_fechar(f: usize) {
+unsafe fn uefa_seeding_crt_fclose(f: usize) {
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
     fechar(f);
 }
@@ -34,43 +34,43 @@ unsafe fn cpx6_fechar(f: usize) {
 unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0xaa1a1c;
     crate::comparacao::ramo("cpx_6 gravar sementes da uefa");
-    let f = cpx6_abrir(0xaa1a50);
+    let f = open_temp_file_for_write(0xaa1a50);
     if f == 0 {
-        aviso_em(FONTE, 0x64f);
+        show_error_at(FONTE, 0x64f);
         return;
     }
-    if cpx6_escrever(this + 0x438, 1, 1, f) != 1 {
-        aviso_em(FONTE, 0x657);
+    if crt_fwrite(this + 0x438, 1, 1, f) != 1 {
+        show_error_at(FONTE, 0x657);
         return;
     }
-    if cpx6_escrever(this, 0x12, cpx6_n8(this + 0x438), f) != cpx6_n8(this + 0x438) {
-        aviso_em(FONTE, 0x660);
+    if crt_fwrite(this, 0x12, signed_byte_count(this + 0x438), f) != signed_byte_count(this + 0x438) {
+        show_error_at(FONTE, 0x660);
         return;
     }
-    if cpx6_escrever(this + 0x439, 2, 1, f) != 1 {
-        aviso_em(FONTE, 0x668);
+    if crt_fwrite(this + 0x439, 2, 1, f) != 1 {
+        show_error_at(FONTE, 0x668);
         return;
     }
-    if cpx6_escrever(this + 0x43f, 1, 1, f) != 1 {
-        aviso_em(FONTE, 0x66f);
+    if crt_fwrite(this + 0x43f, 1, 1, f) != 1 {
+        show_error_at(FONTE, 0x66f);
         return;
     }
-    if *((this + 0x43f) as *const u8) != 0 && cpx6_escrever(cpx6_d(this + 0x43b), 4, cpx6_n8(this + 0x43f), f) != cpx6_n8(this + 0x43f) {
-        aviso_em(FONTE, 0x679);
+    if *((this + 0x43f) as *const u8) != 0 && crt_fwrite(cpx6_d(this + 0x43b), 4, signed_byte_count(this + 0x43f), f) != signed_byte_count(this + 0x43f) {
+        show_error_at(FONTE, 0x679);
         return;
     }
-    if cpx6_escrever(this + 0x440, 0xc, 0x32, f) != 0x32 { // cpx6: os 50 registros fixos
-        aviso_em(FONTE, 0x682);
+    if crt_fwrite(this + 0x440, 0xc, 0x32, f) != 0x32 { // cpx6: os 50 registros fixos
+        show_error_at(FONTE, 0x682);
         return;
     }
-    cpx6_fechar(f);
+    uefa_seeding_crt_fclose(f);
 }
 
 /// Comparador da 0x905510: só a original.
 unsafe extern "thiscall" fn comparar_uefa_seeding_save_to_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     // (o .tmp vai no .qst pelo zadd_matching_files)
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// { 0x4c6b70 } (thiscall, ret 0, conmebol_seeding.cpp): `ConmebolSeeding::save_to_temp_file`: grava
@@ -79,34 +79,34 @@ unsafe extern "thiscall" fn comparar_uefa_seeding_save_to_temp_file(this: usize)
 unsafe extern "thiscall" fn conmebol_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0x9a7ed8;
     crate::comparacao::ramo("cpx_6 gravar sementes da conmebol");
-    let f = cpx6_abrir(0x9a7f10);
+    let f = open_temp_file_for_write(0x9a7f10);
     if f == 0 {
-        aviso_em(FONTE, 0x2ee);
+        show_error_at(FONTE, 0x2ee);
         return;
     }
-    if cpx6_escrever(this + 0x6e, 1, 1, f) != 1 {
-        aviso_em(FONTE, 0x2f6);
+    if crt_fwrite(this + 0x6e, 1, 1, f) != 1 {
+        show_error_at(FONTE, 0x2f6);
         return;
     }
-    if cpx6_escrever(this, 0xa, cpx6_n8(this + 0x6e), f) != cpx6_n8(this + 0x6e) { // cpx6: os registros dos países
-        aviso_em(FONTE, 0x2ff);
+    if crt_fwrite(this, 0xa, signed_byte_count(this + 0x6e), f) != signed_byte_count(this + 0x6e) { // cpx6: os registros dos países
+        show_error_at(FONTE, 0x2ff);
         return;
     }
-    if cpx6_escrever(this + 0x6f, 2, 1, f) != 1 {
-        aviso_em(FONTE, 0x307);
+    if crt_fwrite(this + 0x6f, 2, 1, f) != 1 {
+        show_error_at(FONTE, 0x307);
         return;
     }
-    if cpx6_escrever(this + 0x71, 4, 1, f) != 1 {
-        aviso_em(FONTE, 0x30f);
+    if crt_fwrite(this + 0x71, 4, 1, f) != 1 {
+        show_error_at(FONTE, 0x30f);
         return;
     }
-    cpx6_fechar(f);
+    uefa_seeding_crt_fclose(f);
 }
 
 /// Comparador da 0x4c6b70: só a original.
 unsafe extern "thiscall" fn comparar_conmebol_seeding_save_to_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
 /// { 0x5fb320 } (thiscall, ret 0, host_country.cpp): `HostCountry::save_temp_file`: grava `CM3_TEMP\HostCountry.tmp`:
@@ -114,18 +114,18 @@ unsafe extern "thiscall" fn comparar_conmebol_seeding_save_to_temp_file(this: us
 /// "Error" (host_country.cpp 0x475).
 unsafe extern "thiscall" fn save_temp_file(this: usize) {
     crate::comparacao::ramo("cpx_6 gravar paises anfitrioes");
-    let f = cpx6_abrir(0x9cf10c);
+    let f = open_temp_file_for_write(0x9cf10c);
     if f == 0 {
-        aviso_em(0x9cf0d8, 0x475);
+        show_error_at(0x9cf0d8, 0x475);
         return;
     }
-    cpx6_escrever(this + 4, 2, 1, f);
-    cpx6_escrever(cpx6_d(this), 0x22, *((this + 4) as *const i16) as i32 as u32, f); // cpx6: os anfitriões
-    cpx6_fechar(f);
+    crt_fwrite(this + 4, 2, 1, f);
+    crt_fwrite(cpx6_d(this), 0x22, *((this + 4) as *const i16) as i32 as u32, f); // cpx6: os anfitriões
+    uefa_seeding_crt_fclose(f);
 }
 
 /// Comparador da 0x5fb320: só a original.
 unsafe extern "thiscall" fn comparar_save_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

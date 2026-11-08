@@ -5,8 +5,10 @@ use super::*;
 
 
 
-/// O registro da competição `id` no banco ([0xae23d0] + 0x6b × id).
-pub(crate) unsafe fn cqi11_comp(id: usize) -> usize {
+/// Competition record id in the database (G_CLUB_COMP_TABLE + 0x6b × id).
+///
+/// [pt] O registro da competição `id` no banco ([0xae23d0] + 0x6b × id).
+pub(crate) unsafe fn club_comp_record(id: usize) -> usize {
     read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b))
 }
 
@@ -20,7 +22,9 @@ pub(crate) struct Cqi11Listas {
     pub(crate) n: [u32; 4],
 }
 
-pub(crate) unsafe fn cqi11_listas() -> Cqi11Listas {
+/// The four club lists of 0x4c11a0 in database order (Mexican, Central American, Caribbean, MLS) with their counts,
+/// stopping at the first national team.
+pub(crate) unsafe fn concacaf_club_lists() -> Cqi11Listas {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     // ponytail: as quatro listas começam zeradas na cópia (na original, sobra de pilha que só é lida quando falta clube;
     // o comparador manda esse caso para a original sozinha)
@@ -86,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 8);
     let outro = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
-    let mut l = cqi11_listas();
+    let mut l = concacaf_club_lists();
     ordenar(l.mex.as_mut_ptr() as usize, l.n[0], 2);
     ordenar(l.centro.as_mut_ptr() as usize, l.n[1], 3); // cqi11: três centro-americanos
     ordenar(l.caribe.as_mut_ptr() as usize, l.n[2], 1);
@@ -105,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
         pd(t(1), l.mls[1]);
     } else {
         crate::comparacao::ramo("cqi_11 campeao da mls");
-        let mls = cqi11_comp(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE));
+        let mls = club_comp_record(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE));
         pd(t(0), colocado(mls, 0));
         pd(t(1), colocado(read_u32_as_usize(outro + 4), 0));
         if read_u32_as_usize(t(0)) == read_u32_as_usize(t(1)) { // cqi11: o campeão das duas dá a vaga ao vice da MLS
@@ -125,8 +129,8 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
 /// embaralha; a cópia sem contar). Quando falta clube numa lista (menos de 2 mexicanos, 3 centro-americanos, 1
 /// caribenho, ou 2 da MLS sem o objeto [0x9cf728]) a original lê sobra de pilha: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SELECT_QUALIFIED_CLUBS);
-    let l = cqi11_listas();
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SELECT_QUALIFIED_CLUBS);
+    let l = concacaf_club_lists();
     let outro = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
     if l.n[0] < 2 || l.n[1] < 3 || l.n[2] < 1 || (outro == 0 && l.n[3] < 2) || read_u32_as_usize(this + 0xa7) == 0 {
         return o(this); // ponytail: lista curta (a original lê sobra de pilha) ou sem tabela: só a original
@@ -157,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, ho
         let classificar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CONCHAMP_SELECT_QUALIFIED_CLUBS);
         if classificar(this) < 0 {
             // ponytail: a 0x4c11a0 sempre devolve 1; o caso de erro fica com a caixa e o 0 da original
-            aviso_em(0x9a7d30, 0x1ba);
+            show_error_at(0x9a7d30, 0x1ba);
             return 0;
         }
         crate::comparacao::ramo("cqi_11 dia da selecao");
@@ -172,7 +176,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, ho
 // tabela vazia e fase ≠ 0, a copa sai com 8 times e o time 0 preenchido (a 0x4c11a0 tem o seu comparador); senão +0x3e
 // não muda.
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_CHAMP_UPDATE_FOR_DATE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_CHAMP_UPDATE_FOR_DATE);
     if read_u32_as_usize(this + 0xa7) == 0 {
         return o(this, hoje, fase);
     }
@@ -201,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere o fundo de
 // prêmios (+0x28 = 2.000.000) e a devolução 1.
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SET_UP_ROUNDS)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SET_UP_ROUNDS)(this);
     PLACAR.registrar(r == 1 && read_u32_as_usize(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, read_u32_as_usize(this + 0x28)));
     r
 }
@@ -226,14 +230,14 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(0x138);
     if t == 0 {
-        aviso_em(0x9a7d30, 0x97);
+        show_error_at(0x9a7d30, 0x97);
         return 0;
     }
     crate::comparacao::ramo("cqp_13 tabela da concacaf");
     let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in CQP13_CONCACAF.iter().enumerate() {
-        cql10_rodada(t, i as u32, r, ano);
+        eng_cc_cup_write_cup_round(t, i as u32, r, ano);
         if i < 2 {
             elo(t, i as i32, 0, -1, -1, -1, 0);
         }
@@ -242,10 +246,10 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CON_CHAMP_CREATE_ROUND_TABLE);
-    let a = cql10_comparar("con_champ_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CON_CHAMP_CREATE_ROUND_TABLE);
+    let a = eng_cc_cup_compare_round_table("con_champ_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| con_champ_create_round_table(this, fase, r, e, s));
-    // ponytail: a cql10_comparar não olha os dias dos confrontos (+0x23..); o dia 0 das duas primeiras rodadas é
+    // ponytail: a eng_cc_cup_compare_round_table não olha os dias dos confrontos (+0x23..); o dia 0 das duas primeiras rodadas é
     // conferido aqui contra o valor fixo que a cópia grava
     if a != 0 {
         let ok = (0..2usize).all(|r| {

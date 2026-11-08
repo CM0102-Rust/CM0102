@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     let mut conta = [0i8; 8];
     let lista = zerada(0x20, 5);
     if lista == 0 {
-        aviso_em(0xad5888, 0x4b5);
+        show_error_at(0xad5888, 0x4b5);
         return 0;
     }
     let mut s = 0i32;
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
 /// (+0xee, 0xa0 bytes), de +0x36, de [0xb67a34] e, na Copa de 2002, da tabela das nações ([+0x14], 32 × 6); as duas
 /// listas alocadas têm de ser iguais byte a byte (a da cópia é liberada, 0x9452ca).
 unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend_from_slice(&[(this + 0xee, 0xa0), (this + 0x36, 2), (0xb67a34, 4)]);
@@ -170,15 +170,15 @@ unsafe extern "thiscall" fn run_group_draw(this: usize) {
     let cartoes: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7e9180usize);
     let lista = sortear(this);
     if grupo_um(this, lista) == 0 {
-        aviso_em(0xad5888, 0x46d);
+        show_error_at(0xad5888, 0x46d);
         return;
     }
     if criar(this) == 0 {
-        aviso_em(0xad5888, 0x473);
+        show_error_at(0xad5888, 0x473);
         return;
     }
     if ordenar(this, 0) == 0 {
-        aviso_em(0xad5888, 0x47a);
+        show_error_at(0xad5888, 0x47a);
         return;
     }
     cqf4_pd(this + 0x45, 1);
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn run_group_draw(this: usize) {
 /// Só a original (o sorteio, os jogos, as notícias e as previsões não rodam duas vezes), conferindo o que ela garante:
 /// terminada (+0x45 = 1), as sete fases dos grupos 2..8 existem e a fase atual (+0x30) é a última delas (6).
 unsafe extern "thiscall" fn comparar_run_group_draw(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     if cqf4_d(this + 0x45) == 1 {
         let fases = cqf4_d(this + 0xc);
         let ok = fases != 0 && (0..7).all(|g| cqf4_d(fases + g * 4) != 0) && cqf4_d(this + 0x30) == 6;
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, hoje: usize, 
 /// Só a original (a semeadura, o sorteio e o dia da liga não rodam duas vezes), conferindo o que ela garante: no dia do
 /// sorteio (a condição da cópia), a Copa sai com a tabela do grupo 1 (+0xb1) e +0x45 = 1.
 unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     let ano = core::ptr::read_unaligned((hoje + 2) as *const u16) as i32;
     let dia = core::ptr::read_unaligned(hoje as *const u16);
     let sorteia = cqf4_w(this + 0xb6) as u16 == dia && cqf4_w(this + 0xb8) as i32 + cqf4_w(this + 0x40) as i32 == ano && completo != 0 && cqf4_d(this + 0xb1) == 0;

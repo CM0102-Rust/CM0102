@@ -16,7 +16,7 @@ unsafe fn cqq6_registro(g: usize) -> usize {
 /// Uma competição-marcador (operator new 0x944cf1 de 0xa3: push; add esp, 4 -> cdecl; sem memória: 0): Comp::Comp
 /// (0x48c580: mov ecx -> thiscall, ret 0), a vtable `vtabela`, +0x42 = 1, o registro de id [g] em +4 e sem disciplina
 /// (+0x50 = 0xff).
-unsafe fn cqq6_marcador(vtabela: usize, g: usize) -> usize {
+unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let comp: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x48c580usize);
     let c = novo(0xa3);
@@ -63,9 +63,9 @@ unsafe extern "thiscall" fn construct_fra_first(this: usize, ano: u32, registro:
     core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
     cqq6_pd(this + 4, registro);
     *((this + 0x50) as *mut u8) = 0xc; // cqq6: a disciplina da primeira francesa
-    let m = cqq6_marcador(0x96a994, 0x9cf5d8);
+    let m = new_marker_comp(0x96a994, 0x9cf5d8);
     cqq6_pd(this + 0xee, m);
-    let m = cqq6_marcador(0x96a904, 0x9cf548);
+    let m = new_marker_comp(0x96a904, 0x9cf548);
     cqq6_pd(this + 0xf2, m);
     if carregar(this, 1) != 0 {
         return this;
@@ -98,26 +98,26 @@ unsafe extern "thiscall" fn construct_fra_first(this: usize, ano: u32, registro:
     cqq6_pd(this + 0x2c, 0);
     cqq6_pd(this + 0xc, 0);
     if regras(this) == 0 {
-        aviso_em(0x9ccb5c, 0x65);
+        show_error_at(0x9ccb5c, 0x65);
         return this;
     }
     if tabela(this) == 0 {
-        aviso_em(0x9ccb5c, 0x6c);
+        show_error_at(0x9ccb5c, 0x6c);
         return this;
     }
     if jogos(this) == 0 {
-        aviso_em(0x9ccb5c, 0x73);
+        show_error_at(0x9ccb5c, 0x73);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        aviso_em(0x9ccb5c, 0x7c);
+        show_error_at(0x9ccb5c, 0x7c);
         return this;
     }
     let e = novo(0x5ce);
     let s = if e != 0 { estatisticas(e, this) } else { 0 };
     cqq6_pd(this + 8, s);
     if s == 0 {
-        aviso_em(0x9ccb5c, 0x83);
+        show_error_at(0x9ccb5c, 0x83);
         return this;
     }
     previstas(this);
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn construct_fra_first(this: usize, ano: u32, registro:
 /// registro, a disciplina e os dois marcadores (vtable e registro) e, na liga nova, os campos do começo e as
 /// estatísticas.
 unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     let r = o(this, ano, registro);
     let marcador = |m: usize, vt: usize, g: usize| m == 0 || (cqq6_d(m) == vt && cqq6_d(m + 4) == cqq6_registro(g) && *((m + 0x50) as *const u8) == 0xff);
     let mut ok = r == this && cqq6_d(this) == 0x96aa24 && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16

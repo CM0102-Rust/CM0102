@@ -1,5 +1,5 @@
 # Mutacoes (cqv_13), no sorteio dos grupos do Campeonato de Clubes da Oceania (janeiro de 2002; o australiano joga): o
-# embaralhamento com um clube a menos; sem a ordem pela reputacao antes de embaralhar; so metade embaralhada.
+# embaralhamento com um clube a menos; sem a ordem pela injury_word_0c antes de embaralhar; so metade embaralhada.
 MUTACOES = [
     ('cqv13_embaralha_um_a_menos',
      'embaralhar(cqv13_d(this + 0xee), n); // cqv13: os 8 embaralhados',

@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn scout_covers_nation(this: usize, nacao: usize) -> u3
 /// a lista +0x34c8: a original (caixa "Error").
 unsafe extern "thiscall" fn remove_friendly_match(this: usize, jogo: usize, limpar_vaga: u32) -> u32 {
     if jogo == 0 || cpn7_d(this + 0x34c8) == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, limpar_vaga);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, limpar_vaga);
     }
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn init_banned_nation_pairs(this: usize) {
     let v = alocar(0x20);
     cpn7_por(this + 0x3502, v);
     if v == 0 {
-        aviso_em(0x9cd0a0, 0x1800);
+        show_error_at(0x9cd0a0, 0x1800);
         *((this + 0x3506) as *mut u8) = 0;
         return;
     }
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn init_banned_nation_pairs(this: usize) {
 
 /// Comparador: lado a lado pelo valor e pelas missões +0x18c..+0x1a0 (a 0x7aefd0 as copia sobre elas mesmas).
 unsafe extern "thiscall" fn comparar_scout_covers_nation(this: usize, nacao: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let reg = [(this + 0x18c, 0x15)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao), || scout_covers_nation(this, nacao));
     PLACAR.registrar(igual && r == n, || format!("scout_covers_nation(nacao {:#x}) original={} rust={} {:x?} x {:x?}", nacao, r, n, mo, mr));
@@ -146,14 +146,14 @@ unsafe extern "thiscall" fn comparar_scout_covers_nation(this: usize, nacao: usi
 /// a original roda; confere as listas, o cursor da +0x34d4 no começo e a vaga zerada. Jogo nulo ou sem a lista
 /// +0x34c8: só a original (a caixa).
 unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usize, jogo: usize, limpar_vaga: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if jogo == 0 || cpn7_d(this + 0x34c8) == 0 {
         return o(this, jogo, limpar_vaga);
     }
     // ponytail: a 0x68d1f0 acha o nó pelo conteúdo do item; o plano supõe itens de conteúdo distinto (o normal)
     let l4 = cpn7_d(this + 0x34d4);
-    let esperado4: Vec<usize> = if l4 != 0 { cpd1_itens(l4).into_iter().filter(|&e| cpn7_d(e) != jogo).collect() } else { Vec::new() };
-    let mut esperado8 = cpd1_itens(cpn7_d(this + 0x34c8));
+    let esperado4: Vec<usize> = if l4 != 0 { list_items_capped(l4).into_iter().filter(|&e| cpn7_d(e) != jogo).collect() } else { Vec::new() };
+    let mut esperado8 = list_items_capped(cpn7_d(this + 0x34c8));
     if let Some(k) = esperado8.iter().position(|&e| e == jogo) {
         esperado8.remove(k);
     }
@@ -165,8 +165,8 @@ unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usize, jogo: us
     };
     let r = o(this, jogo, limpar_vaga);
     let l4 = cpn7_d(this + 0x34d4);
-    let itens4 = if l4 != 0 { cpd1_itens(l4) } else { Vec::new() };
-    let itens8 = cpd1_itens(cpn7_d(this + 0x34c8));
+    let itens4 = if l4 != 0 { list_items_capped(l4) } else { Vec::new() };
+    let itens8 = list_items_capped(cpn7_d(this + 0x34c8));
     let ok = itens4 == esperado4
         && (l4 == 0 || cpn7_d(l4 + 0xa) == cpn7_d(l4 + 2))
         && itens8 == esperado8
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usize, jogo: us
 
 /// Comparador: o malloc não pode rodar duas vezes: a original roda e confere o vetor e a conta com o plano.
 unsafe extern "thiscall" fn comparar_init_banned_nation_pairs(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let v = cpn7_d(this + 0x3502);
     let ok = if v == 0 {
         cpn7_b(this + 0x3506) == 0

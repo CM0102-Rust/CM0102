@@ -123,8 +123,8 @@ unsafe extern "thiscall" fn collapse_offers_for_player(this: usize, pessoa: usiz
 /// conta +0x888); cheio, cresce de 50 em 50 (sem memória: caixa 0x2553 e nada). Reordena (qsort 0x945333 com 0x8e54d0,
 /// a ordem da busca 0x8cb0f0).
 unsafe extern "thiscall" fn add_next_sale_percentage(this: usize, registro: usize) {
-    crate::comparacao::ramo("cpr_4 percentual da proxima venda");
-    if !cpl3_crescer(this, 0x880, 4, 50, 0xd, 0x2553, 0xa8eb50) {
+    crate::comparacao::ramo("cpr_4 write_percent_pair da proxima venda");
+    if !grow_record_vector(this, 0x880, 4, 50, 0xd, 0x2553, 0xa8eb50) {
         return;
     }
     let n = cpr4_d(this + 0x888);
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn add_next_sale_percentage(this: usize, registro: usiz
 /// Comparador: sem `lista`, lado a lado por [0xae1080] e pela devolução; com `lista` (cresce a lista: não pode rodar
 /// duas vezes), a cópia conta antes sem lista e a original roda: confere a conta.
 unsafe extern "thiscall" fn comparar_get_open_offers_for_club_players(this: usize, clube: usize, lista: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     if lista != 0 {
         let n = get_open_offers_for_club_players(this, clube, 0);
         let r = o(this, clube, lista);
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn comparar_get_open_offers_for_club_players(this: usiz
 /// Comparador: agenda (aloca) e mexe nas listas de alvos: só a original. O plano antes: as ofertas pela pessoa (0x8c5cf0
 /// numa lista própria, destruída depois); depois confere que todas ficaram no estado 0xf com +0x2e = 3.
 unsafe extern "thiscall" fn comparar_collapse_offers_for_player(this: usize, pessoa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if cpr4_b(cpr4_d(this + 0x86e).wrapping_add(cpr4_d(pessoa).wrapping_mul(8)) + 1) == 0 {
         return o(this, pessoa);
     }
@@ -182,11 +182,11 @@ unsafe extern "thiscall" fn comparar_collapse_offers_for_player(this: usize, pes
 unsafe extern "thiscall" fn comparar_add_next_sale_percentage(this: usize, registro: usize) {
     let n = cpr4_d(this + 0x888);
     let alvo = core::slice::from_raw_parts(registro as *const u8, 0xd).to_vec();
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, registro);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, registro);
     if cpr4_d(this + 0x880) == 0 {
         return; // sem memória: a caixa já saiu
     }
     let conta = cpr4_d(this + 0x888);
-    let ok = conta == n.wrapping_add(1) && cpl3_tem(cpr4_d(this + 0x880), conta, 0xd, &alvo);
+    let ok = conta == n.wrapping_add(1) && vector_contains_record(cpr4_d(this + 0x880), conta, 0xd, &alvo);
     PLACAR.registrar(ok, || format!("add_next_sale_percentage: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }

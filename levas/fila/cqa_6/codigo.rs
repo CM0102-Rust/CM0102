@@ -22,7 +22,7 @@ unsafe extern "thiscall" fn contains_player(this: usize, pessoa: usize) -> u32 {
     data_padrao(k + 0x10);
     data_padrao(k + 0x18);
     if pessoa == 0 {
-        aviso_em(0xa701b0, 0x33e);
+        show_error_at(0xa701b0, 0x33e);
         return 0;
     }
     if cqa6_d(this + 0x1f6) == 0 {
@@ -46,7 +46,7 @@ unsafe extern "thiscall" fn contains_player(this: usize, pessoa: usize) -> u32 {
 
 /// Comparador da 0x7af600: pela devolução (só lê; as datas e a chave são locais). Pessoa nula: a caixa, só a original.
 unsafe extern "thiscall" fn comparar_contains_player(this: usize, pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if pessoa == 0 {
         return o(this, pessoa);
     }
@@ -57,19 +57,19 @@ unsafe extern "thiscall" fn comparar_contains_player(this: usize, pessoa: usize)
 }
 
 /// A busca `i` (0..9) do técnico `m` (0x7f6cd0: thiscall(gerência, i, técnico), ret 8; lê só o byte do índice).
-unsafe fn cqa6_busca(this: usize, i: u8, m: usize) -> usize {
+unsafe fn get_search(this: usize, i: u8, m: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, u32, usize) -> usize = core::mem::transmute(0x7f6cd0usize);
     f(this, i as u32, m)
 }
 
 /// O olheiro da busca (0x7ae950: thiscall(busca)).
-unsafe fn cqa6_olheiro(l: usize) -> usize {
+unsafe fn search_scout(l: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x7ae950usize);
     f(l)
 }
 
 /// Põe o olheiro na busca (0x7ae8a0: thiscall(busca, olheiro), ret 4).
-unsafe fn cqa6_trocar(l: usize, olheiro: usize) {
+unsafe fn set_search_scout(l: usize, olheiro: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7ae8a0usize);
     f(l, olheiro);
 }
@@ -83,25 +83,25 @@ unsafe fn cqa6_trocar(l: usize, olheiro: usize) {
 /// +0 − byte de [0xae2364] + 16, 0..15; fora, a caixa da linha 0x212 e 0): com a edição aberta ([this + vaga × 4 +
 /// 0xc]), ela refaz os olheiros das listas (0x8043c0). Devolve 1.
 unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: usize) -> u32 {
-    let m = if tecnico != 0 { tecnico } else { cps8_gerente_da_vez() };
+    let m = if tecnico != 0 { tecnico } else { scout_manager_current_human_manager() };
     if m == 0 {
-        aviso_em(0xa7b094, 0x1ba);
+        show_error_at(0xa7b094, 0x1ba);
         return 0;
     }
     let clube = cqa6_d(m + 0x39);
     for i in 0..10u8 {
-        let l = cqa6_busca(this, i, m);
+        let l = get_search(this, i, m);
         if l == 0 || cqa6_b(l + 0xa) != 4 {
             continue;
         }
-        let o = cqa6_olheiro(l);
+        let o = search_scout(l);
         if clube != 0 {
             if o == 0 || (cqa6_d(o + 0x39) == clube && cqa6_b(o + 0x3d) == 9) {
                 continue;
             }
         }
         crate::comparacao::ramo("cqa_6 lista sem olheiro");
-        cqa6_trocar(l, 0);
+        set_search_scout(l, 0);
     }
     if clube != 0 {
         let olheiros: unsafe extern "C" fn(usize, *mut usize) -> u32 = core::mem::transmute(0x53cd60usize);
@@ -114,27 +114,27 @@ unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: usize) -> u32
             let mut livre: i8 = -1;
             let mut tem = false;
             for i in 0..10u8 {
-                let l = cqa6_busca(this, i, m);
+                let l = get_search(this, i, m);
                 if l == 0 || cqa6_b(l + 0xa) != 4 {
                     continue;
                 }
-                if cqa6_olheiro(l) == s {
+                if search_scout(l) == s {
                     tem = true;
                     break;
                 }
-                if cqa6_olheiro(l) == 0 && livre == -1 {
+                if search_scout(l) == 0 && livre == -1 {
                     livre = i as i8;
                 }
             }
             if !tem && livre > -1 {
                 crate::comparacao::ramo("cqa_6 olheiro na lista livre");
-                cqa6_trocar(cqa6_busca(this, livre as u8, m), s);
+                set_search_scout(get_search(this, livre as u8, m), s);
             }
         }
     }
     let vaga = cqa6_b(m).wrapping_sub(cqa6_b(0xae2364)).wrapping_add(0x10) as i8;
     if !(0..=15).contains(&vaga) {
-        aviso_em(0xa7b094, 0x212);
+        show_error_at(0xa7b094, 0x212);
         return 0;
     }
     let s = cqa6_d(this + vaga as usize * 4 + 0xc);
@@ -148,8 +148,8 @@ unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: usize) -> u32
 /// Comparador da 0x7f7270: lado a lado nas 10 buscas do técnico (0x2b0 bytes cada, achadas antes pela 0x7f6cd0, que
 /// só lê) e na devolução. Sem técnico ou com a edição aberta (a 0x8043c0 mexe na edição): só a original.
 unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, tecnico: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
-    let m = if tecnico != 0 { tecnico } else { cps8_gerente_da_vez() };
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
+    let m = if tecnico != 0 { tecnico } else { scout_manager_current_human_manager() };
     if m == 0 {
         return o(this, tecnico);
     }
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, tecnico: usiz
     }
     let mut regioes = Vec::new();
     for i in 0..10u8 {
-        let l = cqa6_busca(this, i, m);
+        let l = get_search(this, i, m);
         if l != 0 {
             regioes.push((l, 0x2b0usize));
         }
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, tecnico: usiz
 unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(this: usize, pessoa: usize, reservar: u32) -> usize {
     if pessoa == 0 {
         // ponytail: a original lê o id da pessoa antes de conferir o ponteiro (cairia); fica com ela
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%)(this, pessoa, reservar);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%)(this, pessoa, reservar);
     }
     let id = cqa6_d(pessoa) as i32;
     let vaga = |i: i8| this + 4 + i as usize * 0x1a2;
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(this: usize,
         return 0;
     }
     if livre == -1 {
-        aviso_em(0xa701b0, 0x210d);
+        show_error_at(0xa701b0, 0x210d);
         return 0;
     }
     let a = vaga(livre);
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(this: usize,
 
 /// Comparador da 0x7bd700: sem `reservar`, pela devolução (só lê); com ele, lado a lado nas 50 vagas e na devolução.
 unsafe extern "thiscall" fn comparar_player_search_find_or_claim_player_slot(this: usize, pessoa: usize, reservar: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
     if pessoa == 0 {
         return o(this, pessoa, reservar);
     }

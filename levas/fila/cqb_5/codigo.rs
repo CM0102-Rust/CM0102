@@ -26,17 +26,17 @@ unsafe fn cqb5_sorteio(n: i32) -> i32 {
 }
 
 /// O registro físico de 31 bytes da pessoa `id` em [this].
-unsafe fn cqb5_registro(this: usize, id: usize) -> usize {
+unsafe fn physical_record(this: usize, id: usize) -> usize {
     cqb5_d(this).wrapping_add(id.wrapping_mul(0x1f))
 }
 
 /// A lesão `i` (0x30 bytes) do vetor [this+4].
-unsafe fn cqb5_lesao(this: usize, i: usize) -> usize {
+unsafe fn injury_entry(this: usize, i: usize) -> usize {
     cqb5_d(this + 4).wrapping_add(i.wrapping_mul(0x30))
 }
 
 /// O contrato da pessoa (0x4cf5a0: thiscall([0xae1050], pessoa), ret 4), guardado em [0xae1080].
-unsafe fn cqb5_contrato(p: usize) -> usize {
+unsafe fn injury_main_contract_stored(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cqb5_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
@@ -44,21 +44,21 @@ unsafe fn cqb5_contrato(p: usize) -> usize {
 }
 
 /// O clube do contrato `c` (+4 = id no registro de 0x245 bytes em [0xae23b4]; 0 sem contrato).
-unsafe fn cqb5_clube_do_contrato(c: usize) -> usize {
+unsafe fn injury_club_of_contract(c: usize) -> usize {
     if c == 0 { 0 } else { cqb5_d(0xae23b4).wrapping_add(cqb5_d(c + 4).wrapping_mul(0x245)) }
 }
 
 /// A tabela dos tipos de lesão (13 bytes por tipo): +0 (0x9e7adb) dias de base (i16), +2 (0x9e7add) dias variáveis
 /// (i16), +4 (0x9e7adf) percentual da volta ao treino (i8), +5 (0x9e7ae0) pode voltar (i32).
-fn cqb5_tipo(tipo: i8) -> usize {
+fn injury_type_offset(tipo: i8) -> usize {
     (tipo as i32 * 13) as usize
 }
 
 /// Os dias da volta ao treino (+0x2a) pela duração `dias`: ftol(percentual × 0,01 × dias) (fild, fmul qword
 /// [0x967898], fimul, _ftol 0x945640; x87 em dupla precisão), no máximo 60 dias antes do fim.
-unsafe fn cqb5_volta_ao_treino(tipo: i8, dias: i16) -> i16 {
-    let pct = cqb5_c(0x9e7adf + cqb5_tipo(tipo));
-    let x = ftol(pct as f64 * f64_em(0x967898) * dias as f64) as i16;
+unsafe fn return_to_training_days(tipo: i8, dias: i16) -> i16 {
+    let pct = cqb5_c(0x9e7adf + injury_type_offset(tipo));
+    let x = match_pl_ftol(pct as f64 * read_f64_at(0x967898) * dias as f64) as i16;
     if (x as i32) + 0x3c < dias as i32 { dias.wrapping_sub(0x3c) } else { x }
 }
 
@@ -84,7 +84,7 @@ unsafe fn cqb5_volta_ao_treino(tipo: i8, dias: i16) -> i16 {
 /// a aposentadoria pela idade e pela volta ao treino longa e o surto (0x62e820) nos tipos 0, 1 e 2. Devolve a vaga.
 unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u32, p: usize, jogo: usize, surto: u32, noticia: u32, rec_arg: u32, so_recorrencia: u32) -> i32 {
     let tipo = tipo_arg as u8 as i8;
-    let original = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(%%I0%%);
+    let original = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(%%I0%%);
     if p == 0 {
         return original(this, tipo_arg, retroativa, p, jogo, surto, noticia, rec_arg, so_recorrencia); // a caixa: só a original
     }
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
         let treino: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8b1750usize);
         treino(cqb5_d(0xde1f44), p, 0);
     }
-    let t = cqb5_tipo(tipo);
+    let t = injury_type_offset(tipo);
     let rec = rec_arg as u8 as i8;
     if so_recorrencia != 0 {
         if rec == 0 || cqb5_d(0x9e7ae0 + t) == 0 {
@@ -108,33 +108,33 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
         }
         if rec < 0 {
             if cqb5_sorteio(rec as i32 / 10) == 0 {
-                let r = cqb5_registro(this, cqb5_d(p));
+                let r = physical_record(this, cqb5_d(p));
                 *((r + 0x12) as *mut u8) = tipo as u8;
                 *((r + 0x13) as *mut u8) = 1;
             }
             return -1;
         }
-        let r = cqb5_registro(this, cqb5_d(p));
+        let r = physical_record(this, cqb5_d(p));
         *((r + 0x12) as *mut u8) = tipo as u8;
         *((r + 0x13) as *mut u8) = rec as u8;
         return -1;
     }
-    let antiga = cqb5_d(cqb5_registro(this, cqb5_d(p)) + 0xe) as i32;
+    let antiga = cqb5_d(physical_record(this, cqb5_d(p)) + 0xe) as i32;
     let mut restantes: u16 = 0; // a palavra baixa do local (a alta é 0)
     if antiga != -1 {
         if !(tipo == 0x4d || tipo == 0x4e || tipo == 0x4f || tipo == 0x51) {
             return -1;
         }
         crate::comparacao::ramo("cqb_5 troca a lesao");
-        let r = cqb5_registro(this, cqb5_d(p));
-        let l = cqb5_lesao(this, antiga as usize);
+        let r = physical_record(this, cqb5_d(p));
+        let l = injury_entry(this, antiga as usize);
         restantes = cqb5_w(l + 0x2c) as u16;
         let historico: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> usize = core::mem::transmute(0x58e340usize);
         historico(cqb5_d(this + 0xc), r + 0x14, r + 0x18, l);
         *(l as *mut u8) = 0xff;
-        core::ptr::write_unaligned((cqb5_registro(this, cqb5_d(p)) + 0xe) as *mut i32, -1);
+        core::ptr::write_unaligned((physical_record(this, cqb5_d(p)) + 0xe) as *mut i32, -1);
     }
-    *((cqb5_registro(this, cqb5_d(p)) + 0x1d) as *mut u8) = tipo as u8;
+    *((physical_record(this, cqb5_d(p)) + 0x1d) as *mut u8) = tipo as u8;
     // a vaga
     let mut vaga: i32 = -1;
     let vetor = cqb5_d(this + 4);
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
         };
         *((this + 4) as *mut usize) = v;
         if v == 0 {
-            aviso_em(0x9e7f28, 0x909); // injury.cpp
+            show_error_at(0x9e7f28, 0x909); // injury.cpp
             return -1;
         }
         let velho = cqb5_d(this + 8) as i32;
@@ -281,7 +281,7 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
     cqb5_por_w(cqb5_d(this + 4) + off + 0x28, dias);
     cqb5_por_w(cqb5_d(this + 4) + off + 0x2c, dias);
     crate::comparacao::ramo("cqb_5 volta ao treino");
-    let volta = cqb5_volta_ao_treino(tipo, dias); // cqb5: a volta ao treino pelo percentual
+    let volta = return_to_training_days(tipo, dias); // cqb5: a volta ao treino pelo percentual
     cqb5_por_w(cqb5_d(this + 4) + off + 0x2a, volta);
     cqb5_por_w(cqb5_d(this + 4) + off + 0x2e, cqb5_w(cqb5_d(this + 4) + off + 0x2a));
     let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -298,32 +298,32 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
     fisico(this, p);
     let noticia_fn: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x62dca0usize);
     noticia_fn(this, p, cqb5_d(this + 4) + off, noticia);
-    core::ptr::write_unaligned((cqb5_registro(this, cqb5_d(p)) + 0xe) as *mut i32, vaga);
+    core::ptr::write_unaligned((physical_record(this, cqb5_d(p)) + 0xe) as *mut i32, vaga);
     if rec != 0 && cqb5_d(0x9e7ae0 + t) != 0 {
         if rec < 0 {
             if cqb5_sorteio(rec as i32 / 10) == 0 {
-                *((cqb5_registro(this, cqb5_d(p)) + 0x12) as *mut u8) = tipo as u8;
+                *((physical_record(this, cqb5_d(p)) + 0x12) as *mut u8) = tipo as u8;
                 if cqb5_sorteio(rec as i32) == 0 {
-                    *((cqb5_registro(this, cqb5_d(p)) + 0x13) as *mut u8) = 1;
+                    *((physical_record(this, cqb5_d(p)) + 0x13) as *mut u8) = 1;
                 }
             }
         } else {
-            *((cqb5_registro(this, cqb5_d(p)) + 0x12) as *mut u8) = tipo as u8;
-            *((cqb5_registro(this, cqb5_d(p)) + 0x13) as *mut u8) = rec as u8;
+            *((physical_record(this, cqb5_d(p)) + 0x12) as *mut u8) = tipo as u8;
+            *((physical_record(this, cqb5_d(p)) + 0x13) as *mut u8) = rec as u8;
         }
     }
     if cqb5_d(p + 0x24) != 0 && cqb5_d(0xb74318) != 0 {
         let tirar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x775cd0usize);
         tirar(cqb5_d(0xb74318), p, cqb5_w(cqb5_d(this + 4) + off + 0x28) as u16 as u32);
     }
-    *((cqb5_registro(this, cqb5_d(p)) + 0x1c) as *mut u8) = 0;
+    *((physical_record(this, cqb5_d(p)) + 0x1c) as *mut u8) = 0;
     let recaida: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x62e500usize);
-    recaida(this, cqb5_registro(this, cqb5_d(p)), cqb5_d(this + 4) + off);
+    recaida(this, physical_record(this, cqb5_d(p)), cqb5_d(this + 4) + off);
     let aposentar: unsafe extern "thiscall" fn(usize, usize, i16) = core::mem::transmute(0x7a7f20usize);
-    let r = cqb5_registro(this, cqb5_d(p));
+    let r = physical_record(this, cqb5_d(p));
     if cqb5_b(r + 0x12) as i8 == tipo && rec >= 0 {
         *((r + 0x13) as *mut u8) = cqb5_b(r + 0x13).wrapping_add(1);
-        let c = cqb5_b(cqb5_registro(this, cqb5_d(p)) + 0x13) as i8;
+        let c = cqb5_b(physical_record(this, cqb5_d(p)) + 0x13) as i8;
         if c > 1 {
             let mut e = 200 - cqb5_w(0x9e7adb + t) as i32;
             if e <= 5 {
@@ -369,21 +369,21 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
 /// trocado): o tipo na vaga e em +0x1d, +0x1c = 0, +0x2c = +0x28, +0x2e = +0x2a e +0x2a = a volta ao treino pela
 /// duração +0x28 (o x87 da cópia).
 unsafe extern "thiscall" fn comparar_add_injury(this: usize, tipo_arg: u32, retroativa: u32, p: usize, jogo: usize, surto: u32, noticia: u32, rec_arg: u32, so_recorrencia: u32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(%%I0%%);
     let r = o(this, tipo_arg, retroativa, p, jogo, surto, noticia, rec_arg, so_recorrencia);
     let tipo = tipo_arg as u8 as i8;
     let valida = p != 0 && (cqb5_d(p) as i32) < cqb5_d(0xae2364) as i32 && cqb5_d(p + 0x61) != 0 && (0..0x52).contains(&tipo);
     let ok = if !valida || so_recorrencia != 0 {
         r == -1
     } else {
-        let reg = cqb5_registro(this, cqb5_d(p));
+        let reg = physical_record(this, cqb5_d(p));
         let atual = cqb5_d(reg + 0xe) as i32;
         if r == -1 {
             atual != -1 || cqb5_d(this + 4) == 0
         } else if r < 0 || atual != r {
             r >= 0 // trocada depois (a recaída lesionou de novo): nada a conferir
         } else {
-            let l = cqb5_lesao(this, r as usize);
+            let l = injury_entry(this, r as usize);
             // a recaída (0x62e500) pode injure de novo a própria pessoa com 0x4d/0x4e/0x4f: a troca libera esta vaga e
             // a nova lesão a reocupa (a primeira livre), com o tipo dela; confere a nova
             let t = cqb5_b(l) as i8;
@@ -393,7 +393,7 @@ unsafe extern "thiscall" fn comparar_add_injury(this: usize, tipo_arg: u32, retr
                 && cqb5_b(reg + 0x1c) == 0
                 && cqb5_w(l + 0x2c) == cqb5_w(l + 0x28)
                 && cqb5_w(l + 0x2e) == cqb5_w(l + 0x2a)
-                && cqb5_w(l + 0x2a) == cqb5_volta_ao_treino(tipo, cqb5_w(l + 0x28))
+                && cqb5_w(l + 0x2a) == return_to_training_days(tipo, cqb5_w(l + 0x28))
         }
     };
     PLACAR.registrar(ok, || format!("add_injury(tipo {:#x}, retroativa {}, pessoa {:#x}, recorrencia {}, so {}) = {}", tipo_arg, retroativa, p, rec_arg as u8 as i8, so_recorrencia, r));
@@ -479,11 +479,11 @@ unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: usize, l: u
         return;
     }
     entregar(cqb5_d(0xb7431c), nw, cqb5_d(p + 0x39));
-    let c = cqb5_contrato(p);
-    if c != 0 && cqb5_clube_do_contrato(c) != 0 {
-        let x = cqb5_clube_do_contrato(cqb5_contrato(p));
+    let c = injury_main_contract_stored(p);
+    if c != 0 && injury_club_of_contract(c) != 0 {
+        let x = injury_club_of_contract(injury_main_contract_stored(p));
         if x != cqb5_d(p + 0x39) {
-            let y = cqb5_clube_do_contrato(cqb5_contrato(p));
+            let y = injury_club_of_contract(injury_main_contract_stored(p));
             entregar(cqb5_d(0xb7431c), nw, y);
         }
     }
@@ -496,7 +496,7 @@ unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: usize, l: u
 /// Comparador da 0x62dca0: só a original (entrega a notícia, que não pode sair duas vezes; a cópia leva o ramo no modo
 /// Rust). ponytail: sem plano a conferir além do que a original entrega.
 unsafe extern "thiscall" fn comparar_injury_post_injury_news(this: usize, p: usize, l: usize, arg: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, p, l, arg)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, p, l, arg)
 }
 
 /// { 0x418f60 } (thiscall, ret 8, awol.cpp): `AWOL::is_player_awol(pessoa, só_ler)`, pela seleção, pelo treino, pelo
@@ -509,8 +509,8 @@ unsafe extern "thiscall" fn is_player_awol(this: usize, p: usize, so_ler: u32) -
     }
     let marca = || cqb5_b(cqb5_d(this + 0xc) + cqb5_d(p)) as u32 & 1;
     if so_ler == 0 && marca() != 0 {
-        let c = cqb5_contrato(p);
-        if c == 0 || cqb5_clube_do_contrato(c) == 0 {
+        let c = injury_main_contract_stored(p);
+        if c == 0 || injury_club_of_contract(c) == 0 {
             crate::comparacao::ramo("cqb_5 ausencia acaba sem clube");
             let acabar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4196a0usize);
             acabar(this, p);
@@ -522,10 +522,10 @@ unsafe extern "thiscall" fn is_player_awol(this: usize, p: usize, so_ler: u32) -
 /// Comparador da 0x418f60 (quente: sem alocar): lado a lado em [0xae1080] e no al devolvido; com o bit, sem `só_ler` e
 /// sem contrato ou clube (a 0x4196a0 tira e libera o nó da lista: não pode rodar duas vezes), só a original.
 unsafe extern "thiscall" fn comparar_is_player_awol(this: usize, p: usize, so_ler: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     if p != 0 && (cqb5_d(p) as i32) < cqb5_d(0xae2364) as i32 && so_ler == 0 && cqb5_b(cqb5_d(this + 0xc) + cqb5_d(p)) & 1 != 0 {
-        let c = cqb5_contrato(p); // a original o refaz igual (e regrava [0xae1080])
-        if c == 0 || cqb5_clube_do_contrato(c) == 0 {
+        let c = injury_main_contract_stored(p); // a original o refaz igual (e regrava [0xae1080])
+        if c == 0 || injury_club_of_contract(c) == 0 {
             return o(this, p, so_ler);
         }
     }

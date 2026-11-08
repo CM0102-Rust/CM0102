@@ -57,7 +57,7 @@ impl Cqt11Lista {
 
 /// O par de um pote vai para os grupos A e B: com o sorteio de 2 (0x90cfc0(2): push 2; add esp -> cdecl) diferente de
 /// zero, o primeiro na vaga `k` (grupo A) e o segundo na `k` + 4 (grupo B); com zero, ao contrário.
-unsafe fn cqt11_par(this: usize, k: usize, primeiro: usize, segundo: usize, sorteio: i32) {
+unsafe fn place_pot_pair(this: usize, k: usize, primeiro: usize, segundo: usize, sorteio: i32) {
     let l = cqt11_d(this + 0xee);
     if sorteio != 0 {
         cqt11_pd(l + k * 4, primeiro);
@@ -82,7 +82,7 @@ unsafe fn cqt11_par(this: usize, k: usize, primeiro: usize, segundo: usize, sort
 /// primeiros melanésios de nações diferentes (2/6, a faixa de 2); os dois polinésios (3/7). Devolve 1.
 /// A original guarda as listas na pilha sem zerá-las; com menos clubes que o lido ela lê sobra; a cópia lê zero
 /// [inferência: nesta carreira as listas têm clubes que bastam; o comparador confere a lista].
-unsafe fn cqt11_clubes(this: usize) -> u32 {
+unsafe fn select_qualified_clubs(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -92,7 +92,7 @@ unsafe fn cqt11_clubes(this: usize) -> u32 {
     let lista = alocar(0x20);
     cqt11_pd(this + 0xee, lista);
     if lista == 0 {
-        aviso_em(0xa6a068, 0x307);
+        show_error_at(0xa6a068, 0x307);
         return 0;
     }
     let mut campeao = colocado(cqt11_d(0xae23d0) + cqt11_d(0x9cf89c) * 0x6b, 0);
@@ -129,27 +129,27 @@ unsafe fn cqt11_clubes(this: usize) -> u32 {
         campeao = aus.clubes[0];
     }
     nz.ordenar(1);
-    cqt11_par(this, 0, campeao, nz.clubes[0], sorteio(2)); // cqt11: o campeão australiano e o neozelandês
+    place_pot_pair(this, 0, campeao, nz.clubes[0], sorteio(2)); // cqt11: o campeão australiano e o neozelandês
     fij.ordenar(1);
     tai.ordenar(1);
-    cqt11_par(this, 1, fij.clubes[0], tai.clubes[0], sorteio(2)); // cqt11: Fiji e Taiti
+    place_pot_pair(this, 1, fij.clubes[0], tai.clubes[0], sorteio(2)); // cqt11: Fiji e Taiti
     mel.ordenar(2);
     let (a, b) = mel.dois_de_nacoes_diferentes();
-    cqt11_par(this, 2, a, b, sorteio(2)); // cqt11: os dois melanésios
+    place_pot_pair(this, 2, a, b, sorteio(2)); // cqt11: os dois melanésios
     pol.ordenar(2);
     let (a, b) = pol.dois_de_nacoes_diferentes();
-    cqt11_par(this, 3, a, b, sorteio(2));
+    place_pot_pair(this, 3, a, b, sorteio(2));
     1
 }
 
 unsafe extern "thiscall" fn oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
-    cqt11_clubes(this)
+    select_qualified_clubs(this)
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 8 vagas e liberada.
 unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(t
         lo.set(cqt11_d(this + 0xee));
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| cqt11_clubes(this));
+        let r = crate::aleatorio::sem_contar(|| select_qualified_clubs(this));
         lr.set(cqt11_d(this + 0xee));
         cqt11_pd(this + 0xee, lo.get());
         r
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(t
 unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: usize) {
     let f = cqt11_d(this + 0x30) as i32;
     if f >= (cqt11_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0xa6a068, 0x274);
+        return show_error_at(0xa6a068, 0x274);
     }
     let f = f + 1;
     cqt11_pd(this + 0x30, f as usize);
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: usize) {
 // ponytail: as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da
 // última fase, que dá a caixa e não muda nada).
 unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let f = cqt11_d(this + 0x30) as i32;
     let ultima = f >= (cqt11_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage(this: usiz
 
 /// Os 4 das semifinais, na ordem da lista: o 1º do grupo A (a tabela da copa, +0xb1), o 2º do B (a tabela da fase
 /// [+0xc][0]), o 2º do A e o 1º do B (os cruzamentos: as chaves são os pares da lista).
-unsafe fn cqt11_semifinalistas(this: usize) -> [usize; 4] {
+unsafe fn semifinalists(this: usize) -> [usize; 4] {
     let a = |l: usize| cqt11_d(cqt11_d(this + 0xb1) + l * 0x3b);
     let b = |l: usize| cqt11_d(cqt11_d(cqt11_d(cqt11_d(this + 0xc)) + 0xb1) + l * 0x3b);
     [a(0), b(1), a(1), b(0)] // cqt11: 1º A × 2º B, 2º A × 1º B
@@ -216,7 +216,7 @@ unsafe fn cqt11_semifinalistas(this: usize) -> [usize; 4] {
 
 /// { 0x798050 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `OceaniaClubChamp::create_knockout_stage()`, as semifinais: a lista dos 4 (0x944e46(0x10): push; add esp, 4
-/// -> cdecl; sem memória, a caixa da linha 0x2cb e volta), os cruzamentos de cqt11_semifinalistas; a tabela das rodadas
+/// -> cdecl; sem memória, a caixa da linha 0x2cb e volta), os cruzamentos de semifinalists; a tabela das rodadas
 /// pela virtual +0x3c (push 0; push &id; push &rodadas; push 1; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2)
 /// push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 4, a lista, as rodadas, +4, a
 /// tabela, o ano +0x40, 1, 2, o id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo
@@ -230,10 +230,10 @@ unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
     let lista = alocar(0x10);
     if lista == 0 {
-        return aviso_em(0xa6a068, 0x2cb);
+        return show_error_at(0xa6a068, 0x2cb);
     }
     crate::comparacao::ramo("cqt_11 cruzamentos da oceania");
-    for (k, &c) in cqt11_semifinalistas(this).iter().enumerate() {
+    for (k, &c) in semifinalists(this).iter().enumerate() {
         cqt11_pd(lista + k * 4, c);
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt11_d(cqt11_d(this) + 0x3c));
@@ -253,7 +253,7 @@ unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize
     soltar(lista);
     let f = cqt11_d(cqt11_d(this + 0xc) + 4);
     if f == 0 {
-        return aviso_em(0xa6a068, 0x2e3);
+        return show_error_at(0xa6a068, 0x2e3);
     }
     montar(f, 0);
 }
@@ -261,11 +261,11 @@ unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize
 // ponytail: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4 times,
 // o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: a rodada pode reordenar).
 unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knockout_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqt11_d(this + 0xb1) == 0 || cqt11_d(this + 0xc) == 0 || cqt11_d(cqt11_d(this + 0xc)) == 0 {
         return o(this);
     }
-    let mut plano = cqt11_semifinalistas(this).to_vec();
+    let mut plano = semifinalists(this).to_vec();
     o(this);
     let fase = cqt11_d(cqt11_d(this + 0xc) + 4);
     if fase == 0 {

@@ -3,8 +3,8 @@
 # motor). O limite sem o comunitario (o comparando acusa no primeiro comunitario de nacao com a regra 0xe; a carreira,
 # se a shortlist decidir).
 MUTACOES = [
-    ('cpj_mais_velho_data', 'cpf2_data_padrao(this + 0x18); // a data do mais velho',
-     'cpf2_data_padrao(this + 0x17); // mutacao: a data um byte antes'),
+    ('cpj_mais_velho_data', 'init_default_date(this + 0x18); // a data do mais velho',
+     'init_default_date(this + 0x17); // mutacao: a data um byte antes'),
     ('cpj_permissao_marca', 'return 0; // sem a marca da permissão',
      '// mutacao: sem conferir a marca'),
     ('cpj_limite_comunitario', 'return 1; // comunitário',

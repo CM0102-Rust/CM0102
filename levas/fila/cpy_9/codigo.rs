@@ -29,7 +29,7 @@ unsafe fn cpy9_pb(a: usize, v: u8) {
 }
 
 /// Um byte sorteado: sorteio(n) + k no al.
-unsafe fn cpy9_s(n: i32, k: u8) -> u8 {
+unsafe fn random_byte_plus(n: i32, k: u8) -> u8 {
     (sortear(n) as u8).wrapping_add(k)
 }
 
@@ -38,22 +38,22 @@ unsafe fn cpy9_s(n: i32, k: u8) -> u8 {
 /// byte estendido), os bytes +0x24..+0x26 sorteio(10) + 5 e +0x27..+0x2a sorteio(10) + 7, +0x1a zero, o ano (+0xe)
 /// 1960 + sorteio(10) e o dia (+0xc) sorteio(300) + 1. Não grava +0, +0x10..+0x15 (a original deixa o que o realloc
 /// trouxe).
-unsafe fn cpy9_gerar(r: usize, nacao: usize) {
+unsafe fn generate_official(r: usize, nacao: usize) {
     let primeiro: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539b90usize);
     let segundo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53a0e0usize);
     cpy9_pd(r + 4, primeiro(nacao));
     cpy9_pd(r + 8, segundo(nacao));
     cpy9_pd(r + 0x16, nacao);
-    cpy9_pw(r + 0x22, cpy9_s(0x50, 1) as i8 as i16); // cpy9: a nota +0x22
-    cpy9_pw(r + 0x1e, cpy9_s(0x50, 0x28) as i8 as i16);
-    cpy9_pw(r + 0x20, cpy9_s(0x50, 0x28) as i8 as i16);
+    cpy9_pw(r + 0x22, random_byte_plus(0x50, 1) as i8 as i16); // cpy9: a nota +0x22
+    cpy9_pw(r + 0x1e, random_byte_plus(0x50, 0x28) as i8 as i16);
+    cpy9_pw(r + 0x20, random_byte_plus(0x50, 0x28) as i8 as i16);
     for o in [0x24usize, 0x25, 0x26] {
-        cpy9_pb(r + o, cpy9_s(10, 5));
+        cpy9_pb(r + o, random_byte_plus(10, 5));
     }
-    cpy9_pb(r + 0x27, cpy9_s(10, 7));
-    cpy9_pb(r + 0x28, cpy9_s(10, 7)); // cpy9: o atributo +0x28
-    cpy9_pb(r + 0x29, cpy9_s(10, 7));
-    cpy9_pb(r + 0x2a, cpy9_s(10, 7));
+    cpy9_pb(r + 0x27, random_byte_plus(10, 7));
+    cpy9_pb(r + 0x28, random_byte_plus(10, 7)); // cpy9: o atributo +0x28
+    cpy9_pb(r + 0x29, random_byte_plus(10, 7));
+    cpy9_pb(r + 0x2a, random_byte_plus(10, 7));
     cpy9_pd(r + 0x1a, 0);
     cpy9_pw(r + 0xe, sortear(10).wrapping_add(0x7a8) as i16);
     cpy9_pw(r + 0xc, sortear(0x12c).wrapping_add(1) as i16);
@@ -62,7 +62,7 @@ unsafe fn cpy9_gerar(r: usize, nacao: usize) {
 /// { 0x79c5c0 } (thiscall com o this sem uso, ret 8, officials_manager.cpp): `officials_manager_add_random_officials(
 /// conta, nacao)`, pela montagem dos árbitros do jogo novo (0x79bf60, nas nações com poucos árbitros). Nação sem
 /// continente (+0x71): nada. Realoca a tabela ([0xae23e8], 0x945667) para [0xae2390] + conta fichas (sem memória: erro
-/// e o jogo para), gera `conta` fichas novas no fim (cpy9_gerar), soma a conta em [0xae2390] e ordena a tabela inteira
+/// e o jogo para), gera `conta` fichas novas no fim (generate_official), soma a conta em [0xae2390] e ordena a tabela inteira
 /// (qsort 0x945333 com 0x79d480: nação, +0x28 × 50 + +0x22, id).
 unsafe extern "thiscall" fn officials_manager_add_random_officials(_this: usize, conta: i32, nacao: usize) {
     if nacao != 0 && cpy9_d(nacao + 0x71) == 0 {
@@ -73,12 +73,12 @@ unsafe extern "thiscall" fn officials_manager_add_random_officials(_this: usize,
     let t = realocar(cpy9_d(0xae23e8), antes.wrapping_add(conta).wrapping_mul(0x2b));
     *(0xae23e8 as *mut usize) = t;
     if t == 0 {
-        erro_em(0xa6a22c, 0x342);
+        fatal_error_at(0xa6a22c, 0x342);
     }
     let mut r = t.wrapping_add(antes.wrapping_mul(0x2b) as usize);
     for _ in 0..conta.max(0) {
         crate::comparacao::ramo("cpy_9 arbitro novo");
-        cpy9_gerar(r, nacao);
+        generate_official(r, nacao);
         r += 0x2b;
     }
     let n = cpy9_i(0xae2390).wrapping_add(conta);
@@ -89,18 +89,18 @@ unsafe extern "thiscall" fn officials_manager_add_random_officials(_this: usize,
 }
 
 /// A ficha `g` (gerada no ensaio) bate com a `f` da tabela nos campos que a 0x79c5c0 grava (+4..+0x10, +0x16..+0x2b)?
-unsafe fn cpy9_mesma_ficha(g: &[u8; 0x2b], f: usize) -> bool {
+unsafe fn same_official_record(g: &[u8; 0x2b], f: usize) -> bool {
     let t = core::slice::from_raw_parts(f as *const u8, 0x2b);
     g[4..0x10] == t[4..0x10] && g[0x16..] == t[0x16..]
 }
 
 /// Comparador: realoca e ordena (não pode rodar duas vezes): só a original, depois de um ensaio. O ensaio gera as
-/// `conta` fichas da cópia (cpy9_gerar, sem contar os sorteios) numa área própria a partir do mesmo estado do sorteio,
+/// `conta` fichas da cópia (generate_official, sem contar os sorteios) numa área própria a partir do mesmo estado do sorteio,
 /// que é reposto; depois roda a original. Confere o estado final do sorteio, a conta nova ([0xae2390] + conta) e que
 /// cada ficha do ensaio esteja na tabela ordenada (campos que a original grava). Conta não positiva ou nação sem
 /// continente: só a original.
 unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this: usize, conta: i32, nacao: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(%%I0%%);
     if conta <= 0 || (nacao != 0 && cpy9_d(nacao + 0x71) == 0) {
         return o(this, conta, nacao);
     }
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this
     let mut novas = vec![[0u8; 0x2b]; conta as usize];
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| {
         for g in novas.iter_mut() {
-            cpy9_gerar(g.as_mut_ptr() as usize, nacao);
+            generate_official(g.as_mut_ptr() as usize, nacao);
         }
     }));
     let estado_rust = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this
     let mut usada = vec![false; total.max(0) as usize];
     let mut faltam = Vec::new();
     for (k, g) in novas.iter().enumerate() {
-        match (0..usada.len()).find(|&j| !usada[j] && cpy9_mesma_ficha(g, t + j * 0x2b)) {
+        match (0..usada.len()).find(|&j| !usada[j] && same_official_record(g, t + j * 0x2b)) {
             Some(j) => usada[j] = true,
             None => faltam.push(k),
         }
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this
 }
 
 /// O ajuste de um atributo em byte (+0x24..+0x2a) fora de 1..20: o valor sorteado por `f` (lê a ficha antes).
-unsafe fn cpy9_atributo(e: usize, o: usize, f: impl FnOnce() -> u8) {
+unsafe fn fix_official_attribute(e: usize, o: usize, f: impl FnOnce() -> u8) {
     let v = cpy9_b(e + o) as i8;
     if v <= 0 || v > 0x14 {
         cpy9_pb(e + o, f());
@@ -195,15 +195,15 @@ unsafe extern "C" fn officials_manager_validate_officials() {
         let faixa = |alto: (i32, u8), medio: (i32, u8), baixo: (i32, u8)| {
             let w = cpy9_w(e + 0x1e);
             let (n, k) = if w > 0x78 { alto } else if w > 0x50 { medio } else { baixo };
-            cpy9_s(n, k)
+            random_byte_plus(n, k)
         };
-        cpy9_atributo(e, 0x24, || if cpy9_w(e + 0x1e) > 0x64 { cpy9_s(0xc, 7) } else { cpy9_s(0xa, 5) });
-        cpy9_atributo(e, 0x25, || faixa((0xe, 7), (0xf, 5), (0xa, 5)));
-        cpy9_atributo(e, 0x26, || faixa((0xb, 0xa), (0xf, 5), (0xa, 5)));
-        cpy9_atributo(e, 0x27, || if cpy9_w(e + 0x1e) > 0x50 { cpy9_s(0xf, 6) } else { cpy9_s(0x14, 1) });
-        cpy9_atributo(e, 0x28, || faixa((0xa, 0xb), (0xf, 5), (0xa, 7)));
-        cpy9_atributo(e, 0x29, || faixa((0xd, 8), (0xe, 7), (0xf, 6)));
-        cpy9_atributo(e, 0x2a, || if sortear(0x64) != 0 { cpy9_s(0xa, 0xb) } else { cpy9_s(0xa, 5) });
+        fix_official_attribute(e, 0x24, || if cpy9_w(e + 0x1e) > 0x64 { random_byte_plus(0xc, 7) } else { random_byte_plus(0xa, 5) });
+        fix_official_attribute(e, 0x25, || faixa((0xe, 7), (0xf, 5), (0xa, 5)));
+        fix_official_attribute(e, 0x26, || faixa((0xb, 0xa), (0xf, 5), (0xa, 5)));
+        fix_official_attribute(e, 0x27, || if cpy9_w(e + 0x1e) > 0x50 { random_byte_plus(0xf, 6) } else { random_byte_plus(0x14, 1) });
+        fix_official_attribute(e, 0x28, || faixa((0xa, 0xb), (0xf, 5), (0xa, 7)));
+        fix_official_attribute(e, 0x29, || faixa((0xd, 8), (0xe, 7), (0xf, 6)));
+        fix_official_attribute(e, 0x2a, || if sortear(0x64) != 0 { random_byte_plus(0xa, 0xb) } else { random_byte_plus(0xa, 5) });
         let mut limite = [0u8; 8];
         let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> *const u8 = core::mem::transmute(0x549f70usize);
         let d = data(limite.as_mut_ptr(), 1, 1, 0x776, -1);
@@ -219,7 +219,7 @@ unsafe extern "C" fn officials_manager_validate_officials() {
 
 /// Comparador: lado a lado pelas fichas de todos os árbitros e pelo estado do sorteio.
 unsafe extern "C" fn comparar_officials_manager_validate_officials() {
-    let o = orig::<unsafe extern "C" fn()>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
     let total = cpy9_i(0xae2390).max(0) as usize;
     if cpy9_d(0xae23e8) == 0 {
         return o();
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn officials_manager_operator(this: usize, src: usize) 
 
 /// Comparador: lado a lado pela ficha de destino e pela devolução.
 unsafe extern "thiscall" fn comparar_officials_manager_operator(this: usize, src: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x2b)], || o(this, src), || officials_manager_operator(this, src));
     PLACAR.registrar(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
     r

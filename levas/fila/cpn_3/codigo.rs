@@ -21,7 +21,7 @@ const CPN3_NOTICIA: usize = 0xdf;
 
 /// A razão entre a reputação do jogador (+0xb do registro +0x61, no mínimo 2000) e a do clube (+0x80, entre 2000 e
 /// 7500), como o fild/fidiv do original.
-unsafe fn cpn3_razao_das_reputacoes(jogador: usize, clube: usize) -> f64 {
+unsafe fn player_club_reputation_ratio(jogador: usize, clube: usize) -> f64 {
     let a = cpn3_w(cpn3_d(jogador + 0x61) + 0xb);
     let a = if a < 2000 { 2000 } else { a as i32 };
     let b = cpn3_w(clube + 0x80);
@@ -30,7 +30,7 @@ unsafe fn cpn3_razao_das_reputacoes(jogador: usize, clube: usize) -> f64 {
 }
 
 /// O tipo de história (0..0x52) → o caso do original (a tabela de bytes de 0x736b8c; 12 = a nota como está).
-fn cpn3_caso(tipo: i16) -> u8 {
+fn story_type_case(tipo: i16) -> u8 {
     match tipo {
         0 => 0,
         1 | 2 | 9 => 1,
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, jogador: us
     }
     if !(r >= 0.0) {
         crate::comparacao::ramo("cpn_3 nota negativa");
-        r = r * cpn3_razao_das_reputacoes(jogador, clube); // a negativa pela reputação
+        r = r * player_club_reputation_ratio(jogador, clube); // a negativa pela reputação
     }
     let rf = r as f32;
     let tipo = tipo as u16 as i16;
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, jogador: us
         return r;
     }
     let c = *((contrato + 0x4f) as *const u8) >> 4; // o tipo de contrato
-    match cpn3_caso(tipo) {
+    match story_type_case(tipo) {
         0 => match c {
             1 => r - 0.5,
             2 => r - 0.35f32 as f64,
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, jogador: us
         6 => r + (cpn3_b(cpn3_d(jogador + 0x61) + 0x2f) as i32 - 10) as f64 * (1.0f32 / 3.0) as f64,
         7 => r + l0 as f64,
         8 => {
-            let r2 = if r > 0.0 { r / cpn3_razao_das_reputacoes(jogador, clube) } else { r };
+            let r2 = if r > 0.0 { r / player_club_reputation_ratio(jogador, clube) } else { r };
             match c {
                 1 => r2 - 0.5,
                 2 => r2 - 0.35f32 as f64,
@@ -188,12 +188,12 @@ unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: usize, noti
 /// "Error" e 0.
 unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x21fa);
+        show_error_at(0xa693ec, 0x21fa);
         return 0;
     }
     let idx = cpn3_i(tecnico).wrapping_sub(cpn3_i(0xae2364)).wrapping_add(0x10);
     if idx < 0 {
-        aviso_em(0xa693ec, 0x2205);
+        show_error_at(0xa693ec, 0x2205);
         return 0;
     }
     let e = cpn3_d(this + 8) + idx as usize * 12;
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usize, conta: 
             if vetor == 0 {
                 vetor = alocar(0x571c);
                 if vetor == 0 {
-                    aviso_em(0xa693ec, 0x222a);
+                    show_error_at(0xa693ec, 0x222a);
                     return 0;
                 }
                 *conta = 0;
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usize, conta: 
 /// Comparador: a nota é pura (as estatísticas, as datas e o contrato só leem; nada sorteia): compara a devolução bit a
 /// bit (a original e a cópia na mesma precisão dupla do x87).
 unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this: usize, jogador: usize, clube: usize, contrato: usize, tipo: u32, modo: u32, peso: f32) -> f64 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(%%I0%%)(this, jogador, clube, contrato, tipo, modo, peso);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(%%I0%%)(this, jogador, clube, contrato, tipo, modo, peso);
     let n = rate_player_form_for_story(this, jogador, clube, contrato, tipo, modo, peso);
     PLACAR.registrar(o.to_bits() == n.to_bits() || (o.is_nan() && n.is_nan()),
         || format!("rate_player_form_for_story(tipo {}, modo {}, peso {}) {} x {}", tipo as u16 as i16, modo as u8, peso, o, n));
@@ -247,12 +247,12 @@ unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this: usize, jog
 /// prova no modo Rust, pelo ramo).
 unsafe extern "thiscall" fn comparar_write_financial_trouble_news_text(this: usize, noticia: usize, corpo: u32, saida: usize) {
     // ponytail: o objeto de texto não pode receber o texto duas vezes; só a original roda aqui
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I1%%)(this, noticia, corpo, saida);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I1%%)(this, noticia, corpo, saida);
 }
 
 /// Comparador: a original aloca o vetor: roda só ela e confere o plano feito antes (a conta e os ids, na ordem).
 unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I2%%);
     if tecnico == 0 || cpn3_i(tecnico).wrapping_sub(cpn3_i(0xae2364)).wrapping_add(0x10) < 0 {
         return o(this, tecnico, conta, categoria);
     }

@@ -11,5 +11,5 @@ MUTACOES = [
     ('r_130', "} else if dir > 0x82 && dir < 0xe6 {", "} else if dir > 0x83 && dir < 0xe6 {"),
     ('r_50', "} else if dir < 0x32 || dir > 0x136 {", "} else if dir <= 0x32 || dir > 0x136 {"),
     ('r_x9', "if x < 0 || y < 0 || x >= 9 || y >= 12 {", "if x < 0 || y < 0 || x >= 10 || y >= 12 {"),
-    ('r_lado', "bola_fora_com(this, *b(0x8eab) as u8, chamar);", "bola_fora_com(this, *b(0x8eae) as u8, chamar);"),
+    ('r_lado', "ball_out_with(this, *b(0x8eab) as u8, chamar);", "ball_out_with(this, *b(0x8eae) as u8, chamar);"),
 ]

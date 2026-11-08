@@ -10,7 +10,7 @@ MUTACOES = [
     ('cpt8_sem_tecnico_110', 'return 100; // cpt8: sem técnico',
      'return 110; // mutacao: sem tecnico 110',
      'cpt_8 sem tecnico'),
-    ('cpt8_media_sem_divisor', 'soma = ftol(soma as f64 / cpt8_divisor(n)) as i16; // cpt8: a média dos treinadores',
-     'soma = ftol(soma as f64 / 0.5) as i16; // mutacao: a media sem o divisor',
+    ('cpt8_media_sem_divisor', 'soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: a média dos treinadores',
+     'soma = match_pl_ftol(soma as f64 / 0.5) as i16; // mutacao: a media sem o divisor',
      'cpt_8 treinadores'),
 ]

@@ -1,13 +1,13 @@
 // ---------- %%LEVA%%a leva: as telas da partida (7): o Continuar da partida, abrir a escalação e a resposta da escalação (match_screens.cpp) ----------
 
 /// A vaga de tela do humano da vez ([0xb74c26 + 0x300 × humano]).
-unsafe fn vaga_de_tela_do_humano() -> usize {
+unsafe fn current_human_screen_person() -> usize {
     core::ptr::read_unaligned((0xb74c26 + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize)
 }
 
 /// O id do item `item` (−1 nenhum: o padrão [0xdd6bde]), como as respostas de match_screens.cpp leem.
-unsafe fn id_do_item_ou_padrao(item: i16) -> u16 {
-    if item == -1 { *(0xdd6bde as *const u16) } else { id_do_item(item) }
+unsafe fn item_id_or_default(item: i16) -> u16 {
+    if item == -1 { *(0xdd6bde as *const u16) } else { display_item_id(item) }
 }
 
 /// { 0x725ca0 } (cdecl, match_screens.cpp): a resposta ao Continuar da partida (item `item`, −1 nenhum).
@@ -43,7 +43,7 @@ unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
                 if n > 0 {
                     loop {
                         let e = *lista.as_ptr().offset(i as isize);
-                        if e != vaga_de_tela_do_humano()
+                        if e != current_human_screen_person()
                             && ocupada(GERENTE_DE_TELAS, e) == 0
                             && core::ptr::read_unaligned((ficha(e) + 0xe2) as *const usize) == clube
                         {
@@ -66,7 +66,7 @@ unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
                 // ponytail: a original empurra ecx com 16 bits altos que sobram de 0x66f4e0 (imprevisíveis); aqui zero
                 aviso(GERENTE_DE_TELAS, 0xde1f64, 0, 0, humano() as u16 as u32);
                 let abrir_partida: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x718aa0usize);
-                abrir_partida(vaga_de_tela_do_humano(), clube);
+                abrir_partida(current_human_screen_person(), clube);
                 return -4;
             }
         } else if comando == 0x43 {
@@ -75,7 +75,7 @@ unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
             return -4;
         }
     }
-    if id_do_item_ou_padrao(item as u16 as i16) != 0x3e8 {
+    if item_id_or_default(item as u16 as i16) != 0x3e8 {
         return 0;
     }
     if g(0xb67a48) != 0 {
@@ -91,7 +91,7 @@ unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
                         && core::ptr::read_unaligned((e as isize + humano() as isize * 4 + 0x14) as *const u32) == 0
                     {
                         let abrir: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x717cc0usize);
-                        abrir(vaga_de_tela_do_humano(), e);
+                        abrir(current_human_screen_person(), e);
                         return -4;
                     }
                     i = i.wrapping_add(1);
@@ -128,22 +128,22 @@ unsafe extern "C" fn match_screens_open_team_selection() {
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
     let r = ficha(0);
     if r == 0 {
-        return aviso_em(FONTE, 0x1e1c);
+        return show_error_at(FONTE, 0x1e1c);
     }
     let clube = core::ptr::read_unaligned((r + 0xe6) as *const usize);
     if clube == 0 {
-        return aviso_em(FONTE, 0x1e24);
+        return show_error_at(FONTE, 0x1e24);
     }
     let partida = core::ptr::read_unaligned((r + 0xe2) as *const usize).wrapping_add(4);
     if partida == 0 {
-        return aviso_em(FONTE, 0x1e2c);
+        return show_error_at(FONTE, 0x1e2c);
     }
     let d = |o: usize| core::ptr::read_unaligned((partida + o) as *const usize);
     let b = |o: usize| *((partida + o) as *const u8);
     let em_casa = (clube == d(0x1c) && b(0x40) == 0) || (clube == d(0x20) && b(0x41) == 0);
-    gravar_parametro_da_tela(0, clube);
-    gravar_parametro_da_tela(1, partida);
-    gravar_parametro_da_tela(2, em_casa as usize);
+    set_screen_param(0, clube);
+    set_screen_param(1, partida);
+    set_screen_param(2, em_casa as usize);
 }
 
 /// { 0x727c30 } (cdecl, match_screens.cpp): a resposta da tela da escalação ao item `item` (−1 nenhum).
@@ -153,10 +153,10 @@ unsafe extern "C" fn match_screens_open_team_selection() {
 /// comando pendente 1 ([0xdd6be0]) com a escolha (o id, [0xdd6be4]) e devolve −9.
 unsafe extern "C" fn match_screens_handle_team_selection_input(item: u32) -> i32 {
     crate::comparacao::ramo("telas respond a escalacao");
-    let clube = parametro_da_tela(0);
-    let p2 = parametro_da_tela(2);
+    let clube = get_screen_param(0);
+    let p2 = get_screen_param(2);
     let item16 = item as u16 as i16;
-    let id = id_do_item_ou_padrao(item16);
+    let id = item_id_or_default(item16);
     if id != 1 && id != 2 && id != 3 {
         let comum: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7615d0usize);
         let r = comum(item);
@@ -180,20 +180,20 @@ unsafe extern "C" fn match_screens_handle_team_selection_input(item: u32) -> i32
         }
     }
     *(0xdd6be0 as *mut u32) = 1;
-    *(0xdd6be4 as *mut i32) = id_do_item_ou_padrao(item16) as i16 as i32;
+    *(0xdd6be4 as *mut i32) = item_id_or_default(item16) as i16 as i32;
     -9
 }
 
 // ponytail: as três abrem telas, mexem na rede ou no capitão (não rodam duas vezes): no modo comparação
 // só a original; a cópia é provada no modo Rust pelos ramos
 unsafe extern "C" fn comparar_match_screens_handle_continue_command(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(%%I0%%)(item)
+    original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I0%%)(item)
 }
 
 unsafe extern "C" fn comparar_match_screens_open_team_selection() {
-    orig::<unsafe extern "C" fn()>(%%I1%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I1%%)()
 }
 
 unsafe extern "C" fn comparar_match_screens_handle_team_selection_input(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(%%I2%%)(item)
+    original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I2%%)(item)
 }

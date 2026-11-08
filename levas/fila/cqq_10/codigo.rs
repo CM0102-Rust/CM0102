@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: a Copa da UEFA e a Intertoto: as rodadas da Copa da UEFA, os inscritos da Intertoto e a lista dos seus clubes (uefa_cup.cpp, intertoto_cup.cpp) ----------
 
 /// As rodadas fixas da Copa da UEFA (a preliminar e os campos que dependem de +0xb2 vêm à parte, em
-/// `cqq10_uefa_rodadas`): a 1ª rodada de qualificação em agosto, a 2ª no fim de agosto, a 1ª rodada em setembro, a 2ª
+/// `uefa_cup_rounds`): a 1ª rodada de qualificação em agosto, a 2ª no fim de agosto, a 1ª rodada em setembro, a 2ª
 /// em novembro, a 3ª em dezembro, as oitavas em fevereiro, as quartas e a semifinal em março e abril e a final em
 /// maio, todas em ida e volta menos a final.
 const CQQ10_UEFA: [Cql10R; 8] = [
@@ -22,7 +22,7 @@ const CQQ10_UEFA_PRELIMINAR: Cql10R =
 /// As rodadas da Copa da UEFA com `b` = +0xb2 (byte com sinal; as metades truncam como a original, cdq/sar): com b > 0
 /// a preliminar (b times, b/2 jogos, b novos) e depois as oito; na 1ª rodada de qualificação 0x52 − b/2 novos e b já
 /// inscritos, na 2ª b/2 + 0x52 inscritos, na 1ª rodada b/2 + 0x89 inscritos.
-fn cqq10_uefa_rodadas(b: i8) -> ([Cql10R; 9], usize) {
+fn uefa_cup_rounds(b: i8) -> ([Cql10R; 9], usize) {
     let mut t = [CQQ10_UEFA_PRELIMINAR; 9];
     let (b, m) = (b as i32, b as i32 / 2);
     let mut u = CQQ10_UEFA;
@@ -45,7 +45,7 @@ fn cqq10_uefa_rodadas(b: i8) -> ([Cql10R; 9], usize) {
 
 /// { 0x9025c0 } (thiscall, ret 0x10, uefa_cup.cpp; a virtual +0x3c da Copa da UEFA): `UefaCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 9, extra = 0; a tabela (0x944e46 de 0x3a8;
-/// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `cqq10_uefa_rodadas` e rodadas = as gravadas. Fora da −1,
+/// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `uefa_cup_rounds` e rodadas = as gravadas. Fora da −1,
 /// 0.
 unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     if fase as u8 != 0xff {
@@ -59,22 +59,22 @@ unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, fase: u32, 
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar(0x3a8);
     if t == 0 {
-        aviso_em(0xaa19e0, 0xe0);
+        show_error_at(0xaa19e0, 0xe0);
         return 0;
     }
     crate::comparacao::ramo("cqq_10 tabela da uefa");
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    let (tab, n) = cqq10_uefa_rodadas(*((this + 0xb2) as *const i8));
+    let (tab, n) = uefa_cup_rounds(*((this + 0xb2) as *const i8));
     for (i, r) in tab[..n].iter().enumerate() {
-        cql10_rodada(t, i as u32, r, ano);
+        eng_cc_cup_write_cup_round(t, i as u32, r, ano);
     }
     *rodadas = n as i16;
     t
 }
 
 unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cql10_comparar("uefa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    eng_cc_cup_compare_round_table("uefa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| uefa_cup_create_round_table(this, fase, r, e, s))
 }
 
@@ -92,13 +92,13 @@ unsafe fn cqq10_w(a: usize) -> i16 {
 /// vetor fica alocado, como na original). A lista (0x944e46 de 6 × 60 em +0xa7; sem memória, a caixa 0x17c e −1) leva
 /// cada clube com a classe = o seu coeficiente (+0x1df) e a situação 0, vai ao qsort (0x522190) e o vetor é liberado.
 /// Devolve 1 com os 60.
-unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
+unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
     const F: usize = 0x9e9e14;
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x3c);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let v = alocar(0xf0);
     if v == 0 {
-        aviso_em(F, 0x161);
+        show_error_at(F, 0x161);
         return (0, 0);
     }
     let mut k = 0i32;
@@ -116,13 +116,13 @@ unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
     }
     let n = cqq10_w(this + 0x3e) as i32;
     if k < n {
-        aviso_em(F, 0x172);
+        show_error_at(F, 0x172);
         return (0, 0);
     }
     let l = alocar((n * 6) as u32);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
-        aviso_em(F, 0x17c);
+        show_error_at(F, 0x17c);
         return (-1, 0);
     }
     crate::comparacao::ramo("cqq_10 inscritos da intertoto");
@@ -143,13 +143,13 @@ unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
 }
 
 unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usize) -> i32 {
-    cqq10_intertoto(this).0
+    collect_intertoto_entrants(this).0
 }
 
 /// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a
 /// sua, comparada nos inscritos (com a devolução 1) e liberada.
 unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize)
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, antes as u32);
         r
     }, || {
-        let (r, n) = cqq10_intertoto(this);
+        let (r, n) = collect_intertoto_entrants(this);
         lr.set(cqq10_d(this + 0xa7));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
@@ -186,12 +186,12 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize)
 /// uma lista de ponteiros (0x944e46 de 4 × +0x3e; sem memória, a caixa da linha 0x2fb, saida = 0 e 0) com os clubes da
 /// lista +0xa7 (não nulos, até +0x3e): com `ativos`, só os de situação (+5) 0 ou 1. Grava a lista em saida e devolve a
 /// conta (palavra).
-unsafe fn cqq10_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
+unsafe fn collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
     let n = cqq10_w(this + 0x3e);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let l = alocar((n as i32 * 4) as u32);
     if l == 0 {
-        aviso_em(0x9e9e14, 0x2fb);
+        show_error_at(0x9e9e14, 0x2fb);
         *saida = 0;
         return 0;
     }
@@ -213,16 +213,16 @@ unsafe fn cqq10_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
 }
 
 unsafe extern "thiscall" fn intertoto_cup_collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
-    cqq10_lista(this, saida, ativos)
+    collect_club_list(this, saida, ativos)
 }
 
 /// Lado a lado: a original grava a lista dela em `saida` (de quem chama, que a libera); a cópia faz a sua numa saída
 /// própria, comparada na conta e nos ponteiros, e a libera.
 unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(%%I2%%);
     let mut s2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, saida, ativos), || cqq10_lista(this, &mut s2, ativos));
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, saida, ativos), || collect_club_list(this, &mut s2, ativos));
     let lo = *saida;
     let lista = if lo != 0 && s2 != 0 {
         core::slice::from_raw_parts(lo as *const u8, a as usize * 4) == core::slice::from_raw_parts(s2 as *const u8, b as usize * 4)

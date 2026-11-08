@@ -13,7 +13,7 @@ unsafe fn cps13_b(a: usize) -> u8 {
 }
 
 /// Uma data montada pela 0x549ef0 (dia, ano: ela lê as palavras; os dwords vão como os da original).
-unsafe fn cps13_data(dia: u32, ano: u32) -> [u8; 8] {
+unsafe fn make_date(dia: u32, ano: u32) -> [u8; 8] {
     let montar: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
     let mut d = [0u8; 8];
     montar(&mut d, dia, ano);
@@ -21,31 +21,31 @@ unsafe fn cps13_data(dia: u32, ano: u32) -> [u8; 8] {
 }
 
 /// (dia, ano) de uma data.
-fn cps13_dia_ano(d: &[u8; 8]) -> (u16, u16) {
+fn cup_date_day_year(d: &[u8; 8]) -> (u16, u16) {
     (u16::from_le_bytes([d[0], d[1]]), u16::from_le_bytes([d[2], d[3]]))
 }
 
 /// A rodada `k` da copa (0x68 bytes cada, em +0xa3).
-unsafe fn cps13_rodada(this: usize, k: isize) -> usize {
+unsafe fn round_record_at(this: usize, k: isize) -> usize {
     (cps13_d(this + 0xa3) as isize).wrapping_add(k.wrapping_mul(0x68)) as usize
 }
 
 /// A data da rodada `k` (+0 o dia, +2 o ano a partir do ano-base +0x40 da copa, byte com sinal), como nos blocos da
 /// 0x51f890 em que a metade alta do dword do dia é a do ponteiro da rodada (a do ano é zero).
-unsafe fn cps13_data_da_rodada(this: usize, k: isize) -> [u8; 8] {
-    let r = cps13_rodada(this, k);
+unsafe fn round_date(this: usize, k: isize) -> [u8; 8] {
+    let r = round_record_at(this, k);
     let ano = (cps13_b(r + 2) as i8 as i16).wrapping_add(cps13_w(this + 0x40) as i16) as u16 as u32;
-    cps13_data((r as u32 & 0xffff_0000) | cps13_w(r) as u32, ano)
+    make_date((r as u32 & 0xffff_0000) | cps13_w(r) as u32, ano)
 }
 
 /// A virtual `off` do objeto `p` (thiscall, sem argumentos).
-unsafe fn cps13_virtual0(p: usize, off: usize) {
+unsafe fn cup_call_virtual_no_args(p: usize, off: usize) {
     let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cps13_d(cps13_d(p) + off));
     f(p)
 }
 
 /// A fase `i` da copa ([+0xc][i]).
-unsafe fn cps13_fase(this: usize, i: usize) -> usize {
+unsafe fn cup_stage(this: usize, i: usize) -> usize {
     cps13_d(cps13_d(this + 0xc) + i * 4)
 }
 
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: 
         if completas {
             let mut i = 0usize;
             while (i as i32) <= cps13_d(this + 0x30) as i32 {
-                let p = cps13_fase(this, i);
+                let p = cup_stage(this, i);
                 let completa: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(cps13_d(cps13_d(p) + 0x10));
                 if completa(p, 0, 1) == 0 {
                     completas = false;
@@ -76,11 +76,11 @@ unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: 
         }
         if completas {
             if (cps13_d(this + 0x30) as i32) < (cps13_d(this + 0x2c) as i32).wrapping_sub(1) {
-                cps13_virtual0(this, 0x28); // a fase seguinte
+                cup_call_virtual_no_args(this, 0x28); // a fase seguinte
             } else if cps13_d(this + 0x4c) == 0 {
                 let historico: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x442e80usize);
                 historico(cps13_d(0xad9da8), this);
-                cps13_virtual0(this, 0x30);
+                cup_call_virtual_no_args(this, 0x30);
                 if cps13_d(this + 8) != 0 {
                     let recordes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x4a19f0usize);
                     recordes(cps13_d(this + 8));
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: 
     if cps13_b(this + 0x44) == 0xff {
         let mut i = 0usize;
         while (i as i32) <= cps13_d(this + 0x30) as i32 {
-            let p = cps13_fase(this, i);
+            let p = cup_stage(this, i);
             let dia: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(cps13_d(cps13_d(p) + 0x14));
             dia(p, 0xae2c90, fase);
             i += 1;
@@ -108,11 +108,11 @@ unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: 
         if cps13_b(0xae2c88) != 1 {
             return 0;
         }
-        if n > 0 && cps13_w(cps13_rodada(this, n as isize - 1) + 7) == 0x8c {
-            let r = cps13_rodada(this, n as isize - 1);
+        if n > 0 && cps13_w(round_record_at(this, n as isize - 1) + 7) == 0x8c {
+            let r = round_record_at(this, n as isize - 1);
             let ano = (cps13_b(r + 2) as i8 as i16).wrapping_add(cps13_w(this + 0x40) as i16) as u16 as u32;
-            let d = cps13_data(cps13_w(r) as u32, ano);
-            if cps13_dia_ano(&d) == (hdia, hano) {
+            let d = make_date(cps13_w(r) as u32, ano);
+            if cup_date_day_year(&d) == (hdia, hano) {
                 sortear(this, (n as i32 - 1) as u32); // a final na data dela
             }
         }
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: 
             return 0;
         }
         loop {
-            let (dia, ano) = cps13_dia_ano(&cps13_data_da_rodada(this, k as isize));
+            let (dia, ano) = cup_date_day_year(&round_date(this, k as isize));
             // o ano sem sinal, o dia com sinal
             if ano > hano || (ano == hano && dia as i16 > hdia as i16) { // cps13: a data do sorteio
                 return 0;
@@ -141,11 +141,11 @@ unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: 
     if cps13_d(this + 0x45) == 0 {
         return 0;
     }
-    if n > 0 && cps13_w(cps13_rodada(this, n as isize - 1) + 7) == 0x8c {
-        let r = cps13_rodada(this, n as isize - 1);
+    if n > 0 && cps13_w(round_record_at(this, n as isize - 1) + 7) == 0x8c {
+        let r = round_record_at(this, n as isize - 1);
         let ano = (cps13_b(r + 2) as i8 as i16).wrapping_add(cps13_w(this + 0x40) as i16) as u16 as u32;
-        let d = cps13_data(cps13_w(r) as u32, ano);
-        if cps13_dia_ano(&d) == (hdia, hano) {
+        let d = make_date(cps13_w(r) as u32, ano);
+        if cup_date_day_year(&d) == (hdia, hano) {
             montar(this, (n as i32 - 1) as u32); // a final na data dela
         }
     }
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: 
         return 0;
     }
     loop {
-        let (dia, ano) = cps13_dia_ano(&cps13_data_da_rodada(this, k as isize));
+        let (dia, ano) = cup_date_day_year(&round_date(this, k as isize));
         if (ano, dia) != (hano, hdia) { // cps13: a data da montagem
             let atual = cps13_b(this + 0xab) as i8 as isize;
             let p = cps13_d((cps13_d(this + 0xad) as isize + atual * 4) as usize);
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn set_up_round(this: usize, rodada: u32) -> u32 {
     }
     let ri = rodada as i32;
     if ri > cps13_w(this + 0x3c) as i16 as i32 - 1 || ri < 0 {
-        aviso_em(0x9b55ac, 0xa64);
+        show_error_at(0x9b55ac, 0xa64);
         return u32::MAX;
     }
     let ad = cps13_d(this + 0xad);
@@ -220,24 +220,24 @@ unsafe extern "thiscall" fn set_up_round(this: usize, rodada: u32) -> u32 {
         // a rodada pedida (não a atual) e as seguintes ficam um dia depois
         let mais_dias: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c5b0usize);
         let atribuir: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], usize) -> usize = core::mem::transmute(0x417c10usize);
-        let r = cps13_rodada(this, ri as isize);
+        let r = round_record_at(this, ri as isize);
         let ano = (cps13_b(r + 2) as i8 as i16).wrapping_add(cps13_w(this + 0x40) as i16) as u16 as u32;
-        let mut d = cps13_data((cps13_d(this + 0xa7) as u32 & 0xffff_0000) | cps13_w(r) as u32, ano);
+        let mut d = make_date((cps13_d(this + 0xa7) as u32 & 0xffff_0000) | cps13_w(r) as u32, ano);
         let (mut amanha, mut copia) = ([0u8; 8], [0u8; 8]);
         let p = mais_dias(&mut d, &mut amanha, 1);
         atribuir(&mut d, &mut copia, p);
-        let (dia, ano) = cps13_dia_ano(&d);
+        let (dia, ano) = cup_date_day_year(&d);
         crate::comparacao::ramo("cps_13 rodada adiada");
-        let r = cps13_rodada(this, ri as isize);
+        let r = round_record_at(this, ri as isize);
         core::ptr::write_unaligned(r as *mut u16, dia);
         *((r + 2) as *mut u8) = (ano as u8).wrapping_sub(cps13_b(this + 0x40));
         let mut k = ri + 1;
         while (k as i16) < cps13_w(this + 0x3c) as i16 {
-            let r = cps13_rodada(this, k as i16 as isize);
+            let r = round_record_at(this, k as i16 as isize);
             let rano = (cps13_b(r + 2) as i8 as i16).wrapping_add(cps13_w(this + 0x40) as i16) as u16 as u32;
-            let (odia, oano) = cps13_dia_ano(&cps13_data((cps13_d(this + 0xa3) as u32 & 0xffff_0000) | cps13_w(r) as u32, rano));
+            let (odia, oano) = cup_date_day_year(&make_date((cps13_d(this + 0xa3) as u32 & 0xffff_0000) | cps13_w(r) as u32, rano));
             if ano > oano || (ano == oano && dia as i16 > odia as i16) {
-                let r = cps13_rodada(this, k as i16 as isize);
+                let r = round_record_at(this, k as i16 as isize);
                 core::ptr::write_unaligned(r as *mut u16, dia);
                 *((r + 2) as *mut u8) = (ano as u8).wrapping_sub(cps13_b(this + 0x40));
             }
@@ -294,11 +294,11 @@ unsafe extern "thiscall" fn set_up_round(this: usize, rodada: u32) -> u32 {
 /// Põe o risco de doença (0x62e820 de [0xb63d28], tipo 3) na véspera da data do jogo `f` (+0x2a o dia, +0x28 o ano;
 /// 0x549ef0, 0x54c8e0, 0x417c10) para o clube `id` com a nação do estádio. `alto_dia`/`alto_ano`: as metades altas dos
 /// dwords que a original empurra à 0x549ef0.
-unsafe fn cps13_doenca(f: usize, id: usize, nacao: usize, alto_dia: u32, alto_ano: u32) {
+unsafe fn add_illness_risk_before_match(f: usize, id: usize, nacao: usize, alto_dia: u32, alto_ano: u32) {
     let menos_dias: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c8e0usize);
     let atribuir: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], usize) -> usize = core::mem::transmute(0x417c10usize);
     let doenca: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32, usize, usize) -> u32 = core::mem::transmute(0x62e820usize);
-    let mut d = cps13_data((alto_dia & 0xffff_0000) | cps13_w(f + 0x2a) as u32, (alto_ano & 0xffff_0000) | cps13_w(f + 0x28) as u32);
+    let mut d = make_date((alto_dia & 0xffff_0000) | cps13_w(f + 0x2a) as u32, (alto_ano & 0xffff_0000) | cps13_w(f + 0x28) as u32);
     let (mut vespera, mut copia) = ([0u8; 8], [0u8; 8]);
     let p = menos_dias(&mut d, &mut vespera, 1);
     atribuir(&mut d, &mut copia, p);
@@ -329,30 +329,30 @@ unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, f: usize) {
     if casa != 0 && cps13_d(casa + 0x53) != nacao {
         crate::comparacao::ramo("cps_13 doenca do mandante");
         // a original empurra o ano no eax do clube e o dia no ecx da nação (metades altas dos ponteiros)
-        cps13_doenca(f, cps13_d(f + 0xc), cps13_d(cps13_d(cps13_d(f + 0x18) + 0x38) + 0x1f), nacao as u32, casa as u32);
+        add_illness_risk_before_match(f, cps13_d(f + 0xc), cps13_d(cps13_d(cps13_d(f + 0x18) + 0x38) + 0x1f), nacao as u32, casa as u32);
     }
     let fora = cps13_d(f + 0x20);
     if fora != 0 && cps13_d(fora + 0x53) != cps13_d(cps13_d(cps13_d(f + 0x18) + 0x38) + 0x1f) {
         crate::comparacao::ramo("cps_13 doenca do visitante");
         // o ano no ecx do estádio e o dia no edx da cidade
         let (e, c) = (cps13_d(f + 0x18), cps13_d(cps13_d(f + 0x18) + 0x38));
-        cps13_doenca(f, cps13_d(f + 0x10), cps13_d(c + 0x1f), c as u32, e as u32);
+        add_illness_risk_before_match(f, cps13_d(f + 0x10), cps13_d(c + 0x1f), c as u32, e as u32);
     }
 }
 
 // ponytail: sorteia e monta rodadas (aloca jogos): não roda duas vezes. Só a original; a cópia leva os ramos (sorteio e
 // montagem; a atualização é diária em cada copa, 29.934 chamadas até 2002-06-01: sem ramo no caminho comum).
 unsafe extern "thiscall" fn comparar_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, hoje, fase)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, hoje, fase)
 }
 
 // ponytail: sorteia, cria os jogos e passa a rodada: não roda duas vezes. Só a original; a cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_set_up_round(this: usize, rodada: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, rodada)
+    original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, rodada)
 }
 
 // ponytail: acrescenta o risco de doença (não roda duas vezes; o caminho comum não faz nada). Só a original; a cópia leva
 // os ramos.
 unsafe extern "thiscall" fn comparar_add_away_trip_illness_risk(this: usize, f: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, f)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, f)
 }

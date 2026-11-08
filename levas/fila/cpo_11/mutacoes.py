@@ -4,15 +4,15 @@
 # seguintes mudam). No fim do emprestimo, idem para as vagas nao devolvidas. A terceira depende de emprestimos que
 # terminem com o jogador em vaga de orgao (155 chamadas; PODE ESCAPAR se nenhum tiver vaga ocupada: ver o ramo).
 MUTACOES = [
-    ('cpo11_suspensao_sem_regras', 'ligar(cpo11_orgao(this, regra), id, vaga as u16 as u32); // liga a regra à suspensão',
+    ('cpo11_suspensao_sem_regras', 'ligar(ruling_body_of_rule(this, regra), id, vaga as u16 as u32); // liga a regra à suspensão',
      'let _ = (&ligar, vaga); // mutacao: a regra sem ligar a suspensao',
      'cpo_11 suspensao nova'),
     ('cpo11_transferido_sem_cobertura',
-     'if cpo11_cobre(orgao, clube) {\n            continue;\n        }\n        let e = cpo11_entrada(orgao, id);\n        if e == 0 {',
+     'if ruling_body_covers_club(orgao, clube) {\n            continue;\n        }\n        let e = cpo11_entrada(orgao, id);\n        if e == 0 {',
      '// mutacao: o clube novo nunca cobre\n        let e = cpo11_entrada(orgao, id);\n        if e == 0 {',
      'cpo_11 transferido solta a vaga'),
     ('cpo11_emprestimo_sem_cobertura',
-     'if cpo11_cobre(orgao, clube) {\n            continue;\n        }\n        let e = cpo11_entrada(orgao, id);\n        if e != 0 {',
+     'if ruling_body_covers_club(orgao, clube) {\n            continue;\n        }\n        let e = cpo11_entrada(orgao, id);\n        if e != 0 {',
      '// mutacao: o clube do contrato nunca cobre\n        let e = cpo11_entrada(orgao, id);\n        if e != 0 {',
      'cpo_11 fim do emprestimo solta a vaga'),
 ]

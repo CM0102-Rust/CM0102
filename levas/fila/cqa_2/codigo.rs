@@ -22,7 +22,7 @@ unsafe fn cqa2_pd(a: usize, v: usize) {
 
 /// O outro clube do pedido de amistoso (0x19 bytes: +0 dia, +2 ano, +0xc quem pede, +0x10 e +0x14 os dois clubes do
 /// jogo, +0x18 a situação): o +0x10, ou o +0x14 quando o +0x10 é o que pede.
-unsafe fn cqa2_outro(m: usize) -> usize {
+unsafe fn other_friendly_club(m: usize) -> usize {
     if cqa2_d(m + 0xc) == cqa2_d(m + 0x10) {
         cqa2_d(m + 0x14)
     } else {
@@ -32,7 +32,7 @@ unsafe fn cqa2_outro(m: usize) -> usize {
 
 /// O clube é dirigido por um técnico humano (0x7875e0: push clube; ecx = [0xb7431c]; sem add esp -> thiscall(notícias,
 /// clube), ret 4; a cópia Rust é stdcall(clube): o this não é lido).
-unsafe fn cqa2_humano(clube: usize) -> bool {
+unsafe fn club_has_human_manager(clube: usize) -> bool {
     let f: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
     f(clube) != 0
 }
@@ -42,7 +42,7 @@ unsafe fn cqa2_humano(clube: usize) -> bool {
 /// dos clubes do jogo (+0x10, +0x14), 2 = o id de quem pede (+0xc), 3 = o dia (com sinal), 4 = o ano (sem sinal), 5 =
 /// a situação; entregue ao técnico do `para` (0x7861e0: push para; push &local; ecx = [0xb7431c]; sem add esp ->
 /// thiscall, ret 8).
-unsafe fn cqa2_noticia(m: usize, tipo: u32, situacao: u32, para: usize) {
+unsafe fn send_friendly_news(m: usize, tipo: u32, situacao: u32, para: usize) {
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -60,8 +60,8 @@ unsafe fn cqa2_noticia(m: usize, tipo: u32, situacao: u32, para: usize) {
 
 /// A 0x5c5f40 decide: o outro clube existe, a situação é 1 e ele não é de técnico humano (0x600a50: push 0; push 0;
 /// push 1; push 0; push o; add esp, 0x14 -> cdecl(o, 0, 1, 0, 0)), salvo com `forcar`.
-unsafe fn cqa2_decide(m: usize, forcar: u32) -> bool {
-    let o = cqa2_outro(m);
+unsafe fn friendly_needs_decision(m: usize, forcar: u32) -> bool {
+    let o = other_friendly_club(m);
     if o == 0 || cqa2_b(m + 0x18) != 1 {
         return false;
     }
@@ -69,25 +69,25 @@ unsafe fn cqa2_decide(m: usize, forcar: u32) -> bool {
     human_club(o, 0, 1, 0, 0) == 0 || forcar != 0
 }
 
-/// A decisão do convidado (depois da cqa2_decide): 3 aceita, 4 recusa. O fator: 1,65 (1,32 quando o
+/// A decisão do convidado (depois da friendly_needs_decision): 3 aceita, 4 recusa. O fator: 1,65 (1,32 quando o
 /// outro é o +0x10), × 0,925 com nações diferentes (+0x53), × 0,85 com regiões (+0x76) diferentes, × 0,85 com
 /// continentes (+0x71) diferentes; quando o outro é o +0x10 e os dois têm cidade do estádio (+0x69 → +0x38), × (1 +
 /// +0x77 de quem pede / ((distância das coordenadas +0x23/+0x2b × 0,55 + 1) × 40000)). Aceita se a reputação (+0x80)
 /// de quem pede é ao menos a do outro / fator, ou se a diferença das reputações não passa de fator × 600.
-unsafe fn cqa2_decisao(m: usize, contar: bool) -> u8 {
+unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
     let a = cqa2_d(m + 0xc);
-    let o = cqa2_outro(m);
+    let o = other_friendly_club(m);
     let (na, no) = (cqa2_d(a + 0x53), cqa2_d(o + 0x53));
     let segundo = o == cqa2_d(m + 0x10);
-    let mut f = if segundo { f64_em(0x96af38) } else { f64_em(0x96af20) };
+    let mut f = if segundo { read_f64_at(0x96af38) } else { read_f64_at(0x96af20) };
     if no != na {
-        f *= f64_em(0x96af30);
+        f *= read_f64_at(0x96af30);
     }
     if cqa2_b(no + 0x76) != cqa2_b(na + 0x76) {
-        f *= f64_em(0x969520);
+        f *= read_f64_at(0x969520);
     }
     if cqa2_i(no + 0x71) != cqa2_i(na + 0x71) {
-        f *= f64_em(0x969520);
+        f *= read_f64_at(0x969520);
     }
     if segundo {
         let (fa, fo) = (cqa2_d(a + 0x69), cqa2_d(o + 0x69));
@@ -97,10 +97,10 @@ unsafe fn cqa2_decisao(m: usize, contar: bool) -> u8 {
             if contar {
                 crate::comparacao::ramo("cqa_2 distancia do amistoso");
             }
-            let dx = f64_em(sa + 0x2b) - f64_em(so + 0x2b);
-            let dy = f64_em(sa + 0x23) - f64_em(so + 0x23);
+            let dx = read_f64_at(sa + 0x2b) - read_f64_at(so + 0x2b);
+            let dy = read_f64_at(sa + 0x23) - read_f64_at(so + 0x23);
             let i = cqa2_i(a + 0x77) as f64;
-            let v = i / (((dy * dy + dx * dx).sqrt() * f64_em(0x96a5d8) + f64_em(0x967890)) * f64_em(0x96af28)) + f64_em(0x967890);
+            let v = i / (((dy * dy + dx * dx).sqrt() * read_f64_at(0x96a5d8) + read_f64_at(0x967890)) * read_f64_at(0x96af28)) + read_f64_at(0x967890);
             f *= v; // cqa2: o fator da distância
         }
     }
@@ -109,14 +109,14 @@ unsafe fn cqa2_decisao(m: usize, contar: bool) -> u8 {
         crate::comparacao::ramo("cqa_2 decisao do amistoso");
     }
     // fcompp/test ah, 1: o C0 vale para "menor" e para "sem ordem" (NaN): os >= abaixo dão o mesmo caminho
-    let aceita = ra as f64 >= ro as f64 / f || f * f64_em(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação
+    let aceita = ra as f64 >= ro as f64 / f || f * read_f64_at(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação
     if aceita { 3 } else { 4 }
 }
 
 /// { 0x5c5f40 } (thiscall, ret 8, friendly.cpp, quadro SEH sem destrutor no caminho normal):
 /// `Friendly::process_friendly_reply(pedido, forcar)`. Sem quem pede (+0xc): nada. Com o outro clube (+0x10, ou +0x14
 /// se o +0x10 é quem pede) na situação 1 e sem técnico humano (0x600a50) ou com `forcar`: sem nação num dos dois, a
-/// situação 4 (sobrescrita logo depois); a decisão (cqa2_decisao) grava 3 ou 4 em +0x18 e a notícia 7 vai a quem pede.
+/// situação 4 (sobrescrita logo depois); a decisão (friendly_reply) grava 3 ou 4 em +0x18 e a notícia 7 vai a quem pede.
 /// Aceito (3): a partida do amistoso numa local de 0x4f bytes (a competição [+4] e o id dela, o estádio do clube +0x10 (+0x69) e o
 /// id dele, os clubes +0x10 e +0x14 e os ids, a data do pedido, o ano de hoje, 9 para seleção (0x53b900) ou 1, o horário 1
 /// no sábado e no domingo (0x54a3f0 = 5 ou 6) ou 2, as marcas, −1 nos placares) vai ao calendário (0x5aa680: push 1;
@@ -128,14 +128,14 @@ unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: usize, forcar
     if a == 0 {
         return;
     }
-    let o = cqa2_outro(m);
-    if cqa2_decide(m, forcar) {
+    let o = other_friendly_club(m);
+    if friendly_needs_decision(m, forcar) {
         if cqa2_d(a + 0x53) == 0 || cqa2_d(o + 0x53) == 0 {
             *((m + 0x18) as *mut u8) = 4; // como a original (que cai logo depois, lendo a nação nula)
         }
-        let s = cqa2_decisao(m, true);
+        let s = friendly_reply(m, true);
         *((m + 0x18) as *mut u8) = s;
-        cqa2_noticia(m, 7, s as u32, a);
+        send_friendly_news(m, 7, s as u32, a);
     }
     let s = cqa2_b(m + 0x18);
     if s == 3 {
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: usize, forcar
 }
 
 /// Algum nó da lista (+2 a cabeça, +6 o próximo de cada nó, +0 o dado) guarda `m`, sem mexer no cursor.
-unsafe fn cqa2_na_lista(l: usize, m: usize) -> bool {
+unsafe fn list_holds(l: usize, m: usize) -> bool {
     if l == 0 {
         return false;
     }
@@ -231,17 +231,17 @@ unsafe fn cqa2_na_lista(l: usize, m: usize) -> bool {
 }
 
 /// Comparador da 0x5c5f40: só a original (a partida vai ao calendário e a notícia ao técnico, que alocam, e o pedido é
-/// liberado pela 0x5c87b0). O plano, feito antes: a decisão (cqa2_decisao) e a vaga do amistoso (0x5c6740). Com 3 ou 4,
+/// liberado pela 0x5c87b0). O plano, feito antes: a decisão (friendly_reply) e a vaga do amistoso (0x5c6740). Com 3 ou 4,
 /// a vaga fica com +0x18 = 3, ou com +0x10 = 0 e +0x18 = 0; sem decisão, o pedido continua com a mesma situação e sai
 /// da lista das respostas (+0x34d4). Sem quem pede ou sem nação num dos dois: só a original.
 unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usize, forcar: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let a = if m != 0 { cqa2_d(m + 0xc) } else { 0 };
-    let outro = if m != 0 { cqa2_outro(m) } else { 0 };
+    let outro = if m != 0 { other_friendly_club(m) } else { 0 };
     if a == 0 || (outro != 0 && (cqa2_d(a + 0x53) == 0 || cqa2_d(outro + 0x53) == 0)) {
         return o(this, m, forcar); // ponytail: sem quem pede ou sem nação, só a original
     }
-    let s = if cqa2_decide(m, forcar) { cqa2_decisao(m, false) } else { cqa2_b(m + 0x18) };
+    let s = if friendly_needs_decision(m, forcar) { friendly_reply(m, false) } else { cqa2_b(m + 0x18) };
     let vaga: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(0x5c6740usize);
     let v = if s == 3 || s == 4 { vaga(this, cqa2_w(m) as u16 as u32, cqa2_w(m + 2) as u16 as u32, cqa2_d(m + 0x14), cqa2_d(m + 0x10)) } else { 0 };
     o(this, m, forcar);
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usiz
         // o pedido foi liberado: só a vaga
         v == 0 || if s == 3 { cqa2_b(v + 0x18) == 3 } else { cqa2_d(v + 0x10) == 0 && cqa2_b(v + 0x18) == 0 }
     } else {
-        cqa2_b(m + 0x18) == s && !cqa2_na_lista(cqa2_d(this + 0x34d4), m)
+        cqa2_b(m + 0x18) == s && !list_holds(cqa2_d(this + 0x34d4), m)
     };
     PLACAR.registrar(ok, || format!("process_friendly_reply(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
 }
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usiz
 /// clube na situação 1 e de técnico humano: situação 2 e, se o +0x10 ou o +0x14 é de técnico humano, a notícia 6 ao
 /// outro.
 unsafe extern "thiscall" fn send_friendly_request(this: usize, m: usize) {
-    let o = cqa2_outro(m);
+    let o = other_friendly_club(m);
     if cqa2_d(this + 0x34d4) == 0 {
         let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
         let bloco = novo(0xe);
@@ -273,25 +273,25 @@ unsafe extern "thiscall" fn send_friendly_request(this: usize, m: usize) {
         };
         cqa2_pd(this + 0x34d4, l);
         if l == 0 {
-            return orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, m); // ponytail: sem memória, a caixa da original
+            return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, m); // ponytail: sem memória, a caixa da original
         }
     }
     let guardar: unsafe extern "thiscall" fn(usize, *const usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
     let copia = m;
     guardar(cqa2_d(this + 0x34d4), &copia, 4);
-    if o == 0 || cqa2_b(m + 0x18) != 1 || !cqa2_humano(o) {
+    if o == 0 || cqa2_b(m + 0x18) != 1 || !club_has_human_manager(o) {
         return;
     }
     crate::comparacao::ramo("cqa_2 pedido ao humano");
     *((m + 0x18) as *mut u8) = 2;
-    if !cqa2_humano(cqa2_d(m + 0x10)) && !cqa2_humano(cqa2_d(m + 0x14)) {
+    if !club_has_human_manager(cqa2_d(m + 0x10)) && !club_has_human_manager(cqa2_d(m + 0x14)) {
         return;
     }
-    cqa2_noticia(m, 6, 2, o);
+    send_friendly_news(m, 6, 2, o);
 }
 
 /// Quantos nós a lista tem, sem mexer no cursor.
-unsafe fn cqa2_conta(l: usize) -> usize {
+unsafe fn list_len(l: usize) -> usize {
     let mut n = 0;
     let mut no = if l != 0 { cqa2_d(l + 2) } else { 0 };
     while no != 0 && n < 100_000 {
@@ -305,18 +305,18 @@ unsafe fn cqa2_conta(l: usize) -> usize {
 /// respostas fica com um nó a mais e guarda o pedido; a situação vai a 2 quando o outro clube, na situação 1, é de
 /// técnico humano; senão não muda.
 unsafe extern "thiscall" fn comparar_send_friendly_request(this: usize, m: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
-    let outro = cqa2_outro(m);
-    let antes = cqa2_conta(cqa2_d(this + 0x34d4));
-    let s = if outro != 0 && cqa2_b(m + 0x18) == 1 && cqa2_humano(outro) { 2 } else { cqa2_b(m + 0x18) };
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let outro = other_friendly_club(m);
+    let antes = list_len(cqa2_d(this + 0x34d4));
+    let s = if outro != 0 && cqa2_b(m + 0x18) == 1 && club_has_human_manager(outro) { 2 } else { cqa2_b(m + 0x18) };
     o(this, m);
     let l = cqa2_d(this + 0x34d4);
-    let ok = l == 0 || (cqa2_conta(l) == antes + 1 && cqa2_na_lista(l, m) && cqa2_b(m + 0x18) == s);
-    PLACAR.registrar(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, antes, cqa2_conta(l), cqa2_b(m + 0x18), s));
+    let ok = l == 0 || (list_len(l) == antes + 1 && list_holds(l, m) && cqa2_b(m + 0x18) == s);
+    PLACAR.registrar(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, antes, list_len(l), cqa2_b(m + 0x18), s));
 }
 
 /// As nações com continente (+0x71) da tabela [0xae23a8] (0x122 bytes cada, [0xae2350] delas), na ordem da tabela.
-unsafe fn cqa2_nacoes_com_continente() -> Vec<usize> {
+unsafe fn nations_with_continent() -> Vec<usize> {
     let mut v = Vec::new();
     let t = cqa2_d(0xae23a8);
     let mut i = 0;
@@ -332,7 +332,7 @@ unsafe fn cqa2_nacoes_com_continente() -> Vec<usize> {
 
 /// O qsort da CRT (0x945333: 4 pushes; add esp, 0x10 -> cdecl(base, n, 4, ordem)) com a ordem 0x5cc5f0 (reputação,
 /// a maior primeiro).
-unsafe fn cqa2_ordenar(base: usize, n: u32) {
+unsafe fn sort_by_reputation(base: usize, n: u32) {
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     qsort(base, n, 4, 0x5cc5f0);
 }
@@ -346,22 +346,22 @@ unsafe extern "thiscall" fn build_nation_list(this: usize) {
     let p = malloc((cqa2_i(0xae2350) as u32).wrapping_mul(4));
     cqa2_pd(this + 0x34fa, p);
     if p == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this); // ponytail: sem memória, a caixa da original
+        return original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this); // ponytail: sem memória, a caixa da original
     }
-    for n in cqa2_nacoes_com_continente() {
+    for n in nations_with_continent() {
         let k = cqa2_i(this + 0x34fe);
         cqa2_pd(cqa2_d(this + 0x34fa).wrapping_add((k as isize * 4) as usize), n);
         core::ptr::write_unaligned((this + 0x34fe) as *mut i32, k + 1);
     }
-    cqa2_ordenar(cqa2_d(this + 0x34fa), cqa2_i(this + 0x34fe) as u32);
+    sort_by_reputation(cqa2_d(this + 0x34fa), cqa2_i(this + 0x34fe) as u32);
 }
 
 /// Comparador da 0x5ca3e0: só a original (aloca a lista). O plano, feito antes numa lista local com o mesmo qsort e a
 /// mesma ordem: a conta (+0x34fe) e as nações, na ordem.
 unsafe extern "thiscall" fn comparar_build_nation_list(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    let mut plano = cqa2_nacoes_com_continente();
-    cqa2_ordenar(plano.as_mut_ptr() as usize, plano.len() as u32);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let mut plano = nations_with_continent();
+    sort_by_reputation(plano.as_mut_ptr() as usize, plano.len() as u32);
     o(this);
     let p = cqa2_d(this + 0x34fa);
     let n = cqa2_i(this + 0x34fe);

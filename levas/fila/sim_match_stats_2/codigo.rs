@@ -9,7 +9,7 @@
 /// 0x85a470 quando falta). Partida ou registro nulos: a original (caixa de erro). Devolve 1.
 unsafe extern "thiscall" fn fill_match_record(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
     if m == 0 || reg == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%)(estat, m, reg, sem_renda);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%)(estat, m, reg, sem_renda);
     }
     let b = |p: usize| *(p as *const u8);
     let w = |p: usize| core::ptr::read_unaligned(p as *const u16);
@@ -186,13 +186,13 @@ unsafe extern "thiscall" fn fill_match_record(estat: usize, m: usize, reg: usize
             pb(x + 3, b(y - 0x4d));
             // ponytail: fld f32 × fmul f64 (0,01) em 80 bits no x87; em f64 dá o mesmo truncamento (f32 × 0,01 nunca cai a 2^-53 de um inteiro)
             let nota = core::ptr::read_unaligned((y - 0x1c) as *const f32) as f64 * core::ptr::read_unaligned(0x967898 as *const f64);
-            pb(x + 4, ftol(nota) as u8);
+            pb(x + 4, match_pl_ftol(nota) as u8);
             for (o, de) in [(5, 0x5d), (6, 0x5a), (7, 0x5c), (8, 0x5b), (9, 0x5f), (0xa, 0x5e), (0xb, 0x59), (0xc, 0x58),
                             (0xd, 0x55), (0xe, 0x54), (0xf, 0x56), (0x10, 0x45), (0x11, 0x46), (0x12, 0x44), (0x13, 0x43),
                             (0x16, 0x4a), (0x17, 0x47), (0x14, 0x49)] {
                 pb(x + o, b(y - de));
             }
-            pw(x + 0x1a, ftol(core::ptr::read_unaligned((y - 0x18) as *const f32) as f64) as u16);
+            pw(x + 0x1a, match_pl_ftol(core::ptr::read_unaligned((y - 0x18) as *const f32) as f64) as u16);
             pb(x + 0x15, b(y - 0x52));
             pb(x + 0x18, b(y - 0x48));
             pw(x + 0x1c, w(y - 0x22));
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn remove_language(estat: usize, ficha: usize, idioma: 
 }
 
 unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     // ponytail: a primeira chamada (data estática e atexit) e os erros só pela original
     if m == 0 || reg == 0 || *(0xb6b7c4 as *const u8) & 1 == 0 {
         return o(estat, m, reg, sem_renda);
@@ -276,7 +276,7 @@ unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, r
 }
 
 unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8, b: *const u8) -> i32 {
-    let r = orig::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(%%I1%%)(a, b);
     let n = match_stats_compare_events(a, b);
     PLACAR.registrar(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
         core::slice::from_raw_parts(a, 4), core::slice::from_raw_parts(b, 4), r, n));
@@ -284,7 +284,7 @@ unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8, b: *const
 }
 
 unsafe extern "thiscall" fn comparar_remove_language(estat: usize, ficha: usize, idioma: i8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(%%I2%%);
     let tabela = *((estat + 0x3c) as *const usize);
     let contagem = *((estat + 0x44) as *const i32);
     if tabela == 0 || contagem <= 0 {

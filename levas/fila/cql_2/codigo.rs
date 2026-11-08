@@ -5,7 +5,7 @@ unsafe fn cql2_d(a: usize) -> u32 {
 }
 
 /// A pessoa `p` está na tabela das pessoas com contrato (id < [0xae2364], com sinal).
-unsafe fn cql2_com_contrato(p: usize) -> bool {
+unsafe fn is_contracted_staff(p: usize) -> bool {
     (cql2_d(p) as i32) < cql2_d(0xae2364) as i32
 }
 
@@ -14,7 +14,7 @@ unsafe fn cql2_com_contrato(p: usize) -> bool {
 /// pela esquerda (+0x18), senão o 4, o 5 ou o 6; volante, meia ou meia-atacante (+0x12, +0x13, +0x14) o 6, o 7 ou o 8;
 /// atacante (+0x15) o 8, o 9, o 10 ou o 11. Termina em 0xff. Nenhuma das posições boas: `None` (a original lê então a
 /// lista de 4 bytes sem valor na pilha, ver `comparar_allocate_squad_number`).
-unsafe fn cql2_preferidos(f: usize) -> Option<[u8; 5]> {
+unsafe fn preferred_squad_numbers(f: usize) -> Option<[u8; 5]> {
     let b = |o: usize| *((f + o) as *const i8) >= 15;
     if b(0xf) {
         return Some([0, 0xff, 0xff, 0xff, 0xff]);
@@ -41,7 +41,7 @@ unsafe fn cql2_preferidos(f: usize) -> Option<[u8; 5]> {
 /// à pessoa `p` que chega ao clube `c`. Marca os números ocupados pelo elenco (0x541f90(c, lista, 0), cdecl de 3; a
 /// lista ordenada pela idade com o qsort 0x945333 e a 0x540130; quem está fora da tabela das pessoas com contrato ou sem
 /// ficha de jogador não conta) com o número de cada um (0x85a760, em módulo). Se `p` está na tabela e ainda não tem
-/// número: o primeiro número livre entre os preferidos da posição (`cql2_preferidos`); senão o primeiro livre de 12 a
+/// número: o primeiro número livre entre os preferidos da posição (`preferred_squad_numbers`); senão o primeiro livre de 12 a
 /// 50; e, se ainda sem número, o maior livre de 11 para baixo. O número vai positivo para o clube de técnico humano
 /// (0x600a50(c, 0, 1, 0, 0), cdecl de 5) e negativo para os outros (0x85a850). Sem a pessoa, nada.
 unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usize, p: usize) {
@@ -66,17 +66,17 @@ unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usize, p: usiz
             *q = 0;
             continue;
         }
-        if cql2_com_contrato(x) {
+        if is_contracted_staff(x) {
             let n = (numero(this, x, c) as i32).abs() as u8;
             if n != 0 {
                 usado[(n as i8 as isize - 1) as usize] = 1;
             }
         }
     }
-    if !cql2_com_contrato(p) || numero(this, p, c) != 0 {
+    if !is_contracted_staff(p) || numero(this, p, c) != 0 {
         return;
     }
-    let pref = cql2_preferidos(cql2_d(p + 0x61) as usize).unwrap_or([0xff; 5]);
+    let pref = preferred_squad_numbers(cql2_d(p + 0x61) as usize).unwrap_or([0xff; 5]);
     // o número com o sinal do clube: positivo com técnico humano, negativo sem
     let sinal = |k: u8| -> u32 {
         if humano(c, 0, 1, 0, 0) != 0 {
@@ -115,17 +115,17 @@ unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usize, p: usiz
 /// posição da ficha é boa, a original lê a lista de preferidos de 4 bytes sem valor na pilha (sobra de quem chamou):
 /// a cópia usa a lista vazia (um valor que o jogo produz quando a sobra é 0xff) e o comparador deixa só a original.
 unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usize, c: usize, p: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
-    if p == 0 || cql2_d(p + 0x61) == 0 || cql2_preferidos(cql2_d(p + 0x61) as usize).is_none() {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    if p == 0 || cql2_d(p + 0x61) == 0 || preferred_squad_numbers(cql2_d(p + 0x61) as usize).is_none() {
         return o(this, c, p);
     }
-    let reg = cql2_regioes(&[p]);
+    let reg = squad_number_regions(&[p]);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, p), || allocate_squad_number(this, c, p));
     PLACAR.registrar(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p, mo.0, mr.0));
 }
 
 /// O +0x3a dos contratos (o do clube e o de empréstimo) das pessoas `ps` e a marca da caixa [0xb67a34].
-unsafe fn cql2_regioes(ps: &[usize]) -> Vec<(usize, usize)> {
+unsafe fn squad_number_regions(ps: &[usize]) -> Vec<(usize, usize)> {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     let mut reg = vec![(0xb67a34usize, 4usize)];
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
     let mut n = 0usize;
     for k in 0..50 {
         let x = cql2_d(c + 0xd7 + 4 * k) as usize;
-        if x != 0 && cql2_com_contrato(x) {
+        if x != 0 && is_contracted_staff(x) {
             todos[n] = x;
             n += 1;
         }
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
                 break;
             }
             let x = cql2_d(l + 0xd7 + 4 * k) as usize;
-            if x != 0 && cql2_com_contrato(x) {
+            if x != 0 && is_contracted_staff(x) {
                 todos[n] = x;
                 n += 1;
             }
@@ -301,14 +301,14 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
 /// Lado a lado: o +0x3a dos contratos de quem está no elenco do clube e no do clube ligado (as únicas pessoas que a
 /// rotina e a 0x85a470 numeram) e a marca da caixa.
 unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: usize, c: usize, manter: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let mut ps: Vec<usize> = (0..50).map(|k| cql2_d(c + 0xd7 + 4 * k) as usize).collect();
     let l = parceiro(c, 0, 1);
     if l != 0 {
         ps.extend((0..50).map(|k| cql2_d(l + 0xd7 + 4 * k) as usize));
     }
-    let reg = cql2_regioes(&ps);
+    let reg = squad_number_regions(&ps);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, manter), || assign_club_squad_numbers(this, c, manter));
     PLACAR.registrar(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();

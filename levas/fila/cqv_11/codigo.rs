@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn cqv11_mercosul_quartas(this: usize) {
     ordenar(segundos, 0);
     let v = alocar(0x20);
     if v == 0 {
-        return aviso_em(0x9a7e5c, 0x248);
+        return show_error_at(0x9a7e5c, 0x248);
     }
     let mut k = 0usize;
     for i in 0..(*((this + 0xbe) as *const i8)).max(0) as usize {
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn cqv11_mercosul_quartas(this: usize) {
     soltar(tabela);
     let f = cqv11_d(cqv11_d(this + 0xc) + 0x10);
     if f == 0 {
-        return aviso_em(0x9a7e5c, 0x2ab);
+        return show_error_at(0x9a7e5c, 0x2ab);
     }
     sortear(f, 0);
 }
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn cqv11_mercosul_quartas(this: usize) {
 // 0x6827d0, então só confere que cada um é segundo de um grupo e que nenhum clube se repete); a fase em [+0xc][4] tem
 // os 8 na sua tabela de times (+0xa7, linhas de 6 bytes).
 unsafe extern "thiscall" fn comparar_cqv11_mercosul_quartas(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let q = *((this + 0xbe) as *const i8);
     let fases = cqv11_d(this + 0xc);
     if !(1..=2).contains(&q) || fases == 0 || (0..4).any(|g| cqv11_d(fases + g * 4) == 0) {
@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn cqv11_libertadores_previstas(this: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_cqv11_libertadores_previstas(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqv11_comparar_previstas("cqv11_libertadores_previstas", this, 7, 8, || o(this))
 }
 
@@ -200,7 +200,7 @@ unsafe extern "thiscall" fn cqv11_mercosul_previstas(this: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_cqv11_mercosul_previstas(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqv11_comparar_previstas("cqv11_mercosul_previstas", this, 4, 5, || o(this))
 }
 
@@ -260,7 +260,7 @@ unsafe fn cqv11_previstas(this: usize, fase: u32, grupo: u32, arquivo: usize, li
     let gravar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     if cqv11_d(this + 8) == 0 {
-        return aviso_em(arquivo, linha);
+        return show_error_at(arquivo, linha);
     }
     ordenar(cqv11_d(this + 0xee), cqv11_d(this + 0xf2) as u32, 4, 0x4b07d0);
     let tabela_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqv11_d(cqv11_d(this) + 0x3c));

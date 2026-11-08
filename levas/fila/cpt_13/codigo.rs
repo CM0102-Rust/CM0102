@@ -11,7 +11,7 @@ unsafe fn cpt13_w(a: usize) -> i16 {
 /// O núcleo da 0x4c08f0 sobre os `n` clubes em `v` e as chaves em `k`: a chave de cada clube é a força
 /// (0x4c0720; clube nulo, 0); depois, para cada i, todo j > i com chave maior troca de lugar com i (chave e clube),
 /// com sinal.
-unsafe fn cpt13_ordenar_com(v: *mut u32, k: *mut i32, n: i32) {
+unsafe fn sort_clubs_by_strength(v: *mut u32, k: *mut i32, n: i32) {
     let forca: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x4c0720usize);
     for i in 0..n.max(0) as usize {
         let c = *v.add(i);
@@ -37,9 +37,9 @@ unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i32) {
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let k = alocar((n as u32).wrapping_mul(4));
     if k == 0 {
-        return aviso_em(0x99ec20, 0x292d);
+        return show_error_at(0x99ec20, 0x292d);
     }
-    cpt13_ordenar_com(v as *mut u32, k as *mut i32, n);
+    sort_clubs_by_strength(v as *mut u32, k as *mut i32, n);
     if n > 1 {
         crate::comparacao::ramo("cpt_13 clubes ordenados");
     }
@@ -51,7 +51,7 @@ unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i32) {
 /// +0x72; devolve o registro. Clube nulo: a caixa (linha 0x680).
 unsafe extern "thiscall" fn set_club_final_position(this: usize, clube: usize, pos: u32) -> usize {
     if clube == 0 {
-        aviso_em(0x99ca94, 0x680);
+        show_error_at(0x99ca94, 0x680);
         return 0; // ponytail: a original devolve o eax da caixa; quem chama não lê
     }
     let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn set_club_final_position(this: usize, clube: usize, p
 /// (+0x3c − 2) para trás ([+0xa3] + r × 0x68, a conta de quem sai em +0x1a), até um clube nulo no começo da rodada.
 /// Na primeira rodada vista, os que saem nela ganham todos a posição 1 (sem olhar nulos); em cada rodada, os seguintes
 /// ganham a posição do contador (que sobe a cada vaga, nula ou não), pulando os nulos. `gravar` = 0 só monta a lista.
-unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usize, u8)> {
+unsafe fn set_final_positions_by_round(this: usize, v: *const u32, gravar: usize) -> Vec<(usize, u8)> {
     let gravar_posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
     let mut chamadas: Vec<(usize, u8)> = Vec::new();
     let mut s: i16 = 0; // o índice no vetor (bp com sinal)
@@ -120,7 +120,7 @@ unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usiz
 /// 0x1827); sem memória: a original (a caixa da falta de memória e o fim do jogo).
 unsafe extern "thiscall" fn cup_rank_teams(this: usize) {
     if cpt13_d(this + 8) == 0 {
-        return aviso_em(0x9b55ac, 0x1827);
+        return show_error_at(0x9b55ac, 0x1827);
     }
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -128,13 +128,13 @@ unsafe extern "thiscall" fn cup_rank_teams(this: usize) {
     let n = cpt13_w(this + 0x3e) as i32;
     let v = alocar((n << 2) as u32);
     if v == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+        return original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     }
     for i in 0..n.max(0) as usize {
         *((v + i * 4) as *mut u32) = cpt13_d(cpt13_d(this + 0xa7) + i * 6) as u32;
     }
     ordenar(v, n);
-    cpt13_posicoes(this, v as *const u32, 1);
+    set_final_positions_by_round(this, v as *const u32, 1);
     liberar(v);
 }
 
@@ -142,17 +142,17 @@ unsafe extern "thiscall" fn cup_rank_teams(this: usize) {
 /// planejadas sobre uma cópia ordenada do vetor (as chaves num Vec); depois, o registro de cada clube planejado tem
 /// de ter em +0x72 a última posição dele.
 unsafe extern "thiscall" fn comparar_cup_rank_teams(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = cpt13_w(this + 0x3e) as i32;
     if cpt13_d(this + 8) == 0 || n <= 0 {
         return o(this); // ponytail: a caixa ou nada a ordenar, só a original
     }
     let mut v: Vec<u32> = (0..n as usize).map(|i| cpt13_d(cpt13_d(this + 0xa7) + i * 6) as u32).collect();
     let mut k = vec![0i32; n as usize];
-    cpt13_ordenar_com(v.as_mut_ptr(), k.as_mut_ptr(), n);
+    sort_clubs_by_strength(v.as_mut_ptr(), k.as_mut_ptr(), n);
     // ponytail: com mais vagas nas rodadas que clubes, a original lê além do vetor (sobra do bloco); o plano lê 0
     v.extend(core::iter::repeat(0).take(0x100));
-    let plano = cpt13_posicoes(this, v.as_ptr(), 0);
+    let plano = set_final_positions_by_round(this, v.as_ptr(), 0);
     o(this);
     let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let mut erros = Vec::new();
@@ -171,13 +171,13 @@ unsafe extern "thiscall" fn comparar_cup_rank_teams(this: usize) {
 /// Comparador: ordena no lugar (aloca e libera o temporário): o esperado sai do núcleo sobre uma cópia (chaves num
 /// Vec) antes da original; depois, o vetor tem de ser igual.
 unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usize, n: i32) {
-    let o = orig::<unsafe extern "C" fn(usize, i32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, i32)>(%%I1%%);
     if v == 0 || n <= 1 {
         return o(v, n);
     }
     let mut esperado = core::slice::from_raw_parts(v as *const u32, n as usize).to_vec();
     let mut k = vec![0i32; n as usize];
-    cpt13_ordenar_com(esperado.as_mut_ptr(), k.as_mut_ptr(), n);
+    sort_clubs_by_strength(esperado.as_mut_ptr(), k.as_mut_ptr(), n);
     o(v, n);
     let obtido = core::slice::from_raw_parts(v as *const u32, n as usize);
     PLACAR.registrar(obtido == &esperado[..], || format!("comp_util_sort_clubs_by_strength(n {}) original={:x?} rust={:x?}", n, obtido, esperado));
@@ -186,7 +186,7 @@ unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usize, n: i32)
 /// Comparador: acha ou acrescenta o registro (não roda duas vezes): o registro visto antes (se havia) tem de ser o
 /// devolvido, com a posição em +0x72.
 unsafe extern "thiscall" fn comparar_set_club_final_position(this: usize, clube: usize, pos: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
     if clube == 0 {
         return o(this, clube, pos); // ponytail: a caixa, só a original
     }

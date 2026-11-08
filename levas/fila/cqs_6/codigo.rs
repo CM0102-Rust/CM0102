@@ -14,7 +14,7 @@ unsafe fn cqs6_pd(a: usize, v: usize) {
 
 /// O primeiro clube da lista de inscritos `l` (entradas de 6 bytes: +0 o clube, +5 a situação) com a situação `s`, entre
 /// as `n` primeiras (n = +0x3e da copa, word com sinal); sem ele, None.
-unsafe fn cqs6_vivo(l: usize, n: i32, s: u8) -> Option<usize> {
+unsafe fn first_entrant_with_status(l: usize, n: i32, s: u8) -> Option<usize> {
     (0..n.max(0) as usize).find(|&i| *((l + i * 6 + 5) as *const u8) == s).map(|i| cqs6_d(l + i * 6))
 }
 
@@ -32,12 +32,12 @@ unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let l = alocar(8);
     if l == 0 {
-        return aviso_em(0x9c4180, 0x337);
+        return show_error_at(0x9c4180, 0x337);
     }
-    if let Some(c) = cqs6_vivo(cqs6_d(this + 0xa7), cqs6_w(this + 0x3e) as i32, 1) { // cqs6: o finalista da copa
+    if let Some(c) = first_entrant_with_status(cqs6_d(this + 0xa7), cqs6_w(this + 0x3e) as i32, 1) { // cqs6: o finalista da copa
         cqs6_pd(l, c);
     }
-    if let Some(c) = cqs6_vivo(cqs6_d(cqs6_d(cqs6_d(this + 0xc)) + 0xa7), cqs6_w(this + 0x3e) as i32, 1) { // cqs6: o finalista das chaves
+    if let Some(c) = first_entrant_with_status(cqs6_d(cqs6_d(cqs6_d(this + 0xc)) + 0xa7), cqs6_w(this + 0x3e) as i32, 1) { // cqs6: o finalista das chaves
         cqs6_pd(l + 4, c);
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqs6_d(cqs6_d(this) + 0x3c));
@@ -58,7 +58,7 @@ unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
     soltar(tabela);
     let f = cqs6_d(cqs6_d(this + 0xc) + 4);
     if f == 0 {
-        return aviso_em(0x9c4180, 0x35a);
+        return show_error_at(0x9c4180, 0x35a);
     }
     crate::comparacao::ramo("cqs_6 final do trofeu");
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
 /// Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
 /// achados antes, quando há fase).
 unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     o(this);
     let f = cqs6_d(cqs6_d(this + 0xc) + 4);
     PLACAR.registrar(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
@@ -87,12 +87,12 @@ unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(this: usize
 /// dword do byte da posição com lixo da pilha em cima; a 0x4a2540 só lê o byte). O vetor é liberado.
 unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     if cqs6_d(this + 8) == 0 {
-        return aviso_em(0x9c4180, 0x3bb);
+        return show_error_at(0x9c4180, 0x3bb);
     }
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let v = alocar(((cqs6_w(this + 0x3e) as i32) << 3) as u32);
     if v == 0 {
-        return aviso_em(0x9c4180, 0x3c3);
+        return show_error_at(0x9c4180, 0x3c3);
     }
     let mut d: i16 = 0;
     while d < cqs6_w(this + 0x3e) {
@@ -145,5 +145,5 @@ unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
 
 // ponytail: grava nas estatísticas da copa (Comp_Stats, que acha ou acrescenta a entrada do clube: aloca); só a original
 unsafe extern "thiscall" fn comparar_eng_auto_cup_rank_teams(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }

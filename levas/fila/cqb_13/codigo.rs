@@ -41,7 +41,7 @@ unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo: usize, con
     let outro = proximo(conflitos);
     if jogo == 0 || outro == 0 {
         if !CQB13_ENSAIO {
-            aviso_em(0x9cc208, 0xde6); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
+            show_error_at(0x9cc208, 0xde6); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
         }
         return 1;
     }
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo: usize, con
 /// A cópia roda em ensaio (para na decisão, sem a caixa) e a original depois, a partir do mesmo estado: lado a lado no
 /// cabeçalho da lista (+2 começo, +0xa cursor). Sem o jogo ou o primeiro da lista: só a original (a caixa).
 unsafe extern "thiscall" fn comparar_resolve_same_day_clash(this: usize, jogo: usize, conflitos: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let cabeca = cqb13_d(conflitos + 2);
     if jogo == 0 || cabeca == 0 || cqb13_d(cabeca) == 0 {
         return o(this, jogo, conflitos);

@@ -9,7 +9,7 @@ unsafe fn cpm7_por(a: usize, v: usize) {
 }
 
 /// (dia, ano) de uma data (+0 dia, palavra com sinal; +2 ano, palavra sem sinal).
-unsafe fn cpm7_data(a: usize) -> (i16, u16) {
+unsafe fn friendly_date_day_year(a: usize) -> (i16, u16) {
     (core::ptr::read_unaligned(a as *const i16), core::ptr::read_unaligned((a + 2) as *const u16))
 }
 
@@ -29,15 +29,15 @@ unsafe extern "thiscall" fn is_comp_current_on_date(this: usize, comp: usize, da
     }
     let menos: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c8e0usize);
     let mais: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c5b0usize);
-    let (dia, ano) = cpm7_data(data);
+    let (dia, ano) = friendly_date_day_year(data);
     let mut a = [0u8; 8];
-    let (adia, aano) = cpm7_data(menos(e + 0xb5, &mut a, 7));
+    let (adia, aano) = friendly_date_day_year(menos(e + 0xb5, &mut a, 7));
     if ano < aano || (ano == aano && dia <= adia) {
         return 0;
     }
-    let (dia, ano) = cpm7_data(data);
+    let (dia, ano) = friendly_date_day_year(data);
     let mut b = [0u8; 8];
-    let (bdia, bano) = cpm7_data(mais(e + 0xb5, &mut b, 7));
+    let (bdia, bano) = friendly_date_day_year(mais(e + 0xb5, &mut b, 7));
     (ano < bano || (ano == bano && dia < bdia)) as u32
 }
 
@@ -57,12 +57,12 @@ unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, clube: usize
     }
     cpm7_por(l + 0xa, cpm7_d(l + 2));
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let antes = cpm7_data(antes.as_ptr() as usize);
-    let depois = cpm7_data(depois.as_ptr() as usize);
+    let antes = friendly_date_day_year(antes.as_ptr() as usize);
+    let depois = friendly_date_day_year(depois.as_ptr() as usize);
     let mut e = proximo(l);
     while e != 0 {
-        let item = cpm7_data(e);
-        if item == cpm7_data(data) {
+        let item = friendly_date_day_year(e);
+        if item == friendly_date_day_year(data) {
             return 1;
         }
         if item == antes {
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, 
         let p = realocar(cpm7_d(this + 0x34d8), cap.wrapping_mul(0x14) as u32);
         cpm7_por(this + 0x34d8, p);
         if p == 0 {
-            aviso_em(0x9cd0a0, 0x797);
+            show_error_at(0x9cd0a0, 0x797);
             return;
         }
     }
@@ -109,19 +109,19 @@ unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, 
 
 /// Comparador: pelo valor (as datas e a vaga só são lidas). Chamada pelas copas e ligas a cada data: sem contador.
 unsafe extern "thiscall" fn comparar_is_comp_current_on_date(this: usize, comp: usize, data: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, comp, data);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, comp, data);
     let n = is_comp_current_on_date(this, comp, data);
-    PLACAR.registrar(r == n, || format!("is_comp_current_on_date({}, {:?}) original={} rust={}", cpm7_d(comp), cpm7_data(data), r, n));
+    PLACAR.registrar(r == n, || format!("is_comp_current_on_date({}, {:?}) original={} rust={}", cpm7_d(comp), friendly_date_day_year(data), r, n));
     r
 }
 
 /// Comparador: lado a lado pelo cursor da lista (+0xa) e o valor.
 unsafe extern "thiscall" fn comparar_candidate_has_nearby_date(this: usize, clube: usize, data: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     let l = cpm7_d(clube + 0x12);
     let reg: &[(usize, usize)] = if l == 0 { &[] } else { &[(l + 0xa, 4)] };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, clube, data), || candidate_has_nearby_date(this, clube, data));
-    PLACAR.registrar(igual && r == n, || format!("candidate_has_nearby_date({:?}) original={} rust={} {:x?} x {:x?}", cpm7_data(data), r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("candidate_has_nearby_date({:?}) original={} rust={} {:x?} x {:x?}", friendly_date_day_year(data), r, n, mo, mr));
     r
 }
 
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn comparar_candidate_has_nearby_date(this: usize, club
 unsafe extern "thiscall" fn comparar_add_planned_friendly(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
     let n = cpm7_d(this + 0x34e0);
     let esperado = [cpm7_d(data), cpm7_d(data + 4), 0, cpm7_d(anfitriao), cpm7_d(mandante), cpm7_d(visitante)];
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I2%%)(this, anfitriao, mandante, visitante, data);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I2%%)(this, anfitriao, mandante, visitante, data);
     let v = cpm7_d(this + 0x34d8);
     if v == 0 {
         return; // sem memória: a caixa já saiu

@@ -23,14 +23,14 @@ unsafe fn cpw3_pessoa(id: usize) -> usize {
 }
 
 /// O contrato principal da pessoa (0x4cf5a0).
-unsafe fn cpw3_contrato(p: usize) -> usize {
+unsafe fn main_contract_via_manager(p: usize) -> usize {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     contract_of(cpw3_d(0xae1050), p)
 }
 
 /// O interesse da pessoa em ir para o clube (Shortlist_Manager::staff_interest_in_joining_club 0x846920: thiscall(lista,
 /// pessoa, clube, salário, modo, situação, motivos), ret 0x18, float no st0).
-unsafe fn cpw3_interesse(lista: usize, pessoa: usize, clube: usize, salario: u32, modo: u32, situacao: u32) -> f64 {
+unsafe fn staff_interest_in_club(lista: usize, pessoa: usize, clube: usize, salario: u32, modo: u32, situacao: u32) -> f64 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, usize) -> f64 = core::mem::transmute(0x846920usize);
     f(lista, pessoa, clube, salario, modo, situacao, 0)
 }
@@ -40,7 +40,7 @@ unsafe fn cpw3_interesse(lista: usize, pessoa: usize, clube: usize, salario: u32
 static mut CPW3_ENSAIO: bool = false;
 
 /// A data (dia i16, ano u16) de 8 bytes em `a`, como a original a compara (o ano sem sinal, o dia com sinal).
-unsafe fn cpw3_antes(a: usize, b: usize) -> bool {
+unsafe fn contract_manager_date_is_before(a: usize, b: usize) -> bool {
     let (aa, ab) = (cpw3_w(a + 2) as u16, cpw3_w(b + 2) as u16);
     aa < ab || (aa == ab && cpw3_w(a) < cpw3_w(b))
 }
@@ -58,7 +58,7 @@ unsafe fn cpw3_antes(a: usize, b: usize) -> bool {
 unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usize, clube: usize) -> i32 {
     let shortlist_entry: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
     let entrada = shortlist_entry(this, clube, jogador, 0, 0);
-    let c = cpw3_contrato(jogador);
+    let c = main_contract_via_manager(jogador);
     *(0xae1080 as *mut usize) = c;
     let dono = if c != 0 { cpw3_clube(cpw3_d(c + 4)) } else { 0 };
     if dono == 0 {
@@ -74,14 +74,14 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     // ponytail: a original empurra a situação da vaga num registrador cujo resto é o endereço do clube dono (base +
     // id); a cópia reproduz o dword.
     let situacao = (cpw3_d(0xae23b4).wrapping_add(cpw3_d(c + 4)) as u32 & !0xff) | ((cpw3_b(entrada + 0x24) >> 1) & 0xf) as u32;
-    let f1 = cpw3_interesse(cpw3_d(cpw3_d(0xde1f54) + 0x856), jogador, clube, 0, 1, situacao);
+    let f1 = staff_interest_in_club(cpw3_d(cpw3_d(0xde1f54) + 0x856), jogador, clube, 0, 1, situacao);
     crate::comparacao::ramo("cpw_3 interesse no emprestimo");
-    if !(f1 >= f64_em(0x968e38)) { // cpw3: o interesse mínimo
+    if !(f1 >= read_f64_at(0x968e38)) { // cpw3: o interesse mínimo
         return -1;
     }
     let mes_de: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x54cfb0usize);
     let m = mes_de(0xae2c90) as u8;
-    let c = cpw3_contrato(jogador);
+    let c = main_contract_via_manager(jogador);
     *(0xae1080 as *mut usize) = c;
     let a2 = if c != 0 { cpw3_clube(cpw3_d(c + 4)) } else { 0 };
     let periodo: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i8, *mut u16, *mut i8, *mut u16) = core::mem::transmute(0x8d0590usize);
@@ -100,10 +100,10 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     if nacao != 0 && cpw3_d(nacao) == cpw3_d(0x9cf408) && (m as i8 >= 0xa || m as i8 <= 2) {
         return -1;
     }
-    let f2 = cpw3_interesse(this, jogador, clube, 0, 0, 1);
+    let f2 = staff_interest_in_club(this, jogador, clube, 0, 0, 1);
     let mut meses = ate_fim as u8;
     crate::comparacao::ramo("cpw_3 conta do inicio");
-    if f2 >= f64_em(0x9690a8) { // cpw3: o interesse para contar do início
+    if f2 >= read_f64_at(0x9690a8) { // cpw3: o interesse para contar do início
         let n = cpw3_d(cpw3_d(clube + 0x53));
         if n != cpw3_d(0x9cf488) && n != cpw3_d(0x9cf434) && n != cpw3_d(0x9cf360) {
             meses = inicio as u8;
@@ -130,8 +130,8 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     if encerrar(cpw3_d(0xde1f54), clube, jogador, 0, v, 1) == 0 {
         return -1;
     }
-    let c = cpw3_contrato(jogador);
-    if c == 0 || cpw3_antes(c + 0x2d, v) {
+    let c = main_contract_via_manager(jogador);
+    if c == 0 || contract_manager_date_is_before(c + 0x2d, v) {
         return -1;
     }
     let chave: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x669360usize);
@@ -141,12 +141,12 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     let mais_semanas: unsafe extern "thiscall" fn(usize, *mut [u16; 4], u32) -> usize = core::mem::transmute(0x54c770usize);
     let mut t = [0u16; 4];
     let r = menos_semanas(v, &mut t, 4);
-    if cpw3_antes(r, janela) {
+    if contract_manager_date_is_before(r, janela) {
         return -1;
     }
     crate::comparacao::ramo("cpw_3 tres semanas");
     let r = mais_semanas(0xae2c90, &mut t, 3); // cpw3: as 3 semanas a partir de hoje
-    if cpw3_antes(v, r) {
+    if contract_manager_date_is_before(v, r) {
         return -1;
     }
     let dif = cpw3_w(clube + 0x80) as i32 - cpw3_w(dono + 0x80) as i32;
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
 /// operações de data). A cópia recusou (−1): a original também, com a mesma memória. A cópia atualizaria a lista (−3):
 /// a original devolve −1. A cópia faria a oferta (−2): a original não devolve −1.
 unsafe extern "thiscall" fn comparar_try_loan_offer_for_player(this: usize, jogador: usize, clube: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     regioes.extend(CPQ5_ESTATICAS);
@@ -194,7 +194,7 @@ unsafe fn cpw3_dados_da_pessoa(n: usize, p: usize) {
 }
 
 /// A nação está ativa (0x544670, cdecl)?
-unsafe fn cpw3_nacao_ativa(nacao: usize) -> bool {
+unsafe fn contract_manager_nation_allows_free_transfers(nacao: usize) -> bool {
     let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x544670usize);
     f(nacao) != 0
 }
@@ -208,7 +208,7 @@ unsafe fn cpw3_nacao_ativa(nacao: usize) -> bool {
 unsafe extern "thiscall" fn post_contract_expiry_news(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
     let _ = this;
     if contrato == 0 {
-        return aviso_em(0x9a8190, 0x24f0);
+        return show_error_at(0x9a8190, 0x24f0);
     }
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn post_contract_expiry_news(this: usize, contrato: usi
     gravar(n, 7, bosman);
     gravar(n, 8, (cpw3_d(p + 0x61) != 0) as u32);
     let nacao = cpw3_d(clube + 0x53);
-    let avisar = if nacao != 0 && !cpw3_nacao_ativa(nacao) { 0 } else { avisar };
+    let avisar = if nacao != 0 && !contract_manager_nation_allows_free_transfers(nacao) { 0 } else { avisar };
     entregar(cpw3_d(0xb7431c), n, clube);
     if avisar == 0 {
         return;
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn post_contract_expiry_news(this: usize, contrato: usi
         let id = cpw3_d(x + 4);
         if id != cpw3_d(clube) {
             let nac = cpw3_d(cpw3_clube(id) + 0x53);
-            if nac != 0 && cpw3_nacao_ativa(nac) {
+            if nac != 0 && contract_manager_nation_allows_free_transfers(nac) {
                 entregar(cpw3_d(0xb7431c), n, cpw3_clube(cpw3_d(x + 4)));
             }
         }
@@ -255,7 +255,7 @@ unsafe extern "thiscall" fn post_contract_expiry_news(this: usize, contrato: usi
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_contract_expiry_news(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I1%%)(this, contrato, periodo, bosman, avisar)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I1%%)(this, contrato, periodo, bosman, avisar)
 }
 
 /// { 0x4d6d70 } (thiscall, ret 8, contract_manager.cpp, quadro SEH da notícia local): `CONTRACT_MANAGER::
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn comparar_post_contract_expiry_news(this: usize, cont
 unsafe extern "thiscall" fn post_bosman_departure_news(this: usize, contrato: usize, destino: usize) {
     let _ = this;
     if contrato == 0 {
-        return aviso_em(0x9a8190, 0x2611);
+        return show_error_at(0x9a8190, 0x2611);
     }
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -283,5 +283,5 @@ unsafe extern "thiscall" fn post_bosman_departure_news(this: usize, contrato: us
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_bosman_departure_news(this: usize, contrato: usize, destino: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, contrato, destino)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, contrato, destino)
 }

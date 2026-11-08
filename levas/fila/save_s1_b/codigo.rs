@@ -1,15 +1,15 @@
 // ---------- %%LEVA%%a leva: o contêiner do save: empacotar e desempacotar os arquivos da pasta e limpar a pasta temporária (zipdir.cpp, utils.cpp) ----------
 
 /// strcpy: copia o texto `origem` (com o zero) para `destino`.
-unsafe fn copiar_texto_c(destino: *mut u8, origem: *const u8) {
+unsafe fn zipdir_c_strcpy(destino: *mut u8, origem: *const u8) {
     let t = core::ffi::CStr::from_ptr(origem as *const core::ffi::c_char).to_bytes_with_nul();
     core::ptr::copy(t.as_ptr(), destino, t.len());
 }
 
 /// strcat: acrescenta o texto `origem` ao fim de `destino`.
-unsafe fn juntar_texto_c(destino: *mut u8, origem: *const u8) {
+unsafe fn zipdir_c_strcat(destino: *mut u8, origem: *const u8) {
     let n = core::ffi::CStr::from_ptr(destino as *const core::ffi::c_char).to_bytes().len();
-    copiar_texto_c(destino.add(n), origem);
+    zipdir_c_strcpy(destino.add(n), origem);
 }
 
 /// { 0x933610 } (cdecl, zipdir.cpp): `zadd_matching_files(caminho, pasta, padrao, a4, tipo)`: cada
@@ -42,12 +42,12 @@ unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize, padrao: u
         juntar_caminho(busca.as_mut_ptr(), 0, pasta, achado_p + 0x10, 0);
         let f = abrir(busca.as_mut_ptr() as usize, 0x98f928);
         if f == 0 {
-            aviso_em(0xad6ab0, 0x31d);
+            show_error_at(0xad6ab0, 0x31d);
             return 0;
         }
         let mut z = abrir_item(caminho, achado_p + 0x10, 1, a4, tipo);
         if z == 0 {
-            aviso_em(0xad6ab0, 0x325);
+            show_error_at(0xad6ab0, 0x325);
             fechar(f);
             return 0;
         }
@@ -69,7 +69,7 @@ unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize, padrao: u
 // ponytail: cria itens no contêiner (e o arquivo, se não existir); não roda duas vezes. A prova do
 // save compara o .qst gravado com e sem a leva.
 unsafe extern "C" fn comparar_zadd_matching_files(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
-    orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%)(caminho, pasta, padrao, a4, tipo)
+    original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%)(caminho, pasta, padrao, a4, tipo)
 }
 
 /// { 0x933320 } (cdecl, zipdir.cpp): `zextract_matching_files(caminho, pasta, padrao)`: copia os nomes
@@ -113,7 +113,7 @@ unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: usize, padra
     }
     let h = novo(0x416ec);
     if h == 0 {
-        aviso_em(0xad6ab0, 0x282);
+        show_error_at(0xad6ab0, 0x282);
         // ponytail: o nome do fonte que a 0x944cff separa cai na casa da resposta
         resposta = u32::from_le_bytes(*b"zipd");
     } else {
@@ -143,7 +143,7 @@ unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: usize, padra
         }
         for i in 0..0x3e8usize {
             let origem = if (i as i32) < *((h + 8) as *const i32) { h + 0x14 + 0x10c * i } else { 0xad6ad8 };
-            copiar_texto_c((nomes + 0x104 * i) as *mut u8, origem as *const u8);
+            zipdir_c_strcpy((nomes + 0x104 * i) as *mut u8, origem as *const u8);
         }
         liberar(h);
     }
@@ -178,7 +178,7 @@ unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: usize, padra
 // ponytail: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
 // (--sav) passa por aqui; a gravação não.
 unsafe extern "C" fn comparar_zextract_matching_files(caminho: usize, pasta: usize, padrao: usize) -> u32 {
-    orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I1%%)(caminho, pasta, padrao)
+    original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I1%%)(caminho, pasta, padrao)
 }
 
 /// { 0x90cd50 } (cdecl, utils.cpp): `utils_clear_temp_folder(padrao)`: monta em [0xde279c] a pasta
@@ -200,12 +200,12 @@ unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
     let mut sufixo = [0u8; 0x100];
     copiar_limitado(0xad9c64, sufixo.as_mut_ptr());
     if variavel != 0 && *(variavel as *const u8) != 0 {
-        copiar_texto_c(global, variavel as *const u8);
-        juntar_texto_c(global, 0x9c3730 as *const u8);
+        zipdir_c_strcpy(global, variavel as *const u8);
+        zipdir_c_strcat(global, 0x9c3730 as *const u8);
     }
-    juntar_texto_c(global, sufixo.as_ptr());
+    zipdir_c_strcat(global, sufixo.as_ptr());
     let mut pasta = [0u8; 0x104];
-    copiar_texto_c(pasta.as_mut_ptr(), global);
+    zipdir_c_strcpy(pasta.as_mut_ptr(), global);
     let mut busca = [0u8; 0x104];
     let mut achado = [0u8; 0x114];
     let mut nomes = [0u8; 0x6400];
@@ -214,7 +214,7 @@ unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
         let mut n = 0usize;
         if primeiro(busca.as_mut_ptr(), achado.as_mut_ptr(), 0) == 0 {
             loop {
-                copiar_texto_c(nomes.as_mut_ptr().add(0x100 * n), achado.as_ptr().add(0x10));
+                zipdir_c_strcpy(nomes.as_mut_ptr().add(0x100 * n), achado.as_ptr().add(0x10));
                 n += 1;
                 if n == 100 || proximo(achado.as_mut_ptr()) != 0 {
                     break;
@@ -234,5 +234,5 @@ unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
 
 // ponytail: apaga arquivos; não roda duas vezes. A gravação do .qst passa por aqui (create_game).
 unsafe extern "C" fn comparar_utils_clear_temp_folder(padrao: usize) {
-    orig::<unsafe extern "C" fn(usize)>(%%I2%%)(padrao)
+    original_fn::<unsafe extern "C" fn(usize)>(%%I2%%)(padrao)
 }

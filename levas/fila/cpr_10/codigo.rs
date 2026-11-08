@@ -15,7 +15,7 @@ unsafe fn cpr10_u(a: usize) -> u16 {
 /// O estado pela lesão atual da pessoa (o índice em [this] + id × 31 + 0xe; −1 sem lesão): a diferença da data do jogo
 /// para a da lesão (+0x20 do registro de 48 bytes em [this+4], 0x54cc30) em anos × 365 + dias; abaixo de +0x2a, 2
 /// (lesionado); abaixo de +0x28, 1 (recuperando a forma); senão 0.
-unsafe fn cpr10_estado(this: usize, pessoa: usize) -> u8 {
+unsafe fn injury_status(this: usize, pessoa: usize) -> u8 {
     let id = cpr10_d(pessoa);
     let k = cpr10_d(cpr10_d(this).wrapping_add(id.wrapping_mul(31)) + 0xe) as i32;
     if k == -1 {
@@ -34,10 +34,10 @@ unsafe fn cpr10_estado(this: usize, pessoa: usize) -> u8 {
 
 /// { 0x62c400 } (thiscall, ret 4, injury.cpp): `Injury::get_player_injury_status(pessoa)`: pessoa nula, a caixa
 /// "Error" (linha 0x556) e 0; id a partir de [0xae2364], 0. Senão a forma do dia (0x62c680) e o estado
-/// (cpr10_estado). Quente (escalação automática): sem contador.
+/// (injury_status). Quente (escalação automática): sem contador.
 unsafe extern "thiscall" fn get_player_injury_status(this: usize, pessoa: usize) -> u8 {
     if pessoa == 0 {
-        aviso_em(0x9e7f28, 0x556);
+        show_error_at(0x9e7f28, 0x556);
         return 0;
     }
     if cpr10_d(pessoa) as i32 >= cpr10_d(0xae2364) as i32 {
@@ -45,34 +45,34 @@ unsafe extern "thiscall" fn get_player_injury_status(this: usize, pessoa: usize)
     }
     let atualizar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x62c680usize);
     atualizar(this, pessoa);
-    cpr10_estado(this, pessoa)
+    injury_status(this, pessoa)
 }
 
-unsafe fn cpr10_mais(d: usize, n: u32, t: &mut [u8; 8]) -> usize {
+unsafe fn injury_date_add_days(d: usize, n: u32, t: &mut [u8; 8]) -> usize {
     let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     mais(d, t.as_mut_ptr(), n)
 }
 
 /// A data `d` = a data em `p` (0x417c10).
-unsafe fn cpr10_copiar(d: usize, p: usize) {
+unsafe fn injury_assign_date(d: usize, p: usize) {
     let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut t = [0u8; 8];
     copia(d, t.as_mut_ptr(), p);
 }
 
 /// A data `d` = a data do jogo + `n` dias (0x54c5b0, 0x417c10).
-unsafe fn cpr10_hoje_mais(d: usize, n: u32) {
+unsafe fn set_today_plus_days(d: usize, n: u32) {
     let mut t = [0u8; 8];
-    cpr10_copiar(d, cpr10_mais(0xae2c90, n, &mut t));
+    injury_assign_date(d, injury_date_add_days(0xae2c90, n, &mut t));
 }
 
 /// A data `d` passa para o dia seguinte quando a fatia (+0xc da entrada, com sinal) passa de 2 (menos 3).
-unsafe fn cpr10_acertar_fatia(e: usize, f: i8) {
+unsafe fn advance_time_slice(e: usize, f: i8) {
     *((e + 0xc) as *mut i8) = f;
     if f > 2 {
         *((e + 0xc) as *mut i8) = f.wrapping_sub(3);
         let mut t = [0u8; 8];
-        cpr10_copiar(e + 4, cpr10_mais(e + 4, 1, &mut t));
+        injury_assign_date(e + 4, injury_date_add_days(e + 4, 1, &mut t));
     }
 }
 
@@ -80,7 +80,7 @@ unsafe fn cpr10_acertar_fatia(e: usize, f: i8) {
 /// entradas até `limite` (ano sem sinal, dia com sinal), a primeira de tipo 3 da pessoa é anulada (id −1; sem
 /// `alterar` só fica de fora) e a busca para; depois, a partir dessa posição (ou da conta − [this+0x1c], se maior),
 /// a de tipo 3 da pessoa. Devolve o endereço dela ou 0.
-unsafe fn cpr10_procurar(this: usize, id: i32, limite: &[u8; 8], alterar: bool) -> usize {
+unsafe fn find_type3_decision(this: usize, id: i32, limite: &[u8; 8], alterar: bool) -> usize {
     let conta = cpr10_d(this + 0x14) as i32;
     let base = cpr10_d(this + 0xc);
     let (la, ld) = (u16::from_le_bytes([limite[2], limite[3]]), i16::from_le_bytes([limite[0], limite[1]]));
@@ -114,7 +114,7 @@ unsafe fn cpr10_procurar(this: usize, id: i32, limite: &[u8; 8], alterar: bool) 
 }
 
 /// { 0x4cd230 } (thiscall, ret 8, contract_manager.cpp, SEH só da data local, de destrutor vazio):
-/// `CONTRACT_MANAGER::schedule_offer_decision(id, vaga)`: a entrada de decisão de tipo 3 da pessoa (cpr10_procurar, com
+/// `CONTRACT_MANAGER::schedule_offer_decision(id, vaga)`: a entrada de decisão de tipo 3 da pessoa (find_type3_decision, com
 /// o limite de hoje + 14; sem ela, uma nova em hoje + 1 + sorteio(5), fatia 2, pela 0x4cd6d0). Com a vaga da oferta
 /// (0x8c61e0): o prazo da resposta (0x8cc5b0: dias × 3 + fatias) contra o que falta (dias até a data × 3 + fatias,
 /// 0x54cdb0), o menor, no mínimo 1, vira a data (hoje + ÷3) e a fatia (+ resto, passando de 2 vai ao dia seguinte);
@@ -123,13 +123,13 @@ unsafe fn cpr10_procurar(this: usize, id: i32, limite: &[u8; 8], alterar: bool) 
 /// de hoje + 180, hoje + 4 + sorteio(4). No fim, a data não passa de hoje + 14, e +0x1c sobe.
 unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: i32) {
     let mut limite = [0u8; 8];
-    cpr10_mais(0xae2c90, 0xe, &mut limite);
-    let mut e = cpr10_procurar(this, id, &limite, true);
+    injury_date_add_days(0xae2c90, 0xe, &mut limite);
+    let mut e = find_type3_decision(this, id, &limite, true);
     let pessoa = cpr10_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
     if e == 0 {
         crate::comparacao::ramo("cpr_10 nova decisao");
         let mut d = [0u8; 8];
-        cpr10_mais(0xae2c90, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
+        injury_date_add_days(0xae2c90, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
         let acrescentar: unsafe extern "thiscall" fn(usize, usize, *const u8, u32, u32) = core::mem::transmute(0x4cd6d0usize);
         acrescentar(this, pessoa, d.as_ptr(), 2, 3);
         let n = cpr10_d(this + 0x14);
@@ -154,19 +154,19 @@ unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: 
         }
         let atual = dl.wrapping_mul(3).wrapping_add(f as u8) as i8;
         let x = if atual < alvo { atual.max(1) } else { alvo.max(1) } as i32;
-        cpr10_hoje_mais(data, (x / 3) as u32);
-        cpr10_acertar_fatia(e, ((x % 3) as u8).wrapping_add(*(0xae2c88 as *const u8)) as i8);
+        set_today_plus_days(data, (x / 3) as u32);
+        advance_time_slice(e, ((x % 3) as u8).wrapping_add(*(0xae2c88 as *const u8)) as i8);
         if *((cpr10_d(of) + 0x2f) as *const u8) != 0 && dias(data, cpr10_d(0xae2c90) as u32, cpr10_d(0xae2c94) as u32) < 4 {
-            cpr10_hoje_mais(data, (sortear(2) + 4) as u32);
+            set_today_plus_days(data, (sortear(2) + 4) as u32);
         }
     } else {
         let (td, ta) = (cpr10_w(0xae2c90), cpr10_u(0xae2c92));
         let (rd, ra) = (cpr10_w(data), cpr10_u(data + 2));
         if ta > ra || (ta == ra && td >= rd) {
-            cpr10_copiar(data, 0xae2c90);
+            injury_assign_date(data, 0xae2c90);
             let f = *((e + 0xc) as *const i8);
             if f as i32 <= *(0xae2c88 as *const u8) as i32 {
-                cpr10_acertar_fatia(e, f.wrapping_add(1));
+                advance_time_slice(e, f.wrapping_add(1));
             }
         }
         let p = cpr10_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
@@ -175,10 +175,10 @@ unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: 
             let c = if x >= 0 { cpr10_d(this).wrapping_add((x as usize).wrapping_mul(0x50)) } else { 0 };
             if c != 0 {
                 let mut t = [0u8; 8];
-                let m = cpr10_mais(0xae2c90, 0xb4, &mut t);
+                let m = injury_date_add_days(0xae2c90, 0xb4, &mut t);
                 let (ma, ca) = (cpr10_u(m + 2), cpr10_u(c + 0x2f));
                 if ma > ca || (ma == ca && cpr10_w(m) > cpr10_w(c + 0x2d)) {
-                    cpr10_hoje_mais(data, (sortear(4) + 4) as u32);
+                    set_today_plus_days(data, (sortear(4) + 4) as u32);
                 }
             }
         }
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: 
     let m = menos(data, t.as_mut_ptr(), 0xe);
     let ma = cpr10_u(m + 2);
     if ta < ma || (ta == ma && td < cpr10_w(m)) {
-        cpr10_hoje_mais(data, 0xe);
+        set_today_plus_days(data, 0xe);
     }
     core::ptr::write_unaligned((this + 0x1c) as *mut u32, cpr10_d(this + 0x1c).wrapping_add(1) as u32);
 }
@@ -229,12 +229,12 @@ unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usize, clubes: 
     k
 }
 
-/// Comparador: a original (com a forma do dia) e o estado relido pela regra (cpr10_estado, sem rodar a 0x62c680 de
+/// Comparador: a original (com a forma do dia) e o estado relido pela regra (injury_status, sem rodar a 0x62c680 de
 /// novo: a original já a rodou).
 unsafe extern "thiscall" fn comparar_get_player_injury_status(this: usize, pessoa: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, pessoa);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, pessoa);
     if pessoa != 0 && (cpr10_d(pessoa) as i32) < cpr10_d(0xae2364) as i32 {
-        let n = cpr10_estado(this, pessoa);
+        let n = injury_status(this, pessoa);
         PLACAR.registrar(r == n, || format!("get_player_injury_status(pessoa {:x}) original={} rust={}", pessoa, r, n));
     }
     r
@@ -246,10 +246,10 @@ const CPR10_ESTATICAS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xa
 /// Comparador: sem a entrada (a 0x4cd6d0 acrescenta e pode realocar) só a original; com ela, lado a lado pelo sorteio,
 /// as datas estáticas, o vetor das decisões e +0x1c (a cópia sem contar).
 unsafe extern "thiscall" fn comparar_schedule_offer_decision(this: usize, id: i32, vaga: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32)>(%%I1%%);
     let mut limite = [0u8; 8];
-    cpr10_mais(0xae2c90, 0xe, &mut limite);
-    if cpr10_procurar(this, id, &limite, false) == 0 {
+    injury_date_add_days(0xae2c90, 0xe, &mut limite);
+    if find_type3_decision(this, id, &limite, false) == 0 {
         return o(this, id, vaga);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn comparar_schedule_offer_decision(this: usize, id: i3
 /// Comparador: lado a lado pelo vetor dos clubes e pela data estática da 0x54cab0, e a devolução (os registros dos
 /// técnicos que a 0x86f5b0 cria na original já existem para a cópia).
 unsafe extern "thiscall" fn comparar_get_manager_of_year_candidates(this: usize, clubes: usize, n: u32) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I2%%);
     let k = (n as u16 as i16).max(0) as usize;
     let reg = [(clubes, 4 * k), (0xae24c8, 8), (0xae24aa, 1)];
     let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, n), || get_manager_of_year_candidates(this, clubes, n));

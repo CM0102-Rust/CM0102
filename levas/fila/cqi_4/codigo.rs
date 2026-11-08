@@ -10,7 +10,7 @@ static mut CQI4_ENSAIO: bool = false;
 /// Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
 /// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
 /// resultado em +0xba. Devolve 1.
-unsafe fn cqi4_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
+unsafe fn eng_prm_apply_league_rules(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
     for &(d, t, v) in escritas {
         match t {
             1 => *((this + d) as *mut u8) = v as u8,
@@ -29,7 +29,7 @@ unsafe fn cqi4_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
 /// As regras comuns às quatro divisões (os turnos +0x3c e os pontos da vitória +0xc2 vão em cada uma): 1 ponto pelo empate (+0xc3),
 /// categoria 2 nas partidas (+0xc4, liga), clubes nacionais (+0x42 = 1), os desempates 1, 2 e 3 (+0xc5..+0xc7: saldo,
 /// gols pró e a posição [inferência pelos códigos da Inglaterra]) e +0x52 = 2 [sem nome].
-fn cqi4_comuns() -> Vec<(usize, u8, u32)> {
+fn english_common_rules() -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0x42, 1, 1), (0xc5, 1, 1), (0xc6, 1, 2), (0xc7, 1, 3), (0x52, 1, 2)]
 }
 
@@ -38,11 +38,11 @@ fn cqi4_comuns() -> Vec<(usize, u8, u32)> {
 /// nenhuma liga acima (+0x1c = −1) e a First abaixo (+0x20 = [0x9cf5c0]).
 unsafe extern "thiscall" fn eng_prm_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da premier");
-    cqi4_regras(this, &cqi4_premier())
+    eng_prm_apply_league_rules(this, &premier_rules())
 }
 
-unsafe fn cqi4_premier() -> Vec<(usize, u8, u32)> {
-    let mut v = cqi4_comuns();
+unsafe fn premier_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = english_common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Premier, 2 turnos e 3 pontos
     v.extend_from_slice(&[(0xab, 2, 0), (0xdb, 2, 0), (0xbe, 1, 0), (0xbf, 1, 0), (0xc0, 1, 0)]);
     v.push((0xc1, 1, 3)); // cqi4: a Premier rebaixa 3
@@ -56,11 +56,11 @@ unsafe fn cqi4_premier() -> Vec<(usize, u8, u32)> {
 /// (+0x49) e 3 substituições (+0x4a).
 unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da first");
-    cqi4_regras(this, &cqi4_first())
+    eng_prm_apply_league_rules(this, &eng_prm_first_division_rules())
 }
 
-unsafe fn cqi4_first() -> Vec<(usize, u8, u32)> {
-    let mut v = cqi4_comuns();
+unsafe fn eng_prm_first_division_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = english_common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a First joga 2 turnos
     v.extend_from_slice(&[(0xbe, 1, 2), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 3), (0x1c, 4, cqi4_d(0x9cf5bc) as u32), (0x4a, 1, 3), (0x20, 4, cqi4_d(0x9cf5c4) as u32), (0x49, 1, 5)]);
     v
@@ -70,11 +70,11 @@ unsafe fn cqi4_first() -> Vec<(usize, u8, u32)> {
 /// caem (+0xc1); a First acima ([0x9cf5c0]) e a Third abaixo ([0x9cf5c8]).
 unsafe extern "thiscall" fn eng_second_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da second");
-    cqi4_regras(this, &cqi4_second())
+    eng_prm_apply_league_rules(this, &eng_prm_second_division_rules())
 }
 
-unsafe fn cqi4_second() -> Vec<(usize, u8, u32)> {
-    let mut v = cqi4_comuns();
+unsafe fn eng_prm_second_division_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = english_common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Second dá 3 pontos pela vitória
     v.extend_from_slice(&[(0xbe, 1, 2), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 4), (0x1c, 4, cqi4_d(0x9cf5c0) as u32), (0x4a, 1, 3), (0x20, 4, cqi4_d(0x9cf5c8) as u32), (0x49, 1, 5)]);
     v
@@ -86,11 +86,11 @@ unsafe fn cqi4_second() -> Vec<(usize, u8, u32)> {
 /// [inferência]), senão −1; 5 reservas e 3 substituições.
 unsafe extern "thiscall" fn eng_prm_set_up_rules_5780c0(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da third");
-    cqi4_regras(this, &cqi4_third(this))
+    eng_prm_apply_league_rules(this, &third_division_rules(this))
 }
 
-unsafe fn cqi4_third(this: usize) -> Vec<(usize, u8, u32)> {
-    let mut v = cqi4_comuns();
+unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = english_common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Third, 2 turnos e 3 pontos
     v.extend_from_slice(&[(0xbe, 1, 3), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 1), (0x1c, 4, cqi4_d(0x9cf5c4) as u32)]);
     let nacao = cqi4_d(cqi4_d(this + 4) + 0x5d);
@@ -103,7 +103,7 @@ unsafe fn cqi4_third(this: usize) -> Vec<(usize, u8, u32)> {
 /// original roda inteira; a faixa +0x1c..+0xec volta como estava e a cópia grava as regras sem a virtual +0x3c; os
 /// campos que a cópia grava têm de sair iguais aos da original, e a devolução 1; no fim fica a faixa da original
 /// (com a tabela de rodadas dela em +0xba, +0xa9 e +0x3a).
-unsafe fn cqi4_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
+unsafe fn eng_prm_compare_league_rules(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let faixa = [(this + 0x1c, 0xd0)];
     let antes = crate::comparacao::Memoria::ler(&faixa);
     let r = original();
@@ -128,21 +128,21 @@ unsafe fn cqi4_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>
 }
 
 unsafe extern "thiscall" fn comparar_eng_prm_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqi4_comparar("eng_prm_set_up_rules", this, cqi4_premier(), || o(this), || eng_prm_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    eng_prm_compare_league_rules("eng_prm_set_up_rules", this, premier_rules(), || o(this), || eng_prm_set_up_rules(this))
 }
 
 unsafe extern "thiscall" fn comparar_eng_first_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqi4_comparar("eng_first_set_up_rules", this, cqi4_first(), || o(this), || eng_first_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    eng_prm_compare_league_rules("eng_first_set_up_rules", this, eng_prm_first_division_rules(), || o(this), || eng_first_set_up_rules(this))
 }
 
 unsafe extern "thiscall" fn comparar_eng_second_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqi4_comparar("eng_second_set_up_rules", this, cqi4_second(), || o(this), || eng_second_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    eng_prm_compare_league_rules("eng_second_set_up_rules", this, eng_prm_second_division_rules(), || o(this), || eng_second_set_up_rules(this))
 }
 
 unsafe extern "thiscall" fn comparar_eng_prm_set_up_rules_5780c0(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
-    cqi4_comparar("eng_prm_set_up_rules_5780c0", this, cqi4_third(this), || o(this), || eng_prm_set_up_rules_5780c0(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
+    eng_prm_compare_league_rules("eng_prm_set_up_rules_5780c0", this, third_division_rules(this), || o(this), || eng_prm_set_up_rules_5780c0(this))
 }

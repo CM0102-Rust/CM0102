@@ -9,13 +9,13 @@ unsafe fn dbs3_i16(a: usize) -> i32 {
 }
 
 /// A 0x7c1e30 das notas ([0xb74350]) do jogador (+0x61) da pessoa: `media(p, tipo, atributo)`, peso 6,5.
-unsafe fn dbs3_media(pessoa: usize, tipo: u32, atributo: u32) -> f64 {
+unsafe fn player_stat_average(pessoa: usize, tipo: u32, atributo: u32) -> f64 {
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
     media(dbs3_u32(0xb74350), dbs3_u32(pessoa + 0x61), tipo, atributo, 6.5)
 }
 
 /// O atributo calculado (0x543540) do jogador da pessoa, como byte com sinal.
-unsafe fn dbs3_atributo(pessoa: usize, atributo: u32) -> i32 {
+unsafe fn computed_player_attribute(pessoa: usize, atributo: u32) -> i32 {
     let f: unsafe extern "C" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x543540usize);
     f(pessoa, dbs3_u32(pessoa + 0x61), atributo) as i8 as i32
 }
@@ -23,8 +23,8 @@ unsafe fn dbs3_atributo(pessoa: usize, atributo: u32) -> i32 {
 /// Os bits das posições em que o jogador é natural (20), comuns às duas: goleiro (+0xf), throw_in (+0x11, com +0x19
 /// ou com +0x17/+0x18), zagueiros (+0x12/+0x13 sem +0x17/+0x18 a 15), meias (+0x14, +0x15). `bits` = os valores
 /// de cada caso na ordem; mais o da soma das dez posições (+0x10..+0x19) acima de 110.
-unsafe fn dbs3_posicoes(j: usize, bits: [u32; 7], soma: u32) -> u32 {
-    let b = |k: usize| sb(j, k);
+unsafe fn natural_position_bits(j: usize, bits: [u32; 7], soma: u32) -> u32 {
+    let b = |k: usize| signed_byte_at(j, k);
     let mut f = 0;
     if b(0xf) == 20 {
         f |= bits[0];
@@ -71,9 +71,9 @@ unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize
     }
     let fora: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8cca10usize);
     let j = || dbs3_u32(pessoa + 0x61);
-    let b = |k: usize| sb(j(), k);
-    let m = |tipo: u32, atributo: u32| dbs3_media(pessoa, tipo, atributo);
-    let mut f = dbs3_posicoes(j(), [1, 4, 2, 8, 0x10, 0x20, 0x40], 0);
+    let b = |k: usize| signed_byte_at(j(), k);
+    let m = |tipo: u32, atributo: u32| player_stat_average(pessoa, tipo, atributo);
+    let mut f = natural_position_bits(j(), [1, 4, 2, 8, 0x10, 0x20, 0x40], 0);
     let r = sortear(3);
     let id = dbs3_u32(pessoa) as u32;
     let nibble = (*(dbs3_u32(0xae2d0c).wrapping_add(id.wrapping_mul(79) as usize).wrapping_add(0xb) as *const u8) & 0xf) as i32;
@@ -87,30 +87,30 @@ unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize
         f += 0x100;
     }
     let mut ajuste = 0i32;
-    if m(2, 0x16) > f32_em(0x969570) as f64 {
-        let a = ftol(m(2, 0xd)) as i8 as i32;
+    if m(2, 0x16) > read_f32_at(0x969570) as f64 {
+        let a = match_pl_ftol(m(2, 0xd)) as i8 as i32;
         if a > 10 {
-            ajuste = ftol(a as f64 - f64_em(0x969568));
+            ajuste = match_pl_ftol(a as f64 - read_f64_at(0x969568));
         }
-        let x = (m(2, 5) * f32_em(0x969560) as f64) as f32; // fstp dword
-        ajuste = ajuste.wrapping_add(ftol(x as f64 / m(2, 1)));
+        let x = (m(2, 5) * read_f32_at(0x969560) as f64) as f32; // fstp dword
+        ajuste = ajuste.wrapping_add(match_pl_ftol(x as f64 / m(2, 1)));
     }
     if b(0x37).wrapping_add(ajuste) > sortear(50) {
         f += 0x200;
     }
     let v14 = m(2, 0xe);
     let v14f = v14 as f32; // fst dword
-    if v14 > f64_em(0x968f10) {
+    if v14 > read_f64_at(0x968f10) {
         f += 0x800000;
     }
     if b(0x39) > sortear(50) && b(0x3e) > sortear(50) {
         let mut sim = false;
-        if v14f as f64 > f64_em(0x9689a0) {
+        if v14f as f64 > read_f64_at(0x9689a0) {
             let r = sortear(10) + 5;
-            sim = ftol(v14f as f64) as i8 as i32 > r;
+            sim = match_pl_ftol(v14f as f64) as i8 as i32 > r;
         }
-        if !sim && dbs3_atributo(pessoa, 0x17) > sortear(5) + 15 {
-            let x = m(2, 7) * f64_em(0x968f50); // fstp qword
+        if !sim && computed_player_attribute(pessoa, 0x17) > sortear(5) + 15 {
+            let x = m(2, 7) * read_f64_at(0x968f50); // fstp qword
             sim = m(2, 0x16) > x;
         }
         if sim {
@@ -123,17 +123,17 @@ unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize
         }
     }
     for (a, bit) in [(4, 0x4000), (0xd, 0x20000), (0x14, 0x100000), (0x15, 0x200000), (1, 0x400000)] {
-        if dbs3_atributo(pessoa, a) > sortear(5) + 15 {
+        if computed_player_attribute(pessoa, a) > sortear(5) + 15 {
             f += bit;
         }
     }
     if b(0x21) > sortear(3) + 16 {
         f += 0x8000;
     }
-    if dbs3_atributo(pessoa, 0xb) > sortear(4) + 14 {
+    if computed_player_attribute(pessoa, 0xb) > sortear(4) + 14 {
         let x = m(2, 0xf); // fstp qword
         let r = sortear(20);
-        if !(r as f64 * f64_em(0x967880) + f64_em(0x968eb0) >= x) {
+        if !(r as f64 * read_f64_at(0x967880) + read_f64_at(0x968eb0) >= x) {
             f += 0x10000;
         }
     }
@@ -143,12 +143,12 @@ unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize
         let a = m(6, 2) as f32;
         let c = m(6, 1) as f32;
         let r = sortear(3);
-        if !((r as f64 * f64_em(0x967880) + f64_em(0x968968)) * c as f64 >= a as f64) {
+        if !((r as f64 * read_f64_at(0x967880) + read_f64_at(0x968968)) * c as f64 >= a as f64) {
             f += 0x40000;
         }
     }
-    if !(m(2, 0x15) >= f64_em(0x968930)) && m(2, 0x10) > f64_em(0x968ff8) {
-        let x = m(2, 2) * f64_em(0x968930); // fstp qword
+    if !(m(2, 0x15) >= read_f64_at(0x968930)) && m(2, 0x10) > read_f64_at(0x968ff8) {
+        let x = m(2, 2) * read_f64_at(0x968930); // fstp qword
         if m(2, 1) > x {
             f += 0x80000;
         }
@@ -175,13 +175,13 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
     let casa_de: unsafe extern "thiscall" fn(usize, u32, u32) -> u16 = core::mem::transmute(0x5b2ae0usize);
     let nota: unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32 = core::mem::transmute(0x6e6340usize);
     let j = || dbs3_u32(pessoa + 0x61);
-    let b = |k: usize| sb(j(), k);
-    let m = |tipo: u32, atributo: u32| dbs3_media(pessoa, tipo, atributo);
-    let mut f = dbs3_posicoes(j(), [0, 0x20, 0x10, 0x40, 0x80, 0x100, 0x200], 0x800000);
+    let b = |k: usize| signed_byte_at(j(), k);
+    let m = |tipo: u32, atributo: u32| player_stat_average(pessoa, tipo, atributo);
+    let mut f = natural_position_bits(j(), [0, 0x20, 0x10, 0x40, 0x80, 0x100, 0x200], 0x800000);
     if (*((pessoa + 0x5d) as *const i8) as i32) < sortear(4) + 5 && (b(0x1c) > 15 || b(0x25) < 6) {
-        let a = (m(2, 0xb) * f32_em(0x969584) as f64) as f32; // fstp dword
+        let a = (m(2, 0xb) * read_f32_at(0x969584) as f64) as f32; // fstp dword
         let s = (m(2, 0xa) + a as f64) as f32; // fstp dword
-        if !(m(2, 1) * f32_em(0x968f18) as f64 >= s as f64) {
+        if !(m(2, 1) * read_f32_at(0x968f18) as f64 >= s as f64) {
             f += 1;
         }
     }
@@ -207,13 +207,13 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
         }
     }
     let mut ajuste = 0i32;
-    if m(2, 0x16) > f32_em(0x969570) as f64 {
-        let a = ftol(m(2, 0xd)) as i8 as i32;
+    if m(2, 0x16) > read_f32_at(0x969570) as f64 {
+        let a = match_pl_ftol(m(2, 0xd)) as i8 as i32;
         if a > 10 {
             ajuste = 70 - a;
         }
-        let x = (m(2, 5) * f32_em(0x969580) as f64) as f32; // fstp dword
-        ajuste = ajuste.wrapping_add(ftol(x as f64 / m(2, 1)));
+        let x = (m(2, 5) * read_f32_at(0x969580) as f64) as f32; // fstp dword
+        ajuste = ajuste.wrapping_add(match_pl_ftol(x as f64 / m(2, 1)));
     }
     if b(0x37) < sortear(-50).wrapping_add(ajuste) {
         f += 0x400;
@@ -221,9 +221,9 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
     if b(0x39) < sortear(-50) && b(0x3e) < sortear(-50) {
         let v = m(2, 0xe);
         let vf = v as f32; // fst dword
-        if v > f64_em(0x9689a0) {
+        if v > read_f64_at(0x9689a0) {
             let r = sortear(10);
-            if (ftol(vf as f64) as i8 as i32) < r {
+            if (match_pl_ftol(vf as f64) as i8 as i32) < r {
                 f += 0x800;
             }
         }
@@ -255,30 +255,30 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
     if b(0x21) < 12 - sortear(10) {
         f += 0x20000;
     }
-    if b(0x11) < 15 && dbs3_atributo(pessoa, 0xb) > sortear(4) + 14 {
+    if b(0x11) < 15 && computed_player_attribute(pessoa, 0xb) > sortear(4) + 14 {
         let v = m(2, 0xf);
         let vf = v as f32; // fst dword
-        if v > f64_em(0x9689a0) && dbs3_atributo(pessoa, 0xb) as f64 * f64_em(0x969578) > vf as f64 {
+        if v > read_f64_at(0x9689a0) && computed_player_attribute(pessoa, 0xb) as f64 * read_f64_at(0x969578) > vf as f64 {
             f += 0x40000;
         }
     }
     if b(0x28) > sortear(5) + 13 {
         f += 0x80000;
     }
-    if m(2, 0x16) > f32_em(0x969570) as f64 {
-        let a = dbs3_atributo(pessoa, 0xc);
-        let t = (m(2, 0x10) + a as f64 - f32_em(0x968a78) as f64) as f32; // fstp dword
+    if m(2, 0x16) > read_f32_at(0x969570) as f64 {
+        let a = computed_player_attribute(pessoa, 0xc);
+        let t = (m(2, 0x10) + a as f64 - read_f32_at(0x968a78) as f64) as f32; // fstp dword
         if (sortear(20) + 20) as f64 > t as f64 {
             let x = m(6, 2); // fstp qword
-            if m(6, 1) * f64_em(0x969510) > x {
+            if m(6, 1) * read_f64_at(0x969510) > x {
                 f += 0x100000;
             }
         }
     }
-    if !(m(2, 0x15) >= f64_em(0x968930)) && m(2, 0x10) > f64_em(0x968ff8) {
+    if !(m(2, 0x15) >= read_f64_at(0x968930)) && m(2, 0x10) > read_f64_at(0x968ff8) {
         f += 0x200000;
     }
-    if dbs3_atributo(pessoa, 0x14) < 7 || dbs3_atributo(pessoa, 0x14) < dbs3_i16(j() + 5) / 15 {
+    if computed_player_attribute(pessoa, 0x14) < 7 || computed_player_attribute(pessoa, 0x14) < dbs3_i16(j() + 5) / 15 {
         f += 0x400000;
     }
     f
@@ -288,7 +288,7 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
 /// jogador e guarda: com essa memória fria a original sorteia a mais e a cópia, que roda depois, não, e os sorteios
 /// seguintes saem diferentes. Então, divergindo, refaz uma vez a comparação a partir do mesmo estado (agora quente, a
 /// original sem contar) e devolve o estado do sorteio da primeira, a que o jogo segue.
-unsafe fn dbs3_comparar(o: impl Fn() -> u32, n: impl Fn() -> u32) -> (u32, u32, bool, String) {
+unsafe fn compare_with_rng_retry(o: impl Fn() -> u32, n: impl Fn() -> u32) -> (u32, u32, bool, String) {
     let antes = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, x, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(),
         || crate::aleatorio::sem_contar(|| n()));
@@ -304,15 +304,15 @@ unsafe fn dbs3_comparar(o: impl Fn() -> u32, n: impl Fn() -> u32) -> (u32, u32, 
 }
 
 unsafe extern "C" fn comparar_staff_get_player_strength_flags(pessoa: usize, outro: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
-    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, outro), || staff_get_player_strength_flags(pessoa, outro));
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
+    let (r, _, igual, d) = compare_with_rng_retry(|| o(pessoa, outro), || staff_get_player_strength_flags(pessoa, outro));
     PLACAR.registrar(igual, || format!("staff_get_player_strength_flags({:x}, {:x}) {}", pessoa, outro, d));
     r
 }
 
 unsafe extern "C" fn comparar_staff_get_player_weakness_flags(pessoa: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
-    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, clube), || staff_get_player_weakness_flags(pessoa, clube));
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
+    let (r, _, igual, d) = compare_with_rng_retry(|| o(pessoa, clube), || staff_get_player_weakness_flags(pessoa, clube));
     PLACAR.registrar(igual, || format!("staff_get_player_weakness_flags({:x}, {:x}) {}", pessoa, clube, d));
     r
 }

@@ -13,7 +13,7 @@ unsafe extern "thiscall" fn person_in_list(t: usize, p: *const i32) -> u8 {
         let e = proximo(lista);
         if e == 0 {
             core::ptr::write_unaligned((lista + 0xa) as *mut u32, guardado);
-            return orig::<unsafe extern "thiscall" fn(usize, *const i32) -> u8>(%%I0%%)(t, p);
+            return original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u8>(%%I0%%)(t, p);
         }
         if core::ptr::read_unaligned((e + 6) as *const i32) == *p {
             core::ptr::write_unaligned((lista + 0xa) as *mut u32, guardado);
@@ -78,7 +78,7 @@ comparar_valor!(comparar_person_in_list, person_in_list, %%I0%%, (p: *const i32)
 comparar_valor!(comparar_contract_record, contract_record, %%I1%%, (p: *const i32) -> usize);
 
 unsafe extern "thiscall" fn comparar_daily_wear(t: usize, id: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if id < *(0xae2364 as *const i32) {
         reg.push(((*(t as *const usize)).wrapping_add((id as usize).wrapping_mul(31)).wrapping_add(0xc), 2));

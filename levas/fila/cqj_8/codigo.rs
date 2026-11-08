@@ -13,7 +13,7 @@ unsafe fn cqj8_d(o: usize, d: usize, v: u32) {
 }
 
 /// As regras da NSL (o que a 0x411ce0 grava antes do calendário).
-unsafe fn cqj8_regras_nsl(o: usize) {
+unsafe fn set_nsl_rules(o: usize) {
     cqj8_w(o, 0xab, 0);
     cqj8_b(o, 0xc8, 0);
     cqj8_b(o, 0xbf, 0);
@@ -37,7 +37,7 @@ unsafe fn cqj8_regras_nsl(o: usize) {
 }
 
 /// As regras da MLS (0x908660; sem calendário: os jogos da MLS são montados à mão pela 0x9086e0).
-unsafe fn cqj8_regras_mls(o: usize) {
+unsafe fn set_mls_rules(o: usize) {
     cqj8_b(o, 0xc4, 2);
     cqj8_b(o, 0xc6, 2);
     cqj8_b(o, 0xc2, 3);
@@ -62,7 +62,7 @@ unsafe fn cqj8_regras_mls(o: usize) {
 /// principal pelo slot 16 (`create_schedule` 0x4111a0, thiscall, ret 0x10: estágio -1, as saídas +0xa9 e +0x3a, sem
 /// a marca; o ponteiro vai para +0xba); devolve 1.
 unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 {
-    cqj8_regras_nsl(this);
+    set_nsl_rules(this);
     crate::comparacao::ramo("cqj_8 regras da nsl");
     let vt = *(this as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
@@ -77,8 +77,8 @@ unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_aus_nsl_set_up_rules(this: usize) -> u32 {
     let o = this;
     let reg = [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this), || {
-        cqj8_regras_nsl(this);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this), || {
+        set_nsl_rules(this);
         1
     });
     PLACAR.registrar(igual && r == n, || format!("aus_nsl_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
@@ -88,21 +88,21 @@ unsafe extern "thiscall" fn comparar_aus_nsl_set_up_rules(this: usize) -> u32 {
 /// { 0x908660 } (thiscall, usa_mls.cpp): `UsaMls::set_up_rules`, as regras da MLS; devolve 1 (o eax que ela usa como
 /// valor).
 unsafe extern "thiscall" fn usa_mls_set_up_rules(this: usize) -> u32 {
-    cqj8_regras_mls(this);
+    set_mls_rules(this);
     crate::comparacao::ramo("cqj_8 regras da mls");
     1
 }
 
 /// Comparador: lado a lado sobre o objeto da liga (0xee; só grava nele); a devolução.
 unsafe extern "thiscall" fn comparar_usa_mls_set_up_rules(this: usize) -> u32 {
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xee)], || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), || usa_mls_set_up_rules(this));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xee)], || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), || usa_mls_set_up_rules(this));
     PLACAR.registrar(igual && r == n, || format!("usa_mls_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// O histórico do primeiro estágio: o slot 13 (+0x30, `record_season_honours`, thiscall sem argumentos) do estágio
 /// [[this+0xc]].
-unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
+unsafe fn record_first_stage_honours(this: usize) -> u32 {
     let e = *(*((this + 0xc) as *const usize) as *const usize);
     let vt = *(e as *const usize);
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(*((vt + 0x30) as *const usize));
@@ -114,7 +114,7 @@ unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
 /// e, em salto final, a 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze
 /// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
 unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
-    cqj8_historico_do_estagio(this); // cqj8: o histórico do estadual
+    record_first_stage_honours(this); // cqj8: o histórico do estadual
     crate::comparacao::ramo("cqj_8 historico do estadual");
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x42bba0usize);
     campeoes()
@@ -124,17 +124,17 @@ unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this: usize) ->
 /// pode rodar duas vezes). A cópia roda no modo Rust (contador "cqj_8 historico do estadual") e é provada pelas
 /// mutações e pelas duas carreiras Rust.
 unsafe extern "thiscall" fn comparar_bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
 }
 
 /// { 0x408eb0 } (thiscall, arg_second.cpp): `ArgSecond::record_season_honours` (slot 13 da segunda divisão argentina e
 /// das Séries A e B): só o histórico do primeiro estágio, em salto final; devolve o eax dele.
 unsafe extern "thiscall" fn aus_nsl_record_season_honours(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_8 historico do primeiro estagio");
-    cqj8_historico_do_estagio(this)
+    record_first_stage_honours(this)
 }
 
 /// Comparador: só a original (ponytail: grava o histórico e aloca o registro; não pode rodar duas vezes).
 unsafe extern "thiscall" fn comparar_aus_nsl_record_season_honours(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%)(this)
 }

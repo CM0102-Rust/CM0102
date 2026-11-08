@@ -2,7 +2,7 @@
 
 /// A entrada (12 bytes) da caixa de notícias do técnico humano: [noticias+8] + 12 × (id − [0xae2364] +
 /// 0x10); None quando o índice fica negativo (a original abre a caixa de erro).
-unsafe fn entrada_da_caixa_do_tecnico(noticias: usize, tecnico: usize) -> Option<usize> {
+unsafe fn manager_inbox_entry(noticias: usize, tecnico: usize) -> Option<usize> {
     let i = (*(tecnico as *const i32)).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
     if i < 0 {
         return None;
@@ -11,7 +11,7 @@ unsafe fn entrada_da_caixa_do_tecnico(noticias: usize, tecnico: usize) -> Option
 }
 
 /// A notícia `k` da caixa que começa em `inicio`: [noticias] + 0xdf × (inicio + k).
-unsafe fn noticia_da_caixa(noticias: usize, inicio: i32, k: i32) -> usize {
+unsafe fn inbox_news_item(noticias: usize, inicio: i32, k: i32) -> usize {
     (*(noticias as *const usize)).wrapping_add((inicio.wrapping_add(k) as usize).wrapping_mul(0xdf))
 }
 
@@ -20,9 +20,9 @@ unsafe fn noticia_da_caixa(noticias: usize, inicio: i32, k: i32) -> usize {
 /// +0; −1 = vazia, 0), as ocupadas (+0xd6) da categoria (0x785670) ainda não lidas (+0xda = 0). Técnico
 /// nulo ou fora da faixa: a original (caixa de erro).
 unsafe extern "thiscall" fn count_unread(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
-    let entrada = match if tecnico == 0 { None } else { entrada_da_caixa_do_tecnico(noticias, tecnico) } {
+    let entrada = match if tecnico == 0 { None } else { manager_inbox_entry(noticias, tecnico) } {
         Some(e) => e,
-        None => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%)(noticias, tecnico, categoria),
+        None => return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%)(noticias, tecnico, categoria),
     };
     let total = (entrada + 8) as *mut i32;
     if *total < 0 {
@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn count_unread(noticias: usize, tecnico: usize, catego
     let categoria_de: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x785670usize);
     let mut conta = 0;
     for k in 0..100 {
-        let n = noticia_da_caixa(noticias, inicio, k);
+        let n = inbox_news_item(noticias, inicio, k);
         if core::ptr::read_unaligned((n + 0xd6) as *const u32) != 0
             && categoria_de(n) as u8 == categoria as u8
             && core::ptr::read_unaligned((n + 0xda) as *const u32) == 0
@@ -52,20 +52,20 @@ unsafe extern "thiscall" fn count_unread(noticias: usize, tecnico: usize, catego
 /// Onde a 0x786d30 grava: Err nos casos da caixa de erro (técnico nulo, id 0, vaga fora de 0..49, cópia
 /// de outro id, índice negativo, id fora das 100 da caixa); Ok(None) com a caixa vazia (início −1);
 /// Ok(Some(notícia)) achada.
-unsafe fn alvo_da_marca(noticias: usize, tecnico: usize, id: u32, vaga: i32, copia: usize) -> Result<Option<usize>, ()> {
+unsafe fn set_slot_target(noticias: usize, tecnico: usize, id: u32, vaga: i32, copia: usize) -> Result<Option<usize>, ()> {
     if tecnico == 0 || id == 0 || !(0..0x32).contains(&vaga) {
         return Err(());
     }
     if copia != 0 && core::ptr::read_unaligned((copia + 0xd6) as *const u32) != id {
         return Err(());
     }
-    let entrada = entrada_da_caixa_do_tecnico(noticias, tecnico).ok_or(())?;
+    let entrada = manager_inbox_entry(noticias, tecnico).ok_or(())?;
     let inicio = *(entrada as *const i32);
     if inicio == -1 {
         return Ok(None);
     }
     (0..100)
-        .map(|k| noticia_da_caixa(noticias, inicio, k))
+        .map(|k| inbox_news_item(noticias, inicio, k))
         .find(|&n| core::ptr::read_unaligned((n + 0xd6) as *const u32) == id)
         .map(Some)
         .ok_or(())
@@ -75,9 +75,9 @@ unsafe fn alvo_da_marca(noticias: usize, tecnico: usize, id: u32, vaga: i32, cop
 /// notícia `id` (+0xd6) da caixa do técnico humano, primeiro na `copia` (se houver) e depois na da caixa;
 /// 1 se achou. Caixa vazia: só a cópia, 0. Casos de erro: a original.
 unsafe extern "thiscall" fn set_item_slot(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
-    let alvo = match alvo_da_marca(noticias, tecnico, id, vaga, copia) {
+    let alvo = match set_slot_target(noticias, tecnico, id, vaga, copia) {
         Ok(a) => a,
-        Err(()) => return orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(%%I1%%)(noticias, tecnico, id, vaga, valor, copia),
+        Err(()) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(%%I1%%)(noticias, tecnico, id, vaga, valor, copia),
     };
     if copia != 0 {
         core::ptr::write_unaligned((copia + 5 + 4 * vaga as usize) as *mut u32, valor);
@@ -111,8 +111,8 @@ unsafe extern "stdcall" fn news_club_has_human_manager(clube: usize) -> u32 {
 }
 
 unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%);
-    let entrada = if tecnico == 0 { None } else { entrada_da_caixa_do_tecnico(noticias, tecnico) };
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%);
+    let entrada = if tecnico == 0 { None } else { manager_inbox_entry(noticias, tecnico) };
     let Some(entrada) = entrada else {
         return o(noticias, tecnico, categoria);
     };
@@ -123,8 +123,8 @@ unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, tecnico: usiz
 }
 
 unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(%%I1%%);
-    let Ok(alvo) = alvo_da_marca(noticias, tecnico, id, vaga, copia) else {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(%%I1%%);
+    let Ok(alvo) = set_slot_target(noticias, tecnico, id, vaga, copia) else {
         return o(noticias, tecnico, id, vaga, valor, copia);
     };
     let mut regioes = vec![];
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, tecnico: usi
 
 unsafe extern "stdcall" fn comparar_news_club_has_human_manager(clube: usize) -> u32 {
     // só consultas: as duas rodam de novo sem efeito
-    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
     let n = news_club_has_human_manager(clube);
     PLACAR.registrar(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));
     r

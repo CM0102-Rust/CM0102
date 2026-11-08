@@ -17,7 +17,7 @@ type Cpo7Gravar = unsafe extern "thiscall" fn(usize, i8, u32) -> u32;
 
 /// Os dados da pessoa a partir de `k`: id e as três chaves +0x33 de +4, +8 e +0xc (a de +0xc pode faltar: −1, só
 /// quando `opcional`).
-unsafe fn cpo7_dados(gravar: Cpo7Gravar, n: usize, k: i8, p: usize, opcional: bool) {
+unsafe fn set_person_slots_optional(gravar: Cpo7Gravar, n: usize, k: i8, p: usize, opcional: bool) {
     gravar(n, k, cpo7_d(p) as u32);
     gravar(n, k + 1, cpo7_d(cpo7_d(p + 4) + 0x33) as u32);
     gravar(n, k + 2, cpo7_d(cpo7_d(p + 8) + 0x33) as u32);
@@ -26,12 +26,12 @@ unsafe fn cpo7_dados(gravar: Cpo7Gravar, n: usize, k: i8, p: usize, opcional: bo
 }
 
 /// A dupla de transmutes comum: construir a notícia (0x77bbe0) e gravar um dado (0x785790).
-unsafe fn cpo7_noticia() -> (unsafe extern "thiscall" fn(usize, u32, u32) -> usize, Cpo7Gravar) {
+unsafe fn news_item_fns() -> (unsafe extern "thiscall" fn(usize, u32, u32) -> usize, Cpo7Gravar) {
     (core::mem::transmute(0x77bbe0usize), core::mem::transmute(0x785790usize))
 }
 
 /// Os dias desde a chegada da pessoa (+0x3e/+0x42) até hoje (0x54cdb0 em 0xae2c90).
-unsafe fn cpo7_dias(p: usize) -> i32 {
+unsafe fn days_since_arrival(p: usize) -> i32 {
     let dias_ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
     dias_ate(0xae2c90, cpo7_d(p + 0x3e) as u32, cpo7_d(p + 0x42) as u32)
 }
@@ -58,14 +58,14 @@ unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, jogador: us
         return;
     }
     crate::comparacao::ramo("cpo_7 gratidao");
-    let (construir, gravar) = cpo7_noticia();
+    let (construir, gravar) = news_item_fns();
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let lesionado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x62ed70usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbda, 0);
-    cpo7_dados(gravar, n, 0, jogador, true);
+    set_person_slots_optional(gravar, n, 0, jogador, true);
     gravar(n, 4, cpo7_d(clube) as u32);
     // a lista da mídia (this +0, conta em +8)
     let mut in_list = false;
@@ -118,11 +118,11 @@ unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, jogador: us
     };
     gravar(n, 7, v as u32);
     let tecnico = cpo7_d(clube + 0xcf);
-    cpo7_dados(gravar, n, 8, tecnico, false);
+    set_person_slots_optional(gravar, n, 8, tecnico, false);
     gravar(n, 0xc, 0x420e9);
     let auxiliar = cpo7_d(clube + 0xd3);
     if auxiliar != 0 {
-        cpo7_dados(gravar, n, 0xd, auxiliar, false);
+        set_person_slots_optional(gravar, n, 0xd, auxiliar, false);
     } else {
         gravar(n, 0xd, u32::MAX);
     }
@@ -144,27 +144,27 @@ unsafe extern "thiscall" fn post_player_backing_request_news(_this: usize, jogad
         return;
     }
     crate::comparacao::ramo("cpo_7 pedido de apoio");
-    let (construir, gravar) = cpo7_noticia();
+    let (construir, gravar) = news_item_fns();
     let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544520usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbcf, 0);
-    cpo7_dados(gravar, n, 0, jogador, true);
+    set_person_slots_optional(gravar, n, 0, jogador, true);
     gravar(n, 4, cpo7_d(clube) as u32);
     let t = tipo as u8;
     let alvo = t == 0x20 || t == 1 || t == 0x1e;
     let (a, b): (i32, i32) = if cpo7_w(cpo7_d(jogador + 0x61) + 0xb) > 0x109a {
         if cpo7_c(jogador + 0x57) > 0xf && cpo7_c(jogador + 0x5d) < 6 {
             (1, 1)
-        } else if alvo && cpo7_c(jogador + 0x59) > 0xf && cpo7_c(jogador + 0x5b) > 0xa && cpo7_dias(jogador) > 0xd2 {
+        } else if alvo && cpo7_c(jogador + 0x59) > 0xf && cpo7_c(jogador + 0x5b) > 0xa && days_since_arrival(jogador) > 0xd2 {
             (1, 3)
         } else {
             (1, 2)
         }
     } else if cpo7_c(jogador + 0x5b) < 0xa && cpo7_c(jogador + 0x59) < 6 {
         (2, 1)
-    } else if alvo && cpo7_c(jogador + 0x59) > 0xf && cpo7_c(jogador + 0x5b) > 0xa && cpo7_dias(jogador) > 0xd2 {
+    } else if alvo && cpo7_c(jogador + 0x59) > 0xf && cpo7_c(jogador + 0x5b) > 0xa && days_since_arrival(jogador) > 0xd2 {
         (2, 3)
     } else {
         (2, 2)
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this: usize, jo
         return;
     }
     crate::comparacao::ramo("cpo_7 reacao a critica");
-    let (construir, gravar) = cpo7_noticia();
+    let (construir, gravar) = news_item_fns();
     let categoria: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x4ca470usize);
     let clubes_interessados: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1da0usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this: usize, jo
         && cpo7_c(jogador + 0x5d) > 0xa
         && cpo7_c(jogador + 0x59) < 0xf
         && cpo7_c(jogador + 0x18) > 0x17;
-    cpo7_dados(gravar, n, 0, jogador, true);
+    set_person_slots_optional(gravar, n, 0, jogador, true);
     gravar(n, 4, cpo7_d(clube) as u32);
     let r = resposta as u8;
     let rep = cpo7_w(cpo7_d(jogador + 0x61) + 0xb);
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this: usize, jo
         if cat_ok && cpo7_c(jogador + 0x18) > 0x16 {
             if cpo7_c(jogador + 0x59) < 0xa && cpo7_c(jogador + 0x57) > 0xf && cpo7_c(jogador + 0x5d) < 6 {
                 reacao = if marca && r == 2 { 3 } else { 1 };
-            } else if cpo7_dias(jogador) > 0x3e8 && cpo7_c(jogador + 0x59) > 0xf && cpo7_d(contrato + 0x45) & 0x181 == 0 {
+            } else if days_since_arrival(jogador) > 0x3e8 && cpo7_c(jogador + 0x59) > 0xf && cpo7_d(contrato + 0x45) & 0x181 == 0 {
                 reacao = if marca && r == 2 { 4 } else { 2 };
             }
         }
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this: usize, jo
     let linha = cpo7_d(cpo7_d(0xb67a44)).wrapping_add((cpo7_d(clube)).wrapping_mul(0x49));
     gravar(n, 7, (cpo7_w(linha + 6) < 0xfa0) as u32); // confiança da diretoria abaixo de 4000
     gravar(n, 8, topico);
-    cpo7_dados(gravar, n, 9, cpo7_d(clube + 0xcf), false);
+    set_person_slots_optional(gravar, n, 9, cpo7_d(clube + 0xcf), false);
     let mut clubes = [0usize; 0x1e];
     let tm = cpo7_d(0xde1f54);
     let k = if tm != 0 { clubes_interessados(tm, jogador, 0x21a, clubes.as_mut_ptr(), 0x1e) as i8 } else { 0 };
@@ -240,15 +240,15 @@ unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this: usize, jo
 /// Comparador: a gratidão sorteia, sobe +0x44 da ficha e entrega a notícia: só a original (a prova é a carreira e o
 /// modo Rust).
 unsafe extern "thiscall" fn comparar_queue_player_gratitude_news(this: usize, jogador: usize, clube: usize, tipo: u32, variante: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I0%%)(this, jogador, clube, tipo, variante)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I0%%)(this, jogador, clube, tipo, variante)
 }
 
 /// Comparador: a notícia vai à caixa do técnico (não pode rodar duas vezes): só a original.
 unsafe extern "thiscall" fn comparar_post_player_backing_request_news(this: usize, jogador: usize, clube: usize, tipo: u32, quarto: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%)(this, jogador, clube, tipo, quarto)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%)(this, jogador, clube, tipo, quarto)
 }
 
 /// Comparador: a notícia vai às caixas dos técnicos (não pode rodar duas vezes): só a original.
 unsafe extern "thiscall" fn comparar_post_player_criticism_reaction_news(this: usize, jogador: usize, clube: usize, topico: u32, resposta: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, jogador, clube, topico, resposta)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, jogador, clube, topico, resposta)
 }

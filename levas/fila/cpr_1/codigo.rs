@@ -9,7 +9,7 @@ unsafe fn cpr1_b(a: usize) -> u8 {
 }
 
 /// Os 42 bytes da tabela de restrições com 0xff (o `rep stosd` de 10 duplas e o `stosw` da original).
-unsafe fn cpr1_limpar(t: *mut u8) {
+unsafe fn clear_restriction_table(t: *mut u8) {
     core::ptr::write_bytes(t, 0xff, 42);
 }
 
@@ -19,7 +19,7 @@ unsafe fn cpr1_limpar(t: *mut u8) {
 /// (+0x12) enche a tabela (virtual +0x1c com a partida e `t`). Com `so_a_principal`, fica só o primeiro limite que
 /// existe: +5 ou +3 (gravado em +5), +2 ou +0 (gravado em +2), ou +0x16 com +0x17; o resto volta a 0xff.
 unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, partida: usize, t: *mut u8, so_a_principal: u32) {
-    cpr1_limpar(t);
+    clear_restriction_table(t);
     if partida == 0 {
         return;
     }
@@ -50,18 +50,18 @@ unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, partida: usize,
     let v = if *t.add(5) != 0xff { *t.add(5) } else { *t.add(3) };
     if v != 0xff {
         crate::comparacao::ramo("cpr_1 limite de nao comunitarios");
-        cpr1_limpar(t);
+        clear_restriction_table(t);
         *t.add(5) = v; // o limite de não comunitários
         return;
     }
     let v = if *t.add(2) != 0xff { *t.add(2) } else { *t };
     if v != 0xff {
-        cpr1_limpar(t);
+        clear_restriction_table(t);
         *t.add(2) = v;
         return;
     }
     let (idade, n) = (*t.add(0x16), *t.add(0x17));
-    cpr1_limpar(t);
+    clear_restriction_table(t);
     if idade != 0xff {
         *t.add(0x16) = idade;
         *t.add(0x17) = n;
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn player_needs_work_permit(this: usize, jogador: usize
         return 0;
     }
     if jogador == 0 {
-        aviso_em(0xa8d514, 0x1c23);
+        show_error_at(0xa8d514, 0x1c23);
         return 0;
     }
     if cpr1_b(cpr1_d(clube + 0x53) + 0x76) != 0xe {
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn player_needs_work_permit(this: usize, jogador: usize
 
 /// Comparador: lado a lado pelos 42 bytes da tabela (o alcance e a virtual das regras só escrevem nela).
 unsafe extern "thiscall" fn comparar_fill_squad_restrictions(this: usize, partida: usize, t: *mut u8, so_a_principal: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(t as usize, 42)], || o(this, partida, t, so_a_principal), || fill_squad_restrictions(this, partida, t, so_a_principal));
     PLACAR.registrar(igual, || format!("fill_squad_restrictions({:x}, {}) {:x?} x {:x?}", partida, so_a_principal, mo, mr));
 }
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn comparar_fill_squad_restrictions(this: usize, partid
 /// Comparador: lado a lado pela saída (6 bytes) e pelo aviso (0x100 bytes, com `msg`), e pela devolução. A 0x8968f0 pode
 /// pôr −1 numa vaga sem pessoa válida: a original já deixou assim e a cópia acha a mesma vaga vazia.
 unsafe extern "thiscall" fn comparar_transfer_manager_check_matchday_squad_limit(this: usize, clube: usize, partida: usize, msg: usize, jogadores: usize, nao_usado: u32, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize) -> u32>(%%I1%%);
     let mut regioes = [(0usize, 0usize); 2];
     let mut n = 0;
     if saida != 0 {
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_check_matchday_squad_limit
 
 /// Comparador: pelo valor (só lê). Jogador nulo com clube de nação: a caixa, só a original.
 unsafe extern "thiscall" fn comparar_player_needs_work_permit(this: usize, jogador: usize, clube: usize, ignorar_a_dada: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if jogador == 0 {
         return o(this, jogador, clube, ignorar_a_dada);
     }

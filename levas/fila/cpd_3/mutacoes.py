@@ -4,7 +4,7 @@
 # ESCAPAR se nenhuma nacao tiver a seguinte esperando. A do substituto inverte o filtro das posicoes (140 chamadas):
 # outro jogador e convocado (pessoas na impressao do banco), deve acusar.
 MUTACOES = [
-    ('cpd_atual_aviso', '        cpd3_avisar_tecnicos(nacao); // o aviso da competição seguinte', '        // mutacao: sem o aviso da competicao seguinte'),
-    ('cpd_continente_aviso', '                cpd3_avisar_tecnicos(nacao); // o aviso do continente', '                // mutacao: sem o aviso do continente'),
+    ('cpd_atual_aviso', '        notify_manager_manager(nacao); // o aviso da competição seguinte', '        // mutacao: sem o aviso da competicao seguinte'),
+    ('cpd_continente_aviso', '                notify_manager_manager(nacao); // o aviso do continente', '                // mutacao: sem o aviso do continente'),
     ('cpd_substituto_posicao', 'as u8 & mascara & 0x7f == 0 { // as posições de quem sai', 'as u8 & mascara & 0x7f != 0 { // mutacao: as outras posicoes'),
 ]

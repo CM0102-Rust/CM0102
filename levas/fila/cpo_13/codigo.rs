@@ -10,7 +10,7 @@ unsafe fn cpo13_por(a: usize, v: u32) {
 
 /// A competição (id) é uma das fases finais grandes ([0x9cf79c], [0x9cf7a0], [0x9cf7a4], [0x9cf7a8], [0x9cf7ac],
 /// [0x9cf790], [0x9cf8a0], [0x9cf78c], [0x9cf964])?
-unsafe fn cpo13_final(id: u32) -> bool {
+unsafe fn is_major_finals(id: u32) -> bool {
     [0x9cf79c, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964usize]
         .iter()
         .any(|&g| cpo13_d(g) as u32 == id)
@@ -29,7 +29,7 @@ struct Cpo13Atual {
 /// O plano da 0x775220 (só lê): com competição atual (≠ −1) que é fase final grande, a nova vai para a fila e a atual
 /// fica (sem aviso); senão, se a nova é fase final grande e há atual, a atual vai para a fila; a nova vira a atual e o
 /// gerenciador dos técnicos ([0xb67a44], se existe) é avisado.
-unsafe fn cpo13_plano_atual(this: usize, nacao: usize, comp: usize) -> Cpo13Atual {
+unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -> Cpo13Atual {
     let id = cpo13_d(nacao);
     let vaga = cpo13_d(this + 4).wrapping_add(id.wrapping_mul(110)) + 4;
     let fila = cpo13_d(this + 8).wrapping_add(id.wrapping_mul(4));
@@ -38,10 +38,10 @@ unsafe fn cpo13_plano_atual(this: usize, nacao: usize, comp: usize) -> Cpo13Atua
     let mut p = Cpo13Atual { vaga, nova: Some(nova), fila, na_fila: None, avisa: cpo13_d(0xb67a44) != 0 };
     if atual != 0xffff_ffff {
         let r = cpo13_d(0xae23d0).wrapping_add((atual as usize).wrapping_mul(107)); // registros de 107 bytes
-        if r != 0 && cpo13_final(cpo13_d(r) as u32) {
+        if r != 0 && is_major_finals(cpo13_d(r) as u32) {
             return Cpo13Atual { vaga, nova: None, fila, na_fila: Some(nova), avisa: false };
         }
-        if cpo13_final(nova) {
+        if is_major_finals(nova) {
             p.na_fila = Some(atual);
         }
     }
@@ -49,15 +49,15 @@ unsafe fn cpo13_plano_atual(this: usize, nacao: usize, comp: usize) -> Cpo13Atua
 }
 
 /// { 0x775220 } (thiscall, ret 8, national_teams.cpp): `NationalTeams::set_current_competition(nacao, comp)`: a
-/// competição atual da nação vira `comp` (plano em `cpo13_plano_atual`: a fase final grande em curso fica na frente e a
+/// competição atual da nação vira `comp` (plano em `current_comp_plan`: a fase final grande em curso fica na frente e a
 /// outra vai para a fila) e o gerenciador dos técnicos é avisado (0x6a3770 com o clube da seleção principal, 0x53b3d0,
 /// e 1). Nação ou competição nula: a caixa "Error" (e volta).
 unsafe extern "thiscall" fn set_current_competition(this: usize, nacao: usize, comp: usize) {
     if nacao == 0 || comp == 0 {
-        aviso_em(0xa5b2a4, 0x1bb2);
+        show_error_at(0xa5b2a4, 0x1bb2);
         return;
     }
-    let p = cpo13_plano_atual(this, nacao, comp);
+    let p = current_comp_plan(this, nacao, comp);
     if let Some(f) = p.na_fila {
         cpo13_por(p.fila, f);
     }
@@ -78,11 +78,11 @@ unsafe extern "thiscall" fn set_current_competition(this: usize, nacao: usize, c
 /// Comparador: a 0x6a3770 (o aviso) não pode rodar duas vezes: o plano antes, a original roda; confere a competição
 /// atual e a da fila. Nação ou competição nula: só a original (caixa).
 unsafe extern "thiscall" fn comparar_set_current_competition(this: usize, nacao: usize, comp: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if nacao == 0 || comp == 0 {
         return o(this, nacao, comp);
     }
-    let p = cpo13_plano_atual(this, nacao, comp);
+    let p = current_comp_plan(this, nacao, comp);
     let (atual, fila) = (cpo13_d(p.vaga) as u32, cpo13_d(p.fila) as u32);
     o(this, nacao, comp);
     let (atual2, fila2) = (cpo13_d(p.vaga) as u32, cpo13_d(p.fila) as u32);
@@ -92,14 +92,14 @@ unsafe extern "thiscall" fn comparar_set_current_competition(this: usize, nacao:
 }
 
 /// Marca o clube `c` (se existe e o id < n) com o código na tabela [this+0x24].
-unsafe fn cpo13_marcar(this: usize, c: usize, n: i32, codigo: u8) {
+unsafe fn mark_club_code(this: usize, c: usize, n: i32, codigo: u8) {
     if c != 0 && (cpo13_d(c) as i32) < n {
         *(cpo13_d(this + 0x24).wrapping_add(cpo13_d(c)) as *mut u8) = codigo;
     }
 }
 
 /// O clube tem nação marcada (+0x53, +0x11c ≠ 0)?
-unsafe fn cpo13_nacao_marcada(c: usize) -> bool {
+unsafe fn has_flagged_nation(c: usize) -> bool {
     let n = cpo13_d(c + 0x53);
     n != 0 && *((n + 0x11c) as *const u8) != 0
 }
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, data: usize) {
         let p = calloc(n, 1);
         cpo13_por(this + 0x24, p as u32);
         if p == 0 {
-            aviso_em(0xa5b2a4, 0x2229);
+            show_error_at(0xa5b2a4, 0x2229);
             return;
         }
     }
@@ -142,19 +142,19 @@ unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, data: usize) {
                 if amistoso(cpo13_d(0xae2c74), cpo13_d(jogo + 0x14)) == 0 {
                     let (casa, fora) = (cpo13_d(jogo + 0x1c), cpo13_d(jogo + 0x20));
                     if cpo13_d(e) == 0 {
-                        if casa != 0 && cpo13_nacao_marcada(casa) {
-                            cpo13_marcar(this, casa, n, 3);
+                        if casa != 0 && has_flagged_nation(casa) {
+                            mark_club_code(this, casa, n, 3);
                         }
-                        if fora != 0 && cpo13_nacao_marcada(fora) {
-                            cpo13_marcar(this, fora, n, 3);
+                        if fora != 0 && has_flagged_nation(fora) {
+                            mark_club_code(this, fora, n, 3);
                         }
                     } else {
                         let comp = cpo13_d(jogo + 0x14);
                         // o visitante +0x60 é lido sem conferir o ponteiro (como a original)
                         let codigo = if casa != 0 && (cpo13_d(casa + 0x57) == comp || cpo13_d(fora + 0x60) == comp) { 1 } else { 2 };
                         crate::comparacao::ramo("cpo_13 clubes com jogo");
-                        cpo13_marcar(this, casa, n, codigo); // o mandante
-                        cpo13_marcar(this, fora, n, codigo); // o visitante
+                        mark_club_code(this, casa, n, codigo); // o mandante
+                        mark_club_code(this, fora, n, codigo); // o visitante
                     }
                 }
                 jogo = proximo(lista);
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, data: usize) {
 /// Comparador: na primeira (sem tabela: calloc) só a original; depois, lado a lado na tabela (n bytes). A lista do
 /// dia e o amistoso só leem (o cursor da lista volta ao começo a cada uso).
 unsafe extern "thiscall" fn comparar_mark_clubs_with_fixtures(this: usize, data: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let n = (cpo13_d(0xae235c) as i32).wrapping_sub((cpo13_d(0xae2350) as i32).wrapping_mul(2));
     if cpo13_d(this + 0x24) == 0 || n <= 0 {
         return o(this, data);
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn comparar_discipline_remove_player(this: usize, id: u
             }
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(this, id);
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(this, id);
     let mut depois = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, depois.as_mut_ptr(), 29);
     let ok = depois[..0x1c].iter().all(|&b| b == 0xff) && depois[0x1c] == 0

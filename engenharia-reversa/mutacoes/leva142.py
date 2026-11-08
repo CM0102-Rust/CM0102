@@ -2,13 +2,13 @@
 # d_: 0x70c040 (desfecho do shot); c_: 0x70a910 (shot a gol). O codigo das duas e parecido: as ancoras
 # levam o nome da narracao ou do ramo de cada uma.
 MUTACOES = [
-    ('d_qualidade', "    let qualidade = ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 1) as f64 / f as f64);\n    let g = hold_position_one(m, lado);", "    let qualidade = ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 2) as f64 / f as f64);\n    let g = hold_position_one(m, lado);"),
-    ('d_parte', "    if parte > 0x47 {\n        desfecho_gol(", "    if parte > 0x46 {\n        desfecho_gol(", "desfecho gol"),
+    ('d_qualidade', "    let qualidade = match_pl_ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 1) as f64 / f as f64);\n    let g = hold_position_one(m, lado);", "    let qualidade = match_pl_ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 2) as f64 / f as f64);\n    let g = hold_position_one(m, lado);"),
+    ('d_parte', "    if parte > 0x47 {\n        shot_outcome_goal(", "    if parte > 0x46 {\n        shot_outcome_goal(", "desfecho gol"),
     ('d_escanteio', "        crate::comparacao::ramo(\"desfecho corner\");\n        destaque(chamar, 0x2111, 0x210f, 0x1fe6);\n        somar(g, 0x8c);", "        crate::comparacao::ramo(\"desfecho corner\");\n        destaque(chamar, 0x2111, 0x210f, 0x1fe6);\n        somar(g, 0x8d);", "desfecho corner"),
     ('d_linha', "        *bm(0x8eae) = outro;\n        *((m + 0xf582) as *mut u32) = 0;\n        narrar(chamar, 0x211b, byte(p, 0x2e) as u8 as u32, lado as u8, 0);\n        *bm(0x8eb2) = 3;", "        *bm(0x8eae) = outro;\n        *((m + 0xf582) as *mut u32) = 0;\n        narrar(chamar, 0x211b, byte(p, 0x2e) as u8 as u32, lado as u8, 0);\n        *bm(0x8eb2) = 4;", "desfecho linha de fundo"),
     ('d_gol_placar', "    let gols = bm(0xf5bd + outro as usize * 0x36);", "    let gols = bm(0xf5bd + lado as usize * 0x36);", "desfecho gol"),
     ('d_fator', "    apply_to_team(m, p, f32::from_bits(0x3fd9999a));", "    apply_to_team(m, p, f32::from_bits(0x3fd9999b));", "desfecho gol"),
-    ('c_qualidade', "    let qualidade = ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 1) as f64 / f as f64);\n    let g = hold_position_one(m, outro as i8);", "    let qualidade = ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 2) as f64 / f as f64);\n    let g = hold_position_one(m, outro as i8);"),
+    ('c_qualidade', "    let qualidade = match_pl_ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 1) as f64 / f as f64);\n    let g = hold_position_one(m, outro as i8);", "    let qualidade = match_pl_ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 2) as f64 / f as f64);\n    let g = hold_position_one(m, outro as i8);"),
     ('c_alvo', "        mais(p, 0xa);\n        if tipo == 1 {\n            mais(p, 0xb);", "        mais(p, 0xa);\n        if tipo == 2 {\n            mais(p, 0xb);"),
     ('c_fora', "            narrar(chamar, 0x1fc6 + (tipo as u32 - 8), p2e, p27, 0);", "            narrar(chamar, 0x1fc6 + (tipo as u32 - 7), p2e, p27, 0);", "shot a gol para fora"),
     ('c_gol_atuacao', "        mais(p, 0xc);\n        somar(p, 0x89);", "        mais(p, 0xc);\n        somar(p, 0x8a);", "shot a gol gol"),

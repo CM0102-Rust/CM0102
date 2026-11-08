@@ -19,7 +19,7 @@ unsafe fn cqt12_pd(a: usize, v: usize) {
 unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize) {
     let f = cqt12_d(this + 0x30) as i32;
     if f >= (cqt12_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x987a40, 0x355);
+        return show_error_at(0x987a40, 0x355);
     }
     let f = f + 1;
     cqt12_pd(this + 0x30, f as usize);
@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize) {
 // ponytail: os grupos e as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
 // (os grupos gravam 2, o mesmo valor) fora da última fase, que dá a caixa e não muda nada.
 unsafe extern "thiscall" fn comparar_asia_club_champ_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let f = cqt12_d(this + 0x30) as i32;
     let ultima = f >= (cqt12_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn comparar_asia_club_champ_advance_stage(this: usize) 
 /// Os 8 dos grupos: os vivos (+5 = 1 na tabela de 6 bytes) do mata-mata da primeira zona (a tabela da copa, +0xa7) até 4
 /// e depois os do mata-mata da segunda zona (a tabela +0xa7 da fase [+0xc][0]) até 8; as duas buscas vão até o +0x3e da
 /// copa (palavra com sinal). Devolve os 8 (as vagas que sobrarem ficam 0: a original as deixa com sobra da pilha).
-unsafe fn cqt12_vivos(this: usize) -> [usize; 8] {
+unsafe fn group_stage_qualifiers(this: usize) -> [usize; 8] {
     let mut v = [0usize; 8];
     let mut n = 0usize;
     let times = cqt12_w(this + 0x3e);
@@ -78,7 +78,7 @@ unsafe fn cqt12_vivos(this: usize) -> [usize; 8] {
 /// ret 0x58, 22 argumentos: a copa, 4, os 4 times, 1, +4, a tabela das rodadas, as rodadas (word), 3, 1, 8, &{1, 2, 0,
 /// 0}, &{2, 0, 0, 0}, o ano +0x40 (word), `g`, o id (word), +0x51, `a17`, 0, 0x28, −1, 0, 2; a original empurra os words
 /// e bytes com lixo nos bytes altos, que o construtor não lê) em [+0xc][`g`]; a tabela liberada (0x9452ca). Devolve a fase.
-unsafe fn cqt12_grupo(this: usize, g: u32, times: *const usize, a17: u32) -> usize {
+unsafe fn create_asia_group(this: usize, g: u32, times: *const usize, a17: u32) -> usize {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     #[allow(clippy::type_complexity)]
@@ -125,24 +125,24 @@ unsafe fn cqt12_grupo(this: usize, g: u32, times: *const usize, a17: u32) -> usi
 }
 
 /// { 0x40c110 } (thiscall, ret 0, asia_club_champ.cpp; quadro SEH só para o new das fases: sem destrutor no caminho
-/// normal): `AsiaClubChamp::create_group_stages()`: os 8 vivos das duas zonas (cqt12_vivos); o grupo 1 (fase 1, os 4
+/// normal): `AsiaClubChamp::create_group_stages()`: os 8 vivos das duas zonas (group_stage_qualifiers); o grupo 1 (fase 1, os 4
 /// primeiros, o 17º argumento 2; sem fase, a caixa da linha 0x39e e volta) e a notícia dele (0x684230 na fase, thiscall,
 /// ret 0); o grupo 2 (fase 2, os 4 seguintes, o 17º argumento 1; sem fase, a caixa da linha 0x3b4 e volta), a notícia e
 /// +0x30 = 2.
 unsafe extern "thiscall" fn create_group_stages(this: usize) {
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
-    let v = cqt12_vivos(this);
+    let v = group_stage_qualifiers(this);
     let grupo_1 = [v[0], v[1], v[2], v[3]]; // cqt12: o grupo 1
-    let f = cqt12_grupo(this, 1, grupo_1.as_ptr(), 2);
+    let f = create_asia_group(this, 1, grupo_1.as_ptr(), 2);
     if f == 0 {
-        return aviso_em(0x987a40, 0x39e);
+        return show_error_at(0x987a40, 0x39e);
     }
     noticia(f);
     crate::comparacao::ramo("cqt_12 dois grupos da asia");
     let grupo_2 = [v[4], v[5], v[6], v[7]]; // cqt12: o grupo 2
-    let f = cqt12_grupo(this, 2, grupo_2.as_ptr(), 1);
+    let f = create_asia_group(this, 2, grupo_2.as_ptr(), 1);
     if f == 0 {
-        return aviso_em(0x987a40, 0x3b4);
+        return show_error_at(0x987a40, 0x3b4);
     }
     noticia(f);
     cqt12_pd(this + 0x30, 2);
@@ -152,11 +152,11 @@ unsafe extern "thiscall" fn create_group_stages(this: usize) {
 // lidos antes; depois as fases [+0xc][1] e [+0xc][2] com 4 times, o ano da copa e os 4 vivos de cada (em qualquer ordem:
 // o construtor ordena a tabela) e +0x30 = 2.
 unsafe extern "thiscall" fn comparar_create_group_stages(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     if cqt12_d(this + 0xc) == 0 || cqt12_d(cqt12_d(this + 0xc)) == 0 {
         return o(this);
     }
-    let v = cqt12_vivos(this);
+    let v = group_stage_qualifiers(this);
     o(this);
     let confere = |g: usize, de: &[usize]| {
         let f = cqt12_d(cqt12_d(this + 0xc) + g * 4);
@@ -176,14 +176,14 @@ unsafe extern "thiscall" fn comparar_create_group_stages(this: usize) {
 
 /// Os 4 das semifinais, na ordem da lista: o 1º do grupo 1 ([+0xc][1], tabela +0xb1), o 2º do grupo 2 ([+0xc][2]), o
 /// 1º do grupo 2 e o 2º do grupo 1 (os cruzamentos: as chaves são os pares da lista).
-unsafe fn cqt12_semifinalistas(this: usize) -> [usize; 4] {
+unsafe fn asia_semi_finalists(this: usize) -> [usize; 4] {
     let l = |g: usize, p: usize| cqt12_d(cqt12_d(cqt12_d(cqt12_d(this + 0xc) + g * 4) + 0xb1) + p * 0x3b);
     [l(1, 0), l(2, 1), l(2, 0), l(1, 1)] // cqt12: 1º do 1 × 2º do 2, 1º do 2 × 2º do 1
 }
 
 /// { 0x40c3d0 } (thiscall, ret 0, asia_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal):
 /// `AsiaClubChamp::create_semi_final_stage()`: a lista dos 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; sem memória, a
-/// caixa da linha 0x3d1 e volta), os cruzamentos de cqt12_semifinalistas; a tabela das rodadas pela virtual +0x3c (push
+/// caixa da linha 0x3d1 e volta), os cruzamentos de asia_semi_finalists; a tabela das rodadas pela virtual +0x3c (push
 /// 0; push &id; push &rodadas; push 3; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2) push; add esp, 4 ->
 /// cdecl; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 4, a lista, as rodadas, +4, a tabela, o ano +0x40,
 /// 3, 2, o id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo nos 16 bits altos,
@@ -197,10 +197,10 @@ unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(this: usize)
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
     let lista = alocar(0x10);
     if lista == 0 {
-        return aviso_em(0x987a40, 0x3d1);
+        return show_error_at(0x987a40, 0x3d1);
     }
     crate::comparacao::ramo("cqt_12 cruzamentos da asia");
-    for (k, &c) in cqt12_semifinalistas(this).iter().enumerate() {
+    for (k, &c) in asia_semi_finalists(this).iter().enumerate() {
         cqt12_pd(lista + k * 4, c);
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt12_d(cqt12_d(this) + 0x3c));
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(this: usize)
     soltar(tabela);
     let f = cqt12_d(cqt12_d(this + 0xc) + 0xc);
     if f == 0 {
-        return aviso_em(0x987a40, 0x3e6);
+        return show_error_at(0x987a40, 0x3e6);
     }
     sortear(f, 0);
     soltar(lista);
@@ -229,12 +229,12 @@ unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(this: usize)
 // times, o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio pode
 // reordenar).
 unsafe extern "thiscall" fn comparar_asia_club_champ_create_semi_final_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let fases = cqt12_d(this + 0xc);
     if fases == 0 || cqt12_d(fases + 4) == 0 || cqt12_d(fases + 8) == 0 {
         return o(this);
     }
-    let mut plano = cqt12_semifinalistas(this).to_vec();
+    let mut plano = asia_semi_finalists(this).to_vec();
     o(this);
     let fase = cqt12_d(cqt12_d(this + 0xc) + 0xc);
     if fase == 0 {

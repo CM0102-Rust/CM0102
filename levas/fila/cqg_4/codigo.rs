@@ -25,7 +25,7 @@ unsafe fn cqg4_pb(a: usize, v: u8) {
 }
 
 /// A nação do clube (+0x53).
-unsafe fn cqg4_nacao(clube: usize) -> usize {
+unsafe fn club_nation(clube: usize) -> usize {
     cqg4_d(clube + 0x53)
 }
 
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     let regras_b: [u8; 4] = [2, 0, 0, 0];
     let lista = zerada(0x20, 9);
     if lista == 0 {
-        aviso_em(0x9c4900, 0x4cc);
+        show_error_at(0x9c4900, 0x4cc);
         return;
     }
     let ent = |i: i32| lista.wrapping_add((i * 9) as usize);
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         k += 1;
     }
     if n < 0x20 {
-        aviso_em(0x9c4900, 0x4ee);
+        show_error_at(0x9c4900, 0x4ee);
         cqg4_pd(this + 0x30, usize::MAX);
         soltar(lista);
         cqg4_pb(this + 0xb1, 0);
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         }
         for i in (j + 1)..0x20 {
             let o = ent(i);
-            if cqg4_d(o + 4) == 0 && cqg4_nacao(cqg4_d(e)) == cqg4_nacao(cqg4_d(o)) {
+            if cqg4_d(o + 4) == 0 && club_nation(cqg4_d(e)) == club_nation(cqg4_d(o)) {
                 crate::comparacao::ramo("cqg_4 parceiro da mesma nação");
                 cqg4_pd(e + 4, cqg4_d(o)); // cqg4: o parceiro da mesma nação
                 cqg4_pd(o + 4, cqg4_d(e));
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     }
     let grupos = zerada(0x20, 4);
     if grupos == 0 {
-        erro_em(0x9c4900, 0x515);
+        fatal_error_at(0x9c4900, 0x515);
     }
     let vaga = |g: i32, pote: i32| grupos + ((pote + g * 4) * 4) as usize;
     let mut pote = 0i32;
@@ -197,14 +197,14 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         for p in 0..4i32 {
             let mut g = ini;
             while g < fim {
-                let nacao = cqg4_nacao(cqg4_d(vaga(g, p)));
-                let repetida = (0..4).any(|q| q != p && nacao == cqg4_nacao(cqg4_d(vaga(g, q))));
+                let nacao = club_nation(cqg4_d(vaga(g, p)));
+                let repetida = (0..4).any(|q| q != p && nacao == club_nation(cqg4_d(vaga(g, q))));
                 if repetida {
                     for g2 in ini..fim {
                         if g2 == g {
                             continue;
                         }
-                        if (0..4).all(|q| cqg4_nacao(cqg4_d(vaga(g, p))) != cqg4_nacao(cqg4_d(vaga(g2, q)))) {
+                        if (0..4).all(|q| club_nation(cqg4_d(vaga(g, p))) != club_nation(cqg4_d(vaga(g2, q)))) {
                             crate::comparacao::ramo("cqg_4 troca pela nação");
                             let x = cqg4_d(vaga(g, p));
                             cqg4_pd(vaga(g, p), cqg4_d(vaga(g2, p)));
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         let linha = vaga(g, 0);
         for q in 0..4usize {
             let c = cqg4_d(linha + q * 4);
-            pontos(cqg4_d(0xde1f58), cqg4_nacao(c), 1);
+            pontos(cqg4_d(0xde1f58), club_nation(c), 1);
             let valor = 1_800_000i32; // cqg4: o prêmio da fase de grupos
             crate::comparacao::ramo("cqg_4 prêmio da fase de grupos");
             premio(financas(cqg4_d(0xae2a38), c), valor);
@@ -262,7 +262,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         };
         cqg4_pd(cqg4_d(this + 0xc) + g as usize * 4, fase);
         if cqg4_d(cqg4_d(this + 0xc) + g as usize * 4) == 0 {
-            aviso_em(0x9c4900, 0x5c9);
+            show_error_at(0x9c4900, 0x5c9);
             return;
         }
         soltar(tabela);
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     soltar(grupos);
     let uefa = cqg4_d(cqg4_d(0xadadfc) + cqg4_d(0x9cf6f0) * 4);
     if uefa == 0 {
-        aviso_em(0x9c4900, 0x5d8);
+        show_error_at(0x9c4900, 0x5d8);
         return;
     }
     let mut destino = ((cqg4_w(uefa + 0x3e) as i32 - 0x18) * 6) as usize;
@@ -299,7 +299,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
 }
 
 /// Os 32 clubes que o sorteio põe nos grupos: os 16 primeiros de [+0x14] e os de +0xa7 com +5 = 1.
-unsafe fn cqg4_plano(this: usize) -> Vec<usize> {
+unsafe fn group_draw_clubs(this: usize) -> Vec<usize> {
     let mut v: Vec<usize> = (0..16usize).map(|k| cqg4_d(cqg4_d(this + 0x14) + k * 6)).collect();
     for k in 0..cqg4_w(this + 0x3e).max(0) as usize {
         let t = cqg4_d(this + 0xa7) + k * 6;
@@ -315,8 +315,8 @@ unsafe fn cqg4_plano(this: usize) -> Vec<usize> {
 /// clubes, as 8 fases em [+0xc], +0x30 = 7 e os clubes das tabelas das fases (+0xb1, linhas de 0x3b bytes, 4 por
 /// fase) são exatamente os 32 do plano.
 unsafe extern "thiscall" fn comparar_draw_phase1_groups(this: usize) {
-    let plano = cqg4_plano(this);
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+    let plano = group_draw_clubs(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     if plano.len() != 32 || cqg4_d(cqg4_d(0xadadfc) + cqg4_d(0x9cf6f0) * 4) == 0 {
         return;
     }
@@ -352,7 +352,7 @@ unsafe extern "C" fn european_cup_compare_clubs_by_seed(a: *const usize, b: *con
 
 /// Pura: a devolução.
 unsafe extern "C" fn comparar_european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
     let n = european_cup_compare_clubs_by_seed(a, b);
     PLACAR.registrar(r == n, || format!("european_cup_compare_clubs_by_seed: original={} rust={}", r, n));
     r
@@ -373,7 +373,7 @@ unsafe fn cqg4p_w(a: usize) -> i16 {
 ///    em toda rodada, cada um dos seguintes ganha o contador do começo da rodada (que sobe a cada um).
 /// 2) A segunda fase: 2 × (4 clubes com o contador; o contador sobe 4). 3) A primeira fase: 2 × (8 clubes; sobe 8).
 /// 4) As preliminares, da última para a primeira: cada clube da rodada com o contador do começo dela (sobe a cada um).
-unsafe fn cqg4p_plano(this: usize, mata: usize, nm: i16) -> (Vec<(i16, u8)>, usize) {
+unsafe fn planned_final_positions(this: usize, mata: usize, nm: i16) -> (Vec<(i16, u8)>, usize) {
     let mut v = Vec::new();
     let mut i = 0i16;
     let mut cont = 1u8;
@@ -433,19 +433,19 @@ unsafe fn cqg4p_plano(this: usize, mata: usize, nm: i16) -> (Vec<(i16, u8)>, usi
 /// add esp, 8 -> cdecl); a tabela do mata-mata pelo método +0x3c (push 0; push &id; push &rodadas; push 0xc; mov ecx ->
 /// thiscall, ret 0x10), liberada depois; a posição de cada um, na ordem do vetor, pela 0x4a2540 (push posição; push
 /// clube; mov ecx, [+8] -> thiscall, ret 8; a original empurra o dword da pilha com a posição no byte de baixo e lixo
-/// nos outros, e a 0x4a2540 só grava o byte: a cópia passa o byte limpo) no plano de `cqg4p_plano`; o vetor liberado.
+/// nos outros, e a 0x4a2540 só grava o byte: a cópia passa o byte limpo) no plano de `planned_final_positions`; o vetor liberado.
 unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let ordenar: unsafe extern "C" fn(usize, i32) = core::mem::transmute(0x4c08f0usize);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
     if cqg4p_d(this + 8) == 0 {
-        aviso_em(0x9c4900, 0x81b);
+        show_error_at(0x9c4900, 0x81b);
         return;
     }
     let v = alocar(((cqg4p_w(this + 0x36) as i32) << 2) as u32);
     if v == 0 {
-        aviso_em(0x9c4900, 0x823);
+        show_error_at(0x9c4900, 0x823);
         return;
     }
     let mut i = 0i16;
@@ -458,7 +458,7 @@ unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
     let (mut nm, mut id) = (0i16, 0i16);
     let mata = rodadas_da_copa(this, 0xc, &mut nm, &mut id, 0);
     // as posições do mata-mata antes de liberar a tabela dele, as outras depois (como a original)
-    let (plano, n_mata) = cqg4p_plano(this, mata, nm);
+    let (plano, n_mata) = planned_final_positions(this, mata, nm);
     for (j, &(k, p)) in plano.iter().enumerate() {
         if j == n_mata {
             soltar(mata);
@@ -475,7 +475,7 @@ unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
 /// tabela do mata-mata pedida ao método +0x3c e liberada): a posição (+0x72 do registro achado por 0x4a4850) de cada
 /// clube do plano.
 unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqg4p_d(this + 8) == 0 || cqg4p_d(this + 0x14) == 0 || cqg4p_w(this + 0x36) <= 0 {
         return o(this);
     }
@@ -488,7 +488,7 @@ unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: usize) {
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqg4p_d(cqg4p_d(this) + 0x3c));
     let (mut nm, mut id) = (0i16, 0i16);
     let mata = rodadas_da_copa(this, 0xc, &mut nm, &mut id, 0);
-    let plano = if mata != 0 { cqg4p_plano(this, mata, nm).0 } else { Vec::new() };
+    let plano = if mata != 0 { planned_final_positions(this, mata, nm).0 } else { Vec::new() };
     soltar(mata);
     o(this);
     if plano.iter().any(|&(k, _)| k as usize >= n) {

@@ -2,7 +2,7 @@
 
 /// Os campos de byte e palavra que a virtual +0x8c (set_up_rules) de um torneio de seleções grava na liga do grupo:
 /// (deslocamento, tamanho 1 ou 2, valor). Os pontos da vitória (+0xc2) vêm à parte, para as mutações.
-unsafe fn cqk10_campos(this: usize, campos: &[(usize, u8, u32)], vitoria: u8) {
+unsafe fn goldcup_write_rule_fields(this: usize, campos: &[(usize, u8, u32)], vitoria: u8) {
     for &(o, n, v) in campos {
         if n == 1 {
             *((this + o) as *mut u8) = if o == 0xc2 { vitoria } else { v as u8 };
@@ -14,7 +14,7 @@ unsafe fn cqk10_campos(this: usize, campos: &[(usize, u8, u32)], vitoria: u8) {
 
 /// A primeira palavra da Date(dia, mês, ano da competição +0x40 + `ano`, dia da semana) (0x549f70: push semana; push
 /// ano; push mês; push dia; lea ecx, local -> thiscall, ret 0x10).
-unsafe fn cqk10_data(this: usize, dia: u32, mes: u32, ano: i16, semana: u32) -> u16 {
+unsafe fn competition_date_word(this: usize, dia: u32, mes: u32, ano: i16, semana: u32) -> u16 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
     let mut d = [0u8; 8];
     // ponytail: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
@@ -36,8 +36,8 @@ unsafe fn cqk10_fim(this: usize, palavra: u16, b8: u16) -> u32 {
 }
 
 /// O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
-unsafe fn cqk10_confere(nome: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, i16, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
-    let palavra = cqk10_data(this, data.0, data.1, data.2, data.3);
+unsafe fn check_set_up_rules(nome: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, i16, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
+    let palavra = competition_date_word(this, data.0, data.1, data.2, data.3);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
@@ -64,16 +64,16 @@ const CQK10_COPA_AMERICA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0xc7, 1, 3), 
 unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da copa america");
     let vitoria = 3; // cqk10: a vitória nos grupos da Copa América
-    cqk10_campos(this, &CQK10_COPA_AMERICA, vitoria);
+    goldcup_write_rule_fields(this, &CQK10_COPA_AMERICA, vitoria);
     let dia = 0x14; // cqk10: o dia da data da Copa América
-    let palavra = cqk10_data(this, dia, 2, 0, 5);
+    let palavra = competition_date_word(this, dia, 2, 0, 5);
     cqk10_fim(this, palavra, 0)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_goldcup_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqk10_confere("goldcup_set_up_rules", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    check_set_up_rules("goldcup_set_up_rules", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
 }
 
 const CQK10_AFRICANA: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1),
@@ -86,16 +86,16 @@ const CQK10_AFRICANA: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xb
 unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da copa africana");
     let vitoria = 3; // cqk10: a vitória nos grupos da Copa Africana
-    cqk10_campos(this, &CQK10_AFRICANA, vitoria);
+    goldcup_write_rule_fields(this, &CQK10_AFRICANA, vitoria);
     let dia = 5; // cqk10: o dia da data da Copa Africana
-    let palavra = cqk10_data(this, dia, 9, -1, 5);
+    let palavra = competition_date_word(this, dia, 9, -1, 5);
     cqk10_fim(this, palavra, 0xffff)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_african_nations_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqk10_confere("african_nations_set_up_rules", this, &CQK10_AFRICANA, (5, 9, -1, 5), 0xffff, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    check_set_up_rules("african_nations_set_up_rules", this, &CQK10_AFRICANA, (5, 9, -1, 5), 0xffff, || o(this))
 }
 
 const CQK10_OCEANIA: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x43, 1, 2), (0xc6, 1, 2), (0x3c, 2, 1), (0xc3, 1, 1),
@@ -107,14 +107,14 @@ const CQK10_OCEANIA: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a
 /// do ano da competição num dia da semana 5.
 unsafe extern "thiscall" fn goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da oceania");
-    cqk10_campos(this, &CQK10_OCEANIA, 3);
+    goldcup_write_rule_fields(this, &CQK10_OCEANIA, 3);
     let dia = 0xf; // cqk10: o dia do começo na Oceania
-    let palavra = cqk10_data(this, dia, 0, 0, 5);
+    let palavra = competition_date_word(this, dia, 0, 0, 5);
     cqk10_fim(this, palavra, 0)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqk10_confere("goldcup_set_up_rules_91ecf0", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    check_set_up_rules("goldcup_set_up_rules_91ecf0", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
 }

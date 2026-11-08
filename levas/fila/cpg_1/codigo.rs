@@ -46,21 +46,21 @@ unsafe extern "thiscall" fn future_transfer_assign(this: usize, origem: usize) -
 }
 
 unsafe extern "thiscall" fn comparar_news_operator(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0xdf)], || o(this, origem), || news_operator(this, origem));
     PLACAR.registrar(igual && r == n, || format!("news_operator {:x?} x {:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_past_transfer_copy_construct(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x25)], || o(this, origem), || past_transfer_copy_construct(this, origem));
     PLACAR.registrar(igual && r == n, || format!("past_transfer_copy_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_future_transfer_assign(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0xc)], || o(this, origem), || future_transfer_assign(this, origem));
     PLACAR.registrar(igual && r == n, || format!("future_transfer_assign {:x?} x {:x?}", mo, mr));
     r

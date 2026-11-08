@@ -10,7 +10,7 @@ static mut CQI6_ENSAIO: bool = false;
 /// Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
 /// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
 /// resultado em +0xba. Devolve 1.
-unsafe fn cqi6_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
+unsafe fn ita_ser_a_apply_league_rules(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
     for &(d, t, v) in escritas {
         match t {
             1 => *((this + d) as *mut u8) = v as u8,
@@ -30,7 +30,7 @@ unsafe fn cqi6_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
 /// palavras copiadas nas partidas), clubes nacionais (+0x42 = 1), o 1º desempate 1 (+0xc5) e o 2º 2 (+0xc6), a ordem
 /// fixa das rodadas na grade (bit 0x40 de +0xd9, com o byte de baixo como está), 7 reservas (+0x49) e 3 substituições
 /// (+0x4a).
-unsafe fn cqi6_comuns(this: usize) -> Vec<(usize, u8, u32)> {
+unsafe fn italian_common_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let d9 = *((this + 0xd9) as *const u8) | 0x40;
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0xab, 2, 0), (0xdb, 2, 0), (0x42, 1, 1), (0xc5, 1, 1), (0xc6, 1, 2), (0xd9, 1, d9 as u32), (0x49, 1, 7), (0x4a, 1, 3)]
 }
@@ -41,11 +41,11 @@ unsafe fn cqi6_comuns(this: usize) -> Vec<(usize, u8, u32)> {
 /// empate em pontos na fronteira de uma vaga não se decide pelos critérios: vai ao jogo-desempate, ver 0x642880).
 unsafe extern "thiscall" fn ita_ser_a_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da serie a");
-    cqi6_regras(this, &cqi6_serie_a(this))
+    ita_ser_a_apply_league_rules(this, &serie_a_rules(this))
 }
 
-unsafe fn cqi6_serie_a(this: usize) -> Vec<(usize, u8, u32)> {
-    let mut v = cqi6_comuns(this);
+unsafe fn serie_a_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = italian_common_rules(this);
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3), (0xc7, 1, 4), (0xc8, 1, 0), (0xbe, 1, 0), (0xbf, 1, 0), (0xc0, 1, 0)]);
     v.push((0xc1, 1, 4)); // cqi6: a Série A rebaixa 4
     v.extend_from_slice(&[(0x1c, 4, 0xffff_ffff), (0x52, 1, 2), (0x20, 4, cqi6_d(0x9cf574) as u32), (0xe6, 4, 1)]);
@@ -56,11 +56,11 @@ unsafe fn cqi6_serie_a(this: usize) -> Vec<(usize, u8, u32)> {
 /// direto (+0xbe) e 4 caem (+0xc1); a A acima ([0x9cf570]) e a C1/A abaixo ([0x9cf578]).
 unsafe extern "thiscall" fn ita_ser_a_set_up_rules_6468a0(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da serie b");
-    cqi6_regras(this, &cqi6_serie_b(this))
+    ita_ser_a_apply_league_rules(this, &serie_b_rules(this))
 }
 
-unsafe fn cqi6_serie_b(this: usize) -> Vec<(usize, u8, u32)> {
-    let mut v = cqi6_comuns(this);
+unsafe fn serie_b_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = italian_common_rules(this);
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi6: a Série B joga 2 turnos
     v.extend_from_slice(&[(0xc7, 1, 4), (0xc8, 1, 0), (0xbe, 1, 4), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 4), (0x1c, 4, cqi6_d(0x9cf570) as u32), (0x20, 4, cqi6_d(0x9cf578) as u32), (0x52, 1, 2), (0xe6, 4, 1)]);
     v
@@ -72,11 +72,11 @@ unsafe fn cqi6_serie_b(this: usize) -> Vec<(usize, u8, u32)> {
 /// ([0x9cf574]) e abaixo o id de [0x9cf57c] (o da C1/B, o outro grupo: assim no original).
 unsafe extern "thiscall" fn ita_ser_c1a_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da c1a");
-    cqi6_regras(this, &cqi6_c1a(this))
+    ita_ser_a_apply_league_rules(this, &serie_c1a_rules(this))
 }
 
-unsafe fn cqi6_c1a(this: usize) -> Vec<(usize, u8, u32)> {
-    let mut v = cqi6_comuns(this);
+unsafe fn serie_c1a_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = italian_common_rules(this);
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi6: a C1/A dá 3 pontos pela vitória
     v.extend_from_slice(&[(0xc7, 1, 0), (0xbe, 1, 1), (0xbf, 1, 4), (0xc0, 1, 4), (0xc1, 1, 1), (0x1c, 4, cqi6_d(0x9cf574) as u32), (0x20, 4, cqi6_d(0x9cf57c) as u32)]);
     v
@@ -87,11 +87,11 @@ unsafe fn cqi6_c1a(this: usize) -> Vec<(usize, u8, u32)> {
 /// nação [inferência]), senão −1.
 unsafe extern "thiscall" fn ita_ser_a_set_up_rules_64f920(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da c1b");
-    cqi6_regras(this, &cqi6_c1b(this))
+    ita_ser_a_apply_league_rules(this, &serie_c1b_rules(this))
 }
 
-unsafe fn cqi6_c1b(this: usize) -> Vec<(usize, u8, u32)> {
-    let mut v = cqi6_comuns(this);
+unsafe fn serie_c1b_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = italian_common_rules(this);
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3), (0xc7, 1, 0), (0xbe, 1, 1), (0xbf, 1, 4), (0xc0, 1, 4), (0xc1, 1, 1), (0x1c, 4, cqi6_d(0x9cf578) as u32)]);
     let nacao = cqi6_d(cqi6_d(this + 4) + 0x5d);
     let abaixo = if *((nacao + 0x11c) as *const u8) & 4 != 0 { cqi6_d(0x9cf580) as u32 } else { 0xffff_ffff };
@@ -102,7 +102,7 @@ unsafe fn cqi6_c1b(this: usize) -> Vec<(usize, u8, u32)> {
 /// O comparador das quatro (ensaio, como o da cqi_4): a original roda inteira; a faixa +0x1c..+0xec volta e a cópia
 /// grava as regras sem a virtual +0x3c; os campos que a cópia grava saem iguais aos da original, e a devolução 1; no
 /// fim fica a faixa da original.
-unsafe fn cqi6_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
+unsafe fn ita_ser_a_compare_league_rules(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let faixa = [(this + 0x1c, 0xd0)];
     let antes = crate::comparacao::Memoria::ler(&faixa);
     let r = original();
@@ -127,21 +127,21 @@ unsafe fn cqi6_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqi6_comparar("ita_ser_a_set_up_rules", this, cqi6_serie_a(this), || o(this), || ita_ser_a_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    ita_ser_a_compare_league_rules("ita_ser_a_set_up_rules", this, serie_a_rules(this), || o(this), || ita_ser_a_set_up_rules(this))
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules_6468a0(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqi6_comparar("ita_ser_a_set_up_rules_6468a0", this, cqi6_serie_b(this), || o(this), || ita_ser_a_set_up_rules_6468a0(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    ita_ser_a_compare_league_rules("ita_ser_a_set_up_rules_6468a0", this, serie_b_rules(this), || o(this), || ita_ser_a_set_up_rules_6468a0(this))
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqi6_comparar("ita_ser_c1a_set_up_rules", this, cqi6_c1a(this), || o(this), || ita_ser_c1a_set_up_rules(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    ita_ser_a_compare_league_rules("ita_ser_c1a_set_up_rules", this, serie_c1a_rules(this), || o(this), || ita_ser_c1a_set_up_rules(this))
 }
 
 unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules_64f920(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
-    cqi6_comparar("ita_ser_a_set_up_rules_64f920", this, cqi6_c1b(this), || o(this), || ita_ser_a_set_up_rules_64f920(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
+    ita_ser_a_compare_league_rules("ita_ser_a_set_up_rules_64f920", this, serie_c1b_rules(this), || o(this), || ita_ser_a_set_up_rules_64f920(this))
 }

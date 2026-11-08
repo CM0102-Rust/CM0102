@@ -14,7 +14,7 @@ unsafe fn cqk2_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha:
     let j = alocar((t.len() * 6) as u32);
     core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
     if j == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return;
     }
     for (k, r) in t.iter().enumerate() {
@@ -24,7 +24,7 @@ unsafe fn cqk2_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha:
 
 /// O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
 /// vtable da nação e as janelas.
-unsafe fn cqk2_construir(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
+unsafe fn spain_rules_construct_nation_transfer_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
     let base: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x8e84a0usize);
     base(this, a[0], a[1], a[2], a[3], a[4]);
     core::ptr::write_unaligned(this as *mut u32, vtable);
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn spain_rules_init_transfer_windows(this: usize) {
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk2_comparar`).
 unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     cqk2_comparar("spain_rules_init_transfer_windows", this, || o(this), |s| spain_rules_init_transfer_windows(s));
 }
 
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn spain_rules_init_transfer_windows_6613f0(this: usize
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk2_comparar`).
 unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows_6613f0(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqk2_comparar("spain_rules_init_transfer_windows_6613f0", this, || o(this), |s| spain_rules_init_transfer_windows_6613f0(s));
 }
 
@@ -118,6 +118,6 @@ unsafe extern "thiscall" fn spain_rules_init_transfer_windows_5c15e0(this: usize
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk2_comparar`).
 unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows_5c15e0(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqk2_comparar("spain_rules_init_transfer_windows_5c15e0", this, || o(this), |s| spain_rules_init_transfer_windows_5c15e0(s));
 }

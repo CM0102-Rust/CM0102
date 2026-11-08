@@ -27,14 +27,14 @@ unsafe fn cqb4_clube(id: i32) -> usize {
 }
 
 /// A data de 8 bytes em `a` está antes de hoje ([0xae2c92] o ano, sem sinal; [0xae2c90] o dia, com sinal).
-unsafe fn cqb4_antes_de_hoje(a: usize) -> bool {
+unsafe fn is_before_today(a: usize) -> bool {
     let (ano, hoje) = (cqb4_w(0xae2c92) as u16, cqb4_w(0xae2c90));
     let y = cqb4_w(a + 2) as u16;
     y < ano || (y == ano && cqb4_w(a) < hoje)
 }
 
 /// A data de 8 bytes em `a` está depois de hoje.
-unsafe fn cqb4_depois_de_hoje(a: usize) -> bool {
+unsafe fn is_after_today(a: usize) -> bool {
     let (ano, hoje) = (cqb4_w(0xae2c92) as u16, cqb4_w(0xae2c90));
     let y = cqb4_w(a + 2) as u16;
     y > ano || (y == ano && cqb4_w(a) > hoje)
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
     let p = malloc(0x7d0);
     *((this + 0x34d8) as *mut usize) = p;
     if p == 0 {
-        aviso_em(0x9cd0a0, 0x6f1);
+        show_error_at(0x9cd0a0, 0x6f1);
         return;
     }
     let menos: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54cab0usize);
@@ -79,12 +79,12 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
         if nacao == 0 || *((nacao + 0x11c) as *const u8) == 0 {
             continue;
         }
-        if cqb4_antes_de_hoje(liga + 0x2a) {
+        if is_before_today(liga + 0x2a) {
             continue;
         }
         let mut d = [0u8; 8];
         let r = menos(liga + 0x39, &mut d, 0x34);
-        if cqb4_depois_de_hoje(r) {
+        if is_after_today(r) {
             continue;
         }
         // a chave da busca: um candidato de 0x16 bytes com a nação (+6) e a faixa 0xff (+5)
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
                     1
                 };
                 if marcado != 0 {
-                    let f = ftol(faixa as i8 as i32 as f64 * f64_em(0x9689b0)) as u8;
+                    let f = match_pl_ftol(faixa as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8;
                     faixa = if (f as i8) < 1 { 1 } else { f };
                 }
                 j = j.wrapping_add(1);
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
 /// de adversários dos candidatos; não roda duas vezes), conferindo o plano que ela deixa: o plano alocado, a capacidade
 /// (+0x34e4) não menor que a conta (+0x34e0), o +0x34dc zerado e o plano em ordem de data (a 0x778e90 entre vizinhos).
 unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize, entradas: usize, ordenados: usize, conta: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, entradas, ordenados, conta);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, entradas, ordenados, conta);
     let (p, n, cap, z) = (cqb4_d(this + 0x34d8), cqb4_i(this + 0x34e0), cqb4_i(this + 0x34e4), cqb4_i(this + 0x34dc));
     if p == 0 {
         return; // sem memória: a caixa
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize, entradas:
 }
 
 /// O torneio livre: o primeiro dos 127 (0x69 bytes a partir de +0xb1) sem anfitrião (+0), ou 0.
-unsafe fn cqb4_torneio_livre(this: usize) -> usize {
+unsafe fn free_tournament_slot(this: usize) -> usize {
     (0..0x7fusize).map(|i| this + 0x69 * i + 0xb1).find(|&t| cqb4_d(t) == 0).unwrap_or(0)
 }
 
@@ -179,7 +179,7 @@ unsafe fn cqb4_torneio_livre(this: usize) -> usize {
 /// lea ecx, [t + 4]; 2 pushes; sem add esp -> thiscall), as palavras c, d, e (+0xf, +0x11, +0x13), +0x29, +0x2d e
 /// +0x65 zerados, o nome (+0x31, com o zero) e os 4 convidados (+0x15, dwords) com as marcas +0x25..+0x28 em 1.
 unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
-    let t = cqb4_torneio_livre(this);
+    let t = free_tournament_slot(this);
     if t == 0 {
         return 0;
     }
@@ -215,8 +215,8 @@ unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: usize, tipo: 
 
 /// Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido pass_ball) e a devolução.
 unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32, u32, usize, usize) -> usize>(%%I1%%);
-    let t = cqb4_torneio_livre(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32, u32, usize, usize) -> usize>(%%I1%%);
+    let t = free_tournament_slot(this);
     let mut tam = 0usize;
     while nome != 0 && *((nome + tam) as *const u8) != 0 {
         tam += 1;
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn find_human_club_open_invitation(this: usize) -> usiz
 
 /// Comparador da 0x5c68b0: lado a lado no cursor da lista (+0xa) e a devolução.
 unsafe extern "thiscall" fn comparar_find_human_club_open_invitation(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let lista = cqb4_d(this + 0x34c8);
     let reg = if lista != 0 { vec![(lista + 0xa, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || find_human_club_open_invitation(this));

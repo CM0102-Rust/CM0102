@@ -14,7 +14,7 @@ unsafe fn cqk12_w(a: usize) -> i16 {
 unsafe extern "thiscall" fn african_nations_advance_stage(this: usize) {
     let f = cqk12_d(this + 0x30) as i32;
     if f >= (cqk12_d(this + 0x2c) as i32).wrapping_sub(1) {
-        aviso_em(0x9870f8, 0x2ba);
+        show_error_at(0x9870f8, 0x2ba);
         return;
     }
     let f = f + 1;
@@ -29,7 +29,7 @@ unsafe extern "thiscall" fn african_nations_advance_stage(this: usize) {
 // ponytail: o mata-mata (0x402090) aloca a fase e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa).
 unsafe extern "thiscall" fn comparar_african_nations_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let f = cqk12_d(this + 0x30) as i32;
     if f >= (cqk12_d(this + 0x2c) as i32).wrapping_sub(1) {
         return o(this);
@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
     let t = novo(0xec);
     core::ptr::write_unaligned((this + 0xb1) as *mut u32, t as u32);
     if t == 0 {
-        aviso_em(0x9870f8, 0x1f1);
+        show_error_at(0x9870f8, 0x1f1);
         return 0;
     }
     crate::comparacao::ramo("cqk_12 grupo a da copa africana");
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
 // vezes. Só a original; o plano: 4 times, a tabela, e em cada linha i a seleção i dos sorteados (+0xee) com a posição i
 // (+4 da linha, 0x3b bytes).
 unsafe extern "thiscall" fn comparar_init_group_a_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqk12_d(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -102,5 +102,5 @@ unsafe extern "thiscall" fn african_nations_record_season_honours(this: usize) {
 // ponytail: o histórico (a virtual +0x30 do mata-mata, a 0x519a90 já em Rust com o seu comparador) não roda duas vezes;
 // a rotina não grava nada além do salto. Só a original.
 unsafe extern "thiscall" fn comparar_african_nations_record_season_honours(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

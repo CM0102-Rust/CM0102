@@ -9,7 +9,7 @@ const REGISTRO_DA_PARTIDA: u32 = 0xd7a;
 /// fread falham: erro 0x12f/0x137 e fecha. Devolve 1 se leu.
 unsafe extern "thiscall" fn read_match_record(estat: usize, k: i32, saida: usize) -> u32 {
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I0%%)(estat, k, saida);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I0%%)(estat, k, saida);
     }
     crate::comparacao::ramo("estatisticas ler registro");
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
@@ -19,16 +19,16 @@ unsafe extern "thiscall" fn read_match_record(estat: usize, k: i32, saida: usize
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
     let f = abrir(caminho(0x987da0, 0xa17b88), 0x98f928);
     if f == 0 {
-        aviso_em(0xa17ba0, 0x128);
+        show_error_at(0xa17ba0, 0x128);
         return 0;
     }
     if buscar(f, k.wrapping_mul(REGISTRO_DA_PARTIDA as i32), 0) != 0 {
-        aviso_em(0xa17ba0, 0x12f);
+        show_error_at(0xa17ba0, 0x12f);
         fechar(f);
         return 0;
     }
     if ler(saida, REGISTRO_DA_PARTIDA, 1, f) != 1 {
-        aviso_em(0xa17ba0, 0x137);
+        show_error_at(0xa17ba0, 0x137);
         fechar(f);
         return 0;
     }
@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn read_match_record(estat: usize, k: i32, saida: usize
 /// nulos: a original (caixa de erro, devolve 0). Devolve 1.
 unsafe extern "thiscall" fn match_screens_record_match(estat: usize, m: usize, r: usize) -> u32 {
     if m == 0 || r == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(estat, m, r);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(estat, m, r);
     }
     crate::comparacao::ramo("estatisticas registrar partida");
     let preencher: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x729ff0usize);
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn match_screens_record_match(estat: usize, m: usize, r
 /// de erro). Falhas do arquivo: erro 0x172/0x17f/0x18d/0x1a3 (fechando, como a original). Devolve 1.
 unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
     if jogo == 0 || r == 0 || eventos == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(estat, jogo, r, eventos);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(estat, jogo, r, eventos);
     }
     crate::comparacao::ramo("estatisticas gravar registro");
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
@@ -84,13 +84,13 @@ unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usi
     record_events(eventos, desc, h);
     let f = abrir(caminho(0x987da0, 0xa17b88), 0x9c7848);
     if f == 0 {
-        aviso_em(0xa17ba0, 0x172);
+        show_error_at(0xa17ba0, 0x172);
         return 0;
     }
     let vaga = *j(8);
     if vaga != -1 {
         if buscar(f, vaga.wrapping_mul(REGISTRO_DA_PARTIDA as i32), 0) != 0 {
-            aviso_em(0xa17ba0, 0x17f);
+            show_error_at(0xa17ba0, 0x17f);
             fechar(f);
             return 0;
         }
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usi
         let b = balde(estat, jogo, r) as i8 as isize;
         let cursor = d(8 + 4 * b as usize);
         if buscar(f, (*cursor).wrapping_mul(REGISTRO_DA_PARTIDA as i32), 0) != 0 {
-            aviso_em(0xa17ba0, 0x18d);
+            show_error_at(0xa17ba0, 0x18d);
             fechar(f);
             return 0;
         }
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usi
         }
     }
     if escrever(r, REGISTRO_DA_PARTIDA, 1, f) != 1 {
-        aviso_em(0xa17ba0, 0x1a3);
+        show_error_at(0xa17ba0, 0x1a3);
         fechar(f);
         return 0;
     }
@@ -128,13 +128,13 @@ unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usi
 // duas vezes gravaria o registro duas vezes, então o comparador só chama a original; as cópias se
 // provam no modo Rust (os ramos) e pela carreira com as mutações.
 unsafe extern "thiscall" fn comparar_read_match_record(estat: usize, k: i32, saida: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I0%%)(estat, k, saida)
+    original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I0%%)(estat, k, saida)
 }
 
 unsafe extern "thiscall" fn comparar_match_screens_record_match(estat: usize, m: usize, r: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(estat, m, r)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(estat, m, r)
 }
 
 unsafe extern "thiscall" fn comparar_write_match_record(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(estat, jogo, r, eventos)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(estat, jogo, r, eventos)
 }

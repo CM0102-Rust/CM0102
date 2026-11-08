@@ -11,7 +11,7 @@ unsafe fn cpl3_por(a: usize, v: usize) {
 /// A caixa "Memory Allocation Error" de transfer_manager.cpp (0xa8d514): "v%s %s.%s %d (%s)" (versão 0x90d130, nome
 /// e extensão, `linha`, `texto`) em 0xae24d0, o título traduzido (0x66f4e0) em 0xae28bc, o corpo (0x9a7ff8 com
 /// 0xae24d0) em 0xae26c4 e a caixa 0x5e8290. O jogo segue.
-unsafe fn cpl3_sem_memoria(linha: u32, texto: usize) {
+unsafe fn show_transfer_memory_error(linha: u32, texto: usize) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -29,11 +29,11 @@ unsafe fn cpl3_sem_memoria(linha: u32, texto: usize) {
 /// Cresce o vetor [this+v] (capacidade em +v+`c`, conta em +v+12−`c`: `c` = 4 nas passadas e nos prêmios, 8 nas
 /// permissões) de `passo` registros de `tam` bytes quando cheio: malloc (0x944e46) sem vetor, senão realloc
 /// (0x945667). Devolve se há vetor (sem memória: a caixa já saiu).
-unsafe fn cpl3_crescer(this: usize, v: usize, c: usize, passo: usize, tam: usize, linha: u32, texto: usize) -> bool {
+unsafe fn grow_record_vector(this: usize, v: usize, c: usize, step_towards: usize, tam: usize, linha: u32, texto: usize) -> bool {
     if cpl3_d(this + v + 12 - c) != cpl3_d(this + v + c) {
         return true;
     }
-    let cap = cpl3_d(this + v + c).wrapping_add(passo);
+    let cap = cpl3_d(this + v + c).wrapping_add(step_towards);
     cpl3_por(this + v + c, cap);
     let p = if cpl3_d(this + v) == 0 {
         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -44,7 +44,7 @@ unsafe fn cpl3_crescer(this: usize, v: usize, c: usize, passo: usize, tam: usize
     };
     cpl3_por(this + v, p);
     if p == 0 {
-        cpl3_sem_memoria(linha, texto);
+        show_transfer_memory_error(linha, texto);
         return false;
     }
     true
@@ -56,7 +56,7 @@ unsafe fn cpl3_crescer(this: usize, v: usize, c: usize, passo: usize, tam: usize
 unsafe extern "thiscall" fn add_past_transfer(this: usize, registro: usize) -> usize {
     crate::comparacao::ramo("cpl_3 transferencia passada");
     // ponytail: sem memória a original devolve o que a caixa deixou em eax; aqui 0 (o jogo não lê)
-    if !cpl3_crescer(this, 0x862, 4, 100, 0x25, 0x2794, 0xa8ec34) {
+    if !grow_record_vector(this, 0x862, 4, 100, 0x25, 0x2794, 0xa8ec34) {
         return 0;
     }
     let n = cpl3_d(this + 0x86a);
@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn add_past_transfer(this: usize, registro: usize) -> u
 /// 0x945333 com 0x8e55c0, a ordem da busca 0x8c7560).
 unsafe extern "thiscall" fn add_work_permit(this: usize, pessoa: usize, nacao: usize, ano: u32, _nao_usado: u32, ordenar: u32) {
     crate::comparacao::ramo("cpl_3 permissao de trabalho");
-    if !cpl3_crescer(this, 0x93a, 8, 30, 0xe, 0x1b1b, 0xa8eb04) {
+    if !grow_record_vector(this, 0x93a, 8, 30, 0xe, 0x1b1b, 0xa8eb04) {
         return;
     }
     let n = cpl3_d(this + 0x93e);
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn add_work_permit(this: usize, pessoa: usize, nacao: u
 /// 0x945333 com 0x8b4e00).
 unsafe extern "thiscall" fn add_first_team_appearance_money(this: usize, registro: usize) {
     crate::comparacao::ramo("cpl_3 premio por jogo");
-    if !cpl3_crescer(this, 0x88c, 4, 50, 0xd, 0x2581, 0xa8eb94) {
+    if !grow_record_vector(this, 0x88c, 4, 50, 0xd, 0x2581, 0xa8eb94) {
         return;
     }
     let n = cpl3_d(this + 0x894);
@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn add_first_team_appearance_money(this: usize, registr
 }
 
 /// Algum dos `n` registros de `tam` bytes do vetor `v` é igual a `alvo`.
-unsafe fn cpl3_tem(v: usize, n: usize, tam: usize, alvo: &[u8]) -> bool {
+unsafe fn vector_contains_record(v: usize, n: usize, tam: usize, alvo: &[u8]) -> bool {
     (0..n).any(|i| core::slice::from_raw_parts((v + i * tam) as *const u8, tam) == alvo)
 }
 
@@ -118,7 +118,7 @@ unsafe fn cpl3_tem(v: usize, n: usize, tam: usize, alvo: &[u8]) -> bool {
 unsafe extern "thiscall" fn comparar_add_past_transfer(this: usize, registro: usize) -> usize {
     let n = cpl3_d(this + 0x86a);
     let fonte = core::slice::from_raw_parts(registro as *const u8, 0x1d).to_vec();
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%)(this, registro);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%)(this, registro);
     if cpl3_d(this + 0x862) == 0 {
         return r; // sem memória: a caixa já saiu
     }
@@ -138,13 +138,13 @@ unsafe extern "thiscall" fn comparar_add_work_permit(this: usize, pessoa: usize,
     alvo[0..4].copy_from_slice(&(cpl3_d(pessoa) as u32).to_le_bytes());
     alvo[8..10].copy_from_slice(&(ano as u16).to_le_bytes());
     alvo[0xa..0xe].copy_from_slice(&(cpl3_d(nacao) as u32).to_le_bytes());
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I1%%)(this, pessoa, nacao, ano, nao_usado, ordenar);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I1%%)(this, pessoa, nacao, ano, nao_usado, ordenar);
     if cpl3_d(this + 0x93a) == 0 {
         return; // sem memória: a caixa já saiu
     }
     let conta = cpl3_d(this + 0x93e);
     let marca = *((cpl3_d(this + 0x86e).wrapping_add(cpl3_d(pessoa).wrapping_mul(8))) as *const u8);
-    let ok = conta == n.wrapping_add(1) && marca & 0x20 != 0 && cpl3_tem(cpl3_d(this + 0x93a), conta, 0xe, &alvo);
+    let ok = conta == n.wrapping_add(1) && marca & 0x20 != 0 && vector_contains_record(cpl3_d(this + 0x93a), conta, 0xe, &alvo);
     PLACAR.registrar(ok, || format!("add_work_permit(pessoa {}, nação {}, ano {}): conta {} -> {}, marca {:#x}", cpl3_d(pessoa), cpl3_d(nacao), ano as u16, n, conta, marca));
 }
 
@@ -153,11 +153,11 @@ unsafe extern "thiscall" fn comparar_add_work_permit(this: usize, pessoa: usize,
 unsafe extern "thiscall" fn comparar_add_first_team_appearance_money(this: usize, registro: usize) {
     let n = cpl3_d(this + 0x894);
     let alvo = core::slice::from_raw_parts(registro as *const u8, 0xd).to_vec();
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, registro);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, registro);
     if cpl3_d(this + 0x88c) == 0 {
         return; // sem memória: a caixa já saiu
     }
     let conta = cpl3_d(this + 0x894);
-    let ok = conta == n.wrapping_add(1) && cpl3_tem(cpl3_d(this + 0x88c), conta, 0xd, &alvo);
+    let ok = conta == n.wrapping_add(1) && vector_contains_record(cpl3_d(this + 0x88c), conta, 0xd, &alvo);
     PLACAR.registrar(ok, || format!("add_first_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }

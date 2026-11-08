@@ -31,7 +31,7 @@ unsafe fn cpo10_pessoa(id: usize) -> usize {
 }
 
 /// A regra de transferência da nação `nacao` entre as 28 de `this + 0x8ac` (a de +0xa igual), ou 0.
-unsafe fn cpo10_regra(this: usize, nacao: usize) -> usize {
+unsafe fn nation_transfer_rules_or_zero(this: usize, nacao: usize) -> usize {
     for k in 0..0x1cusize {
         let r = cpo10_d(this + 0x8ac + k * 4);
         if cpo10_d(r + 0xa) == nacao {
@@ -61,12 +61,12 @@ unsafe extern "thiscall" fn get_offer_response_delay(this: usize, oferta: usize,
     let dono = if c != 0 && cpo10_b(c + 0x35) & 0x3f != 5 { cpo10_clube(cpo10_d(c + 4)) } else { 0 };
     let k = com_clube(cpo10_d(0xae1050), p, dono);
     let mut prazo: u16 = 0x16d;
-    let r = cpo10_regra(this, cpo10_d(comprador + 0x53));
+    let r = nation_transfer_rules_or_zero(this, cpo10_d(comprador + 0x53));
     if r != 0 {
         prazo = janela(r) as u16;
     }
     if cpo10_d(oferta + 4) != 0 {
-        let r = cpo10_regra(this, cpo10_d(dono + 0x53));
+        let r = nation_transfer_rules_or_zero(this, cpo10_d(dono + 0x53));
         if r != 0 && prazo >= janela(r) as u16 {
             prazo = janela(r) as u16;
         }
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn get_offer_response_delay(this: usize, oferta: usize,
     // ponytail: a original empurra o cargo num registrador com lixo acima; a 0x53b620 só lê o byte
     let e_jogador: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x53b620usize);
     if e_jogador(cpo10_b(oferta + 0x11) as u32) != 0 && cpo10_d(p + 0x61) == 0 {
-        aviso_em(0xa8d514, 0x29c3);
+        show_error_at(0xa8d514, 0x29c3);
     }
     let mut valor: Option<u8> = None;
     if dono != 0 && e_jogador(cpo10_b(oferta + 0x11) as u32) != 0 {
@@ -97,10 +97,10 @@ unsafe extern "thiscall" fn get_offer_response_delay(this: usize, oferta: usize,
             && estatuto > 0
         {
             let interesse: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> f64 = core::mem::transmute(0x846920usize);
-            if interesse(cpo10_d(this + 0x856), p, comprador, 0, 0, 1, 0) > f64_em(0x968e58) {
-                let x = prazo as i32 as f64 * f64_em(0x968e18);
-                let teto = f64_em(0x968dd8);
-                valor = Some(ftol(if teto < x || x.is_nan() { teto } else { x }) as u8);
+            if interesse(cpo10_d(this + 0x856), p, comprador, 0, 0, 1, 0) > read_f64_at(0x968e58) {
+                let x = prazo as i32 as f64 * read_f64_at(0x968e18);
+                let teto = read_f64_at(0x968dd8);
+                valor = Some(match_pl_ftol(if teto < x || x.is_nan() { teto } else { x }) as u8);
             }
         }
     }
@@ -151,8 +151,8 @@ unsafe extern "thiscall" fn pay_transfer_instalments(this: usize) {
         *((e + 0xc) as *mut i8) = n;
         let fracoes = if n < 4 { Some((0x968918, 0x968f30)) } else if n < 8 { Some((0x967880, 0x969518)) } else { None };
         if let Some((a, b)) = fracoes {
-            cpo10_w(fp + 0x1c, cpo10_i(fp + 0x1c).wrapping_add(ftol(cpo10_i(e) as f64 * f64_em(a))) as u32);
-            cpo10_w(fr + 0x1c, cpo10_i(fr + 0x1c).wrapping_add(ftol(cpo10_i(e) as f64 * f64_em(b))) as u32);
+            cpo10_w(fp + 0x1c, cpo10_i(fp + 0x1c).wrapping_add(match_pl_ftol(cpo10_i(e) as f64 * read_f64_at(a))) as u32);
+            cpo10_w(fr + 0x1c, cpo10_i(fr + 0x1c).wrapping_add(match_pl_ftol(cpo10_i(e) as f64 * read_f64_at(b))) as u32);
         }
         if cpo10_b(e + 0xc) == 0 {
             crate::comparacao::ramo("cpo_10 prestacao acabada");
@@ -270,7 +270,7 @@ unsafe fn cpo10_itens(lista: usize) -> Vec<usize> {
 
 /// Comparador: lado a lado pelas duas saídas, o sorteio, [0xae1080] e [0xb67a34] (a caixa da falta de ficha).
 unsafe extern "thiscall" fn comparar_get_offer_response_delay(this: usize, oferta: usize, dias: *mut u8, fatias: *mut u8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(%%I0%%);
     let mut reg = vec![(dias as usize, 1usize), (fatias as usize, 1), (0xae1080, 4), (0xb67a34, 4)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(
@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn comparar_pay_transfer_instalments(this: usize) {
     let lista = this + 0x872;
     let antes = cpo10_itens(lista);
     let acabam = antes.iter().filter(|&&e| cpo10_b(e + 0xc) == 1).count();
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let depois = cpo10_itens(lista).len();
     PLACAR.registrar(depois + acabam == antes.len(), || format!("pay_transfer_instalments: {} prestações, {} acabando, {} depois", antes.len(), acabam, depois));
 }
@@ -302,7 +302,7 @@ unsafe extern "thiscall" fn comparar_remove_offer(this: usize, oferta: usize) {
     let (n8, n14, livre) = (cpo10_i(this + 8), cpo10_i(this + 0x14), cpo10_i(this + 0x85e));
     let q = cpo10_d(this + 0x86e).wrapping_add(cpo10_d(oferta + 0xc).wrapping_mul(8)) + 1;
     let ofertas = cpo10_b(q);
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, oferta);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, oferta);
     let ok = cpo10_d(cpo10_d(this).wrapping_add((vaga as usize).wrapping_mul(4))) == 0
         && cpo10_i(this + 8) == n8 - 1
         && cpo10_i(this + 0x14) == n14 - ligada as i32

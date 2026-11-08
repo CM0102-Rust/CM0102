@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn board_named_players_after_match(this: usize, jogo: u
 unsafe extern "thiscall" fn comparar_board_named_players_after_match(this: usize, jogo: usize, clube: usize, ids: *mut i32, partida: u32, elogio: *const u8,
                                                                   a6: *mut u8, a7: *mut u8, a8: *mut u8, a9: *mut u8, a10: *mut u8) -> u8 {
     type F = unsafe extern "thiscall" fn(usize, usize, usize, *mut i32, u32, *const u8, *mut u8, *mut u8, *mut u8, *mut u8, *mut u8) -> u8;
-    let o = orig::<F>(%%I0%%);
+    let o = original_fn::<F>(%%I0%%);
     let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     regioes.push((0xae1080, 4));
     if clube != 0 {
@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn get_player_match_rating_verdict(_this: usize, pessoa
 
 /// Comparador: pelo valor (o registro é lido do arquivo temporário e o vetor local se constrói e destrói nos dois).
 unsafe extern "thiscall" fn comparar_get_player_match_rating_verdict(this: usize, pessoa: usize, partida: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%)(this, pessoa, partida);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%)(this, pessoa, partida);
     let n = get_player_match_rating_verdict(this, pessoa, partida);
     PLACAR.registrar(r == n, || format!("get_player_match_rating_verdict({:x}, partida {}) original={} rust={}", pessoa, partida as i32, r as i8, n as i8));
     r
@@ -215,7 +215,7 @@ unsafe extern "stdcall" fn build_board_player_performance_text(ids: *const i32, 
     let (i0, i1, i2) = (*ids, *ids.add(1), *ids.add(2));
     if i0 == -1 && (i1 != -1 || i2 != -1) {
         // ponytail: a original lê o lugar 0 sem valor (a pilha): esse caso fica com ela
-        return orig::<unsafe extern "stdcall" fn(*const i32, u32, usize, u32)>(%%I2%%)(ids, vitoria, saida, variante);
+        return original_fn::<unsafe extern "stdcall" fn(*const i32, u32, usize, u32)>(%%I2%%)(ids, vitoria, saida, variante);
     }
     let nome: unsafe extern "C" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x53dba0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
@@ -250,7 +250,7 @@ unsafe extern "stdcall" fn build_board_player_performance_text(ids: *const i32, 
 
 /// Comparador: lado a lado nos primeiros 0x200 bytes da saída (o único chamador, 0x6a69c0, passa um texto de 1500).
 unsafe extern "stdcall" fn comparar_build_board_player_performance_text(ids: *const i32, vitoria: u32, saida: usize, variante: u32) {
-    let o = orig::<unsafe extern "stdcall" fn(*const i32, u32, usize, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(*const i32, u32, usize, u32)>(%%I2%%);
     if ids.is_null() || (*ids == -1 && (*ids.add(1) != -1 || *ids.add(2) != -1)) {
         return o(ids, vitoria, saida, variante);
     }

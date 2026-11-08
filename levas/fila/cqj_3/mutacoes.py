@@ -15,7 +15,7 @@ MUTACOES = [
      'core::ptr::write_unaligned((e + 4) as *mut u16, ae.wrapping_add(*((e + 0x21) as *const i8) as i16 as u16).wrapping_add(1)); // mutacao: um ano a mais',
      'cqj_3 edicao seguinte'),
     ('cqj3_padrao_sem_segunda',
-     'return cqj3_sedes(e, -1, a, b) as u32; // cqj3: a sede padrão',
-     '{ let r = cqj3_sedes(e, -1, a, b) as u32; *b = u32::MAX; return r; } // mutacao: sem a segunda',
+     'return host_pair(e, -1, a, b) as u32; // cqj3: a sede padrão',
+     '{ let r = host_pair(e, -1, a, b) as u32; *b = u32::MAX; return r; } // mutacao: sem a segunda',
      'cqj_3 sede padrao'),
 ]

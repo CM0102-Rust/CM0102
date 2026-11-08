@@ -3,8 +3,8 @@
 # (o sorteio da Copa da Italia sem potes).
 MUTACOES = [
     ('cqr9_segundos_no_lugar_dos_campeoes',
-     'cqr9_pd(times + i * 4, cqr9_d(cqr9_tabela(this, i))); // cqr9: o campeão do grupo i',
-     'cqr9_pd(times + i * 4, cqr9_d(cqr9_tabela(this, i) + 0x3b)); // mutacao',
+     'cqr9_pd(times + i * 4, cqr9_d(group_table(this, i))); // cqr9: o campeão do grupo i',
+     'cqr9_pd(times + i * 4, cqr9_d(group_table(this, i) + 0x3b)); // mutacao',
      'cqr_9 mata-mata da copa da italia'),
     ('cqr9_segundos_sem_classificacao',
      'ordenar(liga, 0); // cqr9: a classificação dos segundos',

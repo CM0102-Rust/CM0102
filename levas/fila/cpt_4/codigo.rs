@@ -41,7 +41,7 @@ unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
 }
 
 unsafe extern "C" fn comparar_key_nation_index_of_comp(comp: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(comp);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(comp);
     let n = key_nation_index_of_comp(comp);
     PLACAR.registrar(r == n, || format!("key_nation_index_of_comp(competição {}) original={} rust={}", cpt4_d(comp) as i32, r, n));
     r
@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn collect_ranked_order(this: usize, conta: *mut i32) -
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let v = alocar((cpt4_d(0xae2350) as u32).wrapping_mul(4));
     if v == 0 {
-        aviso_em(0x9c74f4, 0x1e3);
+        show_error_at(0x9c74f4, 0x1e3);
         return 0;
     }
     let nacoes = cpt4_d(0xae23a8);
@@ -77,7 +77,7 @@ unsafe extern "thiscall" fn collect_ranked_order(this: usize, conta: *mut i32) -
 // ponytail: as duas alocam o vetor; a original roda primeiro (o vetor dela volta ao chamador), a cópia depois, e o
 // vetor da cópia é liberado (0x9452ca) depois da conferência da conta e dos ponteiros.
 unsafe extern "thiscall" fn comparar_collect_ranked_order(this: usize, conta: *mut i32) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *mut i32) -> usize>(%%I1%%)(this, conta);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, *mut i32) -> usize>(%%I1%%)(this, conta);
     if r == 0 {
         return r;
     }
@@ -105,7 +105,7 @@ unsafe extern "C" fn compare_ranking_score_desc(a: usize, b: usize) -> i32 {
 }
 
 unsafe extern "C" fn comparar_compare_ranking_score_desc(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_ranking_score_desc(a, b);
     PLACAR.registrar(r == n, || format!("compare_ranking_score_desc original={} rust={}", r, n));
     r

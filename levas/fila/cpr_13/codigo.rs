@@ -38,7 +38,7 @@ unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize, clube: usi
         2 => 3,
         0 | 3 | 4 | 11 => 1,
         _ => {
-            aviso_em(0x9cd0a0, 0xf18);
+            show_error_at(0x9cd0a0, 0xf18);
             1
         }
     };
@@ -120,7 +120,7 @@ unsafe extern "C" fn fix_man_get_partner_key_nation_index(clube: usize) -> u8 {
 
 /// Comparador: a cópia roda com a lista provisória dela, como a original: pela devolução.
 unsafe extern "stdcall" fn comparar_friendly_is_club_free_on_date(data: usize, clube: usize, tipo: u32) -> u32 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I0%%)(data, clube, tipo);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I0%%)(data, clube, tipo);
     let n = friendly_is_club_free_on_date(data, clube, tipo);
     PLACAR.registrar(r == n, || format!("friendly_is_club_free_on_date(data {:x}, clube {:x}, tipo {}) original={} rust={}", data, clube, tipo as u8 as i8, r, n));
     r
@@ -128,7 +128,7 @@ unsafe extern "stdcall" fn comparar_friendly_is_club_free_on_date(data: usize, c
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "thiscall" fn comparar_has_club(this: usize, clube: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, clube);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, clube);
     let n = has_club(this, clube);
     PLACAR.registrar(r == n, || format!("has_club(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
     r
@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn comparar_has_club(this: usize, clube: u32) -> u32 {
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "C" fn comparar_fix_man_get_partner_key_nation_index(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     let n = fix_man_get_partner_key_nation_index(clube);
     PLACAR.registrar(r == n, || format!("fix_man_get_partner_key_nation_index({:x}) original={:x} rust={:x}", clube, r, n));
     r

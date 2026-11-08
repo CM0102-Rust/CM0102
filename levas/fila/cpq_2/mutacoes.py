@@ -11,6 +11,6 @@ MUTACOES = [
      '        // mutacao: sem o piso do tecnico novo',
      'cpq_2 selecao avaliada'),
     ('cpq2_federacao_demite', '    let pensar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x69aba0usize);\n    pensar(this, selecao, 0);',
-     '    cpq2_saida(this, selecao, 0); // mutacao: demite em vez de pensar',
+     '    record_national_departure(this, selecao, 0); // mutacao: demite em vez de pensar',
      'cpq_2 a federacao pensa'),
 ]

@@ -70,7 +70,7 @@ unsafe extern "C" fn staff_get_natural_position_mask(pessoa: usize) -> u32 {
 }
 
 unsafe extern "C" fn comparar_staff_get_natural_position_mask(pessoa: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(pessoa);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(pessoa);
     let n = staff_get_natural_position_mask(pessoa);
     PLACAR.registrar(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", pessoa, r, n));
     r
@@ -92,7 +92,7 @@ unsafe extern "C" fn club_count_squad_with_position_mask(clube: usize, mascara: 
 }
 
 unsafe extern "C" fn comparar_club_count_squad_with_position_mask(clube: usize, mascara: u32) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%)(clube, mascara);
+    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%)(clube, mascara);
     let n = club_count_squad_with_position_mask(clube, mascara);
     PLACAR.registrar(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", clube, mascara, r, n));
     r
@@ -161,16 +161,16 @@ unsafe extern "C" fn staff_pick_favoured_team_mate(pessoa: usize, clube: usize) 
         let m1 = media(dbq3_u32(0xb74350), dbq3_u32(o + 0x61), 6, 1, 6.5);
         let dados = dbq3_u32(o + 0x61);
         let mut nota = dbq3_i16(dados + 0xb) as i32;
-        if m1 > f32_em(0x968990) as f64 {
+        if m1 > read_f32_at(0x968990) as f64 {
             let g = dbq3_u32(0xb74350);
             let razao = || {
-                let d = f64_em(g + 0x18);
-                if d == 0.0 || d.is_nan() { f64_em(0x968998) } else { f64_em(g + 0x10) / d }
+                let d = read_f64_at(g + 0x18);
+                if d == 0.0 || d.is_nan() { read_f64_at(0x968998) } else { read_f64_at(g + 0x10) / d }
             };
             // fcompp: C0 (abaixo ou sem ordem) soma
-            if !(razao() + f64_em(0x968918) >= l0) {
+            if !(razao() + read_f64_at(0x968918) >= l0) {
                 nota += 500;
-            } else if !(razao() + f64_em(0x967880) >= l0) {
+            } else if !(razao() + read_f64_at(0x967880) >= l0) {
                 nota += 250;
             }
         }
@@ -217,7 +217,7 @@ unsafe extern "C" fn staff_pick_favoured_team_mate(pessoa: usize, clube: usize) 
 unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(pessoa: usize, clube: usize) -> usize {
     // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
     // cópia não conta, se alguma delas sortear
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa, clube),
         || crate::aleatorio::sem_contar(|| staff_pick_favoured_team_mate(pessoa, clube)));
     PLACAR.registrar(igual && r == n, || format!("staff_pick_favoured_team_mate({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));

@@ -8,7 +8,7 @@ unsafe fn cqi2_b(a: usize) -> u8 {
     *(a as *const u8)
 }
 
-unsafe fn cqi2_mais_um(a: usize) {
+unsafe fn increment_byte(a: usize) {
     *(a as *mut u8) = cqi2_b(a).wrapping_add(1);
 }
 
@@ -21,13 +21,13 @@ fn cqi2_e(this: usize, i: i32) -> usize {
 /// O clube `c` ganha a vaga na competição `comp`, na fase `fase`, se tem nação e ainda não tem vaga (+0x1db = −1):
 /// +0x1db = comp, +0x1df = fase e um clube a mais da nação `i` (+0x11). Devolve se ganhou. (O caso da nação sem entrada,
 /// −1, que a original procura pela nação do clube, não acontece: `i` vem sempre da volta pelas nações.)
-unsafe fn cqi2_vaga(this: usize, c: usize, comp: u32, fase: u8, i: i32) -> bool {
+unsafe fn assign_comp_place(this: usize, c: usize, comp: u32, fase: u8, i: i32) -> bool {
     if c == 0 || cqi2_d(c + 0x53) == 0 || cqi2_d(c + 0x1db) != u32::MAX {
         return false;
     }
     *((c + 0x1df) as *mut u8) = fase;
     *((c + 0x1db) as *mut u32) = comp;
-    cqi2_mais_um(cqi2_e(this, i) + 0x11);
+    increment_byte(cqi2_e(this, i) + 0x11);
     true
 }
 
@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn collect_european_clubs(this: usize, saida: *mut usiz
     let t = alocar((cqi2_d(0xae235c) as i32).wrapping_mul(12) as u32);
     *saida = t;
     if t == 0 {
-        aviso_em(0xaa1a1c, 0x2ed);
+        show_error_at(0xaa1a1c, 0x2ed);
         return 0;
     }
     let mut k = 0u32;
@@ -105,7 +105,7 @@ fn cqi2_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) ->
 }
 
 /// Os clubes do jogo, a linha de cada clube em [0xae2d14], a marca da caixa e o histórico das competições ([0xae23d4],\n/// [0xae237c] linhas de 0x1a: a 0x4afd80 o reordena, e com linhas empatadas a ordem de antes muda o clube achado).
-unsafe fn cqi2_regioes_dos_clubes() -> Vec<(usize, usize)> {
+unsafe fn club_regions() -> Vec<(usize, usize)> {
     let n = (cqi2_d(0xae235c) as i32).max(0) as usize;
     vec![(cqi2_d(0xae23b4) as usize, n * 0x245), (cqi2_d(0xae2d14) as usize, n * 6), (0xb67a34, 4), (cqi2_d(0xae23d4) as usize, (cqi2_d(0xae237c) as i32).max(0) as usize * 0x1a)]
 }
@@ -113,10 +113,10 @@ unsafe fn cqi2_regioes_dos_clubes() -> Vec<(usize, usize)> {
 /// Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// linha de cada um em [0xae2d14], a devolução e os registros das duas tabelas.
 unsafe extern "thiscall" fn comparar_collect_european_clubs(this: usize, saida: *mut usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> u32>(%%I0%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut t2 = 0usize;
-    let reg = cqi2_regioes_dos_clubes();
+    let reg = club_regions();
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, saida), || collect_european_clubs(this, &mut t2));
     let (n, m) = (a as u16 as i16, b as u16 as i16);
     let t1 = *saida;
@@ -155,10 +155,10 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
                 break;
             }
         }
-        cqi2_mais_um(cqi2_e(this, i) + 0x11);
+        increment_byte(cqi2_e(this, i) + 0x11);
         cap[1] = 0xf;
     } else {
-        aviso_em(0xaa1a1c, 0x35d);
+        show_error_at(0xaa1a1c, 0x35d);
     }
     let mut r = 0i8;
     while r < *((this + 0x438) as *const i8) {
@@ -200,7 +200,7 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
                 f += 1;
             }
             if f < 5 {
-                if cqi2_vaga(this, c, lc, f as u8, r as i32) {
+                if assign_comp_place(this, c, lc, f as u8, r as i32) {
                     cap[f] = cap[f].wrapping_sub(1);
                 }
                 vagas[f] = vagas[f].wrapping_sub(1);
@@ -213,8 +213,8 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
 
 /// Lado a lado: a tabela das nações, os clubes e a marca da caixa.
 unsafe extern "thiscall" fn comparar_assign_champions_league_places(this: usize, clubes: usize, conta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
-    let mut reg = cqi2_regioes_dos_clubes();
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
+    let mut reg = club_regions();
     reg.push((this, 0x440));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || assign_champions_league_places(this, clubes, conta));
     PLACAR.registrar(igual, || format!("assign_champions_league_places: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
@@ -245,7 +245,7 @@ unsafe extern "thiscall" fn assign_intertoto_places(this: usize, clubes: usize, 
             if c == 0 {
                 c = enesimo(this, clubes, conta, cqi2_d(e), 1, 1, 1);
             }
-            if cqi2_vaga(this, c, it, fase, i as i8 as i32) {
+            if assign_comp_place(this, c, it, fase, i as i8 as i32) {
                 colocados += 1;
             }
             if cqi2_b(e + 0xe) == 2 {
@@ -253,7 +253,7 @@ unsafe extern "thiscall" fn assign_intertoto_places(this: usize, clubes: usize, 
                 if c == 0 {
                     c = enesimo(this, clubes, conta, cqi2_d(e), 1, 1, 1);
                 }
-                if cqi2_vaga(this, c, it, fase.wrapping_add(1), i as i8 as i32) {
+                if assign_comp_place(this, c, it, fase.wrapping_add(1), i as i8 as i32) {
                     colocados += 1;
                 }
             }
@@ -270,7 +270,7 @@ unsafe extern "thiscall" fn assign_intertoto_places(this: usize, clubes: usize, 
                     break;
                 }
                 let c = enesimo(this, clubes, conta, cqi2_d(e), 1, 1, 0);
-                if cqi2_vaga(this, c, it, (j as u8).wrapping_add(fase), i as i8 as i32) {
+                if assign_comp_place(this, c, it, (j as u8).wrapping_add(fase), i as i8 as i32) {
                     crate::comparacao::ramo("cqi_2 clube na intertoto");
                     colocados += 1; // cqi2: mais um na Intertoto
                 }
@@ -291,11 +291,11 @@ unsafe extern "thiscall" fn assign_intertoto_places(this: usize, clubes: usize, 
 /// a tabela das nações, os clubes e o sorteio (a cópia sem contar). Fora disso, só a original (a 0x903890 sorteia e
 /// entrega notícia).
 unsafe extern "thiscall" fn comparar_assign_intertoto_places(this: usize, clubes: usize, conta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     if *(0xae2c92 as *const i16) != 0x7d1 || cqi2_d(this + 0x43b) != 0 {
         return o(this, clubes, conta);
     }
-    let mut reg = cqi2_regioes_dos_clubes();
+    let mut reg = club_regions();
     reg.push((this, 0x440));
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| assign_intertoto_places(this, clubes, conta)));

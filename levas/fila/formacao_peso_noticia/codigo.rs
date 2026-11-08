@@ -8,7 +8,7 @@ unsafe extern "thiscall" fn formation_record(t: usize, f: i16, humano: u32) -> u
     let limite = if humano != 0 { primeiras } else { core::ptr::read_unaligned((t + 0x5f5) as *const i32).wrapping_add(primeiras) };
     let f = f as i32;
     if f < 0 || f >= limite {
-        return orig::<unsafe extern "thiscall" fn(usize, i16, u32) -> usize>(%%I0%%)(t, f as i16, humano);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i16, u32) -> usize>(%%I0%%)(t, f as i16, humano);
     }
     if f < primeiras {
         core::ptr::read_unaligned((t + 0x5f9) as *const usize).wrapping_add(f as usize * 0x18e3)
@@ -72,7 +72,7 @@ unsafe extern "stdcall" fn competition_weight(p: usize, cod: i8) -> u16 {
 /// cada). Devolve 1. `k` fora: a original (caixa de erro).
 unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, valor: u32) -> u32 {
     if !(0..0x32).contains(&k) {
-        return orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(%%I2%%)(t, k, valor);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(%%I2%%)(t, k, valor);
     }
     core::ptr::write_unaligned((t + 5 + 4 * k as usize) as *mut u32, valor);
     1
@@ -81,14 +81,14 @@ unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, valor: u32) -> u32 {
 comparar_valor!(comparar_formation_record, formation_record, %%I0%%, (f: i16, humano: u32) -> usize);
 
 unsafe extern "stdcall" fn comparar_competition_weight(p: usize, cod: i8) -> u16 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, i8) -> u16>(%%I1%%)(p, cod);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, i8) -> u16>(%%I1%%)(p, cod);
     let n = competition_weight(p, cod);
     PLACAR.registrar(r == n, || format!("competition_weight({:#x}, {}) original={} rust={}", p, cod, r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_set_news_field(t: usize, k: i8, valor: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(%%I2%%);
     let reg = if (0..0x32).contains(&k) { vec![(t + 5 + 4 * k as usize, 4)] } else { vec![] };
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, k, valor), || set_news_field(t, k, valor));
     PLACAR.registrar(igual && r == v, || format!("set_news_field({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, valor, r, mo, v, mr));

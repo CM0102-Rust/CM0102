@@ -28,7 +28,7 @@ const fn cql11r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u
 
 /// Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
-unsafe fn cql11_rodada(t: usize, i: u32, r: &Cql11R, ano: u32) {
+unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &Cql11R, ano: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521eb0usize);
     sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
@@ -58,7 +58,7 @@ unsafe fn cql11_rodada(t: usize, i: u32, r: &Cql11R, ano: u32) {
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela.
-unsafe fn cql11_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cql11R], arquivo: usize, linha: u32, nome: &'static str) -> usize {
+unsafe fn single_stage_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cql11R], arquivo: usize, linha: u32, nome: &'static str) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -70,13 +70,13 @@ unsafe fn cql11_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i1
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar(tabela.len() as u32 * 0x68);
     if t == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return 0;
     }
     crate::comparacao::ramo(nome);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in tabela.iter().enumerate() {
-        cql11_rodada(t, i as u32, r, ano);
+        fra_cup_write_cup_round(t, i as u32, r, ano);
     }
     t
 }
@@ -96,7 +96,7 @@ unsafe fn cql11_gravados(t: usize, n: i16) -> Vec<u8> {
 
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
-unsafe fn cql11_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
+unsafe fn compare_single_stage_round_table(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if fase as u8 != 0xff {
         // ponytail: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
@@ -135,12 +135,12 @@ const CQL11_COPA_DA_FRANCA: [Cql11R; 9] = [
 /// { 0x5ba3f0 } (thiscall, ret 0x10, fra_cup.cpp; a virtual +0x3c da Copa da França): `FraCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 9 rodadas; a caixa da linha 0xa6 sem memória.
 unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql11_tabela(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_FRANCA, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
+    single_stage_round_table(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_FRANCA, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
 }
 
 unsafe extern "thiscall" fn comparar_fra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cql11_comparar("fra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    compare_single_stage_round_table("fra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| fra_cup_create_round_table(this, fase, r, e, s))
 }
 
@@ -158,12 +158,12 @@ const CQL11_COPA_DA_LIGA_FRANCESA: [Cql11R; 7] = [
 /// { 0x5bcc40 } (thiscall, ret 0x10, fra_lge_cup.cpp; a virtual +0x3c da Copa da Liga francesa): `FraLgeCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa2 sem memória.
 unsafe extern "thiscall" fn fra_cup_create_round_table_5bcc40(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql11_tabela(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_LIGA_FRANCESA, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
+    single_stage_round_table(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_LIGA_FRANCESA, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
 }
 
 unsafe extern "thiscall" fn comparar_fra_cup_create_round_table_5bcc40(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cql11_comparar("fra_cup_create_round_table_5bcc40", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    compare_single_stage_round_table("fra_cup_create_round_table_5bcc40", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| fra_cup_create_round_table_5bcc40(this, fase, r, e, s))
 }
 
@@ -182,11 +182,11 @@ const CQL11_COPA_DO_REI: [Cql11R; 7] = [
 /// { 0x84d220 } (thiscall, ret 0x10, spa_cup.cpp; a virtual +0x3c da Copa do Rei): `SpaCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa8 sem memória.
 unsafe extern "thiscall" fn spa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql11_tabela(this, fase, rodadas, extra, saida, &CQL11_COPA_DO_REI, 0xa82810, 0xa8, "cql_11 tabela da copa do rei")
+    single_stage_round_table(this, fase, rodadas, extra, saida, &CQL11_COPA_DO_REI, 0xa82810, 0xa8, "cql_11 tabela da copa do rei")
 }
 
 unsafe extern "thiscall" fn comparar_spa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
-    cql11_comparar("spa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
+    compare_single_stage_round_table("spa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| spa_cup_create_round_table(this, fase, r, e, s))
 }

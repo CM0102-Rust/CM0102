@@ -7,8 +7,8 @@ MUTACOES = [
      'return if *((pessoa + 0x5e) as *const u8) & 1 != 0 { 1 } else { 2 }; // mutacao: trocados'),
     ('cph_lugar_marca', 'if marca == 0 { 4 } else { 3 }',
      'if marca == 0 { 3 } else { 4 } // mutacao: trocados'),
-    ('cph_subir', 'cph2_mover(this, pessoa, clube, [1, 3]) // reservas ou time B',
-     'cph2_mover(this, pessoa, clube, [1, 1]) // mutacao: sem o time B'),
-    ('cph_descer', 'cph2_mover(this, pessoa, clube, [2, 4]) // principal ou clube com time B',
-     'cph2_mover(this, pessoa, clube, [2, 2]) // mutacao: sem o clube com time B'),
+    ('cph_subir', 'toggle_placement_if_in(this, pessoa, clube, [1, 3]) // reservas ou time B',
+     'toggle_placement_if_in(this, pessoa, clube, [1, 1]) // mutacao: sem o time B'),
+    ('cph_descer', 'toggle_placement_if_in(this, pessoa, clube, [2, 4]) // principal ou clube com time B',
+     'toggle_placement_if_in(this, pessoa, clube, [2, 2]) // mutacao: sem o clube com time B'),
 ]

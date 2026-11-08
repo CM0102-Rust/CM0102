@@ -23,7 +23,7 @@ unsafe fn cqa13_sortear(n: i32) -> i32 {
 }
 
 /// A pessoa do id (0x6e bytes em [0xae23bc]).
-unsafe fn cqa13_pessoa(id: i32) -> usize {
+unsafe fn media_staff_by_id(id: i32) -> usize {
     cqa13_d(0xae23bc).wrapping_add((id as u32).wrapping_mul(0x6e) as usize)
 }
 
@@ -34,25 +34,25 @@ unsafe fn cqa13_contrato(pessoa: usize, clube: usize) -> usize {
 }
 
 /// A máscara da posição natural da pessoa (0x5481a0).
-unsafe fn cqa13_mascara(pessoa: usize) -> u32 {
+unsafe fn natural_position_mask(pessoa: usize) -> u32 {
     let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5481a0usize);
     f(pessoa)
 }
 
 /// As marcas de evento do contrato (+0x40, 0x8676f0).
-unsafe fn cqa13_bandeiras(c: usize) -> u32 {
+unsafe fn media_contract_flags(c: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x8676f0usize);
     f(c)
 }
 
 /// Apaga marcas de evento do contrato (0x8676d0).
-unsafe fn cqa13_desmarcar(c: usize, marcas: u32) {
+unsafe fn clear_contract_flags(c: usize, marcas: u32) {
     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x8676d0usize);
     f(c, marcas);
 }
 
 /// A reputação atual do jogador (+0xb da ficha +0x61).
-unsafe fn cqa13_rep(pessoa: usize) -> i16 {
+unsafe fn current_reputation(pessoa: usize) -> i16 {
     cqa13_w(cqa13_d(pessoa + 0x61) + 0xb)
 }
 
@@ -63,7 +63,7 @@ static mut CQA13_PAROU: bool = false;
 
 /// Liga marcas no contrato (STAFF_CONTRACT::set_flags 0x867560). No ensaio, pela cópia em ensaio dela (CPW7_ENSAIO): se
 /// ela pediria transferência, para. Devolve se parou.
-unsafe fn cqa13_marcas(c: usize, marcas: u32) -> bool {
+unsafe fn set_contract_flags_or_stop(c: usize, marcas: u32) -> bool {
     if CQA13_ENSAIO {
         CPW7_ENSAIO = true;
         CPW7_DECISAO = 0;
@@ -83,8 +83,8 @@ unsafe fn cqa13_marcas(c: usize, marcas: u32) -> bool {
 /// fora o técnico e o auxiliar do clube do contrato, moral (+0x44) não negativa, sem +0x49, quer sair (0x866f60, com as
 /// marcas já ligadas), sem transferência futura (0x8cca10), sem os bits 1 e 8 de +0x4e, fora da fila da transferência
 /// livre (0x8c1870) e com mais de 20 anos ou reputação acima de 4250.
-unsafe fn cqa13_pediria(c: usize, marcas: u32) -> bool {
-    let pessoa = cqa13_pessoa(cqa13_i(c));
+unsafe fn would_request_transfer(c: usize, marcas: u32) -> bool {
+    let pessoa = media_staff_by_id(cqa13_i(c));
     let funcao = *((pessoa + 0x3d) as *const u8);
     if funcao != 0xb && funcao != 0xf && funcao != 0xd {
         return false;
@@ -115,13 +115,13 @@ unsafe fn cqa13_pediria(c: usize, marcas: u32) -> bool {
     if na_fila(cqa13_d(0xde1f54), pessoa) != 0 {
         return false;
     }
-    !(cqa13_c(pessoa + 0x18) <= 0x14 && cqa13_rep(pessoa) <= 0x109a)
+    !(cqa13_c(pessoa + 0x18) <= 0x14 && current_reputation(pessoa) <= 0x109a)
 }
 
 /// As queixas do contrato (STAFF_CONTRACT::apply_event_flags 0x867700 com a pessoa). No ensaio, para antes se ela
 /// pediria transferência. Devolve se parou.
-unsafe fn cqa13_eventos(c: usize, marcas: u32, pessoa: usize) -> bool {
-    if CQA13_ENSAIO && cqa13_pediria(c, marcas) {
+unsafe fn apply_event_flags_or_stop(c: usize, marcas: u32, pessoa: usize) -> bool {
+    if CQA13_ENSAIO && would_request_transfer(c, marcas) {
         CQA13_PAROU = true;
         return true;
     }
@@ -131,12 +131,12 @@ unsafe fn cqa13_eventos(c: usize, marcas: u32, pessoa: usize) -> bool {
 }
 
 /// Tira queixas do contrato (STAFF_CONTRACT::clear_grievances 0x8674e0). No ensaio, para antes se o pedido de
-/// transferência seria retirado (a decisão `cph1_retira` com as queixas já tiradas). Devolve se parou.
-unsafe fn cqa13_limpar(c: usize, queixas: u32) -> bool {
+/// transferência seria retirado (a decisão `should_withdraw_transfer_request` com as queixas já tiradas). Devolve se parou.
+unsafe fn clear_grievances_or_stop(c: usize, queixas: u32) -> bool {
     if CQA13_ENSAIO {
         let antes = cqa13_d(c + 0x45);
         core::ptr::write_unaligned((c + 0x45) as *mut usize, antes & !(queixas as usize));
-        let retira = cph1_retira(c).is_some();
+        let retira = should_withdraw_transfer_request(c).is_some();
         core::ptr::write_unaligned((c + 0x45) as *mut usize, antes);
         if retira {
             CQA13_PAROU = true;
@@ -149,7 +149,7 @@ unsafe fn cqa13_limpar(c: usize, queixas: u32) -> bool {
 }
 
 /// A comemoração da contratação (0x75b6e0); no ensaio, para.
-unsafe fn cqa13_comemorar(this: usize, p: usize, clube: usize, tipo: u32, porta_voz: usize) -> bool {
+unsafe fn signing_celebration_or_stop(this: usize, p: usize, clube: usize, tipo: u32, porta_voz: usize) -> bool {
     if CQA13_ENSAIO {
         CQA13_PAROU = true;
         return true;
@@ -161,14 +161,14 @@ unsafe fn cqa13_comemorar(this: usize, p: usize, clube: usize, tipo: u32, porta_
 
 /// O porta-voz do elenco: entre os 50 do clube com ficha, fora `p`, com reputação acima de 4250, o maior sorteio(reputação
 /// + 20 × (+0x5b + +0x59) ± pela idade: abaixo de 19 −1500, de 23 −750, de 28 −250, de 34 +250), acima de 0.
-unsafe fn cqa13_porta_voz(clube: usize, p: usize) -> usize {
+unsafe fn squad_spokesman(clube: usize, p: usize) -> usize {
     let (mut melhor, mut quem) = (0i32, 0usize);
     for j in 0..50usize {
         let m = cqa13_d(clube + 0xd7 + 4 * j);
         if m == 0 || cqa13_d(m + 0x61) == 0 || m == p {
             continue;
         }
-        let r = cqa13_rep(m);
+        let r = current_reputation(m);
         if r <= 0x109a {
             continue;
         }
@@ -222,33 +222,33 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             let tipo = *((h + 0x10) as *const u8);
             let id = cqa13_i(h + 8);
             if id != -1 {
-                let q = cqa13_pessoa(id);
-                let rp = cqa13_rep(p);
-                if cqa13_mascara(p) == cqa13_mascara(q) && (rp > 0x128e || rp as i32 - 0x5dc > cqa13_rep(q) as i32) {
+                let q = media_staff_by_id(id);
+                let rp = current_reputation(p);
+                if natural_position_mask(p) == natural_position_mask(q) && (rp > 0x128e || rp as i32 - 0x5dc > current_reputation(q) as i32) {
                     let c = cqa13_contrato(q, novo);
                     if c != 0 {
                         crate::comparacao::ramo("cqa_13 historia da midia");
                         mudou = true;
                         if tipo == 1 {
-                            if cqa13_eventos(c, 0x8000000, 0) || cqa13_eventos(c, 0x80000000, p) {
+                            if apply_event_flags_or_stop(c, 0x8000000, 0) || apply_event_flags_or_stop(c, 0x80000000, p) {
                                 return;
                             }
                         } else if tipo == 2 {
-                            if cqa13_bandeiras(c) & 0x800 != 0
-                                && (cqa13_marcas(c, 0x200) || cqa13_eventos(c, 0x80000000, p) || cqa13_marcas(c, 0x80))
+                            if media_contract_flags(c) & 0x800 != 0
+                                && (set_contract_flags_or_stop(c, 0x200) || apply_event_flags_or_stop(c, 0x80000000, p) || set_contract_flags_or_stop(c, 0x80))
                             {
                                 return;
                             }
                         } else if cqa13_sortear(cqa13_c(q + 0x5b)) < cqa13_sortear(10) {
-                            if cqa13_marcas(c, 0x80) {
+                            if set_contract_flags_or_stop(c, 0x80) {
                                 return;
                             }
-                            if cqa13_sortear(cqa13_c(q + 0x5a)) == 0 && cqa13_eventos(c, 0x80000000, p) {
+                            if cqa13_sortear(cqa13_c(q + 0x5a)) == 0 && apply_event_flags_or_stop(c, 0x80000000, p) {
                                 return;
                             }
                         }
-                        if cqa13_bandeiras(c) & 0x800 != 0 {
-                            cqa13_desmarcar(c, 0x800);
+                        if media_contract_flags(c) & 0x800 != 0 {
+                            clear_contract_flags(c, 0x800);
                         }
                     }
                 }
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
     let forca = contar(novo, 0, 0) as i8 as i32;
     let rn = cqa13_w(novo + 0x80);
     let limite = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: o limite do elenco forte
-    let mesma = mesma_posicao(novo, cqa13_mascara(p)) as i8 as i32;
+    let mesma = mesma_posicao(novo, natural_position_mask(p)) as i8 as i32;
     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
     let categoria: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(0x4ca470usize);
     for j in 0..50usize {
@@ -276,31 +276,31 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
         if c == 0 {
             continue;
         }
-        if cqa13_bandeiras(c) & 0x800 != 0 && cqa13_mascara(p) == cqa13_mascara(m) {
-            cqa13_desmarcar(c, 0x800);
-            if cqa13_eventos(c, 0x80000000, p) {
+        if media_contract_flags(c) & 0x800 != 0 && natural_position_mask(p) == natural_position_mask(m) {
+            clear_contract_flags(c, 0x800);
+            if apply_event_flags_or_stop(c, 0x80000000, p) {
                 return;
             }
-            if cqa13_sortear(cqa13_c(m + 0x5a)) == 0 && cqa13_marcas(c, 0x200) {
+            if cqa13_sortear(cqa13_c(m + 0x5a)) == 0 && set_contract_flags_or_stop(c, 0x200) {
                 return;
             }
-            if cqa13_sortear(cqa13_c(m + 0x5b)) == 0 && cqa13_marcas(c, 0x80) {
+            if cqa13_sortear(cqa13_c(m + 0x5b)) == 0 && set_contract_flags_or_stop(c, 0x80) {
                 return;
             }
         }
-        if cqa13_bandeiras(c) & 0x400 != 0 && forca >= limite {
+        if media_contract_flags(c) & 0x400 != 0 && forca >= limite {
             crate::comparacao::ramo("cqa_13 elenco forte");
-            cqa13_desmarcar(c, 0x400);
+            clear_contract_flags(c, 0x400);
         }
-        if mesma > 2 && cqa13_bandeiras(c) & 0x400 == 0 && cqa13_rep(m) > 0x109a && cqa13_mascara(p) == cqa13_mascara(m) {
-            let rp = cqa13_rep(p);
+        if mesma > 2 && media_contract_flags(c) & 0x400 == 0 && current_reputation(m) > 0x109a && natural_position_mask(p) == natural_position_mask(m) {
+            let rp = current_reputation(p);
             if rp > 0x128e || rp as i32 - 0x5dc > cqa13_w(novo + 0x80) as i32 {
                 let a = cqa13_c(m + 0x5a);
                 if a < 0xf && cqa13_c(m + 0x5b) < 0xf && a < mesma + 4 && cqa13_c(m + 0x57) < mesma + 8 && cqa13_sortear(a) < cqa13_sortear(6) {
                     let parou = if categoria(m, c) == 1 || categoria(m, c) == 2 {
-                        cqa13_eventos(c, 0x80000000, p)
+                        apply_event_flags_or_stop(c, 0x80000000, p)
                     } else {
-                        cqa13_marcas(c, 0x200)
+                        set_contract_flags_or_stop(c, 0x200)
                     };
                     if parou {
                         return;
@@ -309,12 +309,12 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             }
         }
         if cqa13_i(c + 0x45) & 0x20000000 != 0 {
-            let rp = cqa13_rep(p);
+            let rp = current_reputation(p);
             if rp > 0x1482 || rp as i32 - 0x4e2 > cqa13_w(novo + 0x80) as i32 {
                 mudou = true;
                 if forca > 0x28 || cqa13_sortear(cqa13_c(m + 0x5a)) != 0 {
                     crate::comparacao::ramo("cqa_13 queixa limpa");
-                    if cqa13_limpar(c, 0x20000000) { // cqa13: chega alguém maior
+                    if clear_grievances_or_stop(c, 0x20000000) { // cqa13: chega alguém maior
                         return;
                     }
                 }
@@ -328,9 +328,9 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             let linha = cqa13_d(cqa13_d(0xb67a44)).wrapping_add((cqa13_i(novo) as u32).wrapping_mul(0x49) as usize);
             let x = cqa13_w(linha + 8).wrapping_add(0x1f4); // cqa13: a torcida comemora
             let x = if x < 1 { 1 } else if x > 10000 { 10000 } else { x };
-            crate::comparacao::ramo("cqa_13 torcida comemora");
+            crate::comparacao::ramo("cqa_13 goal_crowd_reaction comemora");
             core::ptr::write_unaligned((linha + 8) as *mut i16, x);
-            if cqa13_comemorar(this, p, novo, 1, 0) {
+            if signing_celebration_or_stop(this, p, novo, 1, 0) {
                 return;
             }
         }
@@ -343,8 +343,8 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             && cqa13_c(p + 0x59) > 6
             && cqa13_sortear(3) != 0
         {
-            let quem = cqa13_porta_voz(novo, p);
-            if quem != 0 && cqa13_comemorar(this, p, novo, 2, quem) {
+            let quem = squad_spokesman(novo, p);
+            if quem != 0 && signing_celebration_or_stop(this, p, novo, 2, quem) {
                 return;
             }
         }
@@ -368,7 +368,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
     } else {
         (0x23, 0x2e)
     };
-    let mesma = mesma_posicao(velho, cqa13_mascara(p)) as i8 as i32;
+    let mesma = mesma_posicao(velho, natural_position_mask(p)) as i8 as i32;
     let candidato: unsafe extern "C" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x548810usize);
     for j in 0..50usize {
         let m = cqa13_d(velho + 0xd7 + 4 * j);
@@ -380,7 +380,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             continue;
         }
         let mut q: i32 = if cqa13_i(c + 0x45) != 0 { 3 } else { 0 };
-        if cqa13_bandeiras(c) != 0 {
+        if media_contract_flags(c) != 0 {
             q += 1;
         }
         if cqa13_c(c + 0x44) < -0x19 {
@@ -390,16 +390,16 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
         let mut queixa = 0u32; // 0x40000000 ou 0x20000000 pela saída do companheiro
         let mut segundo = true;
         if flag as u8 != 0
-            && cqa13_bandeiras(c) & 0x200 == 0
-            && cqa13_bandeiras(c) & 0x800 == 0
+            && media_contract_flags(c) & 0x200 == 0
+            && media_contract_flags(c) & 0x800 == 0
             && cqa13_i(c + 0x45) as u32 & 0x80000000 == 0
             && (forca < 0x28 || mesma < 6)
-            && (cqa13_mascara(p) != cqa13_mascara(m) || mesma < 2)
+            && (natural_position_mask(p) != natural_position_mask(m) || mesma < 2)
         {
-            let rp = cqa13_rep(p);
+            let rp = current_reputation(p);
             if rp > 0x1e46 || rp > cqa13_w(novo + 0x80).wrapping_sub(0x2ee) {
                 let r = cqa13_sortear(6);
-                if cqa13_c(m + 0x57) + q > r + 10 && cqa13_c(c + 0x3d) > 0x19 && cqa13_rep(m) > 0x109a
+                if cqa13_c(m + 0x57) + q > r + 10 && cqa13_c(c + 0x3d) > 0x19 && current_reputation(m) > 0x109a
                     && cqa13_sortear(cqa13_c(m + 0x5b)) < q + 5 && cqa13_sortear(cqa13_c(m + 0x5a)) == 0
                 {
                     segundo = false;
@@ -411,10 +411,10 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             && cqa13_c(p + 0x18) > 0x17
             && flag as u8 != 0
             && candidato(m, novo, p) != 0
-            && cqa13_mascara(p) != cqa13_mascara(m)
+            && natural_position_mask(p) != natural_position_mask(m)
             && cqa13_sortear(cqa13_c(m + 0x5b)) < q + 5
         {
-            let rp = cqa13_rep(p);
+            let rp = current_reputation(p);
             if rp > 0x1e46 || rp > cqa13_w(novo + 0x80).wrapping_sub(0x2ee) {
                 queixa = 0x20000000;
             } else {
@@ -424,20 +424,20 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             }
         }
         if queixa != 0 {
-            if cqa13_eventos(c, queixa, p) {
+            if apply_event_flags_or_stop(c, queixa, p) {
                 return;
             }
             mudou = true;
         }
-        if cqa13_c(m + 0x18) > 0x17 && cqa13_bandeiras(c) & 0x400 == 0 && cqa13_c(m + 0x57) > 0xf {
+        if cqa13_c(m + 0x18) > 0x17 && media_contract_flags(c) & 0x400 == 0 && cqa13_c(m + 0x57) > 0xf {
             let r = (cqa13_sortear(10) as u8).wrapping_add(10) as i8;
-            if *((m + 0x58) as *const i8) > r && cqa13_c(m + 0x5b) > 0xa && cqa13_rep(p) > 0x109a && cqa13_rep(m) > 0x109a && forca < lim1 && cqa13_marcas(c, 0x400) {
+            if *((m + 0x58) as *const i8) > r && cqa13_c(m + 0x5b) > 0xa && current_reputation(p) > 0x109a && current_reputation(m) > 0x109a && forca < lim1 && set_contract_flags_or_stop(c, 0x400) {
                 return;
             }
         }
-        let iguais = || cqa13_mascara(p) == cqa13_mascara(m);
-        if (forca < lim2 || mesma < 2) && iguais() && cqa13_bandeiras(c) & 0x200 != 0 {
-            cqa13_desmarcar(c, 0x200);
+        let iguais = || natural_position_mask(p) == natural_position_mask(m);
+        if (forca < lim2 || mesma < 2) && iguais() && media_contract_flags(c) & 0x200 != 0 {
+            clear_contract_flags(c, 0x200);
         }
         let tirar_800 = if forca < lim2 {
             let r1 = cqa13_sortear(cqa13_c(p + 0x5a));
@@ -445,21 +445,21 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
         } else {
             mesma < 2
         };
-        if tirar_800 && cqa13_bandeiras(c) & 0x800 != 0 {
-            cqa13_desmarcar(c, 0x800);
+        if tirar_800 && media_contract_flags(c) & 0x800 != 0 {
+            clear_contract_flags(c, 0x800);
         }
-        if ((forca < lim2 && iguais()) || mesma < 2) && cqa13_i(c + 0x45) as u32 & 0x80000000 != 0 && cqa13_limpar(c, 0x80000000) {
+        if ((forca < lim2 && iguais()) || mesma < 2) && cqa13_i(c + 0x45) as u32 & 0x80000000 != 0 && clear_grievances_or_stop(c, 0x80000000) {
             return;
         }
-        if cqa13_bandeiras(c) & 0x400 != 0 {
-            if cqa13_i(c + 0x45) as u32 & 0x80000000 != 0 && cqa13_limpar(c, 0x80000000) {
+        if media_contract_flags(c) & 0x400 != 0 {
+            if cqa13_i(c + 0x45) as u32 & 0x80000000 != 0 && clear_grievances_or_stop(c, 0x80000000) {
                 return;
             }
-            if cqa13_bandeiras(c) & 0x800 != 0 {
-                cqa13_desmarcar(c, 0x800);
+            if media_contract_flags(c) & 0x800 != 0 {
+                clear_contract_flags(c, 0x800);
             }
-            if cqa13_bandeiras(c) & 0x200 != 0 {
-                cqa13_desmarcar(c, 0x200);
+            if media_contract_flags(c) & 0x200 != 0 {
+                clear_contract_flags(c, 0x200);
             }
         }
     }
@@ -474,7 +474,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
         && cqa13_c(p + 0x59) > 6
         && cqa13_sortear(3) != 0
     {
-        let quem = cqa13_porta_voz(velho, p);
+        let quem = squad_spokesman(velho, p);
         if quem != 0 {
             if CQA13_ENSAIO {
                 CQA13_PAROU = true;
@@ -491,8 +491,8 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
 /// do novo clube em [[0xb67a44]] e, de cada um dos elencos dos dois clubes (e da pessoa da história da mídia), o contrato
 /// com o clube (0x50 bytes) e a linha de opiniões em [0xae2d0c] (0x4f bytes). Quando a cópia para: só a original.
 unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions(this: usize, p: usize, novo: usize, velho: usize, flag: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I0%%);
-    if p == 0 || novo == 0 || cqa13_d(p + 0x61) == 0 || cqa13_c(p + 0x18) < 0x13 || cqa13_rep(p) < 0x109a {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I0%%);
+    if p == 0 || novo == 0 || cqa13_d(p + 0x61) == 0 || cqa13_c(p + 0x18) < 0x13 || current_reputation(p) < 0x109a {
         return o(this, p, novo, velho, flag);
     }
     let ficha = cqa13_d(0xae1080);
@@ -520,7 +520,7 @@ unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions(this: usiz
         }
     }
     if cqa13_i(this + 8) > 0 && cqa13_i(cqa13_d(this) + 8) != -1 {
-        juntar(cqa13_pessoa(cqa13_i(cqa13_d(this) + 8)), novo);
+        juntar(media_staff_by_id(cqa13_i(cqa13_d(this) + 8)), novo);
     }
     core::ptr::write_unaligned(0xae1080 as *mut usize, ficha); // os contratos lidos acima não contam
     let antes = crate::comparacao::Memoria::ler(&reg);
@@ -610,7 +610,7 @@ unsafe extern "thiscall" fn queue_signing_celebration_story(this: usize, p: usiz
 
 // ponytail: a notícia vai à caixa do técnico (aloca) e sorteia: só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_queue_signing_celebration_story(this: usize, p: usize, clube: usize, tipo: u32, a: u32, porta_voz: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize)>(%%I1%%)(this, p, clube, tipo, a, porta_voz)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize)>(%%I1%%)(this, p, clube, tipo, a, porta_voz)
 }
 
 /// { 0x75cfc0 } (thiscall, ret 0x10, media.cpp, quadro SEH da notícia local): `Media::queue_sale_unrest_story(velho,
@@ -658,5 +658,5 @@ unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, velho: usize, 
 
 // ponytail: a notícia vai à caixa do técnico (aloca) e sorteia: só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_queue_sale_unrest_story(this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I2%%)(this, velho, novo, p, comp)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I2%%)(this, velho, novo, p, comp)
 }

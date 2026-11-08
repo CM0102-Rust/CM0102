@@ -5,7 +5,7 @@ MUTACOES = [
     ('f_insatisfacao', "let r1 = sortear((a * b as i32 * c as i32 + 0x14) * 100);", "let r1 = sortear((a * b as i32 * c as i32 + 0x15) * 100);", "match_wrap_up insatisfeito"),
     ('f_rival', "if [0xb3, 0xb7, 0xbb].iter().any(|&o| d(meu, o) == outro) {\n                        x += 10;", "if [0xb3, 0xb7, 0xbb].iter().any(|&o| d(meu, o) == outro) {\n                        x += 11;"),
     ('f_gosta', "    } else if gosta(pessoa, outro) != 0 {\n                        x -= 20;", "    } else if gosta(pessoa, outro) != 0 {\n                        x -= 19;"),
-    ('f_media', "media = if d(pt, 0x18) == d(meu, 0x69) { q - f64_em(0x967880) } else { q + f64_em(0x968918) };", "media = if d(pt, 0x18) == d(meu, 0x69) { q - f64_em(0x967880) * 1.01 } else { q + f64_em(0x968918) };", "match_wrap_up media do lado"),
+    ('f_media', "media = if d(pt, 0x18) == d(meu, 0x69) { q - read_f64_at(0x967880) } else { q + read_f64_at(0x968918) };", "media = if d(pt, 0x18) == d(meu, 0x69) { q - read_f64_at(0x967880) * 1.01 } else { q + read_f64_at(0x968918) };", "match_wrap_up media do lado"),
     ('f_noventa', "    } else if *(m as *const u8) != 0 {\n                0x5a", "    } else if *(m as *const u8) != 0 {\n                0x59", "match_wrap_up media do lado"),
     ('f_minuto_reserva', "                fim.wrapping_sub(c)", "                fim.wrapping_sub(c).wrapping_add(1)", "match_wrap_up media do lado"),
     ('f_tipo6', "byte(p, 0x24) == 2 || byte(p, 0x23) != 0", "byte(p, 0x24) == 2 || byte(p, 0x23) == 0", "match_wrap_up evento tipo 6"),

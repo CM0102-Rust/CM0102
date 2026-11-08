@@ -15,6 +15,6 @@ MUTACOES = [
      'cpw_13 soma na data'),
     ('cpw13_ultimo_clube',
      'crate::comparacao::ramo("cpw_13 último clube sem registro"); // cpw13: o último clube fica sem registro',
-     'crate::comparacao::ramo("cpw_13 último clube sem registro"); cpw13_somar(this, anterior, conta, d.as_mut_ptr()); // mutacao: o ultimo clube registrado',
+     'crate::comparacao::ramo("cpw_13 último clube sem registro"); add_club_callups(this, anterior, conta, d.as_mut_ptr()); // mutacao: o ultimo clube registrado',
      'cpw_13 último clube sem registro'),
 ]

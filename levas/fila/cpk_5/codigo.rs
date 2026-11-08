@@ -10,9 +10,9 @@ unsafe fn cpk5_d(a: usize) -> usize {
 /// continente nulos: a original (caixa "Error").
 unsafe extern "thiscall" fn send_to_continent_managers(this: usize, noticia: usize, continente: usize) -> u32 {
     if noticia == 0 || continente == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, continente); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, continente); // caixa: só a original
     }
-    cpj3_entregar(this, noticia, 3, |p| {
+    deliver_to_human_managers(this, noticia, 3, |p| {
         let c = cpk5_d(p + 0x39);
         if c != 0 {
             let n = cpk5_d(c + 0x53);
@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn send_to_continent_managers(this: usize, noticia: usi
 /// "Error").
 unsafe extern "thiscall" fn send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
     if noticia == 0 || comp == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, comp); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, comp); // caixa: só a original
     }
     let nacao = cpk5_d(comp + 0x5d);
     if nacao != 0 {
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn send_to_comp_region(this: usize, noticia: usize, com
 }
 
 /// O técnico (+0xcf) do clube cujo id está no dado da notícia em `o` ([0xae23b4], 0x245 bytes por clube).
-unsafe fn cpk5_tecnico_do_clube(noticia: usize, o: usize) -> usize {
+unsafe fn manager_of_news_club(noticia: usize, o: usize) -> usize {
     cpk5_d(cpk5_d(0xae23b4).wrapping_add(cpk5_d(noticia + o).wrapping_mul(0x245)) + 0xcf)
 }
 
@@ -63,7 +63,7 @@ unsafe fn cpk5_tecnico_do_clube(noticia: usize, o: usize) -> usize {
 unsafe extern "thiscall" fn is_important_for(noticia: usize, pessoa: usize) -> u8 {
     let t = cpk5_d(noticia) as i32;
     if pessoa == 0 || !(1..=0x1790).contains(&t) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(noticia, pessoa); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(noticia, pessoa); // caixa: só a original
     }
     let categoria: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x785670usize);
     let r = match categoria(noticia) as u8 {
@@ -73,9 +73,9 @@ unsafe extern "thiscall" fn is_important_for(noticia: usize, pessoa: usize) -> u
             0xfa0 | 0xfa4 | 0xfad | 0xfae | 0xfaf | 0xfb0 | 0xfb2 | 0xfb4 | 0xfb7 | 0xfb8 | 0xfbb | 0xfbf | 0xfc0 => true,
             0xfa1 => {
                 crate::comparacao::ramo("cpk_5 importante oferta pelo clube");
-                cpk5_tecnico_do_clube(noticia, 0x19) == pessoa // o técnico do clube da oferta
+                manager_of_news_club(noticia, 0x19) == pessoa // o técnico do clube da oferta
             }
-            0xfb6 => cpk5_tecnico_do_clube(noticia, 0x15) == pessoa || cpk5_tecnico_do_clube(noticia, 0x19) == pessoa,
+            0xfb6 => manager_of_news_club(noticia, 0x15) == pessoa || manager_of_news_club(noticia, 0x19) == pessoa,
             _ => false,
         },
         6 => t == 0x1770 && cpk5_d(noticia + 5) as i32 >= (cpk5_d(0xae2364) as i32).wrapping_sub(0x10),
@@ -89,17 +89,17 @@ unsafe extern "thiscall" fn is_important_for(noticia: usize, pessoa: usize) -> u
 /// modo Rust).
 unsafe extern "thiscall" fn comparar_send_to_continent_managers(this: usize, noticia: usize, continente: usize) -> u32 {
     crate::comparacao::ramo("send_to_continent_managers");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, continente)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, continente)
 }
 
 unsafe extern "thiscall" fn comparar_send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
     crate::comparacao::ramo("send_to_comp_region");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, comp)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, comp)
 }
 
 /// Comparador: pelo valor (a 0x785670 só lê).
 unsafe extern "thiscall" fn comparar_is_important_for(noticia: usize, pessoa: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(noticia, pessoa);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(noticia, pessoa);
     let t = cpk5_d(noticia) as i32;
     if pessoa == 0 || !(1..=0x1790).contains(&t) {
         return r;

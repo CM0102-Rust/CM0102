@@ -16,7 +16,7 @@ unsafe fn cqh9_strncmp(a: usize, b: usize, n: u32) -> i32 {
 
 /// O nome `k` (+4 primeiro, +8 segundo, +0xc o comum; o registro do nome começa pelo texto) da pessoa bate com `texto`
 /// (até 26 caracteres)? `texto` vazio sempre bate.
-unsafe fn cqh9_bate(p: usize, k: usize, texto: usize) -> bool {
+unsafe fn name_matches(p: usize, k: usize, texto: usize) -> bool {
     *(texto as *const u8) == 0 || cqh9_strncmp(cqh9_d(p + k), texto, 0x1a) == 0
 }
 
@@ -56,7 +56,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
     if no_elenco as u8 == 1 {
         for k in 0..0x32usize {
             let q = cqh9_d(c + 0xd7 + 4 * k);
-            if q != 0 && cqh9_bate(q, 4, primeiro) && cqh9_bate(q, 8, segundo) && cqh9_bate(q, 0xc, comum) {
+            if q != 0 && name_matches(q, 4, primeiro) && name_matches(q, 8, segundo) && name_matches(q, 0xc, comum) {
                 crate::comparacao::ramo("cqh_9 jogador do clube pelo nome");
                 return q; // cqh9: o do elenco pelo nome
             }
@@ -66,7 +66,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
     if t == 0 {
         return 0;
     }
-    if cqh9_bate(t, 4, primeiro) && cqh9_bate(t, 8, segundo) && cqh9_bate(t, 0xc, comum) {
+    if name_matches(t, 4, primeiro) && name_matches(t, 8, segundo) && name_matches(t, 0xc, comum) {
         return t;
     }
     0
@@ -74,7 +74,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
 
 /// Comparador: a devolução (só lê).
 unsafe extern "C" fn comparar_player_setup_find_staff(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
-    let r = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(%%I0%%)(primeiro, comum, segundo, clube, no_elenco);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(%%I0%%)(primeiro, comum, segundo, clube, no_elenco);
     let n = player_setup_find_staff(primeiro, comum, segundo, clube, no_elenco);
     PLACAR.registrar(r == n, || format!("player_setup_find_staff(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
     r
@@ -117,7 +117,7 @@ unsafe extern "C" fn player_setup_read_quoted_token(origem: usize, destino: usiz
 
 /// Comparador: lado a lado no destino (até 0x100 bytes) e na devolução.
 unsafe extern "C" fn comparar_player_setup_read_quoted_token(origem: usize, destino: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%);
     if origem == 0 || destino == 0 {
         return o(origem, destino);
     }
@@ -161,7 +161,7 @@ unsafe extern "C" fn player_setup_type_from_name(nome: usize) -> u32 {
 
 /// Comparador: a devolução (só lê).
 unsafe extern "C" fn comparar_player_setup_type_from_name(nome: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nome);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nome);
     let n = player_setup_type_from_name(nome);
     PLACAR.registrar(r == n, || format!("player_setup_type_from_name({:x}) original={:x} rust={:x}", nome, r, n));
     r

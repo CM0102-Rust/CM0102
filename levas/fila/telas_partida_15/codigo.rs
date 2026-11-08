@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: as telas da partida (15): a conferência da escalação e o índice das estatísticas da partida no save (match_screens.cpp, match_stats.cpp) ----------
 
 /// strcpy de C (a original copia com `rep movs`).
-unsafe fn escalacao_copiar(d: *mut u8, s: *const u8) {
+unsafe fn match_screens_c_strcpy(d: *mut u8, s: *const u8) {
     let mut i = 0;
     loop {
         let c = *s.add(i);
@@ -14,17 +14,17 @@ unsafe fn escalacao_copiar(d: *mut u8, s: *const u8) {
 }
 
 /// strcat de C.
-unsafe fn escalacao_juntar(d: *mut u8, s: *const u8) {
+unsafe fn match_screens_c_strcat(d: *mut u8, s: *const u8) {
     let mut n = 0;
     while *d.add(n) != 0 {
         n += 1;
     }
-    escalacao_copiar(d.add(n), s);
+    match_screens_c_strcpy(d.add(n), s);
 }
 
 /// O subtítulo da conferência ("Team Selection" ou "Please Confirm"): o texto traduzido em 0xde1f64 e
 /// 0x803f80 no gerente.
-unsafe fn titulo_da_escalacao(t: usize) {
+unsafe fn set_selection_subtitle(t: usize) {
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let subtitulo: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x803f80usize);
     texto(0xde1f64, t);
@@ -34,7 +34,7 @@ unsafe fn titulo_da_escalacao(t: usize) {
 /// Os nomes dos `n` jogadores de `lista` juntos em 0xde1f64 ("a", "a and b", "a, b, and c" pelos
 /// textos traduzidos) e, para cada um, a ligação no Text `texto_obj` (0x4ae8a0, tipo 0x7dc na seleção,
 /// senão 0x7d7).
-unsafe fn nomes_da_escalacao(texto_obj: usize, lista: &[usize], n: i8, clube: usize) {
+unsafe fn join_selection_names(texto_obj: usize, lista: &[usize], n: i8, clube: usize) {
     let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x53dba0usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
@@ -46,12 +46,12 @@ unsafe fn nomes_da_escalacao(texto_obj: usize, lista: &[usize], n: i8, clube: us
         let p = lista[k as usize];
         nome_do(p, nome.as_mut_ptr(), 0xc8, 1);
         if k == 0 {
-            escalacao_copiar(juntos.as_mut_ptr(), nome.as_ptr());
+            match_screens_c_strcpy(juntos.as_mut_ptr(), nome.as_ptr());
         } else {
             let modelo: usize = if k as i32 == n as i32 - 1 { if n == 2 { 0xa17b40 } else { 0xa17b18 } } else { 0xa17af4 };
             texto(juntos.as_mut_ptr() as usize, modelo, 0xde1f64usize, nome.as_ptr() as usize);
         }
-        escalacao_copiar(0xde1f64 as *mut u8, juntos.as_ptr());
+        match_screens_c_strcpy(0xde1f64 as *mut u8, juntos.as_ptr());
         let tipo = if selecao(clube) != 0 { 0x7dc } else { 0x7d7 };
         ligacao(texto_obj, nome.as_ptr(), tipo, p);
         k += 1;
@@ -61,18 +61,18 @@ unsafe fn nomes_da_escalacao(texto_obj: usize, lista: &[usize], n: i8, clube: us
 /// O aviso da conferência: a mensagem `msg` no Text (0x4ae660) numa área (0x5ed200) e o botão "Ok"
 /// (0x55f990). `caixa_sobre`/`ok_sobre`: onde a original empurra a cor da caixa / a cor do texto do
 /// botão com os 16 bits de cima da devolução da chamada anterior (varia por ramo).
-unsafe fn aviso_da_escalacao(texto_obj: usize, msg: *const u8, caixa_sobre: bool, ok_sobre: bool) {
+unsafe fn show_selection_warning(texto_obj: usize, msg: *const u8, caixa_sobre: bool, ok_sobre: bool) {
     let definir: unsafe extern "thiscall" fn(usize, *const u8) -> usize = core::mem::transmute(0x4ae660usize);
     let area: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
         core::mem::transmute(0x5ed200usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
     let r = definir(texto_obj, msg);
-    let cor = if caixa_sobre { cor_sobre(r, 0xae3184) } else { cor_em(0xae3184) };
+    let cor = if caixa_sobre { colour_with_high_bits(r, 0xae3184) } else { colour_word(0xae3184) };
     area(0x6e, 0x91, 0x30c, 0x217, 2, 0, 0x10, 4, cor, texto_obj);
     let r = texto(0xde1f64, 0x990f7c) as usize;
-    let cor_do_texto = if ok_sobre { cor_sobre(r, 0xae3184) } else { cor_em(0xae3184) };
-    linha(display_do_humano(), 2, 0x64, 0x22b, 0x316, 0x24e, 0, 0, 0x30, cor_sobre(r, 0xae317e), cor_em(0xae317e), 0xc, 4, cor_do_texto, 0xde1f64, 0, 1, 0, usize::MAX);
+    let cor_do_texto = if ok_sobre { colour_with_high_bits(r, 0xae3184) } else { colour_word(0xae3184) };
+    linha(current_human_display(), 2, 0x64, 0x22b, 0x316, 0x24e, 0, 0, 0x30, colour_with_high_bits(r, 0xae317e), colour_word(0xae317e), 0xc, 4, cor_do_texto, 0xde1f64, 0, 1, 0, usize::MAX);
 }
 
 /// { 0x7260f0 } (cdecl, match_screens.cpp, ~7 KB com os pedaços até 0x727c2e): desenha a conferência
@@ -117,7 +117,7 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
     let por_extenso: unsafe extern "C" fn(i32, *mut u8, u32, u32) -> i32 = core::mem::transmute(0x90c520usize);
     let vaga_do_capitao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u8 = core::mem::transmute(0x897590usize);
     let melhor_titular: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x727e20usize);
-    let cobrador: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize) -> usize = core::mem::transmute(0x897990usize);
+    let pick_restart_taker: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize) -> usize = core::mem::transmute(0x897990usize);
     let vaga_do_jogador: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u8 = core::mem::transmute(0x8972c0usize);
     let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x53dba0usize);
     let area: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
@@ -134,9 +134,9 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
     let mut motivo: u8 = 0;
     criar(t, 0);
     let colunas: [u8; 2] = [3, 1];
-    let clube = parametro_da_tela(0);
-    let jogo = parametro_da_tela(1);
-    let equipe = parametro_da_tela(2);
+    let clube = get_screen_param(0);
+    let jogo = get_screen_param(1);
+    let equipe = get_screen_param(2);
     let banco = || (*((jogo + 0x4d) as *const u8) & 0xf) as i8;
     let competicao = || core::ptr::read_unaligned((jogo + 0x14) as *const usize);
 
@@ -229,8 +229,8 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
     let m = msg.as_mut_ptr();
     let mu = m as usize;
     let grupo = |g: &([usize; 20], i8), plural: usize, singular: usize, traduzir: bool| {
-        titulo_da_escalacao(0xa17b64);
-        nomes_da_escalacao(tu, &g.0, g.1, clube);
+        set_selection_subtitle(0xa17b64);
+        join_selection_names(tu, &g.0, g.1, clube);
         let modelo = if g.1 > 1 { plural } else { singular };
         if traduzir {
             texto(mu, modelo, BUF);
@@ -240,10 +240,10 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
     };
     if convocados.1 != 0 {
         grupo(&convocados, 0xa17a9c, 0xa17a4c, true);
-        aviso_da_escalacao(tu, m, false, false);
+        show_selection_warning(tu, m, false, false);
     } else if emprestados.1 != 0 {
-        titulo_da_escalacao(0xa17b64);
-        nomes_da_escalacao(tu, &emprestados.0, emprestados.1, clube);
+        set_selection_subtitle(0xa17b64);
+        join_selection_names(tu, &emprestados.0, emprestados.1, clube);
         if emprestados.1 > 1 {
             texto(mu, 0xa17a10, BUF);
         } else {
@@ -251,34 +251,34 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
             let genero = *((c + 0x52) as *const i8) as i32;
             texto(mu, 0xa179c8, genero, genero, BUF, c + 0x38);
         }
-        aviso_da_escalacao(tu, m, false, true);
+        show_selection_warning(tu, m, false, true);
     } else if indisponiveis.1 != 0 {
         grupo(&indisponiveis, 0xa1799c, 0xa17970, false);
-        aviso_da_escalacao(tu, m, false, false);
+        show_selection_warning(tu, m, false, false);
     } else if inelegiveis.1 != 0 {
-        titulo_da_escalacao(0xa17b64);
-        nomes_da_escalacao(tu, &inelegiveis.0, inelegiveis.1, clube);
+        set_selection_subtitle(0xa17b64);
+        join_selection_names(tu, &inelegiveis.0, inelegiveis.1, clube);
         const PLURAL: [usize; 11] = [0xa1793c, 0xa17908, 0xa178c0, 0xa17878, 0xa1782c, 0xa177dc, 0xa1778c, 0xa1773c, 0xa176f4, 0xa17694, 0xa1763c];
         const SINGULAR: [usize; 11] = [0xa17610, 0xa175e0, 0xa175a0, 0xa1755c, 0xa17514, 0xa174cc, 0xa17484, 0xa1743c, 0xa173fc, 0xa173a8, 0xa17358];
         if (1..=11).contains(&motivo) {
             let modelo = if inelegiveis.1 > 1 { PLURAL[motivo as usize - 1] } else { SINGULAR[motivo as usize - 1] };
             texto(mu, modelo, BUF);
         }
-        aviso_da_escalacao(tu, m, true, false);
+        show_selection_warning(tu, m, true, false);
     } else if suspensos.1 != 0 {
         grupo(&suspensos, 0xa17328, 0xa17300, true);
-        aviso_da_escalacao(tu, m, false, false);
+        show_selection_warning(tu, m, false, false);
     } else if lesionados.1 != 0 {
         grupo(&lesionados, 0xa172b8, 0xa17278, true);
-        aviso_da_escalacao(tu, m, false, false);
+        show_selection_warning(tu, m, false, false);
     } else if sem_visto.1 != 0 {
         grupo(&sem_visto, 0xa17224, 0xa171d4, true);
-        aviso_da_escalacao(tu, m, false, false);
+        show_selection_warning(tu, m, false, false);
     } else if limite_do_banco(g(0xde1f54), clube, jogo, m, 0, 2, 0) != 0 {
-        titulo_da_escalacao(0xa17b64);
-        aviso_da_escalacao(tu, m, true, false);
+        set_selection_subtitle(0xa17b64);
+        show_selection_warning(tu, m, true, false);
     } else if starters < 11 {
-        titulo_da_escalacao(0xa17b64);
+        set_selection_subtitle(0xa17b64);
         let (mut maximo, mut quantos) = ([0u8; 0xc8], [0u8; 0xc8]);
         por_extenso((banco() + 0xb) as i32, maximo.as_mut_ptr(), 0xc8, 1);
         por_extenso(starters as i32, quantos.as_mut_ptr(), 0xc8, 1);
@@ -287,15 +287,15 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
             1 => texto(mu, 0xa170cc, maximo.as_ptr()),
             _ => texto(mu, 0xa17038, quantos.as_ptr(), maximo.as_ptr()),
         };
-        aviso_da_escalacao(tu, m, false, true);
+        show_selection_warning(tu, m, false, true);
     } else {
-        titulo_da_escalacao(0x9909b8);
+        set_selection_subtitle(0x9909b8);
         *m = 0;
         let acrescentar = |s: usize| {
             if *m != 0 {
-                escalacao_juntar(m, SEPARADOR as *const u8);
+                match_screens_c_strcat(m, SEPARADOR as *const u8);
             }
-            escalacao_juntar(m, s as *const u8);
+            match_screens_c_strcat(m, s as *const u8);
         };
         let mut nome = [0u8; 0xc8];
         let mut outro = [0u8; 0xc8];
@@ -320,7 +320,7 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
         let mut cobradores = ([0usize; 20], 0i8);
         for papel in 0..5usize {
             for escolha in 0..2usize {
-                let p = cobrador(g(0xde1d08), clube, papel, (equipe & !0xff) | escolha, equipe);
+                let p = pick_restart_taker(g(0xde1d08), clube, papel, (equipe & !0xff) | escolha, equipe);
                 if p != 0 {
                     let s = vaga_do_jogador(g(0xde1d08), clube, p, equipe) as i8;
                     if !(0..=10).contains(&s) && !cobradores.0[..cobradores.1 as usize].contains(&p) {
@@ -330,7 +330,7 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
             }
         }
         if cobradores.1 > 0 {
-            nomes_da_escalacao(tu, &cobradores.0, cobradores.1, clube);
+            join_selection_names(tu, &cobradores.0, cobradores.1, clube);
             let mut aviso = [0u8; 0x7c0];
             texto(aviso.as_mut_ptr() as usize, if cobradores.1 > 1 { 0xa16f8c } else { 0xa16f34 }, BUF);
             acrescentar(aviso.as_ptr() as usize);
@@ -357,12 +357,12 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
         texto(BUF, 0xa16db4);
         acrescentar(BUF);
         definir(tu, m);
-        area(0x6e, 0x91, 0x30c, 0x217, 2, 0, 0x10, 4, cor_em(0xae3184), tu);
-        let id = lista(display_do_humano(), 0x64, 0x22b, 0x316, 0x24e, 2, colunas.as_ptr() as usize, 1, 0, 1, 0, usize::MAX);
+        area(0x6e, 0x91, 0x30c, 0x217, 2, 0, 0x10, 4, colour_word(0xae3184), tu);
+        let id = lista(current_human_display(), 0x64, 0x22b, 0x316, 0x24e, 2, colunas.as_ptr() as usize, 1, 0, 1, 0, usize::MAX);
         let r = texto(BUF, 0x98e8cc) as usize;
-        celula(GERENTE_DE_TELAS, id, 0, 0, 0x30, cor_sobre(r, 0xae317e), 0xc, 3, cor_em(0xae3184), BUF, 2, 0);
+        celula(GERENTE_DE_TELAS, id, 0, 0, 0x30, colour_with_high_bits(r, 0xae317e), 0xc, 3, colour_word(0xae3184), BUF, 2, 0);
         texto(BUF, 0x98e8d0);
-        celula(GERENTE_DE_TELAS, id, 1, 0, 0x30, cor_em(0xae317e), 0xc, 3, cor_em(0xae3184), BUF, 3, 0);
+        celula(GERENTE_DE_TELAS, id, 1, 0, 0x30, colour_word(0xae317e), 0xc, 3, colour_word(0xae3184), BUF, 3, 0);
     }
     destruir(t);
 }
@@ -373,7 +373,7 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
 /// de leitura ou de alocação: erro 0x4a5/0x4ae/0x4b6/0x4be/0x4c6/0x4ce e fecha. Devolve 1 se leu.
 unsafe extern "thiscall" fn match_screens_load(estat: usize, zip: usize) -> u32 {
     if zip == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(estat, zip);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(estat, zip);
     }
     crate::comparacao::ramo("telas estatisticas carregar");
     let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
@@ -382,11 +382,11 @@ unsafe extern "thiscall" fn match_screens_load(estat: usize, zip: usize) -> u32 
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let mut h = abrir(zip, 0xa17bd0, 0, 0x16, 4);
     if h == 0 {
-        aviso_em(0xa17ba0, 0x49e);
+        show_error_at(0xa17ba0, 0x49e);
         return 0;
     }
     let falha = |linha: u32, mut h: usize| {
-        aviso_em(0xa17ba0, linha);
+        show_error_at(0xa17ba0, linha);
         fechar(&mut h);
         0
     };
@@ -421,7 +421,7 @@ unsafe extern "thiscall" fn match_screens_load(estat: usize, zip: usize) -> u32 
 /// 0x4f8/0x500/0x508/0x510/0x518 e fecha. Devolve 1 se gravou.
 unsafe extern "thiscall" fn match_screens_save(estat: usize, zip: usize) -> u32 {
     if zip == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(estat, zip);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(estat, zip);
     }
     crate::comparacao::ramo("telas estatisticas salvar");
     let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
@@ -429,10 +429,10 @@ unsafe extern "thiscall" fn match_screens_save(estat: usize, zip: usize) -> u32 
     let fechar: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
     let mut h = abrir(zip, 0xa17bd0, 1, 0x16, 4);
     if h == 0 {
-        erro_em(0xa17ba0, 0x4f1);
+        fatal_error_at(0xa17ba0, 0x4f1);
     }
     let falha = |linha: u32, mut h: usize| {
-        aviso_em(0xa17ba0, linha);
+        show_error_at(0xa17ba0, linha);
         fechar(&mut h);
         0
     };
@@ -459,16 +459,16 @@ unsafe extern "thiscall" fn match_screens_save(estat: usize, zip: usize) -> u32 
 /// A conferência é comparada de verdade pela lista de exibição (o Text local é alocado e liberado
 /// dentro de cada execução).
 unsafe extern "C" fn comparar_match_screens_draw_team_selection() {
-    let o = orig::<unsafe extern "C" fn()>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
     comparar_painel_pela_lista("match_screens_draw_team_selection", || o(), || match_screens_draw_team_selection());
 }
 
 // ponytail: carregar e salvar mexem no arquivo do save (e carregar aloca o índice): rodar duas vezes
 // leria/gravaria duas vezes, então o comparador só chama a original; as cópias se provam no modo Rust.
 unsafe extern "thiscall" fn comparar_match_screens_load(estat: usize, zip: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(estat, zip)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(estat, zip)
 }
 
 unsafe extern "thiscall" fn comparar_match_screens_save(estat: usize, zip: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(estat, zip)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(estat, zip)
 }

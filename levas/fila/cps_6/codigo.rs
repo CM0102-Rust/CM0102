@@ -34,7 +34,7 @@ unsafe fn cps6_contrato(p: usize) -> usize {
 }
 
 /// O clube do contrato (registros de 0x245 bytes em [0xae23b4], pelo id em +4), ou 0 sem contrato.
-unsafe fn cps6_clube_do_contrato(c: usize) -> usize {
+unsafe fn contract_club_record(c: usize) -> usize {
     if c == 0 {
         0
     } else {
@@ -43,7 +43,7 @@ unsafe fn cps6_clube_do_contrato(c: usize) -> usize {
 }
 
 /// Dias desde a data de +0x3e da pessoa até hoje (0x54cdb0 sobre a data do jogo 0xae2c90, a outra por valor).
-unsafe fn cps6_dias_desde(p: usize) -> i32 {
+unsafe fn days_since_staff_date(p: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
     f(0xae2c90, cps6_d(p + 0x3e) as u32, cps6_d(p + 0x42) as u32)
 }
@@ -61,7 +61,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
-    let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let falta: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x41a360usize);
     let n = cps6_d(0xae2364) as i32;
     let q = n / 250;
@@ -78,7 +78,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
         if c == 0 {
             continue;
         }
-        let clube = cps6_clube_do_contrato(c);
+        let clube = contract_club_record(c);
         if clube == 0 {
             continue;
         }
@@ -112,11 +112,11 @@ unsafe extern "C" fn game_check_players_missing_training() {
         let a = cps6_b(p + 0x5b);
         if (a as i8) < 8 && (cps6_b(cps6_d(p + 0x61) + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
             let mut s = a;
-            if cps6_dias_desde(p) < 0x1e {
+            if days_since_staff_date(p) < 0x1e {
                 s = s.wrapping_add(0x64);
-            } else if cps6_dias_desde(p) < 0x5a {
+            } else if days_since_staff_date(p) < 0x5a {
                 s = s.wrapping_add(0x32);
-            } else if cps6_dias_desde(p) < 0xb4 {
+            } else if days_since_staff_date(p) < 0xb4 {
                 s = s.wrapping_add(0x19);
             }
             crate::comparacao::ramo("cps_6 falta pela soma");
@@ -128,8 +128,8 @@ unsafe extern "C" fn game_check_players_missing_training() {
             if cps6_sb(p + 0x5b) >= 0xa {
                 continue;
             }
-            let clube = cps6_clube_do_contrato(cps6_contrato(p));
-            let v = vinculo(cps6_d(0xae1050), p, clube);
+            let clube = contract_club_record(cps6_contrato(p));
+            let v = contract_bond(cps6_d(0xae1050), p, clube);
             if v == 0 {
                 continue;
             }
@@ -154,7 +154,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
 
 // ponytail: sorteia e a falta (0x41a360) multa, sorteia e mexe na forma: só a original; a cópia leva os ramos.
 unsafe extern "C" fn comparar_game_check_players_missing_training() {
-    orig::<unsafe extern "C" fn()>(%%I0%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
 /// { 0x5ce060 } (cdecl, game.cpp): `game_update_comps_for_date(marca)`: cada competição da lista ([0xadadfc], conta
@@ -180,11 +180,11 @@ unsafe extern "C" fn game_update_comps_for_date(marca: u32) {
 
 // ponytail: passa o dia de todas as competições (virtuais) e do [0xae2a58]: só a original; a cópia leva o ramo.
 unsafe extern "C" fn comparar_game_update_comps_for_date(marca: u32) {
-    orig::<unsafe extern "C" fn(u32)>(%%I1%%)(marca)
+    original_fn::<unsafe extern "C" fn(u32)>(%%I1%%)(marca)
 }
 
 /// A confiança da diretoria no clube: a palavra +6 da linha do clube (73 bytes por id em [this]).
-unsafe fn cps6_confianca(this: usize, clube: usize) -> usize {
+unsafe fn board_confidence_ptr(this: usize, clube: usize) -> usize {
     cps6_d(this).wrapping_add(cps6_d(clube).wrapping_mul(0x49)) + 6
 }
 
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(this: usize,
     if clube == 0 {
         return;
     }
-    let c = cps6_confianca(this, clube);
+    let c = board_confidence_ptr(this, clube);
     cps6_pw(c, cps6_w(c).wrapping_add(delta as u16 as i16));
     let v = cps6_w(c);
     if v < 1 {
@@ -207,11 +207,11 @@ unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(this: usize,
 
 /// Comparador: lado a lado pela confiança (2 bytes).
 unsafe extern "thiscall" fn comparar_manager_manager_adjust_board_confidence(this: usize, clube: usize, delta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     if clube == 0 {
         return o(this, clube, delta);
     }
-    let c = cps6_confianca(this, clube);
+    let c = board_confidence_ptr(this, clube);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 2)], || o(this, clube, delta), || manager_manager_adjust_board_confidence(this, clube, delta));
     PLACAR.registrar(igual, || format!("manager_manager_adjust_board_confidence(clube {:x}, {}) {:x?} x {:x?}", clube, delta as i32, mo, mr));
 }

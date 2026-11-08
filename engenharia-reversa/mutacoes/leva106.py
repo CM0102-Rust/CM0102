@@ -6,7 +6,7 @@ MUTACOES = [
     ('e_div9', "        v.max(4)", "        v.max(5)"),
     ('e_divd', "    } else if byte(comp, 0x3a) != 8 {\n        div_d = (0xca - nivel0 as i32 * 10) as i16;", "    } else if byte(comp, 0x3a) != 8 {\n        div_d = (0xcb - nivel0 as i32 * 10) as i16;"),
     ('e_desvio', "        desvio *= desvio.abs();", "        desvio *= 1.0;"),
-    ('e_passo', "    let passo = (nivel as i32 as f64 * d8(0x968968) + d8(0x9688a0)) * desvio * d8(0x968ff8);", "    let passo = (nivel as i32 as f64 * d8(0x968968) + d8(0x968930)) * desvio * d8(0x968ff8);"),
+    ('e_passo', "    let step_towards = (nivel as i32 as f64 * d8(0x968968) + d8(0x9688a0)) * desvio * d8(0x968ff8);", "    let step_towards = (nivel as i32 as f64 * d8(0x968968) + d8(0x968930)) * desvio * d8(0x968ff8);"),
     ('e_novo', "    let novo_b = ((div_b as i32 - 1) * vb + nb as i16 as i32) / div_b as i32;", "    let novo_b = ((div_b as i32 - 2) * vb + nb as i16 as i32) / div_b as i32;"),
     ('e_moral', "        (sortear(3) + (x as i32).min(dif)) as i16", "        (sortear(4) + (x as i32).min(dif)) as i16"),
     ('e_clamp', "    let delta = sortear(m.clamp(-20, 20) as i32);", "    let delta = sortear(m.clamp(-19, 20) as i32);"),
@@ -14,5 +14,5 @@ MUTACOES = [
     ('e_pot', "    let lo = pot * 50 - 3750;", "    let lo = pot * 50 - 3700;"),
     ('e_teto9', "    let r9 = preso(c9, f_9, f4(0x96d210), f4(0x96d208), t9);", "    let r9 = preso(c9, f_9, f4(0x96d210), f4(0x96d20c), t9);"),
     ('e_10000', "        let v = (v as i16).min(10000);", "        let v = (v as i16).min(9999);"),
-    ('e_rep', "                rb = ftol(alvo as i16 as f64 * d8(0x967880) + rb as i16 as f64 * d8(0x9689d8));", "                rb = ftol(alvo as i16 as f64 * d8(0x967880) + rb as i16 as f64);"),
+    ('e_rep', "                rb = match_pl_ftol(alvo as i16 as f64 * d8(0x967880) + rb as i16 as f64 * d8(0x9689d8));", "                rb = match_pl_ftol(alvo as i16 as f64 * d8(0x967880) + rb as i16 as f64);"),
 ]

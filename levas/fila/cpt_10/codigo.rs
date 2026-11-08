@@ -21,7 +21,7 @@ unsafe extern "thiscall" fn advance_week_counter(this: usize, dia: *const i16) -
 
 /// Comparador: lado a lado na semana do treino, com a devolução.
 unsafe extern "thiscall" fn comparar_advance_week_counter(this: usize, dia: *const i16) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const i16) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i16) -> i32>(%%I0%%);
     let regioes = [(this + 0x688d, 2)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, dia), || advance_week_counter(this, dia));
     PLACAR.registrar(igual && r == n, || format!("advance_week_counter(dia {}) original={} rust={} {:x?} x {:x?}", *dia, r, n, mo.0, mr.0));
@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn take_spare_non_player_record(this: usize, id: *mut u
 
 // ponytail: a reserva perde o item (não roda duas vezes): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_take_spare_non_player_record(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u32) -> u32>(%%I1%%)(this, id, nacao, segunda)
+    original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u32) -> u32>(%%I1%%)(this, id, nacao, segunda)
 }
 
 /// { 0x62ed30 } (thiscall, ret 4, injury.cpp): `Injury::get_recurring_injury_type(pessoa)`, pelas notícias (0x77bc80),
@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn get_recurring_injury_type(this: usize, pessoa: usize
 
 /// Comparador: o al devolvido.
 unsafe extern "thiscall" fn comparar_get_recurring_injury_type(this: usize, pessoa: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, pessoa);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, pessoa);
     let n = get_recurring_injury_type(this, pessoa);
     PLACAR.registrar(r == n, || format!("get_recurring_injury_type(pessoa {:x}) original={:x} rust={:x}", pessoa, r, n));
     r

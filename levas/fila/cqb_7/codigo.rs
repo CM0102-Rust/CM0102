@@ -23,14 +23,14 @@ unsafe fn cqb7_clube_do_contrato(c: usize) -> usize {
 }
 
 /// A data `a` vem depois da data em `d` (0x456740: thiscall(a, d.dword0, d.dword1), ret 8; a data vai por valor).
-unsafe fn cqb7_depois(a: usize, d: usize) -> bool {
+unsafe fn transfer_manager_date_is_after(a: usize, d: usize) -> bool {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     f(a, cqb7_d(d) as u32, cqb7_d(d + 4) as u32) != 0
 }
 
 /// O nome (texto C em [pessoa+4]) contém `agulha` (0x945a60, strstr: cdecl(texto, agulha)) e o clube da oferta (+4 =
 /// id; nome em +4 do clube) é o de 0xa8eb48 ("Falkirk"; a comparação de bytes que a original faz em linha).
-unsafe fn cqb7_excecao(p: usize, agulha: usize, oferta: usize) -> bool {
+unsafe fn is_falkirk_name_exception(p: usize, agulha: usize, oferta: usize) -> bool {
     let nome = cqb7_d(p + 4);
     if nome == 0 {
         return false;
@@ -98,12 +98,12 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
                 return 1;
             }
         } else {
-            let fora = (emprestimo != 0 && cqb7_depois(oferta + 0x2d, emprestimo + 0x2d))
+            let fora = (emprestimo != 0 && transfer_manager_date_is_after(oferta + 0x2d, emprestimo + 0x2d))
                 || (contrato != 0 && cqb7_d(oferta + 4) != cqb7_d(contrato + 4));
             if fora && pela_conta {
                 return 1;
             }
-            if emprestimo != 0 && !cqb7_depois(oferta + 0x2d, emprestimo + 0x2d) {
+            if emprestimo != 0 && !transfer_manager_date_is_after(oferta + 0x2d, emprestimo + 0x2d) {
                 return 1;
             }
         }
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
     if np != 0 && cqb7_d(p + 0x61) == 0 {
         return (cqb7_w(np + 0xc) > 0xa0) as u32;
     }
-    if cqb7_w(0xae2c92) == 0x7d1 && (cqb7_excecao(p, 0x9b5ac0, oferta) || cqb7_w(0xae2c92) == 0x7d1 && cqb7_excecao(p, 0x9b5ab0, oferta)) {
+    if cqb7_w(0xae2c92) == 0x7d1 && (is_falkirk_name_exception(p, 0x9b5ac0, oferta) || cqb7_w(0xae2c92) == 0x7d1 && is_falkirk_name_exception(p, 0x9b5ab0, oferta)) {
         crate::comparacao::ramo("cqb_7 excecao de 2001");
         return 1;
     }
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
 /// Comparador da 0x8c7950: lado a lado nas marcas da pessoa (8 bytes), no sorteio e na devolução (a cópia em
 /// sem_contar).
 unsafe extern "thiscall" fn comparar_is_work_permit_granted(this: usize, p: usize, nacao: usize, oferta: usize, registro: usize, sorteio: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%);
     let mut regioes = vec![crate::aleatorio::REGIOES_DO_ESTADO[0], crate::aleatorio::REGIOES_DO_ESTADO[1]];
     if p != 0 && (cqb7_d(p) as i32) < cqb7_d(0xae2364) as i32 {
         regioes.push((cqb7_marcas(this, p), 8));
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn transfer_manager_get_squad_status_for_reason(_this: 
 
 /// Comparador da 0x8c5800: lado a lado em [0xae1080] e no al devolvido.
 unsafe extern "thiscall" fn comparar_transfer_manager_get_squad_status_for_reason(this: usize, p: usize, motivo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p, motivo), || transfer_manager_get_squad_status_for_reason(this, p, motivo));
     PLACAR.registrar(igual && r as u8 == n as u8, || format!("transfer_manager_get_squad_status_for_reason(pessoa {:#x}, motivo {:#x}) original={} {:x?} rust={} {:x?}", p, motivo, r as u8, mo, n as u8, mr));
     r
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn get_negotiation_slot(this: usize, i: i32) -> usize {
 
 /// Comparador da 0x8c6200: pelo valor (só lê).
 unsafe extern "thiscall" fn comparar_get_negotiation_slot(this: usize, i: i32) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(this, i);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(this, i);
     let n = get_negotiation_slot(this, i);
     PLACAR.registrar(r == n, || format!("get_negotiation_slot({}) original={:#x} rust={:#x}", i, r, n));
     r

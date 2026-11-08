@@ -6,8 +6,10 @@ use super::*;
 
 
 
-/// O tipo do contrato (+0x4f, nibble alto).
-pub(crate) unsafe fn cpo6_tipo(contrato: usize) -> u8 {
+/// Contract squad status (high nibble of +0x4f).
+///
+/// [pt] O tipo do contrato (+0x4f, nibble alto).
+pub(crate) unsafe fn contract_squad_status(contrato: usize) -> u8 {
     *((contrato + contract::SQUAD_STATUS) as *const u8) & 0xf0
 }
 
@@ -26,16 +28,16 @@ pub(crate) const CPO6_NOTICIA: usize = 0xdf;
 /// (0x7fffa0) que o humano da vez; devolve 1. Sem técnico, sem id ou técnico da máquina: a caixa "Error" e 0.
 pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usize, id: u32, sincronizar: u32) -> u32 {
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x2358);
+        show_error_at(0xa693ec, 0x2358);
         return 0;
     }
     if id == 0 {
-        aviso_em(0xa693ec, 0x2360);
+        show_error_at(0xa693ec, 0x2360);
         return 0;
     }
     let idx = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
     if idx < 0 {
-        aviso_em(0xa693ec, 0x236b);
+        show_error_at(0xa693ec, 0x236b);
         return 0;
     }
     let e = read_usize(this + 8) + idx as usize * 12;
@@ -83,11 +85,11 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usiz
 /// (News +4). Achou: 1; senão 0. Sem id, sem saída ou técnico da máquina: a caixa "Error" e 0.
 pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usize, id: u32, saida: usize) -> u32 {
     if id == 0 {
-        aviso_em(0xa693ec, 0x2252);
+        show_error_at(0xa693ec, 0x2252);
         return 0;
     }
     if saida == 0 {
-        aviso_em(0xa693ec, 0x225a);
+        show_error_at(0xa693ec, 0x225a);
         return 0;
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_NEWSITEM_OPERATOR_3D);
@@ -96,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usi
     } else {
         let idx = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
         if idx < 0 {
-            aviso_em(0xa693ec, 0x2268);
+            show_error_at(0xa693ec, 0x2268);
             return 0;
         }
         let ini = read_i32(read_usize(this + 8) + idx as usize * 12);
@@ -119,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usi
 /// Comparador: lado a lado no vetor das notícias (News +0, +4 vagas), nas entradas dos 16 humanos (News +8) e no texto
 /// do botão (0xde1f64; a 0x782b70 só consulta). Caixa "Error": só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecnico: usize, id: u32, sincronizar: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_MARK_ITEM_READ);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_MARK_ITEM_READ);
     if tecnico == 0 || id == 0 || read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0 || read_usize(this) == 0 {
         return o(this, tecnico, id, sincronizar);
     }
@@ -135,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecn
 
 /// Comparador: pela notícia copiada em `saida` (0xdf bytes) e pela devolução. Caixa "Error": só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tecnico: usize, id: u32, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32>(IDX_FIND_ITEM_BY_ID);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32>(IDX_FIND_ITEM_BY_ID);
     if id == 0 || saida == 0 || (tecnico != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0) {
         return o(this, tecnico, id, saida);
     }
@@ -152,9 +154,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tec
 /// A notícia guardada na caixa: 0xdf bytes (+4 importante, +0xd6 id, +0xda livre/lida, +0xde alcance).
 pub(crate) const CPN1_NOTICIA: usize = 0xdf;
 
-/// A entrada do técnico humano na tabela das caixas (News +8, 12 bytes: início do anel, a próxima vaga, a conta):
+/// Index of a human manager in News' inbox table: person id - staff count + 16 (negative = not human).
+///
+/// [pt] A entrada do técnico humano na tabela das caixas (News +8, 12 bytes: início do anel, a próxima vaga, a conta):
 /// índice = id da pessoa − [0xae2364] + 16 (os humanos são as 16 últimas pessoas). Negativo: não é humano.
-pub(crate) unsafe fn cpn1_indice_humano(tecnico: usize) -> i32 {
+pub(crate) unsafe fn news_human_manager_index(tecnico: usize) -> i32 {
     read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10)
 }
 
@@ -195,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, noticia: usize
             competicao
         }
         _ => {
-            aviso_em(0xa693ec, 0x1fd3);
+            show_error_at(0xa693ec, 0x1fd3);
             return 0;
         }
     };
@@ -212,11 +216,11 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, noticia: usize
 /// pessoas). Sem notícia ou sem clube: a caixa "Error" e 0; sem técnico ou técnico da máquina: 0.
 pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, noticia: usize, clube: usize) -> u32 {
     if noticia == 0 {
-        aviso_em(0xa693ec, 0x2026);
+        show_error_at(0xa693ec, 0x2026);
         return 0;
     }
     if clube == 0 {
-        aviso_em(0xa693ec, 0x202e);
+        show_error_at(0xa693ec, 0x202e);
         return 0;
     }
     let tecnico = read_usize(clube + club::MANAGER);
@@ -247,19 +251,19 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, noticia
 /// resposta automática (0x784100) pelo clube (+0x39) e pela seleção (+0x24). Soma 1 na conta e devolve 1.
 pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: usize, tecnico: usize, _livre: u32) -> u32 {
     if noticia == 0 {
-        aviso_em(0xa693ec, 0x1f3f);
+        show_error_at(0xa693ec, 0x1f3f);
         return 0;
     }
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x1f47);
+        show_error_at(0xa693ec, 0x1f47);
         return 0;
     }
     let importante: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWSITEM_IS_IMPORTANT_FOR);
     *((noticia + 4) as *mut u8) = importante(noticia, tecnico) as u8;
     write_usize(noticia + 0xda, 0);
-    let idx = cpn1_indice_humano(tecnico);
+    let idx = news_human_manager_index(tecnico);
     if idx < 0 {
-        aviso_em(0xa693ec, 0x1f58);
+        show_error_at(0xa693ec, 0x1f58);
         return 0;
     }
     let e = read_usize(this + 8) + idx as usize * 12;
@@ -272,7 +276,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: 
         let p = realocar(read_usize(this), total.wrapping_mul(CPN1_NOTICIA) as u32);
         write_usize(this, p);
         if p == 0 {
-            aviso_em(0xa693ec, 0x1f6d);
+            show_error_at(0xa693ec, 0x1f6d);
             return 0;
         }
         for k in 0..0x64usize {
@@ -323,7 +327,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: 
 /// Comparador: a entrega pode cair na caixa do humano (realloc, ids, resposta automática): roda só a original e confere
 /// o alcance; alcance fora de 0..5 devolve 0.
 pub(crate) unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, noticia: usize, clube: usize, competicao: usize, nacao: usize, continente: usize, alcance: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(IDX_SEND_BY_SCOPE)(this, noticia, clube, competicao, nacao, continente, alcance);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(IDX_SEND_BY_SCOPE)(this, noticia, clube, competicao, nacao, continente, alcance);
     let fora = !(0..=5).contains(&(alcance as u8 as i8));
     PLACAR.registrar(!fora || r == 0, || format!("send_by_scope alcance {} devolveu {}", alcance as u8 as i8, r));
     r
@@ -332,7 +336,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, notic
 /// Comparador: roda só a original (a entrega não pode rodar duas vezes) e confere o plano: o alcance zerado e, sem técnico
 /// humano, a devolução 0 (com humano, a entrega devolve 1 ou 0 sem memória).
 pub(crate) unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize, noticia: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CLUB_MANAGER);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CLUB_MANAGER);
     if noticia == 0 || clube == 0 {
         return o(this, noticia, clube);
     }
@@ -347,11 +351,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize
 /// Comparador: a original realoca o vetor, numera e responde: roda só ela e confere o plano feito antes: o id da notícia,
 /// o contador de ids (News +0x10), o anel do humano (início, próxima vaga, conta), a vaga escrita com o id e +0xda = 0.
 pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, noticia: usize, tecnico: usize, livre: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_DELIVER_TO_MANAGER);
-    if noticia == 0 || tecnico == 0 || cpn1_indice_humano(tecnico) < 0 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_DELIVER_TO_MANAGER);
+    if noticia == 0 || tecnico == 0 || news_human_manager_index(tecnico) < 0 {
         return o(this, noticia, tecnico, livre);
     }
-    let idx = cpn1_indice_humano(tecnico) as usize;
+    let idx = news_human_manager_index(tecnico) as usize;
     let e = read_usize(this + 8) + idx * 12;
     // o plano
     let novo = read_i32(e) == -1;
@@ -403,19 +407,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
 /// +0xda lida).
 pub(crate) const CPN2_NOTICIA: usize = 0xdf;
 
-/// A entrada do humano na tabela das caixas (News +8, 12 bytes: início do anel, próxima vaga, conta), ou None (com a
+/// Human manager's 12-byte inbox entry (News +8: ring start, next slot, count), or None with the error box when not one
+/// of the last 16 people.
+///
+/// [pt] A entrada do humano na tabela das caixas (News +8, 12 bytes: início do anel, próxima vaga, conta), ou None (com a
 /// caixa "Error" da `linha`) se a pessoa não está entre as 16 últimas.
-pub(crate) unsafe fn cpn2_entrada(this: usize, tecnico: usize, linha: u32) -> Option<usize> {
+pub(crate) unsafe fn human_inbox_entry(this: usize, tecnico: usize, linha: u32) -> Option<usize> {
     let idx = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
     if idx < 0 {
-        aviso_em(0xa693ec, linha);
+        show_error_at(0xa693ec, linha);
         return None;
     }
     Some(read_usize(this + 8) + idx as usize * 12)
 }
 
-/// A vaga anterior a `k` no anel que começa em `inicio` (100 vagas).
-pub(crate) fn cpn2_volta(k: i32, inicio: i32) -> i32 {
+/// Wraps a ring slot k below inicio to inicio + 99 (100-slot inbox ring).
+///
+/// [pt] A vaga anterior a `k` no anel que começa em `inicio` (100 vagas).
+pub(crate) fn ring_prev_wrap(k: i32, inicio: i32) -> i32 {
     if k < inicio { inicio + 0x63 } else { k }
 }
 
@@ -429,10 +438,10 @@ pub(crate) fn cpn2_volta(k: i32, inicio: i32) -> i32 {
 /// demitido e ao ser contratado.
 pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: usize, clube: usize) -> u32 {
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x2460);
+        show_error_at(0xa693ec, 0x2460);
         return 0;
     }
-    let e = match cpn2_entrada(this, tecnico, 0x246b) {
+    let e = match human_inbox_entry(this, tecnico, 0x246b) {
         Some(e) => e,
         None => return 0,
     };
@@ -442,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: us
     let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWSITEM_AUTO_RESPOND);
     let mut k = read_i32(e + 4) - 1;
     loop {
-        k = cpn2_volta(k, read_i32(e));
+        k = ring_prev_wrap(k, read_i32(e));
         let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
         if read_usize(vaga + 0xd6) == 0 {
             return 1;
@@ -469,7 +478,7 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: us
         let nao_lidas: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_NEWS_COUNT_UNREAD);
         return (nao_lidas(this, tecnico, 0) > 0) as u32;
     }
-    let e = match cpn2_entrada(this, tecnico, 0x241e) {
+    let e = match human_inbox_entry(this, tecnico, 0x241e) {
         Some(e) => e,
         None => return 0,
     };
@@ -479,7 +488,7 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: us
     let texto: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_ACTION_BUTTON);
     let mut k = read_i32(e + 4) - 1;
     loop {
-        k = cpn2_volta(k, read_i32(e));
+        k = ring_prev_wrap(k, read_i32(e));
         let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
         if read_usize(vaga + 0xd6) == 0 {
             return 0;
@@ -509,11 +518,11 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: us
 pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, campo: u32, texto: *const u8, proximo: *mut u8) -> u32 {
     let campo = campo as u8 as i8;
     if !(0..0x32).contains(&campo) {
-        aviso_em(0xa693ec, 0x1e8d);
+        show_error_at(0xa693ec, 0x1e8d);
         return 0;
     }
     if texto.is_null() {
-        aviso_em(0xa693ec, 0x1e95);
+        show_error_at(0xa693ec, 0x1e95);
         return 0;
     }
     let copiar: unsafe extern "C" fn(usize, *const u8, u32) -> usize = core::mem::transmute(FN_9466D0);
@@ -540,14 +549,14 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, campo: u32, 
 /// ou com técnico da máquina; senão 1).
 pub(crate) unsafe extern "thiscall" fn comparar_auto_respond_all(this: usize, tecnico: usize, clube: usize) -> u32 {
     let humano = tecnico != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) >= 0;
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_AUTO_RESPOND_ALL)(this, tecnico, clube);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_AUTO_RESPOND_ALL)(this, tecnico, clube);
     PLACAR.registrar(r == humano as u32, || format!("auto_respond_all(técnico {:x}, humano {}) devolveu {}", tecnico, humano, r));
     r
 }
 
 /// Comparador: lado a lado pela devolução e pelo texto montado em 0xde1f64 (a 0x782b70 não sorteia; a caixa não muda).
 pub(crate) unsafe extern "thiscall" fn comparar_has_urgent_items(this: usize, tecnico: usize, so_urgentes: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_HAS_URGENT_ITEMS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_HAS_URGENT_ITEMS);
     if so_urgentes != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0 {
         return o(this, tecnico, so_urgentes); // a caixa "Error"
     }
@@ -559,7 +568,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_urgent_items(this: usize, te
 
 /// Comparador: lado a lado pelos campos da notícia (+5..+0xcc) e pelo próximo campo.
 pub(crate) unsafe extern "thiscall" fn comparar_set_slot_string(this: usize, campo: u32, texto: *const u8, proximo: *mut u8) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *const u8, *mut u8) -> u32>(IDX_SET_SLOT_STRING);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *const u8, *mut u8) -> u32>(IDX_SET_SLOT_STRING);
     if !(0..0x32).contains(&(campo as u8 as i8)) || texto.is_null() {
         return o(this, campo, texto, proximo); // a caixa "Error"
     }
@@ -584,9 +593,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_slot_string(this: usize, cam
 /// continente nulos: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, noticia: usize, continente: usize) -> u32 {
     if noticia == 0 || continente == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, noticia, continente); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, noticia, continente); // caixa: só a original
     }
-    cpj3_entregar(this, noticia, 3, |p| {
+    deliver_to_human_managers(this, noticia, 3, |p| {
         let c = read_usize(p + 0x39);
         if c != 0 {
             let n = read_usize(c + 0x53);
@@ -609,7 +618,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
 /// "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
     if noticia == 0 || comp == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, noticia, comp); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, noticia, comp); // caixa: só a original
     }
     let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     if nacao != 0 {
@@ -626,8 +635,10 @@ pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, noticia:
     f(this, noticia)
 }
 
-/// O técnico (+0xcf) do clube cujo id está no dado da notícia em `o` ([0xae23b4], 0x245 bytes por clube).
-pub(crate) unsafe fn cpk5_tecnico_do_clube(noticia: usize, o: usize) -> usize {
+/// Manager (+0xcf) of the club whose id is in the news data at offset o.
+///
+/// [pt] O técnico (+0xcf) do clube cujo id está no dado da notícia em `o` ([0xae23b4], 0x245 bytes por clube).
+pub(crate) unsafe fn manager_of_news_club(noticia: usize, o: usize) -> usize {
     read_usize(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(noticia + o).wrapping_mul(0x245)) + 0xcf)
 }
 
@@ -643,7 +654,7 @@ pub(crate) unsafe fn cpk5_tecnico_do_clube(noticia: usize, o: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn is_important_for(noticia: usize, pessoa: usize) -> u8 {
     let t = read_usize(noticia) as i32;
     if pessoa == 0 || !(1..=0x1790).contains(&t) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_IMPORTANT_FOR)(noticia, pessoa); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_IMPORTANT_FOR)(noticia, pessoa); // caixa: só a original
     }
     let categoria: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);
     let r = match categoria(noticia) as u8 {
@@ -653,9 +664,9 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(noticia: usize, pessoa: 
             0xfa0 | 0xfa4 | 0xfad | 0xfae | 0xfaf | 0xfb0 | 0xfb2 | 0xfb4 | 0xfb7 | 0xfb8 | 0xfbb | 0xfbf | 0xfc0 => true,
             0xfa1 => {
                 crate::comparacao::ramo("cpk_5 importante oferta pelo clube");
-                cpk5_tecnico_do_clube(noticia, 0x19) == pessoa // o técnico do clube da oferta
+                manager_of_news_club(noticia, 0x19) == pessoa // o técnico do clube da oferta
             }
-            0xfb6 => cpk5_tecnico_do_clube(noticia, 0x15) == pessoa || cpk5_tecnico_do_clube(noticia, 0x19) == pessoa,
+            0xfb6 => manager_of_news_club(noticia, 0x15) == pessoa || manager_of_news_club(noticia, 0x19) == pessoa,
             _ => false,
         },
         6 => t == 0x1770 && read_usize(noticia + 5) as i32 >= (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10),
@@ -669,17 +680,17 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(noticia: usize, pessoa: 
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_send_to_continent_managers(this: usize, noticia: usize, continente: usize) -> u32 {
     crate::comparacao::ramo("send_to_continent_managers");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, noticia, continente)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, noticia, continente)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
     crate::comparacao::ramo("send_to_comp_region");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, noticia, comp)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, noticia, comp)
 }
 
 /// Comparador: pelo valor (a 0x785670 só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_is_important_for(noticia: usize, pessoa: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_IMPORTANT_FOR)(noticia, pessoa);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_IMPORTANT_FOR)(noticia, pessoa);
     let t = read_usize(noticia) as i32;
     if pessoa == 0 || !(1..=0x1790).contains(&t) {
         return r;
@@ -703,7 +714,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_important_for(noticia: usize,
 pub(crate) unsafe extern "thiscall" fn get_slot_string(noticia: usize, dado: u32, destino: *mut u8, n: i32) -> u32 {
     let k = dado as u8 as i8;
     if !(0..0x32).contains(&k) || destino.is_null() || n < 1 {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_GET_SLOT_STRING)(noticia, dado, destino, n); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_GET_SLOT_STRING)(noticia, dado, destino, n); // caixa: só a original
     }
     crate::comparacao::ramo("cpk_6 texto do dado");
     let origem = (noticia + 5 + 4 * k as usize) as *const u8; // o dado
@@ -718,8 +729,10 @@ pub(crate) unsafe extern "thiscall" fn get_slot_string(noticia: usize, dado: u32
 }
 
 
-/// O clube que a 0x7f9190 usa: o `clube`, ou o do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]] + 0x39).
-pub(crate) unsafe fn cpk6_clube(clube: usize) -> usize {
+/// The given club, or the current human manager's club when null.
+///
+/// [pt] O clube que a 0x7f9190 usa: o `clube`, ou o do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]] + 0x39).
+pub(crate) unsafe fn club_or_current_human(clube: usize) -> usize {
     if clube != 0 {
         return clube;
     }
@@ -729,7 +742,7 @@ pub(crate) unsafe fn cpk6_clube(clube: usize) -> usize {
 
 /// Comparador: lado a lado pelos `n` bytes do destino.
 pub(crate) unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, dado: u32, destino: *mut u8, n: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_GET_SLOT_STRING);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_GET_SLOT_STRING);
     let k = dado as u8 as i8;
     if !(0..0x32).contains(&k) || destino.is_null() || n < 1 {
         return o(noticia, dado, destino, n);
@@ -745,19 +758,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, 
 // ---------- 246a leva: as notícias para os técnicos humanos: para todos, para os da divisão e para os da nação (clube ou seleção) ----------
 
 
-/// O técnico humano `i` (0 a 15: os últimos 16 de [0xae23bc], 0x6e bytes), se ativo (+0x5f = 1).
-pub(crate) unsafe fn cpj3_humano_ativo(i: usize) -> Option<usize> {
+/// Human manager i (0..15, last 16 people of G_STAFF_TABLE) if active (+0x5f = 1).
+///
+/// [pt] O técnico humano `i` (0 a 15: os últimos 16 de [0xae23bc], 0x6e bytes), se ativo (+0x5f = 1).
+pub(crate) unsafe fn active_human_manager(i: usize) -> Option<usize> {
     let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(0x6e));
     (*((p + 0x5f) as *const u8) == 1).then_some(p)
 }
 
-/// Entrega a notícia a cada técnico humano ativo que `passa` (0x785d40 com 0), com o alcance `alcance` em +0xde.
+/// Delivers the news to every active human manager that passa accepts, with reach alcance in +0xde; false at the first
+/// refusal.
+///
+/// [pt] Entrega a notícia a cada técnico humano ativo que `passa` (0x785d40 com 0), com o alcance `alcance` em +0xde.
 /// Devolve se todas as entregas foram aceitas (a primeira recusada encerra).
-pub(crate) unsafe fn cpj3_entregar(this: usize, noticia: usize, alcance: u8, passa: impl Fn(usize) -> bool) -> bool {
+pub(crate) unsafe fn deliver_to_human_managers(this: usize, noticia: usize, alcance: u8, passa: impl Fn(usize) -> bool) -> bool {
     *((noticia + 0xde) as *mut u8) = alcance;
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_DELIVER_TO_MANAGER);
     for i in 0..0x10 {
-        if let Some(p) = cpj3_humano_ativo(i) {
+        if let Some(p) = active_human_manager(i) {
             if passa(p) && entregar(this, noticia, p, 0) == 0 {
                 return false; // a entrega recusada encerra
             }
@@ -774,9 +792,9 @@ pub(crate) unsafe fn cpj3_entregar(this: usize, noticia: usize, alcance: u8, pas
 /// (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, noticia: usize) -> u32 {
     if noticia == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, noticia); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, noticia); // caixa: só a original
     }
-    cpj3_entregar(this, noticia, 4, |_| true) as u32
+    deliver_to_human_managers(this, noticia, 4, |_| true) as u32
 }
 
 /// division scope (+0xde = 1) and delivery to every active human manager with a club in the division (+0x57); 1, or 0
@@ -788,9 +806,9 @@ pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, noticia
 /// primeira recusada. Notícia ou divisão nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, noticia: usize, divisao: usize) -> u32 {
     if noticia == 0 || divisao == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, noticia, divisao); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, noticia, divisao); // caixa: só a original
     }
-    cpj3_entregar(this, noticia, 1, |p| {
+    deliver_to_human_managers(this, noticia, 1, |p| {
         let c = read_usize(p + 0x39);
         c != 0 && read_usize(c + 0x57) == divisao // a divisão do clube
     }) as u32
@@ -805,9 +823,9 @@ pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, no
 /// Notícia ou nação nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     if noticia == 0 || nacao == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, noticia, nacao); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, noticia, nacao); // caixa: só a original
     }
-    cpj3_entregar(this, noticia, 2, |p| {
+    deliver_to_human_managers(this, noticia, 2, |p| {
         let (c, s) = (read_usize(p + 0x39), read_usize(p + 0x24));
         (c != 0 && read_usize(c + 0x53) == nacao) || (s != 0 && read_usize(s + 0x53) == nacao) // o clube ou a seleção
     });
@@ -818,17 +836,17 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, noti
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_send_to_all_managers(this: usize, noticia: usize) -> u32 {
     crate::comparacao::ramo("send_to_all_managers");
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, noticia)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, noticia)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_send_to_division_managers(this: usize, noticia: usize, divisao: usize) -> u32 {
     crate::comparacao::ramo("send_to_division_managers");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, noticia, divisao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, noticia, divisao)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_send_to_nation_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     crate::comparacao::ramo("send_to_nation_managers");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, noticia, nacao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, noticia, nacao)
 }
 
 // ---------- 245a leva: a notícia para os técnicos humanos de uma nação, a missão do olheiro da busca e se a copa terminou ----------
@@ -844,7 +862,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_to_nation_managers(this: us
 /// encerra. Devolve 0. Notícia ou nação nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     if noticia == 0 || nacao == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, noticia, nacao); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, noticia, nacao); // caixa: só a original
     }
     *((noticia + 0xde) as *mut u8) = 2; // o alcance da nação
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_DELIVER_TO_MANAGER);
@@ -864,9 +882,12 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize,
     0
 }
 
-/// O olheiro da busca confere (o tipo +0xa é 4, o índice +0x180 > −1 e a pessoa ainda confere com os nomes e a data
+/// Returns the scout of a search if it still checks out (type 4, index ≥ 0, names/date match), else None (the original
+/// shows a box).
+///
+/// [pt] O olheiro da busca confere (o tipo +0xa é 4, o índice +0x180 > −1 e a pessoa ainda confere com os nomes e a data
 /// guardados pela 0x53e990)? Devolve a pessoa, ou nenhuma (a original mostra a caixa).
-pub(crate) unsafe fn cpi6_olheiro(this: usize) -> Option<usize> {
+pub(crate) unsafe fn check_search_scout(this: usize) -> Option<usize> {
     let i = read_usize(this + 0x180) as i32;
     if *((this + 0xa) as *const u8) != 4 || i <= -1 {
         return None;
@@ -885,16 +906,18 @@ pub(crate) unsafe fn cpi6_olheiro(this: usize) -> Option<usize> {
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_send_to_nation_club_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     crate::comparacao::ramo("send_to_nation_club_managers");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, noticia, nacao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, noticia, nacao)
 }
 
 
 
 // ---------- 213a leva: as notícias não lidas, a marca gravada na notícia da caixa e o clube de técnico humano (news.cpp) ----------
 
-/// A entrada (12 bytes) da caixa de notícias do técnico humano: [noticias+8] + 12 × (id − [0xae2364] +
+/// Human manager's 12-byte inbox entry: [news+8] + 12 × (id - staff count + 16); None when negative.
+///
+/// [pt] A entrada (12 bytes) da caixa de notícias do técnico humano: [noticias+8] + 12 × (id − [0xae2364] +
 /// 0x10); None quando o índice fica negativo (a original abre a caixa de erro).
-pub(crate) unsafe fn entrada_da_caixa_do_tecnico(noticias: usize, tecnico: usize) -> Option<usize> {
+pub(crate) unsafe fn manager_inbox_entry(noticias: usize, tecnico: usize) -> Option<usize> {
     let i = (*(tecnico as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
     if i < 0 {
         return None;
@@ -902,8 +925,10 @@ pub(crate) unsafe fn entrada_da_caixa_do_tecnico(noticias: usize, tecnico: usize
     Some((*((noticias + 8) as *const usize)).wrapping_add((i as usize).wrapping_mul(12)))
 }
 
-/// A notícia `k` da caixa que começa em `inicio`: [noticias] + 0xdf × (inicio + k).
-pub(crate) unsafe fn noticia_da_caixa(noticias: usize, inicio: i32, k: i32) -> usize {
+/// News item k of the inbox starting at inicio: [news] + 0xdf × (inicio + k).
+///
+/// [pt] A notícia `k` da caixa que começa em `inicio`: [noticias] + 0xdf × (inicio + k).
+pub(crate) unsafe fn inbox_news_item(noticias: usize, inicio: i32, k: i32) -> usize {
     (*(noticias as *const usize)).wrapping_add((inicio.wrapping_add(k) as usize).wrapping_mul(0xdf))
 }
 
@@ -915,9 +940,9 @@ pub(crate) unsafe fn noticia_da_caixa(noticias: usize, inicio: i32, k: i32) -> u
 /// +0; −1 = vazia, 0), as ocupadas (+0xd6) da categoria (0x785670) ainda não lidas (+0xda = 0). Técnico
 /// nulo ou fora da faixa: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn count_unread(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
-    let entrada = match if tecnico == 0 { None } else { entrada_da_caixa_do_tecnico(noticias, tecnico) } {
+    let entrada = match if tecnico == 0 { None } else { manager_inbox_entry(noticias, tecnico) } {
         Some(e) => e,
-        None => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_COUNT_UNREAD)(noticias, tecnico, categoria),
+        None => return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_COUNT_UNREAD)(noticias, tecnico, categoria),
     };
     let total = (entrada + 8) as *mut i32;
     if *total < 0 {
@@ -933,7 +958,7 @@ pub(crate) unsafe extern "thiscall" fn count_unread(noticias: usize, tecnico: us
     let categoria_de: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);
     let mut conta = 0;
     for k in 0..100 {
-        let n = noticia_da_caixa(noticias, inicio, k);
+        let n = inbox_news_item(noticias, inicio, k);
         if core::ptr::read_unaligned((n + 0xd6) as *const u32) != 0
             && categoria_de(n) as u8 == categoria as u8
             && core::ptr::read_unaligned((n + 0xda) as *const u32) == 0
@@ -944,23 +969,25 @@ pub(crate) unsafe extern "thiscall" fn count_unread(noticias: usize, tecnico: us
     conta
 }
 
-/// Onde a 0x786d30 grava: Err nos casos da caixa de erro (técnico nulo, id 0, vaga fora de 0..49, cópia
+/// Where 0x786d30 writes: Err on its error-box cases, Ok(None) for an empty inbox, Ok(Some(item)) when found.
+///
+/// [pt] Onde a 0x786d30 grava: Err nos casos da caixa de erro (técnico nulo, id 0, vaga fora de 0..49, cópia
 /// de outro id, índice negativo, id fora das 100 da caixa); Ok(None) com a caixa vazia (início −1);
 /// Ok(Some(notícia)) achada.
-pub(crate) unsafe fn alvo_da_marca(noticias: usize, tecnico: usize, id: u32, vaga: i32, copia: usize) -> Result<Option<usize>, ()> {
+pub(crate) unsafe fn set_slot_target(noticias: usize, tecnico: usize, id: u32, vaga: i32, copia: usize) -> Result<Option<usize>, ()> {
     if tecnico == 0 || id == 0 || !(0..0x32).contains(&vaga) {
         return Err(());
     }
     if copia != 0 && core::ptr::read_unaligned((copia + 0xd6) as *const u32) != id {
         return Err(());
     }
-    let entrada = entrada_da_caixa_do_tecnico(noticias, tecnico).ok_or(())?;
+    let entrada = manager_inbox_entry(noticias, tecnico).ok_or(())?;
     let inicio = *(entrada as *const i32);
     if inicio == -1 {
         return Ok(None);
     }
     (0..100)
-        .map(|k| noticia_da_caixa(noticias, inicio, k))
+        .map(|k| inbox_news_item(noticias, inicio, k))
         .find(|&n| core::ptr::read_unaligned((n + 0xd6) as *const u32) == id)
         .map(Some)
         .ok_or(())
@@ -973,9 +1000,9 @@ pub(crate) unsafe fn alvo_da_marca(noticias: usize, tecnico: usize, id: u32, vag
 /// notícia `id` (+0xd6) da caixa do técnico humano, primeiro na `copia` (se houver) e depois na da caixa;
 /// 1 se achou. Caixa vazia: só a cópia, 0. Casos de erro: a original.
 pub(crate) unsafe extern "thiscall" fn set_item_slot(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
-    let alvo = match alvo_da_marca(noticias, tecnico, id, vaga, copia) {
+    let alvo = match set_slot_target(noticias, tecnico, id, vaga, copia) {
         Ok(a) => a,
-        Err(()) => return orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(IDX_SET_ITEM_SLOT)(noticias, tecnico, id, vaga, valor, copia),
+        Err(()) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(IDX_SET_ITEM_SLOT)(noticias, tecnico, id, vaga, valor, copia),
     };
     if copia != 0 {
         core::ptr::write_unaligned((copia + 5 + 4 * vaga as usize) as *mut u32, valor);
@@ -1012,8 +1039,8 @@ pub(crate) unsafe extern "stdcall" fn news_club_has_human_manager(clube: usize) 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_COUNT_UNREAD);
-    let entrada = if tecnico == 0 { None } else { entrada_da_caixa_do_tecnico(noticias, tecnico) };
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_COUNT_UNREAD);
+    let entrada = if tecnico == 0 { None } else { manager_inbox_entry(noticias, tecnico) };
     let Some(entrada) = entrada else {
         return o(noticias, tecnico, categoria);
     };
@@ -1024,8 +1051,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, te
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(IDX_SET_ITEM_SLOT);
-    let Ok(alvo) = alvo_da_marca(noticias, tecnico, id, vaga, copia) else {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(IDX_SET_ITEM_SLOT);
+    let Ok(alvo) = set_slot_target(noticias, tecnico, id, vaga, copia) else {
         return o(noticias, tecnico, id, vaga, valor, copia);
     };
     let mut regioes = vec![];
@@ -1043,7 +1070,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, t
 
 pub(crate) unsafe extern "stdcall" fn comparar_news_club_has_human_manager(clube: usize) -> u32 {
     // só consultas: as duas rodam de novo sem efeito
-    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_NEWS_CLUB_HAS_HUMAN_MANAGER)(clube);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_NEWS_CLUB_HAS_HUMAN_MANAGER)(clube);
     let n = news_club_has_human_manager(clube);
     PLACAR.registrar(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));
     r
@@ -1060,12 +1087,12 @@ pub(crate) unsafe extern "stdcall" fn comparar_news_club_has_human_manager(clube
 /// ou com índice negativo: a caixa de erro (linhas 0x24c1 e 0x24cc).
 pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, tecnico: usize) {
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x24c1);
+        show_error_at(0xa693ec, 0x24c1);
         return;
     }
     let h = read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if h < 0 {
-        aviso_em(0xa693ec, 0x24cc);
+        show_error_at(0xa693ec, 0x24cc);
         return;
     }
     let caixa = (read_i32(this + 8) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
@@ -1092,7 +1119,7 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, tecnico: usize) 
 /// Comparador: lado a lado na caixa e nas 100 notícias; com resposta padrão a dar (clube ou seleção), só a original,
 /// conferindo o plano depois dela (+4 = +0, +8 = 0 e os dois campos das 100 notícias). Erros: a original.
 pub(crate) unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, tecnico: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_INBOX);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_INBOX);
     if tecnico == 0 {
         return o(this, tecnico);
     }
@@ -1104,13 +1131,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, tecnico
     if read_i32(tecnico + 0x39) != 0 || read_i32(tecnico + 0x24) != 0 {
         o(this, tecnico);
         let primeira = read_i32(caixa);
-        let noticias = cpv10_regioes_da_caixa(this, caixa);
+        let noticias = news_box_regions(this, caixa);
         let ok = read_i32(caixa + 4) == primeira && read_i32(caixa + 8) == 0
             && noticias[1..].iter().all(|&(n, _)| read_i32(n) == 0 && read_i32(n + 4) == 1);
         PLACAR.registrar(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", tecnico, (primeira, read_i32(caixa + 4), read_i32(caixa + 8))));
         return;
     }
-    let reg = cpv10_regioes_da_caixa(this, caixa);
+    let reg = news_box_regions(this, caixa);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tecnico), || clear_inbox(this, tecnico));
     PLACAR.registrar(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", tecnico, mo, mr));
 }
@@ -1145,7 +1172,7 @@ pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, tipo: u3
 
 /// Comparador: pela memória da notícia (0xde bytes; a original usa só uma temporária na pilha) e pela devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_construct_news_item(this: usize, tipo: u32, importante: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_CONSTRUCT_NEWS_ITEM);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_CONSTRUCT_NEWS_ITEM);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xde)], || o(this, tipo, importante), || construct_news_item(this, tipo, importante));
     PLACAR.registrar(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
     r
@@ -1161,12 +1188,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_news_item(this: usize,
 /// "Error" e 0.
 pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x21fa);
+        show_error_at(0xa693ec, 0x21fa);
         return 0;
     }
     let idx = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
     if idx < 0 {
-        aviso_em(0xa693ec, 0x2205);
+        show_error_at(0xa693ec, 0x2205);
         return 0;
     }
     let e = read_usize(this + 8) + idx as usize * 12;
@@ -1190,7 +1217,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usi
             if vetor == 0 {
                 vetor = alocar(0x571c);
                 if vetor == 0 {
-                    aviso_em(0xa693ec, 0x222a);
+                    show_error_at(0xa693ec, 0x222a);
                     return 0;
                 }
                 *conta = 0;
@@ -1208,7 +1235,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usi
 
 /// Comparador: a original aloca o vetor: roda só ela e confere o plano feito antes (a conta e os ids, na ordem).
 pub(crate) unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(IDX_GET_INBOX_ITEMS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(IDX_GET_INBOX_ITEMS);
     if tecnico == 0 || read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0 {
         return o(this, tecnico, conta, categoria);
     }
@@ -1260,13 +1287,13 @@ pub(crate) unsafe extern "thiscall" fn get_category(noticia: usize) -> u32 {
         4000..=4999 => 5,
         5000..=5999 => 1,
         6000..=0x1790 => 6,
-        _ => return orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GET_CATEGORY)(noticia),
+        _ => return original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GET_CATEGORY)(noticia),
     };
     (t as u32 & 0xffff_ff00) | c
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_get_category(noticia: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GET_CATEGORY);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GET_CATEGORY);
     let t = *(noticia as *const i32);
     if !(1..=0x1790).contains(&t) {
         return o(noticia);
@@ -1284,13 +1311,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_category(noticia: usize) -> 
 /// cada). Fora da faixa: a original (caixa de erro, devolve 0).
 pub(crate) unsafe extern "thiscall" fn get_slot(noticia: usize, vaga: i8) -> u32 {
     if !(0..0x32).contains(&vaga) {
-        return orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_GET_SLOT)(noticia, vaga);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_GET_SLOT)(noticia, vaga);
     }
     core::ptr::read_unaligned((noticia + 5 + vaga as usize * 4) as *const u32)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_get_slot(noticia: usize, vaga: i8) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_GET_SLOT)(noticia, vaga);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_GET_SLOT)(noticia, vaga);
     if !(0..0x32).contains(&vaga) {
         return r;
     }
@@ -1306,14 +1333,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_slot(noticia: usize, vaga: i
 /// cada). Devolve 1. `k` fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, valor: u32) -> u32 {
     if !(0..0x32).contains(&k) {
-        return orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(IDX_SET_NEWS_FIELD)(t, k, valor);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(IDX_SET_NEWS_FIELD)(t, k, valor);
     }
     core::ptr::write_unaligned((t + 5 + 4 * k as usize) as *mut u32, valor);
     1
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_set_news_field(t: usize, k: i8, valor: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(IDX_SET_NEWS_FIELD);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(IDX_SET_NEWS_FIELD);
     let reg = if (0..0x32).contains(&k) { vec![(t + 5 + 4 * k as usize, 4)] } else { vec![] };
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, k, valor), || set_news_field(t, k, valor));
     PLACAR.registrar(igual && r == v, || format!("set_news_field({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, valor, r, mo, v, mr));
@@ -1334,7 +1361,7 @@ pub(crate) unsafe extern "thiscall" fn news_operator(this: usize, origem: usize)
     for k in 0..50 {
         d(5 + 4 * k); // as fichas da notícia
     }
-    copiar_data_do_recorde(this + 0xcd, origem + 0xcd);
+    copy_record_date(this + 0xcd, origem + 0xcd);
     b(0xd5);
     d(0xd6);
     d(0xda);
@@ -1343,7 +1370,7 @@ pub(crate) unsafe extern "thiscall" fn news_operator(this: usize, origem: usize)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_news_operator(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_NEWS_OPERATOR);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_NEWS_OPERATOR);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0xdf)], || o(this, origem), || news_operator(this, origem));
     PLACAR.registrar(igual && r == n, || format!("news_operator {:x?} x {:x?}", mo, mr));
     r

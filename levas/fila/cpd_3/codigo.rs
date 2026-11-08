@@ -9,7 +9,7 @@ unsafe fn cpd3_b(a: usize) -> u8 {
 }
 
 /// Avisa o gerenciador dos técnicos ([0xb67a44], se existe) da seleção principal da nação (0x6a3770 com 1).
-unsafe fn cpd3_avisar_tecnicos(nacao: usize) {
+unsafe fn notify_manager_manager(nacao: usize) {
     let g = *(0xb67a44 as *const usize);
     if g != 0 {
         let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
@@ -31,14 +31,14 @@ unsafe extern "thiscall" fn clear_current_competition(this: usize, nacao: usize)
         crate::comparacao::ramo("seleção a competição seguinte");
         core::ptr::write_unaligned(atual as *mut i32, v); // a seguinte vira a atual
         *(seguinte as *mut i32) = -1;
-        cpd3_avisar_tecnicos(nacao); // o aviso da competição seguinte
+        notify_manager_manager(nacao); // o aviso da competição seguinte
     }
 }
 
 /// Comparador: a competição atual e a seguinte; com a seguinte (o aviso 0x6a3770 sorteia e mexe nos técnicos), só a
 /// original.
 unsafe extern "thiscall" fn comparar_clear_current_competition(this: usize, nacao: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let id = *(nacao as *const i32);
     let seguinte = cpd3_d(this + 8).wrapping_add((id as usize).wrapping_mul(4));
     if *(seguinte as *const i32) != -1 {
@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn comparar_clear_current_competition(this: usize, naca
 
 /// A competição `v` (−1: nenhuma) acabou para a 0x775070? Sem `fim_de_fase`, quando +0x59 da competição
 /// ([0xae23d0] + 107 × v) é nulo; com ele, quando é a fase [0xae23a4] + 0xc6 × [0x9cfa10].
-unsafe fn cpd3_acabou(v: i32, fim_de_fase: bool) -> bool {
+unsafe fn is_comp_finished(v: i32, fim_de_fase: bool) -> bool {
     let c = cpd3_d((*(0xae23d0 as *const usize)).wrapping_add(v.wrapping_mul(107) as usize) + 0x59);
     if fim_de_fase {
         c == (*(0xae23a4 as *const usize)).wrapping_add((*(0x9cfa10 as *const i32)).wrapping_mul(0xc6) as usize)
@@ -62,7 +62,7 @@ unsafe fn cpd3_acabou(v: i32, fim_de_fase: bool) -> bool {
 
 /// { 0x775070 } (thiscall, ret 8, national_teams.cpp): `release_competitions_of_continent(continente, fim_de_fase)`:
 /// a cada nação ([0xae23a8], 0x122 bytes) do continente (+0x71), a competição atual (registro +4) e a seguinte
-/// ([this+8][i]) que acabaram (cpd3_acabou) viram −1; se a atual ficou −1 e há seguinte, a seguinte passa a atual e o
+/// ([this+8][i]) que acabaram (is_comp_finished) viram −1; se a atual ficou −1 e há seguinte, a seguinte passa a atual e o
 /// gerenciador dos técnicos é avisado (0x6a3770). Sem SEH, sem caixa, sem locais.
 unsafe extern "thiscall" fn release_competitions_of_continent(this: usize, continente: usize, fim_de_fase: u32) {
     let fim = fim_de_fase as u8 != 0;
@@ -72,12 +72,12 @@ unsafe extern "thiscall" fn release_competitions_of_continent(this: usize, conti
         if cpd3_d(nacao + 0x71) == continente {
             let atual = cpd3_d(this + 4) + 0x6e * i as usize + 4;
             let v = *(atual as *const i32);
-            if v != -1 && cpd3_acabou(v, fim) {
+            if v != -1 && is_comp_finished(v, fim) {
                 *(atual as *mut i32) = -1; // a atual acabou
             }
             let seguinte = cpd3_d(this + 8) + 4 * i as usize;
             let v = *(seguinte as *const i32);
-            if v != -1 && cpd3_acabou(v, fim) {
+            if v != -1 && is_comp_finished(v, fim) {
                 *(seguinte as *mut i32) = -1;
             }
             let v = *((cpd3_d(this + 8) + 4 * i as usize) as *const i32);
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn release_competitions_of_continent(this: usize, conti
                 crate::comparacao::ramo("seleção continente a seguinte vira a atual");
                 *((cpd3_d(this + 4) + 0x6e * i as usize + 4) as *mut i32) = v;
                 *((cpd3_d(this + 8) + 4 * i as usize) as *mut i32) = -1;
-                cpd3_avisar_tecnicos(nacao); // o aviso do continente
+                notify_manager_manager(nacao); // o aviso do continente
             }
         }
         i += 1;
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn release_competitions_of_continent(this: usize, conti
 /// carreira e o ramo da cópia no modo Rust.
 // ponytail: só a original (4 chamadas na carreira); comparar pedia separar a decisão do aviso.
 unsafe extern "thiscall" fn comparar_release_competitions_of_continent(this: usize, continente: usize, fim_de_fase: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%)(this, continente, fim_de_fase)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%)(this, continente, fim_de_fase)
 }
 
 /// { 0x775f90 } (thiscall, ret 0x10, national_teams.cpp): `call_up_replacement(nacao, tipo, nivel, saindo)`: no
@@ -196,5 +196,5 @@ unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: usize, tipo:
 /// (a 0x776250 e a 0x7762f0 que ela chama passam pelos comparadores delas).
 // ponytail: só a original; a prova é a carreira (140 chamadas) e o ramo da cópia no modo Rust.
 unsafe extern "thiscall" fn comparar_call_up_replacement(this: usize, nacao: usize, tipo: u32, nivel: u32, saindo: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize)>(%%I2%%)(this, nacao, tipo, nivel, saindo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize)>(%%I2%%)(this, nacao, tipo, nivel, saindo)
 }

@@ -4,7 +4,7 @@
 #   deixam de ser opostas e os grupos (e os jogos de setembro em diante) mudam;
 # - um sorteio a mais antes de cada clube sorteado do pote: a contagem dos sorteios da carreira muda (e os grupos);
 # - o premio da fase de grupos pela metade (900.000): o saldo dos 32 clubes muda.
-# Os contadores ficam colados no efeito: o parceiro depois da condicao da nacao; o clube sorteado depois do laco da repeticao; o premio no laco dos clubes de cada grupo.
+# Os contadores ficam colados no efeito: o parceiro depois da match_condition da nacao; o clube sorteado depois do laco da repeticao; o premio no laco dos clubes de cada grupo.
 MUTACOES = [
     ('cqg4_sem_parceiro_de_um_lado',
      'cqg4_pd(e + 4, cqg4_d(o)); // cqg4: o parceiro da mesma nação',

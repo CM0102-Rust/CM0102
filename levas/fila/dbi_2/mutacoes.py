@@ -1,4 +1,4 @@
-# Mutacoes das ordens: a dos clubes inverte o lado de menor reputacao (o vetor de clubes vai para o save); a do
+# Mutacoes das ordens: a dos clubes inverte o lado de menor injury_word_0c (o vetor de clubes vai para o save); a do
 # elenco vira crescente (o corte do conjunto A+B a 48 tira os melhores; so pega se algum conjunto passa de 48 na
 # criacao: pode escapar); a da forca do elenco vira crescente (0x549a30 so roda na temporada: ESCAPA da prova do
 # save, lacuna; o comparador dela roda no jogo real comparando da cadeia).

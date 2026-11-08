@@ -27,7 +27,7 @@ struct Cqt4Estadual {
 /// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
-unsafe fn cqt4_construir(this: usize, ano: u32, registro: usize, e: &Cqt4Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, registro: usize, e: &Cqt4Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -54,26 +54,26 @@ unsafe fn cqt4_construir(this: usize, ano: u32, registro: usize, e: &Cqt4Estadua
     let v = alocar(e.fases * 4);
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     if regras(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[0]);
+        show_error_at(e.arquivo, e.linhas[0]);
         return this;
     }
     if tabela(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[1]);
+        show_error_at(e.arquivo, e.linhas[1]);
         return this;
     }
     if jogos(this) == 0 {
-        aviso_em(e.arquivo, e.linhas[2]);
+        show_error_at(e.arquivo, e.linhas[2]);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        aviso_em(e.arquivo, e.linhas[3]);
+        show_error_at(e.arquivo, e.linhas[3]);
         return this;
     }
     let n = novo(0x5ce);
     let s = if n != 0 { estatisticas(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
-        aviso_em(e.arquivo, e.linhas[4]);
+        show_error_at(e.arquivo, e.linhas[4]);
         return this;
     }
     if previstas_sim {
@@ -85,7 +85,7 @@ unsafe fn cqt4_construir(this: usize, ano: u32, registro: usize, e: &Cqt4Estadua
 /// O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
 /// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
 /// fases e a importância +0x51 = 0xf.
-unsafe fn cqt4_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt4Estadual, original: impl FnOnce() -> usize) -> usize {
+unsafe fn bra_reg_rio_compare_state_league_ctor(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt4Estadual, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && cqt4_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && cqt4_d(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
@@ -128,32 +128,32 @@ const CQT4_PAULISTA: Cqt4Estadual = Cqt4Estadual {
 
 /// { 0x439a40 } (thiscall, ret 8, bra_reg_rio.cpp): `BraRegRio::BraRegRio(ano, registro)`: o Carioca (três fases além da liga).
 unsafe extern "thiscall" fn construct_bra_reg_rio(this: usize, ano: u32, registro: usize) -> usize {
-    cqt4_construir(this, ano, registro, &CQT4_CARIOCA, 7, true, "cqt_4 carioca novo") // cqt4: a disciplina e as posições previstas do Carioca
+    bra_reg_rio_construct_state_league(this, ano, registro, &CQT4_CARIOCA, 7, true, "cqt_4 carioca novo") // cqt4: a disciplina e as posições previstas do Carioca
 }
 
 /// { 0x43b130 } (thiscall, ret 8, bra_reg_santa.cpp): `BraRegSanta::BraRegSanta(ano, registro)`: o Catarinense (uma fase além da liga).
 unsafe extern "thiscall" fn construct_bra_reg_santa(this: usize, ano: u32, registro: usize) -> usize {
-    cqt4_construir(this, ano, registro, &CQT4_CATARINENSE, 7, true, "cqt_4 catarinense novo") // cqt4: a disciplina e as posições previstas do Catarinense
+    bra_reg_rio_construct_state_league(this, ano, registro, &CQT4_CATARINENSE, 7, true, "cqt_4 catarinense novo") // cqt4: a disciplina e as posições previstas do Catarinense
 }
 
 /// { 0x43c280 } (thiscall, ret 8, bra_reg_sp.cpp): `BraRegSp::BraRegSp(ano, registro)`: o Paulista (uma fase além da liga).
 unsafe extern "thiscall" fn construct_bra_reg_sp(this: usize, ano: u32, registro: usize) -> usize {
-    cqt4_construir(this, ano, registro, &CQT4_PAULISTA, 7, true, "cqt_4 paulista novo") // cqt4: a disciplina e as posições previstas do Paulista
+    bra_reg_rio_construct_state_league(this, ano, registro, &CQT4_PAULISTA, 7, true, "cqt_4 paulista novo") // cqt4: a disciplina e as posições previstas do Paulista
 }
 
 unsafe extern "thiscall" fn comparar_construct_bra_reg_rio(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    cqt4_comparar("construct_bra_reg_rio", this, ano, registro, &CQT4_CARIOCA, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
+    bra_reg_rio_compare_state_league_ctor("construct_bra_reg_rio", this, ano, registro, &CQT4_CARIOCA, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_bra_reg_santa(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    cqt4_comparar("construct_bra_reg_santa", this, ano, registro, &CQT4_CATARINENSE, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
+    bra_reg_rio_compare_state_league_ctor("construct_bra_reg_santa", this, ano, registro, &CQT4_CATARINENSE, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_bra_reg_sp(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
-    cqt4_comparar("construct_bra_reg_sp", this, ano, registro, &CQT4_PAULISTA, || o(this, ano, registro))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
+    bra_reg_rio_compare_state_league_ctor("construct_bra_reg_sp", this, ano, registro, &CQT4_PAULISTA, || o(this, ano, registro))
 }
 
 unsafe fn cqt4_w(a: usize) -> i16 {
@@ -169,26 +169,26 @@ unsafe fn cqt4_pi(a: usize, v: i32) {
 }
 
 /// A reputação da competição de uma liga (+0x69 do registro +4, word).
-unsafe fn cqt4_rep(liga: usize) -> i32 {
+unsafe fn league_comp_reputation(liga: usize) -> i32 {
     cqt4_w(cqt4_d(liga + 4) + 0x69) as i32
 }
 
 /// O piso que sobe com a reputação `r` (dos ramos que puxam o público para cima): com r < 5, 250 × r × f; senão
 /// 750 × (r − 4) × f + 1000 (a original compara com a parte inteira + 1000 e grava a conta com 1000 somado antes do
 /// truncamento). Abaixo dele, o público vai a ele e o recorde (+0x7b) sobe até ele.
-unsafe fn cqt4_piso_pela_reputacao(c: usize, r: i32, f: f64) {
+unsafe fn raise_attendance_floor(c: usize, r: i32, f: f64) {
     let lim = if r < 5 {
-        let lim = ftol((r.wrapping_mul(250)) as f64 * f);
+        let lim = match_pl_ftol((r.wrapping_mul(250)) as f64 * f);
         if cqt4_i(c + 0x73) >= lim {
             return;
         }
         lim
     } else {
         let x = (r.wrapping_sub(4).wrapping_mul(750)) as f64 * f;
-        if cqt4_i(c + 0x73) >= ftol(x).wrapping_add(1000) {
+        if cqt4_i(c + 0x73) >= match_pl_ftol(x).wrapping_add(1000) {
             return;
         }
-        ftol(x + 1000.0)
+        match_pl_ftol(x + 1000.0)
     };
     cqt4_pi(c + 0x73, lim);
     if lim > cqt4_i(c + 0x7b) {
@@ -197,7 +197,7 @@ unsafe fn cqt4_piso_pela_reputacao(c: usize, r: i32, f: f64) {
 }
 
 /// O teto `lim` do público: acima dele, o público cai a ele e o mínimo (+0x77) desce até ele.
-unsafe fn cqt4_teto(c: usize, lim: i32) {
+unsafe fn cap_attendance(c: usize, lim: i32) {
     if cqt4_i(c + 0x73) > lim {
         cqt4_pi(c + 0x73, lim);
         if lim < cqt4_i(c + 0x77) {
@@ -274,27 +274,27 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
         let somar = |v: i32| cqt4_pi(c + 0x73, cqt4_i(c + 0x73).wrapping_add(v));
         let d = (prevista as i16).wrapping_sub(pos as i16).wrapping_add(1);
         if pos == 1 && acesso() == 0 {
-            let k = cqt4_rep(liga) + d.max(0) as i32;
+            let k = league_comp_reputation(liga) + d.max(0) as i32;
             let val = if dono { k.wrapping_mul(200) } else { k.wrapping_mul(100) };
-            somar(ftol(val as f64 * f));
+            somar(match_pl_ftol(val as f64 * f));
         } else if acesso() == 0 && pos < 3 {
-            let k = cqt4_rep(liga) + d.max(0) as i32;
+            let k = league_comp_reputation(liga) + d.max(0) as i32;
             let val = if dono { k.wrapping_mul(125) } else { k.wrapping_mul(65) };
-            somar(ftol(val as f64 * f));
+            somar(match_pl_ftol(val as f64 * f));
         } else if acesso() != 0 && pos as i32 <= *((liga + 0xbe) as *const i8) as i32 {
             if cima != 0 {
                 let mut a = cqt4_w(cqt4_d(cima + 4) + 0x69).wrapping_sub(cqt4_w(cqt4_d(liga + 4) + 0x69));
                 if a < 1 {
                     a = 1;
                 }
-                let v = ftol(cqt4_w(c + 0x80) as f64 * a as f64 * f * 0.1).max(100);
+                let v = match_pl_ftol(cqt4_w(c + 0x80) as f64 * a as f64 * f * 0.1).max(100);
                 if dono {
                     let r = sorteio(v);
                     somar(r.wrapping_add(v));
                 } else {
                     somar(v);
                 }
-                cqt4_piso_pela_reputacao(c, cqt4_rep(cima), f);
+                raise_attendance_floor(c, league_comp_reputation(cima), f);
                 crate::comparacao::ramo("cqt_4 publico de quem subiu");
             }
         } else if *((liga + 0xbf) as *const i8) != 0 && pos as i32 <= *((liga + 0xbf) as *const i8) as i32 {
@@ -302,26 +302,26 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
             if a > 0 {
                 let s = a as i32;
                 if dono {
-                    let v = ftol(cqt4_rep(liga).wrapping_mul(s).wrapping_mul(75) as f64 * f);
+                    let v = match_pl_ftol(league_comp_reputation(liga).wrapping_mul(s).wrapping_mul(75) as f64 * f);
                     let r = sorteio(v);
-                    let w = ftol(cqt4_rep(liga).wrapping_mul(s).wrapping_mul(75) as f64 * f);
+                    let w = match_pl_ftol(league_comp_reputation(liga).wrapping_mul(s).wrapping_mul(75) as f64 * f);
                     somar(r.wrapping_add(w));
                 } else {
-                    let v = ftol(cqt4_rep(liga).wrapping_mul(s).wrapping_mul(25) as f64 * f);
+                    let v = match_pl_ftol(league_comp_reputation(liga).wrapping_mul(s).wrapping_mul(25) as f64 * f);
                     let r = sorteio(v);
-                    let w = ftol(cqt4_rep(liga).wrapping_mul(s).wrapping_mul(10) as f64 * f);
+                    let w = match_pl_ftol(league_comp_reputation(liga).wrapping_mul(s).wrapping_mul(10) as f64 * f);
                     somar(r.wrapping_add(w));
                 }
             } else {
-                let r = cqt4_rep(liga);
+                let r = league_comp_reputation(liga);
                 let val = if dono { r.wrapping_mul(50) } else { r.wrapping_mul(25) };
-                let v = ftol(val as f64 * f);
+                let v = match_pl_ftol(val as f64 * f);
                 somar(sorteio(v));
             }
             let jogos = *((e + 5) as *const u8);
             if jogos != 0 {
                 let val = (cqt4_i(e + 6) / jogos as i32).wrapping_add(cqt4_i(c + 0x73).wrapping_mul(4));
-                cqt4_pi(c + 0x73, ftol(val as f64 * f * 0.2));
+                cqt4_pi(c + 0x73, match_pl_ftol(val as f64 * f * 0.2));
             }
         } else if rebaixamento() != 0
             && pos as i32 > cqt4_w(liga + 0x3e) as i32 - *((liga + 0xc1) as *const i8) as i32
@@ -331,16 +331,16 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
                 if a > -1 {
                     a = -1;
                 }
-                let mut v = ftol(cqt4_w(c + 0x80) as f64 * a as f64 * f * 0.2).min(-100);
+                let mut v = match_pl_ftol(cqt4_w(c + 0x80) as f64 * a as f64 * f * 0.2).min(-100);
                 if cqt4_i(baixo + 0x20) == -1 {
                     let r = sorteio(0x2ee);
                     v = v.wrapping_mul(2).wrapping_sub(0xfa).wrapping_sub(r);
                 }
                 let r = sorteio(v);
                 somar(r.wrapping_add(v));
-                let rb = cqt4_rep(baixo);
-                let lim = if rb > 7 { ftol(rb.wrapping_mul(3000) as f64 * f) } else { ftol(rb.wrapping_mul(2000) as f64 * f) };
-                cqt4_teto(c, lim);
+                let rb = league_comp_reputation(baixo);
+                let lim = if rb > 7 { match_pl_ftol(rb.wrapping_mul(3000) as f64 * f) } else { match_pl_ftol(rb.wrapping_mul(2000) as f64 * f) };
+                cap_attendance(c, lim);
                 crate::comparacao::ramo("cqt_4 publico de quem caiu");
             }
         } else {
@@ -353,18 +353,18 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
             } else {
                 r.wrapping_mul(d as i32).wrapping_mul(5)
             };
-            let v = ftol(val as f64 * f);
+            let v = match_pl_ftol(val as f64 * f);
             somar(sorteio(v));
             let jogos = *((e + 5) as *const u8);
             if jogos != 0 {
                 let val = (cqt4_i(e + 6) / jogos as i32).wrapping_add(cqt4_i(c + 0x73).wrapping_mul(4));
-                cqt4_pi(c + 0x73, ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
+                cqt4_pi(c + 0x73, match_pl_ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
             }
             crate::comparacao::ramo("cqt_4 publico do meio da tabela");
-            cqt4_piso_pela_reputacao(c, cqt4_rep(liga), f);
-            let r = cqt4_rep(liga);
+            raise_attendance_floor(c, league_comp_reputation(liga), f);
+            let r = league_comp_reputation(liga);
             let teto = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };
-            cqt4_teto(c, teto);
+            cap_attendance(c, teto);
         }
         if cqt4_i(c + 0x73) < 500 {
             cqt4_pi(c + 0x73, 500);
@@ -384,7 +384,7 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
 /// restaurado entre as duas) sobre a tabela dos clubes inteira (onde ficam +0x73, +0x77 e +0x7b) e o estado do
 /// sorteador; a tabela final (0x4a4b20) é alocada e liberada nas duas.
 unsafe extern "C" fn comparar_cqt4_atualizar_media_de_publico(liga: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(%%I3%%);
+    let o = original_fn::<unsafe extern "C" fn(usize)>(%%I3%%);
     let mut regioes = vec![(cqt4_d(0xae23b4), cqt4_d(0xae235c) * 0x245)];
     regioes.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(liga), || crate::aleatorio::sem_contar(|| cqt4_atualizar_media_de_publico(liga)));

@@ -1,9 +1,9 @@
 # Mutacoes da leva42 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva42.py
 MUTACOES = [
     ('f_desc', "(3, 0x96d35c, [0x96d330, 0, 0, 1, 0x967880, 0, 0x96d330])", "(4, 0x96d35c, [0x96d330, 0, 0, 1, 0x967880, 0, 0x96d330])"),
-    ('f_lim', "*p35 = if v as f64 <= f32_em(limiar) as f64", "*p35 = if (v as f64) < f32_em(limiar) as f64"),
-    ('f_s32', "s = degrau(s, byte(pessoa, 0x32), &padrao, true);", "s = degrau(s, byte(pessoa, 0x31), &padrao, true);"),
-    ('f_st0', "v = degrau(v, byte(pessoa, 0x44), &forte, false);", "v = degrau(v, byte(pessoa, 0x44), &forte, true);"),
+    ('f_lim', "*p35 = if v as f64 <= read_f32_at(limiar) as f64", "*p35 = if (v as f64) < read_f32_at(limiar) as f64"),
+    ('f_s32', "s = apply_attribute_step(s, byte(pessoa, 0x32), &padrao, true);", "s = apply_attribute_step(s, byte(pessoa, 0x31), &padrao, true);"),
+    ('f_st0', "v = apply_attribute_step(v, byte(pessoa, 0x44), &forte, false);", "v = apply_attribute_step(v, byte(pessoa, 0x44), &forte, true);"),
     ('f_c1x2', "(1, 3) => parcelas[3] + parcelas[3],", "(1, 3) => parcelas[3],"),
     ('f_c4', "        let a = f(p, 0xad) + f(p, 0xcd);", "        let c4 = c4 as f32 as f64;" + chr(10) + "        let a = f(p, 0xad) + f(p, 0xcd);"),
     ('f_comp', "} else if id == g(KEY_NATION_SWEDEN) {", "} else if id == g(KEY_NATION_NORWAY) {"),
@@ -18,7 +18,7 @@ MUTACOES = [
     ('f_faixa', "('>', 0x32, 0x96d3b0), ('>', 0x23, 0),", "('>', 0x32, 0x96d3b0), ('>', 0x24, 0),"),
     ('f_p4', "(13, 0x96d358, [1, 0x968f20", "(13, 0x96d358, [1, 0x968918"),
     ('f_desg', "tire_fatigue(p, (30 - byte(pessoa, 0x3c) as i32) as f32, -1);", "tire_fatigue(p, (31 - byte(pessoa, 0x3c) as i32) as f32, -1);"),
-    ('f_abs', "*w(0x1de) = ftol(*((this + 0x1de) as *const i16) as f64 * f32_em(k) as f64) as i16;", "*w(0x1de) = ftol(*w(0x1de) as f64 * f32_em(k) as f64) as i16;"),
+    ('f_abs', "*w(0x1de) = match_pl_ftol(*((this + 0x1de) as *const i16) as f64 * read_f32_at(k) as f64) as i16;", "*w(0x1de) = match_pl_ftol(*w(0x1de) as f64 * read_f32_at(k) as f64) as i16;"),
     ('f_2f', "(byte(pessoa, 0x2f) >> 2)", "(byte(pessoa, 0x2f) >> 3)"),
     ('f_kw8', "} else if papel & 8 != 0 {" + chr(10) + "                0x96d3c0", "} else if papel & 8 != 0 {" + chr(10) + "                0x967898"),
     ('f_t3sum', "('<', 10, 0x96d320), ('<', 0x19, 0x96d364)", "('<', 10, 0x96d320), ('<', 0x18, 0x96d364)"),

@@ -7,7 +7,7 @@ MUTACOES = [
     ('cpn_responder_so_a_nova', 'k -= 1;\n        if k == read_i32(e + 4) - 1 {\n            return 1;', 'k -= 1;\n        if true { // mutacao: so a mais nova\n            return 1;', 'cpn_2 respond todas'),
     ('cpn_proximo_campo', '*proximo = p; // o próximo campo livre', '*proximo = p.wrapping_add(1); // mutacao: um campo adiante', 'cpn_2 proximo campo do texto'),
     ('cpn_poucas_partidas', 'r = r * s1f as f64 * (1.0f32 / 12.0) as f64; // menos de 12 partidas', 'r = r * s1f as f64 * (1.0f32 / 6.0) as f64; // mutacao: s1/6', 'cpn_3 poucas partidas'),
-    ('cpn_nota_negativa', 'r = r * cpn3_razao_das_reputacoes(jogador, clube); // a negativa pela reputação', 'r = r / cpn3_razao_das_reputacoes(jogador, clube); // mutacao: tackle', 'cpn_3 nota negativa'),
+    ('cpn_nota_negativa', 'r = r * player_club_reputation_ratio(jogador, clube); // a negativa pela reputação', 'r = r / player_club_reputation_ratio(jogador, clube); // mutacao: tackle', 'cpn_3 nota negativa'),
     ('cpn_peso_da_historia', 'peso as f64 * (1.0f32 / 60.0) as f64; // o peso da história', 'peso as f64 * (1.0f32 / 30.0) as f64; // mutacao: 1/30', 'cpn_3 nota do jogador'),
     ('cpn_aposentado_vira_treinador', 'write_i8(p + 0x3d, 0x10); // aposentado', 'write_i8(p + 0x3d, 5); // mutacao: vira treinador', 'cpn_4 jogador aposentado'),
     ('cpn_jovem_primeiro_clube', 'if s > melhor_nota {', 'if melhor == 0 { // mutacao: o primeiro clube valido', 'cpn_4 clube melhor para o jovem'),

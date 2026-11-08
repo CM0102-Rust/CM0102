@@ -10,6 +10,6 @@ MUTACOES = [
      'cqj8_b(o, 0xc2, 2); // mutacao: os pontos por vitória da NSL', 'cqj_8 regras da nsl'),
     ('cqj8_empate_mls', 'cqj8_b(o, 0xc3, 1); // cqj8: os pontos por empate da MLS',
      'cqj8_b(o, 0xc3, 0); // mutacao: os pontos por empate da MLS', 'cqj_8 regras da mls'),
-    ('cqj8_sem_historico_estadual', 'cqj8_historico_do_estagio(this); // cqj8: o histórico do estadual',
+    ('cqj8_sem_historico_estadual', 'record_first_stage_honours(this); // cqj8: o histórico do estadual',
      '// mutacao: sem o histórico do estadual', 'cqj_8 historico do estadual'),
 ]

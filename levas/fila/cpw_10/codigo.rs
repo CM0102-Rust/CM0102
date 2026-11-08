@@ -22,30 +22,30 @@ unsafe fn cpw10_sortear(n: i32) -> i32 {
 }
 
 /// A data da entrada `e` da fila dos regens (+4) é antes de hoje (0x456770)?
-unsafe fn cpw10_vencida(e: usize) -> bool {
+unsafe fn is_regen_entry_due(e: usize) -> bool {
     let anterior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
     anterior(e + 4, cpw10_d(0xae2c90) as u32, cpw10_d(0xae2c94) as u32) != 0 // cpw10: a entrada vencida
 }
 
 /// Uma nota do técnico refeito (um dos blocos da 0x7a65d0): P = pow(+0x22 da pessoa, 0x968950) (vezes `fator`, quando
 /// há), o maior entre P e o valor `v` da ficha, vezes `k`, no máximo `teto` (f64 em 0x...), truncado.
-unsafe fn cpw10_nota(pessoa: usize, v: i16, fator: Option<usize>, k: usize, teto: usize) -> u16 {
-    let mut p = pow_do_jogo(*((pessoa + 0x22) as *const u8) as f64, f64_em(0x968950));
+unsafe fn rebuilt_coach_rating(pessoa: usize, v: i16, fator: Option<usize>, k: usize, teto: usize) -> u16 {
+    let mut p = game_pow(*((pessoa + 0x22) as *const u8) as f64, read_f64_at(0x968950));
     if let Some(f) = fator {
-        p *= f64_em(f);
+        p *= read_f64_at(f);
     }
     let v = v as f64;
     let m = if p > v { p } else { v };
-    let mk = m * f64_em(k);
-    let t = f64_em(teto);
-    ftol(if !(mk >= t) { mk } else { t }) as u16
+    let mk = m * read_f64_at(k);
+    let t = read_f64_at(teto);
+    match_pl_ftol(if !(mk >= t) { mk } else { t }) as u16
 }
 
 /// O cargo do técnico refeito no clube da máquina (0x7a6757..0x7a68d8): reputação do jogador (+0xb da ficha) abaixo da
 /// do clube (+0x80) vezes 0x968968 e menos de 5 treinadores (0x53c8d0): as vagas de treinador vazias (+0x19f, 5) ficam
 /// com ele (cargo 0xf); sem vaga, auxiliar (+0xd3, cargo 0xd) se o clube não tiver (0x53cb80). Senão, abaixo da do clube
 /// vezes 0x969040, auxiliar do mesmo jeito.
-unsafe fn cpw10_cargo_no_clube(s: usize) {
+unsafe fn place_coach_at_ai_club(s: usize) {
     let clube = cpw10_d(s + 0x39);
     if clube == 0 {
         return;
@@ -58,7 +58,7 @@ unsafe fn cpw10_cargo_no_clube(s: usize) {
     let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53cb80usize);
     let rep = |k: usize| {
         let f = cpw10_w(cpw10_d(s + 0x61) + 0xb) as f64;
-        let c = cpw10_w(cpw10_d(s + 0x39) + 0x80) as f64 * f64_em(k);
+        let c = cpw10_w(cpw10_d(s + 0x39) + 0x80) as f64 * read_f64_at(k);
         c > f
     };
     if rep(0x968968) && (treinadores(cpw10_d(s + 0x39)) as i8) < 5 {
@@ -99,14 +99,14 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
     let primeira = cpw10_d(this + 0x10);
     let mut k = 0i32;
     while k < c0 {
-        if !cpw10_vencida(primeira) || cpw10_i(this + 0x40) == 0 {
+        if !is_regen_entry_due(primeira) || cpw10_i(this + 0x40) == 0 {
             break;
         }
         let id = cpw10_i(primeira);
         if id < 0 || id > cpw10_i(0xae2364) {
             let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
             formatar(0xde1f64, 0xa6bfcc, id);
-            aviso_em(0xa6bf9c, 0x36e);
+            show_error_at(0xa6bf9c, 0x36e);
             return;
         }
         crate::comparacao::ramo("cpw_10 regen da fila");
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
                 }
             }
             normalizar(s);
-            cpw10_cargo_no_clube(s);
+            place_coach_at_ai_club(s);
             let rep = cpw10_w(cpw10_d(s + 0x61) + 0xb);
             let (k, teto) = if rep > 0x1d4c {
                 (0x9689d8, 0x9690b8)
@@ -170,11 +170,11 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             } else {
                 (0x968968, 0x96e288)
             };
-            let a = cpw10_nota(s, rep, None, k, teto);
+            let a = rebuilt_coach_rating(s, rep, None, k, teto);
             cpw10_por16(cpw10_d(s + 0x69) + 0xa, a);
-            let b = cpw10_nota(s, cpw10_w(cpw10_d(s + 0x61) + 9), None, k, teto);
+            let b = rebuilt_coach_rating(s, cpw10_w(cpw10_d(s + 0x61) + 9), None, k, teto);
             cpw10_por16(cpw10_d(s + 0x69) + 8, b);
-            let c = cpw10_nota(s, cpw10_w(cpw10_d(s + 0x61) + 0xd), Some(0x969040), k, teto);
+            let c = rebuilt_coach_rating(s, cpw10_w(cpw10_d(s + 0x61) + 0xd), Some(0x969040), k, teto);
             cpw10_por16(cpw10_d(s + 0x69) + 0xc, c);
         }
         tirar(this, cpw10_i(cpw10_d(this + 0x1c)));
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
 /// lado a lado no cabeçalho (nada muda); com vencidas, as k primeiras saem: as seguintes sobem k casas, as k últimas
 /// ficam com id −1 e as palavras +4/+6 zeradas, a conta cai k. Com reservas (mais de 2) ou id inválido: só a original.
 unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpw10_i(this + 0x20) > 2 {
         crate::comparacao::ramo("cpw_10 reservas so na original");
         return o(this);
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
     if cpw10_i(this + 0x40) != 0 {
         while k < c0 {
             let e = base + k as usize * 0xc;
-            if !cpw10_vencida(e) {
+            if !is_regen_entry_due(e) {
                 break;
             }
             let id = cpw10_i(e);
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
 
 /// O veículo pelo sorteio(100) dos grandes (0x757f30/0x757fa0): 0 → 6; até 7 → 3; até 14 → 5; até 39 → 2; até 59 → 0;
 /// senão 1 (comparações do al com sinal).
-fn cpw10_veiculo_grande(al: i8) -> u32 {
+fn big_club_outlet(al: i8) -> u32 {
     if al == 0 {
         6
     } else if al < 8 {
@@ -245,7 +245,7 @@ fn cpw10_veiculo_grande(al: i8) -> u32 {
 }
 
 /// O veículo dos menores: sorteio(4) de 0 a 2 → 2, senão 4.
-unsafe fn cpw10_veiculo_menor() -> u32 {
+unsafe fn small_club_outlet() -> u32 {
     let r = cpw10_sortear(4);
     if (0..=2).contains(&r) {
         2
@@ -259,14 +259,14 @@ unsafe fn cpw10_veiculo_menor() -> u32 {
 /// (0x75cfc0).
 unsafe extern "C" fn media_pick_outlet_type_for_club(clube: usize) -> u32 {
     if cpw10_w(clube + 0x80) > 0x186a {
-        cpw10_veiculo_grande(cpw10_sortear(100) as u8 as i8)
+        big_club_outlet(cpw10_sortear(100) as u8 as i8)
     } else {
-        cpw10_veiculo_menor()
+        small_club_outlet()
     }
 }
 
 unsafe extern "C" fn comparar_media_pick_outlet_type_for_club(clube: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(clube), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_club(clube)));
     PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
     r
@@ -277,14 +277,14 @@ unsafe extern "C" fn comparar_media_pick_outlet_type_for_club(clube: usize) -> u
 /// comemoração da contratação (0x75b6e0, nas transferências).
 unsafe extern "C" fn media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
     if cpw10_w(cpw10_d(pessoa + 0x61) + 0xb) > 0x186a {
-        cpw10_veiculo_grande(cpw10_sortear(100) as u8 as i8)
+        big_club_outlet(cpw10_sortear(100) as u8 as i8)
     } else {
-        cpw10_veiculo_menor()
+        small_club_outlet()
     }
 }
 
 unsafe extern "C" fn comparar_media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_person(pessoa)));
     PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));
     r

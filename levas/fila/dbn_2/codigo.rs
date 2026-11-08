@@ -248,7 +248,7 @@ fn diferenca_dbn2(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memor
 /// Comparador de 0x5315a0: original e cópia lado a lado sobre as 12 tabelas inteiras (~50 MB na carga) e o texto de
 /// 0xde1f64. Pessoa com jogador, preferências ou não jogador fora da faixa (caixa): só a original.
 unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32) {
-    let o = orig::<unsafe extern "C" fn(u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(u32)>(%%I0%%);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| *(a as *const usize);
     let (pessoas, n) = (rd(0xae23bc), gi(0xae2364));
@@ -275,7 +275,7 @@ unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32) {
 
 /// Comparador de 0x53db40: original e cópia lado a lado sobre o vetor de ids [0xae2d1c].
 unsafe extern "C" fn comparar_database_sort_clubs_by_reputation(refazer: u32) {
-    let o = orig::<unsafe extern "C" fn(u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(u32)>(%%I1%%);
     let v = *(0xae2d1c as *const usize);
     let n = core::ptr::read_unaligned(0xae235c as *const i32);
     if v == 0 || n <= 0 {

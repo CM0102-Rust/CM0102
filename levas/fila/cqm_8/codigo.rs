@@ -20,13 +20,13 @@ unsafe fn cqm8_do_estadual(clube: usize, g: usize) -> bool {
 /// [0xae23b4] (0x245 bytes, [0xae235c] deles) do estadual do global `g`, na ordem do banco, cada um na linha seguinte
 /// (League::init_table_row 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve 1 se encheu.
 /// `girar` é 0 (o original: a linha k recebe o k-ésimo clube); existe só para as mutações de cada estadual.
-unsafe fn cqm8_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
+unsafe fn bra_reg_rio_create_state_league_table(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return 0;
     }
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
@@ -57,25 +57,25 @@ unsafe fn cqm8_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
 /// { 0x43a500 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_table()`: o Carioca tem 12 clubes (divisão reserva +0x60 = [0x9cf9dc]).
 /// Fonte 0x98b014, linha 0x169.
 unsafe extern "thiscall" fn bra_reg_rio_create_table(this: usize) -> u32 {
-    cqm8_tabela(this, 0xc, 0x98b014, 0x169, 0x9cf9dc, 0, "cqm_8 carioca cheio")
+    bra_reg_rio_create_state_league_table(this, 0xc, 0x98b014, 0x169, 0x9cf9dc, 0, "cqm_8 carioca cheio")
 }
 
 /// { 0x43bb70 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_table()`: o Catarinense tem 10 clubes (divisão reserva +0x60 = [0x9cf9b0]).
 /// Fonte 0x98b050, linha 0x167.
 unsafe extern "thiscall" fn bra_reg_rio_create_table_43bb70(this: usize) -> u32 {
-    cqm8_tabela(this, 0xa, 0x98b050, 0x167, 0x9cf9b0, 0, "cqm_8 catarinense cheio")
+    bra_reg_rio_create_state_league_table(this, 0xa, 0x98b050, 0x167, 0x9cf9b0, 0, "cqm_8 catarinense cheio")
 }
 
 /// { 0x43cc40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_table()`: o Paulista tem 16 clubes (divisão reserva +0x60 = [0x9cf9e4]).
 /// Fonte 0x98b090, linha 0x159.
 unsafe extern "thiscall" fn bra_reg_rio_create_table_43cc40(this: usize) -> u32 {
-    cqm8_tabela(this, 0x10, 0x98b090, 0x159, 0x9cf9e4, 0, "cqm_8 paulista cheio")
+    bra_reg_rio_create_state_league_table(this, 0x10, 0x98b090, 0x159, 0x9cf9e4, 0, "cqm_8 paulista cheio")
 }
 
 /// O comparador dos três: a original aloca a tabela (não roda duas vezes): só ela. O plano, feito antes: os clubes do
 /// estadual na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0) e as linhas
 /// da tabela (+0 o clube, 0x3b bytes) com os clubes do plano, na ordem.
-unsafe fn cqm8_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
+unsafe fn bra_reg_rio_compare_state_league_table(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < cqm8_d(0xae235c) as i32 && (plano.len() as i16) < n {
@@ -99,16 +99,16 @@ unsafe fn cqm8_comparar(nome: &str, this: usize, n: i16, g: usize, original: imp
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqm8_comparar("bra_reg_rio_create_table", this, 0xc, 0x9cf9dc, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    bra_reg_rio_compare_state_league_table("bra_reg_rio_create_table", this, 0xc, 0x9cf9dc, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table_43bb70(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqm8_comparar("bra_reg_rio_create_table_43bb70", this, 0xa, 0x9cf9b0, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
+    bra_reg_rio_compare_state_league_table("bra_reg_rio_create_table_43bb70", this, 0xa, 0x9cf9b0, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table_43cc40(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqm8_comparar("bra_reg_rio_create_table_43cc40", this, 0x10, 0x9cf9e4, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    bra_reg_rio_compare_state_league_table("bra_reg_rio_create_table_43cc40", this, 0x10, 0x9cf9e4, || o(this))
 }

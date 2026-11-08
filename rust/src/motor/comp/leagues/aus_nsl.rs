@@ -5,8 +5,10 @@ use super::*;
 
 
 
-/// O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
-pub(crate) unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
+/// Club in row i of the table (+0xb1, 0x3b-byte rows) of league or stage t.
+///
+/// [pt] O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
+pub(crate) unsafe fn aus_nsl_table_row_club(t: usize, i: usize) -> usize {
     read_usize(read_usize(t + 0xb1) + i * 0x3b)
 }
 
@@ -22,7 +24,7 @@ pub(crate) unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
     let fase = read_usize(this + 0x30) as i32;
     if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x987c20, 0x2f0);
+        return show_error_at(0x987c20, 0x2f0);
     }
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
@@ -62,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
     let vagas: [u8; 4] = [2, 0, 0, 0];
     let mut clubes = [0usize; 6];
     for (i, c) in clubes.iter_mut().enumerate() {
-        *c = cqr3_linha(this, i); // cqr3: os seis primeiros da tabela
+        *c = aus_nsl_table_row_club(this, i); // cqr3: os seis primeiros da tabela
     }
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -79,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
     soltar(t);
     let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
-        aviso_em(0x987c20, 0x328);
+        show_error_at(0x987c20, 0x328);
         return 0;
     }
     crate::comparacao::ramo("cqr_3 serie final");
@@ -111,11 +113,11 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let lista = alocar(8);
     if lista == 0 {
-        return aviso_em(0x987c20, 0x348);
+        return show_error_at(0x987c20, 0x348);
     }
     let serie = read_usize(read_usize(this + 0xc));
-    core::ptr::write_unaligned(lista as *mut usize, cqr3_linha(serie, 0)); // cqr3: o primeiro da série final
-    core::ptr::write_unaligned((lista + 4) as *mut usize, cqr3_linha(serie, 1)); // cqr3: o segundo da série final
+    core::ptr::write_unaligned(lista as *mut usize, aus_nsl_table_row_club(serie, 0)); // cqr3: o primeiro da série final
+    core::ptr::write_unaligned((lista + 4) as *mut usize, aus_nsl_table_row_club(serie, 1)); // cqr3: o segundo da série final
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 1, &mut rodadas, &mut extra, 0);
@@ -130,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     soltar(t);
     let fase = read_usize(read_usize(this + 0xc) + 4);
     if fase == 0 {
-        return aviso_em(0x987c20, 0x35c);
+        return show_error_at(0x987c20, 0x35c);
     }
     crate::comparacao::ramo("cqr_3 grande final");
     montar(fase, 0);
@@ -140,7 +142,7 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
 pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_AUS_NSL_ADVANCE_STAGE)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AUS_NSL_ADVANCE_STAGE)(this);
     let depois = read_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
@@ -151,14 +153,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usiz
 pub(crate) unsafe extern "thiscall" fn comparar_create_finals_series_stage(this: usize) -> u32 {
     let mut seis = [0usize; 6];
     for (i, c) in seis.iter_mut().enumerate() {
-        *c = cqr3_linha(this, i);
+        *c = aus_nsl_table_row_club(this, i);
     }
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FINALS_SERIES_STAGE)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FINALS_SERIES_STAGE)(this);
     let fase = read_usize(read_usize(this + 0xc));
     let igual = r == 1 && fase != 0 && read_i16(fase + 0x3e) == 6 && read_usize(fase + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0 && {
         let mut nela = [0usize; 6];
         for (i, c) in nela.iter_mut().enumerate() {
-            *c = cqr3_linha(fase, i);
+            *c = aus_nsl_table_row_club(fase, i);
         }
         let (mut a, mut b) = (seis, nela);
         a.sort_unstable();
@@ -174,8 +176,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_finals_series_stage(this:
 /// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
 pub(crate) unsafe extern "thiscall" fn comparar_create_grand_final_stage(this: usize) {
     let serie = read_usize(read_usize(this + 0xc));
-    let (a, b) = (cqr3_linha(serie, 0), cqr3_linha(serie, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_GRAND_FINAL_STAGE)(this);
+    let (a, b) = (aus_nsl_table_row_club(serie, 0), aus_nsl_table_row_club(serie, 1));
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_GRAND_FINAL_STAGE)(this);
     let fase = read_usize(read_usize(this + 0xc) + 4);
     let igual = fase != 0 && {
         let l = read_usize(fase + 0xa7);
@@ -190,8 +192,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_grand_final_stage(this: u
 
 
 
-/// As regras da NSL (o que a 0x411ce0 grava antes do calendário).
-pub(crate) unsafe fn cqj8_regras_nsl(o: usize) {
+/// Writes the NSL rule fields (3 rounds, points, tiebreaks, 6 finalists...) before the schedule.
+///
+/// [pt] As regras da NSL (o que a 0x411ce0 grava antes do calendário).
+pub(crate) unsafe fn set_nsl_rules(o: usize) {
     write_u16_at(o, 0xab, 0);
     write_u8_at(o, 0xc8, 0);
     write_u8_at(o, 0xbf, 0);
@@ -214,8 +218,10 @@ pub(crate) unsafe fn cqj8_regras_nsl(o: usize) {
     write_u8_at(o, 0x49, 4);
 }
 
-/// As regras da MLS (0x908660; sem calendário: os jogos da MLS são montados à mão pela 0x9086e0).
-pub(crate) unsafe fn cqj8_regras_mls(o: usize) {
+/// Writes the MLS rule fields (no schedule; 32 games, fixed round order...).
+///
+/// [pt] As regras da MLS (0x908660; sem calendário: os jogos da MLS são montados à mão pela 0x9086e0).
+pub(crate) unsafe fn set_mls_rules(o: usize) {
     write_u8_at(o, 0xc4, 2);
     write_u8_at(o, 0xc6, 2);
     write_u8_at(o, 0xc2, 3);
@@ -245,7 +251,7 @@ pub(crate) unsafe fn cqj8_regras_mls(o: usize) {
 /// principal pelo slot 16 (`create_schedule` 0x4111a0, thiscall, ret 0x10: estágio -1, as saídas +0xa9 e +0x3a, sem
 /// a marca; o ponteiro vai para +0xba); devolve 1.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 {
-    cqj8_regras_nsl(this);
+    set_nsl_rules(this);
     crate::comparacao::ramo("cqj_8 regras da nsl");
     let vt = *(this as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
@@ -260,8 +266,8 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 
 pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_set_up_rules(this: usize) -> u32 {
     let o = this;
     let reg = [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_SET_UP_RULES)(this), || {
-        cqj8_regras_nsl(this);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_SET_UP_RULES)(this), || {
+        set_nsl_rules(this);
         1
     });
     PLACAR.registrar(igual && r == n, || format!("aus_nsl_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
@@ -270,9 +276,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_set_up_rules(this: usize
 
 
 
-/// O histórico do primeiro estágio: o slot 13 (+0x30, `record_season_honours`, thiscall sem argumentos) do estágio
+/// Calls record_season_honours (vtable +0x30) on the first stage [[this+0xc]].
+///
+/// [pt] O histórico do primeiro estágio: o slot 13 (+0x30, `record_season_honours`, thiscall sem argumentos) do estágio
 /// [[this+0xc]].
-pub(crate) unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
+pub(crate) unsafe fn record_first_stage_honours(this: usize) -> u32 {
     let e = *(*((this + 0xc) as *const usize) as *const usize);
     let vt = *(e as *const usize);
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(*((vt + 0x30) as *const usize));
@@ -289,12 +297,12 @@ pub(crate) unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
 /// das Séries A e B): só o histórico do primeiro estágio, em salto final; devolve o eax dele.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_record_season_honours(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_8 historico do primeiro estagio");
-    cqj8_historico_do_estagio(this)
+    record_first_stage_honours(this)
 }
 
 /// Comparador: só a original (ponytail: grava o histórico e aloca o registro; não pode rodar duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_record_season_honours(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_RECORD_SEASON_HONOURS)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_RECORD_SEASON_HONOURS)(this)
 }
 
 /// NSL: at the end of the regular season, the six clubs through to the finals series get the qualification record
@@ -308,13 +316,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_record_season_honours(th
 /// (fase 0x435) e -1; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    cqk7_nsl(this, clube, situacao, fase, true).0
+    nsl_end_of_stage(this, clube, situacao, fase, true).0
 }
 
 /// Comparador: só a original (os registros alocam) com a devolução prevista pelo ensaio.
 pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, _, _) = cqk7_nsl(this, clube, situacao, fase, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_AUS_NSL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, a5, a6);
+    let (n, _, _) = nsl_end_of_stage(this, clube, situacao, fase, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_AUS_NSL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, a5, a6);
     PLACAR.registrar(r == n, || format!("aus_nsl_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
     r
 }
@@ -327,7 +335,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_update_staff_records_for
 /// ordem do banco, até encher (o contador num int, comparado no word); sem encher: a caixa da linha 0x252 e 0; cheia: 1,
 /// sem fundo de prêmios nem TV. Fonte 0x987c20 (a caixa de memória na linha 0x241).
 pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 {
-    if cqm9_alocar(this, 0xd, 0x987c20, 0x241) == 0 {
+    if alloc_league_table(this, 0xd, 0x987c20, 0x241) == 0 {
         return 0;
     }
     let mut k: u32 = 0;
@@ -337,15 +345,15 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
         if (k as i16) >= read_i16(this + 0x3e) {
             break;
         }
-        if cqm9_da_divisao(clube, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
-            cqm9_linha(this, k as u8, read_i16(this + 0x3e), 0, clube); // cqm9: a linha da NSL
+        if is_in_division(clube, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
+            jap_j1_init_table_row(this, k as u8, read_i16(this + 0x3e), 0, clube); // cqm9: a linha da NSL
             k = k.wrapping_add(1);
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
     if k as i16 != read_i16(this + 0x3e) {
-        aviso_em(0x987c20, 0x252);
+        show_error_at(0x987c20, 0x252);
         return 0;
     }
     crate::comparacao::ramo("cqm_9 nsl cheia");
@@ -353,6 +361,6 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_CREATE_TABLE);
-    cqm9_comparar("aus_nsl_create_table", this, 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_CREATE_TABLE);
+    compare_japanese_table("aus_nsl_create_table", this, 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))
 }

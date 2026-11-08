@@ -1,9 +1,9 @@
 // ---------- %%LEVA%%a leva: o save: as regras FIFA de transferência (gravar e carregar) e o resumo do save (Setup.cpp, file_screens.cpp) ----------
 
 /// A caixa "Error" das regras FIFA: o texto "v%s %s.%s %d" (versão 0x90d130, arquivo e extensão de
-/// Setup.cpp, linha) em 0xae24d0, a caixa 0x5e8290 e [0xb67a34] = 0. Como o `aviso_em`, mas com os
+/// Setup.cpp, linha) em 0xae24d0, a caixa 0x5e8290 e [0xb67a34] = 0. Como o `show_error_at`, mas com os
 /// argumentos que o sprintf da original lê da pilha (nome, extensão e linha) passados explícitos.
-unsafe fn aviso_do_setup(linha: u32) {
+unsafe fn setup_warning(linha: u32) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -27,21 +27,21 @@ unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
     crate::comparacao::ramo("save gravar regras fifa");
     if save == 0 {
-        aviso_do_setup(0x3b24);
+        setup_warning(0x3b24);
         return;
     }
     let mut z = abrir_item(save, 0xa82518, 1, 0x16, 4);
     if z == 0 {
-        aviso_do_setup(0x3b2c);
+        setup_warning(0x3b2c);
         return;
     }
     if gravar(0xae233c, 1, 1, z) != 1 {
-        aviso_do_setup(0x3b32);
+        setup_warning(0x3b32);
         fechar_item(&mut z);
         return;
     }
     if gravar(0xa83608, 1, 1, z) != 1 {
-        aviso_do_setup(0x3b38);
+        setup_warning(0x3b38);
         fechar_item(&mut z);
         return;
     }
@@ -51,7 +51,7 @@ unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
 // ponytail: acrescenta um item ao contêiner; não roda duas vezes. Só a original; a cópia leva o
 // ramo e é provada pela prova do save (o .qst gravado com e sem a leva).
 unsafe extern "C" fn comparar_save_fifa_transfer_rules(save: usize) {
-    orig::<unsafe extern "C" fn(usize)>(%%I0%%)(save)
+    original_fn::<unsafe extern "C" fn(usize)>(%%I0%%)(save)
 }
 
 /// { 0x839760 } (cdecl, Setup.cpp): `load_fifa_transfer_rules(save)`: lê os 2 bytes do item
@@ -64,21 +64,21 @@ unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
     crate::comparacao::ramo("save carregar regras fifa");
     if save == 0 {
-        aviso_do_setup(0x3b4f);
+        setup_warning(0x3b4f);
         return;
     }
     let mut z = abrir_item(save, 0xa82518, 0, 0x16, 4);
     if z == 0 {
-        aviso_do_setup(0x3b57);
+        setup_warning(0x3b57);
         return;
     }
     if ler_item(0xae233c, 1, 1, z) != 1 {
-        aviso_do_setup(0x3b5d);
+        setup_warning(0x3b5d);
         fechar_item(&mut z);
         return;
     }
     if ler_item(0xa83608, 1, 1, z) != 1 {
-        aviso_do_setup(0x3b63);
+        setup_warning(0x3b63);
         fechar_item(&mut z);
         return;
     }
@@ -91,17 +91,17 @@ unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
 // ponytail: abre e lê o contêiner (aloca o ZFILE) e só roda na carga; segue a regra do bloco do save
 // (arquivo = só a original). A cópia leva o ramo; a etapa de carregar da prova do save a exercita.
 unsafe extern "C" fn comparar_load_fifa_transfer_rules(save: usize) {
-    orig::<unsafe extern "C" fn(usize)>(%%I1%%)(save)
+    original_fn::<unsafe extern "C" fn(usize)>(%%I1%%)(save)
 }
 
 /// O `strcat` da original (repne scasb + rep movs): `fonte` com o zero no fim de `destino`.
-unsafe fn emendar_texto(destino: *mut u8, fonte: *const u8) {
+unsafe fn append_text(destino: *mut u8, fonte: *const u8) {
     let d = destino.add(core::ffi::CStr::from_ptr(destino as *const core::ffi::c_char).to_bytes().len());
-    copiar_texto(d, fonte);
+    copy_text(d, fonte);
 }
 
 /// O `strcpy` da original, com o zero.
-unsafe fn copiar_texto(destino: *mut u8, fonte: *const u8) {
+unsafe fn copy_text(destino: *mut u8, fonte: *const u8) {
     let n = core::ffi::CStr::from_ptr(fonte as *const core::ffi::c_char).to_bytes_with_nul().len();
     core::ptr::copy(fonte, destino, n);
 }
@@ -140,7 +140,7 @@ unsafe extern "C" fn build_save_game_summary(resumo: *mut u8) {
             } else {
                 traduzir(nacao.as_mut_ptr(), 0x9c8134, n + 0x38);
             }
-            emendar_texto(destino, nacao.as_ptr());
+            append_text(destino, nacao.as_ptr());
         }
         if bit == 1 && primeira {
             *resumo.add(0x3e8) = 0;
@@ -161,16 +161,16 @@ unsafe extern "C" fn build_save_game_summary(resumo: *mut u8) {
         if clube != 0 && nacao_do != 0 {
             traduzir(clube_txt, 0x9c80f4, clube + 0x38, nacao_do + 0x38);
         } else if clube != 0 {
-            copiar_texto(clube_txt, (clube + 0x38) as *const u8);
+            copy_text(clube_txt, (clube + 0x38) as *const u8);
         } else if nacao_do != 0 {
-            copiar_texto(clube_txt, (nacao_do + 0x38) as *const u8);
+            copy_text(clube_txt, (nacao_do + 0x38) as *const u8);
         } else {
             *clube_txt = 0;
         }
     }
     let mut copia = [0u8; 8];
     copia_data(resumo as usize + 0xf64, copia.as_mut_ptr(), 0xae2c90);
-    copiar_texto(resumo.add(0x7d0), versao());
+    copy_text(resumo.add(0x7d0), versao());
     let mut agora = 0i32;
     let t = relogio(&mut agora);
     let total = (*(0xdd7140 as *const i32)).wrapping_add(t.wrapping_sub(*(0xdd7144 as *const i32)));
@@ -187,7 +187,7 @@ unsafe extern "C" fn build_save_game_summary(resumo: *mut u8) {
 unsafe extern "C" fn comparar_build_save_game_summary(resumo: *mut u8) {
     let regioes = [(resumo as usize, 0xf6c), (resumo as usize + 0xf6c, 8), (0xdd7140, 8)];
     let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
-        || orig::<unsafe extern "C" fn(*mut u8)>(%%I2%%)(resumo),
+        || original_fn::<unsafe extern "C" fn(*mut u8)>(%%I2%%)(resumo),
         || build_save_game_summary(resumo));
     PLACAR.registrar(mo.0[0] == mr.0[0], || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);

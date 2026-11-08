@@ -19,7 +19,7 @@ unsafe fn cqq9_campeao_do_turno(this: usize, k: usize) -> usize {
 unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
     let fase = cqq9_d(this + 0x30) as i32;
     if fase >= (cqq9_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x9eabc8, 0x223);
+        return show_error_at(0x9eabc8, 0x223);
     }
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn create_championship_final_stage(this: usize) {
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let lista = alocar(8);
     if lista == 0 {
-        return aviso_em(0x9eabc8, 0x245);
+        return show_error_at(0x9eabc8, 0x245);
     }
     core::ptr::write_unaligned(lista as *mut usize, cqq9_campeao_do_turno(this, 0)); // cqq9: o campeão do primeiro turno
     core::ptr::write_unaligned((lista + 4) as *mut usize, cqq9_campeao_do_turno(this, 1)); // cqq9: o campeão do segundo turno
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn create_championship_final_stage(this: usize) {
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
     montar(cqq9_d(cqq9_d(this + 0xc) + 8), 0);
     if cqq9_d(cqq9_d(this + 0xc) + 8) == 0 {
-        return aviso_em(0x9eabc8, 0x25c);
+        return show_error_at(0x9eabc8, 0x25c);
     }
     crate::comparacao::ramo("cqq_9 final");
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u32 {
     let v = alocar(0xc);
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     if v == 0 {
-        aviso_em(0x9eabc8, 0x1b4);
+        show_error_at(0x9eabc8, 0x1b4);
         for f in [0x5cc7d0usize, 0x5a8f60] {
             let f: unsafe extern "C" fn() = core::mem::transmute(f);
             f();
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u32 {
         0
     };
     if erro != 0 {
-        aviso_em(0x9eabc8, erro);
+        show_error_at(0x9eabc8, erro);
         return 0;
     }
     virtual_(cqq9_d(cqq9_d(0xadadfc) + 4 * cqq9_d(0x9cf768)), 8);
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize) {
     let antes = cqq9_d(this + 0x30) as i32;
     let ultima = antes >= (cqq9_d(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqq9_d(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize) {
 /// na lista dela (+0xa7, 6 bytes; como conjunto), e +0x30 = 2.
 unsafe extern "thiscall" fn comparar_create_championship_final_stage(this: usize) {
     let (a, b) = (cqq9_campeao_do_turno(this, 0), cqq9_campeao_do_turno(this, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let fase = cqq9_d(cqq9_d(this + 0xc) + 8);
     let igual = fase != 0 && {
         let l = cqq9_d(fase + 0xa7);
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn comparar_create_championship_final_stage(this: usize
 /// J2; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um e +0x2c = 3.
 unsafe extern "thiscall" fn comparar_jap_j1_start_new_season(this: usize) -> u32 {
     let antes = cqq9_w(this + 0x40);
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let depois = cqq9_w(this + 0x40);
     PLACAR.registrar(depois == antes.wrapping_add(1) && cqq9_d(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, cqq9_d(this + 0x2c)));
     r

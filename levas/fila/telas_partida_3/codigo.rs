@@ -1,11 +1,11 @@
 // ---------- %%LEVA%%a leva: as telas da partida (3): a tela de detalhes da partida (match_screens.cpp) ----------
 
 /// Lê e grava os parâmetros da tela atual do gerente de telas [0xb74450] (0x7ff010, 0x7ff270).
-unsafe fn parametro_da_tela(k: u32) -> usize {
+unsafe fn get_screen_param(k: u32) -> usize {
     let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7ff010usize);
     ler(0xb74450, k)
 }
-unsafe fn gravar_parametro_da_tela(k: u32, v: usize) {
+unsafe fn set_screen_param(k: u32, v: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(0x7ff270usize);
     gravar(0xb74450, k, v, 0);
 }
@@ -24,7 +24,7 @@ unsafe extern "C" fn open_match_details(partida: usize) {
         (0u32, 0usize), (2, 6), (9, MENOS1), (0xa, 3), (0xb, MENOS1), (0xc, 0), (0xd, MENOS1), (0x16, 0), (0x17, 0), (0x18, 0), (0x19, 0),
         (0x1a, MENOS1), (0x1b, 0), (0x1c, 1), (0x1d, 0), (0x1e, partida), (0x1f, 0), (0x20, 0), (0x21, MENOS1), (0x22, 0), (0x23, MENOS1), (0x2d, 0),
     ] {
-        gravar_parametro_da_tela(k, v);
+        set_screen_param(k, v);
     }
 }
 
@@ -39,27 +39,27 @@ unsafe extern "C" fn match_details_input(item: u32) -> i32 {
     crate::comparacao::ramo("telas respond aos detalhes");
     let g = |a: usize| *(a as *const u32);
     let item16 = item as u16 as i16;
-    let display_do_humano = || *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
+    let current_human_display = || *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
     let id_ou_padrao = |w: u16| if w == 0 { *(0xdd6bde as *const u16) } else { w };
     if g(0xb77c84) == 0 {
-        let aba = parametro_da_tela(2) as u8 as i8;
-        let v1e = parametro_da_tela(0x1e);
-        let p1f = parametro_da_tela(0x1f);
+        let aba = get_screen_param(2) as u8 as i8;
+        let v1e = get_screen_param(0x1e);
+        let p1f = get_screen_param(0x1f);
         *(0xb6b7ac as *mut u32) = 0;
         *(0xb6b7b0 as *mut u32) = 0;
         *(0xb6b7a8 as *mut u32) = 0;
         if item16 != -1 {
             let deslocamento = item16 as isize * 0x18c;
             let registro = |d: usize| (d as isize + deslocamento) as usize;
-            let e = registro(display_do_humano());
+            let e = registro(current_human_display());
             if id_ou_padrao(core::ptr::read_unaligned((e + 0xba966) as *const u16)) == 1 {
                 let dado = core::ptr::read_unaligned((e + 0xba9a6) as *const usize);
-                if dado != parametro_da_tela(2) {
-                    gravar_parametro_da_tela(2, dado);
+                if dado != get_screen_param(2) {
+                    set_screen_param(2, dado);
                     *(0xb6b7b0 as *mut u32) = 1;
                 }
             }
-            let e = registro(display_do_humano());
+            let e = registro(current_human_display());
             if id_ou_padrao(core::ptr::read_unaligned((e + 0xba966) as *const u16)) == 2 {
                 let clube = core::ptr::read_unaligned((e + 0xba9a6) as *const usize);
                 let marca = if clube == *((p1f + 0x1c) as *const usize) { *((p1f + 0x40) as *const u8) } else { *((p1f + 0x41) as *const u8) };
@@ -69,7 +69,7 @@ unsafe extern "C" fn match_details_input(item: u32) -> i32 {
             }
         }
         let menu_da_partida = |bit: u8| {
-            let p = parametro_da_tela(0);
+            let p = get_screen_param(0);
             g(0xb6b7ac) != 0 && *(*((p + 0x5b) as *const usize) as *const u8) & bit != 0
         };
         let refazer = |f: usize| -> bool {
@@ -85,7 +85,7 @@ unsafe extern "C" fn match_details_input(item: u32) -> i32 {
         let estatisticas_do_time: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x722dc0usize);
         match aba {
             1 => {
-                let p = parametro_da_tela(0);
+                let p = get_screen_param(0);
                 if g(0xb6b7ac) != 0 {
                     let m = *(*((p + 0x5b) as *const usize) as *const u8);
                     if m & 0x20 != 0 || m & 0x10 != 0 {
@@ -106,13 +106,13 @@ unsafe extern "C" fn match_details_input(item: u32) -> i32 {
                     refazer(0x720320);
                 }
                 if item16 != -1 {
-                    let d = display_do_humano();
+                    let d = current_human_display();
                     let id: unsafe extern "thiscall" fn(usize, u32) -> u16 = core::mem::transmute(0x468b10usize);
                     if id_ou_padrao(id(d, item)) == 4 {
                         let dado: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x4739a0usize);
-                        if dado(d, item) != parametro_da_tela(0xa) {
+                        if dado(d, item) != get_screen_param(0xa) {
                             let acao: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x468b90usize);
-                            gravar_parametro_da_tela(0xa, acao(0xb74450, item));
+                            set_screen_param(0xa, acao(0xb74450, item));
                             *(0xb6b7b0 as *mut u32) = 1;
                             return -11;
                         }
@@ -161,10 +161,10 @@ unsafe extern "C" fn close_match_details() {
     crate::comparacao::ramo("telas fechar os detalhes");
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     for (k, destrutor) in [(0x2du32, Some(0x5a8f60usize)), (0x1d, Some(0x453bc0)), (0x1f, None), (0x20, Some(0x453bc0))] {
-        if parametro_da_tela(k) == 0 {
+        if get_screen_param(k) == 0 {
             continue;
         }
-        let p = parametro_da_tela(k);
+        let p = get_screen_param(k);
         match destrutor {
             Some(d) => {
                 if p != 0 {
@@ -175,20 +175,20 @@ unsafe extern "C" fn close_match_details() {
             }
             None => liberar(p),
         }
-        gravar_parametro_da_tela(k, 0);
+        set_screen_param(k, 0);
     }
 }
 
 // ponytail: as três mexem em telas, menus e memória (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 unsafe extern "C" fn comparar_open_match_details(partida: usize) {
-    orig::<unsafe extern "C" fn(usize)>(%%I0%%)(partida)
+    original_fn::<unsafe extern "C" fn(usize)>(%%I0%%)(partida)
 }
 
 unsafe extern "C" fn comparar_match_details_input(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
+    original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
 }
 
 unsafe extern "C" fn comparar_close_match_details() {
-    orig::<unsafe extern "C" fn()>(%%I2%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

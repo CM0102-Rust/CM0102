@@ -5,14 +5,14 @@ unsafe fn dbq1_u32(a: usize) -> usize {
 }
 
 /// A lista de três dwords em `lista` tem `quem`?
-unsafe fn dbq1_tem(lista: usize, quem: usize) -> bool {
+unsafe fn list3_contains(lista: usize, quem: usize) -> bool {
     (0..3).any(|k| dbq1_u32(lista + 4 * k) == quem)
 }
 
 /// O miolo das rotinas de acrescentar às preferências: já na lista (`ja`), nada; na lista `outra` (o oposto: favoritos
 /// x rejeitados), tira de lá a primeira ocorrência e para; senão entra na primeira vaga de `lista`; sem vaga, só com
 /// `forcar`: sorteia (0x90cfc0, 3) a vaga que troca (0, 1 ou 2).
-unsafe fn dbq1_acrescentar(lista: usize, outra: usize, quem: usize, ja: bool, forcar: u32) {
+unsafe fn database_add_to_preference_list(lista: usize, outra: usize, quem: usize, ja: bool, forcar: u32) {
     if ja {
         return;
     }
@@ -35,7 +35,7 @@ unsafe fn dbq1_acrescentar(lista: usize, outra: usize, quem: usize, ja: bool, fo
 
 /// O estado do sorteio e as 6 pessoas (favoritas e rejeitadas) a partir de `base` (o clube +0x9b ou as preferências
 /// +0x1c); `base` nulo: só o sorteio.
-unsafe fn dbq1_regioes(base: usize) -> Vec<(usize, usize)> {
+unsafe fn preference_regions(base: usize) -> Vec<(usize, usize)> {
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if base != 0 {
         reg.push((base, 24));
@@ -51,12 +51,12 @@ unsafe extern "C" fn club_add_favoured_staff(clube: usize, pessoa: usize, forcar
     if clube == 0 || pessoa == 0 {
         return;
     }
-    dbq1_acrescentar(clube + 0x9b, clube + 0xa7, pessoa, dbq1_tem(clube + 0x9b, pessoa), forcar) // as favoritas do clube
+    database_add_to_preference_list(clube + 0x9b, clube + 0xa7, pessoa, list3_contains(clube + 0x9b, pessoa), forcar) // as favoritas do clube
 }
 
 unsafe extern "C" fn comparar_club_add_favoured_staff(clube: usize, pessoa: usize, forcar: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(%%I0%%);
-    let reg = dbq1_regioes(if clube != 0 { clube + 0x9b } else { 0 });
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I0%%);
+    let reg = preference_regions(if clube != 0 { clube + 0x9b } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, pessoa, forcar),
         || crate::aleatorio::sem_contar(|| club_add_favoured_staff(clube, pessoa, forcar)));
     PLACAR.registrar(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
@@ -70,12 +70,12 @@ unsafe extern "C" fn club_add_disliked_staff(clube: usize, pessoa: usize, forcar
     if clube == 0 || pessoa == 0 {
         return;
     }
-    dbq1_acrescentar(clube + 0xa7, clube + 0x9b, pessoa, dbq1_tem(clube + 0xa7, pessoa), forcar) // as rejeitadas do clube
+    database_add_to_preference_list(clube + 0xa7, clube + 0x9b, pessoa, list3_contains(clube + 0xa7, pessoa), forcar) // as rejeitadas do clube
 }
 
 unsafe extern "C" fn comparar_club_add_disliked_staff(clube: usize, pessoa: usize, forcar: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(%%I1%%);
-    let reg = dbq1_regioes(if clube != 0 { clube + 0x9b } else { 0 });
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I1%%);
+    let reg = preference_regions(if clube != 0 { clube + 0x9b } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, pessoa, forcar),
         || crate::aleatorio::sem_contar(|| club_add_disliked_staff(clube, pessoa, forcar)));
     PLACAR.registrar(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
@@ -94,13 +94,13 @@ unsafe extern "C" fn staff_add_favoured_staff(pessoa: usize, outra: usize, forca
     if pref == 0 || outra == 0 {
         return;
     }
-    dbq1_acrescentar(pref + 0x1c, pref + 0x28, outra, dbq1_tem(pref + 0x1c, outra), forcar) // as favoritas da pessoa
+    database_add_to_preference_list(pref + 0x1c, pref + 0x28, outra, list3_contains(pref + 0x1c, outra), forcar) // as favoritas da pessoa
 }
 
 unsafe extern "C" fn comparar_staff_add_favoured_staff(pessoa: usize, outra: usize, forcar: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I2%%);
     let pref = if pessoa != 0 { dbq1_u32(pessoa + 0x65) } else { 0 };
-    let reg = dbq1_regioes(if pref != 0 { pref + 0x1c } else { 0 });
+    let reg = preference_regions(if pref != 0 { pref + 0x1c } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, outra, forcar),
         || crate::aleatorio::sem_contar(|| staff_add_favoured_staff(pessoa, outra, forcar)));
     PLACAR.registrar(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, forcar, mo, mr));

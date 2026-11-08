@@ -26,40 +26,40 @@ unsafe fn cpw7_sortear(n: i32) -> i32 {
 }
 
 /// O byte com sinal `a` (atributo de 1 a 20) cai um com o sorteio dele: zero (`zero`) ou não zero, se for maior que 1.
-unsafe fn cpw7_cair(a: usize, zero: bool) {
+unsafe fn maybe_drop_attribute(a: usize, zero: bool) {
     let v = cpw7_b(a) as i8;
     if v > 1 && (cpw7_sortear(v as i32) == 0) == zero {
         *(a as *mut i8) = v - 1;
     }
 }
 
-unsafe fn cpw7_proximo(lista: usize) -> usize {
+unsafe fn awol_llist_next(lista: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     f(lista)
 }
 
 /// O cursor da lista volta ao primeiro nó (+0xa = +2).
-unsafe fn cpw7_inicio(lista: usize) {
+unsafe fn awol_llist_rewind(lista: usize) {
     cpw7_pd(lista + 0xa, cpw7_d(lista + 2) as u32);
 }
 
 /// A data `d` (dia com sinal em +0, ano sem sinal em +2) já passou: hoje ([0xae2c90]) é depois dela.
-unsafe fn cpw7_passou(d: usize) -> bool {
+unsafe fn date_has_passed(d: usize) -> bool {
     let (dia, ano) = (cpw7_w(0xae2c90), cpw7_w(0xae2c92) as u16);
     let a = cpw7_w(d + 2) as u16;
     ano > a || (ano == a && dia > cpw7_w(d))
 }
 
 /// Uma semana depois da data `d` (0x54c770), já passou?
-unsafe fn cpw7_semana_passou(d: usize, semanas: u32) -> bool {
+unsafe fn weeks_after_have_passed(d: usize, semanas: u32) -> bool {
     let f: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c770usize);
     let mut t = [0u8; 8];
-    cpw7_passou(f(d, &mut t, semanas))
+    date_has_passed(f(d, &mut t, semanas))
 }
 
 /// O fim do caso de falta ao treino `r` (pessoa em +0): com o byte da pessoa na tabela de marcas ([this+0xc]) não zero,
 /// troca o bit 2 dele (o `or 2` da original nunca dá zero) e tira o registro da lista das faltas ([this+4], 0x68d1f0).
-unsafe fn cpw7_tirar_falta(this: usize, r: usize) {
+unsafe fn close_awol_case(this: usize, r: usize) {
     let m = cpw7_d(this + 0xc).wrapping_add(cpw7_i(r) as usize) as *mut u8;
     if *m == 0 {
         return;
@@ -70,7 +70,7 @@ unsafe fn cpw7_tirar_falta(this: usize, r: usize) {
     tirar(cpw7_d(this + 4), r); // cpw7: tira o caso da lista
 }
 
-unsafe fn cpw7_faltou(this: usize, pessoa: usize) {
+unsafe fn awol_miss_training(this: usize, pessoa: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x41a360usize);
     f(this, pessoa);
 }
@@ -89,15 +89,15 @@ unsafe extern "thiscall" fn awol_daily_update(this: usize) {
     // (1) as ausências
     let l = cpw7_d(this);
     if l != 0 {
-        cpw7_inicio(l);
+        awol_llist_rewind(l);
         if cpw7_w(l) > 0 {
             let mut i = 0;
             loop {
-                let r = cpw7_proximo(cpw7_d(this));
+                let r = awol_llist_next(cpw7_d(this));
                 if r == 0 {
                     return;
                 }
-                if cpw7_passou(r + 4) {
+                if date_has_passed(r + 4) {
                     let fim: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x419710usize);
                     fim(this, r);
                     break;
@@ -112,17 +112,17 @@ unsafe extern "thiscall" fn awol_daily_update(this: usize) {
     // (2) as faltas ao treino
     let l = cpw7_d(this + 4);
     if l != 0 {
-        cpw7_inicio(l);
+        awol_llist_rewind(l);
         if cpw7_w(l) > 0 {
             let mut i = 0;
             loop {
-                let r = cpw7_proximo(cpw7_d(this + 4));
+                let r = awol_llist_next(cpw7_d(this + 4));
                 if r == 0 {
                     return;
                 }
-                if cpw7_semana_passou(r + 4, 1) { // cpw7: uma semana depois
+                if weeks_after_have_passed(r + 4, 1) { // cpw7: uma semana depois
                     crate::comparacao::ramo("cpw_7 falta vencida");
-                    cpw7_resolver_falta(this, r);
+                    resolve_awol_case(this, r);
                     break;
                 }
                 i += 1;
@@ -137,24 +137,24 @@ unsafe extern "thiscall" fn awol_daily_update(this: usize) {
     if l == 0 {
         return;
     }
-    cpw7_inicio(l);
+    awol_llist_rewind(l);
     if cpw7_w(l) <= 0 {
         return;
     }
     let mut i = 0;
     loop {
-        let r = cpw7_proximo(cpw7_d(this + 8));
+        let r = awol_llist_next(cpw7_d(this + 8));
         if r == 0 {
             return;
         }
-        if cpw7_semana_passou(r + 8, 1) {
+        if weeks_after_have_passed(r + 8, 1) {
             let pessoa = cpw7_d(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
             let resolveu = if cpw7_b(r + 0x10) != 0 {
                 if cpw7_d(pessoa + 0x61) == 0 {
                     true
                 } else if cpw7_sortear(cpw7_b(pessoa + 0x5b) as i8 as i32) == 0 && cpw7_sortear(cpw7_b(pessoa + 0x5d) as i8 as i32) == 0 {
-                    cpw7_cair(pessoa + 0x5b, true);
-                    cpw7_cair(pessoa + 0x5d, true);
+                    maybe_drop_attribute(pessoa + 0x5b, true);
+                    maybe_drop_attribute(pessoa + 0x5d, true);
                     true
                 } else {
                     false
@@ -163,10 +163,10 @@ unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                 let a = cpw7_sortear(cpw7_b(pessoa + 0x5b) as i8 as i32);
                 let b = cpw7_sortear(5);
                 if (a as u8 as i8) < ((b as u8).wrapping_add(1) as i8) {
-                    cpw7_cair(pessoa + 0x5b, true);
+                    maybe_drop_attribute(pessoa + 0x5b, true);
                     let j = cpw7_d(pessoa + 0x61);
                     if j != 0 {
-                        cpw7_cair(j + 0x44, true);
+                        maybe_drop_attribute(j + 0x44, true);
                     }
                     true
                 } else {
@@ -187,21 +187,21 @@ unsafe extern "thiscall" fn awol_daily_update(this: usize) {
 }
 
 /// A falta ao treino `r` com uma semana passada (o meio da lista (2) de `awol_daily_update`).
-unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
+unsafe fn resolve_awol_case(this: usize, r: usize) {
     let pessoa = cpw7_d(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
     if cpw7_b(r + 0xc) != 0 {
         // o caso repetido
         if cpw7_d(pessoa + 0x61) != 0 {
             crate::comparacao::ramo("cpw_7 caso repetido");
             if cpw7_sortear(cpw7_b(pessoa + 0x5b) as i8 as i32) == 0 && cpw7_sortear(cpw7_b(pessoa + 0x5d) as i8 as i32) == 0 { // cpw7: os sorteios do caso repetido
-                cpw7_cair(pessoa + 0x5b, true);
-                cpw7_cair(pessoa + 0x5d, true);
-                cpw7_tirar_falta(this, r);
-                cpw7_faltou(this, pessoa);
+                maybe_drop_attribute(pessoa + 0x5b, true);
+                maybe_drop_attribute(pessoa + 0x5d, true);
+                close_awol_case(this, r);
+                awol_miss_training(this, pessoa);
                 return;
             }
         }
-        return cpw7_tirar_falta(this, r);
+        return close_awol_case(this, r);
     }
     // o caso novo: os colegas do clube
     crate::comparacao::ramo("cpw_7 caso novo");
@@ -233,12 +233,12 @@ unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
             if cpw7_b(s + 0x18) as i8 >= 0x15 || cpw7_w(cpw7_d(s + 0x61) + 0xb) <= 0x1482 {
                 continue;
             }
-            cpw7_cair(s + 0x5b, true);
+            maybe_drop_attribute(s + 0x5b, true);
             let j = cpw7_d(s + 0x61);
             if cpw7_b(j + 0x44) as i8 > 1 && cpw7_sortear(cpw7_b(s + 0x5b) as i8 as i32) == 0 {
                 *((j + 0x44) as *mut i8) -= 1;
             }
-            cpw7_cair(s + 0x5d, true);
+            maybe_drop_attribute(s + 0x5d, true);
         }
     }
     // o faltoso
@@ -247,10 +247,10 @@ unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
         let a = cpw7_sortear(cpw7_b(pessoa + 0x5b) as i8 as i32);
         let b = cpw7_sortear(0xf);
         if (a as u8 as i8) < ((b as u8).wrapping_add(1) as i8) {
-            cpw7_cair(pessoa + 0x5b, false);
-            cpw7_cair(cpw7_d(pessoa + 0x61) + 0x44, false);
-            cpw7_tirar_falta(this, r);
-            cpw7_faltou(this, pessoa);
+            maybe_drop_attribute(pessoa + 0x5b, false);
+            maybe_drop_attribute(cpw7_d(pessoa + 0x61) + 0x44, false);
+            close_awol_case(this, r);
+            awol_miss_training(this, pessoa);
             if clube != 0 && cpw7_d(pessoa + 0x61) != 0 {
                 let brigar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x72c1f0usize);
                 brigar(cpw7_d(0xb6b7c8), pessoa, clube, 8, 0, 0);
@@ -258,13 +258,13 @@ unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
             return;
         }
     }
-    cpw7_tirar_falta(this, r);
+    close_awol_case(this, r);
 }
 
 // ponytail: sorteia, tira e libera nós das listas (0x68d1f0), dá notícia de volta (0x419710) e de falta (0x41a360): só
 // a original; a cópia leva os ramos.
 unsafe extern "thiscall" fn comparar_awol_daily_update(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// { 0x418ff0 } (thiscall, ret 4, awol.cpp): `AWOL::has_missed_training(pessoa)`, pelos jogadores do dia (0x5a69b0) e
@@ -293,7 +293,7 @@ unsafe extern "thiscall" fn has_missed_training(this: usize, pessoa: usize) -> u
 /// O comparador da falta ao treino: lado a lado pela devolução (byte baixo) e pelo [0xae1080]; sem contrato com o bit 2,
 /// só a original (a 0x4197c0 tira e libera o nó da lista).
 unsafe extern "thiscall" fn comparar_has_missed_training(this: usize, pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
     if pessoa != 0 && cpw7_i(pessoa) < cpw7_i(0xae2364) && cpw7_b(cpw7_d(this + 0xc).wrapping_add(cpw7_i(pessoa) as usize)) & 2 != 0 {
         let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
         let k = contract_of(cpw7_d(0xae1050), pessoa);
@@ -322,13 +322,13 @@ unsafe extern "thiscall" fn has_fitness_incident(this: usize, pessoa: usize) -> 
     if l == 0 {
         return 0;
     }
-    cpw7_inicio(l);
+    awol_llist_rewind(l);
     if cpw7_w(l) <= 0 {
         return l as u32 & 0xffffff00;
     }
     let mut i = 0;
     loop {
-        let r = cpw7_proximo(cpw7_d(this + 8));
+        let r = awol_llist_next(cpw7_d(this + 8));
         if r == 0 {
             return 0;
         }
@@ -345,7 +345,7 @@ unsafe extern "thiscall" fn has_fitness_incident(this: usize, pessoa: usize) -> 
 
 /// O comparador do atraso: lado a lado pela devolução (byte baixo) e pelo cursor da lista.
 unsafe extern "thiscall" fn comparar_has_fitness_incident(this: usize, pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let l = cpw7_d(this + 8);
     let regioes: Vec<(usize, usize)> = if l != 0 { vec![(l + 0xa, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, pessoa), || has_fitness_incident(this, pessoa));
@@ -361,7 +361,7 @@ static mut CPW7_ENSAIO: bool = false;
 static mut CPW7_DECISAO: u32 = 0;
 
 /// O clube do contrato `k` (+4 id, [0xae23b4], 0x245 bytes), ou 0.
-unsafe fn cpw7_clube_do_contrato(k: usize) -> usize {
+unsafe fn awol_club_of_contract(k: usize) -> usize {
     if k == 0 {
         return 0;
     }
@@ -391,7 +391,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let k = contract_of(cpw7_d(0xae1050), pessoa);
     cpw7_pd(0xae1080, k as u32);
-    let clube = cpw7_clube_do_contrato(k);
+    let clube = awol_club_of_contract(k);
     if k == 0 || clube == 0 {
         return;
     }
@@ -427,12 +427,12 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
     let k3 = contract_of(cpw7_d(0xae1050), pessoa);
     cpw7_pd(0xae1080, k3 as u32);
     let noticia: unsafe extern "stdcall" fn(usize, usize) = core::mem::transmute(0x41a630usize);
-    noticia(pessoa, cpw7_clube_do_contrato(k3));
+    noticia(pessoa, awol_club_of_contract(k3));
     let linha = cpw7_d(0xae2d0c).wrapping_add((cpw7_i(pessoa) as usize).wrapping_mul(79)).wrapping_add(0xa) as *mut u8;
     let r = cpw7_sortear(10);
     *linha = (*linha).wrapping_add(r as u8);
-    let condicao: unsafe extern "thiscall" fn(usize, usize, u32) -> i16 = core::mem::transmute(0x62c590usize);
-    let c = condicao(cpw7_d(0xb63d28), pessoa, 0);
+    let match_condition: unsafe extern "thiscall" fn(usize, usize, u32) -> i16 = core::mem::transmute(0x62c590usize);
+    let c = match_condition(cpw7_d(0xb63d28), pessoa, 0);
     // as contas da original são de 32 bits com bytes altos de outros valores no registrador, mas só a palavra baixa
     // chega (a condição é short na 0x62bd10)
     let queda = 0x15i16.wrapping_sub(cpw7_b(cpw7_d(pessoa + 0x61) + 0x34) as i8 as i16).wrapping_mul(25);
@@ -471,7 +471,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
 /// sumiu; bit 2 novo: faltou). Sem decisão, o estado inteiro tem de bater (os mesmos sorteios). O byte do caso (+0xc do
 /// registro) não entra: na original é resíduo da pilha.
 unsafe extern "thiscall" fn comparar_miss_training(this: usize, pessoa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I3%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I3%%);
     if pessoa == 0 || cpw7_d(pessoa + 0x61) == 0 || cpw7_i(pessoa) >= cpw7_i(0xae2364) {
         return o(this, pessoa);
     }
@@ -512,7 +512,7 @@ unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let k = contract_of(cpw7_d(0xae1050), pessoa);
     cpw7_pd(0xae1080, k as u32);
-    if k != 0 && cpw7_clube_do_contrato(k) != 0 {
+    if k != 0 && awol_club_of_contract(k) != 0 {
         if CPW7_ENSAIO {
             CPW7_DECISAO = 1;
         } else {
@@ -533,7 +533,7 @@ unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
 /// O comparador do fim da ausência, em ensaio: a cópia sem a notícia e sem tirar da lista; a marca da pessoa e, sem
 /// notícia, o [0xae1080] têm de bater com os da original.
 unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I4%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I4%%);
     if r == 0 {
         return o(this, r);
     }
@@ -563,7 +563,7 @@ unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usize) {
 unsafe extern "thiscall" fn set_flags(c: usize, marcas: u32) {
     if marcas as i32 > 0x1000 {
         // ponytail: a caixa "Error" (antes de qualquer gravação): a original inteira
-        return orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I5%%)(c, marcas);
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I5%%)(c, marcas);
     }
     cpw7_pd(c + 0x40, cpw7_d(c + 0x40) as u32 | marcas);
     let pessoa = cpw7_d(0xae23bc).wrapping_add((cpw7_i(c) as usize).wrapping_mul(0x6e));
@@ -602,7 +602,7 @@ unsafe extern "thiscall" fn set_flags(c: usize, marcas: u32) {
 /// O comparador das marcas do contrato, em ensaio: a cópia sem o pedido de transferência e a original a partir do mesmo
 /// estado (marcas e sorteio); sem pedido, tudo tem de bater; com pedido (que sorteia e dá notícia), só as marcas.
 unsafe extern "thiscall" fn comparar_set_flags(c: usize, marcas: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I5%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I5%%);
     if marcas as i32 > 0x1000 {
         return o(c, marcas);
     }

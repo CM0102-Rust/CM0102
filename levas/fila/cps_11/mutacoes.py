@@ -9,7 +9,7 @@ MUTACOES = [
     ('cps11_nao_guarda', 'if copiar(l, f, 0x4f) == 0 { // cps11: guardar',
      'if false { // mutacao: nao guarda',
      'cps_11 jogo guardado'),
-    ('cps11_nao_tira', 'let r = tirar(cps11_lista_no_bloco(b, f), f); // cps11: tirar',
+    ('cps11_nao_tira', 'let r = tirar(fixture_list_in_block(b, f), f); // cps11: tirar',
      'let r = 0u32; // mutacao: nao tira',
      'cps_11 jogo tirado'),
 ]

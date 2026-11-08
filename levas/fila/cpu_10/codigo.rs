@@ -10,7 +10,7 @@ unsafe fn cpu10_i(a: usize) -> i32 {
 
 /// Os jogos de suspensão pelo código da falta (9 a 12) e pela escala do órgão (+6), na tabela de saltos 0x7e9028;
 /// None quando não há suspensão (escala abaixo de 3 nos códigos 9 e 10, código fora de 9..=12).
-fn cpu10_jogos(codigo: i32, e: i8) -> Option<u8> {
+fn ban_matches(codigo: i32, e: i8) -> Option<u8> {
     let x = e as i32;
     Some(match codigo {
         9 if e < 3 => return None,
@@ -28,7 +28,7 @@ fn cpu10_jogos(codigo: i32, e: i8) -> Option<u8> {
 }
 
 /// Os dias de suspensão (tabela 0x7e9038): os mesmos degraus em semanas.
-fn cpu10_dias(codigo: i32, e: i8) -> Option<u16> {
+fn ban_days(codigo: i32, e: i8) -> Option<u16> {
     let x = e as i32;
     Some(match codigo {
         9 if e < 3 => return None,
@@ -59,12 +59,12 @@ unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, por
     };
     let escala = *((this + 6) as *const i8);
     let (jogos, dias) = if por_jogos != 0 {
-        match cpu10_jogos(codigo, escala) {
+        match ban_matches(codigo, escala) {
             Some(n) => (n, 0xffffu16),
             None => return 0,
         }
     } else {
-        match cpu10_dias(codigo, escala) {
+        match ban_days(codigo, escala) {
             Some(n) => (0xffu8, n),
             None => return 0,
         }
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, por
 
 /// Comparador: lado a lado nos 0x70 bytes do registro (a rotina só grava nele).
 unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     let regioes = [(r, 0x70)];
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, r, j, por_jogos), || make_points_ban(this, r, j, por_jogos));
     PLACAR.registrar(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", cpu10_d(j), por_jogos, a, b, mo, mr));
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
 // ponytail: a cópia leva o contador "cpu_10 nova temporada" para provar no modo Rust; a compactação (comparada) confere o fim.
 unsafe extern "thiscall" fn comparar_ruling_body_start_new_season(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
 }
 
 /// { 0x7e9050 } (thiscall, ret 0, ruling_body.cpp): `RulingBody::compact_entries()`: tira as entradas livres (id −1)
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn compact_entries(this: usize) {
     let p = realocar(cpu10_d(this + 0xb), (n + 100) * 14);
     *((this + 0xb) as *mut u32) = p as u32;
     if p == 0 {
-        aviso_em(0xa7a858, 0x594);
+        show_error_at(0xa7a858, 0x594);
     }
 }
 
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn comparar_compact_entries(this: usize) {
             esperado.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 0xe));
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let n = (esperado.len() / 0xe) as u32;
     let p = cpu10_d(this + 0xb);
     let iguais = p != 0 && core::slice::from_raw_parts(p as *const u8, esperado.len()) == &esperado[..];

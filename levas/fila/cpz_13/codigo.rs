@@ -6,7 +6,7 @@ unsafe fn cpz13_somar32(a: usize, v: i32) {
 }
 
 /// Soma `v` (estendido com sinal: o cdq/adc da original) ao saldo, i64 em +0.
-unsafe fn cpz13_somar_saldo(fin: usize, v: i64) {
+unsafe fn add_to_balance(fin: usize, v: i64) {
     core::ptr::write_unaligned(fin as *mut i64, core::ptr::read_unaligned(fin as *const i64).wrapping_add(v));
 }
 
@@ -19,12 +19,12 @@ unsafe extern "thiscall" fn add_prize_money(this: usize, valor: i32) {
     if valor != 0 {
         crate::comparacao::ramo("cpz_13 premio recebido"); // só valor diferente de zero muda o saldo
     }
-    cpz13_somar_saldo(this, valor as i64); // cpz13: o prêmio entra no saldo
+    add_to_balance(this, valor as i64); // cpz13: o prêmio entra no saldo
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_add_prize_money(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || add_prize_money(this, valor));
     PLACAR.registrar(igual, || format!("add_prize_money(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
@@ -38,12 +38,12 @@ unsafe extern "thiscall" fn add_tv_revenue(this: usize, valor: i32) {
     if valor != 0 {
         crate::comparacao::ramo("cpz_13 tv recebida"); // só valor diferente de zero muda o saldo
     }
-    cpz13_somar_saldo(this, valor as i64); // cpz13: a TV entra no saldo
+    add_to_balance(this, valor as i64); // cpz13: a TV entra no saldo
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_add_tv_revenue(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || add_tv_revenue(this, valor));
     PLACAR.registrar(igual, || format!("add_tv_revenue(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
@@ -57,12 +57,12 @@ unsafe extern "thiscall" fn pay_wages(this: usize, valor: i32) {
     if valor != 0 {
         crate::comparacao::ramo("cpz_13 salario pago"); // só valor diferente de zero muda o saldo
     }
-    cpz13_somar_saldo(this, (valor as i64).wrapping_neg()); // cpz13: o salário sai do saldo
+    add_to_balance(this, (valor as i64).wrapping_neg()); // cpz13: o salário sai do saldo
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_pay_wages(this: usize, valor: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_wages(this, valor));
     PLACAR.registrar(igual, || format!("pay_wages(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }

@@ -4,18 +4,18 @@ unsafe fn cpj2_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
 }
 
-unsafe fn cpj2_proximo(l: usize) -> usize {
+unsafe fn contract_manager_list_next(l: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     f(l)
 }
 
-unsafe fn cpj2_tirar(l: usize, e: usize) {
+unsafe fn list_remove(l: usize, e: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
     f(l, e);
 }
 
 /// O contador de suspensões guardadas (+0x1c) do registro de 29 bytes do id `id` em [this+0x14].
-unsafe fn cpj2_guardadas(this: usize, id: usize) -> *mut i8 {
+unsafe fn stored_suspension_counter(this: usize, id: usize) -> *mut i8 {
     (cpj2_d(this + 0x14).wrapping_add(id.wrapping_mul(29)) + 0x1c) as *mut i8
 }
 
@@ -24,20 +24,20 @@ unsafe fn cpj2_guardadas(this: usize, id: usize) -> *mut i8 {
 /// do registro dele (+0x1c, com sinal) for positivo, descontando um a cada item.
 unsafe extern "thiscall" fn drop_held_bans(this: usize, pessoa: *const u32) {
     let l = this + 0x1c;
-    let n = cpj2_guardadas(this, *pessoa as usize);
+    let n = stored_suspension_counter(this, *pessoa as usize);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cpj2_d(l + 2));
-    let mut e = cpj2_proximo(l);
+    let mut e = contract_manager_list_next(l);
     while e != 0 && *n > 0 {
         if cpj2_d(e) as u32 == *pessoa {
-            cpj2_tirar(l, e);
+            list_remove(l, e);
             *n = (*n).wrapping_sub(1); // uma a menos
         }
-        e = cpj2_proximo(l);
+        e = contract_manager_list_next(l);
     }
 }
 
 /// O byte de ofertas pendentes (+8) do registro de 79 bytes da pessoa em [0xae2d0c].
-unsafe fn cpj2_pendentes(id: usize) -> *mut u8 {
+unsafe fn pending_offers_byte(id: usize) -> *mut u8 {
     (cpj2_d(0xae2d0c).wrapping_add(id.wrapping_mul(79)) + 8) as *mut u8
 }
 
@@ -47,35 +47,35 @@ unsafe fn cpj2_pendentes(id: usize) -> *mut u8 {
 /// descontando o byte, até ele zerar.
 unsafe extern "thiscall" fn remove_pending_offers_for_staff(this: usize, pessoa: *const u32) {
     let l = cpj2_d(this + 0x34);
-    if l == 0 || *cpj2_pendentes(*pessoa as usize) == 0 {
+    if l == 0 || *pending_offers_byte(*pessoa as usize) == 0 {
         return;
     }
     let desmarcar: unsafe extern "thiscall" fn(usize, *const u32) -> u32 = core::mem::transmute(0x8c5430usize);
     desmarcar(cpj2_d(0xde1f54), pessoa);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cpj2_d(l + 2));
-    let mut e = cpj2_proximo(l);
+    let mut e = contract_manager_list_next(l);
     while e != 0 {
         if cpj2_d(e) as u32 == *pessoa {
-            cpj2_tirar(l, e);
-            let p = cpj2_pendentes(*pessoa as usize);
+            list_remove(l, e);
+            let p = pending_offers_byte(*pessoa as usize);
             *p = (*p).wrapping_sub(1);
             if *p == 0 {
                 return; // a última pendente
             }
         }
-        e = cpj2_proximo(l);
+        e = contract_manager_list_next(l);
     }
 }
 
 /// A primeira oferta da lista `l` (sem mexer no cursor) da pessoa (+0) e do clube (+4) da oferta de transferência e
 /// ainda sem decisão (+0x62 = 0).
-unsafe fn cpj2_oferta_a_marcar(l: usize, oferta: usize) -> Option<usize> {
-    cpd1_itens(l).into_iter().find(|&e| cpj2_d(e) == cpj2_d(oferta + 0xc) && cpj2_d(e + 4) == cpj2_d(oferta + 8) && *((e + 0x62) as *const u8) == 0)
+unsafe fn offer_to_schedule(l: usize, oferta: usize) -> Option<usize> {
+    list_items_capped(l).into_iter().find(|&e| cpj2_d(e) == cpj2_d(oferta + 0xc) && cpj2_d(e + 4) == cpj2_d(oferta + 8) && *((e + 0x62) as *const u8) == 0)
 }
 
 /// Habilidade (palavra +0xb do registro de jogador +0x61 da pessoa +0xc) / 500 acima da reputação (+0x80) do clube
 /// (+8) da oferta?
-unsafe fn cpj2_acima_do_clube(oferta: usize) -> u32 {
+unsafe fn ability_above_club_reputation(oferta: usize) -> u32 {
     let pessoa = cpj2_d(0xae23bc).wrapping_add(cpj2_d(oferta + 0xc).wrapping_mul(0x6e));
     let hab = *((cpj2_d(pessoa + 0x61) + 0xb) as *const i16) as i32 / 500;
     let clube = cpj2_d(0xae23b4).wrapping_add(cpj2_d(oferta + 8).wrapping_mul(0x245));
@@ -89,7 +89,7 @@ unsafe fn cpj2_acima_do_clube(oferta: usize) -> u32 {
 unsafe extern "thiscall" fn schedule_decision_for_transfer(this: usize, oferta: usize) -> u32 {
     let l = cpj2_d(this + 0x34);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cpj2_d(l + 2));
-    let mut e = cpj2_proximo(l);
+    let mut e = contract_manager_list_next(l);
     while e != 0 {
         if cpj2_d(e) == cpj2_d(oferta + 0xc) && cpj2_d(e + 4) == cpj2_d(oferta + 8) && *((e + 0x62) as *const u8) == 0 {
             *((e + 0x62) as *mut u8) = 1; // a oferta vale
@@ -97,17 +97,17 @@ unsafe extern "thiscall" fn schedule_decision_for_transfer(this: usize, oferta: 
             agendar(this, cpj2_d(oferta + 0xc) as u32, cpj2_d(oferta + 0x20) as u32);
             break;
         }
-        e = cpj2_proximo(l);
+        e = contract_manager_list_next(l);
     }
-    cpj2_acima_do_clube(oferta)
+    ability_above_club_reputation(oferta)
 }
 
 /// Comparador: o plano da cópia (os itens do id que saem até o contador zerar) antes; a original tira; confere os
 /// itens que ficaram e o contador.
 unsafe extern "thiscall" fn comparar_drop_held_bans(this: usize, pessoa: *const u32) {
     let l = this + 0x1c;
-    let n = cpj2_guardadas(this, *pessoa as usize);
-    let antes = cpd1_itens(l);
+    let n = stored_suspension_counter(this, *pessoa as usize);
+    let antes = list_items_capped(l);
     let mut resta = *n;
     let mut esperado = Vec::new();
     for &e in &antes {
@@ -117,8 +117,8 @@ unsafe extern "thiscall" fn comparar_drop_held_bans(this: usize, pessoa: *const 
             esperado.push(e);
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I0%%)(this, pessoa);
-    let depois = cpd1_itens(l);
+    original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I0%%)(this, pessoa);
+    let depois = list_items_capped(l);
     PLACAR.registrar(depois == esperado && *n == resta, || format!("drop_held_bans({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *n, resta));
 }
 
@@ -126,10 +126,10 @@ unsafe extern "thiscall" fn comparar_drop_held_bans(this: usize, pessoa: *const 
 unsafe extern "thiscall" fn comparar_remove_pending_offers_for_staff(this: usize, pessoa: *const u32) {
     let l = cpj2_d(this + 0x34);
     if l == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I1%%)(this, pessoa);
+        return original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I1%%)(this, pessoa);
     }
-    let p = cpj2_pendentes(*pessoa as usize);
-    let antes = cpd1_itens(l);
+    let p = pending_offers_byte(*pessoa as usize);
+    let antes = list_items_capped(l);
     let mut resta = *p;
     let mut esperado = Vec::new();
     for &e in &antes {
@@ -139,17 +139,17 @@ unsafe extern "thiscall" fn comparar_remove_pending_offers_for_staff(this: usize
             esperado.push(e);
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I1%%)(this, pessoa);
-    let depois = cpd1_itens(l);
+    original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I1%%)(this, pessoa);
+    let depois = list_items_capped(l);
     PLACAR.registrar(depois == esperado && *p == resta, || format!("remove_pending_offers_for_staff({}) itens {} -> {} (esperava {}), pendentes {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *p, resta));
 }
 
 /// Comparador: a oferta que a cópia marcaria antes; a original marca e agenda (a 0x4cd230 pode acrescentar na lista
 /// das decisões); confere a marca e o valor.
 unsafe extern "thiscall" fn comparar_schedule_decision_for_transfer(this: usize, oferta: usize) -> u32 {
-    let alvo = cpj2_oferta_a_marcar(cpj2_d(this + 0x34), oferta);
-    let n = cpj2_acima_do_clube(oferta);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, oferta);
+    let alvo = offer_to_schedule(cpj2_d(this + 0x34), oferta);
+    let n = ability_above_club_reputation(oferta);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, oferta);
     let marcada = alvo.map_or(true, |e| *((e + 0x62) as *const u8) == 1);
     PLACAR.registrar(marcada && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", oferta, alvo, marcada, r, n));
     r

@@ -9,7 +9,7 @@ unsafe fn cpn6_b(a: usize) -> u8 {
 }
 
 /// O clube do contrato `c` (id em +4; o registro de clube tem 0x245 bytes em [0xae23b4]), ou 0 sem contrato.
-unsafe fn cpn6_clube_do_contrato(c: usize) -> usize {
+unsafe fn shortlist_manager_club_of_contract(c: usize) -> usize {
     if c == 0 {
         return 0;
     }
@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pessoa: usize
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contract_of(cpn6_d(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
-    let pelo_contrato = if cpn6_clube_do_contrato(c) == clube {
+    let pelo_contrato = if shortlist_manager_club_of_contract(c) == clube {
         true
     } else {
         // ponytail: o 3º argumento é empurrado como dword 1; o cargo vai num byte (a 0x53b620 só lê o byte)
@@ -80,8 +80,8 @@ unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pessoa: usize
 /// 6500: 5 (acima de 0,6 e idade +0x18 abaixo de 23), 4 (24 ou mais) ou 6; senão 3. Só roda para o clube humano.
 unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(pessoa: usize, clube: usize) -> u32 {
     let tecnico: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
-    let reputacao: unsafe extern "C" fn(usize, usize, u32) -> u16 = core::mem::transmute(0x5407e0usize);
-    let mut rep = if reputacao(pessoa, tecnico(clube), 0) as i16 > 1 { reputacao(pessoa, tecnico(clube), 0) as i16 } else { 1 };
+    let injury_word_0c: unsafe extern "C" fn(usize, usize, u32) -> u16 = core::mem::transmute(0x5407e0usize);
+    let mut rep = if injury_word_0c(pessoa, tecnico(clube), 0) as i16 > 1 { injury_word_0c(pessoa, tecnico(clube), 0) as i16 } else { 1 };
     let mut rc = core::ptr::read_unaligned((clube + 0x80) as *const i16);
     if rc <= 1 {
         rc = 1;
@@ -89,26 +89,26 @@ unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(pessoa: usize
     let t = tecnico(clube);
     let in_list: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7f7490usize);
     if in_list(cpn6_d(0xb74448), pessoa, t) != 0 {
-        let a = rep as f64 * f64_em(0x968940);
-        let b = rc as f64 * f64_em(0x969040);
-        rep = ftol(if a > b { a } else { b }) as i16;
+        let a = rep as f64 * read_f64_at(0x968940);
+        let b = rc as f64 * read_f64_at(0x969040);
+        rep = match_pl_ftol(if a > b { a } else { b }) as i16;
     }
     let mut q = rep as f64 / rc as f64;
-    if q < f64_em(0x967880) {
-        q = f64_em(0x967880);
-    } else if !(q <= f64_em(0x968950)) {
-        q = f64_em(0x968950);
+    if q < read_f64_at(0x967880) {
+        q = read_f64_at(0x967880);
+    } else if !(q <= read_f64_at(0x968950)) {
+        q = read_f64_at(0x968950);
     }
     let f = q as f32 as f64; // a original guarda a razão num float e compara o resto por ele
-    if q > f64_em(0x968940) {
+    if q > read_f64_at(0x968940) {
         return 1;
     }
-    if f > f64_em(0x968978) && rc < 0x2134 {
+    if f > read_f64_at(0x968978) && rc < 0x2134 {
         return 2;
     }
     let idade = cpn6_b(pessoa + 0x18) as i8;
-    if !(f > f64_em(0x968978)) && rep <= 0x1964 {
-        if f > f64_em(0x968e48) && idade < 0x17 {
+    if !(f > read_f64_at(0x968978)) && rep <= 0x1964 {
+        if f > read_f64_at(0x968e48) && idade < 0x17 {
             return 5;
         }
         return if idade >= 0x18 { 4 } else { 6 };
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn shortlist_manager_release_club_slot_targets(this: us
         let p = cpn6_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
         let c = contract_of(cpn6_d(0xae1050), p);
         *(0xae1080 as *mut usize) = c;
-        let do_contrato = if c != 0 && cpn6_b(c + 0x35) & 0x3f != 5 { cpn6_clube_do_contrato(c) } else { 0 };
+        let do_contrato = if c != 0 && cpn6_b(c + 0x35) & 0x3f != 5 { shortlist_manager_club_of_contract(c) } else { 0 };
         if do_contrato == clube || cpn6_d(p + 0x39) == clube {
             continue;
         }
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn shortlist_manager_release_club_slot_targets(this: us
 
 /// Comparador: lado a lado pelo estatuto, pelo cargo de saída e por [0xae1080].
 unsafe extern "thiscall" fn comparar_get_squad_status_for_club(this: usize, pessoa: usize, clube: usize, cargo: *mut u8) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8) -> u8>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8) -> u8>(%%I0%%);
     let saida = if cargo.is_null() { 0xae1080 } else { cargo as usize };
     let reg = [(0xae1080usize, 4usize), (saida, 1)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube, cargo), || get_squad_status_for_club(this, pessoa, clube, cargo));
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn comparar_get_squad_status_for_club(this: usize, pess
 
 /// Comparador: pelo valor (o byte baixo; a original deixa a palavra de estado do x87 em ah).
 unsafe extern "stdcall" fn comparar_shortlist_manager_estimate_squad_status(pessoa: usize, clube: usize) -> u32 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(pessoa, clube);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(pessoa, clube);
     let n = shortlist_manager_estimate_squad_status(pessoa, clube);
     PLACAR.registrar(r as u8 == n as u8, || format!("shortlist_manager_estimate_squad_status({:#x}, {:#x}) original={:#x} rust={}", pessoa, clube, r, n));
     r
@@ -174,5 +174,5 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_estimate_squad_status(pess
 // ponytail: a 0x843e10 muda a lista do clube (e outras) a cada evento e não pode rodar duas vezes; a cópia tem o ramo
 // e a prova é pela carreira (modo Rust contra a original).
 unsafe extern "thiscall" fn comparar_shortlist_manager_release_club_slot_targets(this: usize, clube: usize, entrada: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, clube, entrada)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, clube, entrada)
 }

@@ -21,7 +21,7 @@ unsafe fn cqw13_estatisticas(this: usize, arquivo: usize, linha: u32) -> bool {
     let e = if p != 0 { estatisticas(p, this) } else { 0 };
     cqw13_pd(this + 8, e);
     if e == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return false;
     }
     true
@@ -85,11 +85,11 @@ unsafe fn cqw13_copa_de_32(this: usize, ano: i16, comp: usize, c: &Cqw13Copa) ->
     cqw13_b(this, 0x51, 0xf);
     cqw13_b(this, 0xb1, 0);
     if rotina(c.classificados)(this) == 0 {
-        aviso_em(c.arquivo, c.linhas[0]);
+        show_error_at(c.arquivo, c.linhas[0]);
         return this;
     }
     if rotina(c.times)(this) == 0 {
-        aviso_em(c.arquivo, c.linhas[1]);
+        show_error_at(c.arquivo, c.linhas[1]);
         return this;
     }
     cqw13_pd(this + 0x28, 0x3d0900);
@@ -104,7 +104,7 @@ unsafe fn cqw13_copa_de_32(this: usize, ano: i16, comp: usize, c: &Cqw13Copa) ->
         cqw13_pd(this + 0xb2, 0);
     }
     if arvore(this) == 0 {
-        aviso_em(c.arquivo, c.linhas[3]);
+        show_error_at(c.arquivo, c.linhas[3]);
         return this;
     }
     rotina(c.previstas)(this);
@@ -134,7 +134,7 @@ unsafe fn cqw13_comparar(nome: &str, this: usize, ano: u32, comp: usize, vtable:
 }
 
 unsafe extern "thiscall" fn comparar_cqw13_liga_asiatica(this: usize, ano: u32, comp: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     cqw13_comparar("cqw13_liga_asiatica", this, ano, comp, 0x9674d4, || o(this, ano, comp))
 }
 
@@ -148,6 +148,6 @@ unsafe extern "thiscall" fn cqw13_recopa_asiatica(this: usize, ano: u32, comp: u
 }
 
 unsafe extern "thiscall" fn comparar_cqw13_recopa_asiatica(this: usize, ano: u32, comp: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     cqw13_comparar("cqw13_recopa_asiatica", this, ano, comp, 0x967574, || o(this, ano, comp))
 }

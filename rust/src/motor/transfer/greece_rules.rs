@@ -21,13 +21,13 @@ pub(crate) const CQN2_GRECIA: [[u8; 6]; 4] = [
 /// 2 janelas de transferência de `CQN2_GRECIA`.
 pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows(this: usize) {
     crate::comparacao::ramo("cqn_2 grecia");
-    cqk1_janelas(this, 2, &CQN2_GRECIA, 0x9cdbc8, 0x51);
+    set_transfer_windows(this, 2, &CQN2_GRECIA, 0x9cdbc8, 0x51);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS);
-    cqk1_comparar("greece_rules_init_transfer_windows", this, || o(this), |s| greece_rules_init_transfer_windows(s));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS);
+    compare_transfer_rules_ctor("greece_rules_init_transfer_windows", this, || o(this), |s| greece_rules_init_transfer_windows(s));
 }
 
 /// As janelas da Rússia: duas janelas, de 15 de dezembro a 24 de março (andando para a quinta-feira [inferência]); de 28 de junho (andando para a terça-feira [inferência]) a 4 de agosto.
@@ -46,13 +46,13 @@ pub(crate) const CQN2_RUSSIA: [[u8; 6]; 4] = [
 /// 2 janelas de transferência de `CQN2_RUSSIA`.
 pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows_7ec7e0(this: usize) {
     crate::comparacao::ramo("cqn_2 russia");
-    cqk1_janelas(this, 2, &CQN2_RUSSIA, 0xa7ad38, 0x4d);
+    set_transfer_windows(this, 2, &CQN2_RUSSIA, 0xa7ad38, 0x4d);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_7ec7e0(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_7EC7E0);
-    cqk1_comparar("greece_rules_init_transfer_windows_7ec7e0", this, || o(this), |s| greece_rules_init_transfer_windows_7ec7e0(s));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_7EC7E0);
+    compare_transfer_rules_ctor("greece_rules_init_transfer_windows_7ec7e0", this, || o(this), |s| greece_rules_init_transfer_windows_7ec7e0(s));
 }
 
 /// As janelas da Bélgica: três janelas, de 1º de junho a 30 de junho; de 1º de junho a 31 de dezembro; de 1º de junho a 31 de março.
@@ -72,12 +72,12 @@ pub(crate) const CQN2_BELGICA: [[u8; 6]; 6] = [
 /// 3 janelas de transferência de `CQN2_BELGICA`.
 pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows_424c00(this: usize) {
     crate::comparacao::ramo("cqn_2 belgica");
-    cqk1_janelas(this, 3, &CQN2_BELGICA, 0x989e34, 0x53);
+    set_transfer_windows(this, 3, &CQN2_BELGICA, 0x989e34, 0x53);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_424c00(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_424C00);
-    cqk1_comparar("greece_rules_init_transfer_windows_424c00", this, || o(this), |s| greece_rules_init_transfer_windows_424c00(s));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_424C00);
+    compare_transfer_rules_ctor("greece_rules_init_transfer_windows_424c00", this, || o(this), |s| greece_rules_init_transfer_windows_424c00(s));
 }
 

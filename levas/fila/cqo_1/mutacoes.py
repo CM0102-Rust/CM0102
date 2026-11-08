@@ -9,5 +9,5 @@
 MUTACOES = [
     ('cqo1_mandante_neutro', 'fixar(cqo1_d(cqo1_d(fx + 0x1c) + 0x69)); // cqo1: o estádio do mandante', '*neutro = 1; // mutacao: o jogo comum marcado como neutro\n                fixar(cqo1_d(cqo1_d(fx + 0x1c) + 0x69));', 'cqo_1 estadio do mandante'),
     ('cqo1_primeiro_neutro', 'melhor = n; // cqo1: a melhor nota\n                        escolhida = e;', 'melhor = n; // mutacao: o primeiro com nota\n                        if escolhida == 0 {\n                            escolhida = e;\n                        }', 'cqo_1 neutro pela nota'),
-    ('cqo1_rodizio_sem_reserva', 'crate::comparacao::ramo("cqo_1 rodizio");\n                        cqo1_reservar(this, cqo1_d(e + 0xc), data);', 'crate::comparacao::ramo("cqo_1 rodizio"); // mutacao: sem a reserva', 'cqo_1 rodizio'),
+    ('cqo1_rodizio_sem_reserva', 'crate::comparacao::ramo("cqo_1 rodizio");\n                        add_stadium_booking(this, cqo1_d(e + 0xc), data);', 'crate::comparacao::ramo("cqo_1 rodizio"); // mutacao: sem a reserva', 'cqo_1 rodizio'),
 ]

@@ -9,7 +9,7 @@ unsafe fn cpv12_b(a: usize) -> u8 {
 }
 
 /// O nome do time (0x542100: time, marca de segundo time, destino de 0x47 bytes, 2, 1) e o byte de gramática (+0x52).
-unsafe fn cpv12_nome_do_time(time: usize, segundo: u32, buf: &mut [u8; 0x48]) -> i32 {
+unsafe fn national_team_name(time: usize, segundo: u32, buf: &mut [u8; 0x48]) -> i32 {
     let nome: unsafe extern "C" fn(usize, u32, *mut u8, u32, u32, u32) -> u32 = core::mem::transmute(0x542100usize);
     nome(time, segundo, buf.as_mut_ptr(), 0x47, 2, 1);
     cpv12_b(time + 0x52) as i8 as i32
@@ -26,7 +26,7 @@ unsafe fn cpv12_nome_do_time(time: usize, segundo: u32, buf: &mut [u8; 0x48]) ->
 /// bytes: a original (caixa e 1).
 unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: usize, tipo: u32, p: usize, entrando: u32, msg: usize, tam: i32) -> u32 {
     if nacao == 0 || (msg != 0 && tam < 0x32) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, i32) -> u32>(%%I0%%)(this, nacao, tipo, p, entrando, msg, tam);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, i32) -> u32>(%%I0%%)(this, nacao, tipo, p, entrando, msg, tam);
     }
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let b_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: 
         if (contar(time, marca, 0) as i8) >= teto {
             if msg != 0 {
                 let mut buf = [0u8; 0x48];
-                let g = cpv12_nome_do_time(time, segundo, &mut buf);
+                let g = national_team_name(time, segundo, &mut buf);
                 texto(msg, 0xa5b3e0, g, g, teto as i32, buf.as_ptr());
             }
             return 0;
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: 
     }
     if msg != 0 {
         let mut buf = [0u8; 0x48];
-        let g = cpv12_nome_do_time(time, segundo, &mut buf);
+        let g = national_team_name(time, segundo, &mut buf);
         texto(msg, if entrando != 0 { 0xa5b34c } else { 0xa5b2d8 }, g, g, buf.as_ptr());
     }
     0
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn schedule_assign_opponent(_this: usize, agenda: usize
 /// tamanho). As duas andam o cursor da lista [this] do mesmo jeito; a busca de jogos do dia monta e libera uma lista
 /// local (sem estado que fique). Sem nação ou destino curto (a caixa): só a original.
 unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize, nacao: usize, tipo: u32, p: usize, entrando: u32, msg: usize, tam: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, i32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, i32) -> u32>(%%I0%%);
     if nacao == 0 || (msg != 0 && tam < 0x32) {
         return o(this, nacao, tipo, p, entrando, msg, tam);
     }
@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize
 
 /// Comparador: pura.
 unsafe extern "stdcall" fn comparar_national_teams_player_in_squad(p: usize, nacao: usize, tipo: u32) -> u32 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I1%%)(p, nacao, tipo);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I1%%)(p, nacao, tipo);
     let n = national_teams_player_in_squad(p, nacao, tipo);
     PLACAR.registrar(r == n, || format!("national_teams_player_in_squad({:x}, {:x}, {}) original={} rust={}", p, nacao, tipo as u8, r, n));
     r
@@ -218,7 +218,7 @@ unsafe extern "stdcall" fn comparar_national_teams_player_in_squad(p: usize, nac
 
 /// Comparador: lado a lado pelas vagas da agenda (até a última possível, 25 · (n + 1) + 4 bytes).
 unsafe extern "thiscall" fn comparar_schedule_assign_opponent(this: usize, agenda: usize, adversario: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
     let n = cpv12_b(agenda + 8) as i8;
     if n <= 0 {
         return o(this, agenda, adversario);

@@ -18,7 +18,7 @@ unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_zip: i32, r
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_db_files_write_staff_history(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%)(stream, use_zip, registros, n)
+    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%)(stream, use_zip, registros, n)
 }
 
 /// { 0x5501d0 } (cdecl, Db_files.cpp): `db_files_write_comps(stream, use_zip, registros, n)`: grava de uma vez `n`
@@ -39,7 +39,7 @@ unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32, registros
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_db_files_write_comps(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I1%%)(stream, use_zip, registros, n)
+    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I1%%)(stream, use_zip, registros, n)
 }
 
 /// { 0x550320 } (cdecl, Db_files.cpp): `db_files_write_comp_history(stream, use_zip, registros, n)`: grava de uma vez `n`
@@ -60,5 +60,5 @@ unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_zip: i32, re
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 unsafe extern "C" fn comparar_db_files_write_comp_history(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I2%%)(stream, use_zip, registros, n)
+    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I2%%)(stream, use_zip, registros, n)
 }

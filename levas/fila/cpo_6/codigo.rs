@@ -18,7 +18,7 @@ unsafe fn cpo6_c(a: usize) -> i32 {
 }
 
 /// O tipo do contrato (+0x4f, nibble alto).
-unsafe fn cpo6_tipo(contrato: usize) -> u8 {
+unsafe fn contract_squad_status(contrato: usize) -> u8 {
     *((contrato + 0x4f) as *const u8) & 0xf0
 }
 
@@ -68,13 +68,13 @@ unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tecnico: usize
     }
     let mut nota = tecnico as i32; // sem jogador: o argumento que ocupa a vaga
     if jogador != 0 {
-        nota = ftol(nota_da_historia(this, jogador, clube, contrato, tipo, 3, 0.0) * *(0x968990 as *const f32) as f64);
+        nota = match_pl_ftol(nota_da_historia(this, jogador, clube, contrato, tipo, 3, 0.0) * *(0x968990 as *const f32) as f64);
     }
     let f = || cpo6_d(tecnico + 0x69); // a ficha de técnico
     let ch = |o: usize| chance(f(), *((f() + o) as *const i8)) as i8 as i32; // o conhecimento pelo atributo +o
     let k = tipo as i16;
     if k == 0x83 {
-        let t = cpo6_tipo(contrato);
+        let t = contract_squad_status(contrato);
         if t == 0x10 || t == 0x20 {
             return 1;
         }
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tecnico: usize
         if cpo6_w(cpo6_d(jogador + 0x61) + 0xb) < 0x1482 && ch(0x14) > 0xf {
             return 2;
         }
-        if cpo6_tipo(contrato) == 0x70 && ch(0x14) > 0xa {
+        if contract_squad_status(contrato) == 0x70 && ch(0x14) > 0xa {
             return 2;
         }
         return if sorteio(ch(0x19)) != 0 { 1 } else { 3 };
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tecnico: usize
         }
         0 | 0xd | 0x11 | 0x52 | 0x23 | 0xe | 2 | 0x21 | 0x22 | 9 | 0xc => {
             crate::comparacao::ramo("cpo_6 tipos comuns");
-            let t = cpo6_tipo(contrato);
+            let t = contract_squad_status(contrato);
             if t == 0x30 || t == 0x10 || t == 0x20 {
                 let e = entrada(cpo6_d(cpo6_d(0xde1f54) + 0x856), clube, jogador, 0, 0);
                 if e != 0 && cpo6_d(e + 0xf) == cpo6_d(jogador) && nota > -10 {
@@ -363,7 +363,7 @@ unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tecnico: usize
                     return 2;
                 }
             }
-            let t = cpo6_tipo(contrato);
+            let t = contract_squad_status(contrato);
             if t != 0 && t != 0x70 && t != 0x80 && listada_pelo_clube(jogador, 0) == 0 {
                 let x = sorteio(cpo6_c(tecnico + 0x59));
                 let y = sorteio(6);
@@ -379,7 +379,7 @@ unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tecnico: usize
                     }
                 }
             }
-            let t = cpo6_tipo(contrato);
+            let t = contract_squad_status(contrato);
             if t != 0x70 && t != 0x40 {
                 return 3;
             }
@@ -460,16 +460,16 @@ unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tecnico: usize
 /// (0x7fffa0) que o humano da vez; devolve 1. Sem técnico, sem id ou técnico da máquina: a caixa "Error" e 0.
 unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usize, id: u32, sincronizar: u32) -> u32 {
     if tecnico == 0 {
-        aviso_em(0xa693ec, 0x2358);
+        show_error_at(0xa693ec, 0x2358);
         return 0;
     }
     if id == 0 {
-        aviso_em(0xa693ec, 0x2360);
+        show_error_at(0xa693ec, 0x2360);
         return 0;
     }
     let idx = cpo6_i(tecnico).wrapping_sub(cpo6_i(0xae2364)).wrapping_add(0x10);
     if idx < 0 {
-        aviso_em(0xa693ec, 0x236b);
+        show_error_at(0xa693ec, 0x236b);
         return 0;
     }
     let e = cpo6_d(this + 8) + idx as usize * 12;
@@ -513,11 +513,11 @@ unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usize, id: u32,
 /// (News +4). Achou: 1; senão 0. Sem id, sem saída ou técnico da máquina: a caixa "Error" e 0.
 unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usize, id: u32, saida: usize) -> u32 {
     if id == 0 {
-        aviso_em(0xa693ec, 0x2252);
+        show_error_at(0xa693ec, 0x2252);
         return 0;
     }
     if saida == 0 {
-        aviso_em(0xa693ec, 0x225a);
+        show_error_at(0xa693ec, 0x225a);
         return 0;
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x786010usize);
@@ -526,7 +526,7 @@ unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usize, id: u32
     } else {
         let idx = cpo6_i(tecnico).wrapping_sub(cpo6_i(0xae2364)).wrapping_add(0x10);
         if idx < 0 {
-            aviso_em(0xa693ec, 0x2268);
+            show_error_at(0xa693ec, 0x2268);
             return 0;
         }
         let ini = cpo6_i(cpo6_d(this + 8) + idx as usize * 12);
@@ -548,7 +548,7 @@ unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usize, id: u32
 /// Comparador: a resposta sorteia e pode pôr o jogador entre os rejeitados do técnico (0x547af0): lado a lado no
 /// estado do gerador e no bloco das preferências do técnico (+0x65, +0x1c..+0x34), a cópia sem contar os sorteios.
 unsafe extern "thiscall" fn comparar_pick_ai_manager_response(this: usize, tecnico: usize, jogador: usize, tipo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if tecnico != 0 && cpo6_d(tecnico + 0x65) != 0 {
         regioes.push((cpo6_d(tecnico + 0x65) + 0x1c, 0x18));
@@ -565,7 +565,7 @@ unsafe extern "thiscall" fn comparar_pick_ai_manager_response(this: usize, tecni
 /// Comparador: lado a lado no vetor das notícias (News +0, +4 vagas), nas entradas dos 16 humanos (News +8) e no texto
 /// do botão (0xde1f64; a 0x782b70 só consulta). Caixa "Error": só a original.
 unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecnico: usize, id: u32, sincronizar: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if tecnico == 0 || id == 0 || cpo6_i(tecnico).wrapping_sub(cpo6_i(0xae2364)).wrapping_add(0x10) < 0 || cpo6_d(this) == 0 {
         return o(this, tecnico, id, sincronizar);
     }
@@ -581,7 +581,7 @@ unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecnico: usize,
 
 /// Comparador: pela notícia copiada em `saida` (0xdf bytes) e pela devolução. Caixa "Error": só a original.
 unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tecnico: usize, id: u32, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32>(%%I2%%);
     if id == 0 || saida == 0 || (tecnico != 0 && cpo6_i(tecnico).wrapping_sub(cpo6_i(0xae2364)).wrapping_add(0x10) < 0) {
         return o(this, tecnico, id, saida);
     }

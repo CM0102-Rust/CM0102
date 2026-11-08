@@ -14,13 +14,13 @@ unsafe fn cqc11_uw(a: usize) -> u16 {
 
 /// A lista de nações `q` do Friendly (vetor de listas em +0x34f6; a primeira parte indexa pela id da nação, a segunda
 /// pela posição na lista ordenada +0x34fa, como na original).
-unsafe fn cqc11_lista(this: usize, q: usize) -> usize {
+unsafe fn nation_friendly_list(this: usize, q: usize) -> usize {
     cqc11_d(cqc11_d(this + 0x34f6).wrapping_add(q.wrapping_mul(4)))
 }
 
 /// Os itens (os 4 bytes de cada) da lista, percorrendo os nós sem mexer no cursor (+2 o primeiro; nó: +0 o item, +6 o
 /// seguinte).
-unsafe fn cqc11_itens(lista: usize) -> Vec<u32> {
+unsafe fn list_item_ids(lista: usize) -> Vec<u32> {
     let mut v = Vec::new();
     if lista == 0 {
         return v;
@@ -47,7 +47,7 @@ struct Cqc11Ensaio {
 static mut CQC11_FITA: (Vec<(i32, i32)>, usize, bool) = (Vec::new(), 0, false);
 
 /// O sorteio do ensaio: o próximo da fita, com o mesmo n.
-unsafe extern "C" fn cqc11_sorteio_da_fita(n: i32) -> i32 {
+unsafe extern "C" fn tape_random(n: i32) -> i32 {
     let f = &mut *core::ptr::addr_of_mut!(CQC11_FITA);
     match f.0.get(f.1) {
         Some(&(m, r)) if m == n && !f.2 => {
@@ -61,7 +61,7 @@ unsafe extern "C" fn cqc11_sorteio_da_fita(n: i32) -> i32 {
     }
 }
 
-unsafe fn cqc11_fita_fechou() -> bool {
+unsafe fn tape_fully_consumed() -> bool {
     let f = &*core::ptr::addr_of!(CQC11_FITA);
     !f.2 && f.1 == f.0.len()
 }
@@ -90,7 +90,7 @@ impl Cqc11Ensaio {
 /// Um jogo da primeira parte: com nação nos dois clubes (+0x1c, +0x20; +0x53, a id em +0), as duas ficam usadas e cada
 /// uma vai à lista (pela id) da outra: a de casa recebe a de fora, depois o contrário (0x68d0d0 com 4: thiscall na
 /// lista). No ensaio, só o registro.
-unsafe fn cqc11_jogo(this: usize, p: usize, usadas: usize, ens: Option<&mut Cqc11Ensaio>) {
+unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, ens: Option<&mut Cqc11Ensaio>) {
     let na = cqc11_d(cqc11_d(p + 0x1c) + 0x53);
     if na == 0 {
         return;
@@ -114,8 +114,8 @@ unsafe fn cqc11_jogo(this: usize, p: usize, usadas: usize, ens: Option<&mut Cqc1
             crate::comparacao::ramo("cqc_11 nacoes com jogo");
             *((usadas.wrapping_add(b as usize)) as *mut u8) = 1; // cqc11: as nações com jogo perto da data
             let (va, vb) = (a, b);
-            por(cqc11_lista(this, a as usize), &vb as *const u32 as usize, 4);
-            por(cqc11_lista(this, b as usize), &va as *const u32 as usize, 4);
+            por(nation_friendly_list(this, a as usize), &vb as *const u32 as usize, 4);
+            por(nation_friendly_list(this, b as usize), &va as *const u32 as usize, 4);
         }
     }
 }
@@ -125,7 +125,7 @@ unsafe fn cqc11_jogo(this: usize, p: usize, usadas: usize, ens: Option<&mut Cqc1
 /// +0x53, a id em +0) marca as duas nações como usadas e cada uma vai à lista da outra (pela id: a de casa recebe a de
 /// fora, depois o contrário; 0x68d0d0 com 4). No ensaio, nada se grava fora das datas estáticas (o cursor das listas
 /// do calendário não se mexe).
-unsafe fn cqc11_primeira_parte(this: usize, datas: usize, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>) {
+unsafe fn link_nations_near_date(this: usize, datas: usize, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>) {
     let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c8e0usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -144,14 +144,14 @@ unsafe fn cqc11_primeira_parte(this: usize, datas: usize, usadas: usize, mut ens
                 if let Some(e) = ens.as_deref_mut() {
                     let mut no = cqc11_d(l + 2);
                     while no != 0 {
-                        cqc11_jogo(this, cqc11_d(no), usadas, Some(&mut *e));
+                        link_fixture_nations(this, cqc11_d(no), usadas, Some(&mut *e));
                         no = cqc11_d(no + 6);
                     }
                 } else {
                     core::ptr::write_unaligned((l + 0xa) as *mut usize, cqc11_d(l + 2));
                     let mut p = proximo(l);
                     while p != 0 {
-                        cqc11_jogo(this, p, usadas, None);
+                        link_fixture_nations(this, p, usadas, None);
                         p = proximo(l);
                     }
                 }
@@ -164,7 +164,7 @@ unsafe fn cqc11_primeira_parte(this: usize, datas: usize, usadas: usize, mut ens
 /// A nação `n` (ponteiro) está numa das confederações da data: alguma das `quantas` entradas de 20 bytes a partir de
 /// `datas` tem em +0xc −1 ou a id do continente da nação (+0x71, lido sem conferir o nulo, como na original). Sem
 /// entradas: não.
-unsafe fn cqc11_na_data(datas: usize, quantas: i32, n: usize) -> bool {
+unsafe fn nation_in_date_confederations(datas: usize, quantas: i32, n: usize) -> bool {
     let mut k = 0;
     while k < quantas {
         let c = cqc11_d(datas + 0xc + k as usize * 0x14) as i32;
@@ -177,7 +177,7 @@ unsafe fn cqc11_na_data(datas: usize, quantas: i32, n: usize) -> bool {
 }
 
 /// Na data só da África (+2 = 1), a nação africana (+0x71 = [0x9cfa08]) fica de fora.
-unsafe fn cqc11_africana_fora(datas: usize, n: usize) -> bool {
+unsafe fn is_african_excluded(datas: usize, n: usize) -> bool {
     *((datas + 2) as *const u8) == 1 && cqc11_d(n + 0x71) != 0 && cqc11_d(cqc11_d(n + 0x71)) == cqc11_d(0x9cfa08)
 }
 
@@ -192,9 +192,9 @@ unsafe fn cqc11_africana_fora(datas: usize, n: usize) -> bool {
 /// não é criado: vale o que a original fez (a id de `b` apareceu na lista da posição de `a`), os sorteios vêm da fita
 /// e, depois do mando, o resto continua (desde `a` seguinte) no primeiro sorteio de 500 da fita (ou no fim) com que
 /// fecha: os de dentro das rotinas do amistoso ficam para trás. Começa na nação `i0`.
-unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>, i0: i32) {
+unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>, i0: i32) {
     let sortear: unsafe extern "C" fn(i32) -> i32 =
-        if ens.is_some() { cqc11_sorteio_da_fita } else { core::mem::transmute(0x90cfc0usize) };
+        if ens.is_some() { tape_random } else { core::mem::transmute(0x90cfc0usize) };
     let proibido: unsafe extern "thiscall" fn(usize, i32, i32) -> u32 = core::mem::transmute(0x5cc3e0usize);
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize = core::mem::transmute(0x5c6f00usize);
@@ -214,7 +214,7 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
             Some(e) => !e.usada(ida),
             None => *((usadas.wrapping_add(ida)) as *const u8) == 0,
         };
-        if livre_a && quantas > 0 && cqc11_na_data(datas, quantas, a) && !cqc11_africana_fora(datas, a) {
+        if livre_a && quantas > 0 && nation_in_date_confederations(datas, quantas, a) && !is_african_excluded(datas, a) {
             let mut j = i + 1;
             while j < total(this) {
                 if ens.is_some() && (*core::ptr::addr_of!(CQC11_FITA)).2 {
@@ -228,7 +228,7 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
                 };
                 if livre_b {
                     let mut v = sortear(500);
-                    if cqc11_na_data(datas, quantas, b) && !cqc11_africana_fora(datas, b)
+                    if nation_in_date_confederations(datas, quantas, b) && !is_african_excluded(datas, b)
                         && (cqc11_d(a + 0x88) as i32 >= 5 || cqc11_d(b + 0x88) as i32 >= 5)
                         && proibido(this, ida as i32, idb as i32) == 0
                     {
@@ -239,7 +239,7 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
                             let ja = match ens.as_deref() {
                                 Some(e) => e.tem(i as usize, idb as u32),
                                 None => {
-                                    let l = cqc11_lista(this, i as usize);
+                                    let l = nation_friendly_list(this, i as usize);
                                     core::ptr::write_unaligned((l + 0xa) as *mut usize, cqc11_d(l + 2));
                                     let mut achou = false;
                                     let mut p = proximo(l);
@@ -248,7 +248,7 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
                                             achou = true;
                                             break;
                                         }
-                                        p = proximo(cqc11_lista(this, i as usize));
+                                        p = proximo(nation_friendly_list(this, i as usize));
                                     }
                                     achou
                                 }
@@ -258,7 +258,7 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
                                 let casa = sortear(2) as u32; // cqc11: o mando sorteado
                                 match ens.as_deref_mut() {
                                     Some(e) => {
-                                        if cqc11_itens(cqc11_lista(this, i as usize)).contains(&(idb as u32)) {
+                                        if list_item_ids(nation_friendly_list(this, i as usize)).contains(&(idb as u32)) {
                                             e.usar(idb);
                                             e.usar(ida);
                                             e.por(i as usize, idb as u32);
@@ -276,8 +276,8 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
                                         for p in pontos {
                                             (*f).1 = p;
                                             *e = base.clone();
-                                            cqc11_segunda_parte(this, datas, n, 0, Some(&mut *e), i + 1);
-                                            if cqc11_fita_fechou() {
+                                            pair_nations_for_friendlies(this, datas, n, 0, Some(&mut *e), i + 1);
+                                            if tape_fully_consumed() {
                                                 return;
                                             }
                                             (*f).2 = false;
@@ -286,15 +286,15 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
                                         return;
                                     }
                                     None => {
-                                        let sb = selecao(b);
+                                        let signed_byte_at = selecao(b);
                                         let sa = selecao(a);
-                                        let m = acrescentar(this, sa, datas + 3, sb, casa);
+                                        let m = acrescentar(this, sa, datas + 3, signed_byte_at, casa);
                                         if m != 0 {
                                             respond(this, m, 1);
                                             *((usadas.wrapping_add(idb)) as *mut u8) = 1;
                                             *((usadas.wrapping_add(ida)) as *mut u8) = 1; // cqc11: as duas usadas
-                                            por(cqc11_lista(this, i as usize), b, 4);
-                                            por(cqc11_lista(this, j as usize), a, 4);
+                                            por(nation_friendly_list(this, i as usize), b, 4);
+                                            por(nation_friendly_list(this, j as usize), a, 4);
                                         }
                                     }
                                 }
@@ -321,11 +321,11 @@ unsafe extern "thiscall" fn arrange_international_friendlies(this: usize, datas:
     // calloc: push 1; push [0xae2350]; add esp, 8 -> cdecl (n, 1); free: push; add esp, 4 -> cdecl
     let usadas = zerado(cqc11_d(0xae2350) as u32, 1);
     if usadas == 0 {
-        aviso_em(0x9cd0a0, 0x1738);
+        show_error_at(0x9cd0a0, 0x1738);
         return;
     }
-    cqc11_primeira_parte(this, datas, usadas, None);
-    cqc11_segunda_parte(this, datas, n, usadas, None, 0);
+    link_nations_near_date(this, datas, usadas, None);
+    pair_nations_for_friendlies(this, datas, n, usadas, None, 0);
     liberar(usadas);
 }
 
@@ -337,22 +337,22 @@ unsafe extern "thiscall" fn arrange_international_friendlies(this: usize, datas:
 /// nações, que os itens novos da original são os que o ensaio acrescentaria. (Lado a lado pelo estado do sorteador não
 /// servia: a 0x5c6f00 e a 0x5c5f40 sorteiam por dentro na original e o ensaio não as chama.)
 unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usize, datas: usize, n: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let nacoes = cqc11_d(0xae2350) as i32;
     let k = nacoes.max(cqc11_d(this + 0x34fe) as i32).max(0) as usize;
-    let antes: Vec<Vec<u32>> = (0..k).map(|q| cqc11_itens(cqc11_lista(this, q))).collect();
+    let antes: Vec<Vec<u32>> = (0..k).map(|q| list_item_ids(nation_friendly_list(this, q))).collect();
     let mut e = Cqc11Ensaio { usadas: vec![0u8; nacoes.max(0) as usize], antes: std::rc::Rc::new(antes), novos: vec![Vec::new(); k] };
-    cqc11_primeira_parte(this, datas, 0, Some(&mut e));
-    let ((), fita) = crate::aleatorio::rastrear(|| o(this, datas, n));
-    let quantos = fita.len();
-    *core::ptr::addr_of_mut!(CQC11_FITA) = (fita, 0, false);
-    cqc11_segunda_parte(this, datas, n, 0, Some(&mut e), 0);
-    let igual = cqc11_fita_fechou();
+    link_nations_near_date(this, datas, 0, Some(&mut e));
+    let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, datas, n));
+    let quantos = tape_lock.len();
+    *core::ptr::addr_of_mut!(CQC11_FITA) = (tape_lock, 0, false);
+    pair_nations_for_friendlies(this, datas, n, 0, Some(&mut e), 0);
+    let igual = tape_fully_consumed();
     let (pos, falhou) = { let f = &*core::ptr::addr_of!(CQC11_FITA); (f.1, f.2) };
     *core::ptr::addr_of_mut!(CQC11_FITA) = (Vec::new(), 0, false);
     let mut dif = Vec::new();
     for q in 0..k.max(e.novos.len()) {
-        let mut depois = if q < k { cqc11_itens(cqc11_lista(this, q)) } else { Vec::new() };
+        let mut depois = if q < k { list_item_ids(nation_friendly_list(this, q)) } else { Vec::new() };
         let mut falta = false;
         for x in e.antes.get(q).map(|v| v.as_slice()).unwrap_or(&[]) {
             match depois.iter().position(|y| y == x) {
@@ -370,7 +370,7 @@ unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usiz
         }
     }
     PLACAR.registrar(igual && dif.is_empty(), || {
-        format!("arrange_international_friendlies(datas {:x}, {}) fita de {} sorteios, o ensaio parou em {} (n diferente: {}); listas (indice, original, ensaio) {:x?}",
+        format!("arrange_international_friendlies(datas {:x}, {}) tape_lock de {} sorteios, o ensaio parou em {} (n diferente: {}); listas (indice, original, ensaio) {:x?}",
             datas, n as i16, quantos, pos, falhou, dif.iter().take(4).collect::<Vec<_>>())
     });
 }
@@ -386,7 +386,7 @@ unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usiz
 unsafe extern "thiscall" fn friendly_check_match_invitation(this: usize, a: usize, b: usize, clube: usize, dia: u32, ano: u32,
     data: usize, texto: usize, tamanho: u32) -> u32 {
     if texto != 0 && (tamanho as i16) < 100 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, usize, usize, u32) -> u32>(%%I1%%)(
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, usize, usize, u32) -> u32>(%%I1%%)(
             this, a, b, clube, dia, ano, data, texto, tamanho); // a caixa
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
@@ -438,7 +438,7 @@ unsafe extern "thiscall" fn friendly_check_match_invitation(this: usize, a: usiz
 }
 
 /// O texto da notícia (até o tamanho dado, no máximo 0x200 bytes), quando há.
-fn cqc11_regioes_do_texto(texto: usize, tamanho: u32) -> Vec<(usize, usize)> {
+fn news_text_regions(texto: usize, tamanho: u32) -> Vec<(usize, usize)> {
     if texto == 0 {
         Vec::new()
     } else {
@@ -451,11 +451,11 @@ fn cqc11_regioes_do_texto(texto: usize, tamanho: u32) -> Vec<(usize, usize)> {
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_friendly_check_match_invitation(this: usize, a: usize, b: usize, clube: usize, dia: u32,
     ano: u32, data: usize, texto: usize, tamanho: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, usize, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, usize, usize, u32) -> u32>(%%I1%%);
     if texto != 0 && (tamanho as i16) < 100 {
         return o(this, a, b, clube, dia, ano, data, texto, tamanho);
     }
-    let reg = cqc11_regioes_do_texto(texto, tamanho);
+    let reg = news_text_regions(texto, tamanho);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, a, b, clube, dia, ano, data, texto, tamanho),
         || friendly_check_match_invitation(this, a, b, clube, dia, ano, data, texto, tamanho));
     PLACAR.registrar(igual && r == n, || format!("friendly_check_match_invitation(a {:x}, b {:x}, clube {:x}, data {:x}) original={} rust={} {:x?} x {:x?}",
@@ -470,7 +470,7 @@ unsafe extern "thiscall" fn comparar_friendly_check_match_invitation(this: usize
 /// competition." e 0.
 unsafe extern "thiscall" fn friendly_check_tournament_invitation(this: usize, clube: usize, torneio: usize, texto: usize, tamanho: u32) -> u32 {
     if texto != 0 && (tamanho as i16) < 100 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32>(%%I2%%)(this, clube, torneio, texto, tamanho);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32>(%%I2%%)(this, clube, torneio, texto, tamanho);
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let mut cancelado = torneio == 0;
@@ -502,11 +502,11 @@ unsafe extern "thiscall" fn friendly_check_tournament_invitation(this: usize, cl
 
 /// Comparador: lado a lado pelo texto e a devolução; com a caixa, só a original.
 unsafe extern "thiscall" fn comparar_friendly_check_tournament_invitation(this: usize, clube: usize, torneio: usize, texto: usize, tamanho: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32>(%%I2%%);
     if texto != 0 && (tamanho as i16) < 100 {
         return o(this, clube, torneio, texto, tamanho);
     }
-    let reg = cqc11_regioes_do_texto(texto, tamanho);
+    let reg = news_text_regions(texto, tamanho);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, torneio, texto, tamanho),
         || friendly_check_tournament_invitation(this, clube, torneio, texto, tamanho));
     PLACAR.registrar(igual && r == n, || format!("friendly_check_tournament_invitation(clube {:x}, torneio {:x}) original={} rust={} {:x?} x {:x?}",

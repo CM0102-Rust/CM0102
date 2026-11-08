@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         }
         let mut w = cpz11_i(c + 0xc);
         if w == -1 {
-            w = ftol(padrao(c, p, clube, 0, -1, 0xb, 0));
+            w = match_pl_ftol(padrao(c, p, clube, 0, -1, 0xb, 0));
         }
         if ficha(cpz11_d(0xae1050), p) != 0 && cpz11_b(c + 0x35) & 0x3f != 6 {
             w = w.wrapping_sub(cpz11_i(ficha(cpz11_d(0xae1050), p) + 0xc)); // a parte do outro contrato
@@ -91,12 +91,12 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         let mut v = if rep > 0x128e {
             rep - 0x79e
         } else if rep > 0x8ca {
-            ftol((rep - 0x8ca) as f64 * f64_em(0x968968) + f64_em(0x96a620))
+            match_pl_ftol((rep - 0x8ca) as f64 * read_f64_at(0x968968) + read_f64_at(0x96a620))
         } else {
-            ftol(rep as f64 * f64_em(0x9689e0))
+            match_pl_ftol(rep as f64 * read_f64_at(0x9689e0))
         };
         if !tipo1 {
-            v = ftol(v as f64 * f64_em(0x968968));
+            v = match_pl_ftol(v as f64 * read_f64_at(0x968968));
         }
         let nacao = cpz11_d(clube + 0x53);
         if nacao != 0 {
@@ -123,8 +123,8 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
     } else {
         0x96a5c0
     };
-    crate::comparacao::ramo("cpz_11 folha pela reputacao");
-    let folha = ftol(rep.wrapping_mul(rep) as f64 * f64_em(k) + cpz11_i(this + 0xc) as f64); // cpz11: a reputação na folha
+    crate::comparacao::ramo("cpz_11 folha pela injury_word_0c");
+    let folha = match_pl_ftol(rep.wrapping_mul(rep) as f64 * read_f64_at(k) + cpz11_i(this + 0xc) as f64); // cpz11: a reputação na folha
     cpz11_por(this + 0xc, folha);
     let t = teto(this, 0, -1);
     cpz11_por(this + 0x14, t);
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
 /// Comparador: lado a lado na folha (+0xc), no maior salário (+0x10), no teto (+0x14) e no último contrato consultado
 /// ([0xae1080], que o salário padrão 0x864550 grava); as outras chamadas (contratos, teto 0x5968d0) só leem.
 unsafe extern "thiscall" fn comparar_update_wage_bill(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 12), (0xae1080, 4)], || o(this), || update_wage_bill(this));
     PLACAR.registrar(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn refresh_all_wage_bills(this: usize) {
 
 /// Comparador: lado a lado na tabela de finanças inteira ([this], [0xae235c] × 0x167 bytes) e em [0xae1080].
 unsafe extern "thiscall" fn comparar_refresh_all_wage_bills(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let n = (cpz11_i(0xae235c).max(0) as usize).wrapping_mul(0x167);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(cpz11_d(this), n), (0xae1080, 4)], || o(this), || refresh_all_wage_bills(this));
     PLACAR.registrar(igual, || format!("refresh_all_wage_bills({:#x}) original={:x?} rust={:x?}", this, mo, mr));
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: usize, clube
     *passou = 0;
     let k = linha(clube) as i8;
     if k < 0 {
-        aviso_em(0x9c8784, 0x1185);
+        show_error_at(0x9c8784, 0x1185);
         return 0;
     }
     let e = 0xb63d60usize.wrapping_add((k as isize * 72) as usize);
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: usize, clube
 /// Comparador: sem linha da nação, só a original (a caixa); senão lado a lado na saída `passou` e na data estática da
 /// 0x54cdb0 (0xae2470), com a devolução.
 unsafe extern "thiscall" fn comparar_finance_get_days_to_season_start(this: usize, clube: usize, passou: *mut u32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> i32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> i32>(%%I2%%);
     let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x669360usize);
     if (linha(clube) as i8) < 0 {
         return o(this, clube, passou);

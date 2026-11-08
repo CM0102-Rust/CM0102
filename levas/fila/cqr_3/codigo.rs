@@ -13,7 +13,7 @@ unsafe fn cqr3_b(a: usize) -> u8 {
 }
 
 /// O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
-unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
+unsafe fn aus_nsl_table_row_club(t: usize, i: usize) -> usize {
     cqr3_d(cqr3_d(t + 0xb1) + i * 0x3b)
 }
 
@@ -24,7 +24,7 @@ unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
 unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
     let fase = cqr3_d(this + 0x30) as i32;
     if fase >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(0x987c20, 0x2f0);
+        return show_error_at(0x987c20, 0x2f0);
     }
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -> u32 {
     let vagas: [u8; 4] = [2, 0, 0, 0];
     let mut clubes = [0usize; 6];
     for (i, c) in clubes.iter_mut().enumerate() {
-        *c = cqr3_linha(this, i); // cqr3: os seis primeiros da tabela
+        *c = aus_nsl_table_row_club(this, i); // cqr3: os seis primeiros da tabela
     }
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqr3_d(cqr3_d(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -> u32 {
     soltar(t);
     let fase = cqr3_d(cqr3_d(this + 0xc));
     if fase == 0 {
-        aviso_em(0x987c20, 0x328);
+        show_error_at(0x987c20, 0x328);
         return 0;
     }
     crate::comparacao::ramo("cqr_3 serie final");
@@ -104,11 +104,11 @@ unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
         core::mem::transmute(0x522e00usize);
     let lista = alocar(8);
     if lista == 0 {
-        return aviso_em(0x987c20, 0x348);
+        return show_error_at(0x987c20, 0x348);
     }
     let serie = cqr3_d(cqr3_d(this + 0xc));
-    core::ptr::write_unaligned(lista as *mut usize, cqr3_linha(serie, 0)); // cqr3: o primeiro da série final
-    core::ptr::write_unaligned((lista + 4) as *mut usize, cqr3_linha(serie, 1)); // cqr3: o segundo da série final
+    core::ptr::write_unaligned(lista as *mut usize, aus_nsl_table_row_club(serie, 0)); // cqr3: o primeiro da série final
+    core::ptr::write_unaligned((lista + 4) as *mut usize, aus_nsl_table_row_club(serie, 1)); // cqr3: o segundo da série final
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqr3_d(cqr3_d(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 1, &mut rodadas, &mut extra, 0);
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     soltar(t);
     let fase = cqr3_d(cqr3_d(this + 0xc) + 4);
     if fase == 0 {
-        return aviso_em(0x987c20, 0x35c);
+        return show_error_at(0x987c20, 0x35c);
     }
     crate::comparacao::ramo("cqr_3 grande final");
     montar(fase, 0);
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
 unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usize) {
     let antes = cqr3_d(this + 0x30) as i32;
     let ultima = antes >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqr3_d(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
@@ -144,14 +144,14 @@ unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usize) {
 unsafe extern "thiscall" fn comparar_create_finals_series_stage(this: usize) -> u32 {
     let mut seis = [0usize; 6];
     for (i, c) in seis.iter_mut().enumerate() {
-        *c = cqr3_linha(this, i);
+        *c = aus_nsl_table_row_club(this, i);
     }
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this);
     let fase = cqr3_d(cqr3_d(this + 0xc));
     let igual = r == 1 && fase != 0 && cqr3_w(fase + 0x3e) == 6 && cqr3_d(fase + 4) == cqr3_d(this + 4) && cqr3_d(this + 0x30) == 0 && {
         let mut nela = [0usize; 6];
         for (i, c) in nela.iter_mut().enumerate() {
-            *c = cqr3_linha(fase, i);
+            *c = aus_nsl_table_row_club(fase, i);
         }
         let (mut a, mut b) = (seis, nela);
         a.sort_unstable();
@@ -167,8 +167,8 @@ unsafe extern "thiscall" fn comparar_create_finals_series_stage(this: usize) -> 
 /// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
 unsafe extern "thiscall" fn comparar_create_grand_final_stage(this: usize) {
     let serie = cqr3_d(cqr3_d(this + 0xc));
-    let (a, b) = (cqr3_linha(serie, 0), cqr3_linha(serie, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
+    let (a, b) = (aus_nsl_table_row_club(serie, 0), aus_nsl_table_row_club(serie, 1));
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let fase = cqr3_d(cqr3_d(this + 0xc) + 4);
     let igual = fase != 0 && {
         let l = cqr3_d(fase + 0xa7);

@@ -5,13 +5,13 @@ unsafe fn cpq13_d(a: usize) -> u32 {
 }
 
 /// A linha do clube na tabela tática (0x8982b0, o `this` não é usado; −1 sem linha).
-unsafe fn cpq13_linha(clube: usize, time: u32) -> i32 {
+unsafe fn club_tactics_row(clube: usize, time: u32) -> i32 {
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
     linha(clube, time)
 }
 
 /// A célula `c` (dword) da linha `k` da tabela tática: [this + 0x601] + 0x91 × k + `c`.
-unsafe fn cpq13_celula(this: usize, k: i32, c: usize) -> usize {
+unsafe fn tactics_cell(this: usize, k: i32, c: usize) -> usize {
     (cpq13_d(this + 0x601) as usize).wrapping_add((k as isize * 0x91) as usize).wrapping_add(c)
 }
 
@@ -22,14 +22,14 @@ unsafe fn cpq13_celula(this: usize, k: i32, c: usize) -> usize {
 unsafe extern "thiscall" fn clear_selection_slot(this: usize, clube: usize, vaga: u32, time: u32) -> u32 {
     let v = vaga as u8 as i8;
     if clube == 0 || !(0..=0x13).contains(&v) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%)(this, clube, vaga, time);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%)(this, clube, vaga, time);
     }
-    let k = cpq13_linha(clube, time);
+    let k = club_tactics_row(clube, time);
     if k == -1 {
         return 0;
     }
     crate::comparacao::ramo("cpq_13 limpar vaga");
-    core::ptr::write_unaligned(cpq13_celula(this, k, 2 + 4 * v as usize) as *mut i32, -1); // a vaga
+    core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * v as usize) as *mut i32, -1); // a vaga
     if *((this + 0x5f0) as *const u8) != 0 {
         for e in 0..16 {
             let a = this + 0x30 + 0x5c * e;
@@ -45,15 +45,15 @@ unsafe extern "thiscall" fn clear_selection_slot(this: usize, clube: usize, vaga
 /// Comparador: só grava a vaga e os espaços guardados: lado a lado pela linha da escalação (20 dwords), pelos 16
 /// espaços e pela conta (+0x5f0). Clube nulo ou vaga fora: só a original (a caixa).
 unsafe extern "thiscall" fn comparar_clear_selection_slot(this: usize, clube: usize, vaga: u32, time: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
     let v = vaga as u8 as i8;
     if clube == 0 || !(0..=0x13).contains(&v) {
         return o(this, clube, vaga, time);
     }
     let mut reg = vec![(this + 0x30, 16 * 0x5c), (this + 0x5f0, 1)];
-    let k = cpq13_linha(clube, time);
+    let k = club_tactics_row(clube, time);
     if k != -1 {
-        reg.push((cpq13_celula(this, k, 2), 20 * 4));
+        reg.push((tactics_cell(this, k, 2), 20 * 4));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, vaga, time), || clear_selection_slot(this, clube, vaga, time));
     PLACAR.registrar(igual && r == n, || format!("clear_selection_slot(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, time, r, n, mo, mr));
@@ -68,13 +68,13 @@ unsafe extern "thiscall" fn comparar_clear_selection_slot(this: usize, clube: us
 unsafe extern "thiscall" fn set_set_piece_taker(this: usize, clube: usize, papel: u32, escolha: u32, pessoa: usize, time: u32) -> u32 {
     let (p, e) = (papel as u8 as i8, escolha as u8 as i8);
     if clube == 0 || !(0..=4).contains(&p) || !(0..=1).contains(&e) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, papel, escolha, pessoa, time);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, papel, escolha, pessoa, time);
     }
-    let k = cpq13_linha(clube, time);
+    let k = club_tactics_row(clube, time);
     if k == -1 {
         return 0;
     }
-    let celula = |j: i8| cpq13_celula(this, k, 0x5e + 4 * (j as i32 + 2 * p as i32) as usize) as *mut i32;
+    let celula = |j: i8| tactics_cell(this, k, 0x5e + 4 * (j as i32 + 2 * p as i32) as usize) as *mut i32;
     if pessoa != 0 {
         core::ptr::write_unaligned(celula(e), cpq13_d(pessoa) as i32);
         return 1;
@@ -100,13 +100,13 @@ unsafe extern "thiscall" fn set_set_piece_taker(this: usize, clube: usize, papel
 /// Comparador: só grava a linha dos batedores: lado a lado pelos 10 dwords (+0x5e) da linha do clube. Clube nulo,
 /// papel ou escolha fora: só a original (a caixa).
 unsafe extern "thiscall" fn comparar_set_set_piece_taker(this: usize, clube: usize, papel: u32, escolha: u32, pessoa: usize, time: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I1%%);
     let (p, e) = (papel as u8 as i8, escolha as u8 as i8);
     if clube == 0 || !(0..=4).contains(&p) || !(0..=1).contains(&e) {
         return o(this, clube, papel, escolha, pessoa, time);
     }
-    let k = cpq13_linha(clube, time);
-    let reg = if k != -1 { vec![(cpq13_celula(this, k, 0x5e), 10 * 4)] } else { Vec::new() };
+    let k = club_tactics_row(clube, time);
+    let reg = if k != -1 { vec![(tactics_cell(this, k, 0x5e), 10 * 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, papel, escolha, pessoa, time),
         || set_set_piece_taker(this, clube, papel, escolha, pessoa, time));
     PLACAR.registrar(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, pessoa, r, n, mo, mr));

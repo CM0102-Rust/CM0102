@@ -23,7 +23,7 @@ unsafe fn cps5_clube(i: usize) -> usize {
 }
 
 /// O contrato da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz a cada chamada.
-unsafe fn cps5_contrato(p: usize) -> usize {
+unsafe fn game_get_contract_and_store(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cps5_d(0xae1050), p);
     core::ptr::write_unaligned(0xae1080 as *mut usize, c);
@@ -31,7 +31,7 @@ unsafe fn cps5_contrato(p: usize) -> usize {
 }
 
 /// O clube do contrato (pelo id em +4), ou 0 sem contrato.
-unsafe fn cps5_clube_do_contrato(c: usize) -> usize {
+unsafe fn game_club_of_contract(c: usize) -> usize {
     if c == 0 {
         0
     } else {
@@ -40,13 +40,13 @@ unsafe fn cps5_clube_do_contrato(c: usize) -> usize {
 }
 
 /// O vínculo da pessoa com o clube (0x4cf5f0).
-unsafe fn cps5_vinculo(p: usize, clube: usize) -> usize {
+unsafe fn game_contract_for_club(p: usize, clube: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     f(cps5_d(0xae1050), p, clube)
 }
 
 /// `pessoa` não gosta de `alvo` (0x547840)?
-unsafe fn cps5_nao_gosta(alvo: usize, pessoa: usize) -> u32 {
+unsafe fn is_disliked_by(alvo: usize, pessoa: usize) -> u32 {
     let f: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
     f(alvo, pessoa)
 }
@@ -55,14 +55,14 @@ unsafe fn cps5_nao_gosta(alvo: usize, pessoa: usize) -> u32 {
 /// gosta; achado, e só quando dia % 14 + id da pessoa dá zero (na prática a pessoa de id 0 a cada 14 dias), a queixa
 /// (0x587c60) contra o técnico (+0xcf, tipo 0), o auxiliar (+0xd3, 1) ou outro (2) e a marca no vínculo `k` (0x867700
 /// com 0x2000, 0x1000 ou 0x800).
-unsafe fn cps5_atrito(p: usize, clube: usize, k: usize) {
+unsafe fn dressing_room_friction(p: usize, clube: usize, k: usize) {
     let mut j = 0usize;
     loop {
         if j >= 0x32 {
             return;
         }
         let q = cps5_d(clube + 0xd7 + j * 4);
-        if q != p && q != 0 && cps5_nao_gosta(q, p) != 0 {
+        if q != p && q != 0 && is_disliked_by(q, p) != 0 {
             break;
         }
         j += 1;
@@ -113,18 +113,18 @@ unsafe extern "C" fn game_update_squad_relationships() {
         if cps5_sortear(cps5_sb(a + 0x5b)) != 0 {
             continue;
         }
-        if cps5_nao_gosta(b, a) != 0 {
+        if is_disliked_by(b, a) != 0 {
             tirar_rejeitada(a, b);
-            let c = cps5_contrato(a);
-            if c == 0 || cps5_clube_do_contrato(c) == 0 {
+            let c = game_get_contract_and_store(a);
+            if c == 0 || game_club_of_contract(c) == 0 {
                 continue;
             }
-            let ca = cps5_clube_do_contrato(cps5_contrato(a));
-            let cb = cps5_clube_do_contrato(cps5_contrato(b));
+            let ca = game_club_of_contract(game_get_contract_and_store(a));
+            let cb = game_club_of_contract(game_get_contract_and_store(b));
             if ca != cb {
                 continue;
             }
-            let k = cps5_vinculo(a, cps5_clube_do_contrato(cps5_contrato(a)));
+            let k = game_contract_for_club(a, game_club_of_contract(game_get_contract_and_store(a)));
             if k == 0 || cps5_d(k + 0x45) & 0x800 == 0 {
                 continue;
             }
@@ -150,25 +150,25 @@ unsafe extern "C" fn game_update_squad_relationships() {
     let fim = base.wrapping_add((cps5_d(0xae2364).wrapping_sub(17)).wrapping_mul(0x6e));
     let mut p = base;
     while p < fim {
-        cps5_pessoa_e_tecnico(p);
+        player_vs_manager_check(p);
         p += 0x6e;
     }
 }
 
 /// Uma pessoa do laço de fora dos dias múltiplos de 50 (0x5d6f15..0x5d7115).
-unsafe fn cps5_pessoa_e_tecnico(p: usize) {
+unsafe fn player_vs_manager_check(p: usize) {
     if cps5_d(p + 0x61) == 0 || cps5_d(p + 0x65) == 0 {
         return;
     }
-    let c = cps5_contrato(p);
+    let c = game_get_contract_and_store(p);
     if c == 0 {
         return;
     }
-    let clube = cps5_clube_do_contrato(c);
+    let clube = game_club_of_contract(c);
     if clube == 0 {
         return;
     }
-    let k = cps5_vinculo(cps5_d(clube + 0xff), clube);
+    let k = game_contract_for_club(cps5_d(clube + 0xff), clube);
     if k == 0 {
         return;
     }
@@ -201,13 +201,13 @@ unsafe fn cps5_pessoa_e_tecnico(p: usize) {
     if cps5_d(p + 0x65) == 0 {
         return;
     }
-    cps5_atrito(p, clube, k);
+    dressing_room_friction(p, clube, k);
 }
 
 // ponytail: sorteia e mexe nas preferências (0x547a10, 0x547af0, 0x547c10, 0x547c50), briga e queixa: só a original;
 // a cópia leva os ramos (roda todo dia).
 unsafe extern "C" fn comparar_game_update_squad_relationships() {
-    orig::<unsafe extern "C" fn()>(%%I0%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
 /// { 0x5d7190 } (cdecl, game.cpp): `game_check_club_dressing_room_unrest(clube)`: cada pessoa do elenco (+0xd7, 50
@@ -219,25 +219,25 @@ unsafe extern "C" fn game_check_club_dressing_room_unrest(clube: usize) {
         if p == 0 {
             continue;
         }
-        let k = cps5_vinculo(p, clube);
+        let k = game_contract_for_club(p, clube);
         if k == 0 {
             continue;
         }
         if cps5_d(p + 0x65) == 0 {
             continue;
         }
-        cps5_atrito(p, clube, k);
+        dressing_room_friction(p, clube, k);
     }
 }
 
 // ponytail: a queixa (0x587c60) e a marca no vínculo (0x867700) não rodam duas vezes: só a original; a cópia leva o
 // ramo do atrito.
 unsafe extern "C" fn comparar_game_check_club_dressing_room_unrest(clube: usize) {
-    orig::<unsafe extern "C" fn(usize)>(%%I1%%)(clube)
+    original_fn::<unsafe extern "C" fn(usize)>(%%I1%%)(clube)
 }
 
 /// A pessoa conta para a liderança do clube: id válido (< [0xae2364]), contrato com o clube (+0x39) e ficha de jogador.
-unsafe fn cps5_do_elenco(p: usize, clube: usize) -> bool {
+unsafe fn is_club_squad_player(p: usize, clube: usize) -> bool {
     p != 0 && (cps5_d(p) as i32) < cps5_d(0xae2364) as i32 && cps5_d(p + 0x39) == clube && cps5_d(p + 0x61) != 0
 }
 
@@ -258,10 +258,10 @@ unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
             let (mut soma, mut lideranca, mut q) = (0i32, 0i32, 0i32);
             for i in 0..0x32usize {
                 let p = cps5_d(vagas + i * 4);
-                if !cps5_do_elenco(p, clube) {
+                if !is_club_squad_player(p, clube) {
                     continue;
                 }
-                let c = cps5_vinculo(p, clube);
+                let c = game_contract_for_club(p, clube);
                 if c == 0 {
                     continue;
                 }
@@ -278,10 +278,10 @@ unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                     break;
                 }
                 let p = cps5_d(vagas + i * 4);
-                if !cps5_do_elenco(p, clube) {
+                if !is_club_squad_player(p, clube) {
                     continue;
                 }
-                let c = cps5_vinculo(p, clube);
+                let c = game_contract_for_club(p, clube);
                 let m = if c == 0 { 0 } else { cps5_sb(c + 0x44) };
                 let l = cps5_sb(cps5_d(p + 0x61) + 0x2f);
                 crate::comparacao::ramo("cps_5 moral sorteado");
@@ -308,5 +308,5 @@ unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
 
 // ponytail: sorteia e muda o moral (0x544710, que também sorteia): só a original; a cópia leva os ramos.
 unsafe extern "C" fn comparar_game_spread_squad_morale_by_leadership() {
-    orig::<unsafe extern "C" fn()>(%%I2%%)()
+    original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

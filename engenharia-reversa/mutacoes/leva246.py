@@ -5,7 +5,7 @@ MUTACOES = [
     ('cpj_decisao_500', 'as i32 / 500;', 'as i32 / 400; // mutacao: 400'),
     ('cpj_noticia_divisao', 'c != 0 && read_usize(c + 0x57) == divisao // a divisão do clube', 'c != 0 // mutacao: qualquer divisao'),
     ('cpj_noticia_selecao', '(c != 0 && read_usize(c + 0x53) == nacao) || (s != 0 && read_usize(s + 0x53) == nacao) // o clube ou a seleção', '(c != 0 && read_usize(c + 0x53) == nacao) && s == s // mutacao: so o clube'),
-    ('cpj_noticia_alcance', 'cpj3_entregar(this, noticia, 4, |_| true) as u32', 'cpj3_entregar(this, noticia, 2, |_| true) as u32 // mutacao: alcance 2'),
+    ('cpj_noticia_alcance', 'deliver_to_human_managers(this, noticia, 4, |_| true) as u32', 'deliver_to_human_managers(this, noticia, 2, |_| true) as u32 // mutacao: alcance 2'),
     ('cpj_recorde_minimo', 'rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {', 'rep.wrapping_mul(25).wrapping_add(200_000).wrapping_mul(2) { // mutacao: 400.000'),
     ('cpj_condicao_teto', '9000 // o teto de quem se recupera', 'v // mutacao: sem o teto'),
     ('cpj_limite_terceiro', '(2, t[2]) // o 3º limite', '(2, t[1]) // mutacao: o 2o byte'),
@@ -13,7 +13,7 @@ MUTACOES = [
     ('cpj_alvos_clube', 'if read_usize(e) as u32 == id { // o pedido do clube', 'if read_usize(e) as u32 != id { // mutacao: os dos outros'),
     ('cpj_olheiro_mesmo', 'return 1; // o mesmo olheiro', '// mutacao: troca mesmo assim'),
     ('cpj_diretoria_tecnico', 'if read_usize(clube + club::MANAGER) != 0 { // o lado tem técnico', 'if read_usize(clube + 0xcf) == 0 { // mutacao: os sem tecnico'),
-    ('cpj_disciplina_liga', 'if let Some(t) = cpj6_tribunal(this, read_usize(liga) as i32) { // o tribunal da liga do clube', 'if let Some(t) = cpj6_tribunal(this, read_usize(liga) as i32 + 1) { // mutacao: a liga seguinte'),
+    ('cpj_disciplina_liga', 'if let Some(t) = comp_tribunal(this, read_usize(liga) as i32) { // o tribunal da liga do clube', 'if let Some(t) = comp_tribunal(this, read_usize(liga) as i32 + 1) { // mutacao: a liga seguinte'),
     ('cpj_shortlist_recuo', 'e -= 8; // a anterior também é do clube', 'break; // mutacao: sem recuar'),
     ('cpj_oferta_empate', 'if v > maior { // a primeira no empate', 'if v >= maior { // mutacao: a ultima no empate'),
 ]

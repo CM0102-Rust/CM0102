@@ -21,7 +21,7 @@ unsafe fn cqt6_tabela(this: usize) -> u32 {
     let t = alocar(0xb1);
     core::ptr::write_unaligned((this + 0xb1) as *mut u32, t as u32);
     if t == 0 {
-        aviso_em(CQT6_F, 0x195);
+        show_error_at(CQT6_F, 0x195);
         return 0;
     }
     crate::comparacao::ramo("cqt_6 tabela da preliminar");
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_tabela_da_preliminar(this: usize) -> u
 /// Só a original (a 0x687430 aloca e a notícia vai aos humanos), conferindo o plano feito antes: devolve 1, +0x3e = 3, os 3
 /// primeiros da lista +0x14 nas linhas, na ordem, e zerados na lista.
 unsafe extern "thiscall" fn comparar_cqt6_campeoes_tabela_da_preliminar(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let plano: Vec<usize> = (0..3).map(|k| cqt6_d(cqt6_d(this + 0x14) + k * 6)).collect();
     let r = o(this);
     let t = cqt6_d(this + 0xb1);
@@ -69,15 +69,15 @@ unsafe extern "thiscall" fn cqt6_campeoes_preliminar(this: usize) {
     previstas(this);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x426130usize);
     if tabela(this) == 0 {
-        return aviso_em(CQT6_F, 0x491);
+        return show_error_at(CQT6_F, 0x491);
     }
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
     if jogos(this) == 0 {
-        return aviso_em(CQT6_F, 0x497);
+        return show_error_at(CQT6_F, 0x497);
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
     if ordenar(this, 0) == 0 { // cqt6: a ordem da tabela da preliminar
-        return aviso_em(CQT6_F, 0x49e);
+        return show_error_at(CQT6_F, 0x49e);
     }
     crate::comparacao::ramo("cqt_6 preliminar dos campeoes");
     core::ptr::write_unaligned((this + 0x45) as *mut u32, 1);
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_preliminar(this: usize) {
 
 /// Só a original (a tabela, os jogos e o sorteio da ordem alocam e sorteiam), conferindo o plano: +0x45 = 1 e +0x3e = 3.
 unsafe extern "thiscall" fn comparar_cqt6_campeoes_preliminar(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     o(this);
     PLACAR.registrar(cqt6_d(this + 0x45) == 1 && cqt6_w(this + 0x3e) == 3, || format!("cqt6_campeoes_preliminar({:#x}) +0x45 {} +0x3e {}", this, cqt6_d(this + 0x45), cqt6_w(this + 0x3e)));
 }
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn comparar_cqt6_campeoes_preliminar(this: usize) {
 unsafe extern "thiscall" fn cqt6_campeoes_fase_seguinte(this: usize) {
     let fase = cqt6_d(this + 0x30) as i32;
     if fase >= (cqt6_d(this + 0x2c) as i32).wrapping_sub(1) {
-        return aviso_em(CQT6_F, 0x219);
+        return show_error_at(CQT6_F, 0x219);
     }
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_fase_seguinte(this: usize) {
 /// Só a original (os grupos e as semifinais alocam e sorteiam), conferindo o plano: +0x30 sobe um fora da última fase (ou
 /// mais, quando os grupos ou as semifinais gravam a fase delas) e fica na última.
 unsafe extern "thiscall" fn comparar_cqt6_campeoes_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let antes = cqt6_d(this + 0x30) as i32;
     let ultima = antes >= (cqt6_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);

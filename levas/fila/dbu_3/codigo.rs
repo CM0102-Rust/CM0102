@@ -48,7 +48,7 @@ const DBU3_REGIOES: [(usize, usize); 14] = [
 unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let r = regiao as u8 as i8;
     if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
-        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I0%%)(regiao, texto, tamanho, forma);
+        return original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I0%%)(regiao, texto, tamanho, forma);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(0x545a60usize);
@@ -91,7 +91,7 @@ unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, tamanho: u32, fo
 }
 
 unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I0%%);
     let r = regiao as u8 as i8;
     if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
         return o(regiao, texto, tamanho, forma); // caixa: só a original
@@ -139,7 +139,7 @@ const DBU3_CONTINENTES_4: [[usize; 5]; 6] = [
 /// busca (find_screens), no Menubar, nos jogos do dia (0x717cc0, em Rust) e em 0x7dd400.
 unsafe extern "C" fn get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
-        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%)(continente, texto, tamanho, forma);
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%)(continente, texto, tamanho, forma);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(0x545a60usize);
@@ -169,7 +169,7 @@ unsafe extern "C" fn get_continent_adjective(continente: usize, texto: usize, ta
 }
 
 unsafe extern "C" fn comparar_get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
         return o(continente, texto, tamanho, forma);
     }

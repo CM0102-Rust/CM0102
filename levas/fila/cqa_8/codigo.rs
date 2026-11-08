@@ -18,26 +18,26 @@ unsafe fn cqa8_w(a: usize) -> i16 {
 
 /// Soma `delta` ao byte (felicidade +0x3d, moral +0x44 do contrato) entre −100 e 100, como a original: a soma em 32
 /// bits decide o teto e o piso; dentro deles, a soma do byte.
-unsafe fn cqa8_somar(a: usize, delta: i32) {
+unsafe fn add_clamped_100(a: usize, delta: i32) {
     let v = cqa8_b(a);
     let s = v as i32 + delta;
     *(a as *mut i8) = if s > 100 { 100 } else if s < -100 { -100 } else { v.wrapping_add(delta as i8) };
 }
 
 /// Os dois clubes do jogo (+0x1c mandante, +0x20 visitante): o do lado e o outro.
-unsafe fn cqa8_clubes(jogo: usize, lado: usize) -> (usize, usize) {
+unsafe fn match_clubs_by_side(jogo: usize, lado: usize) -> (usize, usize) {
     if lado == 0 { (cqa8_d(jogo + 0x1c), cqa8_d(jogo + 0x20)) } else { (cqa8_d(jogo + 0x20), cqa8_d(jogo + 0x1c)) }
 }
 
 /// Com o byte +0x3a do jogo = 1, o lado fica de fora quando a reputação do outro clube (+0x80) fica abaixo do maior
 /// entre a dele × [0x968928] e a dele + 1500 (x87 em dupla, como a original).
-unsafe fn cqa8_pula_lado(jogo: usize, lado: usize) -> bool {
+unsafe fn skip_side_by_reputation(jogo: usize, lado: usize) -> bool {
     if cqa8_b(jogo + 0x3a) != 1 {
         return false;
     }
-    let (meu, outro) = cqa8_clubes(jogo, lado);
+    let (meu, outro) = match_clubs_by_side(jogo, lado);
     let r = cqa8_w(meu + 0x80) as i32;
-    let x = r as f64 * f64_em(0x968928);
+    let x = r as f64 * read_f64_at(0x968928);
     let y = (r + 0x5dc) as f64;
     let m = if x > y { x } else { y };
     m > cqa8_w(outro + 0x80) as f64
@@ -45,7 +45,7 @@ unsafe fn cqa8_pula_lado(jogo: usize, lado: usize) -> bool {
 
 /// A pessoa da vaga do resumo (id em +0 e +4 diferente de −1; registro de 0x6e bytes em [0xae23bc]), ou None quando a
 /// original pula a vaga. A pessoa nula (base 0) passa, como na original.
-unsafe fn cqa8_pessoa_da_vaga(vaga: usize) -> Option<usize> {
+unsafe fn staff_of_summary_slot(vaga: usize) -> Option<usize> {
     let id = cqa8_i(vaga);
     if id == -1 || cqa8_i(vaga + 4) == -1 {
         return None;
@@ -60,7 +60,7 @@ unsafe fn cqa8_pessoa_da_vaga(vaga: usize) -> Option<usize> {
 /// Os três bônus do contrato pela vaga (Finance::pay_bonuses 0x599960): +0x21 × +0x10, +0x27 × +0x14 e, com a palavra
 /// do resumo = 1 e +0x22, +0x27 × +0x18 (a original usa o +0x27 de novo); cada um só com o byte e o valor positivos.
 /// Sem bônus no amistoso (0x5c6710), no jogo da competição [0x9cf684] e nos contratos de tipo 5 e 6.
-unsafe fn cqa8_bonus(jogo: usize, contrato: usize, vaga: usize, palavra: i16) -> [Option<i32>; 3] {
+unsafe fn match_bonuses_for_slot(jogo: usize, contrato: usize, vaga: usize, palavra: i16) -> [Option<i32>; 3] {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     let comp = cqa8_d(jogo + 0x14);
     if comp != 0 && (amistoso(cqa8_d(0xae2c74), comp) != 0 || cqa8_d(jogo) == cqa8_d(0x9cf684)) {
@@ -82,7 +82,7 @@ unsafe fn cqa8_bonus(jogo: usize, contrato: usize, vaga: usize, palavra: i16) ->
 /// match_wrap_up da partida do dia (0x6b5f00). Com +0x40 e +0x41 do jogo, o vencedor pelo placar (+0x47/+0x48; com +0x47 =
 /// −1, +0x43/+0x44) e uma cópia dos 50 do elenco (+0xd7) de cada clube. Primeiro, por lado (clube B do parceiro
 /// 0x540a50 e o lado pulado pela reputação ficam de fora), as 20 vagas do resumo (+0x190 + lado × 0x625, 0x49 bytes):
-/// fora das seleções, o contrato com o clube (0x4cf5f0) paga os bônus (cqa8_bonus); os minutos (+0x30 dos starters,
+/// fora das seleções, o contrato com o clube (0x4cf5f0) paga os bônus (match_bonuses_for_slot); os minutos (+0x30 dos starters,
 /// 90 sem valor; 90 − +0x32 dos reservas) mudam a felicidade (+0x3d, minutos × 10 / 90, presa em 50 abaixo de 50) ou,
 /// nas seleções, o +9 do registro de 79 bytes; fora das seleções e dos amistosos, os reservas e os starters de pouco
 /// jogo sorteiam (2 × sorteio(30)) contra os minutos: a felicidade cai 4, +0x3e conta e a moral cai (0x4cb250); senão
@@ -112,23 +112,23 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
     let venceu = [(a > b) as u32, (a < b) as u32];
     let mut lista = [[0usize; 50]; 2];
     for (lado, l) in lista.iter_mut().enumerate() {
-        let c = cqa8_clubes(jogo, lado).0;
+        let c = match_clubs_by_side(jogo, lado).0;
         core::ptr::copy_nonoverlapping((c + 0xd7) as *const usize, l.as_mut_ptr(), 50);
     }
     let mut eh_a = 0u32;
     for lado in 0..2usize {
-        let clube = cqa8_clubes(jogo, lado).0;
+        let clube = match_clubs_by_side(jogo, lado).0;
         if parceiro(clube, &mut eh_a, 1) != 0 && eh_a == 0 {
             continue;
         }
-        if cqa8_pula_lado(jogo, lado) {
+        if skip_side_by_reputation(jogo, lado) {
             continue;
         }
         let fin = financas(cqa8_d(0xae2a38), clube);
         let base = resumo + lado * 0x625;
         for k in 0..20usize {
             let vaga = base + 0x190 + k * 0x49;
-            let Some(pessoa) = cqa8_pessoa_da_vaga(vaga) else { continue };
+            let Some(pessoa) = staff_of_summary_slot(vaga) else { continue };
             let contrato = if selecao(clube) != 0 {
                 0
             } else {
@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
                 if c == 0 {
                     continue;
                 }
-                for v in cqa8_bonus(jogo, c, vaga, cqa8_w(base + 0x154 + 2 * k)).into_iter().flatten() {
+                for v in match_bonuses_for_slot(jogo, c, vaga, cqa8_w(base + 0x154 + 2 * k)).into_iter().flatten() {
                     pagar(fin, v);
                 }
                 c
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
                     crate::comparacao::ramo("cqa_8 testa a moral");
                     let m = cqa8_b(contrato + 0x44) as i32;
                     let r1 = sorteio(0x1e); // cqa8: o primeiro sorteio da moral
-                    let v = r1 as f64 + (f64_em(0x968d68) - m as f64 * f64_em(0x968d70));
+                    let v = r1 as f64 + (read_f64_at(0x968d68) - m as f64 * read_f64_at(0x968d70));
                     let r2 = sorteio(0x1e);
                     v - r2 as f64 > minutos as f64
                 };
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
                     if *p.add(0x3e) != 100 {
                         *p.add(0x3e) = (*p.add(0x3e)).wrapping_add(1);
                     }
-                    cqa8_somar(contrato + 0x3d, -4);
+                    add_clamped_100(contrato + 0x3d, -4);
                     baixar(this, pessoa, clube, contrato);
                 } else {
                     *p.add(0x3e) = 0;
@@ -207,12 +207,12 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
                 crate::comparacao::ramo("cqa_8 moral do vencedor");
                 let r = sorteio(0x15 - cqa8_b(pessoa + 0x57) as i32); // cqa8: o sorteio do vencedor
                 if r < 4 && contrato != 0 {
-                    cqa8_somar(contrato + 0x44, 3);
+                    add_clamped_100(contrato + 0x44, 3);
                 }
             } else if venceu[1 - lado] != 0 {
                 let r = sorteio(0x15 - cqa8_b(pessoa + 0x57) as i32);
                 if r < 4 && contrato != 0 {
-                    cqa8_somar(contrato + 0x44, -3);
+                    add_clamped_100(contrato + 0x44, -3);
                 }
             }
             if let Some(x) = lista[lado].iter_mut().find(|x| **x == pessoa) {
@@ -227,9 +227,9 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
     let lugar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x4cbb60usize);
     let trocar: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x4cbd20usize);
     for lado in 0..2usize {
-        let (clube, outro) = cqa8_clubes(jogo, lado);
+        let (clube, outro) = match_clubs_by_side(jogo, lado);
         let limite: i8 = if parceiro(clube, core::ptr::null_mut(), 1) != 0 { 14 } else { 8 };
-        if cqa8_pula_lado(jogo, lado) {
+        if skip_side_by_reputation(jogo, lado) {
             continue;
         }
         for i in 0..50usize {
@@ -254,11 +254,11 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
             }
             let m = cqa8_d(0xb74350);
             let x = core::ptr::read_unaligned((m + 0x18) as *const f64);
-            let c = f64_em(0x9689a0);
+            let c = read_f64_at(0x9689a0);
             // fcomp + C3: igual ou desordenado vai para a constante
-            let nota = if !(x < c || x > c) { f64_em(0x968998) } else { core::ptr::read_unaligned((m + 0x10) as *const f64) / x };
+            let nota = if !(x < c || x > c) { read_f64_at(0x968998) } else { core::ptr::read_unaligned((m + 0x10) as *const f64) / x };
             crate::comparacao::ramo("cqa_8 evolui quem ficou de fora");
-            evoluir(0, pessoa, clube, outro, jogo, (nota - f64_em(0x967888)) as f32, 0, 0); // cqa8: a evolução de quem ficou de fora
+            evoluir(0, pessoa, clube, outro, jogo, (nota - read_f64_at(0x967888)) as f32, 0, 0); // cqa8: a evolução de quem ficou de fora
             let p = contrato as *mut u8;
             *p.add(0x3f) = 0;
             if *p.add(0x3e) != 100 {
@@ -270,7 +270,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
                     trocar(this, pessoa, clube, 0);
                 }
             }
-            cqa8_somar(contrato + 0x3d, -8);
+            add_clamped_100(contrato + 0x3d, -8);
             baixar(this, pessoa, clube, contrato);
         }
     }
@@ -281,7 +281,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
 /// antes de qualquer sorteio: os bônus que cada clube paga (+0x138 das finanças soma o total previsto pelas mesmas
 /// regras da cópia, calculado antes). A cópia é provada pelos ramos e pelas mutações na carreira.
 unsafe extern "thiscall" fn comparar_update_after_match(this: usize, jogo: usize, resumo: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if cqa8_b(jogo + 0x40) == 0 || cqa8_b(jogo + 0x41) == 0 {
         return o(this, jogo, resumo);
     }
@@ -292,8 +292,8 @@ unsafe extern "thiscall" fn comparar_update_after_match(this: usize, jogo: usize
     let mut plano: [(usize, i32, i32); 2] = [(0, 0, 0); 2];
     let mut eh_a = 0u32;
     for (lado, pl) in plano.iter_mut().enumerate() {
-        let clube = cqa8_clubes(jogo, lado).0;
-        if (parceiro(clube, &mut eh_a, 1) != 0 && eh_a == 0) || cqa8_pula_lado(jogo, lado) || selecao(clube) != 0 {
+        let clube = match_clubs_by_side(jogo, lado).0;
+        if (parceiro(clube, &mut eh_a, 1) != 0 && eh_a == 0) || skip_side_by_reputation(jogo, lado) || selecao(clube) != 0 {
             continue;
         }
         let fin = financas(cqa8_d(0xae2a38), clube);
@@ -301,10 +301,10 @@ unsafe extern "thiscall" fn comparar_update_after_match(this: usize, jogo: usize
         let mut total = 0i32;
         for k in 0..20usize {
             let vaga = base + 0x190 + k * 0x49;
-            let Some(pessoa) = cqa8_pessoa_da_vaga(vaga) else { continue };
+            let Some(pessoa) = staff_of_summary_slot(vaga) else { continue };
             let c = com_clube(this, pessoa, clube);
             if c != 0 {
-                for v in cqa8_bonus(jogo, c, vaga, cqa8_w(base + 0x154 + 2 * k)).into_iter().flatten() {
+                for v in match_bonuses_for_slot(jogo, c, vaga, cqa8_w(base + 0x154 + 2 * k)).into_iter().flatten() {
                     total = total.wrapping_add(v);
                 }
             }
@@ -329,14 +329,14 @@ unsafe extern "stdcall" fn contract_manager_get_player_morale(pessoa: usize) -> 
 }
 
 unsafe extern "stdcall" fn comparar_contract_manager_get_player_morale(pessoa: usize) -> u32 {
-    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%)(pessoa);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%)(pessoa);
     let n = contract_manager_get_player_morale(pessoa);
     PLACAR.registrar(r == n, || format!("contract_manager_get_player_morale({:x}) original={:#x} rust={:#x}", pessoa, r, n));
     r
 }
 
 /// O texto terminado em zero em `a` (até 0x400 bytes), para os comparadores dos textos.
-unsafe fn cqa8_texto(a: usize) -> Vec<u8> {
+unsafe fn c_string_bytes(a: usize) -> Vec<u8> {
     let s = core::slice::from_raw_parts(a as *const u8, 0x400);
     s[..s.iter().position(|&c| c == 0).unwrap_or(0x400)].to_vec()
 }
@@ -366,10 +366,10 @@ unsafe extern "stdcall" fn contract_manager_write_morale_text(pessoa: usize, sai
 /// Comparador: a original escreve a palavra; a cópia escreve de novo (o texto se sobrescreve) e as duas têm de bater;
 /// fica o texto da original.
 unsafe extern "stdcall" fn comparar_contract_manager_write_morale_text(pessoa: usize, saida: usize, x: u32) {
-    orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I2%%)(pessoa, saida, x);
-    let r = cqa8_texto(saida);
+    original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I2%%)(pessoa, saida, x);
+    let r = c_string_bytes(saida);
     contract_manager_write_morale_text(pessoa, saida, x);
-    let n = cqa8_texto(saida);
+    let n = c_string_bytes(saida);
     core::ptr::copy_nonoverlapping(r.as_ptr(), saida as *mut u8, r.len());
     *((saida + r.len()) as *mut u8) = 0;
     PLACAR.registrar(r == n, || format!("contract_manager_write_morale_text({:x}) original={:?} rust={:?}", pessoa, String::from_utf8_lossy(&r), String::from_utf8_lossy(&n)));

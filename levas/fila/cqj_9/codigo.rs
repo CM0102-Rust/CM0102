@@ -10,38 +10,38 @@ unsafe fn cqj9_w(a: usize) -> i16 {
 
 /// Os registros de carreira (Staff_Records em [0xdd7f00], thiscall, todos já em Rust):
 /// 0x86bdd0 classificou-se (clube, comp, fase, rodada, peso; ret 0x14).
-unsafe fn cqj9_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
+unsafe fn bra_nat_first_add_qualified_record(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86bdd0usize);
     f(cqj9_d(0xdd7f00), clube, comp, fase, rodada, peso);
 }
 
 /// 0x86a1c0 rebaixado (clube, liga; ret 8).
-unsafe fn cqj9_rebaixado(clube: usize, comp: usize) {
+unsafe fn bra_nat_first_add_relegation_record(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x86a1c0usize);
     f(cqj9_d(0xdd7f00), clube, comp);
 }
 
 /// 0x868c50 campeão da liga (clube, liga; ret 8).
-unsafe fn cqj9_campeao(clube: usize, comp: usize) {
+unsafe fn add_champions_record(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x868c50usize);
     f(cqj9_d(0xdd7f00), clube, comp);
 }
 
 /// 0x869480 promovido (clube, liga, peso; ret 0xc).
-unsafe fn cqj9_promovido(clube: usize, comp: usize, peso: u32) {
+unsafe fn bra_nat_first_add_promotion_record(clube: usize, comp: usize, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x869480usize);
     f(cqj9_d(0xdd7f00), clube, comp, peso);
 }
 
 /// 0x68ab70 `League::find_club_row(clube, 0)` (thiscall, ret 8): a linha do clube na tabela da liga.
-unsafe fn cqj9_linha(liga: usize, clube: usize) -> usize {
+unsafe fn bra_nat_first_find_club_row(liga: usize, clube: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x68ab70usize);
     f(liga, clube, 0)
 }
 
 /// A Série A (0x42abc0). `fazer` = falso: o ensaio do comparador, sem os registros nem a gravação; devolve
 /// (devolução, linha gravada ou 0, destino gravado).
-unsafe fn cqj9_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
+unsafe fn serie_a_staff_records(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8);
     let comp = cqj9_d(this + 4);
     if fa == 0xff {
@@ -49,10 +49,10 @@ unsafe fn cqj9_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, faze
         if st == 6 {
             if fazer {
                 crate::comparacao::ramo("cqj_9 serie a classificado");
-                cqj9_classificou(clube, comp, 0x41c, 0, 0x28);
+                bra_nat_first_add_qualified_record(clube, comp, 0x41c, 0, 0x28);
             }
         } else if st == 3 && fazer {
-            cqj9_rebaixado(clube, comp);
+            bra_nat_first_add_relegation_record(clube, comp);
         }
         return (0, 0, 0);
     }
@@ -61,16 +61,16 @@ unsafe fn cqj9_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, faze
     }
     // o mata-mata
     if st == 1 {
-        let l = cqj9_linha(this, clube);
+        let l = bra_nat_first_find_club_row(this, clube);
         if fazer {
             crate::comparacao::ramo("cqj_9 serie a campeao");
-            cqj9_campeao(clube, comp); // cqj9: o registro do campeão da Série A
+            add_champions_record(clube, comp); // cqj9: o registro do campeão da Série A
             *((l + 0x37) as *mut u8) = 5;
         }
         return (0, l, 5);
     }
     if st == 2 || st == 0xff {
-        let l = cqj9_linha(this, clube);
+        let l = bra_nat_first_find_club_row(this, clube);
         if fazer {
             *((l + 0x37) as *mut u8) = 0xfe; // eliminado
         }
@@ -80,13 +80,13 @@ unsafe fn cqj9_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, faze
 }
 
 /// A Série C (0x42eb00); como a da Série A.
-unsafe fn cqj9_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
+unsafe fn serie_c_staff_records(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8 as i8);
     let comp = cqj9_d(this + 4);
     if fa < 7 {
         // os grupos
         if st == 6 && fazer {
-            cqj9_classificou(clube, comp, 0x14, 0, 0x28);
+            bra_nat_first_add_qualified_record(clube, comp, 0x14, 0, 0x28);
         }
         return (0, 0, 0);
     }
@@ -95,7 +95,7 @@ unsafe fn cqj9_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, faze
             return (u32::MAX, 0, 0);
         }
         if fazer {
-            cqj9_classificou(clube, comp, 0, 0x1e, 0x28);
+            bra_nat_first_add_qualified_record(clube, comp, 0, 0x1e, 0x28);
         }
         return (0, 0, 0);
     }
@@ -105,8 +105,8 @@ unsafe fn cqj9_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, faze
             return (u32::MAX, 0, 0);
         }
         if fazer {
-            cqj9_promovido(clube, comp, 0x32);
-            cqj9_classificou(clube, comp, 0, 0x96, 0x28);
+            bra_nat_first_add_promotion_record(clube, comp, 0x32);
+            bra_nat_first_add_qualified_record(clube, comp, 0, 0x96, 0x28);
         }
         // a linha do clube na liga (k = -1) ou nos estágios 0..6, a primeira que tiver o clube, ganha o destino 0
         let mut k: i8 = -1;
@@ -143,24 +143,24 @@ unsafe fn cqj9_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, faze
             return (u32::MAX, 0, 0);
         }
         if fazer {
-            cqj9_campeao(clube, comp);
+            add_champions_record(clube, comp);
         }
     }
     (0, 0, 0)
 }
 
 /// O Baiano (0x430210); como a da Série A. O clube vem da tabela (+0xb1, +0x3e linhas), não da 0x68ab70.
-unsafe fn cqj9_baiano(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
+unsafe fn baiano_staff_records(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8);
     let comp = cqj9_d(this + 4);
     if fa == 0xff {
         if st == 6 {
             if fazer {
-                cqj9_classificou(clube, comp, 0, 0x82, 0x32);
+                bra_nat_first_add_qualified_record(clube, comp, 0, 0x82, 0x32);
             }
         } else if st == 3 && fazer {
             crate::comparacao::ramo("cqj_9 baiano rebaixado");
-            cqj9_rebaixado(clube, comp); // cqj9: o rebaixado do Baiano
+            bra_nat_first_add_relegation_record(clube, comp); // cqj9: o rebaixado do Baiano
         }
         return (0, 0, 0);
     }
@@ -173,7 +173,7 @@ unsafe fn cqj9_baiano(this: usize, clube: usize, situacao: u32, fase: u32, jogo:
         if cqj9_d(cqj9_d(this + 0xb1) + 0x3b * i as usize) == clube {
             if st == 1 {
                 if fazer {
-                    cqj9_campeao(clube, comp);
+                    add_champions_record(clube, comp);
                 }
                 let l = cqj9_d(this + 0xb1) + 0x3b * i as usize;
                 if fazer {
@@ -209,14 +209,14 @@ unsafe fn cqj9_baiano(this: usize, clube: usize, situacao: u32, fase: u32, jogo:
 /// -1) o destino -2. Devolve 0.
 unsafe extern "thiscall" fn bra_nat_first_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    cqj9_serie_a(this, clube, situacao, fase, true).0
+    serie_a_staff_records(this, clube, situacao, fase, true).0
 }
 
 /// Comparador: só a original (ponytail: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
 /// com o plano do ensaio (a cópia sem os registros nem a gravação): a devolução e o destino gravado na linha.
 unsafe extern "thiscall" fn comparar_bra_nat_first_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, l, dest) = cqj9_serie_a(this, clube, situacao, fase, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, a5, a6);
+    let (n, l, dest) = serie_a_staff_records(this, clube, situacao, fase, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
@@ -229,13 +229,13 @@ unsafe extern "thiscall" fn comparar_bra_nat_first_update_staff_records_for_stat
 /// Devolve 0, ou -1 nas situações que a fase não espera.
 unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    cqj9_serie_c(this, clube, situacao, fase, true).0
+    serie_c_staff_records(this, clube, situacao, fase, true).0
 }
 
 /// Comparador: como o da Série A.
 unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, l, dest) = cqj9_serie_c(this, clube, situacao, fase, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I1%%)(this, clube, situacao, fase, a4, a5, a6);
+    let (n, l, dest) = serie_c_staff_records(this, clube, situacao, fase, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I1%%)(this, clube, situacao, fase, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
@@ -248,13 +248,13 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_records_for_stat
 /// de eliminação com o peso da rodada (0x4bf850: de 30 a 50 pela rodada do jogo) e o destino -2. Devolve 0.
 unsafe extern "thiscall" fn bra_reg_bahia_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
-    cqj9_baiano(this, clube, situacao, fase, jogo, true).0
+    baiano_staff_records(this, clube, situacao, fase, jogo, true).0
 }
 
 /// Comparador: como o da Série A.
 unsafe extern "thiscall" fn comparar_bra_reg_bahia_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let (n, l, dest) = cqj9_baiano(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%)(this, clube, situacao, fase, a4, jogo, a6);
+    let (n, l, dest) = baiano_staff_records(this, clube, situacao, fase, jogo, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_bahia_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r

@@ -17,7 +17,7 @@ unsafe fn cpw5_pd(a: usize, v: u32) {
 }
 
 /// A pessoa `id` da tabela de pessoas ([0xae23bc], 0x6e bytes cada).
-unsafe fn cpw5_pessoa(id: i32) -> usize {
+unsafe fn month_ratings_staff_by_id(id: i32) -> usize {
     cpw5_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e))
 }
 
@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: usize, parti
             if k >= 0xb && cpw5_b(e + 0x32) == 0xff {
                 continue;
             }
-            let p = cpw5_pessoa(cpw5_i(e));
+            let p = month_ratings_staff_by_id(cpw5_i(e));
             if p != 0 && cpw5_i(p) >= cpw5_i(0xae2364) {
                 continue;
             }
@@ -54,7 +54,7 @@ unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: usize, parti
 /// O comparador das notas da partida: lado a lado (cabeçalho e as vagas da tabela que podem mudar) quando cabem as 40
 /// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
 unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize, jogo: usize, partida: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let (tab, n, cap) = (cpw5_d(this), cpw5_i(this + 4), cpw5_i(this + 8));
     if tab == 0 || n < 0 || cap.wrapping_sub(n) < 40 {
         // ponytail: a tabela pode crescer (realloc): só a original; a 0x767fa0 compara cada nota
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize, jogo: usi
 
 /// A nota da partida (+0x35 da vaga, sem sinal) soma na palavra +8 do registro de 12 bytes e o byte +0xa conta mais um
 /// jogo.
-unsafe fn cpw5_somar(r: usize, e: usize) {
+unsafe fn add_match_rating(r: usize, e: usize) {
     let s = (r + 8) as *mut u16;
     core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(cpw5_b(e + 0x35) as u16));
     *((r + 0xa) as *mut u8) = cpw5_b(r + 0xa).wrapping_add(1);
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) {
     for k in 0..n.max(0) as usize {
         let r = tab + k * 12;
         if cpw5_i(r) == id {
-            return cpw5_somar(r, e);
+            return add_match_rating(r, e);
         }
     }
     let cap = cpw5_i(this + 8);
@@ -102,11 +102,11 @@ unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) {
         if tab == 0 {
             // ponytail: sem memória (a caixa "Error" da original): volta a capacidade e deixa a original refazer
             cpw5_pd(this + 8, cap as u32);
-            return orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, e);
+            return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, e);
         }
         cpw5_pd(this, tab as u32);
     }
-    let p = cpw5_pessoa(id);
+    let p = month_ratings_staff_by_id(id);
     let clube = cpw5_d(p + 0x39);
     let mut liga = -1i32;
     if clube != 0 {
@@ -123,13 +123,13 @@ unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) {
     crate::comparacao::ramo("cpw_5 jogador novo no mes");
     *((r + 0xa) as *mut u8) = 0; // cpw5: começa sem jogos
     cpw5_pd(this + 4, n.wrapping_add(1) as u32);
-    cpw5_somar(r, e);
+    add_match_rating(r, e);
 }
 
 /// O comparador da nota do mês: lado a lado (cabeçalho e os registros até o novo) quando a tabela não precisa crescer;
 /// senão só a original (realloc).
 unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let (tab, n, cap) = (cpw5_d(this), cpw5_i(this + 4), cpw5_i(this + 8));
     let achou = tab != 0 && (0..n.max(0) as usize).any(|k| cpw5_i(tab + k * 12) == cpw5_i(e));
     if tab == 0 || n < 0 || (n >= cap && !achou) {
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn find_best_player(this: usize, liga: i32, idade: u32)
             if liga == -1 {
                 return r;
             }
-            let c = cpw5_d(cpw5_pessoa(cpw5_i(r)) + 0x39);
+            let c = cpw5_d(month_ratings_staff_by_id(cpw5_i(r)) + 0x39);
             if c != 0 {
                 let l = cpw5_d(c + 0x57);
                 if l != 0 && cpw5_i(l) == liga {
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn find_best_player(this: usize, liga: i32, idade: u32)
 
 /// O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
 unsafe extern "thiscall" fn comparar_find_best_player(this: usize, liga: i32, idade: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(%%I2%%);
     let (tab, n) = (cpw5_d(this), cpw5_i(this + 4));
     let regioes: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, liga, idade), || find_best_player(this, liga, idade));

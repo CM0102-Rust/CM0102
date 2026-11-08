@@ -7,7 +7,7 @@ unsafe fn cql1_d(a: usize) -> u32 {
 /// O contrato `k` (não nulo) vale no clube `c`: o clube do contrato (+4, id) é o próprio `c` ([c] = id), ou é o clube
 /// que a 0x540a50(c, 0, 1) devolve (cdecl de 3, conferida: push 1; push 0; push clube; add esp, 0xc) [inferência: o
 /// clube principal de um time B]. O id do contrato é relido depois da chamada, como na original.
-unsafe fn cql1_vale_no_clube(k: usize, c: usize) -> bool {
+unsafe fn contract_valid_for_club(k: usize, c: usize) -> bool {
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     if cql1_d(k + 4) == cql1_d(c) {
         return true;
@@ -34,12 +34,12 @@ unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -
         return *((cql1_d(p + 0x61) as usize + 4) as *const i8);
     }
     let k = contrato(cql1_d(0xae1050) as usize, p);
-    if k != 0 && jogador(*((p + 0x3d) as *const i8)) != 0 && cql1_vale_no_clube(k, c) {
+    if k != 0 && jogador(*((p + 0x3d) as *const i8)) != 0 && contract_valid_for_club(k, c) {
         crate::comparacao::ramo("cql_1 numero do contrato");
         return *((k + 0x3a) as *const i8); // cql1: o número do contrato
     }
     let k = emprestimo(cql1_d(0xae1050) as usize, p);
-    if k != 0 && cql1_vale_no_clube(k, c) {
+    if k != 0 && contract_valid_for_club(k, c) {
         return *((k + 0x3a) as *const i8);
     }
     0
@@ -47,7 +47,7 @@ unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -
 
 /// A devolução das duas (a rotina só lê; as chamadas de dentro são buscas).
 unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p: usize, c: usize) -> i8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(%%I0%%);
     let r = o(this, p, c);
     let n = get_squad_number(this, p, c);
     PLACAR.registrar(r == n, || format!("get_squad_number(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p: usize, c: 
 /// também tem o bit. Sem divisão ou sem a competição, 0; sem clube, a caixa da linha 0x4b0 e 0.
 unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: usize, outra: usize) -> u32 {
     if c == 0 {
-        aviso_em(0xa82b88, 0x4b0);
+        show_error_at(0xa82b88, 0x4b0);
         return 0;
     }
     let div = cql1_d(c + 0x57) as usize;
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: usize, outr
 
 /// A devolução das duas (a rotina só lê); sem clube, só a original (a caixa não roda duas vezes).
 unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: usize, c: usize, outra: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if c == 0 {
         return o(this, c, outra);
     }
@@ -108,17 +108,17 @@ unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, c: usize, n
     }
     let n = n as u8 as i8;
     if !(-50..=50).contains(&n) {
-        aviso_em(0xa82b88, 0x332);
+        show_error_at(0xa82b88, 0x332);
         return;
     }
     let k = contrato(cql1_d(0xae1050) as usize, p);
-    if k != 0 && cql1_vale_no_clube(k, c) {
+    if k != 0 && contract_valid_for_club(k, c) {
         crate::comparacao::ramo("cql_1 grava no contrato");
         *((k + 0x3a) as *mut i8) = n; // cql1: grava no contrato
         return;
     }
     let k = emprestimo(cql1_d(0xae1050) as usize, p);
-    if k != 0 && cql1_vale_no_clube(k, c) {
+    if k != 0 && contract_valid_for_club(k, c) {
         *((k + 0x3a) as *mut i8) = n;
     }
 }
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, c: usize, n
 /// Lado a lado: o +0x3a dos dois contratos da pessoa (achados antes; as buscas só leem). Número fora da faixa (a caixa),
 /// sem pessoa ou sem clube: só a original.
 unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     if p == 0 || c == 0 || !(-50..=50).contains(&(n as u8 as i8)) {

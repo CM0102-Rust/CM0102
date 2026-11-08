@@ -1,5 +1,5 @@
 # Mutacoes (cqs_13), na Copa Africana de 2002 (sorteio e jogos dentro da janela): so as 16 primeiras africanas na ordem
-# das nacoes entram (em vez de 50); as nao sedes sem a ordem pela reputacao (os potes mudam); os times de cada fase de
+# das nacoes entram (em vez de 50); as nao sedes sem a ordem pela injury_word_0c (os potes mudam); os times de cada fase de
 # tras para a frente (o mando e a ordem dos jogos de cada rodada mudam). Os contadores ficam colados no efeito.
 MUTACOES = [
     ('cqs13_so_16_africanas',

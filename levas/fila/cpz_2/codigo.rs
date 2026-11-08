@@ -9,7 +9,7 @@ unsafe fn cpz2_b(a: usize) -> u8 {
 }
 
 /// O registro de staff ([0xdd7f00]).
-unsafe fn cpz2_registros() -> usize {
+unsafe fn eng_second_staff_records() -> usize {
     cpz2_d(0xdd7f00)
 }
 
@@ -28,22 +28,22 @@ unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usi
         match s {
             5 => {
                 let titulo: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x868c50usize);
-                titulo(cpz2_registros(), clube, comp);
+                titulo(eng_second_staff_records(), clube, comp);
             }
             0 => {
                 crate::comparacao::ramo("cpz_2 acesso na tabela");
                 let acesso: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x869480usize);
-                acesso(cpz2_registros(), clube, comp, 0x64); // cpz2: o acesso pela tabela pesa 0x64
+                acesso(eng_second_staff_records(), clube, comp, 0x64); // cpz2: o acesso pela tabela pesa 0x64
             }
             1 => {
                 crate::comparacao::ramo("cpz_2 vaga no mata-mata");
                 let vaga: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86bdd0usize);
-                vaga(cpz2_registros(), clube, comp, 0xa0, 0x82, 0x1e); // cpz2: a vaga no mata-mata pesa 0x1e
+                vaga(eng_second_staff_records(), clube, comp, 0xa0, 0x82, 0x1e); // cpz2: a vaga no mata-mata pesa 0x1e
             }
             3 => {
                 crate::comparacao::ramo("cpz_2 rebaixamento na tabela");
                 let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x86a1c0usize);
-                cair(cpz2_registros(), clube, comp); // cpz2: o rebaixamento pela tabela
+                cair(eng_second_staff_records(), clube, comp); // cpz2: o rebaixamento pela tabela
             }
             _ => {}
         }
@@ -57,14 +57,14 @@ unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usi
                 1 => {
                     crate::comparacao::ramo("cpz_2 venceu o mata-mata");
                     let acesso: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x869480usize);
-                    acesso(cpz2_registros(), clube, comp, 0x32);
+                    acesso(eng_second_staff_records(), clube, comp, 0x32);
                     *((cpz2_d(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
                     *(saiu as *mut u8) = 1;
                     return 0;
                 }
                 0 => {
                     let vaga: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86bdd0usize);
-                    vaga(cpz2_registros(), clube, comp, 0xa0, 0x96, 0xf);
+                    vaga(eng_second_staff_records(), clube, comp, 0xa0, 0x96, 0xf);
                 }
                 0xff | 2 => {
                     *((cpz2_d(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
@@ -83,7 +83,7 @@ unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usi
 /// rotina grava (+0x37 = 0 e saiu = 1 com 1; +0x37 = 0xfe com 0xff ou 2; nada com 0, que segue procurando outra linha
 /// do mesmo clube); depois a linha e `saiu` têm de estar assim. Na liga a rotina não grava nada: a devolução.
 unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, saiu: usize, a: u32, b: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(%%I0%%);
     let s = situacao as u8;
     let mut plano: Option<(usize, u8, bool)> = None;
     if fase as u8 != 0xff {
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_for_status(
 
 /// A entrada do clube nas estatísticas da competição (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, clube), ret 4;
 /// põe a tabela na ordem dos clubes se precisa e procura).
-unsafe fn cpz2_entrada(this: usize, clube: usize) -> usize {
+unsafe fn eng_second_comp_stats_club_entry(this: usize, clube: usize) -> usize {
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     achar(cpz2_d(this + 8), clube)
 }
@@ -129,8 +129,8 @@ unsafe fn cpz2_entrada(this: usize, clube: usize) -> usize {
 /// (fase 0xff) a melhor e a pior de `baixo` a `alto` (as vagas do mata-mata) viram `baixo`, e com a pior nessa faixa a
 /// pior vira `alto`; no mata-mata (fase 0), 1, 2 e 3 viram `baixo`, `baixo` + 1 e `baixo` + 2 (a melhor, a pior e a
 /// fase); noutra fase, como vieram.
-unsafe fn cpz2_situacao(this: usize, clube: usize, fase: u8, atual: u8, melhor: u8, pior: u8, baixo: u8, alto: u8) {
-    let e = cpz2_entrada(this, clube);
+unsafe fn set_club_stage_status(this: usize, clube: usize, fase: u8, atual: u8, melhor: u8, pior: u8, baixo: u8, alto: u8) {
+    let e = eng_second_comp_stats_club_entry(this, clube);
     let (mut m, mut p, mut a) = (melhor, pior, atual);
     if fase == 0xff {
         if m >= baixo && m <= alto {
@@ -158,19 +158,19 @@ unsafe fn cpz2_situacao(this: usize, clube: usize, fase: u8, atual: u8, melhor: 
 /// { 0x573260 } (thiscall, ret 0x14, eng_first.cpp): `EngFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 da First e da Second (da 0x684cd0 a cada linha da tabela): as vagas do mata-mata são 3 a 6.
 unsafe extern "thiscall" fn eng_first_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    cpz2_situacao(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 3, 6)
+    set_club_stage_status(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 3, 6)
 }
 
 /// { 0x578660 } (thiscall, ret 0x14, eng_third.cpp): `EngThird::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 da Third: as vagas do mata-mata são 4 a 7.
 unsafe extern "thiscall" fn eng_second_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    cpz2_situacao(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 4, 7)
+    set_club_stage_status(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 4, 7)
 }
 
 /// O comparador das duas: a entrada é achada antes (a original e a cópia acham a mesma; a ordem dos clubes já fica
 /// pronta) e as duas rodam lado a lado nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
-unsafe fn cpz2_comparar(nome: &str, this: usize, clube: usize, original: impl FnOnce(), copia: impl FnOnce()) {
-    let e = cpz2_entrada(this, clube);
+unsafe fn compare_club_stage_status(nome: &str, this: usize, clube: usize, original: impl FnOnce(), copia: impl FnOnce()) {
+    let e = eng_second_comp_stats_club_entry(this, clube);
     if e == 0 {
         return original();
     }
@@ -179,11 +179,11 @@ unsafe fn cpz2_comparar(nome: &str, this: usize, clube: usize, original: impl Fn
 }
 
 unsafe extern "thiscall" fn comparar_eng_first_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
-    cpz2_comparar("eng_first_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || eng_first_set_club_progress(this, clube, fase, atual, melhor, pior))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
+    compare_club_stage_status("eng_first_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || eng_first_set_club_progress(this, clube, fase, atual, melhor, pior))
 }
 
 unsafe extern "thiscall" fn comparar_eng_second_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I2%%);
-    cpz2_comparar("eng_second_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || eng_second_set_club_progress(this, clube, fase, atual, melhor, pior))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I2%%);
+    compare_club_stage_status("eng_second_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || eng_second_set_club_progress(this, clube, fase, atual, melhor, pior))
 }

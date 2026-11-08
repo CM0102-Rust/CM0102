@@ -25,7 +25,7 @@ unsafe fn cqs2_linha(t: usize, i: usize) -> usize {
 /// árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve. Com
 /// caixa, a cópia devolve 0 (a original devolve o eax da caixa; a virada é chamada pelo laço das viradas, que não o lê).
 /// O vetor das fases (+0xc) fica: as divisões e o play-off regravam as vagas.
-unsafe fn cqs2_virada(this: usize, ano: i16) -> u32 {
+unsafe fn mls_start_new_season(this: usize, ano: i16) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
@@ -60,22 +60,22 @@ unsafe fn cqs2_virada(this: usize, ano: i16) -> u32 {
     crate::comparacao::ramo("cqs_2 virada da mls");
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs2_d(cqs2_d(this) + 0x8c));
     if regras(this) == 0 {
-        aviso_em(0xaa1fb4, 0x4af);
+        show_error_at(0xaa1fb4, 0x4af);
         return 0;
     }
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x908560usize);
     if tabela(this) == 0 {
-        aviso_em(0xaa1fb4, 0x4b6);
+        show_error_at(0xaa1fb4, 0x4b6);
         return 0;
     }
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x9086e0usize);
     if jogos(this) == 0 {
-        aviso_em(0xaa1fb4, 0x4bc);
+        show_error_at(0xaa1fb4, 0x4bc);
         return 0;
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
     if ordenar(this, 0) == 0 {
-        aviso_em(0xaa1fb4, 0x4c3);
+        show_error_at(0xaa1fb4, 0x4c3);
         return 0;
     }
     let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs2_d(cqs2_d(this) + 0x5c));
@@ -88,7 +88,7 @@ unsafe fn cqs2_virada(this: usize, ano: i16) -> u32 {
 
 /// { 0x908e00 } (thiscall, ret 0, usa_mls.cpp): a virada da MLS (acima), um ano adiante.
 unsafe extern "thiscall" fn usa_mls_start_new_season(this: usize) -> u32 {
-    cqs2_virada(this, 1) // cqs2: o ano seguinte da MLS
+    mls_start_new_season(this, 1) // cqs2: o ano seguinte da MLS
 }
 
 /// { 0x909bb0 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::set_predicted_positions()`, as posições previstas da MLS. Sem
@@ -105,11 +105,11 @@ unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usize) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let n3 = cqs2_w(this + 0x3e).wrapping_mul(3);
     if cqs2_d(this + 8) == 0 {
-        return aviso_em(0xaa1fb4, 0x675);
+        return show_error_at(0xaa1fb4, 0x675);
     }
     let v = alocar(((n3 as i32) << 2) as u32);
     if v == 0 {
-        return aviso_em(0xaa1fb4, 0x67d);
+        return show_error_at(0xaa1fb4, 0x67d);
     }
     let mut i: i16 = 0;
     while i < cqs2_w(this + 0x3e) {
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, lista: *mut usiz
     let v = alocar(0x30);
     *lista = v;
     if v == 0 {
-        aviso_em(0xaa1fb4, 0x64c);
+        show_error_at(0xaa1fb4, 0x64c);
         *n = 0;
         return;
     }
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, lista: *mut usiz
 /// (+0x3e = 4 e as vagas 0 e 1 das fases).
 unsafe extern "thiscall" fn comparar_usa_mls_start_new_season(this: usize) -> u32 {
     let antes = cqs2_w(this + 0x40);
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let depois = cqs2_w(this + 0x40);
     let igual = depois == antes.wrapping_add(1) && cqs2_w(this + 0x3e) == 4 && cqs2_d(cqs2_d(this + 0xc)) != 0 && cqs2_d(cqs2_d(this + 0xc) + 4) != 0;
     PLACAR.registrar(igual, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, cqs2_w(this + 0x3e)));
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_start_new_season(this: usize) -> u3
 /// tem; não pode rodar duas vezes), com o plano feito antes: os doze clubes das três tabelas, cada bloco ordenado pela
 /// mesma qsort numa cópia; depois, a posição (+0x72 do registro achado por 0x4a4850) de cada um.
 unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let n = cqs2_w(this + 0x3e) as usize;
     if cqs2_d(this + 8) == 0 || n != 4 {
         return o(this);
@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(this: usize
 /// O comparador da lista: só a original (aloca a lista, que fica com quem chamou), com o plano: n = 12 e os doze clubes
 /// das três tabelas na ordem.
 unsafe extern "thiscall" fn comparar_usa_mls_get_club_array(this: usize, lista: *mut usize, n: *mut i16) {
-    orig::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(%%I2%%)(this, lista, n);
+    original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(%%I2%%)(this, lista, n);
     let m = cqs2_w(this + 0x3e) as usize;
     let igual = *n == 0xc && *lista != 0 && (0..m).all(|i| {
         cqs2_d(*lista + 4 * i) == cqs2_linha(this, i)

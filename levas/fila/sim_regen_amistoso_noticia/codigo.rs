@@ -36,20 +36,20 @@ unsafe extern "thiscall" fn register_comp_objects(amistoso: usize) {
 /// cada). Fora da faixa: a original (caixa de erro, devolve 0).
 unsafe extern "thiscall" fn get_slot(noticia: usize, vaga: i8) -> u32 {
     if !(0..0x32).contains(&vaga) {
-        return orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(%%I2%%)(noticia, vaga);
+        return original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(%%I2%%)(noticia, vaga);
     }
     core::ptr::read_unaligned((noticia + 5 + vaga as usize * 4) as *const u32)
 }
 
 unsafe extern "thiscall" fn comparar_find_retirement_entry(regen: usize, id: *const i32, por_lesao: u32) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *const i32, u32) -> usize>(%%I0%%)(regen, id, por_lesao);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, u32) -> usize>(%%I0%%)(regen, id, por_lesao);
     let n = find_retirement_entry(regen, id, por_lesao);
     PLACAR.registrar(r == n, || format!("find_retirement_entry({}, {}) original={:#x} rust={:#x}", *id, por_lesao, r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_register_comp_objects(amistoso: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let tabela = *(0xadadfc as *const usize) as isize;
     let base = core::ptr::read_unaligned((amistoso + 0xaf) as *const i16) as isize;
     let reg = [((tabela + *(0x9cf668 as *const i32) as isize * 4) as usize, 4), ((tabela + base * 4) as usize, 0x7f * 4)];
@@ -58,7 +58,7 @@ unsafe extern "thiscall" fn comparar_register_comp_objects(amistoso: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_get_slot(noticia: usize, vaga: i8) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(%%I2%%)(noticia, vaga);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(%%I2%%)(noticia, vaga);
     if !(0..0x32).contains(&vaga) {
         return r;
     }

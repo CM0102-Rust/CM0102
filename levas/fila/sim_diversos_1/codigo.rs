@@ -90,7 +90,7 @@ unsafe extern "stdcall" fn shortlist_manager_max_fee_for_squad_status(clube: usi
 }
 
 unsafe extern "thiscall" fn comparar_national_teams_remove_player(this: usize, jogador: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let nacao = u(jogador + 0x1a);
     if nacao == 0 || u(jogador + 0x61) == 0 {
@@ -117,14 +117,14 @@ unsafe extern "thiscall" fn comparar_national_teams_remove_player(this: usize, j
 }
 
 unsafe extern "thiscall" fn comparar_get_time_slice(this: usize, comp: usize, dia: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%)(this, comp, dia);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%)(this, comp, dia);
     let n = get_time_slice(this, comp, dia);
     PLACAR.registrar(r == n, || format!("get_time_slice(dia {}) original={} rust={}", dia as i16, r, n));
     r
 }
 
 unsafe extern "stdcall" fn comparar_shortlist_manager_max_fee_for_squad_status(clube: usize, posicoes: u32, tipo: u32) -> i32 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, u32, u32) -> i32>(%%I2%%)(clube, posicoes, tipo);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32) -> i32>(%%I2%%)(clube, posicoes, tipo);
     let n = shortlist_manager_max_fee_for_squad_status(clube, posicoes, tipo);
     PLACAR.registrar(r == n, || format!("shortlist_manager_max_fee_for_squad_status(tipo {}) original={} rust={}", tipo as i8, r, n));
     r

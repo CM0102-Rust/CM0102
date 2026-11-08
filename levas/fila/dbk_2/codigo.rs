@@ -16,7 +16,7 @@ unsafe extern "C" fn database_remove_staff_from_club(clube: usize, pessoa: usize
         return 0;
     }
     if pessoa == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%)(clube, pessoa, data, desligar, como_jogador);
+        return original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%)(clube, pessoa, data, desligar, como_jogador);
     }
     let gi = |a: usize| *(a as *const i32);
     let selecao = || gi(clube) >= gi(0xae235c).wrapping_sub(gi(0xae2350).wrapping_mul(2));
@@ -87,7 +87,7 @@ unsafe extern "C" fn database_remove_staff_from_club(clube: usize, pessoa: usize
 /// (caixa "Error" e 0). Na carreira, pela 0x7f7270 (as listas dos olheiros, nas transferências e contratações).
 unsafe extern "C" fn database_get_club_scouts(clube: usize, vetor: *mut usize) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%)(clube, vetor);
+        return original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%)(clube, vetor);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -123,7 +123,7 @@ unsafe extern "C" fn database_get_club_scouts(clube: usize, vetor: *mut usize) -
 }
 
 unsafe extern "C" fn comparar_database_remove_staff_from_club(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%);
     if clube == 0 || pessoa == 0 {
         return o(clube, pessoa, data, desligar, como_jogador); // 0 ou caixa: só a original
     }
@@ -146,7 +146,7 @@ unsafe extern "C" fn comparar_database_remove_staff_from_club(clube: usize, pess
 }
 
 unsafe extern "C" fn comparar_database_get_club_scouts(clube: usize, vetor: *mut usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%);
     if clube == 0 {
         return o(clube, vetor); // caixa: só a original
     }

@@ -6,7 +6,7 @@
 /// contratações e transferências), pela regeneração (0x7a65d0) e pelas telas.
 unsafe extern "C" fn database_get_club_assistant(clube: usize) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%)(clube);
+        return original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%)(clube);
     }
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let a = rd(clube + 0xd3);
@@ -22,7 +22,7 @@ unsafe extern "C" fn database_get_club_assistant(clube: usize) -> usize {
 }
 
 unsafe extern "C" fn comparar_database_get_club_assistant(clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
@@ -39,7 +39,7 @@ unsafe extern "C" fn comparar_database_get_club_assistant(clube: usize) -> usize
 /// treinadores (0x8b2880).
 unsafe extern "C" fn database_get_club_coaches(clube: usize, vetor: *mut usize) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%)(clube, vetor);
+        return original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%)(clube, vetor);
     }
     let parceiro: unsafe extern "C" fn(usize, usize, u32) -> usize = core::mem::transmute(0x540a50usize);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -75,7 +75,7 @@ unsafe extern "C" fn database_get_club_coaches(clube: usize, vetor: *mut usize) 
 }
 
 unsafe extern "C" fn comparar_database_get_club_coaches(clube: usize, vetor: *mut usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%);
     if clube == 0 {
         return o(clube, vetor); // caixa: só a original
     }
@@ -92,7 +92,7 @@ unsafe extern "C" fn comparar_database_get_club_coaches(clube: usize, vetor: *mu
 /// Na carreira, pela fila da regeneração (PLAYER_REGEN::process_regen_queue 0x7a65d0).
 unsafe extern "C" fn database_count_club_coaches(clube: usize) -> u8 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
+        return original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     }
     let contar = |c: usize| {
         let total = *(0xae2364 as *const i32);
@@ -111,7 +111,7 @@ unsafe extern "C" fn database_count_club_coaches(clube: usize) -> u8 {
 }
 
 unsafe extern "C" fn comparar_database_count_club_coaches(clube: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }

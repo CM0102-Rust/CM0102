@@ -1,7 +1,7 @@
 # Mutacoes (cqk_5):
 # - a Primera sem premio no fim (+0xe1 = 2: a 0x682e10 nao paga nada quando a liga acaba, em maio de 2002);
 # - a cota do fundo de premios da Primera vira a metade (provado pelo agente: a impressao muda ate 2002-06-01);
-# - sem o registro do rebaixamento pela tabela da C2/A (0x86a1c0: a reputacao do clube, as notas do tecnico, o moral e
+# - sem o registro do rebaixamento pela tabela da C2/A (0x86a1c0: a injury_word_0c do clube, as notas do tecnico, o moral e
 #   as reputacoes do elenco), em abril e maio de 2002 (provado pelo agente).
 # Ficaram de fora: a TV (a 0x683010 no inicio da carreira nao mudou a impressao nas provas da cqi_5 e da cqj_4) e as
 # linhas trocadas (derrubam o jogo na Espanha: o confronto direto da 0x687430 le a linha seguinte ainda vazia).

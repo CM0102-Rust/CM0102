@@ -4,11 +4,11 @@ unsafe fn cpe2_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
 }
 
-unsafe fn cpe2_mais1(a: usize) {
+unsafe fn increment_u8(a: usize) {
     *(a as *mut u8) = (*(a as *const u8)).wrapping_add(1);
 }
 
-unsafe fn cpe2_somar(a: usize, v: i16) {
+unsafe fn league_add_i16(a: usize, v: i16) {
     core::ptr::write_unaligned(a as *mut i16, core::ptr::read_unaligned(a as *const i16).wrapping_add(v));
 }
 
@@ -59,17 +59,17 @@ unsafe extern "thiscall" fn apply_result_to_table(liga: usize, p: usize, tab: us
     let noventa = || *((p + 0x47) as *const u8) != 0xff;
     if casa > -1 {
         let r = linha(casa);
-        cpe2_mais1(r + 0x1f);
+        increment_u8(r + 0x1f);
         let (pro, contra) = if noventa() { (pb(0x47), pb(0x48)) } else { (pb(0x43), pb(0x44)) };
-        cpe2_somar(r + 0x23, pro as i16);
-        cpe2_somar(r + 0x25, contra as i16);
+        league_add_i16(r + 0x23, pro as i16);
+        league_add_i16(r + 0x25, contra as i16);
     }
     if fora > -1 {
         let r = linha(fora);
-        cpe2_mais1(r + 0x2d);
+        increment_u8(r + 0x2d);
         let (pro, contra) = if noventa() { (pb(0x48), pb(0x47)) } else { (pb(0x44), pb(0x43)) };
-        cpe2_somar(r + 0x31, pro as i16);
-        cpe2_somar(r + 0x33, contra as i16);
+        league_add_i16(r + 0x31, pro as i16);
+        league_add_i16(r + 0x33, contra as i16);
     }
     let pontos = |clube: usize| -> i16 {
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(cpe2_d(cpe2_d(pontuador) + 0x90));
@@ -79,21 +79,21 @@ unsafe extern "thiscall" fn apply_result_to_table(liga: usize, p: usize, tab: us
     let vence_casa = |vitoria: usize| {
         if casa > -1 {
             let r = linha(casa);
-            cpe2_mais1(r + vitoria);
-            cpe2_somar(r + 0x27, pontos(cpe2_d(p + 0x1c))); // os pontos do mandante
+            increment_u8(r + vitoria);
+            league_add_i16(r + 0x27, pontos(cpe2_d(p + 0x1c))); // os pontos do mandante
         }
         if fora > -1 {
-            cpe2_mais1(linha(fora) + 0x30);
+            increment_u8(linha(fora) + 0x30);
         }
     };
     let vence_fora = |vitoria: usize| {
         if casa > -1 {
-            cpe2_mais1(linha(casa) + 0x22);
+            increment_u8(linha(casa) + 0x22);
         }
         if fora > -1 {
             let r = linha(fora);
-            cpe2_mais1(r + vitoria);
-            cpe2_somar(r + 0x35, pontos(cpe2_d(p + 0x20)));
+            increment_u8(r + vitoria);
+            league_add_i16(r + 0x35, pontos(cpe2_d(p + 0x20)));
         }
     };
     let (gc, gf) = (pb(0x43), pb(0x44));
@@ -126,12 +126,12 @@ unsafe extern "thiscall" fn apply_result_to_table(liga: usize, p: usize, tab: us
     } else if flags & 0x21 == 0 {
         let empate = *((liga + 0xc3) as *const i8) as i16; // o empate puro
         if casa > -1 {
-            cpe2_mais1(linha(casa) + 0x21);
-            cpe2_somar(linha(casa) + 0x27, empate);
+            increment_u8(linha(casa) + 0x21);
+            league_add_i16(linha(casa) + 0x27, empate);
         }
         if fora > -1 {
-            cpe2_mais1(linha(fora) + 0x2f);
-            cpe2_somar(linha(fora) + 0x35, empate);
+            increment_u8(linha(fora) + 0x2f);
+            league_add_i16(linha(fora) + 0x35, empate);
         }
     }
     let totais = |r: usize| -> i16 {
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn apply_result_to_table(liga: usize, p: usize, tab: us
 
 /// As regiões da 0x685f60: as `n` linhas, os confrontos de cada linha ((n − 1) entradas de 14, se a primeira os tem),
 /// +0x3d/+0x3e da partida e os dois pontos devolvidos.
-unsafe fn cpe2_regioes(p: usize, tab: usize, n: u32, pts_casa: *mut i16, pts_fora: *mut i16) -> Vec<(usize, usize)> {
+unsafe fn result_update_regions(p: usize, tab: usize, n: u32, pts_casa: *mut i16, pts_fora: *mut i16) -> Vec<(usize, usize)> {
     let n = (n as i16).max(0) as usize;
     let mut reg = vec![(p + 0x3d, 2)];
     if tab != 0 && n > 0 {
@@ -206,8 +206,8 @@ unsafe fn cpe2_regioes(p: usize, tab: usize, n: u32, pts_casa: *mut i16, pts_for
 }
 
 unsafe extern "thiscall" fn comparar_apply_result_to_table(liga: usize, p: usize, tab: usize, n: u32, marcar: u32, pts_casa: *mut i16, pts_fora: *mut i16) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut i16, *mut i16)>(%%I0%%);
-    let reg = cpe2_regioes(p, tab, n, pts_casa, pts_fora);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut i16, *mut i16)>(%%I0%%);
+    let reg = result_update_regions(p, tab, n, pts_casa, pts_fora);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(liga, p, tab, n, marcar, pts_casa, pts_fora),
         || apply_result_to_table(liga, p, tab, n, marcar, pts_casa, pts_fora));
     PLACAR.registrar(igual, || format!("apply_result_to_table({:x}, partida {:x}, {:x}, n {}, marcar {}) {:x?} x {:x?}",

@@ -4,7 +4,7 @@
 # - o valor base da vaga comum com 0,30 no lugar de 0,32 (o preco de quase todos os jogadores avaliados cai);
 # - o listado para transferencia de outro clube com a nota x 1,10 no lugar de 1,05 (muda a ordem das listas);
 # - o fator da idade acima do divisor com 0,9 no lugar de 0,8 (o preco dos mais velhos cai).
-# Os contadores ficam colados no efeito (no ramo do valor base comum, depois da condicao do listado e depois das
+# Os contadores ficam colados no efeito (no ramo do valor base comum, depois da match_condition do listado e depois das
 # condicoes da idade).
 MUTACOES = [
     ('cqa7_valor_base_030',
@@ -12,8 +12,8 @@ MUTACOES = [
      '0.30) as u32 // mutacao: o valor base com 0,30',
      'cqa_7 valor base'),
     ('cqa7_listado_110',
-     '*saida = ftol(*saida as f64 * cqa7_k(0x9689b8)); // cqa7: o listado de outro clube × 1,05',
-     '*saida = ftol(*saida as f64 * 1.10); // mutacao: o listado x 1,10',
+     '*saida = match_pl_ftol(*saida as f64 * cqa7_k(0x9689b8)); // cqa7: o listado de outro clube × 1,05',
+     '*saida = match_pl_ftol(*saida as f64 * 1.10); // mutacao: o listado x 1,10',
      'cqa_7 listado para transferencia'),
     ('cqa7_idade_com_09',
      '(dd * cqa7_k(0x968e80) + cqa7_k(0x9689b0)); // cqa7: a idade acima do divisor',

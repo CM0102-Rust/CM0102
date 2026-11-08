@@ -32,16 +32,16 @@ unsafe fn cqc7_humano(clube: usize) -> bool {
 }
 
 /// A pessoa (0x6e bytes em [0xae23bc]) e o clube (0x245 bytes em [0xae23b4]) pelo id.
-unsafe fn cqc7_pessoa(id: usize) -> usize {
+unsafe fn transfer_manager_staff_by_id(id: usize) -> usize {
     cqc7_d(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
 }
 
-unsafe fn cqc7_clube(id: usize) -> usize {
+unsafe fn transfer_manager_club_by_id(id: usize) -> usize {
     cqc7_d(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
 /// O contrato da pessoa (0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4), gravado em [0xae1080].
-unsafe fn cqc7_contrato(pessoa: usize) -> usize {
+unsafe fn transfer_manager_get_contract_stored(pessoa: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cqc7_d(0xae1050), pessoa);
     cqc7_pd(0xae1080, c);
@@ -50,7 +50,7 @@ unsafe fn cqc7_contrato(pessoa: usize) -> usize {
 
 /// Lista vazia (palavra +0 = 0) da oferta (+4): destruída (0x68d040), liberada (0x944c94) e +4 = 0, como a original
 /// (que lê a palavra antes de testar o ponteiro).
-unsafe fn cqc7_soltar_lista_vazia(oferta: usize) {
+unsafe fn free_empty_offer_list(oferta: usize) {
     let l = cqc7_d(oferta + 4);
     if cqc7_w(l) != 0 {
         return;
@@ -65,23 +65,23 @@ unsafe fn cqc7_soltar_lista_vazia(oferta: usize) {
 }
 
 /// A entrada da rodada (0x68 bytes em [copa + 0xa3], o índice como o dword que a original multiplica).
-unsafe fn cqc7_rodada(copa: usize, rodada: u32) -> usize {
+unsafe fn cup_round_entry(copa: usize, rodada: u32) -> usize {
     cqc7_d(copa + 0xa3).wrapping_add((rodada as usize).wrapping_mul(0x68))
 }
 
 /// Os jogos da copa na data e fatia da rodada, numa lista (0x5abd90: push lista; push liga +0x44; push rodada; push
 /// id; push fatia +6; push dia; push ano; mov ecx, [0xae2a58] -> thiscall, ret 0x1c).
-unsafe fn cqc7_jogos_da_rodada(copa: usize, data: usize, rodada: u32, lista: usize) -> u32 {
+unsafe fn collect_round_fixtures(copa: usize, data: usize, rodada: u32, lista: usize) -> u32 {
     let jogos: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32 = core::mem::transmute(0x5abd90usize);
     // ponytail: a original empurra o dia, a fatia e o tipo em registradores com sobra nos bytes altos; a 0x5abd90 só
     // lê as palavras e os bytes
-    jogos(cqc7_d(0xae2a58), cqc7_w(data + 2) as u16 as u32, cqc7_w(data) as u16 as u32, cqc7_b(cqc7_rodada(copa, rodada) + 6) as u32,
+    jogos(cqc7_d(0xae2a58), cqc7_w(data + 2) as u16 as u32, cqc7_w(data) as u16 as u32, cqc7_b(cup_round_entry(copa, rodada) + 6) as u32,
         cqc7_d(cqc7_d(copa + 4)) as u32, rodada, cqc7_b(copa + 0x44) as u32, lista) & 0xffff
 }
 
 /// O jogo `f` está na data marcada da rodada: dia (+0x2a, sem sinal) = +3 da rodada, ano (+0x28) = +5 + o da copa
 /// (+0x40), fatia (+0x3f) = +6 e o tipo (+0x42) da liga.
-unsafe fn cqc7_na_data_da_rodada(copa: usize, e: usize, f: usize) -> bool {
+unsafe fn fixture_on_round_date(copa: usize, e: usize, f: usize) -> bool {
     cqc7_w(f + 0x2a) as u16 as i32 == cqc7_w(e + 3) as i32
         && cqc7_w(f + 0x28) as u16 as i32 == cqc7_b(e + 5) as i8 as i32 + cqc7_w(copa + 0x40) as i32
         && cqc7_b(f + 0x3f) as i32 == cqc7_b(e + 6) as i8 as i32
@@ -91,7 +91,7 @@ unsafe fn cqc7_na_data_da_rodada(copa: usize, e: usize, f: usize) -> bool {
 /// { 0x51ebe0 } (thiscall, ret 8, Cup.cpp, quadro SEH sem destrutor no caminho normal: as notícias, a data e a lista
 /// locais): `Cup::move_round_fixtures_to_set_dates(data, rodada)`, da montagem da rodada (0x51c800, em Rust). A notícia
 /// 0x14 local é montada logo (0x77bbe0). Rodada (0x68 bytes em +0xa3) com o bit 0x100 em +0xd e a primeira vaga
-/// marcada (+0x29 ≠ 0xff): os jogos da copa na data e fatia (cqc7_jogos_da_rodada). Com jogos, a notícia leva o id da
+/// marcada (+0x29 ≠ 0xff): os jogos da copa na data e fatia (collect_round_fixtures). Com jogos, a notícia leva o id da
 /// copa, +0x3a, o código da rodada (+7) e a rodada de duas mãos (+0x21 = 2). Cada jogo do tipo da liga (+0x42) ocupa
 /// uma vaga (7 bytes a partir de +0x23: +0 regras do estádio, +4 dia da semana, +5 fatia, +6 tipo; até 8, até a
 /// primeira 0xff): na data da rodada, vai ao dia da semana da vaga (0x549ef0 num bloco de 8 bytes de 0x944cf1, 0x54a2d0,
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
     let n1 = noticia.as_mut_ptr() as usize;
     construir(n1, 0x14, 0);
     let id = cqc7_d(cqc7_d(this + 4));
-    let e = cqc7_rodada(this, rodada);
+    let e = cup_round_entry(this, rodada);
     if cqc7_w(e + 0xd) as u16 & 0x100 == 0 || cqc7_b(e + 0x29) == 0xff {
         return;
     }
@@ -117,11 +117,11 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
     let mut lista = [0u8; 0x10];
     let l = lista.as_mut_ptr() as usize;
     criar(l);
-    if cqc7_jogos_da_rodada(this, data, rodada, l) != 0 {
+    if collect_round_fixtures(this, data, rodada, l) != 0 {
         gravar(n1, 0, cqc7_d(cqc7_d(this + 4)) as u32);
         gravar(n1, 1, cqc7_w(this + 0x3a) as i32 as u32);
-        gravar(n1, 2, cqc7_w(cqc7_rodada(this, rodada) + 7) as i32 as u32);
-        gravar(n1, 5, (cqc7_b(cqc7_rodada(this, rodada) + 0x21) == 2) as u32);
+        gravar(n1, 2, cqc7_w(cup_round_entry(this, rodada) + 7) as i32 as u32);
+        gravar(n1, 5, (cqc7_b(cup_round_entry(this, rodada) + 0x21) == 2) as u32);
         // a notícia 0x14 do jogo (dados 3, 4, 6, 7, 8) aos dois clubes, se um deles é de técnico humano
         let noticia_do_jogo = |c1: usize, c2: usize, i1: usize, i2: usize, est: usize, dia: u16, ano: u16| {
             if cqc7_humano(c1) || cqc7_humano(c2) {
@@ -144,12 +144,12 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
         let mut f = proximo(l);
         while f != 0 {
             if cqc7_b(this + 0x44) == cqc7_b(f + 0x42) {
-                let e = cqc7_rodada(this, rodada);
+                let e = cup_round_entry(this, rodada);
                 if j < 0x38 && cqc7_b(e + j + 0x29) != 0xff {
                     let mut buf = [0u8; 0x50];
                     let r = buf.as_mut_ptr() as usize;
                     core::ptr::copy_nonoverlapping(f as *const u8, r as *mut u8, 0x4f);
-                    if cqc7_na_data_da_rodada(this, e, f) {
+                    if fixture_on_round_date(this, e, f) {
                         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
                         let nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
                         let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
@@ -159,9 +159,9 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
                         let mut t = [0u8; 8];
                         let pt = t.as_mut_ptr() as usize;
                         padrao(pt);
-                        let e = cqc7_rodada(this, rodada);
+                        let e = cup_round_entry(this, rodada);
                         ajustar(dp, cqc7_b(e + j + 0x27) as i8 as i16 as u16 as u32, pt); // cqc7: o dia da semana marcado
-                        if cqc7_b(cqc7_rodada(this, rodada) + j + 0x29) != 3 {
+                        if cqc7_b(cup_round_entry(this, rodada) + j + 0x29) != 3 {
                             let mut noticia2 = [0u32; 0x38];
                             let n2 = noticia2.as_mut_ptr() as usize;
                             construir(n2, 3, 0);
@@ -175,8 +175,8 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
                             gravar(n2, 7, cqc7_b(r + 0x3f) as u32);
                             gravar(n2, 8, cqc7_w(pt) as i32 as u32);
                             gravar(n2, 9, cqc7_w(pt + 2) as u16 as u32);
-                            gravar(n2, 10, cqc7_b(cqc7_rodada(this, rodada) + j + 0x28) as i8 as i32 as u32);
-                            gravar(n2, 11, cqc7_b(cqc7_rodada(this, rodada) + j + 0x29) as i8 as i32 as u32);
+                            gravar(n2, 10, cqc7_b(cup_round_entry(this, rodada) + j + 0x28) as i8 as i32 as u32);
+                            gravar(n2, 11, cqc7_b(cup_round_entry(this, rodada) + j + 0x29) as i8 as i32 as u32);
                             entregar(cqc7_d(0xb7431c), n2, cqc7_d(r + 0x1c));
                             entregar(cqc7_d(0xb7431c), n2, cqc7_d(r + 0x20));
                         }
@@ -185,11 +185,11 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
                         crate::comparacao::ramo("cqc_7 jogo levado a data");
                         cqc7_pw(r + 0x2a, cqc7_w(pt) as u16); // cqc7: o dia marcado
                         cqc7_pw(r + 0x28, cqc7_w(pt + 2) as u16);
-                        let v = cqc7_rodada(this, rodada) + j;
+                        let v = cup_round_entry(this, rodada) + j;
                         cqc7_pb(r + 0x3f, cqc7_b(v + 0x28)); // cqc7: a fatia marcada
                         cqc7_pb(r + 0x3b, cqc7_b(v + 0x29));
                         let estadio: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x85c260usize);
-                        estadio(cqc7_d(0xdd7ef4), cqc7_d(cqc7_rodada(this, rodada) + j + 0x23), r, cqc7_d(this + 0x24));
+                        estadio(cqc7_d(0xdd7ef4), cqc7_d(cup_round_entry(this, rodada) + j + 0x23), r, cqc7_d(this + 0x24));
                         let juntar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x5aa680usize);
                         juntar(cqc7_d(0xae2a58), r, 1);
                         if dp != 0 {
@@ -200,7 +200,7 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
                             destruir(l);
                             return;
                         }
-                        cqc7_pb(cqc7_rodada(this, rodada) + j + 0x29, 0xff);
+                        cqc7_pb(cup_round_entry(this, rodada) + j + 0x29, 0xff);
                     }
                     noticia_do_jogo(cqc7_d(r + 0x1c), cqc7_d(r + 0x20), cqc7_d(r + 0xc), cqc7_d(r + 0x10), cqc7_d(r + 4),
                         cqc7_w(r + 0x2a) as u16, cqc7_w(r + 0x28) as u16);
@@ -222,8 +222,8 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
 /// a vaga do que está na data da rodada fica 0xff; as outras vagas não mudam. Sem a copa em [0xadadfc] depois: nada a
 /// conferir.
 unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates(this: usize, data: usize, rodada: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
-    let e = cqc7_rodada(this, rodada);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
+    let e = cup_round_entry(this, rodada);
     if cqc7_w(e + 0xd) as u16 & 0x100 == 0 || cqc7_b(e + 0x29) == 0xff {
         return o(this, data, rodada);
     }
@@ -238,13 +238,13 @@ unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates(this: usiz
     for k in 0..8 {
         esperado[k] = cqc7_b(e + k * 7 + 0x29);
     }
-    if cqc7_jogos_da_rodada(this, data, rodada, l) != 0 {
+    if collect_round_fixtures(this, data, rodada, l) != 0 {
         cqc7_pd(l + 0xa, cqc7_d(l + 2));
         let mut j = 0usize;
         let mut f = proximo(l);
         while f != 0 {
             if cqc7_b(this + 0x44) == cqc7_b(f + 0x42) && j < 0x38 && esperado[j / 7] != 0xff {
-                if cqc7_na_data_da_rodada(this, e, f) {
+                if fixture_on_round_date(this, e, f) {
                     esperado[j / 7] = 0xff;
                 }
                 j += 7;
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates(this: usiz
     if cqc7_d(cqc7_d(0xadadfc) + id * 4) == 0 {
         return; // ponytail: a copa saiu do jogo; nada a conferir
     }
-    let e = cqc7_rodada(this, rodada);
+    let e = cup_round_entry(this, rodada);
     let depois: [u8; 8] = core::array::from_fn(|k| cqc7_b(e + k * 7 + 0x29));
     PLACAR.registrar(depois == esperado, || format!("move_round_fixtures_to_set_dates(rodada {}) vagas {:02x?} (esperado {:02x?})",
         rodada, depois, esperado));
@@ -290,8 +290,8 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
     };
     let mut oferta = oferta;
     if so_esta != 0 {
-        let c = cqc7_contrato(cqc7_pessoa(cqc7_d(oferta + 0xc)));
-        let dono = if c != 0 && cqc7_b(c + 0x35) & 0x3f != 5 { cqc7_clube(cqc7_d(c + 4)) } else { 0 };
+        let c = transfer_manager_get_contract_stored(transfer_manager_staff_by_id(cqc7_d(oferta + 0xc)));
+        let dono = if c != 0 && cqc7_b(c + 0x35) & 0x3f != 5 { transfer_manager_club_by_id(cqc7_d(c + 4)) } else { 0 };
         let troca = cqc7_d(oferta + 4);
         if troca == 0 {
             destruir(l);
@@ -313,7 +313,7 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
                 resposta(this, &mut oferta, 1);
                 let s = cqc7_b(oferta + 0x2c);
                 if matches!(s, 2 | 3 | 0x14 | 0x10 | 4) || (s == 0xf && cqc7_b(oferta + 0x2e) >= 3) {
-                    cqc7_soltar_lista_vazia(oferta);
+                    free_empty_offer_list(oferta);
                     destruir(l);
                     return;
                 }
@@ -322,11 +322,11 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
             cqc7_pd(oferta + 0x1b, v);
             seguir(this, oferta);
         }
-        cqc7_soltar_lista_vazia(oferta);
+        free_empty_offer_list(oferta);
     } else {
         if cqc7_b(cqc7_d(this + 0x86e) + cqc7_d(pessoa) * 8 + 2) != 0 {
             let trocas: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x8c5e40usize);
-            trocas(this, cqc7_pessoa(cqc7_d(oferta + 0xc)), l);
+            trocas(this, transfer_manager_staff_by_id(cqc7_d(oferta + 0xc)), l);
             cqc7_pd(l + 0xa, cqc7_d(l + 2));
             let mut achou = false;
             let mut it = proximo(l);
@@ -346,7 +346,7 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
                             }
                             x = proximo(cqc7_d(o + 4));
                         }
-                        cqc7_soltar_lista_vazia(o);
+                        free_empty_offer_list(o);
                     }
                     if achou {
                         crate::comparacao::ramo("cqc_7 sai da troca das outras");
@@ -367,14 +367,14 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
 /// pela 0x8c2f50, que pode fechar a transferência e tirar outros jogadores das trocas, ou ser respondida pelo vendedor
 /// do computador, 0x8c8090, que pode mudar a oferta da vaga).
 unsafe extern "thiscall" fn comparar_remove_exchange_player(this: usize, pessoa: usize, oferta: usize, so_esta: u32, motivo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%)(this, pessoa, oferta, so_esta, motivo) // ponytail: o efeito segue por outras rotinas
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%)(this, pessoa, oferta, so_esta, motivo) // ponytail: o efeito segue por outras rotinas
 }
 
 /// A permissão de trabalho da pessoa no clube: precisa (0x8c7560: push 0; push clube; push pessoa; mov ecx, this ->
 /// thiscall, ret 0xc), a proposta de contrato dela ao clube (0x4cc9e0: push id do clube; push id da pessoa; mov ecx,
 /// [0xae1050] -> thiscall, ret 8) e a concessão (0x8c7950: push 0; push 0; push proposta; push nação do clube +0x53; push
 /// pessoa; mov ecx, this -> thiscall, ret 0x14, sem sorteio). Devolve (precisa, proposta, concedida).
-unsafe fn cqc7_permissao(this: usize, pessoa: usize, clube: usize) -> (bool, usize, bool) {
+unsafe fn check_work_permit(this: usize, pessoa: usize, clube: usize) -> (bool, usize, bool) {
     let precisa: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c7560usize);
     if precisa(this, pessoa, clube, 0) == 0 {
         return (false, 0, false);
@@ -391,7 +391,7 @@ unsafe fn cqc7_permissao(this: usize, pessoa: usize, clube: usize) -> (bool, usi
 /// { 0x8c7690 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::check_offer_work_permits(oferta, quieto)`,
 /// do processamento da oferta (status 0xa, 0x8c6880) e da conclusão (0x8cbc40). O dono do contrato do alvo (0x4cf5a0,
 /// [0xae1080]; qualquer tipo). Alvo (+0xc) com permissão a pedir no comprador (+8) e proposta, sem concessão
-/// (cqc7_permissao): a oferta desfeita (0x8de790 com 0x13), status 0x10, as propostas fechadas (0x8c6db0), as marcas de
+/// (check_work_permit): a oferta desfeita (0x8de790 com 0x13), status 0x10, as propostas fechadas (0x8c6db0), as marcas de
 /// lance saem (0x84aeb0 no gerente de listas [this+0x856]: o comprador e o alvo, depois o dono do contrato do alvo e cada
 /// jogador da troca), reagendada em 10 dias (0x8c6220) e devolve 0. Concedida (ou sem proposta) e sem `quieto`: a
 /// notícia da concessão (0x8e3130). Depois, cada jogador da troca (+4) no dono do contrato do alvo: recusado, a notícia
@@ -401,11 +401,11 @@ unsafe fn cqc7_permissao(this: usize, pessoa: usize, clube: usize) -> (bool, usi
 unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize, quieto: u32) -> u32 {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let concedida_noticia: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x8e3130usize);
-    let alvo = cqc7_pessoa(cqc7_d(oferta + 0xc));
-    let comprador = cqc7_clube(cqc7_d(oferta + 8));
-    let c = cqc7_contrato(alvo);
-    let dono = if c != 0 { cqc7_clube(cqc7_d(c + 4)) } else { 0 };
-    let (precisa, proposta, concedida) = cqc7_permissao(this, alvo, comprador);
+    let alvo = transfer_manager_staff_by_id(cqc7_d(oferta + 0xc));
+    let comprador = transfer_manager_club_by_id(cqc7_d(oferta + 8));
+    let c = transfer_manager_get_contract_stored(alvo);
+    let dono = if c != 0 { transfer_manager_club_by_id(cqc7_d(c + 4)) } else { 0 };
+    let (precisa, proposta, concedida) = check_work_permit(this, alvo, comprador);
     if precisa {
         if proposta != 0 && !concedida {
             crate::comparacao::ramo("cqc_7 permissao recusada");
@@ -416,16 +416,16 @@ unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize,
             desfeita(this, oferta, comprador, 0x13);
             cqc7_pb(oferta + 0x2c, 0x10); // cqc7: a oferta cai pela permissão
             fechar(this, oferta);
-            let alvo = cqc7_pessoa(cqc7_d(oferta + 0xc));
-            let c = cqc7_contrato(alvo);
-            let dono = if c != 0 { cqc7_clube(cqc7_d(c + 4)) } else { 0 };
-            desmarcar(cqc7_d(this + 0x856), cqc7_clube(cqc7_d(oferta + 8)), alvo);
+            let alvo = transfer_manager_staff_by_id(cqc7_d(oferta + 0xc));
+            let c = transfer_manager_get_contract_stored(alvo);
+            let dono = if c != 0 { transfer_manager_club_by_id(cqc7_d(c + 4)) } else { 0 };
+            desmarcar(cqc7_d(this + 0x856), transfer_manager_club_by_id(cqc7_d(oferta + 8)), alvo);
             if cqc7_d(oferta + 4) != 0 {
                 let t = cqc7_d(oferta + 4);
                 cqc7_pd(t + 0xa, cqc7_d(t + 2));
                 let mut it = proximo(cqc7_d(oferta + 4));
                 while it != 0 {
-                    desmarcar(cqc7_d(this + 0x856), dono, cqc7_pessoa(cqc7_d(it)));
+                    desmarcar(cqc7_d(this + 0x856), dono, transfer_manager_staff_by_id(cqc7_d(it)));
                     it = proximo(cqc7_d(oferta + 4));
                 }
             }
@@ -441,8 +441,8 @@ unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize,
         cqc7_pd(t + 0xa, cqc7_d(t + 2));
         let mut it = proximo(cqc7_d(oferta + 4));
         while it != 0 {
-            let x = cqc7_pessoa(cqc7_d(it));
-            let (precisa, proposta, concedida) = cqc7_permissao(this, x, dono);
+            let x = transfer_manager_staff_by_id(cqc7_d(it));
+            let (precisa, proposta, concedida) = check_work_permit(this, x, dono);
             if precisa {
                 if proposta != 0 && !concedida {
                     crate::comparacao::ramo("cqc_7 troca recusada pela permissao");
@@ -460,7 +460,7 @@ unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize,
             }
             it = proximo(cqc7_d(oferta + 4));
         }
-        cqc7_soltar_lista_vazia(oferta);
+        free_empty_offer_list(oferta);
     }
     if quieto == 0 {
         let seguir: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c2f50usize);
@@ -473,8 +473,8 @@ unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize,
 /// feito antes pelas consultas sem efeito (0x8c7560, 0x4cc9e0, 0x8c7950 sem sorteio): o alvo recusado devolve 0 com a
 /// oferta no status 0x10; senão 1.
 unsafe extern "thiscall" fn comparar_check_offer_work_permits(this: usize, oferta: usize, quieto: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
-    let (precisa, proposta, concedida) = cqc7_permissao(this, cqc7_pessoa(cqc7_d(oferta + 0xc)), cqc7_clube(cqc7_d(oferta + 8)));
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
+    let (precisa, proposta, concedida) = check_work_permit(this, transfer_manager_staff_by_id(cqc7_d(oferta + 0xc)), transfer_manager_club_by_id(cqc7_d(oferta + 8)));
     let recusada = precisa && proposta != 0 && !concedida;
     let r = o(this, oferta, quieto);
     let ok = if recusada { r == 0 && cqc7_b(oferta + 0x2c) == 0x10 } else { r == 1 };

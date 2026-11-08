@@ -13,7 +13,7 @@ unsafe fn cpo2_por(a: usize, v: usize) {
 }
 
 /// A vaga do contrato principal da pessoa: o registro de 79 bytes dela em [0xae2d0c] (+0 o índice do contrato, −1 sem).
-unsafe fn cpo2_vaga(pessoa: usize) -> usize {
+unsafe fn main_contract_slot(pessoa: usize) -> usize {
     cpo2_d(0xae2d0c).wrapping_add(cpo2_d(pessoa).wrapping_mul(0x4f))
 }
 
@@ -22,7 +22,7 @@ unsafe fn cpo2_vaga(pessoa: usize) -> usize {
 /// CONTRACT_MANAGER), põe −1 na vaga da pessoa e refaz a folha de salários (0x598370) das finanças (0x5a0590) do clube
 /// do contrato (+4). Sem contrato: nada.
 unsafe extern "thiscall" fn remove_contract(this: usize, pessoa: usize) {
-    let indice = cpo2_i(cpo2_vaga(pessoa));
+    let indice = cpo2_i(main_contract_slot(pessoa));
     if indice == -1 {
         return;
     }
@@ -31,7 +31,7 @@ unsafe extern "thiscall" fn remove_contract(this: usize, pessoa: usize) {
     cpo2_por(e, usize::MAX);
     let clube = cpo2_d(0xae23b4).wrapping_add(id_clube.wrapping_mul(0x245));
     crate::comparacao::ramo("cpo_2 tirar contrato");
-    cpo2_por(cpo2_vaga(pessoa), usize::MAX); // a pessoa fica sem contrato
+    cpo2_por(main_contract_slot(pessoa), usize::MAX); // a pessoa fica sem contrato
     let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let f = get_club_finance(cpo2_d(0xae2a38), clube);
     if f != 0 {
@@ -104,8 +104,8 @@ unsafe extern "stdcall" fn contract_manager_season_end_month(clube: usize) -> u3
 /// Comparador: lado a lado pela vaga da pessoa e pela entrada do contrato (a folha 0x598370 refeita duas vezes dá o
 /// mesmo, pelo contrato já tirado).
 unsafe extern "thiscall" fn comparar_remove_contract(this: usize, pessoa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
-    let vaga = cpo2_vaga(pessoa);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let vaga = main_contract_slot(pessoa);
     let indice = cpo2_i(vaga);
     if indice == -1 {
         return o(this, pessoa);
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn comparar_remove_contract(this: usize, pessoa: usize)
 /// Comparador: a original reenvia (0x4cc490, ofertas e transferências) e tira as ofertas da lista (libera): roda só ela
 /// e confere o plano feito antes: devolve quantas ofertas da pessoa havia na lista.
 unsafe extern "thiscall" fn comparar_resubmit_held_offers(this: usize, id: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
     let lista = cpo2_d(this + 0x38);
     if lista == 0 {
         return o(this, id);
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_resubmit_held_offers(this: usize, id: usize
 
 /// Comparador: pelo valor (datas e a 0x669bd0 só calculam).
 unsafe extern "stdcall" fn comparar_contract_manager_season_end_month(clube: usize) -> u32 {
-    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
     let n = contract_manager_season_end_month(clube);
     PLACAR.registrar(r == n, || format!("contract_manager_season_end_month({:x}) original={} rust={}", clube, r, n));
     r

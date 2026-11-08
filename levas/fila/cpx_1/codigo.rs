@@ -20,7 +20,7 @@ unsafe fn cpx1_pessoa(id: usize) -> usize {
 
 /// O contrato principal da pessoa (CONTRACT_MANAGER::get_contract 0x4cf5a0 em [0xae1050]), guardado em [0xae1080] como
 /// a original faz depois de cada chamada.
-unsafe fn cpx1_contrato(pessoa: usize) -> usize {
+unsafe fn transfer_manager_get_contract_and_store(pessoa: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cpx1_d(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
@@ -28,7 +28,7 @@ unsafe fn cpx1_contrato(pessoa: usize) -> usize {
 }
 
 /// Os itens de uma LLIST do começo (o cursor +0xa volta a +2), como os laços da original.
-unsafe fn cpx1_itens(l: usize) -> Vec<usize> {
+unsafe fn llist_items_from_start(l: usize) -> Vec<usize> {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cpx1_d(l + 2));
     let mut v = Vec::new();
@@ -45,33 +45,33 @@ unsafe fn cpx1_itens(l: usize) -> Vec<usize> {
 static mut CPX1_ENSAIO: bool = false;
 
 /// A gerência da lista de observação (Shortlist_Manager em +0x856 da gerência de transferências).
-unsafe fn cpx1_listas(this: usize) -> usize {
+unsafe fn shortlist_manager_of(this: usize) -> usize {
     cpx1_d(this + 0x856)
 }
 
 /// Shortlist_Manager::clear_bid_markers_for_player (0x84aeb0: thiscall(gerência, clube, pessoa), ret 8); no ensaio,
 /// nada.
-unsafe fn cpx1_desmarcar(this: usize, clube: usize, pessoa: usize) {
+unsafe fn clear_bid_markers(this: usize, clube: usize, pessoa: usize) {
     if CPX1_ENSAIO {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
-    f(cpx1_listas(this), clube, pessoa);
+    f(shortlist_manager_of(this), clube, pessoa);
 }
 
 /// Shortlist_Manager::update_staff_status (0x843e10: thiscall(gerência, pessoa, clube, evento, tipo), ret 0x10); no
 /// ensaio, nada.
-unsafe fn cpx1_situacao_na_lista(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) {
+unsafe fn update_shortlist_status(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) {
     if CPX1_ENSAIO {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x843e10usize);
-    f(cpx1_listas(this), pessoa, clube, evento, tipo);
+    f(shortlist_manager_of(this), pessoa, clube, evento, tipo);
 }
 
 /// Uma chamada thiscall(gerência de transferências, oferta) com ret 4 (0x8c1290 desassossegar, 0x8cbf70 tirar a
 /// transferência futura, 0x8c6db0 fechar as ofertas de contrato da oferta); no ensaio, nada.
-unsafe fn cpx1_com_a_oferta(f: usize, this: usize, o: usize) {
+unsafe fn call_with_offer(f: usize, this: usize, o: usize) {
     if CPX1_ENSAIO {
         return;
     }
@@ -81,7 +81,7 @@ unsafe fn cpx1_com_a_oferta(f: usize, this: usize, o: usize) {
 
 /// O fim comum da recusa e da retirada, a partir do teste da oferta encerrada: sem oferta rival (+0) em aberto, a marca
 /// de oferta em andamento (bit 0 do registro de 8 bytes da pessoa em +0x86e) sai.
-unsafe fn cpx1_encerrada(o: usize) -> bool {
+unsafe fn offer_is_closed(o: usize) -> bool {
     match cpx1_b(o + 0x2c) {
         2 | 3 | 0x14 | 0x10 | 4 => true,
         0xf => cpx1_b(o + 0x2e) >= 3,
@@ -89,8 +89,8 @@ unsafe fn cpx1_encerrada(o: usize) -> bool {
     }
 }
 
-unsafe fn cpx1_tirar_marca(this: usize, o: usize) {
-    if !cpx1_encerrada(o) {
+unsafe fn clear_offer_mark_if_closed(this: usize, o: usize) {
+    if !offer_is_closed(o) {
         return;
     }
     let rivais = cpx1_d(o);
@@ -100,7 +100,7 @@ unsafe fn cpx1_tirar_marca(this: usize, o: usize) {
         let mut e = proximo(cpx1_d(o));
         while e != 0 {
             let r = cpx1_d(cpx1_d(this).wrapping_add(cpx1_d(e).wrapping_mul(4)));
-            if !cpx1_encerrada(r) {
+            if !offer_is_closed(r) {
                 return;
             }
             e = proximo(cpx1_d(o));
@@ -116,18 +116,18 @@ unsafe fn cpx1_tirar_marca(this: usize, o: usize) {
 /// 0x4ccb30 de cada jogador da troca, cuja marca +4 zera), com +0x10 zerado entre elas; e, com troca, vendedor e
 /// vendedor do computador (0x600a50), a situação na lista do comprador de cada jogador da troca que estava nela
 /// (0x842080, 0x843e10 evento 1).
-unsafe fn cpx1_lista_do_comprador(this: usize, o: usize) {
+unsafe fn update_buyer_shortlist_entry(this: usize, o: usize) {
     let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
-    let e = entrada(cpx1_listas(this), cpx1_clube(cpx1_d(o + 8)), cpx1_pessoa(cpx1_d(o + 0xc)), (cpx1_b(o + 0x11) != 0xb) as u32, 0);
+    let e = entrada(shortlist_manager_of(this), cpx1_clube(cpx1_d(o + 8)), cpx1_pessoa(cpx1_d(o + 0xc)), (cpx1_b(o + 0x11) != 0xb) as u32, 0);
     if e != 0 {
         // ponytail: a original empurra o registrador do ponteiro da entrada com o setne no byte baixo; a 0x843e10 só lê
         // o byte
         let tipo = (e as u32 & !0xff) | (cpx1_b(e) != 0xb) as u32;
-        cpx1_situacao_na_lista(this, cpx1_pessoa(cpx1_d(o + 0xc)), cpx1_clube(cpx1_d(o + 8)), 1, tipo);
+        update_shortlist_status(this, cpx1_pessoa(cpx1_d(o + 0xc)), cpx1_clube(cpx1_d(o + 8)), 1, tipo);
     }
 }
 
-unsafe fn cpx1_ofertas_de_contrato(this: usize, o: usize, vendedor: usize, comprador: usize) {
+unsafe fn withdraw_offer_contract_offers(this: usize, o: usize, vendedor: usize, comprador: usize) {
     if !CPX1_ENSAIO {
         let tirar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4cca70usize);
         tirar(cpx1_d(0xae1050), cpx1_pessoa(cpx1_d(o + 0xc)), cpx1_clube(cpx1_d(o + 8)));
@@ -136,7 +136,7 @@ unsafe fn cpx1_ofertas_de_contrato(this: usize, o: usize, vendedor: usize, compr
     let troca = cpx1_d(o + 4);
     if troca != 0 {
         let tirar_da_vaga: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4ccb30usize);
-        for e in cpx1_itens(troca) {
+        for e in llist_items_from_start(troca) {
             if !CPX1_ENSAIO {
                 tirar_da_vaga(cpx1_d(0xae1050), cpx1_pessoa(cpx1_d(e)), cpx1_d(o + 0x20));
             }
@@ -146,9 +146,9 @@ unsafe fn cpx1_ofertas_de_contrato(this: usize, o: usize, vendedor: usize, compr
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     if cpx1_d(o + 4) != 0 && vendedor != 0 && humano(vendedor, 0, 1, 0, 0) == 0 {
         let in_list: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x842080usize);
-        for e in cpx1_itens(cpx1_d(o + 4)) {
-            if in_list(cpx1_listas(this), cpx1_pessoa(cpx1_d(e)), comprador) != 0 {
-                cpx1_situacao_na_lista(this, cpx1_pessoa(cpx1_d(e)), comprador, 1, 0);
+        for e in llist_items_from_start(cpx1_d(o + 4)) {
+            if in_list(shortlist_manager_of(this), cpx1_pessoa(cpx1_d(e)), comprador) != 0 {
+                update_shortlist_status(this, cpx1_pessoa(cpx1_d(e)), comprador, 1, 0);
             }
         }
     }
@@ -156,20 +156,20 @@ unsafe fn cpx1_ofertas_de_contrato(this: usize, o: usize, vendedor: usize, compr
 
 /// Desmarca os lances do comprador pelo jogador (0x84aeb0) e os do clube do contrato (`vendedor`, ou 0) por cada
 /// jogador da troca.
-unsafe fn cpx1_desmarcar_lances(this: usize, o: usize, vendedor: usize) {
+unsafe fn clear_offer_and_exchange_markers(this: usize, o: usize, vendedor: usize) {
     let p = cpx1_pessoa(cpx1_d(o + 0xc));
-    cpx1_desmarcar(this, cpx1_clube(cpx1_d(o + 8)), p); // cpx1: desmarcar os lances do comprador
+    clear_bid_markers(this, cpx1_clube(cpx1_d(o + 8)), p); // cpx1: desmarcar os lances do comprador
     let troca = cpx1_d(o + 4);
     if troca != 0 {
-        for e in cpx1_itens(troca) {
-            cpx1_desmarcar(this, vendedor, cpx1_pessoa(cpx1_d(e)));
+        for e in llist_items_from_start(troca) {
+            clear_bid_markers(this, vendedor, cpx1_pessoa(cpx1_d(e)));
         }
     }
 }
 
 /// O clube do contrato da pessoa (ou 0), com o contrato guardado em [0xae1080].
-unsafe fn cpx1_clube_do_contrato(pessoa: usize) -> usize {
-    let c = cpx1_contrato(pessoa);
+unsafe fn contract_club_stored(pessoa: usize) -> usize {
+    let c = transfer_manager_get_contract_and_store(pessoa);
     if c == 0 {
         0
     } else {
@@ -178,7 +178,7 @@ unsafe fn cpx1_clube_do_contrato(pessoa: usize) -> usize {
 }
 
 /// A notícia da oferta recusada (0x8d5170: thiscall(gerência, oferta, motivo), ret 8); no ensaio, nada.
-unsafe fn cpx1_noticia(this: usize, o: usize, motivo: u32) {
+unsafe fn transfer_manager_post_offer_rejected_news(this: usize, o: usize, motivo: u32) {
     if CPX1_ENSAIO {
         return;
     }
@@ -187,7 +187,7 @@ unsafe fn cpx1_noticia(this: usize, o: usize, motivo: u32) {
 }
 
 /// TRANSFER_MANAGER::schedule_offer (0x8c6220: thiscall(gerência, oferta, dias, fatias), ret 0xc); no ensaio, nada.
-unsafe fn cpx1_agendar(this: usize, o: usize, dias: u32) {
+unsafe fn schedule_offer_unless_dry_run(this: usize, o: usize, dias: u32) {
     if CPX1_ENSAIO {
         return;
     }
@@ -205,27 +205,27 @@ unsafe fn cpx1_agendar(this: usize, o: usize, dias: u32) {
 /// na lista do comprador (0x842080, 0x843e10).
 unsafe extern "thiscall" fn reject_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = *vaga;
-    let vendedor = cpx1_clube_do_contrato(cpx1_pessoa(cpx1_d(o + 0xc)));
+    let vendedor = contract_club_stored(cpx1_pessoa(cpx1_d(o + 0xc)));
     let comprador = cpx1_clube(cpx1_d(o + 8));
     if marcar != 0 {
         *((*vaga + 0x2d) as *mut u8) = 1;
     }
     crate::comparacao::ramo("cpx_1 recusa desassossega");
-    cpx1_com_a_oferta(0x8c1290, this, o); // cpx1: o desassossego da recusa
+    call_with_offer(0x8c1290, this, o); // cpx1: o desassossego da recusa
     let atual = *vaga;
     if cpx1_b(atual + 0x2c) == 0x13 {
-        cpx1_com_a_oferta(0x8cbf70, this, atual);
+        call_with_offer(0x8cbf70, this, atual);
     }
     *((o + 0x2c) as *mut u8) = 2;
-    let vendedor2 = cpx1_clube_do_contrato(cpx1_pessoa(cpx1_d(o + 0xc)));
+    let vendedor2 = contract_club_stored(cpx1_pessoa(cpx1_d(o + 0xc)));
     crate::comparacao::ramo("cpx_1 recusa desmarca");
-    cpx1_desmarcar_lances(this, o, vendedor2);
-    cpx1_com_a_oferta(0x8c6db0, this, o);
-    cpx1_noticia(this, o, motivo);
-    cpx1_agendar(this, o, 0x19);
-    cpx1_tirar_marca(this, o);
-    cpx1_lista_do_comprador(this, o);
-    cpx1_ofertas_de_contrato(this, o, vendedor, comprador);
+    clear_offer_and_exchange_markers(this, o, vendedor2);
+    call_with_offer(0x8c6db0, this, o);
+    transfer_manager_post_offer_rejected_news(this, o, motivo);
+    schedule_offer_unless_dry_run(this, o, 0x19);
+    clear_offer_mark_if_closed(this, o);
+    update_buyer_shortlist_entry(this, o);
+    withdraw_offer_contract_offers(this, o, vendedor, comprador);
 }
 
 /// { 0x8bfcb0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::withdraw_transfer_offer(vaga, marcar,
@@ -237,43 +237,43 @@ unsafe extern "thiscall" fn reject_transfer_offer(this: usize, vaga: *mut usize,
 /// +0x10 = 0; com troca e vendedor do computador, os jogadores da troca na lista do comprador.
 unsafe extern "thiscall" fn withdraw_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = *vaga;
-    let vendedor = cpx1_clube_do_contrato(cpx1_pessoa(cpx1_d(o + 0xc)));
+    let vendedor = contract_club_stored(cpx1_pessoa(cpx1_d(o + 0xc)));
     let comprador = cpx1_clube(cpx1_d(o + 8));
     if marcar != 0 {
         *((*vaga + 0x2d) as *mut u8) = 1;
     }
     let atual = *vaga;
     if cpx1_b(atual + 0x2c) == 0x13 {
-        cpx1_com_a_oferta(0x8cbf70, this, atual);
+        call_with_offer(0x8cbf70, this, atual);
     }
     if cpx1_b(o + 0x2c) as i8 >= 0xb && !CPX1_ENSAIO {
         let reenviar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4cf4a0usize);
         reenviar(cpx1_d(0xae1050), cpx1_d(o + 0xc));
     }
     *((o + 0x2c) as *mut u8) = 3;
-    cpx1_com_a_oferta(0x8c6db0, this, o);
-    let vendedor2 = cpx1_clube_do_contrato(cpx1_pessoa(cpx1_d(o + 0xc)));
-    cpx1_desmarcar_lances(this, o, vendedor2);
+    call_with_offer(0x8c6db0, this, o);
+    let vendedor2 = contract_club_stored(cpx1_pessoa(cpx1_d(o + 0xc)));
+    clear_offer_and_exchange_markers(this, o, vendedor2);
     *((o + 0x10) as *mut u8) = 4;
-    cpx1_agendar(this, o, 0xa);
-    cpx1_tirar_marca(this, o);
+    schedule_offer_unless_dry_run(this, o, 0xa);
+    clear_offer_mark_if_closed(this, o);
     if motivo as u16 == 2 { // cpx1: só o motivo 2 desassossega
-        cpx1_com_a_oferta(0x8c1290, this, o);
+        call_with_offer(0x8c1290, this, o);
     } else {
         crate::comparacao::ramo("cpx_1 retirada sem desassossego");
     }
-    cpx1_lista_do_comprador(this, o);
-    cpx1_noticia(cpx1_d(0xde1f54), o, motivo);
-    cpx1_ofertas_de_contrato(this, o, vendedor, comprador);
+    update_buyer_shortlist_entry(this, o);
+    transfer_manager_post_offer_rejected_news(cpx1_d(0xde1f54), o, motivo);
+    withdraw_offer_contract_offers(this, o, vendedor, comprador);
 }
 
 /// As vagas de uma LLIST (ou nenhuma), sem mexer no cursor.
-unsafe fn cpx1_nos(l: usize) -> Vec<usize> {
+unsafe fn llist_items_keep_cursor(l: usize) -> Vec<usize> {
     if l == 0 {
         return Vec::new();
     }
     let cursor = cpx1_d(l + 0xa);
-    let v = cpx1_itens(l);
+    let v = llist_items_from_start(l);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cursor);
     v
 }
@@ -282,10 +282,10 @@ unsafe fn cpx1_nos(l: usize) -> Vec<usize> {
 /// partir do mesmo estado (a oferta, as duas listas dela, as vagas da troca, o registro da pessoa em +0x86e e
 /// [0xae1080]); iguais o estado (+0x2c), +0x10, a marca +4 de cada jogador da troca e a marca de oferta da pessoa, que
 /// a original grava sem depender das chamadas.
-unsafe fn cpx1_comparar(nome: &str, this: usize, vaga: *mut usize, original: impl FnOnce(), copia: impl FnOnce()) {
+unsafe fn compare_reject_withdraw(nome: &str, this: usize, vaga: *mut usize, original: impl FnOnce(), copia: impl FnOnce()) {
     let o = *vaga;
     let marca = cpx1_d(this + 0x86e).wrapping_add(cpx1_d(o + 0xc).wrapping_mul(8));
-    let nos = cpx1_nos(cpx1_d(o + 4));
+    let nos = llist_items_keep_cursor(cpx1_d(o + 4));
     let mut regioes = vec![(o, 0x30usize), (marca, 8), (0xae1080, 4)];
     for l in [cpx1_d(o), cpx1_d(o + 4)] {
         if l != 0 {
@@ -312,13 +312,13 @@ unsafe fn cpx1_comparar(nome: &str, this: usize, vaga: *mut usize, original: imp
 }
 
 unsafe extern "thiscall" fn comparar_reject_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I0%%);
-    cpx1_comparar("reject_transfer_offer", this, vaga, || o(this, vaga, marcar, motivo), || reject_transfer_offer(this, vaga, marcar, motivo))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I0%%);
+    compare_reject_withdraw("reject_transfer_offer", this, vaga, || o(this, vaga, marcar, motivo), || reject_transfer_offer(this, vaga, marcar, motivo))
 }
 
 unsafe extern "thiscall" fn comparar_withdraw_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I1%%);
-    cpx1_comparar("withdraw_transfer_offer", this, vaga, || o(this, vaga, marcar, motivo), || withdraw_transfer_offer(this, vaga, marcar, motivo))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I1%%);
+    compare_reject_withdraw("withdraw_transfer_offer", this, vaga, || o(this, vaga, marcar, motivo), || withdraw_transfer_offer(this, vaga, marcar, motivo))
 }
 
 /// { 0x8d5170 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
@@ -336,16 +336,16 @@ unsafe extern "thiscall" fn post_offer_rejected_news(this: usize, o: usize, moti
     let p = cpx1_pessoa(cpx1_d(o + 0xc));
     let comprador = cpx1_clube(cpx1_d(o + 8));
     let tipo5 = |c: usize| cpx1_b(c + 0x35) & 0x3f == 5;
-    let c = cpx1_contrato(p);
+    let c = transfer_manager_get_contract_and_store(p);
     let do_contrato = if c == 0 || tipo5(c) { 0 } else { cpx1_clube(cpx1_d(c + 4)) };
     let mut lista = [0usize; 0x1e];
     let n = destinatarios(this, o, (cpx1_b(o + 0x2c) != 2) as u32 + 0x2d, lista.as_mut_ptr(), 0x1e) as i8;
     if n == 0 {
         return;
     }
-    let c = cpx1_contrato(p);
+    let c = transfer_manager_get_contract_and_store(p);
     let mut clube = if c == 0 || tipo5(c) { 0 } else { cpx1_clube(cpx1_d(c + 4)) };
-    let c = cpx1_contrato(p);
+    let c = transfer_manager_get_contract_and_store(p);
     if c != 0 && tipo5(c) {
         clube = 0;
     }
@@ -377,5 +377,5 @@ unsafe extern "thiscall" fn post_offer_rejected_news(this: usize, o: usize, moti
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
 unsafe extern "thiscall" fn comparar_post_offer_rejected_news(this: usize, o: usize, motivo: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, o, motivo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, o, motivo)
 }

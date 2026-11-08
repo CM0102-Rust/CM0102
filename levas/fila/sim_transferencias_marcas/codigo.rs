@@ -1,18 +1,18 @@
 // ---------- %%LEVA%%a leva: a marca de contrato acertado e a vaga da oferta (transfer_manager.cpp) ----------
 
 /// O byte das marcas da pessoa `*id` no gerente de transferências (+0x86e, 8 bytes por pessoa).
-unsafe fn marcas_da_pessoa(gerente: usize, id: *const i32) -> *mut u8 {
+unsafe fn staff_flags_ptr(gerente: usize, id: *const i32) -> *mut u8 {
     (*((gerente + 0x86e) as *const usize) as isize + *id as isize * 8) as *mut u8
 }
 
 /// { 0x8c5410 } (thiscall, ret 4, transfer_manager.cpp): liga a marca de contrato acertado (0x40).
 unsafe extern "thiscall" fn set_agreed_contract_flag(gerente: usize, id: *const i32) {
-    *marcas_da_pessoa(gerente, id) |= 0x40;
+    *staff_flags_ptr(gerente, id) |= 0x40;
 }
 
 /// { 0x8c5430 } (thiscall, ret 4, transfer_manager.cpp): desliga a marca de contrato acertado.
 unsafe extern "thiscall" fn clear_agreed_contract_flag(gerente: usize, id: *const i32) {
-    *marcas_da_pessoa(gerente, id) &= 0xbf;
+    *staff_flags_ptr(gerente, id) &= 0xbf;
 }
 
 /// { 0x8c61e0 } (thiscall, ret 4, transfer_manager.cpp): o endereço da vaga `k` das ofertas (+0,
@@ -23,21 +23,21 @@ unsafe extern "thiscall" fn offer_slot(tabela: usize, k: i32) -> usize {
 }
 
 unsafe extern "thiscall" fn comparar_set_agreed_contract_flag(gerente: usize, id: *const i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const i32)>(%%I0%%);
-    let a = marcas_da_pessoa(gerente, id) as usize;
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(%%I0%%);
+    let a = staff_flags_ptr(gerente, id) as usize;
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(a, 1)], || o(gerente, id), || set_agreed_contract_flag(gerente, id));
     PLACAR.registrar(igual, || format!("set_agreed_contract_flag({}) {:x?} x {:x?}", *id, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_clear_agreed_contract_flag(gerente: usize, id: *const i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const i32)>(%%I1%%);
-    let a = marcas_da_pessoa(gerente, id) as usize;
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(%%I1%%);
+    let a = staff_flags_ptr(gerente, id) as usize;
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(a, 1)], || o(gerente, id), || clear_agreed_contract_flag(gerente, id));
     PLACAR.registrar(igual, || format!("clear_agreed_contract_flag({}) {:x?} x {:x?}", *id, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_offer_slot(tabela: usize, k: i32) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(tabela, k);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(tabela, k);
     let n = offer_slot(tabela, k);
     PLACAR.registrar(r == n, || format!("offer_slot({}) original={:#x} rust={:#x}", k, r, n));
     r

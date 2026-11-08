@@ -35,7 +35,7 @@ unsafe fn cqc6_humano(clube: usize) -> bool {
 /// entradas, data depois da última (ano +2 + o da liga +0x40, sem sinal; dia +0 com sinal) ou sem a entrada pela busca
 /// (0x946464: push 0x685cf0; push 0x41; push conta; push tabela; push &chave; add esp, 0x14 -> cdecl bsearch; a chave
 /// é o dia e o ano menos o da liga) ou com a primeira vaga vazia (+0xb = 0xff): nenhuma.
-unsafe fn cqc6_entrada(this: usize, data: usize) -> Option<usize> {
+unsafe fn tv_date_entry(this: usize, data: usize) -> Option<usize> {
     let n = cqc6_w(this + 0xa9);
     if n == 0 {
         return None;
@@ -60,7 +60,7 @@ unsafe fn cqc6_entrada(this: usize, data: usize) -> Option<usize> {
 
 /// { 0x685640 } (thiscall, ret 4, league.cpp, quadro SEH sem destrutor no caminho normal: as datas e a lista locais):
 /// `League::move_fixtures_for_tv(data)`, do dia da liga (0x6847c0) e da montagem do calendário (0x683e30). Pela
-/// entrada da data (cqc6_entrada), os jogos da liga no dia e fatia da entrada (+4) vão a uma lista local (0x68d020;
+/// entrada da data (tv_date_entry), os jogos da liga no dia e fatia da entrada (+4) vão a uma lista local (0x68d020;
 /// 0x5abd90: push lista; push liga +0x44; push -1; push id; push fatia; push dia; push ano; mov ecx, [0xae2a58] ->
 /// thiscall, ret 0x1c). Com jogos: as vagas da entrada (7 bytes a partir de +5, até a primeira com +0xb = 0xff) são
 /// ordenadas (0x945333 com 0x8b4e00) se alguma tem bits 0x7fc0 no dword +5. Para cada vaga com fatia (+0xa) 0..2: a data
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: usize) {
     padrao(pa);
     padrao(pb);
     padrao(pc);
-    let e = match cqc6_entrada(this, data) {
+    let e = match tv_date_entry(this, data) {
         Some(e) => e,
         None => return,
     };
@@ -236,8 +236,8 @@ unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: usize) {
 /// um jogo enquanto a lista tiver (toda nota passa do −1 inicial), e a vaga fica 0xff: as vagas 0xff do bloco depois da
 /// original são min(válidas, jogos).
 unsafe extern "thiscall" fn comparar_move_fixtures_for_tv(this: usize, data: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
-    let e = match cqc6_entrada(this, data) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
+    let e = match tv_date_entry(this, data) {
         Some(e) => e,
         None => return o(this, data),
     };
@@ -344,7 +344,7 @@ unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
 
 /// Comparador da 0x684230: só a original (aloca a notícia e a entrega aos técnicos).
 unsafe extern "thiscall" fn comparar_send_group_draw_news(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this) // ponytail: só a notícia
+    original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this) // ponytail: só a notícia
 }
 
 /// { 0x683ee0 } (thiscall, ret 4, league.cpp, quadro SEH sem destrutor no caminho normal: as listas locais):
@@ -471,5 +471,5 @@ unsafe extern "thiscall" fn send_fixture_list_news(this: usize, lista: usize) {
 
 /// Comparador da 0x683ee0: só a original (as notícias vão aos técnicos e a lista dos avisados cresce, alocando).
 unsafe extern "thiscall" fn comparar_send_fixture_list_news(this: usize, lista: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, lista) // ponytail: só as notícias
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, lista) // ponytail: só as notícias
 }

@@ -9,7 +9,7 @@ unsafe fn cpp1_b(a: usize) -> u8 {
 }
 
 /// As comparações de data do jogo (thiscall na data `a`, a outra por valor): 0x456740 `>`, 0x456770 `<`, 0x4a7f20 `==`.
-unsafe fn cpp1_data(f: usize, a: usize, b: usize) -> u32 {
+unsafe fn call_date_compare(f: usize, a: usize, b: usize) -> u32 {
     let g: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(f);
     g(a, cpp1_d(b), cpp1_d(b + 4))
 }
@@ -18,17 +18,17 @@ unsafe fn cpp1_data(f: usize, a: usize, b: usize) -> u32 {
 /// (entradas de 14 bytes: +0 pessoa, +4 data, +0xc fatia do dia, +0xd tipo): a data de `a` antes (0x456770): −1;
 /// depois (0x456740): 1; no mesmo dia, a fatia de `a` menos a de `b` (com sinal). Quente (o qsort): sem contador.
 unsafe extern "C" fn compare_decision_dates(a: usize, b: usize) -> i32 {
-    if cpp1_data(0x456770, a + 4, b + 4) != 0 {
+    if call_date_compare(0x456770, a + 4, b + 4) != 0 {
         return -1; // a antes de b
     }
-    if cpp1_data(0x456740, a + 4, b + 4) != 0 {
+    if call_date_compare(0x456740, a + 4, b + 4) != 0 {
         return 1;
     }
     cpp1_b(a + 0xc) as i8 as i32 - cpp1_b(b + 0xc) as i8 as i32
 }
 
 unsafe extern "C" fn comparar_compare_decision_dates(a: usize, b: usize) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%);
     let r = o(a, b);
     let n = compare_decision_dates(a, b);
     PLACAR.registrar(r == n, || format!("compare_decision_dates original={} rust={}", r, n));
@@ -48,10 +48,10 @@ unsafe extern "thiscall" fn process_due_decision_dates(this: usize, data: usize,
     let resolver: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4ce4e0usize);
     loop {
         let e = (cpp1_d(this + 0xc) as usize).wrapping_add((n(this + 0x18) as usize).wrapping_mul(14));
-        if cpp1_data(0x456740, e + 4, data) != 0 {
+        if call_date_compare(0x456740, e + 4, data) != 0 {
             return; // ainda não venceu
         }
-        if cpp1_data(0x4a7f20, e + 4, data) != 0 && cpp1_b(e + 0xc) as i8 > fatia as u8 as i8 {
+        if call_date_compare(0x4a7f20, e + 4, data) != 0 && cpp1_b(e + 0xc) as i8 > fatia as u8 as i8 {
             return; // hoje, numa fatia depois desta
         }
         let id = n(e);
@@ -75,14 +75,14 @@ unsafe extern "thiscall" fn process_due_decision_dates(this: usize, data: usize,
 /// lidas antes, sem rodar nada) diz se alguma entrada do tipo 3 com pessoa vence; com ela, só a original. Sem ela (o
 /// caso de todo dia), lado a lado pelo índice +0x18 e pelas entradas que vencem (ficam com −1).
 unsafe extern "thiscall" fn comparar_process_due_decision_dates(this: usize, data: usize, fatia: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let (i0, n) = (cpp1_d(this + 0x18) as i32, cpp1_d(this + 0x14) as i32);
     let mut i = i0;
     let mut decide = false;
     while i < n {
         let e = (cpp1_d(this + 0xc) as usize).wrapping_add((i as usize).wrapping_mul(14));
-        if cpp1_data(0x456740, e + 4, data) != 0
-            || (cpp1_data(0x4a7f20, e + 4, data) != 0 && cpp1_b(e + 0xc) as i8 > fatia as u8 as i8) {
+        if call_date_compare(0x456740, e + 4, data) != 0
+            || (call_date_compare(0x4a7f20, e + 4, data) != 0 && cpp1_b(e + 0xc) as i8 > fatia as u8 as i8) {
             break;
         }
         decide |= cpp1_d(e) as i32 != -1 && cpp1_b(e + 0xd) == 3;
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn get_current_contract_offers(this: usize, clube: usiz
                     cap = cap.wrapping_add(20);
                     vetor = realocar(vetor, (cap as i32 * 111) as u32);
                     if cpp1_d(this + 0x34) == 0 {
-                        cpl4_sem_espaco(0x64c, 0x9a8220); // "cannot allocate memory"
+                        show_cannot_create_space_box(0x64c, 0x9a8220); // "cannot allocate memory"
                         core::ptr::write_unaligned(saida as *mut u32, 0);
                         return 0;
                     }
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn get_current_contract_offers(this: usize, clube: usiz
 /// Comparador: a original aloca o vetor que quem chama libera: roda só ela e confere o plano feito antes (as ofertas
 /// do clube lidas da lista, sem alocar): a conta e os 111 bytes de cada uma, na ordem.
 unsafe extern "thiscall" fn comparar_get_current_contract_offers(this: usize, clube: usize, saida: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%);
     let lista = cpp1_d(this + 0x34) as usize;
     if lista == 0 || clube == 0 || saida == 0 {
         return o(this, clube, saida);

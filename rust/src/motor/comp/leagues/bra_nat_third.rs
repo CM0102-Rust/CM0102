@@ -4,8 +4,10 @@ use super::*;
 
 
 
-/// O clube da primeira linha da tabela (+0xb1) da fase `k` da liga (k = −1: a própria liga).
-pub(crate) unsafe fn cqs4_primeiro(this: usize, k: i32) -> usize {
+/// Club in the first table row of stage k of the league (k = -1: the league itself).
+///
+/// [pt] O clube da primeira linha da tabela (+0xb1) da fase `k` da liga (k = −1: a própria liga).
+pub(crate) unsafe fn stage_leader(this: usize, k: i32) -> usize {
     let t = if k == -1 { this } else { read_usize(read_usize(this + 0xc) + 4 * k as usize) };
     read_usize(read_usize(t + 0xb1))
 }
@@ -29,8 +31,8 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let mut lista = [0usize; 2];
-    lista[0] = cqs4_primeiro(this, 8); // cqs4: o campeão do grupo A
-    lista[1] = cqs4_primeiro(this, 9);
+    lista[0] = stage_leader(this, 8); // cqs4: o campeão do grupo A
+    lista[1] = stage_leader(this, 9);
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 10, &mut rodadas, &mut extra, 0);
@@ -43,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
     };
     core::ptr::write_unaligned((read_usize(this + 0xc) + 0x28) as *mut usize, fase);
     if read_usize(read_usize(this + 0xc) + 0x28) == 0 {
-        return aviso_em(0x98aba4, 0x392);
+        return show_error_at(0x98aba4, 0x392);
     }
     crate::comparacao::ramo("cqs_4 final");
     soltar(t);
@@ -108,22 +110,22 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
     if regras(this) == 0 {
-        aviso_em(0x98aba4, 0x202);
+        show_error_at(0x98aba4, 0x202);
         return 0;
     }
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_BRANATTHIRD_CREATE_TABLE);
     if tabela(this) == 0 {
-        aviso_em(0x98aba4, 0x209);
+        show_error_at(0x98aba4, 0x209);
         return 0;
     }
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     if jogos(this) == 0 {
-        aviso_em(0x98aba4, 0x20f);
+        show_error_at(0x98aba4, 0x20f);
         return 0;
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     if ordenar(this, 0) == 0 {
-        aviso_em(0x98aba4, 0x216);
+        show_error_at(0x98aba4, 0x216);
         return 0;
     }
     let expectativas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
@@ -148,7 +150,8 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
 /// (as faixas do mata-mata) e, para os outros quarenta, a faixa de oito em oito: 16, 24, 32, 40 e 48.
 pub(crate) const CQS4_LUGARES: [u8; 16] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]; // cqs4: as posições previstas do mata-mata
 
-pub(crate) fn cqs4_lugar(k: usize) -> u8 {
+/// Place for index k: from CQS4_LUGARES below 16, else 16 + 8 x ((k - 16) / 8) [inference].
+pub(crate) fn place_for_index(k: usize) -> u8 {
     if k < 16 { CQS4_LUGARES[k] } else { (16 + 8 * ((k - 16) / 8)) as u8 }
 }
 
@@ -160,18 +163,18 @@ pub(crate) fn cqs4_lugar(k: usize) -> u8 {
 /// [pt] { 0x42f0a0 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::set_predicted_positions()`, as posições previstas da
 /// Série C (do construtor e da virada, depois dos grupos). Sem estatísticas (+8): a caixa da linha 0x4a2 e volta. A
 /// lista dos 56 (+0xee) é ordenada no lugar pela reputação (qsort 0x945333 com 0x4b07d0, a maior primeiro, nulos no
-/// fim) e cada clube, na ordem, ganha a posição prevista de `cqs4_lugar` (Comp_Stats::set_club_final_position 0x4a2540,
+/// fim) e cada clube, na ordem, ganha a posição prevista de `place_for_index` (Comp_Stats::set_club_final_position 0x4a2540,
 /// thiscall(+8, clube, posição), ret 8; a original empurra a faixa dos quarenta num dword com o byte da faixa e lixo
 /// da pilha em cima; a 0x4a2540 só lê o byte: a cópia passa o byte limpo).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(this: usize) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
-        return aviso_em(0x98aba4, 0x4a2);
+        return show_error_at(0x98aba4, 0x4a2);
     }
     ordenar(read_usize(this + 0xee), 0x38, 4, 0x4b07d0); // cqs4: a lista dos 56 pela reputação
     for k in 0..0x38usize {
-        posicao(read_usize(this + 8), read_usize(read_usize(this + 0xee) + 4 * k), cqs4_lugar(k) as u32);
+        posicao(read_usize(this + 8), read_usize(read_usize(this + 0xee) + 4 * k), place_for_index(k) as u32);
     }
     crate::comparacao::ramo("cqs_4 posicoes previstas");
 }
@@ -180,8 +183,8 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(thi
 /// campeões dos grupos da terceira fase. Depois, a fase da vaga 10 existe, com +0x3e = 2, os dois na lista dela (como
 /// conjunto) e +0x30 = 10.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage(this: usize) {
-    let (a, b) = (cqs4_primeiro(this, 8), cqs4_primeiro(this, 9));
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_CREATE_FINAL_STAGE)(this);
+    let (a, b) = (stage_leader(this, 8), stage_leader(this, 9));
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_CREATE_FINAL_STAGE)(this);
     let fase = read_usize(read_usize(this + 0xc) + 0x28);
     let igual = fase != 0 && {
         let l = read_usize(fase + 0xa7);
@@ -196,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage
 /// lista dos 56 zerada.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(this: usize) -> u32 {
     let antes = read_i16(this + 0x40);
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_START_NEW_SEASON)(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_START_NEW_SEASON)(this);
     let depois = read_i16(this + 0x40);
     let igual = depois == antes.wrapping_add(1) && read_usize(this + 0xee) == 0 && (0..7).all(|g| read_usize(read_usize(this + 0xc) + 4 * g) != 0);
     PLACAR.registrar(igual, || format!("bra_nat_third_start_new_season({:#x}) ano antes={} depois={} +0xee={:#x}", this, antes, depois, read_usize(this + 0xee)));
@@ -207,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(t
 /// pode rodar duas vezes), com o plano feito antes: a lista dos 56 ordenada pela mesma qsort numa cópia; depois, a
 /// lista da liga na mesma ordem e a posição (+0x72 do registro achado por 0x4a4850) de cada clube.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_positions(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_SET_PREDICTED_POSITIONS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_SET_PREDICTED_POSITIONS);
     if read_usize(this + 8) == 0 || read_usize(this + 0xee) == 0 {
         return o(this);
     }
@@ -221,7 +224,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_posi
     o(this);
     let errado = (0..0x38).find(|&k| {
         let e = if v[k] != 0 { achar(read_usize(this + 8), v[k]) } else { 0 };
-        read_usize(read_usize(this + 0xee) + 4 * k) != v[k] || e == 0 || *((e + 0x72) as *const u8) != cqs4_lugar(k)
+        read_usize(read_usize(this + 0xee) + 4 * k) != v[k] || e == 0 || *((e + 0x72) as *const u8) != place_for_index(k)
     });
     PLACAR.registrar(errado.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, errado));
 }
@@ -234,7 +237,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_posi
 #[allow(clippy::type_complexity)]
 pub(crate) type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
 
-/// { 0x42ee80 } (thiscall, ret 4, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_group_stage(g)`, o
+/// 0x42ee80 BraNatThird::create_group_stage(g): round table, the 7 clubs of group g, League_Stage in slot g, +0x30 = g.
+///
+/// [pt] { 0x42ee80 } (thiscall, ret 4, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_group_stage(g)`, o
 /// grupo g (0 a 6) da primeira fase da Série C, da virada e do construtor (g de 0 a 6; a liga é o grupo de cima, e os
 /// sete grupos são as fases 0 a 6).
 /// 1) A tabela das rodadas pela virtual +0x3c (create_round_table: thiscall(this, g inteiro, &rodadas, &extra, 0), ret
@@ -247,7 +252,7 @@ pub(crate) type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize,
 ///    dword inteiro), o extra (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; words e bytes limpos). Sem memória: 0.
 /// 4) [+0xc][g] = a fase. Sem fase: a caixa da linha 0x487 e volta (sem liberar o vetor nem a tabela). Com ela: o vetor
 ///    e a tabela liberados (free 0x9452ca) e +0x30 = g (o byte com sinal).
-pub(crate) unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
+pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g: u32, pv: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -257,7 +262,7 @@ pub(crate) unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
     let t = tabela(this, g, &mut rodadas, &mut extra, 0);
     let v = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if v == 0 {
-        return aviso_em(0x98aba4, 0x475);
+        return show_error_at(0x98aba4, 0x475);
     }
     let k = g as u8 as i8 as i32;
     for j in 0..7usize {
@@ -273,7 +278,7 @@ pub(crate) unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
     };
     core::ptr::write_unaligned((read_usize(this + 0xc) + 4 * k as usize) as *mut usize, fase);
     if read_usize(read_usize(this + 0xc) + 4 * k as usize) == 0 {
-        return aviso_em(0x98aba4, 0x487);
+        return show_error_at(0x98aba4, 0x487);
     }
     crate::comparacao::ramo("cqs_3 grupo");
     soltar(v);
@@ -288,7 +293,7 @@ pub(crate) unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
 ///
 /// [pt] { 0x42ee80 } (acima): o grupo g da primeira fase da Série C.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_group_stage(this: usize, g: u32) {
-    cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
+    bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
 }
 
 /// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `CQS3_SEMENTES[k]` da lista dos dezesseis.
@@ -320,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let lista = alocar(0x40);
     if lista == 0 {
-        return aviso_em(0x98aba4, 0x2e6);
+        return show_error_at(0x98aba4, 0x2e6);
     }
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
@@ -342,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
                 c
             }
             None => {
-                aviso_em(0x98aba4, 0x30b);
+                show_error_at(0x98aba4, 0x30b);
                 core::ptr::read_volatile(core::ptr::null::<usize>()) // ponytail: a original lê o endereço 0 aqui e cai
             }
         };
@@ -360,7 +365,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     };
     core::ptr::write_unaligned((read_usize(this + 0xc) + 0x1c) as *mut usize, fase);
     if read_usize(read_usize(this + 0xc) + 0x1c) == 0 {
-        return aviso_em(0x98aba4, 0x31b);
+        return show_error_at(0x98aba4, 0x31b);
     }
     crate::comparacao::ramo("cqs_3 segunda fase");
     soltar(t);
@@ -419,7 +424,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         };
         core::ptr::write_unaligned((read_usize(this + 0xc) + 4 * k as usize) as *mut usize, fase);
         if read_usize(read_usize(this + 0xc) + 4 * k as usize) == 0 {
-            return aviso_em(0x98aba4, f);
+            return show_error_at(0x98aba4, f);
         }
         soltar(t);
     }
@@ -436,7 +441,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage
     for (j, c) in plano.iter_mut().enumerate() {
         *c = read_usize(read_usize(this + 0xee) + 4 * (7 * (k + 1) as usize + j));
     }
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_NAT_THIRD_CREATE_GROUP_STAGE)(this, g);
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_NAT_THIRD_CREATE_GROUP_STAGE)(this, g);
     let fase = read_usize(read_usize(this + 0xc) + 4 * k as usize);
     let igual = fase != 0 && read_i16(fase + 0x3e) == 7 && read_usize(this + 0x30) as i32 == k && {
         let mut nela = [0usize; 7];
@@ -474,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_second_round_stage(this: 
             r[m].0 = 0;
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECOND_ROUND_STAGE)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECOND_ROUND_STAGE)(this);
     let fase = read_usize(read_usize(this + 0xc) + 0x1c);
     let igual = fase != 0 && read_i16(fase + 0x3e) == 0x10 && read_usize(this + 0x30) == 7 && {
         let mut nela = [0usize; 16];
@@ -504,7 +509,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_third_round_groups(this: 
         }
         i += 1;
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_THIRD_ROUND_GROUPS)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_THIRD_ROUND_GROUPS)(this);
     let (a, b) = (read_usize(read_usize(this + 0xc) + 0x20), read_usize(read_usize(this + 0xc) + 0x24));
     let igual = a != 0 && b != 0 && read_i16(a + 0x3e) == 4 && read_i16(b + 0x3e) == 4 && read_usize(this + 0x30) == 9 && {
         let mut nela = [0usize; 8];
@@ -545,13 +550,13 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
     let lista = alocar(0xe0);
     core::ptr::write_unaligned((this + 0xee) as *mut usize, lista);
     if lista == 0 {
-        aviso_em(0x98aba4, 0x18f);
+        show_error_at(0x98aba4, 0x18f);
         return 1;
     }
     let t = alocar((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(0x98aba4, 0x196);
+        show_error_at(0x98aba4, 0x196);
         return 0;
     }
     let mut k: u8 = 0;
@@ -580,7 +585,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
 /// [this+4], na ordem do banco, até 56. Depois: a devolução 1, +0x3e = 7, a lista (+0xee) com os clubes do plano em
 /// alguma ordem (o sorteio) e as linhas 0..6 da tabela com os 7 primeiros da lista.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_CREATE_TABLE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_CREATE_TABLE);
     let mut plano = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && plano.len() < 0x38 {
@@ -614,17 +619,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this:
 ///
 /// [pt] { 0x42de50 } (thiscall, bra_nat_third.cpp): `BraNatThird::set_up_rules`, as regras da Série C e o calendário.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_up_rules(this: usize) -> u32 {
-    cqi7_regras_serie_c(this);
+    set_serie_c_rules(this);
     crate::comparacao::ramo("cqi_7 regras da serie c");
-    cqi7_calendario(this);
+    create_main_schedule(this);
     1
 }
 
 /// Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_up_rules(this: usize) -> u32 {
-    let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_SET_UP_RULES)(this), || {
-        cqi7_regras_serie_c(this);
+    let reg = league_regions_without_schedule(this);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_SET_UP_RULES)(this), || {
+        set_serie_c_rules(this);
         1
     });
     PLACAR.registrar(igual && r == n, || format!("bra_nat_third_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
@@ -643,13 +648,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_up_rules(this:
 /// Devolve 0, ou -1 nas situações que a fase não espera.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    cqj9_serie_c(this, clube, situacao, fase, true).0
+    serie_c_staff_records(this, clube, situacao, fase, true).0
 }
 
 /// Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, l, dest) = cqj9_serie_c(this, clube, situacao, fase, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_THIRD_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, a5, a6);
+    let (n, l, dest) = serie_c_staff_records(this, clube, situacao, fase, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_THIRD_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
@@ -665,25 +670,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_recor
 /// códigos como vêm (o trecho das fases 1 a 3 que a original tem depois do teste `fase >= 7` nunca roda). Devolve a
 /// entrada.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = cqk8_entrada(this, clube);
+    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
     let (fa, a, b, c) = (fase as u8 as i8, a as u8, b as u8, c as u8);
     if fa < 7 {
-        let (a, c) = (cqk8_serie_c(a, 1), cqk8_serie_c(c, 9));
-        let b2 = cqk8_serie_c(b, 1);
+        let (a, c) = (serie_c_progress_code(a, 1), serie_c_progress_code(c, 9));
+        let b2 = serie_c_progress_code(b, 1);
         if b == 3 {
             crate::comparacao::ramo("cqk_8 serie c segundo 3");
         }
-        cqk8_gravar(e, a, b2, c); // cqk8: os códigos dos grupos da Série C
+        write_progress_codes(e, a, b2, c); // cqk8: os códigos dos grupos da Série C
     } else {
-        cqk8_gravar(e, a, b, c);
+        write_progress_codes(e, a, b, c);
     }
     e
 }
 
 /// Comparador: como o do Mineiro.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = cqk8_entrada(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_NAT_THIRD_SET_CLUB_PROGRESS)(this, clube, fase, a, b, c), || bra_nat_third_set_club_progress(this, clube, fase, a, b, c));
+    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_NAT_THIRD_SET_CLUB_PROGRESS)(this, clube, fase, a, b, c), || bra_nat_third_set_club_progress(this, clube, fase, a, b, c));
     PLACAR.registrar(igual && r == n, || format!("bra_nat_third_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }

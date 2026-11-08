@@ -49,7 +49,7 @@ unsafe extern "C" fn compare_fixture_records_by_date(a: usize, b: usize) -> i32 
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "thiscall" fn comparar_is_banned_nation_pair(this: usize, a: i32, b: i32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(%%I0%%)(this, a, b);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(%%I0%%)(this, a, b);
     let n = is_banned_nation_pair(this, a, b);
     PLACAR.registrar(r == n, || format!("is_banned_nation_pair({}, {}) original={} rust={}", a, b, r, n));
     r
@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn comparar_is_banned_nation_pair(this: usize, a: i32, 
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "C" fn comparar_compare_nations_by_reputation_desc(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_nations_by_reputation_desc(a, b);
     PLACAR.registrar(r == n, || format!("compare_nations_by_reputation_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -65,7 +65,7 @@ unsafe extern "C" fn comparar_compare_nations_by_reputation_desc(a: usize, b: us
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "C" fn comparar_compare_fixture_records_by_date(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_fixture_records_by_date(a, b);
     PLACAR.registrar(r == n, || format!("compare_fixture_records_by_date({:x}, {:x}) original={} rust={}", a, b, r, n));
     r

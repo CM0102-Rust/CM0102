@@ -14,7 +14,7 @@ unsafe fn cqr9_pd(a: usize, v: usize) {
 
 /// A tabela (+0xb1, linhas de 0x3b bytes) do grupo `i` de uma copa italiana: o grupo 0 é a própria copa; o grupo i ≥ 1 é
 /// a fase [+0xc][i − 1].
-unsafe fn cqr9_tabela(this: usize, i: usize) -> usize {
+unsafe fn group_table(this: usize, i: usize) -> usize {
     if i == 0 {
         cqr9_d(this + 0xb1)
     } else {
@@ -24,7 +24,7 @@ unsafe fn cqr9_tabela(this: usize, i: usize) -> usize {
 
 /// Os que entram direto no mata-mata: a partir da vaga `k` do vetor `times`, até `fim`, os inscritos ainda na lista (+0xee,
 /// até +0xf2 vagas: os não nulos, na ordem), cada um zerado ao sair.
-unsafe fn cqr9_cabecas(this: usize, times: usize, mut k: usize, fim: usize) {
+unsafe fn take_direct_entrants(this: usize, times: usize, mut k: usize, fim: usize) {
     let mut j = 0i32;
     if (cqr9_d(this + 0xf2) as i32) <= 0 {
         return;
@@ -52,7 +52,7 @@ unsafe fn cqr9_cabecas(this: usize, times: usize, mut k: usize, fim: usize) {
 /// extra (word), 0x14, 0, 0, 0 e `sementes`; a original empurra os words com lixo nos 16 bits altos, que o construtor não
 /// lê) em [+0xc][fase]; o vetor e a tabela das rodadas liberados (0x9452ca, cdecl; nesta ordem). Sem fase, a caixa da
 /// `linha`; com ela, o sorteio da primeira rodada (Cup::draw_round 0x51c410: push 0; mov ecx, fase -> thiscall, ret 4).
-unsafe fn cqr9_mata_mata(this: usize, n: u32, times: usize, fase: u32, sementes: *const u8, arquivo: usize, linha: u32) {
+unsafe fn create_knockout_stage(this: usize, n: u32, times: usize, fase: u32, sementes: *const u8, arquivo: usize, linha: u32) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr9_d(cqr9_d(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -72,7 +72,7 @@ unsafe fn cqr9_mata_mata(this: usize, n: u32, times: usize, fase: u32, sementes:
     soltar(tabela);
     let f = cqr9_d(cqr9_d(this + 0xc) + fase as usize * 4);
     if f == 0 {
-        return aviso_em(arquivo, linha);
+        return show_error_at(arquivo, linha);
     }
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
     sortear(f, 0);
@@ -81,8 +81,8 @@ unsafe fn cqr9_mata_mata(this: usize, n: u32, times: usize, fase: u32, sementes:
 /// { 0x63f870 } (thiscall, ret 0, ita_cup.cpp; da fase seguinte, depois da fase 6; quadro SEH só para o new, sem
 /// destrutor): `ItaCup::create_knockout_stage()`: o mata-mata da Copa da Itália com 24 times: um vetor de 24 ponteiros
 /// (0x944e46 de 0x60; sem memória, a caixa da linha 0x29c) com os 8 campeões dos grupos (a primeira linha da tabela de
-/// cada grupo, `cqr9_tabela`) e, nas vagas 8 a 23, os 16 cabeças de chave que entram direto (`cqr9_cabecas`); a fase 7
-/// (`cqr9_mata_mata`) com as sementes {3 × 8, 2 × 8, 1 × 8} (os campeões dos grupos, depois os cabeças de chave
+/// cada grupo, `group_table`) e, nas vagas 8 a 23, os 16 cabeças de chave que entram direto (`take_direct_entrants`); a fase 7
+/// (`create_knockout_stage`) com as sementes {3 × 8, 2 × 8, 1 × 8} (os campeões dos grupos, depois os cabeças de chave
 /// [inferência: o pote de cada vaga no sorteio]) e a caixa da linha 0x2c0.
 unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize) {
     let mut sementes = [0u8; 24];
@@ -92,19 +92,19 @@ unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let times = alocar(0x60);
     if times == 0 {
-        return aviso_em(0x9ea23c, 0x29c);
+        return show_error_at(0x9ea23c, 0x29c);
     }
     crate::comparacao::ramo("cqr_9 mata-mata da copa da italia");
     for i in 0..8usize {
-        cqr9_pd(times + i * 4, cqr9_d(cqr9_tabela(this, i))); // cqr9: o campeão do grupo i
+        cqr9_pd(times + i * 4, cqr9_d(group_table(this, i))); // cqr9: o campeão do grupo i
     }
-    cqr9_cabecas(this, times, 8, 0x18);
-    cqr9_mata_mata(this, 0x18, times, 7, sementes.as_ptr(), 0x9ea23c, 0x2c0);
+    take_direct_entrants(this, times, 8, 0x18);
+    create_knockout_stage(this, 0x18, times, 7, sementes.as_ptr(), 0x9ea23c, 0x2c0);
 }
 
 /// O plano dos dois mata-matas (feito antes): os campeões dos `grupos` grupos e os primeiros inscritos não nulos de +0xee
 /// que cabem; o comparador confere, depois da original, a fase em [+0xc][fase] e esses inscritos zerados em +0xee.
-unsafe fn cqr9_comparar(nome: &str, this: usize, fase: usize, cabem: usize, original: impl FnOnce()) {
+unsafe fn ita_cup_compare_knockout_stage(nome: &str, this: usize, fase: usize, cabem: usize, original: impl FnOnce()) {
     let mut vagas = Vec::new();
     let mut j = 0usize;
     while vagas.len() < cabem && (j as i32) < cqr9_d(this + 0xf2) as i32 {
@@ -120,9 +120,9 @@ unsafe fn cqr9_comparar(nome: &str, this: usize, fase: usize, cabem: usize, orig
 }
 
 unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     // ponytail: aloca a fase e sorteia a primeira rodada; não pode rodar duas vezes: só a original, com o plano
-    cqr9_comparar("ita_cup_create_knockout_stage", this, 7, 16, || o(this))
+    ita_cup_compare_knockout_stage("ita_cup_create_knockout_stage", this, 7, 16, || o(this))
 }
 
 /// { 0x63dc10 } (thiscall, ret 0, ita_c_cup.cpp; da fase seguinte, depois da fase 14; quadro SEH só para os dois new, sem
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage(this: usize) 
 /// grupos (a primeira linha de cada tabela) e, nas vagas 16 a 21, os 6 melhores segundos (as 6 primeiras linhas da
 /// classificação): cada um, achado na tabela do seu grupo (o primeiro grupo em que aparece), marca o grupo (+0xbe = 2) e a
 /// linha dele (+0x37 = 6). 3) A liga provisória destruída (a virtual 0 com 1). 4) Nas vagas 22 a 31, os 10 cabeças de chave
-/// que entram direto (`cqr9_cabecas`). 5) A fase 15 (`cqr9_mata_mata`), sem sementes, e a caixa da linha 0x304.
+/// que entram direto (`take_direct_entrants`). 5) A fase 15 (`create_knockout_stage`), sem sementes, e a caixa da linha 0x304.
 unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let desempate: [u8; 4] = [1, 2, 3, 0];
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
         0
     };
     for i in 0..16usize {
-        let de = cqr9_tabela(this, i) + 0x3b;
+        let de = group_table(this, i) + 0x3b;
         let para = cqr9_d(liga + 0xb1) + i * 0x3b;
         core::ptr::copy_nonoverlapping(de as *const u8, para as *mut u8, 0x3b); // cqr9: o segundo do grupo i
         cqr9_pd(cqr9_d(liga + 0xb1) + i * 0x3b + 9, 0);
@@ -161,11 +161,11 @@ unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let times = alocar(0x80);
     if times == 0 {
-        return aviso_em(0x9ea204, 0x2ba);
+        return show_error_at(0x9ea204, 0x2ba);
     }
     crate::comparacao::ramo("cqr_9 mata-mata da copa da serie c");
     for i in 0..16usize {
-        cqr9_pd(times + i * 4, cqr9_d(cqr9_tabela(this, i)));
+        cqr9_pd(times + i * 4, cqr9_d(group_table(this, i)));
     }
     let mut l = 0usize;
     while l < 0x162 {
@@ -193,12 +193,12 @@ unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
         let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqr9_d(cqr9_d(liga)));
         destruir(liga, 1);
     }
-    cqr9_cabecas(this, times, 0x16, 0x20);
-    cqr9_mata_mata(this, 0x20, times, 0xf, core::ptr::null(), 0x9ea204, 0x304);
+    take_direct_entrants(this, times, 0x16, 0x20);
+    create_knockout_stage(this, 0x20, times, 0xf, core::ptr::null(), 0x9ea204, 0x304);
 }
 
 unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage_63dc10(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     // ponytail: monta e destrói a liga provisória, aloca a fase e sorteia; não pode rodar duas vezes: só a original
-    cqr9_comparar("ita_cup_create_knockout_stage_63dc10", this, 0xf, 10, || o(this))
+    ita_cup_compare_knockout_stage("ita_cup_create_knockout_stage_63dc10", this, 0xf, 10, || o(this))
 }

@@ -7,10 +7,13 @@ use super::*;
 /// quantos jogos; a lista termina em −1).
 pub(crate) type Cqo5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
-/// As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
+/// Sets rounds primeira.. of round table t from a static list: each round's date (0x68a160) and match ranges
+/// (0x68a1c0), in the original's order.
+///
+/// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn cqo5_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqo5Rodada]) {
+pub(crate) unsafe fn fra_cfa_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqo5Rodada]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -32,11 +35,14 @@ pub(crate) struct Cqo5Liga {
     pub(crate) ramo: &'static str,
 }
 
-/// O corpo comum (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): só a fase principal
+/// Common French CFA create_schedule: only the main stage (-1) builds a 0x41-byte-per-round table with the league's
+/// dates and ranges; others return 0.
+///
+/// [pt] O corpo comum (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): só a fase principal
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn cqo5_calendario(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5Liga) -> usize {
+pub(crate) unsafe fn create_cfa_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5Liga) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -48,18 +54,20 @@ pub(crate) unsafe fn cqo5_calendario(this: usize, fase: u32, rodadas: *mut i16, 
     *extra = 0;
     let t = alocar(p.rodadas as u32 * 0x41);
     if t == 0 {
-        aviso_em(p.arquivo, p.linha);
+        show_error_at(p.arquivo, p.linha);
         return 0;
     }
     crate::comparacao::ramo(p.ramo);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-    cqo5_rodadas(t, ano, 0, p.tabela);
+    fra_cfa_set_league_rounds(t, ano, 0, p.tabela);
     t
 }
 
-/// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do mesmo [0xb67a34]; as
+/// Side-by-side comparer of the CFA schedule: outputs and written table bytes must match; the copy's table is freed.
+///
+/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do mesmo [0xb67a34]; as
 /// saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada: 0x9452ca, cdecl).
-pub(crate) unsafe fn cqo5_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+pub(crate) unsafe fn compare_cfa_schedule(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -69,7 +77,7 @@ pub(crate) unsafe fn cqo5_comparar(nome: &str, fase: u32, rodadas: *mut i16, ext
     let saidas = fase as u8 != 0xff || (*rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2));
     let tabela = if a != 0 && b != 0 {
         let n = *rodadas as usize;
-        cqo4_gravados(a, a, n) == cqo4_gravados(b, a, n)
+        written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
     } else {
         a == 0 && b == 0
     };
@@ -80,10 +88,13 @@ pub(crate) unsafe fn cqo5_comparar(nome: &str, fase: u32, rodadas: *mut i16, ext
     a
 }
 
-/// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
+/// Side-by-side comparer of the C1 schedule over all stages (league rounds at -1, cup rounds otherwise); the copy's
+/// table is freed.
+///
+/// [pt] Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `cqo4_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
-pub(crate) unsafe fn cqo5_comparar_fases(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+/// `written_league_round_bytes`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
+pub(crate) unsafe fn compare_c1_schedule(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                              original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -95,9 +106,9 @@ pub(crate) unsafe fn cqo5_comparar_fases(nome: &str, fase: u32, rodadas: *mut i1
     let tabela = if a != 0 && b != 0 {
         if fase as u8 == 0xff {
             let n = *rodadas as usize;
-            cqo4_gravados(a, a, n) == cqo4_gravados(b, a, n)
+            written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
         } else {
-            cql10_gravados(a, *rodadas) == cql10_gravados(b, *rodadas)
+            eng_cc_cup_written_round_bytes(a, *rodadas) == eng_cc_cup_written_round_bytes(b, *rodadas)
         }
     } else {
         a == 0 && b == 0
@@ -194,15 +205,15 @@ pub(crate) const CQO5_LIGA_CFA: Cqo5Liga = Cqo5Liga { rodadas: 0x22, arquivo: 0x
 /// [pt] { 0x5b9510 } (thiscall, ret 0x10, fra_cfa.cpp, 2.703 bytes, método +0x3c): `FraCfa::create_schedule(fase, &rodadas, &extra,
 /// &é_liga)`: a CFA, 34 rodadas (`CQO5_CFA`). Fonte 0x9ccaf0, linha 0xab.
 pub(crate) unsafe extern "thiscall" fn fra_cfa_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo5_calendario(this, fase, rodadas, extra, liga, &CQO5_LIGA_CFA)
+    create_cfa_schedule(this, fase, rodadas, extra, liga, &CQO5_LIGA_CFA)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CFA_CREATE_SCHEDULE);
-    cqo5_comparar("fra_cfa_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule(this, fase, r, e, l))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CFA_CREATE_SCHEDULE);
+    compare_cfa_schedule("fra_cfa_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule(this, fase, r, e, l))
 }
 
-/// As fases de copa da C1 (rodadas de 0x68 bytes, `cql10_rodada`; categoria 5, sem prêmios, o ano +0x40 com sinal):
+/// As fases de copa da C1 (rodadas de 0x68 bytes, `eng_cc_cup_write_cup_round`; categoria 5, sem prêmios, o ano +0x40 com sinal):
 /// a fase 0, os play-offs de acesso: as semifinais (sorteio em 8/mai, ida em 21/mai, ida e volta com 7 dias entre os
 /// jogos, 4 times em 2 confrontos, todos novos; 0xa00 no jogo único = sem sorteio (0x200)
 /// mais 0x800, 0x802 no confronto de dois jogos) e a final (sorteio em 29/mai, ida em 4/jun, 2 times); a fase 1, os
@@ -218,12 +229,15 @@ pub(crate) struct Cqo5C1 {
     pub(crate) linhas: [u32; 3],
 }
 
-/// O corpo comum da C1 A e da C1 B (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo), pela
+/// Common French C1 A/B create_schedule by stage: main league (34 rounds), play-offs (2 rounds) or play-outs (1 round);
+/// returns the table or 0.
+///
+/// [pt] O corpo comum da C1 A e da C1 B (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo), pela
 /// fase (o byte): −1 a fase principal (é_liga = 1, 34 rodadas, extra 0, a tabela de 0x8a2 bytes com `CQO5_C1`, o ano
 /// +0x40 como palavra); 0 os play-offs (é_liga = 0, 2 rodadas, extra 0xa0, a tabela de 0xd0 bytes com as semifinais e a
 /// final); 1 os play-outs (é_liga = 0, 1 rodada, extra 0, 0x68 bytes); as outras devolvem 0 sem gravar nada. Sem memória
 /// (malloc 0x944e46: push; add esp, 4 -> cdecl): a caixa da linha da fase e 0. Devolve a tabela.
-pub(crate) unsafe fn cqo5_c1(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5C1) -> usize {
+pub(crate) unsafe fn create_c1_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5C1) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let (k, l, n, x, tamanho) = match fase as u8 {
         0xff => (0, 1, 0x22, 0, 0x8a2),
@@ -238,21 +252,21 @@ pub(crate) unsafe fn cqo5_c1(this: usize, fase: u32, rodadas: *mut i16, extra: *
     *extra = x;
     let t = alocar(tamanho);
     if t == 0 {
-        aviso_em(p.arquivo, p.linhas[k]);
+        show_error_at(p.arquivo, p.linhas[k]);
         return 0;
     }
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16);
     if k == 0 {
         crate::comparacao::ramo("cqo_5 calendario da c1");
-        cqo5_rodadas(t, ano as u16 as u32, 0, &CQO5_C1);
+        fra_cfa_set_league_rounds(t, ano as u16 as u32, 0, &CQO5_C1);
     } else {
         crate::comparacao::ramo("cqo_5 play-offs da c1");
         let ano = ano as i32 as u32;
         if k == 1 {
-            cql10_rodada(t, 0, &CQO5_SEMIFINAIS, ano);
-            cql10_rodada(t, 1, &CQO5_FINAL, ano);
+            eng_cc_cup_write_cup_round(t, 0, &CQO5_SEMIFINAIS, ano);
+            eng_cc_cup_write_cup_round(t, 1, &CQO5_FINAL, ano);
         } else {
-            cql10_rodada(t, 0, &CQO5_PLAYOUT, ano);
+            eng_cc_cup_write_cup_round(t, 0, &CQO5_PLAYOUT, ano);
         }
     }
     t
@@ -266,12 +280,12 @@ pub(crate) unsafe fn cqo5_c1(this: usize, fase: u32, rodadas: *mut i16, extra: *
 /// [pt] { 0x64ef30 } (thiscall, ret 0x10, ita_ser_c1b.cpp, 2.279 bytes, método +0x3c): `ItaSerC1b::create_schedule`: a
 /// chave B, o mesmo código. Fonte 0x9ea558, linhas 0xac, 0x156, 0x190.
 pub(crate) unsafe extern "thiscall" fn fra_cfa_create_schedule_64ef30(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo5_c1(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea558, linhas: [0xac, 0x156, 0x190] })
+    create_c1_schedule(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea558, linhas: [0xac, 0x156, 0x190] })
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule_64ef30(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CFA_CREATE_SCHEDULE_64EF30);
-    cqo5_comparar_fases("fra_cfa_create_schedule_64ef30", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule_64ef30(this, fase, r, e, l))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CFA_CREATE_SCHEDULE_64EF30);
+    compare_c1_schedule("fra_cfa_create_schedule_64ef30", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule_64ef30(this, fase, r, e, l))
 }
 
 // ---------- 278a leva: as ligas de fundo francesas: a CFA (4 grupos de 18) e a divisão de baixo (2 grupos de 20): os construtores, as regras e os destrutores (fra_cfa.cpp, fra_lower.cpp) ----------
@@ -317,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 
 
 /// O calendário (a virtual +0x3c) aloca: só a original, conferindo os campos e a devolução 1.
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_set_up_rules(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_CFA_SET_UP_RULES);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_CFA_SET_UP_RULES);
     let r = o(this);
     let b = |k: usize| *((this + k) as *const u8);
     let ok = r == 1 && core::ptr::read_unaligned((this + 0x3c) as *const u16) == 2 && b(0xc2) == 3 && b(0xc3) == 1 && b(0xc4) == 2
@@ -350,7 +364,10 @@ pub(crate) struct Cqn4Fundo {
     pub(crate) linhas: [u32; 3],
 }
 
-/// O corpo dos dois construtores (thiscall(this, ano), ret 4, quadro SEH só no caminho de exceção; sem estado salvo):
+/// Body of the two French lower-league constructors: League base, fields, rules, then the club list shuffled and split
+/// into groups, each getting a table and fixtures that stay in the calendar.
+///
+/// [pt] O corpo dos dois construtores (thiscall(this, ano), ret 4, quadro SEH só no caminho de exceção; sem estado salvo):
 /// a base (League::League 0x682200: mov ecx -> thiscall, ret 0), a vtable, o ano (+0x40), +0x2c = 0, sem disciplina
 /// (+0x50 = 0xff), o registro (+4), a fase 0xff (+0x44) e −1 (+0x30); as regras (0x5ba0a0: mov ecx -> thiscall, ret 0;
 /// falhando, a caixa e fim). Depois a lista dos clubes, na ordem do banco (os [0xae235c] − 2 × [0xae2350] primeiros),
@@ -361,7 +378,7 @@ pub(crate) struct Cqn4Fundo {
 /// (League::free_table 0x687970: push 0; mov ecx -> thiscall, ret 4): os jogos do grupo ficam no calendário do jogo e a
 /// liga segue sem tabela. A lista é um registro local de 72 ou 40 ponteiros; a cópia usa um vetor zerado (a carreira
 /// enche a lista; a original leria lixo da pilha sem clubes bastantes).
-pub(crate) unsafe fn cqn4_construir(this: usize, ano: u32, p: &Cqn4Fundo) -> usize {
+pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Cqn4Fundo) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FRACFA_SET_UP_RULES);
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
@@ -373,11 +390,11 @@ pub(crate) unsafe fn cqn4_construir(this: usize, ano: u32, p: &Cqn4Fundo) -> usi
     core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
     write_u32_from_usize(this + 0x2c, 0);
     *((this + 0x50) as *mut u8) = 0xff;
-    write_u32_from_usize(this + 4, cqm6_registro(p.competicao));
+    write_u32_from_usize(this + 4, comp_record_of_key(p.competicao));
     *((this + 0x44) as *mut u8) = 0xff;
     write_u32_from_usize(this + 0x30, 0xffff_ffff);
     if regras(this) == 0 {
-        aviso_em(p.arquivo, p.linhas[0]);
+        show_error_at(p.arquivo, p.linhas[0]);
         return this;
     }
     crate::comparacao::ramo("cqn_4 liga de fundo francesa");
@@ -422,11 +439,11 @@ pub(crate) unsafe fn cqn4_construir(this: usize, ano: u32, p: &Cqn4Fundo) -> usi
     embaralhar(lista.as_mut_ptr() as usize, k as u16 as u32); // cqn4: o sorteio da lista
     for g in 0..p.grupos {
         if tabela(this, lista.as_ptr() as usize + g * p.por_grupo * 4) == 0 {
-            aviso_em(p.arquivo, p.linhas[1]);
+            show_error_at(p.arquivo, p.linhas[1]);
             return this;
         }
         if jogos(this) == 0 {
-            aviso_em(p.arquivo, p.linhas[2]);
+            show_error_at(p.arquivo, p.linhas[2]);
             return this;
         }
         soltar(this, 0);
@@ -471,7 +488,7 @@ pub(crate) const CQN4_BAIXO: Cqn4Fundo = Cqn4Fundo {
 /// [inferência: os times reserva]) e até 34 da divisão genérica cuja competição de reserva é a CFA, embaralhados em 4
 /// grupos de 18. Fonte 0x9ccaf0, linhas 0x40, 0x64, 0x6b.
 pub(crate) unsafe extern "thiscall" fn construct_fra_cfa(this: usize, ano: u32) -> usize {
-    cqn4_construir(this, ano, &CQN4_CFA)
+    construct_group_league(this, ano, &CQN4_CFA)
 }
 
 /// the French lower division (background): up to 40 clubs, those of the National and up to 20 French clubs of the
@@ -482,36 +499,42 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_cfa(this: usize, ano: u32) 
 /// (competição de id [0x9cf548]): até 40 clubes, os do National ([0x9cf5d4]) e até 20 franceses ([0x9cf300]) da divisão
 /// genérica sem competição de reserva, embaralhados em 2 grupos de 20. Fonte 0x9ccbd0, linhas 0x40, 0x62, 0x69.
 pub(crate) unsafe extern "thiscall" fn construct_fra_lower(this: usize, ano: u32) -> usize {
-    cqn4_construir(this, ano, &CQN4_BAIXO)
+    construct_group_league(this, ano, &CQN4_BAIXO)
 }
 
-/// Sorteiam e alocam: só a original, conferindo a devolução, a vtable, o ano, a disciplina, o registro e a liga sem
+/// Comparer of the constructors (they draw and allocate): original only, checking return, vtable, year, discipline,
+/// record and no table left (+0x3e = 0, +0xb1 = 0).
+///
+/// [pt] Sorteiam e alocam: só a original, conferindo a devolução, a vtable, o ano, a disciplina, o registro e a liga sem
 /// tabela no fim (+0x3e = 0, +0xb1 = 0: a última tabela foi solta).
-pub(crate) unsafe fn cqn4_comparar(nome: &str, this: usize, ano: u32, p: &Cqn4Fundo, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn compare_construct_group_league(nome: &str, this: usize, ano: u32, p: &Cqn4Fundo, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && *((this + 0x50) as *const u8) == 0xff && read_u32_as_usize(this + 4) == cqm6_registro(p.competicao)
+        && *((this + 0x50) as *const u8) == 0xff && read_u32_as_usize(this + 4) == comp_record_of_key(p.competicao)
         && read_u32_as_usize(this + 0xb1) == 0;
     PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", nome, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 4), read_u32_as_usize(this + 0xb1)));
     r
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, ano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_CFA);
-    cqn4_comparar("construct_fra_cfa", this, ano, &CQN4_CFA, || o(this, ano))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_CFA);
+    compare_construct_group_league("construct_fra_cfa", this, ano, &CQN4_CFA, || o(this, ano))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, ano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_LOWER);
-    cqn4_comparar("construct_fra_lower", this, ano, &CQN4_BAIXO, || o(this, ano))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_LOWER);
+    compare_construct_group_league("construct_fra_lower", this, ano, &CQN4_BAIXO, || o(this, ano))
 }
 
-/// O corpo dos dois destrutores (thiscall, ret 0, quadro SEH só no caminho de exceção; iguais fora a vtable): a vtable
+/// Body of the two destructors: sets the vtable, frees table, schedule (+0xba) and each stage, frees the stage array,
+/// then League::~League.
+///
+/// [pt] O corpo dos dois destrutores (thiscall, ret 0, quadro SEH só no caminho de exceção; iguais fora a vtable): a vtable
 /// da classe, a tabela solta (League::free_table 0x687970: push 0 -> thiscall, ret 4), o calendário [+0xba] solto
 /// (0x9452ca: push; add esp, 4 -> cdecl) e zerado, cada fase de 0 a +0x30 (com +0x30 ≥ 0) destruída pela sua virtual
 /// 0 com 1 (o destrutor que solta: push 1; mov ecx, fase -> thiscall, ret 4), o vetor [+0xc] solto e zerado e, por fim,
 /// League::~League (0x682300: mov ecx -> thiscall, ret 0).
-pub(crate) unsafe fn cqn4_destruir(this: usize, vtabela: usize) {
+pub(crate) unsafe fn destroy_group_league(this: usize, vtabela: usize) {
     let soltar_tabela: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let base: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_DESTRUCTOR_LEAGUE);
@@ -550,7 +573,7 @@ pub(crate) unsafe fn cqn4_destruir(this: usize, vtabela: usize) {
 /// [pt] { 0x5b9460 } (thiscall, ret 0, fra_cfa.cpp): `FraCfa::~FraCfa()`.
 pub(crate) unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
     crate::comparacao::ramo("cqn_4 destrutor da cfa");
-    cqn4_destruir(this, 0x96a7b0)
+    destroy_group_league(this, 0x96a7b0)
 }
 
 /// the same for the lower division
@@ -559,33 +582,36 @@ pub(crate) unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
 /// [pt] { 0x5bd870 } (thiscall, ret 0, fra_lower.cpp): `FraLower::~FraLower()`.
 pub(crate) unsafe extern "thiscall" fn destroy_fra_lower(this: usize) {
     crate::comparacao::ramo("cqn_4 destrutor da divisao de baixo");
-    cqn4_destruir(this, 0x96ab78)
+    destroy_group_league(this, 0x96ab78)
 }
 
 /// Soltam memória: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_destroy_fra_cfa(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_FRA_CFA)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_FRA_CFA)(this)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_destroy_fra_lower(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_FRA_LOWER)(this)
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_FRA_LOWER)(this)
 }
 
 // ---------- 275a leva: as tabelas dos grupos da CFA e da divisão de baixo francesa (a marca dos clubes de divisão maior) e a situação nas estatísticas da Série C1 italiana (o play-off e o play-out em faixas) (fra_cfa.cpp, fra_lower.cpp, ita_ser_c1a.cpp, ita_ser_c1b.cpp) ----------
 
 
 
-/// O corpo das duas tabelas francesas: +0x3e = `n`, a tabela (malloc 0x944e46 de n × 0x3b; sem memória: a caixa do
+/// Common French create_table: n clubs (+0x3e), allocates the table and fills rows from list clubes, marking clubs
+/// whose competition is in marcadas; 1 if full.
+///
+/// [pt] O corpo das duas tabelas francesas: +0x3e = `n`, a tabela (malloc 0x944e46 de n × 0x3b; sem memória: a caixa do
 /// fonte `arquivo` na linha `linha` e 0) e os `n` clubes da lista `clubes`, na ordem, cada um na linha seguinte
 /// (League::init_table_row 0x687430: thiscall(liga, linha, clube, marca, 0), ret 0x10), com a marca 1 nos clubes
 /// cuja competição (+0x57, o id no +0) é uma de `marcadas`. Devolve se encheu (a conta das linhas = +0x3e).
-pub(crate) unsafe fn cqk6_tabela(this: usize, clubes: usize, n: i16, arquivo: usize, linha: u32, marcadas: &[usize]) -> u32 {
+pub(crate) unsafe fn create_french_table(this: usize, clubes: usize, n: i16, arquivo: usize, linha: u32, marcadas: &[usize]) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(arquivo, linha);
+        show_error_at(arquivo, linha);
         return 0;
     }
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
@@ -615,7 +641,7 @@ pub(crate) unsafe fn cqk6_tabela(this: usize, clubes: usize, n: i16, arquivo: us
 /// na segunda ([0x9cf5d0]) divisão [inferência: os times reserva dos profissionais, que não sobem]. Fonte 0x9ccaf0,
 /// linha 0x185.
 pub(crate) unsafe extern "thiscall" fn fra_cfa_create_group_table(this: usize, clubes: usize) -> u32 {
-    cqk6_tabela(this, clubes, 0x12, 0x9ccaf0, 0x185, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION])
+    create_french_table(this, clubes, 0x12, 0x9ccaf0, 0x185, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION])
 }
 
 /// the French lower division has 20 clubs (chosen by the constructor); those in the National get the mark
@@ -625,12 +651,15 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_create_group_table(this: usize, c
 /// 20 clubes da lista (o construtor 0x5bd600 escolhe-os), marcando os que estão no National ([0x9cf5d4]). Fonte
 /// 0x9ccbd0, linha 0x175.
 pub(crate) unsafe extern "thiscall" fn fra_cfa_create_table(this: usize, clubes: usize) -> u32 {
-    cqk6_tabela(this, clubes, 0x14, 0x9ccbd0, 0x175, &[KEY_CLUB_COMP_FRENCH_NATIONAL])
+    create_french_table(this, clubes, 0x14, 0x9ccbd0, 0x175, &[KEY_CLUB_COMP_FRENCH_NATIONAL])
 }
 
-/// O comparador das duas: a original aloca a tabela: só ela. O plano, feito antes: os `n` clubes da lista e a marca de
+/// Comparer of the French table creation: original only, then checks +0x3e, return 1 and rows with the planned clubs
+/// and marks (+0x38).
+///
+/// [pt] O comparador das duas: a original aloca a tabela: só ela. O plano, feito antes: os `n` clubes da lista e a marca de
 /// cada um. Depois: +0x3e = `n`, a devolução 1 e as linhas com os clubes na ordem e a marca (+0x38).
-pub(crate) unsafe fn cqk6_comparar(nome: &str, this: usize, clubes: usize, n: i16, marcadas: &[usize], original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn compare_french_table(nome: &str, this: usize, clubes: usize, n: i16, marcadas: &[usize], original: impl FnOnce() -> u32) -> u32 {
     let plano: Vec<(usize, u8)> = (0..n as usize)
         .map(|i| {
             let c = read_usize(clubes + i * 4);
@@ -651,21 +680,24 @@ pub(crate) unsafe fn cqk6_comparar(nome: &str, this: usize, clubes: usize, n: i1
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_group_table(this: usize, clubes: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_CFA_CREATE_GROUP_TABLE);
-    cqk6_comparar("fra_cfa_create_group_table", this, clubes, 0x12, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], || o(this, clubes))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_CFA_CREATE_GROUP_TABLE);
+    compare_french_table("fra_cfa_create_group_table", this, clubes, 0x12, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], || o(this, clubes))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_table(this: usize, clubes: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_CFA_CREATE_TABLE);
-    cqk6_comparar("fra_cfa_create_table", this, clubes, 0x14, &[KEY_CLUB_COMP_FRENCH_NATIONAL], || o(this, clubes))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_CFA_CREATE_TABLE);
+    compare_french_table("fra_cfa_create_table", this, clubes, 0x14, &[KEY_CLUB_COMP_FRENCH_NATIONAL], || o(this, clubes))
 }
 
-/// A situação do clube nas estatísticas da Série C1 (o corpo de 0x64bd80 e 0x64ff40): na entrada do clube
+/// Writes the club's current/best/worst position (+0x73/+0x74/+0x75) in the C1 Comp_Stats entry, folding
+/// play-off/play-out ranges by stage.
+///
+/// [pt] A situação do clube nas estatísticas da Série C1 (o corpo de 0x64bd80 e 0x64ff40): na entrada do clube
 /// (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, clube), ret 4) grava a posição atual (+0x73), a melhor (+0x74)
 /// e a pior (+0x75). Na liga (fase 0xff): a melhor de 2 a 5 (o play-off de acesso) vira 2 e de 14 a 17 (o play-out)
 /// vira 14; a pior de 2 a 5 vira 5 e de 14 a 17 vira 17. No play-off (fase 0): as três + 1. No play-out (fase 1): a
 /// melhor 1 vira 14 e 2 vira 16. Noutra fase, como vieram.
-pub(crate) unsafe fn cqk6_situacao_na_c1(this: usize, clube: usize, fase: u8, atual: u8, melhor: u8, pior: u8) {
+pub(crate) unsafe fn set_c1_club_progress(this: usize, clube: usize, fase: u8, atual: u8, melhor: u8, pior: u8) {
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let e = achar(read_usize(this + 8), clube);
     let (mut a, mut m, mut p) = (atual, melhor, pior);
@@ -705,12 +737,15 @@ pub(crate) unsafe fn cqk6_situacao_na_c1(this: usize, clube: usize, fase: u8, at
 ///
 /// [pt] { 0x64ff40 } (thiscall, ret 0x14, ita_ser_c1b.cpp): `ItaSerC1b::set_club_progress(...)`, igual à da C1/A.
 pub(crate) unsafe extern "thiscall" fn fra_cfa_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    cqk6_situacao_na_c1(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8)
+    set_c1_club_progress(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8)
 }
 
-/// O comparador das duas: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
+/// Comparer of set_club_progress: finds the stats entry first and runs both side by side on its 3 bytes; without entry,
+/// original only.
+///
+/// [pt] O comparador das duas: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
 /// nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
-pub(crate) unsafe fn cqk6_comparar_situacao(nome: &str, this: usize, clube: usize, original: impl FnOnce(), copia: impl FnOnce()) {
+pub(crate) unsafe fn compare_c1_club_progress(nome: &str, this: usize, clube: usize, original: impl FnOnce(), copia: impl FnOnce()) {
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let e = achar(read_usize(this + 8), clube);
     if e == 0 {
@@ -722,7 +757,7 @@ pub(crate) unsafe fn cqk6_comparar_situacao(nome: &str, this: usize, clube: usiz
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_FRA_CFA_SET_CLUB_PROGRESS);
-    cqk6_comparar_situacao("fra_cfa_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || fra_cfa_set_club_progress(this, clube, fase, atual, melhor, pior))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_FRA_CFA_SET_CLUB_PROGRESS);
+    compare_c1_club_progress("fra_cfa_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || fra_cfa_set_club_progress(this, clube, fase, atual, melhor, pior))
 }
 

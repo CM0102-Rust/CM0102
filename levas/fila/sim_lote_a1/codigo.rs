@@ -2,7 +2,7 @@
 
 /// As regras de transferência da nação: das 28 em [gerente+0x8ac] (ponteiros), a de nação (+0xa) igual;
 /// 0 se nenhuma.
-unsafe fn regras_de_transferencia_da_nacao(gerente: usize, nacao: usize) -> usize {
+unsafe fn nation_transfer_rules(gerente: usize, nacao: usize) -> usize {
     (0..28)
         .map(|i| *((gerente + 0x8ac + 4 * i) as *const usize))
         .find(|&r| core::ptr::read_unaligned((r + 0xa) as *const usize) == nacao)
@@ -15,7 +15,7 @@ unsafe fn regras_de_transferencia_da_nacao(gerente: usize, nacao: usize) -> usiz
 /// de estrangeiros (0x11, 0x14, 0x15, 0x1f): pergunta de novo com a nação do jogador (+0x1a) trocada pela
 /// do clube (e devolvida depois); aceito assim, 1.
 unsafe extern "thiscall" fn can_sign_player(gerente: usize, clube: usize, a2: u32, jogador: usize, a4: u32, a5: u32, saida: *mut u16) -> u32 {
-    let regras = regras_de_transferencia_da_nacao(gerente, core::ptr::read_unaligned((clube + 0x53) as *const usize));
+    let regras = nation_transfer_rules(gerente, core::ptr::read_unaligned((clube + 0x53) as *const usize));
     if !saida.is_null() {
         *saida = 0;
     }
@@ -70,10 +70,10 @@ unsafe extern "thiscall" fn get_exchange_offers_for_player(gerente: usize, jogad
     if limite() == 0 {
         return 0; // sem trocas marcadas
     }
-    if clube_do_contrato(jogador) == 0 {
+    if transfer_manager_contract_club(jogador) == 0 {
         return 0;
     }
-    let clube = *(clube_do_contrato(jogador) as *const u32);
+    let clube = *(transfer_manager_contract_club(jogador) as *const u32);
     let prox: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let anexar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
     let mut conta = 0u32;
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn get_exchange_offers_for_player(gerente: usize, jogad
 
 
 unsafe extern "thiscall" fn comparar_can_sign_player(gerente: usize, clube: usize, a2: u32, jogador: usize, a4: u32, a5: u32, saida: *mut u16) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, *mut u16) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, *mut u16) -> u32>(%%I0%%);
     let mut regioes = vec![];
     if !saida.is_null() {
         regioes.push((saida as usize, 2));
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn comparar_can_sign_player(gerente: usize, clube: usiz
 }
 
 unsafe extern "thiscall" fn comparar_get_exchange_offers_for_player(gerente: usize, jogador: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if saida != 0 {
         // ponytail: com lista de saída a original anexa (aloca); só a original
         return o(gerente, jogador, saida);
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn comparar_get_exchange_offers_for_player(gerente: usi
     let mut regioes = vec![(0xae1080usize, 4usize)];
     if jogador != 0 && *(jogador as *const i32) < *(0xae2364 as *const i32) {
         let guardado = *(0xae1080 as *const usize);
-        let p = clube_do_contrato(jogador);
+        let p = transfer_manager_contract_club(jogador);
         *(0xae1080 as *mut usize) = guardado;
         if p != 0 {
             // os cursores das listas de troca das ofertas do clube (as que a rotina pode percorrer)

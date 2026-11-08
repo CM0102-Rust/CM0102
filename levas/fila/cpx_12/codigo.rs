@@ -12,19 +12,19 @@ unsafe fn cpx12_b(a: usize) -> u8 {
     *(a as *const u8)
 }
 
-unsafe fn cpx12_mais_b(a: usize, v: u8) {
+unsafe fn add_u8_at(a: usize, v: u8) {
     *(a as *mut u8) = (*(a as *const u8)).wrapping_add(v);
 }
 
-unsafe fn cpx12_mais_w(a: usize, v: u16) {
+unsafe fn add_u16_at(a: usize, v: u16) {
     core::ptr::write_unaligned(a as *mut u16, core::ptr::read_unaligned(a as *const u16).wrapping_add(v));
 }
 
-unsafe fn cpx12_mais_f(a: usize, v: f64) {
+unsafe fn add_f64_at(a: usize, v: f64) {
     core::ptr::write_unaligned(a as *mut f64, v + core::ptr::read_unaligned(a as *const f64));
 }
 
-unsafe fn cpx12_registro(this: usize, jogador: usize, cat: u8) -> usize {
+unsafe fn player_category_record(this: usize, jogador: usize, cat: u8) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x7c3920usize);
     f(this, jogador, cat as u32)
 }
@@ -39,7 +39,7 @@ unsafe fn cpx12_contrato(pessoa: usize) -> usize {
 /// ([0x9cf684], [0x9cf798], [0x9cf794]) ou o clube do lado sem a marca +0x40 (mandante) / +0x41 (visitante): 1. Pelo
 /// tipo (+0x42) da competição ([0xadadfc] pelo id +0): 4 → 5, 2 → 4, 1 → 2 se ela conta (0x4b0700), senão 3. Sem a
 /// competição ou outro tipo: a caixa (linhas 0x103a, 0x105d; só com `avisar`), `erro` e 2.
-unsafe fn cpx12_categoria(p: usize, lado: i32, avisar: bool, erro: &mut bool) -> u8 {
+unsafe fn match_stats_category(p: usize, lado: i32, avisar: bool, erro: &mut bool) -> u8 {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let conta: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x4b0700usize);
@@ -61,7 +61,7 @@ unsafe fn cpx12_categoria(p: usize, lado: i32, avisar: bool, erro: &mut bool) ->
     if comp == 0 {
         *erro = true;
         if avisar {
-            aviso_em(0xa78310, 0x103a);
+            show_error_at(0xa78310, 0x103a);
         }
         return 2;
     }
@@ -77,7 +77,7 @@ unsafe fn cpx12_categoria(p: usize, lado: i32, avisar: bool, erro: &mut bool) ->
         _ => {
             *erro = true;
             if avisar {
-                aviso_em(0xa78310, 0x105d);
+                show_error_at(0xa78310, 0x105d);
             }
             2
         }
@@ -87,7 +87,7 @@ unsafe fn cpx12_categoria(p: usize, lado: i32, avisar: bool, erro: &mut bool) ->
 /// A linha `k` (0..20, 0x49 bytes; 11.. reservas) do lado `lado` do jogo conta: reserva que entrou (+0x32 ≠ 0xff),
 /// pessoa (+0) e jogador (+4) ≠ −1 e a pessoa na tabela ([0xae23bc], 0x6e; id abaixo de [0xae2364]). Devolve
 /// (linha, pessoa, dados do jogador em [0xae23c4], 0x46).
-unsafe fn cpx12_linha(jogo: usize, lado: usize, k: usize) -> Option<(usize, usize, usize)> {
+unsafe fn match_lineup_row(jogo: usize, lado: usize, k: usize) -> Option<(usize, usize, usize)> {
     let e = jogo + 0x625 * lado + 0x190 + 0x49 * k;
     if k > 10 && cpx12_b(e + 0x32) == 0xff {
         return None;
@@ -105,13 +105,13 @@ unsafe fn cpx12_linha(jogo: usize, lado: usize, k: usize) -> Option<(usize, usiz
 
 /// As categorias de cada passada: a do jogo e a geral (6), que fica de fora no amistoso de clube (1) e no de seleção
 /// (5).
-fn cpx12_categorias(cat: u8) -> [Option<u8>; 2] {
+fn stats_categories_for(cat: u8) -> [Option<u8>; 2] {
     [Some(cat), if cat == 5 || cat == 1 { None } else { Some(6) }] // cpx12: a categoria geral
 }
 
 /// { 0x7c0d70 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::record_match(partida, jogo)`: partida ou jogo nulos,
 /// as caixas e 0. Competição −2 (jogo simulado): a categoria é sorteio(9) ≠ 0 ? 2 : 3 para os dois lados; senão a de
-/// cada lado (cpx12_categoria). Em cada linha que conta (cpx12_linha): a nota (+0x35) e um jogo nas somas em double
+/// cada lado (match_stats_category). Em cada linha que conta (match_lineup_row): a nota (+0x35) e um jogo nas somas em double
 /// do this (+0x20/+0x28 com a marca +0x4c do jogo, senão +0x10/+0x18); nos registros de 0x20 bytes das categorias
 /// (0x7c3920, ou criado pela 0x7c5d80): jogos, entradas, gols/assistências e o resto da linha (+0x21..+0x2d), gols a
 /// favor (+0x11f do lado) e contra (+0x744 − lado), vitória e derrota, melhor em campo (+0x3c), as palavras
@@ -121,7 +121,7 @@ fn cpx12_categorias(cat: u8) -> [Option<u8>; 2] {
 /// fim a forma (+0x24..+0x26) anda meio byte e recebe a nota. Devolve 1.
 unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
     if p == 0 || jogo == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, p, jogo); // as caixas
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, p, jogo); // as caixas
     }
     let criar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x7c5d80usize);
     let ficha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
@@ -136,59 +136,59 @@ unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jog
     for lado in 0..2usize {
         if !simulado {
             let mut erro = false;
-            cat = cpx12_categoria(p, lado as i32, true, &mut erro);
+            cat = match_stats_category(p, lado as i32, true, &mut erro);
         }
         let gf = jogo + 0x625 * lado + 0x11f;
         let gc = jogo + 0x744 - 0x625 * lado;
         for k in 0..20usize {
-            let Some((e, pessoa, dados)) = cpx12_linha(jogo, lado, k) else { continue };
+            let Some((e, pessoa, dados)) = match_lineup_row(jogo, lado, k) else { continue };
             let nota = cpx12_b(e + 0x35);
             if cpx12_b(jogo + 0x4c) != 0 {
-                cpx12_mais_f(this + 0x20, nota as i32 as f64);
-                cpx12_mais_f(this + 0x28, 1.0);
+                add_f64_at(this + 0x20, nota as i32 as f64);
+                add_f64_at(this + 0x28, 1.0);
             } else {
-                cpx12_mais_f(this + 0x10, nota as i32 as f64);
-                cpx12_mais_f(this + 0x18, 1.0);
+                add_f64_at(this + 0x10, nota as i32 as f64);
+                add_f64_at(this + 0x18, 1.0);
             }
             if !contou {
                 contou = true;
                 crate::comparacao::ramo("cpx_12 jogo registrado");
             }
-            for c in cpx12_categorias(cat).into_iter().flatten() {
-                let mut r = cpx12_registro(this, dados, c);
+            for c in stats_categories_for(cat).into_iter().flatten() {
+                let mut r = player_category_record(this, dados, c);
                 if r == 0 {
                     r = criar(this, dados, c as u32);
                 }
-                cpx12_mais_b(r, 1); // cpx12: o jogo
+                add_u8_at(r, 1); // cpx12: o jogo
                 if k > 10 {
-                    cpx12_mais_b(r + 1, 1);
+                    add_u8_at(r + 1, 1);
                 }
-                cpx12_mais_b(r + 2, cpx12_b(e + 0x21));
-                cpx12_mais_b(r + 3, cpx12_b(e + 0x22));
-                cpx12_mais_b(r + 4, cpx12_b(e + 0x23));
-                cpx12_mais_b(r + 5, cpx12_b(e + 0x24));
-                cpx12_mais_b(r + 6, cpx12_b(e + 0x27));
+                add_u8_at(r + 2, cpx12_b(e + 0x21));
+                add_u8_at(r + 3, cpx12_b(e + 0x22));
+                add_u8_at(r + 4, cpx12_b(e + 0x23));
+                add_u8_at(r + 5, cpx12_b(e + 0x24));
+                add_u8_at(r + 6, cpx12_b(e + 0x27));
                 let (f, a) = (cpx12_b(gf), cpx12_b(gc));
-                cpx12_mais_b(r + 7, f);
-                cpx12_mais_b(r + 8, a);
+                add_u8_at(r + 7, f);
+                add_u8_at(r + 8, a);
                 if f > a {
-                    cpx12_mais_b(r + 9, 1);
+                    add_u8_at(r + 9, 1);
                 }
                 if f < a {
-                    cpx12_mais_b(r + 0xa, 1);
+                    add_u8_at(r + 0xa, 1);
                 }
-                cpx12_mais_b(r + 0xb, cpx12_b(e + 0x2c));
-                cpx12_mais_b(r + 0xc, cpx12_b(e + 0x2d));
+                add_u8_at(r + 0xb, cpx12_b(e + 0x2c));
+                add_u8_at(r + 0xc, cpx12_b(e + 0x2d));
                 if cpx12_d(e + 4) == cpx12_d(jogo + 0x3c) {
-                    cpx12_mais_b(r + 0xd, 1);
+                    add_u8_at(r + 0xd, 1);
                 }
-                cpx12_mais_w(r + 0xe, nota as u16); // cpx12: a nota
-                cpx12_mais_w(r + 0x10, cpx12_b(e + 0x3e) as u16);
-                cpx12_mais_w(r + 0x12, cpx12_b(e + 0x3f) as u16);
-                cpx12_mais_w(r + 0x14, cpx12_b(e + 0x42) as u16);
-                cpx12_mais_w(r + 0x16, cpx12_b(e + 0x28) as u16);
-                cpx12_mais_w(r + 0x18, cpx12_b(e + 0x25) as u16);
-                cpx12_mais_w(r + 0x1a, cpx12_b(e + 0x26) as u16);
+                add_u16_at(r + 0xe, nota as u16); // cpx12: a nota
+                add_u16_at(r + 0x10, cpx12_b(e + 0x3e) as u16);
+                add_u16_at(r + 0x12, cpx12_b(e + 0x3f) as u16);
+                add_u16_at(r + 0x14, cpx12_b(e + 0x42) as u16);
+                add_u16_at(r + 0x16, cpx12_b(e + 0x28) as u16);
+                add_u16_at(r + 0x18, cpx12_b(e + 0x25) as u16);
+                add_u16_at(r + 0x1a, cpx12_b(e + 0x26) as u16);
                 let saiu = |e: usize| {
                     let (s34, s30) = (cpx12_b(e + 0x34) as i8, cpx12_b(e + 0x30) as i8);
                     if s34 > -1 {
@@ -209,10 +209,10 @@ unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jog
             }
             let reg = cpx12_d(this + 0x30).wrapping_add((cpx12_d(e + 4)).wrapping_mul(0x27));
             if cat == 2 || (cpx12_d(p) as i32 > -1 && conta(cpx12_d(p) as i32) != 0) {
-                cpx12_mais_w(reg + 0x20, 1);
-                cpx12_mais_w(reg + 0x22, cpx12_b(e + 0x21) as u16);
+                add_u16_at(reg + 0x20, 1);
+                add_u16_at(reg + 0x22, cpx12_b(e + 0x21) as u16);
                 if ficha(cpx12_d(0xae1050), pessoa) == 0 && cpx12_contrato(pessoa) != 0 {
-                    cpx12_mais_w(cpx12_contrato(pessoa) + 0x3b, 1);
+                    add_u16_at(cpx12_contrato(pessoa) + 0x3b, 1);
                 }
             }
             let (f24, f25, f26) = (cpx12_b(reg + 0x24), cpx12_b(reg + 0x25), cpx12_b(reg + 0x26));
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jog
 /// do sorteio (e as duas categorias possíveis), com o sorteio da cópia fora da contagem. Partida ou jogo nulos, a caixa
 /// de uma competição sem tipo conhecido ou registro de categoria a criar (0x7c5d80 cresce o vetor): só a original.
 unsafe extern "thiscall" fn comparar_player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     if p == 0 || jogo == 0 {
         return o(this, p, jogo); // ponytail: as caixas, só a original
     }
@@ -240,16 +240,16 @@ unsafe extern "thiscall" fn comparar_player_stats_record_match(this: usize, p: u
             vec![2, 3, 6]
         } else {
             let mut erro = false;
-            let c = cpx12_categoria(p, lado as i32, false, &mut erro);
+            let c = match_stats_category(p, lado as i32, false, &mut erro);
             if erro {
                 return o(this, p, jogo); // ponytail: a caixa, só a original
             }
-            cpx12_categorias(c).into_iter().flatten().collect()
+            stats_categories_for(c).into_iter().flatten().collect()
         };
         for k in 0..20usize {
-            let Some((e, pessoa, dados)) = cpx12_linha(jogo, lado, k) else { continue };
+            let Some((e, pessoa, dados)) = match_lineup_row(jogo, lado, k) else { continue };
             for &c in &cats {
-                let r = cpx12_registro(this, dados, c);
+                let r = player_category_record(this, dados, c);
                 if r == 0 {
                     return o(this, p, jogo); // ponytail: o registro seria criado, só a original
                 }
@@ -275,24 +275,24 @@ unsafe extern "thiscall" fn comparar_player_stats_record_match(this: usize, p: u
 /// O ensaio do comparador da 0x447430: a cópia roda sem ordenar as tabelas (a original, que roda antes, já ordenou).
 static mut CPX12_ENSAIO: bool = false;
 
-unsafe fn cpx12_temporada(this: usize, clube: usize, criar: u32) -> usize {
+unsafe fn club_season_record(this: usize, clube: usize, criar: u32) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4528d0usize);
     f(this, clube, criar)
 }
 
-unsafe fn cpx12_de_sempre(this: usize, clube: usize, criar: u32) -> usize {
+unsafe fn club_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x452710usize);
     f(this, clube, criar)
 }
 
 /// A reputação (+0x69, palavra com sinal) da competição `id` (registros de 0x6b em [0xae23d0]).
-unsafe fn cpx12_reputacao(id: i32) -> i16 {
+unsafe fn competition_reputation(id: i32) -> i16 {
     cpx12_w(cpx12_d(0xae23d0).wrapping_add((id as usize).wrapping_mul(0x6b)) + 0x69)
 }
 
 /// O recorde de sempre mudou: clube humano (0x600a50) ou seleção (0x53b900) com 5 temporadas ou mais (+0x68 do
 /// resumo) e o recorde (id, tipo) ainda fora da fila (+0x24, 6 bytes, conta +0x2c): entra na fila (0x452cb0).
-unsafe fn cpx12_fila_do_recorde(this: usize, clube: usize, resumo: usize, tipo: u8) {
+unsafe fn club_records_queue_record_news(this: usize, clube: usize, resumo: usize, tipo: u8) {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let guardar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x452cb0usize);
@@ -315,7 +315,7 @@ unsafe fn cpx12_fila_do_recorde(this: usize, clube: usize, resumo: usize, tipo: 
 
 /// As ligas da cadeia da 0x447430: a liga e, enquanto houver, a fase seguinte (0x48d200 da primeira, índice +0x44 + 1
 /// até +0x30) do tipo 2 (+0x43) com as mesmas +0x3e linhas.
-unsafe fn cpx12_cadeia(liga0: usize) -> Vec<usize> {
+unsafe fn league_stage_chain(liga0: usize) -> Vec<usize> {
     let fase: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x48d200usize);
     let mut v = vec![liga0];
     let mut liga = liga0;
@@ -334,21 +334,21 @@ unsafe fn cpx12_cadeia(liga0: usize) -> Vec<usize> {
 }
 
 /// { 0x447430 } (thiscall, ret 8, club_records.cpp): `Club_Records::update_league_position_records(liga, sempre)`:
-/// liga nula ou com +0x44 ≠ 0xff, as caixas e 0. Em cada liga da cadeia (cpx12_cadeia), ordena a tabela (0x6827d0) e,
+/// liga nula ou com +0x44 ≠ 0xff, as caixas e 0. Em cada liga da cadeia (league_stage_chain), ordena a tabela (0x6827d0) e,
 /// em cada linha com jogos (+0x11) e clube, pelos registros da temporada (0x4528d0) e de sempre (0x452710, criando):
 /// melhor posição (tipo 1, 0x449590) e pior (tipo 2): sem registro (−1), competição (o id da primeira liga) de
 /// reputação maior (melhor) ou menor (pior), ou a mesma com posição melhor ou pior: grava a posição (+0/+7), a
 /// competição (+1/+8) e o ano (+5/+0xc; 0 na temporada, 0x669950 em sempre). Em sempre (com `sempre`; id acima de
-/// [0xae2378] também é "sem"), a fila da notícia (cpx12_fila_do_recorde). Devolve 1.
+/// [0xae2378] também é "sem"), a fila da notícia (club_records_queue_record_news). Devolve 1.
 unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: usize, sempre: u32) -> u32 {
     if liga0 == 0 || cpx12_b(liga0 + 0x44) != 0xff {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, liga0, sempre); // as caixas
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, liga0, sempre); // as caixas
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
     let aplica: unsafe extern "stdcall" fn(u32, usize, u32) -> u32 = core::mem::transmute(0x449590usize);
     let ano_da_temporada: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(0x669950usize);
     let comp = cpx12_d(cpx12_d(liga0 + 4)) as i32;
-    for liga in cpx12_cadeia(liga0) {
+    for liga in league_stage_chain(liga0) {
         if !CPX12_ENSAIO {
             ordenar(liga, 0);
         }
@@ -360,41 +360,41 @@ unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: u
             if cpx12_b(linha + 0x11) == 0 || clube == 0 {
                 continue;
             }
-            let t = cpx12_temporada(this, clube, 1);
-            let s = cpx12_de_sempre(this, clube, 1);
+            let t = club_season_record(this, clube, 1);
+            let s = club_all_time_record(this, clube, 1);
             let resumo = cpx12_d(this + 0x1c).wrapping_add(cpx12_d(clube).wrapping_mul(0x6a));
             let ano = ano_da_temporada(clube) as u16;
             let pos = cpx12_b(linha + 4);
             let fora = |v: i32| v < 0 || v > cpx12_d(0xae2378) as i32;
             if aplica(1, clube, 1) != 0 {
                 let v = cpx12_d(t + 1) as i32;
-                if v < 0 || cpx12_reputacao(comp) > cpx12_reputacao(v) || (comp == v && pos < cpx12_b(t)) {
+                if v < 0 || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < cpx12_b(t)) {
                     *(t as *mut u8) = pos;
                     core::ptr::write_unaligned((t + 1) as *mut i32, comp);
                     core::ptr::write_unaligned((t + 5) as *mut u16, 0);
                 }
                 let v = cpx12_d(s + 1) as i32;
-                if sempre != 0 && (fora(v) || cpx12_reputacao(comp) > cpx12_reputacao(v) || (comp == v && pos < cpx12_b(s))) {
+                if sempre != 0 && (fora(v) || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < cpx12_b(s))) {
                     crate::comparacao::ramo("cpx_12 melhor posicao de sempre");
                     *(s as *mut u8) = pos;
                     core::ptr::write_unaligned((s + 1) as *mut i32, comp);
                     core::ptr::write_unaligned((s + 5) as *mut u16, ano);
-                    cpx12_fila_do_recorde(this, clube, resumo, 1);
+                    club_records_queue_record_news(this, clube, resumo, 1);
                 }
             }
             if aplica(2, clube, 1) != 0 {
                 let v = cpx12_d(t + 8) as i32;
-                if v < 0 || cpx12_reputacao(comp) < cpx12_reputacao(v) || (comp == v && pos > cpx12_b(t + 7)) {
+                if v < 0 || competition_reputation(comp) < competition_reputation(v) || (comp == v && pos > cpx12_b(t + 7)) {
                     *((t + 7) as *mut u8) = pos;
                     core::ptr::write_unaligned((t + 8) as *mut i32, comp);
                     core::ptr::write_unaligned((t + 0xc) as *mut u16, 0);
                 }
                 let v = cpx12_d(s + 8) as i32;
-                if sempre != 0 && (fora(v) || cpx12_reputacao(comp) < cpx12_reputacao(v) || (comp == v && pos > cpx12_b(s + 7))) {
+                if sempre != 0 && (fora(v) || competition_reputation(comp) < competition_reputation(v) || (comp == v && pos > cpx12_b(s + 7))) {
                     *((s + 7) as *mut u8) = pos;
                     core::ptr::write_unaligned((s + 8) as *mut i32, comp);
                     core::ptr::write_unaligned((s + 0xc) as *mut u16, ano);
-                    cpx12_fila_do_recorde(this, clube, resumo, 2);
+                    club_records_queue_record_news(this, clube, resumo, 2);
                 }
             }
         }
@@ -407,7 +407,7 @@ unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: u
 /// de cada clube da cadeia, o cabeçalho da fila (+0x24..+0x30) e a fila; e a devolução. Liga nula ou com +0x44 ≠ 0xff,
 /// registro a criar (0x4528d0/0x452710 alocam) ou fila que pode crescer: só a original.
 unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize, liga0: usize, sempre: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if liga0 == 0 || cpx12_b(liga0 + 0x44) != 0xff {
         return o(this, liga0, sempre); // ponytail: as caixas, só a original
     }
@@ -415,14 +415,14 @@ unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize,
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let mut regioes = vec![(this + 0x24, 0xc)];
     let mut podem_entrar = 0i32;
-    for liga in cpx12_cadeia(liga0) {
+    for liga in league_stage_chain(liga0) {
         for i in 0..cpx12_w(liga + 0x3e).max(0) as usize {
             let linha = cpx12_d(liga + 0xb1) + 0x3b * i;
             let clube = cpx12_d(linha);
             if cpx12_b(linha + 0x11) == 0 || clube == 0 {
                 continue;
             }
-            let (t, s) = (cpx12_temporada(this, clube, 0), cpx12_de_sempre(this, clube, 0));
+            let (t, s) = (club_season_record(this, clube, 0), club_all_time_record(this, clube, 0));
             if t == 0 || s == 0 {
                 return o(this, liga0, sempre); // ponytail: o registro seria criado, só a original
             }
@@ -487,7 +487,7 @@ unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
         let n = local.as_mut_ptr() as usize;
         construir(n, 0x3e8, 0);
-        let reg = if cpx12_b(e + 5) == 2 { cpx12_temporada(this, clube, 0) } else { cpx12_de_sempre(this, clube, 0) };
+        let reg = if cpx12_b(e + 5) == 2 { club_season_record(this, clube, 0) } else { club_all_time_record(this, clube, 0) };
         if CPX12_ENSAIO_FILA {
             continue;
         }
@@ -513,7 +513,7 @@ unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
 /// Comparador: a cópia em ensaio (sem preencher nem entregar, sem soltar) roda antes, enquanto a fila está viva, e a
 /// original depois a partir do mesmo cabeçalho (+0x24..+0x30): o cabeçalho e a devolução.
 unsafe extern "thiscall" fn comparar_send_record_news(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let regioes = [(this + 0x24, 0xc)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPX12_ENSAIO_FILA = true;

@@ -6,6 +6,6 @@
 # roda no load_game_data (a etapa de carregar da prova ainda nao existe): sem mutacao.
 MUTACOES = [
     ('sv2_resumo_primeira', "            if primeira {\n                formatar(", "            if !primeira {\n                formatar("),
-    ('sv2_resumo_versao', "    copiar_texto(resumo.add(0x7d0), versao());", "    copiar_texto(resumo.add(0x7d1), versao());"),
+    ('sv2_resumo_versao', "    copy_text(resumo.add(0x7d0), versao());", "    copy_text(resumo.add(0x7d1), versao());"),
     ('sv2_fifa_segundo_byte', "    if gravar(0xa83608, 1, 1, z) != 1 {", "    if 1 != 1 {"),
 ]

@@ -2,7 +2,7 @@
 
 /// As 50 vagas de convocação (dwords desalinhados em +0xd7) das duas seleções da nação: a principal
 /// (0x53b3d0) e a B (0x53b4f0), nessa ordem.
-unsafe fn convocacoes_das_selecoes(nacao: usize) -> [usize; 2] {
+unsafe fn national_squad_slots(nacao: usize) -> [usize; 2] {
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     [principal(nacao).wrapping_add(0xd7), b(nacao).wrapping_add(0xd7)]
@@ -11,7 +11,7 @@ unsafe fn convocacoes_das_selecoes(nacao: usize) -> [usize; 2] {
 /// { 0x76c060 } (stdcall, ret 4, national_teams.cpp): apaga as convocações repetidas das duas
 /// seleções da nação: em cada uma, todo id não nulo zera as vagas seguintes com o mesmo id.
 unsafe extern "stdcall" fn national_teams_remove_duplicate_squad_entries(nacao: usize) {
-    for vagas in convocacoes_das_selecoes(nacao) {
+    for vagas in national_squad_slots(nacao) {
         let vaga = |i: usize| (vagas + 4 * i) as *mut u32;
         for i in 0..50 {
             let v = core::ptr::read_unaligned(vaga(i));
@@ -33,7 +33,7 @@ unsafe extern "stdcall" fn national_teams_remove_duplicate_squad_entries(nacao: 
 /// de erro).
 unsafe extern "thiscall" fn find_selection_slot(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
     if clube == 0 || pessoa.is_null() {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(%%I1%%)(tatica, clube, pessoa, time);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(%%I1%%)(tatica, clube, pessoa, time);
     }
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
     let k = linha(clube, time);
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, clube
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
-    let reputacao = |nacao: usize| core::ptr::read_unaligned((nacao + 0x8e) as *const i16) as i32;
+    let injury_word_0c = |nacao: usize| core::ptr::read_unaligned((nacao + 0x8e) as *const i16) as i32;
     let (mut melhor, mut maior) = (0usize, 0i32);
     for _ in 0..150 {
         let mut tentativas = 0;
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, clube
             continue;
         }
         let nacao = u(p + 0x1a);
-        let mut peso = sorteio(reputacao(nacao).wrapping_mul(*((p + 0x22) as *const u8) as i32));
+        let mut peso = sorteio(injury_word_0c(nacao).wrapping_mul(*((p + 0x22) as *const u8) as i32));
         let mesma_nacao = if assunto == 0 {
             if nacao != u(clube + 0x53) {
                 continue;
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, clube
             peso = peso.wrapping_add(peso);
         } else {
             let corte = sorteio(100).wrapping_add(0x1964);
-            if reputacao(nacao) < corte
+            if injury_word_0c(nacao) < corte
                 || core::ptr::read_unaligned((u(p + 0x69) + 0xc) as *const i16) < 0x1770
                 || nao_gosta(assunto, p) != 0
             {
@@ -119,17 +119,17 @@ unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, clube
 }
 
 unsafe extern "stdcall" fn comparar_national_teams_remove_duplicate_squad_entries(nacao: usize) {
-    let o = orig::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
+    let o = original_fn::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
     if nacao == 0 {
         return o(nacao);
     }
-    let [a, b] = convocacoes_das_selecoes(nacao);
+    let [a, b] = national_squad_slots(nacao);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(a, 200), (b, 200)], || o(nacao), || national_teams_remove_duplicate_squad_entries(nacao));
     PLACAR.registrar(igual, || format!("national_teams_remove_duplicate_squad_entries {:x?} x {:x?}", mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_find_selection_slot(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(%%I1%%)(tatica, clube, pessoa, time);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(%%I1%%)(tatica, clube, pessoa, time);
     if clube == 0 || pessoa.is_null() {
         return r;
     }
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_find_selection_slot(tatica: usize, clube: u
 }
 
 unsafe extern "thiscall" fn comparar_pick_former_international_pundit(this: usize, clube: usize, assunto: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%);
     if assunto == 0 && clube == 0 {
         return o(this, clube, assunto);
     }

@@ -1,6 +1,6 @@
 # Mutacoes dos auxiliares de competicao. A do tipo de confronto troca a briga pelo titulo (1) pela da zona (3): a
 # escalacao automatica de cada partida le o tipo; a carreira ate 2002-06-01 deve acusar. A da forca do clube pesa a
-# reputacao por 8 em vez de 16: so muda a ordem por forca (0x4c08f0, 17 chamadas) se dois clubes trocarem de lugar:
+# injury_word_0c por 8 em vez de 16: so muda a ordem por forca (0x4c08f0, 17 chamadas) se dois clubes trocarem de lugar:
 # PODE ESCAPAR. A do colocado mais recente troca campeao e vice: muda as vagas de copa quando a competicao pede o
 # campeao de outra; PODE ESCAPAR se nenhuma vaga dessas for decidida ate junho (o comparando acusa na primeira chamada).
 MUTACOES = [

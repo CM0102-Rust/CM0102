@@ -14,14 +14,14 @@ unsafe fn cpp6_clube(id: usize) -> usize {
 }
 
 /// O contrato da pessoa (0x4cf5a0 no CONTRACT_MANAGER [0xae1050]).
-unsafe fn cpp6_contrato(pessoa: usize) -> usize {
+unsafe fn get_contract(pessoa: usize) -> usize {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     contract_of(cpp6_d(0xae1050), pessoa)
 }
 
 /// O contrato da pessoa, guardado em [0xae1080] como a original faz depois de cada chamada.
-unsafe fn cpp6_contrato_guardado(pessoa: usize) -> usize {
-    let c = cpp6_contrato(pessoa);
+unsafe fn shortlist_manager_get_contract_and_store(pessoa: usize) -> usize {
+    let c = get_contract(pessoa);
     *(0xae1080 as *mut usize) = c;
     c
 }
@@ -71,14 +71,14 @@ unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize, jogador: 
         let dia_j = core::ptr::read_unaligned((jogador + 0x3e) as *const i16);
         let recente = if ano != ano_j { ano < ano_j } else { dia < dia_j };
         if recente {
-            let c = cpp6_contrato(jogador);
+            let c = get_contract(jogador);
             if c != 0 && cpp6_b(c + 0x4f) & 0xf0 != 0x70 && cpp6_d(c + 0x45) == 0 {
                 return;
             }
         }
     }
-    let c = cpp6_contrato_guardado(jogador);
-    let clube_do_contrato = if c != 0 { cpp6_clube(cpp6_d(c + 4)) } else { 0 };
+    let c = shortlist_manager_get_contract_and_store(jogador);
+    let transfer_manager_contract_club = if c != 0 { cpp6_clube(cpp6_d(c + 4)) } else { 0 };
     let mut conta = (cpp6_b(registro(jogador) + 0xb) & 0xf) as i8;
     let mascara: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(0x5b7d20usize);
     // ponytail: a 0x5b7d20 devolve só ax e a 0x842e10 usa 16 bits da máscara: os 16 de cima vão zerados
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize, jogador: 
         if conta >= 5 {
             return;
         }
-        if selecao(clube) == 0 && clube_do_contrato != clube && cpp6_d(jogador + 0x39) != clube && acrescentar(this, jogador, clube, m) != 0 {
+        if selecao(clube) == 0 && transfer_manager_contract_club != clube && cpp6_d(jogador + 0x39) != clube && acrescentar(this, jogador, clube, m) != 0 {
             crate::comparacao::ramo("cpp_6 clube acrescentou");
             conta = conta.wrapping_add(1); // mais um clube com ele na lista
         }
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn transfer_list_player(this: usize, jogador: usize, no
     if listada(jogador, 0) != 0 {
         return;
     }
-    let c = cpp6_contrato(jogador);
+    let c = get_contract(jogador);
     if c == 0 {
         return;
     }
@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn transfer_list_player(this: usize, jogador: usize, no
 /// O registro de prêmio por jogos (0xd bytes: +0 id da pessoa, +4 valor, +8 jogos, +9 id do clube antigo) da pessoa,
 /// pela busca binária (0x946464 com 0x8b4e00) no vetor das seleções (tipo 5: +0x898, conta +0x8a0) ou do clube
 /// (+0x88c, conta +0x894) do TRANSFER_MANAGER.
-unsafe fn cpp6_registro_do_premio(this: usize, jogador: usize, tipo: u32) -> usize {
+unsafe fn appearance_bonus_record(this: usize, jogador: usize, tipo: u32) -> usize {
     let bsearch: unsafe extern "C" fn(*const u32, usize, usize, u32, usize) -> usize = core::mem::transmute(0x946464usize);
     let chave = [cpp6_d(jogador) as u32];
     let (vetor, conta) = if tipo as u8 == 5 { (cpp6_d(this + 0x898), cpp6_d(this + 0x8a0)) } else { (cpp6_d(this + 0x88c), cpp6_d(this + 0x894)) };
@@ -183,11 +183,11 @@ unsafe fn cpp6_registro_do_premio(this: usize, jogador: usize, tipo: u32) -> usi
 /// aos totais de transferência (0x448ad0 em [0xad9dac], com o clube atual e o antigo), o clube antigo (+9) recebe
 /// (0x599800) e o atual paga (0x599890), em 64 bits com sinal. Devolve 1 se pagou.
 unsafe extern "thiscall" fn pay_appearance_money(this: usize, jogador: usize, jogos: i32, tipo: u32, arg: u32) -> u32 {
-    let c = cpp6_contrato_guardado(jogador);
+    let c = shortlist_manager_get_contract_and_store(jogador);
     if c == 0 || cpp6_clube(cpp6_d(c + 4)) == 0 {
         return 0;
     }
-    let r = cpp6_registro_do_premio(this, jogador, tipo);
+    let r = appearance_bonus_record(this, jogador, tipo);
     if r == 0 {
         return 0;
     }
@@ -202,9 +202,9 @@ unsafe extern "thiscall" fn pay_appearance_money(this: usize, jogador: usize, jo
     let pagar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x599890usize);
     noticia(this, r, jogos, tipo, arg);
     let f_antigo = financas(cpp6_d(0xae2a38), cpp6_clube(cpp6_d(r + 9)));
-    let c = cpp6_contrato_guardado(jogador);
+    let c = shortlist_manager_get_contract_and_store(jogador);
     let f_atual = financas(cpp6_d(0xae2a38), if c != 0 { cpp6_clube(cpp6_d(c + 4)) } else { 0 });
-    let c = cpp6_contrato_guardado(jogador);
+    let c = shortlist_manager_get_contract_and_store(jogador);
     let atual = if c != 0 { cpp6_clube(cpp6_d(c + 4)) } else { 0 };
     let valor = core::ptr::read_unaligned((r + 4) as *const i32);
     somar(cpp6_d(0xad9dac), valor, atual, cpp6_clube(cpp6_d(r + 9)));
@@ -218,18 +218,18 @@ unsafe extern "thiscall" fn pay_appearance_money(this: usize, jogador: usize, jo
 /// original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
 unsafe extern "thiscall" fn comparar_add_player_to_club_shortlists(this: usize, jogador: usize, forcar: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, jogador, forcar)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, jogador, forcar)
 }
 
 /// Comparador: sorteia e dá notícia: roda só a original e confere o plano feito antes: sem listagem do clube e com
 /// contrato, o contrato fica à venda (+0x4e bit 1, +0x4f nibble alto 7).
 unsafe extern "thiscall" fn comparar_transfer_list_player(this: usize, jogador: usize, noticia: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let listada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5444a0usize);
-    let marca = listada(jogador, 0) == 0 && cpp6_contrato(jogador) != 0;
+    let marca = listada(jogador, 0) == 0 && get_contract(jogador) != 0;
     o(this, jogador, noticia);
     if marca {
-        let c = cpp6_contrato(jogador);
+        let c = get_contract(jogador);
         let ok = c != 0 && cpp6_b(c + 0x4e) & 1 != 0 && cpp6_b(c + 0x4f) & 0xf0 == 0x70;
         PLACAR.registrar(ok, || format!("transfer_list_player(jogador {:x}) contrato {:x} sem a marca de à venda", cpp6_d(jogador), c));
     }
@@ -238,12 +238,12 @@ unsafe extern "thiscall" fn comparar_transfer_list_player(this: usize, jogador: 
 /// Comparador: dá notícia e mexe nas finanças: roda só a original e confere a devolução com o plano (contrato, clube,
 /// registro do prêmio e jogos, sem efeitos).
 unsafe extern "thiscall" fn comparar_pay_appearance_money(this: usize, jogador: usize, jogos: i32, tipo: u32, arg: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32) -> u32>(%%I2%%);
-    let c = cpp6_contrato(jogador);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32) -> u32>(%%I2%%);
+    let c = get_contract(jogador);
     let esperado = if c == 0 || cpp6_clube(cpp6_d(c + 4)) == 0 {
         0
     } else {
-        let r = cpp6_registro_do_premio(this, jogador, tipo);
+        let r = appearance_bonus_record(this, jogador, tipo);
         (r != 0 && cpp6_b(r + 8) as i8 as i32 == jogos && jogos > 0) as u32
     };
     let r = o(this, jogador, jogos, tipo, arg);

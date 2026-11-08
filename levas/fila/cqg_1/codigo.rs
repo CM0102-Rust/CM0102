@@ -33,13 +33,13 @@ unsafe fn cqg1_clube(id: usize) -> usize {
 }
 
 /// O registro de 79 bytes da pessoa `id` em [0xae2d0c] (+0 o índice do contrato no vetor).
-unsafe fn cqg1_registro(id: usize) -> usize {
+unsafe fn contract_manager_staff_state_record(id: usize) -> usize {
     cqg1_d(0xae2d0c).wrapping_add(id.wrapping_mul(0x4f))
 }
 
 /// A cópia do contrato de 0x50 bytes de `o` para `d`, campo a campo como a original (as datas +0x25 e +0x2d pela
 /// 0x417c10; os campos de bits de +0x35 e o nibble de +0x4f, mesclados em passos, acabam iguais à origem).
-unsafe fn cqg1_copiar(d: usize, o: usize) {
+unsafe fn copy_contract(d: usize, o: usize) {
     let copiar_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     for k in (0..0x1c).step_by(4) {
         cqg1_pd(d + k, cqg1_d(o + k));
@@ -74,7 +74,7 @@ unsafe fn cqg1_copiar(d: usize, o: usize) {
 
 /// O tipo do contrato (+0x3d) pelo cargo (nibble alto de +0x4f): 1 → 75, 2 → 50, 3 → 40, 4, 5, 6 e 8 → 0; os outros
 /// não mexem (a tabela de saltos da original).
-unsafe fn cqg1_tipo_pelo_cargo(c: usize) {
+unsafe fn set_contract_type_from_job(c: usize) {
     match cqg1_b(c + 0x4f) >> 4 {
         1 => cqg1_pb(c + 0x3d, 0x4b),
         2 => cqg1_pb(c + 0x3d, 0x32),
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
         copiar_data(c + 0x2d, tmp.as_mut_ptr(), p);
     }
     copiar_data(pessoa + 0x46, tmp.as_mut_ptr(), c + 0x2d);
-    let idx = cqg1_d(cqg1_registro(cqg1_d(c))) as i32;
+    let idx = cqg1_d(contract_manager_staff_state_record(cqg1_d(c))) as i32;
     if idx > -1 {
         let off = (idx as usize).wrapping_mul(0x50);
         let r = cqg1_d(this).wrapping_add(off);
@@ -199,13 +199,13 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
                 }
             }
         } else {
-            cqg1_tipo_pelo_cargo(c);
+            set_contract_type_from_job(c);
             cqg1_pd(c + 0x4a, u32::MAX as usize);
             cqg1_pb(c + 0x49, 0);
             zerar(c, pessoa, cqg1_clube(cqg1_d(c + 4)));
             cqg1_pw(c + 0x3b, 0);
         }
-        cqg1_copiar(cqg1_d(this).wrapping_add(off), c);
+        copy_contract(cqg1_d(this).wrapping_add(off), c);
     } else {
         let conta = cqg1_d(this + 8) as i32;
         let mut i = 0i32;
@@ -213,12 +213,12 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
             let r = cqg1_d(this).wrapping_add((i as usize).wrapping_mul(0x50));
             if cqg1_d(r) as i32 == -1 { // cqg1: a vaga livre
                 crate::comparacao::ramo("cqg_1 vaga livre");
-                cqg1_tipo_pelo_cargo(c);
+                set_contract_type_from_job(c);
                 cqg1_pb(c + 0x49, 0);
                 cqg1_pd(c + 0x4a, u32::MAX as usize);
                 zerar(c, pessoa, cqg1_clube(cqg1_d(c + 4)));
-                cqg1_copiar(r, c);
-                cqg1_pd(cqg1_registro(cqg1_d(r)), i as u32 as usize);
+                copy_contract(r, c);
+                cqg1_pd(contract_manager_staff_state_record(cqg1_d(r)), i as u32 as usize);
                 let f = financas(cqg1_d(0xae2a38), cqg1_clube(cqg1_d(c + 4)));
                 if f != 0 {
                     folha(f);
@@ -233,19 +233,19 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
             let p = if cqg1_d(this) == 0 { malloc(cap.wrapping_mul(0x50)) } else { realocar(cqg1_d(this), cap.wrapping_mul(0x50)) };
             cqg1_pd(this, p);
             if p == 0 {
-                aviso_em(0x9a8190, 0x1637);
+                show_error_at(0x9a8190, 0x1637);
             }
         }
-        cqg1_tipo_pelo_cargo(c);
+        set_contract_type_from_job(c);
         cqg1_pb(c + 0x49, 0);
         cqg1_pd(c + 0x4a, u32::MAX as usize);
         zerar(c, pessoa, cqg1_clube(cqg1_d(c + 4)));
         cqg1_pw(c + 0x3b, 0);
-        cqg1_pd(cqg1_registro(cqg1_d(c)), cqg1_d(this + 8));
+        cqg1_pd(contract_manager_staff_state_record(cqg1_d(c)), cqg1_d(this + 8));
         let n = cqg1_d(this + 8);
         let r = cqg1_d(this).wrapping_add(n.wrapping_mul(0x50));
         cqg1_pd(this + 8, n.wrapping_add(1));
-        cqg1_copiar(r, c);
+        copy_contract(r, c);
     }
     crate::comparacao::ramo("cqg_1 valor na pessoa");
     cqg1_pd(pessoa + 0x4e, cqg1_d(c + 0xc)); // cqg1: o valor do contrato na pessoa
@@ -260,18 +260,18 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
         return 1;
     }
     if tirar(cqg1_d(pessoa + 0x39), pessoa, 0, 1, 0) == 0 {
-        aviso_em(0x9a8190, 0x1672);
+        show_error_at(0x9a8190, 0x1672);
         return 0;
     }
     if incluir(cqg1_clube(cqg1_d(c + 4)), pessoa, cargo, pessoa + 0x3e, 1, 0) != 0 {
         return 1;
     }
-    aviso_em(0x9a8190, 0x167a);
+    show_error_at(0x9a8190, 0x167a);
     0
 }
 
 /// Comparador da 0x4cf720: só a original (inclui e tira a pessoa dos clubes, realoca o vetor dos contratos, entrega
 /// notícias, sorteia a segunda nacionalidade, recalcula a folha).
 unsafe extern "thiscall" fn comparar_sign_contract(this: usize, contrato: usize, cargo: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, contrato, cargo) // ponytail: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, contrato, cargo) // ponytail: só a original
 }

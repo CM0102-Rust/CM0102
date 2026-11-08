@@ -5,8 +5,10 @@ use super::*;
 
 
 
-/// O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
-pub(crate) unsafe fn cqr11_sorteado(this: usize, k: usize) -> usize {
+/// Club k of the drawn list (+0xee pointers).
+///
+/// [pt] O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
+pub(crate) unsafe fn conmebol_merc_drawn_club(this: usize, k: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr11: o sorteado k
 }
 
@@ -56,13 +58,13 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
             crate::comparacao::ramo("cqr_11 sorteio da mercosul");
             clubes(this);
             if primeiro(this) == 0 {
-                aviso_em(0x9a7e5c, 0x396);
+                show_error_at(0x9a7e5c, 0x396);
             }
             if jogos(this) == 0 {
-                aviso_em(0x9a7e5c, 0x39b);
+                show_error_at(0x9a7e5c, 0x39b);
             }
             if ordenar(this, 0) == 0 {
-                aviso_em(0x9a7e5c, 0x3a1);
+                show_error_at(0x9a7e5c, 0x3a1);
             }
             for g in 0..4i32 {
                 fase(this, g);
@@ -81,11 +83,11 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 4 fases
 // criadas e a fase atual (+0x30) a última delas.
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CONMEBOL_MERC_UPDATE_FOR_DATE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CONMEBOL_MERC_UPDATE_FOR_DATE);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo != 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
-        && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16) && !cqr11_virada_hoje(this, hoje);
+        && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16) && !is_rollover_day(this, hoje);
     let r = o(this, hoje, completo);
     if sorteia {
         let fases = read_u32_as_usize(this + 0xc);
@@ -100,8 +102,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_update_for_date(th
     r
 }
 
-/// O dia da virada (1º de junho do ano de hoje, com a copa de outro ano): o comparador não confere o sorteio nesse dia.
-pub(crate) unsafe fn cqr11_virada_hoje(this: usize, hoje: usize) -> bool {
+/// Is today June 1 with the cup from another year (rollover day, draw not checked)?
+///
+/// [pt] O dia da virada (1º de junho do ano de hoje, com a copa de outro ano): o comparador não confere o sorteio nesse dia.
+pub(crate) unsafe fn is_rollover_day(this: usize, hoje: usize) -> bool {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let ano_de_hoje = core::ptr::read_unaligned((hoje + 2) as *const u16);
     let mut junho = [0u8; 8];
@@ -126,14 +130,14 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     let t = novo(0xec);
     write_u32_from_usize(this + 0xb1, t);
     if t == 0 {
-        aviso_em(0x9a7e5c, 0x155);
+        show_error_at(0x9a7e5c, 0x155);
         return 0;
     }
     let mut i = 0i8;
     while (i as i16) < read_i16(this + 0x3e) {
         crate::comparacao::ramo("cqr_11 linha do primeiro grupo");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
-        linha(this, i as u8 as u32, cqr11_sorteado(this, i as usize), 0, 0);
+        linha(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
     noticia(this);
@@ -143,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_first_group_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_MERC_CREATE_FIRST_GROUP_TABLE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_MERC_CREATE_FIRST_GROUP_TABLE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -185,14 +189,14 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let times = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
-        aviso_em(0x9a7e5c, 0x1fb);
+        show_error_at(0x9a7e5c, 0x1fb);
         return 0;
     }
     let mut k = g * 4 + 4;
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
         crate::comparacao::ramo("cqr_11 time do grupo");
-        write_u32_from_usize(times + n * 4, cqr11_sorteado(this, k as usize)); // cqr11: o time na vaga do grupo
+        write_u32_from_usize(times + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: o time na vaga do grupo
         k += 1;
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -234,7 +238,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     soltar(tabela);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
     if f == 0 {
-        aviso_em(0x9a7e5c, 0x211);
+        show_error_at(0x9a7e5c, 0x211);
         return 0;
     }
     noticia(f);
@@ -246,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_group_stage(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CONMEBOL_MERC_CREATE_GROUP_STAGE);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CONMEBOL_MERC_CREATE_GROUP_STAGE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..4).contains(&g) {
         return o(this, g);
@@ -271,14 +275,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_group_stage
 /// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
 pub(crate) type Cqo13G = (u32, u32, u32, u32);
 
-/// As duas fases da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret 0x10; a fase lida
+/// Shared create_schedule (virtual +0x3c) of South American cups: group rounds below `limite`, knockout rounds at it,
+/// nothing above.
+///
+/// [pt] As duas fases da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret 0x10; a fase lida
 /// como byte com sinal) das copas sul-americanas. Abaixo de `limite` (−1 inclusive), os grupos: é_liga (se pedido) = 1,
 /// rodadas = o número de rodadas de grupo, extra = fase + 0x3e9 (16 bits); a tabela de 0x41 bytes por rodada (0x944e46;
 /// sem memória, a caixa `linha_g` e devolve 0) com as datas de `grupos`. Na fase `limite`, o mata-mata: é_liga = 0,
 /// rodadas = o tamanho de `mata`, extra = 0; a tabela de 0x68 bytes por rodada (sem memória, a caixa `linha_m`), as
-/// rodadas pela `cql10_rodada` com o ano +0x40 da copa (com sinal) e as palavras de `a_mais` (rodada, deslocamento,
+/// rodadas pela `eng_cc_cup_write_cup_round` com o ano +0x40 da copa (com sinal) e as palavras de `a_mais` (rodada, deslocamento,
 /// valor). Acima de `limite`: devolve 0 sem gravar nada.
-pub(crate) unsafe fn cqo13_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, grupos: &[Cqo13G],
+pub(crate) unsafe fn south_american_cup_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, grupos: &[Cqo13G],
     mata: &[Cql10R], a_mais: &[(usize, usize, u16)], arquivo: usize, linha_g: u32, linha_m: u32, nome_g: &'static str, nome: &'static str) -> usize {
     let f = fase as u8 as i8;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -292,7 +299,7 @@ pub(crate) unsafe fn cqo13_tabela(this: usize, fase: u32, rodadas: *mut i16, ext
         *extra = (f as i16).wrapping_add(0x3e9);
         let t = alocar(grupos.len() as u32 * 0x41);
         if t == 0 {
-            aviso_em(arquivo, linha_g);
+            show_error_at(arquivo, linha_g);
             return 0;
         }
         crate::comparacao::ramo(nome_g);
@@ -315,13 +322,13 @@ pub(crate) unsafe fn cqo13_tabela(this: usize, fase: u32, rodadas: *mut i16, ext
     *extra = 0;
     let t = alocar(mata.len() as u32 * 0x68);
     if t == 0 {
-        aviso_em(arquivo, linha_m);
+        show_error_at(arquivo, linha_m);
         return 0;
     }
     crate::comparacao::ramo(nome);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in mata.iter().enumerate() {
-        cql10_rodada(t, i as u32, r, ano);
+        eng_cc_cup_write_cup_round(t, i as u32, r, ano);
     }
     for &(r, o, v) in a_mais {
         core::ptr::write_unaligned((t + r * 0x68 + o) as *mut u16, v);
@@ -330,10 +337,13 @@ pub(crate) unsafe fn cqo13_tabela(this: usize, fase: u32, rodadas: *mut i16, ext
 }
 
 
-/// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
+/// Side-by-side comparer for South American cup schedules: outputs and written table bytes (plus a_mais words) must
+/// match.
+///
+/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas (grupos ou mata-mata, este com as
 /// palavras de `a_mais`) têm de ser iguais; a tabela da cópia é liberada (0x9452ca). Acima do mata-mata só a original.
-pub(crate) unsafe fn cqo13_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, a_mais: &[(usize, usize, u16)],
+pub(crate) unsafe fn compare_south_american_cup_schedule(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, a_mais: &[(usize, usize, u16)],
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = fase as u8 as i8;
     if f > limite {
@@ -350,9 +360,9 @@ pub(crate) unsafe fn cqo13_comparar(nome: &str, fase: u32, rodadas: *mut i16, ex
     let mais = |t: usize| a_mais.iter().flat_map(|&(r, o, _)| core::slice::from_raw_parts((t + r * 0x68 + o) as *const u8, 2).to_vec()).collect::<Vec<u8>>();
     let tabela = if a != 0 && b != 0 {
         if f < limite {
-            cqo10_gravados_grupos(a, *rodadas) == cqo10_gravados_grupos(b, r2)
+            written_group_schedule_bytes(a, *rodadas) == written_group_schedule_bytes(b, r2)
         } else {
-            cql10_gravados(a, *rodadas) == cql10_gravados(b, r2) && mais(a) == mais(b)
+            eng_cc_cup_written_round_bytes(a, *rodadas) == eng_cc_cup_written_round_bytes(b, r2) && mais(a) == mais(b)
         }
     } else {
         a == 0 && b == 0
@@ -404,28 +414,31 @@ pub(crate) const CQO13_MERCOSUL_A_MAIS: [(usize, usize, u16); 1] = [(2, 0x11, 3)
 /// fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 4 (a caixa da linha 0x97), o mata-mata na fase 4 (a caixa
 /// da linha 0xbd).
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo13_tabela(this, fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_GRUPOS, &CQO13_MERCOSUL, &CQO13_MERCOSUL_A_MAIS, 0x9a7e5c, 0x97, 0xbd,
+    south_american_cup_schedule(this, fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_GRUPOS, &CQO13_MERCOSUL, &CQO13_MERCOSUL_A_MAIS, 0x9a7e5c, 0x97, 0xbd,
         "cqo_13 grupos da mercosul", "cqo_13 mata-mata da mercosul")
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CONMEBOL_MERC_CREATE_SCHEDULE);
-    cqo13_comparar("conmebol_merc_create_schedule", fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_A_MAIS, || o(this, fase, rodadas, extra, liga),
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CONMEBOL_MERC_CREATE_SCHEDULE);
+    compare_south_american_cup_schedule("conmebol_merc_create_schedule", fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_A_MAIS, || o(this, fase, rodadas, extra, liga),
         |r, e, l| conmebol_merc_create_schedule(this, fase, r, e, l))
 }
 
 
-/// { 0x4c5850 } (thiscall, ret 0, conmebol_merc.cpp): `ConmebolMerc::select_invited_clubs()`: +0xf2 = 20 e a lista de
+/// Port of ConmebolMerc::select_invited_clubs (0x4c5850): 20-slot list of clubs the seeding rules invite, shuffled;
+/// returns (1, count).
+///
+/// [pt] { 0x4c5850 } (thiscall, ret 0, conmebol_merc.cpp): `ConmebolMerc::select_invited_clubs()`: +0xf2 = 20 e a lista de
 /// ponteiros (0x944e46 de 0x50 em +0xee; sem memória, a caixa da linha 0x2c6 e 0); cada clube da tabela ([0xae23b4],
 /// [0xae235c] − 2 × [0xae2350]) que as regras ([0xae1000], 0x4c6890: thiscall com o clube) convidam entra na lista, sem
 /// conferir o espaço; a lista é embaralhada (0x4afb40 com +0xf2). Devolve 1.
-pub(crate) unsafe fn cqo13_convidados(this: usize) -> (i32, i32) {
+pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x14);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0x50);
     core::ptr::write_unaligned((this + 0xee) as *mut u32, l as u32);
     if l == 0 {
-        aviso_em(0x9a7e5c, 0x2c6);
+        show_error_at(0x9a7e5c, 0x2c6);
         return (0, 0);
     }
     let convidado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_CONMEBOLSEEDING_IS_MERCOSUR_INVITED_CLUB);
@@ -454,13 +467,13 @@ pub(crate) unsafe fn cqo13_convidados(this: usize) -> (i32, i32) {
 /// [pt] regra: a Mercosul é só de convidados: os 20 clubes da lista fixa das regras sul-americanas (0x4c6890), na ordem da
 /// tabela de clubes, embaralhados para o sorteio dos grupos
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_select_invited_clubs(this: usize) -> i32 {
-    cqo13_convidados(this).0
+    mercosur_select_invited_clubs(this).0
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nos convidados que ela gravou e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CONMEBOL_MERC_SELECT_INVITED_CLUBS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CONMEBOL_MERC_SELECT_INVITED_CLUBS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
@@ -471,7 +484,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clu
         lo.set(read_u32_as_usize(this + 0xee));
         r
     }, || {
-        let (r, n) = crate::aleatorio::sem_contar(|| cqo13_convidados(this));
+        let (r, n) = crate::aleatorio::sem_contar(|| mercosur_select_invited_clubs(this));
         lr.set(read_u32_as_usize(this + 0xee));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xee) as *mut u32, lo.get() as u32);
@@ -499,10 +512,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clu
 /// [pt] { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
 /// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_advance_stage(this: usize) {
-    cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
+    con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_advance_stage(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_MERC_ADVANCE_STAGE);
-    cqs11_comparar_fase_seguinte("conmebol_merc_advance_stage", this, || o(this))
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_MERC_ADVANCE_STAGE);
+    con_merc_cup_compare_advance_stage("conmebol_merc_advance_stage", this, || o(this))
 }

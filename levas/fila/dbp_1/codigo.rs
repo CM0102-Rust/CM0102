@@ -10,7 +10,7 @@ unsafe fn dbp_i16(a: usize) -> i16 {
 
 /// O clube do contrato da `pessoa` como a 0x545e90 o acha: o contrato pela 0x4cf5a0 (this = [0xae1050]), gravado
 /// em [0xae1080] como na original; com contrato, o clube de id +4 na tabela [0xae23b4] (581 bytes); sem: 0.
-unsafe fn dbp_clube_do_contrato(pessoa: usize) -> usize {
+unsafe fn database_club_of_contract(pessoa: usize) -> usize {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contrato(dbp_u32(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
@@ -22,7 +22,7 @@ unsafe fn dbp_clube_do_contrato(pessoa: usize) -> usize {
 
 /// +500 se o `clube` está entre os três clubes favoritos da pessoa (preferências +4/+8/+0xc), −500 se entre os três
 /// rejeitados (+0x10/+0x14/+0x18), senão 0; sem preferências: 0.
-unsafe fn dbp_preferencia_do_clube(clube: usize, pessoa: usize) -> i32 {
+unsafe fn club_preference_bonus(clube: usize, pessoa: usize) -> i32 {
     let pref = dbp_u32(pessoa + 0x65);
     if pref == 0 {
         return 0;
@@ -62,7 +62,7 @@ unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: usize) -> u
             return 0;
         }
         let n = dbp_i16(liga + 0x3e) as i32;
-        let peso = |k: i32| f64_em(0x9b59c0 + 8 * k.clamp(0, 19) as usize);
+        let peso = |k: i32| read_f64_at(0x9b59c0 + 8 * k.clamp(0, 19) as usize);
         let mut posicao = *((e + 0x73) as *const u8) as i32 - 1;
         if n != 0 && n != 20 {
             posicao = posicao * 20 / n;
@@ -72,33 +72,33 @@ unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: usize) -> u
         if jogos < 20 {
             let antes = *((clube + 0x5f) as *const i8) as i32;
             let w = if dbp_u32(clube + 0x5b) != comp {
-                f64_em(0x968de8)
+                read_f64_at(0x968de8)
             } else if n != 0 && n != 20 {
                 peso((antes * 20 - 20) / n)
             } else if (1..21).contains(&antes) {
                 peso(antes - 1)
             } else {
-                f64_em(0x968de8)
+                read_f64_at(0x968de8)
             };
-            v = ((20 - jogos) as f64 * w + jogos as f64 * v) * f64_em(0x967888);
+            v = ((20 - jogos) as f64 * w + jogos as f64 * v) * read_f64_at(0x967888);
         }
         let mut bonus = 0;
-        if pessoa != 0 && dbp_u32(pessoa + 0x61) != 0 && dbp_clube_do_contrato(pessoa) == clube {
+        if pessoa != 0 && dbp_u32(pessoa + 0x61) != 0 && database_club_of_contract(pessoa) == clube {
             let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
             let m = media(dbp_u32(0xb74350), dbp_u32(pessoa + 0x61), 6, 0x14, v as f32);
-            v = (m + v) * f64_em(0x968968);
-            bonus = dbp_preferencia_do_clube(clube, pessoa);
+            v = (m + v) * read_f64_at(0x968968);
+            bonus = club_preference_bonus(clube, pessoa);
         }
-        let mut x = v * f64_em(0x969558) - f64_em(0x969550); // o peso entre 0 e 10
-        let (baixo, teto) = (f64_em(0x9689a0), f64_em(0x9688b0));
+        let mut x = v * read_f64_at(0x969558) - read_f64_at(0x969550); // o peso entre 0 e 10
+        let (baixo, teto) = (read_f64_at(0x9689a0), read_f64_at(0x9688b0));
         if baixo > x {
             x = baixo;
         } else if !(teto >= x) {
             x = teto; // fcomp: acima do teto ou NaN
         }
         let cx = (divisao as i32).wrapping_mul(500) as i16 as f64; // imul cx, cx, 0x1f4: 16 bits
-        let r = ((teto - x) * rep as f64 + cx * x) * f64_em(0x967880);
-        return (ftol(r) as u32).wrapping_add(bonus as u32);
+        let r = ((teto - x) * rep as f64 + cx * x) * read_f64_at(0x967880);
+        return (match_pl_ftol(r) as u32).wrapping_add(bonus as u32);
     }
     // sem liga, ou o clube já à altura da divisão: a reputação ±500; a parte alta do eax é o que sobrou
     let mut eax = if liga == 0 { comp } else { alto as usize };
@@ -106,11 +106,11 @@ unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: usize) -> u
     if pessoa != 0 {
         eax = dbp_u32(pessoa + 0x61);
         if eax != 0 {
-            eax = dbp_clube_do_contrato(pessoa);
+            eax = database_club_of_contract(pessoa);
             if eax == clube {
                 eax = dbp_u32(pessoa + 0x65);
                 if eax != 0 {
-                    bonus = dbp_preferencia_do_clube(clube, pessoa); // os clubes da pessoa
+                    bonus = club_preference_bonus(clube, pessoa); // os clubes da pessoa
                 }
             }
         }
@@ -119,7 +119,7 @@ unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: usize) -> u
 }
 
 unsafe extern "C" fn comparar_club_reputation_for_staff(clube: usize, pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(clube, pessoa),
         || club_reputation_for_staff(clube, pessoa));
     // os chamadores leem só o ax (movsx)
@@ -129,7 +129,7 @@ unsafe extern "C" fn comparar_club_reputation_for_staff(clube: usize, pessoa: us
 
 /// Quantas das três pessoas da lista de preferências em `base` (+0x65 da pessoa) têm o clube (+0x39) igual a `clube`;
 /// pessoa, preferências ou clube nulos: 0. Só `al`.
-unsafe fn dbp_contar_no_clube(pessoa: usize, clube: usize, base: usize) -> u8 {
+unsafe fn count_preferred_people_at_club(pessoa: usize, clube: usize, base: usize) -> u8 {
     if pessoa == 0 {
         return 0;
     }
@@ -150,11 +150,11 @@ unsafe fn dbp_contar_no_clube(pessoa: usize, clube: usize, base: usize) -> u8 {
 /// { 0x547c90 } (cdecl, Database.cpp): `staff_count_disliked_staff_at_club(pessoa, clube)`: quantas das três pessoas
 /// que a pessoa rejeita (preferências +0x28/+0x2c/+0x30) estão no clube. No diário das pessoas (0x5ce2d0).
 unsafe extern "C" fn staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
-    dbp_contar_no_clube(pessoa, clube, 0x28) // os rejeitados
+    count_preferred_people_at_club(pessoa, clube, 0x28) // os rejeitados
 }
 
 unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%)(pessoa, clube);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%)(pessoa, clube);
     let n = staff_count_disliked_staff_at_club(pessoa, clube);
     PLACAR.registrar(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
@@ -163,11 +163,11 @@ unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(pessoa: usize, 
 /// { 0x547ce0 } (cdecl, Database.cpp): `staff_count_favoured_staff_at_club(pessoa, clube)`: quantas das três pessoas
 /// favoritas da pessoa (preferências +0x1c/+0x20/+0x24) estão no clube. No diário das pessoas (0x5ce2d0).
 unsafe extern "C" fn staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
-    dbp_contar_no_clube(pessoa, clube, 0x1c) // os favoritos
+    count_preferred_people_at_club(pessoa, clube, 0x1c) // os favoritos
 }
 
 unsafe extern "C" fn comparar_staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(pessoa, clube);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(pessoa, clube);
     let n = staff_count_favoured_staff_at_club(pessoa, clube);
     PLACAR.registrar(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r

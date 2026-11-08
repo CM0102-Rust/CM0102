@@ -16,7 +16,7 @@ unsafe fn cqi8_d(o: usize, d: usize, v: u32) {
 /// +0xbe e os rebaixados +0xc1): vitória 3, empate 1, categoria 2 (liga), clube nacional, desempates confronto
 /// direto e saldo, sem play-offs na tabela, sem liga acima nem abaixo, palavra de regras 8, 7 reservas e
 /// 3 substituições, e as palavras +0xab e +0xdb (copiadas em cada partida: +0x38 e +0x36) em 0.
-unsafe fn cqi8_regras(o: usize, turnos: u16, cima: u8, rebaixados: u8) {
+unsafe fn bra_reg_central_set_state_league_rules(o: usize, turnos: u16, cima: u8, rebaixados: u8) {
     cqi8_w(o, 0xab, 0);
     cqi8_w(o, 0xdb, 0);
     cqi8_b(o, 0xc7, 0);
@@ -39,18 +39,18 @@ unsafe fn cqi8_regras(o: usize, turnos: u16, cima: u8, rebaixados: u8) {
 }
 
 /// O Centro-Oeste (0x430ff0): turno único, 8 vagas de cima (o mata-mata de 8), 3 rebaixados.
-unsafe fn cqi8_regras_centro(o: usize) {
-    cqi8_regras(o, 1, 8, 3); // cqi8: o Centro-Oeste
+unsafe fn centro_oeste_rules(o: usize) {
+    bra_reg_central_set_state_league_rules(o, 1, 8, 3); // cqi8: o Centro-Oeste
 }
 
 /// O Gaúcho (0x4322d0, também o Nordeste e o Paulista): turno único, 4 vagas de cima, 2 rebaixados.
-unsafe fn cqi8_regras_gaucho(o: usize) {
-    cqi8_regras(o, 1, 4, 2); // cqi8: o Gaúcho
+unsafe fn gaucho_rules(o: usize) {
+    bra_reg_central_set_state_league_rules(o, 1, 4, 2); // cqi8: o Gaúcho
 }
 
 /// O Catarinense (0x43bc70, também o Baiano): dois turnos, 4 vagas de cima, 1 rebaixado.
-unsafe fn cqi8_regras_catarinense(o: usize) {
-    cqi8_regras(o, 2, 4, 1); // cqi8: o Catarinense
+unsafe fn catarinense_rules(o: usize) {
+    bra_reg_central_set_state_league_rules(o, 2, 4, 1); // cqi8: o Catarinense
 }
 
 /// O calendário da fase principal pelo slot 16 (`create_schedule`, thiscall, ret 0x10, conferido nos seis alvos das
@@ -71,7 +71,7 @@ fn cqi8_regioes(o: usize) -> [(usize, usize); 4] {
 /// { 0x430ff0 } (thiscall, bra_reg_central.cpp): `BraRegCentral::set_up_rules` (slot 36), as regras e o calendário;
 /// devolve 1.
 unsafe extern "thiscall" fn bra_reg_central_set_up_rules(this: usize) -> u32 {
-    cqi8_regras_centro(this);
+    centro_oeste_rules(this);
     crate::comparacao::ramo("cqi_8 regras do centro-oeste");
     cqi8_calendario(this);
     1
@@ -81,8 +81,8 @@ unsafe extern "thiscall" fn bra_reg_central_set_up_rules(this: usize) -> u32 {
 /// saídas do calendário; a devolução.
 unsafe extern "thiscall" fn comparar_bra_reg_central_set_up_rules(this: usize) -> u32 {
     let reg = cqi8_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this), || {
-        cqi8_regras_centro(this);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this), || {
+        centro_oeste_rules(this);
         1
     });
     PLACAR.registrar(igual && r == n, || format!("bra_reg_central_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_central_set_up_rules(this: usize) -
 /// { 0x4322d0 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::set_up_rules`, nas vtables do Gaúcho (0x96811c), do
 /// Nordeste (0x9683ec) e do Paulista (0x968770); devolve 1.
 unsafe extern "thiscall" fn bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
-    cqi8_regras_gaucho(this);
+    gaucho_rules(this);
     crate::comparacao::ramo("cqi_8 regras do gaucho");
     cqi8_calendario(this);
     1
@@ -101,8 +101,8 @@ unsafe extern "thiscall" fn bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
 /// Comparador: como o do Centro-Oeste.
 unsafe extern "thiscall" fn comparar_bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     let reg = cqi8_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), || {
-        cqi8_regras_gaucho(this);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), || {
+        gaucho_rules(this);
         1
     });
     PLACAR.registrar(igual && r == n, || format!("bra_reg_gaucho_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_gaucho_set_up_rules(this: usize) ->
 /// { 0x43bc70 } (thiscall, bra_reg_santa.cpp): `BraRegSanta::set_up_rules`, nas vtables do Baiano (0x967fb4) e do
 /// Catarinense (0x9686bc); devolve 1.
 unsafe extern "thiscall" fn bra_reg_central_set_up_rules_43bc70(this: usize) -> u32 {
-    cqi8_regras_catarinense(this);
+    catarinense_rules(this);
     crate::comparacao::ramo("cqi_8 regras do catarinense");
     cqi8_calendario(this);
     1
@@ -121,8 +121,8 @@ unsafe extern "thiscall" fn bra_reg_central_set_up_rules_43bc70(this: usize) -> 
 /// Comparador: como o do Centro-Oeste.
 unsafe extern "thiscall" fn comparar_bra_reg_central_set_up_rules_43bc70(this: usize) -> u32 {
     let reg = cqi8_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this), || {
-        cqi8_regras_catarinense(this);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this), || {
+        catarinense_rules(this);
         1
     });
     PLACAR.registrar(igual && r == n, || format!("bra_reg_central_set_up_rules_43bc70({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));

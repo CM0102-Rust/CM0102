@@ -6,7 +6,7 @@
 /// erro de Setup.cpp 0x3a1b (caixa "Error"): a cópia chama a original.
 unsafe extern "C" fn check_saved_game_file(caminho: usize) -> u32 {
     if caminho == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(caminho);
+        return original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(caminho);
     }
     let zget_archive_id: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x9331c0usize);
     let id = zget_archive_id(caminho);
@@ -16,7 +16,7 @@ unsafe extern "C" fn check_saved_game_file(caminho: usize) -> u32 {
 // O id só lê o arquivo e libera o que aloca: as duas rodam lado a lado. Caminho nulo (caixa de
 // erro) só a original.
 unsafe extern "C" fn comparar_check_saved_game_file(caminho: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(caminho);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(caminho);
     if caminho == 0 {
         return r;
     }
@@ -31,7 +31,7 @@ unsafe extern "C" fn comparar_check_saved_game_file(caminho: usize) -> u32 {
 /// Caminho nulo: erro de Setup.cpp 0x3a6d, a cópia chama a original.
 unsafe extern "C" fn check_quick_start_file(caminho: usize) -> u32 {
     if caminho == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho);
+        return original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho);
     }
     let zget_archive_id: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x9331c0usize);
     let versao_valida: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x838eb0usize);
@@ -48,14 +48,14 @@ unsafe extern "C" fn check_quick_start_file(caminho: usize) -> u32 {
 // arquivo ficam abertos, como na original): rodar duas vezes deixaria dois. Só a original; a cópia
 // leva o ramo e roda no modo Rust (só a caixa de arquivos chama).
 unsafe extern "C" fn comparar_check_quick_start_file(caminho: usize) -> u32 {
-    orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho)
+    original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho)
 }
 
 /// A caixa "Load Game Error" de `valid_saved_game_version`: o texto "v%s %s.%s %d (%s)" (versão
 /// 0x90d130, arquivo e extensão de Setup.cpp, linha, motivo) em 0xae24d0, o título traduzido em
 /// 0xae28bc, a mensagem traduzida (0x9af334) em 0xae26c4 e a caixa 0x5e8290. Ao contrário do
-/// `aviso_em`, não zera [0xb67a34].
-unsafe fn erro_de_carga_do_setup(linha: u32, motivo: usize) {
+/// `show_error_at`, não zera [0xb67a34].
+unsafe fn load_version_error_box(linha: u32, motivo: usize) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
@@ -91,24 +91,24 @@ unsafe extern "C" fn valid_saved_game_version(caminho: usize) -> u32 {
     data_padrao(resumo.as_mut_ptr() as usize + 0xf64);
     let mut z = abrir_item(caminho, 0x9c7b84, 0, 0x15, 4);
     if z == 0 {
-        erro_de_carga_do_setup(0x3a36, 0xa82494);
+        load_version_error_box(0x3a36, 0xa82494);
         return 0;
     }
     if ler_item(&mut v as *mut i32 as usize, 4, 1, z) != 1 {
-        erro_de_carga_do_setup(0x3a3d, 0xa8244c);
+        load_version_error_box(0x3a3d, 0xa8244c);
         fechar_item(&mut z);
         return 0;
     }
     if v.wrapping_abs() < 0x3e027 {
         if ler_item(resumo.as_mut_ptr() as usize, 0xf70, 1, z) != 1 {
-            erro_de_carga_do_setup(0x3a48, 0xa82408);
+            load_version_error_box(0x3a48, 0xa82408);
             fechar_item(&mut z);
             return 0;
         }
         // o resumo antigo não tem o último campo (+0xf70): a original o zera na pilha
         resumo[0xf70..0xf74].fill(0);
     } else if ler_item(resumo.as_mut_ptr() as usize, 0xf74, 1, z) != 1 {
-        erro_de_carga_do_setup(0x3a55, 0xa82408);
+        load_version_error_box(0x3a55, 0xa82408);
         fechar_item(&mut z);
         return 0;
     }
@@ -121,5 +121,5 @@ unsafe extern "C" fn valid_saved_game_version(caminho: usize) -> u32 {
 // original); nos erros, a caixa. Não roda duas vezes: só a original; a cópia leva o ramo e roda no
 // modo Rust (só a caixa de arquivos, pelo filtro do início rápido, chama).
 unsafe extern "C" fn comparar_valid_saved_game_version(caminho: usize) -> u32 {
-    orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(caminho)
+    original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(caminho)
 }

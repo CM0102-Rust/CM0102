@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn cqu10_asia_classificados(this: usize) -> u32 {
     let lista = calloc(0x20, 4);
     cqu10_pd(this + 0xb2, lista);
     if lista == 0 {
-        aviso_em(0x987a40, 0x289);
+        show_error_at(0x987a40, 0x289);
         return 0;
     }
     let atual = colocado(cqu10_d(this + 4), 0);
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn cqu10_asia_classificados(this: usize) -> u32 {
 // = 32, a lista em +0xb2 e, fora das vagas 0 e 16 (a do campeão da copa), cada clube na zona da sua nação (leste nas
 // vagas 0..15, oeste nas 16..31) e nenhuma nação repetida.
 unsafe extern "thiscall" fn comparar_cqu10_asia_classificados(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let r = o(this);
     if r == 1 {
         let lista = cqu10_d(this + 0xb2);
@@ -177,7 +177,7 @@ unsafe fn cqu10_fase_da_zona(this: usize, arquivo: usize, linhas: (u32, u32), ra
     let n = cqu10_w(this + 0x3e);
     let times = alocar((n as i32 as u32).wrapping_mul(4));
     if times == 0 {
-        return aviso_em(arquivo, linhas.0);
+        return show_error_at(arquivo, linhas.0);
     }
     for i in 0..n.max(0) as usize {
         crate::comparacao::ramo(ramo);
@@ -197,7 +197,7 @@ unsafe fn cqu10_fase_da_zona(this: usize, arquivo: usize, linhas: (u32, u32), ra
     soltar(times);
     soltar(tabela);
     if cqu10_d(cqu10_d(this + 0xc)) == 0 {
-        return aviso_em(arquivo, linhas.1);
+        return show_error_at(arquivo, linhas.1);
     }
     cqu10_pd(this + 0x30, 0);
 }
@@ -231,7 +231,7 @@ unsafe fn cqu10_comparar_fase(nome: &str, this: usize, o: impl FnOnce()) {
 }
 
 unsafe extern "thiscall" fn comparar_cqu10_asia_fase_oeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqu10_comparar_fase("cqu10_asia_fase_oeste", this, || o(this))
 }
 
@@ -247,11 +247,11 @@ unsafe fn cqu10_posicoes(this: usize, arquivo: usize, linhas: (u32, u32)) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let gravar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
     if cqu10_d(this + 8) == 0 {
-        return aviso_em(arquivo, linhas.0);
+        return show_error_at(arquivo, linhas.0);
     }
     let v = alocar((cqu10_w(this + 0x3e) as i32 as u32).wrapping_mul(8));
     if v == 0 {
-        return aviso_em(arquivo, linhas.1);
+        return show_error_at(arquivo, linhas.1);
     }
     let mut i = 0i16;
     while i < cqu10_w(this + 0x3e) {
@@ -319,6 +319,6 @@ unsafe fn cqu10_comparar_posicoes(nome: &str, this: usize, o: impl FnOnce()) {
 }
 
 unsafe extern "thiscall" fn comparar_cqu10_asia_previstas(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqu10_comparar_posicoes("cqu10_asia_previstas", this, || o(this))
 }

@@ -12,5 +12,5 @@ MUTACOES = [
     ('a_sorte50', "if c45() & 0x40000 != 0 && b(p, 0x5a) + l12f < sortear(50) {", "if c45() & 0x40000 != 0 && b(p, 0x5a) + l12f < sortear(40) {"),
     ('a_gosta', "    if gosta(pessoa(), clube_lado()) != 0 {\n        wr(0xf5, rd(0xf5) + f(0x968990));", "    if gosta(pessoa(), clube_lado()) != 0 {\n        wr(0xf5, rd(0xf5) + f(0x96b008));"),
     ('a_hist', "                let r = e as f64 * f(0x96d664) / c0c as f64;", "                let r = e as f64 * f(0x969078) / c0c as f64;"),
-    ('a_3b', "    *p3b = ftol(*p3b as f64 * q(0x968968) + q(0x96d6e0)) as i16;", "    *p3b = ftol(*p3b as f64 * q(0x968968) + q(0x968e08)) as i16;"),
+    ('a_3b', "    *p3b = match_pl_ftol(*p3b as f64 * q(0x968968) + q(0x96d6e0)) as i16;", "    *p3b = match_pl_ftol(*p3b as f64 * q(0x968968) + q(0x968e08)) as i16;"),
 ]

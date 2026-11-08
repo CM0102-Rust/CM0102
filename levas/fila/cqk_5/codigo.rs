@@ -26,7 +26,7 @@ unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u32 {
     let t = alocar(0x49c);
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        aviso_em(0xa82844, 0x250);
+        show_error_at(0xa82844, 0x250);
         return 0;
     }
     // a divisão de baixo espanhola vira a genérica
@@ -77,7 +77,7 @@ unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u32 {
 /// banco (até 20). Depois: os primeiros com +0x57 = o registro de [0x9cf764]; +0x3e = 20, a devolução, as linhas com
 /// os clubes da Primera na ordem e, cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
 unsafe extern "thiscall" fn comparar_spa_first_create_table(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let (mut baixo, mut plano): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     for i in 0..(cqk5_d(0xae235c) as i32).max(0) as usize {
         let clube = cqk5_d(0xae23b4) + i * 0x245;
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn spa_first_update_staff_records_for_status(this: usiz
 /// decide o +0x37 que a rotina grava (fase 0: 0 com 1, 0xfe com 2/0xff; fase 1: 0xfe com 1, 3 com 2/0xff); depois a
 /// linha tem de estar assim. Na liga ela só registra: a devolução 0.
 unsafe extern "thiscall" fn comparar_spa_first_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%);
     let (s, f) = (situacao as u8, fase as u8);
     let mut plano: Option<(usize, u8)> = None;
     if f <= 1 {
@@ -250,7 +250,7 @@ unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, clube: usiz
 /// Comparador da 0x850880: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
 /// nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
 unsafe extern "thiscall" fn comparar_spa_first_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I2%%);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I2%%);
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let e = achar(cqk5_d(this + 8), clube);
     if e == 0 {

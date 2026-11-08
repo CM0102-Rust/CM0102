@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: as ordens dos clubes pelo nome curto e das pessoas pelo nome completo, e se a pessoa confere com os nomes (Database.cpp) ----------
 
 /// A comparação de textos sem maiúsculas 0x90c1d0(a, b, 1, 0) que as ordens do Database.cpp usam.
-unsafe fn dbr_comparar_textos(a: *const u8, b: *const u8) -> i32 {
+unsafe fn compare_text_nocase(a: *const u8, b: *const u8) -> i32 {
     let textos: unsafe extern "C" fn(*const u8, *const u8, i32, u32) -> i32 = core::mem::transmute(0x90c1d0usize);
     textos(a, b, 1, 0)
 }
@@ -15,11 +15,11 @@ unsafe extern "C" fn database_compare_clubs_by_short_name(a: usize, b: usize) ->
         let c = *(p as *const usize);
         if c == 0 { b"\0".as_ptr() } else { (c + 0x38) as *const u8 } // o nome curto
     };
-    dbr_comparar_textos(nome(a), nome(b))
+    compare_text_nocase(nome(a), nome(b))
 }
 
 unsafe extern "C" fn comparar_database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = database_compare_clubs_by_short_name(a, b);
     PLACAR.registrar(r == n, || format!("database_compare_clubs_by_short_name({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -39,11 +39,11 @@ unsafe extern "C" fn database_compare_staff_by_full_name(a: usize, b: usize) -> 
     if pb != 0 {
         formatar(pb, nb.as_mut_ptr() as usize, 0x7d0, 1);
     }
-    dbr_comparar_textos(na.as_ptr(), nb.as_ptr())
+    compare_text_nocase(na.as_ptr(), nb.as_ptr())
 }
 
 unsafe extern "C" fn comparar_database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = database_compare_staff_by_full_name(a, b);
     PLACAR.registrar(r == n, || format!("database_compare_staff_by_full_name({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -55,7 +55,7 @@ unsafe extern "C" fn comparar_database_compare_staff_by_full_name(a: usize, b: u
 /// senão 0. Pessoa nula: a original (caixa e 0). Telas, regeneração e transferências (~137 chamadores).
 unsafe extern "C" fn database_staff_matches_names(pessoa: usize, nome: u32, sobrenome: u32, comum: u32, data: usize) -> u32 {
     if pessoa == 0 {
-        return orig::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(%%I2%%)(pessoa, nome, sobrenome, comum, data);
+        return original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(%%I2%%)(pessoa, nome, sobrenome, comum, data);
     }
     let ler = |d: usize| core::ptr::read_unaligned((pessoa + d) as *const usize);
     if ler(0x61) == 0 && ler(0x69) == 0 {
@@ -77,7 +77,7 @@ unsafe extern "C" fn database_staff_matches_names(pessoa: usize, nome: u32, sobr
 }
 
 unsafe extern "C" fn comparar_database_staff_matches_names(pessoa: usize, nome: u32, sobrenome: u32, comum: u32, data: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(%%I2%%);
+    let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(%%I2%%);
     if pessoa == 0 {
         return o(pessoa, nome, sobrenome, comum, data); // caixa: só a original
     }
