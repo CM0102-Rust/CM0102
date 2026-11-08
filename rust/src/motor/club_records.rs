@@ -71,7 +71,7 @@ pub(crate) unsafe fn match_stats_category(p: usize, side: i32, warn: bool, error
             if warn {
                 crate::comparison::branch("cpx_12 categoria da liga");
             }
-            if count(read_usize(p) as i32) != 0 { 2 } else { 3 } // cpx12: a categoria da liga
+            if count(read_usize(p) as i32) != 0 { 2 } else { 3 } // cpx12: the league category
         }
         _ => {
             *error = true;
@@ -583,7 +583,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
         let v = read_usize(field) as i32;
         write_usize(field, if v == -1 { value } else { v.wrapping_add(value) } as usize);
     };
-    // o vendedor: o recebido
+    // the seller: the amount received
     let t = season(this, seller, 1);
     let s = always(this, seller, 1);
     add(t + club_record::TRANSFER_INCOME);
@@ -598,7 +598,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
         write_usize(s + club_record::TRANSFER_INCOME, read_usize(t + club_record::TRANSFER_INCOME));
         write_i16(s + club_record::TRANSFER_INCOME_YEAR, year);
     }
-    // o comprador: o gasto
+    // the buyer: the amount spent
     let t = season(this, buyer, 1);
     let s = always(this, buyer, 1);
     add(t + club_record::TRANSFER_SPENDING);

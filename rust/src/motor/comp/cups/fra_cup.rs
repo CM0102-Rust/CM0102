@@ -105,7 +105,7 @@ pub(crate) unsafe fn single_stage_round_table(this: usize, stage: u32, rounds: *
 /// 0x3c); o clube da divisão mais baixa joga em casa (+0xb = 1) da 7ª rodada à semifinal.
 pub(crate) const FRENCH_CUP_ROUNDS: [FraCupCupRound; 9] = [
     cql11r((0xa, 9, 0, 0xffff_ffff), (6, 0xa, 0, 5, 2, 0), 0x3c, (0, 3, 0), 4, (0x28, 0x14, 0x28, 0), (0, 1, 0), (0, 0, 0)),
-    cql11r((0xc, 0xa, 0, 4), (0x1b, 0xa, 0, 5, 2, 0), 0x46, (1, 3, 0), 4, (0xb8, 0x5c, 0xa4, 0x28), (0, 1, 0), (0, 0, 0)), // cql11: a 7ª rodada da Copa da França
+    cql11r((0xc, 0xa, 0, 4), (0x1b, 0xa, 0, 5, 2, 0), 0x46, (1, 3, 0), 4, (0xb8, 0x5c, 0xa4, 0x28), (0, 1, 0), (0, 0, 0)), // cql11: the 7th round of the Coupe de France
     cql11r((3, 0xb, 0, 4), (0x12, 0xb, 0, 5, 2, 0), 0x50, (1, 3, 0), 4, (0x5c, 0x2e, 0, 0xcc), (0, 1, 0), (0, 0, 0)),
     cql11r((6, 0, 1, 3), (0x16, 0, 1, 5, 2, 0), 0x5a, (1, 3, 0), 4, (0x40, 0x20, 0x12, 0xcc), (0, 1, 0), (0, 0, 0)),
     cql11r((0x1b, 0, 1, 3), (0xc, 1, 1, 5, 2, 0), 0x64, (1, 3, 0), 4, (0x20, 0x10, 0, 0), (0, 1, 0), (0, 0, 0)),
@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, s
 /// A Copa da Liga francesa (FraLgeCup): sete rodadas de setembro a abril do ano seguinte.
 pub(crate) const FRENCH_LEAGUE_CUP_ROUNDS: [FraCupCupRound; 7] = [
     cql11r((1, 8, 0, 3), (5, 9, 0, 1, 2, 0), 0xe6, (0, 3, 0), 4, (0x10, 8, 0x10, 0), (0, 1, 0), (0, 0x493e0, 0)),
-    cql11r((0xf, 9, 0, 4), (0x10, 0xa, 0, 1, 2, 0), 0xa, (0, 3, 0), 4, (0x1c, 0xe, 0x14, 0x10), (0, 1, 0), (0, 0x493e0, 0)), // cql11: a 1ª rodada da Copa da Liga francesa
+    cql11r((0xf, 9, 0, 4), (0x10, 0xa, 0, 1, 2, 0), 0xa, (0, 3, 0), 4, (0x1c, 0xe, 0x14, 0x10), (0, 1, 0), (0, 0x493e0, 0)), // cql11: the 1st round of the French League Cup
     cql11r((0x1a, 0xa, 0, 4), (8, 0, 1, 5, 2, 0), 0x14, (0, 3, 0), 4, (0x20, 0x10, 0x12, 0x24), (0, 1, 0), (0, 0x493e0, 0)),
     cql11r((0xe, 0, 1, 4), (0x1d, 0, 1, 5, 2, 0), 0x1e, (0, 3, 0), 4, (0x10, 8, 0, 0x24), (0, 1, 0), (0, 0x493e0, 0)),
     cql11r((3, 1, 1, 4), (0x13, 1, 1, 5, 2, 0), 0x78, (0, 3, 0), 4, (8, 4, 0, 0), (0, 1, 0), (0, 0x493e0, 0)),
@@ -151,7 +151,7 @@ pub(crate) const FRENCH_LEAGUE_CUP_ROUNDS: [FraCupCupRound; 7] = [
 pub(crate) const COPA_DEL_REY_ROUNDS: [FraCupCupRound; 7] = [
     cql11r((0x12, 7, 0, 4), (0x1e, 7, 0, 2, 2, 0), 0xe6, (3, 3, 0), 4, (0x26, 0x13, 0x26, 0), (0, 1, 7), (0, 0xffff_ffff, 0)),
     cql11r((8, 8, 0, 4), (0xd, 0xb, 0, 2, 2, 0), 0xa, (3, 3, 0), 4, (0x40, 0x20, 0x2d, 0x26), (0, 1, 0), (0, 0xffff_ffff, 0)),
-    cql11r((0xf, 0xb, 0, 4), (3, 0, 1, 2, 2, 0), 0x14, (3, 3, 0), 4, (0x20, 0x10, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)), // cql11: a 2ª rodada da Copa do Rei
+    cql11r((0xf, 0xb, 0, 4), (3, 0, 1, 2, 2, 0), 0x14, (3, 3, 0), 4, (0x20, 0x10, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)), // cql11: the 2nd round of the Copa del Rey
     cql11r((5, 0, 1, 4), (0xa, 0, 1, 2, 2, 0), 0x1e, (3, 0, 3), 4, (0x10, 8, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
     cql11r((0x13, 0, 1, 4), (0x1f, 0, 1, 2, 2, 0), 0x78, (3, 0, 3), 6, (8, 4, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
     cql11r((0x17, 1, 1, 4), (0xb, 3, 1, 2, 2, 0), 0x82, (3, 0, 3), 6, (4, 2, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
@@ -254,8 +254,8 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
             && n < french_cup_amateur_limit(this)
     });
     crate::comparison::branch("cqm_11 inscritos da copa da franca");
-    fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: a Segunda francesa na Copa da França
-    fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: a Primeira francesa na Copa da França
+    fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: the French Second Division in the Coupe de France
+    fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: the French First Division in the Coupe de France
     ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
 }
 
@@ -320,8 +320,8 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
         i = i.wrapping_add(1);
     }
     crate::comparison::branch("cqm_11 inscritos da copa da liga francesa");
-    fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: a Segunda francesa na Copa da Liga
-    fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: a Primeira francesa na Copa da Liga
+    fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: the French Second Division in the League Cup
+    fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: the French First Division in the League Cup
     ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
 }
 

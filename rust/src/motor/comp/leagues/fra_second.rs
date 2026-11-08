@@ -95,7 +95,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     previstas(this);
     if p.baixo {
         let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
-        if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: a divisão de baixo espanhola
+        if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: the Spanish lower division
             crate::comparison::branch("cqm_5 divisao de baixo espanhola");
             let e = novo(0xee);
             // simplification: the original pushes the year in the low word of ecx, with the rest of the record pointer in
@@ -111,7 +111,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
 
 pub(crate) const FRENCH_SECOND_DIVISION: LeagueDivision = LeagueDivision {
     vtabela: 0x96ac2c,
-    disciplina: 0xc, // cqm5: a regra de disciplina francesa
+    disciplina: 0xc, // cqm5: the French discipline rule
     regras: 0x5bf0a0,
     tabela: 0x5bef10,
     arquivo: 0x9ccc0c,
@@ -129,7 +129,7 @@ pub(crate) const FRENCH_THIRD_DIVISION: LeagueDivision = LeagueDivision {
 };
 pub(crate) const SPANISH_SEGUNDA: LeagueDivision = LeagueDivision {
     vtabela: 0x96fbd0,
-    disciplina: 0x1a, // cqm5: a regra de disciplina espanhola
+    disciplina: 0x1a, // cqm5: the Spanish discipline rule
     regras: 0x855cc0,
     tabela: 0x855b40,
     arquivo: 0xa828bc,
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u
     crate::comparison::branch("cqj_6 tabela da segunda");
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, 0);
     *((this + league::PRIZE_MODE) as *mut u8) = 2;
-    eng_prm_pay_tv_rights(this, 0x1e8480, comp_record_of(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)); // cqj6: a TV de quem caiu da primeira
+    eng_prm_pay_tv_rights(this, 0x1e8480, comp_record_of(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)); // cqj6: the TV money of those relegated from the first division
     eng_prm_pay_tv_rights(this, 0x16e360, comp_record_of(KEY_CLUB_COMP_FRENCH_SECOND_DIVISION));
     eng_prm_pay_tv_rights(this, 0x16e360, comp_record_of(KEY_CLUB_COMP_FRENCH_NATIONAL));
     1

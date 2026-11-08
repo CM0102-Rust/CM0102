@@ -5,8 +5,8 @@ use super::*;
 ///
 /// [pt] A janela do Brasil: de 11 de dezembro (andando para a quarta-feira [inferência]) a 8 de novembro (andando para a sexta-feira [inferência]).
 pub(crate) const BRAZIL_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
-    [0x04, 0x00, 0x03, 0x0b, 0x0b, 0x01], // cqk3: o Brasil abre em dezembro
-    [0x04, 0x00, 0x05, 0x08, 0x0a, 0x00], // cqk3: o Brasil fecha em novembro
+    [0x04, 0x00, 0x03, 0x0b, 0x0b, 0x01], // cqk3: Brazil opens in December
+    [0x04, 0x00, 0x05, 0x08, 0x0a, 0x00], // cqk3: Brazil closes in November
 ];
 
 /// the Brazilian rule (4): one window, from 11 December (moved to the Wednesday [inference]) to 8 November (moved to
@@ -19,7 +19,7 @@ pub(crate) const BRAZIL_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 pub(crate) unsafe extern "thiscall" fn construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparison::branch("cqk_3 brasil");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x968838, 1, &BRAZIL_TRANSFER_WINDOWS, 0x98b104, 0x50);
-    *((this + 0x13) as *mut u8) = 3; // cqk3: o limite do Brasil
+    *((this + 0x13) as *mut u8) = 3; // cqk3: the Brazil limit
     this
 }
 

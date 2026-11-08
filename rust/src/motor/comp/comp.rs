@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
             return 0;
         }
         crate::comparison::branch("cqh_6 liga de baixo completa");
-        i = read_u32_as_usize(c + league::LOWER_DIVISION_ID) as i32; // cqh6: a liga de baixo
+        i = read_u32_as_usize(c + league::LOWER_DIVISION_ID) as i32; // cqh6: the lower league
     }
     1
 }
@@ -237,7 +237,7 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
             let club = if league { read_u32_as_usize(read_u32_as_usize(f + 0xb1) + i as usize * 0x3b) } else { read_u32_as_usize(read_u32_as_usize(f + 0xa7) + i as usize * 6) };
             if club != 0 && !(0..n).any(|k| read_u32_as_usize(v + k as usize * 4) == club) && n < 0xc8 { // cqh6: até 200 clubes
                 crate::comparison::branch("cqh_6 clube na lista");
-                core::ptr::write_unaligned((v + n as usize * 4) as *mut u32, club as u32); // cqh6: o clube na lista
+                core::ptr::write_unaligned((v + n as usize * 4) as *mut u32, club as u32); // cqh6: the club in the list
                 n += 1;
             }
             i += 1;
@@ -288,7 +288,7 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usi
                     if read_u32_as_usize(t) == club {
                         *stage_id = read_i16(s + 0x3a);
                         crate::comparison::branch("cqh_6 progresso na copa");
-                        *status = read_u8(t + 5); // cqh6: a situação do time
+                        *status = read_u8(t + 5); // cqh6: the team’s situation
                         team = k;
                     }
                     k += 1;
@@ -472,7 +472,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
     if nation != 0 {
         if let Some(k) = find_key_nation_index(nation) {
             crate::comparison::branch("cqb_12 nacao chave do clube");
-            return *((key_nation_entry(k) + 0x14) as *const u8); // cqb12: o índice ativo da nação do clube
+            return *((key_nation_entry(k) + 0x14) as *const u8); // cqb12: the active index of the club’s nation
         }
     }
     // 0x53b900: push clube; add esp, 4 -> cdecl
@@ -481,7 +481,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
         return 0;
     }
     crate::comparison::branch("cqb_12 clube sem nacao chave");
-    3 // cqb12: clube fora das nações-chave
+    3 // cqb12: club outside the key nations
 }
 
 /// the active index of the stadium city's nation among the active key nations, or 3
@@ -498,7 +498,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(stadium: usize
     match find_key_nation_index(u(u(stadium + stadium::STADIUM_CITY) + 0x1f)) {
         Some(k) => {
             crate::comparison::branch("cqb_12 nacao chave do estadio");
-            *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: o índice ativo da nação do estádio
+            *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: the active index of the stadium’s nation
         }
         None => 3,
     }
@@ -589,7 +589,7 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
     let mut t = [0u8; 8];
     copy(e, t.as_mut_ptr(), d);
     crate::comparison::branch("cpw_13 registro novo");
-    *((e + 8) as *mut u8) = count; // cpw13: a conta do registro novo
+    *((e + 8) as *mut u8) = count; // cpw13: the count of the new record
     let q = (*((rec + 5) as *const i8)).wrapping_add(1);
     *((rec + 5) as *mut i8) = q;
     qsort(read_usize(rec), q as i32 as u32, 9, 0x778e90);
@@ -683,14 +683,14 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
                 return 3;
             }
             if let Some(k) = row(a) {
-                return *((0xb63d74 + 72 * k) as *const u8); // cpt3: a nacao do amistoso
+                return *((0xb63d74 + 72 * k) as *const u8); // cpt3: the friendly’s nation
             }
             return if national_team(home) != 0 { 0 } else { 3 };
         }
     }
     if read_usize(comp + competition::CLUB_COMP_NATION) != 0 {
         return match row(nation) {
-            Some(k) => *((0xb63d74 + 72 * k) as *const u8), // cpt3: a nacao-chave da competicao
+            Some(k) => *((0xb63d74 + 72 * k) as *const u8), // cpt3: the competition’s key nation
             None => 3,
         };
     }

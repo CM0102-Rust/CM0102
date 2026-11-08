@@ -8,7 +8,7 @@ use super::*;
 /// a virada (`start_new_cup_season`) com os inscritos de JapEmpCup::collect_entrants (0x6624f0) e as caixas do jap_emp_cup.cpp nas
 /// linhas 0x217, 0x21e e 0x225.
 pub(crate) unsafe extern "thiscall" fn jap_emp_cup_start_new_season(this: usize) -> u32 {
-    start_new_cup_season(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: a Copa do Imperador
+    start_new_cup_season(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: the Emperor’s Cup
 }
 
 /// rule: the Emperor's Cup has 7 single-leg rounds with a seeded draw (+0xd = 0x83): 1st round (64 teams) drawn 1/11,

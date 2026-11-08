@@ -197,7 +197,7 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize)>(IDX_INJURE);
     let owner = *(G_INJURY as *const usize);
     if owner == 0 || *((owner + injury_fields::MATCH_HIT_LIST) as *const usize) == 0 {
-        // sem lista, a original a cria (aloca): fica sem comparacao
+        // without a list, the original routine creates it (allocates): left without comparison
         return f(m, kind, chance, p, o);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -982,13 +982,13 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
         if n >= s + 0x1e && read_usize(G_TRANSFER_MANAGER) != 0 && read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856) != 0 {
             crate::comparison::branch("cqb_5 suspende as miras");
             let suspender: unsafe extern "thiscall" fn(usize, usize, u8) = core::mem::transmute(FN_SHORTLIST_MANAGER_SUSPEND_CLUBS_SHORTLISTING_PLAYER);
-            suspender(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), p, 0); // cqb5: os clubes que o miram suspendem
+            suspender(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), p, 0); // cqb5: the clubs targeting him suspend
         }
     }
     write_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x28, days);
     write_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2c, days);
     crate::comparison::branch("cqb_5 volta ao treino");
-    let volta = return_to_training_days(kind, days); // cqb5: a volta ao treino pelo percentual
+    let volta = return_to_training_days(kind, days); // cqb5: the return to training by percentage
     write_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a, volta);
     write_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2e, read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a));
     let copy: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
@@ -1304,7 +1304,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
     let ausente: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_AWOL_IS_PLAYER_AWOL);
     let away_of_season: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_INJURY_PLAYER_IN_CLOSE_SEASON);
     let choose: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8 = core::mem::transmute(FN_INJURY_CHOOSE_INJURY_TYPE);
-    let mut how_many = (read_i32(G_STAFF_COUNT) / 150) as i16; // cpw9: os sorteios do treino
+    let mut how_many = (read_i32(G_STAFF_COUNT) / 150) as i16; // cpw9: the training random draws
     if how_many < 10 {
         how_many = 10;
     }
@@ -1346,7 +1346,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
                 }
             } else {
                 let r = friendly_random(0xa0);
-                let lim = ((read_i8(read_usize(p + staff::PLAYER) + 0x2d) as i32 - 3) * 5 + read_i8(physical_record_by_index(this, idx) + 0x1e) as i32) * 2; // cpw9: o risco sem recorrência
+                let lim = ((read_i8(read_usize(p + staff::PLAYER) + 0x2d) as i32 - 3) * 5 + read_i8(physical_record_by_index(this, idx) + 0x1e) as i32) * 2; // cpw9: the risk without recurrence
                 if r > lim {
                     break 'proximo;
                 }
@@ -1725,12 +1725,12 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
             crate::comparison::branch("cpv_8 ritmo");
             if read_i8(game + fixture::HOME_SIDE_MARK) == 0 {
                 crate::comparison::branch("cpv_8 metade");
-                v = (v as i16 as i32) / 2; // cpv8: sem a marca do jogo, a metade
+                v = (v as i16 as i32) / 2; // cpv8: without the match mark, half
             } else if read_i8(pessoa + staff::AGE) as i32 > sorteio(3) + 0x21 {
                 v = ((v as i16 as i32) as f64 * read_f64_at(0x968928)) as i32; // 0x968928 = 1.25
             } else if (read_i8(pessoa + staff::AGE) as i32) < 0x17 - sorteio(5) {
                 crate::comparison::branch("cpv_8 jovem");
-                v = v.wrapping_add(v); // cpv8: o jovem em dobro
+                v = v.wrapping_add(v); // cpv8: the young player counts double
             }
             if after(G_GAME_START_DATE, read_i32(G_CURRENT_DATE) as u32, read_i32(G_CURRENT_DATE_LEAP) as u32) != 0 {
                 v = 0;
@@ -1853,7 +1853,7 @@ pub(crate) unsafe extern "thiscall" fn end_player_injury(this: usize, person: us
         return;
     }
     let id = read_i32(person);
-    if id >= read_i32(G_STAFF_COUNT) { // cpv10: o id da pessoa
+    if id >= read_i32(G_STAFF_COUNT) { // cpv10: the person id
         return;
     }
     if id >= read_i32(G_STAFF_COUNT) / 2 {
@@ -2906,7 +2906,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
                     }
                 } else {
                     let (f, mc) = (read_i16(rec + 8) as i32, read_i16(rec + physical_record::CONDITION) as i32);
-                    if mc.wrapping_mul(f) / 10000 < 8000 { // cpw8: a forma abaixo de 80% na pré-temporada
+                    if mc.wrapping_mul(f) / 10000 < 8000 { // cpw8: form below 80% in pre-season
                         crate::comparison::branch("cpw_8 sorteio da forma");
                         let r = friendly_random(2);
                         l38 = (r + l3c) / 2;
@@ -2925,7 +2925,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     } else if v > 100 {
         v = 100;
     }
-    let s = (1000 - 12 * v as i32) as i16 as i32; // cpw8: a recuperação por dia livre
+    let s = (1000 - 12 * v as i32) as i16 as i32; // cpw8: the recovery per free day
     let half = s / 2;
     let n = natural as i32;
     let floor = ((n * 25 / 20 + 15) * 100) as i16 as i32;
@@ -3120,7 +3120,7 @@ pub(crate) unsafe extern "C" fn injury_compare_entry_dates(key: usize, item: usi
         return 1;
     }
     crate::comparison::branch("cps_9 data igual");
-    0 // cps9: a volta de hoje achada
+    0 // cps9: the return of today found
 }
 
 /// Returns the player's recurring injury type, or 0xff when he has none or is not a player.

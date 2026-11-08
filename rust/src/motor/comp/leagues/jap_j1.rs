@@ -50,8 +50,8 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
     if list == 0 {
         return show_error_at(0x9eabc8, 0x245);
     }
-    core::ptr::write_unaligned(list as *mut usize, half_champion(this, 0)); // cqq9: o campeão do primeiro turno
-    core::ptr::write_unaligned((list + 4) as *mut usize, half_champion(this, 1)); // cqq9: o campeão do segundo turno
+    core::ptr::write_unaligned(list as *mut usize, half_champion(this, 0)); // cqq9: the first-stage champion
+    core::ptr::write_unaligned((list + 4) as *mut usize, half_champion(this, 1)); // cqq9: the second-stage champion
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 2, &mut rodadas, &mut extra, 0);
@@ -159,7 +159,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
         exit(-1);
     }
     let a = core::ptr::read_unaligned((this + league::YEAR) as *const i16);
-    core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(1)); // cqq9: o ano seguinte da J1
+    core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(1)); // cqq9: the next year of the J1
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
     crate::comparison::branch("cqq_9 virada da j1");
     let error = if virtual_(this, 0x8c) == 0 {
@@ -348,6 +348,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_set_up_rules(this: usize) -> u32 {
 /// [pt] { 0x663c20 } (thiscall, ret 4, jap_j1.cpp): `JapJ1::create_half_season_stage(k)`, um turno da J1 (a caixa da linha
 /// 0x278; o 20º argumento do construtor é 0xf).
 pub(crate) unsafe extern "thiscall" fn jap_j1_create_half_season_stage(this: usize, k: u32) {
-    create_half_season_stage(this, k, 0x9eabc8, 0x278, 0xf, 0xc2, "cqr_1 turno da j1") // cqr1: os pontos por vitória na J1
+    create_half_season_stage(this, k, 0x9eabc8, 0x278, 0xf, 0xc2, "cqr_1 turno da j1") // cqr1: the points per win in the J1
 }
 

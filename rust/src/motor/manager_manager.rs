@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         v += (b127 - o127) as f64 * read_f64(0x968a98);
         v += (di as i16) as f64 * read_f64(0x96d1d0);
         v += read_f64(0x967880);
-        v = v * read_f64(0x96d1c8) - read_f64(0x96d1c0); // cqc8: a nota do jogo (× 67 − 470)
+        v = v * read_f64(0x96d1c8) - read_f64(0x96d1c0); // cqc8: the match rating (× 67 − 470)
         v *= factor;
         aj = aj.wrapping_add(ftol_f64(v));
         // the average reputation of the opponents selected (by the club’s nation)
@@ -537,7 +537,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     crate::comparison::branch("cqc_8 confianca");
     for (o, k) in [(6usize, 0x968e40usize), (0xa, 0x968968), (8, 0x968980), (0xc, 0x968918)] {
         let l = board_row(this, club) + o;
-        let t = ftol_f64(v * read_f64(k)); // cqc8: a confiança pelo ajuste
+        let t = ftol_f64(v * read_f64(k)); // cqc8: the confidence by the adjustment
         write_i16(l, read_i16(l).wrapping_add(t as i16));
     }
     for o in [6usize, 0xa, 8, 0xc] {
@@ -898,7 +898,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     }
     let meta = || read_i32(ln() + 0x2c);
     let por = |v: i32| write_u32(ln() + 0x2c, v as u32);
-    por(read_u8(lg + comp_stats_club::DANGER_POSITION) as i32); // cqc9: a meta pela posição de perigo
+    por(read_u8(lg + comp_stats_club::DANGER_POSITION) as i32); // cqc9: the target by the danger position
     let n = read_i16(club_division_comp(club) + 0x3e) as i32;
     if meta() == n {
         por(n - 1);
@@ -1016,7 +1016,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     if read_u8(ln() + 2) & 1 == 0 && call_comp_virtual(club_division_comp(club), 0x98) == 0 && bf != 0 && read_usize(bf + 0x69) != 0 {
         let p1d = || read_i8(read_usize(read_usize(club + club::CHAIRMAN) + 0x69) + 0x1d) as i32;
         crate::comparison::branch("cqc_9 sorteio do presidente");
-        let r = friendly_random(0x32); // cqc9: o sorteio do presidente
+        let r = friendly_random(0x32); // cqc9: the chairman random draw
         if r > p1d() + meta() * 5 {
             ou(0x80);
         } else {
@@ -1068,7 +1068,7 @@ pub(crate) unsafe fn finish_board_update(this: usize, club: usize) {
         crate::comparison::branch("cqc_9 confianca de volta");
         for (o, k) in [(6usize, 0x96d288usize), (8, 0x9688d0), (0xa, 0x9688d0), (0xc, 0x9688d0)] {
             let x = read_i16(ln() + o) as i32;
-            let v = (x as f64 * read_f64(0x9688a0) + read_f64(k)) * read_f64(0x967880); // cqc9: a confiança de volta
+            let v = (x as f64 * read_f64(0x9688a0) + read_f64(k)) * read_f64(0x967880); // cqc9: the confidence restored
             write_i16(ln() + o, ftol_f64(v) as i16);
         }
     }
@@ -1490,7 +1490,7 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, club: usize,
         }
         let r = friendly_random(5);
         let more = if left != 0 && read_i32(left) >= read_i32(G_STAFF_COUNT) - 0x10 { 7 } else { 4 };
-        v.w(0x16, (r as u16).wrapping_add(v.rw(0x1e)).wrapping_add(more)); // cqc9: a chegada do técnico
+        v.w(0x16, (r as u16).wrapping_add(v.rw(0x1e)).wrapping_add(more)); // cqc9: the arrival of the manager
         if friendly_random(500) == 0 {
             let r = friendly_random(0x14);
             v.w(0x16, v.rw(0x16).wrapping_add(r as u16));
@@ -1611,8 +1611,8 @@ pub(crate) unsafe extern "thiscall" fn board_named_players_after_match(this: usi
         return 0;
     }
     crate::comparison::branch("cqa_10 a diretoria sorteia");
-    let r1 = sorteio(read_i8(read_usize(t + staff::NON_PLAYER) + 0x16) as i32); // cqa10: o sorteio pela ficha do técnico
-    let r2 = sorteio(10); // cqa10: o sorteio da diretoria
+    let r1 = sorteio(read_i8(read_usize(t + staff::NON_PLAYER) + 0x16) as i32); // cqa10: the random draw by the player sheet of the manager
+    let r2 = sorteio(10); // cqa10: the board random draw
     if r1 < r2 {
         return 0;
     }
@@ -1911,7 +1911,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
                         return 0x2000;
                     }
                 }
-                let r = sorteio(200); // cpy12: o sorteio da gravidade
+                let r = sorteio(200); // cpy12: the severity random draw
                 if read_i16(l + injury_entry::DAYS_OUT) as i32 > r.wrapping_add(0x19) {
                     let a = sorteio((0x29 - n()) * 5);
                     let b = sorteio(read_i16(l + injury_entry::DAYS_OUT) as i32);
@@ -2007,7 +2007,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
     let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
     let budget: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> i64 = core::mem::transmute(FN_FINANCE_GET_TRANSFER_BUDGET);
     let orcamento = budget(finances(read_usize(G_FINANCE_TABLE), club), j, 0, 0, 1, 0);
-    if value as i64 > orcamento.wrapping_mul(12) / 10 { // cpy12: a verba da diretoria
+    if value as i64 > orcamento.wrapping_mul(12) / 10 { // cpy12: the board budget
         crate::comparison::branch("cpy_12 diretoria sem verba");
         return 0x800;
     }
@@ -2075,7 +2075,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_ultimatum_news(_this: usize, c
     write(nt, 5, read_usize(opponent) as u32);
     write(nt, 6, read_usize(comp) as u32);
     crate::comparison::branch("cpy_12 noticia do ultimato");
-    write(nt, 7, sorteio(5) as u32); // cpy12: o sorteio do ultimato
+    write(nt, 7, sorteio(5) as u32); // cpy12: the ultimatum random draw
     if read_i16(club + club::REPUTATION) < 0x1676 {
         to_club(read_usize(G_NEWS), nt, club);
     } else if sorteio(3) != 0 {
@@ -2368,7 +2368,7 @@ pub(crate) unsafe extern "thiscall" fn post_manager_under_pressure_news(this: us
     news_set_slot(n, 8, reason as i32 as u32);
     news_set_slot(n, 9, kind as u8 as i8 as i32 as u32);
     crate::comparison::branch("cpx_10 sorteio do boato");
-    let mut boato = friendly_random(10); // cpx10: o sorteio do boato
+    let mut boato = friendly_random(10); // cpx10: the rumour random draw
     let nj = read_usize(manager + staff::NON_PLAYER);
     if nj != 0 {
         let conhecer: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
@@ -2390,7 +2390,7 @@ pub(crate) unsafe extern "thiscall" fn post_manager_under_pressure_news(this: us
     let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut data = [0u32; 2];
     crate::comparison::branch("cpx_10 data da pressure");
-    copy(board_row_of(this, club) + 0x18, data.as_mut_ptr() as usize, G_CURRENT_DATE); // cpx10: a data da notícia na linha
+    copy(board_row_of(this, club) + 0x18, data.as_mut_ptr() as usize, G_CURRENT_DATE); // cpx10: the news date in the row
 }
 
 /// Posts the 6000 news with the manager, the kind, the club, the job, the chairman and the reason; a human manager with
@@ -3412,7 +3412,7 @@ pub(crate) unsafe fn issue_ultimatum(this: usize, club: usize, l: usize) -> u8 {
         return 0;
     }
     let nation: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
-    nation(club); // a original descarta o valor
+    nation(club); // the original routine discards the value
     let weeks: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_WEEKS);
     let (mut d1, mut d2) = ([0u8; 8], [0u8; 8]);
     let p1 = weeks(G_CURRENT_DATE, d1.as_mut_ptr(), 8);
@@ -5355,7 +5355,7 @@ pub(crate) unsafe extern "thiscall" fn post_job_rumour_news(_this: usize, person
     write(n, 4, read_u8(person + staff::JOB_FOR_CLUB) as i8 as i32 as u32);
     write(n, 5, read_usize(read_usize(person + staff::CLUB_JOB)) as u32);
     write(n, 6, read_usize(club) as u32);
-    let s = sorteio(4) as i16 as i32; // cpv4: a variante do boato
+    let s = sorteio(4) as i16 as i32; // cpv4: the rumour variant
     write(n, 7, s as u32);
     let mut clubs = [0usize; 30];
     let manager = read_usize(G_TRANSFER_MANAGER);

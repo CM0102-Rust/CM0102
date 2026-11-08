@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_formation(c: usize, sheets
     }
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c, sheets, a2, a3, a4), || choose_formation(c, sheets, a2, a3, a4));
     SCOREBOARD.record(igual && r == rr, || {
-        // o primeiro byte diferente (as regioes sao grandes)
+        // the first differing byte (the regions are large)
         let dif = mo.0.iter().zip(mr.0.iter()).find_map(|(a, b)| {
             a.1.iter().zip(b.1.iter()).position(|(x, y)| x != y).map(|k| format!("{:#x}+{:#x}: {:x?} x {:x?}", a.0, k, &a.1[k..(k + 8).min(a.1.len())], &b.1[k..(k + 8).min(b.1.len())]))
         });

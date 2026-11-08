@@ -91,7 +91,7 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, entrant
 /// start_new_season()`, a virada (`usa_mls_all_stars_cup_start_new_season`) com os dois times de UsaMlsAllStars::set_up_teams (0x90a540) e as caixas
 /// do usa_mls_all_stars.cpp nas linhas 0x133, 0x13a e 0x141, sem as posições previstas.
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
-    usa_mls_all_stars_cup_start_new_season(this, 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: o Jogo das Estrelas
+    usa_mls_all_stars_cup_start_new_season(this, 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: the All-Star Game
 }
 
 /// Club record i of G_CLUB_TABLE (0x245 bytes each).
@@ -155,7 +155,7 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
             if k == 0 {
                 crate::comparison::branch("cqr_6 estadio do jogo das estrelas");
                 let first = read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE));
-                write_u32_from_usize(first + 0x69, read_u32_as_usize(c + 0x69)); // cqr6: o estádio do clube sorteado
+                write_u32_from_usize(first + 0x69, read_u32_as_usize(c + 0x69)); // cqr6: the stadium of the drawn club
                 *((read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE)) + 0x6d) as *mut u8) = 0;
                 break;
             }
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_teams(this: usize) -> i32 {
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
     let year = read_i16(today + 2) as u16 as u32;
-    let d = make_date_dword(0x1a, 6, year, 6); // cqn10: a convocação do Jogo das Estrelas
+    let d = make_date_dword(0x1a, 6, year, 6); // cqn10: the All-Star Game call-up
     if stage != 0 && is_date_today(d, today) {
         crate::comparison::branch("cqn_10 convocacao do jogo das estrelas");
         let convocar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_USAMLSALLSTARS_SELECT_SQUADS);
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let game: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     sorteio(t, 0, 0xf, 5, 0, 5, year);
-    game(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: o Jogo das Estrelas em 2 de agosto
+    game(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
     let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
     let d = |o: usize, v: u32| core::ptr::write_unaligned((t + o) as *mut u32, v);
     w(0x18, 2);

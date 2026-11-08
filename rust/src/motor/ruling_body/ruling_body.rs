@@ -60,7 +60,7 @@ pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
 /// suspensão, 0 sem gravar nada.
 pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
     let code = match *((j + 0x2c) as *const u8) {
-        0 => *((j + 0x2e) as *const i8) as i32, // cpu10: a falta do primeiro tipo
+        0 => *((j + 0x2e) as *const i8) as i32, // cpu10: the foul of the first type
         1 => *((j + 0x2f) as *const i8) as i32,
         _ => return 0,
     };
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
         }
     };
     crate::comparison::branch("cpu_10 punicao");
-    *(r as *mut u8) = jogos; // cpu10: os jogos da suspensão
+    *(r as *mut u8) = jogos; // cpu10: the suspension matches
     *((r + 1) as *mut u8) = 0;
     *((r + 2) as *mut u16) = dias;
     let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
@@ -86,7 +86,7 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
     *((r + 0x10) as *mut u8) = 3;
     *((r + 0x1c) as *mut u32) = read_u32_as_usize(j) as u32;
     *((r + 0x6f) as *mut u8) = (*((j + 0x48) as *const u8) == 0) as u8;
-    1 // cpu10: a punição feita
+    1 // cpu10: the punishment carried out
 }
 
 /// At the new season, releases bans 2 (or 4) years old, frees the entries without a ban, clears the bookings of the

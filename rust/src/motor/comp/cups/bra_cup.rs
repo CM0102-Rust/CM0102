@@ -102,7 +102,7 @@ pub(crate) unsafe fn compare_cup_new_season(name: &str, this: usize, original: i
 /// virada (`start_new_cup_season`) com os inscritos de BraCup::build_team_table (0x427c20) e as caixas do bra_cup.cpp nas linhas
 /// 0x189, 0x190 e 0x197.
 pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season(this: usize) -> u32 {
-    start_new_cup_season(this, 0x427c20, 0x98a3bc, [0x189, 0x190, 0x197], 1, "cqr_5 virada da copa do brasil") // cqr5: a Copa do Brasil
+    start_new_cup_season(this, 0x427c20, 0x98a3bc, [0x189, 0x190, 0x197], 1, "cqr_5 virada da copa do brasil") // cqr5: the Copa do Brasil
 }
 
 /// The Brazilian Cup (Copa do Brasil): seven two-legged rounds from February to July of the cup's year.
@@ -113,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season(this: usize) -> 
 /// [pt] A Copa do Brasil: sete rodadas em ida e volta de fevereiro a julho do ano da copa (o jogo de volta 14 dias depois do
 /// de ida até as oitavas, 21 nas quartas e 7 na semifinal; 4 dias nas três últimas, ao meio da semana [inferência]).
 pub(crate) const COPA_DO_BRASIL_ROUNDS: [EngCcCupCupRound; 7] = [
-    cql10r((0x12, 0, 0, 6), (0x17, 1, 0, 2, 2, 0), 0xa, (0, 0, 1), 4, (0x36, 0x1b, 0x36, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqo12: a 1ª rodada da Copa do Brasil
+    cql10r((0x12, 0, 0, 6), (0x17, 1, 0, 2, 2, 0), 0xa, (0, 0, 1), 4, (0x36, 0x1b, 0x36, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqo12: the 1st round of the Copa do Brasil
     cql10r((9, 2, 0, 3), (0x16, 2, 0, 2, 2, 0), 0x14, (0, 0, 1), 4, (0x22, 0x11, 7, 0x36), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
     cql10r((6, 3, 0, 3), (0x1a, 3, 0, 2, 2, 0), 0x1e, (0, 0, 1), 6, (0x16, 0xb, 5, 0x3d), (0, 2, 0x15), (0, 0xffff_ffff, 0)),
     cql10r((0x12, 4, 0, 3), (7, 5, 0, 2, 2, 0), 0x28, (0, 0, 1), 6, (0x10, 8, 5, 0x42), (0, 2, 7), (0, 0xffff_ffff, 0)),
@@ -162,7 +162,7 @@ pub(crate) unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
     let mut i = 0i16;
     while i < read_i16(this + cup::TEAM_COUNT) {
         let o = i as usize * 6;
-        let font = o; // cqo12: a inscrição de cada vaga
+        let font = o; // cqo12: the registration of each slot
         let c = read_u32_as_usize(read_u32_as_usize(this + cup::ENTRANT_BOOK) + font);
         let e = read_u32_as_usize(this + cup::TEAM_TABLE) + o;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> 
 pub(crate) unsafe fn set_up_brazil_cup_rounds(this: usize) -> i32 {
     crate::comparison::branch("cqo_12 regras da copa do brasil");
     *((this + cup::SUBSTITUTES_NAMED) as *mut u8) = 7;
-    *((this + cup::SUBSTITUTIONS_ALLOWED) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil
+    *((this + cup::SUBSTITUTIONS_ALLOWED) as *mut u8) = 3; // cqo12: the Copa do Brasil substitutions
     core::ptr::write_unaligned((this + cup::PRIZE_FUND) as *mut u32, 0x7a120);
     let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let t = table(this, 0xffff_ffff, this + cup::ROUND_COUNT, this + cup::STAGE_LABEL, 0);

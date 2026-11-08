@@ -619,7 +619,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                         for (o, v) in [(0x109usize, 0usize), (0x10d, 0), (0x111, 1), (0x115, 0), (0x119, 0)] {
                             por(u(p, day_match::SCOREBOARD), o, v);
                         }
-                        // o maior nivel (0x5fcff0) entre o guardado e o deste humano
+                        // the highest level (0x5fcff0) between the stored one and that of this human
                         let greater = |s: u8, h: usize| if s as i16 > level(manager(), h) as i16 { s } else { level(manager(), h) as u8 };
                         for i in 0..16 {
                             let h = humano_a(i);
@@ -1304,7 +1304,7 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
     let ub = |a: usize| *(a as *const u8);
     if club == 0 || partida == 0 || other == 0 {
-        // simplification: a original mostra a caixa "Error" (match_day.cpp, linhas 0xc45/0xc4a/0xc4f); nao
+        // simplification: the original routine shows the “Error” box (match_day.cpp, lines 0xc45/0xc4a/0xc4f); no
         // happens in the game
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return;

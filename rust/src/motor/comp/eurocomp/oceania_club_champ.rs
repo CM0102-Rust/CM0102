@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         crate::comparison::branch("cqt_10 linha do grupo a");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
-        row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: a linha i do grupo A
+        row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: row i of group A
         i = i.wrapping_add(1);
     }
     news(this);
@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
     }
     for n in 0..4usize {
         crate::comparison::branch("cqt_10 time do grupo b");
-        write_u32_from_usize(teams + n * 4, selected_club(this, 4 + n)); // cqt10: o time na vaga do grupo B
+        write_u32_from_usize(teams + n * 4, selected_club(this, 4 + n)); // cqt10: the team in the group B slot
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
 
 // simplification: the stage is allocated and the news goes to the managers: does not run twice. Original only; the plan: returns 1 with the
 // stage in [+0xc][0], +0x30 = 0, the stage with 4 teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
-// escolhidos 4 a 7 (em qualquer ordem: o construtor ordena a tabela).
+// chosen 4 to 7 (in any order: the constructor sorts the table).
 
 /// The clubs of one source for the Oceania competition: up to 20, in the order of the club table.
 ///
@@ -368,7 +368,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
         champion = aus.clubes[0];
     }
     nz.ordenar(1);
-    place_pot_pair(this, 0, champion, nz.clubes[0], sorteio(2)); // cqt11: o campeão australiano e o neozelandês
+    place_pot_pair(this, 0, champion, nz.clubes[0], sorteio(2)); // cqt11: the Australian and New Zealand champions
     fij.ordenar(1);
     tai.ordenar(1);
     place_pot_pair(this, 1, fij.clubes[0], tai.clubes[0], sorteio(2)); // cqt11: Fiji e Taiti
@@ -800,7 +800,7 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce(
 /// 0x28 (os de cima classificados, os outros eliminados), começo no dia 20 do mês 7 num dia da semana 5; sem prêmio.
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqj_11 regras da oceania");
-    let day = 0x14; // cqj11: o dia do começo na Oceania
+    let day = 0x14; // cqj11: the start day in Oceania
     apply_cup_rules(this, &OCEANIA_RULES, day, 3)
 }
 

@@ -6,7 +6,7 @@ use super::*;
 /// [pt] As datas de referência das decisões (Date::set 0x54a130: dia do mês, mês a partir de 0, ano 1997, sem dia da
 /// semana): o dia do ano delas vai ao +0x1f das entradas do laço seguinte.
 pub(crate) const HOST_DECISION_DATES: [[u32; 4]; 7] = [
-    [0xa, 0x6, 0x7cd, 0xffffffff], // cqo3: 10 de julho, a Copa do Mundo
+    [0xa, 0x6, 0x7cd, 0xffffffff], // cqo3: 10 July, the World Cup
     [0x14, 0x6, 0x7cd, 0xffffffff],
     [0x14, 0x6, 0x7cd, 0xffffffff],
     [0x14, 0x6, 0x7cd, 0xffffffff],
@@ -34,7 +34,7 @@ pub(crate) const HOST_COUNTRY_LOOPS: [(u16, u8, u32, u16, u16, u8); 7] = [
     (0x220, 8, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS as u32, 2000, 2, 0x10), // cqo3: a Copa Africana
     (0x330, 8, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES as u32, 2000, 4, 0x20),
     (0x462, 6, KEY_CLUB_COMP_COPA_AMERICA as u32, 1999, 2, 0xc), // cqo3: a Copa América
-    (0x5fa, 6, KEY_CLUB_COMP_INTER_AMERICAN_CUP as u32, 1999, 1, 0x6), // cqo3: as edições anuais
+    (0x5fa, 6, KEY_CLUB_COMP_INTER_AMERICAN_CUP as u32, 1999, 1, 0x6), // cqo3: the annual editions
     (0x6c6, 5, KEY_CLUB_COMP_ASIAN_CUP as u32, 2000, 4, 0x14),
 ];
 
@@ -150,7 +150,7 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
         let o = (k as i32 * 0x22) as usize;
         let p = read_u32_as_usize(this) + o + 0x1f;
         crate::comparison::branch("cqo_3 sorteio do dia");
-        let r = sortear(0x46); // cqo3: o sorteio do dia da decisão
+        let r = sortear(0x46); // cqo3: the random draw of the decision day
         write_u16(p, read_u16(p).wrapping_add((r - 0x23) as u16));
         let e = read_u32_as_usize(this) + o;
         if *((e + 0x1e) as *const u8) != 0xfd && (read_u32_as_usize(e + 0x12) as u32 != u32::MAX || read_u32_as_usize(e + 0x1a) as u32 != u32::MAX) {
@@ -443,7 +443,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
         while p <= end && compare_year_day(p, year.wrapping_add(8), day) == 0 {
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xfe {
-                *k = 0xff; // cqj3: a votação abre
+                *k = 0xff; // cqj3: voting opens
             }
             if *k == 0xff {
                 crate::comparison::branch("cqj_3 votacao aberta");

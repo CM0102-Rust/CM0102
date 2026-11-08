@@ -26,7 +26,7 @@ pub(crate) unsafe fn raise_champion_reputation(club: usize, weight: i16, champio
     let rep = read_i16(club + club::REPUTATION) as i32;
     if rep < target {
         let foul = target - rep;
-        let sum = if foul > 0x2ee { 0x2ee } else { foul }; // cqd13: o teto da subida
+        let sum = if foul > 0x2ee { 0x2ee } else { foul }; // cqd13: the rise cap
         let v = read_i16(club + club::REPUTATION).wrapping_add(sum as i16);
         let v = if v < 1 { 1 } else if v > 10000 { 10000 } else { v };
         if champion_of_league {
@@ -34,7 +34,7 @@ pub(crate) unsafe fn raise_champion_reputation(club: usize, weight: i16, champio
         } else {
             crate::comparison::branch("cqd_13 injury_word_0c do campeao da copa");
         }
-        core::ptr::write_unaligned((club + club::REPUTATION) as *mut i16, v); // cqd13: a reputação do campeão
+        core::ptr::write_unaligned((club + club::REPUTATION) as *mut i16, v); // cqd13: the reputation of the champion
     }
 }
 
@@ -189,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         return show_error_at(0xa83b78, 0x224);
     }
     let weight = read_i16(comp + competition::CLUB_COMP_REPUTATION);
-    raise_champion_reputation(club, weight, true); // cqd13: a reputação do campeão da liga
+    raise_champion_reputation(club, weight, true); // cqd13: the reputation of the league champion
     if read_usize(club + club::DIVISION) != 0 {
         let b = read_usize(club + club::STADIUM);
         if b != 0 {
@@ -251,13 +251,13 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         if f > threshold as f64 { // cqd13: acima do limiar
             crate::comparison::branch("cqd_13 jogador destacado do campeao");
             append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(p), &e);
-            morale(p, 0x14, 1); // cqd13: o moral do jogador destacado
+            morale(p, 0x14, 1); // cqd13: the morale of the standout player
             let k = contract(read_usize(G_CONTRACT_MANAGER), p, club);
             if k == 0 {
                 continue;
             }
             crate::comparison::branch("cqd_13 contrato do destacado");
-            add_contract_morale(k, 100); // cqd13: o contrato do jogador destacado
+            add_contract_morale(k, 100); // cqd13: the contract of the standout player
             offer_renewal_if_due(club, p, k);
         } else {
             morale(p, 0xa, 1);
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
         if r != 0 {
             core::ptr::write_unaligned((r + manager_record::CUPS_WON) as *mut i16, read_i16(r + manager_record::CUPS_WON).wrapping_add(1));
             // fild weight; fld 4.0; _CIpow (base in st1); fmul 0.5; ftol
-            let v = match_pl_ftol(game_pow(read_i16(comp + competition::CLUB_COMP_REPUTATION) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: o peso do título; 0x968938 = 4, 0x968968 = 0.5
+            let v = match_pl_ftol(game_pow(read_i16(comp + competition::CLUB_COMP_REPUTATION) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: the title weight; 0x968938 = 4, 0x968968 = 0.5
             write_i32(r + manager_record::YEAR_POINTS, read_i32(r + manager_record::YEAR_POINTS).wrapping_add(v));
             write_i32(r + manager_record::MONTH_POINTS, read_i32(r + manager_record::MONTH_POINTS).wrapping_add(v));
             if is_national_team(club) != 0 {
@@ -355,13 +355,13 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
             continue;
         }
         crate::comparison::branch("cqd_13 elenco do campeao da copa");
-        morale(p, 0xf, 1); // cqd13: o moral do jogador do campeão da copa
+        morale(p, 0xf, 1); // cqd13: the morale of the cup winner player
         let k = contract(read_usize(G_CONTRACT_MANAGER), p, club);
         if k == 0 {
             continue;
         }
         crate::comparison::branch("cqd_13 moral do elenco campeao da copa");
-        add_contract_morale(k, 100); // cqd13: o moral do contrato do campeão da copa
+        add_contract_morale(k, 100); // cqd13: the contract morale of the cup winner
         let s = *((k + contract::SQUAD_STATUS) as *const u8) >> 4;
         if s == 0 || (s > 3 && s != 5) {
             continue;
@@ -605,7 +605,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize
     }
     let (mut ba, mut bv) = (0i32, 0i32);
     if ga > gv {
-        ba = 900; // cqa11: o bônus da vitória do mandante
+        ba = 900; // cqa11: the win bonus of the home team
         if a != 0 {
             crate::comparison::branch("cqa_11 vitoria do mandante");
             increment_i16(a + manager_record::WINS);
@@ -643,7 +643,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize
         stored = q;
         if comp == read_usize(casa + club::DIVISION) || comp == read_usize(casa + club::RESERVE_DIVISION) {
             crate::comparison::branch("cqa_11 pontos do mes");
-            add_to_i32(a + manager_record::MONTH_LEAGUE_POINTS, q); // cqa11: os pontos do mês do mandante
+            add_to_i32(a + manager_record::MONTH_LEAGUE_POINTS, q); // cqa11: the month points of the home team
         }
         if is_national_team(casa) != 0 {
             add_to_i32(a + manager_record::NATIONAL_SEASON_POINTS, q);
@@ -794,11 +794,11 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: usize, game: usiz
     let (limiar, teto, k, metade) = if kind == 1 { (500, 350, 300, 150) } else { (500, 200, 200, 100) };
     let comp = read_usize(game + fixture::COMPETITION);
     let weight = read_i16(comp + competition::CLUB_COMP_REPUTATION);
-    let target = (weight as i32).wrapping_mul(limiar); // cqa12: o limiar da reputação
+    let target = (weight as i32).wrapping_mul(limiar); // cqa12: the reputation threshold
     let rep = read_i16(club + club::REPUTATION) as i32;
     if rep < target {
         let foul = target - rep;
-        let sum = if foul > teto { teto } else { foul }; // cqa12: o teto da subida
+        let sum = if foul > teto { teto } else { foul }; // cqa12: the rise cap
         let v = read_i16(club + club::REPUTATION).wrapping_add(sum as i16);
         let v = if v < 1 { 1 } else if v > 10000 { 10000 } else { v };
         if kind == 1 {
@@ -806,7 +806,7 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: usize, game: usiz
         } else {
             crate::comparison::branch("cqa_12 injury_word_0c do terceiro");
         }
-        write_i16(club + club::REPUTATION, v); // cqa12: a reputação do colocado
+        write_i16(club + club::REPUTATION, v); // cqa12: the reputation of the placed team
     }
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());

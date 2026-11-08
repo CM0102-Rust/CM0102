@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_advance_stage(this: 
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == 2 {
         let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_BRAREGMINASGERAIS_CREATE_FINAL_STAGE);
-        final_(this); // cqo7: a final depois do segundo turno
+        final_(this); // cqo7: the final after the second stage
     }
 }
 
@@ -203,12 +203,12 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(th
         }
         if c < 3 {
             crate::comparison::branch("cqk_8 mineiro terceiro abaixo de 3");
-            write_progress_codes(e, a, b, 2); // cqk8: o terceiro código do Mineiro
+            write_progress_codes(e, a, b, 2); // cqk8: the third Mineiro code
             return e;
         }
     }
     crate::comparison::branch("cqk_8 mineiro como vem");
-    write_progress_codes(e, a, b, c); // cqk8: os códigos do Mineiro como vêm
+    write_progress_codes(e, a, b, c); // cqk8: the Mineiro codes as they come
     e
 }
 
@@ -259,7 +259,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_update_staff_records
 ///
 /// [pt] { 0x433d50 } (thiscall, ret 8, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::BraRegMinasGerais(ano, registro)`: o Mineiro (três fases além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_minas_gerais(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_goias_construct_state_league(this, year, record, &MINEIRO_STATE_LEAGUE, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
+    bra_reg_goias_construct_state_league(this, year, record, &MINEIRO_STATE_LEAGUE, 7, true, "cqt_2 mineiro novo") // cqt2: the discipline and expected positions of the Mineiro
 }
 
 /// the Minas Gerais league has 12 clubs: those with it as their reserve division in the database (the field that holds
@@ -281,7 +281,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_table(this: u
 /// [pt] { 0x4351b0 } (thiscall, ret 4, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_half_season_stage(k)`, um turno
 /// do Mineiro (a caixa da linha 0x3d5).
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_half_season_stage(this: usize, k: u32) {
-    create_half_season_stage(this, k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: os pontos por vitória no Mineiro
+    create_half_season_stage(this, k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: the points per win in the Mineiro
 }
 
 /// The Minas Gerais state league turnover: archives the season in the statistics, clears the table, the schedule and
@@ -292,6 +292,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_half_season_s
 ///
 /// [pt] { 0x434910 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::start_new_season()`, a virada do Mineiro (a tabela: 0x434810).
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_start_new_season(this: usize) -> u32 {
-    start_new_season_two_halves(this, 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: o ano seguinte do Mineiro
+    start_new_season_two_halves(this, 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: the next year of the Mineiro
 }
 

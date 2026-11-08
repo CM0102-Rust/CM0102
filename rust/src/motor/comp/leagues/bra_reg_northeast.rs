@@ -153,7 +153,7 @@ pub(crate) const PERNAMBUCANO_STATE_CHAMPIONSHIP: StateLeague = StateLeague {
 ///
 /// [pt] { 0x4363f0 } (thiscall, ret 8, bra_reg_northeast.cpp): `BraRegNortheast::BraRegNortheast(ano, registro)`: o Nordeste (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_northeast(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_northeast_construct_state_league(this, year, record, &NORDESTE_STATE_LEAGUE, 7, true, "cqt_3 nordeste novo") // cqt3: a disciplina e as posições previstas do Nordeste
+    bra_reg_northeast_construct_state_league(this, year, record, &NORDESTE_STATE_LEAGUE, 7, true, "cqt_3 nordeste novo") // cqt3: the discipline and expected positions of the Nordeste
 }
 
 /// the Northeast league has 16 clubs: those with it as their reserve division in the database (the field that holds the
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_create_semi_final_stage
 /// [pt] { 0x436e90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::start_new_season()`, a virada da temporada do Nordeste (a tabela:
 /// 0x436d90; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
+    state_league_new_season(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: the next year of the Nordeste
 }
 
 /// The Northeast next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the

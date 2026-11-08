@@ -119,7 +119,7 @@ pub(crate) unsafe fn eng_cc_cup_written_round_bytes(t: usize, n: i16) -> Vec<u8>
 /// +0xb2 (os clubes nas copas europeias, que entram mais tarde) e vêm à parte (`league_cup_rounds`).
 pub(crate) const LEAGUE_CUP_ROUNDS: [EngCcCupCupRound; 7] = [
     cql10r((0x17, 6, 0, 5), (0x16, 7, 0, 1, 2, 0), 0xa, (0, 0x403, 0), 4, (0, 0, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
-    cql10r((0x17, 7, 0, 2), (0x14, 8, 0, 2, 2, 0), 0x14, (0, 0x403, 0), 4, (0, 0, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)), // cql10: a 2ª rodada da Copa da Liga
+    cql10r((0x17, 7, 0, 2), (0x14, 8, 0, 2, 2, 0), 0x14, (0, 0x403, 0), 4, (0, 0, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)), // cql10: the 2nd round of the League Cup
     cql10r((0x1c, 8, 0, 3), (0x1c, 9, 0, 2, 2, 0), 0x1e, (0, 3, 0), 4, (0x20, 0x10, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
     cql10r((0x1d, 9, 0, 3), (0xb, 0xa, 0, 2, 2, 0), 0x28, (0, 0x203, 0), 4, (0x10, 8, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
     cql10r((0xc, 0xa, 0, 3), (2, 0xb, 0, 2, 2, 0), 0x78, (0, 0x203, 0), 6, (8, 4, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table(this: usize
 pub(crate) const FA_CUP_ROUNDS: [EngCcCupCupRound; 9] = [
     cql10r((9, 9, 0, 5), (0x10, 9, 0, 5, 1, 0), 0xdc, (0, 0, 3), 4, (0x38, 0x1c, 0x38, 0), (1, 0, 0xa), (0, 0x2710, 0)),
     cql10r((0x11, 9, 0, 6), (0x12, 0xa, 0, 5, 1, 0), 0xa, (0, 0, 3), 4, (0x50, 0x28, 0x34, 0x38), (1, 1, 0xa), (0, 0x4e20, 0)),
-    cql10r((0x13, 0xa, 0, 6), (9, 0xb, 0, 5, 1, 0), 0x14, (0, 0, 3), 4, (0, 0, 0, 0), (1, 1, 0xa), (0, 0x4e20, 0)), // cql10: a 2ª rodada da Copa da Inglaterra
+    cql10r((0x13, 0xa, 0, 6), (9, 0xb, 0, 5, 1, 0), 0x14, (0, 0, 3), 4, (0, 0, 0, 0), (1, 1, 0xa), (0, 0x4e20, 0)), // cql10: the 2nd round of the FA Cup
     cql10r((0xa, 0xb, 0, 6), (6, 0, 1, 5, 1, 0), 0x1e, (0, 0, 3), 4, (0, 0, 0, 0), (1, 1, 0xa), (0, 0x7530, 0)),
     cql10r((7, 0, 1, 6), (0x1b, 0, 1, 5, 1, 0), 0x28, (0, 0, 3), 4, (0, 0, 0, 0), (1, 1, 0xa), (0, 0xc350, 0)),
     cql10r((0x1c, 0, 1, 6), (0x11, 1, 1, 5, 1, 0), 0x32, (0, 0, 3), 4, (0x10, 8, 0, 0), (1, 1, 0xa), (0, 0x124f8, 0)),
@@ -224,7 +224,7 @@ pub(crate) fn fa_cup_rounds(b: i16, entry: u8, entrants: i16) -> [EngCcCupCupRou
 
 /// A Supercopa inglesa (Charity Shield): uma rodada, um jogo em agosto.
 pub(crate) const CHARITY_SHIELD_ROUNDS: [EngCcCupCupRound; 1] = [
-    cql10r((5, 6, 0, 5), (0xd, 7, 0, 6, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cql10: o jogo da Supercopa inglesa
+    cql10r((5, 6, 0, 5), (0xd, 7, 0, 6, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cql10: the English Super Cup match
 ];
 
 /// Returns club i of the club table ([G_CLUB_TABLE] + i × 0x245).
@@ -369,7 +369,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
         let c = read_u32_as_usize(e);
         let d = if c != 0 { division_comp_id(c) } else { None };
         *((e + 4) as *mut u8) = match d {
-            Some(x) if x == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) => 1, // cqm10: a classe da Premier
+            Some(x) if x == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) => 1, // cqm10: the Premier class
             Some(x) if x == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) => 2,
             _ => 3,
         };
@@ -462,7 +462,7 @@ pub(crate) unsafe fn collect_auto_cup_entrants(this: usize) -> (i32, i32) {
     let mut k: i16 = 0;
     if read_i16(this + cup::TEAM_COUNT) > 0 {
         loop {
-            let c = read_u32_as_usize(read_u32_as_usize(this + 0xb2) + 0x70 + k as usize * 4); // cqm10: o k-ésimo da segunda metade
+            let c = read_u32_as_usize(read_u32_as_usize(this + 0xb2) + 0x70 + k as usize * 4); // cqm10: the k-th of the second half
             eng_cc_cup_write_entrant(this, k as i32, c, 0);
             k = k.wrapping_add(1);
             if k >= read_i16(this + cup::TEAM_COUNT) {
@@ -603,7 +603,7 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
     if read_u32_as_usize(this + cup::SEASON_SET_UP) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + cup::YEAR) as i32 && stage != 0 {
         free_season_tables(this);
         crate::comparison::branch("cqn_10 virada da copa da liga");
-        core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqn10: a Copa da Liga refeita uma vez
+        core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqn10: the League Cup redone once
         let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGCCCUP_COLLECT_ENTRANTS);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
         if entrants(this) < 0 {

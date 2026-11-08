@@ -66,7 +66,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
                 write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + e, c);
                 *((read_u32_as_usize(this + cup::TEAM_TABLE) + e + 4) as *mut u8) = *((c + 0x1df) as *const u8);
                 *((read_u32_as_usize(this + cup::TEAM_TABLE) + e + 5) as *mut u8) = 0;
-                if *((c + 0x1df) as *const i8) >= 0xa { // cqs9: os da preliminar
+                if *((c + 0x1df) as *const i8) >= 0xa { // cqs9: those in the preliminary
                     *((this + 0xb2) as *mut u8) = (*((this + 0xb2) as *const u8)).wrapping_add(1);
                 }
             }
@@ -91,7 +91,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
                     let e = k as i32 as usize * 6;
                     k = k.wrapping_add(1);
                     write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + e, c);
-                    *((read_u32_as_usize(this + cup::TEAM_TABLE) + e + 4) as *mut u8) = 3; // cqs9: a classe de quem completa
+                    *((read_u32_as_usize(this + cup::TEAM_TABLE) + e + 4) as *mut u8) = 3; // cqs9: the class of those who complete it
                     *((read_u32_as_usize(this + cup::TEAM_TABLE) + e + 5) as *mut u8) = 0;
                     write_u32_from_usize(c + 0x1db, read_u32_as_usize(read_u32_as_usize(this + 4)));
                 }
@@ -197,7 +197,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(
         if d == 0xff {
             crate::comparison::branch("cqi_10 caiu na uefa");
         }
-        core::ptr::write_unaligned((club + club::CONTINENTAL_COMP_ID) as *mut i32, -1); // cqi10: quem termina na UEFA sai da competição europeia
+        core::ptr::write_unaligned((club + club::CONTINENTAL_COMP_ID) as *mut i32, -1); // cqi10: whoever finishes in the UEFA leaves the European competition
     }
     let base: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     base(this, club, outcome, a3, a4, game, a6)

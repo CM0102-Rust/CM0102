@@ -954,7 +954,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 }
             }
         }
-        // a barra, a cada 1%
+        // the bar, every 1%
         if e0c < cent {
             e0c += 1;
         } else {
@@ -3994,7 +3994,7 @@ pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(person: usize) -
     }
     for (k, bit) in [(0x10, 2), (0x11, 4), (0x12, 0x18), (0x13, 0x38), (0x14, 0x30)] {
         if b(k) == 20 {
-            m |= bit; // o lateral, o zagueiro...
+            m |= bit; // the full-back, the centre-back...
         }
     }
     let algum_20 = (0x10..=0x14).any(|k| b(k) == 20);
@@ -5559,7 +5559,7 @@ pub(crate) unsafe extern "C" fn nation_get_english_three_letter_name(nation: usi
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // simplification: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
+        // simplification: the first use allocates (new 0x40) and loads eng.lng (0x544fc0) under the SEH frame: the original routine
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_THREE_LETTER_NAME)(nation);
     }
     let id = *(nation as *const i32);
@@ -5580,7 +5580,7 @@ pub(crate) unsafe extern "C" fn comp_get_english_name(comp: usize) -> usize {
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // simplification: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
+        // simplification: first use (allocates and loads eng.lng under the SEH frame): the original routine
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_COMP_GET_ENGLISH_NAME)(comp);
     }
     let id = *(comp as *const i32);
@@ -5604,7 +5604,7 @@ pub(crate) unsafe extern "C" fn staff_comp_get_english_name(comp: usize) -> usiz
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // simplification: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
+        // simplification: first use (allocates and loads eng.lng under the SEH frame): the original routine
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STAFF_COMP_GET_ENGLISH_NAME)(comp);
     }
     let id = *(comp as *const i32);
@@ -5666,7 +5666,7 @@ pub(crate) unsafe extern "C" fn stadium_get_english_name(stadium: usize) -> usiz
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // simplification: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
+        // simplification: first use (allocates and loads eng.lng under the SEH frame): the original routine
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STADIUM_GET_ENGLISH_NAME)(stadium);
     }
     let id = *(stadium as *const i32);
@@ -6991,7 +6991,7 @@ pub(crate) unsafe extern "C" fn nation_get_english_name(nation: usize) -> usize 
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // simplification: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
+        // simplification: the first use allocates (new 0x40) and loads eng.lng (0x544fc0) under the SEH frame: the original routine
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_NAME)(nation);
     }
     let id = *(nation as *const i32);
@@ -7017,7 +7017,7 @@ pub(crate) unsafe extern "C" fn club_get_english_short_name(club: usize) -> usiz
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // simplification: o primeiro uso aloca e carrega o eng.lng sob o quadro SEH: a original
+        // simplification: the first use allocates and loads eng.lng under the SEH frame: the original routine
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_SHORT_NAME)(club);
     }
     let rows = *((t + english_name_tables::CLUB_ROWS) as *const usize);
@@ -7157,7 +7157,7 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
                     }
                 }
                 let mut k = 99i8;
-                while k >= 0 && total > 48 { // o elenco conjunto a 48
+                while k >= 0 && total > 48 { // the combined squad at 48
                     let q = v[k as usize];
                     if q != 0 {
                         let g = goalkeeper(q);
@@ -8646,7 +8646,7 @@ pub(crate) unsafe extern "C" fn club_get_english_name(club: usize) -> usize {
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // simplification: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
+        // simplification: the first use allocates (new 0x40) and loads eng.lng (0x544fc0) under the SEH frame: the original routine
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_NAME)(club);
     }
     let rows = *((t + english_name_tables::CLUB_ROWS) as *const usize);
@@ -9402,7 +9402,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_attribute(person: usize, attrib
         return original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE)(person, attribute);
     }
     let calcular: unsafe extern "C" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_STAFF_COMPUTE_PLAYER_ATTRIBUTE);
-    // a original empurra o argumento inteiro, como veio
+    // the original routine pushes the whole argument, as it came
     calcular(person, core::ptr::read_unaligned((person + staff::PLAYER) as *const usize), attribute)
 }
 

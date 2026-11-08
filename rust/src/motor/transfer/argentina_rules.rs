@@ -37,6 +37,6 @@ pub(crate) const PORTUGAL_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
 /// [pt] As janelas da Coreia do Sul: uma janela, de 25 de novembro (andando para o domingo [inferência]) a 25 de julho.
 pub(crate) const SOUTH_KOREA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x1b, 0x00, 0x00, 0x19, 0x0a, 0x01],
-    [0x1b, 0x00, 0xff, 0x19, 0x06, 0x00], // cqn1: a Coreia do Sul
+    [0x1b, 0x00, 0xff, 0x19, 0x06, 0x00], // cqn1: South Korea
 ];
 

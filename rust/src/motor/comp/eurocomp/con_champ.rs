@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
         let mls = club_comp_record(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE));
         pd(t(0), colocado(mls, 0));
         pd(t(1), colocado(read_u32_as_usize(other + 4), 0));
-        if read_u32_as_usize(t(0)) == read_u32_as_usize(t(1)) { // cqi11: o campeão das duas dá a vaga ao vice da MLS
+        if read_u32_as_usize(t(0)) == read_u32_as_usize(t(1)) { // cqi11: the champion of both gives the slot to the MLS runner-up
             pd(t(0), colocado(mls, 1));
         }
     }

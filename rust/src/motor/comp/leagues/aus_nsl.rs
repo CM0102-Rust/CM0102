@@ -72,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
     let slots: [u8; 4] = [2, 0, 0, 0];
     let mut clubs = [0usize; 6];
     for (i, c) in clubs.iter_mut().enumerate() {
-        *c = aus_nsl_table_row_club(this, i); // cqr3: os seis primeiros da tabela
+        *c = aus_nsl_table_row_club(this, i); // cqr3: the top six of the table
     }
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -135,8 +135,8 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
         return show_error_at(0x987c20, 0x348);
     }
     let serie = read_usize(read_usize(this + league::STAGES));
-    core::ptr::write_unaligned(list as *mut usize, aus_nsl_table_row_club(serie, 0)); // cqr3: o primeiro da série final
-    core::ptr::write_unaligned((list + 4) as *mut usize, aus_nsl_table_row_club(serie, 1)); // cqr3: o segundo da série final
+    core::ptr::write_unaligned(list as *mut usize, aus_nsl_table_row_club(serie, 0)); // cqr3: the first of the final series
+    core::ptr::write_unaligned((list + 4) as *mut usize, aus_nsl_table_row_club(serie, 1)); // cqr3: the second of the final series
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 1, &mut rodadas, &mut extra, 0);
@@ -171,7 +171,7 @@ pub(crate) unsafe fn set_nsl_rules(o: usize) {
     write_u8_at(o, 0xc6, 2);
     write_u8_at(o, 0x52, 2);
     write_u16_at(o, 0x3c, 3); // three shifts
-    write_u8_at(o, 0xc2, 3); // cqj8: os pontos por vitória da NSL
+    write_u8_at(o, 0xc2, 3); // cqj8: the NSL points per win
     write_u8_at(o, 0x4a, 3);
     write_u8_at(o, 0xc3, 1);
     write_u8_at(o, 0x42, 1);
@@ -195,7 +195,7 @@ pub(crate) unsafe fn set_mls_rules(o: usize) {
     write_u8_at(o, 0xbf, 0);
     write_u8_at(o, 0xc0, 0);
     write_u8_at(o, 0xc1, 0);
-    write_u8_at(o, 0xc3, 1); // cqj8: os pontos por empate da MLS
+    write_u8_at(o, 0xc3, 1); // cqj8: the MLS points per draw
     write_u16_at(o, 0xab, 0xc2);
     write_u8_at(o, 0x42, 1);
     write_u8_at(o, 0xc5, 1); // tiebreakers: goal difference, goals scored, head-to-head
@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
             break;
         }
         if is_in_division(club, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
-            jap_j1_init_table_row(this, k as u8, read_i16(this + league::CLUB_COUNT), 0, club); // cqm9: a linha da NSL
+            jap_j1_init_table_row(this, k as u8, read_i16(this + league::CLUB_COUNT), 0, club); // cqm9: the NSL row
             k = k.wrapping_add(1);
         }
         i = i.wrapping_add(1);

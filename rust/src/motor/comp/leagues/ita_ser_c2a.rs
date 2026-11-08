@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
             3 => {
                 crate::comparison::branch("cqk_5 rebaixamento na c2a");
                 let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-                cair(eng_second_staff_records(), club, comp); // cqk5: o rebaixamento pela tabela da C2/A
+                cair(eng_second_staff_records(), club, comp); // cqk5: relegation by the C2/A table
             }
             _ => {}
         }

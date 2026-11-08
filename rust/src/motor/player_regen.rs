@@ -30,7 +30,7 @@ pub(crate) unsafe fn roll_current_ability(f: usize, m1: usize, m2: usize) {
     let pa = read_i16(f + player_sheet::POTENTIAL_ABILITY) as f64;
     let r = friendly_random(match_pl_ftol(pa * read_f64_at(m1)));
     crate::comparison::branch("cqg_7 habilidade");
-    write_i16(f + player_sheet::CURRENT_ABILITY, match_pl_ftol(r as f64 + pa * read_f64_at(m2)) as i16); // cqg7: a habilidade sorteada pela PA
+    write_i16(f + player_sheet::CURRENT_ABILITY, match_pl_ftol(r as f64 + pa * read_f64_at(m2)) as i16); // cqg7: the ability drawn by the PA
 }
 
 /// Adjusts a 1..20 personality byte: above 15 drops random(cai); below a1 rises random(s1); below a2 rises random(s2).
@@ -321,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         }
         if friendly_random(0xfa) != 0 {
             let r = friendly_random(0x2ee) as i16;
-            write_i16(f + player_sheet::HOME_REPUTATION, r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: a reputação +9 do regen
+            write_i16(f + player_sheet::HOME_REPUTATION, r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: the +9 reputation of the regen
             crate::comparison::branch("cqg_7 injury_word_0c do regen");
             let r = friendly_random(0x14) as i16;
             write_i16(f + player_sheet::WORLD_REPUTATION, r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(5)).wrapping_add(1));
@@ -346,7 +346,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
                 cap_current_ability(f, 0x64, 0x96);
             }
         } else if s < 0x1388 {
-            age = (friendly_random(3) as i8).wrapping_add(0x10); // cqg7: a idade de 16 a 18
+            age = (friendly_random(3) as i8).wrapping_add(0x10); // cqg7: the age from 16 to 18
             crate::comparison::branch("cqg_7 idade 16 a 18");
             if age < 0x12 {
                 cap_current_ability(f, 0x50, 0xfa);
@@ -372,7 +372,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
             write_i16(f + player_sheet::WORLD_REPUTATION, mul_rdata_const(read_i16(f + player_sheet::WORLD_REPUTATION), 0x96a5d0));
         }
     }
-    write_i16(p + 0x12, read_i16(G_CURRENT_DATE_YEAR).wrapping_sub(age as i16)); // cqg7: o ano do nascimento
+    write_i16(p + 0x12, read_i16(G_CURRENT_DATE_YEAR).wrapping_sub(age as i16)); // cqg7: the birth year
     let r = friendly_random(0x16d);
     write_i16(p + staff::DATE_OF_BIRTH, r as i16);
     let years: unsafe extern "C" fn(usize, *const u16) -> u16 = core::mem::transmute(FN_DATABASE_GET_STAFF_AGE);
@@ -645,7 +645,7 @@ pub(crate) unsafe extern "C" fn player_setup_find_staff(first: usize, common: us
             let q = read_u32_as_usize(c + club::SQUAD + 4 * k);
             if q != 0 && name_matches(q, 4, first) && name_matches(q, 8, second) && name_matches(q, 0xc, common) {
                 crate::comparison::branch("cqh_9 jogador do clube pelo nome");
-                return q; // cqh9: o do elenco pelo nome
+                return q; // cqh9: the squad one by name
             }
         }
     }
@@ -695,7 +695,7 @@ pub(crate) unsafe extern "C" fn player_setup_read_quoted_token(source: usize, ta
         }
         if aberto {
             crate::comparison::branch("cqh_9 texto entre aspas");
-            *((target + n) as *mut u8) = c; // cqh9: o caractere do texto
+            *((target + n) as *mut u8) = c; // cqh9: the text character
             n += 1;
         }
     }
@@ -828,7 +828,7 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: usize) {
     let f = read_u32_as_usize(p + staff::PLAYER);
     let t = match_pl_ftol(read_i16(f + player_sheet::CURRENT_REPUTATION) as f64 + game_pow(r as f64, 3.0));
     let r1 = friendly_random(t);
-    let passa = r1 > friendly_random(50000) || { // cqd10: o sorteio de virar técnico
+    let passa = r1 > friendly_random(50000) || { // cqd10: the random draw to become a manager
         let r3 = friendly_random(0x30d40).wrapping_add(0x30d40);
         let v = (read_i16(read_u32_as_usize(p + staff::NATION) + 0x8e) as i32).wrapping_mul(*((p + staff::INT_APPS) as *const u8) as i32);
         v > r3
@@ -872,7 +872,7 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: usize) {
 /// [pt] A aposentadoria que venceu (o item `item` da pessoa `p`).
 pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, slot: &mut [u32; 3]) {
     let id = read_i32(item);
-    if read_i8(p + staff::AGE) < 0x1e && read_i8(item + retirement_entry::REASON) != 8 // cqd10: o jovem não se aposenta
+    if read_i8(p + staff::AGE) < 0x1e && read_i8(item + retirement_entry::REASON) != 8 // cqd10: the young player does not retire
         && (read_u32_as_usize(p + staff::CLUB_JOB) != 0 || *retirement_flags_byte(read_i32(p)) & 0xf != 0) {
         crate::comparison::branch("cqd_10 aposentadoria desfeita");
         player_regen_remove_retirement(this, item);
@@ -994,7 +994,7 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
     let (dia, ano) = if read_i8(p + staff::AGE) < 0x1e {
         (today as u16, read_i16(G_CURRENT_DATE_YEAR) as u16)
     } else {
-        let v = (friendly_random(0x41) as u32).wrapping_add(today).wrapping_add(1) as u16; // cqd10: o dia do regen
+        let v = (friendly_random(0x41) as u32).wrapping_add(today).wrapping_add(1) as u16; // cqd10: the regen day
         crate::comparison::branch("cqd_10 dia do regen sorteado");
         if v as i16 <= 0x16d {
             (v, read_i16(G_CURRENT_DATE_YEAR) as u16)
@@ -1077,7 +1077,7 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
 /// anúncio (0x7aa340, se as marcas & 0x30 não forem 0x10), a marca de anunciada e as marcas 0x10; senão para. No fim
 /// ordena as vagas para o regen ([this+0x10], [this+0x14] de 12 bytes) com 0x7ae240.
 pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
-    let mut slot = [0u32; 3]; // a pessoa e a data (dia, ano, bissexto)
+    let mut slot = [0u32; 3]; // the person and the date (day, year, leap)
     let default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     default(slot.as_mut_ptr() as usize + 4);
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
@@ -1401,9 +1401,9 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
     write_i32(person + staff::CLUB_JOB, club as i32);
     write_i32(person + staff::WAGE, 0);
     let v = value(manager, person, club, 1, -1, 0);
-    write_i32(person + staff::VALUE, v); // cpv9: o valor do regen
+    write_i32(person + staff::VALUE, v); // cpv9: the regen value
     squad(person, 1);
-    if sorteio(4) == 0 { // cpv9: uma vez em quatro
+    if sorteio(4) == 0 { // cpv9: once in four
         crate::comparison::branch("cpv_9 uma em quatro");
         f547d90(person, club, 0);
     }
@@ -1844,7 +1844,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
         }
         let hab = read_i16(j + player_sheet::CURRENT_ABILITY);
         if hab > 0x50 {
-            return 0; // cpr8: a habilidade alta segura o jogador
+            return 0; // cpr8: high ability keeps the player
         }
         if hab < 0xa || v < 0x5dc {
             crate::comparison::branch("cpr_8 inicio habilidade");
@@ -1977,7 +1977,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
         if draws {
             crate::comparison::branch("cpr_8 fora do jogo");
             if random(3) == 0 {
-                break 'm 1; // cpr8: um em três se aposenta
+                break 'm 1; // cpr8: one in three retires
             }
             if read_u32_as_usize(person + staff::CLUB_JOB) != 0 && status < 0 {
                 break 'm 1;
@@ -2192,7 +2192,7 @@ pub(crate) unsafe fn leave_job_slot(person: usize, c: usize, job: i8, field: usi
             let can: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_CAN_BE_MANAGED);
             if can(c) as u8 != 0 {
                 let open: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_MANAGER_MANAGER_ADD_JOB_VACANCY);
-                open(read_u32_as_usize(G_MANAGER_MANAGER), c, person); // cpr9: a vaga do técnico abre
+                open(read_u32_as_usize(G_MANAGER_MANAGER), c, person); // cpr9: the manager slot opens
             }
         }
         6 => zero_dword(c + club::ASSISTANT_MANAGER),
@@ -2202,7 +2202,7 @@ pub(crate) unsafe fn leave_job_slot(person: usize, c: usize, job: i8, field: usi
                 treinadores(read_u32_as_usize(G_TRAINING_MANAGER), c, 0);
             }
             crate::comparison::branch("cpr_9 treinador");
-            clear(0x19f, 5); // cpr9: as vagas de treinador
+            clear(0x19f, 5); // cpr9: the coach slots
         }
         9 => {
             clear(0x1b3, 7);
@@ -3255,7 +3255,7 @@ pub(crate) unsafe extern "C" fn player_setup_injury_from_name(name: usize) -> u3
     for &(n, texto, tipo) in INJURY_NAMES.iter() {
         if strncmp(name, texto, n) == 0 {
             crate::comparison::branch("cqf_9 lesao pelo nome");
-            return tipo as u32; // cqf9: o tipo da lesão pelo nome
+            return tipo as u32; // cqf9: the injury type by name
         }
     }
     if strncmp(name, 0xa6b3a8, 8) == 0 { 0x4c } else { 0x4b }

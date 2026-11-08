@@ -153,7 +153,7 @@ pub(crate) const NORTH_CHAMPIONSHIP: BraRegGoiasStateChampionship = BraRegGoiasS
 ///
 /// [pt] { 0x432b50 } (thiscall, ret 8, bra_reg_goias.cpp): `BraRegGoias::BraRegGoias(ano, registro)`: o Goiano (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_goias(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_goias_construct_state_league(this, year, record, &GOIANO_STATE_CHAMPIONSHIP, 7, true, "cqt_2 goiano novo") // cqt2: a disciplina e as posições previstas do Goiano
+    bra_reg_goias_construct_state_league(this, year, record, &GOIANO_STATE_CHAMPIONSHIP, 7, true, "cqt_2 goiano novo") // cqt2: the discipline and expected positions of the Goiano
 }
 
 /// The Goias turnover: archives the season in the statistics, clears the previous table and stages, moves to the next
@@ -164,7 +164,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_goias(this: usize, year
 /// [pt] { 0x4336f0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::start_new_season()`, a virada da temporada do Goiano (a tabela:
 /// 0x433540; caixas nas linhas 0x1c3, 0x1ca, 0x1d0 e 0x1d7).
 pub(crate) unsafe extern "thiscall" fn bra_reg_goias_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x433540, 0x98ae90, [0x1c3, 0x1ca, 0x1d0, 0x1d7], 1, "cqp_8 virada do goiano") // cqp8: o ano seguinte do Goiano
+    state_league_new_season(this, 0x433540, 0x98ae90, [0x1c3, 0x1ca, 0x1d0, 0x1d7], 1, "cqp_8 virada do goiano") // cqp8: the next year of the Goiano
 }
 
 /// The Goias next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 8 go to the
@@ -198,7 +198,7 @@ pub(crate) unsafe fn goiano_rules(o: usize) {
     write_u8_at(o, 0xbf, 0);
     write_u8_at(o, 0xc0, 0);
     write_u8_at(o, 0xc2, 3);
-    write_u8_at(o, 0xc5, 3); // cqj7: o primeiro desempate do Goiano
+    write_u8_at(o, 0xc5, 3); // cqj7: the first tiebreaker of the Goiano
     write_u8_at(o, 0x4a, 3);
     write_u8_at(o, 0xbe, 8); // the 8 qualified
     write_u16_at(o, 0xd9, 8);
@@ -219,7 +219,7 @@ pub(crate) unsafe fn goiano_rules(o: usize) {
 pub(crate) unsafe fn j1_rules(o: usize) {
     write_u16_at(o, 0x3c, 2);
     write_u8_at(o, 0xc2, 3);
-    write_u8_at(o, 0xc3, 1); // cqj7: os pontos por empate da J1
+    write_u8_at(o, 0xc3, 1); // cqj7: the J1 points per draw
     write_u8_at(o, 0xc4, 2);
     write_u16_at(o, 0xab, 0x82);
     write_u16_at(o, 0xdb, 0);
@@ -246,7 +246,7 @@ pub(crate) unsafe fn j1_rules(o: usize) {
 /// [pt] As regras da J2 (0x665140): não grava +0x52 nem a palavra +0xd9 (fica a de `League::League`).
 pub(crate) unsafe fn j2_rules(o: usize) {
     write_u16_at(o, 0x3c, 4); // quatro turnos
-    write_u8_at(o, 0xc2, 3); // cqj7: os pontos por vitória da J2
+    write_u8_at(o, 0xc2, 3); // cqj7: the J2 points per win
     write_u8_at(o, 0xc3, 1);
     write_u8_at(o, 0xc4, 2);
     write_u16_at(o, 0xab, 0x82);

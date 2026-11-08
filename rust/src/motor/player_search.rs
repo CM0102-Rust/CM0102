@@ -474,7 +474,7 @@ pub(crate) unsafe extern "thiscall" fn contains_player(this: usize, person: usiz
     }
     if read_usize(this + player_search_fields::RESULT_COUNT) == 0 {
         crate::comparison::branch("cqa_6 busca vazia");
-        return 0; // cqa6: sem resultados, não está
+        return 0; // cqa6: without results, it is not there
     }
     let reference: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_FILL_STAFF_NAME_REF);
     reference(person, k);
@@ -483,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn contains_player(this: usize, person: usiz
     if r == 0 {
         return 0;
     }
-    if read_u8(r + 0x20) & 1 != 0 { // cqa6: a removida não conta
+    if read_u8(r + 0x20) & 1 != 0 { // cqa6: the removed one does not count
         crate::comparison::branch("cqa_6 removido");
         return 0;
     }
@@ -631,7 +631,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         match_pl_ftol(esi as f64 * read_f64_at(0x968e18) + read_f64_at(0x9690b8)) // 0x968e18 = 2.5, 0x9690b8 = 7500
     } else if esi > 3000 {
         crate::comparison::branch("cpu_13 band de 3000 a 5000");
-        esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: a faixa do meio
+        esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: the middle band
     } else {
         match_pl_ftol(esi as f64 * read_f64_at(0x969018) + read_f64_at(0x9688e8)) // 0x969018 = 1.6, 0x9688e8 = 5000
     };

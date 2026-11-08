@@ -328,7 +328,7 @@ pub(crate) unsafe fn serie_a_zones(league: usize) -> [u8; 64] {
     }
     let i = uefa + cl;
     if i >= 0 && (i as usize) + 1 < 64 {
-        z[i as usize] = 4; // cql4: as duas posições depois das vagas europeias
+        z[i as usize] = 4; // cql4: the two positions after the European slots
         z[i as usize + 1] = 4;
     }
     let relegated = *((league + league::RELEGATED_COUNT) as *const i8) as i32;
@@ -351,7 +351,7 @@ pub(crate) fn serie_b_zones() -> [u8; 64] {
     z[0] = 1;
     z[1] = 2;
     z[2] = 2;
-    z[3] = 2; // cql4: as vagas de acesso da Série B
+    z[3] = 2; // cql4: the Serie B promotion slots
     for k in 16..20 {
         z[k] = 3;
     }
@@ -419,7 +419,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
         loop {
             let l = ita_ser_a_table_row(this, i as usize);
             let points = read_i16(l + 0x19);
-            if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: o par da Série A na fronteira
+            if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: the Serie A pair at the boundary
                 sort(this, points as u16 as u32);
                 write_u32_from_usize(this + league::STAGE_COUNT, 1);
                 let v = alloc(4);
@@ -622,14 +622,14 @@ pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro:
     write_u32_from_usize(this + 4, registro);
     write_u32_from_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
-    *((this + league::DISCIPLINE_RULE) as *mut u8) = 0x11; // cqm4: a regra de disciplina das ligas italianas
+    *((this + league::DISCIPLINE_RULE) as *mut u8) = 0x11; // cqm4: the discipline rule of the Italian leagues
     if carregar(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch("cqm_4 divisao italiana nova");
     if p.serie {
         *((this + 0xee) as *mut u8) = 0;
-        write_u32_from_usize(this + league::SEASON_CLOSED, 1); // cqm4: a marca do histórico da A e da B
+        write_u32_from_usize(this + league::SEASON_CLOSED, 1); // cqm4: the history mark of A and B
     }
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
@@ -648,7 +648,7 @@ pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro:
         show_error_at(p.arquivo, p.linhas[1]);
         return this;
     }
-    fixos(this); // cqm4: o calendário real de 2001/02
+    fixos(this); // cqm4: the real 2001/02 calendar
     if jogos(this) == 0 {
         show_error_at(p.arquivo, p.linhas[2]);
         return this;
@@ -664,7 +664,7 @@ pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro:
         show_error_at(p.arquivo, p.linhas[4]);
         return this;
     }
-    previstas(this); // cqm4: as posições previstas
+    previstas(this); // cqm4: the expected positions
     this
 }
 
@@ -691,7 +691,7 @@ pub(crate) const SERIE_B_DIVISION: ItalianDivision = ItalianDivision {
 pub(crate) const SERIE_C1A_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c534,
     serie: false,
-    fases: 2, // cqm4: o play-off e o play-out da C1/A
+    fases: 2, // cqm4: the C1/A play-off and play-out
     regras: 0x64b770,
     tabela: 0x64b670,
     fixos: 0x64be90,
@@ -809,7 +809,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures(this: usize, table: &[(u8, u8, u16, u
     let v = read_u32_as_usize(this + league::FIXED_FIXTURES);
     for i in 0..n as usize {
         let f = v + i * 0x10;
-        if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn5: um clube sem achar derruba a lista
+        if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn5: a club not found drops the list
             if v != 0 {
                 destroy(v, 0x10, read_u32_as_usize(v - 4) as u32, 0x5a53c0);
                 erase(v - 4);
@@ -1609,7 +1609,7 @@ pub(crate) unsafe fn serie_b_rules(this: usize) -> Vec<(usize, u8, u32)> {
 /// Rule writes for Serie C1/A.
 pub(crate) unsafe fn serie_c1a_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = italian_common_rules(this);
-    v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi6: a C1/A dá 3 pontos pela vitória
+    v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi6: the C1/A gives 3 points per win
     v.extend_from_slice(&[(0xc7, 1, 0), (0xbe, 1, 1), (0xbf, 1, 4), (0xc0, 1, 4), (0xc1, 1, 1), (0x1c, 4, read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_B) as u32), (0x20, 4, read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C1_B) as u32)]);
     v
 }
@@ -1684,10 +1684,10 @@ pub(crate) unsafe fn ita_ser_a_fill_league_table(this: usize, n: i16, file: usiz
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
-            let row = k; // cqj4: a linha k recebe o k-ésimo clube da divisão
+            let row = k; // cqj4: row k receives the k-th club of the division
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
-            iniciar(this, row as u32, club, 0, 0); // cqj4: as linhas sem marca
+            iniciar(this, row as u32, club, 0, 0); // cqj4: the rows without a mark
             k = k.wrapping_add(1);
             if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
@@ -1727,9 +1727,9 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_table(this: usize) -> u3
         _ => return 0,
     }
     crate::comparison::branch("cqj_4 tabela da serie a");
-    set_prize_fund(this, 0x3d090); // cqj4: a cota da Série A
+    set_prize_fund(this, 0x3d090); // cqj4: the Serie A quota
     let pay: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
-    pay(this, 0x4c4b40, 0); // cqj4: a TV da Série A
+    pay(this, 0x4c4b40, 0); // cqj4: the Serie A TV money
     1
 }
 

@@ -19,5 +19,5 @@ MUTACOES = [
     ('cpe_confronto_posicao', 'let dif = *((b + 4) as *const i8) as i32 - *((a + 4) as *const i8) as i32; // the tie’s position', 'let dif = *((a + 4) as *const i8) as i32 - *((b + 4) as *const i8) as i32; // mutacao: invertida'),
     ('cpe_datas_ano', 'if ya < yb { // o ano antes\n        return -1;', 'if ya < yb { // mutacao: invertido\n        return 1;'),
     ('cpe_linha_do_clube', 'if read_usize(r) == club { // the club’s row\n                return r;', 'if read_usize(r) == club { // mutacao: nunca acha\n                return 0;'),
-    ('cpe_liga_tem_o_clube', 'return (r != 0) as u32; // a liga tem o clube', 'return (r == 0) as u32; // mutacao: nao tem'),
+    ('cpe_liga_tem_o_clube', 'return (r != 0) as u32; // the league has the club', 'return (r == 0) as u32; // mutacao: nao tem'),
 ]

@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
-        let c = base + (i as u16 as usize) * club::SIZE; // cqm6: o clube i do banco
+        let c = base + (i as u16 as usize) * club::SIZE; // cqm6: club i in the database
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             iniciar(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {

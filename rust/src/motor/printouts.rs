@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
     }
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     crate::comparison::branch("cpz_10 sorteio do comentarista");
-    let r = sortear(n as i32); // cpz10: o sorteio do comentarista
+    let r = sortear(n as i32); // cpz10: the commentator random draw
     ids[r as usize] as i32
 }
 

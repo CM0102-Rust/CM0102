@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
         if day == 3 {
             more(G_CURRENT_DATE, pb, 1);
             crate::comparison::branch("cqd_6 reservas de amanha");
-            reservas(read_u32_as_usize(G_RESERVE_COMP), pb); // cqd6: as reservas de amanhã
+            reservas(read_u32_as_usize(G_RESERVE_COMP), pb); // cqd6: tomorrow’s reservations
         }
     }
     let l = read_u32_as_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
                         if !fix_man_is_human_club(read_u32_as_usize(f + 0x1c)) && !fix_man_is_human_club(read_u32_as_usize(f + 0x20)) {
                             previous(list);
                             crate::comparison::branch("cqd_6 amistoso descartado");
-                            remove(list, no); // cqd6: o amistoso de ontem sai da lista
+                            remove(list, no); // cqd6: yesterday’s friendly leaves the list
                         } else {
                             previous(list);
                         }
@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
         };
         write_u32_from_usize(j + fixture::STADIUM, stadium);
         let k = nation(comp, j) as i8;
-        let day = read_i16(j + fixture::DAY) as u16 as usize; // cqd6: o dia do jogo carregado
+        let day = read_i16(j + fixture::DAY) as u16 as usize; // cqd6: the day of the loaded match
         let list = read_u32_as_usize(read_u32_as_usize(this + (day * 3 + read_u8(j + fixture::TIME_SLICE) as usize) * 4) + k as isize as usize * 4);
         crate::comparison::branch("cqd_6 jogo carregado");
         if append(list, j, 0x4f) == 0 {
@@ -511,7 +511,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                         let (sx0, sx1, s0, s1b) = (read_u8(x + 0x40), read_u8(x + 0x41), read_u8(game + fixture::HOME_SIDE_MARK), read_u8(game + fixture::AWAY_SIDE_MARK));
                         if (c1 == h && sx0 == s0) || (c1 == a && sx0 == s1b) || (c2 == h && sx1 == s0) || (c2 == a && sx1 == s1b) {
                             crate::comparison::branch("cqc_3 mesmo clube na mesma fatia");
-                            add_clash_by_type(grav, list, x, true); // cqc3: o mesmo clube na mesma fatia
+                            add_clash_by_type(grav, list, x, true); // cqc3: the same club in the same slice
                         } else if (flag == 0 && c1 == h && sx0 != s0) || (c1 == a && sx0 != s1b) || (c2 == h && sx1 != s0) || (c2 == a && sx1 != s1b) {
                             if read_u8(x + 0x43) != 0xff {
                                 *grav = 0x16;
@@ -879,7 +879,7 @@ pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, game: 
     date_default(&mut j);
     date_default(&mut h);
     date_default(&mut k);
-    let days: [i16; 9] = [2, 1, -1, 5, 6, -1, 0, 3, 4]; // cqc4: a ordem dos dias da semana
+    let days: [i16; 9] = [2, 1, -1, 5, 6, -1, 0, 3, 4]; // cqc4: the order of the weekdays
     let mut tmp = [0u8; 8];
     let r = date_from_day_year(&mut tmp, read_u16(game + fixture::DAY), read_u16(game + fixture::YEAR));
     date_assign(&mut j, r);
@@ -962,7 +962,7 @@ pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, game: 
                             return;
                         }
                     }
-                    let r = date_op(0x54c5b0, pk, 4); // cqc4: o passo da busca
+                    let r = date_op(0x54c5b0, pk, 4); // cqc4: the search step
                     date_assign(&mut k, r);
                 }
             }
@@ -1047,7 +1047,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
                 let mut t = [0u8; 8];
                 date_default(&mut t);
                 crate::comparison::branch("cqc_4 dia preferido do mandante");
-                nearest_weekday(pd, preferido as i8 as i16 as u16 as u32, &mut t); // cqc4: o dia preferido do mandante
+                nearest_weekday(pd, preferido as i8 as i16 as u16 as u32, &mut t); // cqc4: the home side’s preferred day
                 let pt = t.as_ptr() as usize;
                 write_u16(game + fixture::YEAR, read_u16(pt + 2));
                 write_u16(game + fixture::DAY, read_u16(pt));
@@ -1071,7 +1071,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
             if g == 0x14 {
                 crate::comparison::branch("cqc_4 mesmo dia");
                 let same_day: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_RESOLVE_SAME_DAY_CLASH);
-                same_day(this, game, l); // cqc4: o conflito do mesmo dia
+                same_day(this, game, l); // cqc4: the same-day conflict
                 if l != 0 {
                     free_list(l);
                 }
@@ -1333,7 +1333,7 @@ pub(crate) unsafe extern "C" fn fix_man_save_club_dates() {
         return;
     }
     crate::comparison::branch("cpy_7 gravar datas dos clubes");
-    if write(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: as datas dos clubes
+    if write(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the club dates
         show_error_at(0x9cc208, 0x101b);
     }
     uefa_seeding_crt_fclose(f);
@@ -1372,7 +1372,7 @@ pub(crate) unsafe extern "C" fn fix_man_load_club_dates() {
         return;
     }
     crate::comparison::branch("cpy_7 datas dos clubes lidas");
-    if read(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: a leitura das datas
+    if read(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the reading of the dates
         show_error_at(0x9cc208, 0xff6);
     }
     uefa_seeding_crt_fclose(f);
@@ -1458,7 +1458,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     let copy: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], *mut [u8; 8]) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let week: unsafe extern "thiscall" fn(*mut [u8; 8]) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
     let adjust: unsafe extern "thiscall" fn(*mut [u8; 8], u32, *mut [u8; 8]) -> u32 = core::mem::transmute(FN_DATE_GET_NEAREST_WEEKDAY);
-    // 0x68d1b0: ecx = a lista, sem pushes -> thiscall; 0x53b900: push clube; add esp, 4 -> cdecl
+    // 0x68d1b0: ecx = the list, no pushes -> thiscall; 0x53b900: push clube; add esp, 4 -> cdecl
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let (mut a, mut b) = ([0u8; 8], [0u8; 8]);
@@ -1488,7 +1488,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
         _ => severity,
     };
     crate::comparison::branch("cqb_13 dia alvo");
-    adjust(&mut a, target, &mut b); // cqb13: o dia da semana alvo
+    adjust(&mut a, target, &mut b); // cqb13: the target weekday
     let n = novo.as_mut_ptr() as usize;
     let v = velho.as_mut_ptr() as usize;
     let mut pn = read_i16(read_usize(n + 0x14) + 0x69);
@@ -1504,7 +1504,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     if novo_vence {
         crate::comparison::branch("cqb_13 novo vence");
     }
-    let sai_old = novo_vence && *((v + fixture::HOME_GOALS) as *const u8) == 0xff; // cqb13: o da lista ainda não jogado
+    let sai_old = novo_vence && *((v + fixture::HOME_GOALS) as *const u8) == 0xff; // cqb13: the one in the list not yet played
     if SAME_DAY_CLASH_DRY_RUN {
         return 1;
     }
@@ -1516,7 +1516,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     let other_data: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE);
     let news: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_QUEUE_FIXTURE_MOVED_NEWS);
     // the calendar ones: ecx = this; push the match (0x5abc30, 0x5ab510; ret 4), push 0; push the match (0x5aa680; ret 8),
-    // push 0; push &gravidade; push o jogo (0x5ad780; ret 0xc), push 0; push causa; push o jogo (0x5aac70; ret 0xc);
+    // push 0; push &gravidade; push the match (0x5ad780; ret 0xc), push 0; push causa; push the match (0x5aac70; ret 0xc);
     // 0x68d040: ecx = a lista; 0x944c94: push lista; add esp, 4 -> cdecl
     let (sai, causa) = if sai_old {
         crate::comparison::branch("cqb_13 sai o jogo da lista");
@@ -1754,7 +1754,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
             copy_first_fixture(lp, &mut f1, &mut f2);
             if !fix_man_is_friendly_comp(read_u32(f1.as_ptr() as usize + 0x14)) {
                 crate::comparison::branch("cpz_8 jogo dois dias antes");
-                if f2[0x43] == 0xff { // cpz8: o jogo de dois dias antes sem a marca
+                if f2[0x43] == 0xff { // cpz8: the match from two days before without the mark
                     let mut v = [0u8; 8];
                     let r = date_sub_days(d.as_ptr() as usize, v.as_mut_ptr(), 1); // cpz8: um dia antes
                     date_assign_ptr(d.as_mut_ptr(), r);
@@ -2029,7 +2029,7 @@ pub(crate) unsafe extern "thiscall" fn find_stored_fixture(this: usize, f: usize
     while item != 0 {
         if core::slice::from_raw_parts(item as *const u8, 0x4f) == target {
             crate::comparison::branch("cps_11 achou o jogo guardado");
-            return item; // cps11: a cópia guardada
+            return item; // cps11: the saved copy
         }
         item = list_next_item(l);
     }

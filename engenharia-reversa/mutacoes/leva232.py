@@ -15,7 +15,7 @@ MUTACOES = [
     ('dbj2_competicoes', '(0x59, 4, 4)', '(0x59, 4, 3)'),
     ('dbj2_nacao', '(id as usize).wrapping_mul(109))', '(id as usize).wrapping_mul(108))'),
     ('dbj2_clube_curto', '.wrapping_add(0x34) // short name in the row', '.wrapping_add(0x33) // short name in the row'),
-    ('dbk1_cortar_elencos', '                while k >= 0 && total > 48 { // o elenco conjunto a 48', '                while k >= 0 && total > 47 { // mutacao: o elenco conjunto a 47'),
+    ('dbk1_cortar_elencos', '                while k >= 0 && total > 48 { // the combined squad at 48', '                while k >= 0 && total > 47 { // mutacao: o elenco conjunto a 47'),
     ('dbk1_juntar_comissao', '                        if n < k as i32 { // the B team’s staff go to the A team', '                        if n < 0 { // mutacao: a comissao do B nao vai para o A'),
     ('dbk1_indice_de_nomes', '                        *((e + d_quantos) as *mut i32) = quantos; // group size', '                        *((e + d_quantos) as *mut i32) = quantos + 1; // mutacao: a quantidade do grupo + 1'),
     ('dbk2_tirar_pessoa', '            core::ptr::write_unaligned((person + staff::CLUB_JOB) as *mut usize, 0); // detaches the person from the club', '            // mutacao: a pessoa fica com o clube (+0x39) depois de sair'),

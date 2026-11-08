@@ -29,7 +29,7 @@ pub(crate) const RATING_DIVISORS: [u32; 5] = [0x3f80_0000, 0x3f99_999a, 0x3fb3_3
 /// registrador com lixo em cima: a chamada lê o byte).
 pub(crate) unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
     let c: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
-    c(f, read_i8(f + k)) as i8 as i32 // a original estende o al (movsx)
+    c(f, read_i8(f + k)) as i8 as i32 // the original routine sign-extends al (movsx)
 }
 
 /// `TRAINING_MANAGER::update_coach_assignments(club, manager)`, called by the coach hirings and departures (0x4ce4e0,
@@ -125,17 +125,17 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
             }
             let b = |k: usize| read_i8(f + k) as i32;
             let x = match j {
-                0 => (non_player_attribute_rating(f, 0x10) - b(0x12) + 0x15) / 2, // cqf7: a nota de goleiros
+                0 => (non_player_attribute_rating(f, 0x10) - b(0x12) + 0x15) / 2, // cqf7: the goalkeeping rating
                 1 => {
                     let a = non_player_attribute_rating(f, 0x21);
-                    (a + non_player_attribute_rating(f, 0x10) + b(0x12)) / 3 // cqf7: a nota de tática
+                    (a + non_player_attribute_rating(f, 0x10) + b(0x12)) / 3 // cqf7: the tactics rating
                 }
                 2 => (non_player_attribute_rating(f, 0x10) + b(0xe) + b(0x12)) / 3,
                 3 => (non_player_attribute_rating(f, 0x10) + b(0x12)) / 2,
                 _ => non_player_attribute_rating(f, 0x11),
             };
             // the low byte, signed, as float divided by the float of the quantity (x87 double precision)
-            let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade
+            let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: the quantity divisor
             crate::comparison::branch("cqf_7 nota do treinador");
             *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
         }
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
         }
         let e = training_entry_of_player_data(this, f) as *mut i8;
         *e = if read_i8(f + player_sheet::GOALKEEPER) >= 0xf && gol != -1 {
-            gol // cqf7: o programa dos goleiros
+            gol // cqf7: the goalkeepers programme
         } else if geral != -1 {
             geral
         } else {
@@ -428,7 +428,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         // simplification: the original pushes the category in a dword whose upper bytes are stack leftovers; 0x8b4f50 and
         // 0x8b41d0 leem o byte
         let lv = level(prog, k as u32) as u8 as i8;
-        let base = (lv as i16).wrapping_mul(2).wrapping_add(0x3c); // cqd8: o peso do nível
+        let base = (lv as i16).wrapping_mul(2).wrapping_add(0x3c); // cqd8: the level weight
         let club = training_manager_club_of_contract(training_manager_get_contract_stored(p));
         let fa = factor(this, club, k as u32) as u16 as i16 as i32;
         let x = base.wrapping_add(((fa - 100) / 5) as i16);
@@ -445,7 +445,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                 }
             }
             if weight > 0x64 {
-                if friendly_random(0xd2 - weight as i32) < 0x14 && v < ceiling { // cqd8: o sorteio da subida
+                if friendly_random(0xd2 - weight as i32) < 0x14 && v < ceiling { // cqd8: the rise random draw
                     if friendly_random((v as i32).abs() * 2 + 0xe) < 10 {
                         crate::comparison::branch("cqd_8 progresso sobe");
                         d[k] = d[k].wrapping_add(1); // cqd8: o progresso sobe
@@ -665,11 +665,11 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
     let g = |a: usize| *(a as *const i8);
     if devolver != 0 {
         crate::comparison::branch("cqd_9 devolver");
-        d[0] = g(0xde1f3f); // cqd9: devolve a categoria 0
+        d[0] = g(0xde1f3f); // cqd9: returns category 0
         d[1] = g(0xde1f40);
         d[2] = g(0xde1f3d);
         d[3] = g(0xde1f3c);
-        d[4] = g(0xde1f3e); // cqd9: devolve a categoria 4
+        d[4] = g(0xde1f3e); // cqd9: returns category 4
     } else {
         crate::comparison::branch("cqd_9 tirar");
         *(G_TRAINING_PROGRESS_SAVED_DELTA_0 as *mut i8) = training_nibble(e, 0);
@@ -822,7 +822,7 @@ pub(crate) unsafe extern "thiscall" fn set_type(this: usize, slot: i8, kind: i8)
         5 => set_schedule_levels(this, [0xa, 0x32, 0xa, 0xa, 0]),
         6 => {
             crate::comparison::branch("cpu_8 goleiros");
-            set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x32]); // cpu8: o treino dos goleiros
+            set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x32]); // cpu8: the goalkeeper training
         }
         0 | 7 => set_schedule_levels(this, [0; 5]),
         _ => {}
@@ -865,7 +865,7 @@ pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
     let human: unsafe extern "thiscall" fn(usize, usize, i8) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_MANAGER_SCHEDULE);
     kind(this, 0, 0);
     crate::comparison::branch("cpu_8 programas padrao");
-    kind(this + 0x9b, 1, 1); // cpu8: o programa geral do computador
+    kind(this + 0x9b, 1, 1); // cpu8: the general computer programme
     for k in 2..7i8 {
         kind(this + 0x9b * k as usize, k, k);
     }
@@ -958,7 +958,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
     }
     if n != 0 {
         crate::comparison::branch("cpt_8 treinadores");
-        soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: a média dos treinadores
+        soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: the average of the coaches
     }
     let r = match_pl_ftol(soma as f64 * read_f64_at(0x970400)); // 0x970400 = 5.714285714
     if (r as i16) < 0x32 {
@@ -1109,14 +1109,14 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
             add_clamped_1_20(f + player_sheet::TECHNIQUE, dd);
             add_clamped_125(f + player_sheet::THROW_INS, seis);
         }
-        add_high_nibble(e + 4, k); // cpt9: guarda o progresso da categoria 3
+        add_high_nibble(e + 4, k); // cpt9: stores the progress of category 3
     }
     // category 0 (the low nibble of +3)
     let k = read_i8(d);
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 3) << 4 >> 4) as i32);
         if dd != 0 {
-            add_clamped_1_20(f + player_sheet::ACCELERATION, dd); // cpt9: o primeiro atributo da categoria 0
+            add_clamped_1_20(f + player_sheet::ACCELERATION, dd); // cpt9: the first attribute of category 0
             add_clamped_1_20(f + player_sheet::AGILITY, dd);
             add_clamped_1_20(f + player_sheet::JUMPING, dd);
             add_clamped_1_20(f + player_sheet::NATURAL_FITNESS, dd);
@@ -1144,7 +1144,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 3) >> 4) as i32);
         if dd != 0 {
-            let seis = dd * 6; // cpt9: a categoria 1, seis vezes o passo
+            let seis = dd * 6; // cpt9: category 1, six times the step
             add_clamped_125(f + player_sheet::DECISIONS, seis);
             add_clamped_125(f + player_sheet::MARKING, seis);
             add_clamped_125(f + player_sheet::MOVEMENT, seis);
@@ -1291,7 +1291,7 @@ pub(crate) unsafe extern "thiscall" fn has_fast_position_training(this: usize, p
 /// que faltam de cada jogador. Devolve dia / 7 (o chamador não lê).
 pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *const i16) -> i32 {
     let v = *day as i32;
-    let rest = v % 7; // cpt10: a semana de 7 dias
+    let rest = v % 7; // cpt10: the 7-day week
     if rest == 0 { // cpt10: o sétimo dia
         crate::comparison::branch("cpt_10 semana");
         let s = (this + 0x688d) as *mut u16;
@@ -1332,9 +1332,9 @@ pub(crate) unsafe extern "thiscall" fn init_player_entries(this: usize) {
         let sheet = || read_u32_as_usize(this + 0x651d).wrapping_add((read_i32(f) as usize).wrapping_mul(6));
         *((sheet() + 5) as *mut u8) &= 0xdf;
         let goal = *((f + player_sheet::GOALKEEPER) as *const i8);
-        if goal >= 0xf { // cpu9: goleiro de 15 para cima
+        if goal >= 0xf { // cpu9: goalkeeper from 15 up
             crate::comparison::branch("cpu_9 goleiro");
-            *(sheet() as *mut u8) = 6; // cpu9: o programa dos goleiros
+            *(sheet() as *mut u8) = 6; // cpu9: the goalkeepers programme
         } else {
             crate::comparison::branch("cpu_9 linha");
             *(sheet() as *mut u8) = 1; // cpu9: o programa geral

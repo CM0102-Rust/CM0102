@@ -2286,7 +2286,7 @@ pub(crate) unsafe fn contest_ball_injected(j: usize, strength: i16, kind_in: i8,
                 random(500000) + 200
             }
             _ => {
-                // simplification: a original mostra a caixa "Error" (versao, arquivo, linha 0x17e2); tipo
+                // simplification: the original routine shows the “Error” box (version, file, line 0x17e2); type
                 // outside 0..5 does not happen in the game
                 *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
                 return 0;
@@ -2655,7 +2655,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
             apontar_(j, jx, jy, x, y);
         }
     }
-    // o lance e o atributo
+    // the move and the attribute
     let mut doze = false;
     let na_propria = area_de(j, byte(j, match_player::SIDE) == 1);
     let cabeca = !(na_propria && table(m, j) == 1)
@@ -5333,7 +5333,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
                 l10 = l10.wrapping_sub(25000);
             }
         }
-        // o goleiro (ou quem guarda a posicao 1)
+        // the goalkeeper (or whoever holds position 1)
         if g != 0 && is_in_attacking_half(side, y0()) {
             let t = if u(g, match_player::ENGINE) != 0 { table_a(u(g, match_player::ENGINE), g) } else { 0 };
             if t & 1 == 0 {
@@ -6325,7 +6325,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
     let narrar7 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: i8| {
         call(FN_MATCH_EVENTS_ADD_EVENT, u(m, engine::COMMENTATOR), [code | (a7 as u8 as u32) << 16, m as u32, a3, a4, (a5 & 0xff) | (a6 & 0xff) << 8]);
     };
-    // o folego e a distancia
+    // the stamina and the distance
     let r0 = random({
         let v = 10000 - match_pl_ftol(read_f32_at(p + match_player::STAMINA) as f64) as i16 as i32;
         v * v / 50000
@@ -6768,7 +6768,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
     if l54 as i16 > -1 {
         n(call, l54 as u32);
     }
-    // a bola parada seguinte (+0x8ea9) e o tempo dela (+0x8eaa)
+    // the next set piece (+0x8ea9) and its time (+0x8eaa)
     let (v, t): (i8, i8) = match tipo {
         0x34 | 0x37 => {
             let v = if (d as f64) < read_f64_at(0x968930) && band((side == 0) as u8, tx, ty) == 0 { // 0x968930 = 3
@@ -8049,7 +8049,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
                 f
             }
         };
-        // fcomp st(1) + test ah,1: perto quando a distancia e menor (NaN conta como menor)
+        // fcomp st(1) + test ah,1: close when the distance is smaller (NaN counts as smaller)
         if !(dist_table(bx, by) as f64 >= threshold) {
             let mk = marks(block, b(0x19));
             let est = *((block + tactics_fields::FLAGS) as *const u32);
@@ -9277,7 +9277,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         } else if ta() & 8 != 0 {
             l1c = (l1c as f64 * q(0x96d6b0)) as f32;
         } else if ta() & 0x10 != 0 || tb() & 0xc != 0 {
-            // a original usa o L18 aqui
+            // the original routine uses L18 here
             l1c = (l18 as f64 * q(0x968fa0)) as f32;
         }
     }

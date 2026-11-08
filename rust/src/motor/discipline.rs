@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, tea
         let mut p = next(list);
         while p != 0 {
             crate::comparison::branch("cqb_9 jogo cumprido");
-            count(this, read_usize(p) as u32, 0, 1); // cqb9: o jogo cumprido na regra 0
+            count(this, read_usize(p) as u32, 0, 1); // cqb9: the match served under rule 0
             p = next(list);
         }
     }

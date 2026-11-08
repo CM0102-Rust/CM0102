@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         }
         if read_u8(r + transfer_interest::STATE) == 0 && {
             crate::comparison::branch("cqc_10 sorteio do boato");
-            friendly_random(0x19) == 0 // cqc10: o sorteio do boato
+            friendly_random(0x19) == 0 // cqc10: the rumour random draw
         } {
             // the clubs interested in the player
             let mut ids = [-1i32; 5];
@@ -162,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             let mut sai = false;
             if read_i8(person + staff::PROFESSIONALISM) < 0xf && read_i8(person + staff::LOYALITY) < 0xf {
                 crate::comparison::branch("cqc_10 pedido de transferencia");
-                let rr = friendly_random(0x30d4); // cqc10: o sorteio da reputação para o pedido
+                let rr = friendly_random(0x30d4); // cqc10: the reputation random draw for the request
                 if (read_i16(read_usize(person + staff::PLAYER) + 0xd) as i32) > rr {
                     let lim = read_i8(person + staff::LOYALITY) as i32 as f64 * 12.5 + 500.0;
                     if lim < read_i32(r + transfer_interest::RATING) as f64 {
@@ -573,7 +573,7 @@ pub(crate) unsafe fn squad_reaction_to_story_with(topic: u32, player: usize, clu
     if r1 > friendly_random(10) {
         rejeitar(club, player, 1);
     }
-    // cqb8: a 0x4cf5f0 (de dentro da 0x544520 e direta) é unidade da fita: vai por `chamar`
+    // cqb8: 0x4cf5f0 (from inside 0x544520 and direct) is a tape unit: goes through `chamar`
     if replay_inner_tape_calls(call, || listed(player, 0)) != 0 {
         chance -= 0x19;
     } else {
@@ -605,7 +605,7 @@ pub(crate) unsafe fn squad_reaction_to_story_with(topic: u32, player: usize, clu
                 continue;
             }
             crate::comparison::branch("cqb_8 nota do jogador");
-            rating = read_i8(p + staff::TEMPERAMENT).wrapping_add(10); // cqb8: a nota do jogador do elenco
+            rating = read_i8(p + staff::TEMPERAMENT).wrapping_add(10); // cqb8: the rating of the squad player
             if read_i8(p + staff::AGE) < 0x14 {
                 rating = rating.wrapping_sub(5);
             }
@@ -749,7 +749,7 @@ pub(crate) unsafe fn warn_position_rivals_with(player: usize, club: usize, call:
         if p == 0 || read_usize(p + staff::PLAYER) == 0 || p == player {
             continue;
         }
-        // cqb8: a 0x4cf5f0 é unidade da fita (direta e de dentro da 0x544520; a 0x62c400 alcança a 0x600a50)
+        // cqb8: 0x4cf5f0 is a tape unit (direct and from inside 0x544520; 0x62c400 reaches 0x600a50)
         let c = call(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB, read_usize(G_CONTRACT_MANAGER), [p as u32, club as u32, 0, 0, 0]) as usize;
         if c == 0 || read_usize(p + staff::PLAYER) == 0 || read_i8(c + 0x3d) <= 0 {
             continue;
@@ -1121,7 +1121,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     let same_position: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_CLUB_COUNT_SQUAD_WITH_POSITION_MASK);
     let strength = count(new, 0, 0) as i8 as i32;
     let rn = read_i16(new + club::REPUTATION);
-    let limit = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: o limite do elenco forte
+    let limit = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: the strong squad limit
     let same = same_position(new, natural_position_mask(p)) as i8 as i32;
     let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let category: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
@@ -1280,7 +1280,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
                 queixa = 0x20000000;
             } else {
                 crate::comparison::branch("cqa_13 moral cai");
-                let x = read_i8_as_i32(c + 0x44) - 0x19; // cqa13: a moral do companheiro cai
+                let x = read_i8_as_i32(c + 0x44) - 0x19; // cqa13: the morale of the teammate drops
                 *((c + 0x44) as *mut i8) = if x > 100 { 100 } else if x < -100 { -100 } else { x as i8 };
             }
         }
@@ -3168,7 +3168,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                 let e = entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), club, player, 0, 0);
                 if e != 0 && read_usize(e + 0xf) == read_usize(player) && rating > -10 {
                     crate::comparison::branch("cpo_6 sorteio descartado");
-                    sorteio(read_i8_as_i32(manager + staff::LOYALITY)); // o original descarta o resultado
+                    sorteio(read_i8_as_i32(manager + staff::LOYALITY)); // the original discards the result
                 }
             }
             let x = sorteio(ch(0x19));

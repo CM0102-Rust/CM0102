@@ -358,7 +358,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             }
             if !amistoso {
                 crate::comparison::branch("cqo_1 estadio do mandante");
-                fixar(read_u32_as_usize(read_u32_as_usize(fx + fixture::HOME_CLUB) + 0x69)); // cqo1: o estádio do mandante
+                fixar(read_u32_as_usize(read_u32_as_usize(fx + fixture::HOME_CLUB) + 0x69)); // cqo1: the home team stadium
                 return;
             }
         } else if !fin_prm_is_national_team(read_u32_as_usize(fx + fixture::HOME_CLUB)) {
@@ -695,7 +695,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
             } else if read_u8(game + fixture::CATEGORY) == 0xa {
                 f[k] *= read_f64_at(0x968918); // 0x968918 = 0.2
             } else {
-                f[k] *= read_f64_at(0x967888); // cqo2: o fator sem a liga do clube; 0x967888 = 0.05
+                f[k] *= read_f64_at(0x967888); // cqo2: the factor without the club league; 0x967888 = 0.05
             }
         }
         apply_side_factor_floor(game, side, &mut f);
@@ -867,7 +867,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         pc = random_below(0x32) + 1;
         pf = random_below(0xf) + 1;
     }
-    let r = random_below(0x32); // cqo2: o sorteio do total
+    let r = random_below(0x32); // cqo2: the random draw of the total
     let mut total = pf.wrapping_add(pc).wrapping_sub(r);
     if total < 0 {
         total = random_below(0x96) + 0x2d;
@@ -1005,7 +1005,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
         rating = friendly_random(lugares);
     }
     crate::comparison::branch("cpt_7 nota do estadio");
-    let r = friendly_random(100); // cpt7: o sorteio da nota
+    let r = friendly_random(100); // cpt7: the random draw of the rating
     match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * rating as f64) // 0x968d60 = 0.004, 0x9689b0 = 0.8
 }
 
@@ -1125,9 +1125,9 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: 
         let e = read_usize(nation + nation::NATIONAL_STADIUM);
         if e != 0 {
             crate::comparison::branch("cps_7 fecha o estadio nacional");
-            write_u32(G_STADIUM_STASHED_VENUE_ID, read_usize(e) as u32); // cps7: guarda o id do estádio fechado
+            write_u32(G_STADIUM_STASHED_VENUE_ID, read_usize(e) as u32); // cps7: stores the id of the closed stadium
             write_u32(nation + nation::NATIONAL_STADIUM, 0);
-            write_u32(nation_national_team(england_nation()) + 0x69, 0); // cps7: a seleção sem casa
+            write_u32(nation_national_team(england_nation()) + 0x69, 0); // cps7: the national team without a home
         }
     }
     let new: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
@@ -1249,7 +1249,7 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, stad
     copy(key.as_mut_ptr() as usize + 4, t.as_mut_ptr() as usize, data);
     let r = search(key.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380);
     crate::comparison::branch("cps_7 reserva conferida");
-    (r == 0) as u32 // cps7: livre sem a reserva
+    (r == 0) as u32 // cps7: free without the reservation
 }
 
 /// bookings qsort: by date (+4), then by stadium id (+0)
@@ -1338,7 +1338,7 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
         }
         if *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 && (read_u32(e + stadium::STADIUM_CAPACITY) as i32) < 0x1388 { // cqn3: menos de 5000 lugares
             crate::comparison::branch("cqn_3 estadio pequeno");
-            continue; // cqn3: o estádio pequeno fica de fora
+            continue; // cqn3: the small stadium is left out
         }
         if *lista == 0 {
             *lista = alloc(0x1e0);

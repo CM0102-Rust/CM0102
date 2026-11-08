@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize)
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == 2 {
         let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_BRAREGPARANA_CREATE_FINAL_STAGE);
-        final_(this); // cqo8: a final depois do segundo turno
+        final_(this); // cqo8: the final after the second stage
     }
 }
 
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) 
 ///
 /// [pt] { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_northeast_construct_state_league(this, year, record, &PARANA_CHAMPIONSHIP, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
+    bra_reg_northeast_construct_state_league(this, year, record, &PARANA_CHAMPIONSHIP, 7, true, "cqt_3 paranaense novo") // cqt3: the discipline and expected positions of the Paranaense
 }
 
 /// the Parana league has 12 clubs: those with it as their reserve division in the database (the field that holds the
@@ -266,7 +266,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_table(this: usize) 
 /// [pt] { 0x438760 } (thiscall, ret 4, bra_reg_parana.cpp): `BraRegParana::create_half_stage(k)`, um turno do Paranaense (a
 /// caixa da linha 0x3d5).
 pub(crate) unsafe extern "thiscall" fn create_half_stage(this: usize, k: u32) {
-    create_half_season_stage(this, k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: os pontos por vitória no Paranaense
+    create_half_season_stage(this, k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: the points per win in the Paranaense
 }
 
 /// The Parana state league turnover: archives the season in the statistics, clears the table, the schedule and the
@@ -277,6 +277,6 @@ pub(crate) unsafe extern "thiscall" fn create_half_stage(this: usize, k: u32) {
 ///
 /// [pt] { 0x438060 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::start_new_season()`, a virada do Paranaense (a tabela: 0x437ec0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_start_new_season(this: usize) -> u32 {
-    start_new_season_two_halves(this, 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: o ano seguinte do Paranaense
+    start_new_season_two_halves(this, 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: the next year of the Paranaense
 }
 

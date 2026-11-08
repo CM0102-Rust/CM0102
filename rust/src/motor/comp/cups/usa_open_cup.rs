@@ -31,5 +31,5 @@ pub(crate) unsafe extern "thiscall" fn usa_open_cup_collect_entrants(this: usize
 /// a virada (`usa_mls_all_stars_cup_start_new_season`) com os inscritos de UsaOpenCup::collect_entrants (0x90b530) e as caixas do usa_open_cup.cpp
 /// nas linhas 0x198, 0x19f e 0x1a6.
 pub(crate) unsafe extern "thiscall" fn usa_open_cup_start_new_season(this: usize) -> u32 {
-    usa_mls_all_stars_cup_start_new_season(this, 0x90b530, 0xaa20e0, [0x198, 0x19f, 0x1a6], 1, true, "cqr_6 virada da copa dos eua") // cqr6: a Copa dos EUA
+    usa_mls_all_stars_cup_start_new_season(this, 0x90b530, 0xaa20e0, [0x198, 0x19f, 0x1a6], 1, true, "cqr_6 virada da copa dos eua") // cqr6: the US Cup
 }

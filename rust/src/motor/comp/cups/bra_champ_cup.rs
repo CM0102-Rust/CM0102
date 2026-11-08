@@ -148,7 +148,7 @@ pub(crate) unsafe fn compare_stage_schedule(name: &str, stage: u32, f: BraChampC
 
 /// A Copa dos Campeões, a fase preliminar (fase −1): três rodadas às segundas [inferência: dia da semana 1], 19 e 26 de
 /// junho e 3 de julho.
-pub(crate) const CHAMPIONS_CUP_PRELIMINARY_ROUNDS: [BraChampCupGroupRound; 3] = [(0x13, 5, 1, 2), (0x1a, 5, 1, 2), (3, 6, 1, 2)]; // cqp10: a preliminar da Copa dos Campeões
+pub(crate) const CHAMPIONS_CUP_PRELIMINARY_ROUNDS: [BraChampCupGroupRound; 3] = [(0x13, 5, 1, 2), (0x1a, 5, 1, 2), (3, 6, 1, 2)]; // cqp10: the Champions Cup preliminary
 
 /// A Copa dos Campeões, os grupos (fases 0 e 1): três rodadas, 9, 16 e 20 de julho.
 pub(crate) const CHAMPIONS_CUP_GROUP_ROUNDS: [BraChampCupGroupRound; 3] = [(9, 6, 0, 2), (0x10, 6, 0, 2), (0x14, 6, 4, 2)];
@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_schedule(this: usize
 }
 
 /// A Merconorte, grupos (fases abaixo de 3): seis rodadas às terças de 15 em 15 dias, de 9 de setembro a 18 de novembro.
-pub(crate) const MERCONORTE_GROUP_ROUNDS: [BraChampCupGroupRound; 6] = [(9, 8, 2, 2), (0x17, 8, 2, 2), (7, 9, 2, 2), (0x15, 9, 2, 2), (4, 0xa, 2, 2), (0x12, 0xa, 2, 2)]; // cqp10: os grupos da Merconorte
+pub(crate) const MERCONORTE_GROUP_ROUNDS: [BraChampCupGroupRound; 6] = [(9, 8, 2, 2), (0x17, 8, 2, 2), (7, 9, 2, 2), (0x15, 9, 2, 2), (4, 0xa, 2, 2), (0x12, 0xa, 2, 2)]; // cqp10: the Merconorte groups
 
 /// A Merconorte, o mata-mata (fase 3): semifinal em ida e volta (7 dias) e final em jogo único em dezembro.
 pub(crate) const MERCONORTE_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 2] = [

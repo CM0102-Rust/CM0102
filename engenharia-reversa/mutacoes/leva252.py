@@ -14,7 +14,7 @@ MUTACOES = [
     ('cpp_queda_sem_arredondar', '    Some(match_pl_ftol(d / y + read_f64_at(0x968968)) as u8 as i8)', '    Some(match_pl_ftol(d / y) as u8 as i8) // mutacao: sem o arredondamento'),
     ('cpp_goleiro', 'write_u16(v + shortlist_slot::POSITION, 1); // o goleiro', 'write_u16(v + shortlist_slot::POSITION, 2); // mutacao: o goleiro vira libero', 'cpp_5 vagas da formacao'),
     ('cpp_verba', 'budget(this, club); // the transfer budget', 'let _ = budget; // mutacao: sem redistribuir a verba', 'cpp_5 refazer lista'),
-    ('cpp_suspender', '*((e + club_shortlist::DAYS) as *mut u8) = 0x64; // o clube suspende o jogador', '// mutacao: o clube nao suspende o jogador', 'cpp_5 suspender clube'),
+    ('cpp_suspender', '*((e + club_shortlist::DAYS) as *mut u8) = 0x64; // the club suspends the player', '// mutacao: o clube nao suspende o jogador', 'cpp_5 suspender clube'),
     ('cpp_listas_conta', 'count = count.wrapping_add(1); // one more club with him in the list', 'count = count.wrapping_add(2); // mutacao: conta dois', 'cpp_6 clube acrescentou'),
     ('cpp_a_venda', '*((c + contract::SQUAD_STATUS) as *mut u8) = (a & 0xf) | 0x70; // for sale', 'let _ = a; // mutacao: sem o estado a venda', 'cpp_6 por a venda'),
     ('cpp_premio', 'receber(f_old, value as u32, (value >> 31) as u32); // o clube antigo recebe', 'let _ = (receber, f_old); // mutacao: o clube antigo nao recebe', 'cpp_6 premio por jogos'),

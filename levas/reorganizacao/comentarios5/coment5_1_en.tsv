@@ -1,0 +1,437 @@
+cqs1: a linha seguinte da primeira divisão	cqs1: the next row of the first division
+cqs1: os pontos por vitória na segunda	cqs1: the points per win in the second
+cqs1: a fase atual depois da terceira	cqs1: the current stage after the third
+cqs2: a renovação dos árbitros da MLS	cqs2: the renewal of the MLS referees
+cqs2: o ano seguinte da MLS	cqs2: the next year of the MLS
+cqs2: as posições previstas das três divisões	cqs2: the predicted positions of the three divisions
+cqk9: o classificado da MLS	cqk9: the MLS qualifier
+cqk9: o jogo na tabela da segunda conferência	cqk9: the match in the second conference table
+cqk8: o código 2 da MLS	cqk8: the MLS code 2
+cql1: o número do contrato	cql1: the contract number
+cql1: grava no contrato	cql1: writes to the contract
+cql2: o número da posição	cql2: the position number
+`vez` = −1, −2... (char), the order of each one; `k` = 1, 2... the same order as a positive number	`vez` = −1, −2... (char), the order of each one; `k` = 1, 2... the same order as a positive number
+cql2: o número fora do lugar	cql2: the out-of-place number
+cql3: o número do banco	cql3: the bench number
+cpx5: o valor do gerente de elencos	cpx5: the squad manager value
+cqo1: o estádio do mandante	cqo1: the home team stadium
+cqo2: o fator sem a liga do clube; 0x967888 = 0.05	cqo2: the factor without the club league; 0x967888 = 0.05
+cqo2: o sorteio do total	cqo2: the random draw of the total
+cpt7: o sorteio da nota	cpt7: the random draw of the rating
+cps7: guarda o id do estádio fechado	cps7: stores the id of the closed stadium
+cps7: a seleção sem casa	cps7: the national team without a home
+cps7: livre sem a reserva	cps7: free without the reservation
+cqn3: o estádio pequeno fica de fora	cqn3: the small stadium is left out
+cqi1: a França na Intertoto em 2001	cqi1: France in the Intertoto in 2001
+cqi1: pula o clube que já tem vaga	cqi1: skips the club that already has a place
+cqi2: o nível da divisão	cqi2: the division level
+cqi2: 1ª a 3ª nação	cqi2: 1st to 3rd nation
+cqi2: a vaga passa para a fase seguinte	cqi2: the place moves to the next stage
+cqi3: 1ª a 6ª nação	cqi3: 1st to 6th nation
+cqi3: a vaga do fair play	cqi3: the fair play place
+cqi3: as vagas da Intertoto	cqi3: the Intertoto places
+cqj12: o dia do começo das eliminatórias asiáticas	cqj12: the start day of the Asian qualifiers
+cqj12: a vitória nas eliminatórias europeias	cqj12: the win in the European qualifiers
+cqj12: a categoria dos jogos das eliminatórias europeias	cqj12: the match category of the European qualifiers
+cqj12: o dia do começo das eliminatórias europeias	cqj12: the start day of the European qualifiers
+cqk10: o dia do começo na Oceania	cqk10: the start day in Oceania
+cqj12: a vitória nas eliminatórias sul-americanas	cqj12: the win in the South American qualifiers
+cqj12: as vagas diretas da América do Sul	cqj12: the direct places of South America
+cqj12: o dia do começo da eliminatória sul-americana	cqj12: the start day of the South American qualifier
+cqf4: o limite de times por grupo	cqf4: the limit of teams per group
+cqf4: as nações do sorteio real	cqf4: the nations of the real random draw
+cqf4: o dia do sorteio	cqf4: the random draw day
+cqf5: a entrada da lista	cqf5: the list entry
+cqf5: o time na vaga do grupo	cqf5: the team in the group slot
+cqf5: as rodadas (as datas, +0xa9 da fase)	cqf5: the rounds (the dates, +0xa9 of the stage)
+cqf5: a próxima nação	cqf5: the next nation
+low (0x549f70 reads the year as a word and the word at +2 holds year − base): the copy passes the clean year	low (0x549f70 reads the year as a word and the word at +2 holds year − base): the copy passes the clean year
+a original o refaz igual (e regrava [0xae1080])	the original routine redoes it the same way (and rewrites [0xae1080])
+the original’s bands compare the stage byte as signed (0x80 to 0xfe count as stage 1)	the original’s bands compare the stage byte as signed (0x80 to 0xfe count as stage 1)
+simplification: with no requester or no nation, original only	simplification: with no requester or no nation, original only
+deleting a complaint (0x8674e0) recalculates the contract (0x867240), which may rewrite morale: with a complaint marked before	deleting a complaint (0x8674e0) recalculates the contract (0x867240), which may rewrite morale: with a complaint marked before
+a 0x62d250 sorteia e grava o resto	0x62d250 draws and writes the rest
+simplification: the expectations (0x6a3770) post news and the record (0x869aa0) writes the history to a file: they do not	simplification: the expectations (0x6a3770) post news and the record (0x869aa0) writes the history to a file: they do not
+inside a comparison with a tape: unit with vectors (the profiles are on the caller’s stack)	inside a comparison with a tape: unit with vectors (the profiles are on the caller’s stack)
+o primeiro byte diferente (as regioes sao grandes)	the first differing byte (the regions are large)
+lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho	side would allocate its own (different addresses): original routine only; the Rust mode proves this path
+cqg1: o fim pela duração	cqg1: the end by the duration
+cqg1: o valor do contrato na pessoa	cqg1: the contract value in the person
+cqf3: o teto do estatuto 11; 0x967890 = 1, 0x968968 = 0.5	cqf3: the cap of status 11; 0x967890 = 1, 0x968968 = 0.5
+cqf3: o fim no ano que vem	cqf3: the end next year
+cqf3: o teto pelo total	cqf3: the cap by the total
+cqf3: o valor no teto	cqf3: the value at the cap
+cqa8: o primeiro sorteio da moral	cqa8: the first morale random draw
+cqa8: o sorteio do vencedor	cqa8: the winner random draw
+cqa8: a evolução de quem ficou de fora; 0x967888 = 0.05	cqa8: the progress of those left out; 0x967888 = 0.05
+cqa9: a base de quem joga na frente	cqa9: the base of those who play up front
+cqa9: o índice da tabela pela idade	cqa9: the table index by age
+simplification: without a club the error box; without a person the original reads [0x5e] and crashes: both stay with the original	simplification: without a club the error box; without a person the original reads [0x5e] and crashes: both stay with the original
+cpw4: o contador de ofertas da pessoa	cpw4: the offer counter of the person
+cps1: o valor passa do preço	cps1: the value exceeds the price
+cps1: o sorteio da queixa	cps1: the complaint random draw
+a pessoa fica sem contrato	the person is left without a contract
+a pessoa aponta a vaga	the person points to the slot
+cpr10: a decisão em 1 a 5 dias	cpr10: the decision in 1 to 5 days
+cqf2: o sorteio do dado 12	cqf2: the random draw of die 12
+cqf2: o preço da notícia; 0x967898 = 0.01, 0x9689b0 = 0.8	cqf2: the price of the news; 0x967898 = 0.01, 0x9689b0 = 0.8
+the random roll as a byte (al) and as a word (ax)	the random roll as a byte (al) and as a word (ax)
+a barra, a cada 1%	the bar, every 1%
+o lateral, o zagueiro...	the full-back, the centre-back...
+simplification: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original	simplification: the first use allocates (new 0x40) and loads eng.lng (0x544fc0) under the SEH frame: the original routine
+simplification: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original	simplification: first use (allocates and loads eng.lng under the SEH frame): the original routine
+simplification: o primeiro uso aloca e carrega o eng.lng sob o quadro SEH: a original	simplification: the first use allocates and loads eng.lng under the SEH frame: the original routine
+o elenco conjunto a 48	the combined squad at 48
+simplification: the original passes the address of a local; 0x540a50 only returns a partner after writing it	simplification: the original passes the address of a local; 0x540a50 only returns a partner after writing it
+simplification: the original uses the argument’s own place as output; it is only read with a partner, and by then it has been written	simplification: the original uses the argument’s own place as output; it is only read with a partner, and by then it has been written
+a original empurra o argumento inteiro, como veio	the original routine pushes the whole argument, as it came
+cqb9: o jogo cumprido na regra 0	cqb9: the match served under rule 0
+1 byte(s): index of this object as a stage of its parent; 0xff = the main competition itself, 0xfe = special stage	1 byte(s): index of this object as a stage of its parent; 0xff = the main competition itself, 0xfe = special stage
+4 byte(s): a points tie across a band boundary goes to a tie-break match (no prizes or end records until resolved)	4 byte(s): a points tie across a band boundary goes to a tie-break match (no prizes or end records until resolved)
+1 byte(s): Set to 1 when the target is told of or unsettled by the bid (2 on a new offer becomes 1); non-zero counts as under offer [inference]	1 byte(s): Set to 1 when the target is told of or unsettled by the bid (2 on a new offer becomes 1); non-zero counts as under offer [inference]
+1 byte(s): set when a goal is scored in a golden-goal period (marked_moment); the match then ends and restarts are skipped	1 byte(s): set when a goal is scored in a golden-goal period (marked_moment); the match then ends and restarts are skipped
+8 byte(s): Date of the record holder (holder at +8); +0 the age as a date	8 byte(s): Date of the record holder (holder at +8); +0 the age as a date
+1 byte(s): 1 when the offer counts for a decision (set outside type 6 contracts and when scheduled for a transfer) [inference]	1 byte(s): 1 when the offer counts for a decision (set outside type 6 contracts and when scheduled for a transfer) [inference]
+2 byte(s): tie rule bits copied to fixture TIE_RULES (0x100 no fixture news, 0x200 no draw news, 0x800 level-based home side)	2 byte(s): tie rule bits copied to fixture TIE_RULES (0x100 no fixture news, 0x200 no draw news, 0x800 level-based home side)
+10 byte(s): five i16 (indexed by side, 0..4): ball time in the first pitch third, shown as a possession percentage [inference]	10 byte(s): five i16 (indexed by side, 0..4): ball time in the first pitch third, shown as a possession percentage [inference]
+4 byte(s): nonzero when the match went to a penalty shoot-out (shoot-out state 1 or 4, or a shoot-out event)	4 byte(s): nonzero when the match went to a penalty shoot-out (shoot-out state 1 or 4, or a shoot-out event)
+4 byte(s): player id of a player row (same base as ROW_STAFF_ID)	4 byte(s): player id of a player row (same base as ROW_STAFF_ID)
+1 byte(s): minute a player row left the pitch (same base as ROW_MINUTE_OFF)	1 byte(s): minute a player row left the pitch (same base as ROW_MINUTE_OFF)
+1 byte(s): Appearances as a substitute	1 byte(s): Appearances as a substitute
+2 byte(s): story subtype (signed byte stored as a word)	2 byte(s): story subtype (signed byte stored as a word)
+simplification: o original chama 0x717410 a cada teste; ela so le o jogador	simplification: the original calls 0x717410 on every test; it only reads the player
+simplification: the lists of the two stages stay contiguous as at [esp+0x64]; indexes beyond 0xea do not happen	simplification: the lists of the two stages stay contiguous as at [esp+0x64]; indexes beyond 0xea do not happen
+cpu11: o empate entra na lista	cpu11: the tie goes into the list
+cqg8: a instrução padrão das versões antigas	cqg8: the default instruction of the old versions
+cqg8: a instrução 0x2000 sem a 0x4000	cqg8: instruction 0x2000 without 0x4000
+cqg8: a casa guardada da fase 0	cqg8: the stored home side of stage 0
+cqg8: as posições refeitas pela casa	cqg8: the positions redone by home side
+cpt6: o bônus de dezembro; 0x967888 = 0.05, 0x968930 = 3	cpt6: the December bonus; 0x967888 = 0.05, 0x968930 = 3
+cpt6: o dia de dezembro	cpt6: the December day
+cps5: a parte do moral	cps5: the morale part
+cps6: o sorteio da soma	cps6: the random draw of the sum
+simplification: the original pushes the group as a whole word (the upper bytes are stack leftover); 0x5ae6a0	simplification: the original pushes the group as a whole word (the upper bytes are stack leftover); 0x5ae6a0
+Clube de Regatas Vasco da Gama	Clube de Regatas Vasco da Gama
+Corporación de Fútbol de la Universidad de Chile	Corporación de Fútbol de la Universidad de Chile
+Club de Fútbol de la Universidad de Chile	Club de Fútbol de la Universidad de Chile
+Clube de Regatas do Flamengo	Clube de Regatas do Flamengo
+Associação Portugesa de Desportos	Associação Portugesa de Desportos
+Associação Portuguesa de Desportos	Associação Portuguesa de Desportos
+sem lista, a original a cria (aloca): fica sem comparacao	without a list, the original routine creates it (allocates): left without comparison
+the common conditions: no goal, no card, +0x17 up to 8, +0x03 up to 2 and the performance up to the limit	the common conditions: no goal, no card, +0x17 up to 8, +0x03 up to 2 and the performance up to the limit
+cqb5: os clubes que o miram suspendem	cqb5: the clubs targeting him suspend
+cqb5: a volta ao treino pelo percentual	cqb5: the return to training by percentage
+cpw9: os sorteios do treino	cpw9: the training random draws
+cpw9: o risco sem recorrência	cpw9: the risk without recurrence
+simplification: the original pushes the type in a dword whose upper bytes have no value; 0x62d250 reads a char	simplification: the original pushes the type in a dword whose upper bytes have no value; 0x62d250 reads a char
+simplification: the severity is a local of the original that carries over from one hit to the next; with no hit above 51 before,	simplification: the severity is a local of the original that carries over from one hit to the next; with no hit above 51 before,
+the original reads a stack leftover and the copy uses 0 (the comparer leaves every match with a clash to the original).	the original reads a stack leftover and the copy uses 0 (the comparer leaves every match with a clash to the original).
+cpv8: sem a marca do jogo, a metade	cpv8: without the match mark, half
+cpv8: o jovem em dobro	cpv8: the young player counts double
+cpv10: o id da pessoa	cpv10: the person id
+cpw8: a forma abaixo de 80% na pré-temporada	cpw8: form below 80% in pre-season
+cpw8: a recuperação por dia livre	cpw8: the recovery per free day
+cps9: a volta de hoje achada	cps9: the return of today found
+cpu1: a linha da nacao dada	cpu1: the row of the given nation
+cpu1: a linha da nacao escolhida	cpu1: the row of the chosen nation
+cpu1: a nacao do continente	cpu1: the nation of the continent
+cpu1: a linha do continente	cpu1: the continent row
+cpu2: o fim no ano seguinte	cpu2: the end in the following year
+cpu2: antes do fim, na temporada	cpu2: before the end, within the season
+cpu2: entre o fim e o inicio, fora	cpu2: between the end and the start, outside
+cpu2: entre o inicio e o fim do ano	cpu2: between the start and the end of the year
+cpt4: a busca da nacao	cpt4: the nation search
+cpt4: a linha da nacao	cpt4: the nation row
+cpt4: a Copa e as eliminatorias	cpt4: the World Cup and the qualifiers
+cpt4: a linha do continente	cpt4: the continent row
+cqb10: a busca começa na cabeça	cqb10: the search starts at the head
+cqc8: a nota do jogo (× 67 − 470)	cqc8: the match rating (× 67 − 470)
+cqc8: a confiança pelo ajuste	cqc8: the confidence by the adjustment
+cqc9: a meta pela posição de perigo	cqc9: the target by the danger position
+cqc9: o sorteio do presidente	cqc9: the chairman random draw
+cqc9: a confiança de volta	cqc9: the confidence restored
+cqc9: a chegada do técnico	cqc9: the arrival of the manager
+cqa10: o sorteio pela ficha do técnico	cqa10: the random draw by the player sheet of the manager
+cqa10: o sorteio da diretoria	cqa10: the board random draw
+cpy12: o sorteio da gravidade	cpy12: the severity random draw
+cpy12: a verba da diretoria	cpy12: the board budget
+cpy12: o sorteio do ultimato	cpy12: the ultimatum random draw
+whole dword as a field; 0x7858c0 reads only the low byte, and the copy passes the clean value	whole dword as a field; 0x7858c0 reads only the low byte, and the copy passes the clean value
+cpx10: o sorteio do boato	cpx10: the rumour random draw
+cpx10: a data da notícia na linha	cpx10: the news date in the row
+a original descarta o valor	the original routine discards the value
+cpv4: a variante do boato	cpv4: the rumour variant
+simplification: the round goes as a dword with the high bytes zeroed; the original passes stack leftovers in them (read as a byte)	simplification: the round goes as a dword with the high bytes zeroed; the original passes stack leftovers in them (read as a byte)
+o maior nivel (0x5fcff0) entre o guardado e o deste humano	the highest level (0x5fcff0) between the stored one and that of this human
+grows an array (pointer +o, capacity +o+4, count +o+8) in steps of 5; false when out of memory	grows an array (pointer +o, capacity +o+4, count +o+8) in steps of 5; false when out of memory
+simplification: the 2nd argument goes with only the byte; the original passes stack leftovers in the high part (read as a byte)	simplification: the 2nd argument goes with only the byte; the original passes stack leftovers in the high part (read as a byte)
+simplification: a original mostra a caixa "Error" (match_day.cpp, linhas 0xc45/0xc4a/0xc4f); nao	simplification: the original routine shows the “Error” box (match_day.cpp, lines 0xc45/0xc4a/0xc4f); no
+o primeiro jogador sem folego	the first player out of stamina
+A: perdendo (ou empatado sem classificacao) por sorteio(10), o "Ruud Gullit"	A: losing (or drawn without qualification) by random draw(10), the “Ruud Gullit”
+o chute pendente e a disputa marcada	the pending shot and the marked contest
+simplification: the original stops the game (match_pl.cpp line 0x2e0b); without a goalkeeper there is no shot	simplification: the original stops the game (match_pl.cpp line 0x2e0b); without a goalkeeper there is no shot
+sem falta: a disputa limpa	no foul: the clean contest
+o goleiro sofreu o gol	the goalkeeper conceded the goal
+the branch follows `a`’s record (as in the original), the value a of the player himself	the branch follows `a`’s record (as in the original), the value a of the player himself
+o original registra o erro e encerra o jogo	the original logs the error and ends the game
+Port of 0x68d0d0 (puts a copy of a block on the list, allocating): tape unit, for the copy	Port of 0x68d0d0 (puts a copy of a block on the list, allocating): tape unit, for the copy
+calls (0x6cd3d0) record it as a unit: the comparison runs inside the unit (nested)	calls (0x6cd3d0) record it as a unit: the comparison runs inside the unit (nested)
+`=`: confere o evento anterior e abre o novo	`=`: checks the previous event and opens the new one
+simplification: reads a file, allocates the texts and writes the global table; no comparison of its own, validated	simplification: reads a file, allocates the texts and writes the global table; no comparison of its own, validated
+o anterior passa a ser o principal e o novo vira o outro (+7, +8)	the previous one becomes the main one and the new one becomes the other (+7, +8)
+simplification: the 6th argument carries only the byte (n - 11); the original passes ebx leftovers in the high bytes (read as a byte)	simplification: the 6th argument carries only the byte (n - 11); the original passes ebx leftovers in the high bytes (read as a byte)
+simplification: a original mostra a caixa "Error" (versao, arquivo, linha 0x17e2); tipo	simplification: the original routine shows the “Error” box (version, file, line 0x17e2); type
+o lance e o atributo	the move and the attribute
+o goleiro (ou quem guarda a posicao 1)	the goalkeeper (or whoever holds position 1)
+o folego e a distancia	the stamina and the distance
+a bola parada seguinte (+0x8ea9) e o tempo dela (+0x8eaa)	the next set piece (+0x8ea9) and its time (+0x8eaa)
+fcomp st(1) + test ah,1: perto quando a distancia e menor (NaN conta como menor)	fcomp st(1) + test ah,1: close when the distance is smaller (NaN counts as smaller)
+fcomp + test ah,1: NaN counts as less (C0 set), as in the original	fcomp + test ah,1: NaN counts as less (C0 set), as in the original
+a original usa o L18 aqui	the original routine uses L18 here
+the original has `test eax, eax` (85 c0); anything else is a no-CD patch (xor 31 c0 or 33 c0)	the original has `test eax, eax` (85 c0); anything else is a no-CD patch (xor 31 c0 or 33 c0)
+the stadium (”stadium, city”; without a city only the name, without a stadium ”Unknown Stadium”)	the stadium (”stadium, city”; without a city only the name, without a stadium ”Unknown Stadium”)
+(width, wrap, font, mode); the original’s mode is a seven in dl over a dirty edx	(width, wrap, font, mode); the original’s mode is a seven in dl over a dirty edx
+simplification: the original pushes the slot as a dword with the top 3 bytes meaningless (the variable is a	simplification: the original pushes the slot as a dword with the top 3 bytes meaningless (the variable is a
+simplification: with the view outside 0 to 4 the original passes the text of a local variable with no value; here empty	simplification: with the view outside 0 to 4 the original passes the text of a local variable with no value; here empty
+cqc10: o sorteio do boato	cqc10: the rumour random draw
+cqc10: o sorteio da reputação para o pedido	cqc10: the reputation random draw for the request
+cqb8: a 0x4cf5f0 (de dentro da 0x544520 e direta) é unidade da fita: vai por `chamar`	cqb8: 0x4cf5f0 (from inside 0x544520 and direct) is a tape unit: goes through `chamar`
+cqb8: a nota do jogador do elenco	cqb8: the rating of the squad player
+cqb8: a 0x4cf5f0 é unidade da fita (direta e de dentro da 0x544520; a 0x62c400 alcança a 0x600a50)	cqb8: 0x4cf5f0 is a tape unit (direct and from inside 0x544520; 0x62c400 reaches 0x600a50)
+cqa13: o limite do elenco forte	cqa13: the strong squad limit
+cqa13: a moral do companheiro cai	cqa13: the morale of the teammate drops
+o original descarta o resultado	the original discards the result
+cqf11: a ordem dos jogadores	cqf11: the order of the players
+cqf11: o sorteio da notícia	cqf11: the news random draw
+cqc12: as vagas da correção	cqc12: the correction places
+club with a match (table +0x24 by club id) and contract with +0x3d above −10: no	club with a match (table +0x24 by club id) and contract with +0x3d above −10: no
+cqc12: a idade do sub-21	cqc12: the under-21 age
+from another nation: no team, no +0x22 mark, no bit 2 of +0xc in the 79-byte record, with the second	from another nation: no team, no +0x22 mark, no bit 2 of +0xc in the 79-byte record, with the second
+nation (+0x1e) in this one; it gets in if this one has a higher +0x8e, or (club in the same confederation +0x71 or no club)	nation (+0x1e) in this one; it gets in if this one has a higher +0x8e, or (club in the same confederation +0x71 or no club)
+cqc12: a vaga do elenco fica livre	cqc12: the squad slot becomes free
+cqc12: o convocado ganha o time	cqc12: the called-up player gets the team
+cpz6: a serviço da seleção	cpz6: on national team duty
+cpz6: já no time da seleção	cpz6: already in the national team
+cpw12: a reserva que não entrou	cpw12: the substitute who did not come on
+cpv11: o limite de dias	cpv11: the day limit
+the original pushes the slice in a stack dword with a garbage high part and the group in al: 0x5abf10 only reads the bytes	the original pushes the slice in a stack dword with a garbage high part and the group in al: 0x5abf10 only reads the bytes
+a seguinte vira a atual	the next one becomes the current one
+cqc12: os clubes com jogo em volta da data	cqc12: the clubs with a match around the date
+cpw13: o último clube fica sem registro	cpw13: the last club is left without a record
+cqg9: os árbitros que ficam por nação	cqg9: the referees who stay per nation
+cqg9: o pedido da vaga	cqg9: the slot request
+cqg9: a parte de cada vaga	cqg9: the share of each slot
+cqh7: o peso da qualidade	cqh7: the quality weight
+cqh7: o empate pelo índice	cqh7: the tie by the index
+cpy8: o quarto de cima	cpy8: the top quarter
+cpy8: a faixa da liga	cpy8: the league band
+cpy8: o sorteio na faixa	cpy8: the random draw within the band
+cpx7: os registros das nações	cpx7: the records of the nations
+cqg7: a habilidade sorteada pela PA	cqg7: the ability drawn by the PA
+cqg7: a reputação +9 do regen	cqg7: the +9 reputation of the regen
+cqg7: a idade de 16 a 18	cqg7: the age from 16 to 18
+cqg7: o ano do nascimento	cqg7: the birth year
+cqh9: o do elenco pelo nome	cqh9: the squad one by name
+cqh9: o caractere do texto	cqh9: the text character
+cqd10: o sorteio de virar técnico	cqd10: the random draw to become a manager
+cqd10: o jovem não se aposenta	cqd10: the young player does not retire
+the player with a non-player record: the record goes to the regen database and he stays a non-player	the player with a non-player record: the record goes to the regen database and he stays a non-player
+cqd10: o dia do regen	cqd10: the regen day
+a pessoa e a data (dia, ano, bissexto)	the person and the date (day, year, leap)
+simplification: calls the news (they allocate and deliver), the regen as a non-player, the new contracts and the lists: the path	simplification: calls the news (they allocate and deliver), the regen as a non-player, the new contracts and the lists: the path
+cpv9: o valor do regen	cpv9: the regen value
+cpv9: uma vez em quatro	cpv9: once in four
+cpr8: a habilidade alta segura o jogador	cpr8: high ability keeps the player
+cpr8: um em três se aposenta	cpr8: one in three retires
+cpr9: a vaga do técnico abre	cpr9: the manager slot opens
+cpr9: as vagas de treinador	cpr9: the coach slots
+cqf9: o tipo da lesão pelo nome	cqf9: the injury type by name
+cqa6: sem resultados, não está	cqa6: without results, it is not there
+cqa6: a removida não conta	cqa6: the removed one does not count
+cpu13: a faixa do meio	cpu13: the middle band
+cqh8: a categoria e o tipo do nó	cqh8: the category and the node type
+cqh8: o registro da categoria zerado	cqh8: the category record zeroed
+cqh8: o nó vazio da sexta categoria	cqh8: the empty node of the sixth category
+cqh8: os jogos pelo clube	cqh8: the matches for the club
+cqf8: o clube da temporada atual	cqf8: the club of the current season
+cqf8: o ano do grupo do nó	cqf8: the year of the group of the node
+cqf8: o clube do grupo do nó	cqf8: the club of the group of the node
+cpu3: o valor do registro	cpu3: the record value
+cpu3: sem registro, o padrao	cpu3: without a record, the default
+cps9: os gols na carreira	cps9: the career goals
+cps10: só os grupos do clube	cps10: only the club groups
+cps10: os gols pelo clube	cps10: the goals for the club
+cpz10: o sorteio do comentarista	cpz10: the commentator random draw
+cpz7: o clube é o mandante	cpz7: the club is the home team
+cpz7: os gols do mandante	cpz7: the home team goals
+cpz7: os gols sofridos pelo visitante	cpz7: the goals conceded by the away team
+cpu10: a falta do primeiro tipo	cpu10: the foul of the first type
+cpu10: os jogos da suspensão	cpu10: the suspension matches
+cpu10: a punição feita	cpu10: the punishment carried out
+cqf12: a busca de cada lista	cqf12: the search of each list
+cqc12: as convocações para o jogo	cqc12: the call-ups for the match
+cpy4: as nações pela reputação	cpy4: the nations by reputation
+cpy4: marcar os amistosos da data	cpy4: schedule the friendlies of the date
+cps8: sem pedidos de observação	cps8: without scouting requests
+cps8: a resposta da lista do olheiro	cps8: the reply of the scout list
+simplification: a original mostra a caixa "Error" (versao, arquivo, linha 0x4755); +0x8ea9	simplification: the original routine shows the “Error” box (version, file, line 0x4755); +0x8ea9
+0x6cd330 (`search_on_side`), cuja comparacao a grava como unidade: a comparacao roda dentro	0x6cd330 (`search_on_side`), whose comparison records it as a unit: the comparison runs inside
+cqe3: o dobro pela liga ativa	cqe3: double for the active league
+cqe3: o sorteio do lance	cqe3: the bid random draw
+cqe3: o sorteio do empréstimo	cqe3: the loan random draw
+cqe4: a base para outro clube	cqe4: the base for another club
+cqe4: o fator da reputação comparada	cqe4: the factor of the compared reputation
+cqe4: a pedida pelo interesse	cqe4: the asking price by interest
+cqd12: sem a lei Bosman	cqd12: without the Bosman ruling
+cqa7: o listado de outro clube × 1,05	cqa7: the listed player of another club × 1.05
+cqa7: a idade acima do divisor	cqa7: the age above the divisor
+cpy1: alvo sem lance não conta	cpy1: a target without a bid does not count
+cpy1: lance de outra posição não conta	cpy1: a bid for another position does not count
+cpy1: a vaga perde o alvo	cpy1: the slot loses the target
+cpy1: conta a vaga com lance	cpy1: the slot with a bid counts
+cpy2: uma lista a menos na conta da pessoa	cpy2: one list fewer in the count of the person
+cpy2: a vaga é preenchida de novo	cpy2: the slot is filled again
+cpy2: o bloqueio de 14 dias	cpy2: the 14-day block
+cpy3: a verba da vaga de titular	cpy3: the budget of the starter slot
+cpy3: a redução da vaga pela sobra	cpy3: the slot reduction by the surplus
+cpy3: a vaga é preenchida	cpy3: the slot is filled
+o clube suspende o jogador	the club suspends the player
+simplification: the 3rd argument is pushed as dword 1; the job goes in a byte (0x53b620 only reads the byte)	simplification: the 3rd argument is pushed as dword 1; the job goes in a byte (0x53b620 only reads the byte)
+cpw3: o interesse para contar do início; 0x9690a8 = 2.75	cpw3: the interest to count from the start; 0x9690a8 = 2.75
+cpw3: as 3 semanas a partir de hoje	cpw3: the 3 weeks from today
+cpu4: com a clausula ativa	cpu4: with the clause active
+cpu4: sem as regras novas	cpu4: without the new rules
+cpu4: o periodo pela idade	cpu4: the period by age
+cpw1: o desconto do recém-contratado; 0x969560 = 50, 0x968eb0 = 7.5	cpw1: the discount of the newly signed; 0x969560 = 50, 0x968eb0 = 7.5
+cpw1: o limite da insatisfação; 0x969560 = 50	cpw1: the dissatisfaction limit; 0x969560 = 50
+cpw1: o limite da satisfação; 0x96ff70 = 80	cpw1: the satisfaction limit; 0x96ff70 = 80
+cqd13: o teto da subida	cqd13: the rise cap
+cqd13: a reputação do campeão	cqd13: the reputation of the champion
+cqd13: a reputação do campeão da liga	cqd13: the reputation of the league champion
+cqd13: o moral do jogador destacado	cqd13: the morale of the standout player
+cqd13: o contrato do jogador destacado	cqd13: the contract of the standout player
+cqd13: o peso do título; 0x968938 = 4, 0x968968 = 0.5	cqd13: the title weight; 0x968938 = 4, 0x968968 = 0.5
+cqd13: o moral do jogador do campeão da copa	cqd13: the morale of the cup winner player
+cqd13: o moral do contrato do campeão da copa	cqd13: the contract morale of the cup winner
+cqa11: o bônus da vitória do mandante	cqa11: the win bonus of the home team
+cqa11: os pontos do mês do mandante	cqa11: the month points of the home team
+cqa12: o limiar da reputação	cqa12: the reputation threshold
+cqa12: o teto da subida	cqa12: the rise cap
+cqa12: a reputação do colocado	cqa12: the reputation of the placed team
+cpz5: a razão da postura normal	cpz5: the ratio of the normal stance
+cpx9: as vagas da escalação	cpx9: the line-up slots
+cpx8: a vaga pelo time	cpx8: the slot by team
+a original estende o al (movsx)	the original routine sign-extends al (movsx)
+cqf7: a nota de goleiros	cqf7: the goalkeeping rating
+cqf7: a nota de tática	cqf7: the tactics rating
+cqf7: o divisor da quantidade	cqf7: the quantity divisor
+cqf7: o programa dos goleiros	cqf7: the goalkeepers programme
+the progress of the five categories (the original clears a dword and a byte)	the progress of the five categories (the original clears a dword and a byte)
+cqd8: o peso do nível	cqd8: the level weight
+cqd8: o sorteio da subida	cqd8: the rise random draw
+cqd9: devolve a categoria 0	cqd9: returns category 0
+cqd9: devolve a categoria 4	cqd9: returns category 4
+cpu8: o treino dos goleiros	cpu8: the goalkeeper training
+cpu8: o programa geral do computador	cpu8: the general computer programme
+cpt8: a média dos treinadores	cpt8: the average of the coaches
+cpt9: guarda o progresso da categoria 3	cpt9: stores the progress of category 3
+cpt9: o primeiro atributo da categoria 0	cpt9: the first attribute of category 0
+cpt9: a categoria 1, seis vezes o passo	cpt9: category 1, six times the step
+cpt10: a semana de 7 dias	cpt10: the 7-day week
+cpu9: goleiro de 15 para cima	cpu9: goalkeeper from 15 up
+cpu9: o programa dos goleiros	cpu9: the goalkeepers programme
+cqn1: a Coreia do Sul	cqn1: South Korea
+cqk3: o Brasil abre em dezembro	cqk3: Brazil opens in December
+cqk3: o Brasil fecha em novembro	cqk3: Brazil closes in November
+cqk3: o limite do Brasil	cqk3: the Brazil limit
+cqk1: a Inglaterra abre em junho	cqk1: England opens in June
+cqk1: os EUA fecham em agosto	cqk1: the USA close in August
+cqk1: a Austrália abre em junho	cqk1: Australia opens in June
+cqe5: a conta da temporada	cqe5: the season calculation
+cqm2: a Irlanda do Norte	cqm2: Northern Ireland
+cqm2: a País de Gales	cqm2: Wales
+cqk2: a Espanha fecha em agosto	cqk2: Spain closes in August
+cqk2: a Itália fecha em setembro	cqk2: Italy closes in September
+cqk2: a França fecha em agosto	cqk2: France closes in August
+cqf1: a vaga da oferta do mesmo comprador	cqf1: the offer slot of the same buyer
+cqf1: a rival liga as ofertas	cqf1: the rival links the offers
+cqf1: a vaga na lista da rival	cqf1: the slot in the list of the rival
+stack); 0x8c6220 reads the bytes (days as u8, slices as u8)	stack); 0x8c6220 reads the bytes (days as u8, slices as u8)
+cqf1: o prazo da oferta	cqf1: the offer deadline
+cqf2: o empréstimo concluído em 5 dias	cqf2: the loan completed in 5 days
+cqe1: o preço pelo valor k	cqe1: the price by value k
+cqe1: a opção × 0,85 abaixo do pedido; 0x969520 = 0.85	cqe1: the option × 0.85 below the asking price; 0x969520 = 0.85
+cqe2: o vendedor sem lista de observação ativa	cqe2: the seller without an active scouting list
+cqe2: a atração da opção	cqe2: the attraction of the option
+cqe2: o preço da opção	cqe2: the option price
+stack without value up to the first slot with record +0x61; a candidate without a record does not happen: they start at zero). The flags	stack without value up to the first slot with record +0x61; a candidate without a record does not happen: they start at zero). The flags
+cqe2: a vaga sem alvo	cqe2: the slot without a target
+cqe2: o interesse abaixo de 3,15; 0x968e58 = 3.15	cqe2: the interest below 3.15; 0x968e58 = 3.15
+cqe2: a nota até 0,9 da base; 0x9689d8 = 0.9	cqe2: the rating up to 0.9 of the base; 0x9689d8 = 0.9
+cqe2: o valor dele sai do preço	cqe2: his value comes out of the price
+cqd2: o alvo não quer se mudar	cqd2: the target does not want to move
+cqd2: o jogador da troca caro demais	cqd2: the exchange player too expensive
+cqd2: o clube não chega ao jogador	cqd2: the club cannot reach the player
+simplification: the original reads all four as dwords with stack leftovers in the bytes that 0x8d0590 does not write (the month is a	simplification: the original reads all four as dwords with stack leftovers in the bytes that 0x8d0590 does not write (the month is a
+cqc7: a oferta cai pela permissão	cqc7: the offer falls through over the permit
+cqd1: as prestações na virada do mês	cqd1: the instalments at the turn of the month
+cqd1: a resposta da IA ao lance	cqd1: the AI response to the bid
+cqb6: a parte da vaga	cqb6: the slot share
+cqb6: entra nas vendas do comprador	cqb6: enters the sales of the buyer
+cqb7: o potencial acima de 8500	cqb7: potential above 8500
+cqb7: o jovem acima de 190	cqb7: the young player above 190
+cqa5: o jogador da oferta conta	cqa5: the offer player counts
+cqa5: o vendedor sem troca tem vaga	cqa5: the seller without an exchange has a slot
+cqa5: o limite de 50 no elenco	cqa5: the limit of 50 in the squad
+cpy11: os jogos do prêmio	cpy11: the bonus matches
+cpy11: o jogo conta na permissão	cpy11: the match counts toward the permit
+cpy11: a falta conta na permissão	cpy11: the foul counts toward the permit
+cpy13: a compensação ao clube	cpy13: the compensation to the club
+cpy13: a situação nas listas de observação	cpy13: the status in the scouting lists
+cpy13: as escalações	cpy13: the line-ups
+cpx1: desmarcar os lances do comprador	cpx1: unmark the bids of the buyer
+cpx1: o desassossego da recusa	cpx1: the unsettlement from the refusal
+cpx2: o sorteio do desassossego	cpx2: the unsettlement random draw
+cpx2: o desconto do listado	cpx2: the discount of the listed player
+cpx3: os números de camisa de quem chegou	cpx3: the shirt numbers of the newcomers
+cpx3: a confiança das diretorias	cpx3: the confidence of the boards
+cpx3: o pagamento da transferência	cpx3: the transfer payment
+cpx3: a parte dos clubes anteriores	cpx3: the share of the previous clubs
+cpx4: a data da pessoa até o fim	cpx4: the date of the person until the end
+cpx4: o fim do contrato até o fim do empréstimo	cpx4: the contract end until the loan end
+cpx4: o contrato de empréstimo	cpx4: the loan contract
+cpx4: a permissão de trabalho	cpx4: the work permit
+cpw2: a data de conclusão ainda por vir	cpw2: the completion date still to come
+cpw2: a conclusão agendada para hoje	cpw2: the completion scheduled for today
+cpw2: a transferência se conclui	cpw2: the transfer completes
+cpv1: as rivais em 20 dias	cpv1: the rivals in 20 days
+cpv1: a espera da permissao	cpv1: the wait for the permit
+simplification: the original passes a short* to a meaningless local dword and pushes the whole dword; the callees read the	simplification: the original passes a short* to a meaningless local dword and pushes the whole dword; the callees read the
+cpv4: a oferta em negociação	cpv4: the offer under negotiation
+cpv4: o preço dos termos	cpv4: the price of the terms
+cpv4: a oferta em 2 dias	cpv4: the offer in 2 days
+cps2: menos de cinco anos na nação	cps2: less than five years in the nation
+cps3: o sorteio do desafeto	cps3: the grudge random draw
+cps3: os registros da liberação	cps3: the release records
+cps3: a compensação ao clube	cps3: the compensation to the club
+cps4: o valor do percentual	cps4: the percentage value
+cps4: o valor do prêmio na seleção	cps4: the bonus value in the national team
+cps4: o valor do prêmio no time	cps4: the bonus value in the team
+a oferta volta daqui a 10 dias	the offer comes back in 10 days
+simplification: the rule’s reason is a single variable, without a value before the first call (the original does not zero it; the	simplification: the rule’s reason is a single variable, without a value before the first call (the original does not zero it; the
+simplification: without a seller, the original would read the finances from a place without a value (and would crash later, at [vendedor]); the	simplification: without a seller, the original would read the finances from a place without a value (and would crash later, at [vendedor]); the
+cpv2: a recusa na lista	cpv2: the refusal in the list
+cpv2: de volta em 10 dias	cpv2: back in 10 days
+cpv2: a reputação sobe	cpv2: the reputation rises
+cqc5: o aviso do dia da janela	cqc5: the notice of the window day
+cqc5: as ofertas em espera da janela que abriu	cqc5: the pending offers of the window that opened
+cpu5: a fatia da noite	cpu5: the night slice
+cpu5: a rolagem das finanças	cpu5: the finances roll
+cpu5: o sorteio da chuva forte	cpu5: the heavy rain random draw
+cpt5: um em dez muda o vento	cpt5: one in ten changes the wind
+cpt7: o segundo sorteio da medida	cpt7: the second random draw of the measure
+GERADO por `python engenharia-reversa/adjetivos_nacao.py` (não editar): as tabelas da	GENERATED by `python engenharia-reversa/adjetivos_nacao.py` (do not edit): the tables of
+nation_get_nationality_adjective (0x6181d0, index.cpp) lidas do cm0102.exe por todos os caminhos e conferidas	nation_get_nationality_adjective (0x6181d0, index.cpp) read from cm0102.exe along all paths and checked
+(grafo × tabelas); regenerar se o gerador mudar. Os textos são endereços no exe (não copiados). Entra no	(graph × tables); regenerate if the generator changes. The texts are addresses in the exe (not copied). Enters
+motor.rs pelo `include!("nation_adjectives.rs")` do código da leva.	motor.rs through the `include!("nation_adjectives.rs")` of the batch code.
+restore (do not switch on): inside a Rust replica (`without_counting`) that draws several times, switching on	restore (do not switch on): inside a Rust replica (`without_counting`) that draws several times, switching on

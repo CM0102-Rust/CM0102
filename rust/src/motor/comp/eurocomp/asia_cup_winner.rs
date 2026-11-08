@@ -138,7 +138,7 @@ pub(crate) unsafe fn asian_cup_winners_finalists(this: usize) -> [usize; 4] {
             i += 1;
         }
     }
-    v.swap(1, 2); // cqt13: cruza o par do meio
+    v.swap(1, 2); // cqt13: crosses the middle pair
     v
 }
 
@@ -225,6 +225,6 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_round_table(this: 
 /// [pt] { 0x40d4d0 } (thiscall, ret 0, asia_cup_winner.cpp): `AsiaCupWinner::create_team_entries()`: os 16 times (a caixa
 /// da linha 0x185 sem memória).
 pub(crate) unsafe extern "thiscall" fn create_team_entries(this: usize) -> i32 {
-    build_team_table(this, 0x987b60, 0x185, "cqq_12 times da recopa asiatica", |i| i) // cqq12: os times da Recopa asiática
+    build_team_table(this, 0x987b60, 0x185, "cqq_12 times da recopa asiatica", |i| i) // cqq12: the Asian Cup Winners’ Cup teams
 }
 

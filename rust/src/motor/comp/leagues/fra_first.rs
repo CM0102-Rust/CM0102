@@ -81,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     write_u32_from_usize(this, 0x96aa24);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
     write_u32_from_usize(this + 4, record);
-    *((this + league::DISCIPLINE_RULE) as *mut u8) = 0xc; // cqq6: a disciplina da primeira francesa
+    *((this + league::DISCIPLINE_RULE) as *mut u8) = 0xc; // cqq6: the discipline of the French first division
     let m = new_marker_comp(0x96a994, KEY_CLUB_COMP_FRENCH_CFA);
     write_u32_from_usize(this + fra_first::CFA_MARKER, m);
     let m = new_marker_comp(0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
@@ -98,10 +98,10 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
             let comp = read_u32_as_usize(p);
             if comp != 0 {
                 if read_u32_as_usize(comp) == read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA) {
-                    write_u32_from_usize(p + 9, comp); // cqq6: a CFA vira a competição de reserva
+                    write_u32_from_usize(p + 9, comp); // cqq6: the CFA becomes the reserve competition
                     write_u32_from_usize(p, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
                 } else if read_u32_as_usize(comp) == read_u32_as_usize(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) {
-                    write_u32_from_usize(p + 9, 0); // cqq6: a divisão de baixo fica sem reserva
+                    write_u32_from_usize(p + 9, 0); // cqq6: the lower division is left without reserves
                     write_u32_from_usize(p, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
                 }
             }
@@ -214,7 +214,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
     let v = read_u32_as_usize(this + league::FIXED_FIXTURES);
     for i in 0..n as usize {
         let f = v + i * 0x10;
-        if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn6: um clube sem achar derruba a lista
+        if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn6: a club not found drops the list
             if v != 0 {
                 destroy(v, 0x10, read_u32_as_usize(v - 4) as u32, 0x5a53c0);
                 erase(v - 4);
@@ -243,7 +243,7 @@ pub(crate) unsafe fn fra_first_compare_fixed_fixtures(name: &str, this: usize, o
 /// [pt] { 0x5bb540 } (thiscall, ret 8, fra_first.cpp, 8 bytes): `stub_return_one_ret8(a, b)`, o toco das competições que não
 /// jogam partidas no lugar do add_result (o slot +4): ignora os dois e devolve 1.
 pub(crate) unsafe extern "thiscall" fn stub_return_one_ret8(_this: usize, _a: u32, _b: u32) -> u32 {
-    1 // cqn6: o toco devolve 1
+    1 // cqn6: the stub returns 1
 }
 
 /// the default of competition slot 25 and ruling body slot 6: returns 1
@@ -947,7 +947,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_set_up_rules(this: usize) -> u3
 pub(crate) unsafe fn fra_first_first_division_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3), (0xab, 2, 0), (0xdb, 2, 0), (0xbe, 1, 0)]);
-    let caem = if is_2001_season(this) { 2 } else { 3 }; // cqj5: a primeira rebaixa 2 em 2001
+    let caem = if is_2001_season(this) { 2 } else { 3 }; // cqj5: the first relegates 2 in 2001
     v.extend_from_slice(&[(0xc1, 1, caem), (0x49, 1, 5), (0x1c, 4, 0xffff_ffff), (0x52, 1, 2), (0x20, 4, read_usize(KEY_CLUB_COMP_FRENCH_SECOND_DIVISION) as u32)]);
     v
 }
@@ -955,7 +955,7 @@ pub(crate) unsafe fn fra_first_first_division_rules(this: usize) -> Vec<(usize, 
 /// Rule writes of the French second division (promotion/relegation by season).
 pub(crate) unsafe fn fra_first_second_division_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = common_rules();
-    v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqj5: a segunda dá 3 pontos pela vitória
+    v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqj5: the second gives 3 points per win
     let (sobem, caem) = if is_2001_season(this) { (4, 2) } else { (3, 3) };
     v.extend_from_slice(&[(0xbe, 1, sobem), (0xc1, 1, caem), (0x1c, 4, read_usize(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION) as u32), (0x52, 1, 2), (0x20, 4, read_usize(KEY_CLUB_COMP_FRENCH_NATIONAL) as u32), (0x49, 1, 5)]);
     v
@@ -1027,7 +1027,7 @@ pub(crate) unsafe fn fra_first_fill_league_table(this: usize, file: usize, row: 
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
-            let row = k; // cqj6: a linha k recebe o k-ésimo clube da divisão
+            let row = k; // cqj6: row k receives the k-th club of the division
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
             iniciar(this, row as u32, club, 0, 0);
@@ -1062,7 +1062,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u3
     }
     crate::comparison::branch("cqj_6 tabela da primeira");
     set_prize_fund(this, 0x30d40);
-    eng_prm_pay_tv_rights(this, 0x5b8d80, 0); // cqj6: a TV da primeira
+    eng_prm_pay_tv_rights(this, 0x5b8d80, 0); // cqj6: the first division TV money
     1
 }
 

@@ -470,7 +470,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
         i = i.wrapping_add(1);
     }
     let mut k: u8 = 0;
-    for g in [KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION] { // cqm6: os times B da Primera e da Segunda
+    for g in [KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION] { // cqm6: the B teams of the Primera and the Segunda
         let rows = read_i16(this + league::CLUB_COUNT);
         // the row count for the condition advances together with `k`
         let mut kk = k;

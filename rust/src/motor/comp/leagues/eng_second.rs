@@ -351,17 +351,17 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
             0 => {
                 crate::comparison::branch("cpz_2 acesso na tabela");
                 let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
-                promotion(eng_second_staff_records(), club, comp, 0x64); // cpz2: o acesso pela tabela pesa 0x64
+                promotion(eng_second_staff_records(), club, comp, 0x64); // cpz2: promotion by the table weighs 0x64
             }
             1 => {
                 crate::comparison::branch("cpz_2 vaga no mata-mata");
                 let slot: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-                slot(eng_second_staff_records(), club, comp, 0xa0, 0x82, 0x1e); // cpz2: a vaga no mata-mata pesa 0x1e
+                slot(eng_second_staff_records(), club, comp, 0xa0, 0x82, 0x1e); // cpz2: the knockout slot weighs 0x1e
             }
             3 => {
                 crate::comparison::branch("cpz_2 rebaixamento na tabela");
                 let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-                cair(eng_second_staff_records(), club, comp); // cpz2: o rebaixamento pela tabela
+                cair(eng_second_staff_records(), club, comp); // cpz2: relegation by the table
             }
             _ => {}
         }

@@ -21,9 +21,9 @@ pub(crate) unsafe extern "thiscall" fn wc_south_american_league_set_up_rules(thi
     }
     crate::comparison::branch("cqj_12 regras da america do sul");
     wc_europe_league_write_rule_fields(this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS);
-    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias sul-americanas
-    *((this + league::PROMOTED_COUNT) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: as vagas diretas da América do Sul
-    let day = 0x19; // cqj12: o dia do começo da eliminatória sul-americana
+    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: the win in the South American qualifiers
+    *((this + league::PROMOTED_COUNT) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: the direct places of South America
+    let day = 0x19; // cqj12: the start day of the South American qualifier
     let word = comp_date_word(this, day, 0, 5);
     finish_rules_setup(this, word, 0)
 }

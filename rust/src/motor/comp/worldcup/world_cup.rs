@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     let mut dst = list + 0x28;
     let mut k = 8i32;
     for _ in 0..0x18 {
-        let lim = ((k / 8) as i8).wrapping_add(1); // cqf4: o limite de times por grupo
+        let lim = ((k / 8) as i8).wrapping_add(1); // cqf4: the limit of teams per group
         let mut r = sorteio(8);
         while count[r as i16 as usize] >= lim {
             r = sorteio(8);
@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
         return list;
     }
     crate::comparison::branch("cqf_4 sorteio de 2002");
-    for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: as nações do sorteio real
+    for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: the nations of the real random draw
         let nation = read_u32_as_usize(G_NATION_TABLE).wrapping_add((read_u32_as_usize(chave) as i32).wrapping_mul(0x122) as usize);
         write_u32_from_usize(list + i * 5, read_u32_as_usize(main(nation)));
     }
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
     if read_i16(this + 0x18e) as u16 == day && read_i16(this + 0x190) as i32 + read_i16(this + league::YEAR) as i32 == year && full != 0 {
         semear(this);
     }
-    let day_of_draw = read_i16(this + 0xb6) as u16; // cqf4: o dia do sorteio
+    let day_of_draw = read_i16(this + 0xb6) as u16; // cqf4: the random draw day
     if day_of_draw == day && read_i16(this + 0xb8) as i32 + read_i16(this + league::YEAR) as i32 == year && full != 0 && read_u32_as_usize(this + league::TABLE) == 0 {
         crate::comparison::branch("cqf_4 dia do sorteio");
         sortear(this);
@@ -257,7 +257,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_table(this: usize,
     let mut row = 0i8;
     let mut i = 0i8;
     while row < 4 {
-        let e = i as usize; // cqf5: a entrada da lista
+        let e = i as usize; // cqf5: the list entry
         if read_u8(list + e * 5 + 4) == 1 {
             crate::comparison::branch("cqf_5 time do grupo um");
             let club = draw_list_club(list, e);
@@ -326,7 +326,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
         let e = list + i as usize * 5;
         if read_u8(e + 4) as i8 as i32 == g + 2 {
             crate::comparison::branch("cqf_5 time do grupo");
-            write_u32_from_usize(teams + n as usize * 4, draw_list_club(list, i as usize)); // cqf5: o time na vaga do grupo
+            write_u32_from_usize(teams + n as usize * 4, draw_list_club(list, i as usize)); // cqf5: the team in the group slot
             n += 1;
         }
         i += 1;
@@ -347,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
             1,
             read_u32_as_usize(this + 4),
             table,
-            rodadas as u16 as u32, // cqf5: as rodadas (as datas, +0xa9 da fase)
+            rodadas as u16 as u32, // cqf5: the rounds (the dates, +0xa9 of the stage)
             read_u8(this + league::WIN_POINTS) as u32,
             read_u8(this + league::DRAW_POINTS) as u32,
             read_u8(this + league::MATCH_CATEGORY) as u32,
@@ -433,7 +433,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
     while i < read_i16(this + 0x36) {
         crate::comparison::branch("cqf_5 competição da nação");
         competition(read_u32_as_usize(G_NATIONAL_TEAMS), read_u32_as_usize(read_u32_as_usize(v + i as usize * 4) + 0x53), read_u32_as_usize(this + 4));
-        i += 1; // cqf5: a próxima nação
+        i += 1; // cqf5: the next nation
     }
     soltar(v);
 }

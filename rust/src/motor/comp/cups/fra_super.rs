@@ -107,7 +107,7 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stag
 
 /// A Supercopa da França: um jogo em julho; o prêmio de 60 mil por chegar. O mando vem à parte (`french_super_cup_venue`).
 pub(crate) const FRENCH_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
-    cql12r((5, 6, 0, 5), (0x18, 6, 0, 5, 2, 0x400), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0xea60, 0, 0)), // cql12: o jogo da Supercopa da França
+    cql12r((5, 6, 0, 5), (0x18, 6, 0, 5, 2, 0x400), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0xea60, 0, 0)), // cql12: the French Super Cup match
 ];
 
 /// Venue flag of the French Super Cup: 0x400 in 2001, otherwise one of six flags drawn at random (FN_UTILS_RANDOM(6)).
@@ -143,12 +143,12 @@ pub(crate) unsafe extern "thiscall" fn fra_super_create_round_table(this: usize,
 /// A Supercopa da Espanha: ida e volta (7 dias entre os jogos) em agosto, sem sorteio (+0xd = 0x200), desempate de ida e
 /// volta 1.
 pub(crate) const SPANISH_SUPER_CUP: [FraSuperCupRound; 1] = [
-    cql12r((5, 6, 0, 5), (0x14, 7, 0, 6, 1, 0), 0, (0, 0x200, 1), 6, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)), // cql12: a ida da Supercopa da Espanha
+    cql12r((5, 6, 0, 5), (0x14, 7, 0, 6, 1, 0), 0, (0, 0x200, 1), 6, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)), // cql12: the first leg of the Spanish Super Cup
 ];
 
 /// A Supercopa do Japão: um jogo em março no estádio neutro, 150 mil por vencer.
 pub(crate) const JAPAN_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
-    cql12r((1, 1, 0, 5), (4, 2, 0, 5, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0x249f0, 0)), // cql12: o jogo da Supercopa do Japão
+    cql12r((1, 1, 0, 5), (4, 2, 0, 5, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0x249f0, 0)), // cql12: the Japanese Super Cup match
 ];
 
 /// rule: the French Super Cup is between the First Division champion and the Coupe de France winner; if the same club

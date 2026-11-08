@@ -8,7 +8,7 @@ use super::*;
 /// [pt] { 0x43cd40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::start_new_season()`, a virada da temporada do Paulista (a tabela:
 /// 0x43cc40; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_sp_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x43cc40, 0x98b090, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_9 virada do paulista") // cqp9: o ano seguinte do Paulista
+    state_league_new_season(this, 0x43cc40, 0x98b090, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_9 virada do paulista") // cqp9: the next year of the Paulista
 }
 
 /// The Sao Paulo next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_sp_create_semi_final_stage(this: 
 ///
 /// [pt] { 0x43c280 } (thiscall, ret 8, bra_reg_sp.cpp): `BraRegSp::BraRegSp(ano, registro)`: o Paulista (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_sp(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_rio_construct_state_league(this, year, record, &PAULISTA_STATE_LEAGUE, 7, true, "cqt_4 paulista novo") // cqt4: a disciplina e as posições previstas do Paulista
+    bra_reg_rio_construct_state_league(this, year, record, &PAULISTA_STATE_LEAGUE, 7, true, "cqt_4 paulista novo") // cqt4: the discipline and expected positions of the Paulista
 }
 
 /// the Sao Paulo league has 16 clubs: those with it as their reserve division in the database (the field that holds the

@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             let o = ent(i);
             if read_u32_as_usize(o + 4) == 0 && club_nation(read_u32_as_usize(e)) == club_nation(read_u32_as_usize(o)) {
                 crate::comparison::branch("cqg_4 parceiro da mesma nação");
-                write_u32_from_usize(e + 4, read_u32_as_usize(o)); // cqg4: o parceiro da mesma nação
+                write_u32_from_usize(e + 4, read_u32_as_usize(o)); // cqg4: the partner from the same nation
                 write_u32_from_usize(o + 4, read_u32_as_usize(e));
                 break;
             }
@@ -149,7 +149,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     let mut pote = 0i32;
     let mut base = 0i32;
     while base < 0x20 {
-        let (mut livres_b, mut livres_a) = (4i8, 4i8); // [esp+0x12] a metade 2, [esp+0x13] a metade 1
+        let (mut livres_b, mut livres_a) = (4i8, 4i8); // [esp+0x12] half 2, [esp+0x13] half 1
         for i in 0..8 {
             match read_u8(ent(base + i) + 8) {
                 2 => livres_b -= 1,
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             }
         }
         for _ in 0..8 {
-            let mut s = sorteio(8).wrapping_add(base); // cqg4: o clube sorteado do pote
+            let mut s = sorteio(8).wrapping_add(base); // cqg4: the club drawn from the pot
             while read_u32_as_usize(ent(s)) == 0 {
                 s = sorteio(8).wrapping_add(base);
             }
@@ -242,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         for q in 0..4usize {
             let c = read_u32_as_usize(row + q * 4);
             points(read_u32_as_usize(G_UEFA_SEEDING), club_nation(c), 1);
-            let value = 1_800_000i32; // cqg4: o prêmio da fase de grupos
+            let value = 1_800_000i32; // cqg4: the group stage prize
             crate::comparison::branch("cqg_4 prêmio da fase de grupos");
             prize(finances(read_u32_as_usize(G_FINANCE_TABLE), c), value);
             send_prize_money_news(this, c, value, 0, -1, 0x449, 0, -2);
@@ -416,7 +416,7 @@ pub(crate) unsafe fn planned_final_positions(this: usize, knockout: usize, nm: i
         let mut k = 0i16;
         while k < read_i16(read_u32_as_usize(this + cup::ROUND_TABLE) + r as usize * 0x68 + 0x1a) {
             crate::comparison::branch("cqg_4 posição na preliminar");
-            v.push((i, p)); // cqg4: a posição na preliminar
+            v.push((i, p)); // cqg4: the position in the preliminary
             i += 1;
             count = count.wrapping_add(1);
             k += 1;
@@ -624,7 +624,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
                 let o = e7(w, a);
                 let target = if read_u32_as_usize(e7(r, c)) != 0 { e7(r, c + 1) } else { e7(r, c) };
                 crate::comparison::branch("cqg_6 par do mesmo grupo");
-                copy_group_entry(target, o); // cqg6: o outro do grupo
+                copy_group_entry(target, o); // cqg6: the other one in the group
                 k = k.wrapping_add(2);
                 write_u32_from_usize(o, 0);
                 break;
@@ -639,7 +639,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
         let s: i32 = if read_u8(p + 6) != 0 { 2 } else { 0 };
         for _ in 0..5 {
             let a = sorteio(4) as i8 as usize;
-            let b = sorteio(4) as i8 as usize; // cqg6: a troca da ordem dos grupos
+            let b = sorteio(4) as i8 as usize; // cqg6: the swap of the group order
             crate::comparison::branch("cqg_6 troca da ordem");
             order.swap(a, b);
         }
@@ -698,7 +698,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
         for q in 0..4i32 {
             let c = read_u32_as_usize(e7(g, h * 4 + q));
             points(read_u32_as_usize(G_UEFA_SEEDING), club_nation(c), 1);
-            let value = 1_200_000i32; // cqg6: o prêmio da segunda fase
+            let value = 1_200_000i32; // cqg6: the second stage prize
             crate::comparison::branch("cqg_6 prêmio da segunda fase");
             prize(finances(read_u32_as_usize(G_FINANCE_TABLE), c), value);
             send_prize_money_news(this, c, value, 0, -1, 0x44a, 0, -2);
@@ -916,7 +916,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 // simplification: +0x32 and +0x30 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words.
                 european_cup_add_knocked_out_record(club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
                 crate::comparison::branch("cpz_4 caiu na qualificacao");
-                leave_euro_competition(club); // cpz4: quem cai na qualificação sai da competição europeia
+                leave_euro_competition(club); // cpz4: whoever is knocked out in qualifying leaves the European competition
             }
             _ => {}
         }
@@ -926,7 +926,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
         } else if d == 0xfe {
             european_cup_add_failed_to_qualify_record(club, comp, 0x449, 0x32);
             crate::comparison::branch("cpz_4 caiu na fase 1");
-            leave_euro_competition(club); // cpz4: quem cai na fase 1 sai da competição europeia
+            leave_euro_competition(club); // cpz4: whoever is knocked out in stage 1 leaves the European competition
         }
     } else if (f as i8) < 0xc {
         if d == 6 {
@@ -1185,7 +1185,7 @@ pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 2 => {
                     if o2 < 0x6c {
                         crate::comparison::branch("cpy_5 entrada da banda 2");
-                        european_cup_write_entrant(t + 0x60 + o2, c, 8); // cpy5: a banda 2 entra na rodada 8
+                        european_cup_write_entrant(t + 0x60 + o2, c, 8); // cpy5: band 2 enters in round 8
                         n2 += 1;
                         o2 += 6;
                     }
@@ -1193,7 +1193,7 @@ pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 3 => {
                     if o3 < 0x72 {
                         crate::comparison::branch("cpy_5 entrada da banda 3");
-                        european_cup_write_entrant(t + 0xcc + o3, c, 0xd); // cpy5: a banda 3 entra na rodada 0xd
+                        european_cup_write_entrant(t + 0xcc + o3, c, 0xd); // cpy5: band 3 enters in round 0xd
                         n3 += 1;
                         o3 += 6;
                     }
@@ -1201,7 +1201,7 @@ pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 4 => {
                     if o4 < 0x6c {
                         crate::comparison::branch("cpy_5 entrada da banda 4");
-                        european_cup_write_entrant(t + 0x13e + o4, c, 0); // cpy5: a banda 4 entra na rodada 0
+                        european_cup_write_entrant(t + 0x13e + o4, c, 0); // cpy5: band 4 enters in round 0
                         n4 += 1;
                         o4 += 6;
                     }
@@ -1412,11 +1412,11 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
     if stage > -1 && stage < 0xc {
         if vencedor != 0 {
             crate::comparison::branch("cpy_6 premio da vitoria");
-            european_cup_add_prize_money(european_cup_club_finance(vencedor), 0x30d40); // cpy6: o prêmio da vitória
+            european_cup_add_prize_money(european_cup_club_finance(vencedor), 0x30d40); // cpy6: the win prize
             european_cup_send_prize_money_news(this, vencedor, 0x30d40, game);
         } else {
             crate::comparison::branch("cpy_6 premio do empate");
-            european_cup_add_prize_money(european_cup_club_finance(read_usize(game + fixture::HOME_CLUB)), 0x186a0); // cpy6: o prêmio do empate do mandante
+            european_cup_add_prize_money(european_cup_club_finance(read_usize(game + fixture::HOME_CLUB)), 0x186a0); // cpy6: the home side’s draw prize
             european_cup_add_prize_money(european_cup_club_finance(read_usize(game + fixture::AWAY_CLUB)), 0x186a0);
             european_cup_send_prize_money_news(this, read_usize(game + fixture::HOME_CLUB), 0x186a0, game);
             european_cup_send_prize_money_news(this, read_usize(game + fixture::AWAY_CLUB), 0x186a0, game);

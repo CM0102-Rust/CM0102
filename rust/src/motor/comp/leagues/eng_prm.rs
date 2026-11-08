@@ -60,7 +60,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     write_u32_from_usize(this + 4, registro);
     write_u32_from_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
-    *((this + league::DISCIPLINE_RULE) as *mut u8) = 9; // cql6: a regra de disciplina das ligas inglesas
+    *((this + league::DISCIPLINE_RULE) as *mut u8) = 9; // cql6: the discipline rule of the English leagues
     if let Some((capacidade, sentados)) = p.estadio {
         core::ptr::write_unaligned((this + league::REQUIRED_SEATS) as *mut u16, capacidade);
         core::ptr::write_unaligned((this + league::REQUIRED_CAPACITY) as *mut u16, sentados);
@@ -117,7 +117,7 @@ pub(crate) const PREMIER_DIVISION: EnglishDivision = EnglishDivision {
 pub(crate) const FIRST_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969c68,
     estadio: None,
-    fases: 1, // cql6: o play-off da First Division
+    fases: 1, // cql6: the First Division play-off
     regras: 0x572d90,
     tabela: 0x572bf0,
     arquivo: 0x9c4374,
@@ -126,7 +126,7 @@ pub(crate) const FIRST_DIVISION: EnglishDivision = EnglishDivision {
 pub(crate) const ENG_SECOND_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969dd0,
     estadio: None,
-    fases: 1, // cql6: o play-off da Second Division
+    fases: 1, // cql6: the Second Division play-off
     regras: 0x576780,
     tabela: 0x576630,
     arquivo: 0x9c43e8,
@@ -248,7 +248,7 @@ pub(crate) unsafe fn eng_prm_first_division_rules() -> Vec<(usize, u8, u32)> {
 /// Rule writes for the Second Division.
 pub(crate) unsafe fn eng_prm_second_division_rules() -> Vec<(usize, u8, u32)> {
     let mut v = english_common_rules();
-    v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Second dá 3 pontos pela vitória
+    v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: the Second gives 3 points per win
     v.extend_from_slice(&[(0xbe, 1, 2), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 4), (0x1c, 4, read_usize(KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) as u32), (0x4a, 1, 3), (0x20, 4, read_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) as u32), (0x49, 1, 5)]);
     v
 }
@@ -355,7 +355,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
-            let row = k; // cqi5: a linha k recebe o k-ésimo clube da divisão
+            let row = k; // cqi5: row k receives the k-th club of the division
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
             iniciar(this, row as u32, club, 0, 0);
@@ -387,7 +387,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
 /// fundo de prêmios e a TV: 12.000.000 a cada clube depois de 1999 (5.000.000 antes). Fonte 0x9c43b0, linha 0x1ee.
 pub(crate) unsafe extern "thiscall" fn eng_prm_create_table(this: usize) -> u32 {
     eng_prm_fill_league_table(this, 0x14, 0x9c43b0, 0x1ee, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || {
-        let value = if is_after_1999() { 0xb71b00 } else { 0x4c4b40 }; // cqi5: a TV da Premier
+        let value = if is_after_1999() { 0xb71b00 } else { 0x4c4b40 }; // cqi5: the Premier TV money
         eng_prm_pay_tv_rights(this, value, 0)
     })
 }

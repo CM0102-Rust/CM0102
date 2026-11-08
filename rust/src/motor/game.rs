@@ -28,7 +28,7 @@ pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], mark: &m
     crate::comparison::branch("cpt_6 dezembro");
     if (*mark as i8) < 0xc {
         crate::comparison::branch("cpt_6 bonus de dezembro");
-        h[5] = read_i16(na + nation::REPUTATION) as i32 as f64 * read_f64_at(0x967888) * (0xc - *mark as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro; 0x967888 = 0.05, 0x968930 = 3
+        h[5] = read_i16(na + nation::REPUTATION) as i32 as f64 * read_f64_at(0x967888) * (0xc - *mark as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: the December bonus; 0x967888 = 0.05, 0x968930 = 3
     }
     h[0] = h[1];
     h[1] = h[2];
@@ -80,7 +80,7 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
         show_error_at(0x9cd2a4, 0x156d);
         return;
     }
-    let dez = read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_DECEMBER) == read_i16(G_CURRENT_DATE); // cpt6: o dia de dezembro
+    let dez = read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_DECEMBER) == read_i16(G_CURRENT_DATE); // cpt6: the December day
     let mut n = read_usize(G_NATION_COUNT) as i32;
     if n > 0 {
         let mut na = read_usize(G_NATION_TABLE);
@@ -460,7 +460,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + 0x2f);
                 crate::comparison::branch("cps_5 moral sorteado");
                 let r1 = friendly_random(soma.wrapping_mul(2) / (l + lideranca));
-                let r2 = friendly_random(m / 12); // cps5: a parte do moral
+                let r2 = friendly_random(m / 12); // cps5: the morale part
                 let s = (r1 as u8).wrapping_add(r2 as u8) as i8;
                 if s < 0 {
                     let e = friendly_random(s as i32);
@@ -587,7 +587,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
                 s = s.wrapping_add(0x19);
             }
             crate::comparison::branch("cps_6 falta pela soma");
-            if friendly_random(s as i8 as i32) == 0 { // cps6: o sorteio da soma
+            if friendly_random(s as i8 as i32) == 0 { // cps6: the random draw of the sum
                 and_foul = true;
             }
         }

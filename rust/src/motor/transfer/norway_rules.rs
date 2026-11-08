@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn construct_norway_rules(this: usize, a1: u
 ///
 /// [pt] As janelas da Irlanda do Norte: uma janela, de 6 de maio (andando para o sábado [inferência]) a 20 de março.
 pub(crate) const NORTHERN_IRELAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
-    [0x10, 0x00, 0x06, 0x06, 0x04, 0x01], // cqm2: a Irlanda do Norte
+    [0x10, 0x00, 0x06, 0x06, 0x04, 0x01], // cqm2: Northern Ireland
     [0x10, 0x00, 0xff, 0x14, 0x02, 0x00],
 ];
 
@@ -43,7 +43,7 @@ pub(crate) const NORTHERN_IRELAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 ///
 /// [pt] As janelas do País de Gales: uma janela, de 7 de maio (andando para o domingo [inferência]) a 20 de março.
 pub(crate) const WALES_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
-    [0x1a, 0x00, 0x00, 0x07, 0x04, 0x01], // cqm2: a País de Gales
+    [0x1a, 0x00, 0x00, 0x07, 0x04, 0x01], // cqm2: Wales
     [0x1a, 0x00, 0xff, 0x14, 0x02, 0x00],
 ];
 

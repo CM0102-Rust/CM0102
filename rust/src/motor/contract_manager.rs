@@ -229,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn sign_contract(this: usize, contract: usiz
         f90d860(read_u32_as_usize(G_VIRTUAL_STAFF), transfer_manager_club_by_id(read_u32_as_usize(c + contract::CLUB)), 0);
         incluir(transfer_manager_club_by_id(read_u32_as_usize(c + contract::CLUB)), person, 0xb, G_CURRENT_DATE, 1, 0);
         let n = days_until(c + contract::CONTRACT_EXPIRES, read_u32_as_usize(c + contract::DATE_STARTED) as u32, read_u32_as_usize(c + 0x29) as u32);
-        let end = more(G_CURRENT_DATE, tmp2.as_mut_ptr(), n); // cqg1: o fim pela duração
+        let end = more(G_CURRENT_DATE, tmp2.as_mut_ptr(), n); // cqg1: the end by the duration
         copy_data(c + contract::CONTRACT_EXPIRES, tmp.as_mut_ptr(), end);
         write_u8(c + contract::SQUAD_STATUS, (read_u8(c + contract::SQUAD_STATUS) & 0xf) | 0x80);
         copy_data(c + contract::DATE_STARTED, tmp.as_mut_ptr(), G_CURRENT_DATE);
@@ -326,7 +326,7 @@ pub(crate) unsafe extern "thiscall" fn sign_contract(this: usize, contract: usiz
         copy_contract(r, c);
     }
     crate::comparison::branch("cqg_1 valor na pessoa");
-    write_u32_from_usize(person + staff::WAGE, read_u32_as_usize(c + contract::WAGE)); // cqg1: o valor do contrato na pessoa
+    write_u32_from_usize(person + staff::WAGE, read_u32_as_usize(c + contract::WAGE)); // cqg1: the contract value in the person
     if read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 2 && read_u32_as_usize(person + staff::PLAYER) != 0 {
         morale(person, 0x14, 0);
     }
@@ -522,7 +522,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
         let nibble = (read_u8(c + contract::SQUAD_STATUS) >> 4) as u32;
         let f = finances(read_u32_as_usize(G_FINANCE_TABLE), club);
         let m = ceiling_max(f, person, nibble);
-        (factor + read_f64_at(0x967890)) * read_f64_at(0x968968) * m as f64 // cqf3: o teto do estatuto 11; 0x967890 = 1, 0x968968 = 0.5
+        (factor + read_f64_at(0x967890)) * read_f64_at(0x968968) * m as f64 // cqf3: the cap of status 11; 0x967890 = 1, 0x968968 = 0.5
     } else {
         let f = finances(read_u32_as_usize(G_FINANCE_TABLE), club);
         teto_pessoal(f, job as i8) as f64
@@ -543,7 +543,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
         if x > read_f64_at(0x968df8) || (current != 0 && read_u8(current + contract::SQUAD_STATUS) & 0xf0 == 0x60) { // 0x968df8 = 34
             if end(c) > year as u32 + 1 {
                 crate::comparison::branch("cqf_3 fim no ano que vem");
-                write_u16(c + 0x2f, year.wrapping_add(1)); // cqf3: o fim no ano que vem
+                write_u16(c + 0x2f, year.wrapping_add(1)); // cqf3: the end next year
                 write_u32(c + contract::WAGE, match_pl_ftol(read_i32(c + contract::WAGE) as f64 * read_f64_at(0x9689c0)) as u32); // 0x9689c0 = 1.1
             }
             scale_contract_bonuses(c, read_f64_at(0x968928)); // 0x968928 = 1.25
@@ -591,7 +591,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
                 let q = limit / weeks;
                 if (q as f64) < ceiling {
                     crate::comparison::branch("cqf_3 teto pelo total");
-                    ceiling = q as f64; // cqf3: o teto pelo total
+                    ceiling = q as f64; // cqf3: the cap by the total
                 }
             }
         }
@@ -622,7 +622,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
         let ratio = w / den;
         write_u32(c + contract::UNKNOWN, match_pl_ftol(read_i32(c + contract::UNKNOWN) as f64 * ratio) as u32);
         scale_contract_bonuses(c, ratio);
-        write_u32(c + contract::WAGE, match_pl_ftol(ceiling) as u32); // cqf3: o valor no teto
+        write_u32(c + contract::WAGE, match_pl_ftol(ceiling) as u32); // cqf3: the value at the cap
     }
     clear(c, 0);
     if out != 0 {
@@ -875,7 +875,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
                 let mal = testa && {
                     crate::comparison::branch("cqa_8 testa a moral");
                     let m = read_i8(contract + staff_contract::MORALE) as i32;
-                    let r1 = sorteio(0x1e); // cqa8: o primeiro sorteio da moral
+                    let r1 = sorteio(0x1e); // cqa8: the first morale random draw
                     let v = r1 as f64 + (read_f64_at(0x968d68) - m as f64 * read_f64_at(0x968d70)); // 0x968d68 = 45, 0x968d70 = 0.303030303
                     let r2 = sorteio(0x1e);
                     v - r2 as f64 > minutos as f64
@@ -901,7 +901,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
             }
             if venceu[lado] != 0 {
                 crate::comparison::branch("cqa_8 moral do vencedor");
-                let r = sorteio(0x15 - read_i8(person + staff::AMBITION) as i32); // cqa8: o sorteio do vencedor
+                let r = sorteio(0x15 - read_i8(person + staff::AMBITION) as i32); // cqa8: the winner random draw
                 if r < 4 && contract != 0 {
                     add_clamped_100(contract + staff_contract::MORALE, 3);
                 }
@@ -954,7 +954,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
             // fcomp + C3: equal or unordered goes to the constant
             let rating = if !(x < c || x > c) { read_f64_at(0x968998) } else { core::ptr::read_unaligned((m + 0x10) as *const f64) / x }; // 0x968998 = 6.8
             crate::comparison::branch("cqa_8 evolui quem ficou de fora");
-            evoluir(0, person, club, outro, game, (rating - read_f64_at(0x967888)) as f32, 0, 0); // cqa8: a evolução de quem ficou de fora; 0x967888 = 0.05
+            evoluir(0, person, club, outro, game, (rating - read_f64_at(0x967888)) as f32, 0, 0); // cqa8: the progress of those left out; 0x967888 = 0.05
             let p = contract as *mut u8;
             *p.add(0x3f) = 0;
             if *p.add(0x3e) != 100 {
@@ -1089,7 +1089,7 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
         return compensacao(read_usize(G_TRANSFER_MANAGER), person, transfer_manager_contract_club, 1);
     }
     let (base, auge): (f64, i8) = if read_i8(sheet + player_sheet::ATTACKER) >= 0xf {
-        (13_000_000.0, 0x1c) // cqa9: a base de quem joga na frente
+        (13_000_000.0, 0x1c) // cqa9: the base of those who play up front
     } else if read_i8(sheet + player_sheet::ATTACKING_MIDFIELDER) >= 0xf {
         (11_000_000.0, 0x1d)
     } else if read_i8(sheet + player_sheet::MIDFIELDER) >= 0xf {
@@ -1172,7 +1172,7 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
         let sum = if m < 0 { 0 } else if n >= dif { dif } else { n };
         age_ef = age_ef.wrapping_add(sum as i8);
     }
-    let mut i = auge.wrapping_sub(age_ef).wrapping_add(10); // cqa9: o índice da tabela pela idade
+    let mut i = auge.wrapping_sub(age_ef).wrapping_add(10); // cqa9: the table index by age
     if i < 0 {
         i = 0;
     } else if i >= 0x14 {
@@ -1775,7 +1775,7 @@ pub(crate) unsafe extern "thiscall" fn add_contract_offer(this: usize, terms: us
         }
         crate::comparison::branch("cpw_4 oferta nova");
         let c = contract_offer_counter(terms) as *mut u8;
-        *c = (*c).wrapping_add(1); // cpw4: o contador de ofertas da pessoa
+        *c = (*c).wrapping_add(1); // cpw4: the offer counter of the person
     }
     if CONTRACT_OFFER_DRY_RUN {
         return;
@@ -1916,7 +1916,7 @@ pub(crate) unsafe extern "thiscall" fn handle_transfer_request(this: usize, cont
         let a = price(this, club, 0, person, 0, 1, 1);
         let v = value(this, person, club, 0, -1, 0);
         // the 1.5 is the double 0x968940
-        if (v as f64) * 1.5 > a as f64 { // cps1: o valor passa do preço
+        if (v as f64) * 1.5 > a as f64 { // cps1: the value exceeds the price
             crate::comparison::branch("cps_1 listado pelo clube");
             let m = (contract + contract::TRANSFER_STATUS) as *mut u8;
             if *m & 2 != 0 {
@@ -1933,7 +1933,7 @@ pub(crate) unsafe extern "thiscall" fn handle_transfer_request(this: usize, cont
     }
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let r = sorteio(read_u8(contract + staff_contract::MORALE) as i8 as i32 + (read_u8(person + staff::LOYALITY) as i8 as i32 + 5) * 20);
-    if r < sorteio(0x32) { // cps1: o sorteio da queixa
+    if r < sorteio(0x32) { // cps1: the complaint random draw
         crate::comparison::branch("cps_1 queixa do pedido");
         let queixa: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
         queixa(contract, 0x10000, 0);
@@ -2858,7 +2858,7 @@ pub(crate) unsafe extern "thiscall" fn remove_contract(this: usize, person: usiz
     write_usize(e, usize::MAX);
     let club = read_usize(G_CLUB_TABLE).wrapping_add(id_club.wrapping_mul(club::SIZE));
     crate::comparison::branch("cpo_2 tirar contrato");
-    write_usize(main_contract_slot(person), usize::MAX); // a pessoa fica sem contrato
+    write_usize(main_contract_slot(person), usize::MAX); // the person is left without a contract
     let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
     let f = get_club_finance(read_usize(G_FINANCE_TABLE), club);
     if f != 0 {
@@ -3039,7 +3039,7 @@ pub(crate) unsafe extern "thiscall" fn add_staff_contract(this: usize, person: u
         return i as u32;
     }
     crate::comparison::branch("cpl_4 contrato da pessoa");
-    write_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)), i as usize); // a pessoa aponta a vaga
+    write_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)), i as usize); // the person points to the slot
     let c = read_usize(this).wrapping_add((i as usize).wrapping_mul(0x50));
     write_usize(c, read_usize(person));
     let gerar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GENERATE_INITIAL_CONTRACT);
@@ -3919,7 +3919,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: 
     if e == 0 {
         crate::comparison::branch("cpr_10 nova decisao");
         let mut d = [0u8; 8];
-        injury_date_add_days(G_CURRENT_DATE, (random(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
+        injury_date_add_days(G_CURRENT_DATE, (random(5) + 1) as u32, &mut d); // cpr10: the decision in 1 to 5 days
         let append: unsafe extern "thiscall" fn(usize, usize, *const u8, u32, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_ADD_DECISION_DATE);
         append(this, person, d.as_ptr(), 2, 3);
         let n = read_u32_as_usize(this + contract_manager_fields::DECISION_COUNT);
@@ -4167,7 +4167,7 @@ pub(crate) unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, pl
         write(n, 10, (read_u8(c + 0x4f) >> 4) as u32);
         write(n, 11, mask(read_u32_as_usize(player + staff::PLAYER)) as i32 as u32);
         crate::comparison::branch("cqf_2 notícia do listado");
-        let s = sorteio(2); // cqf2: o sorteio do dado 12
+        let s = sorteio(2); // cqf2: the random draw of die 12
         write(n, 12, s as u32);
         let away_of_list = (listado(player, club) == 0) as u32;
         let price = if human(club, 0, 1, 0, 0) != 0 && (away_of_list == 0 || read_u8(c + 0x4f) & 0xf0 == 0x10) {
@@ -4175,7 +4175,7 @@ pub(crate) unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, pl
         } else {
             let p = request(this, club, 0, player, 0, 1, 1);
             let r = sorteio(0x29);
-            let v = match_pl_ftol((r as f64 * read_f64_at(0x967898) + read_f64_at(0x9689b0)) * p as f64); // cqf2: o preço da notícia; 0x967898 = 0.01, 0x9689b0 = 0.8
+            let v = match_pl_ftol((r as f64 * read_f64_at(0x967898) + read_f64_at(0x9689b0)) * p as f64); // cqf2: the price of the news; 0x967898 = 0.01, 0x9689b0 = 0.8
             if v > 0x2710 && v < 0x30d40 {
                 v / 10000 * 10000
             } else if v < 1_000_000 {

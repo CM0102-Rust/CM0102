@@ -208,7 +208,7 @@ pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club
         e = append(this, club);
     }
     crate::comparison::branch("cpt_13 posição gravada");
-    core::ptr::write_volatile((e + 0x72) as *mut u8, pos as u8); // cpt13: a posição
+    core::ptr::write_volatile((e + 0x72) as *mut u8, pos as u8); // cpt13: the position
     e
 }
 
@@ -251,7 +251,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
                 j += 1;
             }
         }
-        a = b; // cpt13: a posição da rodada
+        a = b; // cpt13: the round’s position
         let mut j = 0;
         while j < count(r) {
             let c = *v.offset(s as isize) as usize;
@@ -913,7 +913,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_parent_stage_id(id: i32) -> i32 {
     }
     if em(0x3fd, 0x406) {
         crate::comparison::branch("cqg_6 grupo 0xa");
-        return 0xa; // cqg6: o grupo das fases 0x3fd..0x406
+        return 0xa; // cqg6: the group of stages 0x3fd..0x406
     }
     if em(0x407, 0x40b) || id == 0x472 {
         return 0x14;

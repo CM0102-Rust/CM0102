@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
         let pd = *((j + match_player::PLAYER) as *const usize);
         let sum = 10 * (byte(pd, 0x43) as i32 + byte(pd, 0x33) as i32 + byte(pd, 0x27) as i32);
         let mut v = match_pl_ftol(sum as f64 + read_f32_at(j + match_player::STAMINA) as f64);
-        // simplification: o original chama 0x717410 a cada teste; ela so le o jogador
+        // simplification: the original calls 0x717410 on every test; it only reads the player
         let r = match_player_position(j);
         if r & 1 != 0 {
             continue;
@@ -521,7 +521,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
                 crate::comparison::branch("cpu_11 distância dobrada");
                 dist = dist.wrapping_add(dist); // cpu11: o dobro
             }
-            if dist <= best[p] { // cpu11: o empate entra na lista
+            if dist <= best[p] { // cpu11: the tie goes into the list
                 if dist < best[p] {
                     count[p] = 0;
                 } else {
@@ -950,7 +950,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         }
         for (k, x) in v.iter().enumerate() {
             write_u32(this + 0x188b + 8 * k, *x);
-            write_u32(this + 0x188b + 8 * k + 4, 0xa); // cqg8: a instrução padrão das versões antigas
+            write_u32(this + 0x188b + 8 * k + 4, 0xa); // cqg8: the default instruction of the old versions
         }
         crate::comparison::branch("cqg_8 instructions antigas");
     } else if crt_fread_one(this + 0x188b, 0x58, f) == 1 {
@@ -966,7 +966,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     }
     let mut v = read_u32(team);
     if v & 0x4000 == 0 {
-        v |= 0x2000; // cqg8: a instrução 0x2000 sem a 0x4000
+        v |= 0x2000; // cqg8: instruction 0x2000 without 0x4000
         write_u32(team, v);
         crate::comparison::branch("cqg_8 instrucao 0x2000");
     }
@@ -977,9 +977,9 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     let redo: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) -> u32 = core::mem::transmute(FN_FORMATION_SET_SLOT_COORDINATE);
     let mut c = 0u32;
     for vaga in 0..0xbi32 {
-        stored(this, vaga as i8, 0, 0, &mut c); // cqg8: a casa guardada da fase 0
+        stored(this, vaga as i8, 0, 0, &mut c); // cqg8: the stored home side of stage 0
         crate::comparison::branch("cqg_8 posicoes refeitas");
-        redo(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa
+        redo(this, vaga, 0, 0, c); // cqg8: the positions redone by home side
     }
     let split: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_STRTOK);
     split(path, 0, 0, this, 0);

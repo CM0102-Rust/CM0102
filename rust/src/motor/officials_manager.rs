@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
                 *m = 0;
                 continue;
             }
-            let limit = if *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: os árbitros que ficam por nação
+            let limit = if *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: the referees who stay per nation
             if group <= limit {
                 ficam += 1;
                 *m = 1;
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let b = blocos.wrapping_add((read_i32(nation) as isize * 0x102) as usize);
         let v = b.wrapping_add((read_i16(b + officials_nation_block::COMP_COUNT) as isize * 0x10) as usize);
         write_u32(v + 0x1e, k as u32);
-        let request = read_i16(read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: o pedido da vaga
+        let request = read_i16(read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: the slot request
         crate::comparison::branch("cqg_9 vaga de competicao");
         write_u32(v + 0x1a, request as u32);
         if read_i32(v + 0x1a) > read_i32(b + officials_nation_block::DEMAND) {
@@ -250,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         while j < read_i16(b + officials_nation_block::COMP_COUNT) as i32 {
             let c = read_i16(b + officials_nation_block::COMP_COUNT) as i32;
             crate::comparison::branch("cqg_9 parte da vaga");
-            write_u32(b + 0x16 + 16 * j as usize, (read_i32(b + officials_nation_block::REFEREE_COUNT) / c) as u32); // cqg9: a parte de cada vaga
+            write_u32(b + 0x16 + 16 * j as usize, (read_i32(b + officials_nation_block::REFEREE_COUNT) / c) as u32); // cqg9: the share of each slot
             let c = read_i16(b + officials_nation_block::COMP_COUNT) as i32;
             write_u32(b + officials_nation_block::COMP_SLOTS + 16 * j as usize, (read_i32(b + officials_nation_block::REFEREE_COUNT).wrapping_mul(j) / c).wrapping_add(read_i32(b + officials_nation_block::FIRST_REFEREE)) as u32);
             j += 1;
@@ -299,7 +299,7 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b
 ///
 /// [pt] A qualidade do árbitro na ordem: o byte +0x28 × 50 + a palavra +0x22, em 16 bits.
 pub(crate) unsafe fn official_quality(r: usize) -> i16 {
-    (*((r + 0x28) as *const i8) as i16).wrapping_mul(0x32).wrapping_add(read_i16(r + official::RATING)) // cqh7: o peso da qualidade
+    (*((r + 0x28) as *const i8) as i16).wrapping_mul(0x32).wrapping_add(read_i16(r + official::RATING)) // cqh7: the quality weight
 }
 
 /// Nation id of the official ([+0x16] + 0).
@@ -327,7 +327,7 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_de
     let (ka, kb) = (official_quality(a), official_quality(b));
     crate::comparison::branch("cqh_7 ordem decrescente");
     if ka == kb {
-        return read_i32(b).wrapping_sub(read_i32(a)); // cqh7: o empate pelo índice
+        return read_i32(b).wrapping_sub(read_i32(a)); // cqh7: the tie by the index
     }
     kb as i32 - ka as i32
 }
@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     let b = nation_officials_block(this, k);
                     let count = read_i32(b + officials_nation_block::REFEREE_COUNT) as f64;
                     crate::comparison::branch("cpy_8 arbitro neutro");
-                    (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(match_pl_ftol(count * -0.75)), match_pl_ftol(count * 0.25)) // cpy8: o quarto de cima
+                    (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(match_pl_ftol(count * -0.75)), match_pl_ftol(count * 0.25)) // cpy8: the top quarter
                 } else {
                     let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 {
                         read_i32(read_usize(comp + competition::CLUB_COMP_NATION))
@@ -478,7 +478,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     match found {
                         Some(band) => {
                             crate::comparison::branch("cpy_8 band da liga");
-                            band // cpy8: a faixa da liga
+                            band // cpy8: the league band
                         }
                         None => (read_i32(b + officials_nation_block::FIRST_REFEREE), read_i32(b + officials_nation_block::REFEREE_COUNT)),
                     }
@@ -490,7 +490,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         ini
     } else {
         crate::comparison::branch("cpy_8 arbitro sorteado");
-        ini.wrapping_add(random(n.wrapping_sub(1))) // cpy8: o sorteio na faixa
+        ini.wrapping_add(random(n.wrapping_sub(1))) // cpy8: the random draw within the band
     };
     let ocupado = |k: i32| {
         let sheet = read_usize(G_OFFICIAL_TABLE).wrapping_add(k.wrapping_mul(0x2b) as usize);
@@ -878,7 +878,7 @@ pub(crate) unsafe extern "thiscall" fn save_official_stats(this: usize, save: us
     if zip_write(0xae2350, 4, 1, z) != 1 {
         return officials_save_error(0x164, &mut z);
     }
-    if zip_write(read_usize(this + officials_manager_fields::NATION_BLOCKS), 0x102, nations(), z) != nations() { // cpx7: os registros das nações
+    if zip_write(read_usize(this + officials_manager_fields::NATION_BLOCKS), 0x102, nations(), z) != nations() { // cpx7: the records of the nations
         return officials_save_error(0x16c, &mut z);
     }
     if zip_write(read_usize(this + officials_manager_fields::BUSY_FLAGS), 1, arbitros(), z) != arbitros() {

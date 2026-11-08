@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
         if read_u8(p + staff::CLASSIFICATION) == 1 {
             crate::comparison::branch("cqf_12 busca do humano");
             for j in 0..10u32 {
-                search(record_of_scout(this, j, p)); // cqf12: a busca de cada lista
+                search(record_of_scout(this, j, p)); // cqf12: the search of each list
             }
         }
     }
@@ -403,7 +403,7 @@ pub(crate) unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
     let mut p = next(l);
     while p != 0 {
         crate::comparison::branch("cqc_12 convoca");
-        convocar(this, p); // cqc12: as convocações para o jogo
+        convocar(this, p); // cqc12: the call-ups for the match
         let comp = read_usize(p + fixture::COMPETITION);
         let final_ = comp != 0
             && [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP]
@@ -680,7 +680,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option
             }
             i += 1;
         }
-        sort(read_usize(this + friendly::SORTED_NATIONS), read_usize(this + friendly::SORTED_NATION_COUNT) as u32, 4, 0x5cc5f0); // cpy4: as nações pela reputação
+        sort(read_usize(this + friendly::SORTED_NATIONS), read_usize(this + friendly::SORTED_NATION_COUNT) as u32, 4, 0x5cc5f0); // cpy4: the nations by reputation
         // the first World Cup year (year − 2 a multiple of 4) from this one; the high half of the dword the original adds is
         // stack leftover: here, zero
         let mut year = read_u16(G_CURRENT_DATE_YEAR) as u32;
@@ -736,7 +736,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option
         return Some((first, how_many));
     }
     crate::comparison::branch("cpy_4 amistosos marcados");
-    mark(this, first, how_many); // cpy4: marcar os amistosos da data
+    mark(this, first, how_many); // cpy4: schedule the friendlies of the date
     *((this + friendly::INTL_LAST_DAY_DONE) as *mut u16) = read_u16(G_CURRENT_DATE);
     Some((first, how_many))
 }
@@ -832,7 +832,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
     }
     if read_u32_as_usize(this + scout_manager_fields::SCOUT_REQUESTS) == 0 || read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT) <= 0 {
         crate::comparison::branch("cps_8 sem pedidos");
-        return 0; // cps8: sem pedidos de observação
+        return 0; // cps8: without scouting requests
     }
     let national_team: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let cedido: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_PLAYER_NEEDS_WORK_PERMIT);
@@ -925,7 +925,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_shortlisted(this: usize, person
         if l != 0 && *((l + 0xa) as *const u8) == 1 {
             let r = has(l, person);
             crate::comparison::branch("cps_8 lista do olheiro");
-            return r; // cps8: a resposta da lista do olheiro
+            return r; // cps8: the reply of the scout list
         }
     }
     0

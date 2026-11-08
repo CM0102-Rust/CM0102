@@ -2,7 +2,7 @@ use super::*;
 
 /// A Intertoto: cinco rodadas em ida e volta de junho a agosto (a 1ª com 40 times; 12 novos na 2ª, 8 na 3ª).
 pub(crate) const INTERTOTO_ROUNDS: [EngCcCupCupRound; 5] = [
-    cql10r((0x19, 5, 0, 4), (0x1a, 5, 0, 5, 1, 0), 0xa, (0, 4, 7), 7, (0x28, 0x14, 0x28, 0), (0, 2, 4), (0, 0, 0)), // cqp13: a 1ª rodada da Intertoto
+    cql10r((0x19, 5, 0, 4), (0x1a, 5, 0, 5, 1, 0), 0xa, (0, 4, 7), 7, (0x28, 0x14, 0x28, 0), (0, 2, 4), (0, 0, 0)), // cqp13: the 1st round of the Intertoto
     cql10r((1, 6, 0, 3), (3, 6, 0, 5, 1, 0), 0x14, (0, 0, 3), 7, (0x20, 0x10, 0xc, 0x28), (0, 2, 7), (0, 0, 0)),
     cql10r((0xb, 6, 0, 6), (0x11, 6, 0, 5, 1, 0), 0x1e, (0, 0, 3), 7, (0x18, 0xc, 8, 0x34), (0, 2, 7), (0, 0, 0)),
     cql10r((0x19, 6, 0, 6), (0x1c, 6, 0, 2, 2, 0), 0x82, (0, 0, 3), 8, (0xc, 6, 0, 0), (0, 2, 7), (0, 0, 0)),
@@ -33,7 +33,7 @@ pub(crate) const INTERAMERICAN_CUP: [EngCcCupCupRound; 1] = [
 
 /// A Copa dos Campeões da CONCACAF: quartas (28/8), semifinal (1/9) e final (4/9) em jogo único, 8 times.
 pub(crate) const CONCACAF_CHAMPIONS_CUP_ROUNDS: [EngCcCupCupRound; 3] = [
-    cql10r((1, 7, 0, 5), (0x1c, 8, 0, 3, 2, 0), 0xa, (0, 3, 0), 8, (8, 4, 8, 0), (0, 0, 0), (0, 0xffff_ffff, 0)), // cqp13: as quartas da CONCACAF
+    cql10r((1, 7, 0, 5), (0x1c, 8, 0, 3, 2, 0), 0xa, (0, 3, 0), 8, (8, 4, 8, 0), (0, 0, 0), (0, 0xffff_ffff, 0)), // cqp13: the CONCACAF quarterfinals
     cql10r((0x1d, 8, 0, 4), (1, 9, 0, 6, 2, 0), 0x82, (0, 3, 0), 8, (4, 2, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
     cql10r((2, 9, 0, 0), (4, 9, 0, 2, 2, 0), 0x96, (0, 3, 0), 8, (2, 1, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
 ];
@@ -43,7 +43,7 @@ pub(crate) const CONCACAF_CHAMPIONS_CUP_ROUNDS: [EngCcCupCupRound; 3] = [
 /// em novembro, a 3ª em dezembro, as oitavas em fevereiro, as quartas e a semifinal em março e abril e a final em
 /// maio, todas em ida e volta menos a final.
 pub(crate) const UEFA_CUP_ROUNDS: [EngCcCupCupRound; 8] = [
-    cql10r((0x1c, 6, 0, 4), (0xa, 7, 0, 3, 2, 0), 0xdc, (4, 0, 3), 7, (0x52, 0x29, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqq10: a 1ª rodada de qualificação da UEFA
+    cql10r((0x1c, 6, 0, 4), (0xa, 7, 0, 3, 2, 0), 0xdc, (4, 0, 3), 7, (0x52, 0x29, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqq10: the 1st UEFA qualifying round
     cql10r((0x19, 7, 0, 4), (0xe, 8, 0, 3, 2, 0), 0xa, (4, 0x400, 3), 7, (0x60, 0x30, 0x37, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
     cql10r((0x1d, 8, 0, 4), (0x13, 9, 0, 3, 2, 0), 0x14, (4, 0, 3), 7, (0x30, 0x18, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
     cql10r((3, 0xa, 0, 4), (0x17, 0xa, 0, 3, 2, 0), 0x1e, (0, 0, 3), 8, (0x20, 0x10, 8, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
@@ -140,7 +140,7 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
         let c = read_u32_as_usize(v + j as usize * 4);
         let e = read_u32_as_usize(this + cup::TEAM_TABLE) + j as usize * 6;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
-        *((e + 4) as *mut u8) = *((c + 0x1df) as *const u8); // cqq10: a classe pelo coeficiente
+        *((e + 4) as *mut u8) = *((c + 0x1df) as *const u8); // cqq10: the class by coefficient
         *((e + 5) as *mut u8) = 0;
         j = j.wrapping_add(1);
     }
@@ -190,7 +190,7 @@ pub(crate) unsafe fn collect_club_list(this: usize, out: *mut usize, ativos: u32
         let e = read_u32_as_usize(this + cup::TEAM_TABLE) + i as usize * 6;
         let s = *((e + 5) as *const u8);
         let c = read_u32_as_usize(e);
-        if (ativos as u8 == 0 || s == 1 || s == 0) && c != 0 && k < n { // cqq10: os clubes da lista
+        if (ativos as u8 == 0 || s == 1 || s == 0) && c != 0 && k < n { // cqq10: the clubs in the list
             core::ptr::write_unaligned((l + k as usize * 4) as *mut u32, c as u32);
             k = k.wrapping_add(1);
         }
@@ -293,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
                             *((s + 5) as *mut u8) = 0;
                             let l = read_u32_as_usize(uefa + cup::ENTRANT_BOOK).wrapping_add((read_i16(uefa + cup::ENTRANT_COUNT) as isize * 6) as usize);
                             core::ptr::write_unaligned(l as *mut u32, read_u32_as_usize(s) as u32);
-                            *((l + 4) as *mut u8) = 4; // cqi10: a situação do vencedor do Intertoto no livro da UEFA
+                            *((l + 4) as *mut u8) = 4; // cqi10: the situation of the Intertoto winner in the UEFA book
                             core::ptr::write_unaligned((uefa + cup::ENTRANT_COUNT) as *mut i16, read_i16(uefa + cup::ENTRANT_COUNT).wrapping_add(1));
                             slot = slot.wrapping_add(1);
                         }
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
             // simplification: round +0x30 goes in a register with garbage in the high 16 bits; 0x86c000 only uses the word
             european_cup_add_knocked_out_record(club, read_u32_as_usize(this + 4), 0, core::ptr::read_unaligned((game + 0x30) as *const u16) as u32, weight);
             crate::comparison::branch("cqi_10 caiu no intertoto");
-            leave_euro_competition(club); // cqi10: quem cai no Intertoto sai da competição europeia
+            leave_euro_competition(club); // cqi10: whoever is knocked out in the Intertoto leaves the European competition
         }
         _ => {}
     }

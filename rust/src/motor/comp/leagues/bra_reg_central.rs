@@ -76,11 +76,11 @@ pub(crate) unsafe fn record_state_league_stage(this: usize, club: usize, st: u8,
     if st == 6 {
         if fazer {
             crate::comparison::branch("cqk_7 classificado do estadual");
-            bra_nat_first_add_qualified_record(club, comp, 0, 0x82, 0x32); // cqk7: o classificado do estadual
+            bra_nat_first_add_qualified_record(club, comp, 0, 0x82, 0x32); // cqk7: the state championship qualifier
         }
     } else if st == 3 && fazer {
         crate::comparison::branch("cqk_7 rebaixado do estadual");
-        bra_nat_first_add_relegation_record(club, comp); // cqk7: o rebaixado do estadual
+        bra_nat_first_add_relegation_record(club, comp); // cqk7: the club relegated from the state championship
     }
 }
 
@@ -99,7 +99,7 @@ pub(crate) unsafe fn record_state_knockout(this: usize, club: usize, st: u8, gam
             if st == 1 {
                 if fazer {
                     crate::comparison::branch("cqk_7 campeao do estadual");
-                    add_champions_record(club, comp); // cqk7: o registro do campeão do estadual
+                    add_champions_record(club, comp); // cqk7: the state champion record
                 }
                 let l = read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize;
                 if fazer {
@@ -115,7 +115,7 @@ pub(crate) unsafe fn record_state_knockout(this: usize, club: usize, st: u8, gam
                     crate::comparison::branch("cqk_7 eliminado do estadual");
                     let weight = escala(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, rounds);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                    elim(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight); // cqk7: o registro do eliminado
+                    elim(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight); // cqk7: the eliminated club record
                 }
                 let l = read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize;
                 if fazer {
@@ -180,7 +180,7 @@ pub(crate) unsafe fn nsl_end_of_stage(this: usize, club: usize, status: u32, sta
         if st == 6 {
             if fazer {
                 crate::comparison::branch("cqk_7 nsl classificado");
-                bra_nat_first_add_qualified_record(club, comp, 0x435, 0, 0x28); // cqk7: o classificado da NSL
+                bra_nat_first_add_qualified_record(club, comp, 0x435, 0, 0x28); // cqk7: the NSL qualifier
             }
             return (0, 0, 0);
         }
@@ -233,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_update_staff_records_for_
 ///
 /// [pt] { 0x4304b0 } (thiscall, ret 8, bra_reg_central.cpp): `BraRegCentral::BraRegCentral(ano, registro)`: o Centro-Oeste (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_bahia_construct_state_league(this, year, record, &CENTRO_OESTE_STATE_CHAMPIONSHIP, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
+    bra_reg_bahia_construct_state_league(this, year, record, &CENTRO_OESTE_STATE_CHAMPIONSHIP, 7, true, "cqt_1 centro_oeste novo") // cqt1: the discipline and expected positions of the Centro-Oeste
 }
 
 /// The Centre-West turnover: archives the season in the statistics, clears the previous table and stages, moves to the
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, ye
 /// [pt] { 0x431090 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::start_new_season()`, a virada da temporada do Centro-Oeste (a tabela:
 /// 0x430ef0; caixas nas linhas 0x1cb, 0x1d2, 0x1d8 e 0x1df).
 pub(crate) unsafe extern "thiscall" fn bra_reg_central_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x430ef0, 0x98ae10, [0x1cb, 0x1d2, 0x1d8, 0x1df], 1, "cqp_7 virada do centro_oeste") // cqp7: o ano seguinte do Centro-Oeste
+    state_league_new_season(this, 0x430ef0, 0x98ae10, [0x1cb, 0x1d2, 0x1d8, 0x1df], 1, "cqp_7 virada do centro_oeste") // cqp7: the next year of the Centro-Oeste
 }
 
 /// The Centre-West next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 8 go to the

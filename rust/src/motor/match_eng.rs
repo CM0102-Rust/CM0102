@@ -3280,7 +3280,7 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
         [t - *w(engine::LAST_STANCE_CALL_TICK) as i32 > 0xa5, t - *w(0x1d4) as i32 > 0xa5]
     };
     let minute = (*w(engine::CLOCK) as i32 / 11) as i8;
-    // o primeiro jogador sem folego
+    // the first player out of stamina
     if minute > 0x3c && random(6) == 0 {
         crate::comparison::branch("reinicio sem folego");
         'achou: for side in 0..2 {
@@ -3544,7 +3544,7 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
                 _ => {}
             }
         };
-        // A: perdendo (ou empatado sem classificacao) por sorteio(10), o "Ruud Gullit"
+        // A: losing (or drawn without qualification) by random draw(10), the “Ruud Gullit”
         if (v1 < v2 || (v1 == v2 && empate == 0)) && random(10) == 0 && name_and(g(m + engine::SIDE0_MANAGER), 0x9b63a8) != 0 {
             canto(call, 0x212a, 1);
             break 'cantos;
@@ -4028,7 +4028,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                     }
                     continue 'instante;
                 }
-                // o chute pendente e a disputa marcada
+                // the pending shot and the marked contest
                 let mut done = false;
                 if byte(m, engine::BALL_TRANSIT_TICKS) != 0 {
                     *b(engine::BALL_TRANSIT_TICKS) = (*b(engine::BALL_TRANSIT_TICKS)).wrapping_sub(1);
@@ -4271,7 +4271,7 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         let mut l44 = 0u8;
         'contest: {
             if l70 < *w(p, match_player::BALL_CONTROL) {
-                // sem falta: a disputa limpa
+                // no foul: the clean contest
             } else {
                 let (mut l88, mut l74) = (0u8, 0i8);
                 let mut l2c = foul_in_engine(m, e, p, l30, -1, &mut l88, &mut l74, &mut l44);
@@ -4952,7 +4952,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
             }
         }
         if tg() == 1 {
-            // o goleiro sofreu o gol
+            // the goalkeeper conceded the goal
             *b(g, match_player::GOALS_CONCEDED) = (*b(g, match_player::GOALS_CONCEDED)).wrapping_add(1);
             let ficha = u(g, match_player::STAFF);
             if random(byte(ficha, staff::DETERMINATION) as i32 + 1) != 0 && random(byte(ficha, staff::PRESSURE) as i32 + 1) != 0 {
@@ -7512,7 +7512,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
         let p = *((home + (flag as usize * 11 + i as usize) * 4) as *const usize);
         i += 1;
         if p == 0 {
-            // o original registra o erro e encerra o jogo
+            // the original logs the error and ends the game
             let exit: unsafe extern "C" fn(i32) = core::mem::transmute(FN_CRT_EXIT);
             exit(-1);
         }

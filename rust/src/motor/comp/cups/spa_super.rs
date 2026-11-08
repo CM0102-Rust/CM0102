@@ -55,7 +55,7 @@ pub(crate) unsafe fn select_spanish_super_cup_teams(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = latest_placed_club(KEY_CLUB_COMP_SPANISH_CUP, 0); // cqm12: o campeão da Copa do Rei
+    let a = latest_placed_club(KEY_CLUB_COMP_SPANISH_CUP, 0); // cqm12: the Copa del Rey champion
     if !set_team_slot(l, 0, a, F, 0xcb) {
         return (0, 0);
     }
@@ -138,7 +138,7 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 0); // cqm12: o campeão da J1
+    let a = latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 0); // cqm12: the J1 champion
     if !set_team_slot(l, 0, a, F, 0xca) {
         return (0, 0);
     }

@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_santa_set_up_rules(this: usize) -
 /// [pt] { 0x43bd10 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::start_new_season()`, a virada da temporada do Catarinense (a tabela:
 /// 0x43bb70; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
 pub(crate) unsafe extern "thiscall" fn bra_reg_santa_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x43bb70, 0x98b050, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do catarinense") // cqp9: o ano seguinte do Catarinense
+    state_league_new_season(this, 0x43bb70, 0x98b050, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do catarinense") // cqp9: the next year of the Catarinense
 }
 
 /// The Santa Catarina next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to
@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_santa_create_semi_final_stage(thi
 ///
 /// [pt] { 0x43b130 } (thiscall, ret 8, bra_reg_santa.cpp): `BraRegSanta::BraRegSanta(ano, registro)`: o Catarinense (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_santa(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_rio_construct_state_league(this, year, record, &CATARINENSE_STATE_CHAMPIONSHIP, 7, true, "cqt_4 catarinense novo") // cqt4: a disciplina e as posições previstas do Catarinense
+    bra_reg_rio_construct_state_league(this, year, record, &CATARINENSE_STATE_CHAMPIONSHIP, 7, true, "cqt_4 catarinense novo") // cqt4: the discipline and expected positions of the Catarinense
 }
 
 /// the Santa Catarina league has 10 clubs: those with it as their reserve division in the database (the field that

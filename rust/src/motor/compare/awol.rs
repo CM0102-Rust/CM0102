@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn compare_report_poor_fitness(this: usize, 
 pub(crate) unsafe extern "thiscall" fn compare_is_player_awol(this: usize, p: usize, so_read: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_IS_PLAYER_AWOL);
     if p != 0 && (read_usize(p) as i32) < read_usize(G_STAFF_COUNT) as i32 && so_read == 0 && read_u8(read_usize(this + 0xc) + read_usize(p)) & 1 != 0 {
-        let c = injury_main_contract_stored(p); // a original o refaz igual (e regrava [0xae1080])
+        let c = injury_main_contract_stored(p); // the original routine redoes it the same way (and rewrites [0xae1080])
         if c == 0 || injury_club_of_contract(c) == 0 {
             return o(this, p, so_read);
         }

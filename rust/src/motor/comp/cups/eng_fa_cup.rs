@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_update_for_date(this: usize, t
             return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_FA_CUP_UPDATE_FOR_DATE)(this, today, stage);
         }
         // simplification: the year goes in ax with the rest of eax in the high bytes; 0x549f70 reads it as a word
-        if is_date_today(make_date_dword(3, 9, read_i16(today + 2) as u16 as u32, 0xffff_ffff), today) { // cqn10: as inscrições da Copa da Inglaterra em 3/10
+        if is_date_today(make_date_dword(3, 9, read_i16(today + 2) as u16 as u32, 0xffff_ffff), today) { // cqn10: the FA Cup entries on 3/10
             free_season_tables(this);
             crate::comparison::branch("cqn_10 inscricoes da copa da inglaterra");
             core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1);

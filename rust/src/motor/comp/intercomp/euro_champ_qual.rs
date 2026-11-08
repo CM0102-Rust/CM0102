@@ -41,7 +41,7 @@ pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
     let construct: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut data = [0u32; 2];
     // simplification: the original pushes the year in ecx with the high 16 bits of the cup pointer; 0x549f70 reads the word
-    construct(&mut data, 0xa, 2, read_i16(this + league::YEAR) as u16 as u32, 5); // cqs8: a data do sorteio
+    construct(&mut data, 0xa, 2, read_i16(this + league::YEAR) as u16 as u32, 5); // cqs8: the draw date
     core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
     crate::comparison::branch("cqs_8 regras da eurocopa");
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize)
 pub(crate) unsafe fn group_team_count(this: usize, g: u32) -> i16 {
     let g = g as u8;
     match *((this + 0xf6) as *const i8) {
-        1 => if matches!(g, 0 | 2 | 5) { 6 } else { 5 }, // cqs8: os grupos de 6 no formato 1
+        1 => if matches!(g, 0 | 2 | 5) { 6 } else { 5 }, // cqs8: the groups of 6 in format 1
         2 => if matches!(g, 0 | 2 | 5 | 7) { 6 } else { 5 },
         _ => {
             show_error_at(0x9c4674, 0x245);
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32)
 pub(crate) unsafe fn qualification_status(this: usize, club: usize) -> i16 {
     let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(FN_COMP_STATS_GET_CLUB_STAT);
     let x = match_pl_ftol(estatistica(read_u32_as_usize(this + 8), club, 0x12));
-    ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: a situação pela estatística 0x12
+    ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: the situation by statistic 0x12
 }
 
 /// EuroChampQual::get_qualification_status(club): the club's qualification status in the European Championship
@@ -131,7 +131,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
         return 0;
     }
     let n = read_i16(this + league::CLUB_COUNT);
-    core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut i16, n.wrapping_sub(1).wrapping_mul(read_i16(this + league::LEGS))); // cqs8: as rodadas do grupo 1
+    core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut i16, n.wrapping_sub(1).wrapping_mul(read_i16(this + league::LEGS))); // cqs8: the group 1 rounds
     crate::comparison::branch("cqs_8 grupo 1 da eurocopa");
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut i: i8 = 0;

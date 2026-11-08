@@ -8,7 +8,7 @@ use super::*;
 /// [pt] { 0x4394d0 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::start_new_season()`, a virada da temporada do Pernambucano (a tabela:
 /// 0x439330; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
 pub(crate) unsafe extern "thiscall" fn bra_reg_pern_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x439330, 0x98afd8, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do pernambucano") // cqp9: o ano seguinte do Pernambucano
+    state_league_new_season(this, 0x439330, 0x98afd8, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do pernambucano") // cqp9: the next year of the Pernambucano
 }
 
 /// The Pernambuco next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
@@ -68,7 +68,7 @@ pub(crate) unsafe fn bra_reg_pern_compare_knockout_from_table(name: &str, this: 
 ///
 /// [pt] { 0x4388f0 } (thiscall, ret 8, bra_reg_pern.cpp): `BraRegPern::BraRegPern(ano, registro)`: o Pernambucano (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_pern(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_northeast_construct_state_league(this, year, record, &PERNAMBUCANO_STATE_CHAMPIONSHIP, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
+    bra_reg_northeast_construct_state_league(this, year, record, &PERNAMBUCANO_STATE_CHAMPIONSHIP, 7, true, "cqt_3 pernambucano novo") // cqt3: the discipline and expected positions of the Pernambucano
 }
 
 /// the Pernambuco league has 10 clubs: those with it as their reserve division in the database (the field that holds

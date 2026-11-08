@@ -132,7 +132,7 @@ pub(crate) unsafe fn compare_cup_round_table(name: &str, stage: u32, rounds: *mu
 /// A Copa da Liga japonesa (J League Cup): cinco rodadas de fevereiro a novembro, as quatro primeiras em ida e volta (7
 /// dias entre os jogos, desempate de ida e volta 0x83).
 pub(crate) const J_LEAGUE_CUP_ROUNDS: [JapJCupCupRound; 5] = [
-    cqn11r((0xa, 1, 0, 0xffff_ffff), (0xc, 3, 0, 2, 2, 0), 0xa, (0, 0, 0x83), 4, (0x18, 0xc, 0x18, 0), (0, 2, 7), (0, 0xffff_ffff, 0)), // cqn11: a 1ª rodada da Copa da Liga japonesa
+    cqn11r((0xa, 1, 0, 0xffff_ffff), (0xc, 3, 0, 2, 2, 0), 0xa, (0, 0, 0x83), 4, (0x18, 0xc, 0x18, 0), (0, 2, 7), (0, 0xffff_ffff, 0)), // cqn11: the 1st round of the Japanese League Cup
     cqn11r((0x14, 3, 0, 3), (5, 6, 0, 2, 2, 0), 0x14, (0, 0, 0x83), 4, (0x10, 8, 4, 0x18), (0, 2, 7), (0, 0xffff_ffff, 0)),
     cqn11r((0xd, 6, 0, 3), (0x1e, 7, 0, 2, 2, 0), 0x78, (0, 0, 0x83), 4, (8, 4, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
     cqn11r((7, 8, 0, 3), (0xb, 9, 0, 2, 2, 0), 0x82, (0, 0, 0x83), 6, (4, 2, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table(this: usize,
 /// A Copa do Imperador: sete rodadas em jogo único de novembro ao começo de janeiro do ano seguinte, sorteio por sementes
 /// com grupos separados (+0xd = 0x83).
 pub(crate) const EMPERORS_CUP_ROUNDS: [JapJCupCupRound; 7] = [
-    cqn11r((1, 0xa, 0, 6), (0x1d, 0xa, 0, 6, 1, 0), 0xa, (0, 0x83, 0), 4, (0x40, 0x20, 0x40, 0), (0, 1, 0), (0, 0xffff_ffff, 0)), // cqn11: a 1ª rodada da Copa do Imperador
+    cqn11r((1, 0xa, 0, 6), (0x1d, 0xa, 0, 6, 1, 0), 0xa, (0, 0x83, 0), 4, (0x40, 0x20, 0x40, 0), (0, 1, 0), (0, 0xffff_ffff, 0)), // cqn11: the 1st round of the Emperor’s Cup
     cqn11r((0x1e, 0xa, 0, 0), (6, 0xb, 0, 6, 1, 0), 0x14, (0, 0x83, 0), 4, (0x20, 0x10, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
     cqn11r((7, 0xb, 0, 0), (0xd, 0xb, 0, 6, 1, 0), 0x1e, (0, 0x83, 0), 4, (0x20, 0x10, 0x10, 0x40), (0, 1, 0), (0, 0xffff_ffff, 0)),
     cqn11r((0xe, 0xb, 0, 0), (0x14, 0xb, 0, 6, 1, 0), 0x28, (0, 0x83, 0), 4, (0x10, 8, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
@@ -172,7 +172,7 @@ pub(crate) const US_OPEN_CUP_ROUNDS: [JapJCupCupRound; 5] = [
     cqn11r((1, 5, 0, 3), (0xe, 5, 0, 2, 2, 0), 0x14, (0, 0x483, 0), 4, (0x20, 0x10, 0x20, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
     cqn11r((0xf, 5, 0, 3), (0x19, 5, 0, 6, 1, 0), 0x1e, (0, 0x83, 0), 4, (0x10, 8, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
     cqn11r((0x1a, 5, 0, 0), (9, 7, 0, 2, 2, 0), 0x78, (0, 0x83, 0), 6, (8, 4, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
-    cqn11r((0xa, 7, 0, 3), (0x17, 7, 0, 2, 2, 0), 0x82, (0, 0x83, 0), 6, (4, 2, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)), // cqn11: a semifinal da Copa dos EUA
+    cqn11r((0xa, 7, 0, 3), (0x17, 7, 0, 2, 2, 0), 0x82, (0, 0x83, 0), 6, (4, 2, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)), // cqn11: the US Cup semifinal
     cqn11r((0x18, 7, 0, 3), (0x16, 9, 0, 6, 1, 4), 0x96, (0, 0x83, 0), 6, (2, 1, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
 ];
 
@@ -251,7 +251,7 @@ pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
             let e = read_u32_as_usize(this + cup::TEAM_TABLE) + n as usize * 6;
             core::ptr::write_unaligned(e as *mut u32, c as u32);
             crate::comparison::branch("cqn_12 semente da j1");
-            let s = jap_j_cup_random(0x14); // cqn12: a classe sorteada dos clubes da J1
+            let s = jap_j_cup_random(0x14); // cqn12: the drawn class of the J1 clubs
             *((e + 4) as *mut u8) = s as u8;
             *((e + 5) as *mut u8) = 0;
             n += 1;
@@ -366,7 +366,7 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     }
     let mut k = 0i8;
     for &c in va.iter().take(10).chain(vb.iter().take(10)) {
-        eng_cc_cup_write_entrant(this, k as i32, c, 2); // cqn12: os 10 de cada liga de baixo
+        eng_cc_cup_write_entrant(this, k as i32, c, 2); // cqn12: the 10 from each lower league
         k = k.wrapping_add(1);
     }
     crate::comparison::branch("cqn_12 inscritos da copa dos eua");
@@ -471,7 +471,7 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     crate::comparison::branch("cqn_12 inscritos da copa do imperador");
     let mut n = 0i32;
     for &c in va.iter().take(0x2f).chain(vb.iter().take(2)).chain(vc.iter().take(3)) {
-        eng_cc_cup_write_entrant(this, n, c, 0); // cqn12: os sorteados das divisões de baixo
+        eng_cc_cup_write_entrant(this, n, c, 0); // cqn12: those drawn from the lower divisions
         n += 1;
     }
     let mut i: i16 = 0;
@@ -488,7 +488,7 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
         let c = jap_j_cup_club_by_index(i as i32);
         if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
             crate::comparison::branch("cqn_12 classe da j1 na copa do imperador");
-            eng_cc_cup_write_entrant(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: a classe dos clubes da J1 na Copa do Imperador
+            eng_cc_cup_write_entrant(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: the class of the J1 clubs in the Emperor’s Cup
             n += 1;
             if n == read_i16(this + cup::TEAM_COUNT) as i32 {
                 break;
@@ -508,6 +508,6 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
 /// a virada (`start_new_cup_season`) com os inscritos de 0x665a00 (thiscall, ret 0) e as caixas do jap_j_cup.cpp nas linhas 0x1a3,
 /// 0x1aa e 0x1b1.
 pub(crate) unsafe extern "thiscall" fn jap_j_cup_start_new_season(this: usize) -> u32 {
-    start_new_cup_season(this, 0x665a00, 0x9eaf14, [0x1a3, 0x1aa, 0x1b1], 1, "cqr_5 virada da copa da liga japonesa") // cqr5: a Copa da Liga japonesa
+    start_new_cup_season(this, 0x665a00, 0x9eaf14, [0x1a3, 0x1aa, 0x1b1], 1, "cqr_5 virada da copa da liga japonesa") // cqr5: the Japanese League Cup
 }
 

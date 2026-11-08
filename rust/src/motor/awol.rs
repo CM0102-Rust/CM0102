@@ -213,11 +213,11 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     write(nt, 3, read_usize(read_usize(player + staff::COMMON_NAME) + 0x33) as u32);
     write(nt, 4, read_usize(club) as u32);
     crate::comparison::branch("cqd_11 noticia da falta");
-    let r = taped_random(3); // cqd11: o sorteio da notícia
+    let r = taped_random(3); // cqd11: the news random draw
     write(nt, 5, r as u32);
     write(nt, 6, human(club, 0, 1, 0, 0));
     let manager = read_usize(club + club::MANAGER);
-    if manager != 0 && human(club, 1, 1, 0, 0) == 0 { // cqd11: o técnico da IA relata
+    if manager != 0 && human(club, 1, 1, 0, 0) == 0 { // cqd11: the AI manager reports
         crate::comparison::branch("cqd_11 relator tecnico");
         let t = read_usize(club + club::MANAGER);
         write(nt, 7, read_usize(t) as u32);
@@ -331,7 +331,7 @@ pub(crate) unsafe fn close_awol_case(this: usize, r: usize) {
     *m ^= 2;
     let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     crate::comparison::branch("cpw_7 falta tirada da lista");
-    remove(read_usize(this + 4), r); // cpw7: tira o caso da lista
+    remove(read_usize(this + 4), r); // cpw7: removes the case from the list
 }
 
 /// Calls AWOL miss_training for a person.
@@ -480,7 +480,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
         // o caso repetido
         if read_usize(person + staff::PLAYER) != 0 {
             crate::comparison::branch("cpw_7 caso repetido");
-            if friendly_random(read_u8(person + staff::PROFESSIONALISM) as i8 as i32) == 0 && friendly_random(read_u8(person + staff::TEMPERAMENT) as i8 as i32) == 0 { // cpw7: os sorteios do caso repetido
+            if friendly_random(read_u8(person + staff::PROFESSIONALISM) as i8 as i32) == 0 && friendly_random(read_u8(person + staff::TEMPERAMENT) as i8 as i32) == 0 { // cpw7: the random draws of the repeated case
                 maybe_drop_attribute(person + staff::PROFESSIONALISM, true);
                 maybe_drop_attribute(person + staff::TEMPERAMENT, true);
                 close_awol_case(this, r);
@@ -890,7 +890,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     }
     crate::comparison::branch("cpz_9 multa avaliada");
     let a = friendly_random(read_i8_as_i32(np + non_player::DISCIPLINE));
-    let b = friendly_random(10); // cpz9: o sorteio da multa
+    let b = friendly_random(10); // cpz9: the fine random draw
     if a <= b {
         return;
     }
@@ -899,8 +899,8 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     let rating: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     // simplification: the original pushes ecx with byte +0x19 only in cl (the high ones are leftover); 0x544410 only reads the byte
     let c =friendly_random(rating(np, *((np + non_player::MAN_HANDLING) as *const u8) as u32) as i32);
-    let e = friendly_random(5); // cpz9: o sorteio do prazo
-    let deadline = if c > e { 1 } else { 2 }; // cpz9: o prazo da multa
+    let e = friendly_random(5); // cpz9: the deadline random draw
+    let deadline = if c > e { 1 } else { 2 }; // cpz9: the fine deadline
     let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_FINE_FINE_PLAYER);
     multar(read_usize(G_FINE), player, deadline, 1);
 }

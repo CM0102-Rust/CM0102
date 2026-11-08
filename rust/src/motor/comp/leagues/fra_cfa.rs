@@ -237,7 +237,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_create_schedule(this: usize, stag
 /// mais 0x800, 0x802 no confronto de dois jogos) e a final (sorteio em 29/mai, ida em 4/jun, 2 times); a fase 1, os
 /// play-outs [inferência: o rebaixamento]: uma rodada de 2 confrontos de ida e volta nas datas das semifinais, sem
 /// sorteio (0x200), nome 0xbe.
-pub(crate) const CFA_SEMIFINAL_ROUND: EngCcCupCupRound = cql10r((8, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0x82, (0, 0xa00, 0x802), 5, (4, 2, 4, 0), (0, 2, 7), (0, 0, 0)); // cqo5: as semifinais da C1
+pub(crate) const CFA_SEMIFINAL_ROUND: EngCcCupCupRound = cql10r((8, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0x82, (0, 0xa00, 0x802), 5, (4, 2, 4, 0), (0, 2, 7), (0, 0, 0)); // cqo5: the C1 semifinals
 pub(crate) const CFA_FINAL_ROUND: EngCcCupCupRound = cql10r((0x1d, 4, 1, 0), (4, 5, 1, 6, 1, 0), 0x96, (0, 0x800, 0x802), 5, (2, 1, 0, 0), (0, 2, 7), (0, 0, 0));
 pub(crate) const C1_PLAYOUT: EngCcCupCupRound = cql10r((8, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0xbe, (0, 0x200, 0x800), 5, (4, 2, 4, 0), (0, 2, 7), (0, 0, 0));
 
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 
     core::ptr::write_unaligned((this + league::LEGS) as *mut u16, 2);
     *((this + league::MATCH_CATEGORY) as *mut u8) = 2;
     *((this + 0xc7) as *mut u8) = 2;
-    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqn4: os pontos por vitória nas ligas de fundo francesas
+    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqn4: the points per win in the French lower leagues
     *((this + league::DRAW_POINTS) as *mut u8) = 1;
     *((this + league::CLUB_SIDES) as *mut u8) = 1;
     *((this + league::TIEBREAKS) as *mut u8) = 4;
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 
     // Primera); fiel.
     write_u32_from_usize(this + league::UPPER_DIVISION_ID, read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION));
     write_u32_from_usize(this + league::LOWER_DIVISION_ID, 0xffff_ffff);
-    core::ptr::write_unaligned((this + league::LEAGUE_FLAGS) as *mut u16, 0x43); // cqn4: os bits de regra das ligas de fundo
+    core::ptr::write_unaligned((this + league::LEAGUE_FLAGS) as *mut u16, 0x43); // cqn4: the rule bits of the lower leagues
     let calendario: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let g = calendario(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
     write_u32_from_usize(this + league::ROUND_DATES, g);
@@ -437,7 +437,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
                     comp != 0 && id == read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && reserva != 0 && read_u32_as_usize(reserva) == read_u32_as_usize(p.competicao)
                 }
             };
-            if entra && genericos < p.genericos { // cqn4: o máximo dos clubes da divisão genérica
+            if entra && genericos < p.genericos { // cqn4: the maximum clubs of the generic division
                 lista[k as usize] = c;
                 k += 1;
                 genericos += 1;
@@ -448,7 +448,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
         }
         i += 1;
     }
-    embaralhar(lista.as_mut_ptr() as usize, k as u16 as u32); // cqn4: o sorteio da lista
+    embaralhar(lista.as_mut_ptr() as usize, k as u16 as u32); // cqn4: the list random draw
     for g in 0..p.grupos {
         if tabela(this, lista.as_ptr() as usize + g * p.por_grupo * 4) == 0 {
             show_error_at(p.arquivo, p.linhas[1]);
@@ -466,7 +466,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
 pub(crate) const FRA_CFA_CFA_LEAGUE: BackgroundLeague = BackgroundLeague {
     vtabela: 0x96a7b0,
     competicao: KEY_CLUB_COMP_FRENCH_CFA,
-    todas: &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], // cqn4: os clubes da primeira e da segunda divisões na CFA
+    todas: &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], // cqn4: the first and second division clubs in the CFA
     nacao: None,
     maximo: 0x48,
     genericos: 0x22,
@@ -601,10 +601,10 @@ pub(crate) unsafe fn create_french_table(this: usize, clubs: usize, n: i16, file
     while i < read_i16(this + league::CLUB_COUNT) {
         let club = read_usize(clubs + (i as usize) * 4);
         let id = read_usize(read_usize(club + club::DIVISION));
-        let mark = marcadas.iter().any(|&g| read_usize(g) == id) as u32; // cqk6: a marca dos clubes de divisão maior
+        let mark = marcadas.iter().any(|&g| read_usize(g) == id) as u32; // cqk6: the mark of the higher-division clubs
         // simplification: the original pushes the row in ecx with the upper bits of the competition id; 0x687430 only reads the
         // byte.
-        let row = k; // cqk6: a linha k recebe o k-ésimo clube da lista
+        let row = k; // cqk6: row k receives the k-th club of the list
         iniciar(this, row as u32, club, mark, 0);
         k = k.wrapping_add(1);
         i = i.wrapping_add(1);
@@ -674,7 +674,7 @@ pub(crate) unsafe fn set_c1_club_progress(this: usize, club: usize, stage: u8, c
             2..=5 => 2,
             14..=17 => {
                 crate::comparison::branch("cqk_6 band do play-out");
-                0xe // cqk6: a melhor na faixa do play-out
+                0xe // cqk6: the best in the play-out band
             }
             v => v,
         };

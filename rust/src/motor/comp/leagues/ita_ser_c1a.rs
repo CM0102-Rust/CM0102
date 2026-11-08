@@ -28,7 +28,7 @@ pub(crate) unsafe fn ita_ser_c1a_advance_stage_cql5_passar_de_fase(this: usize, 
     if new == 0 {
         crate::comparison::branch("cql_5 fases do fim da liga");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(create);
-        f(this); // cql5: as fases do fim da liga
+        f(this); // cql5: the end-of-league stages
     }
 }
 
@@ -61,8 +61,8 @@ pub(crate) unsafe fn ita_ser_c1a_compare_advance_stage(name: &str, this: usize, 
 ///
 /// [pt] As linhas dos 4 clubes do play-off de acesso (2º contra 5º, 3º contra 4º: a lista é 5º, 2º, 4º, 3º) e do play-out
 /// (14º contra 17º, 15º contra 16º: 17º, 14º, 16º, 15º), na ordem da lista que vai para a fase.
-pub(crate) const PROMOTION_PLAYOFF_ROWS: [usize; 4] = [4, 1, 3, 2]; // cql5: as linhas do play-off de acesso
-pub(crate) const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas do play-out
+pub(crate) const PROMOTION_PLAYOFF_ROWS: [usize; 4] = [4, 1, 3, 2]; // cql5: the promotion play-off rows
+pub(crate) const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: the play-out rows
 
 /// Creates the end-of-league stages: the champion goes to the Serie C1 Super Cup, and the play-off and play-out
 /// Cup_Stages are built with their first-round draw. Body of both 0x64ba70 and 0x64fc30, identical except for the
@@ -141,7 +141,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     let record = read_u32_as_usize(this + 4);
     let (mut rodadas, mut extra) = (0u32, 0u32);
     let gabarito = calendario(this, 0, &mut rodadas, &mut extra, 0);
-    let positions: [u8; 4] = [4, 1, 3, 2]; // cql5: as posições do play-off
+    let positions: [u8; 4] = [4, 1, 3, 2]; // cql5: the play-off positions
     let mut stage = new(0xb2);
     if stage != 0 {
         stage = stage_of_cup(stage, this, clubs, list, rodadas & 0xffff, record, gabarito, year, 0, 1, extra & 0xffff, 0x14, 0, 0, 0, positions.as_ptr());

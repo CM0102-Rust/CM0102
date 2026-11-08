@@ -13,7 +13,7 @@ use super::*;
 /// 0x8e5d60. TapeCall a cada contrato: sem contador.
 pub(crate) unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u32 {
     if read_u8(c + contract::NON_PROMOTION_RC) == 2 || read_u8(c + contract::MINIMUM_FEE_RC) == 1 || read_u8(c + contract::RELEGATION_RC) == 2 {
-        return 1; // cpu4: com a clausula ativa
+        return 1; // cpu4: with the clause active
     }
     0
 }
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
         *no_limite = 0;
     }
     if read_u8(G_FIFA_TRANSFER_RULES_IN_FORCE) != 1 {
-        return 1; // cpu4: sem as regras novas
+        return 1; // cpu4: without the new rules
     }
     let (rdia, rano) = (*(G_TRANSFER_RULE_CHANGE_DATE as *const i16), *(G_TRANSFER_RULE_CHANGE_DATE_YEAR as *const u16));
     let d = c + contract::DATE_STARTED;
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
     let mut t = [0u8; 8];
     diferenca(G_CURRENT_DATE, t.as_mut_ptr(), d0, d1);
     let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(c).wrapping_mul(110));
-    let limit: u8 = if (age(person, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade
+    let limit: u8 = if (age(person, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: the period by age
     if !years.is_null() {
         *years = limit;
     }
@@ -492,13 +492,13 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     let adapt = read_u8(person + staff::LOYALITY) as i8 as i32;
     if days < adapt.wrapping_mul(15).wrapping_add(100) {
         crate::comparison::branch("cpw_1 contratado ha pouco");
-        ratio = ratio + read_f32_at(0x969560) as f64 + adapt as f64 * read_f64_at(0x968eb0) - (days / 2) as f64; // cpw1: o desconto do recém-contratado; 0x969560 = 50, 0x968eb0 = 7.5
+        ratio = ratio + read_f32_at(0x969560) as f64 + adapt as f64 * read_f64_at(0x968eb0) - (days / 2) as f64; // cpw1: the discount of the newly signed; 0x969560 = 50, 0x968eb0 = 7.5
     }
     crate::comparison::branch("cpw_1 satisfacao avaliada");
-    if !(ratio >= read_f32_at(0x969560) as f64) { // cpw1: o limite da insatisfação; 0x969560 = 50
+    if !(ratio >= read_f32_at(0x969560) as f64) { // cpw1: the dissatisfaction limit; 0x969560 = 50
         return 1;
     }
-    if ratio < read_f32_at(0x96ff70) as f64 { // cpw1: o limite da satisfação; 0x96ff70 = 80
+    if ratio < read_f32_at(0x96ff70) as f64 { // cpw1: the satisfaction limit; 0x96ff70 = 80
         3
     } else {
         2

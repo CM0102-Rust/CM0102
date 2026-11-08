@@ -516,7 +516,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u3
 pub(crate) unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u32 {
     eng_prm_fill_league_table(this, 0x18, 0x9c4374, 0x22d, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, 0x11170, || {
         if is_after_1999() {
-            eng_prm_pay_tv_rights(this, 0x59b011, comp_record_of(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION)); // cqi5: a TV de quem caiu da Premier
+            eng_prm_pay_tv_rights(this, 0x59b011, comp_record_of(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION)); // cqi5: the TV money of those relegated from the Premier
             eng_prm_pay_tv_rights(this, 0x3e8fa0, read_usize(this + 4));
             eng_prm_pay_tv_rights(this, 0x3e8fa0, comp_record_of(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION));
         } else {

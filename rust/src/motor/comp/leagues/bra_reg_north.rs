@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_north_create_semi_final_stage(thi
 ///
 /// [pt] { 0x435340 } (thiscall, ret 8, bra_reg_north.cpp): `BraRegNorth::BraRegNorth(ano, registro)`: o Norte (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_north(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_goias_construct_state_league(this, year, record, &NORTH_CHAMPIONSHIP, 7, true, "cqt_2 norte novo") // cqt2: a disciplina e as posições previstas do Norte
+    bra_reg_goias_construct_state_league(this, year, record, &NORTH_CHAMPIONSHIP, 7, true, "cqt_2 norte novo") // cqt2: the discipline and expected positions of the Norte
 }
 
 /// The North turnover: archives the season in the statistics, clears the previous table and stages, moves to the next
@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_north(this: usize, year
 /// [pt] { 0x435e80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::start_new_season()`, a virada da temporada do Norte (a tabela:
 /// 0x435d80; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
 pub(crate) unsafe extern "thiscall" fn bra_reg_north_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x435d80, 0x98af14, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_8 virada do norte") // cqp8: o ano seguinte do Norte
+    state_league_new_season(this, 0x435d80, 0x98af14, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_8 virada do norte") // cqp8: the next year of the Norte
 }
 
 /// The North next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the

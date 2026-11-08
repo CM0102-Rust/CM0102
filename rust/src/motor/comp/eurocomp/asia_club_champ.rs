@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
 
 // simplification: the stages are allocated and the news goes to the managers: does not run twice. Original only; the plan: those alive
 // read before; then the stages [+0xc][1] and [+0xc][2] with 4 teams, the cup year and the 4 alive in each (in any order:
-// o construtor ordena a tabela) e +0x30 = 2.
+// the constructor sorts the table) and +0x30 = 2.
 
 /// The 4 semi-finalists in list order: group 1 winner, group 2 runner-up, group 2 winner, group 1 runner-up.
 ///
@@ -162,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
 /// 1º do grupo 2 e o 2º do grupo 1 (os cruzamentos: as chaves são os pares da lista).
 pub(crate) unsafe fn asia_semi_finalists(this: usize) -> [usize; 4] {
     let l = |g: usize, p: usize| read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + g * 4) + 0xb1) + p * 0x3b);
-    [l(1, 0), l(2, 1), l(2, 0), l(1, 1)] // cqt12: 1º do 1 × 2º do 2, 1º do 2 × 2º do 1
+    [l(1, 0), l(2, 1), l(2, 0), l(1, 1)] // cqt12: 1st of 1 × 2nd of 2, 1st of 2 × 2nd of 1
 }
 
 /// `AsiaClubChamp::create_semi_final_stage()` (0x40c3d0, thiscall, ret 0, asia_club_champ.cpp; SEH frame only for the
@@ -562,6 +562,6 @@ pub(crate) fn ldv_trophy_stage(fase: u32) -> Option<ScheduleStage> {
 /// [pt] { 0x40b620 } (thiscall, ret 0, asia_club_champ.cpp): `AsiaClubChamp::build_team_table()`: os 16 times (a caixa da
 /// linha 0x1cd sem memória).
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_build_team_table(this: usize) -> i32 {
-    build_team_table(this, 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: os times da Liga dos Campeões asiática
+    build_team_table(this, 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: the Asian Champions League teams
 }
 

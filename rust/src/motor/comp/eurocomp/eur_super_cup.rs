@@ -15,12 +15,12 @@ pub(crate) unsafe fn select_european_super_cup_teams(this: usize) -> (i32, i32) 
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = latest_placed_club(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE, 0); // cqq11: o campeão da Liga dos Campeões
+    let a = latest_placed_club(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE, 0); // cqq11: the Champions League winner
     if !set_team_slot(l, 0, a, F, 0xca) {
         return (0, 0);
     }
     let cup = if core::ptr::read_unaligned((this + cup::YEAR) as *const i16) == 0x7cf { KEY_CLUB_COMP_EUROPEAN_CUP_WINNERS_CUP } else { KEY_CLUB_COMP_UEFA_CUP };
-    let b = latest_placed_club(cup, 0); // cqq11: o campeão da Copa da UEFA
+    let b = latest_placed_club(cup, 0); // cqq11: the UEFA Cup winner
     if !set_team_slot(l, 1, b, F, 0xd5) {
         return (0, 0);
     }
@@ -60,7 +60,7 @@ pub(crate) unsafe fn select_asian_super_cup_teams(this: usize) -> (i32, i32) {
     if !set_team_slot(l, 0, a, F, 0xc9) {
         return (0, 0);
     }
-    let b = latest_placed_club(KEY_CLUB_COMP_ASIAN_CUP_WINNERS_CUP, 0); // cqq11: o campeão da Recopa asiática
+    let b = latest_placed_club(KEY_CLUB_COMP_ASIAN_CUP_WINNERS_CUP, 0); // cqq11: the Asian Cup Winners’ Cup winner
     if !set_team_slot(l, 1, b, F, 0xd1) {
         return (0, 0);
     }

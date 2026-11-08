@@ -153,7 +153,7 @@ pub(crate) const PAULISTA_STATE_LEAGUE: BraRegRioStateChampionship = BraRegRioSt
 ///
 /// [pt] { 0x439a40 } (thiscall, ret 8, bra_reg_rio.cpp): `BraRegRio::BraRegRio(ano, registro)`: o Carioca (três fases além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_rio(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_rio_construct_state_league(this, year, record, &CARIOCA_CHAMPIONSHIP, 7, true, "cqt_4 carioca novo") // cqt4: a disciplina e as posições previstas do Carioca
+    bra_reg_rio_construct_state_league(this, year, record, &CARIOCA_CHAMPIONSHIP, 7, true, "cqt_4 carioca novo") // cqt4: the discipline and expected positions of the Carioca
 }
 
 /// Competition reputation of a league (word +0x69 of the competition record at +4).
@@ -396,7 +396,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             let games = *((e + 5) as *const u8);
             if games != 0 {
                 let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + club::ATTENDANCE).wrapping_mul(4));
-                write_i32(c + club::ATTENDANCE, match_pl_ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
+                write_i32(c + club::ATTENDANCE, match_pl_ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
             }
             crate::comparison::branch("cqt_4 publico do meio da tabela");
             raise_attendance_floor(c, league_comp_reputation(league), f);
@@ -509,7 +509,7 @@ pub(crate) unsafe fn compare_half_season_stage(name: &str, this: usize, k: u32, 
 /// [pt] { 0x43afa0 } (thiscall, ret 4, bra_reg_rio.cpp): `BraRegRio::create_half_season_stage(k)`, um turno do Carioca (os
 /// doze clubes; a caixa da linha 0x3d5).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_half_season_stage(this: usize, k: u32) {
-    create_half_season_stage(this, k, 0x98b014, 0x3d5, 0xb, 0xc2, "cqr_1 turno do carioca") // cqr1: os pontos por vitória no Carioca
+    create_half_season_stage(this, k, 0x98b014, 0x3d5, 0xb, 0xc2, "cqr_1 turno do carioca") // cqr1: the points per win in the Carioca
 }
 
 /// The season rollover of a state league with two halves and a final (`start_new_season`, slot 3, `+0x08`): frees
@@ -632,7 +632,7 @@ pub(crate) unsafe fn compare_new_season(name: &str, this: usize, original: impl 
 ///
 /// [pt] { 0x43a6a0 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::start_new_season()`, a virada do Carioca (a tabela: 0x43a500).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_start_new_season(this: usize) -> u32 {
-    start_new_season_two_halves(this, 0x43a500, 0x98b014, 1, "cqr_2 virada do carioca") // cqr2: o ano seguinte do Carioca
+    start_new_season_two_halves(this, 0x43a500, 0x98b014, 1, "cqr_2 virada do carioca") // cqr2: the next year of the Carioca
 }
 
 /// The Rio de Janeiro state league has two halves (stages 0 and 1, each a round-robin league) and, if needed, a final
@@ -653,7 +653,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == 2 {
         let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_BRAREGRIO_CREATE_FINAL_STAGE);
-        final_(this); // cqo9: a final depois do segundo turno
+        final_(this); // cqo9: the final after the second stage
     }
 }
 

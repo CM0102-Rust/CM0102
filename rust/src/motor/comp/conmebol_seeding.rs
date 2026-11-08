@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
             let c = enesimo(this, clubs, count, read_u32(e), 1, 1, 0);
             if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                 crate::comparison::branch("cqj_1 cota da nacao");
-                enter_libertadores(c, 2); // cqj1: a vaga da cota
+                enter_libertadores(c, 2); // cqj1: the quota slot
             }
             n = n.wrapping_add(1);
         }
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this
             let c = read_u32(p) as usize;
             if without_slot != 0 && c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
                 crate::comparison::branch("cqj_1 ja com vaga");
-                p += 12; // cqj1: pula o clube que já tem vaga
+                p += 12; // cqj1: skips the club that already has a slot
             } else if without_human != 0 && c != 0 && human(c, 0, 1, 0, 0) != 0 {
                 p += 12;
             } else {
@@ -229,7 +229,7 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                     let division = read_u32(c + club::LAST_DIVISION) as usize;
                     if division != 0 {
                         crate::comparison::branch("cqj_2 nivel da divisao");
-                        core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((division + competition::CLUB_COMP_REPUTATION) as *const u16)); // cqj2: o nível da divisão
+                        core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((division + competition::CLUB_COMP_REPUTATION) as *const u16)); // cqj2: the division level
                         *((r + 0xb) as *mut u8) = *((c + club::LAST_POSITION) as *const u8);
                         let comp = read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize;
                         if comp == 0 || *((comp + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_seeding_save_to_temp_file(this: 
         show_error_at(FONTE, 0x2f6);
         return;
     }
-    if crt_fwrite(this, 0xa, signed_byte_count(this + 0x6e), f) != signed_byte_count(this + 0x6e) { // cpx6: os registros dos países
+    if crt_fwrite(this, 0xa, signed_byte_count(this + 0x6e), f) != signed_byte_count(this + 0x6e) { // cpx6: the country records
         show_error_at(FONTE, 0x2ff);
         return;
     }

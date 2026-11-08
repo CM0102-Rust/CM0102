@@ -441,7 +441,7 @@ pub(crate) unsafe extern "thiscall" fn compare_roll_recurring_injury(this: usize
         RecurringInjuryOutcome::Limpar(r) => {
             (read_u8(r + physical_record::RECURRING_TYPE), read_u8(r + physical_record::RECURRENCE_GRADE)) == (0xff, 0) && (r == record || now == (kind, 0)) && same_draw
         }
-        RecurringInjuryOutcome::Tratar(_) => true, // a 0x62d250 sorteia e grava o resto
+        RecurringInjuryOutcome::Tratar(_) => true, // 0x62d250 draws and writes the rest
     };
     SCOREBOARD.record(ok, || {
         format!("roll_recurring_injury(tipo {}) plano {:x?}, marcas {:?} -> {:?}, mesmo sorteio={}", kind, plan, marks, now, same_draw)

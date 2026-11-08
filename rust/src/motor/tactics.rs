@@ -913,7 +913,7 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
         let r = p / b;
         let f = |o: usize| (l + o) as *mut f64;
         core::ptr::write_unaligned(f(0x10), r * h * g);
-        core::ptr::write_unaligned(f(0x18), r * g * q2 * q); // cpz5: a razão da postura normal
+        core::ptr::write_unaligned(f(0x18), r * g * q2 * q); // cpz5: the ratio of the normal stance
         core::ptr::write_unaligned(f(0x20), r * r * h);
     }
     1
@@ -1044,7 +1044,7 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
         return 0;
     }
     let mut found = 0;
-    for k in 0..20usize { // cpx9: as vagas da escalação
+    for k in 0..20usize { // cpx9: the line-up slots
         let slot = tactics_row_start(this, l) + 2 + 4 * k;
         if read_i32(slot) == read_i32(person) {
             crate::comparison::branch(if k < 11 { "cpx_9 tirou titular" } else { "cpx_9 tirou reserva" });
@@ -1320,7 +1320,7 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
             let choose: unsafe extern "thiscall" fn(usize, u32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
             let active: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_ACTIVE_TACTIC);
             crate::comparison::branch("cpx_8 tatica do humano");
-            choose(manager, team, club, read_usize(club + club::MANAGER)); // cpx8: a vaga pelo time
+            choose(manager, team, club, read_usize(club + club::MANAGER)); // cpx8: the slot by team
             return active(manager, read_usize(club + club::MANAGER));
         }
     }

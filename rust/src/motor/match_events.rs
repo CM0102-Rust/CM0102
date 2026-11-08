@@ -306,7 +306,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         match c {
             0xd => {}
             0x3d => {
-                // `=`: confere o evento anterior e abre o novo
+                // `=`: checks the previous event and opens the new one
                 if current != -1 {
                     let e = event(current);
                     let s = sons(e);
@@ -1372,7 +1372,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
     let s3 = w(q);
     let same = |o: usize| b(q, o) == b(e, o);
     let copiar = || core::ptr::copy((q as *const u8).add(5), (e as *mut u8).add(5), 8);
-    // o anterior passa a ser o principal e o novo vira o outro (+7, +8)
+    // the previous one becomes the main one and the new one becomes the other (+7, +8)
     let swap = |inteiro: bool| {
         *((e + 8) as *mut i8) = b(e, 6);
         *((e + 7) as *mut i8) = b(e, 5);

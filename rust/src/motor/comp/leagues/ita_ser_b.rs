@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
     while (i as i32) < read_i16(this + league::CLUB_COUNT) as i32 - 1 {
         let l = ita_ser_a_table_row(this, i as usize);
         let points = read_i16(l + 0x19);
-        if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: o par da Série B na fronteira
+        if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: the Serie B pair at the boundary
             found = true;
             sort(this, points as u16 as u32);
         }
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(thi
             l += 0x3b;
         }
     }
-    qsort(first, how_many as u16 as i16 as i32, 0x3b, 0x683410); // cql4: o bloco dos empatados
+    qsort(first, how_many as u16 as i16 as i32, 0x3b, 0x683410); // cql4: the block of tied clubs
     let mut i: i16 = 0;
     while i < read_i16(this + league::CLUB_COUNT) {
         *((ita_ser_a_table_row(this, i as usize) + 4) as *mut u8) = i as u8;

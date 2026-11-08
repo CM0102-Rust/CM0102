@@ -188,13 +188,13 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             continue;
         }
         let data = read_u32_as_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((id as isize * 0x20) as usize);
-        let no = career_history_node(club, Some(data), value, (((cat + 1) as u8) << 3) | kind); // cqh8: a categoria e o tipo do nó
+        let no = career_history_node(club, Some(data), value, (((cat + 1) as u8) << 3) | kind); // cqh8: the category and the node type
         crate::comparison::branch("cqh_8 categoria arquivada");
         append_history_node(this, reg, &no);
         if cat == 5 {
             sexta = true;
         }
-        core::ptr::write_bytes(data as *mut u8, 0, 32); // cqh8: o registro da categoria zerado
+        core::ptr::write_bytes(data as *mut u8, 0, 32); // cqh8: the category record zeroed
     }
     // no club nation (or outside the table) or within its season: the flag that asks for the 365 days
     let mark = if club == 0 || read_u32_as_usize(club + club::NATION) == 0 {
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             days(G_CURRENT_DATE, read_u32_as_usize(p + staff::DATE_JOINED_CLUB) as u32, read_u32_as_usize(p + 0x42) as u32) < 0x16d
         };
         if write {
-            let no = career_history_node(club, None, value, 0x30 | kind); // cqh8: o nó vazio da sexta categoria
+            let no = career_history_node(club, None, value, 0x30 | kind); // cqh8: the empty node of the sixth category
             crate::comparison::branch("cqh_8 no vazio");
             append_history_node(this, reg, &no);
         }
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
                 if read_u32_as_usize(no + career_entry::CLUB_ID) as u32 == club_id && *((no + career_entry::KIND) as *const u8) & 0xf8 == 0x10 {
                     crate::comparison::branch("cqh_8 jogos pelo clube");
                     let a = (reg + player_stats_entry::CLUB_LEAGUE_GAMES) as *mut u16;
-                    core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(*((no + career_entry::STATS) as *const u8) as u16)); // cqh8: os jogos pelo clube
+                    core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(*((no + career_entry::STATS) as *const u8) as u16)); // cqh8: the matches for the club
                     let g = (reg + player_stats_entry::CLUB_LEAGUE_GOALS) as *mut u16;
                     core::ptr::write_unaligned(g, core::ptr::read_unaligned(g).wrapping_add(*((no + career_entry::STATS_GOALS) as *const u8) as u16));
                 }
@@ -379,7 +379,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     let mut last = PlayerStatsEntry::nova(0, 0, 0, 0);
     for cat in 1..=6u8 {
         let year = year_of_club(club);
-        let id = if club == 0 { 0xffff_ffff } else { read_u32_as_usize(club) as u32 }; // cqf8: o clube da temporada atual
+        let id = if club == 0 { 0xffff_ffff } else { read_u32_as_usize(club) as u32 }; // cqf8: the club of the current season
         crate::comparison::branch("cqf_8 temporada atual");
         let mut r = PlayerStatsEntry::nova(year, id, cat, 0xffff_ffff);
         let c = category(this, f, cat as u32);
@@ -432,8 +432,8 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
                     }
                 }
                 let mut size = cap as usize * HISTORY_ENTRY_SIZE;
-                let year_in = read_u16(no); // cqf8: o ano do grupo do nó
-                let club_in = read_u32_as_usize(no + career_entry::CLUB_ID) as u32; // cqf8: o clube do grupo do nó
+                let year_in = read_u16(no); // cqf8: the year of the group of the node
+                let club_in = read_u32_as_usize(no + career_entry::CLUB_ID) as u32; // cqf8: the club of the group of the node
                 for cat in 1..=6u8 {
                     let mut r = PlayerStatsEntry::nova(year_in, club_in, cat, read_u32_as_usize(no + career_entry::TRANSFER_FEE) as u32);
                     r.0[0x2a] = (cat << 3) | (kind & 7);
@@ -703,10 +703,10 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
         let r = record(this, player, category);
         if r != 0 {
             let value: unsafe extern "stdcall" fn(usize, u32, u32) -> f64 = core::mem::transmute(FN_PLAYER_STATS_GET_RECORD_VALUE);
-            return value(r, which, default.to_bits()); // cpu3: o valor do registro
+            return value(r, which, default.to_bits()); // cpu3: the record value
         }
         if which as u8 == 0x12 || which as u8 == 0x14 {
-            return default as f64; // cpu3: sem registro, o padrao
+            return default as f64; // cpu3: without a record, the default
         }
         return 0.0; // cpu3: sem registro, zero
     }
@@ -848,7 +848,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(person: usiz
         }
     }
     free(t);
-    s // cps9: os gols na carreira
+    s // cps9: the career goals
 }
 
 // simplification: the history goes to the file (does not run twice) and the copy writes nothing else: original only; the
@@ -1463,14 +1463,14 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
         while i < n {
             let g = t + 0xd9 + (i / 6) as usize * 0x102;
             let v = read_i32(g);
-            if v >= 0 && v == read_i32(club) { // cps10: só os grupos do clube
+            if v >= 0 && v == read_i32(club) { // cps10: only the club groups
                 s = s.wrapping_add(*((g + 6) as *const u8) as u16);
             }
             i += 6;
         }
     }
     free(t);
-    s // cps10: os gols pelo clube
+    s // cps10: the goals for the club
 }
 
 /// Returns the competition weight by the club's two competitions (500/1000/300/100).

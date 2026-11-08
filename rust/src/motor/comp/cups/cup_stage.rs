@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_CUP);
     base(this);
     write_u32_from_usize(this + 4, a5 as usize);
-    write_u16(this + cup::YEAR, year as u16); // cqs7: o ano da fase
+    write_u16(this + cup::YEAR, year as u16); // cqs7: the stage year
     write_u8(this + cup::CLUB_SIDES, b2 as u8);
     write_u8(this + cup::STAGE_INDEX, stage as u8);
     write_u32_from_usize(this + cup::CURRENT_STAGE, usize::MAX);
@@ -74,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
         write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + e, read_u32_as_usize(teams + i as usize * 4)); // cqs7: o time i
         write_u8(read_u32_as_usize(this + cup::TEAM_TABLE) + e + 5, 0);
         let s = if seeds != 0 {
-            *((seeds + i as usize) as *const u8) // cqs7: a semente do vetor
+            *((seeds + i as usize) as *const u8) // cqs7: the vector seed
         } else if by_order != 0 {
             i as u8
         } else {

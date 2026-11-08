@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn count_results_in_period(this: usize, nati
         }
         j = j.wrapping_sub(1);
     }
-    n // cpt1: os jogos no periodo
+    n // cpt1: the matches in the period
 }
 
 /// Updates the FIFA rankings on the 18th: drops the results older than a year, sorts the histories, rolls the yearly
@@ -176,8 +176,8 @@ pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize,
     let p = read_usize(e + 4).wrapping_add(c as isize as usize * 5);
     *(p as *mut u16) = points as u16;
     let (mes, ano) = match_month_year(partida);
-    *((p + 2) as *mut u8) = mes; // cpt2: o mes do jogo
-    core::ptr::write_unaligned((p + 3) as *mut u16, ano); // cpt2: o ano do jogo
+    *((p + 2) as *mut u8) = mes; // cpt2: the match month
+    core::ptr::write_unaligned((p + 3) as *mut u16, ano); // cpt2: the match year
     crate::comparison::branch("cpt_2 resultado");
 }
 

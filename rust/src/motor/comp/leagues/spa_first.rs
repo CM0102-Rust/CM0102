@@ -401,7 +401,7 @@ pub(crate) unsafe fn segunda_rules(this: usize) -> Vec<(usize, u8, u32)> {
 /// Rule list for the lower Spanish division: common rules, promotion places and the First Division above.
 pub(crate) unsafe fn lower_division_rules() -> Vec<(usize, u8, u32)> {
     let mut v = spanish_common_rules();
-    v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqk4: a divisão de baixo dá 3 pontos pela vitória
+    v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqk4: the lower division gives 3 points per win
     v.extend_from_slice(&[(0xbe, 1, 2), (0xbf, 1, 2), (0xc1, 1, 4), (0x1c, 4, read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) as u32), (0x20, 4, 0xffff_ffff)]);
     v
 }
@@ -484,7 +484,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
-            let row = k; // cqk5: a linha k recebe o k-ésimo clube da Primera
+            let row = k; // cqk5: row k receives the k-th club of the Primera
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
             iniciar(this, row as u32, club, 0, 0);
@@ -501,11 +501,11 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
     }
     crate::comparison::branch("cqk_5 tabela da primera");
     let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-    let f = prize(this, 0x3d090); // cqk5: a cota da Primera
+    let f = prize(this, 0x3d090); // cqk5: the Primera quota
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
-    *((this + league::PRIZE_MODE) as *mut u8) = 1; // cqk5: o prêmio pela tabela no fim da liga
+    *((this + league::PRIZE_MODE) as *mut u8) = 1; // cqk5: the table prize at the end of the league
     let pay: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
-    pay(this, 0x4c4b40, 0); // cqk5: a TV da Primera
+    pay(this, 0x4c4b40, 0); // cqk5: the Primera TV money
     1
 }
 

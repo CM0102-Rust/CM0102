@@ -283,7 +283,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usiz
         if k == 13 {
             crate::comparison::branch("cqq_8 virada do paulista");
         }
-        bra_nat_first_call_virtual_no_args(comp_by_global(*g), 8); // cqq8: a virada de cada uma
+        bra_nat_first_call_virtual_no_args(comp_by_global(*g), 8); // cqq8: the rollover of each one
     }
     set_expectations_and_renew_officials(this)
 }
@@ -465,7 +465,7 @@ pub(crate) fn league_regions_without_schedule(o: usize) -> [(usize, usize); 4] {
 /// [pt] As regras da Série A (o que a 0x42a5a0 grava antes do calendário).
 pub(crate) unsafe fn set_serie_a_rules(o: usize) {
     write_u16_at(o, 0x3c, 1); // um turno
-    write_u8_at(o, 0xc2, 3); // cqi7: os pontos por vitória da Série A
+    write_u8_at(o, 0xc2, 3); // cqi7: the Serie A points per win
     write_u8_at(o, 0xc3, 1); // pontos por empate
     write_u8_at(o, 0xc4, 2); // match category: league
     write_u8_at(o, 0x42, 1); // clube nacional
@@ -490,7 +490,7 @@ pub(crate) unsafe fn set_serie_a_rules(o: usize) {
 pub(crate) unsafe fn set_serie_b_rules(o: usize) {
     write_u16_at(o, 0x3c, 1);
     write_u8_at(o, 0xc2, 3);
-    write_u8_at(o, 0xc3, 1); // cqi7: os pontos por empate da Série B
+    write_u8_at(o, 0xc3, 1); // cqi7: the Serie B points per draw
     write_u8_at(o, 0xc4, 2);
     write_u8_at(o, 0x42, 1);
     write_u8_at(o, 0xc5, 3);
@@ -512,7 +512,7 @@ pub(crate) unsafe fn set_serie_b_rules(o: usize) {
 ///
 /// [pt] As regras da Série C (0x42de50).
 pub(crate) unsafe fn set_serie_c_rules(o: usize) {
-    write_u16_at(o, 0x3c, 2); // cqi7: os turnos da Série C
+    write_u16_at(o, 0x3c, 2); // cqi7: the Serie C round-robin legs
     write_u8_at(o, 0xc2, 3);
     write_u8_at(o, 0xc3, 1);
     write_u8_at(o, 0xc4, 2);
@@ -617,7 +617,7 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32
         let l = bra_nat_first_find_club_row(this, club);
         if fazer {
             crate::comparison::branch("cqj_9 serie a campeao");
-            add_champions_record(club, comp); // cqj9: o registro do campeão da Série A
+            add_champions_record(club, comp); // cqj9: the Serie A champion record
             *((l + 0x37) as *mut u8) = 5;
         }
         return (0, l, 5);
@@ -688,7 +688,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, club: usize, status: u32
         }
         if achada != 0 && fazer {
             crate::comparison::branch("cqj_9 serie c promovido");
-            *((achada + 0x37) as *mut u8) = 0; // cqj9: o destino de quem sobe da Série C
+            *((achada + 0x37) as *mut u8) = 0; // cqj9: the destination of those promoted from Serie C
         }
         return (0, achada, 0);
     }
@@ -717,7 +717,7 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, club: usize, status: u32,
             }
         } else if st == 3 && fazer {
             crate::comparison::branch("cqj_9 baiano rebaixado");
-            bra_nat_first_add_relegation_record(club, comp); // cqj9: o rebaixado do Baiano
+            bra_nat_first_add_relegation_record(club, comp); // cqj9: the club relegated from the Baiano
         }
         return (0, 0, 0);
     }

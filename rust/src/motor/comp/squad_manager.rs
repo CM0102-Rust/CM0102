@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, 
     let k = contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && player(*((p + staff::JOB_FOR_CLUB) as *const i8)) != 0 && contract_valid_for_club(k, c) {
         crate::comparison::branch("cql_1 numero do contrato");
-        return *((k + 0x3a) as *const i8); // cql1: o número do contrato
+        return *((k + 0x3a) as *const i8); // cql1: the contract number
     }
     let k = loan(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, 
     let k = contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
         crate::comparison::branch("cql_1 grava no contrato");
-        *((k + 0x3a) as *mut i8) = n; // cql1: grava no contrato
+        *((k + 0x3a) as *mut i8) = n; // cql1: writes to the contract
         return;
     }
     let k = loan(read_u32(G_CONTRACT_MANAGER) as usize, p);
@@ -320,7 +320,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
             write(this, p, c, sinal(k));
             used[k as usize] = 1;
             crate::comparison::branch("cql_2 numero da posicao");
-            return; // cql2: o número da posição
+            return; // cql2: the position number
         }
         b += 1;
         if b >= 5 {
@@ -484,7 +484,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
             write(this, x, c, nb.wrapping_neg() as u8 as u32);
         } else if (nb < 12 && time < -11) || (nb >= 12 && time > -12) {
             crate::comparison::branch("cql_2 perde o numero");
-            write(this, x, c, 0); // cql2: o número fora do lugar
+            write(this, x, c, 0); // cql2: the out-of-place number
             continue;
         }
         if nb > 0 {
@@ -626,7 +626,7 @@ pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, 
                 let b = *((f + 4) as *const i8);
                 let k = if b < 0 { 0 } else if b > 0x32 { 0x32 } else { b as i32 };
                 crate::comparison::branch("cql_3 numero do banco");
-                write(this, p, c, k as u32); // cql3: o número do banco
+                write(this, p, c, k as u32); // cql3: the bench number
             }
         }
         numerar(this, c, 1);
@@ -771,7 +771,7 @@ pub(crate) unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usi
     let write_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
     let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     crate::comparison::branch("cpx_5 gravar gerente de elencos");
-    let mut v = *(this as *const u16) as u32; // cpx5: o valor do gerente de elencos
+    let mut v = *(this as *const u16) as u32; // cpx5: the squad manager value
     let mut z = open_item(save, 0xa82bc0, 1, 0x16, 4);
     if z == 0 {
         show_error_at(0xa82b88, 0x68);

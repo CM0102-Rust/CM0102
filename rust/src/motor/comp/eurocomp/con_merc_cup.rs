@@ -11,7 +11,7 @@ pub(crate) unsafe fn qualifiers_per_group(this: usize) -> i32 {
 ///
 /// [pt] O clube da linha i da tabela do grupo 1 (a da própria copa: +0xb1, linhas de 0x3b bytes).
 pub(crate) unsafe fn group_one_club(this: usize, i: usize) -> usize {
-    read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + i * 0x3b) // cqs10: a linha do grupo 1
+    read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + i * 0x3b) // cqs10: the group 1 row
 }
 
 /// Club at position j of stage f (League::get_table_row).
@@ -21,7 +21,7 @@ pub(crate) unsafe fn group_one_club(this: usize, i: usize) -> usize {
 pub(crate) unsafe fn stage_club_at(this: usize, f: usize, j: i32) -> usize {
     let row: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
     let stage = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + f * 4);
-    read_u32_as_usize(row(stage, j)) // cqs10: a posição j da fase
+    read_u32_as_usize(row(stage, j)) // cqs10: position j of the stage
 }
 
 /// Builds the knockout stage after the groups (qualifier list, round table, Cup_Stage) and draws round 0.
@@ -72,7 +72,7 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
         let mut j = 0i32;
         while j < qualifiers_per_group(this) {
             crate::comparison::branch(ramo);
-            write_u32_from_usize(list + n * 4, stage_club_at(this, f, j)); // cqs10: os classificados de cada fase
+            write_u32_from_usize(list + n * 4, stage_club_at(this, f, j)); // cqs10: the qualifiers of each stage
             n += 1;
             j += 1;
         }
@@ -159,7 +159,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
     }
     let f = f + 1;
     write_u32_from_usize(this + league::CURRENT_STAGE, f as usize);
-    if f == 3 { // cqs10: as semifinais da Merconorte depois dos grupos
+    if f == 3 { // cqs10: the Merconorte semifinals after the groups
         crate::comparison::branch("cqs_10 semifinais da merconorte");
         let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONMERCCUP_CREATE_SEMI_FINAL_STAGE);
         semifinais(this);
@@ -278,7 +278,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         c += 0x245;
     }
     crate::comparison::branch("cqs_11 convidados da merconorte");
-    sort(mexico.clubes.as_mut_ptr() as usize, mexico.n as u32, 4); // cqs11: os 4 do México
+    sort(mexico.clubes.as_mut_ptr() as usize, mexico.n as u32, 4); // cqs11: the 4 from Mexico
     sort(colombia.clubes.as_mut_ptr() as usize, colombia.n as u32, 5);
     sort(peru.clubes.as_mut_ptr() as usize, peru.n as u32, 3);
     sort(bolivia.clubes.as_mut_ptr() as usize, bolivia.n as u32, 2);
@@ -302,7 +302,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
     } else {
         let record = read_u32_as_usize(G_CLUB_COMP_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) * 0x6b;
         crate::comparison::branch("cqs_11 campeao da liga americana");
-        slot(0, colocado(record, 0)); // cqs11: o campeão da liga americana
+        slot(0, colocado(record, 0)); // cqs11: the American league champion
         slot(1, colocado(read_u32_as_usize(americana + 4), 0));
         let l = read_u32_as_usize(this + 0xee);
         if read_u32_as_usize(l) == read_u32_as_usize(l + 4) {
@@ -393,7 +393,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     if read_u32_as_usize(this + league::ACTIVE) == 0 && full != 0 {
-        let day = read_i16(this + 0xb6) as u16; // cqr12: o dia do sorteio
+        let day = read_i16(this + 0xb6) as u16; // cqr12: the draw day
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
             crate::comparison::branch("cqr_12 sorteio da merconorte");
@@ -511,7 +511,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
         crate::comparison::branch("cqr_12 time do grupo");
-        write_u32_from_usize(teams + n * 4, con_merc_cup_drawn_club(this, k as usize)); // cqr12: o time na vaga do grupo
+        write_u32_from_usize(teams + n * 4, con_merc_cup_drawn_club(this, k as usize)); // cqr12: the team in the group slot
         k += 1;
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -563,7 +563,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
 
 // simplification: the stage is allocated and the news goes to the managers: does not run twice. Original only; the plan: returns 1 with the
 // stage in [+0xc][g], +0x30 = g, the stage with the teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
-// sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
+// drawn 4g + 4 to 4g + 7 (in any order: the constructor sorts the table).
 
 /// rule: the Copa Merconorte starts with groups (stages below 3, id 0x3e9 + stage: 4 groups [inference]) of six rounds
 /// on Tuesdays every 15 days, from 9/9 to 18/11; the knockout (stage 3): semi-final drawn on 19/11 and played on 25/11

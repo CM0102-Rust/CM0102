@@ -13,7 +13,7 @@ use super::*;
 /// dá a caixa (linhas 0x161, 0x168, 0x16f) e 0 — e as posições previstas (virtual +0x5c). Sempre, no fim, a atualização da
 /// copa (0x51f890: push fase; push hoje; mov ecx -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    if read_u32_as_usize(this + cup::SEASON_SET_UP) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + cup::YEAR) as i32 && stage != 0 { // cqt5: o ano da Copa do Rei
+    if read_u32_as_usize(this + cup::SEASON_SET_UP) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + cup::YEAR) as i32 && stage != 0 { // cqt5: the Copa del Rey year
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         for o in [0xa7usize, 0xa3] {
             if read_u32_as_usize(this + o) != 0 {
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
             soltar(read_u32_as_usize(this + cup::TIE_TABLES));
         }
         crate::comparison::branch("cqt_5 copa do rei refeita");
-        core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
+        core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqt5: the Copa del Rey redone once
         let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPACUP_COLLECT_ENTRANTS);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
         if entrants(this) < 0 {

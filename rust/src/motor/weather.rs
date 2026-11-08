@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             return 0;
         }
     }
-    if read_u8(game + fixture::TIME_SLICE) == 2 { // cpu5: a fatia da noite
+    if read_u8(game + fixture::TIME_SLICE) == 2 { // cpu5: the night slice
         let fin = finances(read_usize(G_FINANCE_TABLE), home);
         if fin != 0 {
             let f = band(fin) as i8;
@@ -87,7 +87,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
                 5000
             };
             crate::comparison::branch("cpu_5 rolagem das financas");
-            if friendly_random(n) == 0 { // cpu5: a rolagem das finanças
+            if friendly_random(n) == 0 { // cpu5: the finances roll
                 return 0x12;
             }
         }
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
                 0xa
             };
             crate::comparison::branch("cpu_5 chuva forte");
-            if friendly_random(n) != 0 { // cpu5: o sorteio da chuva forte
+            if friendly_random(n) != 0 { // cpu5: the heavy rain random draw
                 0
             } else {
                 9
@@ -550,7 +550,7 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
                 *(p as *mut u8) = 0x64;
             }
         }
-        if friendly_random(10) == 0 { // cpt5: um em dez muda o vento
+        if friendly_random(10) == 0 { // cpt5: one in ten changes the wind
             crate::comparison::branch("cpt_5 vento novo");
             let r = friendly_random(3); // cpt5: o vento novo
             *((read_usize(this + 4) + i * 4 + 3) as *mut u8) = r as u8;
@@ -700,7 +700,7 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
         crate::comparison::branch("cpt_7 clima inicial");
         for j in 0..3usize {
             let a = friendly_random(100);
-            let b = friendly_random(100); // cpt7: o segundo sorteio da medida
+            let b = friendly_random(100); // cpt7: the second random draw of the measure
             *((read_usize(this + 4) + k * 4 + j) as *mut u8) = match_pl_ftol(a.wrapping_add(b) as f64 * read_f64_at(0x968968)) as u8; // 0x968968 = 0.5
         }
         let v = friendly_random(3); // cpt7: o vento inicial

@@ -77,9 +77,9 @@ pub(crate) const EUROPE_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqj_12 regras da europa");
     wc_europe_league_write_rule_fields(this, &EUROPE_RULE_FIELDS);
-    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias europeias
-    *((this + league::MATCH_CATEGORY) as *mut u8) = 0xa; // cqj12: a categoria dos jogos das eliminatórias europeias
-    let day = 0x19; // cqj12: o dia do começo das eliminatórias europeias
+    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: the win in the European qualifiers
+    *((this + league::MATCH_CATEGORY) as *mut u8) = 0xa; // cqj12: the match category of the European qualifiers
+    let day = 0x19; // cqj12: the start day of the European qualifiers
     let word = comp_date_word(this, day, 2, 5);
     finish_rules_setup(this, word, 0)
 }

@@ -56,7 +56,7 @@ pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: imp
 ///
 /// [pt] A janela da Inglaterra: de 2 de junho (andando para a segunda-feira [inferência]) a 26 de março (andando para a quinta-feira [inferência]).
 pub(crate) const ENGLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
-    [0x07, 0x00, 0x01, 0x02, 0x05, 0x01], // cqk1: a Inglaterra abre em junho
+    [0x07, 0x00, 0x01, 0x02, 0x05, 0x01], // cqk1: England opens in June
     [0x07, 0x00, 0x04, 0x1a, 0x02, 0x00],
 ];
 
@@ -78,12 +78,12 @@ pub(crate) unsafe extern "thiscall" fn construct_england_rules(this: usize, a1: 
 /// [pt] A janela dos EUA: de 7 de janeiro (andando para a quarta-feira [inferência]) a 15 de agosto.
 pub(crate) const USA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x19, 0x00, 0x03, 0x07, 0x00, 0x01],
-    [0x19, 0x00, 0xff, 0x0f, 0x07, 0x00], // cqk1: os EUA fecham em agosto
+    [0x19, 0x00, 0xff, 0x0f, 0x07, 0x00], // cqk1: the USA close in August
 ];
 
 /// A janela da Austrália: de 11 de junho (andando para o sábado [inferência]) a 17 de abril.
 pub(crate) const AUSTRALIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
-    [0x02, 0x00, 0x06, 0x0b, 0x05, 0x01], // cqk1: a Austrália abre em junho
+    [0x02, 0x00, 0x06, 0x0b, 0x05, 0x01], // cqk1: Australia opens in June
     [0x02, 0x00, 0xff, 0x11, 0x03, 0x00],
 ];
 
@@ -216,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, offer: usize) {
     if nation != 0 && read_usize(nation) == read_usize(KEY_NATION_ENGLAND) {
         crate::comparison::branch("cqe_5 emprestimo contado");
         let p = season_loans_entry(club);
-        *(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: a conta da temporada
+        *(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: the season calculation
     }
 }
 

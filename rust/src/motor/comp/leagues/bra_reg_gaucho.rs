@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this
 /// e, em salto final, a 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze
 /// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
-    record_first_stage_honours(this); // cqj8: o histórico do estadual
+    record_first_stage_honours(this); // cqj8: the state championship history
     crate::comparison::branch("cqj_8 historico do estadual");
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
     campeoes()
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this
 ///
 /// [pt] { 0x4317c0 } (thiscall, ret 8, bra_reg_gaucho.cpp): `BraRegGaucho::BraRegGaucho(ano, registro)`: o Gaúcho (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_bahia_construct_state_league(this, year, record, &GAUCHO_STATE_LEAGUE, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
+    bra_reg_bahia_construct_state_league(this, year, record, &GAUCHO_STATE_LEAGUE, 7, true, "cqt_1 gaucho novo") // cqt1: the discipline and expected positions of the Gaúcho
 }
 
 /// The Rio Grande do Sul turnover: archives the season in the statistics, clears the previous table and stages, moves
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, yea
 /// [pt] { 0x432370 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::start_new_season()`, a virada da temporada do Gaúcho (a tabela:
 /// 0x4321d0; caixas nas linhas 0x1c6, 0x1cd, 0x1d3 e 0x1da).
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x4321d0, 0x98ae50, [0x1c6, 0x1cd, 0x1d3, 0x1da], 1, "cqp_7 virada do gaucho") // cqp7: o ano seguinte do Gaúcho
+    state_league_new_season(this, 0x4321d0, 0x98ae50, [0x1c6, 0x1cd, 0x1d3, 0x1da], 1, "cqp_7 virada do gaucho") // cqp7: the next year of the Gaúcho
 }
 
 /// The Rio Grande do Sul next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to

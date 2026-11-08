@@ -15,7 +15,7 @@ use super::*;
 pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nation: usize) -> u8 {
     for k in 0..0x23usize {
         if read_usize(G_LEAGUE_TABLE + 72 * k) == nation {
-            return k as u8; // cpu1: a linha da nacao dada
+            return k as u8; // cpu1: the row of the given nation
         }
     }
     4
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
         if nation != 0 && *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 {
             for k in 0..0x23usize {
                 if read_usize(G_LEAGUE_TABLE + 72 * k) == nation {
-                    return k as u8; // cpu1: a linha da nacao escolhida
+                    return k as u8; // cpu1: the row of the chosen nation
                 }
             }
             show_error_at(0x9eaff4, 0x26d);
@@ -54,10 +54,10 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
     if national_team(club) != 0 {
         return 1;
     }
-    let nation = read_usize(club + club::NATION); // cpu1: a nacao do continente
+    let nation = read_usize(club + club::NATION); // cpu1: the nation of the continent
     for k in 0..0x23usize {
         if nation != 0 && read_usize(G_LEAGUE_WORLD_CUP_CONTINENT + 72 * k) == read_usize(nation + nation::CONTINENT) {
-            return k as u8; // cpu1: a linha do continente
+            return k as u8; // cpu1: the continent row
         }
     }
     3
@@ -162,18 +162,18 @@ pub(crate) unsafe extern "C" fn key_nation_club_in_season(club: usize, start: us
         if t > a {
             write_date(start, a, y);
             if end != 0 {
-                write_date(end, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte
+                write_date(end, c, y.wrapping_add(1)); // cpu2: the end in the following year
             }
             return 1;
         }
         if t < c {
             write_date(start, a, y.wrapping_sub(1));
             write_date(end, c, y);
-            return 1; // cpu2: antes do fim, na temporada
+            return 1; // cpu2: before the end, within the season
         }
         write_date(start, a, y);
         write_date(end, c, y);
-        return 0; // cpu2: entre o fim e o inicio, fora
+        return 0; // cpu2: between the end and the start, outside
     }
     if t < a {
         write_date(start, a, y);
@@ -187,7 +187,7 @@ pub(crate) unsafe extern "C" fn key_nation_club_in_season(club: usize, start: us
     }
     write_date(start, a, y);
     write_date(end, c, y);
-    1 // cpu2: entre o inicio e o fim do ano
+    1 // cpu2: between the start and the end of the year
 }
 
 /// the continent of the human's nation, or that of the first main nation of the table
@@ -293,14 +293,14 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
 pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     let nation = read_usize(comp + competition::CLUB_COMP_NATION);
     if nation != 0 {
-        let row = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation); // cpt4: a busca da nacao
+        let row = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation); // cpt4: the nation search
         return match row {
-            Some(k) => k as u8, // cpt4: a linha da nacao
+            Some(k) => k as u8, // cpt4: the nation row
             None => 4,
         };
     }
     let id = read_usize(comp);
-    let cup = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT]; // cpt4: a Copa e as eliminatorias
+    let cup = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT]; // cpt4: the World Cup and the qualifiers
     if cup.iter().any(|&g| read_usize(g) == id) {
         return 0;
     }
@@ -314,7 +314,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     for k in 0..0x23usize {
         let c = read_usize(comp + competition::CLUB_COMP_CONTINENT);
         if read_usize(G_LEAGUE_TABLE + 72 * k) == 0 && c != 0 && c == read_usize(G_LEAGUE_WORLD_CUP_CONTINENT + 72 * k) {
-            return k as u8; // cpt4: a linha do continente
+            return k as u8; // cpt4: the continent row
         }
     }
     3

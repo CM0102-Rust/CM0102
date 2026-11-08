@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let mut list = [0usize; 2];
-    list[0] = stage_leader(this, 8); // cqs4: o campeão do grupo A
+    list[0] = stage_leader(this, 8); // cqs4: the group A winner
     list[1] = stage_leader(this, 9);
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -152,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     let expectations: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectations(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)); // cqs4: a renovação dos árbitros da Série C
+    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)); // cqs4: the renewal of the Serie C referees
     let group: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_BRANATTHIRD_CREATE_GROUP_STAGE);
     for g in 0..7 {
         group(this, g);
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
 ///
 /// [pt] As posições previstas da Série C, na ordem da lista dos 56 depois de ordenada: 1, 2, 3, 3, 5, 5, 7, 7, oito vezes 9
 /// (as faixas do mata-mata) e, para os outros quarenta, a faixa de oito em oito: 16, 24, 32, 40 e 48.
-pub(crate) const SERIE_C_PREDICTED_PLACES: [u8; 16] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]; // cqs4: as posições previstas do mata-mata
+pub(crate) const SERIE_C_PREDICTED_PLACES: [u8; 16] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]; // cqs4: the expected knockout positions
 
 /// Place for index k: from SERIE_C_PREDICTED_PLACES below 16, else 16 + 8 x ((k - 16) / 8) [inference].
 pub(crate) fn place_for_index(k: usize) -> u8 {
@@ -205,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(thi
     if read_usize(this + 8) == 0 {
         return show_error_at(0x98aba4, 0x4a2);
     }
-    sort(read_usize(this + bra_nat_third::CLUB_LIST), 0x38, 4, 0x4b07d0); // cqs4: a lista dos 56 pela reputação
+    sort(read_usize(this + bra_nat_third::CLUB_LIST), 0x38, 4, 0x4b07d0); // cqs4: the list of the 56 by reputation
     for k in 0..0x38usize {
         position(read_usize(this + 8), read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k), place_for_index(k) as u32);
     }
@@ -289,11 +289,11 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g:
 ///
 /// [pt] { 0x42ee80 } (acima): o grupo g da primeira fase da Série C.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_group_stage(this: usize, g: u32) {
-    bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
+    bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc2) // cqs3: the points per win in the groups
 }
 
 /// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `SECOND_ROUND_SEEDS[k]` da lista dos dezesseis.
-pub(crate) const SECOND_ROUND_SEEDS: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
+pub(crate) const SECOND_ROUND_SEEDS: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: the second stage slots
 
 /// Creates the Series C second round: the sixteen (the top two of each group) seeded by first-round points (ties go to
 /// the earlier one: the league, then groups 0 to 6, first before second), in a knockout where the best meets the 16th,
@@ -513,7 +513,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
         club = club.wrapping_add(0x245);
     }
     crate::comparison::branch("cql_7 serie c sorteio");
-    shuffle(read_usize(this + bra_nat_third::CLUB_LIST), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
+    shuffle(read_usize(this + bra_nat_third::CLUB_LIST), k as i8 as i32); // cql7: the random draw of the Serie C clubs
     for j in 0..7usize {
         iniciar(this, j as u32, read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + j * 4), 0, 0);
     }
@@ -567,7 +567,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usi
         if b == 3 {
             crate::comparison::branch("cqk_8 serie c segundo 3");
         }
-        write_progress_codes(e, a, b2, c); // cqk8: os códigos dos grupos da Série C
+        write_progress_codes(e, a, b2, c); // cqk8: the Serie C group codes
     } else {
         write_progress_codes(e, a, b, c);
     }

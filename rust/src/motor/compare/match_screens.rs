@@ -460,7 +460,7 @@ pub(crate) unsafe extern "C" fn compare_draw_team_stats_panel(side: u32, top: *m
 pub(crate) unsafe extern "C" fn compare_draw_player_ratings_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_PLAYER_RATINGS_PANEL);
     // simplification: without the state copy (parameter 0x1d) the update inside the panel allocates it, and each
-    // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
+    // side would allocate its own (different addresses): original routine only; the Rust mode proves this path
     if get_screen_param(0x1d) == 0 {
         return o(top, base);
     }
@@ -471,7 +471,7 @@ pub(crate) unsafe extern "C" fn compare_draw_player_ratings_panel(top: *mut i32,
 pub(crate) unsafe extern "C" fn compare_draw_match_stats_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_STATS_PANEL);
     // simplification: without the state copy (parameter 0x1d) the update inside the panel allocates it, and each
-    // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
+    // side would allocate its own (different addresses): original routine only; the Rust mode proves this path
     if get_screen_param(0x1d) == 0 {
         return o(top, base);
     }

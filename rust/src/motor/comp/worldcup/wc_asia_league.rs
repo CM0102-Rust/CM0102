@@ -10,7 +10,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn wc_asia_league_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqj_12 regras da asia");
     wc_europe_league_write_rule_fields(this, &ASIA_QUALIFIER_RULE_FIELDS);
-    let day = 0x19; // cqj12: o dia do começo das eliminatórias asiáticas
+    let day = 0x19; // cqj12: the start day of the Asian qualifiers
     let word = comp_date_word(this, day, 2, 5);
     finish_rules_setup(this, word, 1)
 }

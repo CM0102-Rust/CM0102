@@ -246,7 +246,7 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     }
     let mut i = 0i32;
     while i < read_i16(this + cup::TEAM_COUNT) as i32 {
-        write_u32_from_usize(teams + i as usize * 4, read_u32_as_usize(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS) + i as usize * 4)); // cqs5: a ordem das chaves
+        write_u32_from_usize(teams + i as usize * 4, read_u32_as_usize(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS) + i as usize * 4)); // cqs5: the order of the brackets
         i += 1;
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -336,10 +336,10 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     if l == 0 {
         return show_error_at(0x9c4180, 0x337);
     }
-    if let Some(c) = first_entrant_with_status(read_u32_as_usize(this + cup::TEAM_TABLE), read_i16(this + cup::TEAM_COUNT) as i32, 1) { // cqs6: o finalista da copa
+    if let Some(c) = first_entrant_with_status(read_u32_as_usize(this + cup::TEAM_TABLE), read_i16(this + cup::TEAM_COUNT) as i32, 1) { // cqs6: the cup finalist
         write_u32_from_usize(l, c);
     }
-    if let Some(c) = first_entrant_with_status(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES)) + 0xa7), read_i16(this + cup::TEAM_COUNT) as i32, 1) { // cqs6: o finalista das chaves
+    if let Some(c) = first_entrant_with_status(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES)) + 0xa7), read_i16(this + cup::TEAM_COUNT) as i32, 1) { // cqs6: the brackets finalist
         write_u32_from_usize(l + 4, c);
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -351,7 +351,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 2, l, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + cup::YEAR) as u16 as u32, 1, 1, // cqs6: o ano da final
+        construct(p, this, 2, l, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + cup::YEAR) as u16 as u32, 1, 1, // cqs6: the year of the final
              extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     }
     crate::comparison::branch("cqs_6 final do trofeu");
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
-    sortear(f, 0); // cqs6: o sorteio da final
+    sortear(f, 0); // cqs6: the draw of the final
     soltar(l);
 }
 

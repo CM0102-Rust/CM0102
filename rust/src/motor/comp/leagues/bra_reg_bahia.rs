@@ -156,7 +156,7 @@ pub(crate) const GAUCHO_STATE_LEAGUE: BraRegBahiaStateChampionship = BraRegBahia
 ///
 /// [pt] { 0x42f2d0 } (thiscall, ret 8, bra_reg_bahia.cpp): `BraRegBahia::BraRegBahia(ano, registro)`: o Baiano (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_bahia_construct_state_league(this, year, record, &BAHIA_CHAMPIONSHIP, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
+    bra_reg_bahia_construct_state_league(this, year, record, &BAHIA_CHAMPIONSHIP, 7, true, "cqt_1 baiano novo") // cqt1: the discipline and expected positions of the Baiano
 }
 
 /// Shared season turnover of the state leagues (`start_new_season`, slot 3, +0x08): frees the table, lists and stages,
@@ -300,7 +300,7 @@ pub(crate) unsafe fn compare_state_league_advance_stage(name: &str, this: usize,
 /// [pt] { 0x42fe10 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::start_new_season()`, a virada da temporada do Baiano (a tabela:
 /// 0x42fd10; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
 pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x42fd10, 0x98acac, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_7 virada do baiano") // cqp7: o ano seguinte do Baiano
+    state_league_new_season(this, 0x42fd10, 0x98acac, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_7 virada do baiano") // cqp7: the next year of the Baiano
 }
 
 /// The Bahia next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the

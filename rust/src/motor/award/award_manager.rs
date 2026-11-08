@@ -35,7 +35,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
         if read_i16(p + player_sheet::WORLD_REPUTATION) <= mundo { // cpw6: o piso mundial
             write_i16(p + player_sheet::WORLD_REPUTATION, mundo);
         }
-        if club != 0 && read_usize(club + club::NATION) == read_usize(person + staff::NATION) { // cpw6: o clube da nação do jogador
+        if club != 0 && read_usize(club + club::NATION) == read_usize(person + staff::NATION) { // cpw6: the club of the player’s nation
             add_to_word(p + player_sheet::HOME_REPUTATION, match_pl_ftol(nation as i32 as f64 * read_f64_at(0x967880))); // 0x967880 = 0.1
             clamp_word(p + player_sheet::HOME_REPUTATION, nation);
         } else {

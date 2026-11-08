@@ -121,7 +121,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         3 => random(1000),
         4 => random(0x708),
         _ => {
-            // simplification: a original mostra a caixa "Error" (versao, arquivo, linha 0x4755); +0x8ea9
+            // simplification: the original routine shows the “Error” box (version, file, line 0x4755); +0x8ea9
             // outside 0..4 does not happen in the game
             *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
             return 0;
@@ -142,7 +142,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         espirra(call, r.wrapping_add(1), j);
         return 1;
     }
-    // o lance e o atributo
+    // the move and the attribute
     let em_area = in_the_box();
     let choose = || -> (i16, i16) {
         if byte(m, engine::BALL_HEIGHT) == 4 {
@@ -565,7 +565,7 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
         return rodar() as u8;
     }
     // the comparison of 0x6f5c30 (128th batch): its hook is this port. It is only called by
-    // 0x6cd330 (`search_on_side`), cuja comparacao a grava como unidade: a comparacao roda dentro
+    // 0x6cd330 (`search_on_side`), whose comparison records it as a unit: the comparison runs inside
     // of the unit (nested, with the outer tape saved)
     let comparar = || compare_respond(p, a, b, c, d, &rodar) as u32;
     if RECORD_6F5C30.load(Relaxed) && is_recording() {

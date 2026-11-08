@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
         virada(this);
     }
     if read_u32_as_usize(this + league::ACTIVE) == 0 && full != 0 {
-        let day = read_i16(this + 0xb6) as u16; // cqr11: o dia do sorteio
+        let day = read_i16(this + 0xb6) as u16; // cqr11: the draw day
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
             crate::comparison::branch("cqr_11 sorteio da mercosul");
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
         crate::comparison::branch("cqr_11 time do grupo");
-        write_u32_from_usize(teams + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: o time na vaga do grupo
+        write_u32_from_usize(teams + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: the team in the group slot
         k += 1;
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -236,7 +236,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
 
 // simplification: the stage is allocated and the news goes to the managers: does not run twice. Original only; the plan: returns 1 with the
 // stage in [+0xc][g], +0x30 = g, the stage with the teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
-// sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
+// drawn 4g + 4 to 4g + 7 (in any order: the constructor sorts the table).
 
 /// Writes one group round (a 0x41-byte record, like the league rounds).
 ///
@@ -361,7 +361,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
 }
 
 /// A Libertadores, grupos: seis rodadas às terças [inferência: dia da semana 2], de 25 de fevereiro a 1º de abril.
-pub(crate) const LIBERTADORES_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x19, 1, 2, 2), (4, 2, 2, 2), (0xb, 2, 2, 2), (0x12, 2, 2, 2), (0x19, 2, 2, 2), (1, 3, 2, 2)]; // cqo13: os grupos da Libertadores
+pub(crate) const LIBERTADORES_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x19, 1, 2, 2), (4, 2, 2, 2), (0xb, 2, 2, 2), (0x12, 2, 2, 2), (0x19, 2, 2, 2), (1, 3, 2, 2)]; // cqo13: the Libertadores groups
 
 /// The Copa Libertadores knockout: four two-legged rounds from April to June.
 ///
@@ -370,14 +370,14 @@ pub(crate) const LIBERTADORES_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x19
 /// [pt] A Libertadores, mata-mata: quatro rodadas em ida e volta, de abril a junho (o jogo de volta 14 dias depois nas
 /// oitavas e 7 nas outras).
 pub(crate) const LIBERTADORES_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 4] = [
-    cql10r((2, 3, 0, 3), (0xf, 3, 0, 2, 2, 0), 0x14, (0, 4, 1), 7, (0x10, 8, 0x10, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqo13: as oitavas da Libertadores
+    cql10r((2, 3, 0, 3), (0xf, 3, 0, 2, 2, 0), 0x14, (0, 4, 1), 7, (0x10, 8, 0x10, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqo13: the Libertadores round of 16
     cql10r((0x1e, 3, 0, 3), (0x14, 4, 0, 2, 2, 0), 0x78, (0, 4, 1), 8, (8, 4, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
     cql10r((0x1c, 4, 0, 3), (3, 5, 0, 2, 2, 0), 0x82, (0, 4, 1), 8, (4, 2, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
     cql10r((0xb, 5, 0, 3), (0x11, 5, 0, 2, 2, 0), 0x96, (0, 4, 1), 8, (2, 1, 0, 0), (0, 2, 7), (0, 0x1e8480, 0xc3500)),
 ];
 
 /// A Mercosul, grupos: seis rodadas às terças, de 29 de julho a 14 de outubro.
-pub(crate) const MERCOSUR_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x1d, 6, 2, 2), (0x13, 7, 2, 2), (2, 8, 2, 2), (0x10, 8, 2, 2), (0x1e, 8, 2, 2), (0xe, 9, 2, 2)]; // cqo13: os grupos da Mercosul
+pub(crate) const MERCOSUR_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x1d, 6, 2, 2), (0x13, 7, 2, 2), (2, 8, 2, 2), (0x10, 8, 2, 2), (0x1e, 8, 2, 2), (0xe, 9, 2, 2)]; // cqo13: the Mercosur groups
 
 /// A Mercosul, mata-mata: quartas, semifinal e final em ida e volta, de outubro a dezembro (a volta 3 dias depois nas
 /// quartas e na semifinal, 7 na final).

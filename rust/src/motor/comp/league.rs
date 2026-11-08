@@ -170,8 +170,8 @@ pub(crate) unsafe extern "thiscall" fn narrate_qualification(this: usize, side: 
 /// valor 0), pela metade da fase: [0] primeira fase, grupos 0..3; [1] primeira fase, 4..7; [2] segunda fase, 8..9; [3]
 /// segunda fase, 10..11.
 pub(crate) const GROUP_STAGE_DATES: [[(i32, i32, i32, i32, i32); 6]; 4] = [
-    [(0, 0xc, 8, 0, 1), (1, 0x14, 8, 0, 2), (2, 0x1b, 8, 0, 2), (3, 0x11, 9, 0, 1), (4, 0x19, 9, 0, 2), (5, 7, 0xa, 0, 1)], // cqh4: a primeira fase, grupos A a D
-    [(0, 0xd, 8, 0, 2), (1, 0x13, 8, 0, 1), (2, 0x1a, 8, 0, 1), (3, 0x12, 9, 0, 2), (4, 0x18, 9, 0, 1), (5, 8, 0xa, 0, 2)], // cqh4: a primeira fase, grupos E a H
+    [(0, 0xc, 8, 0, 1), (1, 0x14, 8, 0, 2), (2, 0x1b, 8, 0, 2), (3, 0x11, 9, 0, 1), (4, 0x19, 9, 0, 2), (5, 7, 0xa, 0, 1)], // cqh4: the first stage, groups A to D
+    [(0, 0xd, 8, 0, 2), (1, 0x13, 8, 0, 1), (2, 0x1a, 8, 0, 1), (3, 0x12, 9, 0, 2), (4, 0x18, 9, 0, 1), (5, 8, 0xa, 0, 2)], // cqh4: the first stage, groups E to H
     [(0, 0x15, 0xa, 0, 1), (1, 6, 0xb, 0, 2), (2, 0xe, 1, 1, 2), (3, 0x14, 1, 1, 1), (4, 7, 2, 1, 2), (5, 0xd, 2, 1, 1)],
     [(0, 0x16, 0xa, 0, 2), (1, 5, 0xb, 0, 1), (2, 0xd, 1, 1, 1), (3, 0x15, 1, 1, 2), (4, 6, 2, 1, 1), (5, 0xe, 2, 1, 2)], // cqh4: a segunda fase, grupos C e D
 ];
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn set_club_season_expectations(this: usize)
     while i < read_i16(this + league::CLUB_COUNT) {
         crate::comparison::branch("cqh_4 expectativa do clube");
         let club = read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + i as usize * 0x3b);
-        expectations(read_u32_as_usize(G_MANAGER_MANAGER), club, 1); // cqh4: com a notícia
+        expectations(read_u32_as_usize(G_MANAGER_MANAGER), club, 1); // cqh4: with the news
         i += 1; // cqh4: o próximo clube
     }
 }
@@ -409,7 +409,7 @@ pub(crate) unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: u
                             }
                         }
                     } else {
-                        s = sorteio(read_i16(read_u32_as_usize(f + fixture::AWAY_CLUB) + 0x80) as i32 + 0x5dc); // cqc6: o visitante com o bônus
+                        s = sorteio(read_i16(read_u32_as_usize(f + fixture::AWAY_CLUB) + 0x80) as i32 + 0x5dc); // cqc6: the away side with the bonus
                         s = s.wrapping_add(sorteio(read_i16(read_u32_as_usize(f + fixture::HOME_CLUB) + 0x80) as i32));
                     }
                     if read_u8(v + league_round_date::TV_SLOT_KIND) != 3 {
@@ -461,7 +461,7 @@ pub(crate) unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: u
             remove(read_u32_as_usize(G_FIXTURE_MANAGER), r);
             crate::comparison::branch("cqc_6 jogo para a TV");
             write_u16(r + fixture::YEAR, read_i16(pa + 2) as u16);
-            write_u16(r + fixture::DAY, read_i16(pa) as u16); // cqc6: o dia da TV
+            write_u16(r + fixture::DAY, read_i16(pa) as u16); // cqc6: the TV day
             write_u8(r + fixture::TIME_SLICE, read_u8(v + league_round_date::TV_SLOT_TIME_SLICE));
             write_u8(r + fixture::STAGE, read_u8(v + league_round_date::TV_SLOT_KIND));
             let stadium: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
@@ -931,7 +931,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
 pub(crate) unsafe fn add_league_fixture(this: usize, r: usize, ea: usize, eb: usize, off: usize, tipo4: bool) {
     let stadium: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
     let calendario: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
-    let (ea, eb) = (ea, eb); // cqd5: o mandante e o visitante
+    let (ea, eb) = (ea, eb); // cqd5: the home and away sides
     let (ca, cb) = (read_u32_as_usize(ea), read_u32_as_usize(eb));
     write_u32_from_usize(r + fixture::HOME_CLUB, ca);
     write_u32_from_usize(r + fixture::AWAY_CLUB, cb);
@@ -1031,7 +1031,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     let c = read_u32_as_usize(this + 4);
     if c == 0 || (read_u32_as_usize(c) != read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) && read_u32_as_usize(c) != read_u32_as_usize(KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP)) {
         crate::comparison::branch("cqd_5 ordem sorteada");
-        sortear(this, n as u32); // cqd5: a ordem dos clubes
+        sortear(this, n as u32); // cqd5: the order of the clubs
     }
     // the match record; the bytes the original does not write (+4..+7, +0x18, +0x2e, +0x39, +0x4d and the high bits of
     // +0x4e: leftover from its stack, which method 0x7c and 0x85c260 may fill) stay 0, a value the game produces
@@ -1547,7 +1547,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
         if worst == one_after {
             if s != 3 && s != 0xfe && s != 0xfc && s != 5 {
                 crate::comparison::branch("cpz_3 titulo");
-                set_row_status(this, ii, 5, high_row); // cpz3: o título na pior posição = o primeiro + 1
+                set_row_status(this, ii, 5, high_row); // cpz3: the title in the worst position = the first + 1
             }
         } else {
             let f = *m(worst - 1);
@@ -1571,7 +1571,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
             } else if f == 1 {
                 if s == 0xff {
                     crate::comparison::branch("cpz_3 vaga no mata-mata");
-                    set_row_status(this, ii, 1, high_row); // cpz3: a vaga no mata-mata (situação 1)
+                    set_row_status(this, ii, 1, high_row); // cpz3: the knockout slot (situation 1)
                 }
             } else {
                 let g = *m(read_i8(li + league_table_row::BEST_POSSIBLE_POSITION) as i32 - 1);
@@ -1580,7 +1580,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
                     if !POSITIONS_STATUS_DRY_RUN {
                         crate::comparison::branch("cpz_3 clausulas de rebaixamento");
                         let clausulas: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_TRIGGER_RELEGATION_CLAUSES);
-                        high = clausulas(read_usize(G_CONTRACT_MANAGER), read_usize(li), read_usize(this + 4)) & !0xff; // cpz3: as cláusulas de rebaixamento
+                        high = clausulas(read_usize(G_CONTRACT_MANAGER), read_usize(li), read_usize(this + 4)) & !0xff; // cpz3: the relegation clauses
                     }
                     let li = league_table_row(this, ii);
                     let s = read_u8(li + league_table_row::STATUS);
@@ -2792,7 +2792,7 @@ pub(crate) unsafe extern "thiscall" fn contains_club(league: usize, club: usize)
         loop {
             let r = t.wrapping_add(0x3b * i as i32 as usize);
             if read_usize(r) == club {
-                return (r != 0) as u32; // a liga tem o clube
+                return (r != 0) as u32; // the league has the club
             }
             i = i.wrapping_add(1);
             if i >= n {
@@ -3931,11 +3931,11 @@ pub(crate) unsafe extern "thiscall" fn league_process_promotion_relegation_chain
     crate::comparison::branch("cqp_1 cadeia");
     let swap: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) = core::mem::transmute(FN_LEAGUE_PROMOTE_AND_RELEGATE);
     let mut acima = this;
-    finalize_league_table(this); // cqp1: fecha a liga do topo
+    finalize_league_table(this); // cqp1: closes the top league
     let mut i = read_u32_as_usize(this + league::LOWER_DIVISION_ID) as i32;
     while i >= 0 {
         let abaixo = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + i as usize * 4);
-        finalize_league_table(abaixo); // cqp1: fecha a de baixo
+        finalize_league_table(abaixo); // cqp1: closes the lower one
         swap(this, acima, abaixo, 1, aos_pairs, u32::MAX, u32::MAX); // cqp1: sobem e descem
         i = read_u32_as_usize(abaixo + league::LOWER_DIVISION_ID) as i32;
         acima = abaixo;
