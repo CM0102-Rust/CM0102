@@ -105,7 +105,7 @@ pub(crate) unsafe extern "C" fn referencia_ao_nome(pessoa: usize, saida: usize) 
     core::ptr::write_unaligned((saida + 0xc) as *mut u32, read_u32(pessoa));
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
-    copiar(saida + 0x10, t.as_mut_ptr() as usize, pessoa + 0x10);
+    copiar(saida + 0x10, t.as_mut_ptr() as usize, pessoa + staff::DATE_OF_BIRTH);
     1
 }
 

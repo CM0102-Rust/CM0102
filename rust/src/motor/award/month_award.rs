@@ -116,11 +116,11 @@ pub(crate) unsafe extern "thiscall" fn gravar_vencedor_do_mes(this: usize, id: i
 /// As regiões que a reputação do premiado grava: o registro do jogador (+0x61: +9..+0xe), o do não jogador (+0x69:
 /// +8..+0xd) e a linha da diretoria do clube (73 bytes em [[0xb67a44]], palavra +6).
 pub(crate) unsafe fn cpw6_regioes_da_reputacao(regioes: &mut Vec<(usize, usize)>, pessoa: usize, clube: usize) {
-    let p = read_usize(pessoa + 0x61);
+    let p = read_usize(pessoa + staff::PLAYER);
     if p != 0 {
         regioes.push((p + 9, 6));
     }
-    let np = read_usize(pessoa + 0x69);
+    let np = read_usize(pessoa + staff::NON_PLAYER);
     if np != 0 {
         regioes.push((np + 8, 6));
     }
@@ -182,7 +182,7 @@ pub(crate) unsafe fn cpw6_teto_e_piso(a: usize, piso: i16) {
 pub(crate) unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
     let nac = nac as u16 as i16;
     let mundo = mundo as u16 as i16;
-    let p = read_usize(pessoa + 0x61);
+    let p = read_usize(pessoa + staff::PLAYER);
     if p != 0 && jogador != 0 {
         crate::comparacao::ramo("cpw_6 premio de jogador");
         cpw6_somar(p + 0xd, ftol(mundo as i32 as f64 * f64_em(0x967888))); // cpw6: o aumento mundial
@@ -192,7 +192,7 @@ pub(crate) unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usiz
         if read_i16(p + 0xd) <= mundo { // cpw6: o piso mundial
             write_i16(p + 0xd, mundo);
         }
-        if clube != 0 && read_usize(clube + 0x53) == read_usize(pessoa + 0x1a) { // cpw6: o clube da nação do jogador
+        if clube != 0 && read_usize(clube + club::NATION) == read_usize(pessoa + staff::NATION) { // cpw6: o clube da nação do jogador
             cpw6_somar(p + 9, ftol(nac as i32 as f64 * f64_em(0x967880)));
             cpw6_teto_e_piso(p + 9, nac);
         } else {
@@ -214,14 +214,14 @@ pub(crate) unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usiz
         }
         return;
     }
-    let np = read_usize(pessoa + 0x69);
+    let np = read_usize(pessoa + staff::NON_PLAYER);
     if np == 0 || jogador != 0 {
         return;
     }
     if read_i16(np + 0xc) <= mundo {
         write_i16(np + 0xc, mundo);
     }
-    if clube != 0 && read_usize(clube + 0x53) == read_usize(pessoa + 0x1a) {
+    if clube != 0 && read_usize(clube + club::NATION) == read_usize(pessoa + staff::NATION) {
         if read_i16(np + 8) <= nac {
             write_i16(np + 8, nac);
         }

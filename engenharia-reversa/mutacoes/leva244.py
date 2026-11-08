@@ -1,6 +1,6 @@
 # Mutações da 244a leva (itens cph_2, cph_3, cph_4, cph_5, cph_6, cph_7). Uso: python mutacoes.py mutacoes\leva244.py --carreira 2002-06-01
 MUTACOES = [
-    ('cph_lugar_reservas', 'return if *((pessoa + 0x5e) as *const u8) & 1 != 0 { 2 } else { 1 }; // principal ou reservas', 'return if *((pessoa + 0x5e) as *const u8) & 1 != 0 { 1 } else { 2 }; // mutacao: trocados'),
+    ('cph_lugar_reservas', 'return if *((pessoa + staff::PLAYING_SQUAD) as *const u8) & 1 != 0 { 2 } else { 1 }; // principal ou reservas', 'return if *((pessoa + 0x5e) as *const u8) & 1 != 0 { 1 } else { 2 }; // mutacao: trocados'),
     ('cph_lugar_marca', 'if marca == 0 { 4 } else { 3 }', 'if marca == 0 { 3 } else { 4 } // mutacao: trocados'),
     ('cph_subir', 'cph2_mover(this, pessoa, clube, [1, 3]) // reservas ou time B', 'cph2_mover(this, pessoa, clube, [1, 1]) // mutacao: sem o time B'),
     ('cph_descer', 'cph2_mover(this, pessoa, clube, [2, 4]) // principal ou clube com time B', 'cph2_mover(this, pessoa, clube, [2, 2]) // mutacao: sem o clube com time B'),

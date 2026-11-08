@@ -12,7 +12,7 @@ MUTACOES = [
     ('dbl_auxiliar', '    rd(p + 0xd3) // o auxiliar do parceiro', '    rd(clube + 0xd3) // mutacao: o auxiliar do proprio clube no lugar do parceiro'),
     ('dbl_treinadores', '        let t = rd(p + 0x19f + 4 * j); // os treinadores do parceiro', '        let t = rd(clube + 0x19f + 4 * j); // mutacao: os treinadores do proprio clube no lugar dos do parceiro'),
     ('dbl_contar_treinadores', '        n = n.wrapping_add(contar(p)); // e os do parceiro', '        // mutacao: sem os treinadores do parceiro'),
-    ('dbp_clube_tirar_favorita', '        dbp_tirar_de_tres(clube + 0x9b, pessoa); // os favoritos do clube', '        dbp_tirar_de_tres(clube + 0xa7, pessoa); // mutacao: dos rejeitados do clube'),
+    ('dbp_clube_tirar_favorita', '        dbp_tirar_de_tres(clube + club::FAV_STAFF1, pessoa); // os favoritos do clube', '        dbp_tirar_de_tres(clube + 0xa7, pessoa); // mutacao: dos rejeitados do clube'),
     ('dbp_pessoas_favoritas', '[0x1cusize, 0x20, 0x24].into_iter().enumerate() { // as três favoritas', '[0x1cusize, 0x20, 0x20].into_iter().enumerate() { // mutacao: a segunda no lugar da terceira'),
     ('dbp_tirar_clube_favorito', '        dbp_tirar_de_tres(pref + 4, clube); // os clubes favoritos', '        dbp_tirar_de_tres(pref + 0x10, clube); // mutacao: dos clubes rejeitados'),
     ('dbp_tirar_rejeitada', '        let reg = pref + 0x28; // as pessoas rejeitadas', '        let reg = pref + 0x1c; // mutacao: das pessoas favoritas'),

@@ -245,13 +245,13 @@ pub(crate) unsafe fn cps5_atrito(p: usize, clube: usize, k: usize) {
         if j >= 0x32 {
             return;
         }
-        let q = read_usize(clube + 0xd7 + j * 4);
+        let q = read_usize(clube + club::SQUAD + j * 4);
         if q != p && q != 0 && cps5_nao_gosta(q, p) != 0 {
             break;
         }
         j += 1;
     }
-    let q = read_usize(clube + 0xd7 + j * 4);
+    let q = read_usize(clube + club::SQUAD + j * 4);
     if q == 0 {
         return;
     }
@@ -261,9 +261,9 @@ pub(crate) unsafe fn cps5_atrito(p: usize, clube: usize, k: usize) {
     crate::comparacao::ramo("cps_5 atrito com o tecnico");
     let queixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_NEWS_POST_DRESSING_ROOM_UNREST);
     let marcar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
-    let (tipo, marca) = if q == read_usize(clube + 0xcf) {
+    let (tipo, marca) = if q == read_usize(clube + club::MANAGER) {
         (0, 0x2000)
-    } else if q == read_usize(clube + 0xd3) {
+    } else if q == read_usize(clube + club::ASSISTANT_MANAGER) {
         (1, 0x1000)
     } else {
         (2, 0x800)
@@ -381,7 +381,7 @@ pub(crate) unsafe fn cps5_pessoa_e_tecnico(p: usize) {
         }
     }
     let rep = read_i16(read_usize(p + 0x61) + 0xb);
-    if rep > 0x1194 && rep > read_i16(clube + 0x80) {
+    if rep > 0x1194 && rep > read_i16(clube + club::REPUTATION) {
         e -= 5;
     }
     if cpe1_sorteio(e) >= 1 {
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "C" fn comparar_relacoes_do_elenco() {
 /// de quem não gosta; a queixa só com dia % 14 + id = 0). Pelas relações do elenco (0x5d6d10) nos dias múltiplos de 50.
 pub(crate) unsafe extern "C" fn atrito_com_o_tecnico(clube: usize) {
     for i in 0..0x32usize {
-        let p = read_usize(clube + 0xd7 + i * 4);
+        let p = read_usize(clube + club::SQUAD + i * 4);
         if p == 0 {
             continue;
         }
@@ -450,7 +450,7 @@ pub(crate) unsafe extern "C" fn moral_pela_lideranca() {
     let mut clube = read_usize(G_CLUB_TABLE);
     let fim = clube.wrapping_add(n.wrapping_mul(0x245));
     while clube < fim {
-        let vagas = clube + 0xd7;
+        let vagas = clube + club::SQUAD;
         if e_selecao(clube) == 0 && cpe1_sorteio(7) == 0 {
             let (mut soma, mut lideranca, mut q) = (0i32, 0i32, 0i32);
             for i in 0..0x32usize {
@@ -591,10 +591,10 @@ pub(crate) unsafe extern "C" fn faltas_ao_treino() {
         if dl == 1 {
             bl = bl.wrapping_add(0xfb);
         }
-        if nao_gosta(read_usize(clube + 0xcf), p) != 0 {
+        if nao_gosta(read_usize(clube + club::MANAGER), p) != 0 {
             bl = bl.wrapping_add(0xfb);
         }
-        if gosta(read_usize(clube + 0xcf), p) != 0 {
+        if gosta(read_usize(clube + club::MANAGER), p) != 0 {
             bl = bl.wrapping_add(2);
         }
         let mut e_falta = false;

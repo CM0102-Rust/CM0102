@@ -878,12 +878,12 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
             continue;
         }
         let nacao = core::ptr::read_unaligned((c + 0x53) as *const usize);
-        if nacao == 0 || *((nacao + 0x11c) as *const u8) & 2 == 0 || aceita(c) == 0 {
+        if nacao == 0 || *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 == 0 || aceita(c) == 0 {
             continue;
         }
         break c;
     };
-    let nacao = core::ptr::read_unaligned((clube + 0x53) as *const usize);
+    let nacao = core::ptr::read_unaligned((clube + club::NATION) as *const usize);
     core::ptr::write_unaligned((p + 0x1a) as *mut usize, nacao);
     core::ptr::write_unaligned((p + 4) as *mut u32, primeiro_nome(nacao));
     let n2 = segundo_nome(core::ptr::read_unaligned((p + 0x1a) as *const usize));
@@ -1543,11 +1543,11 @@ pub(crate) unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
         let clube = core::ptr::read_unaligned((p + 0x39) as *const usize);
         let nacao_do = core::ptr::read_unaligned((p + 0x24) as *const usize);
         if clube != 0 && nacao_do != 0 {
-            traduzir(clube_txt, 0x9c80f4, clube + 0x38, nacao_do + 0x38);
+            traduzir(clube_txt, 0x9c80f4, clube + club::SHORT_NAME, nacao_do + nation::SHORT_NAME);
         } else if clube != 0 {
-            copiar_texto(clube_txt, (clube + 0x38) as *const u8);
+            copiar_texto(clube_txt, (clube + club::SHORT_NAME) as *const u8);
         } else if nacao_do != 0 {
-            copiar_texto(clube_txt, (nacao_do + 0x38) as *const u8);
+            copiar_texto(clube_txt, (nacao_do + nation::SHORT_NAME) as *const u8);
         } else {
             *clube_txt = 0;
         }

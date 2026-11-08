@@ -16,7 +16,7 @@ MUTACOES = [
     ('dbp_contar_rejeitados', '    dbp_contar_no_clube(pessoa, clube, 0x28) // os rejeitados', '    dbp_contar_no_clube(pessoa, clube, 0x1c) // mutacao: os favoritos no lugar dos rejeitados'),
     ('dbp_contar_favoritos', '    dbp_contar_no_clube(pessoa, clube, 0x1c) // os favoritos', '    dbp_contar_no_clube(pessoa, clube, 0x28) // mutacao: os rejeitados no lugar dos favoritos'),
     ('dbp_tirar_clube_favorito', '        dbp_tirar_de_tres(pref + 4, clube); // os clubes favoritos', '        dbp_tirar_de_tres(pref + 0x10, clube); // mutacao: dos clubes rejeitados'),
-    ('dbp_clube_tirar_favorita', '        dbp_tirar_de_tres(clube + 0x9b, pessoa); // os favoritos do clube', '        dbp_tirar_de_tres(clube + 0xa7, pessoa); // mutacao: dos rejeitados do clube'),
+    ('dbp_clube_tirar_favorita', '        dbp_tirar_de_tres(clube + club::FAV_STAFF1, pessoa); // os favoritos do clube', '        dbp_tirar_de_tres(clube + 0xa7, pessoa); // mutacao: dos rejeitados do clube'),
     ('dbp_tirar_pessoa_favorita', '        dbp_tirar_de_tres(pref + 0x1c, alvo); // as pessoas favoritas', '        dbp_tirar_de_tres(pref + 0x28, alvo); // mutacao: das pessoas rejeitadas'),
     ('dbp_tirar_rejeitada', '        let reg = pref + 0x28; // as pessoas rejeitadas', '        let reg = pref + 0x1c; // mutacao: das pessoas favoritas'),
     ('dbp_pessoas_favoritas', '[0x1cusize, 0x20, 0x24].into_iter().enumerate() { // as três favoritas', '[0x1cusize, 0x20, 0x20].into_iter().enumerate() { // mutacao: a segunda no lugar da terceira'),

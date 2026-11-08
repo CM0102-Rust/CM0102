@@ -38,5 +38,5 @@ MUTACOES = [
     ('cps12_dia_seguinte', 'let n = (ini as i32).wrapping_add(sortear(fim as i32 - ini as i32)); // cps12: o dia sorteado', 'let n = (ini as i32).wrapping_add(sortear(fim as i32 - ini as i32)).wrapping_add(1); // mutacao: um dia depois', 'cps_12 data livre'),
     ('cps13_sorteio_atrasado', 'if ano > hano || (ano == hano && dia as i16 > hdia as i16) { // cps13: a data do sorteio', 'if ano > hano || (ano == hano && dia as i16 >= hdia as i16) { // mutacao: um dia depois', 'cps_13 sorteio da rodada'),
     ('cps13_montagem_atrasada', 'if (ano, dia) != (hano, hdia) { // cps13: a data da montagem', 'if (ano, dia) != (hano, hdia.wrapping_sub(1)) { // mutacao: um dia depois', 'cps_13 montagem da rodada'),
-    ('cps13_doenca_invertida', 'if read_u8(nacao + 0x7e) != 3 { // cps13: só o terceiro mundo', 'if read_u8(nacao + 0x7e) == 3 { // mutacao: menos o terceiro mundo'),
+    ('cps13_doenca_invertida', 'if read_u8(nacao + nation::STATE_OF_DEVELOPMENT) != 3 { // cps13: só o terceiro mundo', 'if read_u8(nacao + 0x7e) == 3 { // mutacao: menos o terceiro mundo'),
 ]

@@ -38,12 +38,12 @@ pub(crate) unsafe extern "thiscall" fn batedor_guardado(this: usize, clube: usiz
         return 0;
     }
     let pessoa = (*(G_STAFF_TABLE as *const usize)).wrapping_add(v as usize * 0x6e);
-    if *((pessoa + 0x61) as *const u32) == 0 {
+    if *((pessoa + staff::PLAYER) as *const u32) == 0 {
         crate::comparacao::ramo("batedor sem ficha");
         *celula = -1;
         return 0;
     }
-    if *((pessoa + 0x39) as *const usize) == clube {
+    if *((pessoa + staff::CLUB_JOB) as *const usize) == clube {
         crate::comparacao::ramo("batedor do clube");
         return pessoa;
     }
@@ -705,7 +705,7 @@ pub(crate) unsafe fn simulacao_rapida_com(m: usize, chamar: &mut dyn FnMut(usize
                 crate::comparacao::ramo("simulacao rapida nota do amistoso");
                 let clube = if s != 0 { u(pt(), 0x20) } else { u(pt(), 0x1c) };
                 let a = (*((p + 0x3b) as *const i16) as f64 - f64_em(0x968e30)) * f64_em(0x968ff8);
-                let r = *((clube + 0x80) as *const i16) as f64 * f64_em(0x969018) - f64_em(0x96d300);
+                let r = *((clube + club::REPUTATION) as *const i16) as f64 * f64_em(0x969018) - f64_em(0x96d300);
                 let v = ftol(((a - r) * f64_em(0x96d2f8) + f64_em(0x967890)) * *q as f64) as i16;
                 *q = v.clamp(0xdac, 0x2ee0);
             }
@@ -801,7 +801,7 @@ pub(crate) unsafe extern "stdcall" fn linha_tatica(clube: usize, humano: u32) ->
         if segunda(clube) != 0 {
             return -1;
         }
-        let tecnico = *((clube + 0xcf) as *const usize);
+        let tecnico = *((clube + club::MANAGER) as *const usize);
         if tecnico == 0 {
             return orig::<unsafe extern "stdcall" fn(usize, u32) -> i32>(182)(clube, humano);
         }
@@ -1397,12 +1397,12 @@ pub(crate) unsafe extern "thiscall" fn tatica_do_clube(this: usize, clube: usize
         let gerente = read_usize(G_HUMAN_MANAGER);
         let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
         let opcao: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
-        if t9a01(gerente, read_usize(clube + 0xcf)) == 0 || opcao(gerente, 2, read_usize(clube + 0xcf)) != 0 {
+        if t9a01(gerente, read_usize(clube + club::MANAGER)) == 0 || opcao(gerente, 2, read_usize(clube + club::MANAGER)) != 0 {
             let escolher: unsafe extern "thiscall" fn(usize, u32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
             let ativa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_ACTIVE_TACTIC);
             crate::comparacao::ramo("cpx_8 tatica do humano");
-            escolher(gerente, time, clube, read_usize(clube + 0xcf)); // cpx8: a vaga pelo time
-            return ativa(gerente, read_usize(clube + 0xcf));
+            escolher(gerente, time, clube, read_usize(clube + club::MANAGER)); // cpx8: a vaga pelo time
+            return ativa(gerente, read_usize(clube + club::MANAGER));
         }
     }
     let id = read_i32(clube);
@@ -1425,7 +1425,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tatica_do_clube(this: usize, clu
         return o(this, clube, time);
     }
     let gerente = read_usize(G_HUMAN_MANAGER);
-    let t = read_usize(clube + 0xcf);
+    let t = read_usize(clube + club::MANAGER);
     let mut reg = Vec::new();
     if gerente != 0 && t != 0 {
         if let Some(k) = cpx8_indice(gerente, t) {

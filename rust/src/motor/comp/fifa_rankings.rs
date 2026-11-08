@@ -222,7 +222,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_resultado_no_historico(this: usi
 /// resultado internacional 0x58cf70): reputação (+0x8e) abaixo de 3000 e posição (+0x10 da entrada) abaixo de 50: 3;
 /// reputação abaixo de 6000 e posição abaixo de 15: 2; senão pela posição: abaixo de 21, 1; de 61, 2; de 101, 3; 4.
 pub(crate) unsafe extern "thiscall" fn faixa_da_selecao(this: usize, nacao: usize) -> u8 {
-    let rep = read_i16(nacao + 0x8e);
+    let rep = read_i16(nacao + nation::REPUTATION);
     let pos = || read_i16(cpt2_entrada(this, nacao) + 0x10);
     if rep < 0xbb8 && pos() < 0x32 {
         return 3;

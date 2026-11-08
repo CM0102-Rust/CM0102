@@ -3,9 +3,9 @@
 # mexem nos filtros, que mudam quantos chegam aos sorteios.
 # Uso: python mutacoes.py mutacoes\leva132.py --carreira 2002-06-01
 MUTACOES = [
-    ('c_100', "w(clube + 0x80) < 0x128e && sortear(100) != 0 {", "w(clube + 0x80) < 0x128e && sortear(2) != 0 {"),
-    ('c_80', "w(clube + 0x80) < 0x128e && sortear(100) != 0 {", "w(clube + 0x80) < 0x1000 && sortear(100) != 0 {"),
-    ('c_cf', "    if g(clube + 0xcf) == 0 {\n        return;\n    }\n    if teste_600a50", "    if g(clube + 0xd3) == 0 {\n        return;\n    }\n    if teste_600a50"),
+    ('c_100', "w(clube + club::REPUTATION) < 0x128e && sortear(100) != 0 {", "w(clube + club::REPUTATION) < 0x128e && sortear(2) != 0 {"),
+    ('c_80', "w(clube + club::REPUTATION) < 0x128e && sortear(100) != 0 {", "w(clube + club::REPUTATION) < 0x1000 && sortear(100) != 0 {"),
+    ('c_cf', "    if g(clube + club::MANAGER) == 0 {\n        return;\n    }\n    if teste_600a50", "    if g(clube + club::ASSISTANT_MANAGER) == 0 {\n        return;\n    }\n    if teste_600a50"),
     ('c_jovem', "|| byte(p, 0x18) > 0x14 {", "|| byte(p, 0x18) > 0x13 {", "clube segue"),
     ('c_59', "|| byte(p, 0x59) <= 0xf {", "|| byte(p, 0x59) <= 0xe {", "clube segue"),
     ('c_57', "if byte(p, 0x57) <= (r as u8).wrapping_add(10) as i8", "if byte(p, 0x57) <= (r as u8).wrapping_add(0) as i8", "clube jovem"),

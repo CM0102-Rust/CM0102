@@ -734,8 +734,8 @@ pub(crate) unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
             write_u8(read_u32_as_usize(this + 0x14) + i * 6 + 4, 3);
             continue;
         }
-        let nacao = read_u32_as_usize(clube + 0x53);
-        let cont = if nacao != 0 { read_u32_as_usize(nacao + 0x71) } else { 0 };
+        let nacao = read_u32_as_usize(clube + club::NATION);
+        let cont = if nacao != 0 { read_u32_as_usize(nacao + nation::CONTINENT) } else { 0 };
         if cont == 0 {
             aviso_em(0xad5888, 0x61e);
             continue;

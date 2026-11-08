@@ -6,7 +6,7 @@ MUTACOES = [
     ('dq14_peso', 'for _ in 0..3 { // 3 sorteios pelo peso', 'for _ in 0..2 { // 3 sorteios pelo peso'),
     ('dq14_cores', '    let (a, b) = if dono != 0 {', '    let (b, a) = if dono != 0 {'),
     ('dq14_vaga', '        v == 0 || v == pessoa\n', '        v == pessoa\n'),
-    ('dq15_cargo', '            *((pessoa + 0x3d) as *mut u8) = c; // clube e cargo do clube', '            *((pessoa + 0x3d) as *mut u8) = c ^ 1; // clube e cargo do clube'),
+    ('dq15_cargo', '            *((pessoa + staff::JOB_FOR_CLUB) as *mut u8) = c; // clube e cargo do clube', '            *((pessoa + 0x3d) as *mut u8) = c ^ 1; // clube e cargo do clube'),
     ('dq15_data', 'core::ptr::read_unaligned((data + 4) as *const u32));', 'core::ptr::read_unaligned((data + 4) as *const u32) + 1);'),
     ('dq15_casa', '    match (0..n).find(|&i| core::ptr::read_unaligned(casa(i)) == 0) {', '    match (0..n).rev().find(|&i| core::ptr::read_unaligned(casa(i)) == 0) {'),
 ]

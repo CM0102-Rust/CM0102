@@ -637,7 +637,7 @@ pub(crate) unsafe extern "thiscall" fn copa_sortear_separando_nacoes(copa: usize
     let n = cqb11_tirar_times(copa, r, vetor, |vaga| {
         let clube = cpq11_us(cpq11_time(copa, read_i16(vaga)));
         if clube != 0 {
-            let nacao = cpq11_us(clube + 0x53);
+            let nacao = cpq11_us(clube + club::NATION);
             if nacao != 0 {
                 let c = cpq11_us(nacao).wrapping_add(contas);
                 *(c as *mut u8) = read_u8(c).wrapping_add(1);
@@ -701,7 +701,7 @@ pub(crate) unsafe extern "thiscall" fn copa_sortear_separando_nacoes(copa: usize
                     cpq11_us(cpq11_time(copa, fora))
                 };
                 let mesma = clube != 0 && regra
-                    && ((c0 != 0 && read_u32(clube + 0x53) == read_u32(c0 + 0x53)) || (c1 != 0 && read_u32(clube + 0x53) == read_u32(c1 + 0x53)));
+                    && ((c0 != 0 && read_u32(clube + club::NATION) == read_u32(c0 + 0x53)) || (c1 != 0 && read_u32(clube + club::NATION) == read_u32(c1 + 0x53)));
                 if !mesma && livre {
                     lado = Some(m);
                 }
@@ -1303,7 +1303,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize,
 
 /// O nível da divisão do clube: a palavra +0x69 da divisão (+0x57), ou 0 sem divisão.
 pub(crate) unsafe fn cqa3_nivel(clube: usize) -> i16 {
-    let d = read_usize(clube + 0x57);
+    let d = read_usize(clube + club::DIVISION);
     if d != 0 {
         read_i16(d + 0x69)
     } else {
@@ -1376,11 +1376,11 @@ pub(crate) unsafe fn cqa4_vaga_na_uefa(comp: usize, clube: usize) -> bool {
     if read_i32(comp) == read_i32(KEY_CLUB_COMP_ENGLISH_LEAGUE_CUP) {
         return true;
     }
-    let nacao = read_usize(comp + 0x5d);
+    let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     if nacao == 0 {
         return false;
     }
-    let continente = read_usize(nacao + 0x71);
+    let continente = read_usize(nacao + nation::CONTINENT);
     if continente == 0 || read_i32(continente) != read_i32(KEY_CONTINENT_EUROPE) || cqa4_amistosa(comp) {
         return false;
     }
@@ -2453,7 +2453,7 @@ pub(crate) unsafe extern "C" fn ordem_dos_cabecas_de_chave_crescente(a: usize, b
 /// Leva o byte +0x64 do clube (com sinal) até `valor`: para baixo (`baixar` ≠ 0) se está acima, para cima se está
 /// abaixo.
 pub(crate) unsafe fn cpp13_ajustar(clube: usize, valor: i8, baixar: u32) {
-    let p = (clube + 0x64) as *mut i8;
+    let p = (clube + club::PROFESSIONAL_STATUS) as *mut i8;
     let muda = if baixar != 0 { *p > valor } else { *p < valor };
     if muda {
         crate::comparacao::ramo("cpp_13 teto da divisao");
@@ -3067,8 +3067,8 @@ pub(crate) unsafe extern "thiscall" fn noticia_do_desfecho_na_copa(copa: usize, 
     gravar(n, cursor[0] as i8, proxima as u32);
     let noticias = read_usize(G_NEWS);
     if saida as u8 != 0xff {
-        let nacao = read_usize(clube + 0x53);
-        let continente = if nacao != 0 { read_usize(nacao + 0x71) } else { 0 };
+        let nacao = read_usize(clube + club::NATION);
+        let continente = if nacao != 0 { read_usize(nacao + nation::CONTINENT) } else { 0 };
         pelo_alcance(noticias, n, clube, read_usize(copa + 4), nacao, continente, saida);
         return 1;
     }
@@ -3566,7 +3566,7 @@ pub(crate) unsafe extern "thiscall" fn copa_arvore_dos_confrontos(this: usize) -
                         if fora != -1 {
                             let clube = read_u32_as_usize(read_u32_as_usize(this + 0xa7) + (fora as isize * 6) as usize);
                             if clube != 0 {
-                                let nacao = read_u32_as_usize(clube + 0x69);
+                                let nacao = read_u32_as_usize(clube + club::STADIUM);
                                 if nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(this + 0x24) {
                                     write_u16(c, fora as u16);
                                     write_u16(c + 2, v0);

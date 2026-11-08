@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn distribuir_os_treinadores(this: usize, cl
     if selecao(clube) != 0 {
         return;
     }
-    let tec = if tecnico == 0 { read_u32_as_usize(clube + 0xcf) } else { tecnico };
+    let tec = if tecnico == 0 { read_u32_as_usize(clube + club::MANAGER) } else { tecnico };
     let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
     let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_ASSISTANT);
     let treinadores: unsafe extern "C" fn(usize, *mut usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CLUB_COACHES);
@@ -138,9 +138,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_distribuir_os_treinadores(this: 
     }
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let mut reg = vec![(clube + 0x244, 1)];
+    let mut reg = vec![(clube + club::HAS_LINKED_CLUB, 1)];
     if (tecnico != 0 || humano(clube, 1, 1, 0, 0) != 0) && selecao(clube) == 0 {
-        let tec = if tecnico == 0 { read_u32_as_usize(clube + 0xcf) } else { tecnico };
+        let tec = if tecnico == 0 { read_u32_as_usize(clube + club::MANAGER) } else { tecnico };
         if tec == 0 || !(0..0x10).contains(&read_i32(0xae2364).wrapping_sub(read_i32(tec)).wrapping_sub(1)) {
             return o(this, clube, tecnico);
         }
@@ -253,7 +253,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_trocar_os_programas_do_elenco(th
         if clube == 0 {
             continue;
         }
-        reg.push((clube + 0x244, 1));
+        reg.push((clube + club::HAS_LINKED_CLUB, 1));
         let mut v = [0usize; 50];
         elenco(clube, v.as_mut_ptr(), 0);
         for &p in &v {
@@ -1026,7 +1026,7 @@ pub(crate) unsafe extern "thiscall" fn fator_do_treinador(this: usize, clube: us
     if clube == 0 {
         return 0;
     }
-    let t = read_u32_as_usize(clube + 0xcf);
+    let t = read_u32_as_usize(clube + club::MANAGER);
     if t == 0 {
         crate::comparacao::ramo("cpt_8 sem tecnico");
         return 100; // cpt8: sem técnico
@@ -1180,7 +1180,7 @@ pub(crate) unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: 
         aviso_em(0xa8ccd0, 0x4b3);
         return;
     }
-    let f = read_u32_as_usize(pessoa + 0x61);
+    let f = read_u32_as_usize(pessoa + staff::PLAYER);
     if f == 0 {
         aviso_em(0xa8ccd0, 0x4ba);
         return;
@@ -1303,10 +1303,10 @@ pub(crate) unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: 
 /// sem as pessoas que não são jogadores (só a original).
 pub(crate) unsafe extern "thiscall" fn comparar_aplicar_o_progresso(this: usize, pessoa: usize, d: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1179);
-    if pessoa == 0 || read_u32_as_usize(pessoa + 0x61) == 0 || read_i32(pessoa) >= read_i32(0xae2364) {
+    if pessoa == 0 || read_u32_as_usize(pessoa + staff::PLAYER) == 0 || read_i32(pessoa) >= read_i32(0xae2364) {
         return o(this, pessoa, d);
     }
-    let f = read_u32_as_usize(pessoa + 0x61);
+    let f = read_u32_as_usize(pessoa + staff::PLAYER);
     let e = read_u32_as_usize(this + 0x651d) + 6 * read_i32(f) as usize;
     let regioes = [(f + 0xf, 0x33), (e, 6)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, pessoa, d), || aplicar_o_progresso(this, pessoa, d));
@@ -1332,7 +1332,7 @@ pub(crate) unsafe extern "thiscall" fn achar_o_treino_de_posicao(this: usize, pe
         aviso_em(0xa8ccd0, 0x99c);
         return 0;
     }
-    let f = read_u32_as_usize(pessoa + 0x61);
+    let f = read_u32_as_usize(pessoa + staff::PLAYER);
     if f == 0 {
         aviso_em(0xa8ccd0, 0x9a3);
         return 0;
@@ -1366,7 +1366,7 @@ pub(crate) unsafe extern "thiscall" fn achar_o_treino_de_posicao(this: usize, pe
 /// Comparador: a devolução e a saída (reposta entre as duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "thiscall" fn comparar_achar_o_treino_de_posicao(this: usize, pessoa: usize, saida: *mut usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32>(1180);
-    if pessoa == 0 || saida.is_null() || read_u32_as_usize(pessoa + 0x61) == 0 {
+    if pessoa == 0 || saida.is_null() || read_u32_as_usize(pessoa + staff::PLAYER) == 0 {
         return o(this, pessoa, saida);
     }
     let antes = *saida;

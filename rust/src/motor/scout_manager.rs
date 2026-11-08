@@ -37,7 +37,7 @@ pub(crate) unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool,
     if humano(clube, 1, 1, 0, 0) == 0 {
         return (true, false, 0, 0, 0);
     }
-    let tecnico = read_usize(clube + 0xcf);
+    let tecnico = read_usize(clube + club::MANAGER);
     if read_usize(jogador + 0x39) == clube {
         return (true, false, 0, 0, 0);
     }
@@ -584,7 +584,7 @@ pub(crate) unsafe extern "thiscall" fn olheiros_na_partida(this: usize, p: usize
     for k in 0..16i32 {
         let idx = (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(k).wrapping_sub(1);
         let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((idx as usize).wrapping_mul(0x6e));
-        if *((pessoa + 0x5f) as *const u8) != 1 {
+        if *((pessoa + staff::CLASSIFICATION) as *const u8) != 1 {
             continue;
         }
         crate::comparacao::ramo("cqc_13 olheiros do humano");
@@ -601,7 +601,7 @@ pub(crate) unsafe extern "thiscall" fn olheiros_na_partida(this: usize, p: usize
             // byte
             let r = registro(this, q as u8 as u32, pessoa);
             if read_usize(r + 0x19d) != 0 && *((p + 0x40) as *const u8) != 0 && *((p + 0x41) as *const u8) != 0 {
-                let clube = read_usize(pessoa + 0x39);
+                let clube = read_usize(pessoa + staff::CLUB_JOB);
                 if read_usize(p + 0x1c) == clube || read_usize(p + 0x20) == clube {
                     comecar(r, u32::MAX, u32::MAX, u32::MAX, 0, 1);
                 }
@@ -1163,7 +1163,7 @@ pub(crate) unsafe extern "thiscall" fn olheiros_cobrem_a_nacao(this: usize, naca
     let financas_do_clube: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
     let f = financas_do_clube(read_usize(G_FINANCE_TABLE), c);
     if f != 0 && core::ptr::read_unaligned(f as *const i64) < 1_000_000 && read_i16(c + 0x80) < 5000 {
-        if *((read_usize(c + 0x53) + 0x76) as *const u8) != *((nacao + 0x76) as *const u8) { // fora da região
+        if *((read_usize(c + 0x53) + 0x76) as *const u8) != *((nacao + nation::ACTUAL_REGION) as *const u8) { // fora da região
             crate::comparacao::ramo("cpk_6 olheiro fora da regiao");
             return 0;
         }

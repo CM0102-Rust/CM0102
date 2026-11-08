@@ -286,7 +286,7 @@ pub(crate) unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: us
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if selecao(clube) != 0 {
         let nacao = cpq11_us(campo as usize + 0x38);
-        if nacao != 0 && read_u32(nacao + 0x1f) == read_u32(clube + 0x53) {
+        if nacao != 0 && read_u32(nacao + 0x1f) == read_u32(clube + club::NATION) {
             return 1;
         }
         let casa = cpq11_us(jogo + 0x1c);
@@ -299,7 +299,7 @@ pub(crate) unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: us
     let casa = cpq11_us(jogo + 0x1c);
     let outro = if casa == clube { cpq11_us(jogo + 0x20) } else { casa };
     let campo = read_u32(jogo + 0x18);
-    if campo != read_u32(clube + 0x69) {
+    if campo != read_u32(clube + club::STADIUM) {
         return if campo != read_u32(outro + 0x69) { 3 } else { 2 };
     }
     if campo == read_u32(outro + 0x69) {
@@ -563,7 +563,7 @@ pub(crate) unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
     let financas = *(G_FINANCE_TABLE as *const usize);
     let mut forca: i32 = 0;
     if financas == 0 {
-        forca = core::ptr::read_unaligned((clube + 0x65) as *const i32) / 400;
+        forca = core::ptr::read_unaligned((clube + club::CASH) as *const i32) / 400;
     } else {
         let financas_do_clube: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
         let f = financas_do_clube(financas, clube);
@@ -571,7 +571,7 @@ pub(crate) unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
             forca = (core::ptr::read_unaligned(f as *const i64) / 300) as i32;
         }
     }
-    forca = forca.wrapping_add((core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32) << 4); // a reputação
+    forca = forca.wrapping_add((core::ptr::read_unaligned((clube + club::REPUTATION) as *const i16) as i32) << 4); // a reputação
     let mut elenco = [0usize; 50];
     let mut jogadores = [0usize; 50];
     let mut escalados = [0usize; 15];

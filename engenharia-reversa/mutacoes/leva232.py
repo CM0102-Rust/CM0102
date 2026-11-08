@@ -18,6 +18,6 @@ MUTACOES = [
     ('dbk1_cortar_elencos', '                while k >= 0 && total > 48 { // o elenco conjunto a 48', '                while k >= 0 && total > 47 { // mutacao: o elenco conjunto a 47'),
     ('dbk1_juntar_comissao', '                        if n < k as i32 { // a comissão do B vai para o A', '                        if n < 0 { // mutacao: a comissao do B nao vai para o A'),
     ('dbk1_indice_de_nomes', '                        *((e + d_quantos) as *mut i32) = quantos; // quantidade do grupo', '                        *((e + d_quantos) as *mut i32) = quantos + 1; // mutacao: a quantidade do grupo + 1'),
-    ('dbk2_tirar_pessoa', '            core::ptr::write_unaligned((pessoa + 0x39) as *mut usize, 0); // desliga a pessoa do clube', '            // mutacao: a pessoa fica com o clube (+0x39) depois de sair'),
+    ('dbk2_tirar_pessoa', '            core::ptr::write_unaligned((pessoa + staff::CLUB_JOB) as *mut usize, 0); // desliga a pessoa do clube', '            // mutacao: a pessoa fica com o clube (+0x39) depois de sair'),
     ('dbk2_olheiros', '        let o = rd(p + 0x1b3 + 4 * j); // os olheiros do parceiro', '        let o = rd(clube + 0x1b3 + 4 * j); // mutacao: os olheiros do proprio clube no lugar dos do parceiro'),
 ]

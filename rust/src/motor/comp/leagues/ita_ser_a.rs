@@ -1762,7 +1762,7 @@ pub(crate) unsafe fn cqi6_c1b(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqi6_comuns(this);
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3), (0xc7, 1, 0), (0xbe, 1, 1), (0xbf, 1, 4), (0xc0, 1, 4), (0xc1, 1, 1), (0x1c, 4, read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C1_A) as u32)]);
     let nacao = read_usize(read_usize(this + 4) + 0x5d);
-    let abaixo = if *((nacao + 0x11c) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) as u32 } else { 0xffff_ffff };
+    let abaixo = if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) as u32 } else { 0xffff_ffff };
     v.push((0x20, 4, abaixo));
     v
 }
@@ -1832,7 +1832,7 @@ pub(crate) unsafe fn cqj4_encher(this: usize, n: i16, arquivo: usize, linha: u32
     let mut i: i16 = 0;
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        let comp = read_usize(clube + 0x57);
+        let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             let linha = k; // cqj4: a linha k recebe o k-ésimo clube da divisão
             // ponytail: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
@@ -1909,7 +1909,7 @@ pub(crate) unsafe fn cqj4_comparar(nome: &str, this: usize, n: i16, g: usize, co
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
         let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
-        let comp = read_usize(clube + 0x57);
+        let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             plano.push(clube);
         }

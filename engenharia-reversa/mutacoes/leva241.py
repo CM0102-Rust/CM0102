@@ -8,7 +8,7 @@ MUTACOES = [
     ('cpa_honras_ordem', '    registrar(liga, campeao, vice, terceiro, destaque) // campeão, vice, terceiro', '    registrar(liga, campeao, terceiro, vice, destaque) // mutacao: vice e terceiro trocados'),
     ('cpa_historico_ano', '    core::ptr::write_unaligned((r + 8) as *mut u16, *(G_CURRENT_DATE_YEAR as *const u16)); // o ano', '    core::ptr::write_unaligned((r + 8) as *mut u16, (*(0xae2c92 as *const u16)).wrapping_add(1)); // mutacao: o ano seguinte'),
     ('cpa_confronto_titulo', '            return 1; // briga pelo título', '            return 3; // mutacao: a zona no lugar do titulo'),
-    ('cpa_forca_reputacao', '    forca = forca.wrapping_add((core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32) << 4); // a reputação', '    forca = forca.wrapping_add((core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32) << 3); // mutacao: metade'),
+    ('cpa_forca_reputacao', '    forca = forca.wrapping_add((core::ptr::read_unaligned((clube + club::REPUTATION) as *const i16) as i32) << 4); // a reputação', '    forca = forca.wrapping_add((core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32) << 3); // mutacao: metade'),
     ('cpa_colocado_lugar', '    read_usize(p + [0xa, 0xe, 0x12][lugar as usize]) // campeão, vice, terceiro', '    read_usize(p + [0xe, 0xa, 0x12][lugar as usize]) // mutacao: campeao e vice trocados'),
     ('cpc_amistoso_do_clube', 'let do_clube = u(a + 0xc) == clube; // o clube do amistoso', 'let do_clube = u(a + 0xc) != clube; // mutacao: outro clube'),
     ('cpc_lista_da_data', 'lista(*(G_FIXTURE_MANAGER as *const usize), ano, dia, fatia, grupo) // o gerenciador de partidas', 'lista(*(0xae2a58 as *const usize), ano, dia, (fatia + 1) % 3, grupo) // mutacao: a fatia seguinte'),

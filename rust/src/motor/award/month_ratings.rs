@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: us
     let clube = read_usize(p + 0x39);
     let mut liga = -1i32;
     if clube != 0 {
-        let l = read_usize(clube + 0x57);
+        let l = read_usize(clube + club::DIVISION);
         if l != 0 {
             liga = read_i32(l);
         }

@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: 
     let mut ids = [0i16; 20];
     let mut n = 0usize;
     if t == 2 || t == 4 {
-        let est = read_usize(clube + 0x69);
+        let est = read_usize(clube + club::STADIUM);
         if est == 0 || read_usize(est + 0x38) == 0 {
             return -1;
         }
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: 
             if p == 0 {
                 break;
             }
-            if read_u32(p + 0xcb) == read_u32(read_usize(read_usize(clube + 0x69) + 0x38)) { // cpz10: o comentarista local
+            if read_u32(p + 0xcb) == read_u32(read_usize(read_usize(clube + club::STADIUM) + 0x38)) { // cpz10: o comentarista local
                 crate::comparacao::ramo("cpz_10 comentarista local");
                 ids[n] = read_i16_as_i32(p) as i16;
                 n += 1;

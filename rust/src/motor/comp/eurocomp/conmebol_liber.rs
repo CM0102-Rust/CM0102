@@ -374,7 +374,7 @@ pub(crate) unsafe fn cqk11_inscritos(this: usize, max: i32, saida: &mut [usize; 
     let mut clube = read_u32_as_usize(G_CLUB_TABLE);
     if (read_u32_as_usize(G_CLUB_COUNT) as i32) > 0 {
         loop {
-            if read_u32_as_usize(clube + 0x1db) == read_u32_as_usize(read_u32_as_usize(this + 4)) && n < max {
+            if read_u32_as_usize(clube + club::EURO_FLAG) == read_u32_as_usize(read_u32_as_usize(this + 4)) && n < max {
                 if (n as usize) < saida.len() {
                     saida[n as usize] = clube;
                 }
@@ -507,7 +507,7 @@ pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_registros(this: usize,
                 let t = read_u32_as_usize(mundial + 0xa7);
                 let nacao = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
                 crate::comparacao::ramo("cqk_11 campeao da libertadores");
-                if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + 0x71)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) {
+                if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + nation::CONTINENT)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) {
                     core::ptr::write_unaligned(t as *mut u32, clube as u32); // cqk11: o campeão na vaga sul-americana
                 } else {
                     core::ptr::write_unaligned((t + 6) as *mut u32, clube as u32);
@@ -535,7 +535,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_registros(thi
         let mundial = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
         let t = read_u32_as_usize(mundial + 0xa7);
         let nacao = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
-        vaga = if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + 0x71)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) { t } else { t + 6 };
+        vaga = if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + nation::CONTINENT)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) { t } else { t + 6 };
     }
     let r = o(this, clube, desfecho, fase, a4, jogo, a6);
     let igual = r == 0 && (!titulo || read_u32_as_usize(vaga) == clube);

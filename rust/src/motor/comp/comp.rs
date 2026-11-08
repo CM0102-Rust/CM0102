@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_do_premio(this: usize, clube: usi
     if !cqa2_humano(clube) {
         return;
     }
-    let minimo = *((clube + 0x80) as *const i16) as i64 * 50;
+    let minimo = *((clube + club::REPUTATION) as *const i16) as i64 * 50;
     let valor = ((hi as i64) << 32) | lo as i64;
     if valor < minimo {
         return;
@@ -485,7 +485,7 @@ pub(crate) unsafe fn cqb12_achar(nacao: usize) -> Option<i8> {
 /// nação do clube (+0x53) entre as nações-chave ativas; sem nação ou fora da tabela, 0 para uma seleção (0x53b900) e 3
 /// para um clube. Devolve só `al` (os chamadores gravam o byte).
 pub(crate) unsafe extern "C" fn nacao_chave_do_clube(clube: usize) -> u8 {
-    let nacao = core::ptr::read_unaligned((clube + 0x53) as *const usize);
+    let nacao = core::ptr::read_unaligned((clube + club::NATION) as *const usize);
     if nacao != 0 {
         if let Some(k) = cqb12_achar(nacao) {
             crate::comparacao::ramo("cqb_12 nacao chave do clube");
@@ -517,10 +517,10 @@ pub(crate) unsafe extern "C" fn comparar_nacao_chave_do_clube(clube: usize) -> u
 /// tabela, 3. Devolve só `al`.
 pub(crate) unsafe extern "C" fn nacao_chave_do_estadio(estadio: usize) -> u8 {
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    if estadio == 0 || u(estadio + 0x38) == 0 || u(u(estadio + 0x38) + 0x1f) == 0 {
+    if estadio == 0 || u(estadio + stadium::STADIUM_CITY) == 0 || u(u(estadio + stadium::STADIUM_CITY) + 0x1f) == 0 {
         return 3;
     }
-    match cqb12_achar(u(u(estadio + 0x38) + 0x1f)) {
+    match cqb12_achar(u(u(estadio + stadium::STADIUM_CITY) + 0x1f)) {
         Some(k) => {
             crate::comparacao::ramo("cqb_12 nacao chave do estadio");
             *((cqb12_entrada(k) + 0x14) as *const u8) // cqb12: o índice ativo da nação do estádio
@@ -582,7 +582,7 @@ pub(crate) unsafe fn cpw13_registro(this: usize, c: usize) -> Option<usize> {
         return None;
     }
     let nacao = read_usize(c + 0x53);
-    if nacao == 0 || *((nacao + 0x11c) as *const u8) == 0 || read_usize(nacao) == read_usize(KEY_NATION_BRAZIL) {
+    if nacao == 0 || *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 || read_usize(nacao) == read_usize(KEY_NATION_BRAZIL) {
         return None;
     }
     Some(read_usize(this + 0x20).wrapping_add(6 * id as usize))
@@ -716,7 +716,7 @@ pub(crate) unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize)
         let n = read_usize(G_LEAGUE_TABLE + 72 * k);
         n != 0 && *((n + 0x11c) as *const u8) != 0 && n == nacao
     });
-    let nacao = read_usize(comp + 0x5d);
+    let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     let reservas = read_usize(KEY_CLUB_COMP_RESERVE);
     if (amistoso(read_usize(G_FRIENDLY), comp) != 0 || read_usize(comp) == reservas) && partida != 0 {
         let pc = read_usize(partida + 0x14);
@@ -735,7 +735,7 @@ pub(crate) unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize)
             return if selecao(casa) != 0 { 0 } else { 3 };
         }
     }
-    if read_usize(comp + 0x5d) != 0 {
+    if read_usize(comp + competition::CLUB_COMP_NATION) != 0 {
         return match linha(nacao) {
             Some(k) => *((0xb63d74 + 72 * k) as *const u8), // cpt3: a nacao-chave da competicao
             None => 3,

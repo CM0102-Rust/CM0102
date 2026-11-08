@@ -444,7 +444,7 @@ pub(crate) unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, cl
             let uefa = read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
             cpz4_classificado(clube, uefa, 0, 0xa, peso);
             crate::comparacao::ramo("cqi_10 vencedor do intertoto");
-            core::ptr::write_unaligned((clube + 0x1db) as *mut u32, read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA
+            core::ptr::write_unaligned((clube + club::EURO_FLAG) as *mut u32, read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA
         }
         0 => {
             let r = read_i16(jogo + 0x34);
@@ -482,14 +482,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi10_intertoto_registros(this: 
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }
-    let antes = read_u32_as_usize(clube + 0x1db);
+    let antes = read_u32_as_usize(clube + club::EURO_FLAG);
     let previsto = match desfecho as u8 {
         1 => read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP),
         0xff | 2 => 0xffff_ffff,
         _ => antes,
     };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
-    let depois = read_u32_as_usize(clube + 0x1db);
+    let depois = read_u32_as_usize(clube + club::EURO_FLAG);
     PLACAR.registrar(r == 0 && depois == previsto, || format!("cqi10_intertoto_registros({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, desfecho as u8, antes, depois, previsto, r));
     r
 }

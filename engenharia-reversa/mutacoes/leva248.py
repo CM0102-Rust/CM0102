@@ -4,7 +4,7 @@ MUTACOES = [
     ('cpl_oferta_do_clube', 'if read_usize(o + 8) == read_usize(clube) { // a oferta do clube', 'if o != 0 { // mutacao: a primeira de qualquer clube', 'cpl_1 oferta do clube'),
     ('cpl_oferta_pendente', 'if matches!(*((o + 0x2c) as *const u8), 0 | 1 | 5 | 6) { // a situação pendente', 'if matches!(*((o + 0x2c) as *const u8), 0 | 5 | 6) { // mutacao: sem a 1', 'cpl_1 oferta pendente'),
     ('cpl_sob_oferta_marca', 'return marca(); // a marca "sob oferta"', 'return 0; // mutacao: ninguem sob oferta'),
-    ('cpl_bosman_invertida', 'livre(read_usize(clube + 0x53)) // a nação do clube', '(livre(read_usize(clube + 0x53)) == 0) as u32 // mutacao: invertida'),
+    ('cpl_bosman_invertida', 'livre(read_usize(clube + club::NATION)) // a nação do clube', '(livre(read_usize(clube + 0x53)) == 0) as u32 // mutacao: invertida'),
     ('cpl_veto_valores', 'core::ptr::write_unaligned(p, ftol(core::ptr::read_unaligned(p) as f64 * f64_em(0x9689d8)) as i16); // 90%', 'let _ = p; // mutacao: sem cortar', 'cpl_2 veto da diretoria valores'),
     ('cpl_passada_conta', 'write_usize(this + 0x86a, n.wrapping_add(1)); // a conta das transferências passadas', 'write_usize(this + 0x86a, n); // mutacao: a conta nao sobe', 'cpl_3 transferencia passada'),
     ('cpl_permissao_marca', '*marca |= 0x20; // a marca da permissão', '*marca |= 0; // mutacao: sem a marca', 'cpl_3 permissao de trabalho'),

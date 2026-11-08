@@ -86,7 +86,7 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
         }
     }
     let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
-    if *((nacao + 0x11c) as *const u8) & 4 != 0 {
+    if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 {
         // 3a) a Conference pela categoria
         let mut cat: i8 = 6;
         if k < read_u32_as_usize(this + 0xb6) as i32 {

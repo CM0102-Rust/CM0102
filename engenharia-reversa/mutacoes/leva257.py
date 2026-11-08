@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpu1_nacao_linha_seguinte', 'return k as u8; // cpu1: a linha da nacao dada', 'return (k + 1) as u8; // mutacao: a linha seguinte'),
     ('cpu1_clube_linha_seguinte', 'return k as u8; // cpu1: a linha da nacao escolhida', 'return (k + 1) as u8; // mutacao: a linha seguinte'),
-    ('cpu1_sem_conferir_a_escolha', 'let nacao = read_usize(clube + 0x53); // cpu1: a nacao do continente', 'let nacao = read_usize(clube + 0x53); if let Some(k) = (0..0x23usize).find(|&k| nacao != 0 && read_usize(0xb63d60 + 72 * k) == nacao) { return k as u8; } // mutacao: sem conferir a escolha'),
+    ('cpu1_sem_conferir_a_escolha', 'let nacao = read_usize(clube + club::NATION); // cpu1: a nacao do continente', 'let nacao = read_usize(clube + 0x53); if let Some(k) = (0..0x23usize).find(|&k| nacao != 0 && read_usize(0xb63d60 + 72 * k) == nacao) { return k as u8; } // mutacao: sem conferir a escolha'),
     ('cpu2_fim_no_mesmo_ano', 'cpu2_data(fim, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte', 'cpu2_data(fim, c, y); // mutacao: o fim no mesmo ano'),
     ('cpu2_primavera_fora', 'return 1; // cpu2: antes do fim, na temporada', 'return 0; // mutacao: antes do fim, fora'),
     ('cpu2_janela_na_temporada', 'return 0; // cpu2: entre o fim e o inicio, fora', 'return 1; // mutacao: entre o fim e o inicio, na temporada'),

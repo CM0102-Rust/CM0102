@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_periodo_protegido(c: usize, x: u
 /// jogador (+0x61), 0; goleiro (+0xf da ficha = 0x14), 1 só para o tipo 2; senão 1 para os tipos que não são 2. Pela
 /// tela do contrato.
 pub(crate) unsafe extern "C" fn tipo_de_bonus_permitido(pessoa: usize, tipo: u32) -> u32 {
-    let f = read_usize(pessoa + 0x61);
+    let f = read_usize(pessoa + staff::PLAYER);
     if f == 0 {
         return 0;
     }
@@ -133,9 +133,9 @@ pub(crate) unsafe fn cpl5_zerar_moral(this: usize, pessoa: usize, clube: usize) 
     write_u8(this + 0x4e, 4);
     write_u8(this + 0x3f, 0); // a felicidade
     write_u8(this + 0x3e, 0);
-    if clube != 0 && read_usize(clube + 0x53) != 0 {
+    if clube != 0 && read_usize(clube + club::NATION) != 0 {
         let fluencia: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8 = core::mem::transmute(FN_PLAYERSTATS_GET_LANGUAGE_FLUENCY);
-        let r = fluencia(read_usize(G_PLAYER_STATS), pessoa, clube, read_u8(read_usize(clube + 0x53) + 0x77) as u32, 0) as i8;
+        let r = fluencia(read_usize(G_PLAYER_STATS), pessoa, clube, read_u8(read_usize(clube + club::NATION) + 0x77) as u32, 0) as i8;
         let c = if r > 10 { 10 } else { r } as u8;
         let b = read_u8(this + 0x4f);
         write_u8(this + 0x4f, (b & 0xf0) | (c & 0xf));
@@ -342,7 +342,7 @@ pub(crate) unsafe fn cph1_retira(this: usize) -> Option<usize> {
     } else {
         0
     };
-    if clube == 0 || read_u32(pessoa + 0x61) == 0 || read_u32(this + 4) != read_u32(clube) {
+    if clube == 0 || read_u32(pessoa + staff::PLAYER) == 0 || read_u32(this + 4) != read_u32(clube) {
         return None;
     }
     if read_u8(this + 0x4e) & 8 == 0 || read_u8(this + 0x49) != 0 {
@@ -374,7 +374,7 @@ pub(crate) unsafe extern "thiscall" fn conferir_retirada_do_pedido(this: usize, 
     let retirar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_POST_TRANSFER_REQUEST_WITHDRAWN_NEWS);
     retirar(read_u32(G_CONTRACT_MANAGER) as usize, this, ctx);
     *((this + 0x4e) as *mut u8) &= 0xf7; // o pedido retirado
-    *((this + 0x44) as *mut u8) = read_u8(pessoa + 0x5b).wrapping_add(read_u8(pessoa + 0x59)).wrapping_add(5);
+    *((this + 0x44) as *mut u8) = read_u8(pessoa + staff::PROFESSIONALISM).wrapping_add(read_u8(pessoa + staff::LOYALITY)).wrapping_add(5);
     if read_u8(this + 0x3e) != 0 {
         *((this + 0x3e) as *mut u8) = 0;
     }
@@ -444,7 +444,7 @@ pub(crate) unsafe extern "thiscall" fn marcas_do_contrato(c: usize, marcas: u32)
     }
     write_u32(c + 0x40, read_usize(c + 0x40) as u32 | marcas);
     let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(c) as usize).wrapping_mul(0x6e));
-    let funcao = read_u8(pessoa + 0x3d);
+    let funcao = read_u8(pessoa + staff::JOB_FOR_CLUB);
     if funcao == 0xc || funcao == 0xd || funcao == 0xf {
         return;
     }
@@ -464,7 +464,7 @@ pub(crate) unsafe extern "thiscall" fn marcas_do_contrato(c: usize, marcas: u32)
     if na_fila(read_usize(G_TRANSFER_MANAGER), pessoa) != 0 {
         return;
     }
-    if read_u8(pessoa + 0x18) as i8 <= 0x14 && read_i16(read_usize(pessoa + 0x61) + 0xb) <= 0x109a {
+    if read_u8(pessoa + staff::YEAR_OF_BIRTH) as i8 <= 0x14 && read_i16(read_usize(pessoa + staff::PLAYER) + 0xb) <= 0x109a {
         return;
     }
     crate::comparacao::ramo("cpw_7 pedido de saida");
@@ -543,7 +543,7 @@ pub(crate) unsafe extern "thiscall" fn satisfacao_com_o_contrato(this: usize, pe
     };
     let anos = (read_i16(G_CURRENT_DATE_YEAR) as u16 as i32).wrapping_sub(read_i16(this + 0x27) as u16 as i32);
     let dias = anos.wrapping_mul(365).wrapping_sub(read_i16(this + 0x25) as i32).wrapping_add(read_i16(G_CURRENT_DATE) as i32).clamp(0, 500);
-    let adapt = read_u8(pessoa + 0x59) as i8 as i32;
+    let adapt = read_u8(pessoa + staff::LOYALITY) as i8 as i32;
     if dias < adapt.wrapping_mul(15).wrapping_add(100) {
         crate::comparacao::ramo("cpw_1 contratado ha pouco");
         razao = razao + f32_em(0x969560) as f64 + adapt as f64 * f64_em(0x968eb0) - (dias / 2) as f64; // cpw1: o desconto do recém-contratado
@@ -584,7 +584,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_satisfacao_com_o_contrato(this: 
 /// original), truncado (0x945640), com mínimo 55. Devolve o truncado (antes do mínimo).
 pub(crate) unsafe extern "thiscall" fn salario_padrao_do_contrato(this: usize, pessoa: usize) -> u32 {
     let padrao: unsafe extern "thiscall" fn(usize, usize, usize, i32, i32, i32, i32) -> f64 = core::mem::transmute(FN_STAFF_CONTRACT_CALC_UNSET_DEFAULT_WAGE);
-    let v = ftol(padrao(this, pessoa, core::ptr::read_unaligned((pessoa + 0x39) as *const usize), 1, -1, 0xb, 0));
+    let v = ftol(padrao(this, pessoa, core::ptr::read_unaligned((pessoa + staff::CLUB_JOB) as *const usize), 1, -1, 0xb, 0));
     *((this + 0xc) as *mut i32) = if v < 0x37 { 0x37 } else { v }; // o mínimo de 55
     v as u32
 }

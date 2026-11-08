@@ -24,7 +24,7 @@ pub(crate) unsafe extern "C" fn adjetivo_da_nacao(nacao: usize, texto: usize, ta
     if nacao == 0 || texto == 0 || (tamanho as u16 as i16) < 50 {
         return 0;
     }
-    let nome = nacao + 0x57; // o nome da nação
+    let nome = nacao + nation::NATIONALITY; // o nome da nação
     if genero as u8 != 0 {
         let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
         let i = idioma();

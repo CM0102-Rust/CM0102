@@ -634,8 +634,8 @@ pub(crate) unsafe extern "stdcall" fn texto_do_evento(ev: usize, ctx: usize, com
                         let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(0x245));
                         prefixo(pos, &mut pre);
                         sufixo(pos + 2, &mut suf);
-                        let g = *((clube + 0x52) as *const u8) as u32;
-                        let r = compor(clube + 0x38, pre.as_ptr(), suf.as_ptr(), g, g);
+                        let g = *((clube + club::SHORT_GENDER_NAME) as *const u8) as u32;
+                        let r = compor(clube + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
                         if t(pos + 2) == b'C' || t(pos + 2) == b'c' {
                             em_maiusculas(out, r);
                         } else {
@@ -978,8 +978,8 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
                             let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(0x245));
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
-                            let g = *((clube + 0x52) as *const u8) as u32;
-                            let r = compor(clube + 0x38, pre.as_ptr(), suf.as_ptr(), g, g);
+                            let g = *((clube + club::SHORT_GENDER_NAME) as *const u8) as u32;
+                            let r = compor(clube + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
                             if t(pos + 2) == b'C' || t(pos + 2) == b'c' {
                                 em_maiusculas(out, r);
                             } else {

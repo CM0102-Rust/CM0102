@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpo_comprador_no_limite', 'cpo1_ou(f1, 4); // o comprador: taxa dentro do limite', 'cpo1_ou(f1, 8); // mutacao: o comprador ganha a marca da barganha', 'cpo_1 comprador no limite'),
     ('cpo_vendedor_no_limite', 'cpo1_ou(f2, 4); // o vendedor: taxa dentro do limite', 'cpo1_ou(f2, 2); // mutacao: o vendedor perde confianca', 'cpo_1 vendedor no limite'),
-    ('cpo_tirar_favorito', 'tirar(read_usize(read_usize(pessoa + 0x39) + 0xbf), pessoa); // o presidente do vendedor', 'let _ = tirar; // mutacao: o jogador fica nas favoritas do presidente', 'cpo_1 tirar favorito'),
+    ('cpo_tirar_favorito', 'tirar(read_usize(read_usize(pessoa + staff::CLUB_JOB) + 0xbf), pessoa); // o presidente do vendedor', 'let _ = tirar; // mutacao: o jogador fica nas favoritas do presidente', 'cpo_1 tirar favorito'),
     ('cpo_tirar_contrato', 'write_usize(cpo2_vaga(pessoa), usize::MAX); // a pessoa fica sem contrato', '// mutacao: a pessoa fica com o indice do contrato', 'cpo_2 tirar contrato'),
     ('cpo_reenviar_oferta', 'reenviar(this, item, t, read_usize(item + 0x5d), (q as u32 & 0xffff_ff00) | byte, 1, 1, 0); // com a transferência', '// mutacao: sem reenviar', 'cpo_2 reenviar oferta'),
     ('cpo_mes_do_fim', 'let p = somar(d1.as_mut_ptr(), d2.as_mut_ptr(), 0xa); // dez dias depois', 'let p = somar(d1.as_mut_ptr(), d2.as_mut_ptr(), 0x28); // mutacao: quarenta dias depois'),

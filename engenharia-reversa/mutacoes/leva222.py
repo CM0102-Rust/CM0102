@@ -8,5 +8,5 @@ MUTACOES = [
     ('dq2_ue', '    if *((n + 0x7f) as *const u8) == 2 { return 1; } // nacionalidade da UE', '    if *((n + 0x7f) as *const u8) == 3 { return 1; } // nacionalidade da UE'),
     ('dq3_listada', '*((v + 0x4e) as *const u8) & 9 != 0', '*((v + 0x4e) as *const u8) & 8 != 0'),
     ('dq3_arredonda', ' + f64_em(0x968968); // arredonda', ' + 0.0; // arredonda'),
-    ('dq3_atributo_da_pessoa', '    calcular(pessoa, core::ptr::read_unaligned((pessoa + 0x61) as *const usize), atributo)\n', '    calcular(pessoa, core::ptr::read_unaligned((pessoa + 0x61) as *const usize), atributo).wrapping_add(1)\n'),
+    ('dq3_atributo_da_pessoa', '    calcular(pessoa, core::ptr::read_unaligned((pessoa + staff::PLAYER) as *const usize), atributo)\n', '    calcular(pessoa, core::ptr::read_unaligned((pessoa + staff::PLAYER) as *const usize), atributo).wrapping_add(1)\n'),
 ]

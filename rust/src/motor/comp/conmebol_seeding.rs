@@ -241,7 +241,7 @@ pub(crate) unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) 
             let nacao = read_u32(c + 0x53) as usize;
             if nacao != 0 && selecao(c) == 0 {
                 let mexico = read_u32(nacao) == read_u32(KEY_NATION_MEXICO); // cqj2: o México entra
-                let cont = if mexico { 0 } else { read_u32(nacao + 0x71) as usize };
+                let cont = if mexico { 0 } else { read_u32(nacao + nation::CONTINENT) as usize };
                 if mexico || (cont != 0 && read_u32(cont) == read_u32(KEY_CONTINENT_SOUTH_AMERICA)) {
                     if mexico {
                         crate::comparacao::ramo("cqj_2 clube mexicano");

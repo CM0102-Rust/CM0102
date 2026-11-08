@@ -1270,17 +1270,17 @@ pub(crate) unsafe fn clube_do_pos_jogo_com(clube: usize, outro: usize, partida: 
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return;
     }
-    if g(clube + 0xcf) == 0 {
+    if g(clube + club::MANAGER) == 0 {
         return;
     }
-    if teste_600a50(clube, 0, 1, 0, 0) == 0 && w(clube + 0x80) < 0x128e && sortear(100) != 0 {
+    if teste_600a50(clube, 0, 1, 0, 0) == 0 && w(clube + club::REPUTATION) < 0x128e && sortear(100) != 0 {
         return;
     }
     crate::comparacao::ramo("clube segue");
     let n = n as u8 as i8;
     if teste_6b7cf0(partida, clube) != 0 && ub(partida + 0x40) != 0 && ub(partida + 0x41) != 0 && fora(clube) == 0 {
         for k in 0..50 {
-            let s = g(clube + 0xd7 + 4 * k);
+            let s = g(clube + club::SQUAD + 4 * k);
             if s == 0 {
                 continue;
             }
@@ -1319,7 +1319,7 @@ pub(crate) unsafe fn clube_do_pos_jogo_com(clube: usize, outro: usize, partida: 
         if c == 0 || ler(c + 0x45) != 0 || ub(partida + 0x40) == 0 || ub(partida + 0x41) == 0 {
             continue;
         }
-        if ler(partida + 0x14) == 0 || ler(partida + 0x14) != ler(clube + 0x57) || fora(clube) != 0 || byte(p, 0x59) <= 0xf {
+        if ler(partida + 0x14) == 0 || ler(partida + 0x14) != ler(clube + club::DIVISION) || fora(clube) != 0 || byte(p, 0x59) <= 0xf {
             continue;
         }
         crate::comparacao::ramo("clube jovem");
@@ -1551,7 +1551,7 @@ pub(crate) unsafe extern "C" fn comparar_jogadores_do_pos_jogo(partida: usize, t
     for lado in 0..2usize {
         let clube = (g(0xae23b4) as isize + ler(t + 4 * lado) as isize * 0x245) as usize;
         let ts = t + lado * 0x625;
-        reg.push((clube + 0x80, 2));
+        reg.push((clube + club::REPUTATION, 2));
         for k in 0..20usize {
             let id = ler(ts + 0x1c5 + k * 0x49 - 0x35);
             if id == -1 {
@@ -1568,7 +1568,7 @@ pub(crate) unsafe extern "C" fn comparar_jogadores_do_pos_jogo(partida: usize, t
         if id > -1 {
             let tec = (g(0xae23bc) as isize + id as isize * 0x6e) as usize;
             let mut fichas = vec![g(tec + 0x69)];
-            for a in [g(clube + 0xd3), g(clube + 0x19f), g(clube + 0x1a3), g(clube + 0x1a7), g(clube + 0x1ab), g(clube + 0x1af)] {
+            for a in [g(clube + club::ASSISTANT_MANAGER), g(clube + club::COACHES), g(clube + 0x1a3), g(clube + 0x1a7), g(clube + 0x1ab), g(clube + 0x1af)] {
                 if a != 0 {
                     fichas.push(g(a + 0x69));
                 }

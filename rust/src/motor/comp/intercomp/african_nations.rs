@@ -129,7 +129,7 @@ pub(crate) unsafe fn cqs13_sorteio(this: usize) -> u32 {
     let mut i = 0i16;
     let mut nacao = read_u32_as_usize(G_NATION_TABLE);
     while (i as i32) < read_u32_as_usize(G_NATION_COUNT) as i32 {
-        let continente = read_u32_as_usize(nacao + 0x71);
+        let continente = read_u32_as_usize(nacao + nation::CONTINENT);
         if continente != 0 && read_u32_as_usize(continente) == read_u32_as_usize(KEY_CONTINENT_AFRICA) && n < 0x32 { // cqs13: até 50 africanas
             let l = read_u32_as_usize(this + 0xee);
             let sede = (0..quantas.max(0) as usize).any(|j| read_u32_as_usize(read_u32_as_usize(l + j * 4) + 0x53) == nacao);
@@ -500,7 +500,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj10_copa_africana_registros(th
 /// A competição atual da seleção acaba (0x775000 em [0xb74318]: push nação; mov ecx -> thiscall, ret 4).
 pub(crate) unsafe fn cqj10_fim_da_competicao(clube: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_CLEAR_CURRENT_COMPETITION);
-    f(read_u32_as_usize(G_NATIONAL_TEAMS), read_u32_as_usize(clube + 0x53));
+    f(read_u32_as_usize(G_NATIONAL_TEAMS), read_u32_as_usize(clube + club::NATION));
 }
 
 /// rule: in the Oceania qualifier groups, a team going through gets the qualification (weight 20) and one going out the

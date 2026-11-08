@@ -1023,7 +1023,7 @@ pub(crate) unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usi
     let mut i: i16 = 0;
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        let comp = read_usize(clube + 0x57);
+        let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             let linha = k; // cqj6: a linha k recebe o k-ésimo clube da divisão
             // ponytail: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
@@ -1071,7 +1071,7 @@ pub(crate) unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, co
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
         let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
-        let comp = read_usize(clube + 0x57);
+        let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             plano.push(clube);
         }

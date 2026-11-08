@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cqg1_renovacao_como_nova', 'if read_u32_as_usize(r + 4) == read_u32_as_usize(c + 4) { // cqg1: o mesmo clube', 'if read_u32_as_usize(r + 4) == read_u32_as_usize(c + 4) && false { // mutacao: renovacao como contrato novo', 'cqg_1 mesmo clube'),
     ('cqg1_sem_vaga_livre', 'if read_u32_as_usize(r) as i32 == -1 { // cqg1: a vaga livre', 'if read_u32_as_usize(r) as i32 == -1 && false { // mutacao: sem a vaga livre', 'cqg_1 vaga livre'),
-    ('cqg1_valor_zero_na_pessoa', 'write_u32_from_usize(pessoa + 0x4e, read_u32_as_usize(c + 0xc)); // cqg1: o valor do contrato na pessoa', 'write_u32_from_usize(pessoa + 0x4e, 0); // mutacao: valor zero', 'cqg_1 valor na pessoa'),
+    ('cqg1_valor_zero_na_pessoa', 'write_u32_from_usize(pessoa + staff::WAGE, read_u32_as_usize(c + 0xc)); // cqg1: o valor do contrato na pessoa', 'write_u32_from_usize(pessoa + 0x4e, 0); // mutacao: valor zero', 'cqg_1 valor na pessoa'),
     ('cqg7_habilidade_mais_5', 'write_i16(f + 5, ftol(r as f64 + pa * f64_em(m2)) as i16); // cqg7: a habilidade sorteada pela PA', 'write_i16(f + 5, (ftol(r as f64 + pa * f64_em(m2)) as i16).wrapping_add(5)); // mutacao: a habilidade sorteada pela PA', 'cqg_7 habilidade'),
     ('cqg7_idade_17_a_19', 'idade = (cpe1_sorteio(3) as i8).wrapping_add(0x10); // cqg7: a idade de 16 a 18', 'idade = (cpe1_sorteio(3) as i8).wrapping_add(0x11); // mutacao: a idade de 16 a 18', 'cqg_7 idade 16 a 18'),
     ('cqg7_reputacao_x30', 'write_i16(f + 9, r.wrapping_add(read_i16(f + 5).wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: a reputação +9 do regen', 'write_i16(f + 9, r.wrapping_add(read_i16(f + 5).wrapping_mul(0x1e)).wrapping_add(0xfa)); // mutacao: a reputação +9 do regen', 'cqg_7 reputacao do regen'),

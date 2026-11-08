@@ -361,7 +361,7 @@ pub(crate) unsafe fn cqk4_segunda(this: usize) -> Vec<(usize, u8, u32)> {
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqk4: a Segunda joga 2 turnos
     v.extend_from_slice(&[(0xc8, 1, 3), (0xbe, 1, 3), (0xbf, 1, 0), (0xc1, 1, 4), (0x1c, 4, read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) as u32)]);
     let nacao = read_usize(read_usize(this + 4) + 0x5d);
-    let abaixo = if *((nacao + 0x11c) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) as u32 } else { 0xffff_ffff };
+    let abaixo = if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) as u32 } else { 0xffff_ffff };
     v.extend_from_slice(&[(0x20, 4, abaixo), (0x52, 1, 2)]);
     v
 }
@@ -449,7 +449,7 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_primera(this: usize) -> u32 {
     let mut i: i16 = 0;
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        let comp = read_usize(clube + 0x57);
+        let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
             let linha = k; // cqk5: a linha k recebe o k-ésimo clube da Primera
             // ponytail: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
@@ -485,7 +485,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_primera(this: usize) -
     let (mut baixo, mut plano): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     for i in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) as usize {
         let clube = read_usize(G_CLUB_TABLE) + i * 0x245;
-        let comp = read_usize(clube + 0x57);
+        let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
             baixo.push(clube);
         } else if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && plano.len() < 0x14 {

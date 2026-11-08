@@ -6,6 +6,6 @@ MUTACOES = [
     ('p_3a', "    bloco_da_pessoa(this, pessoa, k) + 0x3a", "    bloco_da_pessoa(this, pessoa, k) + 0x3c"),
     ('c_ff', "    if selecao == 0 {\n        return 0xff;", "    if selecao == 0 {\n        return 0;"),
     ('c_2', "    if segunda(selecao) != 0 {\n        return 2;", "    if segunda(selecao) != 0 {\n        return 1;"),
-    ('c_bit', "    (*((pessoa + 0x5e) as *const u8) >> 3) & 1", "    (*((pessoa + 0x5e) as *const u8) >> 2) & 1"),
+    ('c_bit', "    (*((pessoa + staff::PLAYING_SQUAD) as *const u8) >> 3) & 1", "    (*((pessoa + staff::PLAYING_SQUAD) as *const u8) >> 2) & 1"),
     ('g_9b', "    *(G_DATABASE_NAMES_LANGUAGE as *const u32)\n}", "    *(G_PLAYER_INIT_LEVEL_BASE_TABLE as *const u32)\n}"),
 ]

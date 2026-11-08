@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn boatos_de_transferencia(this: usize) {
         crate::comparacao::ramo("cqc_10 interesse");
         let (hd, ha) = (i16::from_le_bytes([hoje[0], hoje[1]]), u16::from_le_bytes([hoje[2], hoje[3]]));
         let vencido = ha > read_i16(p + 2) as u16 || (ha == read_i16(p + 2) as u16 && hd > read_i16(p));
-        if vencido || tec_dono == 0 || read_usize(pessoa + 0x61) == 0 {
+        if vencido || tec_dono == 0 || read_usize(pessoa + staff::PLAYER) == 0 {
             let n = read_i32(this + 0x14);
             let ultimo = read_usize(this + 0xc).wrapping_add((n as usize).wrapping_mul(25)).wrapping_sub(25);
             core::ptr::copy(ultimo as *const u8, r as *mut u8, 25);
@@ -144,11 +144,11 @@ pub(crate) unsafe extern "thiscall" fn boatos_de_transferencia(this: usize) {
             gravar(n, 4, if dono != 0 { read_usize(dono) as u32 } else { 0xffff_ffff });
             let mut pede = false;
             let mut sai = false;
-            if read_i8(pessoa + 0x5b) < 0xf && read_i8(pessoa + 0x59) < 0xf {
+            if read_i8(pessoa + staff::PROFESSIONALISM) < 0xf && read_i8(pessoa + staff::LOYALITY) < 0xf {
                 crate::comparacao::ramo("cqc_10 pedido de transferencia");
                 let rr = cpe1_sorteio(0x30d4); // cqc10: o sorteio da reputação para o pedido
-                if (read_i16(read_usize(pessoa + 0x61) + 0xd) as i32) > rr {
-                    let lim = read_i8(pessoa + 0x59) as i32 as f64 * 12.5 + 500.0;
+                if (read_i16(read_usize(pessoa + staff::PLAYER) + 0xd) as i32) > rr {
+                    let lim = read_i8(pessoa + staff::LOYALITY) as i32 as f64 * 12.5 + 500.0;
                     if lim < read_i32(r + 0x15) as f64 {
                         gravar(n, 5, 0x24);
                         pede = true;
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn boatos_de_transferencia(this: usize) {
             };
             gravar(n, 7, resp);
             gravar(n, 8, forcas(pessoa, dono));
-            gravar(n, 9, posicoes(read_usize(pessoa + 0x61)) as i16 as i32 as u32);
+            gravar(n, 9, posicoes(read_usize(pessoa + staff::PLAYER)) as i16 as i32 as u32);
             if tec_dono != 0 {
                 cqc10_nomes(gravar, n, 0xa, tec_dono);
             } else {
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "thiscall" fn boatos_de_transferencia(this: usize) {
         // estado 1: o dono da IA pode avisar que não vende
         if read_u8(r + 0x10) == 1 && dono != 0 && cqc10_humano(dono, 1, 1) == 0 {
             let (rd, ra) = (read_i16(r + 8), read_i16(r + 0xa) as u16);
-            let (pd, pa) = (read_i16(pessoa + 0x3e), read_i16(pessoa + 0x40) as u16);
+            let (pd, pa) = (read_i16(pessoa + staff::DATE_JOINED_CLUB), read_i16(pessoa + 0x40) as u16);
             let depois = ra > pa || (ra == pa && rd > pd);
             if depois && vinc != 0 && read_u8(vinc + 0x49) == 0 && listada(pessoa, 0) == 0 {
                 let feliz = read_i8(vinc + 0x3d) as i32;
@@ -341,7 +341,7 @@ pub(crate) unsafe extern "C" fn comparar_noticia_nao_vende(jogador: usize, clube
 /// (+6 da linha em [0xb67a44], ou 5000), a liga do clube e os dias do técnico (0x54cdb0); com 180 dias ou mais, a
 /// reputação do clube e a entrega ao técnico (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn noticia_do_titulo(_this: usize, clube: usize, comp: usize, marca: u32) {
-    if clube == 0 || read_usize(clube + 0xcf) == 0 || comp == 0 {
+    if clube == 0 || read_usize(clube + club::MANAGER) == 0 || comp == 0 {
         return;
     }
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
@@ -357,14 +357,14 @@ pub(crate) unsafe extern "thiscall" fn noticia_do_titulo(_this: usize, clube: us
     let mut noticia = [0u32; 0x3a];
     let n = noticia.as_mut_ptr() as usize;
     construir(n, 0x2e, 0);
-    cqc10_nomes(gravar, n, 0, read_usize(clube + 0xcf));
+    cqc10_nomes(gravar, n, 0, read_usize(clube + club::MANAGER));
     gravar(n, 4, read_usize(clube) as u32);
     gravar(n, 5, read_usize(comp) as u32);
     let s = cpe1_sorteio(2);
     gravar(n, 6, s as u32);
     let v = veiculo(clube);
     gravar(n, 7, v);
-    let na = read_usize(clube + 0x53);
+    let na = read_usize(clube + club::NATION);
     let c = comentarista(read_usize(G_PUNDIT_LIST), clube, v, if na != 0 { read_i32(na) } else { -1 });
     gravar(n, 8, c as u32);
     gravar(n, 9, marca as i8 as i32 as u32);
@@ -375,14 +375,14 @@ pub(crate) unsafe extern "thiscall" fn noticia_do_titulo(_this: usize, clube: us
         0x1388
     };
     gravar(n, 0xa, conf as u32);
-    gravar(n, 0xb, (read_usize(clube + 0x57) == comp) as u32);
-    let tec = read_usize(clube + 0xcf);
+    gravar(n, 0xb, (read_usize(clube + club::DIVISION) == comp) as u32);
+    let tec = read_usize(clube + club::MANAGER);
     let dias = ate(0xae2c90, read_usize(tec + 0x3e) as u32, read_usize(tec + 0x42) as u32);
     gravar(n, 0xc, dias as u32);
     if dias < 0xb4 {
         return;
     }
-    gravar(n, 0xd, read_i16(clube + 0x80) as i32 as u32);
+    gravar(n, 0xd, read_i16(clube + club::REPUTATION) as i32 as u32);
     let ao_tecnico: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     ao_tecnico(read_usize(G_NEWS), n, clube);
 }
@@ -435,16 +435,16 @@ pub(crate) unsafe fn cqb8_vetor(clube: usize, chamar: &mut dyn FnMut(usize, usiz
     let tipo: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
     let mut v = [0usize; 58];
     reunir(clube, v.as_mut_ptr(), 0);
-    v[50] = read_usize(clube + 0xbf);
-    let tecnico = read_usize(clube + 0xcf);
+    v[50] = read_usize(clube + club::CHAIRMAN);
+    let tecnico = read_usize(clube + club::MANAGER);
     v[51] = if chamar(0x600a50, 0, [clube as u32, 0, 1, 0, 0]) != 0 || (tecnico != 0 && tipo(*((tecnico + 0x3d) as *const u8) as u32) != 0) {
         0
     } else {
         tecnico
     };
-    v[52] = read_usize(clube + 0xd3);
+    v[52] = read_usize(clube + club::ASSISTANT_MANAGER);
     for k in 0..5 {
-        v[53 + k] = read_usize(clube + 0x19f + 4 * k);
+        v[53 + k] = read_usize(clube + club::COACHES + 4 * k);
     }
     v
 }
@@ -505,7 +505,7 @@ pub(crate) unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, 
                 chance += 0xf;
                 continue;
             }
-            let div = read_usize(clube + 0x57);
+            let div = read_usize(clube + club::DIVISION);
             if div != 0 && read_usize(div) != read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && div == read_usize(outro + 0x57) {
                 chance += 5;
             }
@@ -647,7 +647,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_reacao_do_elenco_a_historia(this
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((0xae1080, 4));
     if clube != 0 && jogador != 0 {
-        reg.push((clube + 0x9b, 24));
+        reg.push((clube + club::FAV_STAFF1, 24));
         reg.extend(cqb8_contrato(jogador, clube));
         for &p in cqb8_vetor(clube, &mut |r, t, a| despachar_pos(r, t, a)).iter().take(57) {
             if p == 0 {
@@ -688,7 +688,7 @@ pub(crate) unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut d
     if n <= 2 {
         return;
     }
-    let div = read_usize(clube + 0x57);
+    let div = read_usize(clube + club::DIVISION);
     if div == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(div)) == 0 {
         return;
     }
@@ -699,7 +699,7 @@ pub(crate) unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut d
     let n = n as i32;
     let mut postou = false;
     for i in 0..50 {
-        let p = read_usize(clube + 0xd7 + 4 * i);
+        let p = read_usize(clube + club::SQUAD + 4 * i);
         if p == 0 || read_usize(p + 0x61) == 0 || p == jogador {
             continue;
         }
@@ -762,7 +762,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_aviso_ao_rival_de_posicao(this: 
     reg.push((0xae1080, 4));
     if clube != 0 {
         for i in 0..50 {
-            let p = read_usize(clube + 0xd7 + 4 * i);
+            let p = read_usize(clube + club::SQUAD + 4 * i);
             if p != 0 {
                 reg.push((p + 0x58, 6));
                 reg.extend(cqb8_contrato(p, clube));
@@ -846,7 +846,7 @@ pub(crate) unsafe fn cqa13_desmarcar(c: usize, marcas: u32) {
 
 /// A reputação atual do jogador (+0xb da ficha +0x61).
 pub(crate) unsafe fn cqa13_rep(pessoa: usize) -> i16 {
-    read_i16(read_usize(pessoa + 0x61) + 0xb)
+    read_i16(read_usize(pessoa + staff::PLAYER) + 0xb)
 }
 
 /// O ensaio do comparador da 0x758200: a cópia roda sem nada que aloque, dê notícia ou peça transferência; quando chega
@@ -878,7 +878,7 @@ pub(crate) unsafe fn cqa13_marcas(c: usize, marcas: u32) -> bool {
 /// livre (0x8c1870) e com mais de 20 anos ou reputação acima de 4250.
 pub(crate) unsafe fn cqa13_pediria(c: usize, marcas: u32) -> bool {
     let pessoa = cqa13_pessoa(read_i32(c));
-    let funcao = *((pessoa + 0x3d) as *const u8);
+    let funcao = *((pessoa + staff::JOB_FOR_CLUB) as *const u8);
     if funcao != 0xb && funcao != 0xf && funcao != 0xd {
         return false;
     }
@@ -908,7 +908,7 @@ pub(crate) unsafe fn cqa13_pediria(c: usize, marcas: u32) -> bool {
     if na_fila(read_usize(G_TRANSFER_MANAGER), pessoa) != 0 {
         return false;
     }
-    !(read_i8_as_i32(pessoa + 0x18) <= 0x14 && cqa13_rep(pessoa) <= 0x109a)
+    !(read_i8_as_i32(pessoa + staff::YEAR_OF_BIRTH) <= 0x14 && cqa13_rep(pessoa) <= 0x109a)
 }
 
 /// As queixas do contrato (STAFF_CONTRACT::apply_event_flags 0x867700 com a pessoa). No ensaio, para antes se ela
@@ -957,7 +957,7 @@ pub(crate) unsafe fn cqa13_comemorar(this: usize, p: usize, clube: usize, tipo: 
 pub(crate) unsafe fn cqa13_porta_voz(clube: usize, p: usize) -> usize {
     let (mut melhor, mut quem) = (0i32, 0usize);
     for j in 0..50usize {
-        let m = read_usize(clube + 0xd7 + 4 * j);
+        let m = read_usize(clube + club::SQUAD + 4 * j);
         if m == 0 || read_usize(m + 0x61) == 0 || m == p {
             continue;
         }
@@ -1313,7 +1313,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_reacoes_dos_elencos_a_transferen
     for clube in [novo, velho] {
         if clube != 0 {
             for j in 0..50usize {
-                juntar(read_usize(clube + 0xd7 + 4 * j), clube);
+                juntar(read_usize(clube + club::SQUAD + 4 * j), clube);
             }
         }
     }
@@ -1381,7 +1381,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_comemoracao_da_contratacao(thi
     gravar(nt, 5, cpe1_sorteio(2) as u32);
     let v = veiculo(p);
     gravar(nt, 6, v);
-    let nacao = read_usize(clube + 0x53);
+    let nacao = read_usize(clube + club::NATION);
     gravar(nt, 7, comentarista(read_usize(G_PUNDIT_LIST), clube, v, if nacao != 0 { read_i32(nacao) } else { -1 }) as u32);
     gravar(nt, 8, posicoes(read_usize(p + 0x61)) as i16 as i32 as u32);
     gravar(nt, 9, tipo as u8 as i8 as i32 as u32);
@@ -1398,7 +1398,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_comemoracao_da_contratacao(thi
         }
         k = 0xf;
     }
-    gravar(nt, k, (read_i16(clube + 0x80) > 0x1c52) as u32);
+    gravar(nt, k, (read_i16(clube + club::REPUTATION) > 0x1c52) as u32);
     let t = read_usize(read_usize(p + 0x39) + 0xcf);
     gravar(nt, k + 1, read_usize(t) as u32);
     for j in 1..4usize {
@@ -1427,7 +1427,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_do_companheiro_desassossegado(_th
     if velho == 0 || read_usize(velho + 0xcf) == 0 || e_selecao(velho) != 0 {
         return;
     }
-    if comp == 0 || read_usize(comp + 0x61) == 0 || p == 0 || read_usize(p + 0x61) == 0 {
+    if comp == 0 || read_usize(comp + competition::CLUB_COMP_FOREGROUND_COLOUR) == 0 || p == 0 || read_usize(p + 0x61) == 0 {
         return;
     }
     crate::comparacao::ramo("cqa_13 noticia do desassossego");
@@ -1481,7 +1481,7 @@ pub(crate) unsafe fn cpw10_vencida(e: usize) -> bool {
 /// Uma nota do técnico refeito (um dos blocos da 0x7a65d0): P = pow(+0x22 da pessoa, 0x968950) (vezes `fator`, quando
 /// há), o maior entre P e o valor `v` da ficha, vezes `k`, no máximo `teto` (f64 em 0x...), truncado.
 pub(crate) unsafe fn cpw10_nota(pessoa: usize, v: i16, fator: Option<usize>, k: usize, teto: usize) -> u16 {
-    let mut p = pow_do_jogo(*((pessoa + 0x22) as *const u8) as f64, f64_em(0x968950));
+    let mut p = pow_do_jogo(*((pessoa + staff::INT_APPS) as *const u8) as f64, f64_em(0x968950));
     if let Some(f) = fator {
         p *= f64_em(f);
     }
@@ -1569,7 +1569,7 @@ pub(crate) unsafe fn cpw10_veiculo_menor() -> u32 {
 /// veículo dos grandes pelo sorteio(100); senão o dos menores (sorteio(4)). Pelas notícias do troféu (0x75c390) e da venda
 /// (0x75cfc0).
 pub(crate) unsafe extern "C" fn veiculo_pelo_clube(clube: usize) -> u32 {
-    if read_i16(clube + 0x80) > 0x186a {
+    if read_i16(clube + club::REPUTATION) > 0x186a {
         cpw10_veiculo_grande(cpe1_sorteio(100) as u8 as i8)
     } else {
         cpw10_veiculo_menor()
@@ -1590,7 +1590,7 @@ pub(crate) unsafe extern "C" fn comparar_veiculo_pelo_clube(clube: usize) -> u32
 /// jogador (+0xb da ficha +0x61). Pelas histórias do jogador (0x72c1f0), do desabafo, do elogio, de querer jogar e da
 /// comemoração da contratação (0x75b6e0, nas transferências).
 pub(crate) unsafe extern "C" fn veiculo_pela_pessoa(pessoa: usize) -> u32 {
-    if read_i16(read_usize(pessoa + 0x61) + 0xb) > 0x186a {
+    if read_i16(read_usize(pessoa + staff::PLAYER) + 0xb) > 0x186a {
         cpw10_veiculo_grande(cpe1_sorteio(100) as u8 as i8)
     } else {
         cpw10_veiculo_menor()
@@ -1647,7 +1647,7 @@ pub(crate) unsafe fn cpo5_variacao_da_torcida(clube: usize, alvo: u32) -> i16 {
     let t = ftol((conf - 5000) as f64 * f64_em(0x96d280));
     let d = (alvo as i32).wrapping_sub(t) as i16;
     let v = ftol(d as f64 * f64_em(0x969040));
-    let tecnico = read_usize(clube + 0xcf);
+    let tecnico = read_usize(clube + club::MANAGER);
     let fav = favorito(tecnico, clube) != 0;
     let rej = !fav && rejeitado(tecnico, clube) != 0;
     cpo5_amortecer(v, fav, rej)
@@ -1661,7 +1661,7 @@ pub(crate) unsafe fn cpo5_variacao_da_diretoria(clube: usize, alvo: u32) -> i16 
     let conf = if clube != 0 { read_i16(cpo5_linha(clube) + 6) as i32 } else { 0 };
     let s = ((conf - 6000) / 20).wrapping_add(alvo as i32) as i16;
     let v = ftol(s as f64 * f64_em(0x969040));
-    let (tecnico, presidente) = (read_usize(clube + 0xcf), read_usize(clube + 0xbf));
+    let (tecnico, presidente) = (read_usize(clube + club::MANAGER), read_usize(clube + club::CHAIRMAN));
     let g = gosta(tecnico, presidente) != 0;
     let n = !g && nao_gosta(tecnico, presidente) != 0;
     cpo5_amortecer(v, g, n)
@@ -1712,7 +1712,7 @@ pub(crate) unsafe extern "thiscall" fn ajustar_confianca_da_torcida(_this: usize
     gravar(n, 4, read_usize(clube) as u32);
     let grau = if v < -750 { 5 } else if v < 0 { 4 } else if v > 750 { 2 } else { 3 };
     gravar(n, 5, grau);
-    cqc10_nomes(gravar, n, 6, read_usize(clube + 0xcf));
+    cqc10_nomes(gravar, n, 6, read_usize(clube + club::MANAGER));
     let b: i8 = if sujeito != 0 {
         cqc10_nomes(gravar, n, 10, sujeito);
         let r = if favorito(sujeito, clube) != 0 {
@@ -1788,10 +1788,10 @@ pub(crate) unsafe extern "thiscall" fn ajustar_confianca_da_diretoria(_this: usi
         3
     };
     gravar(n, 5, grau);
-    cqc10_nomes(gravar, n, 6, read_usize(clube + 0xcf));
+    cqc10_nomes(gravar, n, 6, read_usize(clube + club::MANAGER));
     let mut b: i8 = if sujeito != 0 {
         cqc10_nomes(gravar, n, 10, sujeito);
-        let presidente = read_usize(clube + 0xbf);
+        let presidente = read_usize(clube + club::CHAIRMAN);
         let r = if gosta(sujeito, presidente) != 0 {
             6
         } else if nao_gosta(sujeito, presidente) != 0 {
@@ -1805,7 +1805,7 @@ pub(crate) unsafe extern "thiscall" fn ajustar_confianca_da_diretoria(_this: usi
         gravar(n, 10, u32::MAX);
         0xb
     };
-    let presidente = read_usize(clube + 0xbf);
+    let presidente = read_usize(clube + club::CHAIRMAN);
     if presidente != 0 {
         cqc10_nomes(gravar, n, b, presidente);
         b += 4;
@@ -1944,7 +1944,7 @@ pub(crate) const CPO7_CASO: [u8; 0x26] = [0, 5, 1, 5, 2, 3, 0, 3, 5, 2, 5, 5, 5,
 /// (0x62ed70): 0xc. Nos tipos 0, 6, 14 e 17: com +0x44 da ficha abaixo de 10, sorteio(3) + 2; senão sorteio(5), e 0 ou 1
 /// sobe +0x44 da ficha (até 20).
 pub(crate) unsafe extern "thiscall" fn noticia_de_gratidao_do_jogador(this: usize, jogador: usize, clube: usize, tipo: u32, variante: u32) {
-    if jogador == 0 || read_usize(jogador + 0x61) == 0 || clube == 0 || read_usize(clube + 0xcf) == 0 {
+    if jogador == 0 || read_usize(jogador + 0x61) == 0 || clube == 0 || read_usize(clube + club::MANAGER) == 0 {
         return;
     }
     let contrato_com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
@@ -2012,10 +2012,10 @@ pub(crate) unsafe extern "thiscall" fn noticia_de_gratidao_do_jogador(this: usiz
         _ => 0,
     };
     gravar(n, 7, v as u32);
-    let tecnico = read_usize(clube + 0xcf);
+    let tecnico = read_usize(clube + club::MANAGER);
     cpo7_dados(gravar, n, 8, tecnico, false);
     gravar(n, 0xc, 0x420e9);
-    let auxiliar = read_usize(clube + 0xd3);
+    let auxiliar = read_usize(clube + club::ASSISTANT_MANAGER);
     if auxiliar != 0 {
         cpo7_dados(gravar, n, 0xd, auxiliar, false);
     } else {
@@ -2089,7 +2089,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_de_pedido_de_apoio(_this: usize, 
 /// mais de 23 anos e a resposta é 2; senão 0), 6 = resposta, 7 = confiança da diretoria abaixo de 4000, 8 = tópico,
 /// 9..0xc o técnico. Vai aos técnicos dos clubes que a 0x8d1da0 ([0xde1f54], 0x21a, até 30) devolve.
 pub(crate) unsafe extern "thiscall" fn noticia_de_reacao_a_critica(_this: usize, jogador: usize, clube: usize, topico: u32, resposta: u32) {
-    if jogador == 0 || read_usize(jogador + 0x61) == 0 || clube == 0 || read_usize(clube + 0xcf) == 0 {
+    if jogador == 0 || read_usize(jogador + 0x61) == 0 || clube == 0 || read_usize(clube + club::MANAGER) == 0 {
         return;
     }
     let contrato_com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
@@ -2116,7 +2116,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_de_reacao_a_critica(_this: usize,
     let r = resposta as u8;
     let rep = read_i16(read_usize(jogador + 0x61) + 0xb);
     let mut reacao = 0i8;
-    if rep > 0x109a && rep > read_i16(clube + 0x80) {
+    if rep > 0x109a && rep > read_i16(clube + club::REPUTATION) {
         let gerente = read_usize(G_CONTRACT_MANAGER);
         let cat_ok = categoria(gerente, jogador, contrato) == 1 || categoria(gerente, jogador, contrato) == 2;
         if cat_ok && read_i8_as_i32(jogador + 0x18) > 0x16 {
@@ -2132,7 +2132,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_de_reacao_a_critica(_this: usize,
     let linha = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_usize(clube)).wrapping_mul(0x49));
     gravar(n, 7, (read_i16(linha + 6) < 0xfa0) as u32); // confiança da diretoria abaixo de 4000
     gravar(n, 8, topico);
-    cpo7_dados(gravar, n, 9, read_usize(clube + 0xcf), false);
+    cpo7_dados(gravar, n, 9, read_usize(clube + club::MANAGER), false);
     let mut clubes = [0usize; 0x1e];
     let tm = read_usize(G_TRANSFER_MANAGER);
     let k = if tm != 0 { clubes_interessados(tm, jogador, 0x21a, clubes.as_mut_ptr(), 0x1e) as i8 } else { 0 };
@@ -2171,7 +2171,7 @@ pub(crate) const CPN3_NOTICIA: usize = 0xdf;
 pub(crate) unsafe fn cpn3_razao_das_reputacoes(jogador: usize, clube: usize) -> f64 {
     let a = read_i16(read_usize(jogador + 0x61) + 0xb);
     let a = if a < 2000 { 2000 } else { a as i32 };
-    let b = read_i16(clube + 0x80);
+    let b = read_i16(clube + club::REPUTATION);
     let b = if b < 2000 { 2000 } else if b > 7500 { 7500 } else { b as i32 };
     a as f64 / b as f64
 }
@@ -2246,7 +2246,7 @@ pub(crate) unsafe extern "thiscall" fn nota_do_jogador_para_a_historia(_this: us
     if !(0..=0x52).contains(&tipo) {
         return r;
     }
-    let c = *((contrato + 0x4f) as *const u8) >> 4; // o tipo de contrato
+    let c = *((contrato + contract::SQUAD_STATUS) as *const u8) >> 4; // o tipo de contrato
     match cpn3_caso(tipo) {
         0 => match c {
             1 => r - 0.5,
@@ -2315,8 +2315,8 @@ pub(crate) unsafe extern "thiscall" fn texto_da_crise_financeira(_this: usize, n
     let gravidade = campo(noticia, 1);
     campo(noticia, 2);
     let clube = read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(0x245));
-    let nome = clube + 0x38;
-    let genero = read_i8(clube + 0x52) as i32;
+    let nome = clube + club::SHORT_NAME;
+    let genero = read_i8(clube + club::SHORT_GENDER_NAME) as i32;
     let modelo = if corpo != 0 {
         if gravidade > 0x1a5e {
             0xa436fc
@@ -2938,7 +2938,7 @@ pub(crate) unsafe extern "thiscall" fn escolher_comentarista(_this: usize, clube
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
-    let reputacao = |nacao: usize| core::ptr::read_unaligned((nacao + 0x8e) as *const i16) as i32;
+    let reputacao = |nacao: usize| core::ptr::read_unaligned((nacao + nation::REPUTATION) as *const i16) as i32;
     let (mut melhor, mut maior) = (0usize, 0i32);
     for _ in 0..150 {
         let mut tentativas = 0;
@@ -2955,7 +2955,7 @@ pub(crate) unsafe extern "thiscall" fn escolher_comentarista(_this: usize, clube
             if u(p + 0x61) != 0 && u(p + 0x39) != 0 {
                 continue;
             }
-            if u(clube + 0xcf) == p {
+            if u(clube + club::MANAGER) == p {
                 continue;
             }
             break p;
@@ -2966,7 +2966,7 @@ pub(crate) unsafe extern "thiscall" fn escolher_comentarista(_this: usize, clube
         let nacao = u(p + 0x1a);
         let mut peso = sorteio(reputacao(nacao).wrapping_mul(*((p + 0x22) as *const u8) as i32));
         let mesma_nacao = if assunto == 0 {
-            if nacao != u(clube + 0x53) {
+            if nacao != u(clube + club::NATION) {
                 continue;
             }
             true
@@ -3126,7 +3126,7 @@ pub(crate) unsafe extern "thiscall" fn resposta_do_tecnico_da_maquina(this: usiz
         if b <= sorteio(100) {
             return 3;
         }
-        if criterio(contrato) != 0 || *((contrato + 0x49) as *const u8) != 0 {
+        if criterio(contrato) != 0 || *((contrato + contract::LEAVING_ON_BOSMAN) as *const u8) != 0 {
             return 3;
         }
         return if sorteio(3) != 0 { 1 } else { 3 };
@@ -3300,7 +3300,7 @@ pub(crate) unsafe extern "thiscall" fn resposta_do_tecnico_da_maquina(this: usiz
             let x = sorteio(read_i8_as_i32(f() + 0x1d) + read_i8_as_i32(tecnico + 0x59));
             let y = sorteio(0x96);
             if x > y {
-                if read_i16(read_usize(jogador + 0x61) + 0xb) as i32 <= read_i16(clube + 0x80) as i32 + 0x1f4 {
+                if read_i16(read_usize(jogador + 0x61) + 0xb) as i32 <= read_i16(clube + club::REPUTATION) as i32 + 0x1f4 {
                     return 2;
                 }
                 let x = sorteio(read_i8_as_i32(f() + 0x14));
@@ -3463,11 +3463,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_resposta_do_tecnico_da_maquina(t
 /// reputação 9000 ou mais numa divisão com +0x69 acima de 12: para todos os técnicos (0x786780); senão para os da
 /// nação (0x7863f0). A notícia local tem 0xe0 bytes (a entrega copia só até +0xde).
 pub(crate) unsafe extern "thiscall" fn noticia_de_apuro_financeiro(_this: usize, clube: usize) {
-    if clube == 0 || read_usize(clube + 0x53) == 0 {
+    if clube == 0 || read_usize(clube + club::NATION) == 0 {
         return;
     }
-    let ficha = read_usize(clube + 0x69);
-    if ficha == 0 || read_usize(ficha + 0x38) == 0 || read_usize(clube + 0x57) == 0 {
+    let ficha = read_usize(clube + club::STADIUM);
+    if ficha == 0 || read_usize(ficha + 0x38) == 0 || read_usize(clube + club::DIVISION) == 0 {
         return;
     }
     crate::comparacao::ramo("cpk_6 apuro financeiro");
@@ -3478,17 +3478,17 @@ pub(crate) unsafe extern "thiscall" fn noticia_de_apuro_financeiro(_this: usize,
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     construir(n, 0x1790, 0);
     gravar(n, 0, read_usize(clube) as u32);
-    gravar(n, 1, read_i16(clube + 0x80) as i32 as u32);
+    gravar(n, 1, read_i16(clube + club::REPUTATION) as i32 as u32);
     let v = sorteio(2); // o sorteio da notícia
     gravar(n, 2, v as u32);
     let noticias = read_usize(G_NEWS);
-    let divisao = read_usize(clube + 0x57);
-    if read_i16(clube + 0x80) >= 9000 && divisao != 0 && read_i16(divisao + 0x69) > 12 {
+    let divisao = read_usize(clube + club::DIVISION);
+    if read_i16(clube + club::REPUTATION) >= 9000 && divisao != 0 && read_i16(divisao + 0x69) > 12 {
         let todos: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
         todos(noticias, n);
     } else {
         let pais: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_MANAGERS);
-        pais(noticias, n, read_usize(clube + 0x53));
+        pais(noticias, n, read_usize(clube + club::NATION));
     }
 }
 
@@ -3511,14 +3511,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_de_apuro_financeiro(this
 /// (0x4b02e0, com o limite do sorteio como 3º argumento, resto da pilha do original) com técnico que passa nos
 /// sorteios. Devolve o id do técnico, ou −1.
 pub(crate) unsafe extern "thiscall" fn tecnico_rival_para_comentar(_this: usize, clube: usize) -> u32 {
-    if read_u32(clube + 0xcf) == 0 {
+    if read_u32(clube + club::MANAGER) == 0 {
         return u32::MAX;
     }
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if read_u32(clube + 0x57) == 0 && selecao(clube) == 0 {
+    if read_u32(clube + club::DIVISION) == 0 && selecao(clube) == 0 {
         return u32::MAX;
     }
-    let tecnico = read_u32(clube + 0xcf) as usize;
+    let tecnico = read_u32(clube + club::MANAGER) as usize;
     if read_u32(tecnico + 0x69) == 0 {
         return u32::MAX;
     }
@@ -3542,7 +3542,7 @@ pub(crate) unsafe extern "thiscall" fn tecnico_rival_para_comentar(_this: usize,
         if r == 0 || read_u32(r + 0xcf) == 0 || !cph7_sorteado(r) {
             continue;
         }
-        if read_u32(r + 0x57) != read_u32(clube + 0x57) {
+        if read_u32(r + 0x57) != read_u32(clube + club::DIVISION) {
             continue;
         }
         let reputacao = |c: usize| *((c + 0x80) as *const i16) as i32;
@@ -3588,7 +3588,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tecnico_rival_para_comentar(this
 /// reputação (+0x80) passar de 4750, senão ao clube (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
     let _ = this;
-    if clube == 0 || read_usize(clube + 0x53) == 0 || read_usize(clube + 0xcf) == 0 || pessoa == 0 {
+    if clube == 0 || read_usize(clube + club::NATION) == 0 || read_usize(clube + club::MANAGER) == 0 || pessoa == 0 {
         return;
     }
     crate::comparacao::ramo("cpz_10 noticia da queixa a federacao");
@@ -3598,7 +3598,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, c
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0x178e, 0);
     gravar(nt, 0, read_u32(clube));
-    let tecnico = read_usize(clube + 0xcf);
+    let tecnico = read_usize(clube + club::MANAGER);
     if tecnico != 0 {
         gravar(nt, 1, read_u32(tecnico));
         gravar(nt, 2, read_u32(read_usize(tecnico + 4) + 0x33));
@@ -3613,14 +3613,14 @@ pub(crate) unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, c
     gravar(nt, 6, read_u32(pessoa));
     gravar(nt, 7, read_u32(read_usize(pessoa + 4) + 0x33));
     gravar(nt, 8, read_u32(read_usize(pessoa + 8) + 0x33));
-    gravar(nt, 9, read_u32(read_usize(pessoa + 0xc) + 0x33));
+    gravar(nt, 9, read_u32(read_usize(pessoa + staff::COMMON_NAME) + 0x33));
     gravar(nt, 0xa, a as i8 as u32);
     gravar(nt, 0xb, b as i16 as u32);
-    let nacao = read_usize(clube + 0x53);
+    let nacao = read_usize(clube + club::NATION);
     gravar(nt, 0xc, if nacao != 0 { read_u32(nacao) } else { u32::MAX });
     gravar(nt, 0xd, c as i8 as u32);
-    let nacao = read_usize(clube + 0x53);
-    if nacao != 0 && read_i16_as_i32(clube + 0x80) > 0x128e {
+    let nacao = read_usize(clube + club::NATION);
+    if nacao != 0 && read_i16_as_i32(clube + club::REPUTATION) > 0x128e {
         let aos_da_nacao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_MANAGERS);
         aos_da_nacao(read_usize(G_NEWS), nt, nacao);
     } else {

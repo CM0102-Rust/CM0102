@@ -3196,7 +3196,7 @@ pub(crate) unsafe fn reiniciar_lance_com(m: usize, chamar: &mut dyn FnMut(usize,
                     return;
                 }
             }
-            match *((g(clube + 0x53) + 0x76) as *const i8) {
+            match *((g(clube + club::NATION) + 0x76) as *const i8) {
                 4 | 12 => {
                     let r = sortear(2);
                     canto(chamar, if r == 0 { 0x216b } else { 0x216a }, lado_clube as u32);
@@ -6747,7 +6747,7 @@ pub(crate) unsafe extern "C" fn evoluir_jogador(jm: usize, pessoa: usize, clube:
     let w = |p: usize, o: usize| *((p + o) as *const i16);
     let d8 = |a: usize| f64_em(a);
     let f4 = |a: usize| f32_em(a) as f64;
-    let ficha = || *((pessoa + 0x61) as *const usize);
+    let ficha = || *((pessoa + staff::PLAYER) as *const usize);
     let do_jogo = *((comp + 0x14) as *const usize);
     let reputacao = || w(rep, 0x80) as i32;
     // o nivel da competicao
@@ -6789,9 +6789,9 @@ pub(crate) unsafe extern "C" fn evoluir_jogador(jm: usize, pessoa: usize, clube:
     let mut grande = false;
     let ja_selecao = selecao(clube) != 0;
     let div_9 = if ja_selecao
-        || (*(comp as *const i32) == -2 && *((clube + 0x53) as *const i32) != 0 && *((clube + 0x53) as *const i32) == *((pessoa + 0x1a) as *const i32))
-        || (do_jogo != 0 && *((do_jogo + 0x5d) as *const i32) == *((pessoa + 0x1a) as *const i32))
-        || *((clube + 0x53) as *const i32) == *((pessoa + 0x1a) as *const i32)
+        || (*(comp as *const i32) == -2 && *((clube + club::NATION) as *const i32) != 0 && *((clube + club::NATION) as *const i32) == *((pessoa + staff::NATION) as *const i32))
+        || (do_jogo != 0 && *((do_jogo + 0x5d) as *const i32) == *((pessoa + staff::NATION) as *const i32))
+        || *((clube + club::NATION) as *const i32) == *((pessoa + staff::NATION) as *const i32)
     {
         grande = true;
         (idade(9, 0x16) as i16).wrapping_sub(nivel0)
@@ -8457,7 +8457,7 @@ pub(crate) unsafe extern "thiscall" fn forca_do_lado(this: usize, lado: i8) {
             if (byte(ficha, 0x2f) as i32) > sortear(20)
                 && (*((ficha + 0xb) as *const i16) as i32) > sortear(7000)
                 && (byte(pessoa, 0x5b) as i32) < sortear(6)
-                && *((ficha + 0xb) as *const i16) > (*((clube + 0x80) as *const i16)).wrapping_sub(750)
+                && *((ficha + 0xb) as *const i16) > (*((clube + club::REPUTATION) as *const i16)).wrapping_sub(750)
                 && core::ptr::read_unaligned((c + 0x45) as *const u32) & 0x17a0b != 0
             {
                 if j == designado() {
@@ -8689,7 +8689,7 @@ pub(crate) unsafe extern "thiscall" fn escolher_companheiro(
         let partida = *((m + 0x4792) as *const usize);
         let (mut v44, mut v4c, mut v50) = (0i32, 0i32, 0i32);
         let comp = *((partida + 0x14) as *const usize);
-        let mut edi: i32 = if comp != 0 { (*((comp + 0x69) as *const i16) as i32 - 12) * 25 } else { 0 };
+        let mut edi: i32 = if comp != 0 { (*((comp + competition::CLUB_COMP_REPUTATION) as *const i16) as i32 - 12) * 25 } else { 0 };
         let mut v30 = edi.wrapping_mul(-4);
         let mut v38 = 0i32;
         let lp = lado(p);
@@ -9902,7 +9902,7 @@ pub(crate) unsafe extern "C" fn reputacao_do_jogador(reg: usize, meu: usize, out
     let clube_p = *((p + 0x1a) as *const usize);
     let (mut f_atual, mut f_mundo) = (2i32, 2i32);
     // ponytail: o original tambem testa partida -2 com +0x53 nao nulo; o ultimo teste (+0x53 igual) ja cobre
-    let n_atual: i16 = if selecao || (comp != 0 && *((comp + 0x5d) as *const usize) == clube_p) || *((meu + 0x53) as *const usize) == clube_p {
+    let n_atual: i16 = if selecao || (comp != 0 && *((comp + competition::CLUB_COMP_NATION) as *const usize) == clube_p) || *((meu + 0x53) as *const usize) == clube_p {
         f_atual = 1;
         teto(atual, 22).wrapping_sub(nivel as i16)
     } else {
@@ -10001,7 +10001,7 @@ pub(crate) unsafe extern "C" fn nova_reputacao(this: usize, lado: i8, valor: f32
         5
     } else {
         let v = if byte(partida, 0x40) != 0 {
-            ((rep_de(outro) / 500 + *((comp + 0x69) as *const i16) as i32) / 2) as i8
+            ((rep_de(outro) / 500 + *((comp + competition::CLUB_COMP_REPUTATION) as *const i16) as i32) / 2) as i8
         } else {
             byte(comp, 0x69)
         };
@@ -10745,7 +10745,7 @@ pub(crate) unsafe extern "thiscall" fn forca_do_time(this: usize, lado_b: i8) {
         let clube = *((partida + 0x1c) as *const usize);
         let jogo = *((partida + 0x14) as *const usize);
         if clube != 0 && jogo != 0 {
-            let comp = *((clube + 0x53) as *const usize);
+            let comp = *((clube + club::NATION) as *const usize);
             if *((jogo + 0x5d) as *const usize) == comp && comp != 0 {
                 let id = *(comp as *const u32);
                 let g = |a: usize| *(a as *const u32);
@@ -11089,8 +11089,8 @@ pub(crate) unsafe extern "thiscall" fn comentario_de_contexto(m: usize, lado: u3
         }
         if n == 0 { None } else { Some((s / n) as i16) }
     };
-    let do_clube = || core::ptr::read_unaligned((clube + 0x57) as *const u32) == *((c + 0x14) as *const u32);
-    let da_competicao = || core::ptr::read_unaligned((clube + 0x1db) as *const u32) == *(c as *const u32);
+    let do_clube = || core::ptr::read_unaligned((clube + club::DIVISION) as *const u32) == *((c + 0x14) as *const u32);
+    let da_competicao = || core::ptr::read_unaligned((clube + club::EURO_FLAG) as *const u32) == *(c as *const u32);
     let minuto = core::ptr::read_unaligned((m + 0x8ed0) as *const i16) as i32 / 11;
     // 0x6d587c / 0x6d5704: a linha da tabela (+o1, +o2) contra sorteios; grava +o2 em `saida`
     let tabela = |o1: usize, o2: usize| -> u32 {

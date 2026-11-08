@@ -341,7 +341,7 @@ pub(crate) unsafe fn cqt11_clubes(this: usize) -> u32 {
     let mut c = read_u32_as_usize(G_CLUB_TABLE);
     while i < (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2)) {
         let nacao = read_u32_as_usize(c + 0x53);
-        if nacao != 0 && read_u32_as_usize(nacao + 0x71) != 0 && read_u32_as_usize(read_u32_as_usize(nacao + 0x71)) == read_u32_as_usize(KEY_CONTINENT_OCEANIA) {
+        if nacao != 0 && read_u32_as_usize(nacao + nation::CONTINENT) != 0 && read_u32_as_usize(read_u32_as_usize(nacao + nation::CONTINENT)) == read_u32_as_usize(KEY_CONTINENT_OCEANIA) {
             let id = read_u32_as_usize(nacao);
             if id == read_u32_as_usize(KEY_NATION_NEW_ZEALAND) && nz.cabe() {
                 nz.por(c);

@@ -561,7 +561,7 @@ pub(crate) unsafe extern "thiscall" fn cql7_tabela_da_serie_c(this: usize) -> u3
         if (k as i8) >= 0x38 {
             break;
         }
-        if read_usize(clube + 0x57) == read_usize(this + 4) {
+        if read_usize(clube + club::DIVISION) == read_usize(this + 4) {
             core::ptr::write_unaligned((read_usize(this + 0xee) + (k as i8 as isize as usize) * 4) as *mut usize, clube);
             k = k.wrapping_add(1);
         }
@@ -585,7 +585,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cql7_tabela_da_serie_c(this: usi
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && plano.len() < 0x38 {
         let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
-        if read_usize(clube + 0x57) == read_usize(this + 4) {
+        if read_usize(clube + club::DIVISION) == read_usize(this + 4) {
             plano.push(clube);
         }
         i += 1;

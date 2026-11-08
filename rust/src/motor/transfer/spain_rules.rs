@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_espanha(this: usize, 
         None => return 1,
         Some(d) => d,
     };
-    if read_usize(clube + 0x57) == read_usize(dono + 0x57) {
+    if read_usize(clube + club::DIVISION) == read_usize(dono + 0x57) {
         // 0x7c1e30: push 6,5f; push 1; push 2; push ficha; mov ecx, [0xb74350] -> thiscall, ret 0x10 (devolve no st0)
         let jogos: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
         let v = jogos(read_usize(G_PLAYER_STATS), read_usize(jogador + 0x61), 2, 1, 6.5);

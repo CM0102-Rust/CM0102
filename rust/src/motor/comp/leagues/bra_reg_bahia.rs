@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_baiano(thi
 /// O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
 /// estadual) não é nula e o id do registro (+0) é o do global.
 pub(crate) unsafe fn cql8_do_estadual(clube: usize, g: usize) -> bool {
-    let comp = read_usize(clube + 0x60);
+    let comp = read_usize(clube + club::RESERVE_DIVISION);
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 

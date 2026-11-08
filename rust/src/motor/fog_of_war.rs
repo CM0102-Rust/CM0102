@@ -56,7 +56,7 @@ pub(crate) unsafe extern "stdcall" fn nevoa_apos_partida(partida: usize, dados: 
         if humano(clube, 0, 1, 0, 0) == 0 {
             continue;
         }
-        let q = *((clube + 0xcf) as *const usize);
+        let q = *((clube + club::MANAGER) as *const usize);
         if q == 0 {
             continue;
         }

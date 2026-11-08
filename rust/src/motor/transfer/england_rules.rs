@@ -177,7 +177,7 @@ pub(crate) unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: u
     }
     let c2 = cps5_contrato(jogador);
     let dono = if c2 != 0 { cqe5_clube_do_contrato(c2) } else { 0 };
-    let comp = read_usize(clube + 0x57);
+    let comp = read_usize(clube + club::DIVISION);
     if comp == read_usize(dono + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
         crate::comparacao::ramo("cqe_5 mesma divisao");
         if msg != 0 {
@@ -195,8 +195,8 @@ pub(crate) unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: u
         // cqe5: cinco na temporada
         crate::comparacao::ramo("cqe_5 cinco na temporada");
         if msg != 0 {
-            let g = read_u8(clube + 0x52) as i8 as i32;
-            texto(msg, 0x9c4534, g, g, clube + 0x38);
+            let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
+            texto(msg, 0x9c4534, g, g, clube + club::SHORT_NAME);
         }
         if !motivo.is_null() {
             *motivo = 0x1e;
@@ -207,7 +207,7 @@ pub(crate) unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: u
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let mut n: i8 = 0;
     for k in 0..50usize {
-        let p = read_usize(clube + 0xd7 + 4 * k);
+        let p = read_usize(clube + club::SQUAD + 4 * k);
         if p == 0 {
             continue;
         }
@@ -226,8 +226,8 @@ pub(crate) unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: u
     if n > 1 { // cqe5: dois ao mesmo tempo
         crate::comparacao::ramo("cqe_5 dois ao mesmo tempo");
         if msg != 0 {
-            let g = read_u8(clube + 0x52) as i8 as i32;
-            texto(msg, 0x9c44d4, g, g, clube + 0x38);
+            let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
+            texto(msg, 0x9c44d4, g, g, clube + club::SHORT_NAME);
         }
         if !motivo.is_null() {
             *motivo = 0x26;
@@ -261,7 +261,7 @@ pub(crate) unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: u
 /// temporada.
 pub(crate) unsafe extern "thiscall" fn cqe5_registrar_emprestimo(_this: usize, oferta: usize) {
     let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(oferta + 8).wrapping_mul(0x245));
-    let nacao = read_usize(clube + 0x53);
+    let nacao = read_usize(clube + club::NATION);
     if nacao != 0 && read_usize(nacao) == read_usize(KEY_NATION_ENGLAND) {
         crate::comparacao::ramo("cqe_5 emprestimo contado");
         let p = cqe5_conta(clube);
@@ -285,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn cqe5_dia_das_regras(this: usize, data: us
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 {
         let clube = read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(0x245));
-        if read_usize(clube + 0x53) == read_usize(this + 0xa) {
+        if read_usize(clube + club::NATION) == read_usize(this + 0xa) {
             *(cqe5_conta(clube) as *mut u8) = 0;
         }
         i += 1;

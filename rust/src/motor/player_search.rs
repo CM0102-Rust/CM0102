@@ -79,8 +79,8 @@ pub(crate) unsafe extern "thiscall" fn cqf10_historico_do_clube_observado(this: 
         if p != 0 && read_i32(p) >= read_i32(0xae2364) {
             continue;
         }
-        if read_usize(clube_obs + 0xcf) != 0 && humano(clube_obs, 0, 1, 0, 0) != 0 && read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
-            let q = quadro(read_usize(G_FOG_OF_WAR), read_usize(clube_obs + 0xcf));
+        if read_usize(clube_obs + club::MANAGER) != 0 && humano(clube_obs, 0, 1, 0, 0) != 0 && read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
+            let q = quadro(read_usize(G_FOG_OF_WAR), read_usize(clube_obs + club::MANAGER));
             if q != 0 {
                 conhecer(q, p, 0);
             }
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn cqf10_historico_do_clube_observado(this: 
 pub(crate) unsafe extern "thiscall" fn comparar_cqf10_historico_do_clube_observado(this: usize, jogo: usize, resultado: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1622);
     let clube_obs = cpe1_clube(read_usize(this));
-    if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 && read_usize(clube_obs + 0xcf) != 0 {
+    if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 && read_usize(clube_obs + club::MANAGER) != 0 {
         o(this, jogo, resultado);
         return;
     }
@@ -626,15 +626,15 @@ pub(crate) unsafe extern "C" fn nota_alvo_do_clube(clube: usize, base: *mut i32,
     let contar: unsafe extern "C" fn(usize, u32, u32) -> i8 = core::mem::transmute(FN_DATABASE_COUNT_CLUB_SQUAD);
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
     let riqueza: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
-    let li = read_i32(clube + 0x1db);
+    let li = read_i32(clube + club::EURO_FLAG);
     let liga = if li > -1 { (read_i32(G_CLUB_COMP_TABLE) as usize).wrapping_add((li as usize).wrapping_mul(0x6b)) } else { 0 };
-    let nacao = read_i32(clube + 0x57) as usize;
+    let nacao = read_i32(clube + club::DIVISION) as usize;
     let mut esi: i32;
     if !forcada.is_null() {
         esi = *forcada as i32;
     } else {
-        let rep = read_i16(clube + 0x80) as i32;
-        let t = ftol(read_i32(clube + 0x77) as f64 * f64_em(0x96e2b0) - f64_em(0x96e2a8)) as i16 as i32;
+        let rep = read_i16(clube + club::REPUTATION) as i32;
+        let t = ftol(read_i32(clube + club::MIN_ATTENDANCE) as f64 * f64_em(0x96e2b0) - f64_em(0x96e2a8)) as i16 as i32;
         let ebx = (if rep > t { rep } else if t > 10000 { 10000 } else { t }) as i16 as i32;
         let mut n = rep;
         let mut l = rep;
@@ -659,7 +659,7 @@ pub(crate) unsafe extern "C" fn nota_alvo_do_clube(clube: usize, base: *mut i32,
         };
         esi = soma / 16; // cpu13: a base
     }
-    if *((clube + 0x64) as *const u8) != 1 {
+    if *((clube + club::PROFESSIONAL_STATUS) as *const u8) != 1 {
         esi /= 2;
     }
     let mut edi: i32 = if esi > 9000 {
@@ -689,7 +689,7 @@ pub(crate) unsafe extern "C" fn nota_alvo_do_clube(clube: usize, base: *mut i32,
                 }
             }
         } else {
-            let nacao = read_i32(clube + 0x57) as usize;
+            let nacao = read_i32(clube + club::DIVISION) as usize;
             if com_nacao(nacao) {
                 let t2 = ftol(read_i16(nacao + 0x69) as i32 as f64 * f64_em(0x969588) + f64_em(0x968ea8)) as u8;
                 let falta = (elenco as u8).wrapping_sub(t2) as i8;
@@ -1009,7 +1009,7 @@ pub(crate) unsafe extern "thiscall" fn busca_cobre_a_nacao(this: usize, nacao: u
     if read_u8(this + 0xa) != 4 || pessoa == 0 || nacao == 0 {
         return 0;
     }
-    let clube = read_usize(pessoa + 0x39);
+    let clube = read_usize(pessoa + staff::CLUB_JOB);
     if clube == 0 {
         return 0;
     }
@@ -1024,20 +1024,20 @@ pub(crate) unsafe extern "thiscall" fn busca_cobre_a_nacao(this: usize, nacao: u
             return 1;
         }
         let r = read_u8(this + 0x194);
-        if (r as i8) > -1 && read_u8(nacao + 0x76) == r {
+        if (r as i8) > -1 && read_u8(nacao + nation::ACTUAL_REGION) == r {
             return 1;
         }
         // a original compara de novo o mesmo byte quando há base
-        if read_usize(this + 0x199) != 0 && read_u8(nacao + 0x76) == r {
+        if read_usize(this + 0x199) != 0 && read_u8(nacao + nation::ACTUAL_REGION) == r {
             return 1;
         }
         return 0;
     }
-    let nc = read_usize(clube + 0x53);
-    if read_u8(nc + 0x7f) == 2 && read_u8(nacao + 0x7f) == 2 {
+    let nc = read_usize(clube + club::NATION);
+    if read_u8(nc + 0x7f) == 2 && read_u8(nacao + nation::GROUP_MEMBERSHIP) == 2 {
         return 1;
     }
-    if read_u8(nc + 0x76) == read_u8(nacao + 0x76) {
+    if read_u8(nc + 0x76) == read_u8(nacao + nation::ACTUAL_REGION) {
         crate::comparacao::ramo("cpn_7 mesma regiao");
         return 1; // a mesma região da nação do clube
     }

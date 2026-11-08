@@ -32,7 +32,7 @@ pub(crate) unsafe fn cqi11_listas() -> Cqi11Listas {
         if selecao(clube) != 0 {
             break;
         }
-        let nacao = read_u32_as_usize(clube + 0x53);
+        let nacao = read_u32_as_usize(clube + club::NATION);
         if nacao != 0 {
             let id = read_u32_as_usize(nacao);
             if id == read_u32_as_usize(KEY_NATION_MEXICO) {
@@ -41,18 +41,18 @@ pub(crate) unsafe fn cqi11_listas() -> Cqi11Listas {
                     a += 1;
                 }
             } else {
-                let div = read_u32_as_usize(clube + 0x57);
+                let div = read_u32_as_usize(clube + club::DIVISION);
                 if div != 0 && read_u32_as_usize(div) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
                     if m < 0xc {
                         l.mls[m as usize] = clube;
                         m += 1;
                     }
-                } else if id != read_u32_as_usize(KEY_NATION_UNITED_STATES) && read_u8(nacao + 0x75) == 7 {
+                } else if id != read_u32_as_usize(KEY_NATION_UNITED_STATES) && read_u8(nacao + nation::REGION) == 7 {
                     if b < 0xc8 {
                         l.centro[b as usize] = clube;
                         b += 1;
                     }
-                } else if read_u8(nacao + 0x75) == 6 && c < 0xc8 {
+                } else if read_u8(nacao + nation::REGION) == 6 && c < 0xc8 {
                     l.caribe[c as usize] = clube;
                     c += 1;
                 }

@@ -10,7 +10,7 @@ use super::*;
 
 /// A nação do clube (+0x53).
 pub(crate) unsafe fn cqg4_nacao(clube: usize) -> usize {
-    read_u32_as_usize(clube + 0x53)
+    read_u32_as_usize(clube + club::NATION)
 }
 
 /// the 32 clubs sorted by pot, the same-nation partners in opposite halves, the draw of the 8 groups pot by pot, the
@@ -867,7 +867,7 @@ pub(crate) unsafe fn cpz4_eliminado(clube: usize, comp: usize, fase: u32, rodada
 
 /// O clube sai da competição europeia da temporada (+0x1db = −1).
 pub(crate) unsafe fn cpz4_sair(clube: usize) {
-    core::ptr::write_unaligned((clube + 0x1db) as *mut i32, -1);
+    core::ptr::write_unaligned((clube + club::EURO_FLAG) as *mut i32, -1);
 }
 
 /// by outcome and stage: in qualifying, the qualified (0x86bdd0) or knocked-out (0x86c000) record weighted by round
@@ -978,9 +978,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_registros_da_liga_dos_campeoes(t
     } else {
         false
     };
-    let antes = if clube != 0 { core::ptr::read_unaligned((clube + 0x1db) as *const i32) } else { 0 };
+    let antes = if clube != 0 { core::ptr::read_unaligned((clube + club::EURO_FLAG) as *const i32) } else { 0 };
     let r = o(this, clube, desfecho, fase, a, jogo, fim);
-    let depois = if clube != 0 { core::ptr::read_unaligned((clube + 0x1db) as *const i32) } else { 0 };
+    let depois = if clube != 0 { core::ptr::read_unaligned((clube + club::EURO_FLAG) as *const i32) } else { 0 };
     let igual = r == 0 && (clube == 0 || depois == if sai { -1 } else { antes });
     PLACAR.registrar(igual, || format!("registros_da_liga_dos_campeoes({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, clube, d, f, r, antes, depois, sai));
     r
@@ -1500,7 +1500,7 @@ pub(crate) unsafe extern "thiscall" fn processar_jogo_da_liga_dos_campeoes(this:
 /// como a 0x9058b0 calcula; 0 sem tabela, sem nação ou sem seleção.
 pub(crate) unsafe fn cpy6_casa_do_coeficiente(clube: usize) -> usize {
     let tabela = read_usize(G_UEFA_SEEDING);
-    let nacao = read_usize(clube + 0x53);
+    let nacao = read_usize(clube + club::NATION);
     if tabela == 0 || nacao == 0 {
         return 0;
     }

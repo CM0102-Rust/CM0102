@@ -79,7 +79,7 @@ pub(crate) unsafe fn cqm5_construir(this: usize, ano: u32, registro: usize, p: &
     previstas(this);
     if p.baixo {
         let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
-        if *((nacao + 0x11c) as *const u8) & 4 == 0 { // cqm5: a divisão de baixo espanhola
+        if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: a divisão de baixo espanhola
             crate::comparacao::ramo("cqm_5 divisao de baixo espanhola");
             let e = novo(0xee);
             // ponytail: a original empurra o ano na palavra de baixo do ecx, com o resto do ponteiro do registro em
@@ -155,7 +155,7 @@ pub(crate) unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: 
         if p.baixo {
             let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
             let tem = read_u32_as_usize(this + 0xee) != 0;
-            ok = ok && tem == (*((nacao + 0x11c) as *const u8) & 4 == 0);
+            ok = ok && tem == (*((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0);
         }
     }
     PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", nome, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 8)));

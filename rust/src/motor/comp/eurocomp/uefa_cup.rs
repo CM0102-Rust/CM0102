@@ -219,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn cqi10_uefa_registros(this: usize, clube: 
         if d == 0xff {
             crate::comparacao::ramo("cqi_10 caiu na uefa");
         }
-        core::ptr::write_unaligned((clube + 0x1db) as *mut i32, -1); // cqi10: quem termina na UEFA sai da competição europeia
+        core::ptr::write_unaligned((clube + club::EURO_FLAG) as *mut i32, -1); // cqi10: quem termina na UEFA sai da competição europeia
     }
     let base: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     base(this, clube, desfecho, a3, a4, jogo, a6)
@@ -231,10 +231,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi10_uefa_registros(this: usize
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }
     let d = desfecho as u8;
-    let antes = read_u32_as_usize(clube + 0x1db);
+    let antes = read_u32_as_usize(clube + club::EURO_FLAG);
     let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { antes };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
-    let depois = read_u32_as_usize(clube + 0x1db);
+    let depois = read_u32_as_usize(clube + club::EURO_FLAG);
     PLACAR.registrar(r == 0 && depois == previsto, || format!("cqi10_uefa_registros({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
     r
 }

@@ -330,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn noticias_de_recordes(this: usize) -> u32 
         // ponytail: a original empurra o dword da local com o tipo no byte baixo (o resto é sobra); a 0x453120 lê o byte
         preencher(id, reg, tipo as u32, n);
         if selecao(clube) != 0 {
-            a_nacao(read_usize(G_NEWS), n, read_usize(clube + 0x53));
+            a_nacao(read_usize(G_NEWS), n, read_usize(clube + club::NATION));
         } else {
             ao_clube(read_usize(G_NEWS), n, clube);
         }
@@ -410,7 +410,7 @@ pub(crate) unsafe fn cpp10_nota_da_torcida(p: usize, clube: usize, st: usize) ->
 /// (`cpp10_nota_da_torcida`, acima de −1000). Ninguém: 0; senão a referência dele (0x7e4920) em registro +0x371 e 1.
 pub(crate) unsafe extern "thiscall" fn jogador_do_ano_da_torcida(this: usize, clube: usize, registro: usize) -> u32 {
     let jogos_do_clube = || read_u8(read_usize(this + 0x1c).wrapping_add((read_i32(clube) as usize).wrapping_mul(106)) + 0x10) as i8;
-    if jogos_do_clube() == 0 && read_i16(clube + 0x80) < 0xbb8 {
+    if jogos_do_clube() == 0 && read_i16(clube + club::REPUTATION) < 0xbb8 {
         return 0;
     }
     let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
@@ -420,7 +420,7 @@ pub(crate) unsafe extern "thiscall" fn jogador_do_ano_da_torcida(this: usize, cl
     while escolhido == 0 {
         let minimo = ftol(jogos_do_clube() as i32 as f64 * fator) as i16;
         for s in 0..50usize {
-            let p = read_usize(clube + 0xd7 + 4 * s);
+            let p = read_usize(clube + club::SQUAD + 4 * s);
             if p == 0 || read_i32(p) >= read_i32(0xae2364) {
                 continue;
             }
@@ -464,7 +464,7 @@ pub(crate) unsafe fn cpp10_na_fila(this: usize, id: usize, tipo: u8) -> bool {
 
 /// A transferência de recorde do clube passa de 1000 × (reputação (+0x80) + 300)?
 pub(crate) unsafe fn cpp10_grande(valor: i32, clube: usize) -> bool {
-    valor >= (read_i16(clube + 0x80) as i32 + 300).wrapping_mul(1000)
+    valor >= (read_i16(clube + club::REPUTATION) as i32 + 300).wrapping_mul(1000)
 }
 
 /// Copia o bloco de recorde de `o` (+`d`: valor, a referência de 0x18 bytes, o clube, a data, a marca) para `a`.
@@ -751,7 +751,7 @@ pub(crate) unsafe extern "thiscall" fn recorde_de_nota_da_temporada(this: usize,
     write_usize(r + 0x1f1, 0xbf800000); // −1.0f
     let mut achou = 0;
     for k in 0..50usize {
-        let p = read_usize(clube + 0xd7 + 4 * k);
+        let p = read_usize(clube + club::SQUAD + 4 * k);
         if p == 0 {
             continue;
         }
@@ -1038,7 +1038,7 @@ pub(crate) unsafe extern "thiscall" fn oferta_bate_o_recorde(this: usize, oferta
     if rec == 0 || clube == 0 {
         return 0;
     }
-    let rep = *((clube + 0x80) as *const i16) as i32;
+    let rep = *((clube + club::REPUTATION) as *const i16) as i32;
     let valor = read_usize(oferta + 0x1b) as i32;
     if valor < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // abaixo do mínimo pela reputação

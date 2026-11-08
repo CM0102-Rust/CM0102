@@ -214,9 +214,9 @@ pub(crate) unsafe extern "thiscall" fn liga_rebaixar_clube(_this: usize, clube: 
     let clausulas: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_TRIGGER_RELEGATION_CLAUSES);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let tirar: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_MANAGER_MANAGER_REMOVE_CLUB_MANAGER);
-    let antiga = read_u32_as_usize(clube + 0x57);
-    core::ptr::write_unaligned((clube + 0x57) as *mut u32, divisao as u32);
-    core::ptr::write_unaligned((clube + 0x5b) as *mut u32, antiga as u32);
+    let antiga = read_u32_as_usize(clube + club::DIVISION);
+    core::ptr::write_unaligned((clube + club::DIVISION) as *mut u32, divisao as u32);
+    core::ptr::write_unaligned((clube + club::LAST_DIVISION) as *mut u32, antiga as u32);
     clausulas(read_u32_as_usize(G_CONTRACT_MANAGER), clube, antiga);
     let comps = read_u32_as_usize(G_COMP_OBJECT_TABLE);
     if comps != 0 && divisao != 0 && read_u32_as_usize(comps + read_u32_as_usize(divisao) * 4) != 0 {
@@ -231,9 +231,9 @@ pub(crate) unsafe extern "thiscall" fn liga_rebaixar_clube(_this: usize, clube: 
 /// Só a original (cláusulas de contrato e o técnico que sai não rodam duas vezes), conferindo o que ela grava: +0x57 =
 /// a divisão e +0x5b = a competição de antes.
 pub(crate) unsafe extern "thiscall" fn comparar_liga_rebaixar_clube(this: usize, clube: usize, divisao: usize, x: u32) {
-    let antiga = read_u32_as_usize(clube + 0x57);
+    let antiga = read_u32_as_usize(clube + club::DIVISION);
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(1654)(this, clube, divisao, x);
-    PLACAR.registrar(read_u32_as_usize(clube + 0x57) == divisao && read_u32_as_usize(clube + 0x5b) == antiga, || format!("liga_rebaixar_clube: +0x57 {:#x} +0x5b {:#x}", read_u32_as_usize(clube + 0x57), read_u32_as_usize(clube + 0x5b)));
+    PLACAR.registrar(read_u32_as_usize(clube + club::DIVISION) == divisao && read_u32_as_usize(clube + club::LAST_DIVISION) == antiga, || format!("liga_rebaixar_clube: +0x57 {:#x} +0x5b {:#x}", read_u32_as_usize(clube + club::DIVISION), read_u32_as_usize(clube + club::LAST_DIVISION)));
 }
 
 // ---------- 269a leva: a liga: os jogos levados para a TV, a notícia dos grupos e a notícia da tabela (league.cpp) ----------
@@ -1177,9 +1177,9 @@ pub(crate) unsafe extern "thiscall" fn liga_promover_e_rebaixar(ecx: usize, acim
     // o rebaixado desce para a competição de baixo e perde o técnico humano numa competição sem registro ativo
     let descer = |clube: usize| {
         let comp = read_u32_as_usize(abaixo + 4);
-        let antiga = read_u32_as_usize(clube + 0x57);
-        write_u32_from_usize(clube + 0x5b, antiga);
-        write_u32_from_usize(clube + 0x57, comp);
+        let antiga = read_u32_as_usize(clube + club::DIVISION);
+        write_u32_from_usize(clube + club::LAST_DIVISION, antiga);
+        write_u32_from_usize(clube + club::DIVISION, comp);
         rebaixamento(read_u32_as_usize(G_CONTRACT_MANAGER), clube, antiga);
         let tab = read_u32_as_usize(G_COMP_OBJECT_TABLE);
         if tab == 0 || comp == 0 || read_u32_as_usize(tab + read_u32_as_usize(comp) * 4) == 0 {
@@ -1561,7 +1561,7 @@ pub(crate) unsafe extern "thiscall" fn posicoes_e_situacao_na_liga(this: usize) 
                 let reg = read_usize(this + 4);
                 let nacao = read_usize(reg + 0x5d);
                 if read_i32(vaga) == -1 && nacao != 0 && read_i32(nacao) != read_i32(KEY_NATION_SCOTLAND) {
-                    let cont = read_usize(nacao + 0x71);
+                    let cont = read_usize(nacao + nation::CONTINENT);
                     if cont != 0 && read_i32(cont) == read_i32(KEY_CONTINENT_EUROPE) {
                         let (mut cl, mut uefa) = (0i8, 0i8);
                         let vagas: unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8) = core::mem::transmute(FN_UEFASEEDING_GET_NATION_PLACES);
@@ -1872,8 +1872,8 @@ pub(crate) unsafe extern "thiscall" fn anunciar_situacao_na_liga(liga: usize, cl
     gravar(n, 5, r as u32);
     let noticias = read_usize(G_NEWS);
     if saida as u8 != 0xff {
-        let nacao = read_usize(clube + 0x53);
-        let continente = if nacao != 0 { read_usize(nacao + 0x71) } else { 0 };
+        let nacao = read_usize(clube + club::NATION);
+        let continente = if nacao != 0 { read_usize(nacao + nation::CONTINENT) } else { 0 };
         pelo_alcance(noticias, n, clube, read_usize(liga + 4), nacao, continente, saida);
         return 1;
     }
@@ -2389,8 +2389,8 @@ pub(crate) unsafe fn cpm2_regra_dos_confrontos(this: usize) -> bool {
 /// adversários na ordem da tabela.
 pub(crate) unsafe extern "thiscall" fn iniciar_linha_da_tabela(this: usize, i: u32, clube: usize, marca: u32, linhas: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    if clube != 0 && read_u8(clube + 0x64) == 3 {
-        *((clube + 0x64) as *mut u8) = 2;
+    if clube != 0 && read_u8(clube + club::PROFESSIONAL_STATUS) == 3 {
+        *((clube + club::PROFESSIONAL_STATUS) as *mut u8) = 2;
     }
     if read_i16(this + 0xa7) == -1 && read_i16(this + 0x3e) > 0 {
         if read_i16(this + 0x3e) > 0x32 {
@@ -2507,7 +2507,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_iniciar_linha_da_tabela(this: us
     let a7 = read_i16(this + 0xa7);
     let n = read_i16(this + 0x3e);
     let a7_esperado = if a7 == -1 && n > 0 { (n - 1).wrapping_mul(read_i16(this + 0x3c)) } else { a7 };
-    let situacao = if clube != 0 { read_u8(clube + 0x64) } else { 0 };
+    let situacao = if clube != 0 { read_u8(clube + club::PROFESSIONAL_STATUS) } else { 0 };
     let situacao_esperada = if situacao == 3 { 2 } else { situacao };
     let tab = if linhas == 0 { read_usize(this + 0xb1) } else { linhas };
     let confrontos = cpm2_regra_dos_confrontos(this);
@@ -2516,7 +2516,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_iniciar_linha_da_tabela(this: us
     let l = tab.wrapping_add((idx * CPM2_LINHA as isize) as usize);
     let mut ok = read_usize(l) == clube && read_u8(l + 4) == i as u8 && read_u8(l + 0x37) == 0xff && read_u8(l + 0x38) == marca as u8
         && read_u8(l + 0x39) == 1 && read_u8(l + 0x3a) == n as u8 && read_i16(this + 0xa7) == a7_esperado
-        && (clube == 0 || read_u8(clube + 0x64) == situacao_esperada)
+        && (clube == 0 || read_u8(clube + club::PROFESSIONAL_STATUS) == situacao_esperada)
         && (read_usize(l + 9) != 0) == (read_i16(this + 0x3c) > 0) && (read_usize(l + 5) != 0) == confrontos;
     for k in 0..3 {
         let e = l + 0x11 + 14 * k;
@@ -3387,7 +3387,7 @@ pub(crate) unsafe fn cpa2_pagar_tv(liga: usize, valor: i32, filtro: usize, notic
     loop {
         let linha = read_usize(liga + 0xb1) + 0x3b * i as i32 as usize;
         let clube = read_usize(linha);
-        if filtro == 0 || read_usize(clube + 0x5b) == filtro {
+        if filtro == 0 || read_usize(clube + club::LAST_DIVISION) == filtro {
             somar_tv(financas_do_clube(*(G_FINANCE_TABLE as *const usize), clube), valor); // o dinheiro da TV
             if noticia {
                 let avisar: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(FN_COMP_SEND_TV_RIGHTS_NEWS);
@@ -4169,11 +4169,11 @@ pub(crate) unsafe extern "thiscall" fn mudar_clube_de_divisao(_this: usize, club
     let usa_numeros: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_SQUAD_MANAGER_CLUB_USES_SQUAD_NUMBERS);
     let limpar_clausulas: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_RESET_DIVISION_CLAUSES);
     let antes = usa_numeros(read_usize(G_SQUAD_MANAGER), clube, 0);
-    write_usize(clube + 0x5b, read_usize(clube + 0x57)); // a divisão da última temporada
-    write_usize(clube + 0x57, divisao);
+    write_usize(clube + club::LAST_DIVISION, read_usize(clube + club::DIVISION)); // a divisão da última temporada
+    write_usize(clube + club::DIVISION, divisao);
     let numeros = (antes == 0 && usa_numeros(read_usize(G_SQUAD_MANAGER), clube, 0) != 0) as u32;
     limpar_clausulas(read_usize(G_CONTRACT_MANAGER), clube, numeros);
-    if vaga != 0 && read_usize(clube + 0xcf) == 0 {
+    if vaga != 0 && read_usize(clube + club::MANAGER) == 0 {
         let abrir_vaga: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_MANAGER_MANAGER_ADD_JOB_VACANCY);
         abrir_vaga(read_usize(G_MANAGER_MANAGER), clube, 0);
     }
@@ -4184,7 +4184,7 @@ pub(crate) unsafe extern "thiscall" fn mudar_clube_de_divisao(_this: usize, club
     let id = read_usize(divisao);
     if comps != 0 {
         let comp = read_usize(comps + 4 * id);
-        if comp != 0 && read_usize(clube + 0x69) != 0 && *((comp + 0x43) as *const u8) == 2 {
+        if comp != 0 && read_usize(clube + club::STADIUM) != 0 && *((comp + 0x43) as *const u8) == 2 {
             let lugares = core::ptr::read_unaligned((comp + 0xe2) as *const i16);
             if lugares != -1 {
                 crate::comparacao::ramo("cpm_3 estadio da divisao");
@@ -4197,8 +4197,8 @@ pub(crate) unsafe extern "thiscall" fn mudar_clube_de_divisao(_this: usize, club
         }
     }
     // a original relê [0xadadfc] depois da obra (sem a obra, o mesmo valor; nulo, ela lê do endereço 0 também)
-    if read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * id) != 0 && *((clube + 0x64) as *const u8) == 3 {
-        *((clube + 0x64) as *mut u8) = 2;
+    if read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * id) != 0 && *((clube + club::PROFESSIONAL_STATUS) as *const u8) == 3 {
+        *((clube + club::PROFESSIONAL_STATUS) as *mut u8) = 2;
     }
 }
 

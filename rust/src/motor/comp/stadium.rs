@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_neutro(this: usize, marcas: u32, 
         }
     }
     if nacao != 0 && marcas & 2 == 0 && marcas & 0x2c != 0 {
-        return read_u32_as_usize(nacao + 0x80);
+        return read_u32_as_usize(nacao + nation::NATIONAL_STADIUM);
     }
     0
 }
@@ -341,7 +341,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
     if passo == 1 {
         let comp = read_u32_as_usize(fx + 0x14);
         if comp != 0 {
-            let n = read_u32_as_usize(comp + 0x5d);
+            let n = read_u32_as_usize(comp + competition::CLUB_COMP_NATION);
             if n != 0 && read_u32_as_usize(n) == read_u32_as_usize(KEY_NATION_ENGLAND) && !cqc2_selecao(read_u32_as_usize(fx + 0x1c)) && read_u32_as_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
                 *neutro = 1;
                 fixar(read_u32_as_usize(cqo1_nacao(read_u32_as_usize(KEY_NATION_WALES)) + 0x80));
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
         crate::comparacao::ramo("cqo_1 uma sede");
         alvo = cqo1_nacao(a as usize); // cqo1: a sede única
     } else {
-        alvo = read_u32_as_usize(comp + 0x5d);
+        alvo = read_u32_as_usize(comp + competition::CLUB_COMP_NATION);
     }
     if f & 0x20 != 0 && cqc2_selecao(read_u32_as_usize(fx + 0x1c)) {
         alvo = read_u32_as_usize(read_u32_as_usize(fx + 0x1c) + 0x53);
@@ -424,7 +424,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
         f = if cqc2_selecao(read_u32_as_usize(fx + 0x1c)) { 0x20 } else { 0x40 };
     }
     let buscar: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_STADIUM_FIND_AVAILABLE_VENUE);
-    let r = buscar(this, f, read_u32_as_usize(comp + 0x59), alvo, pd, read_u32_as_usize(fx + 0x1c), read_u32_as_usize(fx + 0x20), fx);
+    let r = buscar(this, f, read_u32_as_usize(comp + competition::CLUB_COMP_CONTINENT), alvo, pd, read_u32_as_usize(fx + 0x1c), read_u32_as_usize(fx + 0x20), fx);
     write_u32_from_usize(fx + 0x18, r);
     if r == 0 && alt != 0 {
         f = match f {
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
             0x200 => 0x2000,
             x => x,
         };
-        let r = buscar(this, f, read_u32_as_usize(comp + 0x59), alt, pd, read_u32_as_usize(fx + 0x1c), read_u32_as_usize(fx + 0x20), fx);
+        let r = buscar(this, f, read_u32_as_usize(comp + competition::CLUB_COMP_CONTINENT), alt, pd, read_u32_as_usize(fx + 0x1c), read_u32_as_usize(fx + 0x20), fx);
         write_u32_from_usize(fx + 0x18, r);
     }
     let st = read_u32_as_usize(fx + 0x18);
@@ -608,7 +608,7 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
         let k = lado as usize;
         let comp = read_u32_as_usize(jogo + 0x14);
         if comp != 0 {
-            f[k] = read_i16(comp + 0x69) as i32 as f64;
+            f[k] = read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32 as f64;
             if f[k] < f64_em(0x967890) {
                 f[k] = 1.0;
             }
@@ -689,7 +689,7 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
                 let busca: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
                 let p = busca(read_u32_as_usize(liga + 8), casa);
                 if p != 0 {
-                    let n = read_i16(comp + 0x69) as i32;
+                    let n = read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32;
                     let v = read_i32(p + 0x19);
                     if v > 1 {
                         crate::comparacao::ramo("cqo_2 posicao de cima");
@@ -765,7 +765,7 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
     }
     let comp = read_u32_as_usize(jogo + 0x14);
     if comp != 0 && casa != 0 && read_u32_as_usize(casa + 0x57) == comp && read_u8(casa + 0x6d) != 0 {
-        let n = read_i16(comp + 0x69);
+        let n = read_i16(comp + competition::CLUB_COMP_REPUTATION);
         if n > 0xc {
             let m = (n.wrapping_sub(0xc) as i32 + 3) * 2000;
             if pc < m {
@@ -997,7 +997,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_nota_do_estadio_neutro(this: usi
 /// nação, 0,05; e sempre [0x96d2c8]. Devolve o double no st0.
 pub(crate) unsafe extern "thiscall" fn fator_da_distancia(_this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
     let nacao = read_usize(read_usize(jogo + 0x20) + 0x53);
-    let r = *((nacao + 0x7e) as *const i8) as i32 as f64;
+    let r = *((nacao + nation::STATE_OF_DEVELOPMENT) as *const i8) as i32 as f64;
     let dy = read_f64(cid_est + 0x2b) - read_f64(cid_clube + 0x2b);
     let dx = read_f64(cid_est + 0x23) - read_f64(cid_clube + 0x23);
     let mut d = (dx * dx + dy * dy).sqrt();
@@ -1087,11 +1087,11 @@ pub(crate) unsafe extern "thiscall" fn estadios_do_dia(this: usize, hoje: usize)
     }
     if read_u16(hoje + 2) < 0x7d3 {
         let nacao = cps7_inglaterra();
-        let e = read_usize(nacao + 0x80);
+        let e = read_usize(nacao + nation::NATIONAL_STADIUM);
         if e != 0 {
             crate::comparacao::ramo("cps_7 fecha o estadio nacional");
             write_u32(G_STADIUM_STASHED_VENUE_ID, read_usize(e) as u32); // cps7: guarda o id do estádio fechado
-            write_u32(nacao + 0x80, 0);
+            write_u32(nacao + nation::NATIONAL_STADIUM, 0);
             write_u32(cps7_selecao(cps7_inglaterra()) + 0x69, 0); // cps7: a seleção sem casa
         }
     }
@@ -1103,7 +1103,7 @@ pub(crate) unsafe extern "thiscall" fn estadios_do_dia(this: usize, hoje: usize)
         crate::comparacao::ramo("cps_7 reabre o estadio nacional");
         write_u32(cps7_inglaterra() + 0x80, cps7_estadio(read_usize(G_STADIUM_STASHED_VENUE_ID)) as u32);
         let nacao = cps7_inglaterra();
-        write_u32(cps7_selecao(nacao) + 0x69, read_usize(nacao + 0x80) as u32);
+        write_u32(cps7_selecao(nacao) + 0x69, read_usize(nacao + nation::NATIONAL_STADIUM) as u32);
         write_u32(cps7_estadio(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x3c, 0x15f90);
         write_u32(cps7_estadio(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x40, 0x15f90);
         write_u32(G_STADIUM_STASHED_VENUE_ID, 0xffff_ffff);
@@ -1169,7 +1169,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_estadios_do_dia(this: usize, hoj
     regioes[m] = (0xa835a4, 4);
     m += 1;
     let nacao = cps7_inglaterra();
-    regioes[m] = (nacao + 0x80, 4);
+    regioes[m] = (nacao + nation::NATIONAL_STADIUM, 4);
     m += 1;
     let s = cps7_selecao(nacao);
     if s != 0 {
@@ -1337,14 +1337,14 @@ pub(crate) unsafe extern "thiscall" fn lista_de_estadios_neutros(this: usize) {
         if cidade == 0 {
             continue;
         }
-        let nacao = read_u32(cidade + 0x1f) as usize;
-        if nacao == 0 || read_u32(nacao + 0x71) == 0 {
+        let nacao = read_u32(cidade + city::CITY_NATION) as usize;
+        if nacao == 0 || read_u32(nacao + nation::CONTINENT) == 0 {
             continue;
         }
         if core::ffi::CStr::from_ptr((e + 4) as *const core::ffi::c_char).to_bytes() == b"City of Manchester Stadium" {
             continue;
         }
-        if *((nacao + 0x11c) as *const u8) != 0 && (read_u32(e + 0x3c) as i32) < 0x1388 { // cqn3: menos de 5000 lugares
+        if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 && (read_u32(e + 0x3c) as i32) < 0x1388 { // cqn3: menos de 5000 lugares
             crate::comparacao::ramo("cqn_3 estadio pequeno");
             continue; // cqn3: o estádio pequeno fica de fora
         }
@@ -1365,10 +1365,10 @@ pub(crate) unsafe extern "thiscall" fn lista_de_estadios_neutros(this: usize) {
         }
         let r = *lista + 16 * *conta as usize;
         *(r as *mut u32) = read_u32(nacao);
-        *((r + 4) as *mut u32) = read_u32(read_u32(nacao + 0x71) as usize);
+        *((r + 4) as *mut u32) = read_u32(read_u32(nacao + nation::CONTINENT) as usize);
         *((r + 0xc) as *mut usize) = e;
         crate::comparacao::ramo("cqn_3 entra na lista");
-        *((r + 8) as *mut u32) = (read_u32(nacao + 0x80) as usize == e) as u32; // cqn3: o estádio nacional
+        *((r + 8) as *mut u32) = (read_u32(nacao + nation::NATIONAL_STADIUM) as usize == e) as u32; // cqn3: o estádio nacional
         *conta += 1;
     }
     ordenar(*lista, *conta as u32, 0x10, 0x85e2f0);

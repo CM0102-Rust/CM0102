@@ -23,7 +23,7 @@ MUTACOES = [
     ('cqd10_fica_no_elenco', '        elenco(p); // cqd10: sai do elenco', '        let _ = elenco; // mutacao: sai do elenco', 'cqd_10 sai do elenco'),
     ('cqd11_sem_sorteio', '    let r = cqd11_sortear(3); // cqd11: o sorteio da notícia', '    let r = 0; // mutacao: sem o sorteio da noticia', 'cqd_11 noticia da falta'),
     ('cqd11_relator_invertido', '    if tecnico != 0 && humano(clube, 1, 1, 0, 0) == 0 { // cqd11: o técnico da IA relata', '    if tecnico != 0 && humano(clube, 1, 1, 0, 0) != 0 { // mutacao: o relator invertido', 'cqd_11 relator tecnico'),
-    ('cqd11_sem_noticia', '    if jogador == 0 || read_usize(jogador + 0x61) == 0 || clube == 0 || read_usize(clube + 0xcf) == 0 { // cqd11: sem jogador ou técnico', '    if true { // mutacao: sem a noticia', 'cqd_11 noticia da falta'),
+    ('cqd11_sem_noticia', '    if jogador == 0 || read_usize(jogador + 0x61) == 0 || clube == 0 || read_usize(clube + club::MANAGER) == 0 { // cqd11: sem jogador ou técnico', '    if true { // mutacao: sem a noticia', 'cqd_11 noticia da falta'),
     ('cqd12_bosman_invertida', '    if bosman(gerente, pessoa(contrato)) == 0 { // cqd12: sem a lei Bosman', '    if bosman(gerente, pessoa(contrato)) != 0 { // mutacao: a lei Bosman invertida', 'cqd_12 com lei Bosman'),
     ('cqd12_fator_invertido', '    (read_i32(vaga + 3) as f64 * fator > read_i32(vaga + 0xb) as f64) as u32', '    (read_i32(vaga + 3) as f64 * fator < read_i32(vaga + 0xb) as f64) as u32 // mutacao: comparacao invertida', 'cqd_12 faixa pelo fator'),
     ('cqd12_longe_recusa', '            return 1; // cqd12: as faixas 9-14', '            return 0; // mutacao: as faixas 9-14 recusam', 'cqd_12 faixa longe'),

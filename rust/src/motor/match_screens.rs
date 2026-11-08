@@ -780,9 +780,9 @@ pub(crate) unsafe extern "C" fn montar_tela_da_partida() {
     // o estádio ("estádio, cidade"; sem cidade só o nome, sem estádio "Unknown Stadium")
     let estadio = rd(p + 0x1c);
     let r: usize = if estadio != 0 {
-        let cidade = rd(estadio + 0x38);
+        let cidade = rd(estadio + stadium::STADIUM_CITY);
         if cidade != 0 {
-            let (a, b) = (sx(estadio + 0x37), sx(cidade + 0x1e));
+            let (a, b) = (sx(estadio + stadium::STADIUM_GENDER_NAME), sx(cidade + city::CITY_GENDER_NAME));
             texto(BUF, 0x9902a4, a, a, b, b, estadio + 4, cidade + 4) as usize
         } else {
             // o strcpy da original deixa eax e ecx em 0
@@ -1641,7 +1641,7 @@ pub(crate) unsafe extern "C" fn painel_da_visao_geral_da_partida(topo: *mut i32,
         if st != 0 {
             let cidade = u(st + 0x38);
             if cidade != 0 {
-                let (a, c) = (i8_(st + 0x37), i8_(cidade + 0x1e));
+                let (a, c) = (i8_(st + 0x37), i8_(cidade + city::CITY_GENDER_NAME));
                 texto(BUF, 0x9902a4, a, a, c, c, st + 4, cidade + 4);
             } else {
                 copiar_para_o_texto(st + 4);
@@ -2174,7 +2174,7 @@ pub(crate) unsafe extern "C" fn tabela_da_liga_ao_vivo(liga: usize, topo: i32, b
             linha(display_do_humano(), 0x40001, 0, 0, 0, 0, 1, fila, 1, cor_sobre(ret, 0xaebdcc), 0, 0xc, 0, cor_em(0xae31a8), 0, 0, 0, 0, lst);
         }
         let cor = if humano(clube, 0, 1, 0, 0) != 0 { cor_em(0xaebdec) } else { cor_em(0xae3184) };
-        celula(sm, lst, 2, fila, 1, 0, 1, 3, cor, clube + 0x38, 0x7d5, clube);
+        celula(sm, lst, 2, fila, 1, 0, 1, 3, cor, clube + club::SHORT_NAME, 0x7d5, clube);
         let d = r + coluna.wrapping_mul(14);
         for (o, col) in [(0x11usize, 4usize), (0x12, 5), (0x13, 6), (0x14, 7)] {
             formatar(BUF, FORMATO_D, b8(d + o) as i8 as i32);
@@ -6252,8 +6252,8 @@ pub(crate) unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base
         } else if chave == *(KEY_CLUB_COMP_RESERVE as *const usize) && mais_de_uma {
             texto(BUF, 0xa16aec, 0xad9c64);
         } else {
-            let g = *((comp + 0x52) as *const i8) as i32;
-            texto(BUF, 0xa16ac8, g, g, comp + 0x38);
+            let g = *((comp + competition::SHORT_GENDER_NAME) as *const i8) as i32;
+            texto(BUF, 0xa16ac8, g, g, comp + competition::SHORT_NAME);
         }
         titulo(sm, 0x6e, t, 0x30c, t + 0x23, 2, 0, 0xc, 3, cor(0xaebdec), BUF, 1);
         if sem_selo(comp) {

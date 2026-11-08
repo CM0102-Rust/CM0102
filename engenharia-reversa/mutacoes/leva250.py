@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpn_resposta_do_clube', 'responder(vaga(atual), tecnico, read_usize(tecnico + 0x39)); // o clube', '// mutacao: sem a resposta automatica pelo clube', 'cpn_1 resposta automatica'),
     ('cpn_alcance_clube', 'crate::comparacao::ramo("cpn_1 alcance do clube");', 'crate::comparacao::ramo("cpn_1 alcance do clube"); return 0; // mutacao: o alcance do clube sem entrega', 'cpn_1 alcance do clube'),
-    ('cpn_tecnico_do_clube', 'let tecnico = read_usize(clube + 0xcf);\n    *((noticia + 0xde) as *mut u8) = 0;', 'let tecnico = read_usize(clube + 0xd3); // mutacao: o auxiliar\n    *((noticia + 0xde) as *mut u8) = 0;', 'cpn_1 noticia ao tecnico humano'),
+    ('cpn_tecnico_do_clube', 'let tecnico = read_usize(clube + club::MANAGER);\n    *((noticia + 0xde) as *mut u8) = 0;', 'let tecnico = read_usize(clube + club::ASSISTANT_MANAGER); // mutacao: o auxiliar\n    *((noticia + 0xde) as *mut u8) = 0;', 'cpn_1 noticia ao tecnico humano'),
     ('cpn_responder_todas', 'responder(vaga, tecnico, clube); // a resposta automática', '// mutacao: sem a resposta automatica', 'cpn_2 responder todas'),
     ('cpn_responder_so_a_nova', 'k -= 1;\n        if k == read_i32(e + 4) - 1 {\n            return 1;', 'k -= 1;\n        if true { // mutacao: so a mais nova\n            return 1;', 'cpn_2 responder todas'),
     ('cpn_proximo_campo', '*proximo = p; // o próximo campo livre', '*proximo = p.wrapping_add(1); // mutacao: um campo adiante', 'cpn_2 proximo campo do texto'),

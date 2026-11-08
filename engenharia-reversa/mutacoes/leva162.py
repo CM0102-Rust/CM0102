@@ -3,6 +3,6 @@ MUTACOES = [
     ('g_vaga', "    core::ptr::write_unaligned((linha_da_tabela(t, l) + 2 + 4 * vaga as usize) as *mut u32, *pessoa);", "    core::ptr::write_unaligned((linha_da_tabela(t, l) + 6 + 4 * vaga as usize) as *mut u32, *pessoa);"),
     ('g_pendente', "            if *ativa != 0 && *(e as *const usize) == clube && *((e + 4) as *const u32) == humano {", "            if *ativa != 0 && *(e as *const usize) == clube {"),
     ('p_ficha', "    if core::ptr::read_unaligned((p + 0x61) as *const usize) == 0 {\n        core::ptr::write_unaligned(casa, -1);", "    if core::ptr::read_unaligned((p + 0x65) as *const usize) == 0 {\n        core::ptr::write_unaligned(casa, -1);"),
-    ('p_nacao', "        if nacao == 0 || core::ptr::read_unaligned((nacao + 0x53)", "        if core::ptr::read_unaligned((nacao + 0x53)"),
+    ('p_nacao', "        if nacao == 0 || core::ptr::read_unaligned((nacao + nation::THREE_LETTER_NAME)", "        if core::ptr::read_unaligned((nacao + nation::THREE_LETTER_NAME)"),
     ('f_grava', "    core::ptr::write_unaligned(linha_da_tabela(t, l) as *mut i16, formacao);", "    core::ptr::write_unaligned(linha_da_tabela(t, l) as *mut i16, formacao.wrapping_add(1));"),
 ]

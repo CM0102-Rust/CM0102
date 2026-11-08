@@ -22,9 +22,9 @@ pub(crate) unsafe extern "C" fn clube_humano(clube: usize, sem_tatica: u32, qual
             return orig::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(180)(0, sem_tatica, qualquer, pessoa, forcar);
         }
         if pessoa == 0 {
-            pessoa = *((clube + 0xcf) as *const usize);
+            pessoa = *((clube + club::MANAGER) as *const usize);
         }
-        let tecnico = *((clube + 0xcf) as *const usize);
+        let tecnico = *((clube + club::MANAGER) as *const usize);
         if tecnico != 0 && pessoa == tecnico && *(pessoa as *const i32) >= (*(G_STAFF_COUNT as *const i32)).wrapping_sub(16) {
             let tatica = sem_tatica == 0
                 && (t9ace(h, pessoa) != 0 || matches!(tecnico_humano(h, pessoa), Ok(r) if *((r + 0x9a01) as *const u32) != 0));
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "C" fn clube_humano(clube: usize, sem_tatica: u32, qual
             return 0;
         }
         qualquer = 0;
-        clube = principal(*((clube + 0x53) as *const usize));
+        clube = principal(*((clube + club::NATION) as *const usize));
     }
 }
 
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn tecnico_9a06(this: usize, pessoa: usize, 
     match pessoa_e_registro(this, pessoa) {
         Some((p, r)) => {
             let clube = *((p + 0x24) as *const usize);
-            if clube != 0 && *((*((clube + 0x53) as *const usize) + 0x88) as *const i32) < 400 {
+            if clube != 0 && *((*((clube + club::NATION) as *const usize) + 0x88) as *const i32) < 400 {
                 if !saida.is_null() {
                     *saida = 1;
                 }
@@ -503,14 +503,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_escalacao_guardada(gerente: usiz
 /// se houver; senão, dos cinco da comissão (+0x19f) com dados (+0x69), o de maior reputação (+0xa,
 /// ficando o primeiro no empate); 0 se nenhum.
 pub(crate) unsafe extern "C" fn tecnico_substituto(clube: usize) -> usize {
-    let auxiliar = core::ptr::read_unaligned((clube + 0xd3) as *const usize);
+    let auxiliar = core::ptr::read_unaligned((clube + club::ASSISTANT_MANAGER) as *const usize);
     if auxiliar != 0 {
         return auxiliar;
     }
     let reputacao = |p: usize| core::ptr::read_unaligned((core::ptr::read_unaligned((p + 0x69) as *const usize) + 0xa) as *const i16);
     let mut melhor = 0usize;
     for k in 0..5 {
-        let c = core::ptr::read_unaligned((clube + 0x19f + k * 4) as *const usize);
+        let c = core::ptr::read_unaligned((clube + club::COACHES + k * 4) as *const usize);
         if c == 0 || core::ptr::read_unaligned((c + 0x69) as *const usize) == 0 {
             continue;
         }

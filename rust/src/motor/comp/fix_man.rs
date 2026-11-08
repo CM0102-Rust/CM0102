@@ -353,7 +353,7 @@ pub(crate) unsafe fn cqc3_dma(dia: u32, mes: u32, ano: u32) -> (u16, u16) {
 
 /// O jogo `x` está na liga de id [0x9cf590] por um dos clubes (+0x57 → +0).
 pub(crate) unsafe fn cqc3_na_liga(clube: usize, id: i32) -> bool {
-    let l = read_usize(clube + 0x57);
+    let l = read_usize(clube + club::DIVISION);
     l != 0 && read_i32(l) == id
 }
 
@@ -444,7 +444,7 @@ pub(crate) unsafe extern "thiscall" fn conflitos_do_dia(this: usize, jogo: usize
     }
     if flag == 0 {
         let comp = read_usize(jogo + 0x14);
-        let nc = if comp != 0 { read_usize(comp + 0x5d) } else { 0 };
+        let nc = if comp != 0 { read_usize(comp + competition::CLUB_COMP_NATION) } else { 0 };
         let e_da = |g: usize| nc != 0 && read_i32(nc) == read_i32(g);
         if mesma(cqc3_dma(0x19, 0xb, ano())) && !e_da(KEY_NATION_JAPAN) {
             crate::comparacao::ramo("cqc_3 natal");
@@ -1724,8 +1724,8 @@ pub(crate) unsafe extern "thiscall" fn mover_jogos_vizinhos_do_clube(this: usize
     let mut f2 = [0u8; 0x4f];
     for k in 0..2 {
         let clube = read_usize(jogo + if k == 0 { 0x1c } else { 0x20 });
-        let nacao = read_usize(clube + 0x53);
-        if nacao == 0 || *((nacao + 0x11c) as *const u8) == 0 {
+        let nacao = read_usize(clube + club::NATION);
+        if nacao == 0 || *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
         // dois dias antes
@@ -2623,7 +2623,7 @@ pub(crate) unsafe fn cpc1_data_original(o: usize, this: usize, ano: u32) -> u32 
 pub(crate) unsafe extern "thiscall" fn faixa_do_horario(_this: usize, comp: usize, dia: u32) -> u8 {
     let dia = dia as i16;
     if comp != 0 {
-        let nacao = core::ptr::read_unaligned((comp + 0x5d) as *const usize);
+        let nacao = core::ptr::read_unaligned((comp + competition::CLUB_COMP_NATION) as *const usize);
         if nacao != 0 {
             let id = *(nacao as *const u32);
             if [KEY_NATION_HOLLAND, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_BELGIUM, KEY_NATION_FRANCE].iter().any(|&g| id == *(g as *const u32)) {
@@ -2653,15 +2653,15 @@ pub(crate) unsafe extern "thiscall" fn risco_de_doenca_na_viagem(_this: usize, f
     if estadio == 0 {
         return;
     }
-    let cidade = read_u32_as_usize(estadio + 0x38);
+    let cidade = read_u32_as_usize(estadio + stadium::STADIUM_CITY);
     if cidade == 0 {
         return;
     }
-    let nacao = read_u32_as_usize(cidade + 0x1f);
+    let nacao = read_u32_as_usize(cidade + city::CITY_NATION);
     if nacao == 0 {
         return;
     }
-    if read_u8(nacao + 0x7e) != 3 { // cps13: só o terceiro mundo
+    if read_u8(nacao + nation::STATE_OF_DEVELOPMENT) != 3 { // cps13: só o terceiro mundo
         return;
     }
     let casa = read_u32_as_usize(f + 0x1c);
@@ -2690,7 +2690,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_risco_de_doenca_na_viagem(this: 
 /// para clube da Inglaterra ([0x9cf2e4]) ou do País de Gales ([0x9cf510]) (nação +0x53, id +0), o índice da nação-chave
 /// ativa da outra (os 35 registros de 72 bytes em 0xb63d60: +0 a nação, ativa em +0x11c, +0x14 o índice); senão 0xff.
 pub(crate) unsafe extern "C" fn nacao_parceira_do_clube(clube: usize) -> u8 {
-    let nacao = read_u32(clube + 0x53) as usize;
+    let nacao = read_u32(clube + club::NATION) as usize;
     if nacao == 0 {
         return 0xff;
     }

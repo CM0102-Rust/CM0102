@@ -12,7 +12,7 @@ MUTACOES = [
     ('cpj_assistida_79', 'core::ptr::write_bytes(f as *mut u8, 0, 79); // a partida sai', 'core::ptr::write_bytes(f as *mut u8, 0, 78); // mutacao: 78 bytes'),
     ('cpj_alvos_clube', 'if read_usize(e) as u32 == id { // o pedido do clube', 'if read_usize(e) as u32 != id { // mutacao: os dos outros'),
     ('cpj_olheiro_mesmo', 'return 1; // o mesmo olheiro', '// mutacao: troca mesmo assim'),
-    ('cpj_diretoria_tecnico', 'if read_usize(clube + 0xcf) != 0 { // o lado tem técnico', 'if read_usize(clube + 0xcf) == 0 { // mutacao: os sem tecnico'),
+    ('cpj_diretoria_tecnico', 'if read_usize(clube + club::MANAGER) != 0 { // o lado tem técnico', 'if read_usize(clube + 0xcf) == 0 { // mutacao: os sem tecnico'),
     ('cpj_disciplina_liga', 'if let Some(t) = cpj6_tribunal(this, read_usize(liga) as i32) { // o tribunal da liga do clube', 'if let Some(t) = cpj6_tribunal(this, read_usize(liga) as i32 + 1) { // mutacao: a liga seguinte'),
     ('cpj_shortlist_recuo', 'e -= 8; // a anterior também é do clube', 'break; // mutacao: sem recuar'),
     ('cpj_oferta_empate', 'if v > maior { // a primeira no empate', 'if v >= maior { // mutacao: a ultima no empate'),

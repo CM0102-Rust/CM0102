@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn iniciar_rigor(this: usize, motor: u32, pe
     }
     for (n, valor) in [(0x15e, 0x1e46u16), (0x12c, 0x1c52), (0xfa, 0x1a5e), (0xc8, 0x186a), (0x96, 0x1676)] {
         let r = sortear(n);
-        if *((pessoa + 0x1e) as *const i16) as i32 > r {
+        if *((pessoa + staff::SECOND_NATION) as *const i16) as i32 > r {
             *v = valor;
             return;
         }

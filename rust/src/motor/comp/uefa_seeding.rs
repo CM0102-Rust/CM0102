@@ -339,7 +339,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_juntar_clubes_europeus(this: usize, 
         loop {
             let nacao = read_u32(c + 0x53) as usize;
             if nacao != 0 && selecao(c) == 0 {
-                let cont = read_u32(nacao + 0x71) as usize;
+                let cont = read_u32(nacao + nation::CONTINENT) as usize;
                 if cont != 0 && read_u32(cont) == read_u32(KEY_CONTINENT_EUROPE) {
                     *((c + 0x1db) as *mut u32) = u32::MAX;
                     core::ptr::write_unaligned((read_u32(G_CLUB_STATE_TABLE) as usize).wrapping_add((read_u32(c) as usize).wrapping_mul(6)) as *mut u32, u32::MAX);
@@ -712,7 +712,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_vagas_copa_da_uefa(this: usize, club
                 loop {
                     let mut tentar_de_novo = false;
                     let c = if escolhidos == 0 {
-                        if read_u8(nacao + 0x11c) == 0 {
+                        if read_u8(nacao + nation::NATION_LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
                             let copa = read_u32(G_LEAGUE_WORLD_CUP_CUP_COMP + (linha(nacao) as i32 * 0x48) as usize) as usize;
@@ -767,7 +767,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_vagas_copa_da_uefa(this: usize, club
                             }
                         }
                     } else if escolhidos == 1 {
-                        if read_u8(nacao + 0x11c) == 0 {
+                        if read_u8(nacao + nation::NATION_LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
                             let copa = read_u32(G_LEAGUE_WORLD_CUP_SECOND_CUP_COMP + (linha(nacao) as i32 * 0x48) as usize) as usize;

@@ -8,7 +8,7 @@ use super::*;
 
 /// O tipo do contrato (+0x4f, nibble alto).
 pub(crate) unsafe fn cpo6_tipo(contrato: usize) -> u8 {
-    *((contrato + 0x4f) as *const u8) & 0xf0
+    *((contrato + contract::SQUAD_STATUS) as *const u8) & 0xf0
 }
 
 /// A notícia guardada: 0xdf bytes (+0xd6 id, +0xda lida).
@@ -219,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_ao_tecnico_do_clube(this: usize, 
         aviso_em(0xa693ec, 0x202e);
         return 0;
     }
-    let tecnico = read_usize(clube + 0xcf);
+    let tecnico = read_usize(clube + club::MANAGER);
     *((noticia + 0xde) as *mut u8) = 0;
     if tecnico == 0 {
         return 0;
@@ -336,7 +336,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_ao_tecnico_do_clube(this
     if noticia == 0 || clube == 0 {
         return o(this, noticia, clube);
     }
-    let tecnico = read_usize(clube + 0xcf);
+    let tecnico = read_usize(clube + club::MANAGER);
     let humano = tecnico != 0 && read_i32(tecnico) >= read_i32(0xae2364).wrapping_sub(0x10);
     let r = o(this, noticia, clube);
     let ok = *((noticia + 0xde) as *const u8) == 0 && (humano || r == 0) && r <= 1;
@@ -611,13 +611,13 @@ pub(crate) unsafe extern "thiscall" fn noticia_para_a_regiao_da_competicao(this:
     if noticia == 0 || comp == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(896)(this, noticia, comp); // caixa: só a original
     }
-    let nacao = read_usize(comp + 0x5d);
+    let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     if nacao != 0 {
         crate::comparacao::ramo("cpk_5 noticia da nacao da competicao");
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_CLUB_MANAGERS);
         return f(this, noticia, nacao);
     }
-    let continente = read_usize(comp + 0x59);
+    let continente = read_usize(comp + competition::CLUB_COMP_CONTINENT);
     if continente != 0 {
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
         return f(this, noticia, continente);
@@ -854,7 +854,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_nacao(this: u
             continue;
         }
         let clube = read_usize(p + 0x39);
-        if clube == 0 || read_usize(clube + 0x53) != nacao {
+        if clube == 0 || read_usize(clube + club::NATION) != nacao {
             continue;
         }
         if entregar(this, noticia, p, 0) == 0 {

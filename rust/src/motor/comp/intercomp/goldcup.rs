@@ -62,7 +62,7 @@ pub(crate) unsafe fn cqs12_selecoes(this: usize) -> u32 {
     let mut i = 0i16;
     let mut nacao = read_u32_as_usize(G_NATION_TABLE);
     while (i as i32) < read_u32_as_usize(G_NATION_COUNT) as i32 && (k as i32) < read_u32_as_usize(this + 0xf2) as i32 {
-        let continente = read_u32_as_usize(nacao + 0x71);
+        let continente = read_u32_as_usize(nacao + nation::CONTINENT);
         let id = read_u32_as_usize(nacao);
         let entra = (continente != 0 && read_u32_as_usize(continente) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA))
             || (ano == 0x7cf && id == read_u32_as_usize(KEY_NATION_JAPAN))

@@ -190,7 +190,7 @@ pub(crate) unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
         if amistoso(read_u32_as_usize(G_FRIENDLY), comp) != 0 {
             continue;
         }
-        let nac = read_u32_as_usize(comp + 0x5d);
+        let nac = read_u32_as_usize(comp + competition::CLUB_COMP_NATION);
         if nac == 0 {
             continue;
         }
@@ -391,7 +391,7 @@ pub(crate) unsafe fn cpy8_bloco(this: usize, nacao: i32) -> usize {
 
 /// O id da nação do clube (+0x53, ponteiro) ou, sem nação, `sem`.
 pub(crate) unsafe fn cpy8_nacao_do_clube(clube: usize) -> Option<i32> {
-    let n = read_usize(clube + 0x53);
+    let n = read_usize(clube + club::NATION);
     if n != 0 { Some(read_i32(n)) } else { None }
 }
 
@@ -436,11 +436,11 @@ pub(crate) unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, 
                 let tipo = read_u8(c + 0x42) as i8;
                 if tipo == 2 || tipo == 4 {
                     let continente_do = |clube: usize| {
-                        let n = read_usize(clube + 0x53);
+                        let n = read_usize(clube + club::NATION);
                         if n != 0 && read_usize(n + 0x71) != 0 { Some(read_i32(read_usize(n + 0x71))) } else { None }
                     };
-                    let continente = if read_usize(comp + 0x59) != 0 {
-                        read_i32(read_usize(comp + 0x59))
+                    let continente = if read_usize(comp + competition::CLUB_COMP_CONTINENT) != 0 {
+                        read_i32(read_usize(comp + competition::CLUB_COMP_CONTINENT))
                     } else if let Some(k) = continente_do(mandante) {
                         k
                     } else if let Some(k) = continente_do(visitante) {
@@ -472,8 +472,8 @@ pub(crate) unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, 
                     crate::comparacao::ramo("cpy_8 arbitro neutro");
                     (read_i32(b + 8).wrapping_sub(ftol(conta * -0.75)), ftol(conta * 0.25)) // cpy8: o quarto de cima
                 } else {
-                    let nacao = if read_usize(comp + 0x5d) != 0 {
-                        read_i32(read_usize(comp + 0x5d))
+                    let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 {
+                        read_i32(read_usize(comp + competition::CLUB_COMP_NATION))
                     } else if let Some(k) = cpy8_nacao_do_clube(mandante) {
                         k
                     } else if let Some(k) = cpy8_nacao_do_clube(visitante) {
@@ -589,7 +589,7 @@ pub(crate) unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize
     if conta(read_i32(comp)) == 0 {
         return 0;
     }
-    let nacao = if read_usize(comp + 0x5d) != 0 { read_i32(read_usize(comp + 0x5d)) } else { sortear(read_i32(0xae2350)) };
+    let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 { read_i32(read_usize(comp + competition::CLUB_COMP_NATION)) } else { sortear(read_i32(0xae2350)) };
     let b = cpy8_bloco(this, nacao);
     let mut faixa = None;
     for f in 0..read_i16(b + 0x10).max(0) as usize {
@@ -712,7 +712,7 @@ pub(crate) unsafe fn cpy9_gerar(r: usize, nacao: usize) {
 /// e o jogo para), gera `conta` fichas novas no fim (cpy9_gerar), soma a conta em [0xae2390] e ordena a tabela inteira
 /// (qsort 0x945333 com 0x79d480: nação, +0x28 × 50 + +0x22, id).
 pub(crate) unsafe extern "thiscall" fn arbitros_sorteados(_this: usize, conta: i32, nacao: usize) {
-    if nacao != 0 && read_usize(nacao + 0x71) == 0 {
+    if nacao != 0 && read_usize(nacao + nation::CONTINENT) == 0 {
         return;
     }
     let realocar: unsafe extern "C" fn(usize, i32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
@@ -748,7 +748,7 @@ pub(crate) unsafe fn cpy9_mesma_ficha(g: &[u8; 0x2b], f: usize) -> bool {
 /// continente: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_arbitros_sorteados(this: usize, conta: i32, nacao: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize)>(1365);
-    if conta <= 0 || (nacao != 0 && read_usize(nacao + 0x71) == 0) {
+    if conta <= 0 || (nacao != 0 && read_usize(nacao + nation::CONTINENT) == 0) {
         return o(this, conta, nacao);
     }
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);

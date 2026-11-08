@@ -1,6 +1,6 @@
 # Mutações da 261a leva (itens cpx_13, cpy_1, cpy_2, cpy_3, cpy_4, cpy_5, cpy_6, cpy_8, cpy_9, cpy_10, cpy_11, cpy_12, cpy_13). Uso: python mutacoes.py mutacoes\leva261.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpx13_sem_elenco', 'escolher(this, read_usize(clube + 0x53), tipo, 0xae2c90, p, 0); // cpx13: o elenco', 'let _ = escolher; // mutacao: sem pedir elenco', 'cpx_13 elenco pedido'),
+    ('cpx13_sem_elenco', 'escolher(this, read_usize(clube + club::NATION), tipo, 0xae2c90, p, 0); // cpx13: o elenco', 'let _ = escolher; // mutacao: sem pedir elenco', 'cpx_13 elenco pedido'),
     ('cpx13_elenco_de_60_dias', 'if d <= 0xe && read_u8(base + 0x11) != 0 && extra() {', 'if d <= 60 && read_u8(base + 0x11) != 0 && extra() { // mutacao: o elenco vale 60 dias', 'cpx_13 elenco pedido'),
     ('cpx13_janela_de_uma_semana', 'let q = semanas_antes(jogo.as_mut_ptr(), r.as_mut_ptr(), 2); // cpx13: a janela', 'let q = semanas_antes(jogo.as_mut_ptr(), r.as_mut_ptr(), 1); // mutacao: a janela de uma semana', 'cpx_13 elenco pedido'),
     ('cpy1_conta_alvo_sem_lance', '            continue; // cpy1: alvo sem lance não conta', '            // mutacao: o alvo sem lance conta', 'cpy_1 alvo sem lance'),

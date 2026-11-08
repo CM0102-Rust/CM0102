@@ -219,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_financas_do_clube(this: usize, c
 
 /// A região do clima de uma cidade (+0x34) se for válida (0 ≤ r < [this + 8]): [this] + r × 0x6e.
 pub(crate) unsafe fn cpu6_regiao(this: usize, cidade: usize) -> Option<usize> {
-    let r = read_i32(cidade + 0x34);
+    let r = read_i32(cidade + city::CITY_WEATHER);
     if r >= 0 && r < read_i32(this + 8) {
         Some(read_usize(this).wrapping_add(r as usize * 0x6e))
     } else {

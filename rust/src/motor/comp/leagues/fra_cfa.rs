@@ -593,7 +593,7 @@ pub(crate) unsafe fn cqk6_tabela(this: usize, clubes: usize, n: i16, arquivo: us
     let mut i: i16 = 0;
     while i < read_i16(this + 0x3e) {
         let clube = read_usize(clubes + (i as usize) * 4);
-        let id = read_usize(read_usize(clube + 0x57));
+        let id = read_usize(read_usize(clube + club::DIVISION));
         let marca = marcadas.iter().any(|&g| read_usize(g) == id) as u32; // cqk6: a marca dos clubes de divisão maior
         // ponytail: a original empurra a linha no ecx com os bits de cima do id da competição; a 0x687430 só lê o
         // byte.

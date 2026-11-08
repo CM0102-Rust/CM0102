@@ -259,13 +259,13 @@ pub(crate) unsafe fn cpo11_cobre(orgao: usize, clube: usize) -> bool {
         if continente == 0xffff_ffff {
             return true;
         }
-        if clube == 0 || read_u32_as_usize(clube + 0x53) == 0 {
+        if clube == 0 || read_u32_as_usize(clube + club::NATION) == 0 {
             return false;
         }
-        let c = read_u32_as_usize(read_u32_as_usize(clube + 0x53) + 0x71);
+        let c = read_u32_as_usize(read_u32_as_usize(clube + club::NATION) + 0x71);
         return c != 0 && read_u32_as_usize(c) as u32 == continente;
     }
-    clube != 0 && read_u32_as_usize(clube + 0x53) != 0 && read_u32_as_usize(read_u32_as_usize(clube + 0x53)) as u32 == nacao
+    clube != 0 && read_u32_as_usize(clube + club::NATION) != 0 && read_u32_as_usize(read_u32_as_usize(clube + club::NATION)) as u32 == nacao
 }
 
 /// Solta a suspensão da entrada (se tem: +6 > −1) e libera a vaga `k` do registro da pessoa (regra 0xff, índice −1) e a
@@ -397,7 +397,7 @@ pub(crate) unsafe extern "thiscall" fn acrescentar_suspensao(this: usize, id: u3
     let item = read_u32_as_usize(this + 0xc).wrapping_add((n as i32 as usize).wrapping_mul(8));
     write_u32(item, id);
     let pessoa = read_u32_as_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
-    write_u32(item + 4, read_u32_as_usize(read_u32_as_usize(pessoa + 0x1a)) as u32); // a nação
+    write_u32(item + 4, read_u32_as_usize(read_u32_as_usize(pessoa + staff::NATION)) as u32); // a nação
     write_u16(this + 0x12, n.wrapping_add(1) as u16);
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     qsort(read_u32_as_usize(this + 0xc), read_i16(this + 0x12) as i32, 8, 0x55e5f0);
@@ -715,7 +715,7 @@ pub(crate) unsafe fn cpm4_entrada(orgao: usize, id: u32) -> usize {
 pub(crate) unsafe fn cpm4_no_indice(this: usize, id: u32) -> usize {
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
-    let mut chave = [id, read_usize(read_usize(pessoa + 0x1a)) as u32];
+    let mut chave = [id, read_usize(read_usize(pessoa + staff::NATION)) as u32];
     let e = bsearch(chave.as_ptr(), read_usize(this + 0xc), read_i16(this + 0x12) as i32, 8, 0x55e5f0);
     if e != 0 {
         return e;
@@ -853,7 +853,7 @@ pub(crate) unsafe extern "thiscall" fn soltar_suspensao(this: usize, id: u32, in
 /// da pessoa (registro de 29 bytes do id em [this+0x14]) fica sem o último (0x58f110 sobre [this+0x18]: +0x18 = −1).
 /// Devolve o que a 0x58f110 devolve. Pessoa nula ou não jogadora (+0x61): a original (caixa fatal).
 pub(crate) unsafe extern "thiscall" fn apagar_historico_de_suspensoes(this: usize, pessoa: usize) -> usize {
-    if pessoa == 0 || read_usize(pessoa + 0x61) == 0 {
+    if pessoa == 0 || read_usize(pessoa + staff::PLAYER) == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(936)(this, pessoa); // caixa fatal: só a original
     }
     let r = cpm4_registro(this, read_usize(pessoa));
@@ -913,7 +913,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_soltar_suspensao(this: usize, id
 /// Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
 pub(crate) unsafe extern "thiscall" fn comparar_apagar_historico_de_suspensoes(this: usize, pessoa: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(936);
-    if pessoa == 0 || read_usize(pessoa + 0x61) == 0 {
+    if pessoa == 0 || read_usize(pessoa + staff::PLAYER) == 0 {
         return o(this, pessoa);
     }
     let r = cpm4_registro(this, read_usize(pessoa));
@@ -1067,7 +1067,7 @@ pub(crate) unsafe extern "thiscall" fn esta_suspenso(this: usize, jogador: usize
     if clube != 0 {
         let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
         if humano(clube, 0, 1, 0, 0) != 0 {
-            if let Some(s) = (0..20).map(|k| clube + 0x1e0 + k * 4).find(|&s| read_usize(s) == jogador) {
+            if let Some(s) = (0..20).map(|k| clube + club::TEAM_SELECTED + k * 4).find(|&s| read_usize(s) == jogador) {
                 *(s as *mut usize) = 0; // sai da vaga
             }
         }
@@ -1079,7 +1079,7 @@ pub(crate) unsafe extern "thiscall" fn esta_suspenso(this: usize, jogador: usize
 pub(crate) unsafe extern "thiscall" fn comparar_esta_suspenso(this: usize, jogador: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(891);
     let clube = if jogador != 0 { read_usize(jogador + 0x39) } else { 0 };
-    let regioes: &[(usize, usize)] = if clube != 0 { &[(clube + 0x1e0, 80)] } else { &[] };
+    let regioes: &[(usize, usize)] = if clube != 0 { &[(clube + club::TEAM_SELECTED, 80)] } else { &[] };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(this, jogador, comp, extra, partida), || esta_suspenso(this, jogador, comp, extra, partida));
     PLACAR.registrar(igual && r == n, || format!("esta_suspenso({:x}, {}) original={} rust={} {:x?} x {:x?}", jogador, *comp, r, n, mo, mr));
     r

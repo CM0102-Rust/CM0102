@@ -757,8 +757,8 @@ pub(crate) unsafe extern "thiscall" fn convite_de_amistoso_valido(this: usize, a
         return 1;
     }
     if texto != 0 {
-        let k = *((clube + 0x52) as *const i8) as i32;
-        formatar(texto, 0x9cd104usize, k, k, clube + 0x38); // "{}<%s - Club Name...>{} are unavailable for this match."
+        let k = *((clube + club::SHORT_GENDER_NAME) as *const i8) as i32;
+        formatar(texto, 0x9cd104usize, k, k, clube + club::SHORT_NAME); // "{}<%s - Club Name...>{} are unavailable for this match."
     }
     0
 }
@@ -824,8 +824,8 @@ pub(crate) unsafe extern "thiscall" fn convite_de_torneio_valido(this: usize, cl
         return 1;
     }
     if texto != 0 {
-        let k = *((clube + 0x52) as *const i8) as i32;
-        formatar(texto, 0x9cd188usize, k, k, clube + 0x38); // "... are unavailable for this competition."
+        let k = *((clube + club::SHORT_GENDER_NAME) as *const i8) as i32;
+        formatar(texto, 0x9cd188usize, k, k, clube + club::SHORT_NAME); // "... are unavailable for this competition."
     }
     0
 }
@@ -1177,7 +1177,7 @@ pub(crate) unsafe extern "thiscall" fn amistosos_dos_clubes(this: usize, entrada
     for k in 0..0x23usize {
         let liga = 0xb63d60 + k * 0x48;
         let nacao = read_usize(liga);
-        if nacao == 0 || *((nacao + 0x11c) as *const u8) == 0 {
+        if nacao == 0 || *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
         if cqb4_antes_de_hoje(liga + 0x2a) {
@@ -1208,17 +1208,17 @@ pub(crate) unsafe extern "thiscall" fn amistosos_dos_clubes(this: usize, entrada
         while q < ultimo {
             let cand = read_usize(q);
             let clube = cpw6_clube(read_i32(cand));
-            if read_usize(clube + 0x53) != read_usize(liga) {
+            if read_usize(clube + club::NATION) != read_usize(liga) {
                 break;
             }
             q += 4;
             if humano(clube, 1, 1, 0, 0) != 0 {
                 continue;
             }
-            if read_i32(clube + 0x1db) == read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) {
+            if read_i32(clube + club::EURO_FLAG) == read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) {
                 continue;
             }
-            let lg = read_usize(clube + 0x57);
+            let lg = read_usize(clube + club::DIVISION);
             if lg == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE) + (read_i32(lg) as usize).wrapping_mul(4)) == 0 {
                 continue;
             }
@@ -1227,7 +1227,7 @@ pub(crate) unsafe extern "thiscall" fn amistosos_dos_clubes(this: usize, entrada
             if b == 3 && cpe1_sorteio(4) == 0 {
                 b = 2;
             }
-            let mut faixa = ((read_i16(clube + 0x80) as i32 / 500) as u8).wrapping_add(b);
+            let mut faixa = ((read_i16(clube + club::REPUTATION) as i32 / 500) as u8).wrapping_add(b);
             let quantos = (cpe1_sorteio(3) as u8).wrapping_add(4) as i8; // cqb4: quantos amistosos
             let mut j = 0i8;
             while read_i8(cand + 4) < quantos && j < quantos {
@@ -1852,7 +1852,7 @@ pub(crate) unsafe fn cpv13_premio(this: usize, p: usize, clube: usize, premio: u
 /// [pt] { 0x5c52d0 } (stdcall, ret 4, friendly.cpp): `friendly_club_reputation_tier(clube)`: a faixa da reputação (+0x80):
 /// 5 a partir de 8000, 4 de 6000, 3 de 4000, 2 de 2000, senão 1 (só o al vale).
 pub(crate) unsafe extern "stdcall" fn faixa_de_reputacao_do_amistoso(clube: usize) -> u8 {
-    let r = core::ptr::read_unaligned((clube + 0x80) as *const i16);
+    let r = core::ptr::read_unaligned((clube + club::REPUTATION) as *const i16);
     if r >= 0x1f40 {
         5
     } else if r >= 0x1770 {
@@ -2067,15 +2067,15 @@ pub(crate) unsafe extern "thiscall" fn planejar_pre_temporada_da_ia(this: usize)
     let mut i: i32 = 0;
     if read_u32_as_usize(G_CLUB_COUNT) as i32 > 0 {
         loop {
-            if e_selecao(clube) == 0 && read_u32_as_usize(clube + 0x53) != 0 {
+            if e_selecao(clube) == 0 && read_u32_as_usize(clube + club::NATION) != 0 {
                 let r = v + n as usize * 0x16;
-                let rep = read_u16(clube + 0x80) as i16 as i32;
+                let rep = read_u16(clube + club::REPUTATION) as i16 as i32;
                 crate::comparacao::ramo("cpt_11 candidato da pré-temporada");
                 let faixa = (rep / 500) as u8; // cpt11: a faixa
                 write_u32_from_usize(r, read_u32_as_usize(clube));
                 *((r + 4) as *mut u8) = 0;
                 *((r + 5) as *mut u8) = faixa;
-                write_u32_from_usize(r + 6, read_u32_as_usize(read_u32_as_usize(clube + 0x53)));
+                write_u32_from_usize(r + 6, read_u32_as_usize(read_u32_as_usize(clube + club::NATION)));
                 write_u32_from_usize(r + 0xa, 0);
                 write_u32_from_usize(r + 0x12, 0);
                 core::ptr::write_unaligned((r + 0xe) as *mut u16, 0xffff);
@@ -2516,7 +2516,7 @@ pub(crate) unsafe extern "thiscall" fn criar_amistosos_planejados(this: usize) {
 /// O estádio do clube (+0x69) já tem jogo na data em alguma fatia (0x5ae870 do calendário [0xae2a58] com −1)? Sem
 /// estádio: não.
 pub(crate) unsafe fn cps12_estadio_ocupado(clube: usize, data: usize) -> bool {
-    let estadio = read_u32_as_usize(clube + 0x69);
+    let estadio = read_u32_as_usize(clube + club::STADIUM);
     if estadio == 0 {
         return false;
     }
@@ -2763,8 +2763,8 @@ pub(crate) unsafe extern "stdcall" fn clube_livre_na_data(data: usize, clube: us
     copiar(pb, p0, r);
     let w = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const u16);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let nacao = read_u32(clube + 0x53) as usize;
-    if k != 0 && selecao(clube) == 0 && nacao != 0 && *((nacao + 0x11c) as *const u8) != 0 {
+    let nacao = read_u32(clube + club::NATION) as usize;
+    if k != 0 && selecao(clube) == 0 && nacao != 0 && *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 {
         let indice: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_NATION);
         let reg = (indice(nacao) as u8 as i8 as isize * 72) as usize;
         let inicio = 0xb63d8ausize.wrapping_add(reg); // a temporada da nação-chave
@@ -3691,8 +3691,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_tirar_clube_dos_amistosos(amisto
 /// tira 0x90cfc0(100) e fica o maior (estrito, comparado como byte com sinal).
 pub(crate) unsafe extern "thiscall" fn pais_da_excursao(_this: usize, clube: usize) -> usize {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let proprio = *((clube + 0x53) as *const usize);
-    let alcance: i8 = match *((clube + 0x80) as *const i16) {
+    let proprio = *((clube + club::NATION) as *const usize);
+    let alcance: i8 = match *((clube + club::REPUTATION) as *const i16) {
         8000.. => 5,
         6000.. => 4,
         4000.. => 3,

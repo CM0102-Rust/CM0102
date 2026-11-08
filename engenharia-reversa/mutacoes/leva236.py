@@ -16,7 +16,7 @@ MUTACOES = [
     ('dbt_nome_do_atributo', '        formatar(texto, curto); // (dbt)', '        formatar(texto, longo); // mutacao: o nome inteiro no abreviado'),
     ('dbt_pessoas_pelo_sobrenome', 'formatar(pa, na.as_mut_ptr() as usize, 0x7d0, 4); // "sobrenome, nome" (dbt)', 'formatar(pa, na.as_mut_ptr() as usize, 0x7d0, 1); // mutacao: o nome completo de um lado'),
     ('dbt_clubes_pela_reputacao', '        1 // a de menor reputação depois (dbt)', '        -1 // mutacao: a de menor reputacao antes'),
-    ('dbt_clube_na_cee', '*((nacao + 0x7f) as *const u8) == 2) as u32 // na CEE (dbt)', '*((nacao + 0x7f) as *const u8) != 2) as u32 // mutacao: fora da CEE'),
+    ('dbt_clube_na_cee', '*((nacao + nation::GROUP_MEMBERSHIP) as *const u8) == 2) as u32 // na CEE (dbt)', '*((nacao + 0x7f) as *const u8) != 2) as u32 // mutacao: fora da CEE'),
     ('dbt_regioes_pelo_nome', 'qsort(0xae2104, 14, 1, 0x545e00); // (dbt)', 'qsort(0xae2104, 13, 1, 0x545e00); // mutacao: a ultima regiao fora da ordem'),
     ('dbt_ordem_das_regioes', '    dbr_comparar_textos(na.as_ptr(), nb.as_ptr()) // (dbt)', '    dbr_comparar_textos(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
     ('dbt_pessoa_da_opiniao', '        ler(0x3b) // (dbt)', '        ler(0x27) // mutacao: o indice do outro lado'),

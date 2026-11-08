@@ -78,7 +78,7 @@ pub(crate) unsafe extern "C" fn escalar(
     }
     let mut lc = 0u32;
     if modo & 0x400000 != 0 && clube != 0 {
-        let p = *((clube + 0xcf) as *const usize);
+        let p = *((clube + club::MANAGER) as *const usize);
         let q = *(G_STAFF_COUNT as *const i32);
         if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, 0x5f) != 0 {
             lc = tecnico(*(G_HUMAN_MANAGER as *const usize), p);
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "C" fn escalar(
     let nota = |pessoa: usize, j: usize, i: i32| -> i32 {
         let i = i as usize;
         nota_fn(
-            pessoa, *((pessoa + 0x61) as *const usize), j, *((codigos + 2 * i) as *const u16) as u32, modo, clube, comissao, a10, u32::MAX,
+            pessoa, *((pessoa + staff::PLAYER) as *const usize), j, *((codigos + 2 * i) as *const u16) as u32, modo, clube, comissao, a10, u32::MAX,
             *((marcas + 8 * i) as *const u32), *((marcas + 8 * i + 4) as *const u32), *((bytes + i) as *const u8) as u32, a14,
             *((curtos + 2 * i) as *const u16) as u32, lc,
         )
@@ -2291,7 +2291,7 @@ pub(crate) unsafe fn substituir_com(c: usize, goleiro: u8, chamar: &mut dyn FnMu
         modo |= 0x800000;
     }
     if humano(clube, 1, 1, 0, 0) != 0 && byte(c, 0x19) == 0 {
-        let p = *((clube + 0xcf) as *const usize);
+        let p = *((clube + club::MANAGER) as *const usize);
         if p != 0 && t9a01(*(G_HUMAN_MANAGER as *const usize), p) != 0 && t9b23(*(G_HUMAN_MANAGER as *const usize), 3, p) != 0 {
             modo |= 0x400000;
         }
@@ -2506,7 +2506,7 @@ pub(crate) unsafe fn refazer_time_com(c: usize, chamar: &mut dyn FnMut(usize, us
     let clube = u(0x2f);
     let mut modo = 0x8800u32;
     if humano(clube, 1, 1, 0, 0) != 0 && byte(c, 0x19) == 0 {
-        let p = *((clube + 0xcf) as *const usize);
+        let p = *((clube + club::MANAGER) as *const usize);
         if p != 0 && t9a01(*(G_HUMAN_MANAGER as *const usize), p) != 0 && t9b23(*(G_HUMAN_MANAGER as *const usize), 3, p) != 0 {
             modo = 0x408800;
         }
@@ -2655,7 +2655,7 @@ pub(crate) unsafe extern "C" fn avaliar_jogador(pessoa: usize, jogador: usize, c
     }
     let ficha = *((p + 0x61) as *const usize);
     let enc = encaixe(p, clube) as f64;
-    let mut y = (*((ficha + 0xd) as *const i16) as i32 - *((clube + 0x80) as *const i16) as i32) as f64 * d8(0x969048) + d8(0x968940);
+    let mut y = (*((ficha + 0xd) as *const i16) as i32 - *((clube + club::REPUTATION) as *const i16) as i32) as f64 * d8(0x969048) + d8(0x968940);
     if !(d8(0x96d220) <= y) {
         y = -4.0;
     } else if d8(0x968938) < y {
@@ -2740,7 +2740,7 @@ pub(crate) unsafe extern "C" fn cumprir_regra_do_elenco(
     let restrito = |p: usize| -> bool {
         let estrangeiro: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
         let comunitario: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_EU_NATIONAL);
-        let nacao = *((clube + 0x53) as *const u32);
+        let nacao = *((clube + club::NATION) as *const u32);
         match r(0) {
             1 => p != 0 && estrangeiro(p, nacao, 1) != 0 && comunitario(p, nacao) == 0,
             2 => p != 0 && estrangeiro(p, nacao, 1) != 0,
@@ -3183,7 +3183,7 @@ pub(crate) unsafe fn bonus_da_forma(p: usize, f: usize, clube: usize, quem: usiz
         soma += ftol((xf * f64_em(0x96afc8) - f64_em(0x96d510)) * c) as i8 as i32;
     }
     let dono = *((p + 0x39) as *const usize);
-    if clube != 0 && (clube == dono || (dono != 0 && *((clube + 0x53) as *const usize) == *((dono + 0x53) as *const usize))) {
+    if clube != 0 && (clube == dono || (dono != 0 && *((clube + club::NATION) as *const usize) == *((dono + 0x53) as *const usize))) {
         let xk = (xf * f64_em(0x9689d8)) as f32;
         let r = nota_externa(f, 1, 0x12, xk);
         if r > f64_em(0x968998) {
@@ -3232,7 +3232,7 @@ pub(crate) unsafe fn fim_da_idade(p: usize, f: usize, clube: usize, flags: u32, 
         }
     }
     l4c += ftol((fb(0x2f) - 10) as f64 * f64_em(0x96a670));
-    let nac = *((clube + 0x53) as *const usize);
+    let nac = *((clube + club::NATION) as *const usize);
     let pais = *((p + 0x1a) as *const usize);
     if nac == 0 || *((nac + 0x77) as *const u8) == *((pais + 0x77) as *const u8) {
         return l4c;
@@ -3276,7 +3276,7 @@ pub(crate) unsafe fn ajuste_do_contrato(p: usize, f: usize, clube: usize, contra
         }
     } else {
         let lim = core::ptr::read_unaligned((dono + 0x80) as *const i16) as i32 - 0x4e2;
-        let dx = core::ptr::read_unaligned((clube + 0x80) as *const i16);
+        let dx = core::ptr::read_unaligned((clube + club::REPUTATION) as *const i16);
         let ax = *((contrato + 0x3d) as *const i8) as i16;
         let cl = idade;
         let k = if dx as i32 > lim {
@@ -3513,7 +3513,7 @@ pub(crate) unsafe fn extra_do_contrato(p: usize, contrato: usize, flags: u32, l2
         let x = s44 * f64_em(0x968e00);
         extra = ftol(if f64_em(0x96d410) < x { f64_em(0x96d410) } else { x });
     }
-    let t = (*((contrato + 0x4f) as *const u8) >> 4) as i8 as i32 - 1;
+    let t = (*((contrato + contract::SQUAD_STATUS) as *const u8) >> 4) as i8 as i32 - 1;
     let lista = match t {
         0 | 1 => {
             extra += if t == 0 { 0x19 } else { 0xf };
@@ -3524,7 +3524,7 @@ pub(crate) unsafe fn extra_do_contrato(p: usize, contrato: usize, flags: u32, l2
                 extra += 10;
                 false
             } else {
-                let d = (*((contrato + 0x3e) as *const i8) as i32 - *((contrato + 0x3f) as *const i8) as i32) * 5;
+                let d = (*((contrato + contract::UNKNOWN18_2) as *const i8) as i32 - *((contrato + 0x3f) as *const i8) as i32) * 5;
                 extra += ftol(d as f64 + (l28 as i16 as f64 * f64_em(0x968e18) - f64_em(0x96d570)));
                 true
             }
@@ -3649,8 +3649,8 @@ pub(crate) unsafe extern "C" fn nota_fora_da_partida(p: usize, pos: u32, flags: 
     let contrato = if *(G_CONTRACT_MANAGER as *const usize) != 0 { contrato_com(*(G_CONTRACT_MANAGER as *const usize), p, clube) } else { 0 };
     let (conhece, obs) = if o != 0 {
         (*((o + 0x69) as *const usize), o)
-    } else if clube != 0 && *((clube + 0xcf) as *const usize) != 0 {
-        let t = *((clube + 0xcf) as *const usize);
+    } else if clube != 0 && *((clube + club::MANAGER) as *const usize) != 0 {
+        let t = *((clube + club::MANAGER) as *const usize);
         (*((t + 0x69) as *const usize), t)
     } else {
         (0, 0)
@@ -3743,7 +3743,7 @@ pub(crate) unsafe extern "C" fn nota_fora_da_partida(p: usize, pos: u32, flags: 
         l4c += ftol(fb(0x45) as f64 * f64_em(0x968940) - f64_em(0x968e08));
     }
     if flags & 0x4000 != 0 {
-        let q = (0x1b58 - core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32) / 100;
+        let q = (0x1b58 - core::ptr::read_unaligned((clube + club::REPUTATION) as *const i16) as i32) / 100;
         let k = (if q < 10 { 10 } else { q }) as i8 as i32;
         let lim = if fb(0xf) == 0x14 { 0x24 } else if fb(0x15) == 0x14 || fb(0x14) == 0x14 { 0x22 } else { 0x23 };
         if idade as i32 > lim {
@@ -3833,7 +3833,7 @@ pub(crate) unsafe fn fora_da_nacao(p: usize, clube: usize, flags: u32, l4c: i32)
     if flags & 0x1000000 == 0 || clube == 0 {
         return l4c;
     }
-    let nac = *((clube + 0x53) as *const usize);
+    let nac = *((clube + club::NATION) as *const usize);
     if *((p + 0x1a) as *const usize) != nac && *((p + 0x1e) as *const usize) != nac {
         l4c - 50
     } else {
@@ -3879,8 +3879,8 @@ pub(crate) unsafe extern "C" fn nota_para_a_vaga(
         (*((lado + 0x1f) as *const usize), *((lado + 0x1b) as *const usize))
     } else if tecnico != 0 {
         (*((tecnico + 0x69) as *const usize), tecnico)
-    } else if clube != 0 && *((clube + 0xcf) as *const usize) != 0 {
-        let t = *((clube + 0xcf) as *const usize);
+    } else if clube != 0 && *((clube + club::MANAGER) as *const usize) != 0 {
+        let t = *((clube + club::MANAGER) as *const usize);
         (*((t + 0x69) as *const usize), t)
     } else {
         (0, 0)
@@ -4101,7 +4101,7 @@ pub(crate) unsafe extern "C" fn nota_para_a_vaga(
     l4c = ajuste_dos_jogos(p, f, flags, da_base, l4c);
     let mut base = l40;
     if !da_base && clube != 0 {
-        let nac = *((clube + 0x53) as *const usize);
+        let nac = *((clube + club::NATION) as *const usize);
         if nac != 0 && *((nac + 0x11c) as *const u8) != 0 {
             l4c -= 0x46;
             base = l40 - 0x78;
@@ -4242,7 +4242,7 @@ pub(crate) unsafe fn bonus_das_ferias(p: usize, clube: usize, ferias: usize, pos
     };
     let aceita = || {
         let g: unsafe extern "thiscall" fn(usize, i8, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
-        if g(*(G_HUMAN_MANAGER as *const usize), 2, *((clube + 0xcf) as *const usize)) == 0 {
+        if g(*(G_HUMAN_MANAGER as *const usize), 2, *((clube + club::MANAGER) as *const usize)) == 0 {
             return true;
         }
         let w = *((ferias + 8 * k + 4) as *const i32);

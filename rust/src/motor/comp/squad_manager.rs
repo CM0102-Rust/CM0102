@@ -187,12 +187,12 @@ pub(crate) unsafe extern "thiscall" fn clube_usa_numeros(_this: usize, c: usize,
     if comp == 0 {
         return 0;
     }
-    if *((comp + 0x52) as *const u8) & 2 == 0 {
+    if *((comp + competition::SHORT_GENDER_NAME) as *const u8) & 2 == 0 {
         return 0;
     }
     if outra != 0 {
         let comp2 = read_u32(tabela + read_u32(outra) as usize * 4) as usize;
-        if *((comp2 + 0x52) as *const u8) & 2 == 0 {
+        if *((comp2 + competition::SHORT_GENDER_NAME) as *const u8) & 2 == 0 {
             return 0;
         }
     }

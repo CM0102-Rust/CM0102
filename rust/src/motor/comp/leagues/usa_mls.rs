@@ -828,7 +828,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk9_resultado_na_mls(this: usiz
 /// San Jose e Chicago (0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c); 0 para clube cuja liga (+0x57) não
 /// é a MLS (chave 0x9cf590); clube da MLS fora dos doze: a caixa "Error" (a original).
 pub(crate) unsafe extern "C" fn cqk9_conferencia_das_estrelas(clube: usize) -> u16 {
-    let nacao = read_u32_as_usize(clube + 0x57);
+    let nacao = read_u32_as_usize(clube + club::DIVISION);
     if nacao == 0 || read_u32_as_usize(nacao) != read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
         return 0;
     }
@@ -848,7 +848,7 @@ pub(crate) unsafe extern "C" fn cqk9_conferencia_das_estrelas(clube: usize) -> u
 /// Comparador: a devolução (só lê; o caso de erro fica com a original sozinha).
 pub(crate) unsafe extern "C" fn comparar_cqk9_conferencia_das_estrelas(clube: usize) -> u16 {
     let r = orig::<unsafe extern "C" fn(usize) -> u16>(1739)(clube);
-    let nacao = read_u32_as_usize(clube + 0x57);
+    let nacao = read_u32_as_usize(clube + club::DIVISION);
     if nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && r == 0 {
         return r; // o caso de erro (a caixa já saiu na original)
     }

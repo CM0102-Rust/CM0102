@@ -211,7 +211,7 @@ pub(crate) unsafe fn jogada_com(j: usize, forca: i16, altura: f32, estilo: i8, f
                     if a > sortear(0x14) {
                         let partida = *((m + 0x4792) as *const usize);
                         let clube = *((partida + if byte(j, 0x27) == 0 { 0x20 } else { 0x1c }) as *const usize);
-                        let k = *((clube + 0x53) as *const usize);
+                        let k = *((clube + club::NATION) as *const usize);
                         if k != 0 && byte(k, 0x77) == 8 {
                             narrar(chamar, 0x20f5, 0, 0, u32::MAX);
                         }
@@ -391,7 +391,7 @@ pub(crate) unsafe fn jogadores_do_pos_jogo_com(partida: usize, t: usize, chamar:
             if g(p + 0x61) == 0 || (p != 0 && ler(p) >= ler(0xae2364)) {
                 continue;
             }
-            if comp != 0 && ler(partida + 0x14) == ler(clube + 0x57) && *((t + 0x4c) as *const u8) == 0 {
+            if comp != 0 && ler(partida + 0x14) == ler(clube + club::DIVISION) && *((t + 0x4c) as *const u8) == 0 {
                 let c = contrato(g(0xae1050), p, clube);
                 let nota1 = nota(comp, g(p + 0x61), 1);
                 let nota11 = nota(comp, g(p + 0x61), 0x11);
@@ -435,12 +435,12 @@ pub(crate) unsafe fn jogadores_do_pos_jogo_com(partida: usize, t: usize, chamar:
             if ler(clube_de(ler(t)) + 0x53) == ler(clube_de(ler(t + 4)) + 0x53) && *((linha - 8) as *const u8) != 0 {
                 let v = media_7c1e30(g(0xb74350), g(p + 0x61), 6, 0xb, 6.5);
                 let anterior = g(p + 0x1a);
-                let nacao = g(clube + 0x53);
+                let nacao = g(clube + club::NATION);
                 let f = g(p + 0x61);
                 if !(v == 0.0 || v.is_nan())
                     && anterior != 0
                     && nacao != 0
-                    && *((anterior + 0x76) as *const u8) != *((nacao + 0x76) as *const u8)
+                    && *((anterior + 0x76) as *const u8) != *((nacao + nation::ACTUAL_REGION) as *const u8)
                     && f != 0
                     && w(f + 0xb) > 0x1676
                     && byte(p, 0x57) > 0xa
@@ -474,7 +474,7 @@ pub(crate) unsafe fn jogadores_do_pos_jogo_com(partida: usize, t: usize, chamar:
                 core::ptr::write_unaligned((f + 0xc) as *mut i16, w(f + 0xc).wrapping_add(dc));
             }
             for k in -1i32..5 {
-                let aux = if k == -1 { g(clube + 0xd3) } else { g(clube + 0x19f + k as usize * 4) };
+                let aux = if k == -1 { g(clube + club::ASSISTANT_MANAGER) } else { g(clube + club::COACHES + k as usize * 4) };
                 if aux == 0 || aux == tec || g(aux + 0x69) == 0 {
                     continue;
                 }
@@ -487,7 +487,7 @@ pub(crate) unsafe fn jogadores_do_pos_jogo_com(partida: usize, t: usize, chamar:
                 }
             }
         }
-        core::ptr::write_unaligned((clube + 0x80) as *mut i16, w(ts + 0x18e));
+        core::ptr::write_unaligned((clube + club::REPUTATION) as *mut i16, w(ts + 0x18e));
     }
 }
 

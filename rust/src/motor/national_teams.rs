@@ -28,7 +28,7 @@ pub(crate) unsafe fn byte_da_selecao(this: usize, clube: usize, flag: u32, o: us
         1
     };
     segunda(clube);
-    let nacao = *(*((clube + 0x53) as *const usize) as *const i32);
+    let nacao = *(*((clube + club::NATION) as *const usize) as *const i32);
     *((*((this + 4) as *const usize)).wrapping_add((nacao as usize).wrapping_mul(110)).wrapping_add(classe * 20 + o) as *const u8)
 }
 
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "stdcall" fn selecao_ou_especial(clube: usize) -> u32 {
 pub(crate) unsafe extern "stdcall" fn nao_gosta_da_selecao(pessoa: usize) -> u32 {
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
-    let s = principal(*((pessoa + 0x1a) as *const usize));
+    let s = principal(*((pessoa + staff::NATION) as *const usize));
     (nao_gosta(pessoa, s) != 0) as u32
 }
 
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn campo_3a_da_pessoa(this: usize, pessoa: u
 /// { 0x76e070 } (stdcall): sem selecao (+0x24), 0xff; segunda selecao (0x5409b0), 2; senao o bit 3
 /// do byte +0x5e. Devolve so `al`.
 pub(crate) unsafe extern "stdcall" fn classe_pela_selecao(pessoa: usize) -> u8 {
-    let selecao = *((pessoa + 0x24) as *const usize);
+    let selecao = *((pessoa + staff::NATIONAL_JOB) as *const usize);
     if selecao == 0 {
         return 0xff;
     }
@@ -104,7 +104,7 @@ pub(crate) unsafe extern "stdcall" fn classe_pela_selecao(pessoa: usize) -> u8 {
     if segunda(selecao) != 0 {
         return 2;
     }
-    (*((pessoa + 0x5e) as *const u8) >> 3) & 1
+    (*((pessoa + staff::PLAYING_SQUAD) as *const u8) >> 3) & 1
 }
 
 
@@ -707,7 +707,7 @@ pub(crate) unsafe fn cqc12_candidato(this: usize, nacao: usize, t: i8, data: usi
     if p != 0 {
         let k = read_usize(p);
         let c = read_usize(j + 0x39);
-        let outra_nacao = |c: usize| c != 0 && read_usize(c + 0x53) != 0 && read_usize(read_usize(c + 0x53) + 0x71) != read_usize(nacao + 0x71);
+        let outra_nacao = |c: usize| c != 0 && read_usize(c + 0x53) != 0 && read_usize(read_usize(c + 0x53) + 0x71) != read_usize(nacao + nation::CONTINENT);
         let mut contrato_ok = true;
         if k == read_usize(KEY_CLUB_COMP_FRIENDLY) || k == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) || k == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
             if outra_nacao(c) {
@@ -788,11 +788,11 @@ pub(crate) unsafe fn cqc12_candidato(this: usize, nacao: usize, t: i8, data: usi
         }
         let c = read_usize(j + 0x39);
         let n2 = if c != 0 { read_usize(c + 0x53) } else { 0 };
-        if read_i16(nacao + 0x8e) <= read_i16(nat + 0x8e) {
-            if n2 != 0 && read_usize(nacao + 0x71) != read_usize(n2 + 0x71) {
+        if read_i16(nacao + nation::REPUTATION) <= read_i16(nat + 0x8e) {
+            if n2 != 0 && read_usize(nacao + nation::CONTINENT) != read_usize(n2 + 0x71) {
                 return false;
             }
-            if (read_u8(nacao + 0x85) as i8) < 5 {
+            if (read_u8(nacao + nation::LEAGUE_STANDARD) as i8) < 5 {
                 return false;
             }
         }
@@ -1504,7 +1504,7 @@ pub(crate) unsafe fn cpx13_elenco(this: usize, p: usize, clube: usize, reg: usiz
     }
     let escolher: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32) = core::mem::transmute(FN_NATIONALTEAMS_SELECT_SQUAD);
     crate::comparacao::ramo("cpx_13 elenco pedido");
-    escolher(this, read_usize(clube + 0x53), tipo, 0xae2c90, p, 0); // cpx13: o elenco
+    escolher(this, read_usize(clube + club::NATION), tipo, 0xae2c90, p, 0); // cpx13: o elenco
 }
 
 /// Os elencos B/olímpico (+0x4e da partida, bit 0x100) ou sub-21 (bit 0x200, ou o clube é seleção B 0x5409b0) do lado
@@ -1516,7 +1516,7 @@ pub(crate) unsafe fn cpx13_elencos_menores(this: usize, p: usize, clube: usize, 
         cpx13_elenco(this, p, clube, reg, 1, || true);
     } else if m & 0x200 != 0 || segunda(clube) != 0 {
         cpx13_elenco(this, p, clube, reg, 2, || {
-            read_usize(p) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) || read_u8(read_usize(read_usize(clube + 0x53)).wrapping_add(read_usize(this + 0x36))) == 0
+            read_usize(p) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) || read_u8(read_usize(read_usize(clube + club::NATION)).wrapping_add(read_usize(this + 0x36))) == 0
         });
     }
 }
@@ -1526,7 +1526,7 @@ pub(crate) unsafe fn cpx13_elencos_menores(this: usize, p: usize, clube: usize, 
 pub(crate) unsafe fn cpx13_dispensar(this: usize, clube: usize) {
     if !CPX13_ENSAIO {
         let dispensar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_RELEASE_OVERAGE_U21_PLAYERS);
-        return dispensar(this, read_usize(clube + 0x53));
+        return dispensar(this, read_usize(clube + club::NATION));
     }
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let reg = cpw12_nacao(this, clube);
@@ -1737,14 +1737,14 @@ pub(crate) unsafe fn cpw12_geral(p: usize) -> usize {
 
 /// O registro da nação do clube nas seleções: [this + 4] + 0x6e × id.
 pub(crate) unsafe fn cpw12_nacao(this: usize, clube: usize) -> usize {
-    read_usize(this + 4).wrapping_add(read_usize(read_usize(clube + 0x53)).wrapping_mul(0x6e))
+    read_usize(this + 4).wrapping_add(read_usize(read_usize(clube + club::NATION)).wrapping_mul(0x6e))
 }
 
 /// Jogou pela nação do clube: se a segunda nação (+0x1e) é a dele, ela vira a primeira (+0x1a) e a antiga a segunda.
 pub(crate) unsafe fn cpw12_trocar_nacao(p: usize, clube: usize) {
-    if read_usize(clube + 0x53) == read_usize(p + 0x1e) {
+    if read_usize(clube + club::NATION) == read_usize(p + 0x1e) {
         core::ptr::write_unaligned((p + 0x1e) as *mut usize, read_usize(p + 0x1a));
-        core::ptr::write_unaligned((p + 0x1a) as *mut usize, read_usize(clube + 0x53));
+        core::ptr::write_unaligned((p + 0x1a) as *mut usize, read_usize(clube + club::NATION));
     }
 }
 
@@ -1816,7 +1816,7 @@ pub(crate) unsafe extern "thiscall" fn resultado_entre_selecoes(this: usize, p: 
                 if pessoa != 0 && read_usize(pessoa) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
                     continue;
                 }
-                if *((pessoa + 0x22) as *const u8) == 0 {
+                if *((pessoa + staff::INT_APPS) as *const u8) == 0 {
                     cpw12_trocar_nacao(pessoa, clube);
                     let adversario = if clube == read_usize(p + 0x1c) { read_usize(p + 0x20) } else { read_usize(p + 0x1c) };
                     if !CPW12_ENSAIO {
@@ -1824,11 +1824,11 @@ pub(crate) unsafe extern "thiscall" fn resultado_entre_selecoes(this: usize, p: 
                     }
                 }
                 crate::comparacao::ramo("cpw_12 jogo pela seleção");
-                *((pessoa + 0x22) as *mut u8) = (*((pessoa + 0x22) as *const u8)).wrapping_add(1); // cpw12: um jogo
-                *((pessoa + 0x23) as *mut u8) = (*((pessoa + 0x23) as *const u8)).wrapping_add(*((vaga + 0x21) as *const u8)); // cpw12: os gols
+                *((pessoa + staff::INT_APPS) as *mut u8) = (*((pessoa + staff::INT_APPS) as *const u8)).wrapping_add(1); // cpw12: um jogo
+                *((pessoa + staff::INT_GOALS) as *mut u8) = (*((pessoa + staff::INT_GOALS) as *const u8)).wrapping_add(*((vaga + 0x21) as *const u8)); // cpw12: os gols
                 if !CPW12_ENSAIO {
                     // a original empurra o edx com o curto dos jogos embaixo e o alto de 55 × id da nação
-                    let id_nacao = read_usize(read_usize(clube + 0x53)) as u32;
+                    let id_nacao = read_usize(read_usize(clube + club::NATION)) as u32;
                     let n = core::ptr::read_unaligned(jogos) as u16 as u32;
                     jogo_pela_selecao(read_usize(G_TRANSFER_MANAGER), pessoa, (id_nacao.wrapping_mul(0x37) & 0xffff_0000) | n);
                 }
@@ -1880,7 +1880,7 @@ pub(crate) unsafe fn cpw12_regioes(this: usize, p: usize, m: usize) -> Vec<(usiz
             }
             let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
             if pessoa != 0 && (read_usize(pessoa) as i32) < read_usize(G_STAFF_COUNT) as i32 {
-                reg.push((pessoa + 0x1a, 10));
+                reg.push((pessoa + staff::NATION, 10));
                 reg.push((cpw12_geral(pessoa) + 0xc, 2));
             }
         }
@@ -2039,7 +2039,7 @@ pub(crate) unsafe extern "thiscall" fn tirar_convocado_machucado(this: usize, p:
     let pedido: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_NATIONAL_TEAMS_POST_REPLACEMENT_NEEDED_NEWS);
     let substituto: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize) = core::mem::transmute(FN_NATIONALTEAMS_CALL_UP_REPLACEMENT);
     let repetidos: unsafe extern "stdcall" fn(usize) = core::mem::transmute(FN_NATIONAL_TEAMS_REMOVE_DUPLICATE_SQUAD_ENTRIES);
-    let nacao = read_usize(clube + 0x53);
+    let nacao = read_usize(clube + club::NATION);
     let rec = cpv11_registro(this, nacao);
     // ponytail: a original empurra o dword da local com o tipo só no byte de baixo (os outros são sobra de pilha); as
     // chamadas leem só o byte
@@ -2085,7 +2085,7 @@ pub(crate) unsafe extern "thiscall" fn tirar_convocado_machucado(this: usize, p:
     let nivel = (rec as u32 & !0xff) | nivel as u32;
     let pede = 'decide: {
         if humano(clube, 0, 1, 0, 0) == 0 {
-            if read_usize(clube + 0xcf) != 0 || humano(principal(nacao), 0, 1, 0, 0) == 0 {
+            if read_usize(clube + club::MANAGER) != 0 || humano(principal(nacao), 0, 1, 0, 0) == 0 {
                 break 'decide false;
             }
         }
@@ -2116,7 +2116,7 @@ pub(crate) unsafe fn cpv11_plano(this: usize, p: usize, dias: u32) -> u8 {
     if inj != 0 && read_u8(inj) == 0x51 {
         return 1;
     }
-    let vaga = cpv11_registro(this, read_usize(clube + 0x53)).wrapping_add((tipo as i8 as i32 * 20) as usize);
+    let vaga = cpv11_registro(this, read_usize(clube + club::NATION)).wrapping_add((tipo as i8 as i32 * 20) as usize);
     if maior(vaga + 0x3a, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32) == 0 {
         return 0;
     }
@@ -2238,7 +2238,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tirar_convocado_machucado(this: 
         return o(this, p, dias);
     }
     let plano = cpv11_plano(this, p, dias);
-    let time = cpd2_time(read_usize(clube + 0x53), cpv11_tipo(clube, p));
+    let time = cpd2_time(read_usize(clube + club::NATION), cpv11_tipo(clube, p));
     let estava = time != 0 && (0..50usize).any(|c| read_usize(time + 0xd7 + 4 * c) == p);
     let antes = (clube, read_u8(p + 0x28));
     o(this, p, dias);
@@ -2736,7 +2736,7 @@ pub(crate) unsafe extern "thiscall" fn marcar_clubes_com_jogo(this: usize, data:
     for i in 0..0x21usize {
         let e = 0xb63df0 + i * 0x48;
         let nacao = read_u32_as_usize(e);
-        if nacao != 0 && *((nacao + 0x11c) as *const u8) == 0 {
+        if nacao != 0 && *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
         for fatia in 0..3u32 {
@@ -3185,7 +3185,7 @@ pub(crate) unsafe extern "thiscall" fn liberar_competicoes_do_continente(this: u
     let mut i = 0i32;
     while i < *(G_NATION_COUNT as *const i32) {
         let nacao = (*(G_NATION_TABLE as *const usize)).wrapping_add(0x122 * i as usize);
-        if read_usize(nacao + 0x71) == continente {
+        if read_usize(nacao + nation::CONTINENT) == continente {
             let atual = read_usize(this + 4) + 0x6e * i as usize + 4;
             let v = *(atual as *const i32);
             if v != -1 && cpd3_acabou(v, fim) {

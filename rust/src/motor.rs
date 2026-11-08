@@ -2659,6 +2659,9 @@ pub(crate) use self::discipline::*;
 #[path = "motor/exe_fns.rs"]
 pub(crate) mod exe_fns;
 pub(crate) use self::exe_fns::*;
+#[path = "motor/fields.rs"]
+pub(crate) mod fields;
+pub(crate) use self::fields::*;
 #[path = "motor/fine.rs"]
 pub(crate) mod fine;
 pub(crate) use self::fine::*;
@@ -2910,11 +2913,11 @@ unsafe extern "thiscall" fn criterio_da_comissao(t: usize) -> u32 {
     let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((*(t as *const i32) as usize).wrapping_mul(0x6e));
     let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((t + 4) as *const i32) as usize).wrapping_mul(0x245));
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let tecnico = u(clube + 0xcf);
+    let tecnico = u(clube + club::MANAGER);
     if tecnico != 0 && p == tecnico {
         return 0;
     }
-    let auxiliar = u(clube + 0xd3);
+    let auxiliar = u(clube + club::ASSISTANT_MANAGER);
     if auxiliar != 0 && p == auxiliar {
         return 0;
     }
@@ -3084,7 +3087,7 @@ unsafe extern "thiscall" fn pessoa_da_vaga_tatica(t: usize, clube: usize, vaga: 
     }
     if selecao(clube) != 0 {
         let nacao = core::ptr::read_unaligned((p + 0x24) as *const usize);
-        if nacao == 0 || core::ptr::read_unaligned((nacao + 0x53) as *const u32) != core::ptr::read_unaligned((clube + 0x53) as *const u32) {
+        if nacao == 0 || core::ptr::read_unaligned((nacao + nation::THREE_LETTER_NAME) as *const u32) != core::ptr::read_unaligned((clube + club::NATION) as *const u32) {
             core::ptr::write_unaligned(casa, -1);
             return 0;
         }
@@ -4657,7 +4660,7 @@ unsafe extern "C" fn comparar_evoluir_jogador(jm: usize, pessoa: usize, clube: u
         });
         return;
     }
-    let st = *((pessoa + 0x61) as *const usize);
+    let st = *((pessoa + staff::PLAYER) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(st + 5, 0xa), (st + 0x45, 1)]);
     if jm != 0 {
@@ -4993,10 +4996,10 @@ unsafe extern "stdcall" fn comparar_nevoa_apos_partida(partida: usize, dados: us
     let mut reg: Vec<(usize, usize)> = Vec::new();
     for lado in 0..2usize {
         let clube = *((partida + 0x20 - 4 * lado) as *const usize);
-        if humano(clube, 0, 1, 0, 0) == 0 || *((clube + 0xcf) as *const usize) == 0 {
+        if humano(clube, 0, 1, 0, 0) == 0 || *((clube + club::MANAGER) as *const usize) == 0 {
             continue;
         }
-        let q = *((clube + 0xcf) as *const usize);
+        let q = *((clube + club::MANAGER) as *const usize);
         let obj = *((*(G_FOG_OF_WAR as *const usize)).wrapping_add((n.wrapping_sub(*(q as *const i32)) as usize).wrapping_mul(4)).wrapping_sub(4) as *const usize);
         if obj == 0 {
             continue;
@@ -5020,7 +5023,7 @@ unsafe extern "C" fn comparar_nivel_do_contrato(pessoa: usize, clube: usize) -> 
 }
 unsafe extern "C" fn comparar_clube_parceiro(clube: usize, eh_a: *mut u32, ativo: u32) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(197);
-    let mut reg: Vec<(usize, usize)> = vec![(clube + 0x244, 1)];
+    let mut reg: Vec<(usize, usize)> = vec![(clube + club::HAS_LINKED_CLUB, 1)];
     if !eh_a.is_null() {
         reg.push((eh_a as usize, 4));
     }

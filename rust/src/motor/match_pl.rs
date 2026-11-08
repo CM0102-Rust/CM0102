@@ -351,7 +351,7 @@ pub(crate) unsafe extern "thiscall" fn atualizar_jogador(this: usize) {
     let mut st = *f1a2 as f64 * f32_em(0x96d364) as f64;
     *f1a2 = st as f32;
     let pessoa = *((this + 0x69) as *const usize);
-    let piso = ((0x19 - *((pessoa + 0x5d) as *const i8) as i32) * 2) as f32;
+    let piso = ((0x19 - *((pessoa + staff::TEMPERAMENT) as *const i8) as i32) * 2) as f32;
     if !(st > piso as f64) {
         st = piso as f64;
     }
@@ -1518,7 +1518,7 @@ pub(crate) unsafe fn punir_desafiante_com(m: usize, e: usize, j: usize, mut tipo
             if x > sortear(0x14) {
                 let t = *((m + 0x4792) as *const usize);
                 let clube = *((t + if byte(j, 0x27) != 0 { 0x20 } else { 0x1c }) as *const usize);
-                let k = *((clube + 0x53) as *const usize);
+                let k = *((clube + club::NATION) as *const usize);
                 if k != 0 && byte(k, 0x77) == 8 {
                     narrar(chamar, 0x20f5, 0, 0, u32::MAX);
                 }
@@ -1980,7 +1980,7 @@ pub(crate) unsafe fn punir_falta_de_quem_disputa_com(j: usize, mut t: u8, cartao
             if a > sortear(0x14) {
                 let partida = *((m + 0x4792) as *const usize);
                 let clube = *((partida + if byte(j, 0x27) == 0 { 0x20 } else { 0x1c }) as *const usize);
-                let k = *((clube + 0x53) as *const usize);
+                let k = *((clube + club::NATION) as *const usize);
                 if k != 0 && byte(k, 0x77) == 8 {
                     narrar(chamar, 0x20f5, 0, 0, u32::MAX);
                 }
@@ -2221,7 +2221,7 @@ pub(crate) unsafe fn responder_com(j: usize, forca: i16, tipo_in: i8, p4: f32, c
                     if a > sortear(0x14) {
                         let partida = *((m + 0x4792) as *const usize);
                         let clube = *((partida + if byte(j, 0x27) == 0 { 0x20 } else { 0x1c }) as *const usize);
-                        let k = *((clube + 0x53) as *const usize);
+                        let k = *((clube + club::NATION) as *const usize);
                         if k != 0 && byte(k, 0x77) == 8 {
                             narrar(chamar, 0x20f5, 0, 0, u32::MAX);
                         }
@@ -2601,7 +2601,7 @@ pub(crate) unsafe fn chute_com(j: usize, forca_in: i16, x_in: i8, y_in: i8, cham
                             if g > sortear(0x14) {
                                 let partida = *((m + 0x4792) as *const usize);
                                 let clube = *((partida + if byte(j, 0x27) == 0 { 0x20 } else { 0x1c }) as *const usize);
-                                let k = *((clube + 0x53) as *const usize);
+                                let k = *((clube + club::NATION) as *const usize);
                                 if k != 0 && byte(k, 0x77) == 8 {
                                     narrar(chamar, 0x20f5, 0, 0, u32::MAX);
                                 }
@@ -6803,7 +6803,7 @@ pub(crate) unsafe fn eventos_do_pos_jogo_com(partida: usize, chamar: &mut dyn Fn
                         }
                         tipo_1e(noticias(), ev, partida);
                         let r = teste_600a50(clube, 1, 1, 0, 0);
-                        let t = *((clube + 0xcf) as *const usize);
+                        let t = *((clube + club::MANAGER) as *const usize);
                         if r == 0 && t != 0 && *((t + 0x69) as *const usize) != 0 && byte(*((t + 0x69) as *const usize), 0x14) > 0xf {
                             crate::comparacao::ramo("eventos 0x1e tecnico");
                             reserva(t, pessoa(ler(ev)), 1);

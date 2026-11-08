@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_escocia(_this: usize,
         None => return 1,
         Some(d) => d,
     };
-    let comp = read_usize(clube + 0x57);
+    let comp = read_usize(clube + club::DIVISION);
     if comp == read_usize(dono + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
         crate::comparacao::ramo("cqe_6 escocia mesma divisao");
         let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION).wrapping_mul(0x6b));
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_italia(this: usize, c
         crate::comparacao::ramo("cqe_6 italia fora da janela");
         return cqe6_fora_da_janela(this, msg, motivo);
     }
-    let comp = read_usize(clube + 0x57);
+    let comp = read_usize(clube + club::DIVISION);
     if comp == 0 {
         return 1;
     }
@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_italia(this: usize, c
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let mut n: i8 = 0;
     for k in 0..50usize {
-        let p = read_usize(clube + 0xd7 + 4 * k);
+        let p = read_usize(clube + club::SQUAD + 4 * k);
         if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 || emprestimo(read_usize(G_CONTRACT_MANAGER), p) == 0 {
             continue;
         }
@@ -146,8 +146,8 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_italia(this: usize, c
         crate::comparacao::ramo("cqe_6 italia quatro emprestados");
         if msg != 0 {
             let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-            let g = read_u8(clube + 0x52) as i8 as i32;
-            texto(msg, 0x9ea9dc, g, g, clube + 0x38);
+            let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
+            texto(msg, 0x9ea9dc, g, g, clube + club::SHORT_NAME);
         }
         if !motivo.is_null() {
             *motivo = 0x25;
@@ -169,8 +169,8 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_irlanda(this: usize, 
         crate::comparacao::ramo("cqe_6 irlanda cinco na temporada");
         if msg != 0 {
             let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-            let g = read_u8(clube + 0x52) as i8 as i32;
-            texto(msg, 0x9c4534, g, g, clube + 0x38);
+            let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
+            texto(msg, 0x9c4534, g, g, clube + club::SHORT_NAME);
         }
         if !motivo.is_null() {
             *motivo = 0x1e;
@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_irlanda(this: usize, 
         None => return 1,
         Some(d) => d,
     };
-    if read_usize(clube + 0x57) == read_usize(dono + 0x57) {
+    if read_usize(clube + club::DIVISION) == read_usize(dono + 0x57) {
         crate::comparacao::ramo("cqe_6 irlanda mesma divisao");
         return cqe6_recusa(msg, motivo, 0x9ea168, read_usize(this + 0xa), 0x1d);
     }

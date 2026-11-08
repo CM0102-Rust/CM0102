@@ -208,7 +208,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq9_virada_da_j1(this: usize) -
 
 /// O clube é da divisão do global `g`: a divisão do clube (+0x57) não é nula e o id do registro (+0) é o do global.
 pub(crate) unsafe fn cqm9_da_divisao(clube: usize, g: usize) -> bool {
-    let comp = read_usize(clube + 0x57);
+    let comp = read_usize(clube + club::DIVISION);
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 
@@ -246,7 +246,7 @@ pub(crate) unsafe fn cqm9_japao(this: usize, g: usize, girar: u8, ramo: &'static
                 cqm9_linha(this, k, read_i16(this + 0x3e), girar, clube);
                 k = k.wrapping_add(1);
             } else {
-                core::ptr::write_unaligned((clube + 0x57) as *mut usize, 0);
+                core::ptr::write_unaligned((clube + club::DIVISION) as *mut usize, 0);
             }
         }
         i = i.wrapping_add(1);
