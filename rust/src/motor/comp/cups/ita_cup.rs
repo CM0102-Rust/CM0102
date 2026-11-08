@@ -687,19 +687,11 @@ pub(crate) unsafe fn cqo11_clubes() -> i32 {
     (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2))
 }
 
-pub(crate) unsafe fn cqo11_clube(i: i32) -> usize {
-    read_u32_as_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize)
-}
 
-/// O id da competição apontada por `c + o` (+0x57 a divisão, +0x5b a da temporada anterior [inferência]), ou None.
-pub(crate) unsafe fn cqo11_comp(c: usize, o: usize) -> Option<usize> {
-    let d = read_u32_as_usize(c + o);
-    if d == 0 { None } else { Some(read_u32_as_usize(d)) }
-}
 
 /// O clube é da Itália (+0x53 a nação; [0x9cf360] o id da Itália).
 pub(crate) unsafe fn cqo11_italiano(c: usize) -> bool {
-    cqo11_comp(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_ITALY))
+    cqm11_comp(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_ITALY))
 }
 
 /// A posição na temporada anterior (+0x5f, byte com sinal; 0 o campeão [inferência]).
@@ -707,11 +699,6 @@ pub(crate) unsafe fn cqo11_posicao(c: usize) -> i8 {
     *((c + 0x5f) as *const i8)
 }
 
-/// O sorteio de 0 a n − 1 (0x90cfc0: push n; add esp, 4 -> cdecl).
-pub(crate) unsafe fn cqo11_sortear(n: i32) -> i32 {
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    sortear(n)
-}
 
 /// Embaralha `n` ponteiros a partir de `v` (0x4afb40: push n; push v; add esp junto -> cdecl; já em Rust).
 pub(crate) unsafe fn cqo11_embaralhar(v: usize, n: u32) {
@@ -766,16 +753,16 @@ pub(crate) unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
     'grupos: {
         let mut i = 0;
         while i < n {
-            let c = cqo11_clube(i);
+            let c = cqn12_clube(i);
             i += 1;
             if !cqo11_italiano(c) {
                 continue;
             }
-            let antes = cqo11_comp(c, 0x5b);
+            let antes = cqm11_comp(c, 0x5b);
             if antes == Some(serie_b) && cqo11_posicao(c) < 3 || antes == Some(serie_a) && cqo11_posicao(c) < 0xf {
                 continue;
             }
-            if cqo11_comp(c, 0x57) == Some(serie_b) {
+            if cqm11_comp(c, 0x57) == Some(serie_b) {
                 v[k] = c;
                 k += 1;
                 if k == 32 {
@@ -801,16 +788,16 @@ pub(crate) unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
         while k < 32 {
             let mut i = 0;
             while i < n {
-                let c = cqo11_clube(i);
+                let c = cqn12_clube(i);
                 i += 1;
                 if !cqo11_italiano(c) {
                     continue;
                 }
-                let agora = cqo11_comp(c, 0x57);
+                let agora = cqm11_comp(c, 0x57);
                 if agora.is_none() || agora == Some(serie_b) {
                     continue;
                 }
-                let antes = cqo11_comp(c, 0x5b);
+                let antes = cqm11_comp(c, 0x5b);
                 if (antes == Some(c1a) || antes == Some(c1b)) && cqo11_posicao(c) == lugar {
                     crate::comparacao::ramo("cqo_11 completar com a c1");
                     v[k] = c;
@@ -829,7 +816,7 @@ pub(crate) unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
         let mut pote = 0usize;
         while pote < 32 {
             crate::comparacao::ramo("cqo_11 potes da copa da italia");
-            let mut r = cqo11_sortear(8) as i8 as i32; // cqo11: o clube sorteado de cada pote
+            let mut r = cqn12_sortear(8) as i8 as i32; // cqo11: o clube sorteado de cada pote
             while v[pote + r as usize] == 0 {
                 r += 1;
                 if r == 8 {
@@ -845,12 +832,12 @@ pub(crate) unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
     'b: {
         let mut i = 0;
         while i < cqo11_clubes() {
-            let c = cqo11_clube(i);
+            let c = cqn12_clube(i);
             i += 1;
             if !cqo11_italiano(c) {
                 continue;
             }
-            let antes = cqo11_comp(c, 0x5b);
+            let antes = cqm11_comp(c, 0x5b);
             let p = cqo11_posicao(c);
             if antes == Some(serie_b) && p < 3 || antes == Some(serie_a) && p > 8 && p < 0xf { // cqo11: os que entram na 2ª rodada
                 if cqo11_por(this, &mut m, c) {
@@ -861,9 +848,9 @@ pub(crate) unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
     }
     let mut i = 0;
     while i < cqo11_clubes() {
-        let c = cqo11_clube(i);
+        let c = cqn12_clube(i);
         i += 1;
-        if cqo11_italiano(c) && cqo11_comp(c, 0x5b) == Some(serie_a) && cqo11_posicao(c) < 9 {
+        if cqo11_italiano(c) && cqm11_comp(c, 0x5b) == Some(serie_a) && cqo11_posicao(c) < 9 {
             if cqo11_por(this, &mut m, c) {
                 break;
             }
@@ -947,12 +934,12 @@ pub(crate) unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
     let mut m = 0i32;
     let mut i = 0;
     while i < cqo11_clubes() {
-        let c = cqo11_clube(i);
+        let c = cqn12_clube(i);
         i += 1;
         if !cqo11_italiano(c) {
             continue;
         }
-        match cqo11_comp(c, 0x57) {
+        match cqm11_comp(c, 0x57) {
             Some(d) if divisoes.contains(&d) => {
                 if cqo11_por(this, &mut m, c) {
                     break;
@@ -965,7 +952,7 @@ pub(crate) unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
     let mut j = 0x50i32;
     for idx in 0..0x50usize {
         let c = read_u32_as_usize(l + idx * 4);
-        let antes = match cqo11_comp(c, 0x5b) {
+        let antes = match cqm11_comp(c, 0x5b) {
             Some(x) => x,
             None => continue,
         };
@@ -1020,17 +1007,17 @@ pub(crate) unsafe fn cqo11_supercopa(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = cqm12_colocado(KEY_CLUB_COMP_ITALIAN_SERIE_A, 0); // cqo11: o campeão da Série A
+    let a = cqm10_colocado(KEY_CLUB_COMP_ITALIAN_SERIE_A, 0); // cqo11: o campeão da Série A
     if !cqm12_vaga(l, 0, a, F, 0xcb) {
         return (0, 0);
     }
-    let b = cqm12_colocado(KEY_CLUB_COMP_ITALIAN_CUP, 0);
+    let b = cqm10_colocado(KEY_CLUB_COMP_ITALIAN_CUP, 0);
     if !cqm12_vaga(l, 1, b, F, 0xd4) {
         return (0, 0);
     }
     if a == b {
         crate::comparacao::ramo("cqo_11 dobradinha italiana");
-        if !cqm12_vaga(l, 1, cqm12_colocado(KEY_CLUB_COMP_ITALIAN_CUP, 1), F, 0xe0) {
+        if !cqm12_vaga(l, 1, cqm10_colocado(KEY_CLUB_COMP_ITALIAN_CUP, 1), F, 0xe0) {
             return (0, 0);
         }
     }

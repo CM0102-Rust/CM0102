@@ -1011,9 +1011,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_escolher_capitao(this: usize, cl
 // ---------- 260a leva: a escalação guardada do clube: tirar o jogador da escalação, trocar duas vagas e a cópia para desfazer (tactics.cpp) ----------
 
 
-pub(crate) unsafe fn cpx9_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
@@ -1076,7 +1073,7 @@ pub(crate) unsafe extern "thiscall" fn tirar_da_escalacao(this: usize, clube: us
     let mut achou = 0;
     for k in 0..20usize { // cpx9: as vagas da escalação
         let vaga = cpx9_inicio(this, l) + 2 + 4 * k;
-        if cpx9_i(vaga) == cpx9_i(pessoa) {
+        if read_i32(vaga) == read_i32(pessoa) {
             crate::comparacao::ramo(if k < 11 { "cpx_9 tirou titular" } else { "cpx_9 tirou reserva" });
             write_u32(vaga, u32::MAX); // cpx9: a vaga fica vazia
             achou = 1;
@@ -1172,7 +1169,7 @@ pub(crate) unsafe extern "thiscall" fn tem_copia_da_escalacao(this: usize, clube
     if t == 0 {
         return 0;
     }
-    let k = cpx9_i(0xae2364).wrapping_sub(cpx9_i(t)).wrapping_sub(1);
+    let k = read_i32(0xae2364).wrapping_sub(read_i32(t)).wrapping_sub(1);
     if !(0..0x10).contains(&k) {
         return 0;
     }
@@ -1408,9 +1405,9 @@ pub(crate) unsafe extern "thiscall" fn tatica_do_clube(this: usize, clube: usize
             return ativa(gerente, read_usize(clube + 0xcf));
         }
     }
-    let id = cpx8_i(clube);
+    let id = read_i32(clube);
     let indice = read_i16(read_usize(this + 0x601).wrapping_add(id.wrapping_mul(0x91) as usize)) as i32;
-    let prontas = cpx8_i(this + 0x5fd);
+    let prontas = read_i32(this + 0x5fd);
     if indice < prontas { // cpx8: tática pronta ou própria
         crate::comparacao::ramo("cpx_8 tatica pronta");
         read_usize(this + 0x5f9).wrapping_add(indice.wrapping_mul(0x18e3) as usize) // cpx8: o bloco pronto

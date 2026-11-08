@@ -287,8 +287,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_franca_3(this: usize) -> u32 {
     if cqj6_encher(this, 0x9ccc80, 0x15d, KEY_CLUB_COMP_FRENCH_NATIONAL) != Some(true) {
         return 0;
     }
-    cqj6_fundo(this, 0x4e20);
-    cqj6_pagar(this, 0x30d40, 0);
+    cqj4_fundo(this, 0x4e20);
+    cqi5_pagar(this, 0x30d40, 0);
     1
 }
 

@@ -5,11 +5,6 @@ use super::*;
 
 
 
-/// A virtual `o` da copa (thiscall, sem argumentos; mov edx, [esi]; mov ecx, esi; call [edx + o]).
-pub(crate) unsafe fn cqr6_virtual(this: usize, o: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + o));
-    f(this)
-}
 
 /// A virada da temporada de uma copa (`start_new_season`, slot 3, +0x08; o molde das copas de mata-mata, conferido
 /// instrução a instrução: só mudam o fonte das caixas, as linhas e a rotina dos inscritos): +0x4c = 0; a lista dos
@@ -59,11 +54,11 @@ pub(crate) unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, 
         aviso_em(arquivo, linhas[0]);
         return 0;
     }
-    if cqr6_virtual(this, 0x8c) < 0 {
+    if cqr5_virtual(this, 0x8c) < 0 {
         aviso_em(arquivo, linhas[1]);
         return 0;
     }
-    let r = cqr6_virtual(this, 0x94);
+    let r = cqr5_virtual(this, 0x94);
     if r < 0 {
         aviso_em(arquivo, linhas[2]);
         return 0;
@@ -71,18 +66,9 @@ pub(crate) unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, 
     if !previstas {
         return r as u32;
     }
-    cqr6_virtual(this, 0x5c) as u32
+    cqr5_virtual(this, 0x5c) as u32
 }
 
-/// O comparador da virada: só a original (ponytail: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
-/// alocam e sorteiam; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
-pub(crate) unsafe fn cqr6_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
-    let antes = read_i16(this + 0x40);
-    let r = original();
-    let depois = read_i16(this + 0x40);
-    PLACAR.registrar(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
-    r
-}
 
 /// rule: at the season turn the Japanese Super Cup is rebuilt: last edition's tables freed, history archived, year +1,
 /// the two clubs (JapSuper::select_teams: the J1 champion and the Emperor's Cup winner [inference]), the rounds, the
@@ -98,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn cqr6_virada_supercopa_japonesa(this: usiz
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr6_virada_supercopa_japonesa(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2002);
-    cqr6_comparar("cqr6_virada_supercopa_japonesa", this, || o(this))
+    cqr5_comparar("cqr6_virada_supercopa_japonesa", this, || o(this))
 }
 
 /// rule: the same turn in the US Open Cup: tables freed, history archived, year +1, the entrants
@@ -114,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn cqr6_virada_copa_dos_eua(this: usize) -> 
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr6_virada_copa_dos_eua(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2003);
-    cqr6_comparar("cqr6_virada_copa_dos_eua", this, || o(this))
+    cqr5_comparar("cqr6_virada_copa_dos_eua", this, || o(this))
 }
 
 /// rule: the MLS All-Star Game turn: tables freed, history archived, year +1, the two all-star teams, the rounds and
@@ -130,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn cqr6_virada_jogo_das_estrelas(this: usize
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr6_virada_jogo_das_estrelas(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2004);
-    cqr6_comparar("cqr6_virada_jogo_das_estrelas", this, || o(this))
+    cqr5_comparar("cqr6_virada_jogo_das_estrelas", this, || o(this))
 }
 
 /// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).

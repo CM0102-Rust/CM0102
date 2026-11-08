@@ -9,11 +9,6 @@ pub(crate) unsafe fn cqo1_nacao(id: usize) -> usize {
     read_u32_as_usize(G_NATION_TABLE).wrapping_add(id.wrapping_mul(0x122))
 }
 
-/// O clube é uma seleção? (0x53b900, cdecl, já em Rust.)
-pub(crate) unsafe fn cqo1_selecao(clube: usize) -> bool {
-    let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    f(clube) != 0
-}
 
 /// `Stadium::add_booking` (0x85de20, thiscall, ret 8, já em Rust): a reserva do estádio na data.
 pub(crate) unsafe fn cqo1_reservar(this: usize, estadio: usize, data: usize) {
@@ -120,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_neutro(this: usize, marcas: u32, 
                     contar = false;
                     break 'vaga;
                 }
-                if casa != 0 && fora != 0 && !cqo1_selecao(casa) && (marcas as i32) < 0x40 {
+                if casa != 0 && fora != 0 && !cqc2_selecao(casa) && (marcas as i32) < 0x40 {
                     let s = read_u32_as_usize(e + 0xc);
                     if s == read_u32_as_usize(casa + 0x69) || s == read_u32_as_usize(fora + 0x69) {
                         break 'vaga;
@@ -298,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
         passo = 1;
     } else if f == 0 {
         let casa = read_u32_as_usize(fx + 0x1c);
-        if d.ano < 0x7d3 && cqo1_selecao(casa) && read_u32_as_usize(read_u32_as_usize(casa + 0x53)) == read_u32_as_usize(KEY_NATION_ENGLAND) {
+        if d.ano < 0x7d3 && cqc2_selecao(casa) && read_u32_as_usize(read_u32_as_usize(casa + 0x53)) == read_u32_as_usize(KEY_NATION_ENGLAND) {
             f = 0x20;
         }
         let casa = read_u32_as_usize(fx + 0x1c);
@@ -336,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
                 fixar(read_u32_as_usize(read_u32_as_usize(fx + 0x1c) + 0x69)); // cqo1: o estádio do mandante
                 return;
             }
-        } else if !cqo1_selecao(read_u32_as_usize(fx + 0x1c)) {
+        } else if !cqc2_selecao(read_u32_as_usize(fx + 0x1c)) {
             write_u32_from_usize(fx + 0x18, 0);
             write_u32_from_usize(fx + 4, u32::MAX as usize);
             return;
@@ -347,7 +342,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
         let comp = read_u32_as_usize(fx + 0x14);
         if comp != 0 {
             let n = read_u32_as_usize(comp + 0x5d);
-            if n != 0 && read_u32_as_usize(n) == read_u32_as_usize(KEY_NATION_ENGLAND) && !cqo1_selecao(read_u32_as_usize(fx + 0x1c)) && read_u32_as_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
+            if n != 0 && read_u32_as_usize(n) == read_u32_as_usize(KEY_NATION_ENGLAND) && !cqc2_selecao(read_u32_as_usize(fx + 0x1c)) && read_u32_as_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
                 *neutro = 1;
                 fixar(read_u32_as_usize(cqo1_nacao(read_u32_as_usize(KEY_NATION_WALES)) + 0x80));
                 return;
@@ -415,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
     } else {
         alvo = read_u32_as_usize(comp + 0x5d);
     }
-    if f & 0x20 != 0 && cqo1_selecao(read_u32_as_usize(fx + 0x1c)) {
+    if f & 0x20 != 0 && cqc2_selecao(read_u32_as_usize(fx + 0x1c)) {
         alvo = read_u32_as_usize(read_u32_as_usize(fx + 0x1c) + 0x53);
     }
     if f & 4 != 0 && alvo != 0 {
@@ -426,7 +421,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
             cqo1_reservar(this, read_u32_as_usize(fx + 0x18), pd);
             return;
         }
-        f = if cqo1_selecao(read_u32_as_usize(fx + 0x1c)) { 0x20 } else { 0x40 };
+        f = if cqc2_selecao(read_u32_as_usize(fx + 0x1c)) { 0x20 } else { 0x40 };
     }
     let buscar: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_STADIUM_FIND_AVAILABLE_VENUE);
     let r = buscar(this, f, read_u32_as_usize(comp + 0x59), alvo, pd, read_u32_as_usize(fx + 0x1c), read_u32_as_usize(fx + 0x20), fx);
@@ -468,9 +463,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_estadio_da_partida(this: usize, 
 // ---------- 279a leva: o público de um jogo (stadium.cpp) ----------
 
 
-pub(crate) unsafe fn cqo2_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
@@ -597,7 +589,7 @@ pub(crate) unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
 /// total, o mandante e o visitante e devolve o total.
 pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize, saida: *mut i32) -> i32 {
     if jogo == 0 {
-        return cqo2_i(0xa835ac);
+        return read_i32(0xa835ac);
     }
     let casa = read_u32_as_usize(jogo + 0x1c);
     let fora = read_u32_as_usize(jogo + 0x20);
@@ -684,12 +676,12 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
         if d < f64_em(0x968f20) {
             d = f64_em(0x968f20);
         }
-        pc = ftol(cqo2_i(casa + 0x73) as f64 * f[0] * d);
+        pc = ftol(read_i32(casa + 0x73) as f64 * f[0] * d);
         let mut d = fator(this, jogo, c_est, c_fora, f[1]);
         if d < f64_em(0x968f20) {
             d = f64_em(0x968f20);
         }
-        pf = ftol(cqo2_i(fora + 0x77).wrapping_add(cqo2_i(fora + 0x73)) as f64 * f[1] * d * f64_em(0x968968));
+        pf = ftol(read_i32(fora + 0x77).wrapping_add(read_i32(fora + 0x73)) as f64 * f[1] * d * f64_em(0x968968));
         let comp = read_u32_as_usize(jogo + 0x14);
         if comp != 0 && casa != 0 && read_u32_as_usize(casa + 0x57) == comp {
             let liga = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(comp) * 4);
@@ -698,7 +690,7 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
                 let p = busca(read_u32_as_usize(liga + 8), casa);
                 if p != 0 {
                     let n = read_i16(comp + 0x69) as i32;
-                    let v = cqo2_i(p + 0x19);
+                    let v = read_i32(p + 0x19);
                     if v > 1 {
                         crate::comparacao::ramo("cqo_2 posicao de cima");
                         pc = pc.wrapping_add(if v < 4 || n < 0xc {
@@ -708,11 +700,11 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
                         } else {
                             n * 150
                         });
-                    } else if cqo2_i(p + 0x41) > 2 {
-                        pc = pc.wrapping_add(if cqo2_i(p + 0x41) >= 4 && n >= 0xc { n * 50 } else { n * 25 });
-                    } else if cqo2_i(p + 0x2d) > 2 {
+                    } else if read_i32(p + 0x41) > 2 {
+                        pc = pc.wrapping_add(if read_i32(p + 0x41) >= 4 && n >= 0xc { n * 50 } else { n * 25 });
+                    } else if read_i32(p + 0x2d) > 2 {
                         pc = pc.wrapping_sub(n * 25);
-                    } else if cqo2_i(p + 0x55) > 3 {
+                    } else if read_i32(p + 0x55) > 3 {
                         pc = pc.wrapping_sub(n * 10);
                     }
                     let dl = read_u8(p + 0x74);
@@ -736,7 +728,7 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
             }
         }
         if c_est == c_casa {
-            let (mx, mn) = (cqo2_i(casa + 0x7b), cqo2_i(casa + 0x77));
+            let (mx, mn) = (read_i32(casa + 0x7b), read_i32(casa + 0x77));
             if pc > mx {
                 pc = mx;
             } else if pc < mn {
@@ -744,7 +736,7 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
             }
         }
         if c_est == c_fora {
-            let (mx, mn) = (cqo2_i(fora + 0x7b), cqo2_i(fora + 0x77));
+            let (mx, mn) = (read_i32(fora + 0x7b), read_i32(fora + 0x77));
             if pf > mx {
                 pf = mx;
             } else if pf < mn {
@@ -752,8 +744,8 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
             }
         }
     } else {
-        pc = ftol(cqo2_i(casa + 0x73) as f64 * f[0]);
-        pf = ftol(cqo2_i(fora + 0x73) as f64 * f[1]);
+        pc = ftol(read_i32(casa + 0x73) as f64 * f[0]);
+        pf = ftol(read_i32(fora + 0x73) as f64 * f[1]);
     }
     // os clássicos
     let (casa, fora) = (read_u32_as_usize(jogo + 0x1c), read_u32_as_usize(jogo + 0x20));
@@ -799,19 +791,19 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
         }
     }
     let est = read_u32_as_usize(jogo + 0x18);
-    if est != 0 && cqo2_i(est + 0x3c) < 0x5dc {
+    if est != 0 && read_i32(est + 0x3c) < 0x5dc {
         core::ptr::write_unaligned((est + 0x3c) as *mut i32, rc as i32 * 1000);
-        if cqo2_i(est + 0x3c) < 0x5dc {
+        if read_i32(est + 0x3c) < 0x5dc {
             core::ptr::write_unaligned((est + 0x3c) as *mut i32, 0x5dc);
         }
     }
     if pf.wrapping_add(pc) != 0 {
         let est = read_u32_as_usize(jogo + 0x18);
         if est != 0 {
-            let lot = cqo2_i(est + 0x3c);
+            let lot = read_i32(est + 0x3c);
             let vis = if read_u8(jogo + 0x3c) == 0 {
                 let a = lot as f64;
-                let x = a - cqo2_i(read_u32_as_usize(jogo + 0x20) + 0x73) as f64 * f[0];
+                let x = a - read_i32(read_u32_as_usize(jogo + 0x20) + 0x73) as f64 * f[0];
                 let y = a * f64_em(0x968f20);
                 let z = if x < y { x } else { y };
                 let w = a * f64_em(0x967888);
@@ -873,15 +865,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_publico_do_jogo(this: usize, jog
 // ---------- 256a leva: o estádio neutro e o clima inicial: a nota do estádio para o jogo, o fator da distância no público e a leitura do weather.cfg (stadium.cpp, weather.cpp) ----------
 
 
-pub(crate) unsafe fn cpt7_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
-pub(crate) unsafe fn cpt7_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 /// A distância entre duas cidades (x em +0x23, y em +0x2b, doubles) × 44,44, truncada (_ftol).
 pub(crate) unsafe fn cpt7_distancia(a: usize, b: usize) -> i32 {
@@ -919,7 +904,7 @@ pub(crate) unsafe extern "thiscall" fn nota_do_estadio_neutro(_this: usize, est:
         let cf = read_usize(fora + 0x69);
         let (cidc, cidf) = (if cc != 0 { read_usize(cc + 0x38) } else { 0 }, if cf != 0 { read_usize(cf + 0x38) } else { 0 });
         let cide = read_usize(est + 0x38);
-        if cc != 0 && cidc != 0 && cf != 0 && cidf != 0 && cide != 0 && cpt7_i(est + 0x3c) > 0x2710 {
+        if cc != 0 && cidc != 0 && cf != 0 && cidf != 0 && cide != 0 && read_i32(est + 0x3c) > 0x2710 {
             let d1 = cpt7_distancia(cidc, cidf);
             let d2 = cpt7_distancia(cidc, cide);
             let d3 = cpt7_distancia(cidf, cide);
@@ -945,15 +930,15 @@ pub(crate) unsafe extern "thiscall" fn nota_do_estadio_neutro(_this: usize, est:
             }
         }
     }
-    let lugares = cpt7_i(est + 0x3c);
+    let lugares = read_i32(est + 0x3c);
     if m & 0x20 != 0 {
         let mut esperado: i32 = 0x2710;
         if jogo != 0 {
             if e_selecao(read_usize(jogo + 0x1c)) != 0 {
                 esperado = 0xea60;
             } else {
-                let a = cpt7_i(read_usize(jogo + 0x20) + 0x73);
-                let c = cpt7_i(read_usize(jogo + 0x1c) + 0x73);
+                let a = read_i32(read_usize(jogo + 0x20) + 0x73);
+                let c = read_i32(read_usize(jogo + 0x1c) + 0x73);
                 let s = c.wrapping_add(a);
                 if s < 0x1388 {
                     esperado = 0x1388;
@@ -988,10 +973,10 @@ pub(crate) unsafe extern "thiscall" fn nota_do_estadio_neutro(_this: usize, est:
             nota = ftol(nota as f64 * f64_em(0x9689d8));
         }
     } else if m & 4 != 0 {
-        nota = cpt7_sortear(lugares);
+        nota = cpe1_sorteio(lugares);
     }
     crate::comparacao::ramo("cpt_7 nota do estadio");
-    let r = cpt7_sortear(100); // cpt7: o sorteio da nota
+    let r = cpe1_sorteio(100); // cpt7: o sorteio da nota
     ftol((r as f64 * f64_em(0x968d60) + f64_em(0x9689b0)) * nota as f64)
 }
 
@@ -1295,7 +1280,7 @@ pub(crate) unsafe extern "C" fn ordem_das_reservas_do_estadio(a: usize, b: usize
     if depois(a + 4, d0, d1) != 0 {
         return 1;
     }
-    cpu5_i(a).wrapping_sub(cpu5_i(b))
+    read_i32(a).wrapping_sub(read_i32(b))
 }
 
 /// Comparador: pelo valor.

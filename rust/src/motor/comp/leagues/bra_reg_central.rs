@@ -46,20 +46,7 @@ pub(crate) unsafe fn cqi8_regras_catarinense(o: usize) {
     cqi8_regras(o, 2, 4, 1); // cqi8: o Catarinense
 }
 
-/// O calendário da fase principal pelo slot 16 (`create_schedule`, thiscall, ret 0x10, conferido nos seis alvos das
-/// vtables destas rotinas): estágio -1, as saídas +0xa9 e +0x3a, sem a marca; o ponteiro vai para +0xba.
-pub(crate) unsafe fn cqi8_calendario(o: usize) {
-    let vt = *(o as *const usize);
-    let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
-    let r = f(o, -1, o + 0xa9, o + 0x3a, 0);
-    write_u32_at(o, 0xba, r as u32);
-}
 
-/// O objeto da liga (0xee bytes) menos as saídas do calendário (+0x3a, +0xa9, +0xba): os calendários não gravam nada
-/// no objeto além delas (nenhum `mov [edi+..]` nos seis).
-pub(crate) fn cqi8_regioes(o: usize) -> [(usize, usize); 4] {
-    [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)]
-}
 
 /// Centre-West: single round robin; 8 top places (the 8-club knockout [inference: the slot 11 stage]); 3 relegated; win
 /// 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no league above or below (the
@@ -73,14 +60,14 @@ pub(crate) fn cqi8_regioes(o: usize) -> [(usize, usize); 4] {
 pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) -> u32 {
     cqi8_regras_centro(this);
     crate::comparacao::ramo("cqi_8 regras do centro-oeste");
-    cqi8_calendario(this);
+    cqi7_calendario(this);
     1
 }
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this: usize) -> u32 {
-    let reg = cqi8_regioes(this);
+    let reg = cqi7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1715)(this), || {
         cqi8_regras_centro(this);
         1
@@ -103,13 +90,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this
 pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -> u32 {
     cqi8_regras_catarinense(this);
     crate::comparacao::ramo("cqi_8 regras do catarinense");
-    cqi8_calendario(this);
+    cqi7_calendario(this);
     1
 }
 
 /// Comparador: como o do Centro-Oeste.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this: usize) -> u32 {
-    let reg = cqi8_regioes(this);
+    let reg = cqi7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1717)(this), || {
         cqi8_regras_catarinense(this);
         1
@@ -122,24 +109,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this:
 
 
 
-/// Os registros de carreira (Staff_Records em [0xdd7f00], thiscall, já em Rust): 0x86bdd0 classificou-se (clube, comp,
-/// fase, rodada, peso; ret 0x14).
-pub(crate) unsafe fn cqk7_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, fase, rodada, peso);
-}
 
-/// 0x86a1c0 rebaixado (clube, liga; ret 8).
-pub(crate) unsafe fn cqk7_rebaixado(clube: usize, comp: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp);
-}
 
-/// 0x868c50 campeão da liga (clube, liga; ret 8).
-pub(crate) unsafe fn cqk7_campeao(clube: usize, comp: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp);
-}
 
 /// A fase de pontos corridos (fase -1) dos estaduais: os classificados (6) ganham o registro de classificação (rodada
 /// 0x82, peso 0x32), os rebaixados (3) o de rebaixamento. Igual nas duas rotinas dos estaduais.
@@ -148,11 +119,11 @@ pub(crate) unsafe fn cqk7_pontos_corridos(this: usize, clube: usize, st: u8, faz
     if st == 6 {
         if fazer {
             crate::comparacao::ramo("cqk_7 classificado do estadual");
-            cqk7_classificou(clube, comp, 0, 0x82, 0x32); // cqk7: o classificado do estadual
+            cqj9_classificou(clube, comp, 0, 0x82, 0x32); // cqk7: o classificado do estadual
         }
     } else if st == 3 && fazer {
         crate::comparacao::ramo("cqk_7 rebaixado do estadual");
-        cqk7_rebaixado(clube, comp); // cqk7: o rebaixado do estadual
+        cqj9_rebaixado(clube, comp); // cqk7: o rebaixado do estadual
     }
 }
 
@@ -168,7 +139,7 @@ pub(crate) unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usi
             if st == 1 {
                 if fazer {
                     crate::comparacao::ramo("cqk_7 campeao do estadual");
-                    cqk7_campeao(clube, comp); // cqk7: o registro do campeão do estadual
+                    cqj9_campeao(clube, comp); // cqk7: o registro do campeão do estadual
                 }
                 let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
                 if fazer {
@@ -240,7 +211,7 @@ pub(crate) unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u3
         if st == 6 {
             if fazer {
                 crate::comparacao::ramo("cqk_7 nsl classificado");
-                cqk7_classificou(clube, comp, 0x435, 0, 0x28); // cqk7: o classificado da NSL
+                cqj9_classificou(clube, comp, 0x435, 0, 0x28); // cqk7: o classificado da NSL
             }
             return (0, 0, 0);
         }
@@ -253,7 +224,7 @@ pub(crate) unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u3
         // a fase final
         if st == 6 {
             if fazer {
-                cqk7_classificou(clube, comp, 0, 0x96, 0x28);
+                cqj9_classificou(clube, comp, 0, 0x96, 0x28);
             }
             return (0, 0, 0);
         }
@@ -267,7 +238,7 @@ pub(crate) unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u3
         return (0, 0, 0);
     }
     if st == 1 && fazer {
-        cqk7_campeao(clube, comp);
+        cqj9_campeao(clube, comp);
     }
     (0, 0, 0)
 }

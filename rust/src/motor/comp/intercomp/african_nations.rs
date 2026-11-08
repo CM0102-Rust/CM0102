@@ -421,7 +421,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk12_africana_historico(this: u
 /// [0xdd7f00] -> thiscall, ret 0xc).
 pub(crate) unsafe fn cqj10_final(f: usize, clube: usize, jogo: usize, a6: u32) {
     let g: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(f);
-    g(cpz4_registros(), clube, jogo, a6);
+    g(cpz2_registros(), clube, jogo, a6);
 }
 
 /// A virtual +0x44 de um torneio de seleções com grupos e mata-mata (a Copa Africana e a Copa América): `fase` (byte com
@@ -604,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn cqk10_copa_africana_regras(this: usize) -
     cqk10_campos(this, &CQK10_AFRICANA, vitoria);
     let dia = 5; // cqk10: o dia da data da Copa Africana
     let palavra = cqk10_data(this, dia, 9, -1, 5);
-    cqk10_fim(this, palavra, 0xffff)
+    cqj12_fim(this, palavra, 0xffff)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqk10_copa_africana_regras(this: usize) -> u32 {

@@ -1,11 +1,11 @@
 # Mutações da 247a leva (itens cpk_1, cpk_2, cpk_3, cpk_4, cpk_5, cpk_6, cpk_7). Uso: python mutacoes.py mutacoes\leva247.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpk_recordes_sempre_conta', 'cpk1_por(this + 0xc, n.wrapping_add(1)); // a conta dos recordes de sempre', 'cpk1_por(this + 0xc, n); // mutacao: a conta nao sobe'),
-    ('cpk_recordes_temporada_conta', 'cpk1_por(this + 0x18, n.wrapping_add(1)); // a conta dos recordes da temporada', 'cpk1_por(this + 0x18, n); // mutacao: a conta nao sobe'),
-    ('cpk_noticia_recorde_conta', 'cpk1_por(this + 0x2c, n.wrapping_add(1)); // mais uma notícia', 'cpk1_por(this + 0x2c, n); // mutacao: a conta nao sobe'),
-    ('cpk_reserva_tecnico_conta', 'cpk2_por(this + 0x20, n.wrapping_add(1)); // mais uma reserva', 'cpk2_por(this + 0x20, n); // mutacao: a conta nao sobe'),
-    ('cpk_aposentadoria_conta', 'cpk2_por(this + 8, read_usize(this + 8).wrapping_add(1)); // mais uma aposentadoria', '// mutacao: a conta nao sobe'),
-    ('cpk_fila_regen_conta', 'cpk2_por(this + 0x14, read_usize(this + 0x14).wrapping_add(1)); // mais uma na fila do regen', '// mutacao: a conta nao sobe'),
+    ('cpk_recordes_sempre_conta', 'write_usize(this + 0xc, n.wrapping_add(1)); // a conta dos recordes de sempre', 'write_usize(this + 0xc, n); // mutacao: a conta nao sobe'),
+    ('cpk_recordes_temporada_conta', 'write_usize(this + 0x18, n.wrapping_add(1)); // a conta dos recordes da temporada', 'write_usize(this + 0x18, n); // mutacao: a conta nao sobe'),
+    ('cpk_noticia_recorde_conta', 'write_usize(this + 0x2c, n.wrapping_add(1)); // mais uma notícia', 'write_usize(this + 0x2c, n); // mutacao: a conta nao sobe'),
+    ('cpk_reserva_tecnico_conta', 'write_usize(this + 0x20, n.wrapping_add(1)); // mais uma reserva', 'write_usize(this + 0x20, n); // mutacao: a conta nao sobe'),
+    ('cpk_aposentadoria_conta', 'write_usize(this + 8, read_usize(this + 8).wrapping_add(1)); // mais uma aposentadoria', '// mutacao: a conta nao sobe'),
+    ('cpk_fila_regen_conta', 'write_usize(this + 0x14, read_usize(this + 0x14).wrapping_add(1)); // mais uma na fila do regen', '// mutacao: a conta nao sobe'),
     ('cpk_clausula_estado', '*((contrato + 0x1f) as *mut u8) = 2; // a cláusula acionada', '*((contrato + 0x1f) as *mut u8) = 3; // mutacao: 3', 'cpk_3 clausula de rebaixamento'),
     ('cpk_oferta_pendente', '*n = (*n).wrapping_sub(1); // uma pendente a menos', '// mutacao: sem descontar', 'cpk_3 tirar oferta de contrato'),
     ('cpk_suspenso_competicao', 'if b == 0 || julgar(b, jogador, 0, extra, partida) == 0 { // sem a suspensão da competição', 'if b == 0 || b != 0 { // mutacao: sem a da competicao', 'cpk_3 suspenso pela competicao'),

@@ -264,9 +264,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_posicao_do_clube(this: us
 // ---------- 253a leva: o lado do jogo, a ordem dos coeficientes das nações e o pedido de observação (comp_util.cpp, scout_manager.cpp) ----------
 
 
-pub(crate) unsafe fn cpq12_us(a: usize) -> usize {
-    read_u32(a) as usize
-}
 
 /// the club side in the fixture: 1 home, 2 away, 3 neutral, by the fixture stadium and the two clubs' stadiums
 /// (national sides: by the stadium nation)
@@ -279,7 +276,7 @@ pub(crate) unsafe fn cpq12_us(a: usize) -> usize {
 /// 1 para o mandante e 2 para o outro; só do adversário, 2; de nenhum, 3. Quem chama lê só o al.
 pub(crate) unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 {
     let campo = read_u32(jogo + 0x18);
-    let casa = cpq12_us(jogo + 0x1c);
+    let casa = cpq11_us(jogo + 0x1c);
     if campo == 0 {
         if read_u32(casa + 0x69) == 0 {
             return 3;
@@ -288,19 +285,19 @@ pub(crate) unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: us
     }
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if selecao(clube) != 0 {
-        let nacao = cpq12_us(campo as usize + 0x38);
+        let nacao = cpq11_us(campo as usize + 0x38);
         if nacao != 0 && read_u32(nacao + 0x1f) == read_u32(clube + 0x53) {
             return 1;
         }
-        let casa = cpq12_us(jogo + 0x1c);
-        let outro = if casa == clube { cpq12_us(jogo + 0x20) } else { casa };
+        let casa = cpq11_us(jogo + 0x1c);
+        let outro = if casa == clube { cpq11_us(jogo + 0x20) } else { casa };
         if nacao != 0 && read_u32(nacao + 0x1f) == read_u32(outro + 0x53) {
             return 2;
         }
         return 3;
     }
-    let casa = cpq12_us(jogo + 0x1c);
-    let outro = if casa == clube { cpq12_us(jogo + 0x20) } else { casa };
+    let casa = cpq11_us(jogo + 0x1c);
+    let outro = if casa == clube { cpq11_us(jogo + 0x20) } else { casa };
     let campo = read_u32(jogo + 0x18);
     if campo != read_u32(clube + 0x69) {
         return if campo != read_u32(outro + 0x69) { 3 } else { 2 };
@@ -353,26 +350,19 @@ pub(crate) unsafe extern "C" fn comparar_ordem_dos_coeficientes_das_nacoes(a: us
 // ---------- 249a leva: a mudança de divisão do clube e os embaralhamentos das listas de clubes (league.cpp, comp_util.cpp) ----------
 
 
-pub(crate) unsafe fn cpm3_sorteio(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 
-pub(crate) unsafe fn cpm3_por(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut usize, v);
-}
 
 /// As trocas de `vezes` pares sorteados (0x90cfc0(n) duas vezes; a primeira dá o índice que recebe o item do segundo)
 /// no vetor de ponteiros `itens`, como as duas originais (índices de 16 bits com sinal).
 pub(crate) unsafe fn cpm3_trocar(itens: usize, n: i32) {
-    let a = cpm3_sorteio(n) as i16 as isize;
-    let b = cpm3_sorteio(n) as i16 as isize;
+    let a = cpe1_sorteio(n) as i16 as isize;
+    let b = cpe1_sorteio(n) as i16 as isize;
     let pa = (itens as isize + 4 * a) as usize;
     let pb = (itens as isize + 4 * b) as usize;
     let (va, vb) = (read_usize(pa), read_usize(pb));
-    cpm3_por(pa, vb);
-    cpm3_por(pb, va);
+    write_usize(pa, vb);
+    write_usize(pb, va);
 }
 
 /// shuffles an array of n pointers with 3 × n swaps of drawn pairs

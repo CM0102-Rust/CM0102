@@ -502,10 +502,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_campeoes_posicoes_previstas(this
 
 
 
-/// A nação do clube (+0x53).
-pub(crate) unsafe fn cqg6_nacao(clube: usize) -> usize {
-    read_u32_as_usize(clube + 0x53)
-}
 
 /// Copia a entrada de 7 bytes `de` (+0 o clube, +4 os da mesma nação, +5 o grupo da primeira fase, +6 0 vencedor / 1
 /// segundo) para `para`, como a original: o dword, o word +4 e o byte +6.
@@ -582,7 +578,7 @@ pub(crate) unsafe extern "thiscall" fn campeoes_sortear_segunda_fase(this: usize
     }
     for i in 0..16 {
         for j in 0..16 {
-            if cqg6_nacao(read_u32_as_usize(e7(w, i))) == cqg6_nacao(read_u32_as_usize(e7(w, j))) {
+            if cqg4_nacao(read_u32_as_usize(e7(w, i))) == cqg4_nacao(read_u32_as_usize(e7(w, j))) {
                 write_u8(e7(w, i) + 4, read_u8(e7(w, i) + 4).wrapping_add(1));
             }
         }
@@ -644,7 +640,7 @@ pub(crate) unsafe extern "thiscall" fn campeoes_sortear_segunda_fase(this: usize
                 let clube = read_u32_as_usize(v);
                 if clube != 0 {
                     n += 1;
-                    if read_u8(v + 5) == read_u8(p + 5) || cqg6_nacao(clube) == cqg6_nacao(read_u32_as_usize(p)) { // cqg6: mesmo grupo ou nação
+                    if read_u8(v + 5) == read_u8(p + 5) || cqg4_nacao(clube) == cqg4_nacao(read_u32_as_usize(p)) { // cqg6: mesmo grupo ou nação
                         conflito = true;
                         break;
                     }
@@ -689,7 +685,7 @@ pub(crate) unsafe extern "thiscall" fn campeoes_sortear_segunda_fase(this: usize
     for h in 0..4i32 {
         for q in 0..4i32 {
             let c = read_u32_as_usize(e7(g, h * 4 + q));
-            pontos(read_u32_as_usize(G_UEFA_SEEDING), cqg6_nacao(c), 1);
+            pontos(read_u32_as_usize(G_UEFA_SEEDING), cqg4_nacao(c), 1);
             let valor = 1_200_000i32; // cqg6: o prêmio da segunda fase
             crate::comparacao::ramo("cqg_6 prêmio da segunda fase");
             premio(financas(read_u32_as_usize(G_FINANCE_TABLE), c), valor);
@@ -820,7 +816,7 @@ pub(crate) unsafe extern "C" fn campeoes_ordem_da_segunda_fase(a: usize, b: usiz
     if r != 0 {
         return r;
     }
-    let r = read_i16(cqg6_nacao(read_u32_as_usize(b)) + 0x8e) as i32 - read_i16(cqg6_nacao(read_u32_as_usize(a)) + 0x8e) as i32;
+    let r = read_i16(cqg4_nacao(read_u32_as_usize(b)) + 0x8e) as i32 - read_i16(cqg4_nacao(read_u32_as_usize(a)) + 0x8e) as i32;
     if r != 0 {
         return r;
     }
@@ -842,10 +838,6 @@ pub(crate) unsafe extern "C" fn comparar_campeoes_ordem_da_segunda_fase(a: usize
 
 
 
-/// O registro de staff ([0xdd7f00]).
-pub(crate) unsafe fn cpz4_registros() -> usize {
-    read_usize(G_STAFF_RECORDS)
-}
 
 /// comp_util_scale_by_round (0x4bf850, cdecl(baixo, alto, rodada, rodadas)): a faixa pela rodada, de 0 a 100.
 pub(crate) unsafe fn cpz4_escala(baixo: u32, alto: u32, rodada: i16, rodadas: u32) -> u32 {
@@ -858,19 +850,19 @@ pub(crate) unsafe fn cpz4_escala(baixo: u32, alto: u32, rodada: i16, rodadas: u3
 /// ret 0x14).
 pub(crate) unsafe fn cpz4_classificado(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    f(cpz4_registros(), clube, comp, fase, rodada, peso);
+    f(cpz2_registros(), clube, comp, fase, rodada, peso);
 }
 
 /// Staff_Records::add_failed_to_qualify_record (0x86c1d0: thiscall(registros, clube, comp, fase, _), ret 0x10).
 pub(crate) unsafe fn cpz4_nao_classificado(clube: usize, comp: usize, fase: u32, x: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FAILED_TO_QUALIFY_RECORD);
-    f(cpz4_registros(), clube, comp, fase, x);
+    f(cpz2_registros(), clube, comp, fase, x);
 }
 
 /// Staff_Records::add_knocked_out_record (0x86c000: thiscall(registros, clube, comp, fase, rodada, _), ret 0x14).
 pub(crate) unsafe fn cpz4_eliminado(clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-    f(cpz4_registros(), clube, comp, fase, rodada, x);
+    f(cpz2_registros(), clube, comp, fase, rodada, x);
 }
 
 /// O clube sai da competição europeia da temporada (+0x1db = −1).
@@ -942,12 +934,12 @@ pub(crate) unsafe extern "thiscall" fn registros_da_liga_dos_campeoes(this: usiz
         match d {
             1 => {
                 let titulo: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_CUP_WINNERS_RECORD);
-                titulo(cpz4_registros(), clube, jogo, fim);
+                titulo(cpz2_registros(), clube, jogo, fim);
                 cpz4_sair(clube);
             }
             2 => {
                 let vice: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_CUP_RUNNERS_UP_RECORD);
-                vice(cpz4_registros(), clube, jogo, fim);
+                vice(cpz2_registros(), clube, jogo, fim);
                 cpz4_sair(clube);
             }
             0 => {
@@ -1192,9 +1184,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_clubes_da_liga_dos_campeoes(this
 // ---------- 261a leva: os inscritos da Liga dos Campeões: a lista das quatro bandas, a tabela da qualificação e a fase seguinte (european_cup.cpp) ----------
 
 
-pub(crate) unsafe fn cpy5_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
@@ -1216,17 +1205,17 @@ pub(crate) unsafe fn cpy5_entrada(p: usize, clube: usize, rodada: u8) {
 /// 2 em +0x60 (até 18, rodada 8), 3 em +0xcc (até 19, rodada 0xd), 4 em +0x13e (até 18, rodada 0). Devolve a soma
 /// das quatro contas.
 pub(crate) unsafe fn cpy5_preencher(t: usize) -> i32 {
-    let clubes = cpy5_i(0xae235c);
+    let clubes = read_i32(0xae235c);
     let (mut n1, mut n2, mut n3, mut n4) = (0i32, 0i32, 0i32, 0i32);
     let (mut o1, mut o2, mut o3, mut o4) = (0usize, 0usize, 0usize, 0usize);
     if clubes <= 0 {
         return 0;
     }
-    let cl = cpy5_i(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE);
+    let cl = read_i32(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE);
     let mut c = read_usize(G_CLUB_TABLE);
     let mut i: i32 = 0;
     loop {
-        if cpy5_i(c + 0x1db) == cl {
+        if read_i32(c + 0x1db) == cl {
             match read_u8(c + 0x1df) {
                 1 => {
                     if o1 < 0x60 {
@@ -1390,8 +1379,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_qualificacao_da_liga_d
 /// 0, o sorteio dos grupos da fase 1 (0x585290, thiscall(this)); na 8, os da fase 2 (0x585ab0, thiscall(this, 0),
 /// ret 4); na 12, as quartas (0x586330, thiscall(this)). Quem chama não lê a devolução.
 pub(crate) unsafe extern "thiscall" fn proxima_fase_da_liga_dos_campeoes(this: usize) {
-    let f = cpy5_i(this + 0x30);
-    if f >= cpy5_i(this + 0x2c).wrapping_sub(1) {
+    let f = read_i32(this + 0x30);
+    if f >= read_i32(this + 0x2c).wrapping_sub(1) {
         return aviso_em(0x9c4900, 0x495);
     }
     let f = f.wrapping_add(1);
@@ -1422,9 +1411,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_proxima_fase_da_liga_dos_campeoe
 // ---------- 261a leva: o jogo da Liga dos Campeões: o prêmio e o coeficiente do jogo, o progresso do clube e o conflito de datas da competição (european_cup.cpp, comp.cpp) ----------
 
 
-pub(crate) unsafe fn cpy6_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
@@ -1545,14 +1531,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_processar_jogo_da_liga_dos_campe
     }
     let conferir = [(ca, 2), (cb, 2)];
     let antes = crate::comparacao::Memoria::ler(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
-    let fase = cpy6_i(this + 0x30);
+    let fase = read_i32(this + 0x30);
     CPY6_ENSAIO = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| processar_jogo_da_liga_dos_campeoes(this, jogo, arg)));
     CPY6_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&conferir);
     antes.escrever();
     o(this, jogo, arg);
-    if cpy6_i(this + 0x30) != fase {
+    if read_i32(this + 0x30) != fase {
         return; // ponytail: a fase andou na base e o sorteio somou coeficiente: sem comparação
     }
     let mo = crate::comparacao::Memoria::ler(&conferir);

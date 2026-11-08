@@ -83,18 +83,6 @@ pub(crate) unsafe fn cqn11_tabela(this: usize, fase: u32, rodadas: *mut i16, ext
     t
 }
 
-/// Os bytes que a original grava em cada rodada (o resto da memória alocada fica como veio): +0..+0x10 (as datas e os
-/// campos até o desempate de ida e volta), +0x13..+0x22 (o mando até os dias entre os jogos) e +0x5c..+0x67 (os prêmios).
-pub(crate) unsafe fn cqn11_gravados(t: usize, n: i16) -> Vec<u8> {
-    let mut v = Vec::new();
-    for r in 0..n.max(0) as usize {
-        let e = t + r * 0x68;
-        for &(a, b) in &[(0usize, 0x11usize), (0x13, 0x23), (0x5c, 0x68)] {
-            v.extend_from_slice(core::slice::from_raw_parts((e + a) as *const u8, b - a));
-        }
-    }
-    v
-}
 
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
@@ -111,7 +99,7 @@ pub(crate) unsafe fn cqn11_comparar(nome: &str, fase: u32, rodadas: *mut i16, ex
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if saida.is_null() { core::ptr::null_mut() } else { &mut s2 }));
     let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
-    let tabela = if a != 0 && b != 0 { cqn11_gravados(a, *rodadas) == cqn11_gravados(b, r2) } else { a == 0 && b == 0 };
+    let tabela = if a != 0 && b != 0 { cql10_gravados(a, *rodadas) == cql10_gravados(b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
@@ -214,19 +202,7 @@ pub(crate) unsafe fn cqn12_clube(i: i32) -> usize {
     read_u32_as_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize)
 }
 
-/// O id da competição apontada por `c + o` (+0 do registro), ou None sem ela.
-pub(crate) unsafe fn cqn12_comp(c: usize, o: usize) -> Option<usize> {
-    let d = read_u32_as_usize(c + o);
-    if d == 0 { None } else { Some(read_u32_as_usize(d)) }
-}
 
-/// Grava a inscrição `k` da lista (+0xa7, 6 bytes: o clube, +4 a classe, +5 a situação 0).
-pub(crate) unsafe fn cqn12_inscrever(this: usize, k: i32, clube: usize, classe: u8) {
-    let e = read_u32_as_usize(this + 0xa7) + k as usize * 6;
-    core::ptr::write_unaligned(e as *mut u32, clube as u32);
-    *((e + 4) as *mut u8) = classe;
-    *((e + 5) as *mut u8) = 0;
-}
 
 /// O sorteio de 0 a n − 1 (0x90cfc0: push n; add esp, 4 -> cdecl).
 pub(crate) unsafe fn cqn12_sortear(n: i32) -> i32 {
@@ -266,8 +242,8 @@ pub(crate) unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = cqn12_clube(i as i32);
-        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + 0x3e) as i32 {
-            cqn12_inscrever(this, n, c, 0);
+        if cqm11_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + 0x3e) as i32 {
+            cqm10_inscrever(this, n, c, 0);
             n += 1;
             if n == read_i16(this + 0x3e) as i32 {
                 break;
@@ -278,7 +254,7 @@ pub(crate) unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = cqn12_clube(i as i32);
-        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + 0x3e) as i32 {
+        if cqm11_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + 0x3e) as i32 {
             let e = read_u32_as_usize(this + 0xa7) + n as usize * 6;
             core::ptr::write_unaligned(e as *mut u32, c as u32);
             crate::comparacao::ramo("cqn_12 semente da j1");
@@ -389,15 +365,15 @@ pub(crate) unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
     }
     let mut k = 0i8;
     for &c in va.iter().take(10).chain(vb.iter().take(10)) {
-        cqn12_inscrever(this, k as i32, c, 2); // cqn12: os 10 de cada liga de baixo
+        cqm10_inscrever(this, k as i32, c, 2); // cqn12: os 10 de cada liga de baixo
         k = k.wrapping_add(1);
     }
     crate::comparacao::ramo("cqn_12 inscritos da copa dos eua");
     let mut i = 0i32;
     while i < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = cqn12_clube(i);
-        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) {
-            cqn12_inscrever(this, k as i32, c, 1);
+        if cqm11_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) {
+            cqm10_inscrever(this, k as i32, c, 1);
             k = k.wrapping_add(1);
         }
         i += 1;
@@ -447,7 +423,7 @@ pub(crate) unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
         let mut i: i16 = 0;
         while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
             let c = cqn12_clube(i as i32);
-            if read_u32_as_usize(c + 0x57) != 0 && cqn12_comp(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_JAPAN)) {
+            if read_u32_as_usize(c + 0x57) != 0 && cqm11_comp(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_JAPAN)) {
                 let d = read_u32_as_usize(read_u32_as_usize(c + 0x57));
                 if d == read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_ADMINISTRATIVE_DIVISION) {
                     if na < 0x64 {
@@ -493,14 +469,14 @@ pub(crate) unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
     crate::comparacao::ramo("cqn_12 inscritos da copa do imperador");
     let mut n = 0i32;
     for &c in va.iter().take(0x2f).chain(vb.iter().take(2)).chain(vc.iter().take(3)) {
-        cqn12_inscrever(this, n, c, 0); // cqn12: os sorteados das divisões de baixo
+        cqm10_inscrever(this, n, c, 0); // cqn12: os sorteados das divisões de baixo
         n += 1;
     }
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = cqn12_clube(i as i32);
-        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + 0x3e) as i32 {
-            cqn12_inscrever(this, n, c, 0);
+        if cqm11_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + 0x3e) as i32 {
+            cqm10_inscrever(this, n, c, 0);
             n += 1;
         }
         i = i.wrapping_add(1);
@@ -508,9 +484,9 @@ pub(crate) unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = cqn12_clube(i as i32);
-        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + 0x3e) as i32 {
+        if cqm11_comp(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + 0x3e) as i32 {
             crate::comparacao::ramo("cqn_12 classe da j1 na copa do imperador");
-            cqn12_inscrever(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: a classe dos clubes da J1 na Copa do Imperador
+            cqm10_inscrever(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: a classe dos clubes da J1 na Copa do Imperador
             n += 1;
             if n == read_i16(this + 0x3e) as i32 {
                 break;

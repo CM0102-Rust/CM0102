@@ -199,9 +199,9 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_6 tabela da segunda");
     core::ptr::write_unaligned((this + 0x28) as *mut i32, 0);
     *((this + 0xe1) as *mut u8) = 2;
-    cqj6_pagar(this, 0x1e8480, cqj6_registro(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)); // cqj6: a TV de quem caiu da primeira
-    cqj6_pagar(this, 0x16e360, cqj6_registro(KEY_CLUB_COMP_FRENCH_SECOND_DIVISION));
-    cqj6_pagar(this, 0x16e360, cqj6_registro(KEY_CLUB_COMP_FRENCH_NATIONAL));
+    cqi5_pagar(this, 0x1e8480, cqi5_registro(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)); // cqj6: a TV de quem caiu da primeira
+    cqi5_pagar(this, 0x16e360, cqi5_registro(KEY_CLUB_COMP_FRENCH_SECOND_DIVISION));
+    cqi5_pagar(this, 0x16e360, cqi5_registro(KEY_CLUB_COMP_FRENCH_NATIONAL));
     1
 }
 

@@ -4,10 +4,6 @@ use super::*;
 
 
 
-/// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes; a original faz id × 3 × 9 × 4 − id).
-pub(crate) unsafe fn cqq6_registro(g: usize) -> usize {
-    read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
-}
 
 /// Uma competição-marcador (operator new 0x944cf1 de 0xa3: push; add esp, 4 -> cdecl; sem memória: 0): Comp::Comp
 /// (0x48c580: mov ecx -> thiscall, ret 0), a vtable `vtabela`, +0x42 = 1, o registro de id [g] em +4 e sem disciplina
@@ -22,7 +18,7 @@ pub(crate) unsafe fn cqq6_marcador(vtabela: usize, g: usize) -> usize {
     comp(c);
     write_u32_from_usize(c, vtabela);
     *((c + 0x42) as *mut u8) = 1;
-    write_u32_from_usize(c + 4, cqq6_registro(g));
+    write_u32_from_usize(c + 4, cqm6_registro(g));
     *((c + 0x50) as *mut u8) = 0xff;
     c
 }
@@ -84,10 +80,10 @@ pub(crate) unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, 
             if comp != 0 {
                 if read_u32_as_usize(comp) == read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA) {
                     write_u32_from_usize(p + 9, comp); // cqq6: a CFA vira a competição de reserva
-                    write_u32_from_usize(p, cqq6_registro(KEY_CLUB_COMP_A_LOWER_DIVISION));
+                    write_u32_from_usize(p, cqm6_registro(KEY_CLUB_COMP_A_LOWER_DIVISION));
                 } else if read_u32_as_usize(comp) == read_u32_as_usize(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) {
                     write_u32_from_usize(p + 9, 0); // cqq6: a divisão de baixo fica sem reserva
-                    write_u32_from_usize(p, cqq6_registro(KEY_CLUB_COMP_A_LOWER_DIVISION));
+                    write_u32_from_usize(p, cqm6_registro(KEY_CLUB_COMP_A_LOWER_DIVISION));
                 }
             }
             i += 1;
@@ -145,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_primeira_francesa(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1946);
     let r = o(this, ano, registro);
-    let marcador = |m: usize, vt: usize, g: usize| m == 0 || (read_u32_as_usize(m) == vt && read_u32_as_usize(m + 4) == cqq6_registro(g) && *((m + 0x50) as *const u8) == 0xff);
+    let marcador = |m: usize, vt: usize, g: usize| m == 0 || (read_u32_as_usize(m) == vt && read_u32_as_usize(m + 4) == cqm6_registro(g) && *((m + 0x50) as *const u8) == 0xff);
     let mut ok = r == this && read_u32_as_usize(this) == 0x96aa24 && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 0xc
         && marcador(read_u32_as_usize(this + 0xee), 0x96a994, KEY_CLUB_COMP_FRENCH_CFA) && marcador(read_u32_as_usize(this + 0xf2), 0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
@@ -160,12 +156,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_construir_primeira_francesa(this
 
 
 
-/// Quantos jogos a liga tem: (clubes +0x3e / 2, com sinal, para zero) × rodadas +0xa9.
-pub(crate) unsafe fn cqn6_jogos(liga: usize) -> i32 {
-    let clubes = core::ptr::read_unaligned((liga + 0x3e) as *const i16) as i32;
-    let rodadas = core::ptr::read_unaligned((liga + 0xa9) as *const i16) as i32;
-    (clubes / 2).wrapping_mul(rodadas)
-}
 
 /// O corpo das duas (set_up_fixed_fixtures; thiscall, ret 0, quadro SEH só para o construtor de vetor): o vetor dos
 /// jogos fixos (operator new 0x944cf1 de n × 16 + 4: push; add esp, 4 -> cdecl; a conta n no primeiro dword e cada jogo
@@ -184,7 +174,7 @@ pub(crate) unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)],
     let destruir: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
     let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let jogo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) = core::mem::transmute(FN_FIXED_FIXTURE_SET_BY_CLUB_NAMES);
-    let n = cqn6_jogos(this);
+    let n = cqn5_jogos(this);
     let bloco = novo((n as u32).wrapping_mul(16).wrapping_add(4));
     let vetor = if bloco != 0 {
         write_u32_from_usize(bloco, n as usize);
@@ -202,7 +192,7 @@ pub(crate) unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)],
         jogo(read_u32_as_usize(this + 0xea) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
     }
     crate::comparacao::ramo("cqn_6 calendario fixo");
-    let n = cqn6_jogos(this);
+    let n = cqn5_jogos(this);
     if n <= 0 {
         return;
     }
@@ -234,7 +224,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_fixo_da_c1b(this: usize) {
 pub(crate) unsafe fn cqn6_comparar(nome: &str, this: usize, original: impl FnOnce()) {
     original();
     let v = read_u32_as_usize(this + 0xea);
-    let n = cqn6_jogos(this);
+    let n = cqn5_jogos(this);
     let ok = v == 0 || (read_u32_as_usize(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| read_u32_as_usize(v + i * 0x10 + 8) != 0xffff_ffff && read_u32_as_usize(v + i * 0x10 + 0xc) != 0xffff_ffff));
     PLACAR.registrar(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", nome, this, v));
 }
@@ -1013,25 +1003,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_da_franca_1(this: usize) 
 
 
 
-/// O registro de competição (0x6b bytes em [0xae23d0]) do id guardado no global `g`.
-pub(crate) unsafe fn cqj6_registro(g: usize) -> usize {
-    read_usize(G_CLUB_COMP_TABLE).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
-}
 
-/// League::pay_tv_rights (0x683010: thiscall(liga, valor, filtro), ret 8).
-pub(crate) unsafe fn cqj6_pagar(this: usize, valor: i32, filtro: usize) {
-    let pagar: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
-    pagar(this, valor, filtro);
-}
 
-/// O fundo de prêmios (+0x28 = League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4) e +0xe1 = 1 (pago pela
-/// tabela no fim da liga, 0x682e10).
-pub(crate) unsafe fn cqj6_fundo(this: usize, cota: i32) {
-    let premio: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-    let f = premio(this, cota);
-    core::ptr::write_unaligned((this + 0x28) as *mut i32, f);
-    *((this + 0xe1) as *mut u8) = 1;
-}
 
 /// O corpo comum, com +0x3e já gravado: a tabela (malloc 0x944e46 de +0x3e × 0x3b; sem memória: a caixa do fonte
 /// `arquivo` na linha `linha` e None); os clubes de [0xae23b4] (0x245 bytes, [0xae235c] deles) cuja competição
@@ -1082,8 +1055,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_franca_1(this: usize) -> u32 {
         return 0;
     }
     crate::comparacao::ramo("cqj_6 tabela da primeira");
-    cqj6_fundo(this, 0x30d40);
-    cqj6_pagar(this, 0x5b8d80, 0); // cqj6: a TV da primeira
+    cqj4_fundo(this, 0x30d40);
+    cqi5_pagar(this, 0x5b8d80, 0); // cqj6: a TV da primeira
     1
 }
 

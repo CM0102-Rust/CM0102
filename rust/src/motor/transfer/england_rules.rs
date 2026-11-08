@@ -145,23 +145,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_australia(this: usize, a1
 
 
 
-pub(crate) unsafe fn cqe5_h(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube de um contrato: +4 é o índice em [0xae23b4] (registros de 0x245 bytes), como as regras calculam.
 pub(crate) unsafe fn cqe5_clube_do_contrato(c: usize) -> usize {
     read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(0x245))
 }
 
-/// O contrato principal da pessoa (0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4), que a original
-/// guarda em [0xae1080] a cada consulta.
-pub(crate) unsafe fn cqe5_contrato(p: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = f(read_usize(G_CONTRACT_MANAGER), p);
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
-    c
-}
 
 /// A entrada de 16 bytes do clube na tabela dos empréstimos da temporada ([[0xde1f54] + 0x91c] + id do clube que pega emprestado × 16, o byte +0
 /// é a conta).
@@ -182,11 +171,11 @@ pub(crate) unsafe fn cqe5_conta(clube: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     // 0x66f4e0: o texto da mensagem (push ...; push formato; push destino; add esp, 0x14) -> cdecl variádica
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let c = cqe5_contrato(jogador);
+    let c = cps5_contrato(jogador);
     if c == 0 || cqe5_clube_do_contrato(c) == 0 {
         return 1;
     }
-    let c2 = cqe5_contrato(jogador);
+    let c2 = cps5_contrato(jogador);
     let dono = if c2 != 0 { cqe5_clube_do_contrato(c2) } else { 0 };
     let comp = read_usize(clube + 0x57);
     if comp == read_usize(dono + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
@@ -228,7 +217,7 @@ pub(crate) unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: u
         if emprestimo(read_usize(G_CONTRACT_MANAGER), p) == 0 {
             continue;
         }
-        let cp = cqe5_contrato(p);
+        let cp = cps5_contrato(p);
         let de = if cp != 0 { cqe5_clube_do_contrato(cp) } else { 0 };
         if de != clube {
             n = n.wrapping_add(1);
@@ -290,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn cqe5_dia_das_regras(this: usize, data: us
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     let r = data_de(d.as_mut_ptr() as usize, 0x14, 5, 0x7ce, -1);
-    if cqe5_h(data) != cqe5_h(r) {
+    if read_i16(data) != read_i16(r) {
         return;
     }
     let mut i: i32 = 0;
@@ -368,7 +357,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqe5_dia_das_regras(this: usize,
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     let r = data_de(d.as_mut_ptr() as usize, 0x14, 5, 0x7ce, -1);
-    if cqe5_h(data) != cqe5_h(r) {
+    if read_i16(data) != read_i16(r) {
         o(this, data);
         return;
     }
@@ -390,7 +379,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_periodo_inglaterra(this: usize, club
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     data_de(d.as_mut_ptr() as usize, 0x13, 5, 0x7ce, -1);
-    if cqe6_h(0xae2c90) > cqe6_h(d.as_ptr() as usize) && (read_u8(jogador + 0x18) as i8) < 0x18 { // cqe6: abaixo de 24 anos
+    if read_i16(0xae2c90) > read_i16(d.as_ptr() as usize) && (read_u8(jogador + 0x18) as i8) < 0x18 { // cqe6: abaixo de 24 anos
         crate::comparacao::ramo("cqe_6 inglaterra periodo da base");
         // 0x8e8bd0: os mesmos 7 argumentos empurrados de novo; mov ecx, esi (this) -> thiscall, ret 0x1c
         let base: unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize) = core::mem::transmute(FN_TRANSFER_RULES_GET_LOAN_PERIOD);
@@ -400,7 +389,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_periodo_inglaterra(this: usize, club
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0 (o mês de hoje)
     let mes: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     *ini_mes = (mes(0xae2c90) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)
-    *ini_ano = cqe6_h(0xae2c92);
+    *ini_ano = read_i16(0xae2c92);
     if *ini_mes > 0xb {
         *ini_mes = (*ini_mes).wrapping_sub(0xc);
         *ini_ano = (*ini_ano).wrapping_add(1);

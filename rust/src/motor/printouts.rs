@@ -3,22 +3,9 @@ use super::*;
 // ---------- 262a leva: os veículos da imprensa: o comentarista sorteado, o nome do veículo e a notícia da queixa do técnico à federação (printouts.cpp, media.cpp) ----------
 
 
-pub(crate) unsafe fn cpz10_u(a: usize) -> u32 {
-    core::ptr::read_unaligned(a as *const u32)
-}
 
-pub(crate) unsafe fn cpz10_sw(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i16) as i32
-}
 
-pub(crate) unsafe fn cpz10_inicio(l: usize) {
-    core::ptr::write_unaligned((l + 0xa) as *mut u32, cpz10_u(l + 2));
-}
 
-pub(crate) unsafe fn cpz10_proximo(l: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    f(l)
-}
 
 /// type 1 on Sunday becomes 7; local types (2, 4): the club's pundits; the others: of the type and nation (−1 any); up
 /// to 20, draw(n) and the id, or −1
@@ -45,38 +32,38 @@ pub(crate) unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: 
             return -1;
         }
         let l = read_usize(this + 4);
-        cpz10_inicio(l);
-        if cpz10_sw(l) <= 0 {
+        cpz8_inicio(l);
+        if read_i16_as_i32(l) <= 0 {
             return -1;
         }
         let mut i = 0;
         loop {
-            let p = cpz10_proximo(l);
+            let p = cpj2_proximo(l);
             if p == 0 {
                 break;
             }
-            if cpz10_u(p + 0xcb) == cpz10_u(read_usize(read_usize(clube + 0x69) + 0x38)) { // cpz10: o comentarista local
+            if read_u32(p + 0xcb) == read_u32(read_usize(read_usize(clube + 0x69) + 0x38)) { // cpz10: o comentarista local
                 crate::comparacao::ramo("cpz_10 comentarista local");
-                ids[n] = cpz10_sw(p) as i16;
+                ids[n] = read_i16_as_i32(p) as i16;
                 n += 1;
                 if n >= 20 {
                     break;
                 }
             }
             i += 1;
-            if i >= cpz10_sw(read_usize(this + 4)) {
+            if i >= read_i16_as_i32(read_usize(this + 4)) {
                 break;
             }
         }
     } else {
         let l = read_usize(this);
-        cpz10_inicio(l);
-        if cpz10_sw(l) <= 0 {
+        cpz8_inicio(l);
+        if read_i16_as_i32(l) <= 0 {
             return -1;
         }
         let mut i = 0;
         loop {
-            let p = cpz10_proximo(l);
+            let p = cpj2_proximo(l);
             if p == 0 {
                 break;
             }
@@ -85,10 +72,10 @@ pub(crate) unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: 
                     crate::comparacao::ramo("cpz_10 comentarista de qualquer nacao");
                     true // cpz10: qualquer nação
                 } else {
-                    cpz10_u(p + 0xcf) as i32 == nacao
+                    read_u32(p + 0xcf) as i32 == nacao
                 };
                 if aceita {
-                    ids[n] = cpz10_sw(p) as i16;
+                    ids[n] = read_i16_as_i32(p) as i16;
                     n += 1;
                     if n >= 20 {
                         break;
@@ -96,7 +83,7 @@ pub(crate) unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: 
                 }
             }
             i += 1;
-            if i >= cpz10_sw(read_usize(this)) {
+            if i >= read_i16_as_i32(read_usize(this)) {
                 break;
             }
         }
@@ -158,21 +145,21 @@ pub(crate) unsafe extern "thiscall" fn nome_do_veiculo(this: usize, tipo: u32, i
     let id = id as i16;
     if id != -1 {
         let l = read_usize(this + if t == 2 || t == 4 { 4 } else { 0 });
-        cpz10_inicio(l);
-        if cpz10_sw(l) > 0 {
+        cpz8_inicio(l);
+        if read_i16_as_i32(l) > 0 {
             let mut i = 0;
             loop {
-                let p = cpz10_proximo(l);
+                let p = cpj2_proximo(l);
                 if p == 0 {
                     break;
                 }
-                if cpz10_sw(p) as i16 == id {
+                if read_i16_as_i32(p) as i16 == id {
                     sprintf(nome, 0x991944, p + 2);
                     *marca = *((p + 0xd3) as *const u8);
                     return;
                 }
                 i += 1;
-                if i >= cpz10_sw(l) {
+                if i >= read_i16_as_i32(l) {
                     break;
                 }
             }

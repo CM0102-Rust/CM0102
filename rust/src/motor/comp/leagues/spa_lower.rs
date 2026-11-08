@@ -23,24 +23,6 @@ pub(crate) unsafe fn cqq5_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[C
     }
 }
 
-/// Os bytes que a tabela de `n` rodadas tem gravados e que o jogo lê: de cada rodada, a data (+0..+4) e +0x3d..+0x40,
-/// e as faixas até a que termina a lista (a de dia −1 na tabela `guia`, a da original); o resto da memória alocada não
-/// é escrito.
-pub(crate) unsafe fn cqq5_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
-    let mut v = Vec::new();
-    for r in 0..n {
-        let e = t + r * 0x41;
-        v.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 5));
-        v.extend_from_slice(core::slice::from_raw_parts((e + 0x3d) as *const u8, 4));
-        for j in 0..8usize {
-            v.extend_from_slice(core::slice::from_raw_parts((e + 5 + j * 7) as *const u8, 7));
-            if *((guia + r * 0x41 + 5 + j * 7 + 4) as *const i8) == -1 {
-                break;
-            }
-        }
-    }
-    v
-}
 
 /// A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
 /// (Date::Date 0x549f70: push −1; push ano; push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) e o caso pelo dia
@@ -76,7 +58,7 @@ pub(crate) unsafe fn cqq5_natal(t: usize, ano: u32, n: &Cqq5Natal, arquivo: usiz
 
 /// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `cqq5_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
+/// `cqo4_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
 pub(crate) unsafe fn cqq5_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -89,7 +71,7 @@ pub(crate) unsafe fn cqq5_comparar(nome: &str, fase: u32, rodadas: *mut i16, ext
     let tabela = if a != 0 && b != 0 {
         if fase as u8 == 0xff {
             let n = *rodadas as usize;
-            cqq5_gravados(a, a, n) == cqq5_gravados(b, a, n)
+            cqo4_gravados(a, a, n) == cqo4_gravados(b, a, n)
         } else {
             cql10_gravados(a, *rodadas) == cql10_gravados(b, *rodadas)
         }

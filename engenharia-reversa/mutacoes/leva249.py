@@ -3,7 +3,7 @@ MUTACOES = [
     ('cpm_jogo_prorrogacao', 'return Some(1); // o mandante na prorrogação', 'return Some(2); // mutacao: o visitante', 'cpm_1 jogo na prorrogacao'),
     ('cpm_confronto_agregado', 'if tot1 > tot2 {', 'if tot1 >= tot2 { // mutacao: o empate no agregado para o primeiro lado', 'cpm_1 confronto empatado no agregado'),
     ('cpm_ordem_sorteio', 'read_i8(b + 6) as i32 - read_i8(a + 6) as i32 // o maior primeiro', 'read_i8(a + 6) as i32 - read_i8(b + 6) as i32 // mutacao: o menor primeiro', 'cpm_1 ordem dos cabecas de chave'),
-    ('cpm_confronto_adversario', 'cpm2_por(p + 14 * k, read_usize(tab + j as usize * CPM2_LINHA)); // o clube adversário', 'cpm2_por(p + 14 * k, read_usize(tab + a as usize * CPM2_LINHA)); // mutacao: o proprio clube', 'cpm_2 confrontos diretos'),
+    ('cpm_confronto_adversario', 'write_usize(p + 14 * k, read_usize(tab + j as usize * CPM2_LINHA)); // o clube adversário', 'write_usize(p + 14 * k, read_usize(tab + a as usize * CPM2_LINHA)); // mutacao: o proprio clube', 'cpm_2 confrontos diretos'),
     ('cpm_vetor_conta', '*n = read_i16(this + 0x3e); // a conta', '*n = read_i16(this + 0x3e) - 1; // mutacao: sem o ultimo', 'cpm_2 vetor dos clubes'),
     ('cpm_posicao_final', '*((c + 0x5f) as *mut u8) = (i as u8).wrapping_add(1); // a posição final', '*((c + 0x5f) as *mut u8) = (i as u8).wrapping_add(2); // mutacao: uma abaixo', 'cpm_2 posicao final'),
     ('cpm_estadio_obra', 'obra(f, capacidade as i32, lugares as i32, id, 0); // a obra do estádio', 'let _ = (obra, f, capacidade); // mutacao: sem a obra', 'cpm_3 estadio da divisao'),
@@ -20,5 +20,5 @@ MUTACOES = [
     ('cpm_nota_metade', 'if (jogou as i32) < *((entrada + 0x10) as *const i8) as i32 / 2 { // menos da metade dos jogos', 'if (jogou as i32) < *((entrada + 0x10) as *const i8) as i32 { // mutacao: todos os jogos', 'cpm_6 recorde de nota da temporada'),
     ('cpm_amistoso_dia_antes', 'if item == antes {\n            crate::comparacao::ramo("cpm_7 amistoso no dia antes");', 'if false && item == antes { // mutacao: sem o dia antes\n            crate::comparacao::ramo("cpm_7 amistoso no dia antes");', 'cpm_7 amistoso no dia antes'),
     ('cpm_amistoso_dia_depois', 'if item == depois {\n            crate::comparacao::ramo("cpm_7 amistoso no dia depois");', 'if false && item == depois { // mutacao: sem o dia depois\n            crate::comparacao::ramo("cpm_7 amistoso no dia depois");', 'cpm_7 amistoso no dia depois'),
-    ('cpm_amistoso_mando', 'cpm7_por(item + 0xc, read_usize(mandante)); // o mandante\n    cpm7_por(item + 0x10, read_usize(visitante)); // o visitante', 'cpm7_por(item + 0xc, read_usize(visitante)); // mutacao: trocados\n    cpm7_por(item + 0x10, read_usize(mandante));', 'cpm_7 amistoso planejado'),
+    ('cpm_amistoso_mando', 'write_usize(item + 0xc, read_usize(mandante)); // o mandante\n    write_usize(item + 0x10, read_usize(visitante)); // o visitante', 'write_usize(item + 0xc, read_usize(visitante)); // mutacao: trocados\n    write_usize(item + 0x10, read_usize(mandante));', 'cpm_7 amistoso planejado'),
 ]

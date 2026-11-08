@@ -13,7 +13,7 @@ MUTACOES = [
     ('cph_conversas_clube', '&& (clube == 0 || read_u32(r + 4) == read_u32(clube)) // o clube', '&& (clube == 0 || true) // mutacao: sem o clube'),
     ('cph_interesse_ordem', 'if *n != 0 {\n        cph4_qsort(read_u32(this + 0xc) as usize, *n, 0x19, 0x757ea0);', 'if *n < 0 {\n        cph4_qsort(read_u32(this + 0xc) as usize, *n, 0x19, 0x757ea0); // mutacao: sem reordenar'),
     ('cph_pedido_data', 'copiar_data(r + 8, &mut local, r + 0x19);', 'copiar_data(r + 8, &mut local, r + 8); // mutacao: a data fica'),
-    ('cph_desempregado_tecnico', '*((tecnico + 0xa) as *const i16) < 50 && cph5_sortear(5) == 0 // o técnico fraco', '*((tecnico + 0xa) as *const i16) < 49 && cph5_sortear(5) == 0 // mutacao: 49'),
+    ('cph_desempregado_tecnico', '*((tecnico + 0xa) as *const i16) < 50 && cpe1_sorteio(5) == 0 // o técnico fraco', '*((tecnico + 0xa) as *const i16) < 49 && cpe1_sorteio(5) == 0 // mutacao: 49'),
     ('cph_permissao_marca', '*marca(pessoa) = 0; // a marca sem permissão', '*marca(pessoa) &= 0xfe; // mutacao: so o bit 0'),
     ('cph_olheiro_confere', 'return 0; // a vaga mudou de pessoa', 'return pessoa; // mutacao: sem conferir'),
     ('cph_sequencia_dias', '< 10 { // há menos de 10 dias', '< 9 { // mutacao: 9 dias'),

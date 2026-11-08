@@ -77,11 +77,6 @@ pub(crate) unsafe fn cqp1_fechar(liga: usize) {
 // ponytail: fecha temporadas e move clubes entre as ligas (contratos, técnicos, notícias): não roda duas vezes; só a
 // original. A cópia leva o ramo.
 
-/// O técnico do clube é humano? (0x7875e0, stdcall de 1, já em Rust; o ecx = [0xb7431c] da original não conta.)
-pub(crate) unsafe fn cqp1_humano(clube: usize) -> bool {
-    let f: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    f(clube) != 0
-}
 
 /// the prize money news to the club's human manager, only when the prize exceeds 50 × the club reputation: the
 /// competition, the amount, the position, the round, the kind and, with the fixture, the opponent and whether the club
@@ -94,7 +89,7 @@ pub(crate) unsafe fn cqp1_humano(clube: usize) -> bool {
 /// rodada, 7 o tipo; com a partida, 5 o adversário e 6 se o clube venceu (+0x3d/+0x3e o vencedor nos pênaltis
 /// [inferência], senão +0x4b/+0x4c, senão +0x43/+0x44 o placar); sem ela −1 e 0. Entregue a ele (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn noticia_do_premio(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
-    if !cqp1_humano(clube) {
+    if !cqa2_humano(clube) {
         return;
     }
     let minimo = *((clube + 0x80) as *const i16) as i64 * 50;
@@ -144,7 +139,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_do_premio(this: usize, c
 /// para o técnico humano do clube (0x7875e0), a notícia 0x1f (0x77bbe0): 0 o clube, 1 a competição ([this+4]), 2 o
 /// valor, 3 o ano da competição (+0x40), entregue a ele (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn noticia_da_tv(this: usize, clube: usize, valor: u32) {
-    if !cqp1_humano(clube) {
+    if !cqa2_humano(clube) {
         return;
     }
     crate::comparacao::ramo("cqp_1 noticia da tv");

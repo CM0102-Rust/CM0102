@@ -4,10 +4,6 @@ use super::*;
 
 
 
-/// O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
-pub(crate) unsafe fn cqn9_clube(liga: usize, l: usize) -> usize {
-    read_usize(read_usize(liga + 0xb1) + l * 0x3b)
-}
 
 /// O mata-mata montado da tabela (o mesmo molde nas semifinais e nos mata-matas dos estaduais; só mudam o fonte, as
 /// linhas da caixa e o arranjo): a lista dos `linhas.len()` times (malloc 0x944e46 de 4 × n; sem memória: a caixa
@@ -31,7 +27,7 @@ pub(crate) unsafe fn cqn9_mata_mata(this: usize, linhas: &[usize], sementes: &[u
         return aviso_em(arquivo, linha_sem_lista);
     }
     for (k, &l) in linhas.iter().enumerate() {
-        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn9_clube(this, l));
+        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn7_clube(this, l));
     }
     crate::comparacao::ramo(ramo);
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
@@ -79,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn cqn9_mata_mata_do_gaucho(this: usize) {
 /// liga e os n primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como conjunto: o sorteio da rodada
 /// 0x51c800 pode reordenar as chaves), e +0x30 = 0.
 pub(crate) unsafe fn cqn9_comparar(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
-    let mut plano: Vec<usize> = linhas.iter().map(|&l| cqn9_clube(this, l)).collect();
+    let mut plano: Vec<usize> = linhas.iter().map(|&l| cqn7_clube(this, l)).collect();
     original();
     let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
@@ -195,13 +191,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cql8_tabela_do_gaucho(this: usiz
 pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32 {
     cqi8_regras_gaucho(this);
     crate::comparacao::ramo("cqi_8 regras do gaucho");
-    cqi8_calendario(this);
+    cqi7_calendario(this);
     1
 }
 
 /// Comparador: como o do Centro-Oeste.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_gaucho(this: usize) -> u32 {
-    let reg = cqi8_regioes(this);
+    let reg = cqi7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1716)(this), || {
         cqi8_regras_gaucho(this);
         1

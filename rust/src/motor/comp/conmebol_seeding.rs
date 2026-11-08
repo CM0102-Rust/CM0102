@@ -3,10 +3,6 @@ use super::*;
 // ---------- 273a leva: a classificação da Conmebol: as vagas da Libertadores, o n-ésimo clube da nação e os convidados da Mercosul (conmebol_seeding.cpp) ----------
 
 
-/// O clube de id `id` (registros de 0x245 bytes em [0xae23b4]).
-pub(crate) unsafe fn cqj1_clube(id: u32) -> usize {
-    (read_u32(G_CLUB_TABLE) as usize).wrapping_add((id as usize).wrapping_mul(0x245))
-}
 
 /// O clube `c` (não nulo e ainda sem vaga, +0x1db = −1) entra na Libertadores na fase `fase`. Devolve se entrou.
 pub(crate) unsafe fn cqj1_entra(c: usize, fase: u8) -> bool {
@@ -56,15 +52,15 @@ pub(crate) unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, 
                     n = 1;
                 }
                 let id = read_u32(this + 0x71);
-                if id != u32::MAX && cqj1_entra(cqj1_clube(id), 2) {
+                if id != u32::MAX && cqj1_entra(cpp2_clube(id), 2) {
                     n = n.wrapping_add(1);
                 }
             } else {
-                if cqj1_entra(cqj1_clube(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS)), 2) {
+                if cqj1_entra(cpp2_clube(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS)), 2) {
                     crate::comparacao::ramo("cqj_1 brasil fixo");
                     n = 1; // cqj1: o Palmeiras
                 }
-                if cqj1_entra(cqj1_clube(read_u32(G_KEY_CLUB_CRUZEIRO_ESPORTE_CLUBE)), 2) {
+                if cqj1_entra(cpp2_clube(read_u32(G_KEY_CLUB_CRUZEIRO_ESPORTE_CLUBE)), 2) {
                     n = n.wrapping_add(1);
                 }
             }
@@ -85,11 +81,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, 
     }
 }
 
-/// As diferenças entre duas memórias (os 16 primeiros endereços).
-pub(crate) fn cqj1_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
-    let (a, b) = (&mo.0, &mr.0);
-    (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
-}
 
 /// Lado a lado: os clubes do jogo e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this: usize, clubes: usize, conta: u32) {
@@ -100,7 +91,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || conmebol_vagas_libertadores(this, clubes, conta));
     PLACAR.registrar(igual, || {
         let base = read_u32(G_CLUB_TABLE) as usize;
-        let l: Vec<String> = cqj1_dif(&mo, &mr).iter().map(|&a| {
+        let l: Vec<String> = cqi1_dif(&mo, &mr).iter().map(|&a| {
             if a < base || a - base >= mo.0[0].1.len() {
                 return format!("{:x}", a);
             }
@@ -290,11 +281,6 @@ pub(crate) unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) 
     k as u16 as u32
 }
 
-/// As diferenças entre duas memórias (os 16 primeiros endereços).
-pub(crate) fn cqj2_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
-    let (a, b) = (&mo.0, &mr.0);
-    (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
-}
 
 /// Os clubes do jogo, a marca da caixa e o histórico das competições (a 0x4afd80 o reordena: ver a cqj_1).
 pub(crate) unsafe fn cqj2_regioes_dos_clubes() -> Vec<(usize, usize)> {
@@ -316,7 +302,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_conmebol_juntar_clubes(saida: *mu
     if t2 != 0 {
         soltar(t2);
     }
-    PLACAR.registrar(igual && tabela, || format!("conmebol_juntar_clubes: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqj2_dif(&mo, &mr)));
+    PLACAR.registrar(igual && tabela, || format!("conmebol_juntar_clubes: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqi1_dif(&mo, &mr)));
     a
 }
 
@@ -356,7 +342,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_virada_do_ano(this: usi
     let mut reg = cqj2_regioes_dos_clubes();
     reg.push((this + 0x6f, 2));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pular), || conmebol_virada_do_ano(this, pular));
-    PLACAR.registrar(igual, || format!("conmebol_virada_do_ano({}): diferenças em {:x?}", pular, cqj2_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("conmebol_virada_do_ano({}): diferenças em {:x?}", pular, cqi1_dif(&mo, &mr)));
 }
 
 /// stores the Copa dos Campeões winner: from 2003 on it gets a Libertadores place

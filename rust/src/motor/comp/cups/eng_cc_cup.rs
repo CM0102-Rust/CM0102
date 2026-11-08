@@ -578,11 +578,6 @@ pub(crate) unsafe fn cqn10_liberar(this: usize) {
     }
 }
 
-/// A virtual `o` da copa (thiscall, sem argumentos; mov ecx, copa; call [vtable + o]).
-pub(crate) unsafe fn cqn10_virtual(this: usize, o: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + o));
-    f(this)
-}
 
 /// A atualização da copa (0x51f890: push fase; push hoje; mov ecx, copa -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe fn cqn10_base(this: usize, hoje: usize, fase: u32) -> u32 {
@@ -611,15 +606,15 @@ pub(crate) unsafe extern "thiscall" fn cqn10_copa_da_liga_dia(this: usize, hoje:
             aviso_em(0x9c4224, 0x161);
             return 0;
         }
-        if cqn10_virtual(this, 0x8c) < 0 {
+        if cqr5_virtual(this, 0x8c) < 0 {
             aviso_em(0x9c4224, 0x168);
             return 0;
         }
-        if cqn10_virtual(this, 0x94) < 0 {
+        if cqr5_virtual(this, 0x94) < 0 {
             aviso_em(0x9c4224, 0x16f);
             return 0;
         }
-        cqn10_virtual(this, 0x5c);
+        cqr5_virtual(this, 0x5c);
     }
     cqn10_base(this, hoje, fase)
 }
@@ -665,15 +660,15 @@ pub(crate) unsafe extern "thiscall" fn cqn10_copa_da_inglaterra_dia(this: usize,
                 aviso_em(0x9c42cc, 0x3d6);
                 return 1;
             }
-            if cqn10_virtual(this, 0x8c) < 0 {
+            if cqr5_virtual(this, 0x8c) < 0 {
                 aviso_em(0x9c42cc, 0x3dd);
                 return 1;
             }
-            if cqn10_virtual(this, 0x94) < 0 {
+            if cqr5_virtual(this, 0x94) < 0 {
                 aviso_em(0x9c42cc, 0x3e4);
                 return 1;
             }
-            cqn10_virtual(this, 0x5c);
+            cqr5_virtual(this, 0x5c);
             let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
             sortear(this, 0);
         }

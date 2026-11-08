@@ -479,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_registros(this: usize,
     let comp = read_u32_as_usize(this + 4);
     let final_ = |g: usize| {
         let h: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(g);
-        h(cpz4_registros(), clube, jogo, a6);
+        h(cpz2_registros(), clube, jogo, a6);
     };
     if f < 7 {
         if d == 6 {

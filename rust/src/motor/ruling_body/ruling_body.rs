@@ -3,9 +3,6 @@ use super::*;
 // ---------- 257a leva: as suspensões dos órgãos disciplinares: a suspensão do cartão vermelho, a virada da temporada do órgão e a compactação das suas entradas (ruling_body.cpp) ----------
 
 
-pub(crate) unsafe fn cpu10_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 /// Os jogos de suspensão pelo código da falta (9 a 12) e pela escala do órgão (+6), na tabela de saltos 0x7e9028;
 /// None quando não há suspensão (escala abaixo de 3 nos códigos 9 e 10, código fora de 9..=12).
@@ -112,15 +109,15 @@ pub(crate) unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
     crate::comparacao::ramo("cpu_10 nova temporada");
     let mut e = read_u32_as_usize(this + 0xb);
     let mut i = 0i32;
-    while i < cpu10_i(this + 0x13) {
-        let id = cpu10_i(e);
+    while i < read_i32(this + 0x13) {
+        let id = read_i32(e);
         if id != -1 {
             let s = *((e + 6) as *const i16);
             let liberar = if s == -1 {
                 true
             } else {
                 let ban = read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE) + 4).wrapping_add((s as i32 as usize).wrapping_mul(20));
-                let anos = if cpu10_i(this + 0x17) == -1 && cpu10_i(this + 0x1b) == -1 { 4 } else { 2 };
+                let anos = if read_i32(this + 0x17) == -1 && read_i32(this + 0x1b) == -1 { 4 } else { 2 };
                 let ano = *((ban + 6) as *const u16) as i32;
                 if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - ano >= anos {
                     crate::comparacao::ramo("cpu_10 suspensao velha");
@@ -132,12 +129,12 @@ pub(crate) unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
                 }
             };
             if liberar {
-                let id = cpu10_i(e);
+                let id = read_i32(e);
                 let g = guardada(read_u32_as_usize(G_DISCIPLINE), id, *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = 0xffff_ffff;
                 } else {
-                    gravar(read_u32_as_usize(G_DISCIPLINE), cpu10_i(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
+                    gravar(read_u32_as_usize(G_DISCIPLINE), read_i32(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
                 }
                 *(e as *mut u32) = 0xffff_ffff;
             } else {
@@ -177,15 +174,15 @@ pub(crate) unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize
     let mut origem = destino;
     let mut n = 0u32;
     let mut i = 0i32;
-    while i < cpu10_i(this + 0x13) {
-        if cpu10_i(origem) != -1 {
+    while i < read_i32(this + 0x13) {
+        if read_i32(origem) != -1 {
             if origem != destino {
                 core::ptr::copy(origem as *const u8, destino as *mut u8, 0xe);
-                let g = guardada(read_u32_as_usize(G_DISCIPLINE), cpu10_i(origem), *((this + 4) as *const i8));
+                let g = guardada(read_u32_as_usize(G_DISCIPLINE), read_i32(origem), *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = n;
                 } else {
-                    gravar(read_u32_as_usize(G_DISCIPLINE), cpu10_i(origem), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
+                    gravar(read_u32_as_usize(G_DISCIPLINE), read_i32(origem), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
                 }
             }
             destino += 0xe;
@@ -209,9 +206,9 @@ pub(crate) unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_compactar_disciplina_do_orgao(this: usize) {
     let mut esperado: Vec<u8> = Vec::new();
     let base = read_u32_as_usize(this + 0xb);
-    for k in 0..cpu10_i(this + 0x13).max(0) as usize {
+    for k in 0..read_i32(this + 0x13).max(0) as usize {
         let e = base + 0xe * k;
-        if cpu10_i(e) != -1 {
+        if read_i32(e) != -1 {
             esperado.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 0xe));
         }
     }

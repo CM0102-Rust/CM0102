@@ -3,18 +3,11 @@ use super::*;
 // ---------- 259a leva: o prêmio do mês: o melhor das notas, a vaga do vencedor e a reputação do premiado (month_award.cpp, award_manager.cpp) ----------
 
 
-pub(crate) unsafe fn cpw6_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
 
 
-/// A pessoa `id` ([0xae23bc], 0x6e bytes cada).
-pub(crate) unsafe fn cpw6_pessoa(id: i32) -> usize {
-    read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e))
-}
 
 /// O clube `id` ([0xae23b4], 0x245 bytes cada).
 pub(crate) unsafe fn cpw6_clube(id: i32) -> usize {
@@ -38,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn premiar_o_melhor_do_mes(this: usize, nota
     let liga = {
         let l = read_usize(this + 9);
         if l != 0 {
-            cpw6_i(l)
+            read_i32(l)
         } else {
             -1
         }
@@ -49,14 +42,14 @@ pub(crate) unsafe extern "thiscall" fn premiar_o_melhor_do_mes(this: usize, nota
         return;
     }
     crate::comparacao::ramo("cpw_6 premiou o melhor do mes");
-    let id = cpw6_i(r);
+    let id = read_i32(r);
     let tabela = read_usize(G_STAFF_TABLE) as u32;
-    let clube = read_usize(cpw6_pessoa(id) + 0x39);
+    let clube = read_usize(cpw5_pessoa(id) + 0x39);
     let ano = (tabela & 0xffff0000) | read_i16(notas + 0xd) as u16 as u32;
     let mes = read_u8(notas + 0xc) as u32;
     let gravar: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) = core::mem::transmute(FN_MONTH_AWARD_SET_WINNER);
     if clube != 0 {
-        gravar(this, id, cpw6_i(clube), (ano & 0xffffff00) | mes, ano);
+        gravar(this, id, read_i32(clube), (ano & 0xffffff00) | mes, ano);
     } else {
         gravar(this, id, -1, mes, ano);
     }
@@ -107,17 +100,17 @@ pub(crate) unsafe extern "thiscall" fn gravar_vencedor_do_mes(this: usize, id: i
         let marca = read_usize(this + 0x19) as u32;
         let alto = marca & 0xffff0000;
         crate::comparacao::ramo("cpw_6 vencedor do mes");
-        cpw6_reputacao(cpw6_pessoa(id), clube, alto | read_i16(this + 0x15) as u16 as u32, alto | read_i16(this + 0x17) as u16 as u32, marca);
+        cpw6_reputacao(cpw5_pessoa(id), clube, alto | read_i16(this + 0x15) as u16 as u32, alto | read_i16(this + 0x17) as u16 as u32, marca);
     }
     if CPW6_ENSAIO {
         return;
     }
     let noticia: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_MONTH_AWARD_POST_WINNER_NEWS);
     noticia(this, (this as u32 & 0xffffff00) | k as u32);
-    let cid = cpw6_i(v + 0x21);
+    let cid = read_i32(v + 0x21);
     let clube = if cid != -1 { cpw6_clube(cid) } else { 0 };
     let registro: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_MONTH_AWARD_RECORD);
-    registro(read_usize(G_STAFF_RECORDS), cpw6_pessoa(cpw6_i(v + 0x1d)), clube, read_usize(this + 5) as u32, mes, ano);
+    registro(read_usize(G_STAFF_RECORDS), cpw5_pessoa(read_i32(v + 0x1d)), clube, read_usize(this + 5) as u32, mes, ano);
 }
 
 /// As regiões que a reputação do premiado grava: o registro do jogador (+0x61: +9..+0xe), o do não jogador (+0x69:
@@ -133,7 +126,7 @@ pub(crate) unsafe fn cpw6_regioes_da_reputacao(regioes: &mut Vec<(usize, usize)>
     }
     if clube != 0 {
         let linhas = read_usize(read_usize(G_MANAGER_MANAGER));
-        regioes.push((linhas.wrapping_add((cpw6_i(clube) as usize).wrapping_mul(73)).wrapping_add(6), 2));
+        regioes.push((linhas.wrapping_add((read_i32(clube) as usize).wrapping_mul(73)).wrapping_add(6), 2));
     }
 }
 
@@ -154,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_vencedor_do_mes(this: usi
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, u32)>(1288);
     let mut regioes = vec![(this + 0x1d, 12 * 11)];
     if id > -1 {
-        cpw6_regioes_da_reputacao(&mut regioes, cpw6_pessoa(id), if clube_id > -1 { cpw6_clube(clube_id) } else { 0 });
+        cpw6_regioes_da_reputacao(&mut regioes, cpw5_pessoa(id), if clube_id > -1 { cpw6_clube(clube_id) } else { 0 });
     }
     cpw6_comparar("gravar_vencedor_do_mes", &regioes, || o(this, id, clube_id, mes, ano), || gravar_vencedor_do_mes(this, id, clube_id, mes, ano));
 }
@@ -244,7 +237,7 @@ pub(crate) unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usiz
     if clube == 0 {
         return;
     }
-    let linha = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((cpw6_i(clube) as usize).wrapping_mul(73)).wrapping_add(6);
+    let linha = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_i32(clube) as usize).wrapping_mul(73)).wrapping_add(6);
     let v = read_i16(linha).wrapping_add(1000);
     let v = if v < 1 {
         1

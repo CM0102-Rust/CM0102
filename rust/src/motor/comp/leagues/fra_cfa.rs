@@ -22,24 +22,6 @@ pub(crate) unsafe fn cqo5_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[C
     }
 }
 
-/// Os bytes que a tabela de `n` rodadas tem gravados e que o jogo lê: de cada rodada, a data (+0..+4) e +0x3d..+0x40,
-/// e as faixas até a que termina a lista (a de dia −1 na tabela `guia`, a da original); o resto da memória alocada não
-/// é escrito.
-pub(crate) unsafe fn cqo5_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
-    let mut v = Vec::new();
-    for r in 0..n {
-        let e = t + r * 0x41;
-        v.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 5));
-        v.extend_from_slice(core::slice::from_raw_parts((e + 0x3d) as *const u8, 4));
-        for j in 0..8usize {
-            v.extend_from_slice(core::slice::from_raw_parts((e + 5 + j * 7) as *const u8, 7));
-            if *((guia + r * 0x41 + 5 + j * 7 + 4) as *const i8) == -1 {
-                break;
-            }
-        }
-    }
-    v
-}
 
 /// O que muda entre as ligas de fase única.
 pub(crate) struct Cqo5Liga {
@@ -87,7 +69,7 @@ pub(crate) unsafe fn cqo5_comparar(nome: &str, fase: u32, rodadas: *mut i16, ext
     let saidas = fase as u8 != 0xff || (*rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2));
     let tabela = if a != 0 && b != 0 {
         let n = *rodadas as usize;
-        cqo5_gravados(a, a, n) == cqo5_gravados(b, a, n)
+        cqo4_gravados(a, a, n) == cqo4_gravados(b, a, n)
     } else {
         a == 0 && b == 0
     };
@@ -100,7 +82,7 @@ pub(crate) unsafe fn cqo5_comparar(nome: &str, fase: u32, rodadas: *mut i16, ext
 
 /// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `cqo5_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
+/// `cqo4_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
 pub(crate) unsafe fn cqo5_comparar_fases(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                              original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -113,7 +95,7 @@ pub(crate) unsafe fn cqo5_comparar_fases(nome: &str, fase: u32, rodadas: *mut i1
     let tabela = if a != 0 && b != 0 {
         if fase as u8 == 0xff {
             let n = *rodadas as usize;
-            cqo5_gravados(a, a, n) == cqo5_gravados(b, a, n)
+            cqo4_gravados(a, a, n) == cqo4_gravados(b, a, n)
         } else {
             cql10_gravados(a, *rodadas) == cql10_gravados(b, *rodadas)
         }
@@ -296,10 +278,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_c1_b(this: usize, 
 
 
 
-/// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes).
-pub(crate) unsafe fn cqn4_registro(g: usize) -> usize {
-    read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
-}
 
 /// the rules of the two French background leagues: home and away, 3 points a win and 1 a draw, tie-breaks 4, 1, 2
 /// [inference: position, goal difference, goals], no promotion, play-off or relegation places, rule bits 0x43 (a
@@ -395,7 +373,7 @@ pub(crate) unsafe fn cqn4_construir(this: usize, ano: u32, p: &Cqn4Fundo) -> usi
     core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
     write_u32_from_usize(this + 0x2c, 0);
     *((this + 0x50) as *mut u8) = 0xff;
-    write_u32_from_usize(this + 4, cqn4_registro(p.competicao));
+    write_u32_from_usize(this + 4, cqm6_registro(p.competicao));
     *((this + 0x44) as *mut u8) = 0xff;
     write_u32_from_usize(this + 0x30, 0xffff_ffff);
     if regras(this) == 0 {
@@ -512,7 +490,7 @@ pub(crate) unsafe extern "thiscall" fn construir_divisao_de_baixo_francesa(this:
 pub(crate) unsafe fn cqn4_comparar(nome: &str, this: usize, ano: u32, p: &Cqn4Fundo, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && *((this + 0x50) as *const u8) == 0xff && read_u32_as_usize(this + 4) == cqn4_registro(p.competicao)
+        && *((this + 0x50) as *const u8) == 0xff && read_u32_as_usize(this + 4) == cqm6_registro(p.competicao)
         && read_u32_as_usize(this + 0xb1) == 0;
     PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", nome, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 4), read_u32_as_usize(this + 0xb1)));
     r

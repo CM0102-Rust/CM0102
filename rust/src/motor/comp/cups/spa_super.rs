@@ -3,12 +3,6 @@ use super::*;
 // ---------- 276a leva: as supercopas e o Jogo das Estrelas: os clubes da Supercopa da Espanha e do Japão e o calendário do Jogo das Estrelas da MLS (spa_super.cpp, jap_super.cpp, usa_mls_all_stars.cpp) ----------
 
 
-/// O clube que terminou em `lugar` (0 o campeão, 1 o vice) na última temporada da competição de id [id] (0x4afd80: push
-/// lugar; push competição do banco [0xae23d0] + 0x6b × id; add esp, 8 -> cdecl).
-pub(crate) unsafe fn cqm12_colocado(id: usize, lugar: u32) -> usize {
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
-    colocado(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
-}
 
 /// O começo comum: +0x3e = 2 e a lista de dois (0x944e46 de 0xc em +0xa7); sem memória, a caixa `linha` e None.
 pub(crate) unsafe fn cqm12_lista(this: usize, arquivo: usize, linha: u32) -> Option<usize> {
@@ -51,17 +45,17 @@ pub(crate) unsafe fn cqm12_espanha(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = cqm12_colocado(KEY_CLUB_COMP_SPANISH_CUP, 0); // cqm12: o campeão da Copa do Rei
+    let a = cqm10_colocado(KEY_CLUB_COMP_SPANISH_CUP, 0); // cqm12: o campeão da Copa do Rei
     if !cqm12_vaga(l, 0, a, F, 0xcb) {
         return (0, 0);
     }
-    let b = cqm12_colocado(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, 0);
+    let b = cqm10_colocado(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, 0);
     if !cqm12_vaga(l, 1, b, F, 0xd4) {
         return (0, 0);
     }
     if a == b {
         crate::comparacao::ramo("cqm_12 dobradinha espanhola");
-        if !cqm12_vaga(l, 0, cqm12_colocado(KEY_CLUB_COMP_SPANISH_CUP, 1), F, 0xe0) {
+        if !cqm12_vaga(l, 0, cqm10_colocado(KEY_CLUB_COMP_SPANISH_CUP, 1), F, 0xe0) {
             return (0, 0);
         }
     }
@@ -126,26 +120,26 @@ pub(crate) unsafe fn cqm12_japao(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = cqm12_colocado(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 0); // cqm12: o campeão da J1
+    let a = cqm10_colocado(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 0); // cqm12: o campeão da J1
     if !cqm12_vaga(l, 0, a, F, 0xca) {
         return (0, 0);
     }
-    if read_u32_as_usize(a + 0x53) == 0 && !cqm12_vaga(l, 0, cqm12_colocado(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0xd6) {
+    if read_u32_as_usize(a + 0x53) == 0 && !cqm12_vaga(l, 0, cqm10_colocado(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0xd6) {
         return (0, 0);
     }
-    let b = cqm12_colocado(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 0);
+    let b = cqm10_colocado(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 0);
     if !cqm12_vaga(l, 1, b, F, 0xe0) {
         return (0, 0);
     }
-    if read_u32_as_usize(b + 0x53) == 0 && !cqm12_vaga(l, 1, cqm12_colocado(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xec) {
+    if read_u32_as_usize(b + 0x53) == 0 && !cqm12_vaga(l, 1, cqm10_colocado(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xec) {
         return (0, 0);
     }
     if read_u32_as_usize(l) == read_u32_as_usize(l + 6) {
         crate::comparacao::ramo("cqm_12 dobradinha japonesa");
-        if !cqm12_vaga(l, 1, cqm12_colocado(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xf9) {
+        if !cqm12_vaga(l, 1, cqm10_colocado(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xf9) {
             return (0, 0);
         }
-        if read_u32_as_usize(l) == read_u32_as_usize(l + 6) && !cqm12_vaga(l, 0, cqm12_colocado(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0x105) {
+        if read_u32_as_usize(l) == read_u32_as_usize(l + 6) && !cqm12_vaga(l, 0, cqm10_colocado(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0x105) {
             return (0, 0);
         }
     }

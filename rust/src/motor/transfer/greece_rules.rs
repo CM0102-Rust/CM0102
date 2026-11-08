@@ -3,47 +3,7 @@ use super::*;
 // ---------- 277a leva: as regras de transferência da Grécia, da Rússia e da Bélgica: as janelas de transferência (belgium_rules.cpp, greece_rules.cpp, russia_rules.cpp) ----------
 
 
-/// As janelas de transferência: +8 = o número de janelas; a tabela (`t`, datas de 6 bytes: +0 a regra, +1 o número da
-/// janela, +2 o dia da semana para o qual a data anda (0 domingo ... 6 sábado, 0xff nenhum) [inferência], +3 o dia, +4 o
-/// mês (0 = janeiro), +5 1 no início da janela e 0 no fim; duas datas por janela) alocada em +4 (0x944e46; sem memória,
-/// a caixa da linha `linha` do fonte `arquivo`).
-pub(crate) unsafe fn cqn2_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    *((this + 8) as *mut u8) = n;
-    let j = alocar((t.len() * 6) as u32);
-    core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
-    if j == 0 {
-        aviso_em(arquivo, linha);
-        return;
-    }
-    for (k, r) in t.iter().enumerate() {
-        core::ptr::copy_nonoverlapping(r.as_ptr(), (j + k * 6) as *mut u8, 6);
-    }
-}
 
-/// Lado a lado à mão: a original no objeto de quem chama; a cópia num objeto de rascunho com o mesmo conteúdo de antes
-/// (os 0x19 bytes das regras); iguais os campos (fora o ponteiro +4) e as janelas alocadas (a do rascunho é solta).
-pub(crate) unsafe fn cqn2_comparar(nome: &str, this: usize, o: impl FnOnce(), c: impl FnOnce(usize)) {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let mut s = [0u8; 0x20];
-    core::ptr::copy_nonoverlapping(this as *const u8, s.as_mut_ptr(), 0x19);
-    o();
-    let r = s.as_mut_ptr() as usize;
-    c(r);
-    let a = core::slice::from_raw_parts(this as *const u8, 0x19);
-    let campos = a[..4] == s[..4] && a[8..] == s[8..0x19];
-    let (ja, jb) = (read_u32(this + 4) as usize, read_u32(r + 4) as usize);
-    let n = s[8] as usize * 12;
-    let janelas = if ja != 0 && jb != 0 {
-        core::slice::from_raw_parts(ja as *const u8, n) == core::slice::from_raw_parts(jb as *const u8, n)
-    } else {
-        ja == jb
-    };
-    if jb != 0 {
-        soltar(jb);
-    }
-    PLACAR.registrar(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
-}
 
 /// As janelas da Grécia: duas janelas, de 22 de maio (andando para o domingo [inferência]) a 29 de agosto (andando para o sábado [inferência]); de 1º de janeiro a 20 de janeiro.
 pub(crate) const CQN2_GRECIA: [[u8; 6]; 4] = [
@@ -61,13 +21,13 @@ pub(crate) const CQN2_GRECIA: [[u8; 6]; 4] = [
 /// 2 janelas de transferência de `CQN2_GRECIA`.
 pub(crate) unsafe extern "thiscall" fn janelas_grecia(this: usize) {
     crate::comparacao::ramo("cqn_2 grecia");
-    cqn2_janelas(this, 2, &CQN2_GRECIA, 0x9cdbc8, 0x51);
+    cqk1_janelas(this, 2, &CQN2_GRECIA, 0x9cdbc8, 0x51);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqn2_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_janelas_grecia(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1819);
-    cqn2_comparar("janelas_grecia", this, || o(this), |s| janelas_grecia(s));
+    cqk1_comparar("janelas_grecia", this, || o(this), |s| janelas_grecia(s));
 }
 
 /// As janelas da Rússia: duas janelas, de 15 de dezembro a 24 de março (andando para a quinta-feira [inferência]); de 28 de junho (andando para a terça-feira [inferência]) a 4 de agosto.
@@ -86,13 +46,13 @@ pub(crate) const CQN2_RUSSIA: [[u8; 6]; 4] = [
 /// 2 janelas de transferência de `CQN2_RUSSIA`.
 pub(crate) unsafe extern "thiscall" fn janelas_russia(this: usize) {
     crate::comparacao::ramo("cqn_2 russia");
-    cqn2_janelas(this, 2, &CQN2_RUSSIA, 0xa7ad38, 0x4d);
+    cqk1_janelas(this, 2, &CQN2_RUSSIA, 0xa7ad38, 0x4d);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqn2_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_janelas_russia(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1820);
-    cqn2_comparar("janelas_russia", this, || o(this), |s| janelas_russia(s));
+    cqk1_comparar("janelas_russia", this, || o(this), |s| janelas_russia(s));
 }
 
 /// As janelas da Bélgica: três janelas, de 1º de junho a 30 de junho; de 1º de junho a 31 de dezembro; de 1º de junho a 31 de março.
@@ -112,12 +72,12 @@ pub(crate) const CQN2_BELGICA: [[u8; 6]; 6] = [
 /// 3 janelas de transferência de `CQN2_BELGICA`.
 pub(crate) unsafe extern "thiscall" fn janelas_belgica(this: usize) {
     crate::comparacao::ramo("cqn_2 belgica");
-    cqn2_janelas(this, 3, &CQN2_BELGICA, 0x989e34, 0x53);
+    cqk1_janelas(this, 3, &CQN2_BELGICA, 0x989e34, 0x53);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqn2_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_janelas_belgica(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1821);
-    cqn2_comparar("janelas_belgica", this, || o(this), |s| janelas_belgica(s));
+    cqk1_comparar("janelas_belgica", this, || o(this), |s| janelas_belgica(s));
 }
 

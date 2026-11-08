@@ -293,11 +293,6 @@ pub(crate) unsafe fn cqi2_mais_um(a: usize) {
     *(a as *mut u8) = read_u8(a).wrapping_add(1);
 }
 
-/// A entrada `i` da tabela das nações da classificação (registros de 0x12 bytes; +0 id da nação, +0xe vagas na
-/// Intertoto, +0x11 clubes da nação nas copas).
-pub(crate) fn cqi2_e(this: usize, i: i32) -> usize {
-    this.wrapping_add((i * 0x12) as usize)
-}
 
 /// O clube `c` ganha a vaga na competição `comp`, na fase `fase`, se tem nação e ainda não tem vaga (+0x1db = −1):
 /// +0x1db = comp, +0x1df = fase e um clube a mais da nação `i` (+0x11). Devolve se ganhou. (O caso da nação sem entrada,
@@ -308,7 +303,7 @@ pub(crate) unsafe fn cqi2_vaga(this: usize, c: usize, comp: u32, fase: u8, i: i3
     }
     *((c + 0x1df) as *mut u8) = fase;
     *((c + 0x1db) as *mut u32) = comp;
-    cqi2_mais_um(cqi2_e(this, i) + 0x11);
+    cqi2_mais_um(cqi1_e(this, i) + 0x11);
     true
 }
 
@@ -384,11 +379,6 @@ pub(crate) unsafe extern "thiscall" fn uefa_juntar_clubes_europeus(this: usize, 
     k as u16 as u32
 }
 
-/// As diferenças entre duas memórias (os 16 primeiros endereços).
-pub(crate) fn cqi2_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
-    let (a, b) = (&mo.0, &mr.0);
-    (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
-}
 
 /// Os clubes do jogo, a linha de cada clube em [0xae2d14], a marca da caixa e o histórico das competições ([0xae23d4],\n/// [0xae237c] linhas de 0x1a: a 0x4afd80 o reordena, e com linhas empatadas a ordem de antes muda o clube achado).
 pub(crate) unsafe fn cqi2_regioes_dos_clubes() -> Vec<(usize, usize)> {
@@ -410,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_uefa_juntar_clubes_europeus(this
     if t2 != 0 {
         soltar(t2);
     }
-    PLACAR.registrar(igual && tabela, || format!("uefa_juntar_clubes_europeus: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqi2_dif(&mo, &mr)));
+    PLACAR.registrar(igual && tabela, || format!("uefa_juntar_clubes_europeus: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqi1_dif(&mo, &mr)));
     a
 }
 
@@ -445,12 +435,12 @@ pub(crate) unsafe extern "thiscall" fn uefa_vagas_liga_dos_campeoes(this: usize,
         let n = *((this + 0x438) as *const i8) as i32;
         let mut i = -1i32;
         for k in 0..n {
-            if read_u32(cqi2_e(this, k)) == id {
+            if read_u32(cqi1_e(this, k)) == id {
                 i = k;
                 break;
             }
         }
-        cqi2_mais_um(cqi2_e(this, i) + 0x11);
+        cqi2_mais_um(cqi1_e(this, i) + 0x11);
         cap[1] = 0xf;
     } else {
         aviso_em(0xaa1a1c, 0x35d);
@@ -476,7 +466,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_vagas_liga_dos_campeoes(this: usize,
             ([0, 0, 0, 0], 1)
         };
         let mut vagas = [faixa[0], faixa[1], faixa[2], faixa[3], ultima];
-        let e = cqi2_e(this, r as i32);
+        let e = cqi1_e(this, r as i32);
         let mut k = 1u8;
         while k < 8 {
             let c = enesimo(this, clubes, conta, read_u32(e), k as u32, 0, 0);
@@ -512,7 +502,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_uefa_vagas_liga_dos_campeoes(thi
     let mut reg = cqi2_regioes_dos_clubes();
     reg.push((this, 0x440));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || uefa_vagas_liga_dos_campeoes(this, clubes, conta));
-    PLACAR.registrar(igual, || format!("uefa_vagas_liga_dos_campeoes: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("uefa_vagas_liga_dos_campeoes: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
 }
 
 /// the Intertoto rule: 60 clubs; it cycles through the nations in coefficient order, each nation with its places (from
@@ -540,7 +530,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_vagas_intertoto(this: usize, clubes:
         if cl == read_u8(this + 0x438) {
             i = 0;
         }
-        let e = cqi2_e(this, i as i8 as i32);
+        let e = cqi1_e(this, i as i8 as i32);
         if read_u32(e) == read_u32(KEY_NATION_ENGLAND) {
             let mut c = voluntario(this);
             if c == 0 {
@@ -600,7 +590,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_uefa_vagas_intertoto(this: usize
     reg.push((this, 0x440));
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| uefa_vagas_intertoto(this, clubes, conta)));
-    PLACAR.registrar(igual, || format!("uefa_vagas_intertoto: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("uefa_vagas_intertoto: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
 }
 
 // ---------- 273a leva: a classificação da UEFA: as vagas da Copa da UEFA, o voluntário inglês da Intertoto e a virada do ano (uefa_seeding.cpp) ----------
@@ -608,11 +598,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_uefa_vagas_intertoto(this: usize
 
 
 
-/// A entrada `i` da tabela das nações da classificação (registros de 0x12 bytes; +0 id da nação, +4 a nação, +0x11
-/// clubes da nação nas copas).
-pub(crate) fn cqi3_e(this: usize, i: i32) -> usize {
-    this.wrapping_add((i * 0x12) as usize)
-}
 
 /// O clube `c` (com nação e ainda sem vaga) entra na Copa da UEFA na fase `fase`; um clube a mais da nação `r`. Devolve
 /// se entrou. (O caso da nação −1, que a original procura pela nação do clube, não acontece: `r` vem da volta.)
@@ -623,7 +608,7 @@ pub(crate) unsafe fn cqi3_entra(this: usize, c: usize, fase: u8, r: i32, colocad
     *((c + 0x1db) as *mut u32) = read_u32(KEY_CLUB_COMP_UEFA_CUP);
     *((c + 0x1df) as *mut u8) = fase;
     *colocados += 1;
-    let p = cqi3_e(this, r) + 0x11;
+    let p = cqi1_e(this, r) + 0x11;
     *(p as *mut u8) = read_u8(p).wrapping_add(1);
     true
 }
@@ -670,12 +655,12 @@ pub(crate) unsafe extern "thiscall" fn uefa_vagas_copa_da_uefa(this: usize, club
         let id = read_u32(read_u32(h + 0x53) as usize);
         let mut i = -1i32;
         for k in 0..n8() as i32 {
-            if read_u32(cqi3_e(this, k)) == id {
+            if read_u32(cqi1_e(this, k)) == id {
                 i = k;
                 break;
             }
         }
-        let p = cqi3_e(this, i) + 0x11;
+        let p = cqi1_e(this, i) + 0x11;
         *(p as *mut u8) = read_u8(p).wrapping_add(1);
         nacao_do_campeao = read_u32(h + 0x53) as usize;
     }
@@ -706,7 +691,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_vagas_copa_da_uefa(this: usize, club
             (0, 1)
         };
         let mut vagas = [0u8, f1, f2];
-        let e = cqi3_e(this, r as i32);
+        let e = cqi1_e(this, r as i32);
         let nacao = read_u32(e + 4) as usize;
         if nacao == nacao_do_campeao {
             vagas[1] = vagas[1].wrapping_sub(1);
@@ -842,11 +827,6 @@ pub(crate) unsafe extern "thiscall" fn uefa_vagas_copa_da_uefa(this: usize, club
     }
 }
 
-/// As diferenças entre duas memórias (os 16 primeiros endereços).
-pub(crate) fn cqi3_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
-    let (a, b) = (&mo.0, &mr.0);
-    (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
-}
 
 /// Lado a lado: a classificação (com a tabela das finais em +0x440), os clubes, o sorteio (a cópia sem contar) e a marca
 /// da caixa.
@@ -857,7 +837,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_uefa_vagas_copa_da_uefa(this: us
     let mut reg = vec![(this, 0x698), (read_u32(G_CLUB_TABLE) as usize, n * 0x245), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| uefa_vagas_copa_da_uefa(this, clubes, conta)));
-    PLACAR.registrar(igual, || format!("uefa_vagas_copa_da_uefa: diferenças em {:x?}", cqi3_dif(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("uefa_vagas_copa_da_uefa: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
 }
 
 /// England's Intertoto club: outside 2001, up to 6 volunteers drawn among Premier clubs without a human manager or a

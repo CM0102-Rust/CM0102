@@ -877,17 +877,6 @@ pub(crate) unsafe fn cqk10_data(this: usize, dia: u32, mes: u32, ano: i16, seman
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
 
-/// O fim comum: +0xb6 = a palavra da data, +0xb8 = `b8`, e a tabela das rodadas da virtual +0x3c (push 0; push &+0x3a;
-/// push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
-pub(crate) unsafe fn cqk10_fim(this: usize, palavra: u16, b8: u16) -> u32 {
-    core::ptr::write_unaligned((this + 0xb6) as *mut u16, palavra);
-    core::ptr::write_unaligned((this + 0xb8) as *mut u16, b8);
-    let vt = core::ptr::read_unaligned(this as *const usize);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(core::ptr::read_unaligned((vt + 0x3c) as *const usize));
-    let t = tabela(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
-    core::ptr::write_unaligned((this + 0xba) as *mut u32, t as u32);
-    1
-}
 
 /// O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
 pub(crate) unsafe fn cqk10_confere(nome: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, i16, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
@@ -927,7 +916,7 @@ pub(crate) unsafe extern "thiscall" fn cqk10_copa_america_regras(this: usize) ->
     cqk10_campos(this, &CQK10_COPA_AMERICA, vitoria);
     let dia = 0x14; // cqk10: o dia da data da Copa América
     let palavra = cqk10_data(this, dia, 2, 0, 5);
-    cqk10_fim(this, palavra, 0)
+    cqj12_fim(this, palavra, 0)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
@@ -958,7 +947,7 @@ pub(crate) unsafe extern "thiscall" fn cqk10_eliminatoria_oceania_regras(this: u
     cqk10_campos(this, &CQK10_OCEANIA, 3);
     let dia = 0xf; // cqk10: o dia do começo na Oceania
     let palavra = cqk10_data(this, dia, 0, 0, 5);
-    cqk10_fim(this, palavra, 0)
+    cqj12_fim(this, palavra, 0)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.

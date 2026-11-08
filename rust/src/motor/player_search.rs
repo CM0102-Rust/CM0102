@@ -3,19 +3,10 @@ use super::*;
 // ---------- 270a leva: o olheiro na partida observada e o histórico do clube observado (player_search.cpp) ----------
 
 
-pub(crate) unsafe fn cqf10_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
-pub(crate) unsafe fn cqf10_pessoa(id: usize) -> usize {
-    read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(0x6e))
-}
 
-pub(crate) unsafe fn cqf10_clube(id: usize) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add(id.wrapping_mul(0x245))
-}
 
 /// O clube do contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) ou 0.
 pub(crate) unsafe fn cqf10_clube_do_contrato(pessoa: usize) -> usize {
@@ -23,7 +14,7 @@ pub(crate) unsafe fn cqf10_clube_do_contrato(pessoa: usize) -> usize {
     // 0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4
     let c = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
-    if c != 0 { cqf10_clube(read_usize(c + 4)) } else { 0 }
+    if c != 0 { cpe1_clube(read_usize(c + 4)) } else { 0 }
 }
 
 /// the slots of players who left the watched club are cleared; every club player who played gets a line in the 10-match
@@ -41,15 +32,15 @@ pub(crate) unsafe fn cqf10_clube_do_contrato(pessoa: usize) -> usize {
 /// 5/6 com a nota pelo +0x30) e a nota +0x15. Com o técnico do clube humano e as máscaras de atributos ligadas, o
 /// técnico passa a conhecer o jogador (0x5b09d0, que sorteia).
 pub(crate) unsafe extern "thiscall" fn cqf10_historico_do_clube_observado(this: usize, jogo: usize, resultado: usize) {
-    let clube_obs = cqf10_clube(read_usize(this));
+    let clube_obs = cpe1_clube(read_usize(this));
     for i in 0..0x32usize {
         let v = this + 4 + i * 0x1a2;
-        let id = cqf10_i(v);
+        let id = read_i32(v);
         if id == -1 {
             continue;
         }
-        let p = cqf10_pessoa(id as usize);
-        if p != 0 && cqf10_i(p) >= cqf10_i(0xae2364) {
+        let p = cpo3_pessoa(id as usize);
+        if p != 0 && read_i32(p) >= read_i32(0xae2364) {
             continue;
         }
         let c = read_usize(p + 0x39);
@@ -77,15 +68,15 @@ pub(crate) unsafe extern "thiscall" fn cqf10_historico_do_clube_observado(this: 
     // this -> thiscall, ret 8; 0x4afa80: push jogo; push clube; add esp, 8 -> cdecl
     for j in 0..0x14i8 {
         let e = resultado + 0x190 + lado as usize * 0x625 + j as usize * 0x49;
-        let id = cqf10_i(e);
-        if id == -1 || cqf10_i(e + 4) == -1 {
+        let id = read_i32(e);
+        if id == -1 || read_i32(e + 4) == -1 {
             continue;
         }
         if j > 10 && read_u8(e + 0x32) == 0xff {
             continue;
         }
-        let p = cqf10_pessoa(id as usize);
-        if p != 0 && cqf10_i(p) >= cqf10_i(0xae2364) {
+        let p = cpo3_pessoa(id as usize);
+        if p != 0 && read_i32(p) >= read_i32(0xae2364) {
             continue;
         }
         if read_usize(clube_obs + 0xcf) != 0 && humano(clube_obs, 0, 1, 0, 0) != 0 && read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
@@ -127,7 +118,7 @@ pub(crate) unsafe extern "thiscall" fn cqf10_historico_do_clube_observado(this: 
         por(0xe, read_u8(jogo + m));
         por(0xf, read_u8(jogo + n));
         core::ptr::write_unaligned((l + 0x10) as *mut u32, read_usize(jogo + 8) as u32);
-        por(0x14, lado_do_jogo(cqf10_clube(read_usize(this)), jogo) as u8);
+        por(0x14, lado_do_jogo(cpe1_clube(read_usize(this)), jogo) as u8);
         for t in 0..10 {
             por(0x1c + t, read_u8(e + 0x3e + t));
         }
@@ -178,7 +169,7 @@ pub(crate) unsafe extern "thiscall" fn cqf10_historico_do_clube_observado(this: 
 /// observando o próprio clube; a carreira automática não chega a esta rotina).
 pub(crate) unsafe extern "thiscall" fn comparar_cqf10_historico_do_clube_observado(this: usize, jogo: usize, resultado: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1622);
-    let clube_obs = cqf10_clube(read_usize(this));
+    let clube_obs = cpe1_clube(read_usize(this));
     if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 && read_usize(clube_obs + 0xcf) != 0 {
         o(this, jogo, resultado);
         return;
@@ -230,7 +221,7 @@ pub(crate) unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, sai
         aviso_em(0xa701b0, 0xef1);
         return 0;
     }
-    let dono = cqf10_pessoa(read_usize(this));
+    let dono = cpo3_pessoa(read_usize(this));
     // a nação da competição do jogo (+0x18 → +0x38 → +0x1f) ou a do mandante (+0x1c → +0x53)
     let mut nacao = 0usize;
     let t = read_usize(jogo + 0x18);
@@ -243,21 +234,21 @@ pub(crate) unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, sai
     if read_u8(this + 0xa) != 4 {
         return 0;
     }
-    let id_olheiro = cqf10_i(this + 0x180);
+    let id_olheiro = read_i32(this + 0x180);
     if id_olheiro <= -1 {
         return 0;
     }
     let confere: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
     // 0x53e990: 5 pushes; add esp, 0x14 -> cdecl
-    if confere(cqf10_pessoa(id_olheiro as usize), read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) == 0 {
+    if confere(cpo3_pessoa(id_olheiro as usize), read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) == 0 {
         return 0;
     }
-    let olheiro = cqf10_pessoa(cqf10_i(this + 0x180) as usize);
+    let olheiro = cpo3_pessoa(read_i32(this + 0x180) as usize);
     if olheiro == 0 || read_u8(resultado + 0x4c) != 0 {
         return 0;
     }
-    let acompanhado = cqf10_i(this + 0x190);
-    if acompanhado > -1 && read_usize(this + 0x170) != 0 && (cqf10_i(jogo + 0xc) == acompanhado || cqf10_i(jogo + 0x10) == acompanhado) {
+    let acompanhado = read_i32(this + 0x190);
+    if acompanhado > -1 && read_usize(this + 0x170) != 0 && (read_i32(jogo + 0xc) == acompanhado || read_i32(jogo + 0x10) == acompanhado) {
         if !CQF10_ENSAIO {
             crate::comparacao::ramo("cqf_10 historico do clube");
             let historico: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_PLAYER_SEARCH_RECORD_SCOUTED_CLUB_MATCH);
@@ -274,11 +265,11 @@ pub(crate) unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, sai
     }
     let (dia_fim, ano_fim) = (read_i16(this + 0x1ad), read_i16(this + 0x1af) as u16);
     let antes_do_fim = ano < ano_fim || (ano == ano_fim && dia < dia_fim);
-    if antes_do_fim && cqf10_i(this + 0x195) == -1 {
+    if antes_do_fim && read_i32(this + 0x195) == -1 {
         return 0;
     }
-    let alvo = cqf10_i(this + 0x195);
-    let do_alvo = alvo > -1 && cqf10_i(jogo) == alvo;
+    let alvo = read_i32(this + 0x195);
+    let do_alvo = alvo > -1 && read_i32(jogo) == alvo;
     if !do_alvo {
         let cobre: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_PLAYER_SEARCH_SCOUT_COVERS_NATION);
         // 0x7b7490: push nação; mov ecx, this -> thiscall, ret 4
@@ -313,8 +304,8 @@ pub(crate) unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, sai
                             i = 0;
                             let mut k = 0usize;
                             while livre {
-                                let id = cqf10_i(resultado + 0x190 + lado as usize * 0x625 + k);
-                                if id != -1 && pedido(read_usize(G_SCOUT_MANAGER), cqf10_pessoa(id as usize), read_usize(olheiro + 0x39), 1) != 0 {
+                                let id = read_i32(resultado + 0x190 + lado as usize * 0x625 + k);
+                                if id != -1 && pedido(read_usize(G_SCOUT_MANAGER), cpo3_pessoa(id as usize), read_usize(olheiro + 0x39), 1) != 0 {
                                     livre = false;
                                 }
                                 k += 0x49;
@@ -385,12 +376,12 @@ pub(crate) unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, sai
             if j > 10 && read_u8(atual + 2) == 0xff {
                 continue;
             }
-            let id = cqf10_i(atual - 0x30);
+            let id = read_i32(atual - 0x30);
             if id == -1 {
                 continue;
             }
-            let p = cqf10_pessoa(id as usize);
-            if p != 0 && cqf10_i(p) >= cqf10_i(0xae2364) {
+            let p = cpo3_pessoa(id as usize);
+            if p != 0 && read_i32(p) >= read_i32(0xae2364) {
                 continue;
             }
             if cqf10_clube_do_contrato(p) == clube_olheiro || read_usize(p + 0x61) == 0 {
@@ -404,8 +395,8 @@ pub(crate) unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, sai
             }
             let pediu = pedido(read_usize(G_SCOUT_MANAGER), p, clube_olheiro, 0);
             if pediu == 0 {
-                let alvo = cqf10_i(this + 0x195);
-                if !(alvo != -1 && cqf10_i(jogo) == alvo) && reputacao(p, olheiro, 0) >= 0xfa0 { // cqf10: reputação vista
+                let alvo = read_i32(this + 0x195);
+                if !(alvo != -1 && read_i32(jogo) == alvo) && reputacao(p, olheiro, 0) >= 0xfa0 { // cqf10: reputação vista
                     continue;
                 }
             }
@@ -427,8 +418,8 @@ pub(crate) unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, sai
             if (nota as i8) < 0xf { // cqf10: a nota mínima
                 continue;
             }
-            let alvo = cqf10_i(this + 0x195);
-            let modo: u32 = if alvo > -1 && alvo == cqf10_i(jogo) {
+            let alvo = read_i32(this + 0x195);
+            let modo: u32 = if alvo > -1 && alvo == read_i32(jogo) {
                 0
             } else if pediu != 0 {
                 1
@@ -811,10 +802,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_gols_do_historico(this: usize) -
 // ---------- 244a leva: o olheiro da busca, a sequência atual do clube, construir o recordista e o técnico rival que comenta na mídia ----------
 
 
-pub(crate) unsafe fn cph7_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 /// the person at index +0x180 when it still matches the stored names and date (0x53e990); else 0
 /// Original: `PLAYER_SEARCH::get_scout` (0x7ae950, player_search.cpp, thiscall).
@@ -839,8 +826,8 @@ pub(crate) unsafe extern "thiscall" fn olheiro_da_busca(this: usize) -> usize {
 
 /// O técnico (+0xcf) de um clube rival passa nos sorteios (sorteio(+0x5c) = 0 e sorteio(+0x57) > 5)?
 pub(crate) unsafe fn cph7_sorteado(c: usize) -> bool {
-    cph7_sortear(*((read_u32(c + 0xcf) as usize + 0x5c) as *const i8) as i32) == 0
-        && cph7_sortear(*((read_u32(c + 0xcf) as usize + 0x57) as *const i8) as i32) > 5
+    cpe1_sorteio(*((read_u32(c + 0xcf) as usize + 0x5c) as *const i8) as i32) == 0
+        && cpe1_sorteio(*((read_u32(c + 0xcf) as usize + 0x57) as *const i8) as i32) > 5
 }
 
 

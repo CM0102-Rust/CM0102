@@ -92,3 +92,11 @@ pub unsafe fn write_u8_at(o: usize, d: usize, v: u8) {
 pub unsafe fn write_usize(a: usize, v: usize) {
     core::ptr::write_unaligned(a as *mut usize, v);
 }
+
+pub unsafe fn read_f32(a: usize) -> f32 {
+    core::ptr::read_unaligned(a as *const f32)
+}
+
+pub unsafe fn write_i32(a: usize, v: i32) {
+    core::ptr::write_unaligned(a as *mut i32, v);
+}

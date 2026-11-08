@@ -352,14 +352,7 @@ pub(crate) unsafe fn cqf9_strncmp(a: usize, b: usize, n: u32) -> i32 {
 
 
 
-pub(crate) unsafe fn cqf9_sb(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
-pub(crate) unsafe fn cqf9_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 /// O ensaio do comparador: a cópia roda sem a entrega da notícia (0x786090, que aloca) e para antes da fuga (0x419840,
 /// que põe na lista e manda notícia), guardando a decisão.
@@ -388,7 +381,7 @@ pub(crate) unsafe fn cqf9_gostar_mais(p: usize, clube: usize) {
     if read_u32_as_usize(clube + 0xcf) != 0 && cqf9_pref(0x547840, p, read_u32_as_usize(clube + 0xcf)) != 0 {
         cqf9_pref(0x547c50, p, read_u32_as_usize(clube + 0xcf));
     }
-    if read_u32_as_usize(clube + 0xcf) != 0 && cqf9_sortear(cqf9_sb(p + 0x59) as i32) > 5 {
+    if read_u32_as_usize(clube + 0xcf) != 0 && cpe1_sorteio(read_i8(p + 0x59) as i32) > 5 {
         cqf9_acrescentar(0x547a10, p, read_u32_as_usize(clube + 0xcf));
     }
 }
@@ -447,7 +440,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize,
     let mut res: i8 = -1;
     let mut f1: i8 = 0;
     if *((0x9e7ad9 + tp as isize * 13) as *const u8) == 0xc {
-        let s = cqf9_sortear(32000) as i16;
+        let s = cpe1_sorteio(32000) as i16;
         if tp == 0x51 {
             res = 0;
             let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
@@ -459,8 +452,8 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize,
                 let mut caiu = false;
                 for marca in [0x20000u32, 0x20] {
                     if read_u32_as_usize(c + 0x45) as u32 & marca != 0 {
-                        let a = cqf9_sortear(cqf9_sb(p + 0x5b) as i32);
-                        let b = cqf9_sortear(0x19);
+                        let a = cpe1_sorteio(read_i8(p + 0x5b) as i32);
+                        let b = cpe1_sorteio(0x19);
                         if a > b {
                             tirar(c, marca);
                             caiu = true;
@@ -469,20 +462,20 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize,
                 }
                 let mut feliz = caiu;
                 if read_u32_as_usize(c + 0x45) as u32 & 0x40 != 0 {
-                    let a = cqf9_sortear(cqf9_sb(p + 0x5b) as i32);
-                    let b = cqf9_sortear(0x19);
+                    let a = cpe1_sorteio(read_i8(p + 0x5b) as i32);
+                    let b = cpe1_sorteio(0x19);
                     if a > b {
                         tirar(c, 0x40);
                         caiu = true;
                         feliz = true;
                     }
                 }
-                if !feliz && cqf9_sortear(cqf9_sb(p + 0x5b) as i32) != 0 {
+                if !feliz && cpe1_sorteio(read_i8(p + 0x5b) as i32) != 0 {
                     feliz = true;
                 }
                 let mut seguir = true;
                 if feliz {
-                    let v = cqf9_sb(c + 0x44) as i32 + 0xf; // cqf9: a felicidade sobe 15
+                    let v = read_i8(c + 0x44) as i32 + 0xf; // cqf9: a felicidade sobe 15
                     crate::comparacao::ramo("cqf_9 felicidade pelas ferias");
                     *((c + 0x44) as *mut i8) = if v > 100 { 100 } else if v < -100 { -100 } else { v as i8 };
                 }
@@ -490,9 +483,9 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize,
                     res = 2;
                     cqf9_gostar_mais(p, clube);
                 } else {
-                    if read_u32_as_usize(G_AWOL) != 0 && cqf9_sb(p + 0x59) < 0xc {
-                        let a = cqf9_sortear(cqf9_sb(p + 0x59) as i32);
-                        let b = cqf9_sortear(5);
+                    if read_u32_as_usize(G_AWOL) != 0 && read_i8(p + 0x59) < 0xc {
+                        let a = cpe1_sorteio(read_i8(p + 0x59) as i32);
+                        let b = cpe1_sorteio(5);
                         if a < b {
                             if CQF9_ENSAIO {
                                 CQF9_FUGIU = true;
@@ -507,26 +500,26 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize,
                     seguir = true;
                 }
                 if seguir {
-                    let mut x = (cqf9_sb(p + 0x5b) as i16).wrapping_add(cqf9_sb(p + 0x59) as i16);
+                    let mut x = (read_i8(p + 0x5b) as i16).wrapping_add(read_i8(p + 0x59) as i16);
                     f1 = 1;
                     if *((read_u32_as_usize(p + 0x61) + 0xb) as *const i16) > 0x1c52 {
                         x = x.wrapping_sub(5);
                     }
-                    let a = cqf9_sortear(x as i32);
-                    let b = cqf9_sortear(0x14);
+                    let a = cpe1_sorteio(x as i32);
+                    let b = cpe1_sorteio(0x14);
                     if a < b {
-                        let r = cqf9_sortear(4);
+                        let r = cpe1_sorteio(4);
                         let f = read_u32_as_usize(p + 0x61);
                         let subir_57 = |p: usize| {
-                            if cqf9_sb(p + 0x57) < 0x14 {
+                            if read_i8(p + 0x57) < 0x14 {
                                 *((p + 0x57) as *mut i8) += 1;
                             }
                         };
                         let descer_5d_44 = |p: usize, f: usize| {
-                            if cqf9_sb(p + 0x5d) > 1 {
+                            if read_i8(p + 0x5d) > 1 {
                                 *((p + 0x5d) as *mut i8) -= 1;
                             }
-                            if cqf9_sb(f + 0x44) > 1 {
+                            if read_i8(f + 0x44) > 1 {
                                 *((f + 0x44) as *mut i8) -= 1;
                             }
                         };
@@ -540,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize,
                             descer_5d_44(p, f);
                         }
                         if r == 0 || r == 1 {
-                            if cqf9_sb(p + 0x59) > 1 {
+                            if read_i8(p + 0x59) > 1 {
                                 *((p + 0x59) as *mut i8) -= 1;
                             }
                         }
@@ -558,22 +551,22 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize,
                     res = 2;
                     *((forma + 0x12) as *mut u8) = 0xff;
                     *((forma + 0x13) as *mut u8) = 0;
-                    v = Some(cqf9_sb(p + 0x59));
+                    v = Some(read_i8(p + 0x59));
                 } else if s < 5 {
                     res = 1;
                     *((forma + 0x13) as *mut u8) = 0;
-                    if cqf9_sb(p + 0x59) > 0xf {
-                        v = Some(cqf9_sb(p + 0x57));
+                    if read_i8(p + 0x59) > 0xf {
+                        v = Some(read_i8(p + 0x57));
                     }
                 } else {
                     res = 0;
-                    if cqf9_sb(p + 0x5d) < 5 {
+                    if read_i8(p + 0x5d) < 5 {
                         f1 = -1;
                         if clube != 0 {
                             if read_u32_as_usize(clube + 0xcf) != 0 && cqf9_pref(0x547810, p, read_u32_as_usize(clube + 0xcf)) != 0 {
                                 cqf9_pref(0x547c10, p, read_u32_as_usize(clube + 0xcf));
                             }
-                            if read_u32_as_usize(clube + 0xcf) != 0 && cqf9_sortear(cqf9_sb(p + 0x5d) as i32) == 0 {
+                            if read_u32_as_usize(clube + 0xcf) != 0 && cpe1_sorteio(read_i8(p + 0x5d) as i32) == 0 {
                                 cqf9_acrescentar(0x547af0, p, read_u32_as_usize(clube + 0xcf));
                             }
                         }
@@ -596,13 +589,13 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize,
                     res = 2;
                     *((forma + 0x12) as *mut u8) = 0xff;
                     *((forma + 0x13) as *mut u8) = 0;
-                } else if cqf9_sortear(5) != 0 {
+                } else if cpe1_sorteio(5) != 0 {
                     res = 1;
                     *((forma + 0x13) as *mut u8) = 0;
                 } else {
                     res = 3;
                     let a = forma + 0x13;
-                    let r = cqf9_sortear(4);
+                    let r = cpe1_sorteio(4);
                     *(a as *mut u8) = (*(a as *const u8)).wrapping_add((r as u8).wrapping_add(1));
                 }
             } else if tp == 0x4e {
@@ -716,16 +709,9 @@ pub(crate) unsafe extern "stdcall" fn comparar_nome_da_categoria_da_lesao(catego
 
 
 
-pub(crate) unsafe fn cqb5_c(a: usize) -> i32 {
-    *(a as *const i8) as i32
-}
 
 
 
-pub(crate) unsafe fn cqb5_sorteio(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 /// O registro físico de 31 bytes da pessoa `id` em [this].
 pub(crate) unsafe fn cqb5_registro(this: usize, id: usize) -> usize {
@@ -759,7 +745,7 @@ pub(crate) fn cqb5_tipo(tipo: i8) -> usize {
 /// Os dias da volta ao treino (+0x2a) pela duração `dias`: ftol(percentual × 0,01 × dias) (fild, fmul qword
 /// [0x967898], fimul, _ftol 0x945640; x87 em dupla precisão), no máximo 60 dias antes do fim.
 pub(crate) unsafe fn cqb5_volta_ao_treino(tipo: i8, dias: i16) -> i16 {
-    let pct = cqb5_c(0x9e7adf + cqb5_tipo(tipo));
+    let pct = read_i8_as_i32(0x9e7adf + cqb5_tipo(tipo));
     let x = ftol(pct as f64 * f64_em(0x967898) * dias as f64) as i16;
     if (x as i32) + 0x3c < dias as i32 { dias.wrapping_sub(0x3c) } else { x }
 }
@@ -815,7 +801,7 @@ pub(crate) unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, re
             return -1;
         }
         if rec < 0 {
-            if cqb5_sorteio(rec as i32 / 10) == 0 {
+            if cpe1_sorteio(rec as i32 / 10) == 0 {
                 let r = cqb5_registro(this, read_usize(p));
                 *((r + 0x12) as *mut u8) = tipo as u8;
                 *((r + 0x13) as *mut u8) = 1;
@@ -930,10 +916,10 @@ pub(crate) unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, re
     // os dias
     crate::comparacao::ramo("cqb_5 duracao");
     let mut extra = (read_i16(G_INJURY_TYPE_VARIABLE_DAYS + t) as i32).wrapping_mul(0x23 - melhor as i32) / 20; // cqb5: o fisioterapeuta encurta
-    let s1 = cqb5_sorteio(melhor as i32 + 5);
-    let s2 = cqb5_sorteio(0x14);
+    let s1 = cpe1_sorteio(melhor as i32 + 5);
+    let s2 = cpe1_sorteio(0x14);
     if s1 > s2 {
-        extra = extra.wrapping_sub(cqb5_sorteio(extra as i16 as i32));
+        extra = extra.wrapping_sub(cpe1_sorteio(extra as i16 as i32));
     }
     if tipo == 0x51 {
         extra = 0;
@@ -942,14 +928,14 @@ pub(crate) unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, re
     let idade = read_u8(p + 0x18) as i8;
     if tipo != 0x51 && read_i16(G_INJURY_TYPE_BASE_DAYS + t) > 10 {
         if idade > 0x1e {
-            let ax = (cqb5_c(read_usize(p + 0x61) + 0x2d) as i16).wrapping_add(idade as i16).wrapping_sub(0x23);
+            let ax = (read_i8_as_i32(read_usize(p + 0x61) + 0x2d) as i16).wrapping_add(idade as i16).wrapping_sub(0x23);
             if ax > 0 {
-                extra = extra.wrapping_add(cqb5_sorteio(ax as i32));
+                extra = extra.wrapping_add(cpe1_sorteio(ax as i32));
             }
         }
         let al = read_u8(read_usize(p + 0x61) + 0x2d) as i8;
         if al > 10 {
-            extra = extra.wrapping_add(cqb5_sorteio((al as i16 - 10) as i32));
+            extra = extra.wrapping_add(cpe1_sorteio((al as i16 - 10) as i32));
         }
     }
     let dias = read_i16(G_INJURY_TYPE_BASE_DAYS + t).wrapping_add(extra as i16);
@@ -960,7 +946,7 @@ pub(crate) unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, re
         if read_u8(g) >= 100 {
             break;
         }
-        if cqb5_sorteio(cqb5_c(read_usize(p + 0x61) + 0x34) * 5 + 0xc) == 0 {
+        if cpe1_sorteio(read_i8_as_i32(read_usize(p + 0x61) + 0x34) * 5 + 0xc) == 0 {
             let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p).wrapping_mul(0x4f)) + 0xa;
             *(g as *mut u8) = read_u8(g).wrapping_add(1);
         }
@@ -979,7 +965,7 @@ pub(crate) unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, re
                 }
             }
         }
-        let s = cqb5_sorteio(0x32);
+        let s = cpe1_sorteio(0x32);
         if n >= s + 0x1e && read_usize(G_TRANSFER_MANAGER) != 0 && read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856) != 0 {
             crate::comparacao::ramo("cqb_5 suspende as miras");
             let suspender: unsafe extern "thiscall" fn(usize, usize, u8) = core::mem::transmute(FN_SHORTLIST_MANAGER_SUSPEND_CLUBS_SHORTLISTING_PLAYER);
@@ -995,7 +981,7 @@ pub(crate) unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, re
     let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut saida = [0u8; 8];
     if retroativa != 0 {
-        let s = cqb5_sorteio(n);
+        let s = cpe1_sorteio(n);
         let menos: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
         let mut d = [0u8; 8];
         let r = menos(0xae2c90, d.as_mut_ptr(), (s + 1) as u32);
@@ -1009,9 +995,9 @@ pub(crate) unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, re
     core::ptr::write_unaligned((cqb5_registro(this, read_usize(p)) + 0xe) as *mut i32, vaga);
     if rec != 0 && read_usize(G_INJURY_TYPE_CAN_RECUR + t) != 0 {
         if rec < 0 {
-            if cqb5_sorteio(rec as i32 / 10) == 0 {
+            if cpe1_sorteio(rec as i32 / 10) == 0 {
                 *((cqb5_registro(this, read_usize(p)) + 0x12) as *mut u8) = tipo as u8;
-                if cqb5_sorteio(rec as i32) == 0 {
+                if cpe1_sorteio(rec as i32) == 0 {
                     *((cqb5_registro(this, read_usize(p)) + 0x13) as *mut u8) = 1;
                 }
             }
@@ -1040,8 +1026,8 @@ pub(crate) unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, re
             if rec > 0 {
                 e /= rec as i32;
             }
-            let s1 = cqb5_sorteio(c as i32);
-            let s2 = cqb5_sorteio(e);
+            let s1 = cpe1_sorteio(c as i32);
+            let s2 = cpe1_sorteio(e);
             if s1 > s2 && read_usize(G_PLAYER_REGEN) != 0 {
                 crate::comparacao::ramo("cqb_5 aposenta pelas recaidas");
                 aposentar(read_usize(G_PLAYER_REGEN), p, read_i16(read_usize(this + 4) + off + 0x2a));
@@ -1050,12 +1036,12 @@ pub(crate) unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, re
     }
     // a aposentadoria pela idade e pela volta ao treino longa
     let volta = || read_i16(read_usize(this + 4) + off + 0x2a) as i32;
-    let propensao = || cqb5_c(read_usize(p + 0x61) + 0x2d);
-    let anos = || cqb5_c(p + 0x18);
-    let encerra = (idade > 0x24 && volta() > 0x78 - propensao() - anos() && cqb5_sorteio(volta()) > 0x5a - anos())
-        || (idade > 0x21 && volta() > 0x96 - propensao() - anos() && cqb5_sorteio(volta()) > 0x5a - anos())
-        || (idade > 0x1f && volta() > 0x12c - anos() && cqb5_sorteio(volta()) > 0xc8 - anos())
-        || (volta() > 0x1f4 && cqb5_sorteio(cqb5_c(read_usize(p + 0x61) + 0x34) + 5) == 0);
+    let propensao = || read_i8_as_i32(read_usize(p + 0x61) + 0x2d);
+    let anos = || read_i8_as_i32(p + 0x18);
+    let encerra = (idade > 0x24 && volta() > 0x78 - propensao() - anos() && cpe1_sorteio(volta()) > 0x5a - anos())
+        || (idade > 0x21 && volta() > 0x96 - propensao() - anos() && cpe1_sorteio(volta()) > 0x5a - anos())
+        || (idade > 0x1f && volta() > 0x12c - anos() && cpe1_sorteio(volta()) > 0xc8 - anos())
+        || (volta() > 0x1f4 && cpe1_sorteio(read_i8_as_i32(read_usize(p + 0x61) + 0x34) + 5) == 0);
     if encerra && read_usize(G_PLAYER_REGEN) != 0 {
         crate::comparacao::ramo("cqb_5 aposenta pela lesao");
         aposentar(read_usize(G_PLAYER_REGEN), p, read_i16(read_usize(this + 4) + off + 0x2a));
@@ -1147,7 +1133,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_lesao(_this: usize, p: usize, 
         let q = read_usize(p + 4 * k);
         gravar(nw, k as i8, if q != 0 { read_usize(q + 0x33) as u32 } else { 0 });
     }
-    gravar(nw, 4, cqb5_c(l) as u32);
+    gravar(nw, 4, read_i8_as_i32(l) as u32);
     gravar(nw, 5, read_i16(l + 0x20) as i32 as u32);
     gravar(nw, 6, read_i16(l + 0x22) as u16 as u32);
     gravar(nw, 7, read_i16(l + 0x28) as i32 as u32);
@@ -1217,20 +1203,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_da_lesao(this: usize, p:
 // ---------- 259a leva: o dia das lesões: as lesões que envelhecem e as lesões no treino, as notícias da volta aos treinos e o jogador a um cartão da suspensão (injury.cpp, discipline.cpp) ----------
 
 
-pub(crate) unsafe fn cpw9_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
-pub(crate) unsafe fn cpw9_uw(a: usize) -> u16 {
-    core::ptr::read_unaligned(a as *const u16)
-}
 
 
-pub(crate) unsafe fn cpw9_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 /// Soma `delta` ao byte `a` (o `add`/`dec` de 8 bits da original).
 pub(crate) unsafe fn cpw9_somar_byte(a: usize, delta: u8) {
@@ -1293,10 +1269,10 @@ pub(crate) unsafe extern "thiscall" fn dia_das_lesoes(this: usize) {
     }
     let base = read_usize(this + 4);
     let mut k = 0i32;
-    while k < cpw9_i(this + 8) {
+    while k < read_i32(this + 8) {
         let e = base.wrapping_add((k as u32).wrapping_mul(0x30) as usize) + 0x2e;
-        core::ptr::write_unaligned((e - 2) as *mut u16, cpw9_uw(e - 2).wrapping_sub(1));
-        core::ptr::write_unaligned(e as *mut u16, cpw9_uw(e).wrapping_sub(1));
+        core::ptr::write_unaligned((e - 2) as *mut u16, read_u16(e - 2).wrapping_sub(1));
+        core::ptr::write_unaligned(e as *mut u16, read_u16(e).wrapping_sub(1));
         k += 1;
     }
     let anterior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
@@ -1308,7 +1284,7 @@ pub(crate) unsafe extern "thiscall" fn dia_das_lesoes(this: usize) {
         let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
         let mut p = read_usize(G_STAFF_TABLE);
         let mut i = 0i32;
-        while i < cpw9_i(0xae2364) {
+        while i < read_i32(0xae2364) {
             fisico(this, p);
             i += 1;
             p = p.wrapping_add(0x6e);
@@ -1333,7 +1309,7 @@ pub(crate) unsafe fn cpw9_treino(this: usize) {
     let ausente: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_AWOL_IS_PLAYER_AWOL);
     let fora_da_temporada: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_INJURY_PLAYER_IN_CLOSE_SEASON);
     let escolher: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8 = core::mem::transmute(FN_INJURY_CHOOSE_INJURY_TYPE);
-    let mut quantos = (cpw9_i(0xae2364) / 150) as i16; // cpw9: os sorteios do treino
+    let mut quantos = (read_i32(0xae2364) / 150) as i16; // cpw9: os sorteios do treino
     if quantos < 10 {
         quantos = 10;
     }
@@ -1341,7 +1317,7 @@ pub(crate) unsafe fn cpw9_treino(this: usize) {
     let graves = (total / 14) as i16 as i32;
     let mut i = 0i32;
     while i < total {
-        let idx = cpw9_sortear(cpw9_i(0xae2364));
+        let idx = cpe1_sorteio(read_i32(0xae2364));
         let p = read_usize(G_STAFF_TABLE).wrapping_add((idx as u32).wrapping_mul(0x6e) as usize);
         'proximo: {
             if read_usize(p + 0x61) == 0 {
@@ -1356,32 +1332,32 @@ pub(crate) unsafe fn cpw9_treino(this: usize) {
                 break 'proximo;
             }
             if read_i8(read_usize(p + 0x61) + 0xf) == 0x14 {
-                let r5 = cpw9_sortear(5);
-                let r2 = cpw9_sortear(2);
+                let r5 = cpe1_sorteio(5);
+                let r2 = cpe1_sorteio(2);
                 if r5 > r2 {
                     break 'proximo;
                 }
             }
             let rec = cpw9_registro(this, idx);
-            if cpw9_i(rec + 0xe) != -1 {
+            if read_i32(rec + 0xe) != -1 {
                 break 'proximo;
             }
             if read_i8(rec + 0x12) > -1 {
                 let rec = cpw9_registro(this, idx);
-                let r = cpw9_sortear(100);
+                let r = cpe1_sorteio(100);
                 let lim = ((read_i8(read_usize(p + 0x61) + 0x2d) as i32 - 3) * 5 + read_i8(rec + 0x1e) as i32 + read_i8(rec + 0x13) as i32) * 2;
                 if r > lim {
                     break 'proximo;
                 }
             } else {
-                let r = cpw9_sortear(0xa0);
+                let r = cpe1_sorteio(0xa0);
                 let lim = ((read_i8(read_usize(p + 0x61) + 0x2d) as i32 - 3) * 5 + read_i8(cpw9_registro(this, idx) + 0x1e) as i32) * 2; // cpw9: o risco sem recorrência
                 if r > lim {
                     break 'proximo;
                 }
                 crate::comparacao::ramo("cpw_9 risco sem recorrencia");
             }
-            if cpw9_sortear(3) != 0 {
+            if cpe1_sorteio(3) != 0 {
                 break 'proximo;
             }
             let rec = cpw9_registro(this, idx);
@@ -1391,8 +1367,8 @@ pub(crate) unsafe fn cpw9_treino(this: usize) {
             let mut categoria: u8 = 0;
             let mut sortear_categoria = true;
             if read_i8(rec + 0x12) > -1 {
-                let r1 = cpw9_sortear(read_i8(rec + 0x13) as i32 + 2);
-                let r2 = cpw9_sortear(3);
+                let r1 = cpe1_sorteio(read_i8(rec + 0x13) as i32 + 2);
+                let r2 = cpe1_sorteio(3);
                 if r1 > r2 {
                     let r = read_i8(cpw9_registro(this, idx) + 0x12) as isize;
                     categoria = *((0x9e7ad9 + (r * 13) as usize) as *const u8);
@@ -1401,13 +1377,13 @@ pub(crate) unsafe fn cpw9_treino(this: usize) {
             }
             if sortear_categoria {
                 loop {
-                    categoria = cpw9_sortear(0xc) as u8;
-                    if categoria == 0 && cpw9_sortear(100) != 0 {
+                    categoria = cpe1_sorteio(0xc) as u8;
+                    if categoria == 0 && cpe1_sorteio(100) != 0 {
                         continue;
                     }
                     let c = categoria as i8 as isize * 3;
                     let n = *((0x9e7f06 + c as usize) as *const i8) as i32 - *((0x9e7f05 + c as usize) as *const i8) as i32 + 2;
-                    if cpw9_sortear(n) != 0 {
+                    if cpe1_sorteio(n) != 0 {
                         break;
                     }
                 }
@@ -1448,30 +1424,30 @@ pub(crate) unsafe fn cpw9_gasto_da_lesao(this: usize, idx: i32, p: usize, catego
             if a == 0x14 {
                 if cpw9_recorrente(this, idx, categoria) {
                     let f = ficha();
-                    let r = cpw9_sortear(3) as u8;
+                    let r = cpe1_sorteio(3) as u8;
                     cpw9_somar_byte(f + 0x1b, 0xffu8.wrapping_sub(r));
-                } else if cpw9_sortear(3) != 0 {
+                } else if cpe1_sorteio(3) != 0 {
                     let f = ficha();
-                    let r = cpw9_sortear(2) as u8;
+                    let r = cpe1_sorteio(2) as u8;
                     cpw9_somar_byte(f + 0x1b, 0xffu8.wrapping_sub(r));
                 }
-            } else if a > 0xf && cpw9_sortear(3) == 0 {
+            } else if a > 0xf && cpe1_sorteio(3) == 0 {
                 cpw9_somar_byte(ficha() + 0x1b, 0xff);
             }
             if read_i8(ficha() + 0x36) == 0x14 {
                 if cpw9_recorrente(this, idx, categoria) {
                     let f = ficha();
-                    let r = cpw9_sortear(3) as u8;
+                    let r = cpe1_sorteio(3) as u8;
                     cpw9_somar_byte(f + 0x36, 0xffu8.wrapping_sub(r));
-                } else if cpw9_sortear(3) != 0 {
+                } else if cpe1_sorteio(3) != 0 {
                     cpw9_somar_byte(ficha() + 0x36, 0xff);
                 }
-            } else if read_i8(ficha() + 0x1b) > 0x11 && cpw9_sortear(3) == 0 {
+            } else if read_i8(ficha() + 0x1b) > 0x11 && cpe1_sorteio(3) == 0 {
                 cpw9_somar_byte(ficha() + 0x1b, 0xff);
             }
         }
         2 => {
-            if cpw9_recorrente(this, idx, categoria) && read_i8(ficha() + 0x1b) == 0x14 && cpw9_sortear(3) == 0 {
+            if cpw9_recorrente(this, idx, categoria) && read_i8(ficha() + 0x1b) == 0x14 && cpe1_sorteio(3) == 0 {
                 cpw9_somar_byte(ficha() + 0x1b, 0xff);
             }
         }
@@ -1479,17 +1455,17 @@ pub(crate) unsafe fn cpw9_gasto_da_lesao(this: usize, idx: i32, p: usize, catego
             let c = read_i8(ficha() + 0x1d);
             if c == 0x14 {
                 *((ficha() + 0x1d) as *mut u8) = 0x13;
-            } else if c > 0xf && cpw9_sortear(3) == 0 {
+            } else if c > 0xf && cpe1_sorteio(3) == 0 {
                 cpw9_somar_byte(ficha() + 0x1d, 0xff);
             }
         }
         4 => {
             let c = read_i8(ficha() + 0x1d);
             if c == 0x14 {
-                if cpw9_sortear(3) != 0 {
+                if cpe1_sorteio(3) != 0 {
                     cpw9_somar_byte(ficha() + 0x1d, 0xff);
                 }
-            } else if c > 0xf && cpw9_sortear(3) == 0 {
+            } else if c > 0xf && cpe1_sorteio(3) == 0 {
                 cpw9_somar_byte(ficha() + 0x1d, 0xff);
             }
         }
@@ -1504,7 +1480,7 @@ pub(crate) unsafe fn cpw9_gasto_da_lesao(this: usize, idx: i32, p: usize, catego
 pub(crate) unsafe extern "thiscall" fn comparar_dia_das_lesoes(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1293);
     let mut reg = vec![(this, 0x2c)];
-    let n = cpw9_i(this + 8);
+    let n = read_i32(this + 8);
     if n > 0 && read_usize(this + 4) != 0 {
         reg.push((read_usize(this + 4), n as usize * 0x30));
     }
@@ -1545,7 +1521,7 @@ pub(crate) unsafe extern "thiscall" fn noticias_de_volta_aos_treinos(this: usize
     let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
     let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     for k in 0..0x10i32 {
-        let n = cpw9_i(0xae2364);
+        let n = read_i32(0xae2364);
         let s = read_usize(G_STAFF_TABLE).wrapping_add(((n - k - 1) as u32).wrapping_mul(0x6e) as usize);
         let clube = read_usize(s + 0x39);
         if clube == 0 {
@@ -1553,22 +1529,22 @@ pub(crate) unsafe extern "thiscall" fn noticias_de_volta_aos_treinos(this: usize
         }
         for j in 0..50usize {
             let p = read_usize(clube + 0xd7 + 4 * j);
-            if p == 0 || cpw9_i(p) >= cpw9_i(0xae2364) {
+            if p == 0 || read_i32(p) >= read_i32(0xae2364) {
                 continue;
             }
-            let i = cpw9_i(cpw9_registro(this, cpw9_i(p)) + 0xe);
+            let i = read_i32(cpw9_registro(this, read_i32(p)) + 0xe);
             if i == -1 {
                 continue;
             }
             let inj = read_usize(this + 4).wrapping_add((i as u32).wrapping_mul(0x30) as usize);
-            let (dia, ano) = (read_i16(G_CURRENT_DATE), cpw9_uw(0xae2c92));
+            let (dia, ano) = (read_i16(G_CURRENT_DATE), read_u16(0xae2c92));
             let mut t = [0u8; 8];
-            let r = mais(inj + 0x20, t.as_mut_ptr(), cpw9_uw(inj + 0x2a) as u32);
-            if ano == cpw9_uw(r + 2) && dia == read_i16(r) && read_i16(inj + 0x2a) > 5 {
-                let marca = cpw9_registro(this, cpw9_i(p)) + 0x1c;
+            let r = mais(inj + 0x20, t.as_mut_ptr(), read_u16(inj + 0x2a) as u32);
+            if ano == read_u16(r + 2) && dia == read_i16(r) && read_i16(inj + 0x2a) > 5 {
+                let marca = cpw9_registro(this, read_i32(p)) + 0x1c;
                 if *(marca as *const u8) == 0 {
                     *(marca as *mut u8) = 1;
-                    let dias = cpw9_uw(inj + 0x28).wrapping_sub(cpw9_uw(inj + 0x2a));
+                    let dias = read_u16(inj + 0x28).wrapping_sub(read_u16(inj + 0x2a));
                     // ponytail: os bytes de cima dos argumentos de 8 e 16 bits não têm valor na original; a 0x630ee0 lê char/short
                     volta(this, p, 0, *(inj as *const u8) as u32, 0, dias as u32);
                 }
@@ -1590,18 +1566,18 @@ pub(crate) unsafe extern "thiscall" fn noticias_de_volta_aos_treinos(this: usize
     copiar(d1.as_mut_ptr(), t.as_mut_ptr(), 0xae2c90);
     copiar(d2.as_mut_ptr(), t.as_mut_ptr(), 0xae2c90);
     let pd1 = d1.as_ptr() as usize;
-    let (d1dia, d1ano) = (read_i16(pd1), cpw9_uw(pd1 + 2));
+    let (d1dia, d1ano) = (read_i16(pd1), read_u16(pd1 + 2));
     let pd2 = d2.as_ptr() as usize;
-    let (d2dia, d2ano) = (read_i16(pd2), cpw9_uw(pd2 + 2));
-    let ultimo = || read_usize(this + 0x10).wrapping_add((cpw9_i(this + 0x18) as u32).wrapping_mul(0x16) as usize).wrapping_sub(0x16);
+    let (d2dia, d2ano) = (read_i16(pd2), read_u16(pd2 + 2));
+    let ultimo = || read_usize(this + 0x10).wrapping_add((read_i32(this + 0x18) as u32).wrapping_mul(0x16) as usize).wrapping_sub(0x16);
     let pessoa = |e: usize| read_usize(G_STAFF_TABLE).wrapping_add((read_usize(e) as u32).wrapping_mul(0x6e) as usize);
     // as de data A hoje
-    let mut e = bsearch(d1.as_ptr(), read_usize(this + 0x10), cpw9_i(this + 0x18) as u32, 0x16, 0x778e90);
+    let mut e = bsearch(d1.as_ptr(), read_usize(this + 0x10), read_i32(this + 0x18) as u32, 0x16, 0x778e90);
     if e != 0 {
         if e > read_usize(this + 0x10) {
             loop {
                 e -= 0x16;
-                let (dia, ano) = (read_i16(e), cpw9_uw(e + 2));
+                let (dia, ano) = (read_i16(e), read_u16(e + 2));
                 if ano > d1ano || (ano == d1ano && dia > d1dia) || depois(d1.as_ptr(), read_usize(e) as u32, read_usize(e + 4) as u32) != 0 {
                     e += 0x16;
                     break;
@@ -1612,7 +1588,7 @@ pub(crate) unsafe extern "thiscall" fn noticias_de_volta_aos_treinos(this: usize
             }
         }
         while e <= ultimo() {
-            let (dia, ano) = (read_i16(e), cpw9_uw(e + 2));
+            let (dia, ano) = (read_i16(e), read_u16(e + 2));
             if ano > d1ano || (ano == d1ano && dia > d1dia) {
                 break;
             }
@@ -1623,18 +1599,18 @@ pub(crate) unsafe extern "thiscall" fn noticias_de_volta_aos_treinos(this: usize
             let mut dif = [0u8; 8];
             diferenca(e + 8, dif.as_mut_ptr(), read_usize(e) as u32, read_usize(e + 4) as u32);
             let pd = dif.as_ptr() as usize;
-            let dias = (cpw9_uw(pd + 2) as u32).wrapping_mul(365).wrapping_add(cpw9_uw(pd) as u32) as u16;
+            let dias = (read_u16(pd + 2) as u32).wrapping_mul(365).wrapping_add(read_u16(pd) as u32) as u16;
             volta(this, p, 0, *((e + 0x15) as *const u8) as u32, *((e + 0x14) as *const u8) as u32, dias as u32);
             e += 0x16;
         }
     }
     // as de data B hoje: a volta completa
-    let mut e = bsearch(d1.as_ptr(), read_usize(this + 0x10), cpw9_i(this + 0x18) as u32, 0x16, 0x632040);
+    let mut e = bsearch(d1.as_ptr(), read_usize(this + 0x10), read_i32(this + 0x18) as u32, 0x16, 0x632040);
     if e == 0 {
         return;
     }
     let diferente = |b: usize| {
-        let (dia, ano) = (read_i16(b), cpw9_uw(b + 2));
+        let (dia, ano) = (read_i16(b), read_u16(b + 2));
         ano != d2ano || dia != d2dia
     };
     if e > read_usize(this + 0x10) {
@@ -1658,14 +1634,14 @@ pub(crate) unsafe extern "thiscall" fn noticias_de_volta_aos_treinos(this: usize
         e += 0x16;
     }
     // as de data B já passada saem do começo da fila
-    let n = cpw9_i(this + 0x18);
+    let n = read_i32(this + 0x18);
     let mut tirar: i16 = 0;
     if n > 0 {
-        let (hd, ha) = (read_i16(G_CURRENT_DATE), cpw9_uw(0xae2c92));
+        let (hd, ha) = (read_i16(G_CURRENT_DATE), read_u16(0xae2c92));
         let mut q = read_usize(this + 0x10) + 0xa;
         let mut i = 0i32;
         while i < n {
-            let ano = cpw9_uw(q);
+            let ano = read_u16(q);
             if ha < ano || (ha == ano && !(hd > read_i16(q - 2))) {
                 break;
             }
@@ -1679,7 +1655,7 @@ pub(crate) unsafe extern "thiscall" fn noticias_de_volta_aos_treinos(this: usize
             core::ptr::copy((base + t * 0x16) as *const u8, base as *mut u8, (n as usize - t) * 0x16);
         }
     }
-    core::ptr::write_unaligned((this + 0x18) as *mut i32, cpw9_i(this + 0x18).wrapping_sub(tirar as i32));
+    core::ptr::write_unaligned((this + 0x18) as *mut i32, read_i32(this + 0x18).wrapping_sub(tirar as i32));
 }
 
 // ponytail: as notícias da volta (0x630ee0) alocam e o físico do dia mexe no sorteio: só a original; a cópia leva o
@@ -2019,9 +1995,6 @@ pub(crate) unsafe fn cpv10_regioes_da_caixa(this: usize, caixa: usize) -> Vec<(u
 
 
 
-pub(crate) unsafe fn cpr10_u(a: usize) -> u16 {
-    core::ptr::read_unaligned(a as *const u16)
-}
 
 /// O estado pela lesão atual da pessoa (o índice em [this] + id × 31 + 0xe; −1 sem lesão): a diferença da data do jogo
 /// para a da lesão (+0x20 do registro de 48 bytes em [this+4], 0x54cc30) em anos × 365 + dias; abaixo de +0x2a, 2
@@ -2036,7 +2009,7 @@ pub(crate) unsafe fn cpr10_estado(this: usize, pessoa: usize) -> u8 {
     let diferenca: unsafe extern "thiscall" fn(usize, *mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_GET_DIFFERENCE);
     let mut t = [0u8; 8];
     diferenca(0xae2c90, t.as_mut_ptr(), read_u32_as_usize(l + 0x20) as u32, read_u32_as_usize(l + 0x24) as u32);
-    let dias = (cpr10_u(t.as_ptr() as usize + 2) as i32).wrapping_mul(365).wrapping_add(read_i16(t.as_ptr() as usize) as i32);
+    let dias = (read_u16(t.as_ptr() as usize + 2) as i32).wrapping_mul(365).wrapping_add(read_i16(t.as_ptr() as usize) as i32);
     if dias < read_i16(l + 0x2a) as i32 {
         return 2; // cpr10: lesionado
     }
@@ -2103,7 +2076,7 @@ pub(crate) unsafe fn cpr10_procurar(this: usize, id: i32, limite: &[u8; 8], alte
     let mut anulada = -1i32;
     while i < conta {
         let r = base.wrapping_add((i as usize).wrapping_mul(14));
-        let ra = cpr10_u(r + 6);
+        let ra = read_u16(r + 6);
         if la < ra || (la == ra && ld < read_i16(r + 4)) {
             break;
         }
@@ -2149,16 +2122,9 @@ pub(crate) const CPR10_ESTATICAS: [(usize, usize); 6] = [(0xae2420, 8), (0xae246
 // ---------- 252a leva: as doenças e a pré-temporada: acrescentar o surto de doença no clube, espalhar os surtos pelos elencos e o jogador fora da temporada (injury.cpp) ----------
 
 
-pub(crate) unsafe fn cpp8_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
-pub(crate) unsafe fn cpp8_sorteio(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 /// O clube pelo índice (registro de 0x245 bytes em [0xae23b4]).
 pub(crate) unsafe fn cpp8_clube(i: i32) -> usize {
@@ -2181,10 +2147,10 @@ pub(crate) unsafe fn cpp8_surto_entra(tipo: u8, clube_i: i32) -> bool {
         return false;
     }
     if tipo == 3 {
-        if cpp8_sorteio(0xf) != 0 {
+        if cpe1_sorteio(0xf) != 0 {
             return false;
         }
-    } else if cpp8_sorteio(4) == 0 { // 1 em 4 fica de fora
+    } else if cpe1_sorteio(4) == 0 { // 1 em 4 fica de fora
         return false;
     }
     !cpp8_selecao(cpp8_clube(clube_i))
@@ -2204,8 +2170,8 @@ pub(crate) unsafe extern "thiscall" fn acrescentar_surto_de_doenca(this: usize, 
         return;
     }
     crate::comparacao::ramo("cpp_8 surto novo");
-    let cap = cpp8_i(this + 0x20);
-    if cpp8_i(this + 0x24) >= cap {
+    let cap = read_i32(this + 0x20);
+    if read_i32(this + 0x24) >= cap {
         let cap = cap.wrapping_add(30);
         core::ptr::write_unaligned((this + 0x20) as *mut i32, cap);
         let tamanho = (cap as u32).wrapping_mul(CPP8_SURTO as u32);
@@ -2223,15 +2189,15 @@ pub(crate) unsafe extern "thiscall" fn acrescentar_surto_de_doenca(this: usize, 
             return;
         }
     }
-    let e = read_usize(this + 0x1c).wrapping_add((cpp8_i(this + 0x24) as usize).wrapping_mul(CPP8_SURTO));
+    let e = read_usize(this + 0x1c).wrapping_add((read_i32(this + 0x24) as usize).wrapping_mul(CPP8_SURTO));
     let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut rascunho = [0u8; 8];
     copiar(e, rascunho.as_mut_ptr(), data);
     *((e + 8) as *mut u8) = tipo;
     core::ptr::write_unaligned((e + 9) as *mut i32, clube_i);
-    let id = if partida != 0 { cpp8_i(partida) } else { -1 };
+    let id = if partida != 0 { read_i32(partida) } else { -1 };
     core::ptr::write_unaligned((e + 0xd) as *mut i32, id);
-    let n = cpp8_i(this + 0x24).wrapping_add(1);
+    let n = read_i32(this + 0x24).wrapping_add(1);
     core::ptr::write_unaligned((this + 0x24) as *mut i32, n);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     ordenar(read_usize(this + 0x1c), n as u32, CPP8_SURTO as u32, 0x778e90);
@@ -2270,7 +2236,7 @@ pub(crate) unsafe extern "thiscall" fn espalhar_surtos_de_doenca(this: usize) {
     let mut removidos: i32 = 0;
     let mut k: i32 = 0;
     let mut off: usize = 0;
-    while k < cpp8_i(this + 0x24) {
+    while k < read_i32(this + 0x24) {
         let e = read_usize(this + 0x1c).wrapping_add(off);
         let hoje4 = read_usize(G_CURRENT_DATE) as u32;
         let (ano_e, ano_h) = (read_i16(e + 2) as u16, (hoje4 >> 16) as u16);
@@ -2283,24 +2249,24 @@ pub(crate) unsafe extern "thiscall" fn espalhar_surtos_de_doenca(this: usize) {
         } else {
             let tipo = read_u8(e + 8);
             let quantos = if tipo == 3 {
-                if read_usize(G_CURRENT_DATE) as u32 == read_usize(e) as u32 { Some((cpp8_sorteio(4) as u8).wrapping_add(1)) } else { None }
+                if read_usize(G_CURRENT_DATE) as u32 == read_usize(e) as u32 { Some((cpe1_sorteio(4) as u8).wrapping_add(1)) } else { None }
             } else {
-                Some(cpp8_sorteio(3) as u8) // 0 a 2 doentes
+                Some(cpe1_sorteio(3) as u8) // 0 a 2 doentes
             };
             if let Some(mut quantos) = quantos {
                 crate::comparacao::ramo("cpp_8 espalhar");
-                let clube = cpp8_clube(cpp8_i(read_usize(this + 0x1c).wrapping_add(off) + 9));
+                let clube = cpp8_clube(read_i32(read_usize(this + 0x1c).wrapping_add(off) + 9));
                 if !cpp8_selecao(clube) {
                     let mut t = 0;
                     while t < 0x14 && (quantos as i8) > 0 {
-                        let vaga = cpp8_sorteio(0x32) as i8 as isize;
+                        let vaga = cpe1_sorteio(0x32) as i8 as isize;
                         let p = read_usize((clube + 0xd7).wrapping_add((vaga * 4) as usize));
-                        if p != 0 && cpp8_i(p) < cpp8_i(0xae2364) {
+                        if p != 0 && read_i32(p) < read_i32(0xae2364) {
                             let e = read_usize(this + 0x1c).wrapping_add(off);
                             let doenca = read_u8(e + 8);
-                            let registro = read_usize(this).wrapping_add((cpp8_i(p) as usize).wrapping_mul(31));
+                            let registro = read_usize(this).wrapping_add((read_i32(p) as usize).wrapping_mul(31));
                             if read_u8(registro + 0x1d) != doenca {
-                                lesionar(this, (off as u32 & 0xffff_ff00) | doenca as u32, 0, p, 0, 0, cpp8_i(e + 0xd), 0, 0);
+                                lesionar(this, (off as u32 & 0xffff_ff00) | doenca as u32, 0, p, 0, 0, read_i32(e + 0xd), 0, 0);
                                 quantos = quantos.wrapping_sub(1);
                             }
                         }
@@ -2312,7 +2278,7 @@ pub(crate) unsafe extern "thiscall" fn espalhar_surtos_de_doenca(this: usize) {
         k += 1;
         off += CPP8_SURTO;
     }
-    let n = cpp8_i(this + 0x24);
+    let n = read_i32(this + 0x24);
     if removidos != 0 && removidos != n {
         let base = read_usize(this + 0x1c);
         core::ptr::copy((base + removidos as usize * CPP8_SURTO) as *const u8, base as *mut u8, (n - removidos) as usize * CPP8_SURTO);
@@ -2351,7 +2317,7 @@ pub(crate) unsafe extern "stdcall" fn jogador_fora_da_temporada(pessoa: usize) -
         convocado = ano > ano_h || (ano == ano_h && (lo as u16 as i16) > read_i16(G_CURRENT_DATE));
     }
     let clube = read_usize(pessoa + 0x39);
-    if clube == 0 || convocado || cpp8_i(clube + 0x1db) != -1 {
+    if clube == 0 || convocado || read_i32(clube + 0x1db) != -1 {
         return 0;
     }
     let temporada: unsafe extern "C" fn(usize, *mut u32, *mut u32) -> u32 = core::mem::transmute(FN_KEY_NATION_CLUB_IN_SEASON);
@@ -2374,15 +2340,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_surto_de_doenca(this
     let entra = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| cpp8_surto_entra(tipo as u8, clube_i)));
     let depois_do_plano = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     estado.escrever();
-    let n0 = cpp8_i(this + 0x24);
+    let n0 = read_i32(this + 0x24);
     let mut esperado = [0u8; CPP8_SURTO];
     esperado[..8].copy_from_slice(&*(data as *const [u8; 8]));
     esperado[8] = tipo as u8;
     esperado[9..13].copy_from_slice(&clube_i.to_le_bytes());
-    let id = if partida != 0 { cpp8_i(partida) } else { -1 };
+    let id = if partida != 0 { read_i32(partida) } else { -1 };
     esperado[13..17].copy_from_slice(&id.to_le_bytes());
     o(this, data, tipo, clube_i, partida);
-    let n = cpp8_i(this + 0x24);
+    let n = read_i32(this + 0x24);
     let mesmo_sorteio = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO) == depois_do_plano;
     let v = read_usize(this + 0x1c);
     let ok = if entra && v != 0 {
@@ -2401,7 +2367,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_surto_de_doenca(this
 pub(crate) unsafe extern "thiscall" fn comparar_espalhar_surtos_de_doenca(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1028);
     let cinco = cpp8_cinco_dias_atras();
-    let n0 = cpp8_i(this + 0x24);
+    let n0 = read_i32(this + 0x24);
     let hoje4 = read_usize(G_CURRENT_DATE) as u32;
     let mut saem = 0;
     for k in 0..n0.max(0) as usize {
@@ -2415,7 +2381,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_espalhar_surtos_de_doenca(this: 
         }
     }
     o(this);
-    let n = cpp8_i(this + 0x24);
+    let n = read_i32(this + 0x24);
     let velho = (0..n.max(0) as usize).find(|&k| cpp8_depois(&cinco, read_usize(this + 0x1c) + k * CPP8_SURTO));
     PLACAR.registrar(velho.is_none() && n >= n0 - saem, || {
         format!("espalhar_surtos_de_doenca: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, velho)
@@ -2433,25 +2399,14 @@ pub(crate) unsafe extern "stdcall" fn comparar_jogador_fora_da_temporada(pessoa:
 // ---------- 252a leva: a criação do jogo: a forma inicial dos elencos, os registros de lesão com as lesões iniciais e as listas de clubes por nação dos jovens (injury.cpp, player_regen.cpp) ----------
 
 
-pub(crate) unsafe fn cpp9_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
-pub(crate) unsafe fn cpp9_sorteio(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
-pub(crate) unsafe fn cpp9_selecao(clube: usize) -> bool {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    e_selecao(clube) != 0
-}
 
 /// Os clubes sem as seleções do fim do vetor: [0xae235c] − 2 × [0xae2350].
 pub(crate) unsafe fn cpp9_clubes_sem_selecoes() -> i32 {
-    cpp9_i(0xae235c).wrapping_sub(cpp9_i(0xae2350).wrapping_mul(2))
+    read_i32(0xae235c).wrapping_sub(read_i32(0xae2350).wrapping_mul(2))
 }
 
 /// Os dias de pré-temporada que contam na forma inicial: dentro da temporada da nação do clube (0x669bd0), 0; fora,
@@ -2496,7 +2451,7 @@ pub(crate) unsafe extern "thiscall" fn forma_inicial_dos_elencos(this: usize) {
         for s in 0..50usize {
             let vaga = clube + 0xd7 + 4 * s;
             let p = read_usize(vaga);
-            if p == 0 || cpp9_i(p) >= cpp9_i(0xae2364) {
+            if p == 0 || read_i32(p) >= read_i32(0xae2364) {
                 continue;
             }
             let jogador = read_usize(p + 0x61);
@@ -2504,7 +2459,7 @@ pub(crate) unsafe extern "thiscall" fn forma_inicial_dos_elencos(this: usize) {
                 crate::comparacao::ramo("cpp_9 forma inicial");
                 let v = dias - (read_u8(jogador + 0x34) as i8 as i32) / 2 - (read_u8(p + 0x5b) as i8 as i32) / 4;
                 let v = v.clamp(1, 0x28);
-                let r = read_usize(this).wrapping_add((cpp9_i(p) as usize).wrapping_mul(31));
+                let r = read_usize(this).wrapping_add((read_i32(p) as usize).wrapping_mul(31));
                 core::ptr::write_unaligned((r + 8) as *mut u16, (10000 - v * 75) as u16); // a forma inicial
             } else {
                 if read_usize(p + 0x39) == clube {
@@ -2536,7 +2491,7 @@ pub(crate) unsafe extern "thiscall" fn forma_inicial_dos_elencos(this: usize) {
 /// 0x9e7ad8) e 1 em 10 fica recorrente; 1 em 100 começa lesionado: categoria sorteada de 12, tipo pela 0x62d140
 /// (gravidade −1) e a lesão nova 0x62d250. No fim os dois totais em 0xde1f64 ("%d players with ...").
 pub(crate) unsafe extern "thiscall" fn registros_iniciais_de_lesao(this: usize) {
-    let n = cpp9_i(0xae2364);
+    let n = read_i32(0xae2364);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let v = alocar((n as u32).wrapping_mul(31));
     core::ptr::write_unaligned(this as *mut usize, v);
@@ -2551,7 +2506,7 @@ pub(crate) unsafe extern "thiscall" fn registros_iniciais_de_lesao(this: usize) 
     let mut r = v;
     let mut pessoa = read_usize(G_STAFF_TABLE);
     let mut i = 0i32;
-    while i < cpp9_i(0xae2364) {
+    while i < read_i32(0xae2364) {
         let mut rascunho = [0u8; 8];
         copiar(r, rascunho.as_mut_ptr(), 0xae2c90);
         core::ptr::write_unaligned((r + 0xc) as *mut u16, 0);
@@ -2564,16 +2519,16 @@ pub(crate) unsafe extern "thiscall" fn registros_iniciais_de_lesao(this: usize) 
         *((r + 0x1d) as *mut u8) = 0xff;
         *((r + 0x1e) as *mut u8) = 0x32;
         if read_usize(pessoa + 0x61) != 0 {
-            let t = cpp9_sorteio(0x52) as u8;
-            if read_usize((0x9e7ae0usize).wrapping_add((t as i8 as isize * 13) as usize)) != 0 && cpp9_sorteio(10) == 0 {
+            let t = cpe1_sorteio(0x52) as u8;
+            if read_usize((0x9e7ae0usize).wrapping_add((t as i8 as isize * 13) as usize)) != 0 && cpe1_sorteio(10) == 0 {
                 recorrentes += 1;
                 *((r + 0x12) as *mut u8) = t;
             }
-            if cpp9_sorteio(100) == 0 { // 1 em 100 começa lesionado
+            if cpe1_sorteio(100) == 0 { // 1 em 100 começa lesionado
                 crate::comparacao::ramo("cpp_9 lesao inicial");
                 // ponytail: a original empurra dwords da pilha com só o byte baixo gravado (o resto é lixo); a 0x62d140
                 // e a 0x62d250 leem só o byte: aqui vão limpos
-                let categoria = cpp9_sorteio(0xc) as u8;
+                let categoria = cpe1_sorteio(0xc) as u8;
                 let tipo = escolher(this, categoria as u32, 0xffff_ffff, pessoa) as u8;
                 lesionar(this, tipo as u32, 1, pessoa, 0, 1, -1, 0, 0);
                 iniciais += 1;
@@ -2592,7 +2547,7 @@ pub(crate) unsafe extern "thiscall" fn registros_iniciais_de_lesao(this: usize) 
 /// nação sem +0x71 ou os dois clubes de 0x9d00a4/0x9d00a8. Nação com +0x11c: só com +0x80 até 2 e divisão (+0x57);
 /// sem: com divisão.
 pub(crate) unsafe fn cpp9_nacao_da_lista(clube: usize) -> usize {
-    if cpp9_selecao(clube) {
+    if cpp8_selecao(clube) {
         return 0;
     }
     let nacao = read_usize(clube + 0x53);
@@ -2620,11 +2575,11 @@ pub(crate) unsafe fn cpp9_nacao_da_lista(clube: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn comparar_forma_inicial_dos_elencos(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1030);
     let base = read_usize(G_CLUB_TABLE);
-    let mut regioes = vec![(read_usize(this), (cpp9_i(0xae2364).max(0) as usize) * 31), (base, (cpp9_i(0xae235c).max(0) as usize) * 0x245)];
+    let mut regioes = vec![(read_usize(this), (read_i32(0xae2364).max(0) as usize) * 31), (base, (read_i32(0xae235c).max(0) as usize) * 0x245)];
     for i in 0..cpp9_clubes_sem_selecoes().max(0) as usize {
         for s in 0..50usize {
             let p = read_usize(base + i * 0x245 + 0xd7 + 4 * s);
-            if p != 0 && cpp9_i(p) < cpp9_i(0xae2364) && read_usize(p + 0x61) == 0 {
+            if p != 0 && read_i32(p) < read_i32(0xae2364) && read_usize(p + 0x61) == 0 {
                 regioes.push((p + 0x39, 5));
             }
         }
@@ -2641,7 +2596,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_registros_iniciais_de_lesao(this
     if v == 0 {
         return;
     }
-    let errado = (0..cpp9_i(0xae2364).max(0) as usize).find(|&k| read_u8(v + 31 * k + 0x1e) != 0x32);
+    let errado = (0..read_i32(0xae2364).max(0) as usize).find(|&k| read_u8(v + 31 * k + 0x1e) != 0x32);
     PLACAR.registrar(errado.is_none(), || format!("registros_iniciais_de_lesao: registro {:?} sem o +0x1e = 50", errado));
 }
 
@@ -2656,10 +2611,6 @@ pub(crate) unsafe fn cpm5_registro(this: usize, id: usize) -> usize {
     read_usize(this).wrapping_add(id.wrapping_mul(31))
 }
 
-pub(crate) unsafe fn cpm5_sorteio(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 /// O que a 0x62e500 decide depois de sortear.
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -2680,7 +2631,7 @@ pub(crate) unsafe fn cpm5_plano(this: usize, registro: usize, lesao: *const u8) 
     if read_u8(registro + 0x12) != 0xff || read_usize((0x9e7ae0isize + *lesao as i8 as isize * 13) as usize) == 0 {
         return Cpm5Recorrente::Nada;
     }
-    let s = cpm5_sorteio(0x14);
+    let s = cpe1_sorteio(0x14);
     if s != 0 { // 1 em 20
         return Cpm5Recorrente::Nada;
     }
@@ -2696,7 +2647,7 @@ pub(crate) unsafe fn cpm5_plano(this: usize, registro: usize, lesao: *const u8) 
     while i < *(G_STAFF_COUNT as *const i32) {
         if read_u8(r + 0x12) != 0xff {
             let p = read_usize(G_STAFF_TABLE).wrapping_add(i as usize * 0x6e);
-            let v = cpm5_sorteio(0x65) as u8;
+            let v = cpe1_sorteio(0x65) as u8;
             let jogador = read_usize(p + 0x61);
             let nota = if jogador == 0 { 0x64 } else { v.wrapping_add(read_u8(r + 0x13).wrapping_mul(0xfb)).wrapping_sub(read_u8(jogador + 0x2d)) };
             if nota as i8 > melhor {
@@ -2716,7 +2667,7 @@ pub(crate) unsafe fn cpm5_plano(this: usize, registro: usize, lesao: *const u8) 
     let clube = read_usize(pessoa + 0x39);
     if read_usize(pessoa + 0x61) != 0 && clube != 0 && core::ptr::read_unaligned((clube + 0x80) as *const i16) > 0x109a {
         let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-        if humano(clube, 0, 1, 0, 0) == 0 && cpm5_sorteio(3) == 0 && pessoa != 0 {
+        if humano(clube, 0, 1, 0, 0) == 0 && cpe1_sorteio(3) == 0 && pessoa != 0 {
             return Cpm5Recorrente::Tratar(pessoa);
         }
     }
@@ -3044,8 +2995,8 @@ pub(crate) unsafe extern "thiscall" fn fisico_do_dia(this: usize, pessoa: usize)
     if pessoa == 0 {
         return;
     }
-    let id = cpw8_i(pessoa);
-    if id >= cpw8_i(0xae2364) {
+    let id = read_i32(pessoa);
+    if id >= read_i32(0xae2364) {
         return;
     }
     let ficha = read_usize(pessoa + 0x61);
@@ -3053,17 +3004,17 @@ pub(crate) unsafe extern "thiscall" fn fisico_do_dia(this: usize, pessoa: usize)
         return;
     }
     let rec = read_usize(this).wrapping_add((id as u32).wrapping_mul(31) as usize);
-    if cpw8_uw(rec + 2) == cpw8_uw(0xae2c92) && read_i16(rec) == read_i16(G_CURRENT_DATE) {
+    if read_u16(rec + 2) == read_u16(0xae2c92) && read_i16(rec) == read_i16(G_CURRENT_DATE) {
         return; // já atualizado hoje
     }
     let t = cpw8_dias_desde(rec);
-    let atual = cpw8_i(rec + 0xe);
-    if atual > cpw8_i(this + 8) || atual < -1 {
+    let atual = read_i32(rec + 0xe);
+    if atual > read_i32(this + 8) || atual < -1 {
         core::ptr::write_unaligned((rec + 0xe) as *mut i32, -1);
     }
     // os dias livres (l38), em recuperação (l3c), parados (l34) e de férias (l30)
     let (mut l3c, mut l38, mut l34, mut l30) = (0i32, 0i32, 0i32, 0i32);
-    let i = cpw8_i(rec + 0xe);
+    let i = read_i32(rec + 0xe);
     if i != -1 {
         let inj = read_usize(this + 4).wrapping_add((i as u32).wrapping_mul(0x30) as usize);
         let e = cpw8_dias_desde(inj + 0x20);
@@ -3099,7 +3050,7 @@ pub(crate) unsafe extern "thiscall" fn fisico_do_dia(this: usize, pessoa: usize)
             let campo: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_NATIONALTEAMS_GET_SQUAD_SLOT_RECORD);
             // ponytail: a original empurra o argumento com o al por cima (o resto é o ponteiro da pessoa); só o byte conta
             let d = campo(read_usize(G_NATIONAL_TEAMS), read_usize(selecao + 0x53), (pessoa as u32 & 0xffff_ff00) | k as u32);
-            let (ano, hoje) = (cpw8_uw(d + 2), cpw8_uw(0xae2c92));
+            let (ano, hoje) = (read_u16(d + 2), read_u16(0xae2c92));
             ocupado = if ano > hoje {
                 true
             } else if ano < hoje {
@@ -3110,14 +3061,14 @@ pub(crate) unsafe extern "thiscall" fn fisico_do_dia(this: usize, pessoa: usize)
         }
         let clube = read_usize(pessoa + 0x39);
         if clube != 0 && !ocupado {
-            if clube != read_usize(G_FITNESS_UPDATE_CACHED_CLUB) || cpw8_uw(0xb63d0a) != cpw8_uw(0xae2c92) || read_i16(G_FITNESS_UPDATE_CACHE_DATE) != read_i16(G_CURRENT_DATE) {
+            if clube != read_usize(G_FITNESS_UPDATE_CACHED_CLUB) || read_u16(0xb63d0a) != read_u16(0xae2c92) || read_i16(G_FITNESS_UPDATE_CACHE_DATE) != read_i16(G_CURRENT_DATE) {
                 let na_temporada: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_KEY_NATION_CLUB_IN_SEASON);
                 let r = na_temporada(clube, 0xb63d18, 0xb63d20);
                 *(G_FITNESS_UPDATE_CACHED_SEASON_FLAG as *mut u32) = (r == 0) as u32;
                 *(G_FITNESS_UPDATE_CACHED_CLUB as *mut usize) = read_usize(pessoa + 0x39);
                 cpw8_copiar_data(0xb63d08, 0xae2c90);
             }
-            if cpw8_i(0xb63d30) != 0 {
+            if read_i32(0xb63d30) != 0 {
                 l38 = 0;
                 let dias_ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
                 let u6 = dias_ate(0xae2c90, read_usize(G_FITNESS_UPDATE_SEASON_END_DATE) as u32, read_usize(G_FITNESS_UPDATE_SEASON_END_DATE_LEAP) as u32) as u16;
@@ -3127,11 +3078,11 @@ pub(crate) unsafe extern "thiscall" fn fisico_do_dia(this: usize, pessoa: usize)
                     l30 = lim;
                     l3c = t - lim;
                     for _ in 0..lim {
-                        let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((cpw8_i(pessoa) as u32).wrapping_mul(0x4f) as usize) + 0xa;
+                        let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(pessoa) as u32).wrapping_mul(0x4f) as usize) + 0xa;
                         if *(g as *const u8) >= 0x32 {
                             break;
                         }
-                        if cpw8_sortear(read_i8(pessoa + 0x5b) as i32 / 3 + 2) == 0 {
+                        if cpe1_sorteio(read_i8(pessoa + 0x5b) as i32 / 3 + 2) == 0 {
                             *(g as *mut u8) = (*(g as *const u8)).wrapping_add(1);
                         }
                     }
@@ -3156,7 +3107,7 @@ pub(crate) unsafe extern "thiscall" fn fisico_do_dia(this: usize, pessoa: usize)
                     let (f, mc) = (read_i16(rec + 8) as i32, read_i16(rec + 0xa) as i32);
                     if mc.wrapping_mul(f) / 10000 < 8000 { // cpw8: a forma abaixo de 80% na pré-temporada
                         crate::comparacao::ramo("cpw_8 sorteio da forma");
-                        let r = cpw8_sortear(2);
+                        let r = cpe1_sorteio(2);
                         l38 = (r + l3c) / 2;
                         l3c -= l38;
                     }
@@ -3264,10 +3215,10 @@ pub(crate) unsafe extern "thiscall" fn fisico_do_dia(this: usize, pessoa: usize)
 /// registro (pessoa nula, id fora da tabela, sem ficha): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_fisico_do_dia(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1290);
-    if *(G_FITNESS_UPDATE_STATIC_INIT_FLAGS as *const u8) & 7 != 7 || pessoa == 0 || cpw8_i(pessoa) < 0 || cpw8_i(pessoa) >= cpw8_i(0xae2364) || read_usize(pessoa + 0x61) == 0 {
+    if *(G_FITNESS_UPDATE_STATIC_INIT_FLAGS as *const u8) & 7 != 7 || pessoa == 0 || read_i32(pessoa) < 0 || read_i32(pessoa) >= read_i32(0xae2364) || read_usize(pessoa + 0x61) == 0 {
         return o(this, pessoa); // ponytail: as estáticas e o atexit da primeira vez não podem rodar duas vezes
     }
-    let id = cpw8_i(pessoa) as usize;
+    let id = read_i32(pessoa) as usize;
     let rec = read_usize(this).wrapping_add(id.wrapping_mul(31));
     let geral = read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f));
     let e = crate::aleatorio::REGIOES_DO_ESTADO;

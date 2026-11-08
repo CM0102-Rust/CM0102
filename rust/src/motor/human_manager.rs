@@ -184,9 +184,6 @@ pub(crate) unsafe extern "C" fn separar_mascara(m: u32, setor: *mut u16, lado: *
 // ---------- 260a leva: a tática ativa do clube: a tática do time do clube, a vaga de tática do técnico humano e a tática ativa dele (tactics.cpp, human_manager.cpp) ----------
 
 
-pub(crate) unsafe fn cpx8_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
@@ -201,8 +198,8 @@ pub(crate) unsafe fn cpx8_tecnico(tecnico: usize) -> usize {
 /// O índice do registro do técnico humano no gerenciador `this` (id − [0xae2364] + 16), se estiver entre 0 e a conta
 /// ([this+4]) − 1; fora disso a original mostra a caixa "Error".
 pub(crate) unsafe fn cpx8_indice(this: usize, tecnico: usize) -> Option<usize> {
-    let k = cpx8_i(tecnico).wrapping_sub(cpx8_i(0xae2364)).wrapping_add(0x10);
-    if k < 0 || k > cpx8_i(this + 4).wrapping_sub(1) {
+    let k = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+    if k < 0 || k > read_i32(this + 4).wrapping_sub(1) {
         return None;
     }
     Some(k as usize)

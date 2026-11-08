@@ -15,7 +15,8 @@ import sys
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(R, 'rust', 'src')
-DEF = re.compile(r'((?:^///[^\n]*\n)*)^unsafe fn (\w+_(?:d|w|b|f|pd|pw|pb|pf|por_w|por_d|por_b))\(([^)]*)\)(?: -> (\w+))? \{\n'
+# qualquer função de topo de um comando só (o corpo é conferido pelo canonico; mem.rs fica de fora)
+DEF = re.compile(r'((?:^///[^\n]*\n)*)^(?:pub\(crate\) )?unsafe fn ((?!read_|write_)\w+)\(([^)]*)\)(?: -> (\w+))? \{\n'
                  r'\s*([^\n]*?);?\n\}\n', re.M)
 TIPOS = 'u8 i8 u16 i16 u32 i32 usize isize f32 f64'.split()
 

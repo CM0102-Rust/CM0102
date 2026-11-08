@@ -3,19 +3,12 @@ use super::*;
 // ---------- 257a leva: o adiamento pelo clima: a decisão de adiar ou abandonar o jogo, as finanças do clube e a ordem das reservas do estádio (weather.cpp, finance.cpp, stadium.cpp) ----------
 
 
-pub(crate) unsafe fn cpu5_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
-pub(crate) unsafe fn cpu5_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 /// O fim do adiamento: sorteio(n) diferente de zero não adia (0), zero abandona (6).
 pub(crate) unsafe fn cpu5_abandonar_se_zero(n: i32) -> u8 {
-    if cpu5_sortear(n) != 0 {
+    if cpe1_sorteio(n) != 0 {
         0
     } else {
         6
@@ -24,7 +17,7 @@ pub(crate) unsafe fn cpu5_abandonar_se_zero(n: i32) -> u8 {
 
 /// O fim do adiamento: sorteio(n) zero não adia (0), diferente de zero adia (5).
 pub(crate) unsafe fn cpu5_adiar_se_nao_zero(n: i32) -> u8 {
-    if cpu5_sortear(n) == 0 {
+    if cpe1_sorteio(n) == 0 {
         0
     } else {
         5
@@ -88,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize
                 5000
             };
             crate::comparacao::ramo("cpu_5 rolagem das financas");
-            if cpu5_sortear(n) == 0 { // cpu5: a rolagem das finanças
+            if cpe1_sorteio(n) == 0 { // cpu5: a rolagem das finanças
                 return 0x12;
             }
         }
@@ -106,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize
             if !(1..0xe).contains(&temp) || read_u8(est + 0x4d) != 0 {
                 return 0;
             }
-            let cap = cpu5_i(est + 0x3c);
+            let cap = read_i32(est + 0x3c);
             if cap > 0x4e20 {
                 return 0;
             }
@@ -121,7 +114,7 @@ pub(crate) unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize
                 0xa
             };
             crate::comparacao::ramo("cpu_5 chuva forte");
-            if cpu5_sortear(n) != 0 { // cpu5: o sorteio da chuva forte
+            if cpe1_sorteio(n) != 0 { // cpu5: o sorteio da chuva forte
                 0
             } else {
                 9
@@ -131,46 +124,46 @@ pub(crate) unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize
             if read_u8(est + 0x4d) != 0 {
                 return 0;
             }
-            let cap = cpu5_i(est + 0x3c);
+            let cap = read_i32(est + 0x3c);
             if cap > 0x3a98 {
                 return 0;
             }
             let mandante = read_u8(casa + 0x64) == 1;
             if cap > 0x1d4c && mandante {
-                if cpu5_sortear(4) != 0 {
+                if cpe1_sorteio(4) != 0 {
                     return 5;
                 }
                 return cpu5_abandonar_se_zero(4);
             }
             if cap <= 0x1d4c && !mandante {
-                if cpu5_sortear(0x19) != 0 {
+                if cpe1_sorteio(0x19) != 0 {
                     return 5;
                 }
-                return if cpu5_sortear(3) == 0 { 0 } else { 6 };
+                return if cpe1_sorteio(3) == 0 { 0 } else { 6 };
             }
-            if cpu5_sortear(0x1e) == 0 {
+            if cpe1_sorteio(0x1e) == 0 {
                 return 6;
             }
             cpu5_adiar_se_nao_zero(0xf)
         }
         9 => {
             let (d1, d2, d3) = if vento == 4 { (10, 0x14, 10) } else { (0x14, 10, 4) };
-            if read_u8(est + 0x4d) != 0 && cpu5_sortear(d1) != 0 {
+            if read_u8(est + 0x4d) != 0 && cpe1_sorteio(d1) != 0 {
                 return 0;
             }
-            if cpu5_i(est + 0x3c) > 0x2710 {
+            if read_i32(est + 0x3c) > 0x2710 {
                 if vento == 4 {
-                    if cpu5_sortear(d2) != 0 {
+                    if cpe1_sorteio(d2) != 0 {
                         return 5;
                     }
                     return cpu5_abandonar_se_zero(d3);
                 }
-                if cpu5_sortear(d2) == 0 {
+                if cpe1_sorteio(d2) == 0 {
                     return cpu5_abandonar_se_zero(d3);
                 }
                 return 5;
             }
-            if cpu5_sortear(0x32) == 0 {
+            if cpe1_sorteio(0x32) == 0 {
                 return 6;
             }
             cpu5_adiar_se_nao_zero(if vento == 4 { 8 } else { 4 })
@@ -222,18 +215,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_financas_do_clube(this: usize, c
 // ---------- 257a leva: o clima da partida: o vento, a chuva e a temperatura do jogo, a temperatura pela faixa e o estado do gramado (weather.cpp) ----------
 
 
-pub(crate) unsafe fn cpu6_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
-pub(crate) unsafe fn cpu6_s(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
 /// A região do clima de uma cidade (+0x34) se for válida (0 ≤ r < [this + 8]): [this] + r × 0x6e.
 pub(crate) unsafe fn cpu6_regiao(this: usize, cidade: usize) -> Option<usize> {
-    let r = cpu6_i(cidade + 0x34);
-    if r >= 0 && r < cpu6_i(this + 8) {
+    let r = read_i32(cidade + 0x34);
+    if r >= 0 && r < read_i32(this + 8) {
         Some(read_usize(this).wrapping_add(r as usize * 0x6e))
     } else {
         None
@@ -325,8 +312,8 @@ pub(crate) unsafe extern "thiscall" fn clima_da_partida(this: usize, s: *mut u8,
         2
     } else {
         let per = reg + 19 * p;
-        let lim = |o: usize| cpu6_s(per + o);
-        let leitura = |k: usize| cpu6_s(cidades.wrapping_add(read_usize(cid).wrapping_mul(4)) + k);
+        let lim = |o: usize| read_i8(per + o);
+        let leitura = |k: usize| read_i8(cidades.wrapping_add(read_usize(cid).wrapping_mul(4)) + k);
         let a = leitura(2);
         *s = if a < lim(0x20) {
             0
@@ -469,14 +456,14 @@ pub(crate) unsafe extern "thiscall" fn gramado_do_jogo(_this: usize, clima: *con
         return 0;
     }
     let soma = (core::ptr::read_unaligned((jogo + 0x2a) as *const u16) as i32)
-        .wrapping_add(cpu6_i(jogo + 0x10))
-        .wrapping_add(cpu6_i(jogo + 0xc))
-        .wrapping_add(cpu6_i(jogo));
+        .wrapping_add(read_i32(jogo + 0x10))
+        .wrapping_add(read_i32(jogo + 0xc))
+        .wrapping_add(read_i32(jogo));
     let h = soma % 20;
     let chuva = *clima.add(1);
     let t = *clima.add(2) as i8;
     let marca = *((est + 0x4d) as *const u8) != 0;
-    let lugares = cpu6_i(est + 0x3c);
+    let lugares = read_i32(est + 0x3c);
     let morno = (1..0x1d).contains(&t);
     if chuva == 5 && morno {
         if marca {
@@ -538,10 +525,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_gramado_do_jogo(this: usize, cli
 // ---------- 256a leva: o tempo das cidades: o tempo do dia, a região do weather.cfg e o período da região (weather.cpp) ----------
 
 
-pub(crate) unsafe fn cpt5_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
 /// A linha seguinte do arquivo (0x90cba0: FILE*, buffer), 0 no fim.
 pub(crate) unsafe fn cpt5_ler_linha(f: usize, buf: *mut u8) -> i32 {
@@ -566,7 +549,7 @@ pub(crate) unsafe extern "thiscall" fn tempo_das_cidades(this: usize) {
     loop {
         for k in 0..3usize { // cpt5: as três medidas
             let p = read_usize(this + 4) + i * 4 + k;
-            let r = cpt5_sortear(100);
+            let r = cpe1_sorteio(100);
             *(p as *mut u8) = ftol((r as i16 as i32 + *(p as *const i8) as i32) as f64 * f64_em(0x968968)) as u8;
             let p = read_usize(this + 4) + i * 4 + k;
             let v = *(p as *const i8);
@@ -576,9 +559,9 @@ pub(crate) unsafe extern "thiscall" fn tempo_das_cidades(this: usize) {
                 *(p as *mut u8) = 0x64;
             }
         }
-        if cpt5_sortear(10) == 0 { // cpt5: um em dez muda o vento
+        if cpe1_sorteio(10) == 0 { // cpt5: um em dez muda o vento
             crate::comparacao::ramo("cpt_5 vento novo");
-            let r = cpt5_sortear(3); // cpt5: o vento novo
+            let r = cpe1_sorteio(3); // cpt5: o vento novo
             *((read_usize(this + 4) + i * 4 + 3) as *mut u8) = r as u8;
         }
         i += 1;
@@ -705,7 +688,7 @@ pub(crate) unsafe extern "thiscall" fn ler_o_clima(this: usize) {
         erro_em(0xad4dec, 0x86);
     }
     let mut i = 0i32;
-    while i < cpt7_i(this + 8) {
+    while i < read_i32(this + 8) {
         if regiao(this, f, read_usize(this) + i as usize * 0x6e) == 0 {
             if i == 0 {
                 erro_em(0xad4dec, 0x92);
@@ -715,14 +698,14 @@ pub(crate) unsafe extern "thiscall" fn ler_o_clima(this: usize) {
         i += 1;
     }
     let mut k = 0usize;
-    while (k as i32) < cpt7_i(0xae2354) {
+    while (k as i32) < read_i32(0xae2354) {
         crate::comparacao::ramo("cpt_7 clima inicial");
         for j in 0..3usize {
-            let a = cpt7_sortear(100);
-            let b = cpt7_sortear(100); // cpt7: o segundo sorteio da medida
+            let a = cpe1_sorteio(100);
+            let b = cpe1_sorteio(100); // cpt7: o segundo sorteio da medida
             *((read_usize(this + 4) + k * 4 + j) as *mut u8) = ftol(a.wrapping_add(b) as f64 * f64_em(0x968968)) as u8;
         }
-        let v = cpt7_sortear(3); // cpt7: o vento inicial
+        let v = cpe1_sorteio(3); // cpt7: o vento inicial
         *((read_usize(this + 4) + k * 4 + 3) as *mut u8) = v as u8;
         k += 1;
     }

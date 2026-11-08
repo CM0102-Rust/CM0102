@@ -10,7 +10,7 @@ MUTACOES = [
     ('cqi3_sem_fair_play', 'vagas[2] = vagas[2].wrapping_add(1); // cqi3: a vaga do fair play', '// mutacao: sem o fair play', 'cqi_3 fair play'),
     ('cqi3_sem_intertoto', 'intertoto(this, t, n); // cqi3: as vagas da Intertoto', 'let _ = intertoto; // mutacao: sem a Intertoto', 'cqi_3 virada da classificacao'),
     ('cqj1_sem_vaga_da_cota', 'cqj1_entra(c, 2); // cqj1: a vaga da cota', '// mutacao: sem a vaga da cota', 'cqj_1 cota da nacao'),
-    ('cqj1_sao_paulo_no_lugar_do_palmeiras', 'if cqj1_entra(cqj1_clube(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS)), 2) {', 'if cqj1_entra(cqj1_clube(read_u32(G_KEY_CLUB_SAO_PAULO_FUTEBOL_CLUBE)), 2) { // mutacao: o São Paulo', 'cqj_1 brasil fixo'),
+    ('cqj1_sao_paulo_no_lugar_do_palmeiras', 'if cqj1_entra(cpp2_clube(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS)), 2) {', 'if cqj1_entra(cpp2_clube(read_u32(G_KEY_CLUB_SAO_PAULO_FUTEBOL_CLUBE)), 2) { // mutacao: o São Paulo', 'cqj_1 brasil fixo'),
     ('cqj1_sem_pular_ja_com_vaga', 'p += 12; // cqj1: pula o clube que já tem vaga', 'if falta == 0 { achou = true; break; } p += 12; falta = falta.wrapping_sub(1); // mutacao: conta o que já tem vaga', 'cqj_1 ja com vaga'),
     ('cqj2_sem_mexico', 'let mexico = read_u32(nacao) == read_u32(KEY_NATION_MEXICO); // cqj2: o México entra', 'let mexico = read_u32(nacao) == read_u32(0x9cf3d0) && false; // mutacao: sem o México', 'cqj_2 clube mexicano'),
     ('cqj2_sem_tirar_a_vaga', '*((c + 0x1db) as *mut u32) = u32::MAX; // cqj2: sem vaga continental', '// mutacao: a vaga de antes fica', 'cqj_2 tira a vaga'),

@@ -456,10 +456,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs1_terceira_divisao_da_mls(thi
 
 
 
-/// O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
-pub(crate) unsafe fn cqs2_linha(t: usize, i: usize) -> usize {
-    read_usize(read_usize(t + 0xb1) + i * 0x3b)
-}
 
 /// { 0x908e00 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::start_new_season()`, a virada da MLS: +0x4c = 0 e a tabela
 /// liberada (League::free_table 0x687970, thiscall(this, 0), ret 4); o calendário (+0xba) liberado (free 0x9452ca) e
@@ -574,9 +570,9 @@ pub(crate) unsafe extern "thiscall" fn cqs2_posicoes_previstas_da_mls(this: usiz
     while i < read_i16(this + 0x3e) {
         let n = read_i16(this + 0x3e) as i32;
         let k = i as usize;
-        core::ptr::write_unaligned((v + 4 * k) as *mut usize, cqs2_linha(this, k));
-        core::ptr::write_unaligned((v + 4 * (k + n as usize)) as *mut usize, cqs2_linha(read_usize(read_usize(this + 0xc)), k));
-        core::ptr::write_unaligned((v + 4 * (k + 2 * n as usize)) as *mut usize, cqs2_linha(read_usize(read_usize(this + 0xc) + 4), k));
+        core::ptr::write_unaligned((v + 4 * k) as *mut usize, cqr3_linha(this, k));
+        core::ptr::write_unaligned((v + 4 * (k + n as usize)) as *mut usize, cqr3_linha(read_usize(read_usize(this + 0xc)), k));
+        core::ptr::write_unaligned((v + 4 * (k + 2 * n as usize)) as *mut usize, cqr3_linha(read_usize(read_usize(this + 0xc) + 4), k));
         i += 1;
     }
     let n = read_i16(this + 0x3e) as i32;
@@ -612,19 +608,19 @@ pub(crate) unsafe extern "thiscall" fn cqs2_clubes_da_mls(this: usize, lista: *m
     }
     let mut i: i16 = 0;
     while i < read_i16(this + 0x3e) {
-        core::ptr::write_unaligned((*lista + 4 * i as usize) as *mut usize, cqs2_linha(this, i as usize));
+        core::ptr::write_unaligned((*lista + 4 * i as usize) as *mut usize, cqr3_linha(this, i as usize));
         i += 1;
     }
     let mut i: i16 = 0;
     while i < read_i16(this + 0x3e) {
         let k = read_i16(this + 0x3e) as i32 + i as i32;
-        core::ptr::write_unaligned((*lista + 4 * k as usize) as *mut usize, cqs2_linha(read_usize(read_usize(this + 0xc)), i as usize));
+        core::ptr::write_unaligned((*lista + 4 * k as usize) as *mut usize, cqr3_linha(read_usize(read_usize(this + 0xc)), i as usize));
         i += 1;
     }
     let mut i: i16 = 0;
     while i < read_i16(this + 0x3e) {
         let k = 2 * read_i16(this + 0x3e) as i32 + i as i32;
-        core::ptr::write_unaligned((*lista + 4 * k as usize) as *mut usize, cqs2_linha(read_usize(read_usize(this + 0xc) + 4), i as usize));
+        core::ptr::write_unaligned((*lista + 4 * k as usize) as *mut usize, cqr3_linha(read_usize(read_usize(this + 0xc) + 4), i as usize));
         i += 1;
     }
     crate::comparacao::ramo("cqs_2 clubes da mls");
@@ -655,9 +651,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs2_posicoes_previstas_da_mls(t
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let mut v = [0usize; 12];
     for k in 0..4 {
-        v[k] = cqs2_linha(this, k);
-        v[4 + k] = cqs2_linha(read_usize(read_usize(this + 0xc)), k);
-        v[8 + k] = cqs2_linha(read_usize(read_usize(this + 0xc) + 4), k);
+        v[k] = cqr3_linha(this, k);
+        v[4 + k] = cqr3_linha(read_usize(read_usize(this + 0xc)), k);
+        v[8 + k] = cqr3_linha(read_usize(read_usize(this + 0xc) + 4), k);
     }
     for b in 0..3 {
         ordenar(v[4 * b..].as_mut_ptr(), 4, 4, 0x4b07d0);
@@ -677,9 +673,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs2_clubes_da_mls(this: usize, 
     orig::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(2023)(this, lista, n);
     let m = read_i16(this + 0x3e) as usize;
     let igual = *n == 0xc && *lista != 0 && (0..m).all(|i| {
-        read_usize(*lista + 4 * i) == cqs2_linha(this, i)
-            && read_usize(*lista + 4 * (m + i)) == cqs2_linha(read_usize(read_usize(this + 0xc)), i)
-            && read_usize(*lista + 4 * (2 * m + i)) == cqs2_linha(read_usize(read_usize(this + 0xc) + 4), i)
+        read_usize(*lista + 4 * i) == cqr3_linha(this, i)
+            && read_usize(*lista + 4 * (m + i)) == cqr3_linha(read_usize(read_usize(this + 0xc)), i)
+            && read_usize(*lista + 4 * (2 * m + i)) == cqr3_linha(read_usize(read_usize(this + 0xc) + 4), i)
     });
     PLACAR.registrar(igual, || format!("cqs2_clubes_da_mls({:#x}) n={}", this, *n));
 }
@@ -688,11 +684,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs2_clubes_da_mls(this: usize, 
 
 
 
-/// 0x86bdd0 Staff_Records::add_qualified_for_round_record (thiscall em [0xdd7f00], ret 0x14; já em Rust).
-pub(crate) unsafe fn cqk9_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, fase, rodada, peso);
-}
 
 /// 0x86c1d0 Staff_Records::add_failed_to_qualify_record (thiscall em [0xdd7f00], ret 0x10; já em Rust).
 pub(crate) unsafe fn cqk9_nao_classificou(clube: usize, comp: usize, fase: u32, peso: u32) {
@@ -715,7 +706,7 @@ pub(crate) unsafe fn cqk9_destino(this: usize, clube: usize, situacao: u32, fase
         if st == 6 {
             if fazer {
                 crate::comparacao::ramo("cqk_9 mls classificado");
-                cqk9_classificou(clube, comp, 0xa0, 0x78, 0x28); // cqk9: o classificado da MLS
+                cqj9_classificou(clube, comp, 0xa0, 0x78, 0x28); // cqk9: o classificado da MLS
             }
             return 0;
         }
@@ -732,14 +723,14 @@ pub(crate) unsafe fn cqk9_destino(this: usize, clube: usize, situacao: u32, fase
         // a final
         if st == 1 {
             if fazer {
-                cqk9_classificou(clube, comp, 0x417, 0x96, 0x50);
+                cqj9_classificou(clube, comp, 0x417, 0x96, 0x50);
             }
         } else if st == 0 {
             if fazer {
                 // ponytail: a original empurra eax/ecx/edx inteiros (lixo acima das palavras: o do chamador, a metade
                 // de cima do this); a 0x4bf850 e a 0x86bdd0 só leem as palavras: vão as palavras.
                 let peso = cqk9_escala(jogo);
-                cqk9_classificou(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso);
+                cqj9_classificou(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso);
             }
         } else if st == 0xff || st == 2 {
             if fazer {

@@ -329,17 +329,6 @@ pub(crate) unsafe fn cqo13_tabela(this: usize, fase: u32, rodadas: *mut i16, ext
     t
 }
 
-/// Os bytes que a original grava numa tabela de grupos de `n` rodadas de 0x41 bytes (o resto fica como veio da
-/// alocação): de cada rodada, +0..+4 (a data e o código), o jogo 0 (+5..+0xb) e +0x3d..+0x40 (o valor).
-pub(crate) unsafe fn cqo13_gravados_grupos(t: usize, n: i16) -> Vec<u8> {
-    let mut v = Vec::new();
-    for r in 0..n.max(0) as usize {
-        let e = t + r * 0x41;
-        v.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 0xc));
-        v.extend_from_slice(core::slice::from_raw_parts((e + 0x3d) as *const u8, 4));
-    }
-    v
-}
 
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas (grupos ou mata-mata, este com as
@@ -361,7 +350,7 @@ pub(crate) unsafe fn cqo13_comparar(nome: &str, fase: u32, rodadas: *mut i16, ex
     let mais = |t: usize| a_mais.iter().flat_map(|&(r, o, _)| core::slice::from_raw_parts((t + r * 0x68 + o) as *const u8, 2).to_vec()).collect::<Vec<u8>>();
     let tabela = if a != 0 && b != 0 {
         if f < limite {
-            cqo13_gravados_grupos(a, *rodadas) == cqo13_gravados_grupos(b, r2)
+            cqo10_gravados_grupos(a, *rodadas) == cqo10_gravados_grupos(b, r2)
         } else {
             cql10_gravados(a, *rodadas) == cql10_gravados(b, r2) && mais(a) == mais(b)
         }

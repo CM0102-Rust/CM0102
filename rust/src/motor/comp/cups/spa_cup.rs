@@ -4,11 +4,6 @@ use super::*;
 
 
 
-/// A virtual `o` de `this` (thiscall, sem argumentos).
-pub(crate) unsafe fn cqt5_virtual(this: usize, o: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + o));
-    f(this)
-}
 
 /// { 0x84d740 } (thiscall, ret 8, spa_cup.cpp; a virtual +0x14 da Copa do Rei, todo dia): `SpaCup::update_for_date(hoje,
 /// fase)`. Uma vez (+0x45 = 0), quando o ano da classificação da UEFA ([0xde1f58] +0x439, palavra sem sinal) é o da copa
@@ -44,15 +39,15 @@ pub(crate) unsafe extern "thiscall" fn cqt5_copa_do_rei_dia(this: usize, hoje: u
             aviso_em(0xa82810, 0x161);
             return 0;
         }
-        if cqt5_virtual(this, 0x8c) < 0 {
+        if cqr5_virtual(this, 0x8c) < 0 {
             aviso_em(0xa82810, 0x168);
             return 0;
         }
-        if cqt5_virtual(this, 0x94) < 0 {
+        if cqr5_virtual(this, 0x94) < 0 {
             aviso_em(0xa82810, 0x16f);
             return 0;
         }
-        cqt5_virtual(this, 0x5c);
+        cqr5_virtual(this, 0x5c);
     }
     let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
     base(this, hoje, fase)
@@ -75,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqt5_copa_do_rei_dia(this: usize
 pub(crate) unsafe fn cqt5_historico(this: usize, o: usize, ramo: &'static str) -> i32 {
     crate::comparacao::ramo(ramo);
     let fase = read_u32_as_usize(read_u32_as_usize(this + 0xc) + o);
-    cqt5_virtual(fase, 0x30)
+    cqr5_virtual(fase, 0x30)
 }
 
 /// { 0x584ad0 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::record_season_honours()`: o histórico da fase 12

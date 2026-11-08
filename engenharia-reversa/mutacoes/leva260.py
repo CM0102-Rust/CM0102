@@ -1,11 +1,11 @@
 # Mutações da 260a leva (itens cpw_7, cpx_1, cpx_2, cpx_3, cpx_4, cpx_8, cpx_9, cpx_10, cpx_11, cpx_12). Uso: python mutacoes.py mutacoes\leva260.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpw7_repetido_sem_sorteio', '            if cpw7_sortear(read_u8(pessoa + 0x5b) as i8 as i32) == 0 && cpw7_sortear(read_u8(pessoa + 0x5d) as i8 as i32) == 0 { // cpw7: os sorteios do caso repetido', '            if false { // mutacao: sem os sorteios', 'cpw_7 caso repetido'),
+    ('cpw7_repetido_sem_sorteio', '            if cpe1_sorteio(read_u8(pessoa + 0x5b) as i8 as i32) == 0 && cpe1_sorteio(read_u8(pessoa + 0x5d) as i8 as i32) == 0 { // cpw7: os sorteios do caso repetido', '            if false { // mutacao: sem os sorteios', 'cpw_7 caso repetido'),
     ('cpw7_duas_semanas', '                if cpw7_semana_passou(r + 4, 1) { // cpw7: uma semana depois', '                if cpw7_semana_passou(r + 4, 2) { // mutacao: duas semanas', 'cpw_7 falta vencida'),
     ('cpw7_nao_sai_da_lista', '    tirar(read_usize(this + 4), r); // cpw7: tira o caso da lista', '    let _ = tirar; // mutacao: nao sai da lista', 'cpw_7 falta tirada da lista'),
     ('cpx1_recusa_sem_desassossego', '    cpx1_com_a_oferta(0x8c1290, this, o); // cpx1: o desassossego da recusa', '    // mutacao: sem o desassossego na recusa', 'cpx_1 recusa desassossega'),
     ('cpx1_retirada_desassossega_sempre', '    if motivo as u16 == 2 { // cpx1: só o motivo 2 desassossega', '    if motivo as u16 == 2 || true { // mutacao: toda retirada desassossega', 'cpx_1 retirada sem desassossego'),
-    ('cpx1_sem_desmarcar_comprador', '    cpx1_desmarcar(this, cpx1_clube(read_usize(o + 8)), p); // cpx1: desmarcar os lances do comprador', '    let _ = p; // mutacao: os lances do comprador ficam marcados', 'cpx_1 recusa desmarca'),
+    ('cpx1_sem_desmarcar_comprador', '    cpx1_desmarcar(this, cpe1_clube(read_usize(o + 8)), p); // cpx1: desmarcar os lances do comprador', '    let _ = p; // mutacao: os lances do comprador ficam marcados', 'cpx_1 recusa desmarca'),
     ('cpx2_sorteio_2000', '    if (read_i16(comprador + 0x80) as i32) > r.wrapping_add(0x109a) { // cpx2: o sorteio do desassossego', '    if (read_i16(comprador + 0x80) as i32) > r.wrapping_add(2000) { // mutacao: o limite em 2000', 'cpx_2 sorteio do desassossego'),
     ('cpx2_interesse_4_5', '    if !(x >= f64_em(0x96d298)) { // cpx2: o interesse mínimo', '    if !(x >= 4.5) { // mutacao: o interesse minimo em 4,5', 'cpx_2 interesse avaliado'),
     ('cpx2_sem_desconto_do_listado', '        n = n.wrapping_add((-2000i32).wrapping_sub(sortear(0x1770)) as i16); // cpx2: o desconto do listado', '        // mutacao: sem o desconto do listado', 'cpx_2 listado'),
@@ -22,7 +22,7 @@ MUTACOES = [
     ('cpx9_so_titulares', '    for k in 0..20usize { // cpx9: as vagas da escalação', '    for k in 0..11usize { // mutacao: so os titulares', 'cpx_9 tirou reserva'),
     ('cpx9_so_reservas', '    for k in 0..20usize { // cpx9: as vagas da escalação', '    for k in 11..20usize { // mutacao: so os reservas', 'cpx_9 tirou titular'),
     ('cpx10_sem_data', '    copiar(cpx10_linha(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha', '    let _ = (copiar, data); // mutacao: sem a data', 'cpx_10 data da pressao'),
-    ('cpx10_boato_sem_sorteio', '    let mut boato = cpx10_sortear(10); // cpx10: o sorteio do boato', '    let mut boato = 0; // mutacao: sem o sorteio', 'cpx_10 sorteio do boato'),
+    ('cpx10_boato_sem_sorteio', '    let mut boato = cpe1_sorteio(10); // cpx10: o sorteio do boato', '    let mut boato = 0; // mutacao: sem o sorteio', 'cpx_10 sorteio do boato'),
     ('cpx10_limite_400', '    let motivo: i8 = if (read_i16(l + 8) as i32) < read_i16(l + 6) as i32 - 500 /* cpx10: o limite pela avaliação +8 */ && {', '    let motivo: i8 = if (read_i16(l + 8) as i32) < read_i16(l + 6) as i32 - 400 /* mutacao: o limite a 400 */ && {', 'cpx_10 motivo pela avaliacao'),
     ('cpx11_sem_premio', 'somar(fin, valor); // cpx11: o prêmio', 'let _ = (somar, fin); // mutacao: sem premio', 'cpx_11 premio pago'),
     ('cpx11_premio_invertido', 'somar(fin, valor); // cpx11: o prêmio', 'somar(fin, (i as i32 + 1).wrapping_mul(parte)); // mutacao: o premio invertido', 'cpx_11 premio pago'),

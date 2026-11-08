@@ -148,12 +148,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_nordeste(this: us
 
 
 
-/// O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
-/// estadual) não é nula e o id do registro (+0) é o do global.
-pub(crate) unsafe fn cqm7_do_estadual(clube: usize, g: usize) -> bool {
-    let comp = read_usize(clube + 0x60);
-    comp != 0 && read_usize(comp) == read_usize(g)
-}
 
 /// O corpo comum dos estaduais (o mesmo molde nos doze, só mudam as constantes): +0x3e = `n` clubes; a tabela
 /// (malloc 0x944e46 de n × 0x3b; sem memória: a caixa do fonte `arquivo` na linha `linha` e devolve 0); os clubes de
@@ -174,7 +168,7 @@ pub(crate) unsafe fn cqm7_tabela(this: usize, n: i16, arquivo: usize, linha: u32
     let mut i: i16 = 0;
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        if cqm7_do_estadual(clube, g) {
+        if cql8_do_estadual(clube, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
@@ -214,7 +208,7 @@ pub(crate) unsafe fn cqm7_comparar(nome: &str, this: usize, n: i16, g: usize, or
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
         let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
-        if cqm7_do_estadual(clube, g) {
+        if cql8_do_estadual(clube, g) {
             plano.push(clube);
         }
         i += 1;
@@ -260,12 +254,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_nordeste(this:
 /// [pt] { 0x436e90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::start_new_season()`, a virada da temporada do Nordeste (a tabela:
 /// 0x436d90; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
 pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u32 {
-    cqp8_virada(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
+    cqp7_virada(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1936);
-    cqp8_comparar_virada("cqp8_virada_do_nordeste", this, || o(this))
+    cqp7_comparar_virada("cqp8_virada_do_nordeste", this, || o(this))
 }
 
 /// The Northeast next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
@@ -275,10 +269,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: us
 /// [pt] { 0x437040 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::advance_stage()`, a fase seguinte do Nordeste: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4370d0); a caixa da linha 0x1ea.
 pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_nordeste(this: usize) {
-    cqp8_fase_seguinte(this, 0x98af54, 0x1ea, 0x4370d0);
+    cqp7_fase_seguinte(this, 0x98af54, 0x1ea, 0x4370d0);
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1937);
-    cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_nordeste", this, || o(this))
+    cqp7_comparar_fase_seguinte("cqp8_fase_seguinte_do_nordeste", this, || o(this))
 }

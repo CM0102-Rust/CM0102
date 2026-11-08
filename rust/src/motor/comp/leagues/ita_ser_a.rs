@@ -22,24 +22,6 @@ pub(crate) unsafe fn cqo6_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[C
     }
 }
 
-/// Os bytes que a tabela de `n` rodadas tem gravados e que o jogo lê: de cada rodada, a data (+0..+4) e +0x3d..+0x40,
-/// e as faixas até a que termina a lista (a de dia −1 na tabela `guia`, a da original); o resto da memória alocada não
-/// é escrito.
-pub(crate) unsafe fn cqo6_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
-    let mut v = Vec::new();
-    for r in 0..n {
-        let e = t + r * 0x41;
-        v.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 5));
-        v.extend_from_slice(core::slice::from_raw_parts((e + 0x3d) as *const u8, 4));
-        for j in 0..8usize {
-            v.extend_from_slice(core::slice::from_raw_parts((e + 5 + j * 7) as *const u8, 7));
-            if *((guia + r * 0x41 + 5 + j * 7 + 4) as *const i8) == -1 {
-                break;
-            }
-        }
-    }
-    v
-}
 
 /// O que muda entre as ligas de fase única.
 pub(crate) struct Cqo6Liga {
@@ -87,7 +69,7 @@ pub(crate) unsafe fn cqo6_comparar(nome: &str, fase: u32, rodadas: *mut i16, ext
     let saidas = fase as u8 != 0xff || (*rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2));
     let tabela = if a != 0 && b != 0 {
         let n = *rodadas as usize;
-        cqo6_gravados(a, a, n) == cqo6_gravados(b, a, n)
+        cqo4_gravados(a, a, n) == cqo4_gravados(b, a, n)
     } else {
         a == 0 && b == 0
     };
@@ -100,7 +82,7 @@ pub(crate) unsafe fn cqo6_comparar(nome: &str, fase: u32, rodadas: *mut i16, ext
 
 /// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `cqo6_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
+/// `cqo4_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
 pub(crate) unsafe fn cqo6_comparar_fases(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                              original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -113,7 +95,7 @@ pub(crate) unsafe fn cqo6_comparar_fases(nome: &str, fase: u32, rodadas: *mut i1
     let tabela = if a != 0 && b != 0 {
         if fase as u8 == 0xff {
             let n = *rodadas as usize;
-            cqo6_gravados(a, a, n) == cqo6_gravados(b, a, n)
+            cqo4_gravados(a, a, n) == cqo4_gravados(b, a, n)
         } else {
             cql10_gravados(a, *rodadas) == cql10_gravados(b, *rodadas)
         }

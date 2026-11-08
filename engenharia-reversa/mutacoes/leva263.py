@@ -1,7 +1,7 @@
 # Mutações da 263a leva (itens cqa_1, cqa_2, cqa_3, cqa_4, cqa_5, cqa_6, cqa_7, cqa_8, cqa_9, cqa_10, cqa_11, cqa_12, cqa_13). Uso: python mutacoes.py mutacoes\leva263.py --carreira 2002-06-01
 MUTACOES = [
-    ('cqa1_vencedor_pela_metade', 'cqa1_somar(cqa1_financas(read_usize(vencedor)), ao_vencedor); // cqa1: o prêmio do vencedor', 'cqa1_somar(cqa1_financas(read_usize(vencedor)), ao_vencedor / 2); // mutacao: o vencedor recebe a metade', 'cqa_1 premio do vencedor'),
-    ('cqa1_premio_ao_perdedor', 'cqa1_somar(cqa1_financas(read_usize(vencedor)), ao_vencedor); // cqa1: o prêmio do vencedor', 'cqa1_somar(cqa1_financas(read_usize(perdedor)), ao_vencedor); // mutacao: o premio do vencedor vai ao perdedor', 'cqa_1 premio do vencedor'),
+    ('cqa1_vencedor_pela_metade', 'cpy6_somar(cpy6_financas(read_usize(vencedor)), ao_vencedor); // cqa1: o prêmio do vencedor', 'cpy6_somar(cpy6_financas(read_usize(vencedor)), ao_vencedor / 2); // mutacao: o vencedor recebe a metade', 'cqa_1 premio do vencedor'),
+    ('cqa1_premio_ao_perdedor', 'cpy6_somar(cpy6_financas(read_usize(vencedor)), ao_vencedor); // cqa1: o prêmio do vencedor', 'cpy6_somar(cpy6_financas(read_usize(perdedor)), ao_vencedor); // mutacao: o premio do vencedor vai ao perdedor', 'cqa_1 premio do vencedor'),
     ('cqa1_fundo_sem_os_confrontos', 'let q = q0 / confrontos; // cqa1: o fundo pelas rodadas que faltam e pelos confrontos', 'let q = q0 + 0 * confrontos; // mutacao: o fundo sem a divisao pelos confrontos', 'cqa_1 premio pelo fundo'),
     ('cqa2_convidado_com_o_dobro_da_folga', 'let aceita = ra as f64 >= ro as f64 / f || f * f64_em(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação', 'let aceita = ra as f64 >= ro as f64 / (f * 2.0) || f * f64_em(0x96a690) * 2.0 >= ro.wrapping_sub(ra) as f64; // mutacao: o dobro da folga', 'cqa_2 decisao do amistoso'),
     ('cqa2_sem_o_fator_da_distancia', 'f *= v; // cqa2: o fator da distância', 'f *= 1.0 + 0.0 * v; // mutacao: sem o fator da distancia', 'cqa_2 distancia do amistoso'),
@@ -18,9 +18,9 @@ MUTACOES = [
     ('cqa6_busca_vazia_tem_todos', 'return 0; // cqa6: sem resultados, não está', 'return 1; // mutacao: sem resultados, esta', 'cqa_6 busca vazia'),
     ('cqa6_achado_nao_esta', '1 // cqa6: achado', '0 // mutacao: achado nao esta', 'cqa_6 achado'),
     ('cqa6_removido_conta', 'if read_u8(r + 0x20) & 1 != 0 { // cqa6: a removida não conta', 'if read_u8(r + 0x20) & 1 != 0 && false { // mutacao: a removida conta', 'cqa_6 removido'),
-    ('cqa7_valor_base_030', 'cqa7_k(0x96f918)) as u32 // cqa7: o valor base', '0.30) as u32 // mutacao: o valor base com 0,30', 'cqa_7 valor base'),
-    ('cqa7_listado_110', '*saida = ftol(*saida as f64 * cqa7_k(0x9689b8)); // cqa7: o listado de outro clube × 1,05', '*saida = ftol(*saida as f64 * 1.10); // mutacao: o listado x 1,10', 'cqa_7 listado para transferencia'),
-    ('cqa7_idade_com_09', '(dd * cqa7_k(0x968e80) + cqa7_k(0x9689b0)); // cqa7: a idade acima do divisor', '(dd * cqa7_k(0x968e80) + 0.9); // mutacao: a idade com 0,9', 'cqa_7 idade'),
+    ('cqa7_valor_base_030', 'read_f64(0x96f918)) as u32 // cqa7: o valor base', '0.30) as u32 // mutacao: o valor base com 0,30', 'cqa_7 valor base'),
+    ('cqa7_listado_110', '*saida = ftol(*saida as f64 * read_f64(0x9689b8)); // cqa7: o listado de outro clube × 1,05', '*saida = ftol(*saida as f64 * 1.10); // mutacao: o listado x 1,10', 'cqa_7 listado para transferencia'),
+    ('cqa7_idade_com_09', '(dd * read_f64(0x968e80) + read_f64(0x9689b0)); // cqa7: a idade acima do divisor', '(dd * read_f64(0x968e80) + 0.9); // mutacao: a idade com 0,9', 'cqa_7 idade'),
     ('cqa8_vencedor_sem_sorteio', '                let r = sorteio(0x15 - read_i8(pessoa + 0x57) as i32); // cqa8: o sorteio do vencedor', '                let r = 4; // mutacao: sem o sorteio do vencedor', 'cqa_8 moral do vencedor'),
     ('cqa8_moral_sem_sorteio', '                    let r1 = sorteio(0x1e); // cqa8: o primeiro sorteio da moral', '                    let r1 = 15; // mutacao: sem o primeiro sorteio da moral', 'cqa_8 testa a moral'),
     ('cqa8_fora_sem_evoluir', '            evoluir(0, pessoa, clube, outro, jogo, (nota - f64_em(0x967888)) as f32, 0, 0); // cqa8: a evolução de quem ficou de fora', '            let _ = (evoluir, nota); // mutacao: quem ficou de fora não evolui', 'cqa_8 evolui quem ficou de fora'),
@@ -30,7 +30,7 @@ MUTACOES = [
     ('cqa10_diretoria_sem_sorteio', '    let r2 = sorteio(10); // cqa10: o sorteio da diretoria', '    let r2 = 0; // mutacao: sem o sorteio da diretoria', 'cqa_10 a diretoria sorteia'),
     ('cqa10_tecnico_sem_sorteio', '    let r1 = sorteio(read_i8(read_usize(t + 0x69) + 0x16) as i32); // cqa10: o sorteio pela ficha do técnico', '    let r1 = 10; // mutacao: sem o sorteio pela ficha do técnico', 'cqa_10 a diretoria sorteia'),
     ('cqa10_rejeitados_sem_culpa', '        core::ptr::write_unaligned(conf, core::ptr::read_unaligned(conf).wrapping_sub(x.wrapping_mul(10))); // cqa10: a confiança pelos rejeitados', '        let _ = (conf, x); // mutacao: a diretoria não culpa os rejeitados', 'cqa_10 diretoria culpa'),
-    ('cqa11_mes_sem_mandante', '            cqa11_somar(a + 0xce, q); // cqa11: os pontos do mês do mandante', '            let _ = q; // mutacao: sem os pontos do mes do mandante', 'cqa_11 pontos do mes'),
+    ('cqa11_mes_sem_mandante', '            cpv5_somar(a + 0xce, q); // cqa11: os pontos do mês do mandante', '            let _ = q; // mutacao: sem os pontos do mes do mandante', 'cqa_11 pontos do mes'),
     ('cqa11_vitoria_como_empate', '        ba = 900; // cqa11: o bônus da vitória do mandante', '        ba = 300; // mutacao: a vitoria do mandante vale como empate', 'cqa_11 vitoria do mandante'),
     ('cqa11_reputacao_do_proprio', '        let q = cqa11_nota(p, 0, &mut saida, fora, ', '        let q = cqa11_nota(p, 0, &mut saida, casa, ', 'cqa_11 nota do mandante'),
     ('cqa12_vice_sem_reputacao', '        write_i16(clube + 0x80, v); // cqa12: a reputação do colocado', '        let _ = v; // mutacao: a reputacao do colocado nao sobe', 'cqa_12 reputacao do vice'),
@@ -38,5 +38,5 @@ MUTACOES = [
     ('cqa12_limiar_pela_metade', '    let alvo = (peso as i32).wrapping_mul(limiar); // cqa12: o limiar da reputação', '    let alvo = (peso as i32).wrapping_mul(limiar / 2); // mutacao: o limiar pela metade', 'cqa_12 reputacao do vice'),
     ('cqa13_torcida_sem_500', '            let x = read_i16(linha + 8).wrapping_add(0x1f4); // cqa13: a torcida comemora', '            let x = read_i16(linha + 8).wrapping_add(0); // mutacao: a torcida nao comemora', 'cqa_13 torcida comemora'),
     ('cqa13_elenco_forte_100', '    let limite = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: o limite do elenco forte', '    let limite = 0x64 + 0 * rn as i32; // mutacao: limite de 100', 'cqa_13 elenco forte'),
-    ('cqa13_moral_menos_50', '                let x = cqa13_c(c + 0x44) - 0x19; // cqa13: a moral do companheiro cai', '                let x = cqa13_c(c + 0x44) - 0x32; // mutacao: a moral cai 50', 'cqa_13 moral cai'),
+    ('cqa13_moral_menos_50', '                let x = read_i8_as_i32(c + 0x44) - 0x19; // cqa13: a moral do companheiro cai', '                let x = read_i8_as_i32(c + 0x44) - 0x32; // mutacao: a moral cai 50', 'cqa_13 moral cai'),
 ]

@@ -3,19 +3,10 @@ use super::*;
 // ---------- 270a leva: os olheiros do dia, os relatórios deles e a notícia do relatório (scout_manager.cpp) ----------
 
 
-pub(crate) unsafe fn cqf12_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 
 
-pub(crate) unsafe fn cqf12_pessoa(id: usize) -> usize {
-    read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(0x6e))
-}
 
-pub(crate) unsafe fn cqf12_clube(id: usize) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add(id.wrapping_mul(0x245))
-}
 
 /// `a` depois de `b` (datas: ano sem sinal em +2, dia com sinal em +0), como as comparações da original.
 pub(crate) unsafe fn cqf12_depois(dia: i16, ano: u16, data: usize) -> bool {
@@ -41,8 +32,8 @@ pub(crate) unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool,
     // thiscall, ret 4; 0x54c5b0: push n; push &saída; lea ecx, [pedido+8] -> thiscall, ret 8; 0x62c400: push jogador;
     // mov ecx, [0xb63d28] -> thiscall, ret 4 (al); 0x4cf5f0: push clube; push jogador; mov ecx, [0xae1050] -> thiscall,
     // ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24 (ax)
-    let jogador = cqf12_pessoa(read_usize(pedido + 4));
-    let clube = cqf12_clube(read_usize(pedido));
+    let jogador = cpo3_pessoa(read_usize(pedido + 4));
+    let clube = cpe1_clube(read_usize(pedido));
     if humano(clube, 1, 1, 0, 0) == 0 {
         return (true, false, 0, 0, 0);
     }
@@ -52,7 +43,7 @@ pub(crate) unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool,
     }
     let c = contrato_de(read_usize(G_CONTRACT_MANAGER), jogador);
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
-    let do_contrato = if c != 0 { cqf12_clube(read_usize(c + 4)) } else { 0 };
+    let do_contrato = if c != 0 { cpe1_clube(read_usize(c + 4)) } else { 0 };
     if do_contrato == clube {
         return (true, false, 0, 0, 0);
     }
@@ -150,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32
     // &local; mov ecx, this -> thiscall, ret 4; 0x945333 (qsort): 4 pushes; add esp, 0x10 -> cdecl; 0x7b3e20: mov ecx,
     // lista -> thiscall, ret 0
     let mut i: i32 = 0;
-    while i < cqf12_i(this + 0x64) {
+    while i < read_i32(this + 0x64) {
         let pedido = read_usize(this + 0x5c) + i as usize * 0x11;
         let (tirar, processar, jogador, tecnico, nacao) = cqf12_julgar(pedido, catorze);
         if processar && !CQF12_ENSAIO {
@@ -172,7 +163,7 @@ pub(crate) unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32
             }
         }
         if tirar {
-            let n = cqf12_i(this + 0x64);
+            let n = read_i32(this + 0x64);
             let base = read_usize(this + 0x5c);
             core::ptr::copy(base.wrapping_add((n as usize).wrapping_mul(0x11)).wrapping_sub(0x11) as *const u8, pedido as *mut u8, 0x11);
             core::ptr::write_unaligned((this + 0x64) as *mut i32, n - 1);
@@ -185,9 +176,9 @@ pub(crate) unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32
         return 1;
     }
     relatorios(this, l);
-    ordenar(read_usize(this + 0x5c), cqf12_i(this + 0x64), 0x11, 0x7fc270);
+    ordenar(read_usize(this + 0x5c), read_i32(this + 0x64), 0x11, 0x7fc270);
     for k in 0..0x10i32 {
-        let p = cqf12_pessoa((cqf12_i(0xae2364) - k - 1) as usize);
+        let p = cpo3_pessoa((read_i32(0xae2364) - k - 1) as usize);
         if read_u8(p + 0x5f) == 1 {
             crate::comparacao::ramo("cqf_12 busca do humano");
             for j in 0..10u32 {
@@ -207,12 +198,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usiz
     if read_u8(G_CURRENT_DAY_SLICE) != 2 {
         return o(this);
     }
-    let n0 = cqf12_i(this + 0x64).max(0) as usize;
+    let n0 = read_i32(this + 0x64).max(0) as usize;
     let base = read_usize(this + 0x5c);
     let mut copia: Vec<u8> = (0..n0 * 0x11).map(|k| read_u8(base + k)).collect();
     copia.push(0);
     // o ensaio poda a cópia: troca o vetor e a conta do `this` pelos da cópia e devolve depois
-    let (b0, c0) = (read_usize(this + 0x5c), cqf12_i(this + 0x64));
+    let (b0, c0) = (read_usize(this + 0x5c), read_i32(this + 0x64));
     core::ptr::write_unaligned((this + 0x5c) as *mut usize, copia.as_mut_ptr() as usize);
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let a1080 = read_usize(G_CONTRACT_LOOKUP_RESULT);
@@ -221,14 +212,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usiz
     CQF12_ENSAIO = false;
     estado.escrever();
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, a1080);
-    let n1 = cqf12_i(this + 0x64).max(0) as usize;
+    let n1 = read_i32(this + 0x64).max(0) as usize;
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     ordenar(copia.as_mut_ptr() as usize, n1 as i32, 0x11, 0x7fc270);
     let plano: Vec<u8> = copia[..n1 * 0x11].to_vec();
     core::ptr::write_unaligned((this + 0x5c) as *mut usize, b0);
     core::ptr::write_unaligned((this + 0x64) as *mut i32, c0);
     let r = o(this);
-    let n2 = cqf12_i(this + 0x64).max(0) as usize;
+    let n2 = read_i32(this + 0x64).max(0) as usize;
     let agora: Vec<u8> = (0..n2 * 0x11).map(|k| read_u8(read_usize(this + 0x5c) + k)).collect();
     PLACAR.registrar(r == 1 && agora == plano, || format!("cqf12_olheiros_do_dia: pedidos {} -> original {} ensaio {}; {:x?} x {:x?}", n0, n2, n1, agora, plano));
     r
@@ -277,8 +268,8 @@ pub(crate) unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize
     let mut i: i32 = 0;
     while i < n {
         let r = v + i as usize * 0x67;
-        let clube_id = read_usize(cqf12_clube(read_usize(r + 0x50)));
-        let jogador_id = read_usize(cqf12_pessoa(read_usize(r + 0x2b)));
+        let clube_id = read_usize(cpe1_clube(read_usize(r + 0x50)));
+        let jogador_id = read_usize(cpo3_pessoa(read_usize(r + 0x2b)));
         let inicio = i;
         let mut quantos: u8 = 1;
         let mut j = i + 1;
@@ -370,13 +361,13 @@ pub(crate) unsafe extern "thiscall" fn cqf12_noticia_do_relatorio(this: usize, r
         pr(&mut idx, ((read_u8(p + 0x26) as i8 as i32) + (read_u8(p + 0x25) as i8 as i32) * 8) as u32);
     }
     pr(&mut idx, 0x420e9);
-    let c = cqf12_i(r + 0x50);
-    let clube = if c > -1 { cqf12_clube(c as usize) } else { 0 };
+    let c = read_i32(r + 0x50);
+    let clube = if c > -1 { cpe1_clube(c as usize) } else { 0 };
     let k = idx;
     idx = idx.wrapping_add(1);
     let _ = idx;
-    gravar(nt, k as u32, forcas(cqf12_pessoa(read_usize(r + 0x2b)), clube));
-    entregar(read_usize(G_NEWS), nt, cqf12_clube(read_usize(r + 0x50)));
+    gravar(nt, k as u32, forcas(cpo3_pessoa(read_usize(r + 0x2b)), clube));
+    entregar(read_usize(G_NEWS), nt, cpe1_clube(read_usize(r + 0x50)));
 }
 
 /// Comparador da 0x7f9a60: a notícia é entregue (aloca na caixa do humano): só a original roda (ponytail: o efeito é a
@@ -392,14 +383,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqf12_noticia_do_relatorio(this:
 
 
 
-pub(crate) unsafe fn cqc12_uw(a: usize) -> u16 {
-    core::ptr::read_unaligned(a as *const u16)
-}
 
 
 /// A data `r` é a de hoje (o ano e o dia)?
 pub(crate) unsafe fn cqc12_e_hoje(r: usize, hoje: usize) -> bool {
-    cqc12_uw(r + 2) == cqc12_uw(hoje + 2) && read_i16(r) == read_i16(hoje)
+    read_u16(r + 2) == read_u16(hoje + 2) && read_i16(r) == read_i16(hoje)
 }
 
 /// Marca os clubes com jogo na data `d` e nos dias vizinhos (0x7775c0 na data, na véspera e no dia seguinte; a data
@@ -446,7 +434,7 @@ pub(crate) unsafe fn cqc12_jogos(this: usize, l: usize) {
         if !final_ && segunda(read_usize(p + 0x1c)) == 0 && *((p + 0x40) as *const u8) != 0 {
             registrar(this, read_usize(p + 0x1c), 0, p);
             registrar(this, read_usize(p + 0x20), 0, p);
-            let f = cqc12_uw(p + 0x4d);
+            let f = read_u16(p + 0x4d);
             if f & 0x200 != 0 {
                 let b1 = selecao_b(read_usize(read_usize(p + 0x1c) + 0x53));
                 registrar(this, b1, 0, p);
@@ -882,9 +870,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_escolher_lista_do_tecnico(this: 
 // ---------- 255a leva: o jogo com jogador observado, a lista do olheiro do humano e o registro da primeira convocação (scout_manager.cpp, staff_records.cpp) ----------
 
 
-pub(crate) unsafe fn cps8_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 /// tells whether the fixture has a watched club or an available player with a scout request (at the club or national
 /// team, not loaned out, injured, suspended or barred, and not yet played)
@@ -899,7 +884,7 @@ pub(crate) unsafe fn cps8_i(a: usize) -> i32 {
 /// = 0), dá 1. Senão 0.
 pub(crate) unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: usize) -> u32 {
     let (c1, c2) = (read_u32_as_usize(partida + 0x1c), read_u32_as_usize(partida + 0x20));
-    if cps8_i(partida) < 0 {
+    if read_i32(partida) < 0 {
         crate::comparacao::ramo("cps_8 competicao negativa");
         return 0; // cps8: competição negativa
     }
@@ -913,7 +898,7 @@ pub(crate) unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: 
         }
         e = proximo(0xb74438);
     }
-    if read_u32_as_usize(this + 0x5c) == 0 || cps8_i(this + 0x64) <= 0 {
+    if read_u32_as_usize(this + 0x5c) == 0 || read_i32(this + 0x64) <= 0 {
         crate::comparacao::ramo("cps_8 sem pedidos");
         return 0; // cps8: sem pedidos de observação
     }
@@ -924,8 +909,8 @@ pub(crate) unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: 
     let impedido: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_NATIONALTEAMS_GET_INTERNATIONAL_DUTY_CLUB);
     let ja_jogou: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_INELIGIBILITY_CODE);
     let mut k = 0i32;
-    while k < cps8_i(this + 0x64) {
-        let id = cps8_i(read_u32_as_usize(this + 0x5c).wrapping_add(k as usize * 0x11) + 4);
+    while k < read_i32(this + 0x64) {
+        let id = read_i32(read_u32_as_usize(this + 0x5c).wrapping_add(k as usize * 0x11) + 4);
         k += 1;
         if id <= -1 {
             continue;
@@ -1389,16 +1374,16 @@ pub(crate) unsafe extern "thiscall" fn pedido_de_observacao(this: usize, jogador
     }
     let mut clube = clube;
     if clube == 0 {
-        let humano = cpq12_us(0xb74c26 + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize));
+        let humano = cpq11_us(0xb74c26 + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize));
         if humano == 0 {
             return 0;
         }
-        clube = cpq12_us(humano + 0x39);
+        clube = cpq11_us(humano + 0x39);
         if clube == 0 {
             return 0;
         }
     }
-    let lista = cpq12_us(this + 0x5c);
+    let lista = cpq11_us(this + 0x5c);
     let achado = if lista == 0 {
         0
     } else {

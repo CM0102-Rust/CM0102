@@ -87,18 +87,6 @@ pub(crate) unsafe fn cql12_tabela(this: usize, fase: u32, rodadas: *mut i16, ext
     t
 }
 
-/// Os bytes que a original grava em cada rodada (o resto da memória alocada fica como veio): +0..+0x10 (as datas e os
-/// campos até o desempate de ida e volta), +0x13..+0x22 (o mando até os dias entre os jogos) e +0x5c..+0x67 (os prêmios).
-pub(crate) unsafe fn cql12_gravados(t: usize, n: i16) -> Vec<u8> {
-    let mut v = Vec::new();
-    for r in 0..n.max(0) as usize {
-        let e = t + r * 0x68;
-        for &(a, b) in &[(0usize, 0x11usize), (0x13, 0x23), (0x5c, 0x68)] {
-            v.extend_from_slice(core::slice::from_raw_parts((e + a) as *const u8, b - a));
-        }
-    }
-    v
-}
 
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
@@ -115,7 +103,7 @@ pub(crate) unsafe fn cql12_comparar(nome: &str, fase: u32, rodadas: *mut i16, ex
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if saida.is_null() { core::ptr::null_mut() } else { &mut s2 }));
     let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
-    let tabela = if a != 0 && b != 0 { cql12_gravados(a, *rodadas) == cql12_gravados(b, r2) } else { a == 0 && b == 0 };
+    let tabela = if a != 0 && b != 0 { cql10_gravados(a, *rodadas) == cql10_gravados(b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
@@ -207,6 +195,6 @@ pub(crate) unsafe extern "thiscall" fn cqm11_supercopa_clubes(this: usize) -> i3
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm11_supercopa_clubes(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1786);
-    cqm11_comparar("cqm11_supercopa_clubes", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_supercopa(this),
+    cqm10_comparar("cqm11_supercopa_clubes", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_supercopa(this),
         |r, _| if r == 1 { 12 } else { 0 })
 }

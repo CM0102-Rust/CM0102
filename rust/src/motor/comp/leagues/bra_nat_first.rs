@@ -4,10 +4,6 @@ use super::*;
 
 
 
-/// O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
-pub(crate) unsafe fn cqq7_clube(liga: usize, l: usize) -> usize {
-    read_usize(read_usize(liga + 0xb1) + l * 0x3b)
-}
 
 /// O play-off de uma Série (o mesmo molde na A e na B, conferido instrução a instrução: só mudam o fonte e as linhas
 /// das caixas): a lista dos 4 (malloc 0x944e46 de 0x10; sem memória: a caixa `linha_sem_lista` e volta) com os clubes
@@ -26,7 +22,7 @@ pub(crate) unsafe fn cqq7_play_off(this: usize, linhas: &[usize; 4], arquivo: us
         return aviso_em(arquivo, linha_sem_lista);
     }
     for (k, &l) in linhas.iter().enumerate() {
-        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqq7_clube(this, l));
+        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn7_clube(this, l));
     }
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -114,22 +110,13 @@ pub(crate) unsafe extern "thiscall" fn cqq7_play_off_da_serie_b(this: usize) {
     cqq7_play_off(this, &[0, 3, 1, 2], 0x98ab64, 0x25f, 0x276, "cqq_7 serie b"); // cqq7: 1º × 4º, 2º × 3º Série B
 }
 
-/// O comparador da fase seguinte: só a original (ponytail: ao chegar a 0 monta o play-off, que aloca e sorteia), com o
-/// plano: na última fase, +0x30 igual; senão +0x30 + 1 (o play-off grava 0, o mesmo valor).
-pub(crate) unsafe fn cqq7_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
-    let antes = read_usize(this + 0x30) as i32;
-    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    original();
-    let depois = read_usize(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
-}
 
 /// O comparador do play-off: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = 4, +4 = o +4 da liga e os 4
 /// primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como conjunto: o sorteio da rodada pode
 /// reordenar), e +0x30 = 0.
 pub(crate) unsafe fn cqq7_comparar_play_off(nome: &str, this: usize, linhas: &[usize; 4], original: impl FnOnce()) {
-    let mut plano: Vec<usize> = linhas.iter().map(|&l| cqq7_clube(this, l)).collect();
+    let mut plano: Vec<usize> = linhas.iter().map(|&l| cqn7_clube(this, l)).collect();
     original();
     let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
@@ -147,7 +134,7 @@ pub(crate) unsafe fn cqq7_comparar_play_off(nome: &str, this: usize, linhas: &[u
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq7_fase_seguinte_da_serie_a(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1947);
-    cqq7_comparar_fase_seguinte("cqq7_fase_seguinte_da_serie_a", this, || o(this))
+    cqp7_comparar_fase_seguinte("cqq7_fase_seguinte_da_serie_a", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq7_play_off_da_serie_a(this: usize) {
@@ -157,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq7_play_off_da_serie_a(this: u
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq7_fase_seguinte_da_serie_b(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1949);
-    cqq7_comparar_fase_seguinte("cqq7_fase_seguinte_da_serie_b", this, || o(this))
+    cqp7_comparar_fase_seguinte("cqq7_fase_seguinte_da_serie_b", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq7_play_off_da_serie_b(this: usize) {
@@ -341,19 +328,10 @@ pub(crate) unsafe extern "thiscall" fn cqq8_virada_da_serie_b(this: usize) -> u3
     cqq8_expectativas_e_arbitros(this)
 }
 
-/// Comparador das viradas: só a original (ponytail: libera e aloca tabelas e fases, sorteia jogos e árbitros e roda as
-/// viradas das outras competições; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um.
-pub(crate) unsafe fn cqq8_comparar_virada(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
-    let antes = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    let r = original();
-    let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    PLACAR.registrar(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
-    r
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq8_virada_da_serie_a(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1951);
-    cqq8_comparar_virada("cqq8_virada_da_serie_a", this, || o(this))
+    cqp7_comparar_virada("cqq8_virada_da_serie_a", this, || o(this))
 }
 
 /// Comparador do acesso e rebaixamento: só a original (ponytail: move clubes entre as listas das ligas, que realocam).
@@ -364,7 +342,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq8_acesso_e_rebaixamento(this:
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq8_virada_da_serie_b(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1953);
-    cqq8_comparar_virada("cqq8_virada_da_serie_b", this, || o(this))
+    cqp7_comparar_virada("cqq8_virada_da_serie_b", this, || o(this))
 }
 
 // ---------- 277a leva: a tabela das três divisões nacionais do Brasil: os 28 clubes da Série A (e o dinheiro da TV), os 28 da Série B e o sorteio dos 56 da Série C (bra_nat_first.cpp, bra_nat_second.cpp, bra_nat_third.cpp) ----------

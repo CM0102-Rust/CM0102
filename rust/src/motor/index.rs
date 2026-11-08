@@ -294,22 +294,7 @@ pub(crate) unsafe extern "C" fn comparar_definir_chaves_fixas_1080() -> u32 {
 
 // ---------- 237a leva: o nome da região e o adjetivo do continente (index.cpp) ----------
 
-pub(crate) unsafe fn dbu3_u32(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-/// strcpy (o `repne scasb` e os `rep movsd`/`rep movsb` da original).
-pub(crate) unsafe fn dbu3_copiar(destino: usize, origem: usize) {
-    let mut k = 0;
-    loop {
-        let c = *((origem + k) as *const u8);
-        *((destino + k) as *mut u8) = c;
-        if c == 0 {
-            break;
-        }
-        k += 1;
-    }
-}
 
 /// Os nomes das regiões 1..14 da 0x616f20 (imediatos do código, pelos endereços no exe): (adjetivo, substantivo). A
 /// 3 (Caribe) tem textos próprios.
@@ -366,7 +351,7 @@ pub(crate) unsafe extern "C" fn nome_da_regiao(regiao: u32, texto: usize, tamanh
         if let Some((base, linha)) = tabela {
             let f = adjetivo(forma, i as u32) as i8 as i32;
             let k = r.wrapping_mul(linha).wrapping_add(f);
-            dbu3_copiar(texto, dbu3_u32(base.wrapping_add((k as usize).wrapping_mul(4))));
+            dbu1_copiar(texto, read_usize(base.wrapping_add((k as usize).wrapping_mul(4))));
             return 1;
         }
     }
@@ -461,12 +446,12 @@ pub(crate) unsafe extern "C" fn adjetivo_do_continente(continente: usize, texto:
         None => proprio,
         Some((t, i)) => {
             let f = adjetivo(forma, i) as i8;
-            let id = dbu3_u32(continente);
-            let linha = [KEY_CONTINENT_AFRICA, KEY_CONTINENT_ASIA, KEY_CONTINENT_EUROPE, KEY_CONTINENT_NORTH_AMERICA, KEY_CONTINENT_OCEANIA].iter().position(|&g| dbu3_u32(g) == id).unwrap_or(5);
+            let id = read_usize(continente);
+            let linha = [KEY_CONTINENT_AFRICA, KEY_CONTINENT_ASIA, KEY_CONTINENT_EUROPE, KEY_CONTINENT_NORTH_AMERICA, KEY_CONTINENT_OCEANIA].iter().position(|&g| read_usize(g) == id).unwrap_or(5);
             t[linha][if (0..=3).contains(&f) { f as usize } else { 4 }]
         }
     };
-    dbu3_copiar(texto, s);
+    dbu1_copiar(texto, s);
     1
 }
 
@@ -2410,19 +2395,6 @@ pub(crate) unsafe extern "C" fn casar_chave_de_competicao_de_pessoa(nome: usize,
     r as u32 // o eax do último _stricmp (chave de competição de pessoa)
 }
 
-/// As globais (dword) que ficaram diferentes entre a original e a cópia: "[end] original x rust".
-pub(crate) fn chaves_de_competicao_diferentes(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> String {
-    let mut s = String::new();
-    for ((a, x), (_, y)) in mo.0.iter().zip(mr.0.iter()) {
-        for i in (0..x.len()).step_by(4) {
-            if x[i..i + 4] != y[i..i + 4] {
-                let v = |b: &[u8]| i32::from_le_bytes([b[i], b[i + 1], b[i + 2], b[i + 3]]);
-                s += &format!("[{:x}] {} x {} ", a + i, v(x), v(y));
-            }
-        }
-    }
-    s
-}
 
 pub(crate) unsafe extern "C" fn comparar_casar_chave_de_competicao_de_clube(nome: usize, linha: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(623);
@@ -2430,7 +2402,7 @@ pub(crate) unsafe extern "C" fn comparar_casar_chave_de_competicao_de_clube(nome
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_competicao_de_clube(nome, linha));
     PLACAR.registrar(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("casar_chave_de_competicao_de_clube(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_de_competicao_diferentes(&mo, &mr))
+        format!("casar_chave_de_competicao_de_clube(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
     });
     r
 }
@@ -2441,7 +2413,7 @@ pub(crate) unsafe extern "C" fn comparar_casar_chave_de_competicao_de_pessoa(nom
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_competicao_de_pessoa(nome, linha));
     PLACAR.registrar(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("casar_chave_de_competicao_de_pessoa(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_de_competicao_diferentes(&mo, &mr))
+        format!("casar_chave_de_competicao_de_pessoa(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
     });
     r
 }

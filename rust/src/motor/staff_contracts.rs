@@ -115,9 +115,6 @@ pub(crate) unsafe extern "C" fn comparar_tipo_de_bonus_permitido(pessoa: usize, 
 // ---------- 248a leva: o contrato da comissão: montar a proposta pelo contrato atual, zerar a moral do contrato novo e a faixa do vencimento (staff_contracts.cpp) ----------
 
 
-pub(crate) unsafe fn cpl5_por(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut usize, v);
-}
 
 
 
@@ -129,10 +126,10 @@ pub(crate) unsafe fn cpl5_zerar_moral(this: usize, pessoa: usize, clube: usize) 
     crate::comparacao::ramo("cpl_5 moral zerada");
     write_u8(this + 0x44, 0);
     write_u8(this + 0x4e, 0);
-    cpl5_por(this + 0x45, 0);
+    write_usize(this + 0x45, 0);
     let limpar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_CLEAR_OPINION_LINKS);
     limpar(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(this).wrapping_mul(0x6e)));
-    cpl5_por(this + 0x40, 0);
+    write_usize(this + 0x40, 0);
     write_u8(this + 0x4e, 4);
     write_u8(this + 0x3f, 0); // a felicidade
     write_u8(this + 0x3e, 0);
@@ -176,28 +173,28 @@ pub(crate) unsafe extern "thiscall" fn contrato_pelo_atual(this: usize, pessoa: 
         return;
     }
     crate::comparacao::ramo("cpl_5 contrato pelo atual");
-    cpl5_por(this, read_usize(pessoa));
-    cpl5_por(this + 8, 0);
-    cpl5_por(this + 4, read_usize(clube));
+    write_usize(this, read_usize(pessoa));
+    write_usize(this + 8, 0);
+    write_usize(this + 4, read_usize(clube));
     let salario = (read_usize(c + 0xc) as i32).wrapping_mul(percentual as u8 as i8 as i32) / 100; // o percentual do salário
-    cpl5_por(this + 0xc, salario as usize);
+    write_usize(this + 0xc, salario as usize);
     core::ptr::write_unaligned((this + 0x25) as *mut [u8; 8], core::ptr::read_unaligned(G_CURRENT_DATE as *const [u8; 8])); // hoje
     core::ptr::write_unaligned((this + 0x2d) as *mut [u8; 8], core::ptr::read_unaligned(fim as *const [u8; 8])); // o fim do contrato
     let b = (read_u8(this + 0x35) & 0xc6) | 6;
-    cpl5_por(this + 0x36, read_usize(this + 0xc));
+    write_usize(this + 0x36, read_usize(this + 0xc));
     write_u8(this + 0x35, b);
     write_u8(this + 0x3a, 0);
     write_u8(this + 0x49, 0);
-    cpl5_por(this + 0x4a, usize::MAX);
+    write_usize(this + 0x4a, usize::MAX);
     cpl5_zerar_moral(this, pessoa, clube);
     core::ptr::write_unaligned((this + 0x3b) as *mut u16, 0);
     for k in 0x1c..=0x20 {
         write_u8(this + k, 0);
     }
-    cpl5_por(this + 0x10, usize::MAX);
-    cpl5_por(this + 0x14, usize::MAX);
-    cpl5_por(this + 0x18, usize::MAX);
-    cpl5_por(this + 0x21, 0);
+    write_usize(this + 0x10, usize::MAX);
+    write_usize(this + 0x14, usize::MAX);
+    write_usize(this + 0x18, usize::MAX);
+    write_usize(this + 0x21, 0);
     write_u8(this + 0x1c, sem_acesso as u8);
     write_u8(this + 0x1d, multa as u8);
 }
@@ -446,7 +443,7 @@ pub(crate) unsafe extern "thiscall" fn marcas_do_contrato(c: usize, marcas: u32)
         return orig::<unsafe extern "thiscall" fn(usize, u32)>(1313)(c, marcas);
     }
     write_u32(c + 0x40, read_usize(c + 0x40) as u32 | marcas);
-    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((cpw7_i(c) as usize).wrapping_mul(0x6e));
+    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(c) as usize).wrapping_mul(0x6e));
     let funcao = read_u8(pessoa + 0x3d);
     if funcao == 0xc || funcao == 0xd || funcao == 0xf {
         return;
@@ -536,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn satisfacao_com_o_contrato(this: usize, pe
     } else {
         atual as u32
     };
-    desejado(l, pessoa, cpw1_clube(read_usize(this + 4)), -1, situacao, 0xb, 0, 0);
+    desejado(l, pessoa, cpe1_clube(read_usize(this + 4)), -1, situacao, 0xb, 0, 0);
     let v1 = cpw1_valor(this, pessoa, l) as f32;
     let v2 = cpw1_valor(l, pessoa, l) as f64;
     let mut razao = if v2 == f32_em(0x968970) as f64 {

@@ -4,10 +4,6 @@ use super::*;
 
 
 
-/// O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
-pub(crate) unsafe fn cqq9_campeao_do_turno(this: usize, k: usize) -> usize {
-    read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
-}
 
 /// The J1 has two stages (0 and 1, each a round-robin league) and the final (stage 2): the next stage moves the current
 /// stage on and, at the end of the second stage, builds the final; past the last stage it is an error (the box)
@@ -50,8 +46,8 @@ pub(crate) unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
     if lista == 0 {
         return aviso_em(0x9eabc8, 0x245);
     }
-    core::ptr::write_unaligned(lista as *mut usize, cqq9_campeao_do_turno(this, 0)); // cqq9: o campeão do primeiro turno
-    core::ptr::write_unaligned((lista + 4) as *mut usize, cqq9_campeao_do_turno(this, 1)); // cqq9: o campeão do segundo turno
+    core::ptr::write_unaligned(lista as *mut usize, cqo7_campeao_do_turno(this, 0)); // cqq9: o campeão do primeiro turno
+    core::ptr::write_unaligned((lista + 4) as *mut usize, cqo7_campeao_do_turno(this, 1)); // cqq9: o campeão do segundo turno
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 2, &mut rodadas, &mut extra, 0);
@@ -185,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq9_fase_seguinte_da_j1(this: u
 /// os campeões dos turnos. Depois, a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os dois campeões
 /// na lista dela (+0xa7, 6 bytes; como conjunto), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn comparar_cqq9_final_da_j1(this: usize) {
-    let (a, b) = (cqq9_campeao_do_turno(this, 0), cqq9_campeao_do_turno(this, 1));
+    let (a, b) = (cqo7_campeao_do_turno(this, 0), cqo7_campeao_do_turno(this, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(1955)(this);
     let fase = read_usize(read_usize(this + 0xc) + 8);
     let igual = fase != 0 && {
@@ -358,13 +354,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j2(this: usize) -
 pub(crate) unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
     cqj7_regras_j1(this);
     crate::comparacao::ramo("cqj_7 regras da j1");
-    cqj7_calendario(this);
+    cqi7_calendario(this);
     1
 }
 
 /// Comparador: como o do Goiano.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j1(this: usize) -> u32 {
-    let reg = cqj7_regioes(this);
+    let reg = cqi7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1722)(this), || {
         cqj7_regras_j1(this);
         1

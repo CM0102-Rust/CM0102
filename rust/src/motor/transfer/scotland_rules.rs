@@ -4,33 +4,18 @@ use super::*;
 
 
 
-pub(crate) unsafe fn cqe6_h(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-/// O clube de um contrato: +4 é o índice em [0xae23b4] (registros de 0x245 bytes).
-pub(crate) unsafe fn cqe6_clube_do_contrato(c: usize) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(0x245))
-}
 
-/// O contrato principal da pessoa (0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4), guardado em
-/// [0xae1080] como a original faz.
-pub(crate) unsafe fn cqe6_contrato(p: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = f(read_usize(G_CONTRACT_MANAGER), p);
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
-    c
-}
 
 /// O começo comum das regras escocesa, irlandesa e espanhola: sem contrato do jogador (ou sem clube do contrato),
 /// `None` (pode); senão o clube dono pelo contrato consultado de novo (0 se a segunda consulta não achar).
 pub(crate) unsafe fn cqe6_dono(jogador: usize) -> Option<usize> {
-    let c = cqe6_contrato(jogador);
-    if c == 0 || cqe6_clube_do_contrato(c) == 0 {
+    let c = cps5_contrato(jogador);
+    if c == 0 || cqe5_clube_do_contrato(c) == 0 {
         return None;
     }
-    let c2 = cqe6_contrato(jogador);
-    Some(if c2 != 0 { cqe6_clube_do_contrato(c2) } else { 0 })
+    let c2 = cps5_contrato(jogador);
+    Some(if c2 != 0 { cqe5_clube_do_contrato(c2) } else { 0 })
 }
 
 /// A recusa "fora da janela" (motivo 9), com o adjetivo da nação das regras (+0xa).
@@ -94,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_periodo_escocia(_this: usize, a1: us
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0
     let mes: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     *ini_mes = (mes(0xae2c90) as i8).wrapping_add(1);
-    *ini_ano = cqe6_h(0xae2c92);
+    *ini_ano = read_i16(0xae2c92);
     if *ini_mes > 0xb {
         *ini_mes = (*ini_mes).wrapping_sub(0xc);
         *ini_ano = (*ini_ano).wrapping_add(1);
@@ -108,7 +93,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_periodo_escocia(_this: usize, a1: us
         if *ini_mes < e {
             *fim_ano = *ini_ano;
         } else {
-            *fim_ano = cqe6_h(0xae2c92).wrapping_add(1);
+            *fim_ano = read_i16(0xae2c92).wrapping_add(1);
         }
         return;
     }
@@ -151,8 +136,8 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_italia(this: usize, c
         if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 || emprestimo(read_usize(G_CONTRACT_MANAGER), p) == 0 {
             continue;
         }
-        let cp = cqe6_contrato(p);
-        let de = if cp != 0 { cqe6_clube_do_contrato(cp) } else { 0 };
+        let cp = cps5_contrato(p);
+        let de = if cp != 0 { cqe5_clube_do_contrato(cp) } else { 0 };
         if de != clube {
             n = n.wrapping_add(1);
         }
@@ -204,21 +189,6 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_irlanda(this: usize, 
 }
 
 
-/// O texto da mensagem (até o zero, no máximo 0x200 bytes).
-pub(crate) unsafe fn cqe6_texto(msg: usize) -> Vec<u8> {
-    let mut v = Vec::new();
-    if msg == 0 {
-        return v;
-    }
-    for k in 0..0x200usize {
-        let b = read_u8(msg + k);
-        v.push(b);
-        if b == 0 {
-            break;
-        }
-    }
-    v
-}
 
 /// Comparador comum (pode emprestar): lado a lado na devolução, em [0xae1080] e no motivo; a mensagem, que só é
 /// escrita, é conferida pelo texto (antes da cópia o primeiro byte vai a zero, e no fim volta o texto da original).
@@ -231,14 +201,14 @@ pub(crate) unsafe fn cqe6_comparar_pode(o: unsafe extern "thiscall" fn(usize, us
     let mut tr = Vec::new();
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || {
         let x = o(this, clube, jogador, msg, motivo);
-        to = cqe6_texto(msg);
+        to = cqe5_texto(msg);
         x
     }, || {
         if msg != 0 {
             *(msg as *mut u8) = 0;
         }
         let x = r(this, clube, jogador, msg, motivo);
-        tr = cqe6_texto(msg);
+        tr = cqe5_texto(msg);
         x
     });
     if msg != 0 {
@@ -282,11 +252,11 @@ pub(crate) unsafe extern "thiscall" fn regras_escocia(this: usize, a1: u32, a2: 
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk3_comparar`).
+/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_regras_escocia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1684);
     let mut r = 0usize;
-    cqk3_comparar("regras_escocia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+    cqk1_comparar("regras_escocia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         regras_escocia(s, a1, a2, a3, a4, a5);
     });
     r

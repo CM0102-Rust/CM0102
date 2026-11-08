@@ -171,13 +171,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqt4_construir_paulista(this: us
 }
 
 
-pub(crate) unsafe fn cqt4_i(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
-pub(crate) unsafe fn cqt4_pi(a: usize, v: i32) {
-    core::ptr::write_unaligned(a as *mut i32, v)
-}
 
 /// A reputação da competição de uma liga (+0x69 do registro +4, word).
 pub(crate) unsafe fn cqt4_rep(liga: usize) -> i32 {
@@ -190,29 +184,29 @@ pub(crate) unsafe fn cqt4_rep(liga: usize) -> i32 {
 pub(crate) unsafe fn cqt4_piso_pela_reputacao(c: usize, r: i32, f: f64) {
     let lim = if r < 5 {
         let lim = ftol((r.wrapping_mul(250)) as f64 * f);
-        if cqt4_i(c + 0x73) >= lim {
+        if read_i32(c + 0x73) >= lim {
             return;
         }
         lim
     } else {
         let x = (r.wrapping_sub(4).wrapping_mul(750)) as f64 * f;
-        if cqt4_i(c + 0x73) >= ftol(x).wrapping_add(1000) {
+        if read_i32(c + 0x73) >= ftol(x).wrapping_add(1000) {
             return;
         }
         ftol(x + 1000.0)
     };
-    cqt4_pi(c + 0x73, lim);
-    if lim > cqt4_i(c + 0x7b) {
-        cqt4_pi(c + 0x7b, lim);
+    write_i32(c + 0x73, lim);
+    if lim > read_i32(c + 0x7b) {
+        write_i32(c + 0x7b, lim);
     }
 }
 
 /// O teto `lim` do público: acima dele, o público cai a ele e o mínimo (+0x77) desce até ele.
 pub(crate) unsafe fn cqt4_teto(c: usize, lim: i32) {
-    if cqt4_i(c + 0x73) > lim {
-        cqt4_pi(c + 0x73, lim);
-        if lim < cqt4_i(c + 0x77) {
-            cqt4_pi(c + 0x77, lim);
+    if read_i32(c + 0x73) > lim {
+        write_i32(c + 0x73, lim);
+        if lim < read_i32(c + 0x77) {
+            write_i32(c + 0x77, lim);
         }
     }
 }
@@ -254,8 +248,8 @@ pub(crate) unsafe fn cqt4_teto(c: usize, lim: i32) {
 /// No fim de cada um: no mínimo 500, e dentro de [+0x77, +0x7b]. A tabela é liberada (free 0x9452ca).
 pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
     let tabela_c = read_usize(G_COMP_OBJECT_TABLE);
-    let cima = if cqt4_i(liga + 0x1c) == -1 { 0 } else { read_usize(tabela_c + 4 * read_usize(liga + 0x1c)) };
-    let baixo = if cqt4_i(liga + 0x20) == -1 { 0 } else { read_usize(tabela_c + 4 * read_usize(liga + 0x20)) };
+    let cima = if read_i32(liga + 0x1c) == -1 { 0 } else { read_usize(tabela_c + 4 * read_usize(liga + 0x1c)) };
+    let baixo = if read_i32(liga + 0x20) == -1 { 0 } else { read_usize(tabela_c + 4 * read_usize(liga + 0x20)) };
     let mut f = 1.0f64;
     let reg = read_usize(liga + 4);
     if reg != 0 && read_usize(reg + 0x5d) != 0 {
@@ -292,7 +286,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
         let pos = *((e + 0x73) as *const u8);
         let prevista = *((e + 0x72) as *const u8);
         let dono = *((c + 0x6d) as *const u8) != 0;
-        let somar = |v: i32| cqt4_pi(c + 0x73, cqt4_i(c + 0x73).wrapping_add(v));
+        let somar = |v: i32| write_i32(c + 0x73, read_i32(c + 0x73).wrapping_add(v));
         let d = (prevista as i16).wrapping_sub(pos as i16).wrapping_add(1);
         if pos == 1 && acesso() == 0 {
             let k = cqt4_rep(liga) + d.max(0) as i32;
@@ -341,8 +335,8 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
             }
             let jogos = *((e + 5) as *const u8);
             if jogos != 0 {
-                let val = (cqt4_i(e + 6) / jogos as i32).wrapping_add(cqt4_i(c + 0x73).wrapping_mul(4));
-                cqt4_pi(c + 0x73, ftol(val as f64 * f * 0.2));
+                let val = (read_i32(e + 6) / jogos as i32).wrapping_add(read_i32(c + 0x73).wrapping_mul(4));
+                write_i32(c + 0x73, ftol(val as f64 * f * 0.2));
             }
         } else if rebaixamento() != 0
             && pos as i32 > read_i16(liga + 0x3e) as i32 - *((liga + 0xc1) as *const i8) as i32
@@ -353,7 +347,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
                     a = -1;
                 }
                 let mut v = ftol(read_i16(c + 0x80) as f64 * a as f64 * f * 0.2).min(-100);
-                if cqt4_i(baixo + 0x20) == -1 {
+                if read_i32(baixo + 0x20) == -1 {
                     let r = sorteio(0x2ee);
                     v = v.wrapping_mul(2).wrapping_sub(0xfa).wrapping_sub(r);
                 }
@@ -378,8 +372,8 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
             somar(sorteio(v));
             let jogos = *((e + 5) as *const u8);
             if jogos != 0 {
-                let val = (cqt4_i(e + 6) / jogos as i32).wrapping_add(cqt4_i(c + 0x73).wrapping_mul(4));
-                cqt4_pi(c + 0x73, ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
+                let val = (read_i32(e + 6) / jogos as i32).wrapping_add(read_i32(c + 0x73).wrapping_mul(4));
+                write_i32(c + 0x73, ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
             }
             crate::comparacao::ramo("cqt_4 publico do meio da tabela");
             cqt4_piso_pela_reputacao(c, cqt4_rep(liga), f);
@@ -387,14 +381,14 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
             let teto = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };
             cqt4_teto(c, teto);
         }
-        if cqt4_i(c + 0x73) < 500 {
-            cqt4_pi(c + 0x73, 500);
+        if read_i32(c + 0x73) < 500 {
+            write_i32(c + 0x73, 500);
         }
-        let a = cqt4_i(c + 0x73);
-        if a < cqt4_i(c + 0x77) {
-            cqt4_pi(c + 0x73, cqt4_i(c + 0x77));
-        } else if a > cqt4_i(c + 0x7b) {
-            cqt4_pi(c + 0x73, cqt4_i(c + 0x7b));
+        let a = read_i32(c + 0x73);
+        if a < read_i32(c + 0x77) {
+            write_i32(c + 0x73, read_i32(c + 0x77));
+        } else if a > read_i32(c + 0x7b) {
+            write_i32(c + 0x73, read_i32(c + 0x7b));
         }
         i += 1;
     }
@@ -614,10 +608,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr2_virada_do_carioca(this: usi
 
 
 
-/// O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
-pub(crate) unsafe fn cqo9_campeao_do_turno(this: usize, k: usize) -> usize {
-    read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
-}
 
 /// The Rio de Janeiro state league has two halves (stages 0 and 1, each a round-robin league) and, if needed, a final
 /// (stage 2): the next stage moves the current stage on and, at the end of the second half, builds the final; past the
@@ -666,9 +656,9 @@ pub(crate) unsafe extern "thiscall" fn cqo9_final_do_carioca(this: usize) {
     if lista == 0 {
         return aviso_em(0x98b014, 0x226);
     }
-    let a = cqo9_campeao_do_turno(this, 0);
+    let a = cqo7_campeao_do_turno(this, 0);
     core::ptr::write_unaligned(lista as *mut usize, a);
-    let b = cqo9_campeao_do_turno(this, 1);
+    let b = cqo7_campeao_do_turno(this, 1);
     core::ptr::write_unaligned((lista + 4) as *mut usize, b);
     if a == b {
         crate::comparacao::ramo("cqo_9 mesmo campeao");
@@ -771,7 +761,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo9_fase_seguinte_do_carioca(th
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn comparar_cqo9_final_do_carioca(this: usize) {
-    let (a, b) = (cqo9_campeao_do_turno(this, 0), cqo9_campeao_do_turno(this, 1));
+    let (a, b) = (cqo7_campeao_do_turno(this, 0), cqo7_campeao_do_turno(this, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(1906)(this);
     let igual = if a == b {
         let marca = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
@@ -804,12 +794,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo9_fim_da_temporada_do_carioca
 
 
 
-/// O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
-/// estadual) não é nula e o id do registro (+0) é o do global.
-pub(crate) unsafe fn cqm8_do_estadual(clube: usize, g: usize) -> bool {
-    let comp = read_usize(clube + 0x60);
-    comp != 0 && read_usize(comp) == read_usize(g)
-}
 
 /// O corpo comum dos estaduais (o mesmo molde nos doze, só mudam as constantes): +0x3e = `n` clubes; a tabela
 /// (malloc 0x944e46 de n × 0x3b; sem memória: a caixa do fonte `arquivo` na linha `linha` e devolve 0); os clubes de
@@ -830,7 +814,7 @@ pub(crate) unsafe fn cqm8_tabela(this: usize, n: i16, arquivo: usize, linha: u32
     let mut i: i16 = 0;
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        if cqm8_do_estadual(clube, g) {
+        if cql8_do_estadual(clube, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
@@ -888,7 +872,7 @@ pub(crate) unsafe fn cqm8_comparar(nome: &str, this: usize, n: i16, g: usize, or
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
         let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
-        if cqm8_do_estadual(clube, g) {
+        if cql8_do_estadual(clube, g) {
             plano.push(clube);
         }
         i += 1;
@@ -934,13 +918,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqm8_tabela_do_paulista(this: us
 pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_carioca(this: usize) -> u32 {
     cqi9_regras_carioca(this);
     crate::comparacao::ramo("cqi_9 regras do carioca");
-    cqi9_calendario(this);
+    cqi7_calendario(this);
     1
 }
 
 /// Comparador: como o do Paranaense.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_carioca(this: usize) -> u32 {
-    let reg = cqi9_regioes(this);
+    let reg = cqi7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1720)(this), || {
         cqi9_regras_carioca(this);
         1

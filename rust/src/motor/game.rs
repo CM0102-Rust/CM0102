@@ -202,20 +202,9 @@ pub(crate) unsafe extern "C" fn comparar_soma_presa(a: u32, b: u32, min: u32, ma
 // ---------- 255a leva: as relações do elenco no dia a dia: as brigas e preferências entre colegas, o atrito com o técnico e o moral espalhado pela liderança (game.cpp) ----------
 
 
-pub(crate) unsafe fn cps5_sb(a: usize) -> i32 {
-    *(a as *const i8) as i32
-}
 
 
-pub(crate) unsafe fn cps5_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
-/// O clube de índice `i` (registros de 0x245 bytes em [0xae23b4]; a conta em 32 bits, como a original).
-pub(crate) unsafe fn cps5_clube(i: usize) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add(i.wrapping_mul(0x245))
-}
 
 /// O contrato da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz a cada chamada.
 pub(crate) unsafe fn cps5_contrato(p: usize) -> usize {
@@ -230,7 +219,7 @@ pub(crate) unsafe fn cps5_clube_do_contrato(c: usize) -> usize {
     if c == 0 {
         0
     } else {
-        cps5_clube(read_usize(c + 4))
+        cpl2_clube(read_usize(c + 4))
     }
 }
 
@@ -304,13 +293,13 @@ pub(crate) unsafe extern "C" fn relacoes_do_elenco() {
     let favorecer: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_FAVOURED_STAFF);
     let tirar_favorita: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_STAFF_REMOVE_FAVOURED_STAFF);
     for _ in 0..10 {
-        let clube = cps5_clube(cps5_sortear(read_usize(G_CLUB_COUNT) as i32) as usize);
-        let a = read_usize(clube.wrapping_add(cps5_sortear(0x32) as usize * 4) + 0xd7);
-        let b = read_usize(clube.wrapping_add(cps5_sortear(0x32) as usize * 4) + 0xd7);
+        let clube = cpl2_clube(cpe1_sorteio(read_usize(G_CLUB_COUNT) as i32) as usize);
+        let a = read_usize(clube.wrapping_add(cpe1_sorteio(0x32) as usize * 4) + 0xd7);
+        let b = read_usize(clube.wrapping_add(cpe1_sorteio(0x32) as usize * 4) + 0xd7);
         if a == 0 || b == 0 || a == b {
             continue;
         }
-        if cps5_sortear(cps5_sb(a + 0x5b)) != 0 {
+        if cpe1_sorteio(read_i8_as_i32(a + 0x5b)) != 0 {
             continue;
         }
         if cps5_nao_gosta(b, a) != 0 {
@@ -329,9 +318,9 @@ pub(crate) unsafe extern "C" fn relacoes_do_elenco() {
                 continue;
             }
             briga(a, b);
-        } else if cps5_sortear(3) == 0 {
+        } else if cpe1_sorteio(3) == 0 {
             rejeitar(a, b, 1);
-        } else if cps5_sortear(3) == 0 {
+        } else if cpe1_sorteio(3) == 0 {
             favorecer(a, b, 1);
         } else {
             tirar_favorita(a, b);
@@ -341,7 +330,7 @@ pub(crate) unsafe extern "C" fn relacoes_do_elenco() {
         let atrito: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GAME_CHECK_CLUB_DRESSING_ROOM_UNREST);
         let mut i = 0i32;
         while i < read_usize(G_CLUB_COUNT) as i32 / 100 {
-            atrito(cps5_clube(cps5_sortear(read_usize(G_CLUB_COUNT) as i32) as usize));
+            atrito(cpl2_clube(cpe1_sorteio(read_usize(G_CLUB_COUNT) as i32) as usize));
             i += 1;
         }
         return;
@@ -372,22 +361,22 @@ pub(crate) unsafe fn cps5_pessoa_e_tecnico(p: usize) {
     if k == 0 {
         return;
     }
-    if cps5_sortear(cps5_sb(p + 0x5b) + 5) != 0 && cps5_sortear(cps5_sb(p + 0x5d) + 5) != 0 && cps5_sortear(cps5_sb(p + 0x5a) + 5) != 0 {
+    if cpe1_sorteio(read_i8_as_i32(p + 0x5b) + 5) != 0 && cpe1_sorteio(read_i8_as_i32(p + 0x5d) + 5) != 0 && cpe1_sorteio(read_i8_as_i32(p + 0x5a) + 5) != 0 {
         return;
     }
-    let mut e = cps5_sb(p + 0x5b) + (cps5_sb(p + 0x5a) + cps5_sb(p + 0x59)) + (cps5_sb(p + 0x5c) + cps5_sb(p + 0x18));
+    let mut e = read_i8_as_i32(p + 0x5b) + (read_i8_as_i32(p + 0x5a) + read_i8_as_i32(p + 0x59)) + (read_i8_as_i32(p + 0x5c) + read_i8_as_i32(p + 0x18));
     crate::comparacao::ramo("cps_5 tecnico sorteado");
-    if cps5_sortear(cps5_sb(p + 0x59)) == 0 { // cps5: o primeiro desconto
+    if cpe1_sorteio(read_i8_as_i32(p + 0x59)) == 0 { // cps5: o primeiro desconto
         e -= 3;
     }
-    if cps5_sortear(cps5_sb(p + 0x5a)) == 0 {
+    if cpe1_sorteio(read_i8_as_i32(p + 0x5a)) == 0 {
         e -= 5;
     }
-    if read_usize(k + 0x45) != 0 || cps5_sortear(0x64) == 0 {
-        if cps5_sortear(cps5_sb(p + 0x5b)) == 0 {
+    if read_usize(k + 0x45) != 0 || cpe1_sorteio(0x64) == 0 {
+        if cpe1_sorteio(read_i8_as_i32(p + 0x5b)) == 0 {
             e -= 0xf;
         }
-        if cps5_sortear(cps5_sb(p + 0x5d)) == 0 {
+        if cpe1_sorteio(read_i8_as_i32(p + 0x5d)) == 0 {
             e -= 0xf;
         }
     }
@@ -395,7 +384,7 @@ pub(crate) unsafe fn cps5_pessoa_e_tecnico(p: usize) {
     if rep > 0x1194 && rep > read_i16(clube + 0x80) {
         e -= 5;
     }
-    if cps5_sortear(e) >= 1 {
+    if cpe1_sorteio(e) >= 1 {
         return;
     }
     if read_usize(p + 0x65) == 0 {
@@ -462,7 +451,7 @@ pub(crate) unsafe extern "C" fn moral_pela_lideranca() {
     let fim = clube.wrapping_add(n.wrapping_mul(0x245));
     while clube < fim {
         let vagas = clube + 0xd7;
-        if e_selecao(clube) == 0 && cps5_sortear(7) == 0 {
+        if e_selecao(clube) == 0 && cpe1_sorteio(7) == 0 {
             let (mut soma, mut lideranca, mut q) = (0i32, 0i32, 0i32);
             for i in 0..0x32usize {
                 let p = read_usize(vagas + i * 4);
@@ -473,8 +462,8 @@ pub(crate) unsafe extern "C" fn moral_pela_lideranca() {
                 if c == 0 {
                     continue;
                 }
-                let l = cps5_sb(read_usize(p + 0x61) + 0x2f);
-                soma = soma.wrapping_add(cps5_sb(c + 0x44) * l);
+                let l = read_i8_as_i32(read_usize(p + 0x61) + 0x2f);
+                soma = soma.wrapping_add(read_i8_as_i32(c + 0x44) * l);
                 lideranca += l;
                 q += 1;
             }
@@ -490,20 +479,20 @@ pub(crate) unsafe extern "C" fn moral_pela_lideranca() {
                     continue;
                 }
                 let c = cps5_vinculo(p, clube);
-                let m = if c == 0 { 0 } else { cps5_sb(c + 0x44) };
-                let l = cps5_sb(read_usize(p + 0x61) + 0x2f);
+                let m = if c == 0 { 0 } else { read_i8_as_i32(c + 0x44) };
+                let l = read_i8_as_i32(read_usize(p + 0x61) + 0x2f);
                 crate::comparacao::ramo("cps_5 moral sorteado");
-                let r1 = cps5_sortear(soma.wrapping_mul(2) / (l + lideranca));
-                let r2 = cps5_sortear(m / 12); // cps5: a parte do moral
+                let r1 = cpe1_sorteio(soma.wrapping_mul(2) / (l + lideranca));
+                let r2 = cpe1_sorteio(m / 12); // cps5: a parte do moral
                 let s = (r1 as u8).wrapping_add(r2 as u8) as i8;
                 if s < 0 {
-                    let e = cps5_sortear(s as i32);
-                    if e < cps5_sortear(-5) {
+                    let e = cpe1_sorteio(s as i32);
+                    if e < cpe1_sorteio(-5) {
                         moral(p, -1, 1);
                     }
                 } else if s > 0 {
-                    let e = cps5_sortear(s as i32);
-                    if e > cps5_sortear(5) {
+                    let e = cpe1_sorteio(s as i32);
+                    if e > cpe1_sorteio(5) {
                         crate::comparacao::ramo("cps_5 moral sobe");
                         moral(p, 1, 1); // cps5: sobe o moral
                     }
@@ -523,24 +512,10 @@ pub(crate) unsafe extern "C" fn comparar_moral_pela_lideranca() {
 
 
 
-pub(crate) unsafe fn cps6_sb(a: usize) -> i32 {
-    *(a as *const i8) as i32
-}
 
 
 
-pub(crate) unsafe fn cps6_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
-}
 
-/// O contrato da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz a cada chamada.
-pub(crate) unsafe fn cps6_contrato(p: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = f(read_usize(G_CONTRACT_MANAGER), p);
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
-    c
-}
 
 /// O clube do contrato (registros de 0x245 bytes em [0xae23b4], pelo id em +4), ou 0 sem contrato.
 pub(crate) unsafe fn cps6_clube_do_contrato(c: usize) -> usize {
@@ -580,7 +555,7 @@ pub(crate) unsafe extern "C" fn faltas_ao_treino() {
     let n = read_usize(G_STAFF_COUNT) as i32;
     let q = n / 250;
     crate::comparacao::ramo("cps_6 faltas do dia");
-    let r = cps6_sortear(n - q - 1); // cps6: a primeira pessoa
+    let r = cpe1_sorteio(n - q - 1); // cps6: a primeira pessoa
     let mut atual = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(0x6e));
     for _ in 0..q {
         let p = atual;
@@ -588,7 +563,7 @@ pub(crate) unsafe extern "C" fn faltas_ao_treino() {
         if read_usize(p + 0x61) == 0 || read_u8(p + 0x3d) != 0xb {
             continue;
         }
-        let c = cps6_contrato(p);
+        let c = cps5_contrato(p);
         if c == 0 {
             continue;
         }
@@ -634,26 +609,26 @@ pub(crate) unsafe extern "C" fn faltas_ao_treino() {
                 s = s.wrapping_add(0x19);
             }
             crate::comparacao::ramo("cps_6 falta pela soma");
-            if cps6_sortear(s as i8 as i32) == 0 { // cps6: o sorteio da soma
+            if cpe1_sorteio(s as i8 as i32) == 0 { // cps6: o sorteio da soma
                 e_falta = true;
             }
         }
         if !e_falta {
-            if cps6_sb(p + 0x5b) >= 0xa {
+            if read_i8_as_i32(p + 0x5b) >= 0xa {
                 continue;
             }
-            let clube = cps6_clube_do_contrato(cps6_contrato(p));
+            let clube = cps6_clube_do_contrato(cps5_contrato(p));
             let v = vinculo(read_usize(G_CONTRACT_MANAGER), p, clube);
             if v == 0 {
                 continue;
             }
-            if read_usize(v + 0x45) & 0x8000 != 0 && cps6_sortear(cps6_sb(p + 0x5b)) == 0 {
+            if read_usize(v + 0x45) & 0x8000 != 0 && cpe1_sorteio(read_i8_as_i32(p + 0x5b)) == 0 {
                 e_falta = true;
-            } else if read_usize(v + 0x45) & 0x30000 != 0 && cps6_sortear(cps6_sb(p + 0x5b)) == 0 {
+            } else if read_usize(v + 0x45) & 0x30000 != 0 && cpe1_sorteio(read_i8_as_i32(p + 0x5b)) == 0 {
                 e_falta = true;
             } else {
-                let a = cps6_sb(p + 0x5b);
-                if a >= 5 || read_usize(v + 0x45) & 0x7800 == 0 || cps6_sortear(a) != 0 {
+                let a = read_i8_as_i32(p + 0x5b);
+                if a >= 5 || read_usize(v + 0x45) & 0x7800 == 0 || cpe1_sorteio(a) != 0 {
                     continue;
                 }
                 e_falta = true;
