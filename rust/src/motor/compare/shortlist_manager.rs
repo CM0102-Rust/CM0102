@@ -56,12 +56,12 @@ pub(crate) unsafe extern "C" fn compare_shortlist_compare_slots_by_index(a: usiz
 pub(crate) unsafe extern "thiscall" fn compare_mark_player_under_offer(this: usize, player: usize, buyer: usize, swap: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_MARK_PLAYER_UNDER_OFFER);
     let mut reg: Vec<(usize, usize)> = interested_clubs(this, player).into_iter()
-        .map(|k| read_usize(read_usize(this + 0xdc).wrapping_add(k.wrapping_mul(9))))
+        .map(|k| read_usize(read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(k.wrapping_mul(9))))
         .filter(|&t| t != 0)
         .map(|t| (t, 40 * 0x25))
         .collect();
     if swap != 0 {
-        reg.push((swap + 0xa, 4));
+        reg.push((swap + llist::CURSOR, 4));
     }
     let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, player, buyer, swap),
         || mark_player_under_offer(this, player, buyer, swap));
@@ -104,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn compare_count_slots_with_bids(this: usize
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_transfer_list(person: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_SHORTLIST_MANAGER_REMOVE_FROM_TRANSFER_LIST);
     let c = contract_of_staff(person);
-    let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
+    let reg = if c != 0 { vec![(c + contract::TRANSFER_STATUS, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || shortlist_manager_remove_from_transfer_list(person));
     SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_transfer_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
     r
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_tran
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_loan_list(person: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_SHORTLIST_MANAGER_REMOVE_FROM_LOAN_LIST);
     let c = contract_of_staff(person);
-    let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
+    let reg = if c != 0 { vec![(c + contract::TRANSFER_STATUS, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || shortlist_manager_remove_from_loan_list(person));
     SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
     r
@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_staff_status(this: usize, 
         return o(this, person, club, event, kind);
     }
     let mut reg = STAFF_STATUS_DATE_STATICS.to_vec();
-    for base in [this, this + 4] {
+    for base in [this, this + shortlist_manager_fields::PAIRS_BY_CLUB] {
         reg.push((base + 0x10, 4));
         if read_usize(base) != 0 {
             reg.push((read_usize(base), read_usize(base + 0x10).wrapping_mul(8)));
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_staff_status(this: usize, 
         let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
         let c = contract_of(read_usize(G_CONTRACT_MANAGER), person, club);
         if c != 0 {
-            reg.push((c + 0x4f, 1));
+            reg.push((c + contract::SQUAD_STATUS, 1));
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, club, event, kind),
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_add_to_loan_list
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> usize>(IDX_SHORTLIST_MANAGER_ADD_TO_LOAN_LIST);
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = f(read_usize(G_CONTRACT_MANAGER), person);
-    let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
+    let reg = if c != 0 { vec![(c + contract::TRANSFER_STATUS, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || shortlist_manager_add_to_loan_list(person));
     SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_add_to_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
     r
@@ -236,14 +236,14 @@ pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player
     interested(this, player, list, 1, 3, 0);
     // the items (8 bytes: player id, club id) through the nodes (+2 the first; node: +0 the data, +6 the next)
     let mut reg: Vec<(usize, usize)> = Vec::new();
-    let mut no = read_usize(list + 2);
+    let mut no = read_usize(list + llist::HEAD);
     while no != 0 {
-        let e = read_usize(this + 0xdc).wrapping_add(read_usize(read_usize(no) + 4).wrapping_mul(9));
+        let e = read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(read_usize(no) + 4).wrapping_mul(9));
         reg.push((e, 9));
         if clear != 0 {
             reg.push((read_usize(e), 0x28 * 0x25));
         }
-        no = read_usize(no + 6);
+        no = read_usize(no + llist_node::NEXT);
     }
     destroy(list);
     free(list);
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_list_player(this: usize,
     o(this, player, news);
     if mark {
         let c = get_contract(player);
-        let ok = c != 0 && read_u8(c + 0x4e) & 1 != 0 && read_u8(c + 0x4f) & 0xf0 == 0x70;
+        let ok = c != 0 && read_u8(c + contract::TRANSFER_STATUS) & 1 != 0 && read_u8(c + contract::SQUAD_STATUS) & 0xf0 == 0x70;
         SCOREBOARD.record(ok, || format!("transfer_list_player(jogador {:x}) contrato {:x} sem a marca de à venda", read_usize(player), c));
     }
 }
@@ -278,13 +278,13 @@ pub(crate) unsafe extern "thiscall" fn compare_build_position_lists(this: usize,
     let serve: unsafe extern "stdcall" fn(usize, u32) -> u8 = core::mem::transmute(FN_SHORTLIST_STAFF_FITS_SLOT_POSITION);
     let mut ruim = None;
     'f: for vaga in 0..16usize {
-        let n = read_i32(this + 0x98 + vaga * 4);
-        if n > read_i32(this + 0xd8) {
+        let n = read_i32(this + shortlist_manager_fields::POSITION_LIST_COUNTS + vaga * 4);
+        if n > read_i32(this + shortlist_manager_fields::POSITION_LIST_CAPACITY) {
             ruim = Some((vaga, -1));
             break;
         }
         for j in 0..n.max(0) as usize {
-            let (a, b) = (read_usize(this + 0x18 + vaga * 4) + j * 12, read_usize(this + 0x58 + vaga * 4) + j * 12);
+            let (a, b) = (read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + vaga * 4) + j * 12, read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_KEY + vaga * 4) + j * 12);
             if read_usize(a) != read_usize(b) || serve(staff_records_staff_by_id(read_usize(a)), vaga as u32) == 0 {
                 ruim = Some((vaga, j as i32));
                 break 'f;
@@ -299,10 +299,10 @@ pub(crate) unsafe extern "thiscall" fn compare_sort_position_lists(this: usize) 
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SORT_POSITION_LISTS);
     let mut reg = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     for vaga in 0..16usize {
-        let n = read_i32(this + 0x98 + vaga * 4);
+        let n = read_i32(this + shortlist_manager_fields::POSITION_LIST_COUNTS + vaga * 4);
         if n > 0 {
-            reg.push((read_usize(this + 0x18 + vaga * 4), n as usize * 12));
-            reg.push((read_usize(this + 0x58 + vaga * 4), n as usize * 12));
+            reg.push((read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + vaga * 4), n as usize * 12));
+            reg.push((read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_KEY + vaga * 4), n as usize * 12));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || sort_position_lists(this));
@@ -338,19 +338,19 @@ pub(crate) unsafe extern "thiscall" fn compare_add_shortlist_entry(this: usize, 
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let human: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let key = [read_usize(person) as u32, if club != 0 { read_usize(club) as u32 } else { 0xffff_ffff }];
-    let tinha = read_usize(this) != 0 && bsearch(key.as_ptr(), read_usize(this), read_i32(this + 0x10), 8, 0x757ea0) != 0;
-    let (n0, n1) = if read_usize(this) != 0 { (read_i32(this + 0x10), read_i32(this + 0x14)) } else { (0, 0) };
+    let tinha = read_usize(this) != 0 && bsearch(key.as_ptr(), read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), 8, 0x757ea0) != 0;
+    let (n0, n1) = if read_usize(this) != 0 { (read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT)) } else { (0, 0) };
     let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)) + 0xb;
     let nib = read_u8(r);
     let sum = !tinha && human(club, 0, 1, 0, 0) == 0;
     o(this, person, club);
     let expected = if sum { (nib & 0xf0) | (nib.wrapping_add(1) & 0xf) } else { nib };
     let (d0, d1) = (if tinha { n0 } else { n0 + 1 }, if tinha { n1 } else { n1 + 1 });
-    let found = bsearch(key.as_ptr(), read_usize(this), read_i32(this + 0x10), 8, 0x757ea0) != 0;
-    let ok = read_i32(this + 0x10) == d0 && read_i32(this + 0x14) == d1 && read_u8(r) == expected && (found || club == 0);
+    let found = bsearch(key.as_ptr(), read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), 8, 0x757ea0) != 0;
+    let ok = read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) == d0 && read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT) == d1 && read_u8(r) == expected && (found || club == 0);
     SCOREBOARD.record(ok, || {
         format!("add_shortlist_entry({:#x}, {:#x}) tinha={} contas {}/{} -> {}/{} nibble {:#x} -> {:#x} (esperado {:#x})",
-            person, club, tinha, n0, n1, read_i32(this + 0x10), read_i32(this + 0x14), nib, read_u8(r), expected)
+            person, club, tinha, n0, n1, read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT), nib, read_u8(r), expected)
     });
 }
 
@@ -446,7 +446,7 @@ pub(crate) unsafe extern "thiscall" fn compare_try_loan_offer_for_player(this: u
 pub(crate) unsafe extern "thiscall" fn compare_clear_bid_markers_for_player(manager: usize, club: *const i32, player: *const i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, *const i32)>(IDX_CLEAR_BID_MARKERS_FOR_PLAYER);
     let l = club_shortlist(manager, club);
-    let reg = if *((l + 4) as *const u8) == 1 { vec![(core::ptr::read_unaligned(l as *const usize), 40 * 0x25)] } else { vec![(l, 9)] };
+    let reg = if *((l + club_shortlist::ACTIVE) as *const u8) == 1 { vec![(core::ptr::read_unaligned(l as *const usize), 40 * 0x25)] } else { vec![(l, 9)] };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(manager, club, player), || clear_bid_markers_for_player(manager, club, player));
     SCOREBOARD.record(igual, || format!("clear_bid_markers_for_player({}, {}) {:x?} x {:x?}", *club, *player, mo, mr));
 }

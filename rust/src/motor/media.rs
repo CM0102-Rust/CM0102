@@ -85,17 +85,17 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
     let positions: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
     let listed: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED_OR_REQUESTED);
     let to_manager: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-    if read_i32(this + 0x14) == 0 {
+    if read_i32(this + media_fields::INTEREST_COUNT) == 0 {
         return;
     }
     // simplification: the owner’s manager stays from the previous pass when the player has no contract (the original does not rewrite it);
     // on the first pass the original reads the stack without a value: here 0
     let mut manager_owner: usize = 0;
     let mut i = 0i32;
-    while i < read_i32(this + 0x14) {
-        let r = read_usize(this + 0xc).wrapping_add((i as usize).wrapping_mul(25));
+    while i < read_i32(this + media_fields::INTEREST_COUNT) {
+        let r = read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add((i as usize).wrapping_mul(25));
         let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
-        let club = month_award_club_by_id(read_i32(r + 4));
+        let club = month_award_club_by_id(read_i32(r + transfer_interest::CLUB));
         let c = contract_of(read_usize(G_CONTRACT_MANAGER), person);
         core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
         let (mut dono, mut vinc) = (0usize, 0usize);
@@ -109,42 +109,42 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         let mut today = [0u8; 8];
         core::ptr::copy_nonoverlapping(G_CURRENT_DATE as *const u8, today.as_mut_ptr(), 8);
         let mut end = [0u8; 8];
-        let p = more(r + 8, end.as_mut_ptr(), 0x1f); // cqc10: o interesse vale 31 dias
+        let p = more(r + transfer_interest::DATE, end.as_mut_ptr(), 0x1f); // cqc10: o interesse vale 31 dias
         crate::comparison::branch("cqc_10 interesse");
         let (hd, ha) = (i16::from_le_bytes([today[0], today[1]]), u16::from_le_bytes([today[2], today[3]]));
         let vencido = ha > read_i16(p + 2) as u16 || (ha == read_i16(p + 2) as u16 && hd > read_i16(p));
         if vencido || manager_owner == 0 || read_usize(person + staff::PLAYER) == 0 {
-            let n = read_i32(this + 0x14);
-            let last = read_usize(this + 0xc).wrapping_add((n as usize).wrapping_mul(25)).wrapping_sub(25);
+            let n = read_i32(this + media_fields::INTEREST_COUNT);
+            let last = read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add((n as usize).wrapping_mul(25)).wrapping_sub(25);
             core::ptr::copy(last as *const u8, r as *mut u8, 25);
-            core::ptr::write_unaligned((this + 0x14) as *mut i32, n - 1);
+            core::ptr::write_unaligned((this + media_fields::INTEREST_COUNT) as *mut i32, n - 1);
             continue; // the last one came into place i: the original goes back one and forward one
         }
         if chegar(read_usize(G_TRANSFER_MANAGER), person, club, 0, 0) == 0 {
             i += 1;
             continue;
         }
-        if read_u8(r + 0x10) == 0 && {
+        if read_u8(r + transfer_interest::STATE) == 0 && {
             crate::comparison::branch("cqc_10 sorteio do boato");
             friendly_random(0x19) == 0 // cqc10: o sorteio do boato
         } {
             // the clubs interested in the player
             let mut ids = [-1i32; 5];
-            ids[0] = read_i32(r + 4);
-            *((r + 0x10) as *mut u8) = 1;
+            ids[0] = read_i32(r + transfer_interest::CLUB);
+            *((r + transfer_interest::STATE) as *mut u8) = 1;
             let mut cnt: i8 = 1;
             let mut cancelar = false;
             let mut j = 0i32;
-            while j < read_i32(this + 0x14) && cnt < 5 {
-                let rj = read_usize(this + 0xc).wrapping_add((j as usize).wrapping_mul(25));
+            while j < read_i32(this + media_fields::INTEREST_COUNT) && cnt < 5 {
+                let rj = read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add((j as usize).wrapping_mul(25));
                 if j != i && read_i32(rj) == read_i32(r) {
-                    if read_u8(rj + 0x10) != 0 {
+                    if read_u8(rj + transfer_interest::STATE) != 0 {
                         cancelar = true;
                         break;
                     }
-                    ids[cnt as usize] = read_i32(rj + 4);
+                    ids[cnt as usize] = read_i32(rj + transfer_interest::CLUB);
                     cnt += 1;
-                    *((rj + 0x10) as *mut u8) = 1;
+                    *((rj + transfer_interest::STATE) as *mut u8) = 1;
                 }
                 j += 1;
             }
@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 let rr = friendly_random(0x30d4); // cqc10: o sorteio da reputação para o pedido
                 if (read_i16(read_usize(person + staff::PLAYER) + 0xd) as i32) > rr {
                     let lim = read_i8(person + staff::LOYALITY) as i32 as f64 * 12.5 + 500.0;
-                    if lim < read_i32(r + 0x15) as f64 {
+                    if lim < read_i32(r + transfer_interest::RATING) as f64 {
                         write(n, 5, 0x24);
                         pede = true;
                         sai = true;
@@ -176,7 +176,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 let s = friendly_random(3);
                 write(n, 5, s as u32);
             }
-            write(n, 6, read_usize(r + 0x11) as u32);
+            write(n, 6, read_usize(r + transfer_interest::VALUE) as u32);
             let resp = if dono != 0 && media_is_human_club(dono, 0, 1) == 0 {
                 reply(this, read_usize(dono + club::MANAGER), person, 0x1f)
             } else {
@@ -255,8 +255,8 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             continue;
         }
         // state 1: the AI owner may warn that it does not sell
-        if read_u8(r + 0x10) == 1 && dono != 0 && media_is_human_club(dono, 1, 1) == 0 {
-            let (rd, ra) = (read_i16(r + 8), read_i16(r + 0xa) as u16);
+        if read_u8(r + transfer_interest::STATE) == 1 && dono != 0 && media_is_human_club(dono, 1, 1) == 0 {
+            let (rd, ra) = (read_i16(r + transfer_interest::DATE), read_i16(r + transfer_interest::DATE_YEAR) as u16);
             let (pd, pa) = (read_i16(person + staff::DATE_JOINED_CLUB), read_i16(person + 0x40) as u16);
             let after = ra > pa || (ra == pa && rd > pd);
             if after && vinc != 0 && read_u8(vinc + contract::LEAVING_ON_BOSMAN) == 0 && listed(person, 0) == 0 {
@@ -267,10 +267,10 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                     let nao_vende: unsafe extern "C" fn(usize, usize, usize, usize) = core::mem::transmute(FN_NEWS_CREATE_NOT_FOR_SALE_STORY);
                     nao_vende(person, dono, read_usize(dono + club::CHAIRMAN), 0);
                     let mut j = 0i32;
-                    while j < read_i32(this + 0x14) {
-                        let rj = read_usize(this + 0xc).wrapping_add((j as usize).wrapping_mul(25));
-                        if read_i32(rj) == read_i32(read_usize(this + 0xc).wrapping_add((i as usize).wrapping_mul(25))) {
-                            *((rj + 0x10) as *mut u8) = 2;
+                    while j < read_i32(this + media_fields::INTEREST_COUNT) {
+                        let rj = read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add((j as usize).wrapping_mul(25));
+                        if read_i32(rj) == read_i32(read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add((i as usize).wrapping_mul(25))) {
+                            *((rj + transfer_interest::STATE) as *mut u8) = 2;
                         }
                         j += 1;
                     }
@@ -279,10 +279,10 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         }
         i += 1;
     }
-    let n = read_i32(this + 0x14);
+    let n = read_i32(this + media_fields::INTEREST_COUNT);
     if n != 0 {
         let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-        qsort(read_usize(this + 0xc), n, 0x19, 0x757ea0);
+        qsort(read_usize(this + media_fields::TRANSFER_INTERESTS), n, 0x19, 0x757ea0);
     }
 }
 
@@ -1077,11 +1077,11 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     }
     let mut mudou = false;
     // (A) the media story at the front of the queue
-    if read_i32(this + 8) > 0 {
+    if read_i32(this + media_fields::STORY_LOG_COUNT) > 0 {
         let h = read_usize(this);
-        if read_i32(h + 0x13) == 0xbd0 && read_i16(h + 0x11) == 0x25 && read_i32(new) == 0x25 {
-            let kind = *((h + 0x10) as *const u8);
-            let id = read_i32(h + 8);
+        if read_i32(h + story_log_entry::TYPE) == 0xbd0 && read_i16(h + story_log_entry::SUBTYPE) == 0x25 && read_i32(new) == 0x25 {
+            let kind = *((h + story_log_entry::RESPONSE) as *const u8);
+            let id = read_i32(h + story_log_entry::PERSON_A);
             if id != -1 {
                 let q = media_staff_by_id(id);
                 let rp = current_reputation(p);
@@ -1879,9 +1879,9 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
         let base = read_usize(G_PLAYER_STATS);
         let notes = ratings_average(base, read_usize(sujeito + staff::PLAYER)) as i8 as f64;
         let base = read_usize(G_PLAYER_STATS);
-        let y = read_f64_at(base + 0x18);
+        let y = read_f64_at(base + player_stats_fields::RATED_COUNT);
         let c0 = read_f64_at(0x9689a0); // 0x9689a0 = 0
-        let average = if !(y < c0 || y > c0) { read_f64_at(0x968998) } else { read_f64_at(base + 0x10) / y }; // sem jogos: 6,8; 0x968998 = 6.8
+        let average = if !(y < c0 || y > c0) { read_f64_at(0x968998) } else { read_f64_at(base + player_stats_fields::RATING_SUM) / y }; // sem jogos: 6,8; 0x968998 = 6.8
         if notes > average * read_f64_at(0x9688a0) { // 0x9688a0 = 5
             m = 1;
         }
@@ -1978,9 +1978,9 @@ pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, 
     gravar(n, 4, read_usize(club) as u32);
     // the media list (this +0, count at +8)
     let mut in_list = false;
-    for i in 0..core::ptr::read_unaligned((this + 8) as *const i32).max(0) as usize {
+    for i in 0..core::ptr::read_unaligned((this + media_fields::STORY_LOG_COUNT) as *const i32).max(0) as usize {
         let e = read_usize(this) + i * 0x17;
-        if read_usize(e + 8) == read_usize(player) && *((e + 0x10) as *const u8) == 2 {
+        if read_usize(e + story_log_entry::PERSON_A) == read_usize(player) && *((e + story_log_entry::RESPONSE) as *const u8) == 2 {
             in_list = true;
             break;
         }
@@ -2234,8 +2234,8 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
     let stats: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let average_notes: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_PLAYERSTATS_GET_RECENT_FORM);
     let g = read_usize(G_PLAYER_STATS);
-    let games = core::ptr::read_unaligned((g + 0x18) as *const f64);
-    let x = if games == 0.0 || games.is_nan() { 6.8 } else { core::ptr::read_unaligned((g + 0x10) as *const f64) / games };
+    let games = core::ptr::read_unaligned((g + player_stats_fields::RATED_COUNT) as *const f64);
+    let x = if games == 0.0 || games.is_nan() { 6.8 } else { core::ptr::read_unaligned((g + player_stats_fields::RATING_SUM) as *const f64) / games };
     let xf = x as f32;
     let s1f = stats(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 6, 1, 6.5) as f32;
     let s2f = stats(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 6, 0x11, 6.5) as f32;
@@ -2418,10 +2418,10 @@ pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize
             show_error_at(0xa17bec, 0x6e11);
             fatal_exit();
         }
-        write_usize(this + 4, 0x14);
+        write_usize(this + media_fields::STORY_LOG_CAPACITY, 0x14);
     }
-    let cap = read_usize(this + 4);
-    if cap == read_usize(this + 8) {
+    let cap = read_usize(this + media_fields::STORY_LOG_CAPACITY);
+    if cap == read_usize(this + media_fields::STORY_LOG_COUNT) {
         let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
         let p = realloc(read_usize(this), cap.wrapping_add(0x14).wrapping_mul(0x17) as u32);
         write_usize(this, p);
@@ -2429,17 +2429,17 @@ pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize
             show_error_at(0xa17bec, 0x6e1c);
             fatal_exit();
         }
-        write_usize(this + 4, read_usize(this + 4).wrapping_add(0x14));
+        write_usize(this + media_fields::STORY_LOG_CAPACITY, read_usize(this + media_fields::STORY_LOG_CAPACITY).wrapping_add(0x14));
     }
-    let item = || read_usize(this).wrapping_add(read_usize(this + 8).wrapping_mul(0x17));
+    let item = || read_usize(this).wrapping_add(read_usize(this + media_fields::STORY_LOG_COUNT).wrapping_mul(0x17));
     write_usize(item() + 8, media_id_or_minus_one(a));
     write_usize(item() + 0xc, media_id_or_minus_one(b));
     copy_record_date(item(), G_CURRENT_DATE);
     write_usize(item() + 0x13, kind as usize);
     core::ptr::write_unaligned((item() + 0x11) as *mut i16, subtipo as u8 as i8 as i16);
     *((item() + 0x10) as *mut u8) = reply as u8;
-    let n = read_usize(this + 8).wrapping_add(1);
-    write_usize(this + 8, n); // one more story
+    let n = read_usize(this + media_fields::STORY_LOG_COUNT).wrapping_add(1);
+    write_usize(this + media_fields::STORY_LOG_COUNT, n); // one more story
     sort_news_log(read_usize(this), n);
 }
 
@@ -2463,9 +2463,9 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
     let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let mut i = 0i32;
-    while i < read_usize(this + 8) as i32 {
+    while i < read_usize(this + media_fields::STORY_LOG_COUNT) as i32 {
         let r = read_usize(this).wrapping_add((i as usize).wrapping_mul(0x17));
-        let days = if read_usize(r + 0x13) == 0xbdf {
+        let days = if read_usize(r + story_log_entry::TYPE) == 0xbdf {
             crate::comparison::branch("cpl_6 expirar historia do time");
             let s = sorteio(0x28); // the team history roll
             (s + 0x28) as u32
@@ -2475,16 +2475,16 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
         let mut local = [0u8; 8];
         let limit = datar(G_CURRENT_DATE, &mut local, days);
         if media_date_before(r, limit) {
-            let n = read_usize(this + 8);
+            let n = read_usize(this + media_fields::STORY_LOG_COUNT);
             let last = read_usize(this).wrapping_add(n.wrapping_mul(0x17)).wrapping_sub(0x17);
             core::ptr::copy(last as *const u8, r as *mut u8, 0x17);
-            write_usize(this + 8, n.wrapping_sub(1));
+            write_usize(this + media_fields::STORY_LOG_COUNT, n.wrapping_sub(1));
             i -= 1; // the same place again
         }
         i += 1;
     }
-    if read_usize(this + 8) != 0 {
-        sort_news_log(read_usize(this), read_usize(this + 8));
+    if read_usize(this + media_fields::STORY_LOG_COUNT) != 0 {
+        sort_news_log(read_usize(this), read_usize(this + media_fields::STORY_LOG_COUNT));
     }
 }
 
@@ -2509,10 +2509,10 @@ pub(crate) unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b
     let s = subtipo as u16;
     if kind == 0xbdf {
         crate::comparison::branch("cpl_6 historia do time ja contada");
-        let n = read_usize(this + 8) as i32;
+        let n = read_usize(this + media_fields::STORY_LOG_COUNT) as i32;
         for k in 0..n.max(0) as usize {
             let r = read_usize(this).wrapping_add(k * 0x17);
-            if read_usize(r + 0x13) == 0xbdf && read_usize(r + 0xc) == read_usize(b) && read_u16(r + 0x11) == s {
+            if read_usize(r + story_log_entry::TYPE) == 0xbdf && read_usize(r + story_log_entry::PERSON_B) == read_usize(b) && read_u16(r + story_log_entry::SUBTYPE) == s {
                 return 1; // the team’s story already told
             }
         }
@@ -2523,7 +2523,7 @@ pub(crate) unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b
     key[0xc..0x10].copy_from_slice(&(read_usize(b) as u32).to_le_bytes());
     key[0x11..0x13].copy_from_slice(&s.to_le_bytes());
     let bsearch: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let e = bsearch(key.as_ptr() as usize, read_usize(this), read_usize(this + 8) as u32, 0x17, 0x757ee0);
+    let e = bsearch(key.as_ptr() as usize, read_usize(this), read_usize(this + media_fields::STORY_LOG_COUNT) as u32, 0x17, 0x757ee0);
     if e == 0 {
         return 0;
     }
@@ -2544,12 +2544,12 @@ pub(crate) unsafe fn interest_key(player: usize, club: usize) -> [u32; 2] {
 ///
 /// [pt] O interesse já está no vetor? (bsearch 0x946464 com 0x757ea0; sem vetor, não).
 pub(crate) unsafe fn has_interest(this: usize, key: &[u32; 2]) -> bool {
-    let base = read_usize(this + 0xc);
+    let base = read_usize(this + media_fields::TRANSFER_INTERESTS);
     if base == 0 {
         return false;
     }
     let bsearch: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    bsearch(key.as_ptr() as usize, base, read_usize(this + 0x14) as u32, 0x19, 0x757ea0) != 0
+    bsearch(key.as_ptr() as usize, base, read_usize(this + media_fields::INTEREST_COUNT) as u32, 0x19, 0x757ea0) != 0
 }
 
 /// Caps the interest value at 50,000,000.
@@ -2588,38 +2588,38 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, player
         return; // the interest is already there
     }
     crate::comparison::branch("cpl_7 interesse novo");
-    if read_usize(this + 0xc) == 0 {
+    if read_usize(this + media_fields::TRANSFER_INTERESTS) == 0 {
         let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
         let p = alloc(0x1f4);
-        write_usize(this + 0xc, p);
+        write_usize(this + media_fields::TRANSFER_INTERESTS, p);
         if p == 0 {
             show_error_at(0xa17bec, 0x665d);
             fatal_exit();
         }
-        write_usize(this + 0x10, 0x14);
+        write_usize(this + media_fields::INTEREST_CAPACITY, 0x14);
     }
-    let cap = read_usize(this + 0x10);
-    if cap == read_usize(this + 0x14) {
+    let cap = read_usize(this + media_fields::INTEREST_CAPACITY);
+    if cap == read_usize(this + media_fields::INTEREST_COUNT) {
         let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-        let p = realloc(read_usize(this + 0xc), cap.wrapping_add(0x14).wrapping_mul(0x19) as u32);
-        write_usize(this + 0xc, p);
+        let p = realloc(read_usize(this + media_fields::TRANSFER_INTERESTS), cap.wrapping_add(0x14).wrapping_mul(0x19) as u32);
+        write_usize(this + media_fields::TRANSFER_INTERESTS, p);
         if p == 0 {
             show_error_at(0xa17bec, 0x6668);
             fatal_exit();
         }
-        write_usize(this + 0x10, read_usize(this + 0x10).wrapping_add(0x14));
+        write_usize(this + media_fields::INTEREST_CAPACITY, read_usize(this + media_fields::INTEREST_CAPACITY).wrapping_add(0x14));
     }
-    let item = || read_usize(this + 0xc).wrapping_add(read_usize(this + 0x14).wrapping_mul(0x19));
+    let item = || read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add(read_usize(this + media_fields::INTEREST_COUNT).wrapping_mul(0x19));
     write_usize(item(), read_usize(player));
     write_usize(item() + 4, read_usize(club));
     copy_record_date(item() + 8, G_CURRENT_DATE);
     *((item() + 0x10) as *mut u8) = 0; // the rumour has not come out yet
     write_usize(item() + 0x11, cap_interest_value(value) as usize);
     write_usize(item() + 0x15, match_pl_ftol(avaliacao * 100.0) as usize); // [0x9688a8] = 100.0
-    let n = read_usize(this + 0x14).wrapping_add(1);
-    write_usize(this + 0x14, n); // mais um interesse
+    let n = read_usize(this + media_fields::INTEREST_COUNT).wrapping_add(1);
+    write_usize(this + media_fields::INTEREST_COUNT, n); // mais um interesse
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    qsort(read_usize(this + 0xc), n as u32, 0x19, 0x757ea0);
+    qsort(read_usize(this + media_fields::TRANSFER_INTERESTS), n as u32, 0x19, 0x757ea0);
 }
 
 /// null first; by the +0 id and, when equal, by +4 (−1 matches anything)
@@ -2667,7 +2667,7 @@ pub(crate) unsafe extern "C" fn compare_story_log_records(a: usize, b: usize) ->
             return x.wrapping_sub(y);
         }
     }
-    let s = |p: usize| core::ptr::read_unaligned((p + 0x11) as *const i16) as i32;
+    let s = |p: usize| core::ptr::read_unaligned((p + story_log_entry::SUBTYPE) as *const i16) as i32;
     s(a) - s(b)
 }
 
@@ -2708,12 +2708,12 @@ pub(crate) unsafe fn crt_bsearch(key: usize, base: usize, n: u32, size: u32, com
 /// ([this+0xc], [this+0x14] registros de 25 bytes), cada um da pessoa (+0 = id) recebe por cima o último (6 duplas e um
 /// byte), a contagem desce e o mesmo lugar é visto de novo. Sobrando algum, reordena (qsort 0x945333 com 0x757ea0).
 pub(crate) unsafe extern "thiscall" fn remove_transfer_interest(this: usize, person: usize) {
-    let n = (this + 0x14) as *mut i32;
+    let n = (this + media_fields::INTEREST_COUNT) as *mut i32;
     let mut i = 0i32;
     let mut off = 0usize;
     if *n > 0 {
         loop {
-            let base = read_u32(this + 0xc) as usize;
+            let base = read_u32(this + media_fields::TRANSFER_INTERESTS) as usize;
             let r = base.wrapping_add(off);
             if read_u32(r) == read_u32(person) {
                 let last = base.wrapping_add((*n as usize).wrapping_mul(25)).wrapping_sub(25); // the last interest
@@ -2730,7 +2730,7 @@ pub(crate) unsafe extern "thiscall" fn remove_transfer_interest(this: usize, per
         }
     }
     if *n != 0 {
-        media_crt_qsort(read_u32(this + 0xc) as usize, *n, 0x19, 0x757ea0);
+        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0);
     }
 }
 
@@ -2758,10 +2758,10 @@ pub(crate) unsafe extern "thiscall" fn get_finable_story_kind(average: usize, pl
     let id = *(player as *const u32);
     for i in 0..n.max(0) as usize {
         let e = base.wrapping_add(i * 0x17);
-        if core::ptr::read_unaligned((e + 8) as *const u32) != id || *(0xa17be0 as *const u8) == 0xff {
+        if core::ptr::read_unaligned((e + story_log_entry::PERSON_A) as *const u32) != id || *(0xa17be0 as *const u8) == 0xff {
             continue;
         }
-        let kind = core::ptr::read_unaligned((e + 0x11) as *const u16);
+        let kind = core::ptr::read_unaligned((e + story_log_entry::SUBTYPE) as *const u16);
         let mut p = 0xa17be0usize;
         loop {
             if kind == *(p as *const i8) as i16 as u16 {
@@ -2811,7 +2811,7 @@ pub(crate) unsafe fn any_news_for_player(average: usize, id: i32, accepted: impl
 ///
 /// [pt] { 0x735780 } (thiscall, ret 4, media.cpp): o jogador `*id` tem uma notícia com a resposta 2 (+0x10)?
 pub(crate) unsafe extern "thiscall" fn story_with_response_two(average: usize, id: *const i32) -> u32 {
-    any_news_for_player(average, *id, |r| *((r + 0x10) as *const u8) == 2) as u32
+    any_news_for_player(average, *id, |r| *((r + story_log_entry::RESPONSE) as *const u8) == 2) as u32
 }
 
 /// whether the player has any story in the media log

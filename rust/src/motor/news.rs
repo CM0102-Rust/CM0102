@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
         show_error_at(0xa693ec, 0x236b);
         return 0;
     }
-    let e = read_usize(this + 8) + idx as usize * 12;
+    let e = read_usize(this + news_fields::HUMAN_INBOXES) + idx as usize * 12;
     if read_i32(e) == -1 {
         return 0;
     }
@@ -47,11 +47,11 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
     let mut v = 0usize;
     for k in 0..0x64usize {
         v = read_usize(this).wrapping_add((read_usize(e).wrapping_add(k)).wrapping_mul(STORED_NEWS_SIZE));
-        if read_usize(v + 0xd6) as u32 == id && read_usize(v + 0xda) == 0 {
+        if read_usize(v + news_item::ID) as u32 == id && read_usize(v + news_item::READ) == 0 {
             let mut tratador = 0u32;
             if botao(v, manager, 0xde1f64, 0x7d0, &mut tratador) != 2 {
                 crate::comparison::branch("cpo_6 noticia lida");
-                core::ptr::write_unaligned((v + 0xda) as *mut u32, 1);
+                core::ptr::write_unaligned((v + news_item::READ) as *mut u32, 1);
                 core::ptr::write_unaligned((e + 8) as *mut i32, read_i32(e + 8) - 1);
                 break;
             }
@@ -97,14 +97,14 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, manager: usi
     }
     let copy: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_NEWSITEM_OPERATOR_3D);
     let (inicio, n) = if manager == 0 {
-        (0usize, read_i32(this + 4).max(0) as usize)
+        (0usize, read_i32(this + news_fields::SLOT_COUNT).max(0) as usize)
     } else {
         let idx = read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
         if idx < 0 {
             show_error_at(0xa693ec, 0x2268);
             return 0;
         }
-        let start = read_i32(read_usize(this + 8) + idx as usize * 12);
+        let start = read_i32(read_usize(this + news_fields::HUMAN_INBOXES) + idx as usize * 12);
         if start == -1 {
             return 0;
         }
@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, manager: usi
     };
     for k in 0..n {
         let v = read_usize(this).wrapping_add(inicio.wrapping_add(k).wrapping_mul(STORED_NEWS_SIZE));
-        if read_usize(v + 0xd6) as u32 == id {
+        if read_usize(v + news_item::ID) as u32 == id {
             copy(out, v);
             return 1;
         }
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: u
         return 0;
     }
     let manager = read_usize(club + club::MANAGER);
-    *((news + 0xde) as *mut u8) = 0;
+    *((news + news_item::REACH) as *mut u8) = 0;
     if manager == 0 {
         return 0;
     }
@@ -233,20 +233,20 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
         return 0;
     }
     let importante: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWSITEM_IS_IMPORTANT_FOR);
-    *((news + 4) as *mut u8) = importante(news, manager) as u8;
-    write_usize(news + 0xda, 0);
+    *((news + news_item::IMPORTANT) as *mut u8) = importante(news, manager) as u8;
+    write_usize(news + news_item::READ, 0);
     let idx = news_human_manager_index(manager);
     if idx < 0 {
         show_error_at(0xa693ec, 0x1f58);
         return 0;
     }
-    let e = read_usize(this + 8) + idx as usize * 12;
+    let e = read_usize(this + news_fields::HUMAN_INBOXES) + idx as usize * 12;
     if read_i32(e) == -1 {
         let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-        write_usize(e, read_usize(this + 4));
-        write_usize(e + 4, read_usize(this + 4));
-        let total = read_usize(this + 4).wrapping_add(0x64);
-        write_usize(this + 4, total);
+        write_usize(e, read_usize(this + news_fields::SLOT_COUNT));
+        write_usize(e + 4, read_usize(this + news_fields::SLOT_COUNT));
+        let total = read_usize(this + news_fields::SLOT_COUNT).wrapping_add(0x64);
+        write_usize(this + news_fields::SLOT_COUNT, total);
         let p = realloc(read_usize(this), total.wrapping_mul(NEWS_NEWS_RECORD_SIZE) as u32);
         write_usize(this, p);
         if p == 0 {
@@ -255,14 +255,14 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
         }
         for k in 0..0x64usize {
             let v = read_usize(this) + (read_usize(e) + k).wrapping_mul(NEWS_NEWS_RECORD_SIZE);
-            write_usize(v + 0xd6, 0);
-            write_usize(v + 0xda, 1);
+            write_usize(v + news_item::ID, 0);
+            write_usize(v + news_item::READ, 1);
         }
     }
-    if read_usize(news + 0xd6) == 0 {
-        let id = read_usize(this + 0x10).wrapping_add(1);
-        write_usize(this + 0x10, id);
-        write_usize(news + 0xd6, id);
+    if read_usize(news + news_item::ID) == 0 {
+        let id = read_usize(this + news_fields::LAST_ID).wrapping_add(1);
+        write_usize(this + news_fields::LAST_ID, id);
+        write_usize(news + news_item::ID, id);
     }
     let current = read_i32(e + 4);
     let mut previous = current.wrapping_sub(1);
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
         previous = read_i32(e) + 0x63;
     }
     let slot = |k: i32| read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
-    if read_usize(slot(previous) + 0xd6) == read_usize(news + 0xd6) {
+    if read_usize(slot(previous) + 0xd6) == read_usize(news + news_item::ID) {
         return 1; // the same news again
     }
     if read_usize(slot(current) + 0xda) == 0 {
@@ -313,7 +313,7 @@ pub(crate) unsafe fn human_inbox_entry(this: usize, manager: usize, row: u32) ->
         show_error_at(0xa693ec, row);
         return None;
     }
-    Some(read_usize(this + 8) + idx as usize * 12)
+    Some(read_usize(this + news_fields::HUMAN_INBOXES) + idx as usize * 12)
 }
 
 /// Wraps a ring slot k below inicio to inicio + 99 (100-slot inbox ring).
@@ -353,7 +353,7 @@ pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, manager: us
     loop {
         k = ring_prev_wrap(k, read_i32(e));
         let slot = read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
-        if read_usize(slot + 0xd6) == 0 {
+        if read_usize(slot + news_item::ID) == 0 {
             return 1;
         }
         crate::comparison::branch("cpn_2 respond todas");
@@ -395,7 +395,7 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: us
     loop {
         k = ring_prev_wrap(k, read_i32(e));
         let slot = read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
-        if read_usize(slot + 0xd6) == 0 {
+        if read_usize(slot + news_item::ID) == 0 {
             return 0;
         }
         let mut out = 0u32;
@@ -403,7 +403,7 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: us
             return 1; // pede resposta
         }
         let slot = read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
-        if *((slot + 4) as *const u8) == 1 && read_usize(slot + 0xda) == 0 {
+        if *((slot + news_item::IMPORTANT) as *const u8) == 1 && read_usize(slot + news_item::READ) == 0 {
             return 1; // important and unread
         }
         k -= 1;
@@ -438,8 +438,8 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, 
     }
     let copy: unsafe extern "C" fn(usize, *const u8, u32) -> usize = core::mem::transmute(FN_9466D0);
     let d = 4 * field as i32;
-    copy(this + 5 + d as usize, text, (0xc8 - d) as u32);
-    *((this + 0xcc) as *mut u8) = 0;
+    copy(this + news_item::DATA + d as usize, text, (0xc8 - d) as u32);
+    *((this + news_item::TEXT_END) as *mut u8) = 0;
     if !next.is_null() {
         let mut n = 0i32;
         while *text.add(n as usize) != 0 {
@@ -559,7 +559,7 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(news: usize, person: usi
             0xfb6 => manager_of_news_club(news, 0x15) == person || manager_of_news_club(news, 0x19) == person,
             _ => false,
         },
-        6 => t == 0x1770 && read_usize(news + 5) as i32 >= (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10),
+        6 => t == 0x1770 && read_usize(news + news_item::DATA) as i32 >= (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10),
         1 => t == 0x1388,
         _ => false, // 3 e 7: nenhum
     };
@@ -618,7 +618,7 @@ pub(crate) unsafe fn active_human_manager(i: usize) -> Option<usize> {
 /// [pt] Entrega a notícia a cada técnico humano ativo que `passa` (0x785d40 com 0), com o alcance `alcance` em +0xde.
 /// Devolve se todas as entregas foram aceitas (a primeira recusada encerra).
 pub(crate) unsafe fn deliver_to_human_managers(this: usize, news: usize, reach: u8, passa: impl Fn(usize) -> bool) -> bool {
-    *((news + 0xde) as *mut u8) = reach;
+    *((news + news_item::REACH) as *mut u8) = reach;
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_DELIVER_TO_MANAGER);
     for i in 0..0x10 {
         if let Some(p) = active_human_manager(i) {
@@ -703,7 +703,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize,
     if news == 0 || nation == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, news, nation); // message box: original only
     }
-    *((news + 0xde) as *mut u8) = 2; // the nation’s reach
+    *((news + news_item::REACH) as *mut u8) = 2; // the nation’s reach
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_DELIVER_TO_MANAGER);
     for i in 0..0x10usize {
         let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE));
@@ -789,9 +789,9 @@ pub(crate) unsafe extern "thiscall" fn count_unread(news: usize, manager: usize,
     let mut count = 0;
     for k in 0..100 {
         let n = inbox_news_item(news, start, k);
-        if core::ptr::read_unaligned((n + 0xd6) as *const u32) != 0
+        if core::ptr::read_unaligned((n + news_item::ID) as *const u32) != 0
             && category_of(n) as u8 == category as u8
-            && core::ptr::read_unaligned((n + 0xda) as *const u32) == 0
+            && core::ptr::read_unaligned((n + news_item::READ) as *const u32) == 0
         {
             count += 1;
         }
@@ -808,7 +808,7 @@ pub(crate) unsafe fn set_slot_target(news: usize, manager: usize, id: u32, slot:
     if manager == 0 || id == 0 || !(0..0x32).contains(&slot) {
         return Err(());
     }
-    if copy != 0 && core::ptr::read_unaligned((copy + 0xd6) as *const u32) != id {
+    if copy != 0 && core::ptr::read_unaligned((copy + news_item::ID) as *const u32) != id {
         return Err(());
     }
     let entry = manager_inbox_entry(news, manager).ok_or(())?;
@@ -818,7 +818,7 @@ pub(crate) unsafe fn set_slot_target(news: usize, manager: usize, id: u32, slot:
     }
     (0..100)
         .map(|k| inbox_news_item(news, start, k))
-        .find(|&n| core::ptr::read_unaligned((n + 0xd6) as *const u32) == id)
+        .find(|&n| core::ptr::read_unaligned((n + news_item::ID) as *const u32) == id)
         .map(Some)
         .ok_or(())
 }
@@ -897,7 +897,7 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
         show_error_at(0xa693ec, 0x24cc);
         return;
     }
-    let caixa = (read_i32(this + 8) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
+    let caixa = (read_i32(this + news_fields::HUMAN_INBOXES) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
     let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_AUTO_RESPOND_ALL);
     for o in [0x39usize, 0x24] {
         let c = read_i32(manager + o) as usize;
@@ -912,8 +912,8 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
         crate::comparison::branch("clear_inbox");
         for k in 0..0x64u32 {
             let n = (read_i32(this) as u32).wrapping_add(k.wrapping_add(read_i32(caixa) as u32).wrapping_mul(0xdf)) as usize;
-            core::ptr::write_unaligned((n + 0xd6) as *mut i32, 0);
-            core::ptr::write_unaligned((n + 0xda) as *mut i32, 1);
+            core::ptr::write_unaligned((n + news_item::ID) as *mut i32, 0);
+            core::ptr::write_unaligned((n + news_item::READ) as *mut i32, 1);
         }
     }
 }
@@ -932,17 +932,17 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
 pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u32, importante: u32) -> usize {
     let init_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     let atribuir_data: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    init_data(this + 0xcd);
+    init_data(this + news_item::DATE);
     write_usize(this, kind as usize);
-    *((this + 4) as *mut u8) = importante as u8;
+    *((this + news_item::IMPORTANT) as *mut u8) = importante as u8;
     for k in 0..50 {
-        write_usize(this + 5 + 4 * k, 0);
+        write_usize(this + news_item::DATA + 4 * k, 0);
     }
     let mut temporaria = [0u32; 2];
-    atribuir_data(this + 0xcd, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
-    *((this + 0xd5) as *mut u8) = *(G_CURRENT_DAY_SLICE as *const u8);
-    write_usize(this + 0xd6, 0);
-    write_usize(this + 0xda, 0);
+    atribuir_data(this + news_item::DATE, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
+    *((this + news_item::DAY_SLICE) as *mut u8) = *(G_CURRENT_DAY_SLICE as *const u8);
+    write_usize(this + news_item::ID, 0);
+    write_usize(this + news_item::READ, 0);
     this
 }
 
@@ -970,7 +970,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
         show_error_at(0xa693ec, 0x2205);
         return 0;
     }
-    let e = read_usize(this + 8) + idx as usize * 12;
+    let e = read_usize(this + news_fields::HUMAN_INBOXES) + idx as usize * 12;
     if read_i32(e) == -1 {
         return 0;
     }
@@ -984,7 +984,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
             k = read_i32(e) + 0x63;
         }
         let slot = read_usize(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE));
-        if read_usize(slot + 0xd6) == 0 {
+        if read_usize(slot + news_item::ID) == 0 {
             return array;
         }
         if category as u8 == 0 || kind(slot) as u8 == category as u8 {
@@ -1074,11 +1074,11 @@ pub(crate) unsafe extern "thiscall" fn news_operator(this: usize, source: usize)
     for k in 0..50 {
         d(5 + 4 * k); // the news item’s records
     }
-    copy_record_date(this + 0xcd, source + 0xcd);
-    b(0xd5);
-    d(0xd6);
-    d(0xda);
-    b(0xde);
+    copy_record_date(this + news_item::DATE, source + news_item::DATE);
+    b(news_item::DAY_SLICE);
+    d(news_item::ID);
+    d(news_item::READ);
+    b(news_item::REACH);
     this
 }
 

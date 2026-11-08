@@ -1,12 +1,12 @@
 # Mutacoes da leva151 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva151.py --carreira 2002-06-01
 MUTACOES = [
-    ('i_decidida', "            if byte(p, 0x47) != -2\n", "            if byte(p, 0x47) != -3\n"),
+    ('i_decidida', "            if byte(p, day_match::HOME_GOALS) != -2\n", "            if byte(p, day_match::HOME_GOALS) != -3\n"),
     ('i_volta', "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, -1);", "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, 0);"),
-    ('i_rapida', "                    prepare(engine, p + 4, r, 0, 0);", "                    prepare(engine, p + 4, 1, 0, 0);"),
+    ('i_rapida', "                    prepare(engine, p + day_match::FIXTURE_COPY, r, 0, 0);", "                    prepare(engine, p + day_match::FIXTURE_COPY, 1, 0, 0);"),
     ('a_passo', "        step_towards(1);\n", "        step_towards(2);\n"),
-    ('a_conta', "            *((day + 0x25) as *mut i32) += 1;", "            *((day + 0x25) as *mut i32) += 2;"),
+    ('a_conta', "            *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 1;", "            *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 2;"),
     ('a_fim', "    let end = |e: u8| e == 2 || e == 8;", "    let end = |e: u8| e == 2;"),
-    ('f_copia', "    core::ptr::copy((p + 4) as *const u8, game as *mut u8, 0x4f);", "    core::ptr::copy((p + 4) as *const u8, game as *mut u8, 0x4e);"),
+    ('f_copia', "    core::ptr::copy((p + day_match::FIXTURE_COPY) as *const u8, game as *mut u8, 0x4f);", "    core::ptr::copy((p + day_match::FIXTURE_COPY) as *const u8, game as *mut u8, 0x4e);"),
     ('f_rodada', "            if r != 0 && *((r + 0x2d) as *const i32) > 1 {", "            if r != 0 && *((r + 0x2d) as *const i32) > 0 {"),
     ('f_contratos', "    two(u(G_CONTRACT_MANAGER, 0), 0x4ca6d0);\n", ""),
     ('f_suspensoes', "    two(u(G_DISCIPLINE, 0), 0x55ca00);\n", ""),

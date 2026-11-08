@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usiz
     if club == 0 || game == 0 || partida == 0 {
         return o(this, club, game, partida);
     }
-    let notes = (partida + 0x188 + 0x625 * (read_usize(game + 0x20) == club) as usize, 6);
+    let notes = (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club) as usize, 6);
     compare_champion_update("add_cup_winners_record", this, club, notes, false, || o(this, club, game, partida),
         || add_cup_winners_record(this, club, game, partida));
 }
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_human_manager_record(this: 
     let lim = read_i32(G_STAFF_COUNT);
     let r = if id >= lim.wrapping_sub(0x10) && id < lim {
         let slot = id.wrapping_sub(lim).wrapping_add(read_i32(G_NON_PLAYER_COUNT)).wrapping_add(0x10);
-        read_usize(this + 8).wrapping_add((slot as usize).wrapping_mul(0xd2))
+        read_usize(this + staff_records_fields::MANAGER_RECORDS).wrapping_add((slot as usize).wrapping_mul(0xd2))
     } else {
         person
     };
@@ -50,11 +50,11 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_human_manager_record(this: 
 /// chamada acha o mesmo registro). Jogo não disputado: só a original (não cria nada).
 pub(crate) unsafe extern "thiscall" fn compare_record_match_result(this: usize, p: usize, m: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RESULT);
-    if *((p + 0x3a) as *const u8) == 1 {
+    if *((p + fixture::CATEGORY) as *const u8) == 1 {
         return o(this, p, m);
     }
-    let a = club_manager_record(this, read_usize(p + 0x1c));
-    let v = club_manager_record(this, read_usize(p + 0x20));
+    let a = club_manager_record(this, read_usize(p + fixture::HOME_CLUB));
+    let v = club_manager_record(this, read_usize(p + fixture::AWAY_CLUB));
     let mut reg = Vec::new();
     for r in [a, v] {
         if r != 0 {
@@ -256,18 +256,18 @@ pub(crate) unsafe extern "thiscall" fn compare_add_failed_to_qualify_record(this
 /// do mês zerados e o mês e o ano guardados; no primeiro dia do ano, os pontos do ano zerados.
 pub(crate) unsafe extern "thiscall" fn compare_staff_records_daily_update(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STAFF_RECORDS_DAILY_UPDATE);
-    let virada = date_month(data) as i32 != read_i16(this + 0x14) as u16 as i32 || read_i16(data + 2) != read_i16(this + 0x16);
+    let virada = date_month(data) as i32 != read_i16(this + staff_records_fields::CURRENT_MONTH) as u16 as i32 || read_i16(data + 2) != read_i16(this + staff_records_fields::CURRENT_YEAR);
     let year = read_i16(data) == 0;
     let (m, a) = (date_month(data), read_i16(data + 2));
     o(this, data);
     if !virada && !year {
         return;
     }
-    let mut ok = !virada || (read_i16(this + 0x14) == m && read_i16(this + 0x16) == a);
+    let mut ok = !virada || (read_i16(this + staff_records_fields::CURRENT_MONTH) == m && read_i16(this + staff_records_fields::CURRENT_YEAR) == a);
     let mut first = -1i32;
     for k in 0..manager_record_count().max(0) {
         let e = manager_record_at(this, k);
-        let certo = (!virada || (read_usize(e + 0xca) == 0 && read_usize(e + 0xce) == 0)) && (!year || read_usize(e + 0xb6) == 0);
+        let certo = (!virada || (read_usize(e + manager_record::MONTH_POINTS) == 0 && read_usize(e + manager_record::MONTH_LEAGUE_POINTS) == 0)) && (!year || read_usize(e + manager_record::YEAR_POINTS) == 0);
         if !certo && first < 0 {
             first = k;
         }
@@ -355,9 +355,9 @@ pub(crate) unsafe extern "thiscall" fn compare_get_manager_record(this: usize, p
         return o(this, person, create);
     };
     let mut reg = vec![(r, 0xd2)];
-    let owner = read_u32(r + 0x86) as i32;
+    let owner = read_u32(r + manager_record::OWNER) as i32;
     if owner != -1 && owner != read_u32(person) as i32 {
-        let z = (read_u32(this + 8) as usize).wrapping_add((read_u32(read_u32(person + staff::NON_PLAYER) as usize) as usize).wrapping_mul(0xd2));
+        let z = (read_u32(this + staff_records_fields::MANAGER_RECORDS) as usize).wrapping_add((read_u32(read_u32(person + staff::NON_PLAYER) as usize) as usize).wrapping_mul(0xd2));
         if z != r {
             reg.push((z, 0xd2));
         }
@@ -385,7 +385,7 @@ pub(crate) unsafe extern "thiscall" fn compare_rewind_staff_history(this: usize,
     if person == 0 {
         return o(this, person);
     }
-    let par = read_usize(this + 0xc).wrapping_add(read_usize(person).wrapping_mul(8));
+    let par = read_usize(this + staff_records_fields::PERSON_HISTORY_LISTS).wrapping_add(read_usize(person).wrapping_mul(8));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(par, 8)], || o(this, person), || rewind_staff_history(this, person));
     SCOREBOARD.record(igual, || format!("rewind_staff_history({}) {:x?} x {:x?}", read_usize(person), mo, mr));
 }

@@ -62,8 +62,8 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = 9; // cql6: a regra de disciplina das ligas inglesas
     if let Some((capacidade, sentados)) = p.estadio {
-        core::ptr::write_unaligned((this + 0xe2) as *mut u16, capacidade);
-        core::ptr::write_unaligned((this + 0xe4) as *mut u16, sentados);
+        core::ptr::write_unaligned((this + league::REQUIRED_SEATS) as *mut u16, capacidade);
+        core::ptr::write_unaligned((this + league::REQUIRED_CAPACITY) as *mut u16, sentados);
     }
     if carregar(this, 1) != 0 {
         return this;
@@ -164,7 +164,7 @@ pub(crate) unsafe fn compare_english_constructor(name: &str, this: usize, year: 
     let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
         && read_u32_as_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 9;
     if let Some((c, s)) = p.estadio {
-        ok = ok && core::ptr::read_unaligned((this + 0xe2) as *const u16) == c && core::ptr::read_unaligned((this + 0xe4) as *const u16) == s;
+        ok = ok && core::ptr::read_unaligned((this + league::REQUIRED_SEATS) as *const u16) == c && core::ptr::read_unaligned((this + league::REQUIRED_CAPACITY) as *const u16) == s;
     }
     if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
         ok = ok && read_u32_as_usize(this + league::STAGE_COUNT) == p.fases as usize && (read_u32_as_usize(this + league::STAGES) != 0) == (p.fases != 0);

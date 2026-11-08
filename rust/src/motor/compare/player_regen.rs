@@ -89,13 +89,13 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_sign_for_club(person:
 /// capacidade). Com a tabela cheia (conta = capacidade − 1, a 0x7a8510 realoca): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_schedule_injury_retirement(this: usize, person: usize, days: i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i16)>(IDX_SCHEDULE_INJURY_RETIREMENT);
-    let (n, cap) = (read_i32(this + 8), read_i32(this + 0xc));
+    let (n, cap) = (read_i32(this + player_regen_fields::RETIREMENT_COUNT), read_i32(this + player_regen_fields::RETIREMENT_CAPACITY));
     if person == 0 || n >= cap.wrapping_sub(1) || cap <= 0 {
         return o(this, person, days);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((this + 4, 12));
-    reg.push((read_i32(this + 4) as usize, cap as usize * 0x1a));
+    reg.push((this + player_regen_fields::RETIREMENTS, 12));
+    reg.push((read_i32(this + player_regen_fields::RETIREMENTS) as usize, cap as usize * 0x1a));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, days), || crate::rng::without_counting(|| schedule_injury_retirement(this, person, days)));
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
@@ -113,13 +113,13 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_post_retirement_annou
 
 /// Comparador: o id da ficha antes; a original acrescenta (pode realocar); confere a conta e o item novo.
 pub(crate) unsafe extern "thiscall" fn compare_add_player_data_to_pool(this: usize, person: i32, nation: u32, second: u32) {
-    let n = read_usize(this + 0x40);
+    let n = read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT);
     let id = read_usize(read_usize(read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul(0x6e) as usize) + 0x61)) as u32;
     original_fn::<unsafe extern "thiscall" fn(usize, i32, u32, u32)>(IDX_ADD_PLAYER_DATA_TO_POOL)(this, person, nation, second);
-    let item = read_usize(this + 0x3c).wrapping_add(n << 4);
-    let g = [read_usize(item) as u32, read_usize(item + 4) as u32, read_usize(item + 8) as u32];
-    SCOREBOARD.record(read_usize(this + 0x40) == n.wrapping_add(1) && g == [id, nation, second], || {
-        format!("add_player_data_to_pool({}, {}, {}) conta {} -> {}, item {:?} (id {})", person, nation, second, n, read_usize(this + 0x40), g, id)
+    let item = read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(n << 4);
+    let g = [read_usize(item) as u32, read_usize(item + regen_pool_item::NATION_ID) as u32, read_usize(item + regen_pool_item::SECOND_NATION_ID) as u32];
+    SCOREBOARD.record(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == n.wrapping_add(1) && g == [id, nation, second], || {
+        format!("add_player_data_to_pool({}, {}, {}) conta {} -> {}, item {:?} (id {})", person, nation, second, n, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT), g, id)
     });
 }
 
@@ -249,7 +249,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_club_from_nation_list(this: 
     for n in [read_usize(read_usize(player + staff::NATION)), read_usize(KEY_NATION_ENGLAND)] {
         let l = nation_club_list(this, n);
         if l != 0 {
-            reg.push((l + 0xa, 4));
+            reg.push((l + llist::CURSOR, 4));
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, player), || crate::rng::without_counting(|| pick_club_from_nation_list(this, player)));
@@ -259,24 +259,24 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_club_from_nation_list(this: 
 
 /// Comparador: a original acrescenta (pode realocar); confere a conta e o item novo.
 pub(crate) unsafe extern "thiscall" fn compare_add_spare_non_player_record(this: usize, id: u32, nation: u32, second: u32) {
-    let n = read_usize(this + 0x20);
+    let n = read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT);
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(IDX_ADD_SPARE_NON_PLAYER_RECORD)(this, id, nation, second);
-    let item = read_usize(this + 0x1c).wrapping_add(n << 4);
-    let g = [read_usize(item) as u32, read_usize(item + 4) as u32, read_usize(item + 8) as u32];
-    SCOREBOARD.record(read_usize(this + 0x20) == n.wrapping_add(1) && g == [id, nation, second], || {
-        format!("add_spare_non_player_record({}, {}, {}) conta {} -> {}, item {:?}", id, nation, second, n, read_usize(this + 0x20), g)
+    let item = read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS).wrapping_add(n << 4);
+    let g = [read_usize(item) as u32, read_usize(item + regen_pool_item::NATION_ID) as u32, read_usize(item + regen_pool_item::SECOND_NATION_ID) as u32];
+    SCOREBOARD.record(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) == n.wrapping_add(1) && g == [id, nation, second], || {
+        format!("add_spare_non_player_record({}, {}, {}) conta {} -> {}, item {:?}", id, nation, second, n, read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT), g)
     });
 }
 
 /// Comparador: o registro copiado antes; a original acrescenta (pode realocar); confere a conta e os campos.
 pub(crate) unsafe extern "thiscall" fn compare_add_retirement(this: usize, r: usize) {
-    let n = read_usize(this + 8);
+    let n = read_usize(this + player_regen_fields::RETIREMENT_COUNT);
     let expected = retirement_entry_fields(r);
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_RETIREMENT)(this, r);
-    let item = read_usize(this + 4).wrapping_add(n.wrapping_mul(26));
+    let item = read_usize(this + player_regen_fields::RETIREMENTS).wrapping_add(n.wrapping_mul(26));
     let g = retirement_entry_fields(item);
-    SCOREBOARD.record(read_usize(this + 8) == n.wrapping_add(1) && g == expected, || {
-        format!("add_retirement conta {} -> {}, item {:x?} (esperava {:x?})", n, read_usize(this + 8), g, expected)
+    SCOREBOARD.record(read_usize(this + player_regen_fields::RETIREMENT_COUNT) == n.wrapping_add(1) && g == expected, || {
+        format!("add_retirement conta {} -> {}, item {:x?} (esperava {:x?})", n, read_usize(this + player_regen_fields::RETIREMENT_COUNT), g, expected)
     });
 }
 
@@ -291,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize
         return o(this, entry);
     }
     let person = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
-    let (n1, n2, n3) = (read_usize(this + 0x14), read_usize(this + 0x20), read_usize(this + 0x40));
+    let (n1, n2, n3) = (read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT), read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT), read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT));
     let datas = read_usize(entry + 4) as u32;
     let np = read_usize(person + staff::NON_PLAYER);
     let jp = read_usize(person + staff::PLAYER);
@@ -299,31 +299,31 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize
     let reserve = (np != 0).then(|| (read_usize(np) as u32, (nation != 0).then(|| read_usize(nation) as u32), read_usize(person) as u32));
     let bench = (jp != 0).then(|| (read_usize(jp) as u32, read_usize(nation) as u32, read_usize(person) as u32));
     o(this, entry);
-    let queue = read_usize(this + 0x10).wrapping_add(n1.wrapping_mul(12));
-    let mut ok = read_usize(this + 0x14) == n1 + 1 && read_usize(queue) as i32 == id && read_usize(queue + 4) as u32 == datas;
-    ok &= read_usize(this + 0x20) == n2 + reserve.is_some() as usize;
+    let queue = read_usize(this + player_regen_fields::REGEN_QUEUE).wrapping_add(n1.wrapping_mul(12));
+    let mut ok = read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT) == n1 + 1 && read_usize(queue) as i32 == id && read_usize(queue + regen_queue_entry::REGEN_DATE) as u32 == datas;
+    ok &= read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) == n2 + reserve.is_some() as usize;
     if let Some((rid, rnac, rp)) = reserve {
-        let i = read_usize(this + 0x1c).wrapping_add(n2 << 4);
-        let gn = read_usize(i + 4) as u32;
-        ok &= read_usize(i) as u32 == rid && read_usize(i + 0xc) as u32 == rp
+        let i = read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS).wrapping_add(n2 << 4);
+        let gn = read_usize(i + regen_pool_item::NATION_ID) as u32;
+        ok &= read_usize(i) as u32 == rid && read_usize(i + regen_pool_item::STAFF_ID) as u32 == rp
             && rnac.map_or(gn < (*(G_NATION_COUNT as *const i32)).max(1) as u32, |v| gn == v);
     }
-    ok &= read_usize(this + 0x40) == n3 + bench.is_some() as usize;
+    ok &= read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == n3 + bench.is_some() as usize;
     if let Some((bid, bnac, bp)) = bench {
-        let i = read_usize(this + 0x3c).wrapping_add(n3 << 4);
-        ok &= read_usize(i) as u32 == bid && read_usize(i + 4) as u32 == bnac && read_usize(i + 0xc) as u32 == bp;
+        let i = read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(n3 << 4);
+        ok &= read_usize(i) as u32 == bid && read_usize(i + regen_pool_item::NATION_ID) as u32 == bnac && read_usize(i + regen_pool_item::STAFF_ID) as u32 == bp;
     }
     SCOREBOARD.record(ok, || {
         format!("queue_staff_for_regen({}) contas {} {} {} -> {} {} {}, reserva {:?}, banco {:?}", id, n1, n2, n3,
-            read_usize(this + 0x14), read_usize(this + 0x20), read_usize(this + 0x40), reserve, bench)
+            read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT), read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT), read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT), reserve, bench)
     });
 }
 
 /// Comparer for `remove_retirement` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn compare_remove_retirement(this: usize, key: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_RETIREMENT);
-    let n = (*((this + 8) as *const i32)).max(0) as usize;
-    let reg = [(this + 4, 8), (read_u32(this + 4) as usize, n * 26)];
+    let n = (*((this + player_regen_fields::RETIREMENT_COUNT) as *const i32)).max(0) as usize;
+    let reg = [(this + player_regen_fields::RETIREMENTS, 8), (read_u32(this + player_regen_fields::RETIREMENTS) as usize, n * 26)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, key), || remove_retirement(this, key));
     SCOREBOARD.record(igual, || format!("remove_retirement {:x?} x {:x?}", mo, mr));
 }
@@ -448,14 +448,14 @@ pub(crate) unsafe extern "thiscall" fn compare_build_nation_club_lists(this: usi
 /// ou id inválido: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_process_regen_queue(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PROCESS_REGEN_QUEUE);
-    if read_i32(this + 0x20) > 2 {
+    if read_i32(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) > 2 {
         crate::comparison::branch("cpw_10 reservas so na original");
         return o(this);
     }
-    let c0 = read_i32(this + 0x14);
-    let base = read_usize(this + 0x10);
+    let c0 = read_i32(this + player_regen_fields::REGEN_QUEUE_COUNT);
+    let base = read_usize(this + player_regen_fields::REGEN_QUEUE);
     let mut k = 0i32;
-    if read_i32(this + 0x40) != 0 {
+    if read_i32(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) != 0 {
         while k < c0 {
             let e = base + k as usize * 0xc;
             if !is_regen_entry_due(e) {

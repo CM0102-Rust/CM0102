@@ -1,6 +1,6 @@
 # Mutacoes da leva55 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva55.py
 MUTACOES = [
-    ('j_nulo', "    let st = *((p + 0x69) as *const usize);\n    if st == 0 {\n        return;", "    let st = *((p + 0x69) as *const usize);\n    if st == 0 && p == 1 {\n        return;"),
+    ('j_nulo', "    let st = *((p + staff::NON_PLAYER) as *const usize);\n    if st == 0 {\n        return;", "    let st = *((p + staff::NON_PLAYER) as *const usize);\n    if st == 0 && p == 1 {\n        return;"),
     ('j_22', "    let n_home = ceiling(casa, 22).wrapping_sub(level as i16);", "    let n_home = ceiling(casa, 21).wrapping_sub(level as i16);"),
     ('j_5d', "(comp != 0 && *((comp + competition::CLUB_COMP_NATION) as *const usize) == club_p)", "(comp != 0 && *((comp + competition::CLUB_COMP_CONTINENT) as *const usize) == club_p)"),
     ('j_53', "|| *((my + club::NATION) as *const usize) == club_p {", "|| *((other + club::NATION) as *const usize) == club_p {"),

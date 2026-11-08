@@ -1,0 +1,178 @@
+manager_manager_fields	0x0	BOARD_RECORDS	4	array of 0x49-byte board records, one per club id (board_record)
+manager_manager_fields	0x4	DEPARTURE_LIST	4	LLIST of pending manager departures (6-byte items: type, reason, club id)
+manager_manager_fields	0x8	VACANCY_LIST	4	LLIST of job vacancies (0x26-byte items, club id at +0xe)
+manager_manager_fields	0x10	ULTIMATUM_LIST	4	LLIST of club ids under a board ultimatum
+manager_manager_fields	0x14	BAN_APPEAL_LIST	4	LLIST of pending ban appeals (ban_appeal items)
+board_record	0x1	WEALTH_BAND	1	club wealth band copied in at the season expectations
+board_record	0x2	FLAGS	1	status bits (bit 2 departure recorded, bit 8 in season; cleared on a manager change) [inference]
+board_record	0x6	CONFIDENCE	2	board confidence in the manager, 1..10000
+board_record	0x8	CONFIDENCE_2	2	second confidence value (+1.15 x the match adjustment)
+board_record	0xa	CONFIDENCE_3	2	third confidence value (+0.5 x the match adjustment)
+board_record	0xc	CONFIDENCE_4	2	fourth confidence value (+0.2 x the match adjustment)
+board_record	0xe	EXPECTATION_FLAGS	2	season expectation flags (title, European places, top half, avoid relegation...)
+board_record	0x12	LEAGUE_CONFIDENCE	2	season change of the board's league confidence (signed; banded by get_league_confidence_band)
+board_record	0x14	TRANSFER_MOOD	2	board mood changed by the transfer deal reasons (signed) [inference]
+board_record	0x16	FAVOURITES_MOOD	2	board mood changed by sales of favoured or rejected players and media stories, floor -10000 [inference]
+board_record	0x18	LAST_REVIEW_DATE	8	date of the last board review news (TCMDate)
+board_record	0x2c	TARGET_POSITION	4	league position the board expects this season
+board_record	0x30	SPENDING	8	double spending figure, reputation squared / 4 at the season start [inference]
+board_record	0x38	SPENDING_CEILING	8	double compared with SPENDING for the debt departure reason [inference]
+comp_stats_club	0x72	DANGER_POSITION	1	danger position used as the board target (0 none) [inference]
+comp_stats_club	0x73	CURRENT_POSITION	1	club's current position in the competition statistics
+comp_stats_club	0x74	BEST_POSITION	1	best position reached
+comp_stats_club	0x75	WORST_POSITION	1	worst position reached
+ban_appeal	0x4	RESULT	1	appeal result (0 none yet)
+ban_appeal	0x5	DATE	8	date the appeal is heard (TCMDate)
+ban_appeal	0xd	RULES	4	up to 4 discipline rule indexes (signed bytes, negative unused)
+job_vacancy	0xe	CLUB_ID	4	id of the club with the vacancy
+staff_state	0xa	INJURY_COUNTER	1	byte of the 79-byte general.dat record raised by injuries up to 100 [inference]
+staff_state	0xb	STATUS_FLAGS	1	bit 0x40 regen mark, bits 0x30 retirement state (0x10 announced, 0x20 retired)
+match_record	0x188	HOME_MANAGER_CURRENT_REPUTATION	2	home manager's current reputation (team block +0x69; home and world reputations at +2/+4, away side at +0x625)
+match_record	0x1c0	ROW_MINUTE_OFF	1	minute substituted off of a player row (base record + 0x625 x side + 0x49 x idx)
+match_record	0x1c4	ROW_MINUTE_LEFT_PITCH	1	minute a player row left the pitch (same base as ROW_MINUTE_OFF)
+staff_records_fields	0x0	PERSON_HISTORY_FILE	4	FILE_LLIST of the person histories
+staff_records_fields	0x4	CLUB_HISTORY_FILE	4	FILE_LLIST of the club histories
+staff_records_fields	0x8	MANAGER_RECORDS	4	array of 0xd2-byte manager records (manager_record)
+staff_records_fields	0xc	PERSON_HISTORY_LISTS	4	8-byte start/end pair per person id into PERSON_HISTORY_FILE
+staff_records_fields	0x10	CLUB_HISTORY_LISTS	4	8-byte start/end pair per club id into CLUB_HISTORY_FILE
+staff_records_fields	0x14	CURRENT_MONTH	2	month of the last daily update
+staff_records_fields	0x16	CURRENT_YEAR	2	year of the last daily update
+manager_record	0x10	BIGGEST_PURCHASE_DATE	8	date of the biggest purchase
+manager_record	0x18	BIGGEST_PURCHASE_FEE	4	fee of the biggest purchase
+manager_record	0x1c	BIGGEST_PURCHASE_SWAP	1	1 when the biggest purchase included a swap
+manager_record	0x1d	BIGGEST_PURCHASE_SELLER	4	selling club id of the biggest purchase (-1 none)
+manager_record	0x21	BIGGEST_PURCHASE_BUYER	4	buying club id of the biggest purchase
+manager_record	0x25	BIGGEST_SALE_PERSON	16	person id and three name keys of the biggest sale
+manager_record	0x35	BIGGEST_SALE_DATE	8	date of the biggest sale
+manager_record	0x3d	BIGGEST_SALE_FEE	4	fee of the biggest sale
+manager_record	0x41	BIGGEST_SALE_SWAP	1	1 when the biggest sale included a swap
+manager_record	0x42	BIGGEST_SALE_SELLER	4	selling club id of the biggest sale
+manager_record	0x46	BIGGEST_SALE_BUYER	4	buying club id of the biggest sale (-1 none)
+manager_record	0x4a	CURRENT_CLUB	4	club id of the current job (-1 none)
+manager_record	0x4e	CURRENT_CLUB_SINCE	8	start date of the current job
+manager_record	0x50	CURRENT_CLUB_SINCE_YEAR	2	year word of CURRENT_CLUB_SINCE
+manager_record	0x52	CURRENT_CLUB_SINCE_HIGH	4	second dword of CURRENT_CLUB_SINCE
+manager_record	0x56	CURRENT_CLUB_END	8	end date of the current job (13/11/1975 placeholder when hired)
+manager_record	0x5e	LONGEST_CLUB	4	club id of the longest job (-1 none)
+manager_record	0x62	LONGEST_START	8	start date of the longest job
+manager_record	0x66	LONGEST_START_HIGH	4	second dword of LONGEST_START
+manager_record	0x6a	LONGEST_END	8	end date of the longest job
+manager_record	0x72	SHORTEST_CLUB	4	club id of the shortest job (-1 none)
+manager_record	0x76	SHORTEST_START	8	start date of the shortest job
+manager_record	0x78	SHORTEST_START_YEAR	2	year word of SHORTEST_START
+manager_record	0x7a	SHORTEST_START_HIGH	4	second dword of SHORTEST_START
+manager_record	0x7e	SHORTEST_END	8	end date of the shortest job
+manager_record	0x86	OWNER	4	person id the record belongs to (-1 free)
+manager_record	0x8a	CUPS_WON	2	cups won
+manager_record	0x8c	LEAGUES_WON	2	league titles won
+manager_record	0x8e	GAMES	2	matches managed
+manager_record	0x90	WINS	2	matches won
+manager_record	0x92	DRAWS	2	matches drawn
+manager_record	0x94	LOSSES	2	matches lost
+manager_record	0x96	GOALS_FOR	4	goals scored
+manager_record	0x9a	GOALS_AGAINST	4	goals conceded
+manager_record	0xa0	PLAYERS_BOUGHT	2	number of players bought
+manager_record	0xa2	PLAYERS_SOLD	2	number of players sold
+manager_record	0xa4	PURCHASES_TOTAL	8	total spent on players (i64)
+manager_record	0xac	SALES_TOTAL	8	total received for players (i64)
+manager_record	0xb4	CLUB_JOBS	1	number of club jobs taken
+manager_record	0xb5	NATIONAL_JOBS	1	number of national team jobs taken
+manager_record	0xb6	YEAR_POINTS	4	manager points this year (hall of fame, reset yearly)
+manager_record	0xba	SEASON_POINTS	4	club manager points this season (reset when SEASON_NATION changes)
+manager_record	0xbe	NATIONAL_SEASON_POINTS	4	national team manager points this season (reset when NATIONAL_NATION changes)
+manager_record	0xc2	SEASON_NATION	4	nation id of SEASON_POINTS (-1 none)
+manager_record	0xc6	NATIONAL_NATION	4	nation id of NATIONAL_SEASON_POINTS (-1 none)
+manager_record	0xca	MONTH_POINTS	4	manager points this month
+manager_record	0xce	MONTH_LEAGUE_POINTS	4	manager points this month in the club's own league (manager of the month)
+national_teams_fields	0x0	CALL_UP_LIST	4	LLIST of call-ups (national side, opponent or competition, date)
+national_teams_fields	0x4	NATION_RECORDS	4	array of 0x6e-byte records, one per nation id (national_squad_record)
+national_teams_fields	0x8	NEXT_COMPETITIONS	4	array of i32 per nation id: queued next competition (-1 none)
+national_teams_fields	0xc	RESERVE_POOLS	8	two reserve pool pointers (senior, under-21)
+national_teams_fields	0x1c	FIFA_RANKING	4	FIFA ranking object
+national_teams_fields	0x20	CLUB_CALL_UP_RECORDS	4	6-byte record per club id (+0 vector of 9-byte entries, +4 flag, +5 count)
+national_teams_fields	0x24	CLUB_MARKS	4	byte per club id marking clubs with fixtures (freed daily)
+national_teams_fields	0x28	NEW_QUALIFIERS	4	LLIST of 8-byte items (nation, final stage) of newly qualified nations
+national_teams_fields	0x36	OLYMPIC_NATION_MARKS	4	byte per nation id marked at the Olympic Games
+national_squad_record	0x4	CURRENT_COMPETITION	4	competition the nation currently plays (-1 none)
+national_squad_record	0xd	RESERVE_GROUPS	42	two 0x15-byte reserve level groups (senior, under-21) [inference]
+national_squad_record	0x32	SQUAD_STAMP_DATE	8	today's stamp of the main squad (type t at +0x14 x t)
+national_squad_record	0x3a	SQUAD_DATE	8	squad date of the main squad (type t at +0x14 x t)
+national_squad_record	0x43	CALLED_UP_MARK	1	called-up mark of the main squad (type t at +0x14 x t)
+national_squad_record	0x4e	B_SQUAD_DATE	8	squad date of the B/Olympic squad
+national_squad_record	0x62	U21_SQUAD_DATE	8	squad date of the under-21 squad
+national_squad_record	0x6b	U21_CALLED_UP_MARK	1	called-up mark of the under-21 squad
+injury_fields	0x0	PHYSICAL_RECORDS	4	array of 31-byte physical records per person id (physical_record)
+injury_fields	0x4	INJURY_ENTRIES	4	array of 0x30-byte injuries (injury_entry; byte 0xff marks a free slot)
+injury_fields	0x8	INJURY_ENTRY_COUNT	4	number of slots in INJURY_ENTRIES
+physical_record	0xa	CONDITION	2	condition, 10000 = full
+physical_record	0xc	FATIGUE	2	accumulated wear (0 none)
+physical_record	0xe	CURRENT_INJURY	4	index of the current injury in INJURY_ENTRIES (-1 none)
+physical_record	0x12	RECURRING_TYPE	1	injury type that can recur (0xff none)
+physical_record	0x13	RECURRENCE_GRADE	1	recurrence grade/count of RECURRING_TYPE
+physical_record	0x14	HISTORY_FIRST	4	first offset of the person's injury history (-1 none)
+physical_record	0x18	HISTORY_LAST	4	last offset of the person's injury history (-1 none)
+physical_record	0x1d	LAST_INJURY_TYPE	1	type of the last injury or illness (0xff none)
+physical_record	0x1e	PRONENESS	1	injury proneness (50 at start)
+injury_entry	0x1a	MATCH_MARK	1	0xff when the injury did not happen in a match
+injury_entry	0x20	DATE	8	date of the injury (TCMDate)
+injury_entry	0x28	DAYS_OUT	2	total days out
+injury_entry	0x2a	TRAINING_RETURN_DAYS	2	days until the return to light training
+injury_entry	0x2c	DAYS_LEFT	2	days out still remaining (counted down daily)
+injury_entry	0x2e	TRAINING_DAYS_LEFT	2	days until light training still remaining (counted down daily)
+illness_outbreak	0xd	CLUB_ID	4	index of the club where the outbreak is
+media_fields	0x0	STORY_LOG	4	array of 23-byte story log records (story_log_entry)
+media_fields	0x4	STORY_LOG_CAPACITY	4	capacity of STORY_LOG
+media_fields	0x8	STORY_LOG_COUNT	4	number of story log records
+media_fields	0xc	TRANSFER_INTERESTS	4	array of 25-byte transfer interest records (transfer_interest)
+media_fields	0x10	INTEREST_CAPACITY	4	capacity of TRANSFER_INTERESTS (grows by 20)
+media_fields	0x14	INTEREST_COUNT	4	number of transfer interest records
+story_log_entry	0x0	DATE	8	date the story was logged
+story_log_entry	0x8	PERSON_A	4	id of the first person (-1 none)
+story_log_entry	0xc	PERSON_B	4	id of the second person (-1 none)
+story_log_entry	0x10	RESPONSE	1	response code
+story_log_entry	0x11	SUBTYPE	2	story subtype (signed byte stored as a word)
+story_log_entry	0x13	TYPE	4	news type (0xbdf team history, 0xbd0 media story...)
+transfer_interest	0x0	PLAYER	4	player id
+transfer_interest	0x4	CLUB	4	interested club id
+transfer_interest	0x8	DATE	8	date the interest was recorded
+transfer_interest	0xa	DATE_YEAR	2	year word of DATE
+transfer_interest	0x10	STATE	1	0 rumour not out yet, 1 out, 2 resolved
+transfer_interest	0x11	VALUE	4	capped interest value
+transfer_interest	0x15	RATING	4	club's rating of the player x 100
+officials_manager_fields	0x0	GRADE_ROWS	4	array of 17-byte referee grade rows per official id (official_stats)
+officials_manager_fields	0x4	BUSY_COUNT	4	number of busy flags
+officials_manager_fields	0x8	BUSY_FLAGS	4	byte per official id: busy today
+officials_manager_fields	0xc	NATION_BLOCKS	4	array of 0x102-byte per-nation blocks (officials_nation_block)
+officials_nation_block	0x0	NATION	4	nation id
+officials_nation_block	0x4	REFEREE_COUNT	4	number of referees kept for the nation
+officials_nation_block	0x8	FIRST_REFEREE	4	index of the nation's first referee
+officials_nation_block	0xc	DEMAND	4	referees the nation's competitions ask for
+officials_nation_block	0x10	COMP_COUNT	2	number of competition slots used
+officials_nation_block	0x12	COMP_SLOTS	240	15 competition slots of 16 bytes (officials_comp_slot)
+officials_comp_slot	0x0	FIRST	4	first referee index of the slot's share
+officials_comp_slot	0x4	SHARE	4	number of referees in the slot's share
+officials_comp_slot	0x8	REQUEST	4	referees requested (competition +0x3e / 2 + 10)
+officials_comp_slot	0xc	COMP_ID	4	competition id of the slot (-1 none)
+official	0xc	BIRTH_DAY	2	day of year of the birth date
+official	0xe	BIRTH_YEAR	2	year of the birth date
+official	0x16	NATION	4	nation record pointer
+official	0x1e	CURRENT_ABILITY	2	current ability (1..200)
+official	0x20	POTENTIAL_ABILITY	2	potential ability, at least CURRENT_ABILITY
+official	0x22	RATING	2	quality word used with +0x28 x 50 to sort referees (1..200) [inference]
+official_stats	0x4	AVERAGE_GRADE	4	f32 average grade (GRADE_SUM / MATCHES)
+official_stats	0x8	FOULS	2	fouls total
+official_stats	0xa	GRADE_SUM	2	sum of the grades
+official_stats	0xc	MATCHES	2	matches refereed
+official_stats	0xf	CARDS	1	cards total
+official_stats	0x10	LAST_GRADE	1	last grade
+news_fields	0x4	SLOT_COUNT	4	number of stored news slots (grows by 100 per human ring)
+news_fields	0x8	HUMAN_INBOXES	4	12-byte inbox record per human manager (ring start, position, count)
+news_fields	0x10	LAST_ID	4	last news id assigned
+news_item	0x4	IMPORTANT	1	1 when the news is important
+news_item	0x5	DATA	200	50 data fields of 4 bytes (the text area ends at TEXT_END)
+news_item	0xcc	TEXT_END	1	terminator of the text area
+news_item	0xcd	DATE	8	date of the news (TCMDate)
+news_item	0xd5	DAY_SLICE	1	time slice of the day the news was made
+news_item	0xd6	ID	4	news id (0 empty slot)
+news_item	0xda	READ	4	1 read or free, 0 unread
+news_item	0xde	REACH	1	delivery scope (0 club, 2 nation, 3 continent)

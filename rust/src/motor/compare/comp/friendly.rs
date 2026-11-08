@@ -11,13 +11,13 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn compare_on_friendly_fixture_cancelled(this: usize, game: usize, who: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ON_FRIENDLY_FIXTURE_CANCELLED);
     let mut slot = 0usize;
-    if read_usize(game + 0x14) == read_usize(this + 4) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
+    if read_usize(game + fixture::COMPETITION) == read_usize(this + 4) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
         let slot_of: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
-        slot = slot_of(this, replace_low_word(read_usize(game + 0x1c), read_i16(game + 0x2a)), replace_low_word(read_usize(game + 0x14), read_i16(game + 0x28)),
-            read_usize(game + 0x20) as u32, read_usize(game + 0x1c) as u32);
+        slot = slot_of(this, replace_low_word(read_usize(game + fixture::HOME_CLUB), read_i16(game + fixture::DAY)), replace_low_word(read_usize(game + fixture::COMPETITION), read_i16(game + fixture::YEAR)),
+            read_usize(game + fixture::AWAY_CLUB) as u32, read_usize(game + fixture::HOME_CLUB) as u32);
     }
     o(this, game, who);
-    let free = slot == 0 || (read_usize(slot + 0x10) == 0 && read_u8(slot + 0x18) == 0);
+    let free = slot == 0 || (read_usize(slot + scheduled_friendly_slot::OPPONENT) == 0 && read_u8(slot + scheduled_friendly_slot::STATUS) == 0);
     SCOREBOARD.record(free, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", game, slot));
 }
 
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
         o(this, tournament, without_owner);
         return;
     }
-    let k = (read_i16(this + friendly::FIRST_TOURNAMENT_COMP_ID) as i32 + read_u8(tournament + 0x64) as i8 as i32) as usize;
+    let k = (read_i16(this + friendly::FIRST_TOURNAMENT_COMP_ID) as i32 + read_u8(tournament + tournament_slot::SLOT_INDEX) as i8 as i32) as usize;
     let slot = read_usize(G_COMP_OBJECT_TABLE).wrapping_add(k.wrapping_mul(4));
     o(this, tournament, without_owner);
     let mut in_list = false;
@@ -60,9 +60,9 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
             n += 1;
         }
     }
-    let ok = read_usize(tournament) == 0 && read_usize(tournament + 0x65) == 0 && read_usize(slot) == 0 && !in_list;
+    let ok = read_usize(tournament) == 0 && read_usize(tournament + tournament_slot::COMPETITION) == 0 && read_usize(slot) == 0 && !in_list;
     SCOREBOARD.record(ok, || format!("cancel_tournament(torneio {:#x}) dono {:#x} competição {:#x} vaga {:#x} na lista {}",
-        tournament, read_usize(tournament), read_usize(tournament + 0x65), read_usize(slot), in_list));
+        tournament, read_usize(tournament), read_usize(tournament + tournament_slot::COMPETITION), read_usize(slot), in_list));
 }
 
 /// Comparer for `arrange_international_friendlies` (comparison mode: see the header of motor.rs).
@@ -247,7 +247,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_tournament(this: usize, anfit
 pub(crate) unsafe extern "thiscall" fn compare_find_human_club_open_invitation(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_FIND_HUMAN_CLUB_OPEN_INVITATION);
     let list = read_usize(this + friendly::FRIENDLY_MATCH_LIST);
-    let reg = if list != 0 { vec![(list + 0xa, 4)] } else { Vec::new() };
+    let reg = if list != 0 { vec![(list + llist::CURSOR, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || find_human_club_open_invitation(this));
     SCOREBOARD.record(igual && r == n, || format!("find_human_club_open_invitation original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
     r
@@ -269,20 +269,20 @@ pub(crate) unsafe extern "thiscall" fn compare_find_human_club_open_invitation(t
 pub(crate) unsafe extern "thiscall" fn compare_process_friendly_reply(this: usize, m: usize, force: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FRIENDLY_REPLY);
     LAST_FRIENDLY_REPLY = m;
-    let a = if m != 0 { read_usize(m + 0xc) } else { 0 };
+    let a = if m != 0 { read_usize(m + friendly_match::REQUESTING_CLUB) } else { 0 };
     let other = if m != 0 { other_friendly_club(m) } else { 0 };
     if a == 0 || (other != 0 && (read_usize(a + club::NATION) == 0 || read_usize(other + club::NATION) == 0)) {
         return o(this, m, force); // simplification: with no requester or no nation, original only
     }
-    let s = if friendly_needs_decision(m, force) { friendly_reply(m, false) } else { read_u8(m + 0x18) };
+    let s = if friendly_needs_decision(m, force) { friendly_reply(m, false) } else { read_u8(m + friendly_match::STATUS) };
     let slot: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
-    let v = if s == 3 || s == 4 { slot(this, read_i16(m) as u16 as u32, read_i16(m + 2) as u16 as u32, read_usize(m + 0x14), read_usize(m + 0x10)) } else { 0 };
+    let v = if s == 3 || s == 4 { slot(this, read_i16(m) as u16 as u32, read_i16(m + 2) as u16 as u32, read_usize(m + friendly_match::AWAY_CLUB), read_usize(m + friendly_match::HOME_CLUB)) } else { 0 };
     o(this, m, force);
     let ok = if s == 3 || s == 4 {
         // the request was released: only the slot
-        v == 0 || if s == 3 { read_u8(v + 0x18) == 3 } else { read_usize(v + 0x10) == 0 && read_u8(v + 0x18) == 0 }
+        v == 0 || if s == 3 { read_u8(v + scheduled_friendly_slot::STATUS) == 3 } else { read_usize(v + scheduled_friendly_slot::OPPONENT) == 0 && read_u8(v + scheduled_friendly_slot::STATUS) == 0 }
     } else {
-        read_u8(m + 0x18) == s && !list_holds(read_usize(this + friendly::REQUEST_REPLY_LIST), m)
+        read_u8(m + friendly_match::STATUS) == s && !list_holds(read_usize(this + friendly::REQUEST_REPLY_LIST), m)
     };
     SCOREBOARD.record(ok, || format!("process_friendly_reply(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
 }
@@ -306,7 +306,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_friendly_request(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_FRIENDLY_REQUEST);
     let other = other_friendly_club(m);
     let before = list_len(read_usize(this + friendly::REQUEST_REPLY_LIST));
-    let s = if other != 0 && read_u8(m + 0x18) == 1 && club_has_human_manager(other) { 2 } else { read_u8(m + 0x18) };
+    let s = if other != 0 && read_u8(m + friendly_match::STATUS) == 1 && club_has_human_manager(other) { 2 } else { read_u8(m + friendly_match::STATUS) };
     LAST_FRIENDLY_REPLY = 0;
     o(this, m);
     let l = read_usize(this + friendly::REQUEST_REPLY_LIST);
@@ -317,9 +317,9 @@ pub(crate) unsafe extern "thiscall" fn compare_send_friendly_request(this: usize
     let ok = l == 0 || if respondido {
         list_len(l) == before && !list_holds(l, m)
     } else {
-        list_len(l) == before + 1 && list_holds(l, m) && read_u8(m + 0x18) == s
+        list_len(l) == before + 1 && list_holds(l, m) && read_u8(m + friendly_match::STATUS) == s
     };
-    SCOREBOARD.record(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, before, list_len(l), read_u8(m + 0x18), s));
+    SCOREBOARD.record(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, before, list_len(l), read_u8(m + friendly_match::STATUS), s));
 }
 
 /// Comparer for `build_nation_list` (comparison mode: see the header of motor.rs).
@@ -383,11 +383,11 @@ pub(crate) unsafe extern "thiscall" fn compare_set_preseason_windows(this: usize
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_SET_PRESEASON_WINDOWS)(this, ptrs, n);
     let erros: Vec<String> = plan.iter()
         .filter(|&&(c, ini, fim, nova)| {
-            core::ptr::read_unaligned((c + 0xe) as *const i16) != ini || core::ptr::read_unaligned((c + 0x10) as *const i16) != fim
-                || (nova && read_u32_as_usize(c + 0x12) == 0)
+            core::ptr::read_unaligned((c + preseason_candidate::WINDOW_START) as *const i16) != ini || core::ptr::read_unaligned((c + preseason_candidate::WINDOW_END) as *const i16) != fim
+                || (nova && read_u32_as_usize(c + preseason_candidate::PLANNED_DATES) == 0)
         })
         .map(|&(c, ini, fim, nova)| format!("candidato {:x}: esperado {}..{} lista {} obtido {}..{} lista {:x}", c, ini, fim, nova,
-            core::ptr::read_unaligned((c + 0xe) as *const i16), core::ptr::read_unaligned((c + 0x10) as *const i16), read_u32_as_usize(c + 0x12)))
+            core::ptr::read_unaligned((c + preseason_candidate::WINDOW_START) as *const i16), core::ptr::read_unaligned((c + preseason_candidate::WINDOW_END) as *const i16), read_u32_as_usize(c + preseason_candidate::PLANNED_DATES)))
         .collect();
     SCOREBOARD.record(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plan.len(), erros.join("; ")));
 }
@@ -444,8 +444,8 @@ pub(crate) unsafe extern "thiscall" fn compare_add_friendly_match(this: usize, c
         r == 0
     } else {
         // simplification: r = 0 without being occupied only when out of memory (the box has already shown): not checked
-        r == 0 || (read_u16(r) == dia && read_u16(r + 2) == ano && read_u32_as_usize(r + 0xc) == club && read_u32_as_usize(r + 8) == 0
-            && *((r + 0x18) as *const u8) == 1 && read_u32_as_usize(r + 0x10) == casa && read_u32_as_usize(r + 0x14) == fora)
+        r == 0 || (read_u16(r) == dia && read_u16(r + 2) == ano && read_u32_as_usize(r + friendly_match::REQUESTING_CLUB) == club && read_u32_as_usize(r + 8) == 0
+            && *((r + friendly_match::STATUS) as *const u8) == 1 && read_u32_as_usize(r + friendly_match::HOME_CLUB) == casa && read_u32_as_usize(r + friendly_match::AWAY_CLUB) == fora)
     };
     SCOREBOARD.record(same, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
         club, dia, ano, opponent, in_home, ocupada, r));
@@ -521,7 +521,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_friendly_match(this: usize
     }
     let v = if clear_slot != 0 {
         let slot: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
-        slot(this, *(game as *const u16) as u32, *((game + 2) as *const u16) as u32, read_usize(game + 0x14), read_usize(game + 0x10))
+        slot(this, *(game as *const u16) as u32, *((game + 2) as *const u16) as u32, read_usize(game + friendly_match::AWAY_CLUB), read_usize(game + friendly_match::HOME_CLUB))
     } else {
         0
     };
@@ -530,9 +530,9 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_friendly_match(this: usize
     let itens4 = if l4 != 0 { list_items_capped(l4) } else { Vec::new() };
     let itens8 = list_items_capped(read_usize(this + friendly::FRIENDLY_MATCH_LIST));
     let ok = itens4 == esperado4
-        && (l4 == 0 || read_usize(l4 + 0xa) == read_usize(l4 + 2))
+        && (l4 == 0 || read_usize(l4 + llist::CURSOR) == read_usize(l4 + llist::HEAD))
         && itens8 == esperado8
-        && (v == 0 || (read_usize(v + 0x10) == 0 && read_u8(v + 0x18) == 0));
+        && (v == 0 || (read_usize(v + scheduled_friendly_slot::OPPONENT) == 0 && read_u8(v + scheduled_friendly_slot::STATUS) == 0));
     SCOREBOARD.record(ok, || format!("remove_friendly_match({:#x}, {}) itens {} e {} (esperava {} e {}), vaga {:#x}", game, clear_slot, itens4.len(), itens8.len(), esperado4.len(), esperado8.len(), v));
     r
 }
@@ -567,8 +567,8 @@ pub(crate) unsafe extern "thiscall" fn compare_is_comp_current_on_date(this: usi
 /// [pt] Comparador: lado a lado pelo cursor da lista (+0xa) e o valor.
 pub(crate) unsafe extern "thiscall" fn compare_candidate_has_nearby_date(this: usize, club: usize, data: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CANDIDATE_HAS_NEARBY_DATE);
-    let l = read_usize(club + 0x12);
-    let reg: &[(usize, usize)] = if l == 0 { &[] } else { &[(l + 0xa, 4)] };
+    let l = read_usize(club + preseason_candidate::PLANNED_DATES);
+    let reg: &[(usize, usize)] = if l == 0 { &[] } else { &[(l + llist::CURSOR, 4)] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, club, data), || candidate_has_nearby_date(this, club, data));
     SCOREBOARD.record(igual && r == n, || format!("candidate_has_nearby_date({:?}) original={} rust={} {:x?} x {:x?}", friendly_date_day_year(data), r, n, mo, mr));
     r
@@ -587,7 +587,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_planned_friendly(this: usize,
         return; // out of memory: the box has already shown
     }
     let item = v.wrapping_add(n.wrapping_mul(0x14));
-    let done = [read_usize(item), read_usize(item + 4), 0, read_usize(item + 8), read_usize(item + 0xc), read_usize(item + 0x10)];
+    let done = [read_usize(item), read_usize(item + 4), 0, read_usize(item + planned_friendly::HOST_CLUB_ID), read_usize(item + planned_friendly::HOME_CLUB_ID), read_usize(item + planned_friendly::AWAY_CLUB_ID)];
     SCOREBOARD.record(done == expected && read_usize(this + friendly::PLANNED_COUNT) == n.wrapping_add(1), || {
         format!("add_planned_friendly conta {} -> {}, item {:x?} (esperava {:x?})", n, read_usize(this + friendly::PLANNED_COUNT), done, expected)
     });
@@ -706,15 +706,15 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_from_ai_plans(amistos
     if list != 0 {
         // the cursor and the +0xc pointer of each friendly in the list (traversed here before; the two
         // rotinas reiniciam o cursor)
-        regions.push((list + 0xa, 4));
+        regions.push((list + llist::CURSOR, 4));
         let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-        core::ptr::write_unaligned((list + 0xa) as *mut u32, core::ptr::read_unaligned((list + 2) as *const u32));
+        core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, core::ptr::read_unaligned((list + llist::HEAD) as *const u32));
         loop {
             let e = next(list);
             if e == 0 {
                 break;
             }
-            regions.push((e + 0xc, 4));
+            regions.push((e + friendly_match::REQUESTING_CLUB, 4));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(amistosos, club),

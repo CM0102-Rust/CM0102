@@ -241,8 +241,8 @@ pub(crate) unsafe fn apply_cup_rules(this: usize, g: &ContinentalGroupRules, day
     let mut d = [0u8; 8];
     // simplification: the year goes in a register that may have garbage in the high 16 bits; 0x549f70 reads it as a word
     data(d.as_mut_ptr(), day, g.mes, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, g.semana);
-    core::ptr::write_unaligned((this + 0xb6) as *mut u16, core::ptr::read_unaligned(d.as_ptr() as *const u16));
-    core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);
+    core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, core::ptr::read_unaligned(d.as_ptr() as *const u16));
+    core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
     if let Some(p) = g.premio {
         core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut u32, p);
     }
@@ -277,8 +277,8 @@ pub(crate) unsafe fn check_cup_rules(nome: &str, this: usize, g: &ContinentalGro
             k += 1;
         }
     }
-    let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
-    let b8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
+    let b6 = core::ptr::read_unaligned((this + league::NEXT_DRAW_DAY) as *const u16);
+    let b8 = core::ptr::read_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *const u16);
     let premio = g.premio.map_or(true, |p| core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const u32) == p);
     SCOREBOARD.record(r == 1 && k == 0 && b6 == palavra && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", nome, this, r, &errados[..k], b6, palavra, b8, premio));
     r

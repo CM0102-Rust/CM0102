@@ -30,7 +30,7 @@ pub(crate) unsafe fn search_cell_side_with(
                 contagem = contagem.wrapping_add(1);
             } else if f(p, a4, a5, a3, a6) != 0 {
                 *((this + 0x1a6) as *mut u8) = 0;
-                *((this + 0x1a5) as *mut u8) = 0;
+                *((this + engine::SIDE_PLAYED_BALL) as *mut u8) = 0;
                 return 1;
             }
         }
@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn can_play(this: usize, a: i8, b: i8, calcu
 /// 0x6f9f90 (pelo endereco) virado para o meio do gol, sem calculo nem saida (nao sorteia).
 pub(crate) unsafe extern "thiscall" fn in_the_box(this: usize) -> u8 {
     let row: i8 = if side_of_player(this) == 0 { 0xb } else { 0 };
-    if byte(this, 0x103) == row && (3..=5).contains(&byte(this, 0x102)) {
+    if byte(this, match_player::CELL_Y) == row && (3..=5).contains(&byte(this, match_player::CELL_X)) {
         return 1;
     }
     let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, f32, f32, *mut u8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_IS_CELL_IN_VIEW);
@@ -531,10 +531,10 @@ pub(crate) unsafe extern "thiscall" fn behind_the_extreme(this: usize, j: usize)
     let y = byte(j, match_player::CELL_Y);
     if side_of_player(j) == 0 {
         let p = *((this + engine::LOWEST_Y_PLAYER) as *const usize);
-        (y <= if p != 0 { byte(p, 0x103) } else { 0xc }) as u8
+        (y <= if p != 0 { byte(p, match_player::CELL_Y) } else { 0xc }) as u8
     } else {
         let p = *((this + 0xf592) as *const usize);
-        (y >= if p != 0 { byte(p, 0x103) } else { -1 }) as u8
+        (y >= if p != 0 { byte(p, match_player::CELL_Y) } else { -1 }) as u8
     }
 }
 
@@ -831,12 +831,12 @@ pub(crate) unsafe extern "thiscall" fn remove_from_list(this: usize, target: usi
 /// (0x453a, 11 por lado; quantidade em 0x4592 + lado), guardando a ordem em 0x28.
 pub(crate) unsafe extern "thiscall" fn take_the_field(this: usize, player: usize) -> u8 {
     let l = side_of_player(player) as isize;
-    *((player + 0x102) as *mut i8) = 8;
-    *((player + 0x103) as *mut i8) = 6;
+    *((player + match_player::CELL_X) as *mut i8) = 8;
+    *((player + match_player::CELL_Y) as *mut i8) = 6;
     let contagem = (this as isize + 0x4592 + l) as *mut i8;
     *((this as isize + 0x453a + 4 * (*contagem as isize + 11 * l)) as *mut usize) = player;
     // reread after writing: the slot may land on the count itself (side outside 0/1)
-    *((player + 0x28) as *mut i8) = *contagem;
+    *((player + match_player::CELL_SLOT) as *mut i8) = *contagem;
     let n = (*contagem).wrapping_add(1);
     *contagem = n;
     n as u8
@@ -964,7 +964,7 @@ pub(crate) unsafe extern "thiscall" fn reaches_the_point(this: usize, x: i8, y: 
 /// ftol(disposicao x fator) nao menor. Guarda o primeiro dword da ficha (0x69) em 0x477a.
 pub(crate) unsafe extern "thiscall" fn choose_standout(this: usize) {
     let partida = *((this + engine::MATCH) as *const usize);
-    let n = (byte(partida, 0x4d) & 0xf) + 0xb;
+    let n = (byte(partida, fixture::SQUAD_RULES) & 0xf) + 0xb;
     let (mut melhor, mut pontos, mut valor) = (0usize, 0i16, 0i16);
     for l in 0..2usize {
         for k in 0..n.max(0) as usize {
@@ -1468,7 +1468,7 @@ pub(crate) unsafe extern "thiscall" fn possession_statistic(this: usize, side_b:
         mais16(pal[1] as isize);
         return;
     }
-    let i = byte(this, 0x8e9b) as isize;
+    let i = byte(this, engine::POSSESSION_WINDOW_INDEX) as isize;
     for (o, b) in [(0x1fe, 0xa), (0x208, 0x41), (0x212, 0x78)] {
         *w16(o) = (*w16(o)).wrapping_sub(*b8(b + i) as i16 as u16);
     }
@@ -1552,12 +1552,12 @@ pub(crate) unsafe extern "thiscall" fn match_summary(this: usize, momento: i16) 
     match momento {
         0 | 1 => {
             let f = |o: usize| (this + o) as *mut f32;
-            *f(0xf628) = ((random(7) as u8).wrapping_add(3) as i8) as f32;
-            *f(0xf62c) = ((random(7) as u8).wrapping_add(3) as i8) as f32;
+            *f(engine::TEMPO_ROLL_A) = ((random(7) as u8).wrapping_add(3) as i8) as f32;
+            *f(engine::TEMPO_ROLL_B) = ((random(7) as u8).wrapping_add(3) as i8) as f32;
             let estados = |r: i32| r + *((this + engine::SCORE) as *const u8) as i32 + *((this + engine::SCORE_SIDE1) as *const u8) as i32;
             let t = estados(random(5));
             let t = if t < 10 { 10 } else { estados(random(5)) };
-            *f(0xf630) = (t as u8 as i8) as f32;
+            *f(engine::TEMPO_GOALS_ROLL) = (t as u8 as i8) as f32;
             summarize_sides(this);
         }
         0x3de => summarize_sides(this),
@@ -1967,24 +1967,24 @@ pub(crate) unsafe fn apply_substitutions_with(m: usize, call: &mut dyn FnMut(usi
         }
         let base = m + 0xd0 * lu;
         let t = u(m, engine::MATCH);
-        let club_of = |l: i8| if l == 0 { u(t, 0x1c) } else { u(t, 0x20) };
-        let p = u(base, 0x904d);
+        let club_of = |l: i8| if l == 0 { u(t, fixture::HOME_CLUB) } else { u(t, fixture::AWAY_CLUB) };
+        let p = u(base, engine::SIDE0_MANAGER);
         let q = *(G_STAFF_COUNT as *const i32);
         if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, 0x5f) != 0 && human_9a01(u(G_HUMAN_MANAGER, 0), p) == 0 {
-            if byte(base, 0x904b) == 0 || national_team(club_of(lado)) != 0 || human_9a05(u(G_HUMAN_MANAGER, 0), u(base, 0x904d)) != 0 {
+            if byte(base, 0x904b) == 0 || national_team(club_of(lado)) != 0 || human_9a05(u(G_HUMAN_MANAGER, 0), u(base, engine::SIDE0_MANAGER)) != 0 {
                 continue;
             }
         }
-        let staff = base + 0x9032;
+        let staff = base + engine::MATCH_MANAGERS;
         if byte(base, 0x9049) != 0 {
             call(FN_MATCH_MAN_MAKE_SUBSTITUTIONS, staff, [0, 0, 0, 0, 0]);
         } else {
             call(FN_MATCH_MAN_REASSIGN_POSITIONS, staff, [0, 0, 0, 0, 0]);
-            let main = if lado != 0 { byte(t, 0x41) } else { byte(t, 0x40) } == 0;
+            let main = if lado != 0 { byte(t, fixture::AWAY_SIDE_MARK) } else { byte(t, fixture::HOME_SIDE_MARK) } == 0;
             let v = marked_slot(u(G_TACTICS, 0), club_of(lado), main as u32, 0);
             let jv = (m as isize + 0x4796 + 0x1be * (v as isize + 20 * lado as isize)) as usize;
             if byte(jv, match_player::POSITION) < 0 {
-                let main = if lado != 0 { byte(t, 0x41) } else { byte(t, 0x40) } == 0;
+                let main = if lado != 0 { byte(t, fixture::AWAY_SIDE_MARK) } else { byte(t, fixture::HOME_SIDE_MARK) } == 0;
                 let k = best(staff);
                 call(FN_TACTICS_SET_CAPTAIN_FROM_SLOT, u(G_TACTICS, 0), [club_of(lado) as u32, k as u8 as u32, main as u32, 0, 0]);
             }
@@ -2099,11 +2099,11 @@ pub(crate) unsafe fn apply_pending_punishments_with(m: usize, first: usize, call
     let mut k = 0i8;
     while k < byte(m, engine::PENDING_INCIDENT_COUNT) {
         let e = (m as isize + 11 * k as isize) as usize;
-        let j = u(e, 0xb1);
+        let j = u(e, engine::PENDING_INCIDENTS);
         let table = tabela(j);
         let mut kind = 1u8;
         let mut weight = 0f32;
-        punish(m + engine::REFEREE, j, u(e, 0xb5), &mut kind, byte(e, 0xbb), byte(e, 0xb9), 0, &mut weight, 0);
+        punish(m + engine::REFEREE, j, u(e, engine::PENDING_INCIDENT_VICTIM), &mut kind, byte(e, engine::PENDING_INCIDENT_REASON), byte(e, engine::PENDING_INCIDENT_SEVERITY), 0, &mut weight, 0);
         let mark_side = || *((m as isize + byte(j, match_player::SIDE) as isize + 0x1cb) as *mut u8) = (table == 1) as u8;
         let code: i32 = match kind as i8 {
             2 => 0x1ff9,
@@ -2117,18 +2117,18 @@ pub(crate) unsafe fn apply_pending_punishments_with(m: usize, first: usize, call
             }
             _ => {
                 let r = random(7) + 2;
-                if byte(e, 0xb9) as i32 > r && byte(j, match_player::POSITION) >= 0 { 0x210a } else { -1 }
+                if byte(e, engine::PENDING_INCIDENT_SEVERITY) as i32 > r && byte(j, match_player::POSITION) >= 0 { 0x210a } else { -1 }
             }
         };
         if code != -1 {
-            let a = random(byte(e, 0xb9) as i32);
+            let a = random(byte(e, engine::PENDING_INCIDENT_SEVERITY) as i32);
             if a > random(20) {
                 narrate(call, 0x20f5, 0, (byte(j, match_player::SIDE) == 0) as u32);
             }
             narrate(call, 0x2109, *((j + match_player::COMMENTARY_ID) as *const u8) as u32, *((j + match_player::SIDE) as *const u8) as u32);
             narrate(call, code as u32, *((j + match_player::COMMENTARY_ID) as *const u8) as u32, *((j + match_player::SIDE) as *const u8) as u32);
         }
-        let v = (byte(e, 0xba) as i32 - 0x25) as u32;
+        let v = (byte(e, engine::PENDING_INCIDENT_PLAY) as i32 - 0x25) as u32;
         let pula = v <= 0x3c && matches!(v, 0 | 5..=13 | 0x3b | 0x3c);
         let sent_off = kind == 4 || kind == 3;
         if !pula && code != -1 {
@@ -2176,18 +2176,18 @@ pub(crate) unsafe fn apply_pending_punishments_with(m: usize, first: usize, call
         if byte(m, 0x1cb + lu) != 0 {
             let base = m + 0xd0 * lu;
             let t = u(m, engine::MATCH);
-            let club_of = |l: i8| if l == 0 { u(t, 0x1c) } else { u(t, 0x20) };
-            let p = u(base, 0x904d);
+            let club_of = |l: i8| if l == 0 { u(t, fixture::HOME_CLUB) } else { u(t, fixture::AWAY_CLUB) };
+            let p = u(base, engine::SIDE0_MANAGER);
             let q = *(G_STAFF_COUNT as *const i32);
             let pula = p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, 0x5f) != 0 && human_9a01(u(G_HUMAN_MANAGER, 0), p) == 0
-                && (byte(base, 0x904b) == 0 || national_team(club_of(lado)) != 0 || human_9a05(u(G_HUMAN_MANAGER, 0), u(base, 0x904d)) != 0);
+                && (byte(base, 0x904b) == 0 || national_team(club_of(lado)) != 0 || human_9a05(u(G_HUMAN_MANAGER, 0), u(base, engine::SIDE0_MANAGER)) != 0);
             if !pula {
-                let staff = base + 0x9032;
+                let staff = base + engine::MATCH_MANAGERS;
                 if byte(base, 0x9049) != 0 {
                     call(FN_MATCH_MAN_MAKE_SUBSTITUTIONS, staff, [1, 0, 0, 0, 0]);
                 } else {
                     call(FN_MATCH_MAN_REASSIGN_POSITIONS, staff, [0, 0, 0, 0, 0]);
-                    let main = if lado != 0 { byte(t, 0x41) } else { byte(t, 0x40) } == 0;
+                    let main = if lado != 0 { byte(t, fixture::AWAY_SIDE_MARK) } else { byte(t, fixture::HOME_SIDE_MARK) } == 0;
                     let k = best(staff);
                     call(FN_TACTICS_SET_CAPTAIN_FROM_SLOT, u(G_TACTICS, 0), [club_of(lado) as u32, k as u8 as u32, main as u32, 0, 0]);
                     *((m + if lado == 0 { 0xf59e } else { 0xf5a2 }) as *mut usize) = 0;
@@ -2454,8 +2454,8 @@ pub(crate) unsafe fn penalty_shootout_step_with(m: usize, mode: u32, call: &mut 
         3 | 6 => {
             narrate(call, 0x2004, u32::MAX, (*b(engine::SIDE_STATS) <= *b(0xf5f2)) as u32);
             let game = u(engine::MATCH);
-            *((game + 0x49) as *mut u8) = *b(engine::SIDE_STATS);
-            *((game + 0x4a) as *mut u8) = *b(0xf5f2);
+            *((game + fixture::HOME_PENALTIES) as *mut u8) = *b(engine::SIDE_STATS);
+            *((game + fixture::AWAY_PENALTIES) as *mut u8) = *b(0xf5f2);
             *b(engine::SHOOTOUT_STATE) = 0;
             *(u(engine::COMMENTATOR) as *mut u8) = *b(engine::SAVED_COMMENTATOR_FLAG);
         }
@@ -3374,7 +3374,7 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
     for side in 0..2usize {
         let blk = m + side * 0xd0;
         if humano_de_verdade(side) {
-            if *((blk + 0x904b) as *const u8) == 0 || national_team(club_of(side)) != 0 || auto_humano(g(G_HUMAN_MANAGER), g(blk + 0x904d)) != 0 {
+            if *((blk + 0x904b) as *const u8) == 0 || national_team(club_of(side)) != 0 || auto_humano(g(G_HUMAN_MANAGER), g(blk + engine::SIDE0_MANAGER)) != 0 {
                 continue;
             }
         }
@@ -3404,7 +3404,7 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
         match *b(0x1ab + side) {
             1 => {
                 crate::comparison::branch("reinicio stance 1");
-                let f = if (manager != 0 && f32m(0x476a + 4 * side) < 2.5 && tb(0xe) <= 6) || !attack { 0x20000 } else { 0x10000 };
+                let f = if (manager != 0 && f32m(0x476a + 4 * side) < 2.5 && tb(non_player::ATTACKING) <= 6) || !attack { 0x20000 } else { 0x10000 };
                 general(tobj, f);
                 general(tobj, 0x800);
                 general(tobj, 0x2000);
@@ -3418,16 +3418,16 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
             }
             2 => {
                 crate::comparison::branch("reinicio stance 2");
-                if manager == 0 || (!(tb(0xe) as i32 > lim(0xf) && attack) && (tb(0xe) > 5 || *b(0x1ad + side) == 0 || f32m(0x476a + 4 * side) as f64 > 1.0)) {
+                if manager == 0 || (!(tb(non_player::ATTACKING) as i32 > lim(0xf) && attack) && (tb(non_player::ATTACKING) > 5 || *b(0x1ad + side) == 0 || f32m(0x476a + 4 * side) as f64 > 1.0)) {
                     general(tobj, 0x20000);
                     general(tobj, 0x800);
-                } else if tb(0xe) as i32 > lim(0xf) && attack {
+                } else if tb(non_player::ATTACKING) as i32 > lim(0xf) && attack {
                     general(tobj, 0x10000);
                     general(tobj, 0x800);
                 } else {
                     // NaN at +0x476a falls here, like the original’s fcomp
                     general(tobj, 0x8000);
-                    general(tobj, if (tb(0x13) as i32) < lim(4) { 0x1000 } else { 0x800 });
+                    general(tobj, if (tb(non_player::DIRECTNESS) as i32) < lim(4) { 0x1000 } else { 0x800 });
                 }
                 general(tobj, 0x2000);
                 if *w(engine::CLOCK) > 1 {
@@ -3444,8 +3444,8 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
                 if mode == 3 {
                     crate::comparison::branch("reinicio stance 3");
                     if manager != 0 {
-                        general(tobj, if tb(0xe) > 0x10 { 0x20000 } else { 0x8000 });
-                        general(tobj, if (tb(0x13) as i32) < lim(10) { 0x1000 } else { 0x800 });
+                        general(tobj, if tb(non_player::ATTACKING) > 0x10 { 0x20000 } else { 0x8000 });
+                        general(tobj, if (tb(non_player::DIRECTNESS) as i32) < lim(10) { 0x1000 } else { 0x800 });
                     } else {
                         general(tobj, 0x8000);
                         general(tobj, 0x1000);
@@ -3453,7 +3453,7 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
                     general(tobj, 0x2000);
                 } else {
                     crate::comparison::branch("reinicio stance 4");
-                    general(tobj, if manager != 0 && tb(0xe) > 0x12 { 0x20000 } else { 0x8000 });
+                    general(tobj, if manager != 0 && tb(non_player::ATTACKING) > 0x12 { 0x20000 } else { 0x8000 });
                     general(tobj, 0x800);
                     general(tobj, 0x4000);
                 }
@@ -3470,9 +3470,9 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
             5 => {
                 crate::comparison::branch("reinicio stance 5");
                 if manager != 0 {
-                    let e = tb(0xe);
+                    let e = tb(non_player::ATTACKING);
                     general(tobj, if e > 0x10 && attack { 0x10000 } else if e > 0xc { 0x20000 } else { 0x8000 });
-                    general(tobj, if (tb(0x13) as i32) < lim(10) { 0x1000 } else { 0x800 });
+                    general(tobj, if (tb(non_player::DIRECTNESS) as i32) < lim(10) { 0x1000 } else { 0x800 });
                 } else {
                     general(tobj, 0x20000);
                     general(tobj, 0x1000);
@@ -3882,14 +3882,14 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                     call_thiscall0(FN_CM3_MATCH_ENGINE_PICK_MAN_OF_THE_MATCH, m);
                     let t = u(engine::MATCH);
                     let tb = |o: usize| (t + o) as *mut u8;
-                    let ag = byte(t, 0x4b);
+                    let ag = byte(t, fixture::HOME_AGGREGATE);
                     if ag != -1 {
-                        if byte(t, 0x47) != -1 {
-                            *tb(0x4b) = (*tb(0x47)).wrapping_add(ag as u8);
-                            *tb(0x4c) = (*tb(0x4c)).wrapping_add(*tb(0x48));
+                        if byte(t, fixture::HOME_GOALS_EXTRA_TIME) != -1 {
+                            *tb(fixture::HOME_AGGREGATE) = (*tb(fixture::HOME_GOALS_EXTRA_TIME)).wrapping_add(ag as u8);
+                            *tb(fixture::AWAY_AGGREGATE) = (*tb(fixture::AWAY_AGGREGATE)).wrapping_add(*tb(fixture::AWAY_GOALS_EXTRA_TIME));
                         } else {
-                            *tb(0x4b) = (*tb(0x43)).wrapping_add(ag as u8);
-                            *tb(0x4c) = (*tb(0x4c)).wrapping_add(*tb(0x44));
+                            *tb(fixture::HOME_AGGREGATE) = (*tb(fixture::HOME_GOALS)).wrapping_add(ag as u8);
+                            *tb(fixture::AWAY_AGGREGATE) = (*tb(fixture::AWAY_AGGREGATE)).wrapping_add(*tb(fixture::AWAY_GOALS));
                         }
                     }
                     if *(t as *const i32) != -2 {
@@ -4049,7 +4049,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                         call_thiscall1(FN_MATCH_PLAYER_CHOOSE_ATTACKING_OFF_BALL_MOVE, c, 1);
                         *b(engine::BALL_TRANSIT_TICKS) = 0;
                         let c2 = u(engine::BALL_RECEIVER);
-                        if c2 == c && byte(c2, 0x102) == byte(m, engine::BALL_X) && byte(c2, 0x103) == byte(m, engine::BALL_Y) {
+                        if c2 == c && byte(c2, match_player::CELL_X) == byte(m, engine::BALL_X) && byte(c2, match_player::CELL_Y) == byte(m, engine::BALL_Y) {
                             shoot(c2);
                         }
                     }
@@ -4645,7 +4645,7 @@ pub(crate) unsafe fn shot_foul_with(m: usize, e: usize, p: usize, kind: u8, grav
                 let t = u(m, engine::MATCH);
                 let club = u(t, if byte(e, match_player::SIDE) == 0 { 0x20 } else { 0x1c });
                 let k = u(club, club::NATION);
-                if k != 0 && byte(k, 0x77) == 8 {
+                if k != 0 && byte(k, nation::FIRST_LANGUAGE) == 8 {
                     n7(call, 0x20f5, 0, 0);
                 }
             }
@@ -4897,13 +4897,13 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
         }
         let k = u(m, engine::FOULED_PLAYER);
         if c.tipo == 0x33 && k != 0 && k != p {
-            *b(k, 0x10) = (*b(k, 0x10)).wrapping_add(1);
+            *b(k, match_player::ASSISTS) = (*b(k, match_player::ASSISTS)).wrapping_add(1);
         }
         let base = m + (lado as isize * 0x36) as usize;
         match byte(m, engine::SET_PIECE_KIND) {
-            -1 | 7 => *b(base, 0xf5c4) = (*b(base, 0xf5c4)).wrapping_add(1),
-            3 => *b(base, 0xf5c3) = (*b(base, 0xf5c3)).wrapping_add(1),
-            6 => *b(base, 0xf5c5) = (*b(base, 0xf5c5)).wrapping_add(1),
+            -1 | 7 => *b(base, engine::FREE_KICK_PLAY_GOALS) = (*b(base, engine::FREE_KICK_PLAY_GOALS)).wrapping_add(1),
+            3 => *b(base, engine::CORNER_GOALS) = (*b(base, engine::CORNER_GOALS)).wrapping_add(1),
+            6 => *b(base, engine::DIRECT_FREE_KICK_GOALS) = (*b(base, engine::DIRECT_FREE_KICK_GOALS)).wrapping_add(1),
             _ => {}
         }
         if marked_moment(m) as u8 != 0 {
@@ -6079,7 +6079,7 @@ pub(crate) unsafe fn compare_shoot_tape(p: usize, a1: u32, a2: u32, a3: u32, a4:
         reg.push((a6 as usize, 14));
     }
     let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, Relaxed);
@@ -6364,7 +6364,7 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, rapida: u8, comme
     clear(0x1f6, 0x21e);
     clear(0xa, 0xaf);
     clear(0x8d51, 0x8e9b);
-    *b(0x8e9b) = 0;
+    *b(engine::POSSESSION_WINDOW_INDEX) = 0;
     *b(engine::LAST_POSSESSION_SIDE) = 0xff;
     *w(engine::BALL_DIRECTION) = 0xb4;
     *b(engine::BALL_ROLL) = 0;
@@ -6382,9 +6382,9 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, rapida: u8, comme
         clear(e + 0x11, e + 0x35);
         *b(0x8d46 + l) = 0;
     }
-    *dw(0xf628) = 0x40c00000;
-    *dw(0xf62c) = 0x40c00000;
-    *dw(0xf630) = 0x40a00000;
+    *dw(engine::TEMPO_ROLL_A) = 0x40c00000;
+    *dw(engine::TEMPO_ROLL_B) = 0x40c00000;
+    *dw(engine::TEMPO_GOALS_ROLL) = 0x40a00000;
     *b(0) = rapida;
     if *(G_MATCH_ENGINE_ENABLED as *const u8) == 0 {
         *b(0) = 1;
@@ -6830,9 +6830,9 @@ pub(crate) unsafe fn player_left_pitch_with(m: usize, j: usize, ja_away: u8, cal
     let side = byte(j, match_player::SIDE);
     let base = (m as isize + side as isize * 0xd0) as usize;
     let t = *((m + engine::MATCH) as *const usize);
-    let club_of = |l: i8| if l == 0 { *((t + 0x1c) as *const usize) } else { *((t + 0x20) as *const usize) };
+    let club_of = |l: i8| if l == 0 { *((t + fixture::HOME_CLUB) as *const usize) } else { *((t + fixture::AWAY_CLUB) as *const usize) };
     if byte(m, 0) == 0 {
-        let p = *((base + 0x904d) as *const usize);
+        let p = *((base + engine::SIDE0_MANAGER) as *const usize);
         let n = *(G_STAFF_COUNT as *const i32);
         if p != 0 && *(p as *const i32) >= n - 0x10 && *(p as *const i32) < n && byte(p, staff::CLASSIFICATION) != 0 && human_9a01(*(G_HUMAN_MANAGER as *const usize), p) == 0 {
             if byte(base, 0x904b) == 0 || national_team(club_of(side)) != 0 || human_9a05(*(G_HUMAN_MANAGER as *const usize), p) != 0 {
@@ -6843,7 +6843,7 @@ pub(crate) unsafe fn player_left_pitch_with(m: usize, j: usize, ja_away: u8, cal
     if byte(m, engine::PENDING_INCIDENT_COUNT) != 0 {
         return;
     }
-    let staff = base + 0x9032;
+    let staff = base + engine::MATCH_MANAGERS;
     let mut store = byte(m, 0) == 0;
     if byte(base, 0x9049) != 0 && goalkeeper {
         call(FN_MATCH_MAN_MAKE_SUBSTITUTIONS, staff, [1, 0, 0, 0, 0]);
@@ -6853,11 +6853,11 @@ pub(crate) unsafe fn player_left_pitch_with(m: usize, j: usize, ja_away: u8, cal
         call(FN_MATCH_MAN_REASSIGN_POSITIONS, staff, [0, 0, 0, 0, 0]);
         call(FN_MATCH_MAN_MAKE_SUBSTITUTIONS, staff, [0, 0, 0, 0, 0]);
         let l = byte(j, match_player::SIDE);
-        let main = if l != 0 { byte(t, 0x41) } else { byte(t, 0x40) } == 0;
+        let main = if l != 0 { byte(t, fixture::AWAY_SIDE_MARK) } else { byte(t, fixture::HOME_SIDE_MARK) } == 0;
         let v = marked_slot(*(G_TACTICS as *const usize), club_of(l), main as u32, 0);
         if j == side_player_slot(m, l, v as isize as usize) {
             let l = byte(j, match_player::SIDE);
-            let main = if l != 0 { byte(t, 0x41) } else { byte(t, 0x40) } == 0;
+            let main = if l != 0 { byte(t, fixture::AWAY_SIDE_MARK) } else { byte(t, fixture::HOME_SIDE_MARK) } == 0;
             let k = best(m + engine::MATCH_MANAGERS + l as isize as usize * 0xd0);
             call(FN_TACTICS_SET_CAPTAIN_FROM_SLOT, *(G_TACTICS as *const usize), [club_of(l) as u32, k as u8 as u32, main as u32, 0, 0]);
         }
@@ -7137,16 +7137,16 @@ pub(crate) unsafe extern "C" fn kit(club: usize, other: usize, any: u32) -> u8 {
     let colour_other = if any {
         0
     } else {
-        let c = *((other + 0x87) as *const usize);
+        let c = *((other + club::BACK_COLOUR1) as *const usize);
         if c != 0 { c } else { *(G_COLOUR_TABLE as *const usize) + *(KEY_COLOUR_WHITE as *const i32) as usize * 58 }
     };
     let (mut x, mut y) = (0usize, 0usize);
     let mut k = 0u8;
     loop {
         match k {
-            0 => (x, y) = (u(0x83), u(0x87)),
+            0 => (x, y) = (u(club::FORE_COLOUR1), u(club::BACK_COLOUR1)),
             1 | 2 => {
-                (x, y) = if k == 1 { (u(0x8b), u(0x8f)) } else { (u(0x93), u(0x97)) };
+                (x, y) = if k == 1 { (u(club::FORE_COLOUR2), u(club::BACK_COLOUR2)) } else { (u(club::FORE_COLOUR3), u(club::BACK_COLOUR3)) };
                 if x == 0 || y == 0 {
                     return 2;
                 }
@@ -7223,13 +7223,13 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     };
     let mut factor = rating;
     if jm != 0 && !((rating as f64) < d8(0x968f10)) {
-        if byte(jm, 0xc) == 0 {
+        if byte(jm, match_player::GOALS) == 0 {
             factor = (rating as f64 * f4(0x96d48c)) as f32;
         }
-        if byte(jm, 0x10) == 0 {
+        if byte(jm, match_player::ASSISTS) == 0 {
             factor = (factor as f64 * f4(0x96d488)) as f32;
         }
-        if byte(jm, 0xd) != byte(jm, 0xe) {
+        if byte(jm, match_player::PENALTIES_TAKEN) != byte(jm, match_player::PENALTIES_SCORED) {
             factor = (factor as f64 * f4(0x96d488)) as f32;
         }
         if byte(jm, 0x23) != 0 {
@@ -7430,9 +7430,9 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     };
     let (b, n, d) = (end(rb, pa), end(r9, pb), end(rd, pc));
     if jm != 0 {
-        *((jm + 0x4b) as *mut i16) = d;
-        *((jm + 0x47) as *mut i16) = b;
-        *((jm + 0x49) as *mut i16) = n;
+        *((jm + match_player::NEW_WORLD_REPUTATION) as *mut i16) = d;
+        *((jm + match_player::NEW_CURRENT_REPUTATION) as *mut i16) = b;
+        *((jm + match_player::NEW_HOME_REPUTATION) as *mut i16) = n;
     } else {
         let st = sheet();
         *((st + player_sheet::CURRENT_REPUTATION) as *mut i16) = b;
@@ -7751,10 +7751,10 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
             let y = byte(p, match_player::CELL_Y);
             let last = if byte(p, match_player::SIDE) == 0 {
                 let u = *((m + engine::LOWEST_Y_PLAYER) as *const usize);
-                y <= if u != 0 { byte(u, 0x103) } else { 0xc }
+                y <= if u != 0 { byte(u, match_player::CELL_Y) } else { 0xc }
             } else {
                 let u = *((m + 0xf592) as *const usize);
-                y >= if u != 0 { byte(u, 0x103) } else { -1 }
+                y >= if u != 0 { byte(u, match_player::CELL_Y) } else { -1 }
             };
             let segue = if last && random(10) == 0 {
                 true
@@ -8021,8 +8021,8 @@ pub(crate) unsafe fn period_completed_with(m: usize, call: &mut dyn FnMut(usize,
             if !passou(0x1ef) {
                 return 0;
             }
-            *tb(0x45) = byte(m, engine::SCORE);
-            *tb(0x46) = byte(m, engine::SCORE_SIDE1);
+            *tb(fixture::HOME_GOALS_HALF_TIME) = byte(m, engine::SCORE);
+            *tb(fixture::AWAY_GOALS_HALF_TIME) = byte(m, engine::SCORE_SIDE1);
             fala(call, 0x20f1);
             *w(engine::CLOCK) = 0x1ef;
             *b(engine::STOPPAGE_TIME) = 0;
@@ -8039,11 +8039,11 @@ pub(crate) unsafe fn period_completed_with(m: usize, call: &mut dyn FnMut(usize,
             if !passou(0x3de) {
                 return 0;
             }
-            *tb(0x43) = byte(m, engine::SCORE);
-            *tb(0x44) = byte(m, engine::SCORE_SIDE1);
-            let rule = *((t + 0x38) as *const u16);
-            let cl = byte(t, 0x4b);
-            let empate = || byte(t, 0x43) as i32 + cl as i32 == byte(t, 0x4c) as i32 + byte(t, 0x44) as i32;
+            *tb(fixture::HOME_GOALS) = byte(m, engine::SCORE);
+            *tb(fixture::AWAY_GOALS) = byte(m, engine::SCORE_SIDE1);
+            let rule = *((t + fixture::TIE_RULES) as *const u16);
+            let cl = byte(t, fixture::HOME_AGGREGATE);
+            let empate = || byte(t, fixture::HOME_GOALS) as i32 + cl as i32 == byte(t, fixture::AWAY_AGGREGATE) as i32 + byte(t, fixture::AWAY_GOALS) as i32;
             // ends with the standings narrated before (or after) closing the period
             let encerrar_antes = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
                 *b(engine::RESTART_TYPE) = 8;
@@ -8055,7 +8055,7 @@ pub(crate) unsafe fn period_completed_with(m: usize, call: &mut dyn FnMut(usize,
                 4
             };
             if rule & 2 == 0 {
-                let decides = cl != -1 && rule & 4 == 0 && byte(t, 0x44) != cl && empate();
+                let decides = cl != -1 && rule & 4 == 0 && byte(t, fixture::AWAY_GOALS) != cl && empate();
                 if !decides && rule & 1 != 0 && empate() {
                     *b(engine::SHOOTOUT_STATE) = 4;
                 } else if !decides && rule & 0x20 != 0 && empate() {
@@ -8071,7 +8071,7 @@ pub(crate) unsafe fn period_completed_with(m: usize, call: &mut dyn FnMut(usize,
                 return 4;
             }
             if cl == -1 {
-                if byte(t, 0x43) != byte(t, 0x44) {
+                if byte(t, fixture::HOME_GOALS) != byte(t, fixture::AWAY_GOALS) {
                     return encerrar_antes(call);
                 }
                 fala(call, 0x20f2);
@@ -8086,7 +8086,7 @@ pub(crate) unsafe fn period_completed_with(m: usize, call: &mut dyn FnMut(usize,
             if !empate() {
                 return encerrar_antes(call);
             }
-            if rule & 4 == 0 && byte(t, 0x44) != cl && rule & 0x4000 == 0 {
+            if rule & 4 == 0 && byte(t, fixture::AWAY_GOALS) != cl && rule & 0x4000 == 0 {
                 return encerrar_antes(call);
             }
             fala(call, 0x20f2);
@@ -8100,8 +8100,8 @@ pub(crate) unsafe fn period_completed_with(m: usize, call: &mut dyn FnMut(usize,
         }
         0x483 => {
             if byte(m, engine::GOLDEN_GOAL_SCORED) != 0 {
-                *tb(0x47) = byte(m, engine::SCORE);
-                *tb(0x48) = byte(m, engine::SCORE_SIDE1);
+                *tb(fixture::HOME_GOALS_EXTRA_TIME) = byte(m, engine::SCORE);
+                *tb(fixture::AWAY_GOALS_EXTRA_TIME) = byte(m, engine::SCORE_SIDE1);
                 *b(engine::RESTART_TYPE) = 8;
                 *b(engine::KICKOFF_ANNOUNCED) = 0;
                 *w(engine::PERIOD_END) = 1;
@@ -8127,19 +8127,19 @@ pub(crate) unsafe fn period_completed_with(m: usize, call: &mut dyn FnMut(usize,
             if byte(m, engine::GOLDEN_GOAL_SCORED) == 0 && !passou(0x528) {
                 return 0;
             }
-            *tb(0x47) = byte(m, engine::SCORE);
-            *tb(0x48) = byte(m, engine::SCORE_SIDE1);
-            let cl = byte(t, 0x4b);
-            let rule = *((t + 0x38) as *const u16);
-            let empate = || byte(t, 0x47) as i32 + cl as i32 == byte(t, 0x4c) as i32 + byte(t, 0x48) as i32;
+            *tb(fixture::HOME_GOALS_EXTRA_TIME) = byte(m, engine::SCORE);
+            *tb(fixture::AWAY_GOALS_EXTRA_TIME) = byte(m, engine::SCORE_SIDE1);
+            let cl = byte(t, fixture::HOME_AGGREGATE);
+            let rule = *((t + fixture::TIE_RULES) as *const u16);
+            let empate = || byte(t, fixture::HOME_GOALS_EXTRA_TIME) as i32 + cl as i32 == byte(t, fixture::AWAY_AGGREGATE) as i32 + byte(t, fixture::AWAY_GOALS_EXTRA_TIME) as i32;
             let penalties = if cl == -1 {
                 rule & 0x21 != 0
             } else if rule & 0x4000 != 0 {
-                empate() && byte(t, 0x48) == cl && rule & 0x21 != 0
+                empate() && byte(t, fixture::AWAY_GOALS_EXTRA_TIME) == cl && rule & 0x21 != 0
             } else {
                 empate() && rule & 0x21 != 0
             };
-            let iguais = byte(t, 0x47) as i32 - byte(t, 0x43) as i32 == byte(t, 0x48) as i32 - byte(t, 0x44) as i32;
+            let iguais = byte(t, fixture::HOME_GOALS_EXTRA_TIME) as i32 - byte(t, fixture::HOME_GOALS) as i32 == byte(t, fixture::AWAY_GOALS_EXTRA_TIME) as i32 - byte(t, fixture::AWAY_GOALS) as i32;
             if rule & 1 != 0 && iguais && penalties {
                 *b(engine::SHOOTOUT_STATE) = 4;
             } else if rule & 0x20 != 0 && iguais && penalties {
@@ -8875,7 +8875,7 @@ pub(crate) unsafe extern "thiscall" fn side_strength(this: usize, side: i8) {
     let slot: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8 = core::mem::transmute(FN_TACTICS_FIND_CAPTAIN_SLOT);
     let designado = || {
         let t = *((this + engine::MATCH) as *const usize);
-        let (c, fl) = if side != 0 { (*((t + 0x20) as *const usize), (byte(t, 0x41) == 0) as u32) } else { (*((t + 0x1c) as *const usize), (byte(t, 0x40) == 0) as u32) };
+        let (c, fl) = if side != 0 { (*((t + fixture::AWAY_CLUB) as *const usize), (byte(t, fixture::AWAY_SIDE_MARK) == 0) as u32) } else { (*((t + fixture::HOME_CLUB) as *const usize), (byte(t, fixture::HOME_SIDE_MARK) == 0) as u32) };
         let k = slot(*(G_TACTICS as *const usize), c, fl, 0) as i32;
         (this as isize + 0x4796 + 0x1be * (k + 20 * side as i32) as isize) as usize
     };
@@ -9149,15 +9149,15 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
         }
         let partida = *((m + engine::MATCH) as *const usize);
         let (mut v44, mut v4c, mut v50) = (0i32, 0i32, 0i32);
-        let comp = *((partida + 0x14) as *const usize);
+        let comp = *((partida + fixture::COMPETITION) as *const usize);
         let mut edi: i32 = if comp != 0 { (*((comp + competition::CLUB_COMP_REPUTATION) as *const i16) as i32 - 12) * 25 } else { 0 };
         let mut v30 = edi.wrapping_mul(-4);
         let mut v38 = 0i32;
         let lp = side_of_player(p);
         let (marca_p, clube_p) = if lp != 0 {
-            (byte(partida, 0x41), *((partida + 0x20) as *const usize))
+            (byte(partida, fixture::AWAY_SIDE_MARK), *((partida + fixture::AWAY_CLUB) as *const usize))
         } else {
-            (byte(partida, 0x40), *((partida + 0x1c) as *const usize))
+            (byte(partida, fixture::HOME_SIDE_MARK), *((partida + fixture::HOME_CLUB) as *const usize))
         };
         let table = *(G_TACTICS as *const usize);
         let sheet_p = *((p + match_player::STAFF) as *const usize);
@@ -9677,9 +9677,9 @@ pub(crate) unsafe extern "thiscall" fn penalty_order(m: usize) {
             let chosen = if by_table {
                 let partida = *((m + engine::MATCH) as *const usize);
                 let (marca, clube) = if lado == 0 {
-                    (byte(partida, 0x40), *((partida + 0x1c) as *const usize))
+                    (byte(partida, fixture::HOME_SIDE_MARK), *((partida + fixture::HOME_CLUB) as *const usize))
                 } else {
-                    (byte(partida, 0x41), *((partida + 0x20) as *const usize))
+                    (byte(partida, fixture::AWAY_SIDE_MARK), *((partida + fixture::AWAY_CLUB) as *const usize))
                 };
                 Some(tatico(*(G_TACTICS as *const usize), clube, time, (marca == 0) as u32) as i8)
             } else {
@@ -9711,14 +9711,14 @@ pub(crate) unsafe extern "thiscall" fn penalty_order(m: usize) {
 /// lado em +0x1ab e 3 ou 4.
 pub(crate) unsafe extern "thiscall" fn side_under_control(m: usize, side: i8) -> u8 {
     let partida = *((m + engine::MATCH) as *const usize);
-    let kind = byte(partida, 0x3a);
+    let kind = byte(partida, fixture::CATEGORY);
     if kind == 1 || kind == 9 {
         return 0;
     }
     let club = *((partida + if side != 0 { 0x20 } else { 0x1c }) as *const usize);
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let l = side as isize;
-    if human(club, 0, byte(partida, 0x40) as u8, 0, 0) != 0 {
+    if human(club, 0, byte(partida, fixture::HOME_SIDE_MARK) as u8, 0, 0) != 0 {
         (*((m as isize + 6371 * l + 0x9766) as *const u32) & 0x4000 != 0) as u8
     } else {
         let mode = *((m as isize + l + 0x1ab) as *const i8);
@@ -9815,7 +9815,7 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
     }
     let s = (side_j == 0) as usize; // o lado adversario
     let partida = *((m + engine::MATCH) as *const usize);
-    let (c1c, c20) = (*((partida + 0x1c) as *const usize), *((partida + 0x20) as *const usize));
+    let (c1c, c20) = (*((partida + fixture::HOME_CLUB) as *const usize), *((partida + fixture::AWAY_CLUB) as *const usize));
     let clubs = if s == 1 { (c1c, c20) } else { (c20, c1c) };
     let (mut x, mut y) = (0i8, 0i8);
     position_place_players(m, j, &mut x, &mut y, 1);
@@ -10286,7 +10286,7 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
             4 => if table_a(this, j) == 1 { 100 } else { 0 },
             5 => {
                 let block = (this as isize + 0xd0 * side as isize) as usize;
-                let manager = d32(block, 0x904d);
+                let manager = d32(block, engine::SIDE0_MANAGER);
                 let n = *(G_STAFF_COUNT as *const i32);
                 let list = manager != 0
                     && (n - 16..n).contains(&*(manager as *const i32))
@@ -10294,12 +10294,12 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
                     && f5fd210(*(G_HUMAN_MANAGER as *const usize), manager) == 0
                     && (byte(block, 0x904b) == 0
                         || is_national_team(d32(partida, if side == 0 { 0x1c } else { 0x20 })) != 0
-                        || f5fd480(*(G_HUMAN_MANAGER as *const usize), d32(block, 0x904d)) != 0)
+                        || f5fd480(*(G_HUMAN_MANAGER as *const usize), d32(block, engine::SIDE0_MANAGER)) != 0)
                     && excluidos == 0;
                 if list {
                     let mut v = match_pl_ftol(f(j, match_player::PENALTIES) - (byte(d32(j, match_player::PLAYER), 0xf) as i32 * 20 - 20) as f64) as i16;
                     for b in 0..50i32 {
-                        if f601070(*(G_HUMAN_MANAGER as *const usize), b, d32(block, 0x904d)) == d32(j, match_player::STAFF) {
+                        if f601070(*(G_HUMAN_MANAGER as *const usize), b, d32(block, engine::SIDE0_MANAGER)) == d32(j, match_player::STAFF) {
                             v = 10000 - b as i16;
                             break;
                         }
@@ -10366,11 +10366,11 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
 /// (minimo 21). Faixas por partida: casa -250/+300, atual -250/+375, mundial -500/+100 x nivel (x
 /// 2 - reputacao/10000). Tetos: 400 x nivel (/2 sem o caso especial), entre 5000 (mundial 3000) e 10000.
 pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: usize, partida: usize, value: f32, alt: u8, bonus: u8) {
-    let p = *((reg + 0x1b) as *const usize);
+    let p = *((reg + match_manager::MANAGER) as *const usize);
     if p == 0 {
         return;
     }
-    let st = *((p + 0x69) as *const usize);
+    let st = *((p + staff::NON_PLAYER) as *const usize);
     if st == 0 {
         return;
     }
@@ -10390,7 +10390,7 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
     let (atual, casa, mundo) = (w(st, 8), w(st, non_player::CURRENT_REPUTATION), w(st, non_player::WORLD_REPUTATION));
     let n_home = ceiling(casa, 22).wrapping_sub(level as i16);
     let national_team = is_national_team(my) != 0;
-    let club_p = *((p + 0x1a) as *const usize);
+    let club_p = *((p + staff::NATION) as *const usize);
     let (mut f_atual, mut f_mundo) = (2i32, 2i32);
     // simplification: the original also tests match -2 with a non-null +0x53; the last test (+0x53 equal) already covers it
     let n_current: i16 = if national_team || (comp != 0 && *((comp + competition::CLUB_COMP_NATION) as *const usize) == club_p) || *((my + club::NATION) as *const usize) == club_p {
@@ -10457,8 +10457,8 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
     let c = nv.wrapping_mul(400);
     let cap = |x: i32, floor: i32, r: i32| (x.clamp(floor, 10000) as i16).max(r as i16);
     *(reg as *mut i16) = r_home.min(cap(c, 5000, casa)).max(1);
-    *((reg + 2) as *mut i16) = r_current.min(cap(c / f_atual, 5000, atual)).max(1);
-    *((reg + 4) as *mut i16) = r_mundo.min(cap(c / f_mundo, 3000, mundo)).max(1);
+    *((reg + match_manager::MANAGER_HOME_REPUTATION) as *mut i16) = r_current.min(cap(c / f_atual, 5000, atual)).max(1);
+    *((reg + match_manager::MANAGER_WORLD_REPUTATION) as *mut i16) = r_mundo.min(cap(c / f_mundo, 3000, mundo)).max(1);
 }
 
 /// Ratio of the global player stats (G_PLAYER_STATS): +0x20/+0x28 or +0x10/+0x18; zero divisor gives the 0x968998
@@ -10616,7 +10616,7 @@ pub(crate) unsafe extern "thiscall" fn take_off_pitch(this: usize, j: usize, mod
     let idx = byte(j, match_player::CELL_SLOT);
     let movido = *list(idx as isize);
     if movido != 0 {
-        *((movido + 0x28) as *mut i8) = idx;
+        *((movido + match_player::CELL_SLOT) as *mut i8) = idx;
     }
     let marked = (j + match_player::MARKING_TARGET) as *mut usize;
     if *marked != 0 {
@@ -10649,7 +10649,7 @@ pub(crate) unsafe extern "thiscall" fn take_off_pitch(this: usize, j: usize, mod
     }
     let side_j = byte(j, match_player::SIDE);
     let block_manager = this as isize + 208 * side_j as isize;
-    let tec = *((block_manager + 0x904d) as *const usize);
+    let tec = *((block_manager + engine::SIDE0_MANAGER as isize) as *const usize);
     if tec != 0 {
         let npes = *(G_STAFF_COUNT as *const i32);
         let id = *(tec as *const i32);
@@ -10666,7 +10666,7 @@ pub(crate) unsafe extern "thiscall" fn take_off_pitch(this: usize, j: usize, mod
                 return;
             }
             let t9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
-            if t9a05(manager, *((block_manager + 0x904d) as *const usize)) != 0 {
+            if t9a05(manager, *((block_manager + engine::SIDE0_MANAGER as isize) as *const usize)) != 0 {
                 return;
             }
         }
@@ -10864,7 +10864,7 @@ pub(crate) unsafe extern "thiscall" fn fine_positions(this: usize, out: *mut u8)
                             let c = random(3) as i8;
                             attempts += 1;
                             let owner = *((this + engine::BALL_HOLDER) as *const usize);
-                            if owner != 0 && byte(owner, 0x102) == x && byte(owner, 0x103) == y && r == 1 && c == 1 {
+                            if owner != 0 && byte(owner, match_player::CELL_X) == x && byte(owner, match_player::CELL_Y) == y && r == 1 && c == 1 {
                                 continue;
                             }
                             let i = (3 * r + c) as usize;
@@ -11531,7 +11531,7 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
         return 0;
     }
     let c = *((m + engine::MATCH) as *const usize);
-    if *((c + 0x14) as *const u32) == 0 {
+    if *((c + fixture::COMPETITION) as *const u32) == 0 {
         return 0;
     }
     let (mut casa, mut fora, mut classificado, mut ida, mut fase3) = (0i8, 0i8, 0u8, 0u8, 0u8);
@@ -11567,7 +11567,7 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
         }
         if n == 0 { None } else { Some((s / n) as i16) }
     };
-    let of_club = || core::ptr::read_unaligned((club + club::DIVISION) as *const u32) == *((c + 0x14) as *const u32);
+    let of_club = || core::ptr::read_unaligned((club + club::DIVISION) as *const u32) == *((c + fixture::COMPETITION) as *const u32);
     let of_competition = || core::ptr::read_unaligned((club + club::CONTINENTAL_COMP_ID) as *const u32) == *(c as *const u32);
     let minute = core::ptr::read_unaligned((m + engine::CLOCK) as *const i16) as i32 / 11;
     // 0x6d587c / 0x6d5704: the table row (+o1, +o2) against random rolls; writes +o2 to `saida`
@@ -11717,7 +11717,7 @@ pub(crate) unsafe extern "thiscall" fn referee_grade(m: usize) {
     if partida == 0 {
         return;
     }
-    let comp = *((partida + 0x14) as *const usize);
+    let comp = *((partida + fixture::COMPETITION) as *const usize);
     if comp == 0 {
         return;
     }
@@ -11807,7 +11807,7 @@ pub(crate) unsafe extern "thiscall" fn side_difference(this: usize, side: u8, v:
     if side == 1 {
         (byte(this, 0x8eb0) as u8).wrapping_sub(v)
     } else {
-        v.wrapping_sub(byte(this, 0x8eaf) as u8)
+        v.wrapping_sub(byte(this, engine::OFFSIDE_LINE) as u8)
     }
 }
 
@@ -11853,7 +11853,7 @@ pub(crate) unsafe extern "thiscall" fn player_difference(this: usize, player: us
     if player == *((this + engine::BALL_HOLDER) as *const usize) {
         return 0;
     }
-    let v = byte(player, 0x103) as u8;
+    let v = byte(player, match_player::CELL_Y) as u8;
     if side_of_player(player) == 1 {
         (byte(this, 0x8eb0) as u8).wrapping_sub(v)
     } else {
@@ -11874,7 +11874,7 @@ pub(crate) unsafe extern "thiscall" fn side_byte(this: usize, player: usize) -> 
             return byte(this, 0x8ead) as u8;
         }
         if s == 0 {
-            return byte(this, 0x8eac) as u8;
+            return byte(this, engine::GOALKEEPER_NEAREST) as u8;
         }
     }
     let stored = *((this + if s == 1 { 0xf58a } else { 0xf586 }) as *const usize);

@@ -111,7 +111,7 @@ pub(crate) unsafe fn reset_contract_morale(this: usize, person: usize, club: usi
     clear(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(this).wrapping_mul(staff::SIZE)));
     write_usize(this + staff_contract::FLAGS, 0);
     write_u8(this + staff_contract::TRANSFER_STATUS, 4);
-    write_u8(this + 0x3f, 0); // a felicidade
+    write_u8(this + staff_contract::MATCHES_LEFT_OUT, 0); // a felicidade
     write_u8(this + staff_contract::UNHAPPY_FLAG, 0);
     if club != 0 && read_usize(club + club::NATION) != 0 {
         let fluencia: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8 = core::mem::transmute(FN_PLAYERSTATS_GET_LANGUAGE_FLUENCY);

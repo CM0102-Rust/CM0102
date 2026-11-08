@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn compare_stored_taker(this: usize, club: u
     let k = row(club, human);
     let mut reg = vec![(0xb67a34, 4)];
     if k != -1 {
-        reg.push(((*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4), 4));
+        reg.push(((*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4), 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, kind, side, human), || stored_taker(this, club, kind, side, human));
     SCOREBOARD.record(igual && r == n, || format!("stored_taker(tipo {} lado {}) original={:#x} rust={:#x} {:x?} x {:x?}", t, l, r, n, mo, mr));
@@ -30,9 +30,9 @@ pub(crate) unsafe extern "thiscall" fn compare_store_instructions(this: usize, c
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = row(club, person);
     // the 16 spaces and the counter, and the club’s instructions row
-    let mut reg = vec![(this + 0x30, 0x5c * 16), (this + 0x5f0, 1)];
+    let mut reg = vec![(this + tactics_fields::UNDO_SLOTS, 0x5c * 16), (this + tactics_fields::UNDO_COUNT, 1)];
     if k != -1 {
-        reg.push(((*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 2), 80));
+        reg.push(((*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91 + 2), 80));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, person, usar, volta), || store_instructions(this, club, person, usar, volta));
     SCOREBOARD.record(igual && r == n, || format!("store_instructions(usar {} volta {}) original={} rust={} {:x?} x {:x?}", usar, volta, r, n, mo, mr));
@@ -69,10 +69,10 @@ pub(crate) unsafe extern "thiscall" fn compare_write_tactics_row(this: usize, cl
 /// registro da partida é local. Jogo ou clube nulos: a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_record_tactic_result(this: usize, game: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_RECORD_TACTIC_RESULT);
-    if game == 0 || read_usize(game + 0x1c) == 0 || read_usize(game + 0x20) == 0 {
+    if game == 0 || read_usize(game + fixture::HOME_CLUB) == 0 || read_usize(game + fixture::AWAY_CLUB) == 0 {
         return o(this, game);
     }
-    let reg = [(tactic_stats_row(this, read_usize(game + 0x1c)), 0x28), (tactic_stats_row(this, read_usize(game + 0x20)), 0x28)];
+    let reg = [(tactic_stats_row(this, read_usize(game + fixture::HOME_CLUB)), 0x28), (tactic_stats_row(this, read_usize(game + fixture::AWAY_CLUB)), 0x28)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game), || record_tactic_result(this, game));
     SCOREBOARD.record(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", game, r, n, mo, mr));
     r
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_captain(this: usize, club: us
     if k == -1 {
         return o(this, club, person, team);
     }
-    let p = read_usize(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52;
+    let p = read_usize(this + tactics_fields::ROWS).wrapping_add((k as isize * 0x91) as usize) + 0x52;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(p, 4)], || o(this, club, person, team), || set_captain(this, club, person, team));
     SCOREBOARD.record(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", club, team, r, n, mo, mr));
     r
@@ -163,7 +163,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_selection_slot(this: usize,
     if club == 0 || !(0..=0x13).contains(&v) {
         return o(this, club, slot, team);
     }
-    let mut reg = vec![(this + 0x30, 16 * 0x5c), (this + 0x5f0, 1)];
+    let mut reg = vec![(this + tactics_fields::UNDO_SLOTS, 16 * 0x5c), (this + tactics_fields::UNDO_COUNT, 1)];
     let k = club_tactics_row(club, team);
     if k != -1 {
         reg.push((tactics_cell(this, k, 2), 20 * 4));
@@ -274,7 +274,7 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_slot(this: usize, club: usiz
     if is_recording_top_level() {
         return call_recording(FN_TACTICS_SET_CAPTAIN_FROM_SLOT, this, [club as u32, slot as u8 as u32, human, 0, 0], || o(this, club, slot, human));
     }
-    let table = *((this + 0x601) as *const usize);
+    let table = *((this + tactics_fields::ROWS) as *const usize);
     // the row can be any in the table: compares 0x52..0x56 of every possible row
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = row(club, human);

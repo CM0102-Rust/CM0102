@@ -13,7 +13,7 @@ pub(crate) unsafe extern "thiscall" fn compare_restart_play(m: usize) {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_RESTART.swap(true, Relaxed);
@@ -162,7 +162,7 @@ pub(crate) unsafe fn compare_play(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, 
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, Relaxed);
@@ -283,7 +283,7 @@ pub(crate) unsafe extern "thiscall" fn compare_quick_simulation(m: usize) {
     reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     reg.push((t, 0x50));
-    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
@@ -483,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_substitutions(m: usize) {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
     }
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m), |chamar| {
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "thiscall" fn compare_punishments(m: usize, first: usiz
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
     }
     RECORD_716.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -565,7 +565,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_foul(m: usize) -> u8 {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
     }
     let kind = byte(m, engine::PENDING_PLAY_KIND);
@@ -598,7 +598,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contest(m: usize, x: u32, y: u32)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
@@ -646,7 +646,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, j
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         for humano in 0..2u32 {
             let l = if clube == 0 { -1 } else { row(clube, humano) };
             if l != -1 {

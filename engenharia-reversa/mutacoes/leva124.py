@@ -7,5 +7,5 @@ MUTACOES = [
     ('n_direcao', "                *((j + match_player::BALL_CONTROL) as *mut i16) = c.clamp(-0xc8, 0xc8);", "                *((j + match_player::BALL_CONTROL) as *mut i16) = c.clamp(-0xc7, 0xc8);"),
     ('n_reacao', "                    if n >= 4 || defendeu != 0 || u(engine::BALL_HOLDER) != j {", "                    if n >= 3 || defendeu != 0 || u(engine::BALL_HOLDER) != j {"),
     ('n_fim', "                *b(engine::SHOOTOUT_STATE) = if mode as u8 == 4 { 3 } else { 6 };", "                *b(engine::SHOOTOUT_STATE) = if mode as u8 == 4 { 6 } else { 3 };"),
-    ('n_placar', "            *((game + 0x4a) as *mut u8) = *b(0xf5f2);", "            *((game + 0x4a) as *mut u8) = *b(engine::SIDE_STATS);"),
+    ('n_placar', "            *((game + fixture::AWAY_PENALTIES) as *mut u8) = *b(0xf5f2);", "            *((game + fixture::AWAY_PENALTIES) as *mut u8) = *b(engine::SIDE_STATS);"),
 ]

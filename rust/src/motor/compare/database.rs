@@ -1674,7 +1674,7 @@ pub(crate) unsafe extern "thiscall" fn compare_ball_out(this: usize, l: u8) -> u
         return call_recording(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, this, [l as u32, 0, 0, 0, 0], || o(this, l) as u32) as u8;
     }
     let mut extra = vec![(this + 0x8ea0, 0x20), (this + 0x4780, 0x10), (this + 0xf570, 0x20), (this + 0x1a0, 0x10)];
-    let owner = *((this + 0xf582) as *const usize);
+    let owner = *((this + engine::BALL_HOLDER) as *const usize);
     if owner != 0 {
         extra.extend([(owner + 0x29, 2), (owner + 0x19c, 2)]);
     }
@@ -1717,7 +1717,7 @@ pub(crate) unsafe extern "thiscall" fn compare_foul_in_engine(
 ) -> u8 {
     // the decision itself (0x6e9820) is already compared in its own hook; here only the pass-through
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8>(IDX_FOUL_IN_ENGINE);
-    let mut regions = vec![(m + 0xf5b2 + 8, 2), (card as usize, 1), (grav as usize, 1), (advantage as usize, 1)];
+    let mut regions = vec![(m + engine::REFEREE + 8, 2), (card as usize, 1), (grav as usize, 1), (advantage as usize, 1)];
     for p in [j, other] {
         if p != 0 {
             regions.push((p, 0x1be));

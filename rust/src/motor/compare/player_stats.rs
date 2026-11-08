@@ -30,12 +30,12 @@ pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize,
     if p == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 {
         return o(this, p, value, loan, end, club_id, other);
     }
-    let reg = read_u32_as_usize(this + 0x30).wrapping_add((read_i32(read_u32_as_usize(p + staff::PLAYER)) as isize * 0x27) as usize);
-    let mut regions = vec![(reg + 0x20, 4)];
+    let reg = read_u32_as_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(read_u32_as_usize(p + staff::PLAYER)) as isize * 0x27) as usize);
+    let mut regions = vec![(reg + player_stats_entry::CLUB_LEAGUE_GAMES, 4)];
     for cat in 0..6usize {
         let id = read_i32(reg + 4 * cat);
         if id != -1 {
-            regions.push((read_u32_as_usize(this + 4).wrapping_add((id as isize * 0x20) as usize), 32));
+            regions.push((read_u32_as_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((id as isize * 0x20) as usize), 32));
         }
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
@@ -200,9 +200,9 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
         _ => return o(this, player, category),
     };
     let current = read_usize(slot) as i32;
-    let (n, soltos) = (read_usize(this + 0xc), read_usize(this + 0x38));
+    let (n, soltos) = (read_usize(this + player_stats_fields::CATEGORY_COUNT), read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT));
     let solto = if current == -1 && soltos != 0 {
-        (0..n as i32).find(|&i| core::ptr::read_unaligned((read_usize(this + 4) + ((i as usize) << 5) + 0xe) as *const u16) == 0xffff)
+        (0..n as i32).find(|&i| core::ptr::read_unaligned((read_usize(this + player_stats_fields::CATEGORY_RECORDS) + ((i as usize) << 5) + 0xe) as *const u16) == 0xffff)
     } else {
         None
     };
@@ -215,11 +215,11 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
     if r == 0 {
         return r;
     }
-    let expected = read_usize(this + 4).wrapping_add((indice as usize) << 5);
+    let expected = read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((indice as usize) << 5);
     let zerado = current != -1 || (0..0x20).all(|k| *((r + k) as *const u8) == 0);
-    let same = r == expected && read_usize(slot) as i32 == indice && read_usize(this + 0xc) == n2 && read_usize(this + 0x38) == soltos2 && zerado;
+    let same = r == expected && read_usize(slot) as i32 == indice && read_usize(this + player_stats_fields::CATEGORY_COUNT) == n2 && read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT) == soltos2 && zerado;
     SCOREBOARD.record(same, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
-        this, player, category as u8 as i8, r, expected, read_usize(slot) as i32, indice, read_usize(this + 0xc), n2, read_usize(this + 0x38), soltos2, zerado));
+        this, player, category as u8 as i8, r, expected, read_usize(slot) as i32, indice, read_usize(this + player_stats_fields::CATEGORY_COUNT), n2, read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT), soltos2, zerado));
     r
 }
 
@@ -233,23 +233,23 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
 /// capacidade depois, a fluência), a original roda; confere a conta, a capacidade e o registro novo (no fim sem ordenar;
 /// com `ordenar`, em algum lugar da tabela).
 pub(crate) unsafe extern "thiscall" fn compare_add_language(this: usize, person: usize, language: u32, fluencia: u32, sort: u32) {
-    let (n, cap) = if read_u32_as_usize(this + 0x3c) == 0 { (read_u32_as_usize(this + 0x44), 100) } else { (read_u32_as_usize(this + 0x44), read_u32_as_usize(this + 0x40)) };
+    let (n, cap) = if read_u32_as_usize(this + player_stats_fields::LANGUAGES) == 0 { (read_u32_as_usize(this + player_stats_fields::LANGUAGE_COUNT), 100) } else { (read_u32_as_usize(this + player_stats_fields::LANGUAGE_COUNT), read_u32_as_usize(this + player_stats_fields::LANGUAGE_CAPACITY)) };
     let cap = if cap == n { cap.wrapping_add(100) } else { cap };
     let f = fluencia as u8;
     let new = (read_u32_as_usize(person) as u32, language as u8, if (f as i8) > 10 { 10 } else { f });
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_ADD_LANGUAGE)(this, person, language, fluencia, sort);
-    let base = read_u32_as_usize(this + 0x3c);
+    let base = read_u32_as_usize(this + player_stats_fields::LANGUAGES);
     let e = |i: usize| {
         let r = base.wrapping_add(i * 6);
-        (read_u32_as_usize(r) as u32, *((r + 4) as *const u8), *((r + 5) as *const u8))
+        (read_u32_as_usize(r) as u32, *((r + language_entry::LANGUAGE) as *const u8), *((r + language_entry::FLUENCY) as *const u8))
     };
-    let count = read_u32_as_usize(this + 0x44);
-    let mut ok = count == n.wrapping_add(1) && read_u32_as_usize(this + 0x40) == cap;
+    let count = read_u32_as_usize(this + player_stats_fields::LANGUAGE_COUNT);
+    let mut ok = count == n.wrapping_add(1) && read_u32_as_usize(this + player_stats_fields::LANGUAGE_CAPACITY) == cap;
     if ok {
         ok = if sort == 0 { e(n) == new } else { (0..count).any(|i| e(i) == new) };
     }
     SCOREBOARD.record(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
-        new, sort, count, n.wrapping_add(1), read_u32_as_usize(this + 0x40), cap));
+        new, sort, count, n.wrapping_add(1), read_u32_as_usize(this + player_stats_fields::LANGUAGE_CAPACITY), cap));
 }
 
 /// Comparer for `improve_language` (comparison mode: see the header of motor.rs).
@@ -258,7 +258,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_language(this: usize, person:
 /// registro, lado a lado nos 6 bytes dele.
 pub(crate) unsafe extern "thiscall" fn compare_improve_language(this: usize, person: usize, language: u32, aumento: u32, sort: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_IMPROVE_LANGUAGE);
-    let r = if read_u32_as_usize(this + 0x3c) == 0 { 0 } else { find_language_record(this, person, language as u8) };
+    let r = if read_u32_as_usize(this + player_stats_fields::LANGUAGES) == 0 { 0 } else { find_language_record(this, person, language as u8) };
     if r == 0 {
         return o(this, person, language, aumento, sort);
     }
@@ -276,12 +276,12 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_reset_player(this: u
     if person == 0 || read_u32_as_usize(person + staff::PLAYER) == 0 {
         return o(this, person);
     }
-    let r = read_u32_as_usize(this + 0x30).wrapping_add(read_u32_as_usize(read_u32_as_usize(person + staff::PLAYER)).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
-    let mut reg = vec![(r, 39), (this + 0x38, 4)];
+    let r = read_u32_as_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_u32_as_usize(read_u32_as_usize(person + staff::PLAYER)).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
+    let mut reg = vec![(r, 39), (this + player_stats_fields::FREE_CATEGORY_COUNT, 4)];
     for k in 0..6usize {
         let i = read_u32_as_usize(r + 4 * k);
         if i as u32 != 0xffff_ffff {
-            reg.push((read_u32_as_usize(this + 4).wrapping_add(i << 5) + 0xe, 2));
+            reg.push((read_u32_as_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add(i << 5) + 0xe, 2));
         }
     }
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person), || player_stats_reset_player(this, person));
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_record_match(this: u
         return o(this, p, game); // simplification: the boxes, original only
     }
     let simulado = read_usize(p) as i32 == -2;
-    let mut regions = vec![(this + 0x10, 0x20)];
+    let mut regions = vec![(this + player_stats_fields::RATING_SUM, 0x20)];
     for lado in 0..2usize {
         let cats: Vec<u8> = if simulado {
             vec![2, 3, 6]
@@ -338,7 +338,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_record_match(this: u
                 }
                 regions.push((r, 0x20));
             }
-            regions.push((read_usize(this + 0x30).wrapping_add(read_usize(e + 4).wrapping_mul(0x27)) + 0x20, 7));
+            regions.push((read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(e + lineup_row::PLAYER_ID).wrapping_mul(0x27)) + 0x20, 7));
             let ct = contract_of_staff(pessoa);
             if ct != 0 {
                 regions.push((ct + 0x3b, 2));
@@ -368,12 +368,12 @@ pub(crate) unsafe extern "thiscall" fn compare_end_season_for_key_nation(this: u
 /// Comparer for `remove_language` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn compare_remove_language(stats: usize, sheet: usize, language: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_REMOVE_LANGUAGE);
-    let table = *((stats + 0x3c) as *const usize);
-    let contagem = *((stats + 0x44) as *const i32);
+    let table = *((stats + player_stats_fields::LANGUAGES) as *const usize);
+    let contagem = *((stats + player_stats_fields::LANGUAGE_COUNT) as *const i32);
     if table == 0 || contagem <= 0 {
         return o(stats, sheet, language);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(stats + 0x44, 4), (table, contagem as usize * 6)],
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(stats + player_stats_fields::LANGUAGE_COUNT, 4), (table, contagem as usize * 6)],
         || o(stats, sheet, language), || remove_language(stats, sheet, language));
     SCOREBOARD.record(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", language, mo.0[0].1, mr.0[0].1));
 }

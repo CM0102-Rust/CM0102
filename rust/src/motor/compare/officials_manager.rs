@@ -20,8 +20,8 @@ pub(crate) unsafe extern "thiscall" fn compare_record_referee_grade(this: usize,
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
 pub(crate) unsafe extern "thiscall" fn compare_set_up_officials(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_UP_OFFICIALS)(this);
-    SCOREBOARD.record(read_u32_as_usize(this + 0xc) != 0 && read_i32(this + 4) == read_i32(G_OFFICIAL_COUNT) && read_u32_as_usize(this + 8) != 0,
-        || format!("set_up_officials: blocos {:x}, conta {} x {}", read_u32_as_usize(this + 0xc), read_i32(this + 4), read_i32(G_OFFICIAL_COUNT)));
+    SCOREBOARD.record(read_u32_as_usize(this + officials_manager_fields::NATION_BLOCKS) != 0 && read_i32(this + officials_manager_fields::BUSY_COUNT) == read_i32(G_OFFICIAL_COUNT) && read_u32_as_usize(this + officials_manager_fields::BUSY_FLAGS) != 0,
+        || format!("set_up_officials: blocos {:x}, conta {} x {}", read_u32_as_usize(this + officials_manager_fields::NATION_BLOCKS), read_i32(this + officials_manager_fields::BUSY_COUNT), read_i32(G_OFFICIAL_COUNT)));
 }
 
 /// Comparer for `officials_manager_compare_comp_level` (comparison mode: see the header of motor.rs).
@@ -72,8 +72,8 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_match_official(this: usize
 /// [pt] Comparador: lado a lado pelos bytes de ocupado e pela devolução.
 pub(crate) unsafe extern "thiscall" fn compare_clear_busy_flags(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CLEAR_BUSY_FLAGS);
-    let n = read_i32(this + 4);
-    let reg = if n > 0 && read_usize(this + 8) != 0 { vec![(read_usize(this + 8), n as usize)] } else { Vec::new() };
+    let n = read_i32(this + officials_manager_fields::BUSY_COUNT);
+    let reg = if n > 0 && read_usize(this + officials_manager_fields::BUSY_FLAGS) != 0 { vec![(read_usize(this + officials_manager_fields::BUSY_FLAGS), n as usize)] } else { Vec::new() };
     let (r, m, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || clear_busy_flags(this));
     SCOREBOARD.record(igual && r == m, || format!("clear_busy_flags(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
     r

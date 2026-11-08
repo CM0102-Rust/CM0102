@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpn_resposta_do_clube', 'respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // o clube', '// mutacao: sem a resposta automatica pelo clube', 'cpn_1 resposta automatica'),
     ('cpn_alcance_clube', 'crate::comparison::branch("cpn_1 alcance do clube");', 'crate::comparison::branch("cpn_1 alcance do clube"); return 0; // mutacao: o alcance do clube sem entrega', 'cpn_1 alcance do clube'),
-    ('cpn_tecnico_do_clube', 'let manager = read_usize(club + club::MANAGER);\n    *((news + 0xde) as *mut u8) = 0;', 'let manager = read_usize(club + club::ASSISTANT_MANAGER); // mutacao: o auxiliar\n    *((news + 0xde) as *mut u8) = 0;', 'cpn_1 noticia ao tecnico humano'),
+    ('cpn_tecnico_do_clube', 'let manager = read_usize(club + club::MANAGER);\n    *((news + news_item::REACH) as *mut u8) = 0;', 'let manager = read_usize(club + club::ASSISTANT_MANAGER); // mutacao: o auxiliar\n    *((news + news_item::REACH) as *mut u8) = 0;', 'cpn_1 noticia ao tecnico humano'),
     ('cpn_responder_todas', 'respond(slot, manager, club); // the automatic reply', '// mutacao: sem a resposta automatica', 'cpn_2 responder todas'),
     ('cpn_responder_so_a_nova', 'k -= 1;\n        if k == read_i32(e + 4) - 1 {\n            return 1;', 'k -= 1;\n        if true { // mutacao: so a mais nova\n            return 1;', 'cpn_2 respond todas'),
     ('cpn_proximo_campo', '*next = p; // the next free field', '*next = p.wrapping_add(1); // mutacao: um campo adiante', 'cpn_2 proximo campo do texto'),
@@ -15,7 +15,7 @@ MUTACOES = [
     ('cpn_vaga_nunca_achada', 'return Some(true);', 'return Some(false); // mutacao: a vaga aberta nao conta', 'cpn_5 clube com vaga aberta'),
     ('cpn_candidato_conta_o_atual', "break 'f true; // the current one is left out", "if false { break 'f true; } // mutacao: o tecnico atual entra", 'cpn_5 o tecnico atual fica de fora'),
     ('cpn_oferta_um_dia_depois', 'let r = add(G_CURRENT_DATE, tmp.as_mut_ptr(), days as i16 as i32 as u32);', 'let r = add(G_CURRENT_DATE, tmp.as_mut_ptr(), (days as i16 + 1) as i32 as u32); // mutacao: um dia depois', 'cpn_5 agendar oferta'),
-    ('cpn_estatuto_lista', 'return (read_u8(e + 0x24) >> 1) & 0xf; // bits 1..4 of the entry', 'return (read_u8(e + 0x24) >> 2) & 0xf; // mutacao: os bits 2..5', 'cpn_6 estatuto pela lista'),
+    ('cpn_estatuto_lista', 'return (read_u8(e + shortlist_slot::FLAGS) >> 1) & 0xf; // bits 1..4 of the entry', 'return (read_u8(e + shortlist_slot::FLAGS) >> 2) & 0xf; // mutacao: os bits 2..5', 'cpn_6 estatuto pela lista'),
     ('cpn_estatuto_contrato', 'read_u8(k + contract::SQUAD_STATUS) >> 4 // the high nibble of the contract', 'read_u8(k + contract::SQUAD_STATUS) & 0xf // mutacao: o nibble baixo', 'cpn_6 estatuto pelo contrato'),
     ('cpn_alvos_evento', 'atualizar(this, p, club, 3, kind);', 'let _ = (atualizar, kind); // mutacao: sem o evento 3', 'cpn_6 alvo fora do clube'),
     ('cpn_busca_mesma_regiao', 'return 1; // the same region as the club’s nation', 'return 0; // mutacao: a mesma regiao nao cobre', 'cpn_7 mesma regiao'),

@@ -1,7 +1,7 @@
 # Mutacoes da leva140 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva140.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
     ('t_ler', "as *const u8, target, 0x91);", "as *const u8, target, 0x90);", "linha tatica lida"),
-    ('t_gravar', "core::ptr::copy(source, (*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91) as *mut u8, 0x91);", "core::ptr::copy(source.add(1), (*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91) as *mut u8, 0x90);", "linha tatica gravada"),
+    ('t_gravar', "core::ptr::copy(source, (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91) as *mut u8, 0x91);", "core::ptr::copy(source.add(1), (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91) as *mut u8, 0x90);", "linha tatica gravada"),
     ('s_metade', "let middle = x * read_f64_at(0x968968);", "let middle = x * read_f64_at(0x968968) * 1.02;"),
     ('s_ataque', "let r = random((word(0x1da, other) + 200) / 19);", "let r = random((word(0x1da, other) + 201) / 19);"),
     ('s_duelo2', "let r = random(word(0x1de, other) / 5);", "let r = random(word(0x1de, other) / 6);"),
@@ -9,11 +9,11 @@ MUTACOES = [
     ('s_desgaste', "add(p, -0xf);\n                more(b(0xf5ca", "add(p, -0xe);\n                more(b(0xf5ca"),
     ('s_expulsao', "add(jog(other, c as i8), -0xfa);", "add(jog(other, c as i8), -0xf9);", "simulacao rapida expulsao"),
     ('s_amarelo', "if byte(p, match_player::YELLOW_CARDS) == 2 {\n                        crate::comparison::branch(\"simulacao rapida segundo give_yellow_card\");", "if byte(p, match_player::YELLOW_CARDS) == 3 {\n                        crate::comparison::branch(\"simulacao rapida segundo give_yellow_card\");", "simulacao rapida give_yellow_card"),
-    ('s_abandono', "if *((mo + 0xf5cb) as *const u8) > 4 {", "if *((mo + 0xf5cb) as *const u8) > 5 {", "simulacao rapida abandono"),
-    ('s_fator', "} else if *w(0x8ed0) > 0x3c {\n                read_f32_at(0x96d320) as f64", "} else if *w(0x8ed0) > 0x3d {\n                read_f32_at(0x96d320) as f64"),
+    ('s_abandono', "if *((mo + engine::CARDS) as *const u8) > 4 {", "if *((mo + engine::CARDS) as *const u8) > 5 {", "simulacao rapida abandono"),
+    ('s_fator', "} else if *w(engine::CLOCK) > 0x3c {\n                read_f32_at(0x96d320) as f64", "} else if *w(engine::CLOCK) > 0x3d {\n                read_f32_at(0x96d320) as f64"),
     ('s_chute', "if us + 0xa5 > random(0x172)", "if us + 0xa6 > random(0x172)"),
     ('s_gol', "if us + 0x2d > random((7 - local_28 as i32 * 3)", "if us + 0x2e > random((7 - local_28 as i32 * 3)", "simulacao rapida gol"),
-    ('s_goleiros', "if byte(q, 0x19) >= 0 && player_table(q) == 1 {\n                more((q + 0xf) as *mut u8);", "if byte(q, 0x19) >= 0 && player_table(q) == 2 {\n                more((q + 0xf) as *mut u8);", "simulacao rapida gol"),
+    ('s_goleiros', "if byte(q, match_player::POSITION) >= 0 && player_table(q) == 1 {\n                more((q + match_player::GOALS_CONCEDED) as *mut u8);", "if byte(q, match_player::POSITION) >= 0 && player_table(q) == 2 {\n                more((q + match_player::GOALS_CONCEDED) as *mut u8);", "simulacao rapida gol"),
     ('s_assistencia', "add(q, 0x15e);", "add(q, 0x15f);", "simulacao rapida gol"),
     ('s_penaltis', "*pb(0x49) = random(5) as i8;", "*pb(0x49) = random(6) as i8;", "simulacao rapida penalties"),
     ('s_mando', "more(b(0xf5be + s * 0x36));", "more(b(0xf5bd + s * 0x36));", "simulacao rapida gol do mando"),
@@ -22,5 +22,5 @@ MUTACOES = [
     ('s_amistoso', "let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64_at(0x968e30)) * read_f64_at(0x968ff8);", "let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64_at(0x968e30) - 1.0) * read_f64_at(0x968ff8);", "simulacao rapida nota do amistoso"),
     ('s_contador', "*w(x) = (random(6) + 12) as i16;", "*w(x) = (random(6) + 13) as i16;", "simulacao rapida contador reiniciado"),
     ('s_contador_igual', "*w(x) = (*w(x)).wrapping_add((-1i32).wrapping_sub(r) as i16);", "*w(x) = (*w(x)).wrapping_add((-2i32).wrapping_sub(r) as i16);", "simulacao rapida contador igual"),
-    ('s_periodo', "0x69 => *w(0x8ed4) = 0x528,", "0x69 => *w(0x8ed4) = 0x529,"),
+    ('s_periodo', "0x69 => *w(engine::PERIOD_END) = 0x528,", "0x69 => *w(engine::PERIOD_END) = 0x529,"),
 ]

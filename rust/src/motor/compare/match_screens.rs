@@ -101,10 +101,10 @@ pub(crate) unsafe extern "C" fn compare_build_match_screen() {
     let p = get_screen_param(0);
     if p != 0 && get_screen_param(1) as u8 != 1 {
         let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
-        let espectadores = rd(p + 0x5b);
+        let espectadores = rd(p + live_match::SPECTATORS);
         extra.push(((espectadores as isize + 0xc5 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 4) as usize, 4));
-        extra.push((espectadores + 0x108, 1));
-        let pm = rd(p + 0x57);
+        extra.push((espectadores + match_spectators::COUNT, 1));
+        let pm = rd(p + live_match::ENGINE);
         if pm != 0 && rd(pm + engine::COMMENTATOR) != 0 {
             extra.push((rd(pm + engine::COMMENTATOR) + 0x2db0, 1));
         }
@@ -178,7 +178,7 @@ pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32,
     let p0 = get_screen_param(0);
     let foto = get_screen_param(0x1d);
     let commentator = p0 != 0
-        && core::ptr::read_unaligned((core::ptr::read_unaligned((p0 + 0x5f) as *const usize) + 0x53) as *const u32) == 0
+        && core::ptr::read_unaligned((core::ptr::read_unaligned((p0 + live_match::RECORD) as *const usize) + 0x53) as *const u32) == 0
         && get_screen_param(7) != 0;
     let reg = screen_update_regions(false);
     if overview_would_error() || commentator || (p0 != 0 && foto == 0) || reg.is_none() {
@@ -515,14 +515,14 @@ pub(crate) unsafe extern "C" fn compare_match_screens_tally_live_score(partida: 
     if res == 0 {
         return o(partida, index, res);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(res + 0x43, 0xa)], || o(partida, index, res), || match_screens_tally_live_score(partida, index, res));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(res + fixture::HOME_GOALS, 0xa)], || o(partida, index, res), || match_screens_tally_live_score(partida, index, res));
     SCOREBOARD.record(igual, || format!("match_screens_tally_live_score(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, index, mo.0, mr.0));
 }
 
 /// Comparer for `fixture_entry_matches` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn compare_fixture_entry_matches(stats: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(IDX_FIXTURE_ENTRY_MATCHES);
-    if k < -1 || k > (*((stats + 0x1c) as *const i32)).wrapping_sub(1) {
+    if k < -1 || k > (*((stats + match_stats::CAPACITY) as *const i32)).wrapping_sub(1) {
         return o(stats, k, a, b, data_a, data_b);
     }
     let r = o(stats, k, a, b, data_a, data_b);
@@ -597,7 +597,7 @@ pub(crate) unsafe extern "C" fn compare_match_screens_handle_latest_scores_cycle
 /// Comparer for `handle_team_stats_input` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn compare_handle_team_stats_input(item: u32) -> i32 {
     let p0 = get_screen_param(0);
-    let redesenha = *(G_MATCH_SCREEN_LIVE_DATA_FLAG as *const u32) != 0 && *(*((p0 + 0x5b) as *const usize) as *const u8) & 4 != 0;
+    let redesenha = *(G_MATCH_SCREEN_LIVE_DATA_FLAG as *const u32) != 0 && *(*((p0 + live_match::SPECTATORS) as *const usize) as *const u8) & 4 != 0;
     compare_resposta("handle_team_stats_input", item, original_fn(432), handle_team_stats_input, redesenha)
 }
 

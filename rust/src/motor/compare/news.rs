@@ -13,8 +13,8 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_item_read(this: usize, manag
         return o(this, manager, id, sincronizar);
     }
     let regions = [
-        (read_usize(this), read_i32(this + 4).max(0) as usize * STORED_NEWS_SIZE),
-        (read_usize(this + 8), 0x10 * 12),
+        (read_usize(this), read_i32(this + news_fields::SLOT_COUNT).max(0) as usize * STORED_NEWS_SIZE),
+        (read_usize(this + news_fields::HUMAN_INBOXES), 0x10 * 12),
         (0xde1f64, 0x7d0),
     ];
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&regions, || o(this, manager, id, sincronizar), || mark_item_read(this, manager, id, sincronizar));
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_to_club_manager(this: usize,
     let manager = read_usize(club + club::MANAGER);
     let human = manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10);
     let r = o(this, news, club);
-    let ok = *((news + 0xde) as *const u8) == 0 && (human || r == 0) && r <= 1;
+    let ok = *((news + news_item::REACH) as *const u8) == 0 && (human || r == 0) && r <= 1;
     SCOREBOARD.record(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", club, manager, human, r));
     r
 }
@@ -73,12 +73,12 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
         return o(this, news, manager, free);
     }
     let idx = news_human_manager_index(manager) as usize;
-    let e = read_usize(this + 8) + idx * 12;
+    let e = read_usize(this + news_fields::HUMAN_INBOXES) + idx * 12;
     // o plano
     let new = read_i32(e) == -1;
-    let (inicio, atual, conta) = if new { (read_i32(this + 4), read_i32(this + 4), read_i32(e + 8)) } else { (read_i32(e), read_i32(e + 4), read_i32(e + 8)) };
-    let contador = read_usize(this + 0x10);
-    let (id, contador_depois) = if read_usize(news + 0xd6) == 0 { (contador.wrapping_add(1), contador.wrapping_add(1)) } else { (read_usize(news + 0xd6), contador) };
+    let (inicio, atual, conta) = if new { (read_i32(this + news_fields::SLOT_COUNT), read_i32(this + news_fields::SLOT_COUNT), read_i32(e + 8)) } else { (read_i32(e), read_i32(e + 4), read_i32(e + 8)) };
+    let contador = read_usize(this + news_fields::LAST_ID);
+    let (id, contador_depois) = if read_usize(news + news_item::ID) == 0 { (contador.wrapping_add(1), contador.wrapping_add(1)) } else { (read_usize(news + news_item::ID), contador) };
     let mut previous = atual - 1;
     if previous < inicio {
         previous = inicio + 0x63;
@@ -108,11 +108,11 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
     let slot = read_usize(this).wrapping_add((atual as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
     let ok = r == 1 && read_i32(e) == inicio && read_i32(e + 4) == if extra == 0 { prox } else { read_i32(e + 4) }
         && read_i32(e + 8) >= conta_depois && read_i32(e + 8) <= conta_depois + extra
-        && (read_usize(this + 0x10) == contador_depois || (extra > 0 && read_usize(this + 0x10) > contador_depois))
-        && read_usize(news + 0xd6) == id && read_usize(news + 0xda) == 0
-        && (repetida || read_usize(slot + 0xd6) == id);
+        && (read_usize(this + news_fields::LAST_ID) == contador_depois || (extra > 0 && read_usize(this + news_fields::LAST_ID) > contador_depois))
+        && read_usize(news + news_item::ID) == id && read_usize(news + news_item::READ) == 0
+        && (repetida || read_usize(slot + news_item::ID) == id);
     SCOREBOARD.record(ok, || format!("deliver_to_manager(humano {}) id {} (esperava {}), anel {}/{}/{} (esperava {}/{}/{}), repetida {}",
-        idx, read_usize(news + 0xd6), id, read_i32(e), read_i32(e + 4), read_i32(e + 8), inicio, prox, conta_depois, repetida));
+        idx, read_usize(news + news_item::ID), id, read_i32(e), read_i32(e + 4), read_i32(e + 8), inicio, prox, conta_depois, repetida));
     r
 }
 
@@ -284,7 +284,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_inbox(this: usize, manager:
     if h < 0 {
         return o(this, manager);
     }
-    let caixa = (read_i32(this + 8) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
+    let caixa = (read_i32(this + news_fields::HUMAN_INBOXES) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
     if read_i32(manager + staff::CLUB_JOB) != 0 || read_i32(manager + staff::NATIONAL_JOB) != 0 {
         o(this, manager);
         let first = read_i32(caixa);
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, mana
     if manager == 0 || read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10) < 0 {
         return o(this, manager, count, category);
     }
-    let e = read_usize(this + 8) + (read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10)) as usize * 12;
+    let e = read_usize(this + news_fields::HUMAN_INBOXES) + (read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10)) as usize * 12;
     let mut ids = Vec::new();
     if read_i32(e) != -1 {
         let kind: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);
@@ -327,11 +327,11 @@ pub(crate) unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, mana
                 k = read_i32(e) + 0x63;
             }
             let slot = read_usize(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE));
-            if read_usize(slot + 0xd6) == 0 {
+            if read_usize(slot + news_item::ID) == 0 {
                 break;
             }
             if category as u8 == 0 || kind(slot) as u8 == category as u8 {
-                ids.push(read_usize(slot + 0xd6));
+                ids.push(read_usize(slot + news_item::ID));
             }
             k -= 1;
             if k == read_i32(e + 4) - 1 {

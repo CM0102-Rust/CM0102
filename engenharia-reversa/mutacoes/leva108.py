@@ -2,5 +2,5 @@
 MUTACOES = [
     ('l_tab', "    *((0x9e7ad9 + kind as isize as usize * 13) as *const u8)", "    *((0x9e7ad8 + kind as isize as usize * 13) as *const u8)"),
     ('l_grau', "    if g > 1 { g as u8 } else { 1 }", "    if g > 2 { g as u8 } else { 1 }"),
-    ('l_sem', "    if byte(r, 0x12) <= -1 {", "    if byte(r, 0x12) <= 0 {"),
+    ('l_sem', "    if byte(r, physical_record::RECURRING_TYPE) <= -1 {", "    if byte(r, physical_record::RECURRING_TYPE) <= 0 {"),
 ]

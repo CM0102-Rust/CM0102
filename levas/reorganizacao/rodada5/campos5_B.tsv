@@ -1,0 +1,95 @@
+engine	0xa	POSSESSION_WINDOW_LOW	55	ring of the last 55 possession ticks: 1 when the ball was in rows 0..3 at that tick (indexed by POSSESSION_WINDOW_INDEX)
+engine	0x41	POSSESSION_WINDOW_MIDDLE	55	ring of the last 55 possession ticks: 1 when the ball was in rows 4..7 at that tick
+engine	0x78	POSSESSION_WINDOW_HIGH	55	ring of the last 55 possession ticks: 1 when the ball was in rows 8..11 at that tick
+engine	0xb1	PENDING_INCIDENTS	?	pending incident entries, 11 bytes each (count at PENDING_INCIDENT_COUNT); entry +0 is the offending match player
+engine	0xb5	PENDING_INCIDENT_VICTIM	4	first pending incident entry +4: the player who suffered it (passed to the referee's foul punishment)
+engine	0xb9	PENDING_INCIDENT_SEVERITY	1	first pending incident entry +8: severity passed to the referee's foul punishment
+engine	0xba	PENDING_INCIDENT_PLAY	1	first pending incident entry +9: play code of the incident (minus 0x25 selects the codes without commentary) [inference]
+engine	0xbb	PENDING_INCIDENT_REASON	1	first pending incident entry +0xa: reason byte passed to the referee's foul punishment
+engine	0x1a5	SIDE_PLAYED_BALL	2	per-side flag set when a player of that side deliberately plays or takes the ball (cleared for the other side and on interceptions); while clear the goalkeeper may pick it up [inference: back-pass rule]
+engine	0x1f6	ZONE_LOW_TICKS_BY_PERIOD	6	possession ticks with the ball in rows 0..3, i16 per period (first half, second half, extra time)
+engine	0x1fc	ZONE_LOW_TICKS	2	possession ticks with the ball in rows 0..3, whole match (i16)
+engine	0x1fe	ZONE_LOW_WINDOW_TICKS	2	possession ticks with the ball in rows 0..3 over the last 55 ticks (i16)
+engine	0x200	ZONE_MIDDLE_TICKS_BY_PERIOD	6	possession ticks with the ball in rows 4..7, i16 per period
+engine	0x206	ZONE_MIDDLE_TICKS	2	possession ticks with the ball in rows 4..7, whole match (i16)
+engine	0x208	ZONE_MIDDLE_WINDOW_TICKS	2	possession ticks with the ball in rows 4..7 over the last 55 ticks (i16)
+engine	0x20a	ZONE_HIGH_TICKS_BY_PERIOD	6	possession ticks with the ball in rows 8..11, i16 per period
+engine	0x210	ZONE_HIGH_TICKS	2	possession ticks with the ball in rows 8..11, whole match (i16)
+engine	0x212	ZONE_HIGH_WINDOW_TICKS	2	possession ticks with the ball in rows 8..11 over the last 55 ticks (i16)
+engine	0x214	PERIOD_TICKS	6	possession ticks counted per period, i16 per period
+engine	0x21a	TOTAL_TICKS	2	possession ticks counted in the whole match (i16)
+engine	0x8e9b	POSSESSION_WINDOW_INDEX	1	current index (0..54) in the 55-tick possession rings
+engine	0x8eac	GOALKEEPER_NEAREST	2	per side: 1 when the side's goalkeeper is the team-mate closest to the ball (refreshed with NEAREST_TO_BALL)
+engine	0xf5c3	CORNER_GOALS	1	side 0 goals from corners (set piece kind 3); side 1 at +0x36
+engine	0xf5c4	FREE_KICK_PLAY_GOALS	1	side 0 goals from free-kick plays (set piece kind 7 or -1); side 1 at +0x36 [inference]
+engine	0xf5c5	DIRECT_FREE_KICK_GOALS	1	side 0 goals from direct free kicks (set piece kind 6); side 1 at +0x36
+engine	0xf628	TEMPO_ROLL_A	4	f32 3..9 rolled by the match summary at kick-off and half time (6.0 at preparation) [inference: match tempo]
+engine	0xf62c	TEMPO_ROLL_B	4	f32 3..9 rolled with TEMPO_ROLL_A (6.0 at preparation) [inference]
+engine	0xf630	TEMPO_GOALS_ROLL	4	f32 from random(5) plus the goals so far, rerolled when not below 10 (5.0 at preparation) [inference]
+match_player	0x47	NEW_CURRENT_REPUTATION	2	current reputation after the match, written by develop_player instead of the person sheet
+match_player	0x49	NEW_HOME_REPUTATION	2	home reputation after the match, written by develop_player
+match_player	0x4b	NEW_WORLD_REPUTATION	2	world reputation after the match, written by develop_player
+tactics	0x584	FLAGS	4	tactics flag dword (0x1000 marking by ball side, 0x4000, 0x400...); engine TACTICS_FLAGS for side 0
+tactics	0x187b	FORMATION	4	formation (shape) object of the tactic, compared with the manager's favourite formation [inference]
+match_day	0x0	MODE	1	match day mode (0..2)
+match_day	0x1	GROUPS	4	array of 24-byte groups (key nation entries)
+match_day	0x5	GROUP_CAPACITY	4	allocated group entries (grows by 5)
+match_day	0x9	GROUP_COUNT	4	number of groups
+match_day	0xd	COMPETITIONS	4	array of 0x54-byte day competitions
+match_day	0x11	COMPETITION_CAPACITY	4	allocated day competition entries (grows by 5)
+match_day	0x15	COMPETITION_COUNT	4	number of day competitions
+match_day	0x19	MATCHES	4	array of 0x69-byte day matches
+match_day	0x1d	MATCH_CAPACITY	4	allocated day match entries (grows by 5)
+match_day	0x21	MATCH_COUNT	4	number of day matches
+match_day	0x25	FINISHED_COUNT	4	matches already finished today
+match_day	0x29	MARKED_GROUP_COUNT	1	groups with a match marked for the human
+match_day	0x2a	MARKED_COMPETITION_COUNT	1	competitions with a match marked for the human
+match_day	0x2b	HAS_INTEREST	4	1 when something today interests the human
+match_day	0x2f	CURRENT_MATCH	4	index of the match being played (-1 none yet, -2 finished)
+match_day	0x33	PASS	1	start pass: 1 first, 2 second (also matches without a marked competition)
+match_day	0x34	HUMAN_MATCH	4	the human's day match (the one shown), 0 none
+day_match	0x0	FIXTURE	4	fixture (match record) the entry was copied from
+day_match	0x4	FIXTURE_COPY	79	copy of the fixture's 0x4f bytes (fixture offset + 4)
+day_match	0x18	COMPETITION	4	competition pointer (copy of fixture COMPETITION)
+day_match	0x20	HOME_CLUB	4	home club pointer (copy of fixture HOME_CLUB)
+day_match	0x24	AWAY_CLUB	4	away club pointer (copy of fixture AWAY_CLUB)
+day_match	0x44	HOME_SIDE_MARK	1	copy of fixture HOME_SIDE_MARK
+day_match	0x45	AWAY_SIDE_MARK	1	copy of fixture AWAY_SIDE_MARK
+day_match	0x47	HOME_GOALS	1	copy of fixture HOME_GOALS: -1 pending, -2 decided earlier, -3 recorded as an away game
+day_match	0x48	AWAY_GOALS	1	copy of fixture AWAY_GOALS
+day_match	0x4b	HOME_AGGREGATE	1	copy of fixture HOME_AGGREGATE
+day_match	0x4c	AWAY_AGGREGATE	1	copy of fixture AWAY_AGGREGATE
+day_match	0x53	MARKED	4	1 when the match interests the human (human club or watched)
+day_match	0x57	ENGINE	4	match engine while the match is being played (0 none)
+day_match	0x5b	SCOREBOARD	4	humans' network scoreboard (0x11d bytes) [inference]
+day_match	0x5f	SUMMARY	4	match summary created at the end (0xd7a bytes)
+day_match	0x63	DAY_COMPETITION	4	the day competition entry the match belongs to
+day_match	0x67	STATE	1	engine step state of the match (-1 not started; 2 or 8 finished)
+day_competition	0x0	COMP_ID	4	competition id (-1 none)
+day_competition	0x4	FIRST_MATCH	4	index of its first day match
+day_competition	0x8	LAST_MATCH	4	index of its last day match
+day_competition	0xc	INTERESTING	4	1 when the competition interests the human
+day_competition	0x10	HAS_MARKED	4	1 when one of its matches is marked for the human
+day_competition	0x14	PANEL	64	0x40 bytes cleared when the day's matches are picked [inference]
+day_group	0x4	FIRST_COMPETITION	4	index of its first day competition
+day_group	0x8	LAST_COMPETITION	4	index of its last day competition
+day_group	0xc	FIRST_MATCH	4	index of its first day match (-1 none, while building)
+day_group	0x10	LAST_MATCH	4	index of its last day match (while building)
+day_group	0x14	HAS_MARKED	4	1 when one of its matches is marked for the human
+match_stats	0x0	INDEX	4	index of match records, 12 bytes each (+0 competition, +4 a club, +8/+0xa the date)
+match_stats	0x1c	RECORD_COUNT	4	number of records in INDEX
+match_summary	0x11f	SIDES	3146	the two sides' summaries, 0x625 bytes each
+commentary_queue	0x5	ACTIVE	1	the queue is switched on (0 off: nothing to show)
+commentary_queue	0x8	WRITE_POS	2	write position in the ring of 12 slots
+commentary_queue	0xa	SAVED_POS	2	saved position; reaching it switches the queue off (-1 at construction)
+commentary_queue	0xc	READ_POS	2	read position in the ring of 12 slots
+commentary_queue	0x10	SOUND_CHANNELS	16	sound channel per event sound (-1 free, -2 waiting)
+commentary_queue	0x20	LOOP_CHANNELS	16	channels of the crowd loops (-1 none; side's loop at +0x20 + side) [inference]
+commentary_queue	0x30	SLOTS	168	12 slots of 14 bytes: +0 event code (bit 0x8000 more parts), +2 record, +0xd current text part
+commentary_queue	0xd8	SLOT_RECORDS	1608	12 records of 0x86 bytes, one per slot
+commentary_queue	0x2d6c	SOUND_START_TIMES	64	start time (ms) of each of the 16 event sounds
+commentary_queue	0x2dac	SOUND_DURATION	4	length (ms) of an event sound window: weight x volume / 100
+commentary_queue	0x2db0	VOLUME	1	commentary volume (125 at construction)
+event_type	0x8	VARIANTS	4	array of 0x110-byte text/sound variants of the event
+event_type	0xc	VARIANT_COUNT	2	number of variants
+event_type	0xe	TOTAL_WEIGHT	4	sum of the variants' weights (scaled after loading)

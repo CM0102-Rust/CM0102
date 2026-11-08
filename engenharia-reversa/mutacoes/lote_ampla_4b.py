@@ -6,7 +6,7 @@ MUTACOES = [
     ('d_sem_regra', '    if k == -1 {\n        return;\n    }\n    let rules', '    if k <= 0 {\n        return;\n    }\n    let rules'),
     ('d_43', '    for k in 0..43usize {', '    for k in 0..42usize {'),
     ('t_desmarca', '    *staff_flags_ptr(manager, id) &= 0xbf;', '    *staff_flags_ptr(manager, id) &= 0x3f;'),
-    ('t_vaga', '    if k < *((table + 4) as *const i32) {', '    if k <= *((table + 4) as *const i32) {'),
+    ('t_vaga', '    if k < *((table + transfer_manager_fields::OFFER_CAPACITY) as *const i32) {', '    if k <= *((table + transfer_manager_fields::OFFER_CAPACITY) as *const i32) {'),
     ('r_ids', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e, 0x72] {', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e] {'),
     ('s_empate', '        if best == 0 || injury_word_0c(c) > injury_word_0c(best) {', '        if best == 0 || injury_word_0c(c) >= injury_word_0c(best) {'),
     ('c_clube', '    *club = (*(G_CLUB_TABLE as *const usize) as isize + *((contract + contract::CLUB) as *const i32) as isize * 581) as usize;', '    *club = (*(G_CLUB_TABLE as *const usize) as isize + *((contract + contract::CLUB) as *const i32) as isize * 580) as usize;'),

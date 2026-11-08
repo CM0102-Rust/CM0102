@@ -5,7 +5,7 @@ MUTACOES = [
     ('i_duracao', "    *b(engine::SUBSTITUTION_PENDING) = 0;\n    *w(engine::PERIOD_END) = 0x1ef;", "    *b(engine::SUBSTITUTION_PENDING) = 0;\n    *w(engine::PERIOD_END) = 0x1f0;"),
     ('i_folego', "    *w(engine::LAST_STANCE_CALL_TICK) = 0x2710;", "    *w(engine::LAST_STANCE_CALL_TICK) = 0x2700;"),
     ('i_desvio', "    *w(engine::BALL_DIRECTION) = 0xb4;", "    *w(engine::BALL_DIRECTION) = 0xb5;"),
-    ('i_campo', "    *dw(0xf628) = 0x40c00000;", "    *dw(0xf628) = 0x40d00000;"),
+    ('i_campo', "    *dw(engine::TEMPO_ROLL_A) = 0x40c00000;", "    *dw(engine::TEMPO_ROLL_A) = 0x40d00000;"),
     ('i_gramado', "        *dw(0x91d6) = 0x5a;", "        *dw(0x91d6) = 0x5b;"),
     ('i_desgaste', "let t = (read_f64_at(0x9688a8) - x) as f32;", "let t = (read_f64_at(0x9688a8) - x + 1.0) as f32;"),
     ('i_peso', "let a = (ga * read_f64_at(0x96a5c0) + read_f64_at(0x9688a0)) - x * read_f64_at(0x968a80);", "let a = (ga * read_f64_at(0x96a5c0) + read_f64_at(0x9688a0) + 1.0) - x * read_f64_at(0x968a80);"),

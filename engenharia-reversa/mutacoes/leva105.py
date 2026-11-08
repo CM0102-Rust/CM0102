@@ -13,7 +13,7 @@ MUTACOES = [
     ('o_6d', "                } else if byte(m, engine::BALL_HEIGHT) < 2 {", "                } else if byte(m, engine::BALL_HEIGHT) < 3 {"),
     ('o_letras', "            1 => (0x2d, 0x2c),", "            1 => (0x2b, 0x2c),"),
     ('o_frente', "                if byte(q, match_player::POSITION) >= 0 && ((l == 1 && byte(q, match_player::CELL_Y) < y) || (l == 0 && byte(q, match_player::CELL_Y) > y)) {", "                if byte(q, match_player::POSITION) >= 0 && ((l == 1 && byte(q, match_player::CELL_Y) <= y) || (l == 0 && byte(q, match_player::CELL_Y) > y)) {"),
-    ('o_ultimo', "                y <= if u != 0 { byte(u, 0x103) } else { 0xc }", "                y < if u != 0 { byte(u, 0x103) } else { 0xc }"),
+    ('o_ultimo', "                y <= if u != 0 { byte(u, match_player::CELL_Y) } else { 0xc }", "                y < if u != 0 { byte(u, match_player::CELL_Y) } else { 0xc }"),
     ('o_forca10', "                    strength = strength.wrapping_add(random(10));", "                    strength = strength.wrapping_add(random(11));"),
     ('o_lim', "            let lim = ((leitura + 5) * byte(p, match_player::YELLOW_CARDS) as i32 + fx * leitura * 14 + leitura * arr * 20) * 25 + 0x14;", "            let lim = ((leitura + 5) * byte(p, match_player::YELLOW_CARDS) as i32 + fx * leitura * 14 + leitura * arr * 20) * 25 + 0x15;"),
     ('o_12', "            value_play = value_play.wrapping_add(c * c);", "            value_play = value_play.wrapping_add(c);"),

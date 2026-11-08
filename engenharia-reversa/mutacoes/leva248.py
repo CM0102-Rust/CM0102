@@ -1,7 +1,7 @@
 # Mutações da 248a leva (itens cpl_1, cpl_2, cpl_3, cpl_4, cpl_5, cpl_6, cpl_7). Uso: python mutacoes.py mutacoes\leva248.py --carreira 2002-06-01
 MUTACOES = [
     ('cpl_clube_tem_oferta', 'if read_usize(offer_at(this, read_usize(no)) + 8) == read_usize(club) { // the offer is from the club', 'if read_usize(offer_at(this, read_usize(no)) + 8) != read_usize(club) { // mutacao: de outro clube', 'cpl_1 clube tem oferta'),
-    ('cpl_oferta_do_clube', 'if read_usize(o + 8) == read_usize(club) { // the club’s offer', 'if o != 0 { // mutacao: a primeira de qualquer clube', 'cpl_1 oferta do clube'),
+    ('cpl_oferta_do_clube', 'if read_usize(o + offer::BUYER_CLUB_ID) == read_usize(club) { // the club’s offer', 'if o != 0 { // mutacao: a primeira de qualquer clube', 'cpl_1 oferta do clube'),
     ('cpl_oferta_pendente', 'if matches!(*((o + offer::STATUS) as *const u8), 0 | 1 | 5 | 6) { // the pending status', 'if matches!(*((o + offer::STATUS) as *const u8), 0 | 5 | 6) { // mutacao: sem a 1', 'cpl_1 oferta pendente'),
     ('cpl_sob_oferta_marca', 'return mark(); // a marca "sob oferta"', 'return 0; // mutacao: ninguem sob oferta'),
     ('cpl_bosman_invertida', 'free(read_usize(club + club::NATION)) // the club’s nation', '(free(read_usize(club + 0x53)) == 0) as u32 // mutacao: invertida'),
@@ -13,12 +13,12 @@ MUTACOES = [
     ('cpl_contrato_valor', 'gerar(c, person, value) // the person’s value', 'gerar(c, person, value / 2) // mutacao: metade do valor', 'cpl_4 contrato da pessoa'),
     ('cpl_decisao_conta', 'write_usize(this + contract_manager_fields::DECISION_COUNT, n.wrapping_add(1)); // the decision date', 'write_usize(this + contract_manager_fields::DECISION_COUNT, n); // mutacao: a conta nao sobe', 'cpl_4 data de decisao'),
     ('cpl_proposta_fim', 'core::ptr::write_unaligned((this + staff_contract::CONTRACT_EXPIRES) as *mut [u8; 8], core::ptr::read_unaligned(end as *const [u8; 8])); // the end of the contract', 'core::ptr::write_unaligned((this + staff_contract::CONTRACT_EXPIRES) as *mut [u8; 8], core::ptr::read_unaligned(0xae2c90 as *const [u8; 8])); let _ = end; // mutacao: vence hoje', 'cpl_5 contrato pelo atual'),
-    ('cpl_felicidade', 'write_u8(this + 0x3f, 0); // a felicidade', 'write_u8(this + 0x3f, 10); // mutacao: 10', 'cpl_5 moral zerada'),
+    ('cpl_felicidade', 'write_u8(this + staff_contract::MATCHES_LEFT_OUT, 0); // a felicidade', 'write_u8(this + staff_contract::MATCHES_LEFT_OUT, 10); // mutacao: 10', 'cpl_5 moral zerada'),
     ('cpl_faixa_meio', 'if m(G_CONTRACT_DATE_PLUS_91_DAYS) { // past the midpoint limit', 'if m(G_CONTRACT_DATE_PLUS_30_DAYS) { // mutacao: o limite de baixo'),
-    ('cpl_registrar_conta', 'write_usize(this + 8, n); // one more story', 'write_usize(this + 8, n.wrapping_sub(1)); // mutacao: a conta nao sobe', 'cpl_6 registrar historia'),
+    ('cpl_registrar_conta', 'write_usize(this + media_fields::STORY_LOG_COUNT, n); // one more story', 'write_usize(this + media_fields::STORY_LOG_COUNT, n.wrapping_sub(1)); // mutacao: a conta nao sobe', 'cpl_6 registrar historia'),
     ('cpl_expirar_sorteio', 'let s = sorteio(0x28); // the team history roll', 'let s = 0; let _ = sorteio; // mutacao: sem o sorteio', 'cpl_6 expirar historia do time'),
     ('cpl_historia_do_time', 'return 1; // the team’s story already told', 'return 0; // mutacao: nunca contada', 'cpl_6 historia do time ja contada'),
-    ('cpl_interesse_conta', 'write_usize(this + 0x14, n); // mais um interesse', 'write_usize(this + 0x14, n.wrapping_sub(1)); // mutacao: a conta nao sobe', 'cpl_7 interesse novo'),
+    ('cpl_interesse_conta', 'write_usize(this + media_fields::INTEREST_COUNT, n); // mais um interesse', 'write_usize(this + media_fields::INTEREST_COUNT, n.wrapping_sub(1)); // mutacao: a conta nao sobe', 'cpl_7 interesse novo'),
     ('cpl_interesse_repetido', 'return; // the interest is already there', '// mutacao: o repetido entra', 'cpl_7 interesse repetido'),
     ('cpl_interesse_boato', '*((item() + 0x10) as *mut u8) = 0; // the rumour has not come out yet', '*((item() + 0x10) as *mut u8) = 1; // mutacao: o boato ja saiu', 'cpl_7 interesse novo'),
 ]

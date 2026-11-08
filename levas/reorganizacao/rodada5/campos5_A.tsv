@@ -1,0 +1,173 @@
+engine	0x1f6	BALL_TIME_THIRD_1	10	five i16 counters (indexed by side, 0..4) of ball time in the first pitch third; copied to the match record +0xc [inference]
+engine	0x200	BALL_TIME_THIRD_2	10	five i16 counters of ball time in the second pitch third; copied to the match record +0x16 [inference]
+engine	0x20a	BALL_TIME_THIRD_3	10	five i16 counters of ball time in the third pitch third; copied to the match record +0x20 [inference]
+engine	0x214	BALL_IN_PLAY_TIME	10	five i16 counters of ticks with the ball in play (x 60 / 11 = seconds); copied to the match record +0x2a
+engine	0x9034	SIDE0_MANAGER_HOME_REPUTATION	2	home reputation of side 0's match manager (MATCH_MANAGERS + 2; side stride 0xd0)
+engine	0x9036	SIDE0_MANAGER_WORLD_REPUTATION	2	world reputation of side 0's match manager (MATCH_MANAGERS + 4; side stride 0xd0)
+league	0xb6	NEXT_DRAW_DAY	2	day of the upcoming draw; 0xffff = none
+league	0xb8	NEXT_DRAW_YEAR_OFFSET	2	year of the upcoming draw, relative to YEAR
+match_record	0x0	HOME_CLUB_ID	4	home club id (from the fixture)
+match_record	0x4	AWAY_CLUB_ID	4	away club id (from the fixture)
+match_record	0x8	DAY	2	day of the match
+match_record	0xa	YEAR	2	year of the match
+match_record	0xc	BALL_TIME_THIRD_1	10	five i16 (indexed by side, 0..4): ball time in the first pitch third, shown as a possession percentage [inference]
+match_record	0x16	BALL_TIME_THIRD_2	10	five i16: ball time in the second pitch third [inference]
+match_record	0x20	BALL_TIME_THIRD_3	10	five i16: ball time in the third pitch third [inference]
+match_record	0x2a	BALL_IN_PLAY_TIME	10	five i16: ticks with the ball in play (x 60 / 11 = seconds)
+match_record	0x34	ATTENDANCE	4	attendance
+match_record	0x38	GATE_RECEIPTS	4	gate receipts (0 when filled without receipts)
+match_record	0x3c	MAN_OF_THE_MATCH_ID	4	player id highlighted in the ratings and team stats (compared with the rows' PLAYER_ID); -1 none [inference]
+match_record	0x40	REFEREE_ID	4	referee id; -1 none
+match_record	0x4c	NO_STATISTICS	1	copy of the engine's first byte; set: the detail panels show 'no statistics' and reserve-competition matches are not written
+match_record	0x4d	MINUTE	2	current minute (engine CLOCK / 11, i16)
+match_record	0x4f	PERIOD_END	2	engine PERIOD_END in ticks: 0x1ef / 0x3de / 0x483 / 0x528 = minute 45 / 90 / 105 / 120 (x 11); 0 or 1 otherwise
+match_record	0x51	SUB_TICK	2	engine SUB_TICK
+match_record	0x53	SHOOTOUT	4	nonzero when the match went to a penalty shoot-out (shoot-out state 1 or 4, or a shoot-out event)
+match_record	0x57	EVENTS	200	up to 50 events of 4 bytes: +0 side (0xff ends the list), +1 player row, +2 kind, +3 minute
+match_record	0x58	EVENT_PLAYER	1	player row index of event k (base = record + 4 x k)
+match_record	0x59	EVENT_KIND	1	kind of event k: 1 goal, 2 own goal, 3 penalty goal, 4 missed penalty, 5 card/sending off, 6 injury, 7/8 shoot-out kick (base = record + 4 x k)
+match_record	0x5a	EVENT_MINUTE	1	minute of event k (shoot-out kicks: their order) (base = record + 4 x k)
+match_record	0x11f	HOME_TEAM	1573	home team block (match_record_team); its first byte is the goals, 0xfd before kick-off
+match_record	0x120	HOME_SHOOTOUT_GOALS	1	home penalty shoot-out goals
+match_record	0x127	HOME_SHOTS	1	home shots on goal
+match_record	0x128	HOME_SHOTS_ON_TARGET	1	home shots on target
+match_record	0x129	HOME_CORNERS	1	home corners
+match_record	0x12a	HOME_FREE_KICKS	1	home free kicks
+match_record	0x12b	HOME_THROW_INS	1	home throw-ins
+match_record	0x12c	HOME_FOULS	1	home fouls
+match_record	0x12d	HOME_OFFSIDES	1	home offsides
+match_record	0x12e	HOME_YELLOW_CARDS	1	home yellow cards
+match_record	0x12f	HOME_RED_CARDS	1	home red cards
+match_record	0x130	HOME_PASSES	2	home passes attempted
+match_record	0x132	HOME_PASSES_COMPLETED	2	home passes completed
+match_record	0x134	HOME_TACKLES	2	home tackles
+match_record	0x136	HOME_TACKLES_WON	2	home tackles won
+match_record	0x138	HOME_HEADERS	2	headers contested (the away percentage is 100 minus the home one) [inference]
+match_record	0x13a	HOME_HEADERS_WON	2	home headers won
+match_record	0x13e	HOME_POSSESSION	5	home possession percentages; [0] drives the action zones possession bar
+match_record	0x142	HOME_RECENT_POSSESSION	1	home possession of the last five minutes (the overview possession bar) [inference]
+match_record	0x143	HOME_ZONE_1	5	home share of the first pitch zone (action zones; 50 when empty)
+match_record	0x148	HOME_ZONE_2	5	home share of the second pitch zone (action zones)
+match_record	0x14d	HOME_ZONE_3	5	home share of the third pitch zone (action zones)
+match_record	0x152	HOME_KIT	1	home kit used, for the club colours
+match_record	0x153	HOME_CAPTAIN	1	home captain's row index
+match_record	0x190	ROW_STAFF_ID	4	staff id of a player row (base from match_player_row: record + 0x625 x side + 0x49 x idx); -1 empty
+match_record	0x194	ROW_PLAYER_ID	4	player id of a player row (same base as ROW_STAFF_ID)
+match_record	0x198	ROW_FIRST_NAME_ID	4	first name id of a player row (same base) [inference]
+match_record	0x19c	ROW_SECOND_NAME_ID	4	second name id of a player row (same base) [inference]
+match_record	0x1a0	ROW_COMMON_NAME_ID	4	common name id of a player row (same base) [inference]
+match_record	0x1a4	ROW_DATE_OF_BIRTH	8	date of birth of a player row (TCMDate; same base)
+match_record	0x1ad	ROW_POSITION	1	position of a player row; 0xfb = empty row (same base)
+match_record	0x744	AWAY_TEAM	1573	away team block (match_record_team); its first byte is the goals, 0xfd before kick-off
+match_record	0x745	AWAY_SHOOTOUT_GOALS	1	away penalty shoot-out goals
+match_record	0x74c	AWAY_SHOTS	1	away shots on goal
+match_record	0x74d	AWAY_SHOTS_ON_TARGET	1	away shots on target
+match_record	0x74e	AWAY_CORNERS	1	away corners
+match_record	0x74f	AWAY_FREE_KICKS	1	away free kicks
+match_record	0x750	AWAY_THROW_INS	1	away throw-ins
+match_record	0x751	AWAY_FOULS	1	away fouls
+match_record	0x752	AWAY_OFFSIDES	1	away offsides
+match_record	0x753	AWAY_YELLOW_CARDS	1	away yellow cards
+match_record	0x754	AWAY_RED_CARDS	1	away red cards
+match_record	0x755	AWAY_PASSES	2	away passes attempted
+match_record	0x757	AWAY_PASSES_COMPLETED	2	away passes completed
+match_record	0x759	AWAY_TACKLES	2	away tackles
+match_record	0x75b	AWAY_TACKLES_WON	2	away tackles won
+match_record	0x75d	AWAY_HEADERS	2	away headers contested [inference]
+match_record	0x763	AWAY_POSSESSION	5	away possession percentages
+match_record	0x767	AWAY_RECENT_POSSESSION	1	away possession of the last five minutes [inference]
+match_record	0x768	AWAY_ZONE_1	5	away share of the first pitch zone (action zones)
+match_record	0x76d	AWAY_ZONE_2	5	away share of the second pitch zone (action zones)
+match_record	0x772	AWAY_ZONE_3	5	away share of the third pitch zone (action zones)
+match_record	0x777	AWAY_KIT	1	away kit used, for the club colours
+match_record	0xd69	EVENT_LOG	13	descriptor of the saved event log (zeroed, then filled by Match_Events::save_event_log; read back for the match report)
+match_record	0xd76	WEATHER	4	weather of the match
+match_record_team	0x0	GOALS	1	goals; 0xfd before kick-off
+match_record_team	0x1	SHOOTOUT_GOALS	1	penalty shoot-out goals
+match_record_team	0x8	SHOTS	1	shots on goal
+match_record_team	0x9	SHOTS_ON_TARGET	1	shots on target
+match_record_team	0xa	CORNERS	1	corners
+match_record_team	0xb	FREE_KICKS	1	free kicks
+match_record_team	0xc	THROW_INS	1	throw-ins
+match_record_team	0xd	FOULS	1	fouls
+match_record_team	0xe	OFFSIDES	1	offsides
+match_record_team	0xf	YELLOW_CARDS	1	yellow cards
+match_record_team	0x10	RED_CARDS	1	red cards
+match_record_team	0x11	PASSES	2	passes attempted
+match_record_team	0x13	PASSES_COMPLETED	2	passes completed
+match_record_team	0x15	TACKLES	2	tackles
+match_record_team	0x17	TACKLES_WON	2	tackles won
+match_record_team	0x19	HEADERS	2	headers contested [inference]
+match_record_team	0x1b	HEADERS_WON	2	headers won
+match_record_team	0x1f	POSSESSION	5	possession percentages; [4] is the last five minutes [inference]
+match_record_team	0x24	ZONE_1	5	share of the first pitch zone (action zones)
+match_record_team	0x29	ZONE_2	5	share of the second pitch zone
+match_record_team	0x2e	ZONE_3	5	share of the third pitch zone
+match_record_team	0x33	KIT	1	kit used (engine SIDE_KIT)
+match_record_team	0x34	CAPTAIN	1	captain's row index
+match_record_team	0x35	FORMATION_X	22	11 u16: first coordinate of each formation slot (formation slot position, axis 0) [inference]
+match_record_team	0x4b	FORMATION_Y	22	11 u16: second coordinate of each formation slot (axis 1) [inference]
+match_record_team	0x65	MANAGER_ID	4	staff id of the side's manager; -1 none
+match_record_team	0x69	MANAGER_CURRENT_REPUTATION	2	manager's current reputation; 0xffff none
+match_record_team	0x6b	MANAGER_HOME_REPUTATION	2	manager's home reputation; 0xffff none
+match_record_team	0x6d	MANAGER_WORLD_REPUTATION	2	manager's world reputation; 0xffff none
+match_record_team	0x6f	SIDE_REPUTATION	2	side reputation (engine SIDE_REPUTATION)
+match_record_team	0x71	ROWS	1460	the 20 player rows (match_record_row, 0x49 bytes each)
+match_record_row	0x0	STAFF_ID	4	staff id; -1 = empty row
+match_record_row	0x4	PLAYER_ID	4	player id
+match_record_row	0x8	FIRST_NAME_ID	4	first name id (checked against the person) [inference]
+match_record_row	0xc	SECOND_NAME_ID	4	second name id [inference]
+match_record_row	0x10	COMMON_NAME_ID	4	common name id [inference]
+match_record_row	0x14	DATE_OF_BIRTH	8	date of birth (TCMDate)
+match_record_row	0x1c	SHIRT_NUMBER	1	shirt number (0 = none: the list shows the row number)
+match_record_row	0x1d	POSITION	1	position (match_player POSITION); 0xfb = empty row
+match_record_row	0x1e	PREVIOUS_POSITION	1	previous position (match_player PREVIOUS_POSITION)
+match_record_row	0x21	GOALS	1	goals scored
+match_record_row	0x2c	YELLOW_CARDS	1	yellow cards
+match_record_row	0x2d	RED_CARD	1	red card (drawn in red on the ratings) [inference]
+match_record_row	0x30	MINUTE_OFF	1	minute substituted off; negative = not
+match_record_row	0x32	MINUTE_ON	1	minute brought on; negative = not
+match_record_row	0x33	INJURY_MINUTE	1	minute injured; negative = not
+match_record_row	0x34	MINUTE_LEFT_PITCH	1	minute sent off / left the pitch; negative = not
+match_record_row	0x35	MATCH_GRADE	1	match rating shown in the ratings
+match_stats	0x0	INDEX	4	pointer to the record index (match_stats_entry, 12 bytes per slot)
+match_stats	0x4	COUNT	4	number of index entries (zeroed when the index is freed)
+match_stats	0x8	BUCKET_CURSORS	16	four i32 cursors: next slot of each bucket (bucket k covers slots k x n / 4 to (k + 1) x n / 4)
+match_stats	0x18	EVENT_FILE_NUMBER	4	number of the last event log file created (incremented by Match_Events::save_event_log)
+match_stats	0x1c	CAPACITY	4	number of record slots n in match_stats_matches.tmp
+match_stats_entry	0x0	HOME_CLUB_ID	4	home club id of the stored match
+match_stats_entry	0x4	AWAY_CLUB_ID	4	away club id
+match_stats_entry	0x8	DAY	2	day of the match
+match_stats_entry	0xa	YEAR	2	year of the match
+live_match	0x0	SOURCE_FIXTURE	4	pointer to the original fixture record (FIXTURE holds its copy)
+live_match	0x4	FIXTURE	79	copy of the fixture record (fixture fields at FIXTURE + fixture::X)
+live_match	0x10	HOME_CLUB_ID	4	fixture HOME_CLUB_ID of the copy
+live_match	0x18	COMPETITION	4	fixture COMPETITION of the copy
+live_match	0x1c	STADIUM	4	fixture STADIUM of the copy
+live_match	0x20	HOME_CLUB	4	fixture HOME_CLUB of the copy
+live_match	0x24	AWAY_CLUB	4	fixture AWAY_CLUB of the copy
+live_match	0x44	HOME_SIDE_MARK	1	fixture HOME_SIDE_MARK of the copy
+live_match	0x45	AWAY_SIDE_MARK	1	fixture AWAY_SIDE_MARK of the copy
+live_match	0x46	STAGE_INDEX	1	fixture STAGE_INDEX of the copy (-1 = the competition itself)
+live_match	0x4f	HOME_AGGREGATE	1	fixture HOME_AGGREGATE of the copy
+live_match	0x50	AWAY_AGGREGATE	1	fixture AWAY_AGGREGATE of the copy
+live_match	0x57	ENGINE	4	match engine of the live match; 0 until the watched match is started
+live_match	0x5b	SPECTATORS	4	pointer to the spectators/viewers state (match_spectators)
+live_match	0x5f	RECORD	4	match statistics record being filled (match_record)
+live_match	0x63	DAY_ENTRY	4	match-day competition entry of the match (0x54 bytes; screen param 0xe of the match screen) [inference]
+live_match	0x67	STATE	1	live state: 0xff = not live; 2 = finished (the score is already in the aggregate); set to 1 by the match screen [inference]
+match_spectators	0x0	UPDATE_FLAGS	1	bits telling the match screens what to redraw (4 data panels, 0x10/0x20 view changes) [inference]
+match_spectators	0xc5	HUMAN_MARKS	64	one i32 per human slot: 1 watching, -911 left
+match_spectators	0x108	COUNT	1	number of humans watching
+match_spectators	0x119	CLOSED	4	nonzero: the viewing is closed (the match screen input returns -9)
+match_events_fields	0x6	COUNT	2	number of event entries (i16)
+match_events_fields	0x720	ENTRIES	?	event entries of 14 bytes: +0 commentary code (i16), +4 minute, +5 player, +6 flag
+match_events_fields	0x2db0	COMMENTARY_SPEED	1	commentary speed setting chosen on the match screen
+match_day_fields	0x1	REGIONS	4	pointer to the region groups (0x18 bytes: +0 kind, +4 first and +8 last competition entry, +0x14 shown flags)
+match_day_fields	0x9	REGION_COUNT	4	number of region groups
+match_day_fields	0xd	COMPETITIONS	4	pointer to the competition entries (0x54 bytes: +0 competition id, +4 first and +8 last match index)
+match_day_fields	0x15	COMPETITION_COUNT	4	number of competition entries
+match_day_fields	0x19	MATCHES	4	pointer to the day's live matches (live_match, 0x69 bytes each)
+match_day_fields	0x34	REFERENCE_MATCH	4	live match used as the time reference of the latest scores when no match screen is open [inference]
+human_manager_sheet	0xe2	LIVE_MATCH	4	live match (live_match) the manager is in; 0 none
+human_manager_sheet	0xe6	CLUB	4	club the manager leads in that match [inference]

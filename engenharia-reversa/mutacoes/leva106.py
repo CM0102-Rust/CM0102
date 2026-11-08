@@ -1,7 +1,7 @@
 # Mutacoes da leva106 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva106.py --jogo 2001-08-20
 MUTACOES = [
     ('e_nivel20', "            Some(n) => n.min(20),", "            Some(n) => n.min(19),"),
-    ('e_fator', "        if byte(jm, 0x10) == 0 {\n            factor = (factor as f64 * f4(0x96d488)) as f32;", "        if byte(jm, 0x10) != 0 {\n            factor = (factor as f64 * f4(0x96d488)) as f32;"),
+    ('e_fator', "        if byte(jm, match_player::ASSISTS) == 0 {\n            factor = (factor as f64 * f4(0x96d488)) as f32;", "        if byte(jm, match_player::ASSISTS) != 0 {\n            factor = (factor as f64 * f4(0x96d488)) as f32;"),
     ('e_idade', "    let age = |o: usize, min: i8| ((w(sheet(), o) as i32 / 1000) as i8).wrapping_add(0x10).max(min);", "    let age = |o: usize, min: i8| ((w(sheet(), o) as i32 / 1000) as i8).wrapping_add(0x11).max(min);"),
     ('e_div9', "        v.max(4)", "        v.max(5)"),
     ('e_divd', "    } else if byte(comp, fixture::CATEGORY) != 8 {\n        div_d = (0xca - nivel0 as i32 * 10) as i16;", "    } else if byte(comp, fixture::CATEGORY) != 8 {\n        div_d = (0xcb - nivel0 as i32 * 10) as i16;"),

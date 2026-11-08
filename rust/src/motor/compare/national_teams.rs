@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_duty_competitions(this: u
 /// mexe nos elencos), a comparação não vale e fica a original; senão os registros têm de bater.
 pub(crate) unsafe extern "thiscall" fn compare_select_squads_for_fixture(this: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SELECT_SQUADS_FOR_FIXTURE);
-    let regions = [(club_nation_record(this, read_usize(p + 0x1c)) + 0x32, 0x3a), (club_nation_record(this, read_usize(p + 0x20)) + 0x32, 0x3a)];
+    let regions = [(club_nation_record(this, read_usize(p + fixture::HOME_CLUB)) + 0x32, 0x3a), (club_nation_record(this, read_usize(p + fixture::AWAY_CLUB)) + 0x32, 0x3a)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     o(this, p);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
@@ -249,7 +249,7 @@ pub(crate) unsafe extern "stdcall" fn compare_national_teams_post_player_called_
 pub(crate) unsafe extern "thiscall" fn compare_record_international_result(this: usize, p: usize, m: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_INTERNATIONAL_RESULT);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if is_national_team(read_usize(p + 0x1c)) == 0 || is_national_team(read_usize(p + 0x20)) == 0 {
+    if is_national_team(read_usize(p + fixture::HOME_CLUB)) == 0 || is_national_team(read_usize(p + fixture::AWAY_CLUB)) == 0 {
         return o(this, p, m); // simplification: writes nothing, original only
     }
     let regions = caps_update_regions(this, p, m);
@@ -385,9 +385,9 @@ pub(crate) unsafe extern "C" fn compare_compare_call_up_records_by_date(a: usize
 /// [pt] Comparador: a original aloca o nó (não roda duas vezes): só ela, e confere o plano: a conta da lista (+0x28, palavra)
 /// sobe 1 com as duas não nulas e fica igual senão.
 pub(crate) unsafe extern "thiscall" fn compare_add_qualified_nation(this: usize, nation: usize, stage_final: usize) {
-    let before = *((this + 0x28) as *const i16) as i32;
+    let before = *((this + national_teams_fields::NEW_QUALIFIERS) as *const i16) as i32;
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_QUALIFIED_NATION)(this, nation, stage_final);
-    let after = *((this + 0x28) as *const i16) as i32;
+    let after = *((this + national_teams_fields::NEW_QUALIFIERS) as *const i16) as i32;
     let expected = before + (nation != 0 && stage_final != 0) as i32;
     SCOREBOARD.record(after == expected, || format!("add_qualified_nation({:x}, {:x}) conta {} -> {}", nation, stage_final, before, after));
 }
@@ -417,10 +417,10 @@ pub(crate) unsafe extern "thiscall" fn compare_set_current_competition(this: usi
 pub(crate) unsafe extern "thiscall" fn compare_mark_clubs_with_fixtures(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MARK_CLUBS_WITH_FIXTURES);
     let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
-    if read_u32_as_usize(this + 0x24) == 0 || n <= 0 {
+    if read_u32_as_usize(this + national_teams_fields::CLUB_MARKS) == 0 || n <= 0 {
         return o(this, data);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(read_u32_as_usize(this + 0x24), n as usize)], || o(this, data), || mark_clubs_with_fixtures(this, data));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(read_u32_as_usize(this + national_teams_fields::CLUB_MARKS), n as usize)], || o(this, data), || mark_clubs_with_fixtures(this, data));
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<(usize, u8, u8)> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).map(|i| (i, a[i], b[i])).collect();
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn compare_end_duty_for_nation_in_competitio
 pub(crate) unsafe extern "thiscall" fn compare_prune_club_call_up_records(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PRUNE_CLUB_CALL_UP_RECORDS);
     let n = club_call_up_record_count().max(0) as usize;
-    let recs = read_usize(this + 0x20);
+    let recs = read_usize(this + national_teams_fields::CLUB_CALL_UP_RECORDS);
     if n == 0 || recs == 0 || (0..n).any(|i| would_free_call_up_record(recs + 6 * i)) {
         return o(this);
     }
@@ -523,11 +523,11 @@ pub(crate) unsafe extern "thiscall" fn compare_release_overage_u21_players(this:
 pub(crate) unsafe extern "thiscall" fn compare_clear_current_competition(this: usize, nation: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_CURRENT_COMPETITION);
     let id = *(nation as *const i32);
-    let next = read_usize(this + 8).wrapping_add((id as usize).wrapping_mul(4));
+    let next = read_usize(this + national_teams_fields::NEXT_COMPETITIONS).wrapping_add((id as usize).wrapping_mul(4));
     if *(next as *const i32) != -1 {
         return o(this, nation);
     }
-    let reg = [(read_usize(this + 4).wrapping_add(id.wrapping_mul(0x6e) as usize) + 4, 4), (next, 4)];
+    let reg = [(read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add(id.wrapping_mul(0x6e) as usize) + 4, 4), (next, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, nation), || clear_current_competition(this, nation));
     SCOREBOARD.record(igual, || format!("clear_current_competition({:x}, {:x}) {:x?} x {:x?}", this, nation, mo, mr));
 }
@@ -549,7 +549,7 @@ pub(crate) unsafe extern "thiscall" fn compare_call_up_replacement(this: usize, 
 pub(crate) unsafe extern "thiscall" fn compare_build_selection_pools(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_SELECTION_POOLS);
     let n = (*(G_NATION_COUNT as *const i32)).max(0) as usize;
-    let recs = read_usize(this + 4);
+    let recs = read_usize(this + national_teams_fields::NATION_RECORDS);
     let mut reg = vec![(recs, 0x6e * n)];
     for i in 0..n {
         let rec = recs + 0x6e * i;
@@ -557,7 +557,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_selection_pools(this: usize
             let o = 0x15 * sub;
             let total: usize = (0..4).map(|k| read_u8(rec + o + 0xe + 4 * k) as usize).sum();
             if total > 0 {
-                reg.push((read_usize(this + 0xc + 4 * sub).wrapping_add(4 * read_usize(rec + o + 8)), 4 * total));
+                reg.push((read_usize(this + national_teams_fields::RESERVE_POOLS + 4 * sub).wrapping_add(4 * read_usize(rec + o + 8)), 4 * total));
             }
         }
     }
@@ -592,14 +592,14 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
     // the regions: the player, the nation record, the level band in the list and the national team (the level,
     // 0x76d810, only reads)
     let level: unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_POSITION_GROUP);
-    let reg = u(this + 4).wrapping_add((*(nation as *const u32) as usize).wrapping_mul(110));
+    let reg = u(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation as *const u32) as usize).wrapping_mul(110));
     let n = level(player, reg as *const i16, 0) as i8 as isize;
     let mut regions = [(player, 110), (reg, 110), (player, 0), (player, 0)];
     if (0..=3).contains(&n) {
         let start = (0..n as usize).fold(u(reg + 8) as i32, |s, k| s.wrapping_add(*((reg + 0xe + 4 * k) as *const u8) as i32));
-        let size = *((reg + 0xd + 4 * n as usize) as *const u8) as usize;
+        let size = *((reg + national_squad_record::RESERVE_GROUPS + 4 * n as usize) as *const u8) as usize;
         if start >= 0 && size > 0 {
-            regions[2] = (u(this + 0xc) + 4 * start as usize, 4 * size);
+            regions[2] = (u(this + national_teams_fields::RESERVE_POOLS) + 4 * start as usize, 4 * size);
         }
     }
     if u(player + staff::NATIONAL_JOB) != 0 {

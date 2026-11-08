@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_offer_contract(t
 /// regras da cópia, calculado antes). A cópia é provada pelos ramos e pelas mutações na carreira.
 pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, game: usize, summary: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_AFTER_MATCH);
-    if read_i8(game + 0x40) == 0 || read_i8(game + 0x41) == 0 {
+    if read_i8(game + fixture::HOME_SIDE_MARK) == 0 || read_i8(game + fixture::AWAY_SIDE_MARK) == 0 {
         return o(this, game, summary);
     }
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
@@ -86,13 +86,13 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
             }
         }
         if fin != 0 {
-            *pl = (fin, read_i32(fin + 0x138), total);
+            *pl = (fin, read_i32(fin + finance::SEASON_BONUSES), total);
         }
     }
     o(this, game, summary);
     for &(fin, antes, total) in &plan {
         if fin != 0 {
-            let pago = read_i32(fin + 0x138).wrapping_sub(antes);
+            let pago = read_i32(fin + finance::SEASON_BONUSES).wrapping_sub(antes);
             SCOREBOARD.record(pago == total, || format!("update_after_match(jogo {:x}) bônus de fin {:x}: original {} previsto {}", game, fin, pago, total));
         }
     }
@@ -195,7 +195,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_bosman_departure_news(this: 
 pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decide: u32, acertado: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(IDX_ADD_CONTRACT_OFFER);
     let id = read_usize(terms);
-    let club = read_usize(terms + 4);
+    let club = read_usize(terms + contract::CLUB);
     let count = contract_offer_counter(terms);
     let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
     let item = if read_u8(count) != 0 && l != 0 { find_contract_offer(l, id, club) } else { 0 };
@@ -223,14 +223,14 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
         let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
         let mut new = 0;
         if l != 0 {
-            let mut no = read_usize(l + 2);
+            let mut no = read_usize(l + llist::HEAD);
             let mut n = 0;
             while no != 0 && n < 100000 {
                 let x = read_usize(no);
                 if read_usize(x) == id && read_usize(x + 4) == club {
                     new = x;
                 }
-                no = read_usize(no + 6);
+                no = read_usize(no + llist_node::NEXT);
                 n += 1;
             }
         }
@@ -248,7 +248,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer_for_transfe
     let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
     let mut found = false;
     if l != 0 {
-        let mut no = read_usize(l + 2);
+        let mut no = read_usize(l + llist::HEAD);
         let mut n = 0;
         while no != 0 && n < 100000 {
             let x = read_usize(no);
@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer_for_transfe
                 found = true;
                 break;
             }
-            no = read_usize(no + 6);
+            no = read_usize(no + llist_node::NEXT);
             n += 1;
         }
     }
@@ -331,11 +331,11 @@ pub(crate) unsafe extern "thiscall" fn compare_process_due_decision_dates(this: 
     let mut decides = false;
     while i < n {
         let e = (read_u32(this + contract_manager_fields::DECISION_DATES) as usize).wrapping_add((i as usize).wrapping_mul(14));
-        if call_date_compare(0x456740, e + 4, data) != 0
-            || (call_date_compare(0x4a7f20, e + 4, data) != 0 && read_u8(e + 0xc) as i8 > slice as u8 as i8) {
+        if call_date_compare(0x456740, e + decision_date::DATE, data) != 0
+            || (call_date_compare(0x4a7f20, e + decision_date::DATE, data) != 0 && read_u8(e + decision_date::SLICE) as i8 > slice as u8 as i8) {
             break;
         }
-        decides |= read_u32(e) as i32 != -1 && read_u8(e + 0xd) == 3;
+        decides |= read_u32(e) as i32 != -1 && read_u8(e + decision_date::KIND) == 3;
         i += 1;
     }
     if decides {
@@ -360,12 +360,12 @@ pub(crate) unsafe extern "thiscall" fn compare_get_current_contract_offers(this:
         return o(this, club, out);
     }
     let mut plan: Vec<u8> = Vec::new();
-    core::ptr::write_unaligned((list + 0xa) as *mut u32, read_u32(list + 2));
+    core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_u32(list + llist::HEAD));
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut item = next(list);
     while item != 0 {
-        let state = read_u8(item + 0x35) & 0x3f;
-        if read_u32(item + 4) == read_u32(club) && state != 5 && state != 6 {
+        let state = read_u8(item + contract_offer::CONTRACT_TYPE) & 0x3f;
+        if read_u32(item + contract_offer::CLUB_ID) == read_u32(club) && state != 5 && state != 6 {
             plan.extend_from_slice(core::slice::from_raw_parts(item as *const u8, 111));
         }
         item = next(list);
@@ -454,7 +454,7 @@ pub(crate) unsafe extern "thiscall" fn compare_resubmit_held_offers(this: usize,
         return o(this, id);
     }
     // the plan: the original restarts the cursor (+0xa) before traversing
-    write_usize(list + 0xa, read_usize(list + 2));
+    write_usize(list + llist::CURSOR, read_usize(list + llist::HEAD));
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut expected = 0u32;
     let mut item = next(list);
@@ -483,7 +483,7 @@ pub(crate) unsafe extern "stdcall" fn compare_contract_manager_season_end_month(
 ///
 /// [pt] Comparador: a vaga esperada (a primeira vazia, ou a do fim com a conta + 1 e a capacidade + 200 se cheio).
 pub(crate) unsafe extern "thiscall" fn compare_get_free_staff_contract_space(this: usize, so_in_end: u32) -> i32 {
-    let (n, cap, p) = (read_usize(this + 8), read_usize(this + 4), read_usize(this));
+    let (n, cap, p) = (read_usize(this + contract_manager_fields::CONTRACT_COUNT), read_usize(this + contract_manager_fields::CONTRACT_CAPACITY), read_usize(this));
     let mut free = -1i32;
     if so_in_end == 0 {
         for i in 0..(n as i32).max(0) {
@@ -498,9 +498,9 @@ pub(crate) unsafe extern "thiscall" fn compare_get_free_staff_contract_space(thi
         return r; // out of memory: the box has already shown
     }
     let (er, en, ecap) = if free >= 0 { (free, n, cap) } else { (n as i32, n.wrapping_add(1), if n == cap { cap.wrapping_add(200) } else { cap }) };
-    SCOREBOARD.record(r == er && read_usize(this + 8) == en && read_usize(this + 4) == ecap, || {
+    SCOREBOARD.record(r == er && read_usize(this + contract_manager_fields::CONTRACT_COUNT) == en && read_usize(this + contract_manager_fields::CONTRACT_CAPACITY) == ecap, || {
         format!("get_free_staff_contract_space({}) devolveu {} (esperava {}), conta {} -> {} (esperava {}), capacidade {} -> {} (esperava {})",
-            so_in_end, r, er, n, read_usize(this + 8), en, cap, read_usize(this + 4), ecap)
+            so_in_end, r, er, n, read_usize(this + contract_manager_fields::CONTRACT_COUNT), en, cap, read_usize(this + contract_manager_fields::CONTRACT_CAPACITY), ecap)
     });
     r
 }
@@ -509,7 +509,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_free_staff_contract_space(thi
 ///
 /// [pt] Comparador: a vaga é a do fim (a conta de antes); confere a ligação da pessoa, o id no contrato e a conta.
 pub(crate) unsafe extern "thiscall" fn compare_add_staff_contract(this: usize, person: usize, value: u32) -> u32 {
-    let n = read_usize(this + 8);
+    let n = read_usize(this + contract_manager_fields::CONTRACT_COUNT);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ADD_STAFF_CONTRACT)(this, person, value);
     if read_usize(this) == 0 {
         return r; // out of memory
@@ -517,9 +517,9 @@ pub(crate) unsafe extern "thiscall" fn compare_add_staff_contract(this: usize, p
     let id = read_usize(person);
     let ligada = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f)));
     let in_contract = read_usize(read_usize(this).wrapping_add(n.wrapping_mul(0x50)));
-    SCOREBOARD.record(ligada == n && in_contract == id && read_usize(this + 8) == n.wrapping_add(1), || {
+    SCOREBOARD.record(ligada == n && in_contract == id && read_usize(this + contract_manager_fields::CONTRACT_COUNT) == n.wrapping_add(1), || {
         format!("add_staff_contract(pessoa {}, valor {}) vaga {} (esperava {}), id no contrato {}, conta {} -> {}",
-            id, value, ligada, n, in_contract, n, read_usize(this + 8))
+            id, value, ligada, n, in_contract, n, read_usize(this + contract_manager_fields::CONTRACT_COUNT))
     });
     r
 }
@@ -557,7 +557,7 @@ pub(crate) unsafe extern "thiscall" fn compare_trigger_relegation_clauses(this: 
     let mut alvos = Vec::new();
     for c in club_and_b_team(club) {
         if c != 0 {
-            alvos.extend((0..50).map(|k| contract_with_relegation_clause(this, c, read_usize(c + 0xd7 + k * 4))).filter(|&x| x != 0));
+            alvos.extend((0..50).map(|k| contract_with_relegation_clause(this, c, read_usize(c + club::SQUAD + k * 4))).filter(|&x| x != 0));
         }
     }
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_TRIGGER_RELEGATION_CLAUSES)(this, club, league);
@@ -613,7 +613,7 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_decision_for_transfer(th
     let target = offer_to_schedule(read_usize(this + contract_manager_fields::CONTRACT_OFFERS), offer);
     let n = ability_above_club_reputation(offer);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCHEDULE_DECISION_FOR_TRANSFER)(this, offer);
-    let marcada = target.map_or(true, |e| *((e + 0x62) as *const u8) == 1);
+    let marcada = target.map_or(true, |e| *((e + contract_offer::DECISION_VALID) as *const u8) == 1);
     SCOREBOARD.record(marcada && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", offer, target, marcada, r, n));
     r
 }

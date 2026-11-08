@@ -1,7 +1,7 @@
 # Mutacoes da leva96 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva96.py --jogo 2001-08-20
 MUTACOES = [
     ('m_infiltra', "                        corre(call, l, 2);", "                        corre(call, l, 3);"),
-    ('m_goleiro_9', "                let gy = |gk: usize| if gk != 0 { byte(gk, 0x103) } else { 9 };", "                let gy = |gk: usize| if gk != 0 { byte(gk, 0x103) } else { 8 };"),
+    ('m_goleiro_9', "                let gy = |gk: usize| if gk != 0 { byte(gk, match_player::CELL_Y) } else { 9 };", "                let gy = |gk: usize| if gk != 0 { byte(gk, match_player::CELL_Y) } else { 8 };"),
     ('m_limiar', "            let mut f = f64::from_bits(0x3ff8_0000_0000_0000);", "            let mut f = f64::from_bits(0x3ff4_0000_0000_0000);"),
     ('m_8000', "            pressiona = mk & 0x8000 != 0", "            pressiona = mk & 0x4000 != 0"),
     ('m_71', "        *w(match_player::ACTION) = 0x71;", "        *w(match_player::ACTION) = 0x72;"),

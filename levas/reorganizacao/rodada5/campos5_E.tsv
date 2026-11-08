@@ -1,0 +1,121 @@
+llist	0x2	HEAD	4	first node of the LLIST (0xe-byte list: +0 count i16, +2 head, +6 tail, +0xa cursor; node: +0 data, +6 next)
+llist	0x6	TAIL	4	last node of the LLIST
+llist	0xa	CURSOR	4	iteration cursor; reset to HEAD before walking the list with LLIST::get_next
+friendly	0x34f6	NATION_LISTS	4	pointer to the array of per-nation friendly lists (indexed by nation id, then by position in SORTED_NATIONS)
+tournament_slot	0x0	HOST	4	host club pointer; 0 = free slot (one of the Friendly object's 127 tournament slots of 0x69 bytes)
+tournament_slot	0x4	START_DATE	8	tournament start date (TCMDate)
+tournament_slot	0xc	KIND	1	tournament type, passed to is_club_free_on_date
+tournament_slot	0x15	INVITED_CLUBS	16	the 4 invited club pointers (0 = empty)
+tournament_slot	0x25	INVITE_PENDING	4	per invited club, 1 while the invitation has not been accepted (no cancellation news to it)
+tournament_slot	0x29	IN_USE	4	nonzero once the tournament is under way; find_human_club_tournament only returns slots with it set [inference]
+tournament_slot	0x31	NAME	51	tournament name, zero-terminated
+tournament_slot	0x64	SLOT_INDEX	1	slot index; comp id = Friendly FIRST_TOURNAMENT_COMP_ID + this
+tournament_slot	0x65	COMPETITION	4	competition object created for the tournament (0 none); destroyed when it is cancelled
+intl_date_entry	0x0	WEEK	1	week of the month of the international friendly date (0x14-byte entries of the Friendly INTL_DATE_TABLE)
+intl_date_entry	0x1	WEEKDAY	1	day byte of the international date as written by build_international_date_table [inference]
+intl_date_entry	0x2	MONTH	1	month of the international date
+intl_date_entry	0x3	DATE	8	resolved date (TCMDate) of the entry
+intl_date_entry	0xb	YEAR_OFFSET	1	signed year offset added to the World Cup cycle year
+intl_date_entry	0xc	CONTINENT_ID	4	continent id the date applies to (-1 = any)
+intl_date_entry	0x10	COMP_ID	4	competition id tied to the date (-1 none)
+friendly_match	0x0	DATE	8	date of the friendly (TCMDate; day +0, year +2) (0x19-byte records of FRIENDLY_MATCH_LIST)
+friendly_match	0xc	REQUESTING_CLUB	4	club that requested the friendly (0 = removed from the plans)
+friendly_match	0x10	HOME_CLUB	4	home club pointer
+friendly_match	0x14	AWAY_CLUB	4	away club pointer
+friendly_match	0x18	STATUS	1	request status: 1 waiting for a reply, 3 accepted, 4 refused
+scheduled_friendly_slot	0x0	DAY	2	day of year of the scheduled friendly (25-byte slots from +9 of a SCHEDULED_SLOT_LIST record)
+scheduled_friendly_slot	0x2	YEAR	2	year of the scheduled friendly
+scheduled_friendly_slot	0x10	OPPONENT	4	opponent club pointer (0 = slot free)
+scheduled_friendly_slot	0x18	STATUS	1	slot status: 0 free, 3 friendly accepted
+planned_friendly	0x0	DATE	8	date of the planned AI preseason friendly (0x14-byte entries of PLANNED_FRIENDLIES)
+planned_friendly	0x8	HOST_CLUB_ID	4	id of the club that planned it (-1 invalid)
+planned_friendly	0xc	HOME_CLUB_ID	4	home club id
+planned_friendly	0x10	AWAY_CLUB_ID	4	away club id
+preseason_candidate	0x0	CLUB_ID	4	club id (0x16-byte preseason planning candidate)
+preseason_candidate	0x5	REPUTATION_BAND	1	club reputation / 500
+preseason_candidate	0x6	NATION_ID	4	id of the club's nation (sort key)
+preseason_candidate	0xa	OPPONENTS	4	LLIST of the opponent candidates already planned against
+preseason_candidate	0xe	WINDOW_START	2	first day (offset from PRESEASON_BASE_DATE) of the friendly window (-1 none)
+preseason_candidate	0x10	WINDOW_END	2	last day of the friendly window (-1 none)
+preseason_candidate	0x12	PLANNED_DATES	4	LLIST of the dates already planned for the club
+cup_round	0x3	DAY	2	day of year of the round date (0x68-byte round records of the cup ROUND_TABLE)
+cup_round	0x5	YEAR_OFFSET	1	signed year offset of the round date relative to the cup YEAR
+cup_round	0x21	LEGS	1	number of legs (2 = two-legged)
+cup_round	0x22	LEG_GAP_DAYS	1	signed days from the first leg to the second leg
+league	0xe2	REQUIRED_SEATS	2	seats a club's stadium must have in this division (-1 none); passed to Finance::upgrade_stadium_for_league [inference]
+league	0xe4	REQUIRED_CAPACITY	2	capacity a club's stadium must have in this division, passed to Finance::upgrade_stadium_for_league [inference]
+league_table_row	0x4	POSITION	1	table position index of the row (0x3b-byte rows of the league TABLE)
+league_table_row	0x5	H2H_ENTRIES	4	pointer to the head-to-head entries, 14 bytes per opponent (tie-break rule 4)
+league_table_row	0x9	POSITION_HISTORY	4	pointer to the per-round position history (allocated when the league has legs)
+league_table_row	0x11	PLAYED	1	games played (overall totals block +0xd..+0x1a)
+league_table_row	0x12	WON	1	games won (tie-break code 3)
+league_table_row	0x13	DRAWN	1	games drawn
+league_table_row	0x14	LOST	1	games lost
+league_table_row	0x15	GOALS_FOR	2	goals scored
+league_table_row	0x17	GOALS_AGAINST	2	goals conceded
+league_table_row	0x19	POINTS	2	points
+league_table_row	0x1f	HOME_PLAYED	1	home games played (home totals block +0x1b..+0x28)
+league_table_row	0x20	HOME_WON	1	home wins
+league_table_row	0x21	HOME_DRAWN	1	home draws
+league_table_row	0x22	HOME_LOST	1	home defeats
+league_table_row	0x23	HOME_GOALS_FOR	2	goals scored at home
+league_table_row	0x25	HOME_GOALS_AGAINST	2	goals conceded at home
+league_table_row	0x27	HOME_POINTS	2	points won at home
+league_table_row	0x2d	AWAY_PLAYED	1	away games played (away totals block +0x29..+0x36)
+league_table_row	0x2e	AWAY_WON	1	away wins
+league_table_row	0x2f	AWAY_DRAWN	1	away draws
+league_table_row	0x30	AWAY_LOST	1	away defeats
+league_table_row	0x31	AWAY_GOALS_FOR	2	goals scored away (tie-break code 5)
+league_table_row	0x33	AWAY_GOALS_AGAINST	2	goals conceded away
+league_table_row	0x35	AWAY_POINTS	2	points won away
+league_table_row	0x37	STATUS	1	decided table status (0xff = not decided yet), set by update_positions_and_status
+league_table_row	0x38	MARK	1	flag given at init_table_row; 0 sets the fixture's side mark to 1
+league_table_row	0x39	BEST_POSSIBLE_POSITION	1	best position still reachable (1-based)
+league_table_row	0x3a	WORST_POSSIBLE_POSITION	1	worst position still possible (starts at CLUB_COUNT)
+league_round_date	0x0	DAY	2	day of year of the round (0x41-byte entries of the league ROUND_DATES)
+league_round_date	0x2	YEAR_OFFSET	2	year of the round minus the league YEAR
+league_round_date	0x4	TIME_SLICE	1	time slice of the round's fixtures (copied to fixture TIME_SLICE)
+league_round_date	0x5	TV_SLOT_DATA	4	dword of TV slot 0 (8 slots of 7 bytes from +5) [inference]
+league_round_date	0x9	TV_SLOT_WEEKDAY	1	TV slot 0 weekday offset (-1..6), passed to Date::get_nearest_weekday
+league_round_date	0xa	TV_SLOT_TIME_SLICE	1	TV slot 0 time slice (-1..2)
+league_round_date	0xb	TV_SLOT_KIND	1	TV slot 0 kind (0xff = no slot, ends the list; 3 TV move, 4 special last round)
+league_round_date	0x3d	VENUE_VALUE	4	value passed to Stadium::set_fixture_venue for the round's fixtures
+league_projection	0x0	CLUB	4	club pointer (0xe-byte projection entry built from the league table)
+league_projection	0x4	POINTS_PER_GAME	4	points per game so far (f32), scaled by the form factor
+league_projection	0x8	POINTS	2	points so far (table row POINTS)
+league_projection	0xa	PROJECTED_POINTS	2	projected final points = POINTS + remaining games x POINTS_PER_GAME
+league_projection	0xc	PLAYED	2	games played so far
+cup_round	0x6	TIME_SLICE	1	time slice of the round's fixtures (match time byte)
+cup_round	0x7	ROUND_CODE	2	round name code (copied to fixture ROUND_NAME; +3 for a two-legged round)
+cup_round	0x9	ROUND_NUMBER	2	round number copied to fixture ROUND_NUMBER
+cup_round	0xb	DRAW_RULES	2	draw rule bits copied to fixture ROUND_DRAW_RULES (bit 4 checked by draw_round)
+cup_round	0xd	TIE_RULES	2	tie rule bits copied to fixture TIE_RULES (0x100 no fixture news, 0x200 no draw news, 0x800 level-based home side)
+cup_round	0x13	VENUE_VALUE	4	home venue value passed to Stadium::set_fixture_venue
+cup_round	0x17	MATCH_CATEGORY	1	match category copied to fixture CATEGORY
+cup_round	0x18	TEAMS	2	number of teams in the round
+cup_round	0x1a	TIES	2	number of ties in the round
+cup_round	0x1c	NEW_TEAMS	2	number of teams entering at this round
+cup_round	0x20	SINGLE_LEG_FLAG	1	positive with fewer than 2 legs sets fixture SQUAD_RULES bit 0x400 [inference]
+cup_round	0x23	SLOT_VENUE	4	venue value of match-day slot 0 (8 slots of 7 bytes from +0x23)
+cup_round	0x27	SLOT_WEEKDAY	1	weekday of match-day slot 0 (-1..6)
+cup_round	0x28	SLOT_TIME_SLICE	1	time slice of match-day slot 0 (-1..2)
+cup_round	0x29	SLOT_CODE	1	code of match-day slot 0 (0xff = no slot)
+cup_round	0x60	WINNER_PRIZE	4	prize paid to each tie winner (-1 = share of the cup PRIZE_FUND)
+cup_round	0x64	LOSER_PRIZE	4	prize paid to each tie loser
+cup_tie	0x0	HOME_TEAM	2	home team index in the cup TEAM_TABLE (-1 not decided) (0x35-byte ties of TIE_TABLES)
+cup_tie	0x2	AWAY_TEAM	2	away team index (-1 not decided)
+cup_tie	0x6	FEEDER_TIE	2	tie of the previous round whose winner comes here
+cup_tie	0x8	FEEDER_SIDE	2	side the feeder winner takes here: 1 home, 0 away
+cup_tie	0xa	HOME_LINK_TIE	2	tie linked to the home side in the other round (-1 none)
+cup_tie	0xc	AWAY_LINK_TIE	2	tie linked to the away side (-1 none)
+cup_tie	0xe	HOME_LINK_ROUND	2	round of the tie linked to the home side (-1 none)
+cup_tie	0x10	AWAY_LINK_ROUND	2	round of the tie linked to the away side (-1 none)
+cup_tie	0x12	FEEDER_ROUND	2	round of FEEDER_TIE
+cup_tie	0x34	FIXTURE_STATE	1	fixture creation state: 0 none, 1 postponed, 2 to create, 3 created
+english_name_tables	0x14	CLUB_COMP_COUNT	4	number of club competitions; ids at or above it index the nation competition rows (eng.lng name tables object at G_ENGLISH_NAME_TABLES)
+english_name_tables	0x20	CLUB_ROWS	4	English club name rows (first of the 8 row pointers +0x20..+0x3c)
+english_name_tables	0x28	NATION_COMP_ROWS	4	English nation competition name rows, 83 bytes each, by id minus CLUB_COMP_COUNT
+english_name_tables	0x2c	NATION_ROWS	4	English nation name rows, 109 bytes each (three-letter name at row +0x4f)
+english_name_tables	0x34	STADIUM_ROWS	4	English stadium name rows, 52 bytes each
+english_name_tables	0x38	CLUB_COMP_ROWS	4	English club competition name rows, 83 bytes each
+english_name_tables	0x3c	STAFF_COMP_ROWS	4	English staff competition name rows, 79 bytes each

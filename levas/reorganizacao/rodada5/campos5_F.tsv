@@ -1,0 +1,180 @@
+discipline_fields	0x0	RULING_BODIES	4	Pointer to the table of 43 ruling body object pointers, indexed by rule (signed byte)
+discipline_fields	0x4	BANS	4	Pointer to the array of 20-byte ban records
+discipline_fields	0x8	BAN_CAPACITY	2	Capacity of the ban array (grows by 100, up to 0x7d00)
+discipline_fields	0xa	BAN_COUNT	2	Number of ban records in use (signed)
+discipline_fields	0xc	NATION_INDEX	4	Pointer to the nation index: 8-byte items (person id, nation id), sorted by 0x55e5f0
+discipline_fields	0x10	NATION_INDEX_CAPACITY	2	Capacity of the nation index (grows by 20)
+discipline_fields	0x12	NATION_INDEX_COUNT	2	Number of nation index items (signed)
+discipline_fields	0x14	PERSON_RECORDS	4	Pointer to the 29-byte per-person discipline records, indexed by staff id
+discipline_fields	0x18	BAN_HISTORY	4	Ban history file list object (0x58e340 adds, 0x58f110 drops the last)
+discipline_fields	0x1c	HELD_BANS	14	Inline LLIST of 10-byte held bans (person id, slot, the slot's 5 bytes) kept during a loan
+discipline_fields	0x1e	HELD_BANS_HEAD	4	First node of HELD_BANS (HELD_BANS + llist HEAD), the start the cursor is reset to
+llist	0x2	HEAD	4	First node of the linked list; walks reset CURSOR to it
+llist	0xa	CURSOR	4	Iteration cursor read and advanced by LLIST::get_next (0x68d1b0)
+ban_record	0x0	MATCHES	1	Matches of the ban; 0xff = a ban by days
+ban_record	0x1	MATCHES_SERVED	1	Matches served so far (signed); the ban ends when it reaches MATCHES
+ban_record	0x2	DAYS	2	Days of a ban by days (-1 = free slot together with MATCHES 0xff)
+ban_record	0x4	START_DATE	8	Date the ban starts (day i16 +4, year i16 +6)
+ban_record	0xc	RULES	4	The four rules (ruling body indexes, 0xff none) the ban applies under
+ban_record	0xf	NATION_RULE	1	Fourth rule: when set, the person is also listed in the discipline nation index
+ban_record	0x13	FLAGS	1	Flags: bit 0 extended (merged with an existing ban); bits 0..2 copied by operator=
+discipline_record	0x14	HISTORY_START	4	Start offset of the person's ban history in the history file list
+discipline_record	0x18	HISTORY_LAST	4	Offset of the person's last ban history entry (-1 none)
+discipline_record	0x1c	HELD_BAN_COUNT	1	Number of the person's bans held in HELD_BANS (signed)
+ban_slot	0x0	RULE	1	Rule (ruling body index) of the slot; 0xff = free
+ban_slot	0x1	VALUE	4	Value of the slot (-1 when free) [inference: link to the ruling body entry]
+ruling_body	0x17	NATION_ID	4	Nation the ruling body covers (-1 none)
+ruling_body	0x1b	CONTINENT_ID	4	Continent the ruling body covers when it has no nation (-1 none)
+ruling_body_entry	0x0	PERSON_ID	4	Person id of the entry (-1 = free) [inference]
+ruling_body_entry	0x6	BAN_INDEX	2	Index of the person's ban in the discipline BANS array (-1 none)
+held_ban	0x4	SLOT	1	Record slot (0..2) the held ban came from
+held_ban	0x5	SLOT_DATA	5	The slot's 5 bytes (rule byte, value dword) to put back
+nation_index_item	0x4	NATION_ID	4	Nation id of the person in the discipline nation index item (+0 the person id)
+llist	0x6	TAIL	4	Last node of the linked list; backward walks (get_prev 0x68d1d0) reset CURSOR to it
+player_stats_fields	0x0	HISTORY_FILE	4	Career history FILE_LLIST object (add_node 0x58e340, get_nodes 0x58f120)
+player_stats_fields	0x4	CATEGORY_RECORDS	4	Pointer to the array of 0x20-byte category statistics records
+player_stats_fields	0x8	CATEGORY_CAPACITY	4	Capacity of CATEGORY_RECORDS (grows by 100)
+player_stats_fields	0xc	CATEGORY_COUNT	4	Number of category records in use
+player_stats_fields	0x10	RATING_SUM	8	Double sum of match ratings of every recorded player (match flag +0x4c clear)
+player_stats_fields	0x18	RATED_COUNT	8	Double count of ratings added to RATING_SUM
+player_stats_fields	0x20	FLAGGED_RATING_SUM	8	Double sum of match ratings for matches with the +0x4c flag set
+player_stats_fields	0x28	FLAGGED_RATED_COUNT	8	Double count of ratings added to FLAGGED_RATING_SUM
+player_stats_fields	0x30	PLAYER_ENTRIES	4	Pointer to the 39-byte per-player entries, indexed by player data (TPlayer) id
+player_stats_fields	0x38	FREE_CATEGORY_COUNT	4	Number of loose category records (RATING_TOTAL 0xffff) available for reuse
+player_stats_fields	0x3c	LANGUAGES	4	Pointer to the 6-byte language records (person id, language, fluency), sorted by 0x7c6d40
+player_stats_fields	0x40	LANGUAGE_CAPACITY	4	Capacity of LANGUAGES (starts at 100, grows by 100)
+player_stats_fields	0x44	LANGUAGE_COUNT	4	Number of language records
+player_stats_entry	0x18	HISTORY_START	4	Start offset of the player's career history in HISTORY_FILE
+player_stats_entry	0x1c	HISTORY_LAST	4	Offset of the last career history node in HISTORY_FILE
+player_stats_entry	0x20	CLUB_LEAGUE_GAMES	2	League games for the current club (stat field 1)
+player_stats_entry	0x22	CLUB_LEAGUE_GOALS	2	League goals for the current club (stat field 2)
+player_stats_entry	0x24	RECENT_RATINGS	3	Last five match ratings, 4 bits each (+0x24, +0x25 both nibbles, +0x26 low nibble newest)
+player_stats_entry	0x26	LAST_RATING	1	Low nibble: the last match rating (0 none); high nibble part of RECENT_RATINGS
+player_category_stats	0x1	SUB_APPEARANCES	1	Appearances as a substitute
+player_category_stats	0x2	GOALS	1	Goals scored
+player_category_stats	0x7	TEAM_GOALS_FOR	1	Goals scored by his side in his matches
+player_category_stats	0x8	TEAM_GOALS_AGAINST	1	Goals conceded by his side in his matches
+player_category_stats	0x9	WINS	1	Matches won
+player_category_stats	0xa	DEFEATS	1	Matches lost
+player_category_stats	0xd	MAN_OF_THE_MATCH	1	Man of the match awards
+player_category_stats	0xe	RATING_TOTAL	2	Sum of match ratings (average = RATING_TOTAL / matches); 0xffff marks a loose record
+player_category_stats	0x1c	MINUTES	4	Minutes played
+career_entry	0x2	CLUB_ID	4	Club id of the season entry (-1 none)
+career_entry	0x6	STATS	32	The category statistics (player_category_stats layout)
+career_entry	0x7	STATS_SUB_APPEARANCES	1	STATS + player_category_stats SUB_APPEARANCES
+career_entry	0x8	STATS_GOALS	1	STATS + player_category_stats GOALS
+career_entry	0x14	STATS_RATING_TOTAL	2	STATS + player_category_stats RATING_TOTAL (-1 none)
+career_entry	0x26	TRANSFER_FEE	4	Transfer fee of the club exit (-1 none)
+career_entry	0x2a	KIND	1	Category x 8, with the exit type (0 normal, 1 end, 2 loan, 3 other) in the low 3 bits
+language_entry	0x4	LANGUAGE	1	Language code (signed; 0xff in a search key matches any)
+language_entry	0x5	FLUENCY	1	Fluency 0..10
+match_stats_record	0x3c	MAN_OF_THE_MATCH_ID	4	Player data id of the man of the match (compared with lineup_row PLAYER_ID)
+match_stats_record	0x4d	DURATION	2	Match length in minutes, for players who stayed on to the end
+match_stats_record	0x11f	HOME_GOALS	1	Home side goals (away at HOME_GOALS + SIDE_SIZE)
+match_stats_record	0x190	HOME_LINEUP	1460	Home side lineup: 20 rows of 0x49 bytes (away at HOME_LINEUP + SIDE_SIZE)
+match_stats_record	0x625	SIDE_SIZE	?	Stride between the home and away side blocks
+match_stats_record	0x744	AWAY_GOALS	1	Away side goals (HOME_GOALS + SIDE_SIZE)
+lineup_row	0x4	PLAYER_ID	4	Player data (TPlayer) id (-1 none); +0 the staff id
+lineup_row	0x21	GOALS	1	Goals scored in the match
+lineup_row	0x32	ENTRY_MINUTE	1	Minute a substitute came on (0xff = did not play)
+lineup_row	0x35	RATING	1	Match rating
+club_records_fields	0x4	ALL_TIME_RECORDS	4	Pointer to the 0x38b-byte all-time club records
+club_records_fields	0x8	ALL_TIME_CAPACITY	4	Capacity of ALL_TIME_RECORDS (grows by 50)
+club_records_fields	0xc	ALL_TIME_COUNT	4	Number of all-time club records
+club_records_fields	0x10	SEASON_RECORDS	4	Pointer to the 0x38b-byte season club records
+club_records_fields	0x14	SEASON_CAPACITY	4	Capacity of SEASON_RECORDS (grows by 50)
+club_records_fields	0x18	SEASON_COUNT	4	Number of season club records
+club_records_fields	0x1c	CLUB_ENTRIES	4	Pointer to the 0x6a-byte per-club entries, indexed by club id
+club_records_fields	0x24	NEWS_QUEUE	4	Pointer to the 6-byte record news queue (club id, record type, period)
+club_records_fields	0x28	NEWS_QUEUE_CAPACITY	4	Capacity of NEWS_QUEUE (grows by 5; freed at 100 or more)
+club_records_fields	0x2c	NEWS_QUEUE_COUNT	4	Number of queued record news items
+club_record_entry	0x4	SEASON_INDEX	4	Index of the club's season record in SEASON_RECORDS (-1 none); +0 the all-time index
+club_record_entry	0x10	SEASON_GAMES	1	Games played this season (signed)
+club_record_entry	0x68	SEASONS	2	Seasons recorded; record news needs 5 or more
+record_news_item	0x4	RECORD_TYPE	1	Record type of the news (1 best position, 2 worst, 0x1c..0x1f transfer records)
+record_news_item	0x5	PERIOD	1	2 = season record, otherwise all-time
+club_record	0x1	BEST_POSITION_COMP	4	Competition id of the best league position (-1 none); +0 the position
+club_record	0x5	BEST_POSITION_YEAR	2	Season year of the best league position (0 in the season record)
+club_record	0x7	WORST_POSITION	1	Worst league position
+club_record	0x8	WORST_POSITION_COMP	4	Competition id of the worst league position (-1 none)
+club_record	0xc	WORST_POSITION_YEAR	2	Season year of the worst league position (0 in the season record)
+club_record	0x1f1	SEASON_RATING	31	Best average rating record (rating_record layout; f32 rating, -1.0 none)
+club_record	0x20d	SEASON_RATING_GAMES	1	Games played by the rating record holder (SEASON_RATING + rating_record GAMES)
+club_record	0x20e	SEASON_RATING_YEAR	2	SEASON_RATING + rating_record YEAR (0 in the season record) [inference]
+club_record	0x247	LEAGUE_APPEARANCES	2	Most league appearances for the club (-1 none); holder reference at +0x249
+club_record	0x261	LEAGUE_GOALS	2	Most league goals for the club (-1 none); holder reference at +0x263
+club_record	0x313	FEE_PAID	41	Highest transfer fee paid (transfer_fee_record layout; fee -1 none)
+club_record	0x317	FEE_PAID_HOLDER	24	FEE_PAID + transfer_fee_record HOLDER
+club_record	0x32f	FEE_PAID_OTHER_CLUB_ID	4	FEE_PAID + transfer_fee_record OTHER_CLUB_ID
+club_record	0x333	FEE_PAID_DATE	8	FEE_PAID + transfer_fee_record DATE
+club_record	0x33b	FEE_PAID_FLAG	1	FEE_PAID + transfer_fee_record FLAG
+club_record	0x33c	FEE_RECEIVED	41	Highest transfer fee received (transfer_fee_record layout; fee -1 none)
+club_record	0x340	FEE_RECEIVED_HOLDER	24	FEE_RECEIVED + transfer_fee_record HOLDER
+club_record	0x358	FEE_RECEIVED_OTHER_CLUB_ID	4	FEE_RECEIVED + transfer_fee_record OTHER_CLUB_ID
+club_record	0x35c	FEE_RECEIVED_DATE	8	FEE_RECEIVED + transfer_fee_record DATE
+club_record	0x364	FEE_RECEIVED_FLAG	1	FEE_RECEIVED + transfer_fee_record FLAG
+club_record	0x365	TRANSFER_SPENDING	4	Total transfer spending in a season (-1 none)
+club_record	0x369	TRANSFER_SPENDING_YEAR	2	Season year of TRANSFER_SPENDING (0 in the season record)
+club_record	0x36b	TRANSFER_INCOME	4	Total transfer income in a season (-1 none)
+club_record	0x36f	TRANSFER_INCOME_YEAR	2	Season year of TRANSFER_INCOME (0 in the season record)
+club_record	0x371	FANS_PLAYER	26	Fans' player of the year (fans_player_record layout)
+record_holder	0x10	DATE	8	Date of the record; +0..+0xc the holder's name ids and staff index
+rating_record	0x4	HOLDER	24	Record holder (record_holder layout); +0 the rating (f32)
+rating_record	0x1c	GAMES	1	Games played by the holder
+rating_record	0x1d	YEAR	2	Season year of the record [inference]
+man_of_match_record	0x1	HOLDER	24	Record holder (record_holder layout); +0 the count
+man_of_match_record	0x19	YEAR	2	Season year of the record
+club_discipline_record	0x1	RED_CARDS	1	Red cards; +0 the yellow cards
+club_discipline_record	0x2	HOLDER	24	Record holder (record_holder layout)
+club_discipline_record	0x1a	YEAR	2	Season year of the record
+count_record	0x2	HOLDER	24	Record holder (record_holder layout); +0 the count (word)
+count_record	0x12	HOLDER_DATE	8	HOLDER + record_holder DATE
+fans_player_record	0x18	YEAR	2	Season year of the award; +0 the holder (record_holder layout)
+tally_record	0x11	HOLDER_DATE	8	Date of the holder at +1 (holder + record_holder DATE)
+transfer_fee_record	0x4	HOLDER	24	The player (record_holder layout); +0 the fee
+transfer_fee_record	0x14	HOLDER_DATE	8	HOLDER + record_holder DATE
+transfer_fee_record	0x1c	OTHER_CLUB_ID	4	Id of the other club in the transfer
+transfer_fee_record	0x20	DATE	8	Date of the transfer
+transfer_fee_record	0x28	FLAG	1	Transfer flag: 1 when the transfer's +4 was set (loan or part exchange) [inference]
+goals_in_match_record	0x1	HOLDER	24	Record holder (record_holder layout); +0 the goals
+goals_in_match_record	0x11	HOLDER_DATE	8	HOLDER + record_holder DATE
+goals_in_match_record	0x19	MATCH	31	The match (match record, copied by 0x448110)
+age_record	0x18	HOLDER_DATE	8	Date of the record holder (holder at +8); +0 the age as a date
+age_record	0x20	MATCH_DATE	8	Date of the match
+run_record	0x4	START_DATE	8	First date of the run; +0 the game count
+run_record	0xc	END_DATE	8	Last date of the run
+league_table_row	0x4	POSITION	1	Table position of the club; +0 the club pointer
+league_table_row	0x11	GAMES_PLAYED	1	Games played
+offer	0x8	BUYING_CLUB_ID	4	Id of the club making the offer
+tactics_fields	0x0	TACTIC_STATS	4	Pointer to the 0x28-byte per-tactic result statistics (read by the AI formation choice)
+tactics_fields	0x30	UNDO_SLOTS	1472	16 undo/stored-instruction slots of 0x5c bytes, one per human (staff count - id - 1)
+tactics_fields	0x5f0	UNDO_COUNT	1	Number of UNDO_SLOTS in use
+tactics_fields	0x5f1	CUSTOM_TACTICS	4	Pointer to the clubs' own tactic blocks (0x18e3 bytes each)
+tactics_fields	0x5f5	CUSTOM_TACTIC_COUNT	4	Number of CUSTOM_TACTICS
+tactics_fields	0x5f9	PRESET_TACTICS	4	Pointer to the preset tactic blocks (0x18e3 bytes each)
+tactics_fields	0x5fd	PRESET_TACTIC_COUNT	4	Number of PRESET_TACTICS; tactic indexes at or above it are CUSTOM_TACTICS
+tactics_fields	0x601	ROWS	4	Pointer to the 0x91-byte per-club tactics rows (clubs, then human managers)
+tactics_fields	0x605	ROW_COUNT	4	Number of tactics rows
+tactics_row	0x2	SELECTION	80	The 20 line-up slots: staff ids (-1 empty); +0 the tactic index (i16)
+tactics_row	0x52	CAPTAIN	4	Staff id of the captain
+tactics_row	0x56	PLAYMAKER	4	First of the two extra role slots (staff id, -1 none)
+tactics_row	0x5a	SECOND_PLAYMAKER	4	Second extra role slot (staff id, -1 none); moves down when the first is cleared
+undo_slot	0x4	TEAM	4	Team/human argument of the slot; +0 the club
+undo_slot	0x8	IN_USE	4	Nonzero while the slot holds a copy
+player_regen_fields	0x4	RETIREMENTS	4	Pointer to the 0x1a-byte pending retirement records, sorted by 0x7ae2a0
+player_regen_fields	0x8	RETIREMENT_COUNT	4	Number of pending retirements
+retirement_entry	0x4	CLUB_ID	4	Club id of the person (-1 none); +0 the staff id
+retirement_entry	0x8	ANNOUNCE_DATE	8	Date the retirement is announced (day +8, year +0xa)
+retirement_entry	0xa	ANNOUNCE_YEAR	2	Year of ANNOUNCE_DATE
+retirement_entry	0x10	RETIRE_DATE	8	Date the person retires (day +0x10, year +0x12)
+retirement_entry	0x12	RETIRE_YEAR	2	Year of RETIRE_DATE
+retirement_entry	0x18	REASON	1	Retirement reason (8 injury, 0x10 unemployed, ...)
+retirement_entry	0x19	ANNOUNCED	1	Set once the retirement was announced
+retirement_entry	0x1a	SIZE	?	The record size (26 bytes)
+regen_queue_entry	0x4	REGEN_DATE	8	Date the regen is created (day +4, year +6); +0 the staff id
+regen_queue_entry	0x6	REGEN_YEAR	2	Year of REGEN_DATE
+regen_pool_item	0x4	NATION_ID	4	Nation id; +0 the record id
+regen_pool_item	0x8	SECOND_NATION_ID	4	Second nation id
+regen_pool_item	0xc	STAFF_ID	4	Staff id of the person the record came from (spare non-player records)
+key_nation_record	0x15	SEASON_END_DAY	2	Day of year the nation's season ends (72-byte records at 0xb63d60)
+key_nation_record	0x1d	SEASON_SPANS_YEAR	1	Nonzero when the season ends in the following year [inference]

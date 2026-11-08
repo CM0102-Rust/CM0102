@@ -18,18 +18,18 @@ use super::*;
 /// registro a criar (0x4528d0/0x452710 alocam) ou fila que pode crescer: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(this: usize, liga0: usize, always: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS);
-    if liga0 == 0 || read_u8(liga0 + 0x44) != 0xff {
+    if liga0 == 0 || read_u8(liga0 + league::STAGE_INDEX) != 0xff {
         return o(this, liga0, always); // simplification: the boxes, original only
     }
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let mut regions = vec![(this + 0x24, 0xc)];
+    let mut regions = vec![(this + club_records_fields::NEWS_QUEUE, 0xc)];
     let mut podem_entrar = 0i32;
     for liga in league_stage_chain(liga0) {
-        for i in 0..read_i16(liga + 0x3e).max(0) as usize {
-            let row = read_usize(liga + 0xb1) + 0x3b * i;
+        for i in 0..read_i16(liga + league::CLUB_COUNT).max(0) as usize {
+            let row = read_usize(liga + league::TABLE) + 0x3b * i;
             let club = read_usize(row);
-            if read_u8(row + 0x11) == 0 || club == 0 {
+            if read_u8(row + league_table_row::PLAYED) == 0 || club == 0 {
                 continue;
             }
             let (t, s) = (club_season_record(this, club, 0), club_all_time_record(this, club, 0));
@@ -43,12 +43,12 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
             }
         }
     }
-    let queue = read_usize(this + 0x24);
-    if (read_usize(this + 0x2c) as i32).wrapping_add(podem_entrar) > read_usize(this + 0x28) as i32 || (queue == 0 && podem_entrar > 0) {
+    let queue = read_usize(this + club_records_fields::NEWS_QUEUE);
+    if (read_usize(this + club_records_fields::NEWS_QUEUE_COUNT) as i32).wrapping_add(podem_entrar) > read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY) as i32 || (queue == 0 && podem_entrar > 0) {
         return o(this, liga0, always); // simplification: the queue may grow (reallocates), original only
     }
     if queue != 0 {
-        regions.push((queue, 6 * read_usize(this + 0x28)));
+        regions.push((queue, 6 * read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY)));
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
     let ro = o(this, liga0, always);
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
 /// original depois a partir do mesmo cabeçalho (+0x24..+0x30): o cabeçalho e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_send_record_news(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SEND_RECORD_NEWS);
-    let regions = [(this + 0x24, 0xc)];
+    let regions = [(this + club_records_fields::NEWS_QUEUE, 0xc)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     RECORD_NEWS_DRY_RUN = true;
     let rr = crate::rng::pause_trace(|| send_record_news(this));
@@ -87,7 +87,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_record_news(this: usize) -> 
 /// [pt] Comparador: lado a lado pela referência do escolhido (registro +0x371, 0x18 bytes) e pela devolução.
 pub(crate) unsafe extern "thiscall" fn compare_pick_fans_player_of_year(this: usize, club: usize, record: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PICK_FANS_PLAYER_OF_YEAR);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(record + 0x371, 0x18)], || o(this, club, record), || pick_fans_player_of_year(this, club, record));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(record + club_record::FANS_PLAYER, 0x18)], || o(this, club, record), || pick_fans_player_of_year(this, club, record));
     SCOREBOARD.record(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", read_usize(club), r, mo, n, mr));
     r
 }
@@ -104,11 +104,11 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_fans_player_of_year(this: us
 /// de novo (o vetor pode ter sido realocado) e confere os valores e o clube de cada recorde e o [0xae1080].
 pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_TRANSFER_FEE_RECORDS);
-    let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + 0xc) as usize).wrapping_mul(staff::SIZE));
-    let buyer = injury_club_by_index(read_i32(t + 8));
+    let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + offer::TARGET_STAFF_ID) as usize).wrapping_mul(staff::SIZE));
+    let buyer = injury_club_by_index(read_i32(t + offer::BUYER_CLUB_ID));
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let contract = contract_of(read_usize(G_CONTRACT_MANAGER), person);
-    let seller = if contract != 0 { injury_club_by_index(read_i32(contract + 4)) } else { 0 };
+    let seller = if contract != 0 { injury_club_by_index(read_i32(contract + contract::CLUB)) } else { 0 };
     if seller == 0 {
         let r = o(this, t);
         SCOREBOARD.record(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records sem vendedor: {} [G_CONTRACT_LOOKUP_RESULT]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
@@ -117,12 +117,12 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
     let always: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
     let records = || [season(this, buyer, 1), always(this, buyer, 1), season(this, seller, 1), always(this, seller, 1)];
-    let value = read_i32(t + 0x1b);
+    let value = read_i32(t + offer::FEE);
     let rg = records();
     // (value, club) of each record: paid in the season and all-time by the buyer, received by the seller
     let mut plan = [(read_i32(rg[0] + 0x313), read_usize(rg[0] + 0x32f)), (read_i32(rg[1] + 0x313), read_usize(rg[1] + 0x32f)),
                      (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];
-    let mut queue = read_i32(this + 0x2c);
+    let mut queue = read_i32(this + club_records_fields::NEWS_QUEUE_COUNT);
     if value != 0 {
         if value > plan[0].0 {
             plan[0] = (value, read_usize(seller));
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     let rg = records();
     let now = [(read_i32(rg[0] + 0x313), read_usize(rg[0] + 0x32f)), (read_i32(rg[1] + 0x313), read_usize(rg[1] + 0x32f)),
                  (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];
-    let queue_now = read_i32(this + 0x2c);
+    let queue_now = read_i32(this + club_records_fields::NEWS_QUEUE_COUNT);
     SCOREBOARD.record(r == 1 && now == plan && queue_now == queue && read_usize(G_CONTRACT_LOOKUP_RESULT) == contract, || {
         format!("update_transfer_fee_records(valor {}) plano {:x?} fila {} x {:x?} fila {}", value, plan, queue, now, queue_now)
     });
@@ -167,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
 /// notícias e as duas vagas seguintes.
 pub(crate) unsafe extern "thiscall" fn compare_add_transfer_totals(this: usize, value: i32, buyer: usize, seller: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32>(IDX_ADD_TRANSFER_TOTALS);
-    if buyer == 0 || seller == 0 || (read_usize(this + 0x28).wrapping_sub(read_usize(this + 0x2c)) as i32) < 2 {
+    if buyer == 0 || seller == 0 || (read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY).wrapping_sub(read_usize(this + club_records_fields::NEWS_QUEUE_COUNT)) as i32) < 2 {
         return o(this, value, buyer, seller); // simplification: with queue realloc, original only
     }
     let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
@@ -175,8 +175,8 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_totals(this: usize, 
     let _ = [season(this, seller, 1), always(this, seller, 1), season(this, buyer, 1), always(this, buyer, 1)];
     // creating the buyer’s record may reallocate the vector and move the seller’s: fetch all four again (now it only finds)
     let regs = [season(this, seller, 1), always(this, seller, 1), season(this, buyer, 1), always(this, buyer, 1)];
-    let queue = read_usize(this + 0x24).wrapping_add(read_usize(this + 0x2c).wrapping_mul(6));
-    let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + 0x2c, 4), (queue, 12)];
+    let queue = read_usize(this + club_records_fields::NEWS_QUEUE).wrapping_add(read_usize(this + club_records_fields::NEWS_QUEUE_COUNT).wrapping_mul(6));
+    let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + club_records_fields::NEWS_QUEUE_COUNT, 4), (queue, 12)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, value, buyer, seller), || add_transfer_totals(this, value, buyer, seller));
     SCOREBOARD.record(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", value, read_usize(buyer), read_usize(seller), mo, mr));
     r
@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn compare_club_records_update_career_record
     if reg == 0 {
         return o(this, player, club, games, goals);
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(reg + 0x247, 0x34)], || o(this, player, club, games, goals), || club_records_update_career_records(this, player, club, games, goals));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(reg + club_record::LEAGUE_APPEARANCES, 0x34)], || o(this, player, club, games, goals), || club_records_update_career_records(this, player, club, games, goals));
     SCOREBOARD.record(igual && r == n, || format!("club_records_update_career_records({}, {}, {}, {}) {:x?} x {:x?}", read_usize(player), read_usize(club), games as i16, goals as i16, mo, mr));
     r
 }
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_season_rating_record(this:
     }
     let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
     let t = season(this, club, 0);
-    let reg: &[(usize, usize)] = if t == 0 { &[] } else { &[(t + 0x1f1, 0x1f)] };
+    let reg: &[(usize, usize)] = if t == 0 { &[] } else { &[(t + club_record::SEASON_RATING, 0x1f)] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, club), || update_season_rating_record(this, club));
     SCOREBOARD.record(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", read_usize(club), r, n, mo, mr));
     r
@@ -226,9 +226,9 @@ pub(crate) unsafe extern "thiscall" fn compare_get_all_time_record(this: usize, 
         return o(this, club, create);
     }
     let e = club_records_entry(this, club);
-    let plan = record_index_plan(e, this + 0xc, create);
+    let plan = record_index_plan(e, this + club_records_fields::ALL_TIME_COUNT, create);
     let r = o(this, club, create);
-    check_record_plan("get_all_time_record", club, e, this + 0xc, this + 4, plan, r);
+    check_record_plan("get_all_time_record", club, e, this + club_records_fields::ALL_TIME_COUNT, this + club_records_fields::ALL_TIME_RECORDS, plan, r);
     r
 }
 
@@ -239,9 +239,9 @@ pub(crate) unsafe extern "thiscall" fn compare_get_season_record(this: usize, cl
         return o(this, club, create);
     }
     let e = club_records_entry(this, club) + 4;
-    let plan = record_index_plan(e, this + 0x18, create);
+    let plan = record_index_plan(e, this + club_records_fields::SEASON_COUNT, create);
     let r = o(this, club, create);
-    check_record_plan("get_season_record", club, e, this + 0x18, this + 0x10, plan, r);
+    check_record_plan("get_season_record", club, e, this + club_records_fields::SEASON_COUNT, this + club_records_fields::SEASON_RECORDS, plan, r);
     r
 }
 
@@ -249,15 +249,15 @@ pub(crate) unsafe extern "thiscall" fn compare_get_season_record(this: usize, cl
 ///
 /// [pt] Comparador: a original acrescenta (pode realocar); confere a conta, o item novo (id, tipo) e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_queue_record_news(this: usize, id: u32, kind: u32) -> u32 {
-    let n = read_usize(this + 0x2c);
+    let n = read_usize(this + club_records_fields::NEWS_QUEUE_COUNT);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_QUEUE_RECORD_NEWS)(this, id, kind);
     if r == 0 {
         return r; // out of memory: the box has already shown
     }
-    let item = read_usize(this + 0x24).wrapping_add(n.wrapping_mul(6));
-    let (gid, gtipo) = (core::ptr::read_unaligned(item as *const u32), *((item + 4) as *const u8));
-    SCOREBOARD.record(r == 1 && read_usize(this + 0x2c) == n.wrapping_add(1) && gid == id && gtipo == kind as u8, || {
-        format!("queue_record_news({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, kind as u8, r, n, read_usize(this + 0x2c), gid, gtipo)
+    let item = read_usize(this + club_records_fields::NEWS_QUEUE).wrapping_add(n.wrapping_mul(6));
+    let (gid, gtipo) = (core::ptr::read_unaligned(item as *const u32), *((item + record_news_item::RECORD_TYPE) as *const u8));
+    SCOREBOARD.record(r == 1 && read_usize(this + club_records_fields::NEWS_QUEUE_COUNT) == n.wrapping_add(1) && gid == id && gtipo == kind as u8, || {
+        format!("queue_record_news({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, kind as u8, r, n, read_usize(this + club_records_fields::NEWS_QUEUE_COUNT), gid, gtipo)
     });
     r
 }
@@ -461,7 +461,7 @@ pub(crate) unsafe extern "C" fn compare_reset_records(r: usize) -> u32 {
 /// Comparer for `record_holder_construct` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn compare_record_holder_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_RECORD_HOLDER_CONSTRUCT);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x10, 8)], || o(this), || record_holder_construct(this));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + record_holder::DATE, 8)], || o(this), || record_holder_construct(this));
     SCOREBOARD.record(igual && r == n, || format!("record_holder_construct {:x?} x {:x?}", mo, mr));
     r
 }

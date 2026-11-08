@@ -237,7 +237,7 @@ pub(crate) unsafe extern "thiscall" fn compare_announce_team_status(league: usiz
 /// da partida e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_league_add_result(league: usize, p: usize, game: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT);
-    if p == 0 || (*((league + league::STAGE_INDEX) as *const u8) == 0xff && *((p + 0x42) as *const u8) != 0xff) {
+    if p == 0 || (*((league + league::STAGE_INDEX) as *const u8) == 0xff && *((p + fixture::STAGE_INDEX) as *const u8) != 0xff) {
         return o(league, p, game); // simplification: the box or the stage, original only
     }
     let n = read_i16(league + league::CLUB_COUNT) as u16 as u32;
@@ -409,17 +409,17 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
     o(this, i, club, mark, rows);
     let idx = i as u8 as i8 as isize;
     let l = table.wrapping_add((idx * TABLE_ROW_SIZE as isize) as usize);
-    let mut ok = read_usize(l) == club && read_u8(l + 4) == i as u8 && read_u8(l + 0x37) == 0xff && read_u8(l + 0x38) == mark as u8
-        && read_u8(l + 0x39) == 1 && read_u8(l + 0x3a) == n as u8 && read_i16(this + league::GAMES_PER_CLUB) == a7_expected
+    let mut ok = read_usize(l) == club && read_u8(l + league_table_row::POSITION) == i as u8 && read_u8(l + league_table_row::STATUS) == 0xff && read_u8(l + league_table_row::MARK) == mark as u8
+        && read_u8(l + league_table_row::BEST_POSSIBLE_POSITION) == 1 && read_u8(l + league_table_row::WORST_POSSIBLE_POSITION) == n as u8 && read_i16(this + league::GAMES_PER_CLUB) == a7_expected
         && (club == 0 || read_u8(club + club::PROFESSIONAL_STATUS) == situacao_esperada)
-        && (read_usize(l + 9) != 0) == (read_i16(this + league::LEGS) > 0) && (read_usize(l + 5) != 0) == confrontos;
+        && (read_usize(l + league_table_row::POSITION_HISTORY) != 0) == (read_i16(this + league::LEGS) > 0) && (read_usize(l + league_table_row::H2H_ENTRIES) != 0) == confrontos;
     for k in 0..3 {
-        let e = l + 0x11 + 14 * k;
+        let e = l + league_table_row::PLAYED + 14 * k;
         ok &= (e - 4..e + 10).all(|a| read_u8(a) == 0);
     }
-    let last = idx == n as isize - 1 && read_usize(l + 5) != 0;
-    if read_usize(l + 5) != 0 && !last {
-        let p = read_usize(l + 5);
+    let last = idx == n as isize - 1 && read_usize(l + league_table_row::H2H_ENTRIES) != 0;
+    if read_usize(l + league_table_row::H2H_ENTRIES) != 0 && !last {
+        let p = read_usize(l + league_table_row::H2H_ENTRIES);
         ok &= (0..(n as usize).saturating_sub(1)).all(|k| (p + 14 * k + 4..p + 14 * k + 14).all(|a| read_u8(a) == 0));
     }
     if last {
@@ -430,7 +430,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
         }
     }
     SCOREBOARD.record(ok, || format!("init_table_row(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
-        idx, club, mark as u8, n, read_i16(this + league::GAMES_PER_CLUB), a7_expected, confrontos, read_usize(l + 5), read_usize(l + 9)));
+        idx, club, mark as u8, n, read_i16(this + league::GAMES_PER_CLUB), a7_expected, confrontos, read_usize(l + league_table_row::H2H_ENTRIES), read_usize(l + league_table_row::POSITION_HISTORY)));
 }
 
 /// Comparer for `league_get_club_array` (comparison mode: see the header of motor.rs).

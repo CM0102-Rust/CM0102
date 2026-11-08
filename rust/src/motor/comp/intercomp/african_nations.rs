@@ -41,8 +41,8 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
     if full == 0 {
         return league(this, today, 0);
     }
-    let day = read_i16(this + 0xb6) as u16;
-    let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
+    let day = read_i16(this + league::NEXT_DRAW_DAY) as u16;
+    let year = (read_i16(this + league::NEXT_DRAW_YEAR_OFFSET) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     // simplification: in the passes before the draw and on errors the original returns only al = 0 (the rest of eax is leftover from the

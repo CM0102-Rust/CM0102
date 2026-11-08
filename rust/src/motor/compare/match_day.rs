@@ -96,7 +96,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
                 break;
             }
             let club = (*(G_CLUB_TABLE as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
-            if club == *((partida + 0x1c) as *const usize) || club == *((partida + 0x20) as *const usize) {
+            if club == *((partida + fixture::HOME_CLUB) as *const usize) || club == *((partida + fixture::AWAY_CLUB) as *const usize) {
                 reg.extend(contract_flags_region(person(core::ptr::read_unaligned(ev as *const i32)), club));
             }
         }
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "C" fn compare_match_day_drop_viewer_and_finish_match()
 /// Comparer for `find_record_fixture` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn compare_find_record_fixture(stats: usize, k: i32, out: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FIND_RECORD_FIXTURE);
-    if k < 0 || k > (*((stats + 0x1c) as *const i32)).wrapping_sub(1) || out == 0 {
+    if k < 0 || k > (*((stats + match_stats::CAPACITY) as *const i32)).wrapping_sub(1) || out == 0 {
         return o(stats, k, out);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out, 0x4f)], || o(stats, k, out), || find_record_fixture(stats, k, out));

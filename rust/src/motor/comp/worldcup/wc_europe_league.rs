@@ -31,8 +31,8 @@ pub(crate) unsafe fn comp_date_word(this: usize, day: u32, month: u32, week: u32
 /// [pt] O fim comum: +0xb6 = a palavra da data, +0xb8 = `b8`, e a tabela das rodadas da virtual +0x3c (push 0; push &+0x3a;
 /// push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
 pub(crate) unsafe fn finish_rules_setup(this: usize, word: u16, b8: u16) -> u32 {
-    core::ptr::write_unaligned((this + 0xb6) as *mut u16, word);
-    core::ptr::write_unaligned((this + 0xb8) as *mut u16, b8);
+    core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, word);
+    core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, b8);
     let vt = core::ptr::read_unaligned(this as *const usize);
     let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(core::ptr::read_unaligned((vt + 0x3c) as *const usize));
     let t = table(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);

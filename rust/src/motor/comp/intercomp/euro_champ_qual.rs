@@ -42,8 +42,8 @@ pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
     let mut data = [0u32; 2];
     // simplification: the original pushes the year in ecx with the high 16 bits of the cup pointer; 0x549f70 reads the word
     construct(&mut data, 0xa, 2, read_i16(this + league::YEAR) as u16 as u32, 5); // cqs8: a data do sorteio
-    core::ptr::write_unaligned((this + 0xb6) as *mut u16, data[0] as u16);
-    core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);
+    core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, data[0] as u16);
+    core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
     crate::comparison::branch("cqs_8 regras da eurocopa");
     let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);

@@ -23,7 +23,7 @@ import traduzir_locais  # noqa: E402
 
 MODULO = {'TStaff': 'staff', 'TPlayer': 'player_sheet', 'TNonPlayer': 'non_player', 'TClub': 'club',
           'TNation': 'nation', 'TContract': 'contract', 'TComp': 'competition', 'TStadiums': 'stadium',
-          'TCities': 'city', 'TPreferences': 'preferences', 'TContinent': 'continent'}
+          'TCities': 'city', 'TPreferences': 'preferences', 'TContinent': 'continent', 'TCMDate': 'cm_date'}
 
 
 def modulos_de_campos():

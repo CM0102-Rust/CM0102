@@ -1,0 +1,103 @@
+llist	0x0	COUNT	2	Number of nodes in the linked list (LLIST, 14 bytes; 0x68d020 zeroes it)
+llist	0x2	HEAD	4	First node (LLIST_NODE pointer)
+llist	0x6	TAIL	4	Last node (add_tail 0x68d0d0 appends after it)
+llist	0xa	CURSOR	4	Iteration cursor: get_next (0x68d1b0) returns the cursor node data and moves to its next; reset by copying HEAD
+llist_node	0x0	DATA	4	Pointer to the copy of the item data (allocated by the node constructor 0x68cfc0)
+llist_node	0x4	DATA_SIZE	2	Size of the item data in bytes
+llist_node	0x6	NEXT	4	Next node, 0 at the tail
+llist_node	0xa	PREV	4	Previous node, 0 at the head
+offer	0x4	EXCHANGE_PLAYERS	4	Pointer to the LLIST of exchange-player items offered with the bid (0 = none)
+offer	0x8	BUYER_CLUB_ID	4	Id of the bidding club
+offer	0x14	DUE_YEAR	2	Year half of DUE_DATE (compared with today's year)
+offer	0x2d	PLAYER_AWARE	1	Set to 1 when the target is told of or unsettled by the bid (2 on a new offer becomes 1); non-zero counts as under offer [inference]
+offer	0x2f	PRE_CONTRACT	1	Agreement that completes at the end of the target's contract: the seller's approval is skipped and the news gives the contract end [inference]
+offer	0x31	OFFER_KIND	4	Dword whose low nibble is the offer kind (copied from the incoming offer, news slot 0xe; kinds 1 and 2 excluded when valuing the best bid) [inference]
+transfer_manager_fields	0x4	OFFER_CAPACITY	4	Capacity of the offer pointer array at +0 (grows by 50)
+transfer_manager_fields	0x8	OFFER_COUNT	4	Number of live offers in the offer array
+transfer_manager_fields	0x84f	CURRENT_YEAR	2	Year half of CURRENT_DATE (0 = not started)
+transfer_manager_fields	0x874	INSTALMENTS_HEAD	4	HEAD of the inline INSTALMENTS LLIST (copied to its cursor to iterate)
+transfer_manager_fields	0x92e	FREE_TRANSFER_QUEUE_HEAD	4	HEAD of the inline FREE_TRANSFER_QUEUE LLIST
+transfer_manager_fields	0x936	FREE_TRANSFER_QUEUE_CURSOR	4	CURSOR of the inline FREE_TRANSFER_QUEUE LLIST
+contract_manager_fields	0x4	CONTRACT_CAPACITY	4	Capacity of the 0x50-byte contract array at +0 (grows by 100 or 200)
+contract_manager_fields	0x8	CONTRACT_COUNT	4	Number of slots used in the contract array (free slot = person -1)
+shortlist_manager_fields	0x4	PAIRS_BY_CLUB	4	Pointer to the sorted 8-byte (person, club) pair array keyed by club (count at PAIRS_BY_CLUB_COUNT)
+shortlist_manager_fields	0x8	PAIRS_BY_PERSON_CAPACITY	4	Capacity of the by-person pair array at +0 (starts at 100)
+staff_contract	0x2f	CONTRACT_EXPIRES_YEAR	2	Year half of CONTRACT_EXPIRES
+staff_contract	0x3b	CLUB_APPEARANCES	2	Games for the club under this contract (zeroed on signing; clause counts)
+staff_contract	0x3d	HAPPINESS	1	Signed happiness -100..100: set from the squad role (1->75, 2->50, 3->40), moved by minutes played after each match
+staff_contract	0x3f	MATCHES_LEFT_OUT	1	Count of matches the person was left out; 5 or more outside the human club sets the squad mark [inference]
+finance	0x1c	INSTALMENT_BALANCE	4	Running share of transfer instalments still owed (buyer negative, seller positive); cleared when the club has none left [inference]
+transfer_rules	0xa	NATION_ID	4	Nation the transfer rules apply to (matched against the club's nation)
+transfer_rules	0xe	CONTINENT_ID	4	Continent of the rules, used when the fixture scope is continental (SCOPE 2)
+transfer_rules	0x12	SCOPE	1	Scope of the squad restriction rules (2 continental; otherwise compared with the fixture rules type) [inference]
+past_transfer	0x4	FIRST_NAME_ID	4	First name id of the person (+0x33 of the staff FIRST_NAME record)
+past_transfer	0x8	SECOND_NAME_ID	4	Second name id of the person (+0x33 of the staff SECOND_NAME record)
+past_transfer	0xc	COMMON_NAME_ID	4	Common name id of the person (+0x33 of the staff COMMON_NAME record)
+past_transfer	0x10	TO_CLUB_ID	4	Club the person moved to (-1 when released) [inference]
+past_transfer	0x14	FROM_CLUB_ID	4	Club the person left (-1 when none) [inference]
+past_transfer	0x18	FEE	4	Fee of the move (0 for loans and releases) [inference]
+past_transfer	0x1c	MOVE_TYPE	1	Kind of move: 2 loan, 3 release, 5 record only
+past_transfer	0x1d	DATE	8	Date of the move (TCMDate)
+future_transfer	0x8	OFFER_SLOT	4	Index of the offer in the manager's offer array
+person_transfer_record	0x1	OFFER_COUNT	1	Number of offers made for the person (bumped when an offer is added)
+person_transfer_record	0x3	RECENT_INTERNATIONAL_BITS	2	Bits of the last national-team matches (bit 0 = latest), shifted one per match
+person_transfer_record	0x5	LAST_INTERNATIONAL_MATCH	2	Number of the last national-team match recorded in RECENT_INTERNATIONAL_BITS
+person_transfer_record	0x7	INTERNATIONAL_APPS_AT_DEAL	1	International caps when the clause was agreed (the clause counts caps since)
+club_shortlist	0x4	ACTIVE	1	Shortlist state of the club (1 active; 2 also seen) [inference]
+club_shortlist	0x8	DAYS	1	Day counter; set to 100 when the club suspends a player, bids skipped at 100 or more [inference]
+shortlist_slot	0x1	POSITION	2	Position mask the slot is for (1 = goalkeeper)
+shortlist_slot	0x3	VALUATION	4	Club's valuation of the target, compared with PRICE in compensation deals [inference]
+shortlist_slot	0xb	PRICE	4	Price or budget allotted to the slot (summed when allocating the transfer budget)
+shortlist_slot	0xf	TARGET_STAFF_ID	4	Id of the slot's target (-1 none)
+shortlist_slot	0x13	REPLACEMENT_STAFF_ID	4	Id of the person the slot would replace (-1 none)
+shortlist_slot	0x17	OFFER_REF	4	Bid or request made for the target (-1 none)
+shortlist_slot	0x1b	DATE	8	Date stored by set_slot_date (TCMDate)
+shortlist_slot	0x23	INDEX	1	Signed slot index used to sort the slots
+shortlist_slot	0x24	FLAGS	1	Bit 0 loan slot, bits 1-4 slot type / squad status, bit 5 bid marker
+shortlist_pair	0x4	CLUB_ID	4	Club of the (person, club) shortlist pair
+sell_on_clause	0x1	PAYING_CLUB_ID	4	Club that bought the person and owes the percentage on the next sale
+sell_on_clause	0x5	RECEIVING_CLUB_ID	4	Selling club that receives the percentage of the next sale
+sell_on_clause	0x9	PERSON_ID	4	Id of the person the clause is on
+appearance_clause	0x4	AMOUNT	4	Amount paid when the games are reached
+appearance_clause	0x8	GAMES	1	Games (or caps) needed
+appearance_clause	0x9	CLUB_ID	4	Selling club that receives the money
+work_permit	0x4	MATCHES_PLAYED	2	Matches played under the permit
+work_permit	0x6	MATCHES_MISSED	2	Matches missed under the permit (permit kept while played > 3 x missed or missed < 4)
+work_permit	0x8	YEAR	2	Year the permit was granted
+work_permit	0xa	NATION_ID	4	Nation the permit is for
+instalment	0x4	PAYING_CLUB_ID	4	Club paying the instalments (the buyer)
+instalment	0x8	RECEIVING_CLUB_ID	4	Club receiving the instalments (the seller)
+instalment	0xc	REMAINING	1	Instalments still to pay; the record leaves the list at 0
+free_transfer_entry	0x4	REASON	1	Reason code of the free transfer (0 = news to the human club)
+free_transfer_entry	0x5	COMPENSATION	4	Compensation paid to the club
+loan_negotiation	0x4	CLUB_ID	4	Club negotiating the loan
+exchange_player	0x4	TERMS_STATE	1	Personal-terms state of the exchange player (1 terms sent, 2 accepted, 0 cleared)
+exchange_player	0x6	JOB_TYPE	1	Job the exchange player would take, set when terms are accepted
+transfer_window	0x4	MONTH	1	Month of the window date
+transfer_window	0x5	CLOSES	1	Non-zero when the date closes the window, 0 when it opens
+contract_offer	0x4	CLUB_ID	4	Club making the contract offer (the terms' contract club)
+contract_offer	0x35	CONTRACT_TYPE	1	Contract type of the terms (low 6 bits; 5 and 6 skipped as current offers)
+contract_offer	0x50	STATE	1	Offer state: 0 open, 2 agreed, 4 closed with the transfer offer
+contract_offer	0x51	OFFER_DATE	8	Date the offer was made or updated (TCMDate)
+contract_offer	0x59	TRANSFER_OFFER_SLOT	4	Slot of the linked transfer offer (-1 none)
+contract_offer	0x5d	TRANSFER_OFFER_SERIAL	4	Serial of the linked transfer offer (matched against the offer's SERIAL)
+contract_offer	0x61	MARK	1	Flag byte passed to add_contract_offer and resubmitted with held offers
+contract_offer	0x62	DECISION_VALID	1	1 when the offer counts for a decision (set outside type 6 contracts and when scheduled for a transfer) [inference]
+contract_offer	0x63	RESERVED_RECORD	4	Non-player record reserved for the offer, -1 none; returned to the regen pool when removed
+contract_offer	0x67	RESERVED_RECORD_ARG1	4	First extra argument returned with RESERVED_RECORD (add_spare_non_player_record) [inference]
+contract_offer	0x6b	RESERVED_RECORD_ARG2	4	Second extra argument returned with RESERVED_RECORD [inference]
+decision_date	0x4	DATE	8	Date of the decision (TCMDate)
+decision_date	0xc	SLICE	1	Day slice of the decision
+decision_date	0xd	KIND	1	Decision kind (2, 3 = offer decision)
+contract_talks	0x4	CLUB_ID	4	Club in the contract talks
+contract_talks	0x8	MANAGER_ID	4	Manager in the contract talks
+scout_manager_fields	0xc	EDIT_SESSIONS	0x40	16 pointers to the player-search edit sessions
+scout_manager_fields	0x4c	SELECTED_LISTS	0x10	16 bytes: the selected list per session
+scout_manager_fields	0x5c	SCOUT_REQUESTS	4	Pointer to the sorted array of 17-byte scout requests
+scout_manager_fields	0x64	SCOUT_REQUEST_COUNT	4	Number of scout requests
+scout_request	0x4	PLAYER_ID	4	Id of the player to scout
+scout_request	0x8	DATE	8	Date of the request (TCMDate)
+scout_request	0xa	DATE_YEAR	2	Year half of DATE
+scout_request	0x10	REPORT_COUNT	1	Reports already made (3 or more ends the request)
+scout_report	0x2b	PLAYER_ID	4	Id of the scouted player
+scout_report	0x50	CLUB_ID	4	Id of the club the report is for

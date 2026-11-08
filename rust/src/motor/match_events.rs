@@ -199,9 +199,9 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     const FIM: usize = 0xb6b723;
     const BUF: usize = 0xde1f64;
     let event = |k: i32| TABELA.wrapping_add((k as isize * 0x12) as usize);
-    let sons = |e: usize| core::ptr::read_unaligned((e + 8) as *const usize);
-    let how_many = |e: usize| core::ptr::read_unaligned((e + 0xc) as *const i16);
-    let weight = |e: usize| (e + 0xe) as *mut i32;
+    let sons = |e: usize| core::ptr::read_unaligned((e + event_type::VARIANTS) as *const usize);
+    let how_many = |e: usize| core::ptr::read_unaligned((e + event_type::VARIANT_COUNT) as *const i16);
+    let weight = |e: usize| (e + event_type::TOTAL_WEIGHT) as *mut i32;
 
     if *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *const i32) != language() {
         clear();
@@ -215,8 +215,8 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         for o in 1..=7 {
             *((e + o) as *mut u8) = 0;
         }
-        core::ptr::write_unaligned((e + 8) as *mut u32, 0);
-        core::ptr::write_unaligned((e + 0xc) as *mut u16, 0);
+        core::ptr::write_unaligned((e + event_type::VARIANTS) as *mut u32, 0);
+        core::ptr::write_unaligned((e + event_type::VARIANT_COUNT) as *mut u16, 0);
         core::ptr::write_unaligned(weight(e), 0);
         e += 0x12;
     }
@@ -361,7 +361,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 if new == 0 {
                     fatal_error_at(FONTE, 0xd50);
                 }
-                core::ptr::write_unaligned((e + 8) as *mut usize, new);
+                core::ptr::write_unaligned((e + event_type::VARIANTS) as *mut usize, new);
                 let s = new + 0x110 * how_many(e) as usize;
                 field();
                 *(s as *mut i16) = numero_curto(BUF) as i16;
@@ -387,7 +387,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 }
                 core::ptr::write_unaligned((s + 0x108) as *mut usize, 0);
                 core::ptr::write_unaligned((s + 0x10c) as *mut usize, 0);
-                core::ptr::write_unaligned((e + 0xc) as *mut i16, how_many(e) + 1);
+                core::ptr::write_unaligned((e + event_type::VARIANT_COUNT) as *mut i16, how_many(e) + 1);
             }
             0x47 | 0x67 | 0x52 | 0x72 => {
                 // `G`/`R`: the two texts of the last sound
@@ -424,8 +424,8 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     for k in 0..0x2a5i32 {
         let e = event(k);
         if sons(e) == 0 {
-            core::ptr::write_unaligned((e + 8) as *mut usize, 0xb68670);
-            core::ptr::write_unaligned((e + 0xc) as *mut i16, 1);
+            core::ptr::write_unaligned((e + event_type::VARIANTS) as *mut usize, 0xb68670);
+            core::ptr::write_unaligned((e + event_type::VARIANT_COUNT) as *mut i16, 1);
             format(BUF, 0xa15b38, k);
             show_error_at(FONTE, 0xe46);
         } else {
@@ -491,11 +491,11 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
     }
     let k = (((*(ev as *const u16) & 0x7fff) as i32 - 0x1f40) as i16) as isize;
     let e = (0xb68788isize + k * 18) as usize;
-    let sons = core::ptr::read_unaligned((e + 8) as *const usize);
+    let sons = core::ptr::read_unaligned((e + event_type::VARIANTS) as *const usize);
     if sons == 0 {
         return 0;
     }
-    let n = core::ptr::read_unaligned((e + 0xc) as *const i16);
+    let n = core::ptr::read_unaligned((e + event_type::VARIANT_COUNT) as *const i16);
     let which = (ev + 2) as *mut i16;
     if *which as i32 > n as i32 - 1 {
         *which = n.wrapping_sub(1);
@@ -1151,7 +1151,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
 
     // the event sound
     *(((nar as isize) + eu() + 0x10) as *mut u8) = 0xff;
-    if b(0xd) as i8 <= 0 && *((nar + 0x2db0) as *const u8) >= 0x65 {
+    if b(0xd) as i8 <= 0 && *((nar + commentary_queue::VOLUME) as *const u8) >= 0x65 {
         let sound = (sons() as isize + which() * 0x110) as usize;
         if *((sound + 4) as *const u8) != 0 {
             let canal = if *((e + 6) as *const u8) == 0 { 0xb6b722usize } else { ((nar as isize) + eu() + 0x10) as usize };
@@ -1171,8 +1171,8 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     let now = clock();
     core::ptr::write_unaligned(((nar as isize) + eu() * 4 + 0x2d6c) as *mut u32, now);
     let weight = *((sons() as isize + which() * 0x110 + 2) as *const i16) as i32;
-    let volume = *((nar + 0x2db0) as *const u8) as i32;
-    core::ptr::write_unaligned((nar + 0x2dac) as *mut i32, (weight.wrapping_mul(volume) / 100) as i16 as i32);
+    let volume = *((nar + commentary_queue::VOLUME) as *const u8) as i32;
+    core::ptr::write_unaligned((nar + commentary_queue::SOUND_DURATION) as *mut i32, (weight.wrapping_mul(volume) / 100) as i16 as i32);
     0
 }
 
@@ -1185,19 +1185,19 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
 /// −1, tira o bit 0x8000 do evento) e, chegando na de escrita (+8, e então +0x2d68 = −1) ou na
 /// guardada (+0xa), desliga a fila (+5 = 0). Devolve se desligou.
 pub(crate) unsafe fn advance_commentary_read(t: usize) -> bool {
-    let c = (t + 0xc) as *mut i16;
+    let c = (t + commentary_queue::READ_POS) as *mut i16;
     *c = if c.read().wrapping_add(1) > 0xb { 0 } else { c.read().wrapping_add(1) };
-    let p = t + 0x30 + *c as usize * 14;
+    let p = t + commentary_queue::SLOTS + *c as usize * 14;
     *((p + 0xd) as *mut u8) = 0xff;
     *(p as *mut u16) &= 0x7fff;
     let mut desligou = false;
-    if *c == *((t + 8) as *const i16) {
+    if *c == *((t + commentary_queue::WRITE_POS) as *const i16) {
         *((t + 0x2d68) as *mut u32) = u32::MAX;
-        *((t + 5) as *mut u8) = 0;
+        *((t + commentary_queue::ACTIVE) as *mut u8) = 0;
         desligou = true;
     }
-    if *c == *((t + 0xa) as *const i16) {
-        *((t + 5) as *mut u8) = 0;
+    if *c == *((t + commentary_queue::SAVED_POS) as *const i16) {
+        *((t + commentary_queue::ACTIVE) as *mut u8) = 0;
         desligou = true;
     }
     desligou
@@ -1217,14 +1217,14 @@ pub(crate) unsafe fn advance_commentary_read(t: usize) -> bool {
 /// atual em +0xd; o bit 0x8000 marca que há mais) e, acabado o texto, avança a leitura. Em `saida`,
 /// o registro de 0x86 bytes da vaga (+0xd8).
 pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> usize {
-    if *((t + 5) as *const u8) == 0 {
+    if *((t + commentary_queue::ACTIVE) as *const u8) == 0 {
         return 0;
     }
     crate::comparison::branch("narracao proximo evento");
     if !out.is_null() {
-        *out = (t as isize + 0xd8 + *((t + 0xc) as *const i16) as isize * 0x86) as usize;
+        *out = (t as isize + 0xd8 + *((t + commentary_queue::READ_POS) as *const i16) as isize * 0x86) as usize;
     }
-    let slot = |t: usize| t + 0x30 + *((t + 0xc) as *const i16) as usize * 14;
+    let slot = |t: usize| t + commentary_queue::SLOTS + *((t + commentary_queue::READ_POS) as *const i16) as usize * 14;
     let mut p = slot(t);
     while *(p as *const u16) == 0 {
         if advance_commentary_read(t) {
@@ -1813,7 +1813,7 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
     b(0x2db0, 0x7d);
     b(1, 0xff);
     b(3, 0);
-    core::ptr::write_unaligned((t + 0x2dac) as *mut u32, 0);
+    core::ptr::write_unaligned((t + commentary_queue::SOUND_DURATION) as *mut u32, 0);
     b(4, 0);
     *(G_MATCH_EVENT_DEFAULT_VARIANT as *mut u16) = 1;
     *(G_MATCH_EVENT_DEFAULT_VARIANT_LINE_DELAY as *mut u16) = 0x2bc;
@@ -1825,7 +1825,7 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
     for k in 0..16 {
         b(0x10 + k, 0xff);
         b(0x20 + k, 0xff);
-        core::ptr::write_unaligned((t + 0x2d6c + 4 * k) as *mut u32, 0);
+        core::ptr::write_unaligned((t + commentary_queue::SOUND_START_TIMES + 4 * k) as *mut u32, 0);
     }
     if goal_crowd_reaction != 0 {
         let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
@@ -1900,10 +1900,10 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
         if *ativos.add(k) == 0 {
             continue;
         }
-        let start = *((e + 0x2d6c + 4 * k) as *const u32);
-        let end = (*((e + 0x2dac) as *const u32)).wrapping_add(start);
+        let start = *((e + commentary_queue::SOUND_START_TIMES + 4 * k) as *const u32);
+        let end = (*((e + commentary_queue::SOUND_DURATION) as *const u32)).wrapping_add(start);
         let passou = now > end || now < start;
-        let canal = (e + 0x10 + k) as *mut u8;
+        let canal = (e + commentary_queue::SOUND_CHANNELS + k) as *mut u8;
         if *canal != 0xff {
             if *canal == 0xfe {
                 return 0;

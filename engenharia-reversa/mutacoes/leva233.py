@@ -14,7 +14,7 @@ MUTACOES = [
     ('dbm1_pessoal', '.wrapping_mul(79)) // staff competition in the table', '.wrapping_mul(78)) // staff competition in the table'),
     ('dbm2_estadio', '.wrapping_mul(52)) // stadium in the table', '.wrapping_mul(51)) // stadium in the table'),
     ('dbm2_lng', '0x9b6314, 0x9b631c, 0x9b6304', '0x9b6314, 0x9b632c, 0x9b6304'),
-    ('dbm2_soltar', '(t + 0x20 + 4 * k) as *const usize); // table row in English', '(t + 0x20 + 4 * (k ^ 1)) as *const usize); // table row in English'),
+    ('dbm2_soltar', '(t + english_name_tables::CLUB_ROWS + 4 * k) as *const usize); // table row in English', '(t + english_name_tables::CLUB_ROWS + 4 * (k ^ 1)) as *const usize); // table row in English'),
     ('dbn1_nascimento', '    let year = sorteio(0x1a) + 0x794; // 1940 + up to 25', '    let year = sorteio(0x1a) + 0x795; // mutacao: 1941 + ate 25'),
     ('dbn1_comissao_alvo', '            let target = ((rep(c) + 500) * k as i32 / 10000).clamp(1, k as i32); // the commission by reputation', '            let target = ((rep(c) + 500) * k as i32 / 10000).clamp(2, k as i32); // mutacao: no minimo 2'),
     ('dbn1_cortar_pessoas', '        for &d in &[0x39usize, 0x24] { // the person’s club and national team stay', '        for &d in &[0x24usize] { // mutacao: o clube da pessoa nao a segura'),

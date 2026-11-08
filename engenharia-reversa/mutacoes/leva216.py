@@ -8,5 +8,5 @@ MUTACOES = [
     ('cr_sequencia', '    *(this as *mut u32) = *(source as *const u32); // jogos', '    *(this as *mut u32) = *(source as *const u32) ^ 1; // jogos'),
     ('ha_ninguem_assiste', '    0 // nobody watches', '    1 // nobody watches'),
     ('ha_apelido', '    found // apelido', '    found ^ 1 // apelido'),
-    ('ha_motivo', '*((this + 0x18) as *mut u8) = *((source + 0x18) as *const u8); // motivo', '*((this + 0x18) as *mut u8) = *((source + 0x18) as *const u8) ^ 1; // motivo'),
+    ('ha_motivo', '*((this + retirement_entry::REASON) as *mut u8) = *((source + retirement_entry::REASON) as *const u8); // motivo', '*((this + retirement_entry::REASON) as *mut u8) = *((source + retirement_entry::REASON) as *const u8) ^ 1; // motivo'),
 ]

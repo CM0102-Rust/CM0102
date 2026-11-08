@@ -21,7 +21,7 @@ MUTACOES = [
     ('cqf7_divisor_sempre_1', 'let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade', 'let q = ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[0]) as f64) as i8; // mutacao: o divisor da quantidade', 'cqf_7 nota do treinador'),
     ('cqf7_goleiros_mais_31', '0 => (non_player_attribute_rating(f, 0x10) - b(0x12) + 0x15) / 2, // cqf7: a nota de goleiros', '0 => (non_player_attribute_rating(f, 0x10) - b(0x12) + 0x1f) / 2, // mutacao: a nota de goleiros', 'cqf_7 nota do treinador'),
     ('cqf7_tatica_por_2', '(a + non_player_attribute_rating(f, 0x10) + b(0x12)) / 3 // cqf7: a nota de tática', '(a + non_player_attribute_rating(f, 0x10) + b(0x12)) / 2 // mutacao: a nota de tática', 'cqf_7 nota do treinador'),
-    ('cqf8_grupo_sem_clube', 'let club_in = read_u32_as_usize(no + 2) as u32; // cqf8: o clube do grupo do nó', 'let club_in = 0xffff_ffffu32; // mutacao: o clube do grupo do nó', 'cqf_8 temporada do historico'),
+    ('cqf8_grupo_sem_clube', 'let club_in = read_u32_as_usize(no + career_entry::CLUB_ID) as u32; // cqf8: o clube do grupo do nó', 'let club_in = 0xffff_ffffu32; // mutacao: o clube do grupo do nó', 'cqf_8 temporada do historico'),
     ('cqf8_grupo_dois_anos_antes', 'let year_in = read_u16(no); // cqf8: o ano do grupo do nó', 'let year_in = read_u16(no).wrapping_sub(2); // mutacao: o ano do grupo do nó', 'cqf_8 temporada do historico'),
     ('cqf8_atual_sem_clube', 'let id = if club == 0 { 0xffff_ffff } else { read_u32_as_usize(club) as u32 }; // cqf8: o clube da temporada atual', 'let id = if club == 0 { 0xffff_ffff } else { 0xffff_ffffu32 }; // mutacao: o clube da temporada atual', 'cqf_8 temporada atual'),
     ('cqf9_tipo_mais_1', 'return tipo as u32; // cqf9: o tipo da lesão pelo nome', 'return tipo as u32 + 1; // mutacao: o tipo da lesão pelo nome', 'cqf_9 lesao pelo nome'),
@@ -33,7 +33,7 @@ MUTACOES = [
     ('cqf11_sem_sorteio', 'let r = random_or_tape(2); // cqf11: o sorteio da notícia', 'let r = 0; // mutacao: sem o sorteio', 'cqf_11 noticia do clube'),
     ('cqf11_um_grupo_so', 'if read_usize(other + staff::CLUB_JOB) != read_usize(first + staff::CLUB_JOB) {', 'if false && read_usize(other + staff::CLUB_JOB) != read_usize(first + staff::CLUB_JOB) { // mutacao: um grupo so', 'cqf_11 noticia do clube'),
     ('cqf11_sem_tirar_do_elenco', '                    *pj = 0;', '                    let _ = pj; // mutacao: o jogador fica no elenco', 'cqf_11 noticia do clube'),
-    ('cqf12_quinze_dias', 'let month_after = more(request + 8, t2.as_mut_ptr() as usize, 0x1e); // cqf12: trinta dias', 'let month_after = more(request + 8, t2.as_mut_ptr() as usize, 0xf); // mutacao: quinze dias', 'cqf_12 pedido processado'),
+    ('cqf12_quinze_dias', 'let month_after = more(request + scout_request::DATE, t2.as_mut_ptr() as usize, 0x1e); // cqf12: trinta dias', 'let month_after = more(request + scout_request::DATE, t2.as_mut_ptr() as usize, 0xf); // mutacao: quinze dias', 'cqf_12 pedido processado'),
     ('cqf12_um_relatorio', 'if feitos >= 3 { // cqf12: até três relatórios', 'if feitos >= 1 { // mutacao: um relatorio', 'cqf_12 relatorio do pedido'),
-    ('cqf12_meio_ano', 'let year_after = more(request + 8, t.as_mut_ptr() as usize, 0x16d); // cqf12: um ano', 'let year_after = more(request + 8, t.as_mut_ptr() as usize, 0x2d); // mutacao: 45 dias', 'cqf_12 pedido processado'),
+    ('cqf12_meio_ano', 'let year_after = more(request + scout_request::DATE, t.as_mut_ptr() as usize, 0x16d); // cqf12: um ano', 'let year_after = more(request + scout_request::DATE, t.as_mut_ptr() as usize, 0x2d); // mutacao: 45 dias', 'cqf_12 pedido processado'),
 ]

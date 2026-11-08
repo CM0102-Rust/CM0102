@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(
             }
         }
     }
-    if read_i32(this + 8) > 0 && read_i32(read_usize(this) + 8) != -1 {
+    if read_i32(this + media_fields::STORY_LOG_COUNT) > 0 && read_i32(read_usize(this) + 8) != -1 {
         join(media_staff_by_id(read_i32(read_usize(this) + 8)), new);
     }
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, sheet); // the contracts read above do not count
@@ -255,10 +255,10 @@ pub(crate) unsafe extern "thiscall" fn compare_write_financial_trouble_news_text
 /// [pt] Comparador: a original pode alocar e realocar (não roda duas vezes): o registro esperado antes; confere a conta e
 /// que o registro esperado está na lista (a ordem é a do qsort).
 pub(crate) unsafe extern "thiscall" fn compare_log_story(this: usize, a: usize, b: usize, kind: u32, subtipo: u32, reply: u32) {
-    let n = read_usize(this + 8);
+    let n = read_usize(this + media_fields::STORY_LOG_COUNT);
     let expected = build_news_log_record(a, b, kind, subtipo, reply);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_LOG_STORY)(this, a, b, kind, subtipo, reply);
-    let m = read_usize(this + 8);
+    let m = read_usize(this + media_fields::STORY_LOG_COUNT);
     let found = (0..m).any(|k| {
         core::slice::from_raw_parts(read_usize(this).wrapping_add(k * 0x17) as *const u8, 0x17) == &expected[..]
     });
@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn compare_expire_story_log(this: usize) {
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((this, 0xc));
-    reg.push((read_usize(this), (read_usize(this + 8) as i32).max(0) as usize * 0x17));
+    reg.push((read_usize(this), (read_usize(this + media_fields::STORY_LOG_COUNT) as i32).max(0) as usize * 0x17));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| expire_story_log(this)));
     // mo.0[2] and mr.0[2]: pointer, capacity and count after each side
     SCOREBOARD.record(igual, || format!("expire_story_log {:x?} x {:x?}", mo.0[2].1, mr.0[2].1));
@@ -299,15 +299,15 @@ pub(crate) unsafe extern "thiscall" fn compare_has_logged_story(this: usize, a: 
 /// [pt] Comparador: a original pode alocar e realocar (não roda duas vezes): o plano antes (já está? o registro novo);
 /// confere a conta e que o registro novo está no vetor (a ordem é a do qsort).
 pub(crate) unsafe extern "thiscall" fn compare_add_transfer_interest(this: usize, player: usize, club: usize, value: i32, avaliacao: f64) {
-    let n = read_usize(this + 0x14);
+    let n = read_usize(this + media_fields::INTEREST_COUNT);
     let ja_esta = has_interest(this, &interest_key(player, club));
     let expected = if ja_esta { None } else { Some(build_interest_record(player, club, value, avaliacao)) };
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, f64)>(IDX_ADD_TRANSFER_INTEREST)(this, player, club, value, avaliacao);
-    let m = read_usize(this + 0x14);
+    let m = read_usize(this + media_fields::INTEREST_COUNT);
     let ok = match &expected {
         None => m == n,
         Some(e) => m == n.wrapping_add(1) && (0..m).any(|k| {
-            core::slice::from_raw_parts(read_usize(this + 0xc).wrapping_add(k * 0x19) as *const u8, 0x19) == &e[..]
+            core::slice::from_raw_parts(read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add(k * 0x19) as *const u8, 0x19) == &e[..]
         }),
     };
     SCOREBOARD.record(ok, || format!("add_transfer_interest(valor {}, avaliacao {}) conta {} -> {}, esperado {:x?}", value, avaliacao, n, m, expected));
@@ -336,8 +336,8 @@ pub(crate) unsafe extern "C" fn compare_compare_story_log_records(a: usize, b: u
 /// Comparer for `remove_transfer_interest` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn compare_remove_transfer_interest(this: usize, person: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_TRANSFER_INTEREST);
-    let n = (*((this + 0x14) as *const i32)).max(0) as usize;
-    let reg = [(this + 0xc, 0xc), (read_u32(this + 0xc) as usize, n * 25)];
+    let n = (*((this + media_fields::INTEREST_COUNT) as *const i32)).max(0) as usize;
+    let reg = [(this + media_fields::TRANSFER_INTERESTS, 0xc), (read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, n * 25)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person), || remove_transfer_interest(this, person));
     SCOREBOARD.record(igual, || format!("remove_transfer_interest({:x}) {:x?} x {:x?}", person, mo, mr));
 }
