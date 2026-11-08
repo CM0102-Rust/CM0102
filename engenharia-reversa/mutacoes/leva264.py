@@ -18,7 +18,7 @@ MUTACOES = [
     ('cqb6_so_acima_de_30', 'if (read_u8(p + 0x18) as i8) < 0x17 { // cqb6: só acima de 22 anos', 'if (read_u8(p + 0x18) as i8) < 0x1f { // mutacao: so acima de 30 anos', 'cqb_6 parte dos clubes anteriores'),
     ('cqb6_parte_sem_dividir', 'let value = vinte.wrapping_div(divisor).wrapping_mul(weight); // cqb6: a parte da vaga', 'let value = vinte.wrapping_mul(weight); // mutacao: sem dividir pela soma dos pesos', 'cqb_6 parte paga'),
     ('cqb6_parte_sai_do_comprador', 'post_finance_amount(0x599800, fin, value); // cqb6: entra nas vendas do comprador', 'post_finance_amount(0x599890, fin, value); // mutacao: sai pelas compras do comprador', 'cqb_6 parte paga'),
-    ('cqb7_potencial_6000', 'if read_i16(sheet + 0xd) > 0x2134 { // cqb7: o potencial acima de 8500', 'if read_i16(sheet + 0xd) > 0x1770 { // mutacao: o potencial acima de 6000', 'cqb_7 confere o potencial'),
+    ('cqb7_potencial_6000', 'if read_i16(sheet + player_sheet::WORLD_REPUTATION) > 0x2134 { // cqb7: o potencial acima de 8500', 'if read_i16(sheet + 0xd) > 0x1770 { // mutacao: o potencial acima de 6000', 'cqb_7 confere o potencial'),
     ('cqb7_jovem_100', 'if read_i16(sheet + 7) > 0xbe { // cqb7: o jovem acima de 190', 'if read_i16(sheet + 7) > 0x64 { // mutacao: o jovem acima de 100', 'cqb_7 confere o jovem'),
     ('cqb7_historico_5', 'if marcados > 0xb { // cqb7: mais de 11 jogos marcados', 'if marcados > 5 { // mutacao: mais de 5 jogos marcados', 'cqb_7 jogos pela selecao'),
     ('cqb8_chance_inicial_20', '    let mut chance: i32 = 0xa; // cqb8: a chance inicial', '    let mut chance: i32 = 0x14; // mutacao: a chance inicial', 'cqb_8 reacao do elenco'),

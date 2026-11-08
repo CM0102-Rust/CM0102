@@ -355,7 +355,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
 /// finanças do próprio clube ([tabela] + id × 0x167, sem o parceiro).
 pub(crate) unsafe fn upgrade_ai_training_ground(this: usize, clube: usize, goal_difference: i32) {
     let manager = read_usize(clube + club::MANAGER);
-    if manager == 0 || read_i16(clube + club::REPUTATION) == 0 || read_u8(clube + club::TRAINING) as i8 >= 0x14 || read_usize(manager + 0x69) == 0 {
+    if manager == 0 || read_i16(clube + club::REPUTATION) == 0 || read_u8(clube + club::TRAINING) as i8 >= 0x14 || read_usize(manager + staff::NON_PLAYER) == 0 {
         return;
     }
     if fin_prm_is_human_club(clube) != 0 {
@@ -1508,7 +1508,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         0 => {
             if rep <= 0x109a {
                 let sheet = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
-                if strong(pres, sheet) && read_i8(pres + 0x57) > 0xf && read_i8(sheet + 0x20) > 0xf {
+                if strong(pres, sheet) && read_i8(pres + 0x57) > 0xf && read_i8(sheet + player_sheet::BRAVERY) > 0xf {
                     read_f64_at(0x96a740) // 0x96a740 = 0.0125
                 } else {
                     crate::comparacao::ramo("cqb_2 divisor da band 0 baixa");
@@ -1516,7 +1516,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
                 }
             } else if rep < 0x186a {
                 let sheet = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
-                if strong(pres, sheet) && read_i8(sheet + 0x20) > 0xf && read_i8(pres + 0x57) > 0xf {
+                if strong(pres, sheet) && read_i8(sheet + player_sheet::BRAVERY) > 0xf && read_i8(pres + 0x57) > 0xf {
                     read_f64_at(0x967888) // 0x967888 = 0.05
                 } else {
                     read_f64_at(0x967878) // 0x967878 = 0.025
@@ -1532,7 +1532,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
     if pres != 0 && sheet != 0 {
         crate::comparacao::ramo("cqb_2 com a ficha");
         let r1 = friendly_random(match_pl_ftol(read_f64_at(0x968dd8) / div)); // cqb2: o sorteio com a ficha; 0x968dd8 = 30
-        let r2 = friendly_random(read_i8(sheet + 0xf) as i32);
+        let r2 = friendly_random(read_i8(sheet + player_sheet::GOALKEEPER) as i32);
         if r2 <= r1 {
             return 0;
         }
@@ -1687,7 +1687,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: us
     let pres = read_usize(clube + club::CHAIRMAN);
     let sheet = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
     let with_sheet = pres != 0 && sheet != 0;
-    let first = if with_sheet { friendly_random(read_i8(sheet + 0x16) as i32) } else { friendly_random(0x14) };
+    let first = if with_sheet { friendly_random(read_i8(sheet + player_sheet::WING_BACK) as i32) } else { friendly_random(0x14) };
     if first != 0 {
         return 0;
     }

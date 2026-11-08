@@ -167,12 +167,12 @@ pub(crate) unsafe fn league_stage_chain(liga0: usize) -> Vec<usize> {
     let mut v = vec![liga0];
     let mut league = liga0;
     loop {
-        let k = read_u8(league + 0x44) as i8 as i32;
+        let k = read_u8(league + league::STAGE_INDEX) as i8 as i32;
         if k >= read_usize(liga0 + 0x30) as i32 {
             return v;
         }
         let f = stage(liga0, k + 1);
-        if read_u8(f + 0x43) != 2 || read_i16(f + 0x3e) != read_i16(league + 0x3e) {
+        if read_u8(f + 0x43) != 2 || read_i16(f + 0x3e) != read_i16(league + league::CLUB_COUNT) {
             return v;
         }
         v.push(f);
@@ -856,7 +856,7 @@ pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offe
         return 0;
     }
     let rep = *((clube + club::REPUTATION) as *const i16) as i32;
-    let value = read_usize(offer + 0x1b) as i32;
+    let value = read_usize(offer + offer::FEE) as i32;
     if value < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // below the minimum for the reputation
     }

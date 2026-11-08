@@ -285,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, manager
         return o(this, manager);
     }
     let caixa = (read_i32(this + 8) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
-    if read_i32(manager + 0x39) != 0 || read_i32(manager + 0x24) != 0 {
+    if read_i32(manager + staff::CLUB_JOB) != 0 || read_i32(manager + staff::NATIONAL_JOB) != 0 {
         o(this, manager);
         let first = read_i32(caixa);
         let noticias = news_box_regions(this, caixa);

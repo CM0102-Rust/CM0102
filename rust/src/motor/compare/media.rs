@@ -382,8 +382,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_former_international_pundit
 pub(crate) unsafe extern "thiscall" fn comparar_pick_ai_manager_response(this: usize, manager: usize, player: usize, kind: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_PICK_AI_MANAGER_RESPONSE);
     let mut regions = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    if manager != 0 && read_usize(manager + 0x65) != 0 {
-        regions.push((read_usize(manager + 0x65) + 0x1c, 0x18));
+    if manager != 0 && read_usize(manager + staff::STAFF_PREFERENCES) != 0 {
+        regions.push((read_usize(manager + staff::STAFF_PREFERENCES) + 0x1c, 0x18));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regions,

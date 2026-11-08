@@ -962,7 +962,7 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_tournament(this: usize) -
     if manager == 0 {
         return 0;
     }
-    let clube = read_usize(manager + 0x39);
+    let clube = read_usize(manager + staff::CLUB_JOB);
     if clube == 0 {
         return 0;
     }
@@ -1191,7 +1191,7 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_open_invitation(this: usi
     if manager == 0 {
         return 0;
     }
-    let clube = read_usize(manager + 0x39);
+    let clube = read_usize(manager + staff::CLUB_JOB);
     if clube == 0 {
         return 0;
     }

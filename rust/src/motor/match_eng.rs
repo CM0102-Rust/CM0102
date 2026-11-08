@@ -8630,9 +8630,9 @@ pub(crate) unsafe extern "thiscall" fn side_strength(this: usize, side: i8) {
         if c != 0 && clube != 0 {
             let sheet = *((j + 0x6d) as *const usize);
             if (byte(sheet, 0x2f) as i32) > sortear(20)
-                && (*((sheet + 0xb) as *const i16) as i32) > sortear(7000)
+                && (*((sheet + player_sheet::CURRENT_REPUTATION) as *const i16) as i32) > sortear(7000)
                 && (byte(person, 0x5b) as i32) < sortear(6)
-                && *((sheet + 0xb) as *const i16) > (*((clube + club::REPUTATION) as *const i16)).wrapping_sub(750)
+                && *((sheet + player_sheet::CURRENT_REPUTATION) as *const i16) > (*((clube + club::REPUTATION) as *const i16)).wrapping_sub(750)
                 && core::ptr::read_unaligned((c + 0x45) as *const u32) & 0x17a0b != 0
             {
                 if j == designado() {

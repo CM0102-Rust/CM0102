@@ -6,7 +6,7 @@ use super::*;
 ///
 /// [pt] O clube da linha `i` da tabela [+0xb1] (0x3b bytes).
 pub(crate) unsafe fn ita_ser_c1a_league_row_club(league: usize, i: usize) -> usize {
-    read_u32_as_usize(read_u32_as_usize(league + 0xb1) + i * 0x3b)
+    read_u32_as_usize(read_u32_as_usize(league + league::TABLE) + i * 0x3b)
 }
 
 /// League::advance_stage body: error box at the last stage; else +0x30 + 1 and, reaching stage 0, creates the
@@ -112,7 +112,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     // the Série C1 Super Cup
     let cup = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
-    let inscritos = read_u32_as_usize(cup + 0xa7);
+    let inscritos = read_u32_as_usize(cup + cup::TEAM_TABLE);
     let champion = ita_ser_c1a_league_row_club(this, 0);
     if read_u32_as_usize(inscritos) != 0 {
         write_u32_from_usize(inscritos + 6, champion);
@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn create_play_off_stages(this: usize) {
 /// a vaga com o campeão, as duas fases em [+0xc] e +0x30 = 1.
 pub(crate) unsafe fn compare_end_of_league_stages(name: &str, this: usize, original: impl FnOnce()) {
     let cup = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
-    let inscritos = read_u32_as_usize(cup + 0xa7);
+    let inscritos = read_u32_as_usize(cup + cup::TEAM_TABLE);
     let champion = ita_ser_c1a_league_row_club(this, 0);
     let slot = if read_u32_as_usize(inscritos) != 0 { inscritos + 6 } else { inscritos };
     original();

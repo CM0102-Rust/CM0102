@@ -66,6 +66,11 @@ def main():
     def nome_mod(x):
         m_ = snake(x)
         return m_ + '_fields' if m_ in ocupados else m_
+    # as variáveis que dizem o objeto (league, cup, offer): os campos base da família, em qualquer função
+    vars_mapa = {}
+    for var, fam, esc in (('league', 'League', 'base'), ('cup', 'Cup', 'base'), ('offer', 'TRANSFER_MANAGER', 'offer')):
+        vars_mapa[var] = {off: (nome_mod(fam) if esc == 'base' else nome_mod(esc), n_, by, de)
+                          for (e, off), (n_, by, de) in tabelas.get(fam, {}).items() if e == esc}
     mutacoes = []
     pasta = os.path.join(R, 'engenharia-reversa', 'mutacoes')
     for f in sorted(os.listdir(pasta)):
@@ -88,19 +93,15 @@ def main():
             for nome, a, b in mover_rotinas.blocos(t):
                 bloco = t[a:b]
                 m = re.search(r'Original: `([A-Za-z_0-9]+)::', bloco)
-                if not m:
-                    continue
-                cls = m.group(1)
-                fam = familia_de(cls, rel_logico)
-                tab = tabelas.get(fam)
-                if not tab:
-                    continue
                 mapa = {}
-                for (esc, off), (n_, by, de) in tab.items():
-                    if esc == 'base' or esc == cls or (esc.lower() == 'offer' and False):
-                        mod = nome_mod(fam) if esc == 'base' else nome_mod(esc)
-                        mapa[off] = (mod, n_, by, de)
-                if not mapa:
+                if m:
+                    cls = m.group(1)
+                    fam = familia_de(cls, rel_logico)
+                    for (esc, off), (n_, by, de) in tabelas.get(fam, {}).items():
+                        if esc == 'base' or esc == cls:
+                            mod = nome_mod(fam) if esc == 'base' else nome_mod(esc)
+                            mapa[off] = (mod, n_, by, de)
+                if not mapa and not vars_mapa:
                     continue
 
                 def f_(s, mapa=mapa):
@@ -111,7 +112,17 @@ def main():
                         mod, n_, by, de = mapa[off]
                         usados[mod][n_] = (off, by, de)
                         return 'this + %s::%s' % (mod, n_)
-                    return re.sub(r'\bthis \+ (0x[0-9a-f]+)\b', r, s)
+
+                    def rv(mm):  # variável que diz o objeto: league, cup, offer (com ou sem sufixo)
+                        var, base_var, off = mm.group(1), mm.group(2), int(mm.group(3), 16)
+                        tab_v = vars_mapa.get(base_var, {})
+                        if off not in tab_v:
+                            return mm.group(0)
+                        mod, n_, by, de = tab_v[off]
+                        usados[mod][n_] = (off, by, de)
+                        return '%s + %s::%s' % (var, mod, n_)
+                    s = re.sub(r'\bthis \+ (0x[0-9a-f]+)\b', r, s)
+                    return re.sub(r'\b((league|cup|offer)(?:_[a-z0-9_]+)?) \+ (0x[0-9a-f]+)\b', rv, s)
                 novo = traduzir_locais.so_codigo(bloco, f_)
                 if novo == bloco:
                     continue
@@ -157,7 +168,14 @@ def main():
     texto = open(pf, encoding='utf-8').read()
     novos = []
     for mod, campos in sorted(usados.items()):
-        if 'pub(crate) mod %s {' % mod in texto:
+        abre = 'pub(crate) mod %s {\n' % mod
+        if abre in texto:  # o módulo já existe: entram só as constantes que faltam
+            i = texto.index(abre) + len(abre)
+            fim = texto.index('\n}', i)
+            dentro = texto[i:fim]
+            faltam = ['    pub(crate) const %s: usize = %#x; // %s byte(s): %s' % (n_, off, by, de)
+                      for n_, (off, by, de) in sorted(campos.items(), key=lambda x: x[1][0]) if 'const %s:' % n_ not in dentro]
+            texto = texto[:fim] + ''.join('\n' + c for c in faltam) + texto[fim:]
             continue
         novos.append('/// Fields of the `%s` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `%s`.' % (mod, mod))
         novos.append('#[allow(dead_code)]')

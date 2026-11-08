@@ -570,12 +570,12 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
             continue;
         }
         crate::comparacao::ramo("cpy_8 arbitro renovado");
-        let nac = read_usize(sheet + 0x16);
+        let nac = read_usize(sheet + player_sheet::WING_BACK);
         let n1 = name(nac);
         core::ptr::write_unaligned((sheet + 4) as *mut usize, n1);
-        let n2 = name(read_usize(sheet + 0x16));
+        let n2 = name(read_usize(sheet + player_sheet::WING_BACK));
         core::ptr::write_unaligned((sheet + 8) as *mut usize, n2);
-        *((sheet + 0x25) as *mut u8) = if sortear(10) != 0 {
+        *((sheet + player_sheet::DIRTINESS) as *mut u8) = if sortear(10) != 0 {
             (sortear(0x10) as u8).wrapping_add(5)
         } else {
             let a = sortear(0xb) as u8;

@@ -6895,7 +6895,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn F
                         if a < b || protegido(noticias(), p) != 0 || c45(c) != 0x4000000 {
                             let r = sortear(2000) + 0x1194;
                             let sheet = *((p + 0x61) as *const usize);
-                            if core::ptr::read_unaligned((sheet + 0xb) as *const i16) as i32 > r {
+                            if core::ptr::read_unaligned((sheet + player_sheet::CURRENT_REPUTATION) as *const i16) as i32 > r {
                                 crate::comparacao::ramo("eventos 0x0a noticia");
                                 noticia(noticias(), p, clube, 0xa, partida, 0);
                             }
@@ -9378,7 +9378,7 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
     let sheet = *((this + 0x6d) as *const usize);
     let level: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CONTRACT_RATING_MODIFIER);
     let n = level(person, clube()) as i8 as f64;
-    let mut form = (*((sheet + 0xd) as *const i16) as i32 - *((clube() + 0x80) as *const i16) as i32) as f64 * 0.002 + 1.5;
+    let mut form = (*((sheet + player_sheet::WORLD_REPUTATION) as *const i16) as i32 - *((clube() + 0x80) as *const i16) as i32) as f64 * 0.002 + 1.5;
     if form < -4.0 {
         form = -4.0;
     } else if form > 4.0 {
@@ -9409,7 +9409,7 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
         days(G_CURRENT_DATE, read(0x3e), read(0x42)) as f64
     };
     let y = if x > 1000.0 { (x - 1000.0) * 0.000125 + 1.0 } else { 1.0 };
-    let e = *((sheet + 0x2f) as *const i8) as f64;
+    let e = *((sheet + player_sheet::LEADERSHIP) as *const i8) as f64;
     match_pl_ftol(e * y - (n * n + 5.0) * 0.1 + form + c + 0.5)
 }
 

@@ -674,7 +674,7 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
 /// [pt] { 0x518780 } (thiscall, ret 0, Cup.cpp): `Cup::start_new_season()` da classe base: só zera o byte +0xb1 da copa
 /// (as copas derivadas liberam as tabelas delas).
 pub(crate) unsafe extern "thiscall" fn cup_start_new_season(cup: usize) {
-    *((cup + 0xb1) as *mut u8) = 0;
+    *((cup + cup::RUN_BY_STAGES) as *mut u8) = 0;
 }
 
 
@@ -686,21 +686,21 @@ pub(crate) unsafe extern "thiscall" fn cup_start_new_season(cup: usize) {
 ///
 /// [pt] O registro de 0x68 bytes da rodada `r` (+0xa3).
 pub(crate) unsafe fn round_record(cup: usize, r: i32) -> usize {
-    read_usize(cup + 0xa3).wrapping_add((r as isize * 0x68) as usize)
+    read_usize(cup + cup::ROUND_TABLE).wrapping_add((r as isize * 0x68) as usize)
 }
 
 /// Address of the 6-byte entry of cup team t (+0xa7: +0 club, +4 level, +5 outcome).
 ///
 /// [pt] A entrada de 6 bytes do time `t` (+0xa7: +0 o clube, +4 o nível, +5 o desfecho).
 pub(crate) unsafe fn team_entry(cup: usize, t: i32) -> usize {
-    read_usize(cup + 0xa7).wrapping_add((t as isize * 6) as usize)
+    read_usize(cup + cup::TEAM_TABLE).wrapping_add((t as isize * 6) as usize)
 }
 
 /// Address of tie k (0x35 bytes) of round r (per-round arrays at cup +0xad).
 ///
 /// [pt] O confronto `k` (0x35 bytes) da rodada `r` (+0xad: um vetor por rodada).
 pub(crate) unsafe fn round_tie(cup: usize, r: i32, k: i32) -> usize {
-    read_usize(read_usize(cup + 0xad).wrapping_add((r as isize * 4) as usize)).wrapping_add((k as isize * 0x35) as usize)
+    read_usize(read_usize(cup + cup::TIE_TABLES).wrapping_add((r as isize * 4) as usize)).wrapping_add((k as isize * 0x35) as usize)
 }
 
 
@@ -732,7 +732,7 @@ pub(crate) unsafe fn round_prizes(cup: usize, r: i32, count: bool) -> Option<(i3
     let e = round_record(cup, r);
     let (mut ao_vencedor, mut ao_perdedor) = (read_i32(e + 0x60), read_i32(e + 0x64));
     if ao_vencedor == -1 {
-        let (fundo, resta, confrontos) = (read_i32(cup + 0x28), read_i16(cup + 0x3c) as i32 - r, read_i16(e + 0x1a) as i32);
+        let (fundo, resta, confrontos) = (read_i32(cup + cup::PRIZE_FUND), read_i16(cup + cup::ROUND_COUNT) as i32 - r, read_i16(e + 0x1a) as i32);
         if resta == 0 || confrontos == 0 || (fundo == i32::MIN && resta == -1) {
             return None;
         }
@@ -778,7 +778,7 @@ pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(cup: usize, winner:
     }
     let e = round_record(cup, r);
     let mut next = 0u32;
-    if r + 1 < read_i16(cup + 0x3c) as i32 {
+    if r + 1 < read_i16(cup + cup::ROUND_COUNT) as i32 {
         let w = core::ptr::read_unaligned((e + 0x6f) as *const u16);
         if w != 0x8c {
             next = (e as u32 & 0xffff_0000) | w as u32; // mov bp, [ebp+0x6f]: only the low word of ebp changes
@@ -788,11 +788,11 @@ pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(cup: usize, winner:
         send_prize_news(cup, read_usize(winner), ao_vencedor, next, partida, outcome);
         crate::comparacao::ramo("cqa_1 premio do vencedor");
         european_cup_add_prize_money(european_cup_club_finance(read_usize(winner)), ao_vencedor); // cqa1: o prêmio do vencedor
-        core::ptr::write_unaligned((cup + 0x28) as *mut i32, read_i32(cup + 0x28).wrapping_sub(ao_vencedor));
+        core::ptr::write_unaligned((cup + cup::PRIZE_FUND) as *mut i32, read_i32(cup + cup::PRIZE_FUND).wrapping_sub(ao_vencedor));
     }
     if ao_perdedor != 0 {
         european_cup_add_prize_money(european_cup_club_finance(read_usize(loser)), ao_perdedor);
-        core::ptr::write_unaligned((cup + 0x28) as *mut i32, read_i32(cup + 0x28).wrapping_sub(ao_perdedor));
+        core::ptr::write_unaligned((cup + cup::PRIZE_FUND) as *mut i32, read_i32(cup + cup::PRIZE_FUND).wrapping_sub(ao_perdedor));
     }
 }
 
@@ -833,7 +833,7 @@ pub(crate) unsafe extern "thiscall" fn set_home_teams_for_round(cup: usize, roun
     let r = round as i16 as i32;
     let (ini, fim) = ties_range(cup, round, laco);
     let rule = read_u8(round_record(cup, r) + 0xb);
-    if rule & 1 == 0 && rule & 8 == 0 && read_i32(cup + 0x24) == -1 {
+    if rule & 1 == 0 && rule & 8 == 0 && read_i32(cup + cup::VENUE_STADIUM_ID) == -1 {
         return;
     }
     let mut k = ini as i32;
@@ -855,7 +855,7 @@ pub(crate) unsafe extern "thiscall" fn set_home_teams_for_round(cup: usize, roun
             (read_u8(ta + 4) as i8) < (read_u8(tb + 4) as i8)
         } else {
             let cb = read_usize(tb);
-            cb != 0 && read_usize(cb + 0x69) != 0 && read_i32(read_usize(cb + 0x69)) == read_i32(cup + 0x24) // the cup stadium
+            cb != 0 && read_usize(cb + 0x69) != 0 && read_i32(read_usize(cb + 0x69)) == read_i32(cup + cup::VENUE_STADIUM_ID) // the cup stadium
         };
         if inverter {
             swap_home_away(t);
@@ -868,7 +868,7 @@ pub(crate) unsafe extern "thiscall" fn set_home_teams_for_round(cup: usize, roun
 ///
 /// [pt] Os argumentos da virtual +0x68 que a 0x521b30 chama para o time `t` na rodada `r`: (p1, p2, p3) ou None.
 pub(crate) unsafe fn team_progress_args(cup: usize, t: i32, r: i32) -> Option<(u8, u8, u8)> {
-    let n = read_i16(cup + 0x3c) as i32;
+    let n = read_i16(cup + cup::ROUND_COUNT) as i32;
     let d = read_u8(team_entry(cup, t) + 5); // o desfecho
     let byte_of_round = |k: i32, desl: usize| read_u8(round_record(cup, k) + desl);
     if n > 0 && read_i16(round_record(cup, n - 1) + 7) == 0x8c {
@@ -938,7 +938,7 @@ pub(crate) unsafe extern "thiscall" fn record_team_progress(cup: usize, team: u3
         // simplification: the original pushes bytes over whole registers (the caller’s ebx, the argument’s dword
         // `time` with the low byte replaced, 13 × round): the high bits are leftovers; the 70 versions of +0x68 only read the byte
         // low byte of each (or pass the dwords on to another that reads): here, the clean bytes.
-        f(cup, read_usize(team_entry(cup, t)), read_u8(cup + 0x44) as u32, p1 as u32, p2 as u32, p3 as u32);
+        f(cup, read_usize(team_entry(cup, t)), read_u8(cup + cup::STAGE_INDEX) as u32, p1 as u32, p2 as u32, p3 as u32);
     }
 }
 
@@ -950,14 +950,14 @@ pub(crate) unsafe extern "thiscall" fn record_team_progress(cup: usize, team: u3
 ///
 /// [pt] O registro de 0x68 bytes da rodada `r` (+0xa3); `r` como a original o usa (o dword inteiro).
 pub(crate) unsafe fn round_record_by_dword(cup: usize, r: u32) -> usize {
-    read_usize(cup + 0xa3).wrapping_add((r as usize).wrapping_mul(0x68))
+    read_usize(cup + cup::ROUND_TABLE).wrapping_add((r as usize).wrapping_mul(0x68))
 }
 
 /// Start of round r's tie array (0x35-byte ties, per-round pointers at cup +0xad).
 ///
 /// [pt] Os confrontos da rodada `r` (+0xad: um vetor de confrontos de 0x35 bytes por rodada).
 pub(crate) unsafe fn round_ties_array(cup: usize, r: u32) -> usize {
-    read_usize(read_usize(cup + 0xad).wrapping_add((r as usize).wrapping_mul(4)))
+    read_usize(read_usize(cup + cup::TIE_TABLES).wrapping_add((r as usize).wrapping_mul(4)))
 }
 
 /// True when some defined team of a round's ties still has no club (an earlier tie undecided): the round cannot be
@@ -972,7 +972,7 @@ pub(crate) unsafe fn round_has_open_team(cup: usize, r: u32) -> bool {
     while k < read_i16(reg + 0x1a) as i32 {
         for lado in [0usize, 2] {
             let x = read_i16(t + lado);
-            if x != -1 && read_usize(read_usize(cup + 0xa7).wrapping_add((x as isize * 6) as usize)) == 0 {
+            if x != -1 && read_usize(read_usize(cup + cup::TEAM_TABLE).wrapping_add((x as isize * 6) as usize)) == 0 {
                 return true;
             }
         }
@@ -989,7 +989,7 @@ pub(crate) unsafe fn round_has_open_team(cup: usize, r: u32) -> bool {
 /// a Rust só lê as palavras).
 pub(crate) unsafe fn round_draw_date(cup: usize, reg: usize, d: *mut [u8; 8]) {
     let new: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let year = (read_u8(reg + 2) as i8 as i16).wrapping_add(read_i16(cup + 0x40));
+    let year = (read_u8(reg + 2) as i8 as i16).wrapping_add(read_i16(cup + cup::YEAR));
     new(d, read_i16(reg) as u16 as u32, year as u16 as u32);
 }
 
@@ -998,7 +998,7 @@ pub(crate) unsafe fn round_draw_date(cup: usize, reg: usize, d: *mut [u8; 8]) {
 /// [pt] Grava a data `d` como a do sorteio da rodada: a palavra do dia e o byte do ano menos o byte baixo de +0x40.
 pub(crate) unsafe fn set_round_draw_date(cup: usize, reg: usize, d: &[u8; 8]) {
     core::ptr::write_unaligned(reg as *mut [u8; 2], [d[0], d[1]]);
-    *((reg + 2) as *mut u8) = d[2].wrapping_sub(read_u8(cup + 0x40));
+    *((reg + 2) as *mut u8) = d[2].wrapping_sub(read_u8(cup + cup::YEAR));
 }
 
 /// True when date a is after date b (unsigned year, then signed day), as 0x51c410 compares.
@@ -1050,7 +1050,7 @@ pub(crate) unsafe fn skips_draw_news(cup: usize, r: u32) -> bool {
 /// se +0xab + 1 < +0xac) vai a cada um dos times ainda vivos (desfecho 0) entre os primeiros (soma das entradas +0x1c
 /// das rodadas até esta) que é de técnico humano, com o id dele no dado 3.
 pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32 {
-    if read_usize(cup + 0x45) == 0 || read_u8(round_ties_array(cup, round) + 0x34) != 0 {
+    if read_usize(cup + cup::SEASON_SET_UP) == 0 || read_u8(round_ties_array(cup, round) + 0x34) != 0 {
         return 1;
     }
     let reg = round_record_by_dword(cup, round);
@@ -1064,7 +1064,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
         copy(&mut a, &mut c, r); // push &b; push &c; ecx = &a -> thiscall, ret 8
         set_round_draw_date(cup, reg, &a);
         let mut k = round.wrapping_add(1);
-        while (k as i16) < read_i16(cup + 0x3c) {
+        while (k as i16) < read_i16(cup + cup::ROUND_COUNT) {
             let rk = round_record_by_dword(cup, k as i16 as i32 as u32);
             round_draw_date(cup, rk, &mut b);
             if cup_date_is_after(&a, &b) {
@@ -1105,7 +1105,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
     }
     let reg = round_record_by_dword(cup, round);
     if read_i16(reg + 7) != 0x8c {
-        *((cup + 0xac) as *mut u8) = read_u8(cup + 0xac).wrapping_add(1);
+        *((cup + cup::NEXT_DRAW_ROUND) as *mut u8) = read_u8(cup + cup::NEXT_DRAW_ROUND).wrapping_add(1);
     }
     let mut sum: i16 = 0;
     if (round as i32) >= 0 {
@@ -1121,14 +1121,14 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
     let human: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     construct(n, 0x27, 0); // push 0; push 0x27; ecx = a local -> thiscall, ret 8
     write(n, 0, read_usize(read_usize(cup + 4)) as u32); // push valor; push k; ecx = a local -> thiscall, ret 8
-    write(n, 1, read_i16(cup + 0x3a) as i32 as u32);
+    write(n, 1, read_i16(cup + cup::STAGE_LABEL) as i32 as u32);
     write(n, 2, read_i16(round_record_by_dword(cup, round) + 7) as i32 as u32);
-    write(n, 4, read_u8(cup + 0x44) as i8 as i32 as u32);
+    write(n, 4, read_u8(cup + cup::STAGE_INDEX) as i8 as i32 as u32);
     write(n, 5, round);
     write(n, 6, 0);
-    write(n, 7, ((read_u8(cup + 0xab) as i8 as i32 + 1) < read_u8(cup + 0xac) as i8 as i32) as u32);
+    write(n, 7, ((read_u8(cup + cup::CURRENT_ROUND) as i8 as i32 + 1) < read_u8(cup + cup::NEXT_DRAW_ROUND) as i8 as i32) as u32);
     for i in 0..sum.max(0) as usize {
-        let e = read_usize(cup + 0xa7) + 6 * i;
+        let e = read_usize(cup + cup::TEAM_TABLE) + 6 * i;
         if read_u8(e + 5) != 0 || read_usize(e) == 0 {
             continue;
         }
@@ -1136,9 +1136,9 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
         if human(read_usize(e)) == 0 {
             continue;
         }
-        write(n, 3, read_usize(read_usize(read_usize(cup + 0xa7) + 6 * i)) as u32);
+        write(n, 3, read_usize(read_usize(read_usize(cup + cup::TEAM_TABLE) + 6 * i)) as u32);
         // push clube; push &local; ecx = [0xb7431c]; sem add esp -> thiscall, ret 8
-        deliver(read_usize(G_NEWS), n, read_usize(read_usize(cup + 0xa7) + 6 * i));
+        deliver(read_usize(G_NEWS), n, read_usize(read_usize(cup + cup::TEAM_TABLE) + 6 * i));
     }
     1
 }
@@ -1184,7 +1184,7 @@ pub(crate) unsafe extern "thiscall" fn club_in_higher_division(_this: usize, a: 
 ///
 /// [pt] O clube do time `t` (+0xa7, 6 bytes por time, +0 o clube).
 pub(crate) unsafe fn club_of_team(cup: usize, t: i32) -> usize {
-    read_usize(read_usize(cup + 0xa7).wrapping_add((t as isize * 6) as usize))
+    read_usize(read_usize(cup + cup::TEAM_TABLE).wrapping_add((t as isize * 6) as usize))
 }
 
 /// Address of the club's 6-byte state record in G_CLUB_STATE_TABLE (+0 = season's European competition).
@@ -1262,7 +1262,7 @@ pub(crate) unsafe fn cup_record_final_result(f: usize, clube: usize, jogo: usize
 /// 0xff: a eliminação (0x86c000) com o peso rodada × 99 / rodadas + 1. Os registros de fase levam os dwords que a
 /// original empurra: a palavra do jogo (+0x32, +0x30) ou da rodada (+7) sobre os 16 bits altos do registrador.
 pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: usize, clube: usize, outcome: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
-    if read_u8(jogo + 0x3a) == 1 || read_usize(cup + 0x2c) != 0 || read_u8(cup + 0x44) != 0xff {
+    if read_u8(jogo + 0x3a) == 1 || read_usize(cup + cup::STAGE_COUNT) != 0 || read_u8(cup + cup::STAGE_INDEX) != 0xff {
         return 0;
     }
     let comp = read_usize(cup + 4);
@@ -1281,7 +1281,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: 
         3 => cup_record_final_result(0x86b710, clube, jogo, final_),
         0 => {
             let r = read_i16(jogo + 0x34);
-            let n = read_i16(cup + 0x3c);
+            let n = read_i16(cup + cup::ROUND_COUNT);
             let next = r.wrapping_add(1);
             if next >= n {
                 return 0;
@@ -1297,14 +1297,14 @@ pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: 
             let q = (r as i32 * 99) / div;
             let weight = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32; // inc al
             let stage = (jogo as u32 & 0xffff_0000) | core::ptr::read_unaligned((jogo + 0x32) as *const u16) as u32; // mov cx, [ecx+0x32]
-            let round = (read_usize(cup + 0xa3) as u32 & 0xffff_0000) | w7 as u32; // mov di, [edi+...+7]
+            let round = (read_usize(cup + cup::ROUND_TABLE) as u32 & 0xffff_0000) | w7 as u32; // mov di, [edi+...+7]
             // push peso; push rodada; push fase; push comp; push clube; ecx = [0xdd7f00] -> thiscall, ret 0x14
             let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
             f(read_usize(G_STAFF_RECORDS), clube, comp, stage, round, weight);
         }
         0xff => {
             let r = read_i16(jogo + 0x34) as i32;
-            let n = read_i16(cup + 0x3c) as i32;
+            let n = read_i16(cup + cup::ROUND_COUNT) as i32;
             if n == 0 {
                 return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(cup, clube, outcome, a3, a4, jogo, final_); // simplification: the original falls into the division
             }
@@ -1333,11 +1333,11 @@ pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: 
 /// push ano; push id; ecx = [0xb5e134] -> thiscall, ret 0x14): duas, a seleção principal (0x53b3d0: push nação; add
 /// esp, 4 -> cdecl) da de +0x8e maior (empate, a primeira); uma, a da primeira; nenhuma, 0.
 pub(crate) unsafe fn season_honours(cup: usize) -> (usize, usize, usize, usize) {
-    let n = read_i16(cup + 0x3e);
+    let n = read_i16(cup + cup::TEAM_COUNT);
     let (mut campeao, mut vice, mut terceiro) = (0usize, 0usize, 0usize);
     let mut i = 0i16;
     while i < n {
-        let e = read_usize(cup + 0xa7).wrapping_add((i as isize * 6) as usize);
+        let e = read_usize(cup + cup::TEAM_TABLE).wrapping_add((i as isize * 6) as usize);
         match read_u8(e + 5) {
             1 => campeao = read_usize(e),
             2 => vice = read_usize(e),
@@ -1354,7 +1354,7 @@ pub(crate) unsafe fn season_honours(cup: usize) -> (usize, usize, usize, usize) 
     if comp != 0 && read_i32(comp) == read_i32(KEY_CLUB_COMP_WELSH_PREMIER_CUP) {
         let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
         let mut j = 0i16;
-        while j < read_i16(cup + 0x3e) {
+        while j < read_i16(cup + cup::TEAM_COUNT) {
             let c = club_of_team(cup, j as i32);
             if read_u8(search(read_usize(objeto() + 8), c) + 0x73) == 3 {
                 terceiro = c;
@@ -1370,7 +1370,7 @@ pub(crate) unsafe fn season_honours(cup: usize) -> (usize, usize, usize, usize) 
         let (mut a, mut b) = (0i32, 0i32);
         let find: unsafe extern "thiscall" fn(usize, i32, u32, *mut i32, *mut i32, u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
         // simplification: the year goes in a register with garbage in the high 16 bits; 0x5fa730 receives a short
-        let k = find(read_usize(G_HOST_COUNTRY), read_i32(read_usize(cup + 4)), read_i16(cup + 0x40) as u16 as u32, &mut a, &mut b, 0);
+        let k = find(read_usize(G_HOST_COUNTRY), read_i32(read_usize(cup + 4)), read_i16(cup + cup::YEAR) as u16 as u32, &mut a, &mut b, 0);
         let national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
         let nacao = |x: i32| read_usize(G_NATION_TABLE).wrapping_add((x as isize * 0x122) as usize);
         if k == 2 {
@@ -1412,7 +1412,7 @@ pub(crate) unsafe extern "thiscall" fn cup_record_season_honours(cup: usize) {
 pub(crate) unsafe fn semi_final_losers(cup: usize) -> Option<(i32, i32)> {
     let (mut semi, mut final_) = (-1i16, -1i16);
     let mut i = 0i16;
-    while i < read_i16(cup + 0x3c) {
+    while i < read_i16(cup + cup::ROUND_COUNT) {
         let t = read_i16(round_record(cup, i as i32) + 7);
         if t == 0x82 {
             semi = i;
@@ -1427,7 +1427,7 @@ pub(crate) unsafe fn semi_final_losers(cup: usize) -> Option<(i32, i32)> {
     if semi == -1 || final_ == -1 {
         return None;
     }
-    let confrontos = |r: i16| read_usize(read_usize(cup + 0xad).wrapping_add((r as isize * 4) as usize));
+    let confrontos = |r: i16| read_usize(read_usize(cup + cup::TIE_TABLES).wrapping_add((r as isize * 4) as usize));
     let f0 = confrontos(final_);
     let (fa, fb) = (read_i16(f0), read_i16(f0 + 2));
     let n = read_i16(round_record(cup, semi as i32) + 0x1a);
@@ -1923,21 +1923,21 @@ pub(crate) fn index_addr(base: usize, i: i32, size: usize) -> usize {
 ///
 /// [pt] O confronto `k` (0x35 bytes) da rodada `r` da copa: [[copa + 0xad] + 4r] + 0x35k.
 pub(crate) unsafe fn tie_of_round(cup: usize, r: i32, k: i32) -> usize {
-    index_addr(read_ptr(index_addr(read_ptr(cup + 0xad), r, 4)), k, 0x35)
+    index_addr(read_ptr(index_addr(read_ptr(cup + cup::TIE_TABLES), r, 4)), k, 0x35)
 }
 
 /// Address of round r's 0x68-byte entry in [cup + 0xa3] (+0x18 team slots, +0x1a ties).
 ///
 /// [pt] A entrada da rodada `r` (0x68 bytes) em [copa + 0xa3]: +0x18 vagas de times, +0x1a confrontos.
 pub(crate) unsafe fn round_entry(cup: usize, r: i32) -> usize {
-    index_addr(read_ptr(cup + 0xa3), r, 0x68)
+    index_addr(read_ptr(cup + cup::ROUND_TABLE), r, 0x68)
 }
 
 /// Address of cup team t's 6-byte entry in [cup + 0xa7] (+0 club, +4 level).
 ///
 /// [pt] O clube do time `t` da copa (6 bytes em [copa + 0xa7]: +0 clube, +4 nível).
 pub(crate) unsafe fn cup_team_entry(cup: usize, t: i16) -> usize {
-    index_addr(read_ptr(cup + 0xa7), t as i32, 6)
+    index_addr(read_ptr(cup + cup::TEAM_TABLE), t as i32, 6)
 }
 
 /// Memory regions of all rounds' tie arrays (plus 0xb67a34), for the comparers.
@@ -1945,8 +1945,8 @@ pub(crate) unsafe fn cup_team_entry(cup: usize, t: i16) -> usize {
 /// [pt] Os confrontos de todas as rodadas da copa (rodadas em +0x3c), para os comparadores.
 pub(crate) unsafe fn all_ties_regions(cup: usize) -> Vec<(usize, usize)> {
     let mut v = vec![(0xb67a34, 4)];
-    for r in 0..(read_i16(cup + 0x3c) as i32).max(0) {
-        let f = read_ptr(index_addr(read_ptr(cup + 0xad), r, 4));
+    for r in 0..(read_i16(cup + cup::ROUND_COUNT) as i32).max(0) {
+        let f = read_ptr(index_addr(read_ptr(cup + cup::TIE_TABLES), r, 4));
         let n = read_i16(round_entry(cup, r) + 0x1a) as i32;
         if f != 0 && n > 0 {
             v.push((f, n as usize * 0x35));
@@ -2624,21 +2624,21 @@ pub(crate) unsafe extern "C" fn cup_set_round_match_date(rounds: usize, round: u
 ///
 /// [pt] A rodada `r` da copa: registro de 104 bytes em [copa+0xa3].
 pub(crate) unsafe fn cup_cup_round(cup: usize, r: i32) -> usize {
-    (*((cup + 0xa3) as *const usize) as isize + r as isize * 104) as usize
+    (*((cup + cup::ROUND_TABLE) as *const usize) as isize + r as isize * 104) as usize
 }
 
 /// Address of bracket row k of round r: [[cup + 0xad] + 4r] + 53k.
 ///
 /// [pt] A linha da chave `k` da rodada `r` da copa: [[copa+0xad] + 4·r] + 53·k.
 pub(crate) unsafe fn bracket_row(cup: usize, r: i32, k: i32) -> usize {
-    (*((*((cup + 0xad) as *const usize) as isize + r as isize * 4) as *const usize) as isize + k as isize * 53) as usize
+    (*((*((cup + cup::TIE_TABLES) as *const usize) as isize + r as isize * 4) as *const usize) as isize + k as isize * 53) as usize
 }
 
 /// Address of the cup's 6-byte team slot v: [cup + 0xa7] + 6v.
 ///
 /// [pt] O registro de 6 bytes da vaga `v` da copa: [copa+0xa7] + 6·v.
 pub(crate) unsafe fn team_slot(cup: usize, v: i16) -> usize {
-    (*((cup + 0xa7) as *const usize) as isize + v as isize * 6) as usize
+    (*((cup + cup::TEAM_TABLE) as *const usize) as isize + v as isize * 6) as usize
 }
 
 /// copies the round rules onto the match and, with a decision on a draw, marks who goes through by both sides' levels
@@ -2760,8 +2760,8 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, clube: u
     let mut cursor = [5u8, 0, 0, 0];
     save_game_data(p, n, cursor.as_mut_ptr());
     let k = read_i16(p + 0x34) as i32;
-    let proxima = if k < read_i16(cup + 0x3c) as i32 - 1 {
-        let v = read_i16(read_usize(cup + 0xa3).wrapping_add((k as usize).wrapping_mul(0x68)) + 0x6f);
+    let proxima = if k < read_i16(cup + cup::ROUND_COUNT) as i32 - 1 {
+        let v = read_i16(read_usize(cup + cup::ROUND_TABLE).wrapping_add((k as usize).wrapping_mul(0x68)) + 0x6f);
         if v != 0x8c { v as i32 } else { -1 }
     } else {
         -1

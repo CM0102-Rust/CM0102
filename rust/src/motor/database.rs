@@ -4729,7 +4729,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(clube: usize, person: 
         if e == 0 {
             return 0;
         }
-        let n = read_i16(league + 0x3e) as i32;
+        let n = read_i16(league + league::CLUB_COUNT) as i32;
         let weight = |k: i32| read_f64_at(0x9b59c0 + 8 * k.clamp(0, 19) as usize);
         let mut position = *((e + 0x73) as *const u8) as i32 - 1;
         if n != 0 && n != 20 {

@@ -246,8 +246,8 @@ pub(crate) unsafe fn cap_attendance(c: usize, lim: i32) {
 /// No fim de cada um: no mínimo 500, e dentro de [+0x77, +0x7b]. A tabela é liberada (free 0x9452ca).
 pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
     let table_c = read_usize(G_COMP_OBJECT_TABLE);
-    let cima = if read_i32(league + 0x1c) == -1 { 0 } else { read_usize(table_c + 4 * read_usize(league + 0x1c)) };
-    let low = if read_i32(league + 0x20) == -1 { 0 } else { read_usize(table_c + 4 * read_usize(league + 0x20)) };
+    let cima = if read_i32(league + league::UPPER_DIVISION_ID) == -1 { 0 } else { read_usize(table_c + 4 * read_usize(league + league::UPPER_DIVISION_ID)) };
+    let low = if read_i32(league + league::LOWER_DIVISION_ID) == -1 { 0 } else { read_usize(table_c + 4 * read_usize(league + league::LOWER_DIVISION_ID)) };
     let mut f = 1.0f64;
     let reg = read_usize(league + 4);
     if reg != 0 && read_usize(reg + 0x5d) != 0 {
@@ -294,7 +294,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             let k = league_comp_reputation(league) + d.max(0) as i32;
             let val = if owner { k.wrapping_mul(125) } else { k.wrapping_mul(65) };
             add(match_pl_ftol(val as f64 * f));
-        } else if promotion() != 0 && pos as i32 <= *((league + 0xbe) as *const i8) as i32 {
+        } else if promotion() != 0 && pos as i32 <= *((league + league::PROMOTED_COUNT) as *const i8) as i32 {
             if cima != 0 {
                 let mut a = read_i16(read_usize(cima + 4) + 0x69).wrapping_sub(read_i16(read_usize(league + 4) + 0x69));
                 if a < 1 {
@@ -310,7 +310,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 raise_attendance_floor(c, league_comp_reputation(cima), f);
                 crate::comparacao::ramo("cqt_4 publico de quem subiu");
             }
-        } else if *((league + 0xbf) as *const i8) != 0 && pos as i32 <= *((league + 0xbf) as *const i8) as i32 {
+        } else if *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) != 0 && pos as i32 <= *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) as i32 {
             let a = (prevista as i16).wrapping_sub(pos as i16);
             if a > 0 {
                 let s = a as i32;
@@ -337,7 +337,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 write_i32(c + 0x73, match_pl_ftol(val as f64 * f * 0.2));
             }
         } else if relegation() != 0
-            && pos as i32 > read_i16(league + 0x3e) as i32 - *((league + 0xc1) as *const i8) as i32
+            && pos as i32 > read_i16(league + league::CLUB_COUNT) as i32 - *((league + league::RELEGATED_COUNT) as *const i8) as i32
         {
             if low != 0 {
                 let mut a = read_i16(read_usize(low + 4) + 0x69).wrapping_sub(read_i16(read_usize(league + 4) + 0x69));

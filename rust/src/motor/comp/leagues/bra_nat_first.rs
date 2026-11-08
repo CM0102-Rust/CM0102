@@ -701,9 +701,9 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u3
         let mut achada = 0;
         while k < 7 {
             let league = if k == -1 { this } else { read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4 * k as i32 as usize) };
-            let n = read_i16(league + 0x3e);
+            let n = read_i16(league + league::CLUB_COUNT);
             if n > 0 {
-                let t = read_u32_as_usize(league + 0xb1);
+                let t = read_u32_as_usize(league + league::TABLE);
                 let mut i: i8 = 0;
                 while (i as i16) < n {
                     let r = t.wrapping_add(0x3b * i as i32 as usize);

@@ -449,11 +449,11 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let ea = find(read_usize(league + 8), a);
     let eb = find(read_usize(league + 8), b);
-    if ea == 0 || eb == 0 || read_usize(league + 0x30) as i32 != -1 || read_u8(league + 0x43) != 2 {
+    if ea == 0 || eb == 0 || read_usize(league + league::CURRENT_STAGE) as i32 != -1 || read_u8(league + league::COMP_TYPE) != 2 {
         return 0;
     }
     let (a73, b73) = (read_u8(ea + 0x73) as i32, read_u8(eb + 0x73) as i32);
-    let clubs = core::ptr::read_unaligned((league + 0x3e) as *const i16) as i32;
+    let clubs = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16) as i32;
     if (a73 - b73).abs() > match_pl_ftol(clubs as f64 * read_f64_at(0x9689e0)) as i16 as i32 { // 0x9689e0 = 0.25
         return 0;
     }
@@ -471,7 +471,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
             return 1; // title race
         }
     }
-    let be = read_u8(league + 0xbe) as i8 as f64;
+    let be = read_u8(league + league::PROMOTED_COUNT) as i8 as f64;
     if virtual98() != 0 {
         let t = clubs as f64 * read_f64_at(0x968918) + be; // 0x968918 = 0.2
         if !(na > t) && !(nb > t) && cruzadas {
@@ -481,7 +481,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     if virtual98() == 0 {
         return 0;
     }
-    let bf = read_u8(league + 0xbf) as i8;
+    let bf = read_u8(league + league::PROMOTION_PLAYOFF_COUNT) as i8;
     if bf == 0 {
         return 0;
     }

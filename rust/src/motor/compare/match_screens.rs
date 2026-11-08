@@ -187,8 +187,8 @@ pub(crate) unsafe extern "C" fn comparar_match_screens_draw_live_league_table(le
         return o(league, top, base);
     }
     let mut extra = vec![(league, 0xee)];
-    let table = core::ptr::read_unaligned((league + 0xb1) as *const usize);
-    let n = core::ptr::read_unaligned((league + 0x3e) as *const i16);
+    let table = core::ptr::read_unaligned((league + league::TABLE) as *const usize);
+    let n = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16);
     if table != 0 && n > 0 {
         extra.push((table, n as usize * 59));
     }

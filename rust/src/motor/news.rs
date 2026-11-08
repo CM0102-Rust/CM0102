@@ -284,8 +284,8 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: 
     if *(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || holiday(read_usize(G_HUMAN_MANAGER), manager) != 0 {
         let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWSITEM_AUTO_RESPOND);
         crate::comparacao::ramo("cpn_1 resposta automatica");
-        respond(slot(current), manager, read_usize(manager + 0x39)); // o clube
-        let national_team = read_usize(manager + 0x24);
+        respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // o clube
+        let national_team = read_usize(manager + staff::NATIONAL_JOB);
         if national_team != 0 {
             respond(slot(current), manager, national_team);
         }

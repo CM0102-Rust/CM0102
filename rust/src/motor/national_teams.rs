@@ -1276,7 +1276,7 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
 /// seleção tem de ser a primeira ou a segunda (+0x1e) nacionalidade; sendo a nação [0x9cf434] e a segunda também: 0.
 /// Senão 1.
 pub(crate) unsafe extern "stdcall" fn national_teams_player_is_eligible(player: usize, manager: usize) -> u32 {
-    let sel = read_usize(manager + 0x24);
+    let sel = read_usize(manager + staff::NATIONAL_JOB);
     if read_usize(player + 0x61) == 0 || sel == 0 {
         return 0;
     }

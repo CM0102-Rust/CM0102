@@ -306,14 +306,14 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, clube: us
 ///
 /// [pt] O confronto `p` (0x35 bytes) da rodada `r` da copa (vetores em [+0xad]).
 pub(crate) unsafe fn cup_tie(cup: usize, r: i32, p: i32) -> usize {
-    read_u32_as_usize(read_u32_as_usize(cup + 0xad) + (r as isize * 4) as usize).wrapping_add((p as isize * 0x35) as usize)
+    read_u32_as_usize(read_u32_as_usize(cup + cup::TIE_TABLES) + (r as isize * 4) as usize).wrapping_add((p as isize * 0x35) as usize)
 }
 
 /// Address of cup round r (0x68 bytes in table [+0xa3]).
 ///
 /// [pt] A rodada `r` da copa (0x68 bytes na tabela [+0xa3]).
 pub(crate) unsafe fn comp_cup_round(cup: usize, r: i32) -> usize {
-    read_u32_as_usize(cup + 0xa3).wrapping_add((r as isize * 0x68) as usize)
+    read_u32_as_usize(cup + cup::ROUND_TABLE).wrapping_add((r as isize * 0x68) as usize)
 }
 
 

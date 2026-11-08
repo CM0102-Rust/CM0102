@@ -505,10 +505,10 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
     if sheet != 0 {
         let days = days_until(G_CURRENT_DATE, read_u32_as_usize(person + staff::DATE_OF_BIRTH) as u32, read_u32_as_usize(person + 0x14) as u32);
         let mut x = days as f64 * read_f64_at(0x968e10); // 0x968e10 = 0.002739726027
-        if read_u8(sheet + 0xf) == 0x14 {
+        if read_u8(sheet + player_sheet::GOALKEEPER) == 0x14 {
             x -= read_f64_at(0x968950); // 0x968950 = 2
         } else {
-            let s = read_u8(sheet + 0x3c) as i8 as i32 + read_u8(sheet + 0x34) as i8 as i32 + read_u8(person + staff::PROFESSIONALISM) as i8 as i32;
+            let s = read_u8(sheet + player_sheet::STAMINA) as i8 as i32 + read_u8(sheet + player_sheet::NATURAL_FITNESS) as i8 as i32 + read_u8(person + staff::PROFESSIONALISM) as i8 as i32;
             x -= (s as f64 * read_f64_at(0x968a80) - read_f64_at(0x968e08)) * read_f64_at(0x968e00); // 0x968a80 = 0.3333333333, 0x968e08 = 15, 0x968e00 = 0.4
         }
         let end = |c: usize| core::ptr::read_unaligned((c + 0x2f) as *const u16) as u32;
@@ -525,7 +525,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
                 write_u32(c + 0xc, match_pl_ftol(read_i32(c + 0xc) as f64 * read_f64_at(0x9689c0)) as u32); // 0x9689c0 = 1.1
             }
             scale_contract_bonuses(c, read_f64_at(0x968de8)); // 0x968de8 = 1.3
-        } else if x > read_f64_at(0x968de0) && read_i16(clube + club::REPUTATION) as f64 > read_i16(sheet + 0xd) as f64 * read_f64_at(0x968978) { // 0x968de0 = 29, 0x968978 = 1.2
+        } else if x > read_f64_at(0x968de0) && read_i16(clube + club::REPUTATION) as f64 > read_i16(sheet + player_sheet::WORLD_REPUTATION) as f64 * read_f64_at(0x968978) { // 0x968de0 = 29, 0x968978 = 1.2
             let k = match_pl_ftol(x + read_f64_at(0x968968)) as i8; // 0x968968 = 0.5
             if end(c) as i32 > (year as i32 - k as i32) + 0x22 {
                 write_u16(c + 0x2f, year.wrapping_sub(k as i16 as u16).wrapping_add(0x22));
@@ -537,7 +537,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
             let days_end = days_until(c + 0x2d, read_u32_as_usize(G_CURRENT_DATE) as u32, read_u32_as_usize(G_CURRENT_DATE_LEAP) as u32);
             let mut weeks = days_end / 7;
             let mut total = weeks.wrapping_mul(read_i32(c + 0xc));
-            let mut a = game_pow(read_i16(sheet + 0xb) as f64, read_f64_at(0x968950)) * read_f64_at(0x968dd0); // 0x968950 = 2, 0x968dd0 = 0.0001333333333
+            let mut a = game_pow(read_i16(sheet + player_sheet::CURRENT_REPUTATION) as f64, read_f64_at(0x968950)) * read_f64_at(0x968dd0); // 0x968950 = 2, 0x968dd0 = 0.0001333333333
             if !(a < read_f64_at(0x968dc8)) { // 0x968dc8 = 8000
                 a = 8000.0;
             }
@@ -1033,15 +1033,15 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
         let compensacao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> i32 = core::mem::transmute(FN_TRANSFER_MANAGER_CALC_COMPENSATION_FEE);
         return compensacao(read_usize(G_TRANSFER_MANAGER), person, transfer_manager_contract_club, 1);
     }
-    let (base, auge): (f64, i8) = if read_i8(sheet + 0x15) >= 0xf {
+    let (base, auge): (f64, i8) = if read_i8(sheet + player_sheet::ATTACKER) >= 0xf {
         (13_000_000.0, 0x1c) // cqa9: a base de quem joga na frente
-    } else if read_i8(sheet + 0x14) >= 0xf {
+    } else if read_i8(sheet + player_sheet::ATTACKING_MIDFIELDER) >= 0xf {
         (11_000_000.0, 0x1d)
-    } else if read_i8(sheet + 0x13) >= 0xf {
+    } else if read_i8(sheet + player_sheet::MIDFIELDER) >= 0xf {
         (10_000_000.0, 0x1d)
-    } else if read_i8(sheet + 0x12) >= 0xf {
+    } else if read_i8(sheet + player_sheet::DEFENSIVE_MIDFIELDER) >= 0xf {
         (9_000_000.0, 0x1d)
-    } else if read_i8(sheet + 0xf) == 0x14 {
+    } else if read_i8(sheet + player_sheet::GOALKEEPER) == 0x14 {
         (6_000_000.0, 0x21)
     } else {
         (8_000_000.0, 0x1d)
@@ -1054,16 +1054,16 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
     }
     let a = match_pl_ftol(t).wrapping_abs();
     let mut f = t * a as f64 * read_f32_at(0x968f08) as f64 * read_f64_at(0x968f00) + read_f64_at(0x967890); // 0x968f08 = 0.3333333433, 0x968f00 = 0.08333333333, 0x967890 = 1
-    if read_i8(sheet + 0xf) < 0xf {
+    if read_i8(sheet + player_sheet::GOALKEEPER) < 0xf {
         let rating = |o: usize, c: usize| (read_i8(sheet + o) as i32 - 0xf) as f64 * read_f64_at(c) + read_f64_at(0x967890); // 0x967890 = 1
         let fa = rating(0x28, 0x968ef8);
-        let fb = read_i8(sheet + 0x27) as f64 * read_f64_at(0x968ef0) + read_f64_at(0x967890); // 0x968ef0 = 0.005, 0x967890 = 1
-        let fc = read_i8(sheet + 0x43) as f64 * read_f64_at(0x968e60) + read_f64_at(0x967890); // 0x968e60 = 0.003333333333, 0x967890 = 1
+        let fb = read_i8(sheet + player_sheet::FINISHING) as f64 * read_f64_at(0x968ef0) + read_f64_at(0x967890); // 0x968ef0 = 0.005, 0x967890 = 1
+        let fc = read_i8(sheet + player_sheet::VISION) as f64 * read_f64_at(0x968e60) + read_f64_at(0x967890); // 0x968e60 = 0.003333333333, 0x967890 = 1
         let fd = rating(0x36, 0x968ef8);
         let fe = rating(0x2f, 0x968ef8);
         f = fa * (fb * f) * fc * fd * fe;
     }
-    let q = read_i8(sheet + 0x2d) as i32;
+    let q = read_i8(sheet + player_sheet::INJURY_PRONENESS) as i32;
     let factor = ((read_f64_at(0x968ee0) - (q * q) as f64 * read_f64_at(0x967888) * read_f64_at(0x968ee8)) * f) as f32; // 0x968ee0 = 1.33, 0x967888 = 0.05, 0x968ee8 = 0.034
     let mut r = read_i16(sheet + 9) as f64 * read_f64_at(0x968ed8) + read_f64_at(0x968ed0); // 0x968ed8 = 0.0003333333333, 0x968ed0 = 0.17
     if !(r >= read_f64_at(0x9689c0)) { // 0x9689c0 = 1.1
@@ -1077,7 +1077,7 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
         factor
     };
     let mut v: u32 = if clube == 0 {
-        read_i16(sheet + 0xb) as i32 as u32
+        read_i16(sheet + player_sheet::CURRENT_REPUTATION) as i32 as u32
     } else {
         let vista: unsafe extern "C" fn(usize, usize, u32) -> u16 = core::mem::transmute(FN_DATABASE_GET_STAFF_REPUTATION_FOR_VIEWER);
         let manager = read_usize(clube + club::MANAGER);
@@ -1095,7 +1095,7 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
         let y = match_pl_ftol((s as f64 + ceiling as f64 * x as f64) * read_f32_at(0x968f08) as f64) as u32; // 0x968f08 = 0.3333333433
         if y <= 1 { 1 } else if y > 0x2ee0 { 0x2ee0 } else { y }
     };
-    let pot = read_i16(sheet + 0xd);
+    let pot = read_i16(sheet + player_sheet::WORLD_REPUTATION);
     if pot > 0x1388 && (age as i32) < auge as i32 + 4 {
         let c = (v >> 1).wrapping_add(pot as i32 as u32).wrapping_sub(0x9c4);
         if c > v {
@@ -1405,7 +1405,7 @@ pub(crate) unsafe extern "thiscall" fn post_wants_new_contract_news(this: usize,
     write(n, 9, read_i16(contrato + 0x2f) as u16 as u32);
     write(n, 10, read_usize(contrato + contract::WAGE) as u32);
     let sheet = read_usize(p + 0x61);
-    let reputado = (read_u8(p + 0x59) as i8) < 0xa && (read_u8(p + 0x5b) as i8) < 5 && sheet != 0 && read_i16(sheet + 0xd) > 0x128e;
+    let reputado = (read_u8(p + 0x59) as i8) < 0xa && (read_u8(p + 0x5b) as i8) < 5 && sheet != 0 && read_i16(sheet + player_sheet::WORLD_REPUTATION) > 0x128e;
     write(n, 11, reputado as u32);
     deliver(read_usize(G_NEWS), n, clube);
 }
@@ -3150,7 +3150,7 @@ pub(crate) unsafe extern "thiscall" fn remove_pending_offers_for_staff(this: usi
 /// [pt] A primeira oferta da lista `l` (sem mexer no cursor) da pessoa (+0) e do clube (+4) da oferta de transferência e
 /// ainda sem decisão (+0x62 = 0).
 pub(crate) unsafe fn offer_to_schedule(l: usize, offer: usize) -> Option<usize> {
-    list_items_capped(l).into_iter().find(|&e| read_usize(e) == read_usize(offer + 0xc) && read_usize(e + 4) == read_usize(offer + 8) && *((e + 0x62) as *const u8) == 0)
+    list_items_capped(l).into_iter().find(|&e| read_usize(e) == read_usize(offer + offer::TARGET_STAFF_ID) && read_usize(e + 4) == read_usize(offer + 8) && *((e + 0x62) as *const u8) == 0)
 }
 
 /// 1 when the offered player's ability (+0xb of the player record) / 500 exceeds the offering club's reputation
@@ -3159,7 +3159,7 @@ pub(crate) unsafe fn offer_to_schedule(l: usize, offer: usize) -> Option<usize> 
 /// [pt] Habilidade (palavra +0xb do registro de jogador +0x61 da pessoa +0xc) / 500 acima da reputação (+0x80) do clube
 /// (+8) da oferta?
 pub(crate) unsafe fn ability_above_club_reputation(offer: usize) -> u32 {
-    let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(offer + 0xc).wrapping_mul(staff::SIZE));
+    let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(offer + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE));
     let hab = *((read_usize(person + staff::PLAYER) + 0xb) as *const i16) as i32 / 500;
     let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE));
     (hab > *((clube + club::REPUTATION) as *const i16) as i32) as u32
@@ -3178,10 +3178,10 @@ pub(crate) unsafe extern "thiscall" fn schedule_decision_for_transfer(this: usiz
     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
     let mut e = contract_manager_list_next(l);
     while e != 0 {
-        if read_usize(e) == read_usize(offer + 0xc) && read_usize(e + 4) == read_usize(offer + 8) && *((e + 0x62) as *const u8) == 0 {
+        if read_usize(e) == read_usize(offer + offer::TARGET_STAFF_ID) && read_usize(e + 4) == read_usize(offer + 8) && *((e + 0x62) as *const u8) == 0 {
             *((e + 0x62) as *mut u8) = 1; // a oferta vale
             let schedule: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_SCHEDULE_OFFER_DECISION);
-            schedule(this, read_usize(offer + 0xc) as u32, read_usize(offer + 0x20) as u32);
+            schedule(this, read_usize(offer + offer::TARGET_STAFF_ID) as u32, read_usize(offer + offer::SLOT_INDEX) as u32);
             break;
         }
         e = contract_manager_list_next(l);
@@ -4164,10 +4164,10 @@ pub(crate) unsafe extern "thiscall" fn post_contract_end_news(this: usize, p: us
     let jornal = read_usize(G_NEWS);
     let mut default = true;
     if amplo != 0 && sheet != 0 {
-        if read_i16(sheet + 0xd) > 0x1b58 {
+        if read_i16(sheet + player_sheet::WORLD_REPUTATION) > 0x1b58 {
             all(jornal, nt);
             default = false;
-        } else if read_i16(sheet + 0xb) > 0x1b58 {
+        } else if read_i16(sheet + player_sheet::CURRENT_REPUTATION) > 0x1b58 {
             default = false;
             do_pais(jornal, nt, nacao);
             if nacao != read_usize(clube + club::NATION) {

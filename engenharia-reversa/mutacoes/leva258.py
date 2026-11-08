@@ -10,7 +10,7 @@ MUTACOES = [
     ('cpv3_status_1', 'write_u8(o + 0x2c, 3); // cpv3: status 3', 'write_u8(o + 0x2c, 1); // mutacao: status 1', 'cpv_3 reagendada na janela'),
     ('cpv3_volta_em_3', 'schedule(this, o, 1, 0); // cpv3: de volta amanhã', 'schedule(this, o, 3, 0); // mutacao: 3 dias', 'cpv_3 reagendada na janela'),
     ('cpv4_agendada_em_3', 'schedule(this, offer, 2, 0); // cpv4: a oferta em 2 dias', 'schedule(this, offer, 3, 0); // mutacao: 3 dias', 'cpv_4 negociacao agendada'),
-    ('cpv4_status_2', 'write_u8(offer + 0x2c, 1); // cpv4: a oferta em negociação', 'write_u8(offer + 0x2c, 2); // mutacao: status 2', 'cpv_4 vaga nova'),
+    ('cpv4_status_2', 'write_u8(offer + offer::STATUS, 1); // cpv4: a oferta em negociação', 'write_u8(offer + offer::STATUS, 2); // mutacao: status 2', 'cpv_4 vaga nova'),
     ('cpv4_boato_sem_sorteio', 'let s = sorteio(4) as i16 as i32; // cpv4: a variante do boato', 'let s = 0i32; // mutacao: sem o sorteio', 'cpv_4 boato do tecnico'),
     ('cpv5_merchandising_sem_sorteio', '    let r = friendly_random(0xb); // cpv5: o sorteio do merchandising', '    let r = 5i32; // mutacao: sem o sorteio', 'cpv_5 merchandising'),
     ('cpv5_loja_sem_sorteio', '    let r2 = friendly_random(rep); // cpv5: o segundo sorteio da loja', '    let r2 = rep / 2; // mutacao: sem o sorteio', 'cpv_5 ingressos vendidos'),

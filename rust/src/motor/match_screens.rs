@@ -1940,12 +1940,12 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
     // o sorteio ainda por vir
     let sorteio = w16(league + 0xb6);
     if sorteio != 0xffff {
-        data_new(s + 0x30, sorteio as u32, w16(league + 0xb8).wrapping_add(w16(league + 0x40)) as u32);
+        data_new(s + 0x30, sorteio as u32, w16(league + 0xb8).wrapping_add(w16(league + league::YEAR)) as u32);
         core::ptr::copy_nonoverlapping(G_CURRENT_DATE as *const u8, (s + 0x38) as *mut u8, 8);
         let (hoje, dia) = (w16(s + 0x3a), w16(s + 0x32));
         if hoje < dia || (hoje == dia && (w16(s + 0x38) as i16) < (w16(s + 0x30) as i16)) {
             let mut y = top;
-            let c = core::ptr::read_unaligned((league + 0x3a) as *const i16);
+            let c = core::ptr::read_unaligned((league + league::STAGE_ID) as *const i16);
             if c != 0 {
                 let mut k = competicao_curta(c as i32);
                 if k == -1 {
@@ -1970,7 +1970,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
     // the title and the table
     let title = s + 0xba0;
     gravar8(s + 0x3d0, 0);
-    let c = w16(league + 0x3a);
+    let c = w16(league + league::STAGE_ID);
     if c != 0 {
         name_of_competition(title, 0x7d0, c as u32, 0);
     } else {
@@ -1978,11 +1978,11 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
     }
     txt(sm, 0x6e, z(top), 0x30c, z(top + 0x23), 2, 0, 0xc, 3, colour_word(0xaebdec), title, 1);
     let y = top + 0x28;
-    let clubs = core::ptr::read_unaligned((league + 0x3e) as *const i16);
+    let clubs = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16);
     let (alto, n);
-    if clubs <= 8 && core::ptr::read_unaligned((league + 0x3c) as *const i16) > 0 && u(u(league + 4)) != u(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
+    if clubs <= 8 && core::ptr::read_unaligned((league + league::LEGS) as *const i16) > 0 && u(u(league + 4)) != u(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
         let mut k = (clubs as u8).wrapping_add(1);
-        if b8(league + 0xbe) != 0 || b8(league + 0xd9) & 1 != 0 {
+        if b8(league + league::PROMOTED_COUNT) != 0 || b8(league + league::LEAGUE_FLAGS) & 1 != 0 {
             k = k.wrapping_add(1);
         }
         for o in [0xbf, 0xc0, 0xc1] {
@@ -2005,7 +2005,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
     cabecalho(4);
     text(BUF, 0x990b1c, EMPTY_TEXT);
     cabecalho(5);
-    let rule = w16(league + 0xab) as u8;
+    let rule = w16(league + league::MATCH_RULES) as u8;
     text(BUF, if rule & 0x20 != 0 { 0x990b18 } else if rule & 1 != 0 { 0x99c24c } else { 0x990b14 });
     cabecalho(6);
     text(BUF, 0x990af4, EMPTY_TEXT);
@@ -2018,7 +2018,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
     cabecalho(0xa);
 
     // the real league sorted by the column of parameter 0x28, for the position arrows
-    *((league + 0xad) as *mut usize) = column;
+    *((league + league::TABLE_COLUMN) as *mut usize) = column;
     sort(league, 0);
     let mut queue = 1usize;
     let c8 = |o: usize| b8(local + o) as i8 as i32;
@@ -2055,7 +2055,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
         }
         let r = record(local, i);
         let clube = u(r);
-        let nl = core::ptr::read_unaligned((league + 0x3e) as *const i16) as i32;
+        let nl = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16) as i32;
         if nl > 0 {
             let mut j = 0;
             loop {
@@ -2065,13 +2065,13 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
                     break;
                 }
                 j += 1;
-                if j >= core::ptr::read_unaligned((league + 0x3e) as *const i16) as i32 {
+                if j >= core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16) as i32 {
                     break;
                 }
             }
         }
         let pos = por_extenso(b8(r + 4) as i8 as i32 + 1, 3);
-        let ret = if core::ptr::read_unaligned((league + 0x3c) as *const i16) != 0 {
+        let ret = if core::ptr::read_unaligned((league + league::LEGS) as *const i16) != 0 {
             cell(sm, lst, 0, queue, 0x30, colour_with_high_bits(pos, 0xaebe04), 0xc, 1, colour_word(0xae3184), pos, 7, r)
         } else {
             text_of_cell(sm, lst, 0, queue, 0x30, colour_with_high_bits(pos, 0xaebe04), 0xc, 1, colour_word(0xae3184), pos)

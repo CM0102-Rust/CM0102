@@ -2689,7 +2689,7 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, clube:
     }
     let sheet = *((p + 0x61) as *const usize);
     let enc = encaixe(p, clube) as f64;
-    let mut y = (*((sheet + 0xd) as *const i16) as i32 - *((clube + club::REPUTATION) as *const i16) as i32) as f64 * d8(0x969048) + d8(0x968940);
+    let mut y = (*((sheet + player_sheet::WORLD_REPUTATION) as *const i16) as i32 - *((clube + club::REPUTATION) as *const i16) as i32) as f64 * d8(0x969048) + d8(0x968940);
     if !(d8(0x96d220) <= y) {
         y = -4.0;
     } else if d8(0x968938) < y {
@@ -3944,7 +3944,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     let (conhece, obs) = if side != 0 {
         (*((side + 0x1f) as *const usize), *((side + 0x1b) as *const usize))
     } else if manager != 0 {
-        (*((manager + 0x69) as *const usize), manager)
+        (*((manager + staff::NON_PLAYER) as *const usize), manager)
     } else if clube != 0 && *((clube + club::MANAGER) as *const usize) != 0 {
         let t = *((clube + club::MANAGER) as *const usize);
         (*((t + 0x69) as *const usize), t)
@@ -4508,7 +4508,7 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
     let age = if kind == 2 {
         0
     } else {
-        (*((p + 0x18) as *const u8)).wrapping_sub(if *((sheet + 0xf) as *const u8) == 0x14 { 0x1a } else { 0x17 }) as i8
+        (*((p + 0x18) as *const u8)).wrapping_sub(if *((sheet + player_sheet::GOALKEEPER) as *const u8) == 0x14 { 0x1a } else { 0x17 }) as i8
     };
     let mut conhece = 0usize;
     if o != 0 {

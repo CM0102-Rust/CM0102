@@ -334,7 +334,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_schedule_645af0(this: us
 ///
 /// [pt] A linha `i` da tabela [+0xb1] (0x3b bytes).
 pub(crate) unsafe fn ita_ser_a_table_row(league: usize, i: usize) -> usize {
-    read_u32_as_usize(league + 0xb1) + i * 0x3b
+    read_u32_as_usize(league + league::TABLE) + i * 0x3b
 }
 
 /// Per-position zones of Serie A: 1 champion, 2 other Champions League places, 3 UEFA Cup places, 4 the next two
@@ -374,7 +374,7 @@ pub(crate) unsafe fn serie_a_zones(league: usize) -> [u8; 64] {
         z[i as usize] = 4; // cql4: as duas posições depois das vagas europeias
         z[i as usize + 1] = 4;
     }
-    let relegated = *((league + 0xc1) as *const i8) as i32;
+    let relegated = *((league + league::RELEGATED_COUNT) as *const i8) as i32;
     if relegated > 0 {
         for k in 0..relegated {
             if 17 - k >= 0 {
@@ -405,7 +405,7 @@ pub(crate) fn serie_b_zones() -> [u8; 64] {
 ///
 /// [pt] Há duas linhas vizinhas com os mesmos pontos (+0x19) em faixas diferentes? (a conferência do comparador)
 pub(crate) unsafe fn tie_on_zone_boundary(league: usize, z: &[u8; 64]) -> bool {
-    let n = read_i16(league + 0x3e) as i32 - 1;
+    let n = read_i16(league + league::CLUB_COUNT) as i32 - 1;
     (0..n.max(0) as usize).any(|i| {
         let l = ita_ser_a_table_row(league, i);
         read_i16(l + 0x19) == read_i16(l + 0x3b + 0x19) && z[i.min(63)] != z[(i + 1).min(63)]
@@ -850,8 +850,8 @@ pub(crate) unsafe fn compare_italian_constructor(name: &str, this: usize, year: 
 ///
 /// [pt] Quantos jogos a liga tem: (clubes +0x3e / 2, com sinal, para zero) × rodadas +0xa9.
 pub(crate) unsafe fn league_match_count(league: usize) -> i32 {
-    let clubs = core::ptr::read_unaligned((league + 0x3e) as *const i16) as i32;
-    let rounds = core::ptr::read_unaligned((league + 0xa9) as *const i16) as i32;
+    let clubs = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16) as i32;
+    let rounds = core::ptr::read_unaligned((league + league::ROUND_COUNT) as *const i16) as i32;
     (clubs / 2).wrapping_mul(rounds)
 }
 

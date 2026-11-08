@@ -2553,7 +2553,7 @@ pub(crate) unsafe extern "thiscall" fn pick_club_from_nation_list(this: usize, p
             let sheet = read_usize(player + 0x61);
             let rep = read_i16(clube + club::REPUTATION) as i32;
             let c = rep
-                .wrapping_sub((read_i16(sheet + 0xb) as i32).wrapping_sub(rep).wrapping_abs())
+                .wrapping_sub((read_i16(sheet + player_sheet::CURRENT_REPUTATION) as i32).wrapping_sub(rep).wrapping_abs())
                 .wrapping_sub((read_i16(sheet + 7) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
                 .wrapping_sub((read_i16(sheet + 5) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
                 .wrapping_add(0x1388);
@@ -3233,7 +3233,7 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             let c = friendly_random(0x1f4).wrapping_add(1) as u16;
             write_u16(read_usize(s + 0x69) + 0xc, c);
         } else {
-            if *((sheet + 0xf) as *const i8) == 0x14 {
+            if *((sheet + player_sheet::GOALKEEPER) as *const i8) == 0x14 {
                 let (cl, dl) = (*((nj + 0x10) as *const i8), *((nj + 0x11) as *const i8));
                 if cl > dl {
                     *((nj + 0x11) as *mut i8) = cl;

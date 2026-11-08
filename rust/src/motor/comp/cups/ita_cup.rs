@@ -437,10 +437,10 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
     };
     for i in 0..16usize {
         let de = group_table(this, i) + 0x3b;
-        let para = read_u32_as_usize(league + 0xb1) + i * 0x3b;
+        let para = read_u32_as_usize(league + league::TABLE) + i * 0x3b;
         core::ptr::copy_nonoverlapping(de as *const u8, para as *mut u8, 0x3b); // cqr9: o segundo do grupo i
-        write_u32_from_usize(read_u32_as_usize(league + 0xb1) + i * 0x3b + 9, 0);
-        write_u32_from_usize(read_u32_as_usize(league + 0xb1) + i * 0x3b + 5, 0);
+        write_u32_from_usize(read_u32_as_usize(league + league::TABLE) + i * 0x3b + 9, 0);
+        write_u32_from_usize(read_u32_as_usize(league + league::TABLE) + i * 0x3b + 5, 0);
     }
     let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     sort(league, 0); // cqr9: a classificação dos segundos
@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
     }
     let mut l = 0usize;
     while l < 0x162 {
-        let c = read_u32_as_usize(read_u32_as_usize(league + 0xb1) + l);
+        let c = read_u32_as_usize(read_u32_as_usize(league + league::TABLE) + l);
         write_u32_from_usize(teams + 0x40 + (l / 0x3b) * 4, c); // cqr9: os 6 melhores segundos
         let mut g = 0usize;
         while g < 0x10 {
@@ -463,7 +463,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
             let n = read_i16(group + 0x3e) as i32;
             let mut r = 0i32;
             while r < n {
-                if read_u32_as_usize(read_u32_as_usize(group + 0xb1) + r as usize * 0x3b) == read_u32_as_usize(read_u32_as_usize(league + 0xb1) + l) {
+                if read_u32_as_usize(read_u32_as_usize(group + 0xb1) + r as usize * 0x3b) == read_u32_as_usize(read_u32_as_usize(league + league::TABLE) + l) {
                     *((group + 0xbe) as *mut u8) = 2;
                     *((read_u32_as_usize(group + 0xb1) + r as usize * 0x3b + 0x37) as *mut u8) = 6;
                     g = 0x10;

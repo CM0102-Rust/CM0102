@@ -612,8 +612,8 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             let group: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
             if group(read_u32_as_usize(jogo + 0x14)) == 0 {
                 let league = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(read_u32_as_usize(jogo + 0x14)) * 4);
-                if read_u8(league + 0x43) != 2 {
-                    let x = (read_u8(jogo + 0x34).wrapping_sub(read_u8(league + 0x3c)) as i8) as i32 as f64;
+                if read_u8(league + league::COMP_TYPE) != 2 {
+                    let x = (read_u8(jogo + 0x34).wrapping_sub(read_u8(league + league::LEGS)) as i8) as i32 as f64;
                     adjust = if x < read_f64_at(0x96fe28) { // 0x96fe28 = -6
                         read_f64_at(0x96fe28) // 0x96fe28 = -6
                     } else if x <= read_f64_at(0x9688a0) { // 0x9688a0 = 5

@@ -454,14 +454,14 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             crate::comparacao::ramo("jogadores tecnico");
             let manager = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
             let (mut da, mut db, mut dc) = (0i16, 0i16, 0i16);
-            if manager != 0 && g(manager + 0x69) != 0 {
-                let f = g(manager + 0x69);
+            if manager != 0 && g(manager + staff::NON_PLAYER) != 0 {
+                let f = g(manager + staff::NON_PLAYER);
                 da = w(ts + 0x188).wrapping_sub(w(f + 0xa));
                 core::ptr::write_unaligned((f + 0xa) as *mut i16, w(f + 0xa).wrapping_add(da));
-                let f = g(manager + 0x69);
+                let f = g(manager + staff::NON_PLAYER);
                 db = w(ts + 0x18a).wrapping_sub(w(f + 8));
                 core::ptr::write_unaligned((f + 8) as *mut i16, w(f + 8).wrapping_add(db));
-                let f = g(manager + 0x69);
+                let f = g(manager + staff::NON_PLAYER);
                 dc = w(ts + 0x18c).wrapping_sub(w(f + 0xc));
                 core::ptr::write_unaligned((f + 0xc) as *mut i16, w(f + 0xc).wrapping_add(dc));
             }

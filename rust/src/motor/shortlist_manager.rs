@@ -2090,12 +2090,12 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, clube:
         let dd = d as f64;
         let sheet = read_usize(p + 0x61);
         let f = read_f64(0x967890) / (dd * read_f64(0x968e80) + read_f64(0x9689b0)); // cqa7: a idade acima do divisor
-        let ts = read_i16(sheet + 0xd);
+        let ts = read_i16(sheet + player_sheet::WORLD_REPUTATION);
         let g = if ts > 0x1770 { ts as i32 as f64 * read_f64(0x96a680) - read_f64(0x968940) } else { 0.0 };
         let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
         let y = if estrangeira(p, read_usize(clube + club::NATION), 1) != 0 {
             f / (dd * read_f64(0x968f20) + read_f64(0x9689d8))
-        } else if age as i32 > div as i32 + 2 && (kind == 8 || kind == 6) && read_i16(sheet + 0xb) < read_i16(clube + club::REPUTATION) {
+        } else if age as i32 > div as i32 + 2 && (kind == 8 || kind == 6) && read_i16(sheet + player_sheet::CURRENT_REPUTATION) < read_i16(clube + club::REPUTATION) {
             (read_f64(0x967890) - (d - 2) as f64 * read_f64(0x96d438)) * f
         } else {
             f
@@ -2108,7 +2108,7 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, clube:
         e = match_pl_ftol(((um - g) * y + g) * e as f64) as u32;
     }
     let sheet = read_usize(p + 0x61);
-    let cons = read_u8(sheet + 0x2d) as i8 as f64;
+    let cons = read_u8(sheet + player_sheet::INJURY_PRONENESS) as i8 as f64;
     let c = match_pl_ftol((read_f64(0x967890) - game_pow(cons, read_f64(0x968950)) * read_f64(0x968f40)) * e as f64);
     let mut kk = (c.wrapping_mul(c) as u32) as f64 * teto_pos * read_f64(0x968eb8);
     let ra = read_i16(clube + club::REPUTATION);
@@ -2136,7 +2136,7 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, clube:
             kk = lim;
         }
     }
-    let ts = read_i16(sheet + 0xd);
+    let ts = read_i16(sheet + player_sheet::WORLD_REPUTATION);
     if ts <= 5000 {
         let lim = frac * read_f64(0x96f908);
         if lim < kk {
@@ -2199,7 +2199,7 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, clube:
         if lim <= 1000000 {
             lim = 1000000;
         }
-        let ts = read_i16(sheet + 0xd) as i32;
+        let ts = read_i16(sheet + player_sheet::WORLD_REPUTATION) as i32;
         if ts > 8000 {
             lim = lim.wrapping_add((ts - 8000) * 10000);
         }
@@ -4088,7 +4088,7 @@ pub(crate) unsafe extern "thiscall" fn update_club_target_reputation(this: usize
     if human(clube, 1, 1, 0, 0) == 0 {
         let manager = u(clube + club::MANAGER);
         if manager != 0 {
-            let dif = byte(manager, 0x57) as i32 - byte(u(manager + 0x69), 0x1d) as i32;
+            let dif = byte(manager, 0x57) as i32 - byte(u(manager + staff::NON_PLAYER), 0x1d) as i32;
             core::ptr::write_unaligned(target, por(dif, 0x96a740, w()) as i16);
         }
     }

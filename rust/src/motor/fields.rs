@@ -141,6 +141,7 @@ pub(crate) mod staff {
     pub(crate) const STAFF_PREFERENCES: usize = 0x65; // 4 byte(s), int
     pub(crate) const NON_PLAYER: usize = 0x69; // 4 byte(s), int
     pub(crate) const SQUAD_SELECTED_FOR: usize = 0x6d; // 1 byte(s), byte
+    pub(crate) const SPORTSMANSHIP: usize = 0x5c; // 1 byte(s), byte
 }
 
 /// Fields of the `bra_nat_third` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `bra_nat_third`.
@@ -307,6 +308,8 @@ pub(crate) mod league {
     pub(crate) const PRIZE_MODE: usize = 0xe1; // 1 byte(s): prize payment mode: 1 = PRIZE_FUND by position, 2 = nothing, 3 = paid by the competition (virtual +0x6c)
     pub(crate) const TIEBREAK_MATCHES: usize = 0xe6; // 4 byte(s): a points tie across a band boundary goes to a tie-break match (no prizes or end records until resolved)
     pub(crate) const FIXED_FIXTURES: usize = 0xea; // 4 byte(s): pointer to a fixed fixture list (0x10-byte entries, +8/+0xc club ids) used instead of the round robin; 0 = none
+    pub(crate) const COMP_TYPE: usize = 0x43; // 1 byte(s): competition type: 1 = cup, 2 = league
+    pub(crate) const CUSTOM_COMPARE: usize = 0xa3; // 4 byte(s): optional extra table-row compare function used by sort_table before the standard criteria
 }
 
 /// Fields of the `player_regen_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `player_regen_fields`.
@@ -414,4 +417,54 @@ pub(crate) mod transfer_manager_fields {
 #[allow(dead_code)]
 pub(crate) mod uefa_cup {
     pub(crate) const PRELIMINARY_CLUB_COUNT: usize = 0xb2; // 1 byte(s): Signed count of clubs in the preliminary round (coefficient 10 or more); shapes the round table
+}
+
+/// Fields of the `offer` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `offer`.
+#[allow(dead_code)]
+pub(crate) mod offer {
+    pub(crate) const TARGET_STAFF_ID: usize = 0xc; // 4 byte(s): Id of the person the offer is for
+    pub(crate) const TERMS_STATE: usize = 0x10; // 1 byte(s): Personal-terms progress (0 none, 2 target accepted terms, 4 collapsed) [inference]
+    pub(crate) const JOB_TYPE: usize = 0x11; // 1 byte(s): Job the target would take at the buyer (11..15 = player jobs), set when terms are accepted [inference]
+    pub(crate) const DUE_DATE: usize = 0x12; // 8 byte(s): Date the offer is next processed (day i16 +0x12, year i16 +0x14)
+    pub(crate) const DUE_SLICE: usize = 0x1a; // 1 byte(s): Day slice the offer is next processed on
+    pub(crate) const FEE: usize = 0x1b; // 4 byte(s): Transfer fee offered
+    pub(crate) const OFFER_TYPE: usize = 0x1f; // 1 byte(s): 1 = loan offer, otherwise transfer
+    pub(crate) const SLOT_INDEX: usize = 0x20; // 4 byte(s): Index of the offer in the manager's offer array
+    pub(crate) const SERIAL: usize = 0x24; // 4 byte(s): Serial number of the offer (from NEXT_SERIAL)
+    pub(crate) const NEGOTIATION_INDEX: usize = 0x28; // 4 byte(s): Index in the manager's negotiation array, -1 if none
+    pub(crate) const STATUS: usize = 0x2c; // 1 byte(s): Offer status (2 rejected, 3 withdrawn, 5 accepted, 7, 8, 0xa waiting, 0xf, 0x13 future transfer, ...)
+    pub(crate) const RESPONSE_ROUND: usize = 0x2e; // 1 byte(s): Response counter; with status 0xf, >= 3 means closed [inference]
+    pub(crate) const COMPLETION_TIMING: usize = 0x30; // 1 byte(s): Low nibble: when the move completes (0 now, 1/4 first allowed day, 2 season end +7, 3 contract end, 5 fixed window)
+    pub(crate) const APPEARANCE_FEE: usize = 0x35; // 4 byte(s): First-team appearance clause amount
+    pub(crate) const APPEARANCE_GAMES: usize = 0x39; // 1 byte(s): First-team games needed for the appearance clause
+    pub(crate) const INTERNATIONAL_FEE: usize = 0x3a; // 4 byte(s): International appearance clause amount
+    pub(crate) const INTERNATIONAL_GAMES: usize = 0x3e; // 1 byte(s): International caps needed for the international clause
+    pub(crate) const SELL_ON_PERCENT: usize = 0x3f; // 1 byte(s): Percentage of the next sale owed to the selling club
+    pub(crate) const INSTALMENTS: usize = 0x40; // 1 byte(s): Instalments of the fee (cleared when the fee is 0) [inference]
+}
+
+/// `TPlayer` record. [pt] Registro `TPlayer`.
+#[allow(dead_code)]
+pub(crate) mod player_sheet {
+    pub(crate) const CURRENT_REPUTATION: usize = 0xb; // 2 byte(s), UInt16
+    pub(crate) const WORLD_REPUTATION: usize = 0xd; // 2 byte(s), UInt16
+    pub(crate) const GOALKEEPER: usize = 0xf; // 1 byte(s), sbyte
+    pub(crate) const SWEEPER: usize = 0x10; // 1 byte(s), sbyte
+    pub(crate) const DEFENSIVE_MIDFIELDER: usize = 0x12; // 1 byte(s), sbyte
+    pub(crate) const MIDFIELDER: usize = 0x13; // 1 byte(s), sbyte
+    pub(crate) const ATTACKING_MIDFIELDER: usize = 0x14; // 1 byte(s), sbyte
+    pub(crate) const ATTACKER: usize = 0x15; // 1 byte(s), sbyte
+    pub(crate) const WING_BACK: usize = 0x16; // 1 byte(s), sbyte
+    pub(crate) const BRAVERY: usize = 0x20; // 1 byte(s), sbyte
+    pub(crate) const DIRTINESS: usize = 0x25; // 1 byte(s), sbyte
+    pub(crate) const FINISHING: usize = 0x27; // 1 byte(s), sbyte
+    pub(crate) const INJURY_PRONENESS: usize = 0x2d; // 1 byte(s), sbyte
+    pub(crate) const LEADERSHIP: usize = 0x2f; // 1 byte(s), sbyte
+    pub(crate) const NATURAL_FITNESS: usize = 0x34; // 1 byte(s), sbyte
+    pub(crate) const PENALTIES: usize = 0x38; // 1 byte(s), sbyte
+    pub(crate) const STAMINA: usize = 0x3c; // 1 byte(s), sbyte
+    pub(crate) const TACKLING: usize = 0x3e; // 1 byte(s), sbyte
+    pub(crate) const VERSATILITY: usize = 0x42; // 1 byte(s), sbyte
+    pub(crate) const VISION: usize = 0x43; // 1 byte(s), sbyte
+    pub(crate) const WORK_RATE: usize = 0x44; // 1 byte(s), sbyte
 }

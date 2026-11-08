@@ -806,8 +806,8 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let division: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_DIVISION_MANAGERS);
     let club_drawn = || {
-        let s = sorteio(read_i16(league + 0x3e) as i32) as i16 as i32;
-        read_u32((read_u32(league + 0xb1) as usize).wrapping_add((s * 0x3b) as usize)) as usize
+        let s = sorteio(read_i16(league + league::CLUB_COUNT) as i32) as i16 as i32;
+        read_u32((read_u32(league + league::TABLE) as usize).wrapping_add((s * 0x3b) as usize)) as usize
     };
     let mut attempts = 0i8;
     while (read_u8(this + 0x43f) as i8) < 6 && attempts < 0x50 {
@@ -927,8 +927,8 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
             write(p, 0, 0);
             write(p, 2, read_i16(this + 0x439) as u16 as u32);
             let mut i = 0i16;
-            while i < read_i16(league + 0x3e) {
-                let c = read_u32((read_u32(league + 0xb1) as usize).wrapping_add(i as i32 as usize * 0x3b)) as usize;
+            while i < read_i16(league + league::CLUB_COUNT) {
+                let c = read_u32((read_u32(league + league::TABLE) as usize).wrapping_add(i as i32 as usize * 0x3b)) as usize;
                 if human(read_u32(G_NEWS) as usize, c) != 0 {
                     write(p, 1, read_u32(c));
                     deliver(read_u32(G_NEWS) as usize, p, c);

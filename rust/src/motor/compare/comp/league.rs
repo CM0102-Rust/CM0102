@@ -145,15 +145,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_positions_and_status(this
 /// registros de finanças (0x167 bytes) de todos os clubes da tabela.
 pub(crate) unsafe extern "thiscall" fn comparar_pay_prize_money(league: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PAY_PRIZE_MONEY);
-    let n = read_i16(league + 0x3e);
-    let e1 = read_u8(league + 0xe1);
+    let n = read_i16(league + league::CLUB_COUNT);
+    let e1 = read_u8(league + league::PRIZE_MODE);
     if e1 == 3 || sum_of_positions(n) == 0 {
         return o(league); // simplification: the virtual or the division by zero, original only
     }
     let mut regions: Vec<(usize, usize)> = Vec::new();
     if e1 != 2 {
         for i in 0..n.max(0) as usize {
-            let fin = european_cup_club_finance(read_usize(read_usize(league + 0xb1) + 0x3b * i));
+            let fin = european_cup_club_finance(read_usize(read_usize(league + league::TABLE) + 0x3b * i));
             if fin != 0 && !regions.iter().any(|r| r.0 == fin) {
                 regions.push((fin, 0x167));
             }
@@ -200,12 +200,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_announce_team_status(league: usi
 /// da partida e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_league_add_result(league: usize, p: usize, jogo: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT);
-    if p == 0 || (*((league + 0x44) as *const u8) == 0xff && *((p + 0x42) as *const u8) != 0xff) {
+    if p == 0 || (*((league + league::STAGE_INDEX) as *const u8) == 0xff && *((p + 0x42) as *const u8) != 0xff) {
         return o(league, p, jogo); // simplification: the box or the stage, original only
     }
-    let n = read_i16(league + 0x3e) as u16 as u32;
-    let mut regions = vec![(league + 0xc9, 8)];
-    regions.extend(result_update_regions(p, read_usize(league + 0xb1), n, core::ptr::null_mut(), core::ptr::null_mut()));
+    let n = read_i16(league + league::CLUB_COUNT) as u16 as u32;
+    let mut regions = vec![(league + league::LAST_RESULT_DATE, 8)];
+    regions.extend(result_update_regions(p, read_usize(league + league::TABLE), n, core::ptr::null_mut(), core::ptr::null_mut()));
     let before = crate::comparacao::Memoria::ler(&regions);
     LEAGUE_ADD_RESULT_DRY_RUN = true;
     let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| league_add_result(league, p, jogo)));
@@ -225,16 +225,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_add_result(league: usize,
 /// vetores de confrontos e de forma iguais aos da tabela.
 pub(crate) unsafe extern "thiscall" fn comparar_copy_table(league: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_COPY_TABLE);
-    let table = read_usize(league + 0xb1);
-    let n = read_i16(league + 0x3e);
+    let table = read_usize(league + league::TABLE);
+    let n = read_i16(league + league::CLUB_COUNT);
     if table == 0 || n <= 0 || n > 0x32 {
         return o(league); // simplification: nothing to copy or the message box: original only
     }
-    let a7 = if read_i16(league + 0xa7) == -1 { n.wrapping_sub(1).wrapping_mul(read_i16(league + 0x3c)) } else { read_i16(league + 0xa7) };
+    let a7 = if read_i16(league + league::GAMES_PER_CLUB) == -1 { n.wrapping_sub(1).wrapping_mul(read_i16(league + league::LEGS)) } else { read_i16(league + league::GAMES_PER_CLUB) };
     let c = o(league);
     let mut erros = Vec::new();
-    if read_i16(league + 0xa7) != a7 {
-        erros.push(format!("+0xa7 {} esperado {}", read_i16(league + 0xa7), a7));
+    if read_i16(league + league::GAMES_PER_CLUB) != a7 {
+        erros.push(format!("+0xa7 {} esperado {}", read_i16(league + league::GAMES_PER_CLUB), a7));
     }
     if c != 0 {
         let (h2h, forma) = (read_usize(table + 5) != 0, read_usize(table + 9) != 0);
@@ -273,11 +273,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_copy_table(league: usize) -> usi
 /// aparece) tem de ter em +0x72 a posição planejada.
 pub(crate) unsafe extern "thiscall" fn comparar_league_set_predicted_positions(league: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LEAGUE_SET_PREDICTED_POSITIONS);
-    let n = read_i16(league + 0x3e) as i32;
+    let n = read_i16(league + league::CLUB_COUNT) as i32;
     if read_usize(league + 8) == 0 || n <= 0 {
         return o(league); // simplification: the box or nothing to sort, original only
     }
-    let mut v: Vec<u32> = (0..n as usize).map(|i| read_usize(read_usize(league + 0xb1) + 0x3b * i) as u32).collect();
+    let mut v: Vec<u32> = (0..n as usize).map(|i| read_usize(read_usize(league + league::TABLE) + 0x3b * i) as u32).collect();
     let mut k = vec![0i32; n as usize];
     sort_clubs_by_strength(v.as_mut_ptr(), k.as_mut_ptr(), n);
     o(league);
@@ -445,7 +445,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_h2h_table(league: usize, r
     if rows == 0 {
         return o(league, rows);
     }
-    let reg = [(rows, LEAGUE_TABLE_ROW_SIZE * read_i16(league + 0x3e).max(0) as usize)];
+    let reg = [(rows, LEAGUE_TABLE_ROW_SIZE * read_i16(league + league::CLUB_COUNT).max(0) as usize)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(league, rows), || build_h2h_table(league, rows));
     PLACAR.registrar(igual, || format!("build_h2h_table({:x}, {:x}) {:x?} x {:x?}", league, rows, mo, mr));
 }
@@ -461,7 +461,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_check_complete(league: us
     if !is_complete_check_read_only(league, stages) {
         return o(league, stages, warn); // end of league (records, prizes, stages, notice): original only
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(league + 0xa7, 2)], || o(league, stages, warn), || league_check_complete(league, stages, warn));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(league + league::GAMES_PER_CLUB, 2)], || o(league, stages, warn), || league_check_complete(league, stages, warn));
     PLACAR.registrar(igual && r == n, || format!("league_check_complete({:x}, {}, {}) {}/{} {:x?} x {:x?}", league, stages, warn, r, n, mo, mr));
     r
 }
@@ -473,8 +473,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_check_complete(league: us
 pub(crate) unsafe extern "thiscall" fn comparar_pay_tv_rights(league: usize, value: i32, filtro: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_PAY_TV_RIGHTS);
     let finances = *(G_FINANCE_TABLE as *const usize);
-    let n = read_i16(league + 0x3e).max(0) as usize;
-    let clubs: Vec<usize> = (0..n).map(|i| read_usize(read_usize(league + 0xb1) + 0x3b * i)).collect();
+    let n = read_i16(league + league::CLUB_COUNT).max(0) as usize;
+    let clubs: Vec<usize> = (0..n).map(|i| read_usize(read_usize(league + league::TABLE) + 0x3b * i)).collect();
     if finances == 0 || clubs.contains(&0) {
         return o(league, value, filtro);
     }
@@ -598,7 +598,7 @@ pub(crate) unsafe extern "C" fn comparar_store_round_match(base: usize, round: i
 /// Comparer for `calc_prize_fund` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_calc_prize_fund(league: usize, cota: i32) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_CALC_PRIZE_FUND)(league, cota);
-    if *((league + 0x3e) as *const i16) == 0 {
+    if *((league + league::CLUB_COUNT) as *const i16) == 0 {
         return r;
     }
     let n = calc_prize_fund(league, cota);

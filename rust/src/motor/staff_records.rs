@@ -627,10 +627,10 @@ pub(crate) unsafe extern "thiscall" fn add_league_finish_records(this: usize, le
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0xa;
-    put_i32(&mut e, 0x11, read_i16(league + 0x3a) as i32);
+    put_i32(&mut e, 0x11, read_i16(league + league::STAGE_ID) as i32);
     put_i32(&mut e, 0xd, read_i32(read_usize(league + 4)));
     let mut k: i16 = 0;
-    while k < read_i16(league + 0x3e) {
+    while k < read_i16(league + league::CLUB_COUNT) {
         let clube = read_usize(row(league, k as i32));
         put_i32(&mut e, 0x15, k as i32 + 1);
         put_i32(&mut e, 8, read_i32(clube));
@@ -1188,7 +1188,7 @@ pub(crate) unsafe fn apply_promotion(this: usize, clube: usize, comp: usize, wei
     }
     if read_usize(clube + club::MANAGER) != 0 {
         let manager = read_usize(clube + club::MANAGER);
-        if read_usize(manager + 0x69) != 0 {
+        if read_usize(manager + staff::NON_PLAYER) != 0 {
             let objeto = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(comp).wrapping_mul(4)));
             let mut pela = comp;
             if objeto != 0 && read_i32(objeto + 0x1c) > -1 {
@@ -1271,8 +1271,8 @@ pub(crate) unsafe fn promotion_regions(this: usize, clube: usize, promotion: boo
     reg.push((clube, 0x245));
     let manager = read_usize(clube + club::MANAGER);
     if manager != 0 {
-        if read_usize(manager + 0x69) != 0 {
-            reg.push((read_usize(manager + 0x69), 0x10));
+        if read_usize(manager + staff::NON_PLAYER) != 0 {
+            reg.push((read_usize(manager + staff::NON_PLAYER), 0x10));
         }
         if promotion {
             let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
@@ -1331,7 +1331,7 @@ pub(crate) unsafe fn apply_relegation(this: usize, clube: usize, comp: usize, wr
     }
     if read_usize(clube + club::MANAGER) != 0 {
         let manager = read_usize(clube + club::MANAGER);
-        if read_usize(manager + 0x69) != 0 {
+        if read_usize(manager + staff::NON_PLAYER) != 0 {
             let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
             let factor: i16 = if estrangeira(manager, read_usize(clube + club::NATION), 1) != 0 { -8 } else { -16 };
             let nj = || read_usize(read_usize(clube + club::MANAGER) + 0x69);
@@ -1913,7 +1913,7 @@ pub(crate) unsafe extern "thiscall" fn staff_records_end_season_for_nation(this:
 /// acima de 0. Devolve o técnico ou 0.
 pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, indice: i32) -> usize {
     let league = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((indice as usize).wrapping_mul(4)));
-    if *((league + 0x43) as *const u8) != 2 {
+    if *((league + league::COMP_TYPE) as *const u8) != 2 {
         show_error_at(0xa83b78, 0x104e);
         return 0;
     }
@@ -1922,16 +1922,16 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
     let mut best_points = 0i32;
     let mut best = 0usize;
     let mut k = 0i32;
-    while k < read_i16(league + 0x3e) as i32 {
-        let clube = read_usize(read_usize(league + 0xb1).wrapping_add((k as usize).wrapping_mul(0x3b)));
+    while k < read_i16(league + league::CLUB_COUNT) as i32 {
+        let clube = read_usize(read_usize(league + league::TABLE).wrapping_add((k as usize).wrapping_mul(0x3b)));
         let manager = read_usize(clube + club::MANAGER);
-        if manager != 0 && read_usize(manager + 0x39) != 0 {
+        if manager != 0 && read_usize(manager + staff::CLUB_JOB) != 0 {
             let mut d = [0u32; 2];
             let q = before(G_CURRENT_DATE, d.as_mut_ptr(), 2); // two weeks ago
             let lo = read_usize(q) as u32;
             let year = (lo >> 16) as u16;
             let year_manager = read_i16(manager + 0x40) as u16;
-            let recente = year < year_manager || (year == year_manager && (lo as u16 as i16) < read_i16(manager + 0x3e));
+            let recente = year < year_manager || (year == year_manager && (lo as u16 as i16) < read_i16(manager + staff::DATE_JOINED_CLUB));
             if recente {
                 crate::comparacao::ramo("cpo_3 tecnico recente");
             } else {
@@ -1980,7 +1980,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usiz
             continue;
         }
         let ta = read_u16(manager + 0x40);
-        if !(la > ta || (la == ta && ld > read_i16(manager + 0x3e))) {
+        if !(la > ta || (la == ta && ld > read_i16(manager + staff::DATE_JOINED_CLUB))) {
             continue;
         }
         let r = record(this, manager, 1);

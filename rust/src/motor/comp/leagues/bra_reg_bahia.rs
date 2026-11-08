@@ -394,7 +394,7 @@ pub(crate) unsafe fn bra_reg_bahia_compare_state_league_table(name: &str, this: 
 ///
 /// [pt] O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
 pub(crate) unsafe fn bra_reg_bahia_table_row_club(league: usize, l: usize) -> usize {
-    read_usize(read_usize(league + 0xb1) + l * 0x3b)
+    read_usize(read_usize(league + league::TABLE) + l * 0x3b)
 }
 
 /// Builds the knockout stage from given table rows: entrant list, round table (virtual +0x3c), Cup_Stage with seeds,

@@ -951,7 +951,7 @@ pub(crate) unsafe extern "thiscall" fn remove_scout_request(this: usize, person:
         if manager == 0 {
             return;
         }
-        c = read_u32(manager + 0x39) as usize;
+        c = read_u32(manager + staff::CLUB_JOB) as usize;
         if c == 0 {
             return;
         }

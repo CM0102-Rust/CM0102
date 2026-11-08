@@ -309,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nat
 pub(crate) unsafe extern "thiscall" fn comparar_find_manager_of_the_month(this: usize, indice: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_FIND_MANAGER_OF_THE_MONTH);
     let league = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((indice as usize).wrapping_mul(4)));
-    if *((league + 0x43) as *const u8) != 2 {
+    if *((league + league::COMP_TYPE) as *const u8) != 2 {
         return o(this, indice);
     }
     let r = o(this, indice);

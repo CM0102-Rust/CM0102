@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
             let nacao = read_usize(clube + club::NATION);
             let sheet = read_usize(p + 0x61);
             let rep = if read_usize(other + 0x53) == nacao {
-                read_i16(sheet + 0xb)
+                read_i16(sheet + player_sheet::CURRENT_REPUTATION)
             } else if read_usize(p + 0x1a) == nacao {
                 read_i16(sheet + 9)
             } else if estrangeira(p, nacao, 1) == 0 {
@@ -286,12 +286,12 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         if !end && (aj as i16) < -0x32 && clube != 0 {
             let manager = read_usize(clube + club::MANAGER);
             let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-            if manager != 0 && read_usize(manager + 0x69) != 0 && human(clube, 0, 1, 0, 0) == 0 {
+            if manager != 0 && read_usize(manager + staff::NON_PLAYER) != 0 && human(clube, 0, 1, 0, 0) == 0 {
                 let manager = read_usize(clube + club::MANAGER);
                 let r = friendly_random(6);
-                if read_i8(manager + 0x5d) < (r as u8).wrapping_add(6) as i8
+                if read_i8(manager + staff::TEMPERAMENT) < (r as u8).wrapping_add(6) as i8
                     && read_i8(read_usize(G_CLUB_STATE_TABLE).wrapping_add((read_i32(clube) as usize).wrapping_mul(6)) + 4) < 0
-                    && friendly_random(read_i8(read_usize(manager + 0x69) + 0x1d) as i32 + 1) == 0
+                    && friendly_random(read_i8(read_usize(manager + staff::NON_PLAYER) + 0x1d) as i32 + 1) == 0
                 {
                     let request: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_MANAGER_MANAGER_HANDLE_FA_REQUEST);
                     request(this, clube, 1);
@@ -760,7 +760,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     if read_u8(ln() + 2) & 1 == 0 && read_usize(clube + club::MANAGER) != 0 && manager_manager_is_national_team(clube) == 0 {
         let manager = read_usize(clube + club::MANAGER);
         let ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-        days = ate(G_CURRENT_DATE, read_usize(manager + 0x3e) as u32, read_usize(manager + 0x42) as u32);
+        days = ate(G_CURRENT_DATE, read_usize(manager + staff::DATE_JOINED_CLUB) as u32, read_usize(manager + 0x42) as u32);
         let pres = || {
             let bf = read_usize(clube + club::CHAIRMAN);
             if bf != 0 && read_usize(bf + 0x69) != 0 { Some(read_i8(read_usize(bf + 0x69) + 0x1d) as i32) } else { None }
@@ -1047,8 +1047,8 @@ pub(crate) unsafe fn finish_board_update(this: usize, clube: usize) {
     write_u8(ln() + 1, r);
     let rep = || read_i16(clube + club::REPUTATION);
     let manager = read_usize(clube + club::MANAGER);
-    if manager != 0 && read_usize(manager + 0x69) != 0 {
-        let fx = read_usize(manager + 0x69);
+    if manager != 0 && read_usize(manager + staff::NON_PLAYER) != 0 {
+        let fx = read_usize(manager + staff::NON_PLAYER);
         let a = read_i16(fx + 0xa);
         if a < rep() {
             let t = ftol_f64((rep() as i32 - a as i32) as f64 * read_f64(0x969518));
@@ -1068,8 +1068,8 @@ pub(crate) unsafe fn finish_board_update(this: usize, clube: usize) {
         }
     }
     let manager = read_usize(clube + club::MANAGER);
-    if manager != 0 && read_usize(manager + 0x69) != 0 {
-        let fx = read_usize(manager + 0x69);
+    if manager != 0 && read_usize(manager + staff::NON_PLAYER) != 0 {
+        let fx = read_usize(manager + staff::NON_PLAYER);
         let a = read_i16(fx + 0xa);
         if rep() > a {
             let t = ftol_f64((rep() as i32 - a as i32) as f64 * read_f64(0x969518));
@@ -1077,8 +1077,8 @@ pub(crate) unsafe fn finish_board_update(this: usize, clube: usize) {
         }
     }
     let manager = read_usize(clube + club::MANAGER);
-    if manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) && read_i8(manager + 0x59) < 0x14 {
-        write_u8(manager + 0x59, read_u8(manager + 0x59).wrapping_add(1));
+    if manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) && read_i8(manager + staff::LOYALITY) < 0x14 {
+        write_u8(manager + staff::LOYALITY, read_u8(manager + staff::LOYALITY).wrapping_add(1));
     }
     write_u8(ln() + 2, read_u8(ln() + 2) & 0xfe);
     write_u8(ln() + 4, 0);
@@ -2257,7 +2257,7 @@ pub(crate) unsafe extern "thiscall" fn post_manager_under_pressure_news(this: us
     news_set_slot(n, 9, kind as u8 as i8 as i32 as u32);
     crate::comparacao::ramo("cpx_10 sorteio do boato");
     let mut boato = friendly_random(10); // cpx10: o sorteio do boato
-    let nj = read_usize(manager + 0x69);
+    let nj = read_usize(manager + staff::NON_PLAYER);
     if nj != 0 {
         let conhecer: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
         if conhecer(nj, read_u8(nj + 0x1b) as i8) as u8 as i8 > 10 {
@@ -2363,9 +2363,9 @@ pub(crate) unsafe extern "thiscall" fn post_manager_appointment_news(this: usize
     let funcao = if previous == 0 {
         u32::MAX
     } else if national_team(previous) != 0 {
-        read_u8(manager + 0x28) as i8 as i32 as u32
+        read_u8(manager + staff::JOB_FOR_NATION) as i8 as i32 as u32
     } else {
-        read_u8(manager + 0x3d) as i8 as i32 as u32
+        read_u8(manager + staff::JOB_FOR_CLUB) as i8 as i32 as u32
     };
     news_set_slot(n, 7, funcao);
     crate::comparacao::ramo("cpx_10 noticia do tecnico novo");
@@ -2549,7 +2549,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_confidence_update_news(_this: 
     let manager = read_usize(clube + club::MANAGER);
     let days = if manager != 0 {
         let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(core::ptr::read_unaligned((manager + 0x40) as *const u16) as i32);
-        years.wrapping_mul(365).wrapping_sub(read_i16(manager + 0x3e) as i32).wrapping_add(*(G_CURRENT_DATE as *const i16) as i32)
+        years.wrapping_mul(365).wrapping_sub(read_i16(manager + staff::DATE_JOINED_CLUB) as i32).wrapping_add(*(G_CURRENT_DATE as *const i16) as i32)
     } else {
         100
     };
@@ -3058,7 +3058,7 @@ pub(crate) unsafe fn check_better_candidate(this: usize, clube: usize) -> bool {
     let rating_of: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> i32 = core::mem::transmute(FN_SCORE_STAFF_FOR_JOB);
     let best: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_MANAGER_MANAGER_BEST_MANAGER_CANDIDATE_SCORE);
     let manager = read_usize(clube + club::MANAGER);
-    let rating = if manager != 0 && read_usize(manager + 0x69) != 0 { rating_of(this, manager, clube, 0, 5) } else { 0 };
+    let rating = if manager != 0 && read_usize(manager + staff::NON_PLAYER) != 0 { rating_of(this, manager, clube, 0, 5) } else { 0 };
     let m = best(this, clube, read_usize(clube + club::MANAGER));
     if rating <= m.wrapping_add(0x1c2) {
         return false;
@@ -3113,14 +3113,14 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
         return;
     }
     let manager = read_usize(clube + club::MANAGER);
-    if days_until_today(read_usize(manager + 0x3e), read_usize(manager + 0x42)) < 0x96 {
+    if days_until_today(read_usize(manager + staff::DATE_JOINED_CLUB), read_usize(manager + 0x42)) < 0x96 {
         return;
     }
     let manager = read_usize(clube + club::MANAGER);
-    if manager != 0 && read_usize(manager + 0x69) != 0 {
-        let conf = read_i16(read_usize(manager + 0x69) + 0xa);
+    if manager != 0 && read_usize(manager + staff::NON_PLAYER) != 0 {
+        let conf = read_i16(read_usize(manager + staff::NON_PLAYER) + 0xa);
         if conf > 0x1388 && read_i16(clube + club::REPUTATION).wrapping_sub(0x2ee) < conf
-            && days_until_today(read_usize(manager + 0x3e), read_usize(manager + 0x42)) < 0x190 {
+            && days_until_today(read_usize(manager + staff::DATE_JOINED_CLUB), read_usize(manager + 0x42)) < 0x190 {
             let pres = chairman_record(clube);
             let n = if pres != 0 { read_u8(pres + 0x1d) as i8 as i32 } else { 10 };
             if friendly_random(n) != 0 {
@@ -3251,8 +3251,8 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
         return;
     }
     let manager = read_usize(clube + club::MANAGER);
-    if manager != 0 && read_usize(manager + 0x69) != 0 {
-        let nj = read_usize(manager + 0x69);
+    if manager != 0 && read_usize(manager + staff::NON_PLAYER) != 0 {
+        let nj = read_usize(manager + staff::NON_PLAYER);
         write_i16(nj + 0xa, read_i16(nj + 0xa).wrapping_sub(250));
         let floor: i16 = if has_chairman { 0x5dc } else { 1 };
         if read_i16(nj + 0xa) < floor {
@@ -3355,10 +3355,10 @@ pub(crate) unsafe fn manager_and_role(clube: usize) -> Option<(usize, u8)> {
     if manager == 0 {
         return None;
     }
-    if read_usize(manager + 0x39) == clube {
-        Some((manager, read_u8(manager + 0x3d)))
-    } else if read_usize(manager + 0x24) == clube {
-        Some((manager, read_u8(manager + 0x28)))
+    if read_usize(manager + staff::CLUB_JOB) == clube {
+        Some((manager, read_u8(manager + staff::JOB_FOR_CLUB)))
+    } else if read_usize(manager + staff::NATIONAL_JOB) == clube {
+        Some((manager, read_u8(manager + staff::JOB_FOR_NATION)))
     } else {
         None
     }
@@ -3508,7 +3508,7 @@ pub(crate) unsafe extern "thiscall" fn review_national_team_performance(this: us
         return;
     }
     let days_of: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    let days = days_of(G_CURRENT_DATE, read_usize(manager + 0x3e), read_usize(manager + 0x42));
+    let days = days_of(G_CURRENT_DATE, read_usize(manager + staff::DATE_JOINED_CLUB), read_usize(manager + 0x42));
     if days < 0x16d && read_i16(club_board_row(this, national_team) + 6) < 0x1964 {
         write_i16(club_board_row(this, national_team) + 6, 0x1964); // new manager
     }
@@ -3679,8 +3679,8 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     let k = read_f64_at(0x967880); // 0,1; 0x967880 = 0.1
     let rep = read_i16(clube + club::REPUTATION) as i32;
     let manager = read_u32(clube + club::MANAGER) as usize;
-    let sheet = read_u32(manager + 0x69) as usize;
-    if read_u32(clube + club::NATION) == read_u32(manager + 0x1a) {
+    let sheet = read_u32(manager + staff::NON_PLAYER) as usize;
+    if read_u32(clube + club::NATION) == read_u32(manager + staff::NATION) {
         let a = read_i16(sheet + 0xa) as i32;
         write_i16(sheet + 0xa, match_pl_ftol((rep - a) as f64 * k + a as f64) as i16);
         let sheet = read_u32(read_u32(clube + club::MANAGER) as usize + 0x69) as usize;
@@ -3895,7 +3895,7 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     let manager = read_u32(clube + club::MANAGER) as usize;
     if manager != 0 {
         let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-        let d = days(G_CURRENT_DATE, read_u32(manager + 0x3e), read_u32(manager + 0x42));
+        let d = days(G_CURRENT_DATE, read_u32(manager + staff::DATE_JOINED_CLUB), read_u32(manager + 0x42));
         if d > sortear(0x7d0) + 0x3e8 {
             return 6;
         }
@@ -4237,7 +4237,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, club
         if item != 0 && read_usize(clube) == read_usize(item) {
             remover(read_usize(this + 0x10), item);
             let manager = read_usize(clube + club::MANAGER);
-            if manager != 0 && days(G_CURRENT_DATE, read_usize(manager + 0x3e), read_usize(manager + 0x42)) > 0x64 {
+            if manager != 0 && days(G_CURRENT_DATE, read_usize(manager + staff::DATE_JOINED_CLUB), read_usize(manager + 0x42)) > 0x64 {
                 crate::comparacao::ramo("cpo_1 ultimato cumprido");
                 let mut reg = [0u8; 8];
                 reg[0] = 1;

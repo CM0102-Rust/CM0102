@@ -6,5 +6,5 @@ MUTACOES = [
     ('d_jovem', "    if age < 0x13 && core::ptr::read_unaligned(e) < 0 {", "    if age < 0x12 && core::ptr::read_unaligned(e) < 0 {"),
     ('d_treze', "        core::ptr::write_unaligned(e, core::ptr::read_unaligned(e).wrapping_sub(0xd));", "        core::ptr::write_unaligned(e, core::ptr::read_unaligned(e).wrapping_sub(0xc));"),
     ('d_sorteio', "        let r = sorteio(0xd) as i16;", "        let r = sorteio(0xc) as i16;"),
-    ('d_goleiro', "    if sheet != 0 && *((sheet + 0xf) as *const u8) == 0x14 && core::ptr::read_unaligned(e) >= 0x41a {", "    if sheet != 0 && *((sheet + 0xf) as *const u8) == 0x13 && core::ptr::read_unaligned(e) >= 0x41a {"),
+    ('d_goleiro', "    if sheet != 0 && *((sheet + player_sheet::GOALKEEPER) as *const u8) == 0x14 && core::ptr::read_unaligned(e) >= 0x41a {", "    if sheet != 0 && *((sheet + player_sheet::GOALKEEPER) as *const u8) == 0x13 && core::ptr::read_unaligned(e) >= 0x41a {"),
 ]

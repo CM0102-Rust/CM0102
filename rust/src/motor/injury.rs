@@ -248,7 +248,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         0x219f => atuacao >= sortear(0x7d0) + 0x1b58 && algum(0, 0x1d, &d7),
         0x21a0 => {
             let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-            if days(today, *((sheet + 0x3e) as *const u32), *((sheet + 0x42) as *const u32)) < 0x5a || atuacao <= sortear(0x7d0) + 0x1b58 {
+            if days(today, *((sheet + player_sheet::TACKLING) as *const u32), *((sheet + player_sheet::VERSATILITY) as *const u32)) < 0x5a || atuacao <= sortear(0x7d0) + 0x1b58 {
                 false
             } else {
                 let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_MEDIA_HAS_RESPONSE_TWO_FOR_PLAYER);
@@ -2557,7 +2557,7 @@ pub(crate) unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, m
     }
     let sheet = core::ptr::read_unaligned((p as usize + 0x61) as *const usize);
     let b = |a: usize| *(a as *const i8) as i16;
-    let sum = b(sheet + 0x44).wrapping_add(b(sheet + 0x3c)).wrapping_add(b(p as usize + 0x5b));
+    let sum = b(sheet + player_sheet::WORK_RATE).wrapping_add(b(sheet + player_sheet::STAMINA)).wrapping_add(b(p as usize + 0x5b));
     if (v as i32) < 0x4b0 - sum as i32 {
         core::ptr::write_unaligned(e, v.wrapping_add(ritmo));
     } else if v < 0x4e2 {
@@ -2790,7 +2790,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     }
     // a forma
     let f = read_i16(rec + 8) as i32;
-    let natural = read_i8(sheet + 0x34);
+    let natural = read_i8(sheet + player_sheet::NATURAL_FITNESS);
     let mut v = read_i8(rec + 0x1e).wrapping_sub(natural);
     if v < 0 {
         v = 0;
@@ -2912,7 +2912,7 @@ pub(crate) unsafe extern "thiscall" fn daily_wear(t: usize, id: i32) {
         core::ptr::write_unaligned(e, core::ptr::read_unaligned(e).wrapping_sub(r));
     }
     let sheet = core::ptr::read_unaligned((p + 0x61) as *const usize);
-    if sheet != 0 && *((sheet + 0xf) as *const u8) == 0x14 && core::ptr::read_unaligned(e) >= 0x41a {
+    if sheet != 0 && *((sheet + player_sheet::GOALKEEPER) as *const u8) == 0x14 && core::ptr::read_unaligned(e) >= 0x41a {
         core::ptr::write_unaligned(e, 0x41a);
     }
 }

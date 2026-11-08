@@ -557,7 +557,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     }
     let sheet = u(p + 0x61);
     if sheet != 0 {
-        let rep = core::ptr::read_unaligned((sheet + 0xb) as *const i16);
+        let rep = core::ptr::read_unaligned((sheet + player_sheet::CURRENT_REPUTATION) as *const i16);
         if rep > 0x1c52 {
             rating = rating.wrapping_sub(5);
         } else if rep > 0x1676 {

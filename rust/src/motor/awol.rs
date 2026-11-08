@@ -698,7 +698,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     if manager == 0 {
         return;
     }
-    let np = read_usize(manager + 0x69);
+    let np = read_usize(manager + staff::NON_PLAYER);
     if np == 0 || friendly_random(read_u8(np + 0x14) as i8 as i32) == 0 {
         return;
     }
@@ -814,7 +814,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     if manager == 0 {
         return;
     }
-    let np = read_usize(manager + 0x69);
+    let np = read_usize(manager + staff::NON_PLAYER);
     if np == 0 {
         return;
     }
