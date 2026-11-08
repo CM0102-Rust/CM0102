@@ -216,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32
         let (mut dia, mut ano) = (read_i16(round_record_by_dword(cup, round)), (read_u8(round_record_by_dword(cup, round) + 2) as i8 as i16).wrapping_add(read_i16(cup + cup::YEAR)) as u16);
         // 0x54c5b0 (plus 1): normalize forward, 365 days in the leap year (crate::date::bissexto)
         dia = dia.wrapping_add(1);
-        let size = |y: u16| if crate::date::bissexto(y) == 1 { 365i16 } else { 364 };
+        let size = |y: u16| if crate::date::is_leap_year(y) == 1 { 365i16 } else { 364 };
         while dia > size(ano) {
             dia = dia.wrapping_sub(size(ano) + 1);
             ano = ano.wrapping_add(1);

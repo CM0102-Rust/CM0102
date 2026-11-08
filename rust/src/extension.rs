@@ -21,7 +21,7 @@ use std::sync::OnceLock;
 /// Version of the contract with the external DLL (bumped when the call or what it receives changes).
 ///
 /// [pt] Versao do contrato com a DLL externa (sobe quando mudar a chamada ou o que ela recebe).
-pub const VERSAO: u32 = 1;
+pub const VERSION: u32 = 1;
 
 type InstantFn = unsafe extern "C" fn(motor: *const u8);
 
@@ -30,7 +30,7 @@ static CALLBACK: OnceLock<Option<InstantFn>> = OnceLock::new();
 /// At the start of each instant of the engine loop.
 ///
 /// [pt] No inicio de cada instante do laco do motor.
-pub fn instante(m: usize) {
+pub fn instant(m: usize) {
     if let Some(f) = CALLBACK.get_or_init(|| unsafe { load() }) {
         unsafe { f(m as *const u8) }
     }
@@ -49,8 +49,8 @@ unsafe fn load() -> Option<InstantFn> {
     let v = crate::win::GetProcAddress(h, b"cm_versao\0".as_ptr());
     if !v.is_null() {
         let version: unsafe extern "C" fn() -> u32 = core::mem::transmute(v);
-        if version() != VERSAO {
-            crate::registro::linha(&format!("extensao: botao.dll espera a versao {}, o nucleo e a {}", version(), VERSAO));
+        if version() != VERSION {
+            crate::registro::linha(&format!("extensao: botao.dll espera a versao {}, o nucleo e a {}", version(), VERSION));
             return None;
         }
     }

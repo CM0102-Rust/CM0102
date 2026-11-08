@@ -121,7 +121,7 @@ pub(crate) unsafe extern "C" fn compare_pick(
     // Probe (comparison only): 0x6dbc50, in mode 2, never writes the short of the 1st extra slot and passes
     // the stack garbage at the scale (return 0x6dd383). Counts how often it is not zero and whether zeroing it changes
     // the scale (the original twice: with the garbage and with 0).
-    if crate::detours::RETORNO == 0x6dd383 && a5 as u8 != 0 && a15 != 0 {
+    if crate::detours::RETURN_TO == 0x6dd383 && a5 as u8 != 0 && a15 != 0 {
         use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
         static CHAMADAS: AtomicU32 = AtomicU32::new(0);
         static NAO_ZERO: AtomicU32 = AtomicU32::new(0);

@@ -82,7 +82,7 @@ pub fn without_counting<R>(f: impl FnOnce() -> R) -> R {
 pub const STATE_REGIONS: [(usize, usize); 2] = [(0xde1f5c, 8), (0xad6c30, 4)];
 
 unsafe fn count_draw(n: i32) {
-    detours::reconferir_no_dia();
+    detours::recheck_on_day();
     if COUNTING.with(|c| c.get()) {
         simulation::sorteio(n, *POINTER, *OFFSET, *RAND_STATE);
     }
@@ -252,24 +252,24 @@ unsafe extern "C" fn observe(n: i32) -> i32 {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Modo {
+pub enum Mode {
     Rust,
-    Comparar,
-    Observar,
+    Compare,
+    Observe,
 }
 
-pub unsafe fn instalar(mode: Modo) {
+pub unsafe fn install(mode: Mode) {
     let target = match mode {
-        Modo::Rust => aleatorio as *const () as usize,
-        Modo::Comparar => compare as *const () as usize,
-        Modo::Observar => observe as *const () as usize,
+        Mode::Rust => aleatorio as *const () as usize,
+        Mode::Compare => compare as *const () as usize,
+        Mode::Observe => observe as *const () as usize,
     };
-    if let Some(t) = detours::desviar("aleatorio", &PROLOGUE, target) {
+    if let Some(t) = detours::hook("aleatorio", &PROLOGUE, target) {
         ORIGINAL = t;
         match mode {
-            Modo::Comparar => linha("aleatorio: modo comparacao (original x Rust)"),
-            Modo::Observar => linha("aleatorio: modo observador (so a original roda)"),
-            Modo::Rust => {}
+            Mode::Compare => linha("aleatorio: modo comparacao (original x Rust)"),
+            Mode::Observe => linha("aleatorio: modo observador (so a original roda)"),
+            Mode::Rust => {}
         }
     }
 }
@@ -281,7 +281,7 @@ pub unsafe fn instalar(mode: Modo) {
 /// [pt] Compara original e Rust em `casos` entradas sinteticas (estado e n sorteados, cobrindo n
 /// pequeno, grande, negativo, bordas e a volta da tabela). Exige o modo comparacao instalado
 /// (a recursao da original tem de cair na original).
-pub unsafe fn autoteste(cases: u64) {
+pub unsafe fn self_test(cases: u64) {
     if ORIGINAL == 0 {
         return;
     }
@@ -292,7 +292,7 @@ pub unsafe fn autoteste(cases: u64) {
     let mut draw = || s.next_u64();
     let entries = ((REAL_END - TABLE_START) / 4 + 1) as u64;
     let edges = [1, 2, 3, 7, 10, 100, 0xfffe, 0xffff, 0x10000, 0x10001, 100_000, 1_000_000, i32::MAX];
-    SCOREBOARD.autoteste(|| for i in 0..cases {
+    SCOREBOARD.self_test(|| for i in 0..cases {
         let a = draw();
         // Pointer: any entry; one in eight near the end, to exercise the wrap.
         let entry = if a % 8 == 0 { entries - 1 - (a >> 3) % 3 } else { (a >> 3) % entries };

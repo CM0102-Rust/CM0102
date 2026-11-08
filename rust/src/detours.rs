@@ -41,7 +41,7 @@ pub struct Prologue {
 /// Return address of the game's last call to a detoured routine (written on entry).
 ///
 /// [pt] Endereco de retorno da ultima chamada do jogo a uma rotina desviada (gravado na entrada).
-pub static mut RETORNO: u32 = 0;
+pub static mut RETURN_TO: u32 = 0;
 static mut GAME_ESP: u32 = 0;
 /// The game's ECX on entry: third-party patch code (NickPatcher) relies on ECX being preserved after
 /// calling a routine that preserves it (0x90cfc0 does push ecx/pop ecx); the exit stub used ECX and the
@@ -58,7 +58,7 @@ const ARG_DWORDS: u32 = 16; // dwords copied from the game's stack (enough for a
 /// Switches on the private stack for detours installed from here on.
 ///
 /// [pt] Liga a pilha particular para os desvios instalados daqui em diante.
-pub static ISOLAR: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub static ISOLATE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Garbage detector (diagnosis only, the chain's third Rust career; `jogo\veneno.txt`, read by
 /// `simulation::instalar`): when nonzero, every entry from outside into a detoured routine fills the POISON_SPAN bytes
@@ -71,7 +71,7 @@ pub static ISOLAR: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool
 /// do alto da pilha particular com esse valor antes de chamar a rotina. Uma original que le variavel local sem valor
 /// passa a ler o veneno, e a carreira sai diferente das duas normais. Nao entra no produto nem decide nada: so acusa
 /// (ver docs/COMO_CONTINUAR.md).
-pub static VENENO: AtomicU32 = AtomicU32::new(0);
+pub static POISON: AtomicU32 = AtomicU32::new(0);
 static mut SAVED_EDI: u32 = 0;
 /// The career with the engine uses up to 33 KB of the private stack (measured up to 2001-09-01) and enters it ~158 million
 /// times up to 2002-06-01: filling 1 MB on every entry made the career 6 times slower. simplification: fixed span; if the
@@ -112,9 +112,9 @@ unsafe fn executable(n: usize) -> usize {
 /// The stubs line in ddraw.log: how many blocks, how much used and where the last one is.
 ///
 /// [pt] A linha dos trechos no ddraw.log: quantos blocos, quanto usado e onde esta o ultimo.
-pub fn resumo_trechos() {
+pub fn stub_summary() {
     let g = *STUBS.lock().unwrap_or_else(|e| e.into_inner());
-    if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) {
+    if ISOLATE.load(std::sync::atomic::Ordering::Relaxed) {
         // the private stack starts zeroed: the lowest nonzero dword is the deepest ever written (with the detector,
         // the poisoned span); past POISON_SPAN, increase the span
         let mut p = STACK_BASE;
@@ -134,7 +134,7 @@ pub fn resumo_trechos() {
 /// [pt] Trecho de entrada: grava o retorno; se ja estiver na pilha particular (chamada aninhada), so
 /// salta; senao troca de pilha, copia os argumentos, chama `destino` e volta descontando os
 /// argumentos que a rotina retirou (vale para cdecl, stdcall e thiscall; ecx = this e preservado).
-pub unsafe fn isolar(target: usize) -> usize {
+pub unsafe fn isolate(target: usize) -> usize {
     isolate_with(target, true)
 }
 
@@ -143,7 +143,7 @@ pub unsafe fn isolar(target: usize) -> usize {
 ///
 /// [pt] O mesmo para as funcoes do Windows (entradas da IAT): o detector de lixo nao enche a pilha antes delas, porque o
 /// codigo do Windows nao le o lixo do jogo e a proxima rotina desviada vinda de fora envenena de novo.
-pub unsafe fn isolar_importacao(target: usize) -> usize {
+pub unsafe fn isolate_import(target: usize) -> usize {
     isolate_with(target, false)
 }
 
@@ -161,7 +161,7 @@ unsafe fn isolate_with(target: usize, poison: bool) -> usize {
     }
     let base = top + 16 - STACK as u32;
     let le = |v: u32| v.to_le_bytes();
-    let (ret_slot, game_esp) = (&raw mut RETORNO as u32, &raw mut GAME_ESP as u32);
+    let (ret_slot, game_esp) = (&raw mut RETURN_TO as u32, &raw mut GAME_ESP as u32);
     let mut c: Vec<u8> = Vec::new();
     let rel = |c: &Vec<u8>, target: usize| ((target as isize - (code + c.len() + 4) as isize) as i32).to_le_bytes();
     c.extend([0x8b, 0x04, 0x24, 0xa3]); // mov eax, [esp]; mov [RETORNO], eax
@@ -185,7 +185,7 @@ unsafe fn isolate_with(target: usize, poison: bool) -> usize {
     c.extend(le(&raw mut GAME_ECX as u32));
     c.extend([0x89, 0xe0, 0xa3]); // mov eax, esp; mov [GAME_ESP], eax
     c.extend(le(game_esp));
-    let poison_value = if poison { VENENO.load(std::sync::atomic::Ordering::Relaxed) } else { 0 };
+    let poison_value = if poison { POISON.load(std::sync::atomic::Ordering::Relaxed) } else { 0 };
     if poison_value != 0 {
         // detector: mov [SAVED_EDI], edi; mov edi, top - POISON_SPAN; mov ecx, POISON_SPAN/4; mov eax, poison; cld;
         // rep stosd; mov edi, [SAVED_EDI]; mov ecx, [GAME_ECX]; mov eax, [GAME_ESP]
@@ -241,7 +241,7 @@ static mut SAVED_EAX: u32 = 0;
 /// não o preservam; o código compilado do jogo não conta com isso, mas o patch de terceiros conta). Troca o
 /// endereço de retorno pelo nosso, guarda ECX e retorno na PILHA_ECX e, na volta, restaura os dois; EAX (o
 /// resultado) passa intacto. A profundidade da pilha do jogo não muda.
-pub unsafe fn preservar_ecx(target: usize) -> usize {
+pub unsafe fn preserve_ecx(target: usize) -> usize {
     let code = executable(96);
     if code == 0 {
         return target;
@@ -284,7 +284,7 @@ pub unsafe fn preservar_ecx(target: usize) -> usize {
 /// argumentos; call; add esp; pop ecx; ret. Fica com as chamadas e retornos casados (a troca do retorno do
 /// `preservar_ecx` desfaz a previsão de retorno do processador e dobrava o tempo da carreira, com o sorteio
 /// 0x90cfc0 chamado bilhões de vezes).
-pub unsafe fn preservar_ecx_cdecl(target: usize, n: u8) -> usize {
+pub unsafe fn preserve_ecx_cdecl(target: usize, n: u8) -> usize {
     let code = executable(64);
     if code == 0 {
         return target;
@@ -306,27 +306,27 @@ pub unsafe fn preservar_ecx_cdecl(target: usize, n: u8) -> usize {
 ///
 /// [pt] `destino` especial: a propria rotina original (so faz sentido com a pilha particular, para a
 /// original rodar isolada como as reescritas e os modos da simulacao serem comparaveis).
-pub const PASSAGEM: usize = 0;
+pub const PASSTHROUGH: usize = 0;
 
 /// Detours `p.address` to `target`. Returns the trampoline (the original routine), or None if refused.
 ///
 /// [pt] Desvia `p.address` para `destino`. Devolve o trampolim (a rotina original), ou None se recusou.
-pub unsafe fn desviar(name: &str, p: &Prologue, target: usize) -> Option<usize> {
+pub unsafe fn hook(name: &str, p: &Prologue, target: usize) -> Option<usize> {
     hook_with(name, p, |tramp| {
-        let target = if target == PASSAGEM { tramp } else { target };
+        let target = if target == PASSTHROUGH { tramp } else { target };
         // only in the patched exe (third-party code relies on ECX; the game's does not, and the generic stub doubles the
         // career's time); the draw (1 argument, cdecl, the most called) gets the cheap stub
-        let target = if !exe_com_patch() { target }
-            else if p.address == 0x90cfc0 { preservar_ecx_cdecl(target, 1) } else { preservar_ecx(target) };
-        if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) { isolar(target) } else { target }
+        let target = if !exe_is_patched() { target }
+            else if p.address == 0x90cfc0 { preserve_ecx_cdecl(target, 1) } else { preserve_ecx(target) };
+        if ISOLATE.load(std::sync::atomic::Ordering::Relaxed) { isolate(target) } else { target }
     })
 }
 
 /// Stack probe detour (`CM_SONDA_PILHA`, diagnosis): the original runs on the game's stack between the probe stubs.
 ///
 /// [pt] Desvio da sonda de pilha (`CM_SONDA_PILHA`, diagnóstico): a original roda na pilha do jogo entre os trechos da sonda.
-pub unsafe fn desviar_sonda(name: &str, p: &Prologue, inside: bool) -> Option<usize> {
-    hook_with(name, p, |tramp| crate::stack_probe::montar(tramp, inside))
+pub unsafe fn hook_probe(name: &str, p: &Prologue, inside: bool) -> Option<usize> {
+    hook_with(name, p, |tramp| crate::stack_probe::build_stub(tramp, inside))
 }
 
 /// Call counter (coverage): `inc dword [counter]; jmp original`. Touches neither stack nor
@@ -334,7 +334,7 @@ pub unsafe fn desviar_sonda(name: &str, p: &Prologue, inside: bool) -> Option<us
 ///
 /// [pt] Contador de chamadas (cobertura): `inc dword [contador]; jmp original`. Nao toca pilha nem
 /// registradores (so os flags, que nao sobrevivem a um call), entao a carreira nao muda.
-pub unsafe fn contar(name: &str, p: &Prologue, counter: *mut u32) -> bool {
+pub unsafe fn count_calls(name: &str, p: &Prologue, counter: *mut u32) -> bool {
     hook_with(name, p, |tramp| {
         let c = executable(16) as *mut u8;
         *c = 0xff;
@@ -364,7 +364,7 @@ static mut VERDICTS: Vec<bool> = Vec::new();
 /// The snapshot: the verdict of each ASSINATURAS line with the current bytes (call before detouring anything).
 ///
 /// [pt] A foto: o veredicto de cada linha de ASSINATURAS com os bytes de agora (chamar antes de desviar qualquer coisa).
-pub unsafe fn conferir_assinaturas() {
+pub unsafe fn check_signatures() {
     use crate::signatures::ASSINATURAS;
     let v: Vec<bool> = ASSINATURAS.iter().map(|a| check_range(a.0)).collect();
     VERDICTS = v;
@@ -402,7 +402,7 @@ unsafe fn check_range(address: usize) -> bool {
 /// The final line of the check in ddraw.log.
 ///
 /// [pt] A linha final da conferencia no ddraw.log.
-pub fn resumo_assinaturas() {
+pub fn signature_summary() {
     use std::sync::atomic::Ordering::Relaxed;
     linha(&format!("assinaturas: {} conferidas, {} ficam com o exe ({} us)",
         CHECKED.load(Relaxed), LEFT_TO_EXE.load(Relaxed), MICROS.load(Relaxed)));
@@ -504,7 +504,7 @@ unsafe fn write_jmp(at: *mut u8, to: usize) {
 /// Roda no DllMain antes de tudo (antes do WinMain e da CRT do exe, entao as trocas em .data valem desde o
 /// inicio, e antes dos desvios, que entao veem o mesmo que no cm0102-1080.exe). Troca cujos bytes nao sao os
 /// "antes" (nem ja os "depois") fica de fora e vai para o log (exe com patch de terceiros).
-pub unsafe fn aplicar_resolucao() {
+pub unsafe fn apply_resolution() {
     if win::texto_ambiente("CM_RESOLUCAO") != "1080" {
         return;
     }
@@ -601,7 +601,7 @@ static PATCHED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::n
 /// The exe has a third-party patch (the .text or the entry are not ours): deferred installation.
 ///
 /// [pt] O exe tem patch de terceiros (o .text ou a entrada não são os nossos): instalação adiada.
-pub fn exe_com_patch() -> bool {
+pub fn exe_is_patched() -> bool {
     PATCHED.load(std::sync::atomic::Ordering::Relaxed)
 }
 
@@ -693,7 +693,7 @@ unsafe fn install_box() {
 /// Installs all the detours. Called when the DLL loads, before the game's WinMain.
 ///
 /// [pt] Instala todos os desvios. Chamado no carregamento da DLL, antes do WinMain do jogo.
-pub unsafe fn instalar() {
+pub unsafe fn install() {
     if win::ambiente("CM_SEM_DESVIOS") {
         linha("desvios: desligados (CM_SEM_DESVIOS)");
         // observe only; in a patched exe its DLL (CLZ's LaMOHatesCD) swaps the entry after DllMain: the box
@@ -707,14 +707,14 @@ pub unsafe fn instalar() {
     }
     if !our_exe() {
         // the simulation (allocator, clock, CRT draw) must be in place before the CRT; none of it falls in the ranges
-        crate::simulation::instalar();
+        crate::simulation::install();
         DEFERRED.store(true, std::sync::atomic::Ordering::Relaxed);
         PATCHED.store(true, std::sync::atomic::Ordering::Relaxed);
         return;
     }
-    conferir_assinaturas();
+    check_signatures();
     // Batch simulation (CM_PARAR_EM): fixed clock, so the simulation is reproducible.
-    crate::simulation::instalar();
+    crate::simulation::install();
     install_engine();
     install_box();
 }
@@ -722,13 +722,13 @@ pub unsafe fn instalar() {
 /// First DirectDrawCreate: the deferred installation of the patched exe (nothing in our exes).
 ///
 /// [pt] Primeira DirectDrawCreate: a instalacao adiada do exe com patch (nada nos exes nossos).
-pub unsafe fn instalar_adiado() {
+pub unsafe fn install_deferred() {
     if BOX_DEFERRED.swap(false, std::sync::atomic::Ordering::Relaxed) {
         install_box();
     }
     if DEFERRED.swap(false, std::sync::atomic::Ordering::Relaxed) {
         linha(&format!("desvios: instalacao adiada (data do jogo {:?})", *(0xae2c90 as *const [u16; 2])));
-        conferir_assinaturas();
+        check_signatures();
         install_engine();
         install_box();
     }
@@ -738,27 +738,27 @@ unsafe fn install_engine() {
     // CM_ORIGINAL=1: no routine replaced; the draw is only observed (count and stop of the
     // simulation), to compare a simulation with only the originals against another with the Rust.
     if win::ambiente("CM_ORIGINAL") {
-        rng::instalar(rng::Modo::Observar);
-        if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) {
-            date::instalar_passagem();
+        rng::install(rng::Mode::Observe);
+        if ISOLATE.load(std::sync::atomic::Ordering::Relaxed) {
+            date::install_passthrough();
             crate::motor::instalar_passagem();
         }
-        crate::stack_probe::instalar_lista();
+        crate::stack_probe::install_list();
         snapshot_bodies();
-        resumo_assinaturas();
+        signature_summary();
         return;
     }
     // CM_AUTOTESTE=1 switches on comparison mode; the self-tests themselves run later (see `autotestes`).
     // A crash in the self-test is logged in ddraw.log (address and registers).
     if win::ambiente("CM_AUTOTESTE") {
-        win::AddVectoredExceptionHandler(1, crate::simulation::registrar_excecao);
+        win::AddVectoredExceptionHandler(1, crate::simulation::record_exception);
     }
     let compare = win::ambiente("CM_COMPARAR") || win::ambiente("CM_AUTOTESTE");
-    rng::instalar(if compare { rng::Modo::Comparar } else { rng::Modo::Rust });
-    date::instalar(compare);
+    rng::install(if compare { rng::Mode::Compare } else { rng::Mode::Rust });
+    date::install(compare);
     crate::motor::instalar(compare);
     snapshot_bodies();
-    resumo_assinaturas();
+    signature_summary();
 }
 
 // ---------- daily recheck of the bodies ----------
@@ -800,7 +800,7 @@ unsafe fn snapshot_bodies() {
 /// [pt] Chamado a cada sorteio: so trabalha quando o dia do jogo muda. Inline e sem quadro de pilha no caminho comum (o
 /// jogo le sobras de pilha; um quadro a mais em cada sorteio mudaria o que ele encontra fora da pilha particular).
 #[inline(always)]
-pub unsafe fn reconferir_no_dia() {
+pub unsafe fn recheck_on_day() {
     let today = *(0xae2c90 as *const [u16; 2]);
     if today != CHECKED_DAY {
         recheck_bodies(today);
@@ -839,7 +839,7 @@ unsafe fn recheck_bodies(today: [u16; 2]) {
 /// (resultado em ddraw.log). `CM_AUTOTESTE=motor:N` roda so o motor, com N casos (as mutacoes de
 /// uma leva do motor nao mexem no aleatorio nem na data). Chamado na primeira DirectDrawCreate: a essa altura o WinMain ja
 /// esta rodando e a CRT do jogo esta inicializada (algumas rotinas chamam atexit, malloc...).
-pub unsafe fn autotestes() {
+pub unsafe fn self_tests() {
     static DONE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     if !win::ambiente("CM_AUTOTESTE") || DONE.swap(true, std::sync::atomic::Ordering::Relaxed) {
         return;
@@ -864,7 +864,7 @@ pub unsafe fn autotestes() {
     crate::motor::autoteste_dbj_2();
     crate::motor::autoteste_dbm_1();
     crate::motor::autoteste_dbm_2();
-    rng::autoteste(5_000_000);
-    date::autoteste();
+    rng::self_test(5_000_000);
+    date::self_test();
     crate::motor::autoteste(2_000_000);
 }

@@ -483,8 +483,8 @@ unsafe extern "thiscall" fn set_year(this: usize, ano: u32) -> u32 {
         core::ptr::write_unaligned((this + 0x112c) as *mut usize, 0);
     }
     cqc4_pw(this + 0x1130, a);
-    let bissexto: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x54cfe0usize);
-    *((this + 0x1132) as *mut u8) = (bissexto(ano) != 0) as u8;
+    let is_leap_year: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x54cfe0usize);
+    *((this + 0x1132) as *mut u8) = (is_leap_year(ano) != 0) as u8;
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let construir: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     crate::comparison::branch("cqc_4 ano novo do calendario");

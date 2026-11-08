@@ -87,12 +87,12 @@ pub unsafe extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserv
     const DLL_PROCESS_ATTACH: u32 = 1;
     if reason == DLL_PROCESS_ATTACH {
         cm0102_base::ganchos::definir_ramo(comparison::branch);
-        cm0102_base::ganchos::definir_visivel(allocator::entrar_visivel, allocator::sair_visivel);
-        detours::aplicar_resolucao(); // CM_RESOLUCAO=1080 (experiment): before everything
+        cm0102_base::ganchos::definir_visivel(allocator::enter_visible, allocator::leave_visible);
+        detours::apply_resolution(); // CM_RESOLUCAO=1080 (experiment): before everything
     }
     if reason == DLL_PROCESS_ATTACH && !win::ambiente("CM_ESPIAO") {
-        iat_hooks::instalar_cedo();
-        detours::instalar();
+        iat_hooks::install_early();
+        detours::install();
     }
     1
 }
@@ -110,13 +110,13 @@ pub unsafe extern "system" fn DirectDrawCreate(guid: *mut c_void, out: *mut *mut
         let r = real(guid, out, outer);
         registro::linha(&format!("espiao: DirectDrawCreate(guid={:p}) -> {:#x}", guid, r));
         if r == 0 {
-            *out = spy::embrulhar(*out, spy::Tipo::DirectDraw);
+            *out = spy::wrap(*out, spy::Kind::DirectDraw);
         }
         return r;
     }
-    detours::instalar_adiado(); // exe with third-party patch: after the whole game load
-    iat_hooks::instalar();
+    detours::install_deferred(); // exe with third-party patch: after the whole game load
+    iat_hooks::install();
     *out = video::criar();
-    detours::autotestes();
+    detours::self_tests();
     0
 }

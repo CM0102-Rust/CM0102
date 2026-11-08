@@ -42,7 +42,7 @@ use crate::registro::linha;
 pub struct Data {
     pub dia: i16,
     pub ano: u16,
-    pub bissexto: i32,
+    pub is_leap_year: i32,
 }
 
 /// Path "E:\dev\CM3\cm3 00-01\si\code\Date.cpp" in the exe (for the error messages).
@@ -102,7 +102,7 @@ const PROLOGUES: [Prologue; 10] = [
 ///
 /// [pt] Regra do { 0x549ef0 }: impar ou nao divisivel por 4 -> nao; nao divisivel por 100 -> sim;
 /// senao, so se divisivel por 400.
-pub fn bissexto(year: u16) -> i32 {
+pub fn is_leap_year(year: u16) -> i32 {
     let a = year as i32;
     if a % 2 == 1 || a % 4 != 0 {
         0
@@ -114,17 +114,17 @@ pub fn bissexto(year: u16) -> i32 {
 }
 
 /// { 0x54a110 }
-pub unsafe extern "thiscall" fn data_padrao(this: *mut Data) -> *mut Data {
-    *this = Data { dia: 40, ano: 1972, bissexto: 1 };
+pub unsafe extern "thiscall" fn default_date(this: *mut Data) -> *mut Data {
+    *this = Data { dia: 40, ano: 1972, is_leap_year: 1 };
     this
 }
 
 /// { 0x549ef0 } The two arguments take 4 bytes on the stack; only the low 16 bits count.
 ///
 /// [pt] { 0x549ef0 } Os dois argumentos ocupam 4 bytes na pilha; so os 16 bits de baixo contam.
-pub unsafe extern "thiscall" fn data_nova(this: *mut Data, day: u32, year: u32) -> *mut Data {
+pub unsafe extern "thiscall" fn new_date(this: *mut Data, day: u32, year: u32) -> *mut Data {
     let year = year as u16;
-    *this = Data { dia: day as u16 as i16, ano: year, bissexto: bissexto(year) };
+    *this = Data { dia: day as u16 as i16, ano: year, is_leap_year: is_leap_year(year) };
     this
 }
 
@@ -133,11 +133,11 @@ pub unsafe extern "thiscall" fn data_nova(this: *mut Data, day: u32, year: u32) 
 ///
 /// [pt] { 0x54a3f0 } Dias desde 1600 (anos * 365 + bissextos) + dia do ano, menos 1 se o ano e
 /// bissexto, modulo 7 com sinal; 1..6 vira 0..5, 0 vira 6 e negativo fica como esta.
-pub unsafe extern "thiscall" fn dia_da_semana(this: *const Data) -> i32 {
+pub unsafe extern "thiscall" fn weekday(this: *const Data) -> i32 {
     let d = *this;
     let y = d.ano as i32 - 1600;
     let mut days = y / 400 + y * 365 - y / 100 + y / 4 + d.dia as i32;
-    if d.bissexto != 0 {
+    if d.is_leap_year != 0 {
         days -= 1;
     }
     let r = days % 7;
@@ -156,7 +156,7 @@ pub unsafe extern "thiscall" fn dia_da_semana(this: *const Data) -> i32 {
 pub unsafe extern "thiscall" fn copia(this: *mut Data, ret: *mut Data, src: *const Data) -> *mut Data {
     (*this).ano = (*src).ano;
     (*this).dia = (*src).dia;
-    (*this).bissexto = (*src).bissexto;
+    (*this).is_leap_year = (*src).is_leap_year;
     *ret = *this;
     ret
 }
@@ -168,7 +168,7 @@ unsafe fn prepare(e: &LocalStatic) -> *mut Data {
     let g = e.guard as *mut u8;
     if *g & 1 == 0 {
         *g |= 1;
-        *(e.value as *mut Data) = Data { dia: 40, ano: 1972, bissexto: 1 };
+        *(e.value as *mut Data) = Data { dia: 40, ano: 1972, is_leap_year: 1 };
         crt::atexit(e.destructor);
     }
     e.value as *mut Data
@@ -179,7 +179,7 @@ unsafe fn prepare(e: &LocalStatic) -> *mut Data {
 /// [pt] Avanca `dia` (que pode passar de 365) para os anos seguintes. Comparacoes em 16 bits com sinal.
 fn normalize_forward(mut day: i16, mut year: u16) -> (i16, u16) {
     loop {
-        let limit = if bissexto(year) == 1 { 365 } else { 364 };
+        let limit = if is_leap_year(year) == 1 { 365 } else { 364 };
         if day <= limit {
             return (day, year);
         }
@@ -197,7 +197,7 @@ fn normalize_backward(mut day: i16, mut year: u16) -> (i16, u16) {
             return (day, year);
         }
         let previous = year.wrapping_sub(1);
-        day = day.wrapping_add(if bissexto(previous) == 1 { 366 } else { 365 });
+        day = day.wrapping_add(if is_leap_year(previous) == 1 { 366 } else { 365 });
         year = previous;
     }
 }
@@ -205,7 +205,7 @@ fn normalize_backward(mut day: i16, mut year: u16) -> (i16, u16) {
 unsafe fn store(st: *mut Data, ret: *mut Data, day: i16, year: u16) -> *mut Data {
     (*st).ano = year;
     (*st).dia = day;
-    (*st).bissexto = bissexto(year);
+    (*st).is_leap_year = is_leap_year(year);
     *ret = *st;
     ret
 }
@@ -251,7 +251,7 @@ pub unsafe extern "thiscall" fn menos(this: *const Data, ret: *mut Data, n: u32)
 /// { 0x54c770 } n (8 bits) weeks.
 ///
 /// [pt] { 0x54c770 } n (8 bits) semanas.
-pub unsafe extern "thiscall" fn mais_semanas(this: *const Data, ret: *mut Data, n: u32) -> *mut Data {
+pub unsafe extern "thiscall" fn add_weeks(this: *const Data, ret: *mut Data, n: u32) -> *mut Data {
     let st = prepare(&ST_WEEKS);
     let days = ((n as u8) as u16).wrapping_mul(7) as i16;
     let (day, year) = normalize_forward(days.wrapping_add((*this).dia), (*this).ano);
@@ -263,8 +263,8 @@ pub unsafe extern "thiscall" fn mais_semanas(this: *const Data, ret: *mut Data, 
 ///
 /// [pt] { 0x54a2d0 } *dest = *this e, se o dia da semana nao for `alvo`, move dest para o `alvo` mais
 /// proximo (diferenca levada a -3..3). O valor devolvido nao e usado pelos chamadores.
-pub unsafe extern "thiscall" fn ajustar_semana(this: *const Data, target: u32, dest: *mut Data) -> u32 {
-    let weekday = dia_da_semana(this);
+pub unsafe extern "thiscall" fn adjust_week(this: *const Data, target: u32, dest: *mut Data) -> u32 {
+    let weekday = weekday(this);
     let mut t = Data::default();
     copia(dest, &mut t, this);
     if weekday as i16 == target as i16 {
@@ -293,28 +293,28 @@ fn valid_input(day: u32, month: u32) -> bool {
 /// { 0x549f70 } Data(day_of_month, month 0..11, year, weekday or 0xffff).
 ///
 /// [pt] { 0x549f70 } Data(dia_do_mes, mes 0..11, ano, dia_da_semana ou 0xffff).
-pub unsafe extern "thiscall" fn data_dma(this: *mut Data, day: u32, month: u32, year: u32, weekday: u32) -> *mut Data {
+pub unsafe extern "thiscall" fn from_dmy(this: *mut Data, day: u32, month: u32, year: u32, weekday: u32) -> *mut Data {
     let mut di = day as i16;
     if !(1..=31).contains(&di) {
-        crt::erro(SOURCE_PATH, 0x34);
+        crt::error_box(SOURCE_PATH, 0x34);
         di = 1;
     }
     let mut m = month as u8 as i8;
     if !(0..=11).contains(&m) {
-        crt::erro(SOURCE_PATH, 0x3b);
+        crt::error_box(SOURCE_PATH, 0x3b);
         m = 0;
     }
     let year = year as u16;
     (*this).ano = year;
-    if bissexto(year) == 1 {
-        (*this).bissexto = 1;
+    if is_leap_year(year) == 1 {
+        (*this).is_leap_year = 1;
         (*this).dia = (*LEAP_TABLE.add(m as usize)).wrapping_add(di);
     } else {
-        (*this).bissexto = 0;
+        (*this).is_leap_year = 0;
         (*this).dia = (*NORMAL_TABLE.add(m as usize)).wrapping_add(di);
     }
     if weekday as u16 != 0xffff {
-        ajustar_semana(this, weekday, this);
+        adjust_week(this, weekday, this);
     }
     this
 }
@@ -344,7 +344,7 @@ fn days_in_year(year: u16) -> i32 {
 /// e anda ano a ano ate o de `outra`, somando os dias de cada ano: para tras os do proprio ano
 /// alcancado, para a frente os do ano anterior a cada um (como no original); no fim a estatica fica
 /// com o ano de `outra`.
-pub unsafe extern "thiscall" fn dias_ate(this: *const Data, other: Data) -> i32 {
+pub unsafe extern "thiscall" fn days_until(this: *const Data, other: Data) -> i32 {
     let st = prepare(&ST_DAYS);
     let a = *this;
     let mut sum = 0i32;
@@ -404,14 +404,14 @@ fn regions(objects: &[usize]) -> Regions {
 
 unsafe extern "thiscall" fn compare_default(this: *mut Data) -> *mut Data {
     let f: unsafe extern "thiscall" fn(*mut Data) -> *mut Data = original_fn(0);
-    let (r, rr, equal, mo, mr) = side_by_side(&regions(&[this as usize]), || f(this), || data_padrao(this));
+    let (r, rr, equal, mo, mr) = side_by_side(&regions(&[this as usize]), || f(this), || default_date(this));
     SCOREBOARD.record(equal && r == rr, || format!("padrao original={:x?} rust={:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn compare_new(this: *mut Data, day: u32, year: u32) -> *mut Data {
     let f: unsafe extern "thiscall" fn(*mut Data, u32, u32) -> *mut Data = original_fn(1);
-    let (r, rr, equal, mo, mr) = side_by_side(&regions(&[this as usize]), || f(this, day, year), || data_nova(this, day, year));
+    let (r, rr, equal, mo, mr) = side_by_side(&regions(&[this as usize]), || f(this, day, year), || new_date(this, day, year));
     SCOREBOARD.record(equal && r == rr, || format!("nova({:#x}, {:#x}) original={:x?} rust={:x?}", day, year, mo, mr));
     r
 }
@@ -419,7 +419,7 @@ unsafe extern "thiscall" fn compare_new(this: *mut Data, day: u32, year: u32) ->
 unsafe extern "thiscall" fn compare_weekday(this: *const Data) -> i32 {
     let f: unsafe extern "thiscall" fn(*const Data) -> i32 = original_fn(2);
     let r = f(this);
-    let ours = dia_da_semana(this);
+    let ours = weekday(this);
     SCOREBOARD.record(r == ours, || format!("semana({:?}) original={} rust={}", *this, r, ours));
     r
 }
@@ -446,13 +446,13 @@ macro_rules! compare_operator {
 
 compare_operator!(compare_plus, 4, mais, "mais");
 compare_operator!(compare_minus, 5, menos, "menos");
-compare_operator!(compare_weeks, 6, mais_semanas, "mais_semanas");
+compare_operator!(compare_weeks, 6, add_weeks, "mais_semanas");
 
 unsafe extern "thiscall" fn compare_adjust(this: *const Data, target: u32, dest: *mut Data) -> u32 {
     let f: unsafe extern "thiscall" fn(*const Data, u32, *mut Data) -> u32 = original_fn(7);
     let reg = regions(&[this as usize, dest as usize]);
     // The return value is the address of a temporary on the stack: it is not compared.
-    let (r, _, equal, mo, mr) = side_by_side(&reg, || f(this, target, dest), || ajustar_semana(this, target, dest));
+    let (r, _, equal, mo, mr) = side_by_side(&reg, || f(this, target, dest), || adjust_week(this, target, dest));
     SCOREBOARD.record(equal, || format!("ajustar_semana({:#x}) original={:x?} rust={:x?}", target, mo, mr));
     r
 }
@@ -464,7 +464,7 @@ unsafe extern "thiscall" fn compare_dma(this: *mut Data, day: u32, month: u32, y
         return f(this, day, month, year, weekday);
     }
     let reg = regions(&[this as usize]);
-    let (r, rr, equal, mo, mr) = side_by_side(&reg, || f(this, day, month, year, weekday), || data_dma(this, day, month, year, weekday));
+    let (r, rr, equal, mo, mr) = side_by_side(&reg, || f(this, day, month, year, weekday), || from_dmy(this, day, month, year, weekday));
     SCOREBOARD.record(equal && r == rr, || format!("dma({:#x}, {:#x}, {:#x}, {:#x}) original={:x?} rust={:x?}", day, month, year, weekday, mo, mr));
     r
 }
@@ -472,7 +472,7 @@ unsafe extern "thiscall" fn compare_dma(this: *mut Data, day: u32, month: u32, y
 unsafe extern "thiscall" fn compare_days(this: *const Data, other: Data) -> i32 {
     let f: unsafe extern "thiscall" fn(*const Data, Data) -> i32 = original_fn(9);
     let reg = [(this as usize, 8), (ST_DAYS.value, 8), (ST_DAYS.guard, 1)];
-    let (r, rr, equal, mo, mr) = side_by_side(&reg, || f(this, other), || dias_ate(this, other));
+    let (r, rr, equal, mo, mr) = side_by_side(&reg, || f(this, other), || days_until(this, other));
     SCOREBOARD.record(equal && r == rr, || format!("dias_ate({:?}, {:?}) original={} {:x?} rust={} {:x?}", *this, other, r, mo, rr, mr));
     r
 }
@@ -480,28 +480,28 @@ unsafe extern "thiscall" fn compare_days(this: *const Data, other: Data) -> i32 
 /// Self-test (runs after the game's CRT is initialized: the operators call atexit).
 ///
 /// [pt] Autoteste (roda depois de a CRT do jogo estar inicializada: os operadores chamam atexit).
-pub unsafe fn autoteste() {
+pub unsafe fn self_test() {
     let mut s = TestRng(0x1234_5678_9abc_def1);
-    SCOREBOARD.autoteste(|| {
+    SCOREBOARD.self_test(|| {
         // Constructors: every 16-bit year, with junk in the upper 16 bits of the arguments.
         for year in 0..=0xffffu32 {
             let junk = s.next_u64() as u32;
             let mut d = Data::default();
             compare_new(&mut d, (junk & 0xffff_0000) | (junk >> 7 & 0xffff), (junk << 16) | year);
         }
-        let mut d = Data { dia: -1, ano: 0, bissexto: 7 };
+        let mut d = Data { dia: -1, ano: 0, is_leap_year: 7 };
         compare_default(&mut d);
         // Weekday: every year x days -5..370 x leap flag 0/1 and some odd values.
         for year in 0..=0xffffu16 {
             for day in (-5i16..=370).step_by(if (1590..=2100).contains(&year) { 1 } else { 23 }) {
                 for b in [0, 1] {
-                    compare_weekday(&Data { dia: day, ano: year, bissexto: b });
+                    compare_weekday(&Data { dia: day, ano: year, is_leap_year: b });
                 }
             }
         }
         for _ in 0..200_000 {
             let x = s.next_u64();
-            compare_weekday(&Data { dia: x as i16, ano: (x >> 16) as u16, bissexto: (x >> 32) as i32 });
+            compare_weekday(&Data { dia: x as i16, ano: (x >> 16) as u16, is_leap_year: (x >> 32) as i32 });
         }
         // Operators and co.: plausible and odd dates, small, large, negative n and edges.
         // Out: n with low 16 bits = 0x8000 (-32768). Negated it stays -32768, and plus/minus
@@ -511,7 +511,7 @@ pub unsafe fn autoteste() {
             let x = s.next_u64();
             let year = if i % 4 == 0 { (x >> 48) as u16 } else { 1900 + ((x >> 48) % 250) as u16 };
             let day = if i % 5 == 0 { (x >> 32) as i16 } else { ((x >> 32) % 400) as i16 - 20 };
-            let a = Data { dia: day, ano: year, bissexto: if i % 7 == 0 { (x >> 20) as i32 } else { bissexto(year) } };
+            let a = Data { dia: day, ano: year, is_leap_year: if i % 7 == 0 { (x >> 20) as i32 } else { is_leap_year(year) } };
             let n = if i % 3 == 0 { edges[(x as usize >> 4) % edges.len()] } else { (x >> 8) as u32 % 2000 };
             let n = if i % 2 == 0 { n } else { (n as i32).wrapping_neg() as u32 };
             if n as u16 == 0x8000 {
@@ -521,10 +521,10 @@ pub unsafe fn autoteste() {
             compare_plus(&a, &mut ret, n);
             compare_minus(&a, &mut ret, n);
             compare_weeks(&a, &mut ret, n);
-            let mut dest = Data { dia: 99, ano: 1, bissexto: 3 };
+            let mut dest = Data { dia: 99, ano: 1, is_leap_year: 3 };
             compare_adjust(&a, (x >> 12) as u32 % 9, &mut dest);
             let mut target = a;
-            let src = Data { dia: (x >> 16) as i16, ano: (x >> 24) as u16, bissexto: x as i32 };
+            let src = Data { dia: (x >> 16) as i16, ano: (x >> 24) as u16, is_leap_year: x as i32 };
             compare_copy(&mut target, &mut ret, &src);
             compare_copy(&mut target, &mut ret, &target as *const Data); // src == this
             let (dm, m) = (1 + (x >> 40) as u32 % 31, (x >> 45) as u32 % 12);
@@ -535,18 +535,18 @@ pub unsafe fn autoteste() {
     });
 }
 
-pub unsafe fn instalar(comparing: bool) {
+pub unsafe fn install(comparing: bool) {
     let rust: [usize; 10] = [
-        data_padrao as *const () as usize,
-        data_nova as *const () as usize,
-        dia_da_semana as *const () as usize,
+        default_date as *const () as usize,
+        new_date as *const () as usize,
+        weekday as *const () as usize,
         copia as *const () as usize,
         mais as *const () as usize,
         menos as *const () as usize,
-        mais_semanas as *const () as usize,
-        ajustar_semana as *const () as usize,
-        data_dma as *const () as usize,
-        dias_ate as *const () as usize,
+        add_weeks as *const () as usize,
+        adjust_week as *const () as usize,
+        from_dmy as *const () as usize,
+        days_until as *const () as usize,
     ];
     let comp: [usize; 10] = [
         compare_default as *const () as usize,
@@ -562,7 +562,7 @@ pub unsafe fn instalar(comparing: bool) {
     ];
     let names = ["data_padrao", "data_nova", "dia_da_semana", "data_copia", "data_mais", "data_menos", "data_mais_semanas", "data_ajustar_semana", "data_dma", "data_dias_ate"];
     for i in 0..10 {
-        if let Some(t) = detours::desviar(names[i], &PROLOGUES[i], if comparing { comp[i] } else { rust[i] }) {
+        if let Some(t) = detours::hook(names[i], &PROLOGUES[i], if comparing { comp[i] } else { rust[i] }) {
             ORIGINALS[i] = t;
         }
     }
@@ -576,9 +576,9 @@ pub unsafe fn instalar(comparing: bool) {
 ///
 /// [pt] Simulacao no modo original: as mesmas rotinas desviadas para a propria original, que assim roda
 /// na pilha particular como a versao Rust (ver `detours::isolar`).
-pub unsafe fn instalar_passagem() {
+pub unsafe fn install_passthrough() {
     for (i, p) in PROLOGUES.iter().enumerate() {
-        detours::desviar(&format!("data {} (original isolada)", i), p, detours::PASSAGEM);
+        detours::hook(&format!("data {} (original isolada)", i), p, detours::PASSTHROUGH);
     }
 }
 
@@ -596,11 +596,11 @@ mod tests {
 
     #[test]
     fn leap_years() {
-        assert_eq!(bissexto(2000), 1);
-        assert_eq!(bissexto(1900), 0);
-        assert_eq!(bissexto(2001), 0);
-        assert_eq!(bissexto(2004), 1);
-        assert_eq!(bissexto(0), 1);
+        assert_eq!(is_leap_year(2000), 1);
+        assert_eq!(is_leap_year(1900), 0);
+        assert_eq!(is_leap_year(2001), 0);
+        assert_eq!(is_leap_year(2004), 1);
+        assert_eq!(is_leap_year(0), 1);
     }
 
     #[test]
@@ -608,16 +608,16 @@ mod tests {
         unsafe {
             // After 1600 the result stays in 0..6 and moves one day at a time.
             for year in [1601u16, 1999, 2000, 2001] {
-                let mut previous = dia_da_semana(&Data { dia: 0, ano: year, bissexto: bissexto(year) });
+                let mut previous = weekday(&Data { dia: 0, ano: year, is_leap_year: is_leap_year(year) });
                 for day in 1..366 {
-                    let r = dia_da_semana(&Data { dia: day, ano: year, bissexto: bissexto(year) });
+                    let r = weekday(&Data { dia: day, ano: year, is_leap_year: is_leap_year(year) });
                     assert!((0..=6).contains(&r));
                     assert_eq!(r, (previous + 1) % 7);
                     previous = r;
                 }
             }
             // In 1600, day 0, leap year: the game's arithmetic gives -1 (negative remainder returned as is).
-            assert_eq!(dia_da_semana(&Data { dia: 0, ano: 1600, bissexto: 1 }), -1);
+            assert_eq!(weekday(&Data { dia: 0, ano: 1600, is_leap_year: 1 }), -1);
         }
     }
 

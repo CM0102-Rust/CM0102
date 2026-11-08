@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn compare_draw_round(copa: usize, rodada: u32) -> u32 
         let (mut dia, mut ano) = (cqa3_w(round_record_by_dword(copa, rodada)), (cqa3_b(round_record_by_dword(copa, rodada) + 2) as i8 as i16).wrapping_add(cqa3_w(copa + 0x40)) as u16);
         // a 0x54c5b0 (mais 1): normalizar para a frente, 365 dias no bissexto (crate::data::bissexto)
         dia = dia.wrapping_add(1);
-        let tam = |y: u16| if crate::date::bissexto(y) == 1 { 365i16 } else { 364 };
+        let tam = |y: u16| if crate::date::is_leap_year(y) == 1 { 365i16 } else { 364 };
         while dia > tam(ano) {
             dia = dia.wrapping_sub(tam(ano) + 1);
             ano = ano.wrapping_add(1);

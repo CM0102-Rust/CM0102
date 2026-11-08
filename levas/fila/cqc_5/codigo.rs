@@ -245,7 +245,7 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
 fn add_days_to_day_year((ano, dia): (i32, i32), n: i32) -> (i32, i32) {
     let (mut a, mut d) = (ano, dia + n);
     loop {
-        let t = if crate::date::bissexto(a as u16) == 1 { 366 } else { 365 };
+        let t = if crate::date::is_leap_year(a as u16) == 1 { 366 } else { 365 };
         if d < t {
             return (a, d);
         }

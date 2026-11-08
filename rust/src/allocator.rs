@@ -52,7 +52,7 @@ const BASES: [usize; 1] = [0x1800_0000];
 const HEAP_ZERO_MEMORY: u32 = 0x08;
 const HEAP_REALLOC_IN_PLACE_ONLY: u32 = 0x10;
 
-pub struct Alocador {
+pub struct Allocator {
     start: usize,
     top: usize,
     end: usize,
@@ -81,9 +81,9 @@ fn class_of(cap: usize) -> Option<usize> {
     (c < CLASSES).then_some(c)
 }
 
-impl Alocador {
+impl Allocator {
     pub const fn novo(start: usize, size: usize) -> Self {
-        Alocador { start, top: start, end: start + size, free: [0; CLASSES], peak: 0, merged: None }
+        Allocator { start, top: start, end: start + size, free: [0; CLASSES], peak: 0, merged: None }
     }
 
     /// Switches to the given region (without moving the structure, which is large for the stack).
@@ -281,16 +281,16 @@ impl Alocador {
     }
 }
 
-static HEAP: Mutex<Alocador> = Mutex::new(Alocador::novo(0, 0));
+static HEAP: Mutex<Allocator> = Mutex::new(Allocator::novo(0, 0));
 static mut ORIGINALS: [usize; 6] = [0; 6]; // Create, Alloc, Free, ReAlloc, Size, Destroy
 static mut HANDLE: usize = 0; // "handle" returned by HeapCreate (= start of the region)
 
-fn with_heap<R>(f: impl FnOnce(&mut Alocador) -> R) -> R {
+fn with_heap<R>(f: impl FnOnce(&mut Allocator) -> R) -> R {
     let mut g = HEAP.lock().unwrap_or_else(|e| e.into_inner());
     let r = f(&mut g);
     let notice = g.merged.take();
     drop(g);
-    Alocador::log_merged(notice, "do jogo");
+    Allocator::log_merged(notice, "do jogo");
     r
 }
 
@@ -320,7 +320,7 @@ unsafe extern "system" fn heap_free(h: usize, flags: u32, p: usize) -> i32 {
     if p != 0 {
         // the match engine (0xf63b bytes, 0xf640 with the CRT's rounding; players on the pitch included) goes into the match fingerprint
         if with_heap(|a| a.tamanho(p)) == 0xf640 {
-            crate::simulation::partida_terminou(p);
+            crate::simulation::match_finished(p);
         }
         with_heap(|a| a.liberar(p));
     }
@@ -351,7 +351,7 @@ unsafe extern "system" fn heap_destroy(h: usize) -> i32 {
 /// Used range of the game region (start, top), for the simulation's daily hash.
 ///
 /// [pt] RoleBitEffect usada da regiao do jogo (inicio, topo), para o hash diario da simulacao.
-pub fn regiao_do_jogo() -> (usize, usize) {
+pub fn game_region() -> (usize, usize) {
     let a = HEAP.lock().unwrap_or_else(|e| e.into_inner());
     (a.start, a.top)
 }
@@ -367,7 +367,7 @@ pub fn pico() -> usize {
 
 const VISIBLE_REGION: usize = 0x0800_0000; // 128 MB, just below the game region
 const VISIBLE_BASES: [usize; 1] = [0x1000_0000];
-static VISIBLE: Mutex<Alocador> = Mutex::new(Alocador::novo(0, 0));
+static VISIBLE: Mutex<Allocator> = Mutex::new(Allocator::novo(0, 0));
 static IN_VISIBLE: AtomicBool = AtomicBool::new(false);
 
 /// The `visivel` pair for the hook of `cm0102-base` (the video layer's allocations): what is created in between
@@ -375,11 +375,11 @@ static IN_VISIBLE: AtomicBool = AtomicBool::new(false);
 ///
 /// [pt] Aloca o que `f` criar na regiao visivel ao jogo (quando a simulacao a ligou).
 /// The `visivel` pair for the hook of `cm0102-base` (the video layer's allocations).
-pub fn entrar_visivel() -> bool {
+pub fn enter_visible() -> bool {
     IN_VISIBLE.swap(true, Ordering::Relaxed)
 }
 
-pub fn sair_visivel(before: bool) {
+pub fn leave_visible(before: bool) {
     IN_VISIBLE.store(before, Ordering::Relaxed);
 }
 
@@ -401,7 +401,7 @@ pub fn visivel<R>(f: impl FnOnce() -> R) -> R {
 // 96 KB), there is no free low space with room for that, and its criterion is divergence, not the fingerprint.
 const DLL_REGION: usize = 0x0400_0000; // 64 MB; the career up to 2002-06-01 uses 145 KB
 const DLL_BASES: [usize; 1] = [0x0b00_0000]; // up to 0x0f000000, below the private stack (0x0ff00000)
-static DLL: Mutex<Alocador> = Mutex::new(Alocador::novo(0, 0));
+static DLL: Mutex<Allocator> = Mutex::new(Allocator::novo(0, 0));
 static DLL_RANGE: [AtomicUsize; 2] = [AtomicUsize::new(0), AtomicUsize::new(0)]; // (start, end): dealloc checks without the lock
 static DLL_THREAD: AtomicU32 = AtomicU32::new(0);
 static DLL_EXHAUSTED: AtomicBool = AtomicBool::new(false);
@@ -431,7 +431,7 @@ unsafe fn in_dll_region(l: Layout, zero: bool) -> Option<*mut u8> {
     let p = a.alocar(l.size(), zero);
     let notice = a.merged.take();
     drop(a);
-    Alocador::log_merged(notice, "da DLL");
+    Allocator::log_merged(notice, "da DLL");
     if p == 0 && !DLL_EXHAUSTED.swap(true, Ordering::Relaxed) {
         linha(&format!("alocador: AVISO regiao da DLL esgotada pedindo {} bytes; o que nao couber vai para a heap do Windows", l.size()));
     }
@@ -471,7 +471,7 @@ unsafe impl GlobalAlloc for Global {
 ///
 /// [pt] Pico de uso da regiao da DLL e maximo de bytes vivos nela (0 sem ela), para o registro da simulacao. O pico passa dos
 /// vivos porque os livres so se juntam com a regiao esgotada.
-pub fn pico_dll() -> (usize, usize) {
+pub fn dll_peak() -> (usize, usize) {
     (DLL.lock().unwrap_or_else(|e| e.into_inner()).peak, DLL_LIVE[1].load(Ordering::Relaxed))
 }
 
@@ -537,7 +537,7 @@ static DATABASE_BLOCKS: Mutex<Vec<(usize, usize)>> = Mutex::new(Vec::new());
 /// (cabecalho coerente: capacidade de classe, nao menor que a do tamanho pedido; o realocar mantem
 /// a capacidade ao encolher).
 pub unsafe fn bloco(p: usize) -> Option<usize> {
-    let (start, top) = regiao_do_jogo();
+    let (start, top) = game_region();
     if p < start + HEADER || p >= top || p & 15 != 0 {
         return None;
     }
@@ -545,7 +545,7 @@ pub unsafe fn bloco(p: usize) -> Option<usize> {
     (n > 0 && cap >= capacity(n) && capacity(cap) == cap && p + cap <= top).then_some(n)
 }
 
-pub fn blocos_do_banco() -> Vec<(usize, usize)> {
+pub fn database_blocks() -> Vec<(usize, usize)> {
     DATABASE_BLOCKS.lock().unwrap_or_else(|e| e.into_inner()).clone()
 }
 
@@ -601,14 +601,14 @@ pub unsafe fn instalar() {
         ("HeapSize", heap_size as *const () as usize),
         ("HeapDestroy", heap_destroy as *const () as usize),
     ];
-    crate::iat_hooks::trocar_importacao("KERNEL32.dll", "GlobalAlloc", global_alloc as *const () as usize);
-    crate::iat_hooks::trocar_importacao("KERNEL32.dll", "GlobalFree", global_free as *const () as usize);
-    match crate::iat_hooks::trocar_importacao("KERNEL32.dll", "VirtualAlloc", virtual_alloc as *const () as usize) {
+    crate::iat_hooks::replace_import("KERNEL32.dll", "GlobalAlloc", global_alloc as *const () as usize);
+    crate::iat_hooks::replace_import("KERNEL32.dll", "GlobalFree", global_free as *const () as usize);
+    match crate::iat_hooks::replace_import("KERNEL32.dll", "VirtualAlloc", virtual_alloc as *const () as usize) {
         Some(a) => VIRTUAL_ALLOC_ORIGINAL = a,
         None => linha("alocador: AVISO VirtualAlloc nao trocado"),
     }
     for (i, (name, new_fn)) in swaps.iter().enumerate() {
-        match crate::iat_hooks::trocar_importacao("KERNEL32.dll", name, *new_fn) {
+        match crate::iat_hooks::replace_import("KERNEL32.dll", name, *new_fn) {
             Some(a) => ORIGINALS[i] = a,
             None => linha(&format!("alocador: {} nao trocado", name)),
         }
@@ -625,7 +625,7 @@ mod tests {
         let mut mem = vec![0u8; 1 << 20];
         let base = (mem.as_mut_ptr() as usize + 15) & !15;
         let run = |base: usize| unsafe {
-            let mut a = Alocador::novo(base, (1 << 20) - 16);
+            let mut a = Allocator::novo(base, (1 << 20) - 16);
             let x = a.alocar(10, false);
             let y = a.alocar(5000, true);
             assert_eq!((x % 16, a.tamanho(x), a.tamanho(y)), (0, 10, 5000));
@@ -651,7 +651,7 @@ mod tests {
         let mut mem = vec![0u8; 1 << 20];
         let base = (mem.as_mut_ptr() as usize + 15) & !15;
         unsafe {
-            let mut a = Alocador::novo(base, (1 << 20) - 16);
+            let mut a = Allocator::novo(base, (1 << 20) - 16);
             let fixed = a.alocar(100, false); // at the start, never freed
             // the list that grows 3200 bytes at a time (like the players' statistics one): without merging, it runs out
             let mut p = a.alocar(3200, false);

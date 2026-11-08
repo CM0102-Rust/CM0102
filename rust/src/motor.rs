@@ -3837,35 +3837,35 @@ unsafe fn compare_restart(nome: &str, this: usize, o: unsafe extern "thiscall" f
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         for (k, pr) in POS_PROLOGUES.iter().enumerate() {
-            if let Some(t) = detours::desviar(&format!("motor_porta_{:x} (pos-jogo)", pr.address), pr, post_match_gates()[k]) {
+            if let Some(t) = detours::hook(&format!("motor_porta_{:x} (pos-jogo)", pr.address), pr, post_match_gates()[k]) {
                 PORTAS_POS[k] = t;
             }
         }
-        if let Some(t) = detours::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGUE_6F5C30, respond_hook as *const () as usize) {
+        if let Some(t) = detours::hook("motor_porta_6f5c30 (gravacao)", &PROLOGUE_6F5C30, respond_hook as *const () as usize) {
             MATCH_PLAYER_RESPOND_TRAMPOLINE = t;
         }
-        if let Some(t) = detours::desviar("motor_porta_6d6f70 (gravacao)", &PROLOGUE_6D6F70, port_6d6f70 as *const () as usize) {
+        if let Some(t) = detours::hook("motor_porta_6d6f70 (gravacao)", &PROLOGUE_6D6F70, port_6d6f70 as *const () as usize) {
             PORT_6D6F70 = t;
         }
-        if let Some(t) = detours::desviar("motor_porta_6eaea0 (gravacao)", &PROLOGUE_6EAEA0, init_player_hook as *const () as usize) {
+        if let Some(t) = detours::hook("motor_porta_6eaea0 (gravacao)", &PROLOGUE_6EAEA0, init_player_hook as *const () as usize) {
             INIT_MATCH_PLAYER_TRAMPOLINE = t;
         }
-        if let Some(t) = detours::desviar("motor_porta_716630 (gravacao)", &PROLOGUE_716630, gate_start_fight as *const () as usize) {
+        if let Some(t) = detours::hook("motor_porta_716630 (gravacao)", &PROLOGUE_716630, gate_start_fight as *const () as usize) {
             START_FIGHT_TRAMPOLINE = t;
         }
-        if let Some(t) = detours::desviar("motor_porta_716e10 (gravacao)", &PROLOGUE_716E10, gate_react_to_foul_decision as *const () as usize) {
+        if let Some(t) = detours::hook("motor_porta_716e10 (gravacao)", &PROLOGUE_716E10, gate_react_to_foul_decision as *const () as usize) {
             REACT_TO_FOUL_DECISION_TRAMPOLINE = t;
         }
-        if let Some(t) = detours::desviar("motor_porta_716c90 (gravacao)", &PROLOGUE_716C90, gate_handle_suspected_dive as *const () as usize) {
+        if let Some(t) = detours::hook("motor_porta_716c90 (gravacao)", &PROLOGUE_716C90, gate_handle_suspected_dive as *const () as usize) {
             HANDLE_SUSPECTED_DIVE_TRAMPOLINE = t;
         }
-        if let Some(t) = detours::desviar("motor_porta_70dfd0 (gravacao)", &PROLOGUE_70DFD0, gate_try_block_shot as *const () as usize) {
+        if let Some(t) = detours::hook("motor_porta_70dfd0 (gravacao)", &PROLOGUE_70DFD0, gate_try_block_shot as *const () as usize) {
             TRY_BLOCK_SHOT_TRAMPOLINE = t;
         }
-        if let Some(t) = detours::desviar("motor_porta_68d0d0 (gravacao)", &PROLOGUE_68D0D0, gate_llist_add_tail as *const () as usize) {
+        if let Some(t) = detours::hook("motor_porta_68d0d0 (gravacao)", &PROLOGUE_68D0D0, gate_llist_add_tail as *const () as usize) {
             LLIST_ADD_TAIL_TRAMPOLINE = t;
         }
-        if let Some(t) = detours::desviar("motor_porta_62ed70 (gravacao)", &PROLOGUE_62ED70, gate_get_player_injury as *const () as usize) {
+        if let Some(t) = detours::hook("motor_porta_62ed70 (gravacao)", &PROLOGUE_62ED70, gate_get_player_injury as *const () as usize) {
             GET_PLAYER_INJURY_TRAMPOLINE = t;
         }
     }
@@ -8174,7 +8174,7 @@ pub unsafe fn instalar(comparando: bool) {
         if SEM_ROTINAS.contains(&nomes[i]) {
             // the original through the same pass-through detour as original mode (same private stack)
             linha(&format!("motor: {} fica no original (SEM_ROTINAS)", nomes[i]));
-            detours::desviar(nomes[i], &PROLOGOS[i], detours::PASSAGEM);
+            detours::hook(nomes[i], &PROLOGOS[i], detours::PASSTHROUGH);
             continue;
         }
         // in comparison 0x6f5c30 and 0x70dfd0 already have the port (installed earlier), which compares them too
@@ -8182,7 +8182,7 @@ pub unsafe fn instalar(comparando: bool) {
             continue;
         }
         let destino = if comparando { comp[i] } else { rust[i] };
-        let feito = detours::desviar(nomes[i], &PROLOGOS[i], destino);
+        let feito = detours::hook(nomes[i], &PROLOGOS[i], destino);
         // refused (routine changed by another patch): orig(i) calls the exe itself, which runs without a detour
         ORIGINAIS[i] = feito.unwrap_or(PROLOGOS[i].address);
     }
@@ -8193,7 +8193,7 @@ pub unsafe fn instalar(comparando: bool) {
         // with the contract fields before and after (the 0x4d8610 request of the human club has its own line)
         DIAG_PERSON = p;
         DIAG_CLUB = std::env::var("CM_DIAG_CLUBE").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(usize::MAX);
-        DIAG_COMPLAINT = detours::desviar("diag queixa 0x867700", &Prologue { address: 0x867700, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] }, diag_complaint as *const () as usize).unwrap_or(0);
+        DIAG_COMPLAINT = detours::hook("diag queixa 0x867700", &Prologue { address: 0x867700, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] }, diag_complaint as *const () as usize).unwrap_or(0);
     }
 }
 
@@ -8280,14 +8280,14 @@ pub unsafe fn instalar_passagem() {
     if sonda != 0 && prologo >= 5 && !PROLOGOS.iter().any(|p| p.address == sonda) {
         // routine outside the table: the prologue comes from the exe itself (the size, from the variable)
         let bytes: &'static [u8] = Box::leak(core::slice::from_raw_parts(sonda as *const u8, prologo).to_vec().into_boxed_slice());
-        detours::desviar_sonda("sonda de pilha", &Prologue { address: sonda, bytes }, dentro);
+        detours::hook_probe("sonda de pilha", &Prologue { address: sonda, bytes }, dentro);
     }
     for (i, p) in PROLOGOS.iter().enumerate() {
         if p.address == sonda {
-            detours::desviar_sonda(&format!("motor {} (sonda de pilha)", i), p, dentro);
+            detours::hook_probe(&format!("motor {} (sonda de pilha)", i), p, dentro);
             continue;
         }
-        detours::desviar(&format!("motor {} (original isolada)", i), p, detours::PASSAGEM);
+        detours::hook(&format!("motor {} (original isolada)", i), p, detours::PASSTHROUGH);
     }
 }
 
@@ -8351,7 +8351,7 @@ pub unsafe fn autoteste(casos: u64) {
     let mut tecnicos56 = vec![0u8; 42735 * 16 + 16];
     let mut partida50 = vec![0u8; 0x60];
     SYNTHETIC.store(true, std::sync::atomic::Ordering::Relaxed);
-    SCOREBOARD.autoteste(|| {
+    SCOREBOARD.self_test(|| {
         for _ in 0..casos {
             for t in tabelas.iter_mut() {
                 for v in t.iter_mut() {

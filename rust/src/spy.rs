@@ -24,17 +24,17 @@ use crate::registro::linha;
 const DETAILED: u64 = 25;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Tipo {
+pub enum Kind {
     DirectDraw,
-    Superficie,
+    Surface,
     Clipper,
 }
 
 #[repr(C)]
-pub struct Embrulho {
+pub struct Wrapper {
     vtbl: *const usize,
     real: *mut c_void,
-    kind: Tipo,
+    kind: Kind,
     id: u32,
 }
 
@@ -74,7 +74,7 @@ fn count_call(name: &'static str) -> bool {
     n <= DETAILED
 }
 
-pub unsafe fn embrulhar(real: *mut c_void, kind: Tipo) -> *mut c_void {
+pub unsafe fn wrap(real: *mut c_void, kind: Kind) -> *mut c_void {
     if real.is_null() {
         return real;
     }
@@ -83,7 +83,7 @@ pub unsafe fn embrulhar(real: *mut c_void, kind: Tipo) -> *mut c_void {
             return Err(emb);
         }
         e.next_id += 1;
-        let emb = Box::into_raw(Box::new(Embrulho { vtbl: vtable(kind), real, kind, id: e.next_id })) as usize;
+        let emb = Box::into_raw(Box::new(Wrapper { vtbl: vtable(kind), real, kind, id: e.next_id })) as usize;
         e.by_real.insert(real as usize, emb);
         e.by_wrapper.insert(emb, real as usize);
         Ok((emb, e.next_id))
@@ -122,7 +122,7 @@ macro_rules! usize_of {
 /// [pt] Repasse generico: desembrulha todos os argumentos, chama o metodo `$i` do objeto verdadeiro.
 macro_rules! forward {
     ($f:ident, $i:expr, $name:literal $(, $a:ident)*) => {
-        unsafe extern "system" fn $f(this: *mut Embrulho $(, $a: usize)*) -> i32 {
+        unsafe extern "system" fn $f(this: *mut Wrapper $(, $a: usize)*) -> i32 {
             let real = (*this).real;
             let g: unsafe extern "system" fn(*mut c_void $(, usize_of!($a))*) -> i32 =
                 core::mem::transmute(method(real, $i));
@@ -143,7 +143,7 @@ macro_rules! forward {
 /// [pt] Repasse com uma saida `**` que cria objeto (`$saida` e o nome do argumento ponteiro-para-ponteiro).
 macro_rules! forward_create {
     ($f:ident, $i:expr, $name:literal, $kind:expr, $out:ident $(, $a:ident)*) => {
-        unsafe extern "system" fn $f(this: *mut Embrulho $(, $a: usize)*) -> i32 {
+        unsafe extern "system" fn $f(this: *mut Wrapper $(, $a: usize)*) -> i32 {
             let real = (*this).real;
             let g: unsafe extern "system" fn(*mut c_void $(, usize_of!($a))*) -> i32 =
                 core::mem::transmute(method(real, $i));
@@ -157,7 +157,7 @@ macro_rules! forward_create {
             }
             if r == 0 && $out != 0 {
                 let p = $out as *mut *mut c_void;
-                *p = embrulhar(*p, $kind);
+                *p = wrap(*p, $kind);
             }
             r
         }
@@ -166,7 +166,7 @@ macro_rules! forward_create {
 
 // ---------- IUnknown (common to all three) ----------
 
-unsafe extern "system" fn query_interface(this: *mut Embrulho, iid: *const [u8; 16], out: *mut *mut c_void) -> i32 {
+unsafe extern "system" fn query_interface(this: *mut Wrapper, iid: *const [u8; 16], out: *mut *mut c_void) -> i32 {
     let real = (*this).real;
     let g: unsafe extern "system" fn(*mut c_void, *const [u8; 16], *mut *mut c_void) -> i32 = core::mem::transmute(method(real, 0));
     let r = g(real, iid, out);
@@ -176,13 +176,13 @@ unsafe extern "system" fn query_interface(this: *mut Embrulho, iid: *const [u8; 
     r
 }
 
-unsafe extern "system" fn add_ref(this: *mut Embrulho) -> u32 {
+unsafe extern "system" fn add_ref(this: *mut Wrapper) -> u32 {
     let real = (*this).real;
     let g: unsafe extern "system" fn(*mut c_void) -> u32 = core::mem::transmute(method(real, 1));
     g(real)
 }
 
-unsafe extern "system" fn release(this: *mut Embrulho) -> u32 {
+unsafe extern "system" fn release(this: *mut Wrapper) -> u32 {
     let real = (*this).real;
     let g: unsafe extern "system" fn(*mut c_void) -> u32 = core::mem::transmute(method(real, 2));
     let r = g(real);
@@ -194,7 +194,7 @@ unsafe extern "system" fn release(this: *mut Embrulho) -> u32 {
         });
         drop(Box::from_raw(this));
         linha(&format!("  liberado {:?} #{}", kind, id));
-        if kind == Tipo::DirectDraw {
+        if kind == Kind::DirectDraw {
             summary();
         }
     }
@@ -241,10 +241,10 @@ unsafe fn rect(p: usize) -> String {
 // ---------- IDirectDraw ----------
 
 forward!(dd_compact, 3, "DD.Compact");
-forward_create!(dd_create_clipper, 4, "DD.CreateClipper", Tipo::Clipper, saida, flags, saida, externo);
+forward_create!(dd_create_clipper, 4, "DD.CreateClipper", Kind::Clipper, saida, flags, saida, externo);
 forward!(dd_create_palette, 5, "DD.CreatePalette", flags, cores, saida, externo);
 
-unsafe extern "system" fn dd_create_surface(this: *mut Embrulho, desc: usize, out: usize, outer: usize) -> i32 {
+unsafe extern "system" fn dd_create_surface(this: *mut Wrapper, desc: usize, out: usize, outer: usize) -> i32 {
     let real = (*this).real;
     let requested = surface_desc(desc);
     let g: unsafe extern "system" fn(*mut c_void, usize, usize, usize) -> i32 = core::mem::transmute(method(real, 6));
@@ -254,19 +254,19 @@ unsafe extern "system" fn dd_create_surface(this: *mut Embrulho, desc: usize, ou
     }
     if r == 0 && out != 0 {
         let p = out as *mut *mut c_void;
-        *p = embrulhar(*p, Tipo::Superficie);
+        *p = wrap(*p, Kind::Surface);
     }
     r
 }
 
-forward_create!(dd_duplicate_surface, 7, "DD.DuplicateSurface", Tipo::Superficie, saida, origem, saida);
+forward_create!(dd_duplicate_surface, 7, "DD.DuplicateSurface", Kind::Surface, saida, origem, saida);
 forward!(dd_enum_display_modes, 8, "DD.EnumDisplayModes", flags, desc, ctx, cb);
 forward!(dd_enum_surfaces, 9, "DD.EnumSurfaces", flags, desc, ctx, cb);
 forward!(dd_flip_to_gdi_surface, 10, "DD.FlipToGDISurface");
 forward!(dd_get_caps, 11, "DD.GetCaps", hw, hel);
 forward!(dd_get_display_mode, 12, "DD.GetDisplayMode", desc);
 forward!(dd_get_fourcc_codes, 13, "DD.GetFourCCCodes", n, codigos);
-forward_create!(dd_get_gdi_surface, 14, "DD.GetGDISurface", Tipo::Superficie, saida, saida);
+forward_create!(dd_get_gdi_surface, 14, "DD.GetGDISurface", Kind::Surface, saida, saida);
 forward!(dd_get_monitor_frequency, 15, "DD.GetMonitorFrequency", freq);
 forward!(dd_get_scan_line, 16, "DD.GetScanLine", linha_);
 forward!(dd_get_vertical_blank_status, 17, "DD.GetVerticalBlankStatus", status);
@@ -281,12 +281,12 @@ forward!(dd_wait_for_vertical_blank, 22, "DD.WaitForVerticalBlank", flags, event
 forward!(s_add_attached_surface, 3, "S.AddAttachedSurface", sup);
 forward!(s_add_overlay_dirty_rect, 4, "S.AddOverlayDirtyRect", ret);
 
-unsafe extern "system" fn s_blt(this: *mut Embrulho, dest: usize, src: usize, src_rect: usize, flags: usize, fx: usize) -> i32 {
+unsafe extern "system" fn s_blt(this: *mut Wrapper, dest: usize, src: usize, src_rect: usize, flags: usize, fx: usize) -> i32 {
     let real = (*this).real;
     let g: unsafe extern "system" fn(*mut c_void, usize, usize, usize, usize, usize) -> i32 = core::mem::transmute(method(real, 5));
     let r = g(real, dest, unwrap_arg(src), src_rect, flags, fx);
     if count_call("S.Blt") {
-        let src_id = if src == 0 { 0 } else { with_state(|e| e.by_wrapper.contains_key(&src)).then(|| (*(src as *const Embrulho)).id).unwrap_or(0) };
+        let src_id = if src == 0 { 0 } else { with_state(|e| e.by_wrapper.contains_key(&src)).then(|| (*(src as *const Wrapper)).id).unwrap_or(0) };
         linha(&format!(
             "#{} S.Blt(dest={} origem=#{} {} flags={:#x} fx={:#x}) -> {:#x}",
             (*this).id, rect(dest), src_id, rect(src_rect), flags, fx, r
@@ -297,12 +297,12 @@ unsafe extern "system" fn s_blt(this: *mut Embrulho, dest: usize, src: usize, sr
 
 forward!(s_blt_batch, 6, "S.BltBatch", lote, n, flags);
 
-unsafe extern "system" fn s_blt_fast(this: *mut Embrulho, x: usize, y: usize, src: usize, src_rect: usize, trans: usize) -> i32 {
+unsafe extern "system" fn s_blt_fast(this: *mut Wrapper, x: usize, y: usize, src: usize, src_rect: usize, trans: usize) -> i32 {
     let real = (*this).real;
     let g: unsafe extern "system" fn(*mut c_void, usize, usize, usize, usize, usize) -> i32 = core::mem::transmute(method(real, 7));
     let r = g(real, x, y, unwrap_arg(src), src_rect, trans);
     if count_call("S.BltFast") {
-        let src_id = if src == 0 { 0 } else { with_state(|e| e.by_wrapper.contains_key(&src)).then(|| (*(src as *const Embrulho)).id).unwrap_or(0) };
+        let src_id = if src == 0 { 0 } else { with_state(|e| e.by_wrapper.contains_key(&src)).then(|| (*(src as *const Wrapper)).id).unwrap_or(0) };
         linha(&format!(
             "#{} S.BltFast(x={} y={} origem=#{} {} trans={:#x}) -> {:#x}",
             (*this).id, x as i32, y as i32, src_id, rect(src_rect), trans, r
@@ -315,10 +315,10 @@ forward!(s_delete_attached_surface, 8, "S.DeleteAttachedSurface", flags, sup);
 forward!(s_enum_attached_surfaces, 9, "S.EnumAttachedSurfaces", ctx, cb);
 forward!(s_enum_overlay_z_orders, 10, "S.EnumOverlayZOrders", flags, ctx, cb);
 forward!(s_flip, 11, "S.Flip", alvo, flags);
-forward_create!(s_get_attached_surface, 12, "S.GetAttachedSurface", Tipo::Superficie, saida, caps, saida);
+forward_create!(s_get_attached_surface, 12, "S.GetAttachedSurface", Kind::Surface, saida, caps, saida);
 forward!(s_get_blt_status, 13, "S.GetBltStatus", flags);
 forward!(s_get_caps, 14, "S.GetCaps", caps);
-forward_create!(s_get_clipper, 15, "S.GetClipper", Tipo::Clipper, saida, saida);
+forward_create!(s_get_clipper, 15, "S.GetClipper", Kind::Clipper, saida, saida);
 forward!(s_get_color_key, 16, "S.GetColorKey", flags, chave);
 forward!(s_get_dc, 17, "S.GetDC", hdc);
 forward!(s_get_flip_status, 18, "S.GetFlipStatus", flags);
@@ -326,7 +326,7 @@ forward!(s_get_overlay_position, 19, "S.GetOverlayPosition", x, y);
 forward!(s_get_palette, 20, "S.GetPalette", paleta);
 forward!(s_get_pixel_format, 21, "S.GetPixelFormat", fmt);
 
-unsafe extern "system" fn s_get_surface_desc(this: *mut Embrulho, desc: usize) -> i32 {
+unsafe extern "system" fn s_get_surface_desc(this: *mut Wrapper, desc: usize) -> i32 {
     let real = (*this).real;
     let g: unsafe extern "system" fn(*mut c_void, usize) -> i32 = core::mem::transmute(method(real, 22));
     let r = g(real, desc);
@@ -339,7 +339,7 @@ unsafe extern "system" fn s_get_surface_desc(this: *mut Embrulho, desc: usize) -
 forward!(s_initialize, 23, "S.Initialize", dd, desc);
 forward!(s_is_lost, 24, "S.IsLost");
 
-unsafe extern "system" fn s_lock(this: *mut Embrulho, ret: usize, desc: usize, flags: usize, evento: usize) -> i32 {
+unsafe extern "system" fn s_lock(this: *mut Wrapper, ret: usize, desc: usize, flags: usize, evento: usize) -> i32 {
     let real = (*this).real;
     let g: unsafe extern "system" fn(*mut c_void, usize, usize, usize, usize) -> i32 = core::mem::transmute(method(real, 25));
     let r = g(real, ret, desc, flags, evento);
@@ -369,7 +369,7 @@ forward!(c_is_clip_list_changed, 6, "C.IsClipListChanged", mudou);
 forward!(c_set_clip_list, 7, "C.SetClipList", lista, flags);
 forward!(c_set_hwnd, 8, "C.SetHWnd", flags, hwnd);
 
-fn vtable(kind: Tipo) -> *const usize {
+fn vtable(kind: Kind) -> *const usize {
     static TABLES: OnceLock<[Vec<usize>; 3]> = OnceLock::new();
     let t = TABLES.get_or_init(|| {
         let iu = [query_interface as *const () as usize, add_ref as *const () as usize, release as *const () as usize];

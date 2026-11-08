@@ -297,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     write_usize(fx + fixture::STADIUM, 0);
     write_usize(fx + fixture::STADIUM_ID, u32::MAX as usize);
     let ano = *((fx + fixture::YEAR) as *const u16);
-    let d = crate::date::Data { dia: *((fx + fixture::DAY) as *const i16), ano, bissexto: crate::date::bissexto(ano) };
+    let d = crate::date::Data { dia: *((fx + fixture::DAY) as *const i16), ano, is_leap_year: crate::date::is_leap_year(ano) };
     let pd = &d as *const crate::date::Data as usize;
     let fixar = |st: usize| {
         write_usize(fx + fixture::STADIUM, st);
@@ -333,7 +333,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
                 let mut chave = [0u32; 3];
                 chave[0] = read_usize(st) as u32;
                 chave[1] = (d.dia as u16 as u32) | ((d.ano as u32) << 16);
-                chave[2] = d.bissexto as u32;
+                chave[2] = d.is_leap_year as u32;
                 livre = buscar(chave.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380) == 0;
             }
             if livre && (read_usize(read_usize(read_usize(fx + fixture::HOME_CLUB) + 0x69) + 0x3c) as i32) < 40000 {

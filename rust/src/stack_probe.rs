@@ -79,7 +79,7 @@ unsafe extern "C" fn show_chain(entry: u32) {
 /// Builds the stubs around the routine's trampoline `tramp`; returns the detour target.
 ///
 /// [pt] Monta os trechos em volta do trampolim `tramp` da rotina; devolve o destino do desvio.
-pub unsafe fn montar(tramp: usize, inside: bool) -> usize {
+pub unsafe fn build_stub(tramp: usize, inside: bool) -> usize {
     // CM_SONDA_FAIXA=ini-fim[/from-to]: the calls go in the same variable (one extra variable shifts the heap and the career)
     let text = win::texto_ambiente("CM_SONDA_FAIXA");
     let (band, calls) = text.split_once('/').unwrap_or((&text, ""));
@@ -179,7 +179,7 @@ pub unsafe fn montar(tramp: usize, inside: bool) -> usize {
 /// um trecho que envenena o próprio quadro na entrada ([esp − quadro, esp), com 0x5a5a5a5a) e segue para a original.
 /// Sem marca não há desvio (o trecho é transparente, provado com a sonda de uma rotina). Tudo num bloco só (milhares de
 /// rotinas: um VirtualAlloc por trampolim gastaria 64 KB de endereços cada).
-pub unsafe fn instalar_lista() {
+pub unsafe fn install_list() {
     if !win::ambiente("CM_SONDA_LISTA") {
         return;
     }

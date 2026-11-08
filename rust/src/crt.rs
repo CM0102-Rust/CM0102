@@ -11,7 +11,7 @@
 ///   _splitpath(fonte, 0, 0, nome, ext); versao(); sprintf(0xae24d0, "v%s %s.%s %d", versao, nome, ext, linha);
 ///   caixa("Error", 0xae24d0, 0); [0xb67a34] = 0.
 /// `fonte` e o endereco da string do caminho do .cpp no exe.
-pub unsafe fn erro(source: usize, line: u32) {
+pub unsafe fn error_box(source: usize, line: u32) {
     let splitpath: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
     let version: unsafe extern "C" fn() -> usize = core::mem::transmute(0x90d130usize);
     let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);

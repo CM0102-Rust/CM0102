@@ -81,7 +81,7 @@ impl Scoreboard {
     /// Runs `f` (the self-test) and logs how many cases and divergences it added.
     ///
     /// [pt] Roda `f` (o autoteste) e registra quantos casos e divergencias ele somou.
-    pub fn autoteste(&self, f: impl FnOnce()) {
+    pub fn self_test(&self, f: impl FnOnce()) {
         let (t0, d0) = self.counts();
         f();
         let (t1, d1) = self.counts();

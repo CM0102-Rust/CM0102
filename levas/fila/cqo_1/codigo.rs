@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
     cqo1_pd(fx + 0x18, 0);
     cqo1_pd(fx + 4, u32::MAX as usize);
     let ano = *((fx + 0x28) as *const u16);
-    let d = crate::date::Data { dia: *((fx + 0x2a) as *const i16), ano, bissexto: crate::date::bissexto(ano) };
+    let d = crate::date::Data { dia: *((fx + 0x2a) as *const i16), ano, is_leap_year: crate::date::is_leap_year(ano) };
     let pd = &d as *const crate::date::Data as usize;
     let fixar = |st: usize| {
         cqo1_pd(fx + 0x18, st);
@@ -302,7 +302,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
                 let mut chave = [0u32; 3];
                 chave[0] = cqo1_d(st) as u32;
                 chave[1] = (d.dia as u16 as u32) | ((d.ano as u32) << 16);
-                chave[2] = d.bissexto as u32;
+                chave[2] = d.is_leap_year as u32;
                 livre = buscar(chave.as_ptr() as usize, cqo1_d(this), cqo1_d(this + 4) as u32, 0xc, 0x85e380) == 0;
             }
             if livre && (cqo1_d(cqo1_d(cqo1_d(fx + 0x1c) + 0x69) + 0x3c) as i32) < 40000 {

@@ -16,7 +16,7 @@ use crate::win;
 /// Swaps, in the main exe's IAT, `dll!function` for `replacement`. Returns the old address.
 ///
 /// [pt] Troca, na IAT do exe principal, `dll!funcao` por `nova`. Devolve o endereco antigo.
-pub unsafe fn trocar_importacao(dll: &str, function: &str, replacement: usize) -> Option<usize> {
+pub unsafe fn replace_import(dll: &str, function: &str, replacement: usize) -> Option<usize> {
     let base = win::GetModuleHandleW(core::ptr::null()) as usize;
     let rd = |off: usize| *((base + off) as *const u32) as usize;
     let pe = rd(0x3c);
@@ -61,7 +61,7 @@ pub unsafe fn trocar_importacao(dll: &str, function: &str, replacement: usize) -
 ///
 /// [pt] Visita todas as entradas da IAT do exe: `f(dll, nome ou None se por numero, endereco atual)`;
 /// se devolver Some(novo), a entrada passa a apontar para `novo`. Devolve quantas trocou.
-pub unsafe fn para_cada_importacao(mut f: impl FnMut(&str, Option<&str>, usize) -> Option<usize>) -> usize {
+pub unsafe fn for_each_import(mut f: impl FnMut(&str, Option<&str>, usize) -> Option<usize>) -> usize {
     let base = win::GetModuleHandleW(core::ptr::null()) as usize;
     let rd = |off: usize| *((base + off) as *const u32) as usize;
     let pe = rd(0x3c);
@@ -111,8 +111,8 @@ unsafe extern "system" fn change_display_settings_a(mode: *const c_void, flags: 
     0 // DISP_CHANGE_SUCCESSFUL
 }
 
-pub unsafe fn instalar() {
-    trocar_importacao("USER32.dll", "ChangeDisplaySettingsA", change_display_settings_a as *const () as usize);
+pub unsafe fn install() {
+    replace_import("USER32.dll", "ChangeDisplaySettingsA", change_display_settings_a as *const () as usize);
 }
 
 static mut SHOW_WINDOW_ORIGINAL: usize = 0;
@@ -195,23 +195,23 @@ unsafe extern "system" fn create_mutex_a(attributes: *mut c_void, initial_owner:
 /// Called when the DLL loads (before the game creates the window).
 ///
 /// [pt] Chamado no carregamento da DLL (antes de o jogo criar a janela).
-pub unsafe fn instalar_cedo() {
-    if let Some(a) = trocar_importacao("KERNEL32.dll", "CreateMutexA", create_mutex_a as *const () as usize) {
+pub unsafe fn install_early() {
+    if let Some(a) = replace_import("KERNEL32.dll", "CreateMutexA", create_mutex_a as *const () as usize) {
         CREATE_MUTEX_ORIGINAL = a;
     }
     // CM_OCULTO=2: hidden with sound (the value has the same length; one extra variable would change the heap)
     if crate::apresentacao::oculto() && win::texto_ambiente("CM_OCULTO") != "2" {
-        let n = para_cada_importacao(|dll, name, _| {
+        let n = for_each_import(|dll, name, _| {
             (dll.eq_ignore_ascii_case("DSOUND.dll") && name.is_none()).then(|| direct_sound_create as *const () as usize)
         });
         linha(&format!("gancho: DSOUND sem som nos testes ({} entrada)", n));
-        if let Some(a) = trocar_importacao("USER32.dll", "MoveWindow", move_window as *const () as usize) {
+        if let Some(a) = replace_import("USER32.dll", "MoveWindow", move_window as *const () as usize) {
             MOVE_WINDOW_ORIGINAL = a;
         }
-        if let Some(a) = trocar_importacao("USER32.dll", "CreateWindowExA", create_window_ex_a as *const () as usize) {
+        if let Some(a) = replace_import("USER32.dll", "CreateWindowExA", create_window_ex_a as *const () as usize) {
             CREATE_WINDOW_ORIGINAL = a;
         }
-        if let Some(a) = trocar_importacao("USER32.dll", "ShowWindow", show_window as *const () as usize) {
+        if let Some(a) = replace_import("USER32.dll", "ShowWindow", show_window as *const () as usize) {
             SHOW_WINDOW_ORIGINAL = a;
         }
     }

@@ -3661,7 +3661,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
         }
     }
     'instante: while n != 0 {
-        crate::extension::instante(m);
+        crate::extension::instant(m);
         if byte(m, engine::PUNISHMENT_STATE) == 1 {
             call_thiscall1(FN_CM3_MATCH_ENGINE_PROCESS_QUEUED_FOULS, m, 0);
             n = n.wrapping_sub(1);

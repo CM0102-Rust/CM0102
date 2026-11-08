@@ -106,7 +106,7 @@ const HOST_COUNTRY_TABLE: [(u16, u8, u32); 281] = [
 /// fixa (−3) e tem segunda ou terceira candidatura completa leva a caixa (linha 0x226) e perde as duas.
 unsafe extern "thiscall" fn init_default_table(this: usize) {
     let definir: unsafe extern "thiscall" fn(*mut crate::date::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(0x54a130usize);
-    let mut d = crate::date::Data { dia: 40, ano: 1972, bissexto: 1 };
+    let mut d = crate::date::Data { dia: 40, ano: 1972, is_leap_year: 1 };
     for &(off, t, v) in HOST_COUNTRY_TABLE.iter() {
         let e = cqo3_d(this) + off as usize;
         match t {

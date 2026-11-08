@@ -34,7 +34,7 @@ fn date_from_env(name: &str) -> Option<(u16, u16)> {
     let mut buf = [0u16; 32];
     let k = unsafe { crate::win::GetEnvironmentVariableW(n.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) } as usize;
     let s = String::from_utf16_lossy(&buf[..k.min(32)]);
-    let a = interpretar(&s);
+    let a = interpret(&s);
     if let Some((year, day)) = a {
         linha(&format!("simulacao: {} = {} (ano {}, dia {})", name, s, year, day));
     }
@@ -83,14 +83,14 @@ fn close_trace() {
 /// "AAAA-MM-DD" -> (year, day of the year from 0), with the game's leap-year rule.
 ///
 /// [pt] "AAAA-MM-DD" -> (ano, dia do ano a partir de 0), com a regra de bissexto do jogo.
-pub fn interpretar(s: &str) -> Option<(u16, u16)> {
+pub fn interpret(s: &str) -> Option<(u16, u16)> {
     let mut p = s.trim().split('-').map(|x| x.parse::<u32>().ok());
     let (a, m, d) = (p.next()??, p.next()??, p.next()??);
     if !(1..=12).contains(&m) || !(1..=31).contains(&d) || a > 65535 {
         return None;
     }
     let cumulative = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-    let extra = (m > 2 && crate::date::bissexto(a as u16) == 1) as u32;
+    let extra = (m > 2 && crate::date::is_leap_year(a as u16) == 1) as u32;
     Some((a as u16, (cumulative[m as usize - 1] + extra + d - 1) as u16))
 }
 
@@ -155,7 +155,7 @@ unsafe fn memory_map() {
         line.push_str(&format!(" d{:x}:{:x}", b, hash_range(b, b + 0x1000) as u32));
         b += 0x1000;
     }
-    let (start, top) = crate::allocator::regiao_do_jogo();
+    let (start, top) = crate::allocator::game_region();
     let mut b = start;
     while start != 0 && b + 0x10000 <= top {
         line.push_str(&format!(" h{:x}:{:x}", b, hash_range(b, b + 0x10000) as u32));
@@ -182,7 +182,7 @@ unsafe fn hash_range(start: usize, end: usize) -> u64 {
 static MATCHES: AtomicU64 = AtomicU64::new(0);
 static MATCH_COUNT: AtomicU64 = AtomicU64::new(0);
 
-pub unsafe fn partida_terminou(engine: usize) {
+pub unsafe fn match_finished(engine: usize) {
     let h = hash_range(engine, engine + (0xf63b & !7));
     let v = MATCHES.load(Ordering::Relaxed);
     MATCHES.store(v.rotate_left(5) ^ h, Ordering::Relaxed);
@@ -202,8 +202,8 @@ pub unsafe fn partida_terminou(engine: usize) {
 /// e os blocos do GlobalAlloc.
 static MEMORY: AtomicU64 = AtomicU64::new(0);
 
-pub unsafe fn blocos_do_jogo() -> Vec<(usize, usize)> {
-    let mut v = crate::allocator::blocos_do_banco();
+pub unsafe fn game_blocks() -> Vec<(usize, usize)> {
+    let mut v = crate::allocator::database_blocks();
     let mut pointers: Vec<usize> = (0xae2300..0xae2400).step_by(4).map(|g| *(g as *const usize)).collect();
     if *(0xb67a44 as *const usize) != 0 {
         pointers.push(**(0xb67a44 as *const *const usize));
@@ -219,7 +219,7 @@ pub unsafe fn blocos_do_jogo() -> Vec<(usize, usize)> {
 }
 
 unsafe fn hash_game_blocks() -> u64 {
-    blocos_do_jogo().iter().fold(0u64, |h, &(p, n)| h.rotate_left(7) ^ hash_range(p, p + (n & !7)))
+    game_blocks().iter().fold(0u64, |h, &(p, n)| h.rotate_left(7) ^ hash_range(p, p + (n & !7)))
 }
 
 /// The hash chained so far, with the memory of this moment.
@@ -241,7 +241,7 @@ unsafe fn hash_whole_game() -> String {
         return String::new();
     }
     memory_map();
-    let (start, top) = crate::allocator::regiao_do_jogo();
+    let (start, top) = crate::allocator::game_region();
     format!(" heap={:016x} dados={:016x}", if start == 0 { 0 } else { hash_range(start, top & !7) }, hash_range(0x987000, 0xde4638))
 }
 
@@ -256,14 +256,14 @@ pub unsafe fn sorteio(requested: i32, pointer: u32, offset: i32, rand: u32) {
         if (a, d) == (ra, rd) && !SNAPSHOT_TAKEN.swap(true, Ordering::Relaxed) {
             let data_path = std::env::current_exe().map(|p| p.with_file_name("dados.bin")).unwrap_or_default();
             let _ = std::fs::write(data_path, core::slice::from_raw_parts(0x987000 as *const u8, 0xde4638 - 0x987000));
-            let (start, top) = crate::allocator::regiao_do_jogo();
+            let (start, top) = crate::allocator::game_region();
             if start != 0 {
                 let heap = std::env::current_exe().map(|p| p.with_file_name("heap.bin")).unwrap_or_default();
                 let _ = std::fs::write(heap, core::slice::from_raw_parts(start as *const u8, top - start));
             }
         }
         if (a, d) == (ra, rd) {
-            write_trace(&format!("{} n={} chamador={:#x} ponteiro={:#x} deslocamento={:#x} rand={:#x}", n, requested, { crate::detours::RETORNO }, pointer, offset, rand));
+            write_trace(&format!("{} n={} chamador={:#x} ponteiro={:#x} deslocamento={:#x} rand={:#x}", n, requested, { crate::detours::RETURN_TO }, pointer, offset, rand));
         } else if (a, d) > (ra, rd) {
             close_trace();
         }
@@ -285,7 +285,7 @@ pub unsafe fn sorteio(requested: i32, pointer: u32, offset: i32, rand: u32) {
     ));
     linha(&format!("partidas: {} motores, impressao {:016x}", MATCH_COUNT.load(Ordering::Relaxed), MATCHES.load(Ordering::Relaxed)));
     {
-        let (start, top) = crate::allocator::regiao_do_jogo();
+        let (start, top) = crate::allocator::game_region();
         // diagnosis: with jogo\heap_fim.txt (the output path inside), dumps the game's heap at the end
         // (a file, and not an environment variable, which would shift the heap and change the career)
         let marker = std::env::current_exe().map(|p| p.with_file_name("heap_fim.txt")).unwrap_or_default();
@@ -296,12 +296,12 @@ pub unsafe fn sorteio(requested: i32, pointer: u32, offset: i32, rand: u32) {
             }
         }
         let _ = start;
-        let blocks = blocos_do_jogo();
+        let blocks = game_blocks();
         linha(&format!("memoria: banco {:016x} ({} blocos, {} KB)", memory_of_day(), blocks.len(), blocks.iter().map(|b| b.1).sum::<usize>() >> 10));
     }
-    let (dll, live) = crate::allocator::pico_dll();
+    let (dll, live) = crate::allocator::dll_peak();
     linha(&format!("alocador: pico {} MB; regiao da DLL: pico {} KB, ate {} KB vivos", crate::allocator::pico() >> 20, dll >> 10, live >> 10));
-    crate::detours::resumo_trechos();
+    crate::detours::stub_summary();
     dump_coverage();
     close_trace();
     // Ends without running the game's finalizations (no saving of preferences).
@@ -367,7 +367,7 @@ static CLOCKS: [AtomicU64; 14] = [const { AtomicU64::new(0) }; 14];
 /// "volta quando clock() passar de X") dependerem de quantas vezes a barra de menus e as telas
 /// consultaram o relogio, o que varia com as mensagens do Windows.
 unsafe extern "C" fn fixed_clock() -> i32 {
-    let r = crate::detours::RETORNO;
+    let r = crate::detours::RETURN_TO;
     let i = CLOCK_CALLERS.iter().rposition(|&f| f <= r).unwrap_or(13);
     let v = CLOCKS[i].fetch_add(1, Ordering::Relaxed) as i32;
     let [d, a] = *CURRENT_DATE;
@@ -468,7 +468,7 @@ unsafe fn install_coverage() {
         let bytes: Vec<u8> = (0..hex.len() / 2).filter_map(|i| u8::from_str_radix(&hex[2 * i..2 * i + 2], 16).ok()).collect();
         let p = crate::detours::Prologue { address: address, bytes: Box::leak(bytes.into_boxed_slice()) };
         let counter: &'static mut u32 = Box::leak(Box::new(0));
-        if crate::detours::contar(&format!("cobertura {:#x}", address), &p, counter) {
+        if crate::detours::count_calls(&format!("cobertura {:#x}", address), &p, counter) {
             list.push((address, file.to_string(), counter));
         }
     }
@@ -520,11 +520,11 @@ unsafe extern "system" fn isolated_peek(_msg: *mut [u32; 7], _hwnd: usize, _min:
 /// excecao e de encerramento, que precisam da pilha real.
 unsafe fn isolate_imports() {
     const EXCLUDED: [&str; 6] = ["RaiseException", "RtlUnwind", "ExitProcess", "TerminateProcess", "UnhandledExceptionFilter", "SetUnhandledExceptionFilter"];
-    let n = crate::iat_hooks::para_cada_importacao(|_dll, name, current| {
+    let n = crate::iat_hooks::for_each_import(|_dll, name, current| {
         if name.is_some_and(|n| EXCLUDED.contains(&n)) {
             None
         } else {
-            Some(crate::detours::isolar_importacao(current))
+            Some(crate::detours::isolate_import(current))
         }
     });
     linha(&format!("simulacao: {} funcoes do Windows isoladas na pilha particular", n));
@@ -539,7 +539,7 @@ unsafe fn isolate_imports() {
 /// [pt] Registra no ddraw.log as excecoes do processo (codigo, endereco, registradores, pilha) e deixa
 /// o tratamento seguir normal. Na simulacao o jogo roda oculto e o Windows nem sempre registra a
 /// queda; assim o endereco fica sempre a mao. So as 8 primeiras (excecoes tratadas tambem passam aqui).
-pub unsafe extern "system" fn registrar_excecao(info: *const [usize; 2]) -> i32 {
+pub unsafe extern "system" fn record_exception(info: *const [usize; 2]) -> i32 {
     static SEEN: AtomicU64 = AtomicU64::new(0);
     if SEEN.fetch_add(1, Ordering::Relaxed) < 8 {
         let (reg, ctx) = ((*info)[0], (*info)[1]);
@@ -603,23 +603,23 @@ unsafe extern "C" fn restore_humans_on_holiday() -> i32 {
 /// Called when the DLL loads: only acts in simulation mode (CM_PARAR_EM set).
 ///
 /// [pt] Chamado no carregamento da DLL: so age em modo simulacao (CM_PARAR_EM definido).
-pub unsafe fn instalar() {
+pub unsafe fn install() {
     if target_date().is_some() {
         // Every routine detoured from here on runs on the private stack and records its caller.
-        crate::detours::ISOLAR.store(true, Ordering::Relaxed);
-        crate::win::AddVectoredExceptionHandler(1, registrar_excecao);
-        crate::iat_hooks::trocar_importacao("USER32.dll", "PeekMessageA", isolated_peek as *const () as usize);
+        crate::detours::ISOLATE.store(true, Ordering::Relaxed);
+        crate::win::AddVectoredExceptionHandler(1, record_exception);
+        crate::iat_hooks::replace_import("USER32.dll", "PeekMessageA", isolated_peek as *const () as usize);
         // garbage detector (simular.py --detector): jogo\veneno.txt with the poison in hex. A file, and not an environment
         // variable (it would shift the game's heap); read before the DLL region, and the line has the same length with and
         // without it, so the DLL's memory stays equal to that of the normal careers.
         let file = std::env::current_exe().map(|p| p.with_file_name("veneno.txt")).unwrap_or_default();
         if let Some(v) = std::fs::read_to_string(file).ok().and_then(|t| u32::from_str_radix(t.trim(), 16).ok()) {
-            crate::detours::VENENO.store(v, Ordering::Relaxed);
+            crate::detours::POISON.store(v, Ordering::Relaxed);
         }
-        linha(&format!("simulacao: veneno {:08x}", crate::detours::VENENO.load(Ordering::Relaxed)));
+        linha(&format!("simulacao: veneno {:08x}", crate::detours::POISON.load(Ordering::Relaxed)));
         crate::allocator::instalar();
         if crate::win::ambiente("CM_FERIAS") {
-            if let Some(t) = crate::detours::desviar("ferias depois do -load (CM_FERIAS)", &PROLOGUE_RESTORE_HUMANS,
+            if let Some(t) = crate::detours::hook("ferias depois do -load (CM_FERIAS)", &PROLOGUE_RESTORE_HUMANS,
                                                      restore_humans_on_holiday as *const () as usize) {
                 RESTORE_ORIGINAL = t;
             }
@@ -628,17 +628,17 @@ pub unsafe fn instalar() {
             install_coverage();
         }
         if rastro().is_some() {
-            if let Some(t) = crate::detours::desviar("qsort (rastro)", &PROLOGUE_QSORT, traced_qsort as *const () as usize) {
+            if let Some(t) = crate::detours::hook("qsort (rastro)", &PROLOGUE_QSORT, traced_qsort as *const () as usize) {
                 QSORT_ORIGINAL = t;
             }
         }
-        crate::detours::desviar("time (relogio fixo da simulacao)", &PROLOGUE_TIME, fixed_time as *const () as usize);
-        crate::detours::desviar("clock (relogio da simulacao)", &PROLOGUE_CLOCK, fixed_clock as *const () as usize);
-        crate::detours::desviar("disco livre (fixo na simulacao)", &PROLOGUE_DISK, fixed_disk as *const () as usize);
-        crate::iat_hooks::trocar_importacao("KERNEL32.dll", "GetLogicalDriveStringsA", fixed_drives as *const () as usize);
-        crate::detours::desviar("RAM total (fixa na simulacao)", &PROLOGUE_RAM_TOTAL, fixed_memory as *const () as usize);
-        crate::detours::desviar("RAM livre (fixa na simulacao)", &PROLOGUE_RAM_FREE, fixed_memory as *const () as usize);
-        if let Some(t) = crate::detours::desviar("rand (observado na simulacao)", &PROLOGUE_RAND, observed_rand as *const () as usize) {
+        crate::detours::hook("time (relogio fixo da simulacao)", &PROLOGUE_TIME, fixed_time as *const () as usize);
+        crate::detours::hook("clock (relogio da simulacao)", &PROLOGUE_CLOCK, fixed_clock as *const () as usize);
+        crate::detours::hook("disco livre (fixo na simulacao)", &PROLOGUE_DISK, fixed_disk as *const () as usize);
+        crate::iat_hooks::replace_import("KERNEL32.dll", "GetLogicalDriveStringsA", fixed_drives as *const () as usize);
+        crate::detours::hook("RAM total (fixa na simulacao)", &PROLOGUE_RAM_TOTAL, fixed_memory as *const () as usize);
+        crate::detours::hook("RAM livre (fixa na simulacao)", &PROLOGUE_RAM_FREE, fixed_memory as *const () as usize);
+        if let Some(t) = crate::detours::hook("rand (observado na simulacao)", &PROLOGUE_RAND, observed_rand as *const () as usize) {
             RAND_ORIGINAL = t;
         }
         isolate_imports();
@@ -651,10 +651,10 @@ mod tests {
 
     #[test]
     fn dates() {
-        assert_eq!(interpretar("2001-01-01"), Some((2001, 0)));
-        assert_eq!(interpretar("2001-08-09"), Some((2001, 220))); // the date seen in the game's memory
-        assert_eq!(interpretar("2004-03-01"), Some((2004, 60)));
-        assert_eq!(interpretar("2001-13-01"), None);
-        assert_eq!(interpretar("lixo"), None);
+        assert_eq!(interpret("2001-01-01"), Some((2001, 0)));
+        assert_eq!(interpret("2001-08-09"), Some((2001, 220))); // the date seen in the game's memory
+        assert_eq!(interpret("2004-03-01"), Some((2004, 60)));
+        assert_eq!(interpret("2001-13-01"), None);
+        assert_eq!(interpret("lixo"), None);
     }
 }
