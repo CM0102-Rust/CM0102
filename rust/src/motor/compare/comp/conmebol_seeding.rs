@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_assign_libertadores_places(this: usize, clubs: usize, count: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_LIBERTADORES_PLACES);
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
-    // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
+    // the competition history too: 0x4afd80 reorders it (tied rows: the previous order changes the club found)
     let reg = [(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubs, count), || assign_libertadores_places(this, clubs, count));
     PLACAR.registrar(igual, || {
@@ -89,6 +89,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_bra_champ_cup_winner(this: u
 ///
 /// [pt] Comparador da 0x4c6b70: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_seeding_save_to_temp_file(this: usize) {
-    // simplification: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
+    // simplification: writes a file to CM3_TEMP (cannot run twice); the copy is proven by the save proof
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_SEEDING_SAVE_TO_TEMP_FILE)(this)
 }

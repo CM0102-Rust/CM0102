@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
     if national_team(clube) != 0 {
         return;
     }
-    let mut local = 0u32; // o [esp + 0x20] da original (a 0x540a50 do dono e a média de público)
+    let mut local = 0u32; // the original’s [esp + 0x20] (the owner’s 0x540a50 and the average attendance)
     let mut a = 0u32;
     let fin = finance_of_parent_club(this, clube, &mut a);
     if fin == 0 {
@@ -648,7 +648,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
             job = read_u8(contrato + contract::SQUAD_STATUS) >> 4;
         }
     }
-    let mut r: i32; // [esp + 0x18]: o teto que sai
+    let mut r: i32; // [esp + 0x18]: the ceiling that comes out
     let b20: i32;
     if person != 0 {
         r = 0;
@@ -828,8 +828,8 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                     }
                     s = match_pl_ftol(s as f64 * m);
                 }
-                // o contrato perto do fim (0x54cdb0: lea ecx, contrato + 0x2d; push [0xae2c94]; push [0xae2c90] ->
-                // thiscall, ret 8), menos de 200 dias
+                // the contract near its end (0x54cdb0: lea ecx, contract + 0x2d; push [0xae2c94]; push [0xae2c90] ->
+                // thiscall, ret 8), less than 200 days
                 let near = || {
                     let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
                     contrato != 0 && read_usize(person + staff::CLUB_JOB) == clube && days(contrato + contract::CONTRACT_EXPIRES, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32) < 0xc8
@@ -1200,7 +1200,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
     }
     let home = read_usize(partida + 0x1c);
     let away = read_usize(partida + 0x20);
-    let mut custo; // o ebp da original
+    let mut custo; // the original’s ebp
     if read_u8(home + 0x64) != 1 && read_u8(away + 0x64) != 1 {
         custo = match_pl_ftol(publico as f64 * read_f64_at(0x9689e0)); // 0x9689e0 = 0.25
     } else {
@@ -1235,7 +1235,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         }
     }
     let home = read_usize(partida + 0x1c);
-    let mut gastos; // o [esp+0x10] da original (começa com o público)
+    let mut gastos; // the original’s [esp+0x10] (starts with the attendance)
     if read_u8(home + 0x64) == 1 {
         let rep = read_i16(home + 0x80);
         if rep != 0 {
@@ -1252,11 +1252,11 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
     } else {
         let rep = read_i16(home + 0x80);
         let r1 = if rep != 0 { friendly_random(match_pl_ftol(rep as i32 as f64 * read_f64_at(0x9689e0))) } else { friendly_random(0xfa) }; // 0x9689e0 = 0.25
-        let r1f = r1 as f32; // fstp dword: o primeiro sorteio guardado em float
+        let r1f = r1 as f32; // fstp dword: the first roll stored as float
         let r2 = friendly_random(0xfa);
         gastos = match_pl_ftol((r2 as f64 + r1f as f64) + publico as f64);
     }
-    let mut dinheiro = 0i32; // o [esp+0x1c] da original
+    let mut dinheiro = 0i32; // the original’s [esp+0x1c]
     let kind_ok = match (read_u8(partida + 0x3b) as i8 as i32).wrapping_add(1) as u32 {
         1 => {
             dinheiro = 25000;
@@ -1270,7 +1270,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
             dinheiro = 125000;
             true
         }
-        _ => false, // 0 (fase −1) e fora da tabela: pelo tipo
+        _ => false, // 0 (stage −1) and outside the table: by type
     };
     if !kind_ok {
         let t = read_u8(partida + 0x3a);
@@ -1501,7 +1501,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
     }
     let rep = read_i16(clube + club::REPUTATION);
     let pres = read_usize(clube + club::CHAIRMAN);
-    let strong = |a: usize, b: usize| a != 0 && b != 0; // (ponteiros conferidos antes dos bytes)
+    let strong = |a: usize, b: usize| a != 0 && b != 0; // (pointers checked before the bytes)
     let div = match wealth_band(fin) {
         -2 => read_f64_at(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
         -1 => read_f64_at(if rep > 0x1482 { 0x967880 } else if rep > 0xcb2 { 0x96a730 } else { 0x967878 }),
@@ -1548,7 +1548,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         if rep >= n.wrapping_mul(750) {
             return 0;
         }
-        // simplification: a original faz pow(+0x20, 2,0) (0x945ff0); o quadrado de um byte é exato nos dois
+        // simplification: the original does pow(+0x20, 2.0) (0x945ff0); the square of a byte is exact in both
         let mut v = match_pl_ftol(((n as f64 * n as f64) * read_f64_at(0x968930) + read_f64_at(0x96a5f0)) * rep as f64 + read_f64_at(0x9688d8)); // 0x968930 = 3, 0x96a5f0 = 750, 0x9688d8 = 1000000
         v = if hi < 0 { v.wrapping_sub(lo as i32) } else { v.wrapping_add(lo as i32) };
         if read_i16(clube + club::REPUTATION) < 0x7d0 {
@@ -1680,7 +1680,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: us
     let league = read_usize(clube + club::DIVISION);
     let mut factor = if league != 0 {
         let k = rep as i32 as f64 * read_f64_at(0x969048) / read_i16(league + 0x69) as i32 as f64; // 0x969048 = 0.002
-        if !(k >= read_f64_at(0x969040)) { read_f64_at(0x969040) } else { k } // fcomp: menor ou sem ordem (NaN) vira 0,75; 0x969040 = 0.75
+        if !(k >= read_f64_at(0x969040)) { read_f64_at(0x969040) } else { k } // fcomp: smaller or unordered (NaN) becomes 0.75; 0x969040 = 0.75
     } else {
         0.5
     };
@@ -1719,7 +1719,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: us
             read_usize(G_NATION_TABLE).wrapping_add((k as usize).wrapping_mul(nation::SIZE))
         };
         core::ptr::write_unaligned((pres + 0x1a) as *mut usize, new);
-        // 0x539c60, 0x53a5b0, 0x53a1b0: push nação; call (add esp, 0xc depois das três) -> cdecl(nação)
+        // 0x539c60, 0x53a5b0, 0x53a1b0: push nation; call (add esp, 0xc after the three) -> cdecl(nation)
         let nome1: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_PICK_FIRST_NAME_FOR_NATION);
         let nome3: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_EMPTY_COMMON_NAME);
         let nome2: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_PICK_SECOND_NAME_FOR_NATION);
@@ -1803,14 +1803,14 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
             w = match_pl_ftol(default(c, p, clube, 0, -1, 0xb, 0));
         }
         if sheet(read_usize(G_CONTRACT_MANAGER), p) != 0 && read_u8(c + 0x35) & 0x3f != 6 {
-            w = w.wrapping_sub(read_i32(sheet(read_usize(G_CONTRACT_MANAGER), p) + 0xc)); // a parte do outro contrato
+            w = w.wrapping_sub(read_i32(sheet(read_usize(G_CONTRACT_MANAGER), p) + 0xc)); // the share of the other contract
         }
         if w > read_i32(this + 0x10) {
             write_i32(this + 0x10, w);
         }
         write_i32(this + 0xc, read_i32(this + 0xc).wrapping_add(w));
     }
-    // o pessoal: a soma vai à folha depois das três listas (a mesma soma, em 32 bits)
+    // the staff: the sum goes to the payroll after the three lists (the same sum, in 32 bits)
     let mut comissao = 0i32;
     for (base, n) in [(0x19fusize, 5usize), (0x1b3, 7), (0x1cf, 3)] {
         for k in 0..n {
@@ -1985,7 +1985,7 @@ pub(crate) unsafe extern "thiscall" fn add_players_sold(this: usize, low: u32, h
     fin_prm_add_i64(this + 0x78, v);
     fin_prm_add_i64(this + 0x118, v);
     if v != 0 {
-        crate::comparacao::ramo("cpz_12 venda recebida"); // só valor diferente de zero muda o saldo
+        crate::comparacao::ramo("cpz_12 venda recebida"); // only a nonzero value changes the balance
     }
     fin_prm_add_i64(this, v); // cpz12: a venda entra no saldo
 }
@@ -2003,7 +2003,7 @@ pub(crate) unsafe extern "thiscall" fn pay_players_bought(this: usize, low: u32,
     fin_prm_add_i64(this + 0x70, v);
     fin_prm_add_i64(this + 0x110, v);
     if v != 0 {
-        crate::comparacao::ramo("cpz_12 compra paga"); // só valor diferente de zero muda o saldo
+        crate::comparacao::ramo("cpz_12 compra paga"); // only a nonzero value changes the balance
     }
     fin_prm_add_i64(this, v.wrapping_neg()); // cpz12: a compra sai do saldo
 }
@@ -2019,7 +2019,7 @@ pub(crate) unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, value: i32) 
     fin_prm_add_i32(this + 0x13c, value);
     fin_prm_add_i32(this + 0x9c, value);
     if value != 0 {
-        crate::comparacao::ramo("cpz_12 luvas pagas"); // só valor diferente de zero muda o saldo
+        crate::comparacao::ramo("cpz_12 luvas pagas"); // only a nonzero value changes the balance
     }
     fin_prm_add_i64(this, (value as i64).wrapping_neg()); // cpz12: as luvas saem do saldo
 }
@@ -2043,7 +2043,7 @@ pub(crate) unsafe extern "thiscall" fn add_prize_money(this: usize, value: i32) 
     fin_prm_add_i32(this + 0x148, value);
     fin_prm_add_i32(this + 0xa8, value);
     if value != 0 {
-        crate::comparacao::ramo("cpz_13 premio recebido"); // só valor diferente de zero muda o saldo
+        crate::comparacao::ramo("cpz_13 premio recebido"); // only a nonzero value changes the balance
     }
     add_to_balance(this, value as i64); // cpz13: o prêmio entra no saldo
 }
@@ -2059,7 +2059,7 @@ pub(crate) unsafe extern "thiscall" fn add_tv_revenue(this: usize, value: i32) {
     fin_prm_add_i32(this + 0x158, value);
     fin_prm_add_i32(this + 0xb8, value);
     if value != 0 {
-        crate::comparacao::ramo("cpz_13 tv recebida"); // só valor diferente de zero muda o saldo
+        crate::comparacao::ramo("cpz_13 tv recebida"); // only a nonzero value changes the balance
     }
     add_to_balance(this, value as i64); // cpz13: a TV entra no saldo
 }
@@ -2076,7 +2076,7 @@ pub(crate) unsafe extern "thiscall" fn pay_wages(this: usize, value: i32) {
     fin_prm_add_i32(this + 0x130, value);
     fin_prm_add_i32(this + 0x90, value);
     if value != 0 {
-        crate::comparacao::ramo("cpz_13 salario pago"); // só valor diferente de zero muda o saldo
+        crate::comparacao::ramo("cpz_13 salario pago"); // only a nonzero value changes the balance
     }
     add_to_balance(this, (value as i64).wrapping_neg()); // cpz13: o salário sai do saldo
 }
@@ -2611,7 +2611,7 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
     *level = (*level).wrapping_sub(1);
 }
 
-// simplification: chama originais que sorteiam, alocam notícias e mexem nos contratos: só a original; a cópia leva o ramo.
+// simplification: calls originals that roll, allocate news items and touch contracts: original only; the copy takes the branch.
 
 /// poor club (band −2/−1, or 0 with a low balance): three random draws; the board pays 450, 300 or 150 × reputation and
 /// sends the news

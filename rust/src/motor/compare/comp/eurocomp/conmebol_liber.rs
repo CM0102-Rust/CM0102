@@ -81,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_select_qualified_
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_LIBER_SELECT_QUALIFIED_CLUBS);
     let mut v = [0usize; 32];
     if libertadores_entrants(this, 0x20, &mut v) != 0x20 {
-        return o(this); // simplification: as caixas de erro: só a original
+        return o(this); // simplification: the error boxes: original only
     }
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let state = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);

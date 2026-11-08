@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
                 let year = *((ban + 6) as *const u16) as i32;
                 if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - year >= years {
                     crate::comparacao::ramo("cpu_10 suspensao velha");
-                    // simplification: a original empurra o índice com os 16 bits altos do edx de antes; a 0x556d00 lê só a palavra.
+                    // simplification: the original pushes the index with the high 16 bits of the previous edx; 0x556d00 reads only the word.
                     soltar(read_u32_as_usize(G_DISCIPLINE), id as u32, s as u16 as u32);
                     true
                 } else {
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
 }
 
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
-// simplification: a cópia leva o contador "cpu_10 nova temporada" para provar no modo Rust; a compactação (comparada) confere o fim.
+// simplification: the copy carries the ”cpu_10 nova temporada” counter to prove in Rust mode; the compaction (compared) checks the end.
 
 /// removes the free entries from the body's discipline table, fixes the stored index of each moved player and
 /// reallocates with 100 spare rows

@@ -38,8 +38,8 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
     let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
-    // simplification: nas voltas antes do sorteio e nos erros a original devolve só o al (0 ou 1; o resto do eax é sobra das
-    // chamadas de antes); quem chama lê o byte
+    // simplification: in the loops before the draw and on errors the original returns only al (0 or 1; the rest of eax is leftover from the
+    // earlier calls); the caller reads the byte
     if year_of_today < year || (year_of_today == year && (day_of_today as i16) < day as i16) {
         return 0;
     }
@@ -69,8 +69,8 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
     league(this, today, full)
 }
 
-// simplification: os clubes, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
-// no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e a fase do
+// simplification: the clubs, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan
+// on the draw day (the copy’s condition): +0x45 = 1, the list +0xee and +0xf2 zeroed, the group A table and the stage of
 // grupo B criadas e a fase atual (+0x30) = 0.
 
 /// rule: group A of the Oceania Club Championship has the first 4 chosen clubs, each in the row of its order; human
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
     let mut i = 0i8;
     while (i as i16) < read_i16(this + 0x3e) {
         crate::comparacao::ramo("cqt_10 linha do grupo a");
-        // simplification: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: a linha i do grupo A
         i = i.wrapping_add(1);
     }
@@ -104,8 +104,8 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
     1
 }
 
-// simplification: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
-// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o escolhido i com a posição i (+4).
+// simplification: the table is allocated (and each row allocates the history) and the news goes to the managers: does not run twice. Only the
+// original; the plan: returns 1, 4 teams and in row i (0x3b bytes) the chosen i with position i (+4).
 
 /// rule: group B of the Oceania Club Championship is a league stage with chosen clubs 4 to 7, the cup's rules and year
 /// and the cup's round table for stage 0 (10, 12 and 14 January); human managers get the news
@@ -184,8 +184,8 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
     1
 }
 
-// simplification: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
-// fase em [+0xc][0], +0x30 = 0, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// simplification: the stage is allocated and the news goes to the managers: does not run twice. Original only; the plan: returns 1 with the
+// stage in [+0xc][0], +0x30 = 0, the stage with 4 teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // escolhidos 4 a 7 (em qualquer ordem: o construtor ordena a tabela).
 
 
@@ -362,8 +362,8 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: us
     }
 }
 
-// simplification: as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da
-// última fase, que dá a caixa e não muda nada).
+// simplification: the semi-finals allocate and draw: they do not run twice. Original only; the plan: +0x30 goes up one (outside the
+// last stage, which shows the box and changes nothing).
 
 /// The 4 semifinalists: 1st A, 2nd B, 2nd A, 1st B.
 ///
@@ -423,8 +423,8 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
     build(f, 0);
 }
 
-// simplification: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4 times,
-// o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: a rodada pode reordenar).
+// simplification: allocates the stage and builds the round: does not run twice. Original only; the plan: the stage at [+0xc][1] with 4 teams,
+// the cup’s +4 and the 4 crossed ones (read earlier) in its list (+0xa7, 6 bytes; as a set: the round may reorder).
 
 /// Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
 /// rodada, dia, mês com 0 = janeiro, anos a somar, dia da semana, código, valor; registros de 0x41 bytes), `L` um jogo

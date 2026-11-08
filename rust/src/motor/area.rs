@@ -1,14 +1,14 @@
 use super::*;
 
-// A área (0xbf1 bytes, 249 por Display a partir de Display+4; criada pela lista 0x55fba0): +0 x1,
-// +4 y1, +8 x2, +0xc y2; +0x10 a primeira e +0x14 a última linha dos itens; +0x18 as marcas; as
-// grades de no máximo 30 colunas e 30 linhas: +0x1c início e +0x10c fim das colunas, +0x94 início e
-// +0x184 fim das linhas (i32, relativos a x1/y1); +0x1fc a linha pedida para a rolagem; +0x200 a
-// imagem guardada; +0x204 as áreas; +0x208 os itens (0x18c bytes cada); +0x20c a cor; +0x20e o item
-// dono (áreas que abrem por cima, -1 nas outras); +0x212 a lista dos itens (1200 i16); +0xb72 o
-// índice da área; +0xb74 quantos itens; +0xb76 o primeiro item à mostra; +0xb7a..0xbab a barra de
-// rolagem; +0xbab colunas e +0xbac linhas (u8); +0xbad os pesos das colunas e +0xbcb os das linhas
-// (30 u8 cada); +0xbe9 aberta; +0xbed tem barra de rolagem.
+// The area (0xbf1 bytes, 249 per Display starting at Display+4; created by list 0x55fba0): +0 x1,
+// +4 y1, +8 x2, +0xc y2; +0x10 the first and +0x14 the last row of the items; +0x18 the marks; the
+// grids of at most 30 columns and 30 rows: +0x1c start and +0x10c end of the columns, +0x94 start and
+// +0x184 end of the rows (i32, relative to x1/y1); +0x1fc the row requested for scrolling; +0x200 the
+// saved image; +0x204 the areas; +0x208 the items (0x18c bytes each); +0x20c the colour; +0x20e the item
+// owner (areas that open on top, -1 in the others); +0x212 the item list (1200 i16); +0xb72 the
+// area index; +0xb74 item count; +0xb76 the first visible item; +0xb7a..0xbab the scroll
+// scrolling; +0xbab columns and +0xbac rows (u8); +0xbad the column weights and +0xbcb the row weights
+// (30 u8 each); +0xbe9 open; +0xbed has a scroll bar.
 
 /// Address of item k (0x18c bytes each) in the item table base.
 ///
@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     let columns = *((area + 0xbab) as *const u8);
     let rows = *((area + 0xbac) as *const u8);
     if marks & 0x80000 == 0 && columns != 0 && (columns > 30 || (rows != 0 && rows > 30)) {
-        // simplification: a original grava o dono e o +0xb76 antes do erro; repetir é inofensivo (mesmos valores)
+        // simplification: the original writes the owner and +0xb76 before the error; repeating is harmless (same values)
         return original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT)(area);
     }
     crate::comparacao::ramo("telas organizar a area");
@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
         barra(area, lado, cima);
         width = width.wrapping_sub(0x16);
     }
-    // colunas: +0x1c início e +0x10c fim, pelos pesos +0xbad
+    // columns: +0x1c start and +0x10c end, by weights +0xbad
     let pesos = |desl: usize, n: usize| (0..n).map(|k| *((area + desl + k) as *const u8) as i32).fold(0i32, |a, b| a.wrapping_add(b));
     let n = *((area + 0xbab) as *const u8) as i32 - 1;
     let sum = pesos(0xbad, (n + 1) as usize);
@@ -101,7 +101,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
             break;
         }
     }
-    // linhas: +0x94 início e +0x184 fim, pelos pesos +0xbcb
+    // rows: +0x94 start and +0x184 end, by weights +0xbcb
     let n = *((area + 0xbac) as *const u8) as i32 - 1;
     let sum = pesos(0xbcb, (n + 1) as usize);
     let mut acumulado = 0i32;
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn init(
     }
     let x1 = if x1 > 0 { x1 } else { 0 };
     let y1 = if y1 > 0 { y1 } else { 0 };
-    // os limites da tela: imediatos de `cmp edx, imm` e `mov edx, imm` (0x402b7c) e `mov esi, imm` (0x402b8d)
+    // the screen limits: immediates of `cmp edx, imm` and `mov edx, imm` (0x402b7c) and `mov esi, imm` (0x402b8d)
     let x2 = if x2 >= core::ptr::read_unaligned(0x402b7e as *const i32) { core::ptr::read_unaligned(0x402b85 as *const i32) } else { x2 };
     let ceiling_y = core::ptr::read_unaligned(0x402b8e as *const i32);
     let y2 = if y2 >= ceiling_y { ceiling_y } else { y2 };
@@ -213,9 +213,9 @@ pub(crate) unsafe extern "thiscall" fn init(
 /// 1920 × 1080 o relatório de uma partida antiga pede mais; travadas em 30, o resto vai para a barra de
 /// rolagem, como em 800 × 600 (onde nunca passa de 30 e a trava não muda nada). Fica no Area::init porque
 /// o começo do Display::add_area (0x55fba0) já é desvio do exe de 1080 (escala das coordenadas).
-// simplification: as 30 linhas se espalham pela altura da área (linhas mais altas em 1080); layout pela
-// resolução de verdade fica para a modernização (PLANO_LIMITE.md); a original e a cópia recebem a trava
-// igual no comparador, então a comparação segue valendo
+// simplification: the 30 rows spread over the height of the area (taller rows in 1080); layout by the
+// real resolution is left for the modernization (PLANO_LIMITE.md); the original and the copy get the lock
+// equal in the comparer, so the comparison remains valid
 /// Caps an area grid's row count (low byte) at 30, the fixed array size; extra rows go to the scroll bar.
 pub(crate) fn cap_area_rows(rows: u32) -> u32 {
     if rows & 0xff > 30 {
@@ -252,8 +252,8 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
     if core::ptr::read_unaligned((area + 0x20e) as *const i16) != -1 && *imagem == 0 {
         *imagem = store(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
     }
-    // simplification: a original empurra edx com a cor em dx e, em cima, sobra de chamadas anteriores
-    // (imprevisível); a cor é u16 para o painel, aqui estendida com zero
+    // simplification: the original pushes edx with the colour in dx and, on top, leftovers from earlier calls
+    // (unpredictable); the color is u16 for the panel, here zero-extended
     let painel: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32, u32) = core::mem::transmute(FN_GUI_DRAW_PANEL);
     let colour = core::ptr::read_unaligned((area + 0x20c) as *const u16) as u32;
     painel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), *((area + 0x18) as *const u32), colour, 0);
@@ -326,6 +326,6 @@ pub(crate) unsafe fn position_area_item(area: usize, item: usize, d: i32) {
 }
 
 // simplification: desenhar guarda e libera imagens (aloca) e escurece o fundo (desenhar duas vezes escurece
-// duas vezes): no modo comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust
-// (contador "telas desenhar a area" no ddraw.log)
+// twice): in comparison mode only the original runs; the copy is proven in Lucas’s game in Rust mode
+// (counter ”telas desenhar a area” in ddraw.log)
 

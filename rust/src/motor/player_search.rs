@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         *((v + 0x1a0) as *mut u8) = 0;
         *((v + 0x1a1) as *mut u8) = 0;
     }
-    // o lado do clube: 0 se ele é o +0xc do jogo (o adversário é o +0x10), senão 1 (adversário +0xc)
+    // the club’s side: 0 if it is the match’s +0xc (the opponent is +0x10), otherwise 1 (opponent +0xc)
     let (lado, adversario): (i8, u32) = if read_usize(jogo + 0xc) == read_usize(this) {
         (0, read_usize(jogo + 0x10) as u32)
     } else {
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
     let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FOG_OF_WAR_MAP_RAISE_KNOWLEDGE);
     let slot_of: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYER_SEARCH_FIND_OR_CLAIM_PLAYER_SLOT);
     let side_of_game: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
-    // 0x600a50: 5 pushes (clube, 0, 1, 0, 0); add esp, 0x14 -> cdecl; 0x5afde0: push técnico; mov ecx, [0xae2a60] ->
+    // 0x600a50: 5 pushes (club, 0, 1, 0, 0); add esp, 0x14 -> cdecl; 0x5afde0: push manager; mov ecx, [0xae2a60] ->
     // thiscall; 0x5b09d0: push 0; push jogador; mov ecx, eax -> thiscall, ret 8; 0x7bd700: push 1; push jogador; mov ecx,
     // this -> thiscall, ret 8; 0x4afa80: push jogo; push clube; add esp, 8 -> cdecl
     for j in 0..0x14i8 {
@@ -94,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         core::ptr::write_unaligned((r + 4) as *mut u16, (read_i16(r + 4) as u16).wrapping_add(1));
         let mut k = read_u8(r + 0x1a0);
         if how_many == 0xa {
-            // o histórico cheio: a linha mais antiga (+0x1a0) é a da vez, e o começo anda
+            // the history is full: the oldest row (+0x1a0) is the current one, and the start moves
             let n = k.wrapping_add(1);
             *((r + 0x1a0) as *mut u8) = if n == 0xa { 0 } else { n };
         } else {
@@ -209,7 +209,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, result: usize, o
         return 0;
     }
     let owner = staff_records_staff_by_id(read_usize(this));
-    // a nação da competição do jogo (+0x18 → +0x38 → +0x1f) ou a do mandante (+0x1c → +0x53)
+    // the nation of the match’s competition (+0x18 → +0x38 → +0x1f) or the home club’s (+0x1c → +0x53)
     let mut nacao = 0usize;
     let t = read_usize(jogo + 0x18);
     if t != 0 && read_usize(t + 0x38) != 0 && read_usize(read_usize(t + 0x38) + 0x1f) != 0 {
@@ -243,8 +243,8 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, result: usize, o
             history(read_usize(this + 0x170), jogo, result);
         }
     }
-    // as datas: hoje antes do começo (+0x1a5: dia, +0x1a7: ano) sai; antes do fim (+0x1ad/+0x1af) só com jogador
-    // acompanhado; ano sem sinal, dia com sinal, como a original
+    // the dates: today before the start (+0x1a5: day, +0x1a7: year) leaves; before the end (+0x1ad/+0x1af) only with a player
+    // accompanied; year unsigned, day signed, like the original
     let (dia, ano) = (read_i16(G_CURRENT_DATE), read_i16(G_CURRENT_DATE_YEAR) as u16);
     let (dia_ini, ano_ini) = (read_i16(this + 0x1a5), read_i16(this + 0x1a7) as u16);
     if ano < ano_ini || (ano == ano_ini && dia < dia_ini) {
@@ -259,24 +259,24 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, result: usize, o
     let of_target = target > -1 && read_i32(jogo) == target;
     if !of_target {
         let cobre: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_PLAYER_SEARCH_SCOUT_COVERS_NATION);
-        // 0x7b7490: push nação; mov ecx, this -> thiscall, ret 4
+        // 0x7b7490: push nation; mov ecx, this -> thiscall, ret 4
         if cobre(this, nacao) == 0 {
             return 0;
         }
         let alvos: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SCOUT_MANAGER_COLLECT_CLUB_SCOUT_TARGETS);
         let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
         let request: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_SCOUT_MANAGER_HAS_SCOUT_REQUEST);
-        // 0x7f9690: push &lista; push clube do olheiro; mov ecx, [0xb74448] -> thiscall, ret 8; 0x68d1b0: lea ecx, lista
+        // 0x7f9690: push &list; push scout’s club; mov ecx, [0xb74448] -> thiscall, ret 8; 0x68d1b0: lea ecx, list
         // -> thiscall; 0x7f8d70: push 1; push clube; push jogador; mov ecx, [0xb74448] -> thiscall, ret 0xc
         alvos(read_usize(G_SCOUT_MANAGER), read_usize(scout + 0x39), l);
         let count = read_i16(l);
         if count == 0 {
             return 0;
         }
-        core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2)); // o cursor volta à cabeça
-        let mut free = true; // ebp da original: nenhum pedido achado
-        // simplification: a original usa o mesmo registrador (edi) para contar os itens e as 20 vagas de cada lado; depois de
-        // um item de um dos clubes o contador vira o número de vagas olhadas na última volta (o laço de fora acaba antes)
+        core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2)); // the cursor goes back to the head
+        let mut free = true; // the original’s ebp: no request found
+        // simplification: the original uses the same register (edi) to count the items and the 20 slots of each side; after
+        // an item from one of the clubs the counter becomes the number of slots looked at in the last pass (the outer loop ends first)
         let mut i: i32 = 0;
         if count > 0 {
             loop {
@@ -319,8 +319,8 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, result: usize, o
         }
     }
     crate::comparacao::ramo("cqf_10 relatorio");
-    // o começo da lista vai a amanhã (0x54c5b0 com 1, 0x417c10 grava em +0x1a5); o byte baixo do dword da data copiada
-    // vira o contador dos dois lados e vai inteiro como 7º argumento da 0x7b62a0
+    // the start of the list goes to tomorrow (0x54c5b0 with 1, 0x417c10 writes at +0x1a5); the low byte of the copied date dword
+    // becomes the counter of both sides and goes whole as the 7th argument of 0x7b62a0
     let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     // 0x54c5b0: push 1; push &tmp; mov ecx, 0xae2c90 -> thiscall, ret 8; 0x417c10: push data; push &copia; lea ecx,
@@ -343,9 +343,9 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, result: usize, o
     // thiscall, ret 8; 0x7f8d70: push 0; push clube; push jogador; mov ecx, [0xb74448] -> thiscall, ret 0xc; 0x5407e0:
     // push 0; push olheiro; push jogador; add esp, 0xc -> cdecl; 0x7b62a0: 7 pushes; mov ecx, this -> thiscall, ret 0x1c;
     // 0x68d0d0: push 0x67; push &registro; mov ecx, saida -> thiscall, ret 8
-    // o registro local (0x67 bytes), reaproveitado entre os jogadores como na original, com as partes que o construtor da
-    // original monta na entrada: a data em +0 (0x54a110) e os dois recordistas em +0x1f e +0x37 (0x450d40); o resto
-    // começa zerado (na original, sobra da pilha que a 0x7b62a0 sobrescreve)
+    // the local record (0x67 bytes), reused between players as in the original, with the parts that the constructor of the
+    // original builds on entry: the date at +0 (0x54a110) and the two record holders at +0x1f and +0x37 (0x450d40); the rest
+    // starts zeroed (in the original, a stack leftover that 0x7b62a0 overwrites)
     let mut record = [0u8; 0x68];
     let reg = record.as_mut_ptr() as usize;
     let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
@@ -387,7 +387,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, result: usize, o
                     continue;
                 }
             }
-            // a nota: titulares (até o 11º) pela nota +4, senão +0, senão a do resultado (+0x4d); reservas descontam a
+            // the rating: starters (up to the 11th) by rating +4, else +0, else the result’s (+0x4d); substitutes deduct the
             // entrada (+2); resultado sem notas (+0x4c): titular vale 90
             let rating_of = |x: usize| -> u8 {
                 let a = read_u8(x + 4);
@@ -508,7 +508,7 @@ pub(crate) unsafe fn set_search_scout(l: usize, scout: usize) {
 /// 0x210d e 0); sem `reservar`, 0.
 pub(crate) unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(this: usize, person: usize, reservar: u32) -> usize {
     if person == 0 {
-        // simplification: a original lê o id da pessoa antes de conferir o ponteiro (cairia); fica com ela
+        // simplification: the original reads the person’s id before checking the pointer (it would crash); kept as in the original
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_PLAYER_SEARCH_FIND_OR_CLAIM_PLAYER_SLOT)(this, person, reservar);
     }
     let id = read_usize(person) as i32;
@@ -721,7 +721,7 @@ pub(crate) unsafe extern "thiscall" fn get_scout(this: usize) -> usize {
     let person = (read_u32(G_STAFF_TABLE) as usize).wrapping_add((i as usize).wrapping_mul(110));
     let checks: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
     if checks(person, read_u32(this + 0x174), read_u32(this + 0x178), read_u32(this + 0x17c), this + 0x184) == 0 {
-        return 0; // a vaga mudou de pessoa
+        return 0; // the slot changed person
     }
     person
 }
@@ -737,7 +737,7 @@ pub(crate) unsafe fn rival_manager_passes_draws(c: usize) -> bool {
 }
 
 
-// a 0x53e990 só lê: compara o valor
+// 0x53e990 only reads: compare the value
 comparar_valor!(comparar_get_scout, get_scout, IDX_GET_SCOUT, () -> usize);
 
 
@@ -822,12 +822,12 @@ pub(crate) unsafe extern "thiscall" fn set_manager(search: usize, person: usize)
 /// as saídas e devolve 1; nenhuma: 0. Olheiro que não confere: a original (caixa "Error" e 0).
 pub(crate) unsafe extern "thiscall" fn get_scout_assignment(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, opponent: *mut u32) -> u32 {
     if check_search_scout(this).is_none() {
-        return original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(IDX_GET_SCOUT_ASSIGNMENT)(this, clube, nacao, regiao, comp, base, opponent); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(IDX_GET_SCOUT_ASSIGNMENT)(this, clube, nacao, regiao, comp, base, opponent); // message box: original only
     }
     let marcada = read_usize(this + 0x190) as i32 > -1
         || read_usize(this + 0x18c) as i32 > -1
         || *((this + 0x194) as *const i8) > -1
-        || read_usize(this + 0x195) as i32 > -1 // a competição
+        || read_usize(this + 0x195) as i32 > -1 // the competition
         || read_usize(this + 0x199) != 0
         || read_usize(this + 0x19d) != 0;
     if !marcada {
@@ -885,7 +885,7 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nacao: u
         if (r as i8) > -1 && read_u8(nacao + nation::ACTUAL_REGION) == r {
             return 1;
         }
-        // a original compara de novo o mesmo byte quando há base
+        // the original compares the same byte again when there is a base
         if read_usize(this + 0x199) != 0 && read_u8(nacao + nation::ACTUAL_REGION) == r {
             return 1;
         }
@@ -897,12 +897,12 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nacao: u
     }
     if read_u8(nc + 0x76) == read_u8(nacao + nation::ACTUAL_REGION) {
         crate::comparacao::ramo("cpn_7 mesma regiao");
-        return 1; // a mesma região da nação do clube
+        return 1; // the same region as the club’s nation
     }
     let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
     if estrangeira(person, nacao, 1) == 0 {
         crate::comparacao::ramo("cpn_7 nacao do olheiro");
-        return 1; // a nação não é estrangeira para o olheiro
+        return 1; // the nation is not foreign for the scout
     }
     let cobrem: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_SCOUT_MANAGER_CAN_CLUB_SCOUT_NATION);
     (cobrem(read_usize(G_SCOUT_MANAGER), nacao, clube) != 0) as u32

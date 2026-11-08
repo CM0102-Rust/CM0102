@@ -249,7 +249,7 @@ pub(crate) unsafe fn human_manager_record_at(this: usize, k: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn get_active_tactic(this: usize, manager: usize) -> usize {
     let t = manager_or_current_human(manager);
     let Some(k) = (if t != 0 { human_manager_human_manager_index(this, t) } else { None }) else {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_ACTIVE_TACTIC)(this, manager); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_ACTIVE_TACTIC)(this, manager); // message box: original only
     };
     let slot = read_u8(human_manager_record_at(this, k) + 0x9a69) as i8 as i32;
     read_usize(this).wrapping_add(slot.wrapping_mul(0x1ecd) as usize).wrapping_add(k.wrapping_mul(0xa6ef))
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserve: 
         return;
     }
     let Some(k) = human_manager_human_manager_index(this, t) else {
-        return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT)(this, reserve, clube, manager); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT)(this, reserve, clube, manager); // message box: original only
     };
     let clube = if clube != 0 { clube } else { read_usize(t + 0x39) };
     let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
@@ -280,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserve: 
     } else if reserve != 0 && clube != 0 && national_team(clube) != 0 {
         3
     } else if clube != 0 && national_team(clube) != 0 {
-        2 // com `reserva` e fora da seleção a original pergunta de novo (0x53b900 duas vezes)
+        2 // with `reserva` and outside the national team the original asks again (0x53b900 twice)
     } else if reserve != 0 {
         1
     } else {
@@ -329,7 +329,7 @@ pub(crate) unsafe fn scouting_targets_of_club(this: usize, id: u32) -> Vec<usize
     let mut k = 0i32;
     while k < read_usize(this + 0x64) as i32 {
         let e = read_usize(this + 0x5c).wrapping_add(k as usize * 0x11);
-        if read_usize(e) as u32 == id { // o pedido do clube
+        if read_usize(e) as u32 == id { // the club’s request
             v.push(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(e + 4).wrapping_mul(staff::SIZE)));
         }
         k += 1;
@@ -360,7 +360,7 @@ pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: 
             return 1;
         }
     }
-    0 // ninguém assiste
+    0 // nobody watches
 }
 
 /// Index of human manager (or current one) for 0x600740: None without human, Some(None) out of range.
@@ -402,7 +402,7 @@ pub(crate) unsafe extern "thiscall" fn has_nickname(this: usize, person: usize, 
     let search: unsafe extern "C" fn(*const u32, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let r = (*(this as *const usize)).wrapping_add(i.wrapping_mul(0xa6ef));
     let list = core::ptr::read_unaligned((r + 0xa6e3) as *const usize);
-    // a chave: o id e um byte 0 (a 0x601a10 só compara o id)
+    // the key: the id and a 0 byte (0x601a10 only compares the id)
     let key = [*(person as *const u32), 0u32];
     let found = if list == 0 { 0 } else { (search(key.as_ptr(), list, core::ptr::read_unaligned((r + 0xa6eb) as *const u32), 0x1e, 0x601a10) != 0) as u32 };
     found // apelido
@@ -547,8 +547,8 @@ pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: u
     while (group as i8) < read_u8(G_KEY_NATION_ACTIVE_COUNT) as i8 {
         let mut d = [0u8; 8];
         let data = data_new(d.as_mut_ptr() as usize, read_i16(partida + 0x2a) as u16 as u32, read_i16(partida + 0x28) as u16 as u32);
-        // simplification: a original empurra o grupo como palavra inteira (os bytes de cima são sobra de pilha); a 0x5ae6a0
-        // repassa o tipo (char) e a 0x5abf10 lê só o byte.
+        // simplification: the original pushes the group as a whole word (the upper bytes are stack leftover); 0x5ae6a0
+        // passes the type (char) on and 0x5abf10 reads only the byte.
         let list = list_of(data, read_u8(partida + 0x3f) as u32, group as u32);
         if list != 0 {
             write_u32(list + 0xa, read_usize(list + 2) as u32);

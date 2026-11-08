@@ -87,11 +87,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(thi
     if r == 1 {
         let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
         let t = read_u32_as_usize(f + 0xb1);
-        // as rodadas (3) na conta das datas +0xa9 e o id (0x420 + g) em +0x3a: a ordem dos argumentos do construtor
+        // the rounds (3) in the date count +0xa9 and the id (0x420 + g) at +0x3a: the order of the constructor’s arguments
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == read_i16(this + 0x3e) && read_i16(f + 0x40) == read_i16(this + 0x40)
             && read_i16(f + 0xa9) == 3 && read_i16(f + 0x3a) as i32 == 0x420 + g
             && (t == 0 || {
-                // as linhas da fase não seguem a ordem da lista: confere o conjunto dos clubes
+                // the stage rows do not follow the list order: checks the set of clubs
                 let mut a: Vec<usize> = (0..plan.len()).map(|k| read_u32_as_usize(t + k * 0x3b)).collect();
                 let mut b = plan.clone();
                 a.sort_unstable();

@@ -1,6 +1,6 @@
 # Mutações da 210a leva (itens sim_midia_lesao, sim_selecoes_taticas, sim_copas_amistosos). Uso: python mutacoes.py mutacoes\leva210.py --carreira 2002-06-01
 MUTACOES = [
-    ('m_nenhuma', '    0 // nenhuma história de indisciplina', '    1 // nenhuma história de indisciplina'),
+    ('m_nenhuma', '    0 // no indiscipline story', '    1 // no indiscipline story'),
     ('l_empate', '            if r < best {', '            if r <= best {'),
     ('n_5000', '        5000..=5999 => 1,', '        5000..=5999 => 5,'),
     ('c_propria', '            for j in i + 1..50 {', '            for j in i..50 {'),

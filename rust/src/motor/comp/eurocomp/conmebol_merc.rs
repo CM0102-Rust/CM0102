@@ -77,9 +77,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
     league(this, today, full)
 }
 
-// simplification: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
-// no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 4 fases
-// criadas e a fase atual (+0x30) a última delas.
+// simplification: the clubs (shuffled), the tables, the matches and the league day do not run twice. Original only; the plan
+// on draw day (the copy’s condition): +0x45 = 1, the list +0xee zeroed, the first group’s table and the 4 stages
+// created and the current stage (+0x30) the last of them.
 
 /// Is today June 1 with the cup from another year (rollover day, draw not checked)?
 ///
@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     let mut i = 0i8;
     while (i as i16) < read_i16(this + 0x3e) {
         crate::comparacao::ramo("cqr_11 linha do primeiro grupo");
-        // simplification: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
@@ -123,8 +123,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     1
 }
 
-// simplification: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
-// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
+// simplification: the table is allocated (and each row allocates the history) and the news goes to the managers: does not run twice. Only the
+// original; the plan: returns 1, 4 teams and in row i (0x3b bytes) the drawn team i with position i (+4).
 
 /// rule: each of the other groups of the Copa Mercosur is a league stage with the next 4 drawn clubs (4g + 4 to 4g +
 /// 7), the cup's rules and year and the cup's round table for the group; human managers get the news
@@ -206,8 +206,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     1
 }
 
-// simplification: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
-// fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// simplification: the stage is allocated and the news goes to the managers: does not run twice. Original only; the plan: returns 1 with the
+// stage in [+0xc][g], +0x30 = g, the stage with the teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 
 /// Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
@@ -242,8 +242,8 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
             return 0;
         }
         crate::comparacao::ramo(name_g);
-        // o ano vai com lixo nos bytes altos na original (o registrador de antes com a palavra +0x40 por cima); a
-        // 0x68a160 só usa os 16 bits de baixo: a cópia passa o ano limpo
+        // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
+        // 0x68a160 only uses the low 16 bits: the copy passes the clean year
         let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
         for (r, &(dia, mes, semana, codigo)) in groups.iter().enumerate() {
             data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
@@ -286,7 +286,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = stage as u8 as i8;
     if f > limit {
-        // simplification: acima do mata-mata nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: above the knockout neither of the two writes anything; the outputs may not even exist
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, f, a));
         return a;
@@ -389,7 +389,7 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
         i += 1;
     }
     crate::comparacao::ramo("cqo_13 convidados da mercosul");
-    // simplification: a original empurra a palavra +0xf2 com lixo nos 16 bits altos (o eax de antes); a 0x4afb40 lê a palavra
+    // simplification: the original pushes the word +0xf2 with garbage in the high 16 bits (the previous eax); 0x4afb40 reads the word
     embaralhar(read_u32_as_usize(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
     (1, k as i32)
 }

@@ -16,11 +16,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_destroy_match_stats(stats: usize
 /// Comparer for `fill_match_record` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fill_match_record(stats: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_FILL_MATCH_RECORD);
-    // simplification: a primeira chamada (data estática e atexit) e os erros só pela original
+    // simplification: the first call (static data and atexit) and the errors only through the original
     if m == 0 || reg == 0 || *(G_MATCH_STATS_FILL_RECORD_STATIC_DATE_GUARD as *const u8) & 1 == 0 {
         return o(stats, m, reg, sem_renda);
     }
-    // o número da camisa dado pela original (0x85a470) fica fora das regiões: a cópia já o acha dado
+    // the shirt number given by the original (0x85a470) stays outside the regions: the copy finds it already given
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg, 0xd7a)], || o(stats, m, reg, sem_renda),
         || fill_match_record(stats, m, reg, sem_renda));
     PLACAR.registrar(igual && r == n, || {
@@ -56,8 +56,8 @@ pub(crate) unsafe fn comparar_montagem_da_partida(name: &str, extra: &[(usize, u
     reg.push((0xde1f64, 0x100));
     reg.push((0xae290c, 4));
     reg.extend_from_slice(extra);
-    // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
-    // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
+    // the background photo (0x41c410) rolls: the generator state goes back for the second round (without it the
+    // generator advanced twice in comparison mode and the career shifted; 204th)
     reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, || crate::aleatorio::sem_contar(rust));
     PLACAR.registrar(igual, || format!("{}: diferencas em {:?}", name, first_differences(&mo, &mr)));
@@ -73,9 +73,9 @@ pub(crate) unsafe fn comparar_montagem_da_partida(name: &str, extra: &[(usize, u
 pub(crate) unsafe extern "C" fn comparar_build_match_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_MATCH_SCREEN);
     let aba = get_screen_param(2) as u8;
-    // as abas 2 (estatisticas) e 7 (notas) alocam a copia do estado 0x1d quando ela falta: tambem so a original
+    // tabs 2 (statistics) and 7 (ratings) allocate the copy of state 0x1d when it is missing: also original only
     if get_screen_param(0x1d) != 0 || get_screen_param(7) != 0 || matches!(aba, 1 | 2 | 3 | 7 | 10) {
-        // simplification: liberar, narrar com som e alocar não rodam duas vezes; esses casos se provam no modo Rust
+        // simplification: freeing, commentary with sound and allocating do not run twice; these cases are proven in Rust mode
         return o();
     }
     let sheet: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
@@ -115,9 +115,9 @@ pub(crate) unsafe extern "C" fn comparar_handle_match_screen_input(item: u32) ->
 pub(crate) unsafe extern "C" fn comparar_build_match_details_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_MATCH_DETAILS_SCREEN);
     let aba = get_screen_param(2) as u8;
-    // as abas 2 (estatisticas) e 6 (notas) alocam a copia do estado 0x1d: tambem so a original
+    // tabs 2 (statistics) and 6 (ratings) allocate the copy of state 0x1d: also original only
     if get_screen_param(0x1d) != 0 || get_screen_param(0x1f) == 0 || get_screen_param(0x20) == 0 || matches!(aba, 1 | 2 | 3 | 4 | 6) {
-        // simplification: alocar, liberar e narrar não rodam duas vezes; esses casos se provam no modo Rust
+        // simplification: allocating, freeing and narrating do not run twice; those cases are proven in Rust mode
         return o();
     }
     comparar_montagem_da_partida("build_match_details_screen", &[], || o(), || build_match_details_screen());
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "C" fn comparar_refresh_possession_bar() {
     let copy = get_screen_param(0x1d);
     let mut reg = match screen_update_regions(false) {
         Some(r) if p0 == 0 || copy != 0 => r,
-        // simplification: a alocação da cópia e o pacote pela rede não rodam duas vezes; provados no modo Rust
+        // simplification: the copy’s allocation and the network packet do not run twice; proven in Rust mode
         _ => return o(),
     };
     reg.extend(screen_param_regions());
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "C" fn comparar_draw_match_overview_panel(top: *mut i32
         && get_screen_param(7) != 0;
     let reg = screen_update_regions(false);
     if overview_would_error() || commentator || (p0 != 0 && foto == 0) || reg.is_none() {
-        // simplification: aviso, som, alocação e rede não rodam duas vezes; esses caminhos se provam no modo Rust
+        // simplification: warning, sound, allocation and network do not run twice; those paths are proved in Rust mode
         return o(top, base);
     }
     let mut reg = reg.unwrap_or_default();
@@ -283,8 +283,8 @@ pub(crate) unsafe fn comparar_pela_lista_com(name: &str, extra: &[(usize, usize)
     reg.push((0xde1f64, 0x100));
     reg.push((0xae290c, 4));
     reg.extend_from_slice(extra);
-    // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
-    // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
+    // the background photo (0x41c410) rolls: the generator state goes back for the second round (without it the
+    // generator advanced twice in comparison mode and the career shifted; 204th)
     reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, || crate::aleatorio::sem_contar(rust));
     PLACAR.registrar(igual, || {
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "C" fn comparar_draw_action_zones_panel(top: *mut i32, 
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_ACTION_ZONES_PANEL);
     let foto = get_screen_param(0x1d);
     if foto == 0 {
-        // simplification: a alocação não roda duas vezes; esse desenho se prova no modo Rust
+        // simplification: the allocation does not run twice; this design is proven in Rust mode
         return o(top, base);
     }
     let extra = [(top as usize, 4), (0xb6b7a4, 2), (0xb6b7b4, 1), (foto, 0xd7a)];
@@ -319,7 +319,7 @@ pub(crate) unsafe extern "C" fn comparar_draw_action_zones_panel(top: *mut i32, 
 pub(crate) unsafe extern "C" fn comparar_draw_match_report_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_REPORT_PANEL);
     if get_screen_param(0) == 0 && *((get_screen_param(0x20) + 0x4c) as *const u8) == 0 && get_screen_param(0x2d) == 0 {
-        // simplification: a alocação do relatório não roda duas vezes; esse caminho se prova no modo Rust
+        // simplification: the report allocation does not run twice; this path is proven in Rust mode
         return o(top, base);
     }
     comparar_painel_pela_lista("draw_match_report_panel", || o(top, base), || draw_match_report_panel(top, base));
@@ -344,8 +344,8 @@ pub(crate) unsafe extern "C" fn comparar_build_day_fixtures_screen() {
 pub(crate) unsafe fn comparar_valores_da_partida(name: &str, original: impl FnOnce(), rust: impl FnOnce()) {
     let copy = get_screen_param(0x1d);
     if copy == 0 {
-        // simplification: sem cópia a rotina aloca a cópia (0x944cf1) e a grava no parâmetro 0x1d; não dá
-        // para rodar duas vezes. Só a original; a cópia Rust prova esse ramo no modo Rust.
+        // simplification: without a copy the routine allocates the copy (0x944cf1) and writes it to parameter 0x1d; it cannot
+        // to run twice. Original only; the Rust copy proves this branch in Rust mode.
         return original();
     }
     let mut reg = screen_build_regions();
@@ -411,7 +411,7 @@ pub(crate) unsafe extern "C" fn comparar_draw_team_stats_panel(side: u32, top: *
 /// Comparer for `draw_player_ratings_panel` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_draw_player_ratings_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_PLAYER_RATINGS_PANEL);
-    // simplification: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
+    // simplification: without the state copy (parameter 0x1d) the update inside the panel allocates it, and each
     // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
     if get_screen_param(0x1d) == 0 {
         return o(top, base);
@@ -422,7 +422,7 @@ pub(crate) unsafe extern "C" fn comparar_draw_player_ratings_panel(top: *mut i32
 /// Comparer for `draw_match_stats_panel` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_draw_match_stats_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_STATS_PANEL);
-    // simplification: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
+    // simplification: without the state copy (parameter 0x1d) the update inside the panel allocates it, and each
     // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
     if get_screen_param(0x1d) == 0 {
         return o(top, base);
@@ -537,7 +537,7 @@ pub(crate) unsafe fn comparar_resposta(name: &str, item: u32, o: unsafe extern "
 /// Comparer for `match_screens_handle_latest_scores_cycle` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
     let now: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
-    // folga de 1 s: a hora pode virar entre os dois lados
+    // 1 s of slack: the time may roll over between the two sides
     let redesenha = now().wrapping_add(1000) >= (get_screen_param(0x14) as u32).wrapping_add(5000);
     comparar_resposta("match_screens_handle_latest_scores_cycle", item, original_fn(431), match_screens_handle_latest_scores_cycle, redesenha)
 }
@@ -577,15 +577,15 @@ pub(crate) unsafe extern "C" fn comparar_build_latest_scores() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_LATEST_SCORES);
     let mut reg = screen_build_regions();
     reg.push((0xde1f64, 0x100));
-    // a lista (0x55fba0) escreve num buffer de rede ([0xae2908] na posicao [0xae290c]): a posicao volta
-    // para a segunda rodada escrever no mesmo lugar
+    // the list (0x55fba0) writes into a network buffer ([0xae2908] at position [0xae290c]): the position is restored
+    // for the second round to write in the same place
     reg.push((0xae290c, 4));
-    // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
-    // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
+    // the background photo (0x41c410) rolls: the generator state goes back for the second round (without it the
+    // generator advanced twice in comparison mode and the career shifted; 204th)
     reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| build_latest_scores()));
     PLACAR.registrar(igual, || {
-        // so as diferencas (a lista e grande): onde comecam e quantos bytes
+        // only the differences (the list is large): where they start and how many bytes
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))
@@ -637,8 +637,8 @@ pub(crate) unsafe extern "C" fn comparar_draw_latest_scores_panel(top: *mut i32,
     }
     reg.push((top as usize, 4));
     reg.push((0xde1f64, 0x100));
-    // a lista (0x55fba0) escreve num buffer de rede ([0xae2908] na posicao [0xae290c]): a posicao volta
-    // para a segunda rodada escrever no mesmo lugar
+    // the list (0x55fba0) writes into a network buffer ([0xae2908] at position [0xae290c]): the position is restored
+    // for the second round to write in the same place
     reg.push((0xae290c, 4));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(top, base), || draw_latest_scores_panel(top, base));
     PLACAR.registrar(igual, || {

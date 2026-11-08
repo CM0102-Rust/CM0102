@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize,
 pub(crate) unsafe extern "thiscall" fn comparar_check_duplicate_position(this: usize, home: u32, out: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(IDX_CHECK_DUPLICATE_POSITION);
     if !(0..=10).contains(&(home as u8 as i8)) {
-        return o(this, home, out); // simplification: a caixa, só a original
+        return o(this, home, out); // simplification: the box, original only
     }
     let (mut so, mut sr) = (0xdead_u32, 0xbeef_u32);
     let r = o(this, home, &mut so);
@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_duplicate_position(this: u
 pub(crate) unsafe extern "thiscall" fn comparar_set_marking_type(this: usize, home: u32, mark: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_SET_MARKING_TYPE);
     if !matches!(mark as u8, 1 | 2 | 4 | 8 | 0x10) {
-        return o(this, home, mark); // simplification: a caixa, só a original
+        return o(this, home, mark); // simplification: the box, original only
     }
     let reg = [(this as isize + home as u8 as i8 as isize + 0x5b4) as usize, 1usize];
     let reg = [(reg[0], reg[1]), (this + 0x187f, 4)];

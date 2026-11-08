@@ -30,8 +30,8 @@ pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file:
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = new(0xb2);
-    // simplification: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
-    // virtual são words na pilha; o ano vai no dx); o construtor só lê as palavras.
+    // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
+    // virtual are words on the stack; the year goes in dx); the constructor only reads the words.
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
@@ -364,8 +364,8 @@ pub(crate) unsafe fn create_division_table(this: usize, n: i16, file: usize, row
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if club_in_comp_global(clube, field, g) {
-            // simplification: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
-            // o byte. Com girar = 0, (k + 0) % n = k.
+            // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
+            // the byte. With girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
             k = k.wrapping_add(1);
@@ -481,21 +481,21 @@ pub(crate) unsafe fn set_serie_a_rules(o: usize) {
     write_u16_at(o, 0x3c, 1); // um turno
     write_u8_at(o, 0xc2, 3); // cqi7: os pontos por vitória da Série A
     write_u8_at(o, 0xc3, 1); // pontos por empate
-    write_u8_at(o, 0xc4, 2); // categoria das partidas: liga
+    write_u8_at(o, 0xc4, 2); // match category: league
     write_u8_at(o, 0x42, 1); // clube nacional
     write_u8_at(o, 0xc5, 3); // desempates: confronto direto, saldo, nenhum
     write_u8_at(o, 0xc6, 1);
     write_u8_at(o, 0xc7, 0);
-    write_u8_at(o, 0xbe, 4); // vagas de cima
+    write_u8_at(o, 0xbe, 4); // top places
     write_u8_at(o, 0xbf, 0);
     write_u8_at(o, 0xc0, 0);
     write_u8_at(o, 0xc1, 4); // rebaixados
     write_u32_at(o, 0x1c, 0xffff_ffff); // nenhuma liga acima
-    write_u8_at(o, 0x4a, 3); // substituições
-    write_u32_at(o, 0x20, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION as *const u32)); // cai para a Série B
-    write_u16_at(o, 0xd9, 8); // bit 0x8: os de cima vão para a fase seguinte (sem acesso, sem faixa de campeão)
-    write_u8_at(o, 0x52, 2); // numeração fixa do elenco
-    write_u8_at(o, 0x49, 7); // reservas no banco
+    write_u8_at(o, 0x4a, 3); // substitutions
+    write_u32_at(o, 0x20, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION as *const u32)); // relegated to Série B
+    write_u16_at(o, 0xd9, 8); // bit 0x8: the top ones go to the next stage (no promotion, no champion band)
+    write_u8_at(o, 0x52, 2); // fixed squad numbering
+    write_u8_at(o, 0x49, 7); // substitutes on the bench
 }
 
 /// Writes the Série B rule fields (0x42cb70).
@@ -514,11 +514,11 @@ pub(crate) unsafe fn set_serie_b_rules(o: usize) {
     write_u8_at(o, 0xbf, 0);
     write_u8_at(o, 0xc0, 0);
     write_u8_at(o, 0xc1, 4); // quatro caem
-    write_u32_at(o, 0x1c, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION as *const u32)); // sobe para a Série A
-    write_u16_at(o, 0xd9, 2); // bit 0x2: as vagas de cima são de acesso
+    write_u32_at(o, 0x1c, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION as *const u32)); // goes up to Série A
+    write_u16_at(o, 0xd9, 2); // bit 0x2: the top places are promotion places
     write_u8_at(o, 0x52, 2);
     write_u8_at(o, 0x4a, 3);
-    write_u32_at(o, 0x20, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION as *const u32)); // cai para a Série C
+    write_u32_at(o, 0x20, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION as *const u32)); // drops to Série C
     write_u8_at(o, 0x49, 7);
 }
 
@@ -531,7 +531,7 @@ pub(crate) unsafe fn set_serie_c_rules(o: usize) {
     write_u8_at(o, 0xc3, 1);
     write_u8_at(o, 0xc4, 2);
     write_u8_at(o, 0x42, 1);
-    write_u8_at(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora
+    write_u8_at(o, 0xc5, 1); // tiebreakers: goal difference, goals for, away goals
     write_u8_at(o, 0xc6, 2);
     write_u8_at(o, 0xc7, 4);
     write_u8_at(o, 0xbe, 2);
@@ -540,7 +540,7 @@ pub(crate) unsafe fn set_serie_c_rules(o: usize) {
     write_u8_at(o, 0xc1, 2);
     write_u8_at(o, 0x4a, 3);
     write_u8_at(o, 0x52, 2);
-    write_u32_at(o, 0x1c, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION as *const u32)); // sobe para a Série B
+    write_u32_at(o, 0x1c, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION as *const u32)); // promoted to Série B
     write_u32_at(o, 0x20, 0xffff_ffff); // nenhuma liga abaixo
     write_u16_at(o, 0xd9, 8);
     write_u8_at(o, 0x49, 7);
@@ -631,7 +631,7 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, clube: usize, status: u3
     let (st, fa) = (status as u8, stage as u8);
     let comp = read_u32_as_usize(this + 4);
     if fa == 0xff {
-        // a fase de pontos corridos
+        // the round-robin stage
         if st == 6 {
             if fazer {
                 crate::comparacao::ramo("cqj_9 serie a classificado");
@@ -672,7 +672,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u3
     let (st, fa) = (status as u8, stage as u8 as i8);
     let comp = read_u32_as_usize(this + 4);
     if fa < 7 {
-        // os grupos
+        // the groups
         if st == 6 && fazer {
             bra_nat_first_add_qualified_record(clube, comp, 0x14, 0, 0x28);
         }
@@ -688,7 +688,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u3
         return (0, 0, 0);
     }
     if fa < 10 {
-        // o quadrangular final: os dois que sobem
+        // the final round-robin of four: the two promoted
         if st != 0 {
             return (u32::MAX, 0, 0);
         }
@@ -696,7 +696,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u3
             bra_nat_first_add_promotion_record(clube, comp, 0x32);
             bra_nat_first_add_qualified_record(clube, comp, 0, 0x96, 0x28);
         }
-        // a linha do clube na liga (k = -1) ou nos estágios 0..6, a primeira que tiver o clube, ganha o destino 0
+        // the club’s row in the league (k = -1) or in stages 0..6, the first that has the club, gets destination 0
         let mut k: i8 = -1;
         let mut achada = 0;
         while k < 7 {
@@ -773,9 +773,9 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, clube: usize, status: u32
             }
             if st == 2 || st == 0xff {
                 if fazer {
-                    // simplification: a original empurra os registradores inteiros (eax com o lixo do chamador acima da
-                    // palavra, ecx com a metade de cima do ponteiro da tabela); a 0x4bf850 e a 0x86c000 só leem as
-                    // palavras (0x4b0870 / `as u16`): vão as palavras.
+                    // simplification: the original pushes the whole registers (eax with the caller’s garbage above the
+                    // word, ecx with the upper half of the table pointer); 0x4bf850 and 0x86c000 only read the
+                    // words (0x4b0870 / `as u16`): the words go.
                     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
                     let weight = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, 2);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);

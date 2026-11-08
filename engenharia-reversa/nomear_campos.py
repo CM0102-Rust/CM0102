@@ -17,8 +17,12 @@ SRC = os.path.join(R, 'rust', 'src')
 # variável -> (registro no FORMATOS.md, módulo em fields.rs)
 REGISTROS = {'clube': ('TClub', 'club'), 'pessoa': ('TStaff', 'staff'), 'nacao': ('TNation', 'nation'),
              'contrato': ('TContract', 'contract'), 'comp': ('TComp', 'competition'),
-             'estadio': ('TStadiums', 'stadium'), 'cidade': ('TCities', 'city')}
-USO = re.compile(r'\b((clube|pessoa|nacao|contrato|comp|estadio|cidade)(?:_[a-z0-9_]+|\d+)?) \+ (0x[0-9a-f]+)\b')
+             'estadio': ('TStadiums', 'stadium'), 'cidade': ('TCities', 'city'),
+             # os nomes ingleses dos locais (traduzir_locais.py, 08/11/2026)
+             'club': ('TClub', 'club'), 'person': ('TStaff', 'staff'), 'nation': ('TNation', 'nation'),
+             'contract': ('TContract', 'contract'), 'stadium': ('TStadiums', 'stadium'), 'city': ('TCities', 'city')}
+USO = re.compile(r'\b((clube|pessoa|nacao|contrato|comp|estadio|cidade|club|person|nation|contract|stadium|city)'
+                 r'(?:_[a-z0-9_]+|\d+)?) \+ (0x[0-9a-f]+)\b')
 
 
 def leiautes():

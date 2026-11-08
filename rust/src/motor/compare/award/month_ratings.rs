@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RATINGS);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
     if tab == 0 || n < 0 || cap.wrapping_sub(n) < 40 {
-        // simplification: a tabela pode crescer (realloc): só a original; a 0x767fa0 compara cada nota
+        // simplification: the table may grow (realloc): original only; 0x767fa0 compares each rating
         return o(this, jogo, partida);
     }
     let regions = [(this, 12), (tab, (n as usize + 40) * 12)];
@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
     let found = tab != 0 && (0..n.max(0) as usize).any(|k| read_i32(tab + k * 12) == read_i32(e));
     if tab == 0 || n < 0 || (n >= cap && !found) {
-        // simplification: a tabela cresce (malloc/realloc): só a original
+        // simplification: the table grows (malloc/realloc): original only
         return o(this, e);
     }
     let slots = if n < cap { n as usize + 1 } else { n as usize };

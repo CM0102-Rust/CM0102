@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_store_instructions(this: usize, 
     }
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = row(clube, person);
-    // os 16 espacos e o contador, e a linha de instrucoes do clube
+    // the 16 spaces and the counter, and the club’s instructions row
     let mut reg = vec![(this + 0x30, 0x5c * 16), (this + 0x5f0, 1)];
     if k != -1 {
         reg.push(((*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 2), 80));
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_slot(this: usize, clube: us
         return call_recording(FN_TACTICS_SET_CAPTAIN_FROM_SLOT, this, [clube as u32, slot as u8 as u32, human, 0, 0], || o(this, clube, slot, human));
     }
     let table = *((this + 0x601) as *const usize);
-    // a linha pode ser qualquer uma da tabela: compara as 0x52..0x56 de todas as linhas possiveis
+    // the row can be any in the table: compares 0x52..0x56 of every possible row
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = row(clube, human);
     let reg: Vec<(usize, usize)> = if l == -1 || clube == 0 { vec![] } else { vec![(table.wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4)] };

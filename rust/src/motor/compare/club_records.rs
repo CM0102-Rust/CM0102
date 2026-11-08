@@ -12,7 +12,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize, liga0: usize, always: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS);
     if liga0 == 0 || read_u8(liga0 + 0x44) != 0xff {
-        return o(this, liga0, always); // simplification: as caixas, só a original
+        return o(this, liga0, always); // simplification: the boxes, original only
     }
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(t
             }
             let (t, s) = (club_season_record(this, clube, 0), club_all_time_record(this, clube, 0));
             if t == 0 || s == 0 {
-                return o(this, liga0, always); // simplification: o registro seria criado, só a original
+                return o(this, liga0, always); // simplification: the record would be created, original only
             }
             regions.push((t, 0xe));
             regions.push((s, 0xe));
@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(t
     }
     let queue = read_usize(this + 0x24);
     if (read_usize(this + 0x2c) as i32).wrapping_add(podem_entrar) > read_usize(this + 0x28) as i32 || (queue == 0 && podem_entrar > 0) {
-        return o(this, liga0, always); // simplification: a fila pode crescer (realoca), só a original
+        return o(this, liga0, always); // simplification: the queue may grow (reallocates), original only
     }
     if queue != 0 {
         regions.push((queue, 6 * read_usize(this + 0x28)));
@@ -107,7 +107,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this
     let records = || [season(this, buyer, 1), always(this, buyer, 1), season(this, seller, 1), always(this, seller, 1)];
     let value = read_i32(t + 0x1b);
     let rg = records();
-    // (valor, clube) de cada recorde: pago da temporada e de sempre do comprador, recebido do vendedor
+    // (value, club) of each record: paid in the season and all-time by the buyer, received by the seller
     let mut plan = [(read_i32(rg[0] + 0x313), read_usize(rg[0] + 0x32f)), (read_i32(rg[1] + 0x313), read_usize(rg[1] + 0x32f)),
                      (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];
     let mut queue = read_i32(this + 0x2c);
@@ -151,12 +151,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this
 pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize, value: i32, buyer: usize, seller: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32>(IDX_ADD_TRANSFER_TOTALS);
     if buyer == 0 || seller == 0 || (read_usize(this + 0x28).wrapping_sub(read_usize(this + 0x2c)) as i32) < 2 {
-        return o(this, value, buyer, seller); // simplification: com realloc da fila, só a original
+        return o(this, value, buyer, seller); // simplification: with queue realloc, original only
     }
     let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
     let always: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
     let _ = [season(this, seller, 1), always(this, seller, 1), season(this, buyer, 1), always(this, buyer, 1)];
-    // criar o registro do comprador pode realocar o vetor e mover o do vendedor: pega os quatro de novo (agora só acha)
+    // creating the buyer’s record may reallocate the vector and move the seller’s: fetch all four again (now it only finds)
     let regs = [season(this, seller, 1), always(this, seller, 1), season(this, buyer, 1), always(this, buyer, 1)];
     let queue = read_usize(this + 0x24).wrapping_add(read_usize(this + 0x2c).wrapping_mul(6));
     let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + 0x2c, 4), (queue, 12)];
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_record_news(this: usize, i
     let n = read_usize(this + 0x2c);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_QUEUE_RECORD_NEWS)(this, id, kind);
     if r == 0 {
-        return r; // sem memória: a caixa já saiu
+        return r; // out of memory: the box has already shown
     }
     let item = read_usize(this + 0x24).wrapping_add(n.wrapping_mul(6));
     let (gid, gtipo) = (core::ptr::read_unaligned(item as *const u32), *((item + 4) as *const u8));

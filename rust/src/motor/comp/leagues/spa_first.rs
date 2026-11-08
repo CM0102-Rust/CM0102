@@ -439,7 +439,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
         show_error_at(0xa82844, 0x250);
         return 0;
     }
-    // a divisão de baixo espanhola vira a genérica
+    // the Spanish lower division becomes the generic one
     let mut i: i16 = 0;
     let mut field = read_usize(G_CLUB_TABLE) + 0x57;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
@@ -458,7 +458,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
         let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
             let row = k; // cqk5: a linha k recebe o k-ésimo clube da Primera
-            // simplification: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
+            // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
             iniciar(this, row as u32, clube, 0, 0);
             k = k.wrapping_add(1);
@@ -546,8 +546,8 @@ pub(crate) unsafe extern "thiscall" fn spa_first_update_staff_records_for_status
                     2 | 0xff => {
                         let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
                         let weight = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, 2);
-                        // simplification: a original empurra a fase (+0x32) e a rodada (+0x30) do jogo como palavras em
-                        // registradores com lixo nos 16 bits de cima; a 0x86c000 só lê as palavras.
+                        // simplification: the original pushes the match’s stage (+0x32) and round (+0x30) as words in
+                        // registers with garbage in the high 16 bits; 0x86c000 only reads the words.
                         let away: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
                         away(eng_second_staff_records(), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
                         *((read_usize(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;

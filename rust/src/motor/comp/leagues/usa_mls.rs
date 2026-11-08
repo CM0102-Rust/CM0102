@@ -564,7 +564,7 @@ pub(crate) unsafe fn mls_stage_outcome(this: usize, clube: usize, status: u32, s
     let (st, fa) = (status as u8, stage as u8 as i8);
     let comp = read_u32_as_usize(this + 4);
     if fa < 2 {
-        // a temporada (-1) e as duas primeiras rodadas dos play-offs
+        // the season (-1) and the first two play-off rounds
         if st == 6 {
             if fazer {
                 crate::comparacao::ramo("cqk_9 mls classificado");
@@ -589,8 +589,8 @@ pub(crate) unsafe fn mls_stage_outcome(this: usize, clube: usize, status: u32, s
             }
         } else if st == 0 {
             if fazer {
-                // simplification: a original empurra eax/ecx/edx inteiros (lixo acima das palavras: o do chamador, a metade
-                // de cima do this); a 0x4bf850 e a 0x86bdd0 só leem as palavras: vão as palavras.
+                // simplification: the original pushes whole eax/ecx/edx (garbage above the words: the caller’s, the half
+                // from above this); 0x4bf850 and 0x86bdd0 only read the words: the words go.
                 let weight = weight_by_round(jogo);
                 bra_nat_first_add_qualified_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
             }

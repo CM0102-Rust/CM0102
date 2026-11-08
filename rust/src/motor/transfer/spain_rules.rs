@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, 
         Some(d) => d,
     };
     if read_usize(clube + club::DIVISION) == read_usize(owner + 0x57) {
-        // 0x7c1e30: push 6,5f; push 1; push 2; push ficha; mov ecx, [0xb74350] -> thiscall, ret 0x10 (devolve no st0)
+        // 0x7c1e30: push 6,5f; push 1; push 2; push record; mov ecx, [0xb74350] -> thiscall, ret 0x10 (returns in st0)
         let games: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
         let v = games(read_usize(G_PLAYER_STATS), read_usize(player + 0x61), 2, 1, 6.5);
         if v > read_f32_at(0x968990) as f64 { // 0x968990 = 5

@@ -50,7 +50,7 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscrit
     *((this + 0xab) as *mut u8) = 0;
     *((this + 0xb1) as *mut u8) = 0;
     let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
-    // simplification: nas caixas a original sai com o eax da caixa (0x5e8290); quem chama a virada não lê a devolução
+    // simplification: in the boxes the original exits with the box’s eax (0x5e8290); the caller of the turnover does not read the return
     if inscritos(this) < 0 {
         show_error_at(file, rows[0]);
         return 0;
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_teams(this: usize) -> i32 {
 /// ano de hoje, dia da semana 6) (o sábado de 26 de julho em diante [inferência]), a convocação das duas seleções
 /// (0x90a980, mov ecx -> thiscall, ret 0); depois a atualização da copa.
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    // simplification: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
+    // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
     let year = read_i16(today + 2) as u16 as u32;
     let d = make_date_dword(0x1a, 6, year, 6); // cqn10: a convocação do Jogo das Estrelas
     if stage != 0 && is_date_today(d, today) {

@@ -170,8 +170,8 @@ pub(crate) unsafe fn build_state_league_table(this: usize, n: i16, file: usize, 
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if is_in_state_league(clube, g) {
-            // simplification: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
-            // byte. Com girar = 0, (k + 0) % n = k.
+            // simplification: the original pushes the row in eax with the high bits of the state league’s id; 0x687430 only reads the
+            // byte. With girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
             k = k.wrapping_add(1);

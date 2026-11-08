@@ -21,7 +21,7 @@ pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: usize, campos: &[(
 pub(crate) unsafe fn comp_date_word(this: usize, day: u32, month: u32, week: u32) -> u16 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    // simplification: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
+    // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
     data(d.as_mut_ptr(), day, month, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, week);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize
     finish_rules_setup(this, word, 0)
 }
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 pub(crate) const SOUTH_AMERICA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1, 2), (0xc2, 1, 3), (0xc3, 1, 1), (0xc4, 1, 0xa), (0xab, 2, 0),
     (0xdb, 2, 0), (0xc5, 1, 1), (0xc7, 1, 3), (0xbf, 1, 1), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7), (0x4a, 1, 3), (0xa7, 2, 0xffff)];
@@ -117,8 +117,8 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this
     finish_rules_setup(this, word, 0)
 }
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras e
-// as vagas diretas (4 − +0xef − +0xee, com o +0xef que a própria rotina copia, calculado antes).
+// simplification: virtual +0x3c allocates the round table: does not run twice. Original only; the plan checks the rules and
+// the direct places (4 − +0xef − +0xee, with the +0xef the routine itself copies, computed before).
 
 pub(crate) const ASIA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
     (0xc6, 1, 2), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0)];
@@ -138,5 +138,5 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_912eb0(this
     finish_rules_setup(this, word, 1)
 }
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 

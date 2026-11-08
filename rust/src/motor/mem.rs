@@ -3,7 +3,7 @@ use super::*;
 // Unaligned memory access for the game's records, one function per type (stage 4 of the reorganisation:
 // they replace the copies each batch item used to carry).
 // [pt] Acesso à memória dos registros do jogo, sem alinhamento, uma função por tipo (etapa 4 da reorganização:
-// substituem as cópias que cada item de leva carregava).
+// replace the copies each batch item carried).
 
 pub unsafe fn read_f64(a: usize) -> f64 {
     core::ptr::read_unaligned(a as *const f64)

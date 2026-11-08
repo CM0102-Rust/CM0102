@@ -1,4 +1,4 @@
-// The match-engine macros (textual scope: included first). [pt] As macros do motor (escopo textual: incluídas primeiro).
+// The match-engine macros (textual scope: included first).
 
 macro_rules! leitor {
     ($nome:ident, $campo:expr) => {

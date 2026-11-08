@@ -87,7 +87,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
             realloc(table, bytes)
         };
         if table == 0 {
-            // simplification: sem memória (a caixa "Error" da original): volta a capacidade e deixa a original refazer
+            // simplification: out of memory (the original’s ”Error” box): restores the capacity and lets the original redo it
             write_u32(this + 8, cap as u32);
             return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_PLAYER_RATING)(this, e);
         }

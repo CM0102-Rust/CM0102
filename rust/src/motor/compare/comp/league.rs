@@ -61,14 +61,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_fixtures_for_tv(this: usize
 ///
 /// [pt] Comparador da 0x684230: só a original (aloca a notícia e a entrega aos técnicos).
 pub(crate) unsafe extern "thiscall" fn comparar_send_group_draw_news(this: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SEND_GROUP_DRAW_NEWS)(this) // simplification: só a notícia
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SEND_GROUP_DRAW_NEWS)(this) // simplification: only the news item
 }
 
 /// Comparer for `send_fixture_list_news` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x683ee0: só a original (as notícias vão aos técnicos e a lista dos avisados cresce, alocando).
 pub(crate) unsafe extern "thiscall" fn comparar_send_fixture_list_news(this: usize, list: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_FIXTURE_LIST_NEWS)(this, list) // simplification: só as notícias
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_FIXTURE_LIST_NEWS)(this, list) // simplification: only the news
 }
 
 /// Comparer for `league_update_for_date` (comparison mode: see the header of motor.rs).
@@ -148,7 +148,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_prize_money(league: usize) {
     let n = read_i16(league + 0x3e);
     let e1 = read_u8(league + 0xe1);
     if e1 == 3 || sum_of_positions(n) == 0 {
-        return o(league); // simplification: a virtual ou a divisão por zero, só a original
+        return o(league); // simplification: the virtual or the division by zero, original only
     }
     let mut regions: Vec<(usize, usize)> = Vec::new();
     if e1 != 2 {
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_announce_team_status(league: usi
 pub(crate) unsafe extern "thiscall" fn comparar_league_add_result(league: usize, p: usize, jogo: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT);
     if p == 0 || (*((league + 0x44) as *const u8) == 0xff && *((p + 0x42) as *const u8) != 0xff) {
-        return o(league, p, jogo); // simplification: a caixa ou a fase, só a original
+        return o(league, p, jogo); // simplification: the box or the stage, original only
     }
     let n = read_i16(league + 0x3e) as u16 as u32;
     let mut regions = vec![(league + 0xc9, 8)];
@@ -228,7 +228,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copy_table(league: usize) -> usi
     let table = read_usize(league + 0xb1);
     let n = read_i16(league + 0x3e);
     if table == 0 || n <= 0 || n > 0x32 {
-        return o(league); // simplification: nada a copiar ou a caixa: só a original
+        return o(league); // simplification: nothing to copy or the message box: original only
     }
     let a7 = if read_i16(league + 0xa7) == -1 { n.wrapping_sub(1).wrapping_mul(read_i16(league + 0x3c)) } else { read_i16(league + 0xa7) };
     let c = o(league);
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_set_predicted_positions(l
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LEAGUE_SET_PREDICTED_POSITIONS);
     let n = read_i16(league + 0x3e) as i32;
     if read_usize(league + 8) == 0 || n <= 0 {
-        return o(league); // simplification: a caixa ou nada a ordenar, só a original
+        return o(league); // simplification: the box or nothing to sort, original only
     }
     let mut v: Vec<u32> = (0..n as usize).map(|i| read_usize(read_usize(league + 0xb1) + 0x3b * i) as u32).collect();
     let mut k = vec![0i32; n as usize];
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_projected_positions(this:
     let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let reg = if stats != 0 { search(stats, clube) } else { 0 };
     if reg == 0 {
-        return o(this, clube); // simplification: sem registro para olhar, só a original
+        return o(this, clube); // simplification: no record to look at, original only
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg + 0x73, 3)], || o(this, clube),
         || update_projected_positions(this, clube));
@@ -385,7 +385,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_get_club_array(this: usiz
     original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(IDX_LEAGUE_GET_CLUB_ARRAY)(this, out, n);
     let p = *out;
     if p == 0 {
-        return; // sem memória: a caixa já saiu
+        return; // out of memory: the box has already shown
     }
     let count = read_i16(this + 0x3e);
     let ok = *n == count && (0..count.max(0) as usize).all(|i| read_usize(p + 4 * i) == read_usize(read_usize(this + 0xb1) + i * TABLE_ROW_SIZE));
@@ -459,7 +459,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_free_table(league: usize, table:
 pub(crate) unsafe extern "thiscall" fn comparar_league_check_complete(league: usize, stages: u32, warn: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_LEAGUE_CHECK_COMPLETE);
     if !is_complete_check_read_only(league, stages) {
-        return o(league, stages, warn); // fim de liga (registros, prêmios, fases, aviso): só a original
+        return o(league, stages, warn); // end of league (records, prizes, stages, notice): original only
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(league + 0xa7, 2)], || o(league, stages, warn), || league_check_complete(league, stages, warn));
     PLACAR.registrar(igual && r == n, || format!("league_check_complete({:x}, {}, {}) {}/{} {:x?} x {:x?}", league, stages, warn, r, n, mo, mr));
@@ -521,7 +521,7 @@ pub(crate) unsafe extern "C" fn comparar_league_round_set_date(rounds: usize, i:
 
 /// Comparer for `get_match_importance` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_get_match_importance(league: usize, partida: usize, side: u32, out: *mut u8) -> u8 {
-    // a 0x68a4d0 só lê a liga e grava na local e na `saida`: pode rodar nos dois lados
+    // 0x68a4d0 only reads the league and writes to the local and to `saida`: it can run on both sides
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut u8) -> u8>(IDX_GET_MATCH_IMPORTANCE);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(out as usize, 1)], || o(league, partida, side, out),
         || get_match_importance(league, partida, side, out));
@@ -531,7 +531,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_match_importance(league: usi
 
 /// Comparer for `league_compare_table_rows` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_league_compare_table_rows(a: usize, b: usize) -> i32 {
-    // a comparação particular de [0xb67a00] (se houver) roda nos dois lados: só lê as linhas
+    // the private comparison of [0xb67a00] (if any) runs on both sides: it only reads the rows
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_LEAGUE_COMPARE_TABLE_ROWS)(a, b);
     let n = league_compare_table_rows(a, b);
     PLACAR.registrar(r == n, || format!("league_compare_table_rows original={} rust={}", r, n));
@@ -624,7 +624,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_club_to_division(this: usiz
 ///
 /// [pt] Comparador: embaralha com o sorteio e o rand, aloca e chama a tabela virtual: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_draw_team_order(this: usize, clubs: i32) {
-    // simplification: sorteia e aloca (não roda duas vezes); a cópia se prova pela carreira (a grade de jogos de toda liga)
+    // simplification: rolls and allocates (does not run twice); the copy is proven by the career (the fixture grid of every league)
     original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_DRAW_TEAM_ORDER)(this, clubs)
 }
 

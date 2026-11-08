@@ -214,7 +214,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_international_result(this
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_INTERNATIONAL_RESULT);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if is_national_team(read_usize(p + 0x1c)) == 0 || is_national_team(read_usize(p + 0x20)) == 0 {
-        return o(this, p, m); // simplification: não grava nada, só a original
+        return o(this, p, m); // simplification: writes nothing, original only
     }
     let regions = caps_update_regions(this, p, m);
     let before = crate::comparacao::Memoria::ler(&regions);
@@ -234,7 +234,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_international_result(this
 pub(crate) unsafe extern "thiscall" fn comparar_format_squad_label(this: usize, kind: u32, sub23: u32, out: usize, size: i32, minusculo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, i32, u32) -> u32>(IDX_FORMAT_SQUAD_LABEL);
     if size < 0x14 || out == 0 {
-        return o(this, kind, sub23, out, size, minusculo); // simplification: a caixa, só a original
+        return o(this, kind, sub23, out, size, minusculo); // simplification: the box, original only
     }
     let reg = [(out, (size as usize).min(0x40))];
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, kind, sub23, out, size, minusculo),
@@ -534,8 +534,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_national_teams_remove_player(thi
     if nacao == 0 || u(player + 0x61) == 0 {
         return o(this, player);
     }
-    // as regiões: o jogador, o registro da nação, a faixa do nível na lista e a seleção (o nível,
-    // 0x76d810, só lê)
+    // the regions: the player, the nation record, the level band in the list and the national team (the level,
+    // 0x76d810, only reads)
     let level: unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_POSITION_GROUP);
     let reg = u(this + 4).wrapping_add((*(nacao as *const u32) as usize).wrapping_mul(110));
     let n = level(player, reg as *const i16, 0) as i8 as isize;
@@ -605,7 +605,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_club_call_ups(this: usize
     if p != 0 && callup_array_full(this, team) {
         let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
         let mut expected: Vec<u32> = (0..0x32usize).map(|i| read_usize(team + 0xd7 + 4 * i) as u32).collect();
-        // o mesmo qsort da CRT (a ordem dos iguais é a dele), fora do rastro da original
+        // the CRT’s own qsort (the order of equals is its own), outside the original’s trace
         crate::aleatorio::pausar_rastro(|| qsort(expected.as_mut_ptr() as usize, 0x32, 4, 0x778ef0));
         o(this, team, b, p);
         let obtido: Vec<u32> = (0..0x32usize).map(|i| read_usize(team + 0xd7 + 4 * i) as u32).collect();

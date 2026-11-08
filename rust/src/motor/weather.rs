@@ -88,8 +88,8 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usi
             }
         }
     }
-    // simplification: a original grava o clima na vaga do próprio argumento; se o clima não grava (sem regiões), ficam os
-    // bytes do ponteiro do jogo, como aqui.
+    // simplification: the original writes the weather into the slot of its own argument; if the weather is not written (no regions), what remains are the
+    // bytes of the game pointer, as here.
     let mut cl = jogo as u32;
     clima(this, &mut cl as *mut u32 as usize, jogo);
     let [vento, chuva, temp, _] = cl.to_le_bytes();
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usi
     }
 }
 
-// simplification: sorteia: só a original; a cópia leva os ramos.
+// simplification: rolls: original only; the copy takes the branches.
 
 /// the finance record (0x167 bytes) by the club id; a B club with an A partner, the A one (0x540a50); null club, error
 /// box
@@ -538,7 +538,7 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
     }
 }
 
-// simplification: sorteia 3 ou 4 vezes por cidade: só a original; a cópia leva os ramos.
+// simplification: rolls 3 or 4 times per city: original only; the copy takes the branches.
 
 /// one weather.cfg line with the region id and name ("%ld %s") and its four periods (0x922d20) at +0x1e, +0x31, +0x44
 /// and +0x57
@@ -566,7 +566,7 @@ pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao
     1
 }
 
-// simplification: lê do arquivo (não dá para ler duas vezes): só a original; a cópia leva o ramo.
+// simplification: reads from the file (cannot read twice): original only; the copy carries the branch.
 
 /// one line with the name and 18 integers (the day, five W, five P, seven H): the period gets the day (word) and the 17
 /// bytes; a null file is the "Error" box
@@ -587,7 +587,7 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
     if read_config_line(f, row.as_mut_ptr()) == 0 {
         return 0;
     }
-    // simplification: o nome tem 200 bytes na original; aqui 2000 para o %s não estourar (com os nomes do arquivo, igual).
+    // simplification: the name is 200 bytes in the original; here 2000 so the %s does not overflow (with the names in the file, the same).
     let mut name = [0u8; 2000];
     let mut v = [0i32; 18];
     let p = v.as_mut_ptr();
@@ -604,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
     1
 }
 
-// simplification: lê do arquivo: só a original; a cópia leva o ramo.
+// simplification: reads from the file: original only; the copy takes the branch.
 
 /// reads CM3_DATA\weather.cfg: the region count, the regions (0x922c40) and the city table, with the three readings
 /// ((random(100) + random(100)) × 0.5) and the wind (random(3)) drawn; a file or memory error stops the game

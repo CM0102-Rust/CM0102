@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_appeal_result(this: usize,
 pub(crate) unsafe extern "thiscall" fn comparar_get_slot_text(this: usize, person: usize, slot: u32, out: usize, size: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32>(IDX_GET_SLOT_TEXT);
     if person == 0 || (read_usize(person) as i32) < read_usize(G_STAFF_COUNT) as i32 && ban_slot_rule(this, person, slot) != 0xff {
-        // simplification: o texto do órgão não roda duas vezes; a cópia só repassa a ele
+        // simplification: the governing body’s text does not run twice; the copy only passes it on
         return o(this, person, slot, out, size);
     }
     let r = o(this, person, slot, out, size);
@@ -367,7 +367,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_discipline_remove_player(this: u
 /// Comparer for `find_held_ban` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_find_held_ban(disciplina: usize, id: i32, slot: i8) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8) -> usize>(IDX_FIND_HELD_BAN);
-    // a lista guarda o cursor: as duas partem do mesmo e têm de deixá-lo igual
+    // the list keeps the cursor: both start from the same one and must leave it the same
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(disciplina + 0x1c, 0x12)], || o(disciplina, id, slot), || find_held_ban(disciplina, id, slot));
     PLACAR.registrar(igual && ro == rr, || format!("find_held_ban({}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", id, slot, ro, rr, mo, mr));
     ro

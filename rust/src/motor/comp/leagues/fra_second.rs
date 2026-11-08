@@ -84,8 +84,8 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
         if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: a divisão de baixo espanhola
             crate::comparacao::ramo("cqm_5 divisao de baixo espanhola");
             let e = novo(0xee);
-            // simplification: a original empurra o ano na palavra de baixo do ecx, com o resto do ponteiro do registro em
-            // cima; a 0x851020 só lê a palavra (mov ax, word ptr [esp + 0x21c]).
+            // simplification: the original pushes the year in the low word of ecx, with the rest of the record pointer in
+            // above; 0x851020 only reads the word (mov ax, word ptr [esp + 0x21c]).
             let b = if e != 0 { baixo(e, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32) } else { 0 };
             write_u32_from_usize(this + 0xee, b);
         } else {

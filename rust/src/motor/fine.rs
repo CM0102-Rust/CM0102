@@ -69,7 +69,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let future: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
-    let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construct(nt, 0xbc6, 0);
     set_news_person_slots(nt, 0, player);
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usiz
     crate::comparacao::ramo("cpz_9 noticia do retorno do treinador");
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-    let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construct(nt, 0x1394, 0);
     set_news_person_slots(nt, 0, player);
@@ -120,6 +120,6 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usiz
     deliver(read_usize(G_NEWS), nt, read_usize(player + 0x39));
 }
 
-// simplification: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem
-// notícia as duas não fazem nada.
+// simplification: the news rolls and goes to the managers’ inboxes (allocates): original only, with the copy taking the branch; without
+// news item, both do nothing.
 

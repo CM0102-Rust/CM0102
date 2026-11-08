@@ -352,7 +352,7 @@ pub(crate) unsafe fn serie_a_zones(league: usize) -> [u8; 64] {
     z[0] = 1;
     let (mut cl, mut uefa) = (0i8, 0i8);
     slots(read_u32_as_usize(G_UEFA_SEEDING), read_u32_as_usize(read_u32_as_usize(league + 4) + 0x5d), &mut cl, &mut uefa);
-    // simplification: as contas da nação ficam de 1 a 16 no jogo; a cópia ignora as faixas que cairiam fora do registro.
+    // simplification: the nation’s counts stay from 1 to 16 in the game; the copy ignores the bands that would fall outside the record.
     let cl = cl as i32;
     let uefa = uefa as i32;
     if cl > 1 {
@@ -433,8 +433,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
     let sort: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_ITA_LEAGUE_SORT_CLUBS_LEVEL_ON_POINTS);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let r = day(this, today, full);
-    // simplification: a original devolve o byte do dia de liga com os bits de cima do eax que sobram da última chamada; o
-    // laço das competições só lê o byte.
+    // simplification: the original returns the league day byte with the upper bits of eax left over from the last call; the
+    // the competitions loop only reads the byte.
     if read_u32_as_usize(this + 0xdd) == 0 || read_u32_as_usize(this + 0x2c) != 0 || full == 0 || read_u32_as_usize(this + 0xe6) == 0 {
         return r;
     }
@@ -610,7 +610,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
             if i > 0 {
                 let acima = read_u32_as_usize(l - 0x3b);
                 if acima == a || acima == b {
-                    // o clube estava abaixo do outro: trocam
+                    // the club was below the other: they swap
                     let mut tmp = [0u8; 0x3b];
                     core::ptr::copy_nonoverlapping(l as *const u8, tmp.as_mut_ptr(), 0x3b);
                     core::ptr::copy_nonoverlapping((l - 0x3b) as *const u8, l as *mut u8, 0x3b);
@@ -625,7 +625,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                 }
             }
             if i < read_i16(this + 0x3e) {
-                // simplification: a original lê o clube da linha seguinte mesmo na última (4 bytes além da tabela), como aqui.
+                // simplification: the original reads the club of the next row even on the last one (4 bytes past the table), as here.
                 let abaixo = read_u32_as_usize(l + 0x3b);
                 if abaixo == a || abaixo == b {
                     *((t + i as usize * 0x3b + 4) as *mut u8) = i as u8;
@@ -1810,7 +1810,7 @@ pub(crate) unsafe fn ita_ser_a_fill_league_table(this: usize, n: i16, file: usiz
         let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             let row = k; // cqj4: a linha k recebe o k-ésimo clube da divisão
-            // simplification: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
+            // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
             iniciar(this, row as u32, clube, 0, 0); // cqj4: as linhas sem marca
             k = k.wrapping_add(1);

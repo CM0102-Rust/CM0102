@@ -27,7 +27,7 @@ pub(crate) unsafe extern "C" fn zipdir_match_filename_pattern(default: *const u8
             if *default.add(i + 1) != b'.' {
                 return (*default.add(i + 1) == 0) as u32;
             }
-            // o último ponto do nome (strchr 0x946540 sem outro ponto depois)
+            // the last dot of the name (strchr 0x946540 with no other dot after it)
             loop {
                 if *name.add(j) == b'.' && find(name.add(j + 1), b'.' as i32) == 0 {
                     break;
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "C" fn zget_archive_id(path: usize) -> u32 {
     id
 }
 
-// O id e o tamanho só leem o arquivo e liberam o que alocam: as duas rodam lado a lado.
+// The id and the size only read the file and free what they allocate: both run side by side.
 
 /// adds up the uncompressed sizes of the items matching the pattern (signed int: negative above 2 GB, as in the
 /// original)
@@ -197,7 +197,7 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
     let write: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZWRITE);
     let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     crate::comparacao::ramo("save empacotar");
-    // a busca (alça +0, nome +0x10, filtro +0x110) e o caminho montado
+    // the search (handle +0, name +0x10, filter +0x110) and the built path
     let mut found = [0u8; 0x114];
     let mut search = [0u8; 0x104];
     let found_p = found.as_mut_ptr() as usize;
@@ -233,8 +233,8 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
     1
 }
 
-// simplification: cria itens no contêiner (e o arquivo, se não existir); não roda duas vezes. A prova do
-// save compara o .qst gravado com e sem a leva.
+// simplification: creates items in the container (and the file, if it does not exist); does not run twice. The proof of the
+// save compares the .qst saved with and without the batch.
 
 /// each container item whose name matches the pattern becomes a folder file (zopen for reading, zread in 0x30d40
 /// blocks, fwrite)
@@ -282,7 +282,7 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
     let h = new(0x416ec);
     if h == 0 {
         show_error_at(0xad6ab0, 0x282);
-        // simplification: o nome do fonte que a 0x944cff separa cai na casa da resposta
+        // simplification: the source file name that 0x944cff splits off lands in the reply cell
         reply = u32::from_le_bytes(*b"zipd");
     } else {
         let f = open(path, 0x98f928);
@@ -343,8 +343,8 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
     reply
 }
 
-// simplification: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
-// (--sav) passa por aqui; a gravação não.
+// simplification: creates files in the temporary folder and allocates; does not run twice. The load in the save proof
+// (--sav) goes through here; saving does not.
 
 /// builds the CM3_TEMP folder path in [0xde279c] and deletes its files matching the pattern, in groups of 100
 /// Original: `utils_clear_temp_folder` (0x90cd50, utils.cpp, cdecl).
@@ -400,15 +400,15 @@ pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
     }
 }
 
-// simplification: apaga arquivos; não roda duas vezes. A gravação do .qst passa por aqui (create_game).
+// simplification: deletes files; does not run twice. Saving the .qst goes through here (create_game).
 
 //
-// O ZFILE (0xa3191 bytes, do zopen 0x9326e0): +0 o FILE da CRT, +4 modo (1 gravando), +8 posição
-// lógica (bytes descomprimidos), +0xc o item, +0x10/+0x14 repetição do RLE (entregues/contagem),
-// +0x18 o byte da repetição, +0x19 cabeçalho (tipo +0x19, a4 +0x1d, quantos +0x21) e índice
-// (+0x25, 0x10c por item: posição, tamanho descomprimido, nome), buffer de leitura +0x41705 e de
+// The ZFILE (0xa3191 bytes, from zopen 0x9326e0): +0 the CRT FILE, +4 mode (1 writing), +8 position
+// logical (uncompressed bytes), +0xc the item, +0x10/+0x14 RLE repetition (delivered/count),
+// +0x18 the repeat byte, +0x19 header (type +0x19, a4 +0x1d, count +0x21) and index
+// (+0x25, 0x10c per item: position, uncompressed size, name), read buffer +0x41705 and
 // escrita +0x72445 (0x30d40 cada), cursores +0xa3185 (leitura), +0xa3189 (escrita), +0xa318d (lidos).
-// RLE: byte <= 0x80 sai como está; > 0x80 = (byte − 0x80) cópias do byte seguinte (1 a 0x7f).
+// RLE: byte <= 0x80 is emitted as is; > 0x80 = (byte − 0x80) copies of the next byte (1 to 0x7f).
 
 /// Reads an unaligned i32 at offset o of the ZFILE.
 ///
@@ -436,7 +436,7 @@ pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
         zf_write_i32(z, 0xa3185, c + 1);
         return b;
     }
-    // simplification: o ramo marca o bloco, nao cada chamada (a zread roda milhoes de vezes na carga)
+    // simplification: the branch marks the block, not each call (zread runs millions of times during loading)
     crate::comparacao::ramo("save zread bloco");
     zf_write_i32(z, 0xa318d, read(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize));
     let b = *((z + 0x41705) as *const u8);
@@ -477,7 +477,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
     let mut k = 0i32;
     if request > 0 {
         'fora: loop {
-            // o resto da repetição pendente
+            // the rest of the pending repeat
             let n = zf_read_i32(z, 0x14);
             if n != 0 && zf_read_i32(z, 0x10) < n {
                 loop {
@@ -523,8 +523,8 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
     request / size
 }
 
-// simplification: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
-// (carga, --sav) e a gravação (o zseek relê pela zread) passam por aqui.
+// simplification: reads from the file and advances the FILE and item cursors; does not run twice. The save proof
+// (loading, --sav) and saving (zseek rereads through zread) go through here.
 
 /// Puts a compressed byte in the write buffer, flushing it with fwrite when full.
 ///
@@ -538,7 +538,7 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
         zf_write_i32(z, 0xa3189, p + 1);
         return;
     }
-    // simplification: o ramo marca o bloco, nao cada chamada (a zwrite roda milhoes de vezes no save)
+    // simplification: the branch flags the block, not each call (zwrite runs millions of times in the save)
     crate::comparacao::ramo("save zwrite bloco");
     write(z + 0x72445, 1, p, zf_read_i32(z, 0) as usize);
     zf_write_i32(z, 0xa3189, 1);
@@ -579,7 +579,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
                     k += 1;
                     continue;
                 }
-                // 0x7f cópias: sai o par e recomeça
+                // 0x7f copies: emit the pair and start over
                 crate::comparacao::ramo("save zwrite par 0x7f");
                 zf_put_byte(z, (n as u8).wrapping_add(0x80));
                 zf_put_byte(z, *repetido);
@@ -598,8 +598,8 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
     how_many
 }
 
-// simplification: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
-// compara o .qst tipo 4 gravado com e sem a leva.
+// simplification: writes to the file (buffer and fwrite) and changes the index; does not run twice. The save proof
+// compares the type-4 .qst saved with and without the batch.
 
 /// when writing: flushes the buffer, closes the pending RLE run and rewrites header and index at the start; closes the
 /// file and frees the item
@@ -650,5 +650,5 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
     *zz = 0;
 }
 
-// simplification: grava, fecha o arquivo e libera; efeito único. A prova do save compara o .qst gravado.
+// simplification: writes, closes the file and frees; one-shot effect. The save proof compares the written .qst.
 

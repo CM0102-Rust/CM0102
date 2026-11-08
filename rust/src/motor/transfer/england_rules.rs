@@ -149,7 +149,7 @@ pub(crate) unsafe fn season_loans_entry(clube: usize) -> usize {
 /// temporada (a tabela [[0xde1f54] + 0x91c]): 0x1e. Mais de um jogador de outro clube no elenco (as 50 vagas em +0xd7,
 /// contados só com o id do jogador abaixo de [0xae2364]): 0x26. Fora da janela (0x8e8e50): 9, com o adjetivo da nação.
 pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
-    // 0x66f4e0: o texto da mensagem (push ...; push formato; push destino; add esp, 0x14) -> cdecl variádica
+    // 0x66f4e0: the message text (push ...; push format; push destination; add esp, 0x14) -> variadic cdecl
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let c = game_get_contract_and_store(player);
     if c == 0 || england_rules_club_of_contract(c) == 0 {
@@ -183,7 +183,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         }
         return 0;
     }
-    // 0x4cf6d0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4 (o contrato de empréstimo)
+    // 0x4cf6d0: push person; mov ecx, [0xae1050] -> thiscall, ret 4 (the loan contract)
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let mut n: i8 = 0;
     for k in 0..50usize {
@@ -221,7 +221,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     }
     crate::comparacao::ramo("cqe_5 fora da janela");
     if msg != 0 {
-        // 0x6181d0: push 2; push 100; push buffer; push nação; add esp, 0x10 -> cdecl (o adjetivo da nação)
+        // 0x6181d0: push 2; push 100; push buffer; push nation; add esp, 0x10 -> cdecl (the nation’s adjective)
         let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_NATION_GET_NATIONALITY_ADJECTIVE);
         let mut buf = [0u8; 100];
         adjetivo(read_usize(this + 0xa), buf.as_mut_ptr(), 100, 2);
@@ -339,12 +339,12 @@ pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize
     data_de(d.as_mut_ptr() as usize, 0x13, 5, 0x7ce, -1);
     if read_i16(G_CURRENT_DATE) > read_i16(d.as_ptr() as usize) && (read_u8(player + 0x18) as i8) < 0x18 { // cqe6: abaixo de 24 anos
         crate::comparacao::ramo("cqe_6 inglaterra periodo da base");
-        // 0x8e8bd0: os mesmos 7 argumentos empurrados de novo; mov ecx, esi (this) -> thiscall, ret 0x1c
+        // 0x8e8bd0: the same 7 arguments pushed again; mov ecx, esi (this) -> thiscall, ret 0x1c
         let base: unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize) = core::mem::transmute(FN_TRANSFER_RULES_GET_LOAN_PERIOD);
         base(this, clube, a2, ini_month, ini_year, end_month, end_year, player);
         return;
     }
-    // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0 (o mês de hoje)
+    // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0 (today’s month)
     let month: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     *ini_month = (month(G_CURRENT_DATE) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)
     *ini_year = read_i16(G_CURRENT_DATE_YEAR);

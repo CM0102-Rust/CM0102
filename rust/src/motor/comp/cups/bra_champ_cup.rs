@@ -38,8 +38,8 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
                 return 0;
             }
             crate::comparacao::ramo(nome);
-            // o ano vai com lixo nos bytes altos na original (o registrador de antes com a palavra +0x40 por cima); a
-            // 0x68a160 só usa os 16 bits de baixo: a cópia passa o ano limpo
+            // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
+            // 0x68a160 only uses the low 16 bits: the copy passes the clean year
             let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             for (r, &(dia, mes, semana, codigo)) in grupos.iter().enumerate() {
                 data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);

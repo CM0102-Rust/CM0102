@@ -22,7 +22,8 @@ def main():
             p = l.rstrip('\n').split('\t')
             # "[pt] ..." é a metade portuguesa de um cabeçalho bilíngue: fica
             if len(p) >= 2 and p[0].strip() and p[1].strip() and '\t' not in p[1] and not p[0].strip().startswith('[pt]'):
-                trad[p[0].strip()] = p[1].strip()
+                # sem ' nem " nem \ (as listas de mutação guardam os trechos em strings Python): os tipográficos
+                trad[p[0].strip()] = p[1].strip().replace("'", '’').replace('"', '”').replace(chr(92), '/')
 
     def linha(l):
         cod, sep, com = l.partition('//')
@@ -46,7 +47,7 @@ def main():
                     open(p, 'w', encoding='utf-8').write(novo)
     print('%d linhas de comentário traduzidas (%d traduções)' % (n, len(trad)))
     if '--gravar' in sys.argv:
-        trocar_nas_mutacoes.aplicar(linha)
+        trocar_nas_mutacoes.aplicar_por_trecho(linha)
 
 
 if __name__ == '__main__':

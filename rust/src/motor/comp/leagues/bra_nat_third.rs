@@ -297,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
             }
             None => {
                 show_error_at(0x98aba4, 0x30b);
-                core::ptr::read_volatile(core::ptr::null::<usize>()) // simplification: a original lê o endereço 0 aqui e cai
+                core::ptr::read_volatile(core::ptr::null::<usize>()) // simplification: the original reads address 0 here and crashes
             }
         };
         core::ptr::write_unaligned((list + 4 * SECOND_ROUND_SEEDS[k] as usize) as *mut usize, c);
@@ -352,7 +352,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     let mut i = 0i32;
     while i < read_i16(second + 0x3e) as i32 {
         let e = read_usize(second + 0xa7) + 6 * i as usize;
-        // simplification: a original grava sem limite numa lista de 8 na pilha; a fase tem 8 vencedores (a cópia para no 8º).
+        // simplification: the original writes without bounds into a list of 8 on the stack; the stage has 8 winners (the copy stops at the 8th).
         if read_u8(e + 5) == 1 && n < 8 {
             v[n] = read_usize(e);
             n += 1;

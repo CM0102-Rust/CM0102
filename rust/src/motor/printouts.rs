@@ -153,6 +153,6 @@ pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, kind: u32, i
 
 
 
-// simplification: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo. Sem notícia as duas não
+// simplification: the news item goes to the managers’ inboxes (allocates): original only; the copy carries the branch. Without news both do not
 // fazem nada.
 

@@ -348,7 +348,7 @@ pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, attack: i8, band: u32, out
         }
     };
     *out.add(1) = row;
-    // a coluna (saida[0]), pelo lado
+    // the column (saida[0]), by side
     let l = if lado & 0x80 != 0 {
         0
     } else if lado & 0x100 != 0 {
@@ -379,7 +379,7 @@ pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, attack: i8, band: u32, out
         [6, 11, 13, 15, 20]
     };
     *out = table[l];
-    // os encostos: com `perto`, um passo na faixa; sem, cinco (fora do goleiro)
+    // the cushions: with `perto`, one step in the band; without, five (except the goalkeeper)
     let near = (setor & 1 != 0 && high > 0)
         || (setor & 6 != 0 && high == 0)
         || (setor & 0x40 != 0 && lado & 0x700 != 0 && high == 3 && attack == 1);
@@ -471,13 +471,13 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     let cel = this + 0x164 + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
     crate::comparacao::ramo("cpu_11 coordenada gravada");
     core::ptr::write_unaligned(cel as *mut u32, coord); // cpu11: a coordenada
-    // a saída da 0x5b7e60 é o próprio argumento coord na original (uma vaga só, para a função inteira)
+    // the output of 0x5b7e60 is the coord argument itself in the original (a single slot, for the whole function)
     let mut out: [i16; 2] = [cx, cy];
-    // simplification: as listas das duas fases ficam contíguas como em [esp+0x64]; os índices além de 0xea não acontecem
+    // simplification: the lists of the two stages stay contiguous as at [esp+0x64]; indexes beyond 0xea do not happen
     let mut cand = [0u16; 0xea];
-    let mut count = [0i8; 2]; // na original sem valor inicial; a primeira posição sempre a zera
+    let mut count = [0i8; 2]; // uninitialized in the original; the first position always zeroes it
     let mut best = [0i32; 2];
-    let mut last_dy: i32 = 0; // [esp+0x60], lido só pelos índices fora da tabela no fim
+    let mut last_dy: i32 = 0; // [esp+0x60], read only by the indices outside the table at the end
     for p in 0..2usize {
         best[p] = 0x7fffffff;
         let mut list = 0x9cc368usize;
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
             let mut dist: i32 = 0;
             for zx in 0..3u32 {
                 for zy in 0..4u32 {
-                    // a máscara vai com a altura da faixa nos 16 bits de cima (o ecx da original); a 0x5b7e60 não os lê
+                    // the mask goes with the band height in the upper 16 bits (the original’s ecx); 0x5b7e60 does not read them
                     home_in(pos as u32 | zy << 16, p as i8, zx | zy << 16, out.as_mut_ptr());
                     let c = base + 4 * (zx as usize * 4 + zy as usize);
                     let dy = ((read_i16(c + 2) as i32 * 12) / 36 - (out[1] as i32 * 12) / 36).wrapping_abs();
@@ -540,7 +540,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
         }
     }
     let extra = this + 0x14e + su * 2;
-    let o = (1 - sf as i32) * 11; // o começo da lista da outra fase
+    let o = (1 - sf as i32) * 11; // the start of the other stage’s list
     let no = count[(1 - sf) as usize];
     let current = read_i16(geral) as u16;
     for a in 0..no.max(0) as i32 {
@@ -549,7 +549,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
             return 1;
         }
     }
-    // simplification: as saídas da 0x5b73a0 ficam sem valor inicial na original se ela falhar (posição sem lado); aqui 0
+    // simplification: the outputs of 0x5b73a0 are uninitialized in the original if it fails (position without a side); here 0
     let (mut setor, mut lado_c, mut lado_a) = (0u16, 0u16, 0u16);
     for b in 0..no.max(0) as i32 {
         split(cand[(o + b) as usize] as u32, &mut setor, &mut lado_c);
@@ -563,9 +563,9 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
         write_u16(extra, cand[o as usize]);
         return 1;
     }
-    // duas na outra fase: o meio dos bits de setor (1..0x40) e de lado (0x80..0x800) das duas. As palavras do quadro a
-    // partir de [esp+0x38]: a tabela dos lados e 0xffff, a faixa (3) e 0, o ponteiro da melhor distância (sem valor
-    // reproduzível: 0), this, a tabela dos setores e 0xffff, o último |Δy| e as listas.
+    // two in the other stage: the middle of the sector bits (1..0x40) and side bits (0x80..0x800) of both. The frame words
+    // from [esp+0x38]: the sides table and 0xffff, the band (3) and 0, the best-distance pointer (uninitialized
+    // reproducible: 0), this, the sector table and 0xffff, the last |Δy| and the lists.
     let (c0, c1) = (cand[o as usize], cand[(o + 1) as usize]);
     let mut q = [0u16; 0x100];
     q[..6].copy_from_slice(&[0x80, 0x100, 0x200, 0x400, 0x800, 0xffff]);
@@ -892,8 +892,8 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         formation_error_box(0x971);
     }
     if id < 0x98ec5e {
-        // simplification: a original copia o vetor local mesmo quando a leitura falha (sobra de pilha num arquivo truncado);
-        // a cópia começa com zeros
+        // simplification: the original copies the local array even when the read fails (stack leftover in a truncated file);
+        // the copy starts with zeros
         let mut v = [0u32; 11];
         if crt_fread_one(v.as_mut_ptr() as usize, 0x2c, f) == 1 {
             if !nativo {
@@ -990,7 +990,7 @@ pub(crate) unsafe extern "thiscall" fn centre_backs_without_conflict(this: usize
 pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32, position: u32, extra: u32) -> u32 {
     let k = home as u8 as i8;
     if !(0..=10).contains(&k) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_SET_SLOT_POSITION)(this, home, position, extra); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_SET_SLOT_POSITION)(this, home, position, extra); // message box: original only
     }
     let s = k as usize;
     let p = position as u16 as i16;
@@ -1003,16 +1003,16 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
         *((this + 0x143 + s) as *mut u8) = 1;
         for j in 0..11usize {
             if j != s && read_i16(this + 0x12d + 2 * j) == p {
-                *((this + 0x143 + j) as *mut u8) = 0; // a outra casa com a mesma posição
+                *((this + 0x143 + j) as *mut u8) = 0; // the other square with the same position
             }
         }
     }
     core::ptr::write_unaligned(extra_of_home as *mut i16, p);
-    // a 0x5b7e60 e a 0x5b73a0 só leem a palavra baixa da máscara (a original empurra o eax com o alto que estiver)
+    // 0x5b7e60 and 0x5b73a0 only read the low word of the mask (the original pushes eax with whatever high part it has)
     let pitch_cell: unsafe extern "C" fn(u32, u32, u32, *mut u32) -> u32 = core::mem::transmute(FN_FORMATION_GET_DEFAULT_COORDINATE);
     let split: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
-    // as saídas valem de uma volta para a outra, como as locais da original (sem valor só se a 0x5b73a0 falhar
-    // logo na primeira: zero aqui)
+    // the outputs carry over from one iteration to the next, like the original’s locals (uninitialized only if 0x5b73a0 fails
+    // right on the first one: zero here)
     let (mut setor_geral, mut setor_extra, mut lado, mut saida) = (0u16, 0u16, 0u16, 0u32);
     if read_i16(geral) == read_i16(extra_of_home) {
         crate::comparacao::ramo("cpk_7 formacao mesma posicao");
@@ -1026,11 +1026,11 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
             let (sem_bola, com_bola) = (this + 0x164 + 4 * i, this + 0x194 + 4 * i);
             let (g, e) = (read_i16(geral) as u16 as u32, read_i16(extra_of_home) as u16 as u32);
             let (a, b) = if g == e {
-                (g, g) // a mesma posição com e sem a bola
+                (g, g) // the same position with and without the ball
             } else {
                 split(g, &mut setor_geral, &mut lado);
                 split(e, &mut setor_extra, &mut lado);
-                if (setor_extra as i16) < (setor_geral as i16) { // a extra mais atrás
+                if (setor_extra as i16) < (setor_geral as i16) { // the rearmost extra
                     (e, g)
                 } else {
                     (g, e)

@@ -215,6 +215,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_euro_registered_players(t
 ///
 /// [pt] Comparador da 0x859cc0: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_squad_manager_save(this: usize, save: usize) -> u32 {
-    // simplification: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
+    // simplification: writes to the save container (cannot run twice); the copy is proven by the save proof
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SQUAD_MANAGER_SAVE)(this, save)
 }

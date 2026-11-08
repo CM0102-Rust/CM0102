@@ -152,8 +152,8 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
     }
 }
 
-// simplification: as semifinais (0x4c2330) alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
-// (fora da última fase, que dá a caixa e não muda nada).
+// simplification: the semi-finals (0x4c2330) allocate and roll: they do not run twice. Original only; the plan: +0x30 goes up one
+// (outside the last stage, which shows the box and changes nothing).
 
 
 
@@ -311,8 +311,8 @@ pub(crate) unsafe fn con_merc_cup_advance_stage_cqs11_fase_seguinte(this: usize,
     }
 }
 
-// simplification: o mata-mata aloca e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um (fora da última
-// fase, que dá a caixa e não muda nada).
+// simplification: the knockout allocates and draws: it does not run twice. Original only; the plan: +0x30 goes up one (outside the last
+// stage, which shows the box and changes nothing).
 /// Comparer: runs only the original and checks +0x30 increased by one (unchanged on the last stage).
 pub(crate) unsafe fn con_merc_cup_compare_advance_stage(name: &str, this: usize, original: impl FnOnce()) {
     let f = read_u32_as_usize(this + 0x30) as i32;
@@ -369,17 +369,17 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
             clubs(this);
             if first(this) == 0 {
                 show_error_at(0x9a7d6c, 0x385);
-                // simplification: a original devolve só o al = 0 (o resto do eax é o que a caixa deixou); quem chama lê o byte
+                // simplification: the original returns only al = 0 (the rest of eax is what the box left); the caller reads the byte
                 return 0;
             }
             if games(this) == 0 {
                 show_error_at(0x9a7d6c, 0x38b);
-                // simplification: a original devolve só o al = 0 (o resto do eax é o que a caixa deixou); quem chama lê o byte
+                // simplification: the original returns only al = 0 (the rest of eax is what the box left); the caller reads the byte
                 return 0;
             }
             if sort(this, 0) == 0 {
                 show_error_at(0x9a7d6c, 0x392);
-                // simplification: a original devolve só o al = 0 (o resto do eax é o que a caixa deixou); quem chama lê o byte
+                // simplification: the original returns only al = 0 (the rest of eax is what the box left); the caller reads the byte
                 return 0;
             }
             for g in 0..3i32 {
@@ -395,9 +395,9 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
     league(this, today, full)
 }
 
-// simplification: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
-// no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 3 fases
-// criadas e a fase atual (+0x30) a última delas.
+// simplification: the clubs (shuffled), the tables, the matches and the league day do not run twice. Original only; the plan
+// on the draw day (the copy’s condition): +0x45 = 1, the list +0xee cleared, the table of the first group and the 3 stages
+// created and the current stage (+0x30) the last of them.
 
 /// rule: group 1 of the Copa Merconorte has 4 clubs, the first 4 drawn, each in the row of its order; human managers
 /// get the group draw news
@@ -422,7 +422,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(thi
     let mut i = 0i8;
     while (i as i16) < read_i16(this + 0x3e) {
         crate::comparacao::ramo("cqr_12 linha do primeiro grupo");
-        // simplification: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, con_merc_cup_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
@@ -430,8 +430,8 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(thi
     1
 }
 
-// simplification: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
-// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
+// simplification: the table is allocated (and each row allocates the history) and the news goes to the managers: does not run twice. Only the
+// original; the plan: returns 1, 4 teams and in row i (0x3b bytes) the drawn team i with position i (+4).
 
 /// rule: each of the other groups of the Copa Merconorte is a league stage with the next 4 drawn clubs (4g + 4 to 4g +
 /// 7), the cup's rules and year and the cup's round table for the group; human managers get the news
@@ -513,8 +513,8 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
     1
 }
 
-// simplification: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
-// fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// simplification: the stage is allocated and the news goes to the managers: does not run twice. Original only; the plan: returns 1 with the
+// stage in [+0xc][g], +0x30 = g, the stage with the teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 
 /// rule: the Copa Merconorte starts with groups (stages below 3, id 0x3e9 + stage: 4 groups [inference]) of six rounds

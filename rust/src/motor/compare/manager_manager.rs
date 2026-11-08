@@ -94,7 +94,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_build_board_player_performance_te
 pub(crate) unsafe extern "thiscall" fn comparar_check_board_transfer_veto(this: usize, j: usize, clube: usize, value: i32, comprando: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32) -> u32>(IDX_CHECK_BOARD_TRANSFER_VETO);
     if comprando as u8 != 0 && j != 0 {
-        // ecx = [0xb63d28]; push pessoa -> thiscall, ret 4 (como em 0x62edfc); confere id e ficha por dentro
+        // ecx = [0xb63d28]; push person -> thiscall, ret 4 (as in 0x62edfc); checks id and record inside
         let in_day: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
         in_day(read_usize(G_INJURY), j);
     }
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_board_ultimatum_news(this: 
 ///
 /// [pt] Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original.
 pub(crate) unsafe extern "stdcall" fn comparar_news_board_ultimatum_text(noticia: usize, corpo: u32, out: usize) {
-    // simplification: o objeto de texto não pode receber o texto duas vezes; só a original roda aqui
+    // simplification: the text object cannot receive the text twice; only the original runs here
     original_fn::<unsafe extern "stdcall" fn(usize, u32, usize)>(IDX_NEWS_BOARD_ULTIMATUM_TEXT)(noticia, corpo, out);
 }
 
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize,
             }
             let ct = contrato(read_usize(G_CONTRACT_MANAGER), p);
             if ct != 0 {
-                // a 0x10000000 é lida em +0x40 (0x8676f0) e apagada em +0x45 (0x8674e0): não dá para conferir
+                // 0x10000000 is read at +0x40 (0x8676f0) and cleared at +0x45 (0x8674e0): cannot be checked
                 sobra |= (marks(ct) & 0x180) | (read_usize(ct + 0x45) as u32 & 0x889_2608);
             }
         }
@@ -259,8 +259,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_board_confidence_band(this: 
 
 /// Comparer for `reset_board_for_new_manager` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_reset_board_for_new_manager(this: usize, clube: usize) {
-    // simplification: as expectativas (0x6a3770) postam notícia e o registro (0x869aa0) grava o histórico em arquivo: não
-    // rodam duas vezes; só a original, a cópia prova pela carreira no modo Rust (o ramo)
+    // simplification: the expectations (0x6a3770) post news and the record (0x869aa0) writes the history to a file: they do not
+    // run twice; original only, the copy proves itself by the career in Rust mode (the branch)
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RESET_BOARD_FOR_NEW_MANAGER)(this, clube)
 }
 
@@ -383,7 +383,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_staff_from_club(this: usi
     if person == 0 || clube == 0 || read_i32(person) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         return o(this, person, clube);
     }
-    // o plano: os campos em cópias com os mesmos deslocamentos
+    // the plan: the fields in copies with the same offsets
     let mut s = [0u8; 0x40];
     let mut c = [0u8; 0x1e0];
     core::ptr::copy_nonoverlapping(person as *const u8, s.as_mut_ptr(), 0x40);
@@ -417,7 +417,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fix_missing_jobs(this: usize) {
     }
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cursor);
     if !empty {
-        // simplification: a 0x69ba50 abre a vaga (aloca, sorteia o candidato): não roda duas vezes; o modo Rust e a carreira provam
+        // simplification: 0x69ba50 opens the slot (allocates, draws the candidate): does not run twice; Rust mode and the career prove
         return o(this);
     }
     let reg = [(l + 0xa, 4)];

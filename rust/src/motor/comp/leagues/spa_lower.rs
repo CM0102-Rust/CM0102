@@ -470,7 +470,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
         show_error_at(0xa82880, 0x2ac);
         return 0;
     }
-    // os clubes desta divisão passam à genérica
+    // the clubs of this division move to the generic one
     let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
@@ -484,7 +484,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     let mut k: u8 = 0;
     for g in [KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION] { // cqm6: os times B da Primera e da Segunda
         let rows = read_i16(this + 0x3e);
-        // a conta das linhas para a condição anda junto com `k`
+        // the row count for the condition advances together with `k`
         let mut kk = k;
         for_each_spanish_b_team(g, &mut kk, rows, |c, entra| {
             if entra {

@@ -420,7 +420,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut nm, mut id) = (0i16, 0i16);
     let knockout = rounds_of_cup(this, 0xc, &mut nm, &mut id, 0);
-    // as posições do mata-mata antes de liberar a tabela dele, as outras depois (como a original)
+    // the knockout positions before freeing its table, the others after (like the original)
     let (plano, n_mata) = planned_final_positions(this, knockout, nm);
     for (j, &(k, p)) in plano.iter().enumerate() {
         if j == n_mata {
@@ -752,7 +752,7 @@ pub(crate) unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usiz
 /// [pt] comp_util_scale_by_round (0x4bf850, cdecl(baixo, alto, rodada, rodadas)): a faixa pela rodada, de 0 a 100.
 pub(crate) unsafe fn scale_by_round(low: u32, high: u32, round: i16, rounds: u32) -> u32 {
     let f: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
-    // simplification: a original empurra a rodada num registrador com lixo nos 16 bits altos; a 0x4bf850 só lê a palavra.
+    // simplification: the original pushes the round in a register with garbage in the high 16 bits; 0x4bf850 only reads the word.
     f(low, high, round as u16 as u32, rounds)
 }
 
@@ -816,7 +816,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 if r == 0 {
                     let weight = scale_by_round(1, 0x14, 0, 2);
                     let round = read_i16(read_usize(this + 0xa3) + 0x6f) as u16 as u32;
-                    // simplification: a fase +0x3a vai num registrador com lixo nos 16 bits altos; a 0x86bdd0 só usa a palavra.
+                    // simplification: the stage +0x3a goes in a register with garbage in the high 16 bits; 0x86bdd0 only uses the word.
                     european_cup_add_qualified_record(clube, comp, read_i16(this + 0x3a) as u16 as u32, round, weight);
                 } else {
                     let weight = scale_by_round(1, 0x14, r, 2);
@@ -825,7 +825,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
             }
             0xff | 2 => {
                 let weight = scale_by_round(1, 0x14, read_i16(jogo + 0x34), 2);
-                // simplification: +0x32 e +0x30 vão em registradores com lixo nos 16 bits altos; a 0x86c000 só usa as palavras.
+                // simplification: +0x32 and +0x30 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words.
                 european_cup_add_knocked_out_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
                 crate::comparacao::ramo("cpz_4 caiu na qualificacao");
                 leave_euro_competition(clube); // cpz4: quem cai na qualificação sai da competição europeia
@@ -865,7 +865,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 let knockout = read_usize(read_usize(this + 0xc) + 0x30);
                 let rounds = read_usize(knockout + 0xa3);
                 let r = read_i16(jogo + 0x34) as i32;
-                // os bits de cima do registrador que a original empurra são os do ponteiro das fases (+0xc)
+                // the upper bits of the register the original pushes are those of the stages pointer (+0xc)
                 let round = (read_usize(this + 0xc) as u32 & 0xffff_0000) | read_i16(rounds.wrapping_add((r as usize).wrapping_mul(0x68)) + 0x6f) as u16 as u32;
                 european_cup_add_qualified_record(clube, comp, 0, round, weight);
             }
@@ -880,9 +880,9 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
     0
 }
 
-// simplification: os registros vão para o arquivo, mexem nas reputações e no moral (sorteiam) e o título e o vice gravam o
-// elenco da final: não rodam duas vezes. Só a original roda; o plano confere o que a rotina mesma grava (+0x1db do
-// clube: −1 nos casos em que ele sai, intacto nos outros).
+// simplification: the records go to the file, touch the reputations and morale (they roll) and the champion and runner-up write the
+// final squad: they do not run twice. Only the original runs; the plan checks what the routine itself writes (+0x1db of the
+// club: −1 in the cases where it leaves, untouched in the others).
 
 /// Draws four distinct group indices (rand 4 each until unused).
 ///
@@ -949,8 +949,8 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     let t = table(this, 0xc, &mut rodadas, &mut extra, 0);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = new(0xb2);
-    // simplification: as rodadas, o extra e a palavra +0x40 vão em registradores com lixo nos 16 bits altos; o construtor
-    // só lê as palavras.
+    // simplification: the rounds, the extra and the word +0x40 go in registers with garbage in the high 16 bits; the constructor
+    // only reads the words.
     let stage = if p != 0 {
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
@@ -975,9 +975,9 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut i32, 0xc);
 }
 
-// simplification: o sorteio sorteia, a 0x7e9180 e o construtor alocam e a rodada cria os jogos: só a original. O plano,
-// feito antes: os 8 primeiros e segundos dos grupos e o 3º e 4º de cada um; depois, +0x30 = 12, a fase do mata-mata
-// com 8 clubes que são os primeiros e segundos (como conjunto) e o 3º e o 4º de cada grupo com +0x1db = −1.
+// simplification: the draw rolls, 0x7e9180 and the constructor allocate and the round creates the matches: original only. The plan,
+// done before: the 8 group winners and runners-up and the 3rd and 4th of each; then +0x30 = 12, the knockout stage
+// with 8 clubs that are the first and second places (as a set) and the 3rd and 4th of each group with +0x1db = −1.
 
 /// Entrants (+0x14, 6 bytes each) still in the competition (+0x1db = the cup id), optionally excluding entry round 7;
 /// writes them to v and returns the count.
@@ -1227,7 +1227,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
     }
 }
 
-// simplification: os sorteios sorteiam, alocam as fases e mandam notícias: só a original; a cópia leva o ramo.
+// simplification: the draws roll, allocate the stages and send news: original only; the copy takes the branch.
 
 
 
@@ -1430,7 +1430,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
         let minus: unsafe extern "thiscall" fn(*mut [u16; 4], *mut [u16; 4], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
         let copy: unsafe extern "thiscall" fn(*mut [u16; 4], *mut [u16; 4], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
         let (mut d, mut t1, mut t2) = ([0u16; 4], [0u16; 4], [0u16; 4]);
-        // simplification: o ano + 1 vai no ax com o resto do eax nos bytes altos; a 0x549f70 lê o ano como word
+        // simplification: the year + 1 goes in ax with the rest of eax in the high bytes; 0x549f70 reads the year as a word
         construct(&mut d, 1, 2, (year as u16).wrapping_add(1) as u32, 2);
         let r = minus(&mut d, &mut t1, 1);
         copy(&mut d, &mut t2, r);

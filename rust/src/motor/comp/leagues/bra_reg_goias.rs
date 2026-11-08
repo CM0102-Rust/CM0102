@@ -234,8 +234,8 @@ pub(crate) unsafe fn bra_reg_goias_create_state_league_table(this: usize, n: i16
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if is_in_state_league(clube, g) {
-            // simplification: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
-            // byte. Com girar = 0, (k + 0) % n = k.
+            // simplification: the original pushes the row in eax with the high bits of the state league’s id; 0x687430 only reads the
+            // byte. With girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
             k = k.wrapping_add(1);
@@ -324,7 +324,7 @@ pub(crate) unsafe fn goiano_rules(o: usize) {
     write_u8_at(o, 0xc2, 3);
     write_u8_at(o, 0xc5, 3); // cqj7: o primeiro desempate do Goiano
     write_u8_at(o, 0x4a, 3);
-    write_u8_at(o, 0xbe, 8); // os 8 classificados
+    write_u8_at(o, 0xbe, 8); // the 8 qualified
     write_u16_at(o, 0xd9, 8);
     write_u16_at(o, 0x3c, 1);
     write_u8_at(o, 0xc3, 1);
@@ -348,18 +348,18 @@ pub(crate) unsafe fn j1_rules(o: usize) {
     write_u16_at(o, 0xab, 0x82);
     write_u16_at(o, 0xdb, 0);
     write_u8_at(o, 0x42, 1);
-    write_u8_at(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora, nenhum
+    write_u8_at(o, 0xc5, 1); // tiebreakers: goal difference, goals for, away goals, none
     write_u8_at(o, 0xc6, 2);
     write_u8_at(o, 0xc7, 4);
     write_u8_at(o, 0xc8, 0);
     write_u8_at(o, 0xbe, 0);
     write_u8_at(o, 0xbf, 0);
     write_u8_at(o, 0xc0, 0);
-    write_u8_at(o, 0xc1, 2); // dois caem para a J2
+    write_u8_at(o, 0xc1, 2); // two go down to J2
     write_u32_at(o, 0x1c, 0xffff_ffff);
     write_u8_at(o, 0x52, 2);
     write_u8_at(o, 0x4a, 3);
-    write_u32_at(o, 0x20, *(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2 as *const u32)); // cai para a J2
+    write_u32_at(o, 0x20, *(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2 as *const u32)); // falls to J2
     write_u16_at(o, 0xd9, 8);
     write_u8_at(o, 0x49, 5);
 }
@@ -380,11 +380,11 @@ pub(crate) unsafe fn j2_rules(o: usize) {
     write_u8_at(o, 0xc6, 2);
     write_u8_at(o, 0xc7, 4);
     write_u8_at(o, 0xc8, 0);
-    write_u8_at(o, 0xbe, 2); // dois sobem para a J1
+    write_u8_at(o, 0xbe, 2); // two go up to the J1
     write_u8_at(o, 0xbf, 0);
     write_u8_at(o, 0xc0, 0);
     write_u8_at(o, 0xc1, 0);
-    write_u32_at(o, 0x1c, *(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1 as *const u32)); // sobe para a J1
+    write_u32_at(o, 0x1c, *(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1 as *const u32)); // promoted to J1
     write_u8_at(o, 0x4a, 3);
     write_u32_at(o, 0x20, 0xffff_ffff);
     write_u8_at(o, 0x49, 5);

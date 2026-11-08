@@ -277,7 +277,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
         return;
     }
     let pref = preferred_squad_numbers(read_u32(p + 0x61) as usize).unwrap_or([0xff; 5]);
-    // o número com o sinal do clube: positivo com técnico humano, negativo sem
+    // the number with the club’s sign: positive with a human manager, negative without
     let sinal = |k: u8| -> u32 {
         if human(c, 0, 1, 0, 0) != 0 {
             k.wrapping_add(1) as u32
@@ -336,7 +336,7 @@ pub(crate) unsafe fn squad_number_regions(ps: &[usize]) -> Vec<(usize, usize)> {
 /// posições que servem (máscaras: 1 goleiro, 4/0x10/0x40 os setores, 0x80..0x800 as faixas [inferência]).
 pub(crate) const SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS: [u16; 20] = [
     0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os titulares
-    0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x4, // os reservas
+    0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x4, // the reserves
 ];
 
 /// the rule: the squad (with the linked B team) is ordered by the reference line-up (11 starters and 9 substitutes) and
@@ -367,7 +367,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
     let number: unsafe extern "thiscall" fn(usize, usize, usize) -> i8 = core::mem::transmute(FN_SQUAD_MANAGER_GET_SQUAD_NUMBER);
     let write: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_SQUAD_MANAGER_SET_SQUAD_NUMBER);
     let dar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SQUAD_MANAGER_ALLOCATE_SQUAD_NUMBER);
-    let mut stored = [0usize; 50]; // por número − 1
+    let mut stored = [0usize; 50]; // by number − 1
     let mut order = [0usize; 50];
     let mut all = [0usize; 50];
     let mut n = 0usize;
@@ -422,7 +422,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
             order[b] = 0;
         }
     }
-    // `vez` = −1, −2... (char), a ordem de cada um; `k` = 1, 2... a mesma ordem em positivo
+    // `vez` = −1, −2... (char), the order of each one; `k` = 1, 2... the same order as a positive number
     for i in 0..50usize {
         let vez = (-1 - i as i32) as i8;
         let x = order[i];
@@ -603,8 +603,8 @@ pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, 
 /// As vagas da escalação de referência da 0x85aae0: os 11 titulares e até 14 reservas (as da 0x859fe0, `SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS`,
 /// até a 19ª; a 20ª aqui é de goleiro).
 pub(crate) const EURO_REFERENCE_LINEUP_SLOTS: [u16; 25] = [
-    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // os titulares
-    0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, // os reservas
+    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // the starters
+    0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, // the reserves
 ];
 
 /// the European cup registration rule: the best of the reference line-up are registered (11 starters and 14

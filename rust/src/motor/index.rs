@@ -1,6 +1,6 @@
 use super::*;
 
-// As tabelas da nation_get_nationality_adjective, geradas do exe por `python engenharia-reversa/adjetivos_nacao.py`
+// The nation_get_nationality_adjective tables, generated from the exe by `python engenharia-reversa/adjetivos_nacao.py`
 // (rust/src/adjetivos_nacao.rs).
 include!("../adjetivos_nacao.rs");
 
@@ -18,11 +18,11 @@ include!("../adjetivos_nacao.rs");
 /// não copia, 1 é o nome) e passa à cadeia seguinte; no fim, com o texto vazio, o nome (nos idiomas 4 e 5 não: fica
 /// vazio). Nos outros idiomas (o inglês, 0), o nome. Devolve 1. Sem SEH, sem locais, sem sorteio.
 pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, text: usize, size: u32, gender: u32) -> u32 {
-    core::ptr::write_volatile(text as *mut u8, 0); // antes dos testes, como a original (texto nulo: a mesma falha)
+    core::ptr::write_volatile(text as *mut u8, 0); // before the tests, like the original (null text: the same failure)
     if nacao == 0 || text == 0 || (size as u16 as i16) < 50 {
         return 0;
     }
-    let name = nacao + nation::NATIONALITY; // o nome da nação
+    let name = nacao + nation::NATIONALITY; // the nation’s name
     if gender as u8 != 0 {
         let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
         let i = language();
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, t
             let id = core::ptr::read_unaligned(nacao as *const i32);
             for cadeia in cadeias {
                 if let Some((_, fontes)) = cadeia.iter().find(|e| *(e.0 as *const i32) == id) {
-                    match fontes[f.min(5)] { // as formas 5..255 pela última coluna
+                    match fontes[f.min(5)] { // shapes 5..255 by the last column
                         0 => {}
                         1 => copy_c_string(text, name),
                         t => copy_c_string(text, t as usize),
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, t
 }
 
 
-// As listas da set_key_ids, geradas do exe por `python engenharia-reversa/chaves_fixas.py` (rust/src/chaves_fixas.rs).
+// The set_key_ids lists, generated from the exe by `python engenharia-reversa/chaves_fixas.py` (rust/src/chaves_fixas.rs).
 include!("../chaves_fixas.rs");
 
 /// A chain of _stricmp: the first text equal to the name writes the row index into its global.
@@ -94,7 +94,7 @@ pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     split(0x9d93cc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let v = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
-    // a original não desempilha os argumentos da 0x90d130: são o resto do "v%s %s.%s %d"
+    // the original does not pop the arguments of 0x90d130: they are the rest of ”v%s %s.%s %d”
     format(0xae24d0, 0x9870e8, v, nome.as_ptr(), ext.as_ptr(), row);
     caixa(0x9870e0, 0xae24d0, 0);
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
@@ -147,7 +147,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
                 *x = x.swap_bytes();
             }
         }
-        // a tabela de `n` linhas de `passo` bytes: lida e entregue a `f` (o fseek por cima se a memória faltar)
+        // the table of `n` rows of `passo` bytes: read and handed to `f` (the fseek over it if memory runs out)
         let table = |n: i32, step_towards: u32, f_: &mut dyn FnMut(u32)| {
             let b = alloc((n as u32).wrapping_mul(step_towards));
             if b != 0 {
@@ -161,7 +161,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
         table(c[0], 0x4f, &mut |b| {
             let mut i = 0i32;
             loop {
-                let list = rd(G_CLUB_ENGLISH_NAME_INDEX_TABLE); // a lista de clubes da base
+                let list = rd(G_CLUB_ENGLISH_NAME_INDEX_TABLE); // the database’s club list
                 if i >= if list != 0 { gi(0xae235c) } else { c[0] } {
                     break;
                 }
@@ -171,27 +171,27 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
             }
         });
         table(c[1], 0xba, &mut |b| {
-            key_ids_loop(|| c[1], |i| match_key_name_chain(em(b, i, 0xba), &CONTINENTES_DAS_CHAVES, i as u32)); // continentes do eng.lng
+            key_ids_loop(|| c[1], |i| match_key_name_chain(em(b, i, 0xba), &CONTINENTES_DAS_CHAVES, i as u32)); // continents from eng.lng
         });
         table(c[2], 0x53, &mut |b| {
-            key_ids_loop(|| c[2], |i| { competicao(em(b, i, 0x53), c[5].wrapping_add(i) as u32); }); // competições do eng.lng depois das c5
+            key_ids_loop(|| c[2], |i| { competicao(em(b, i, 0x53), c[5].wrapping_add(i) as u32); }); // eng.lng competitions after the c5
         });
         table(c[3], 0x6d, &mut |b| {
-            key_ids_loop(|| c[3], |i| { nacao(em(b, i, 0x6d), i as u32); }); // nações do eng.lng
+            key_ids_loop(|| c[3], |i| { nacao(em(b, i, 0x6d), i as u32); }); // eng.lng nations
         });
-        // os prêmios: a memória antes de pular as duas tabelas de 0x34
+        // the prizes: the memory before skipping the two 0x34 tables
         let b = alloc((c[7] as u32).wrapping_mul(0x4f));
         pular(f, (c[6] as u32).wrapping_mul(0x34), 1);
         pular(f, (c[4] as u32).wrapping_mul(0x34), 1);
         if b != 0 {
             read(b, 0x4f, c[7] as u32, f);
-            key_ids_loop(|| c[7], |i| { prize(em(b as u32, i, 0x4f), i as u32); }); // prêmios do eng.lng
+            key_ids_loop(|| c[7], |i| { prize(em(b as u32, i, 0x4f), i as u32); }); // eng.lng awards
             free(b);
         } else {
             pular(f, (c[7] as u32).wrapping_mul(0x4f), 1);
         }
         table(c[5], 0x53, &mut |b| {
-            key_ids_loop(|| c[5], |i| { competicao(em(b, i, 0x53), i as u32); }); // competições do eng.lng
+            key_ids_loop(|| c[5], |i| { competicao(em(b, i, 0x53), i as u32); }); // eng.lng competitions
         });
         close(f);
         mark = u32::MAX;
@@ -200,10 +200,10 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
         rodou |= key_ids_loop(|| gi(0xae2378).wrapping_sub(0x7f), |i| { competicao(em(rd(G_CLUB_COMP_TABLE), i, 0x6b) + 4, i as u32); });
         rodou |= key_ids_loop(|| gi(0xae234c), |i| {
             let name = em(rd(G_CONTINENT_TABLE), i, 0xc6) + 4;
-            match_key_name_chain(name, &CONTINENTES_DAS_CHAVES, i as u32); // continentes da base
+            match_key_name_chain(name, &CONTINENTES_DAS_CHAVES, i as u32); // continents of the database
         });
         rodou |= key_ids_loop(|| gi(0xae2388), |i| { prize(em(rd(G_STAFF_COMP_TABLE), i, 0x65) + 4, i as u32); });
-        rodou |= key_ids_loop(|| gi(0xae235c), |i| { clube(em(rd(G_CLUB_TABLE), i, 0x245) + 4, i as u32); }); // clubes da base
+        rodou |= key_ids_loop(|| gi(0xae235c), |i| { clube(em(rd(G_CLUB_TABLE), i, 0x245) + 4, i as u32); }); // database clubs
         if rodou {
             mark = u32::MAX;
         }
@@ -220,7 +220,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
                     index_fatal_error(row as u32, mark);
                 }
             }
-            relato(name as usize); // tipos 0 e 1 (o 1 é o corpo da 0x60d780 em linha)
+            relato(name as usize); // types 0 and 1 (1 is the body of 0x60d780 inlined)
         }
     }
     1
@@ -281,7 +281,7 @@ pub(crate) const FIXED_KEY_REGIONS: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x
 pub(crate) const REGION_NAMES: [(usize, usize); 14] = [
     (0x9e20bc, 0x9d9458), // African / Africa
     (0x9e20b4, 0x9d9450), // Asian / Asia
-    (0, 0),               // Caribbean (à parte)
+    (0, 0),               // Caribbean (separate)
     (0x9e2040, 0x9e1f84), // Central American / Central America
     (0x9e202c, 0x9e1f74), // Central European / Central Europe
     (0x9e2018, 0x9e1f64), // Eastern European / Eastern Europe
@@ -319,9 +319,9 @@ pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, text: usize, size: 
     *(text as *mut u8) = 0;
     let r = r as i32;
     let fb = form as u8;
-    let i = language(); // a original relê [0x9eb2dc] a cada pergunta (o mesmo valor)
+    let i = language(); // the original rereads [0x9eb2dc] on every question (the same value)
     if fb != 0xff {
-        // (tabela, linha) do idioma: as tabelas do exe, lidas pelo endereço
+        // (table, row) of the language: the exe’s tables, read by address
         let table = match i {
             4 => Some((0x9d0518usize, 4)),
             5 => Some((0x9d06d4usize, 5)),
@@ -346,7 +346,7 @@ pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, text: usize, size: 
         }
     } else {
         let (adj, nome) = REGION_NAMES[r as usize - 1];
-        // nos idiomas do grupo o adjetivo vem com a forma 0xff; nos outros, com as outras formas
+        // in the group’s languages the adjective comes with form 0xff; in the others, with the other forms
         let usa_adjetivo = if group { fb == 0xff } else { fb != 0xff }; // (dbu)
         format(text, if usa_adjetivo { adj } else { nome });
     }
@@ -399,7 +399,7 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: 
     let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
     *(text as *mut u8) = 0;
-    let own = continent + 0x23; // o adjetivo do registro (dbu)
+    let own = continent + 0x23; // the record’s adjective (dbu)
     let table = if form as u8 == 0 {
         None
     } else {
@@ -1372,12 +1372,12 @@ pub(crate) unsafe extern "C" fn match_club_key_id(name: usize, row: u32) -> u32 
         for &(texto, global) in cadeia.iter() {
             r = stricmp(name, texto as usize);
             if r == 0 {
-                *(global as *mut u32) = row; // chave de clube
+                *(global as *mut u32) = row; // club key
                 break;
             }
         }
     }
-    r as u32 // o eax do último _stricmp (chave de clube)
+    r as u32 // the eax of the last _stricmp (club key)
 }
 
 /// after the club table trim, the first club key holding the old id gets the new one (returns 1; none: 0)
@@ -1411,12 +1411,12 @@ pub(crate) unsafe extern "C" fn match_nation_key_id(name: usize, row: u32) -> u3
         for &(texto, global) in cadeia.iter() {
             r = stricmp(name, texto as usize);
             if r == 0 {
-                *(global as *mut u32) = row; // chave de nação
+                *(global as *mut u32) = row; // nation key
                 break;
             }
         }
     }
-    r as u32 // o eax do último _stricmp (chave de nação)
+    r as u32 // the eax of the last _stricmp (nation key)
 }
 
 /// Text listing the dword globals that differ between original and copy snapshots.
@@ -1688,9 +1688,9 @@ pub(crate) static CLUB_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
         (0x9dab0c, KEY_CLUB_COMP_GREEK_LOWER_DIVISION as u32), // greek lower division
         (0x9dab00, KEY_CLUB_COMP_GREEK_CUP as u32), // greek cup
         (0x9daae8, KEY_CLUB_COMP_CROATIAN_FIRST_DIVISION_9CF87C as u32), // croatian first division
-        (0, KEY_CLUB_COMP_CROATIAN_FIRST_DIVISION_9CF8A4 as u32), // (também grava, mesmo acerto)
+        (0, KEY_CLUB_COMP_CROATIAN_FIRST_DIVISION_9CF8A4 as u32), // (also writes, same adjustment)
         (0x9daad0, KEY_CLUB_COMP_CROATIAN_FIRST_DIVISION_9CF87C as u32), // croatian a1 division
-        (0, KEY_CLUB_COMP_CROATIAN_FIRST_DIVISION_9CF8A4 as u32), // (também grava, mesmo acerto)
+        (0, KEY_CLUB_COMP_CROATIAN_FIRST_DIVISION_9CF8A4 as u32), // (also writes, same adjustment)
         (0x9daab4, KEY_CLUB_COMP_CROATIAN_SECOND_DIVISION as u32), // croatian second division
         (0x9daa94, KEY_CLUB_COMP_CROATIAN_THIRD_DIVISION_CENTRAL as u32), // croatian third division central
         (0x9daa74, KEY_CLUB_COMP_CROATIAN_THIRD_DIVISION_NORTH as u32), // croatian third division north
@@ -2283,8 +2283,8 @@ pub(crate) unsafe extern "C" fn match_club_comp_key_id(name: usize, row: u32) ->
             let (texto, global) = cadeia[i];
             r = stricmp(name, texto as usize);
             if r == 0 {
-                *(global as *mut u32) = row; // chave de competição de clube
-                // as gravações extras do mesmo acerto (texto 0)
+                *(global as *mut u32) = row; // club competition key
+                // the extra writes of the same deal (text 0)
                 while i + 1 < cadeia.len() && cadeia[i + 1].0 == 0 {
                     i += 1;
                     *(cadeia[i].1 as *mut u32) = row;
@@ -2297,7 +2297,7 @@ pub(crate) unsafe extern "C" fn match_club_comp_key_id(name: usize, row: u32) ->
             }
         }
     }
-    r as u32 // o eax do último _stricmp (chave de competição de clube)
+    r as u32 // the eax of the last _stricmp (club competition key)
 }
 
 /// matches the staff competition or award name with the 417 fixed keys (442 names in 5 chains, _stricmp)
@@ -2315,12 +2315,12 @@ pub(crate) unsafe extern "C" fn match_staff_comp_key_id(name: usize, row: u32) -
         for &(texto, global) in cadeia.iter() {
             r = stricmp(name, texto as usize);
             if r == 0 {
-                *(global as *mut u32) = row; // chave de competição de pessoa
+                *(global as *mut u32) = row; // person competition key
                 break;
             }
         }
     }
-    r as u32 // o eax do último _stricmp (chave de competição de pessoa)
+    r as u32 // eax of the last _stricmp (person competition key)
 }
 
 pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, text: usize, size: u32, gender: u32) -> u32 {
@@ -2328,7 +2328,7 @@ pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao:
     if text == 0 {
         return o(nacao, text, size, gender);
     }
-    // o texto produzido (até o tamanho dado, de 1 a 128 bytes; abaixo de 50 só o zero do começo)
+    // the produced text (up to the given size, 1 to 128 bytes; below 50 only the leading zero)
     let n = ((size as u16 as i16).max(1) as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(nacao, text, size, gender),
         || nation_get_nationality_adjective(nacao, text, size, gender));
@@ -2364,9 +2364,9 @@ pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, text: usiz
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME);
     let r = regiao as u8 as i8;
     if text == 0 || !(1..=14).contains(&r) || (size as u16 as i16) < 100 {
-        return o(regiao, text, size, form); // caixa: só a original
+        return o(regiao, text, size, form); // message box: original only
     }
-    // os 100 primeiros bytes (o tamanho mínimo aceito)
+    // the first 100 bytes (the minimum size accepted)
     let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, 100)], || o(regiao, text, size, form),
         || get_region_name(regiao, text, size, form));
     PLACAR.registrar(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, form as u8, x, n, mo, mr));
@@ -2379,7 +2379,7 @@ pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continent: usiz
     if continent == 0 || text == 0 || (size as u16 as i16) < 0x32 {
         return o(continent, text, size, form);
     }
-    // os 50 primeiros bytes (o tamanho mínimo aceito)
+    // the first 50 bytes (the minimum accepted size)
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, 50)], || o(continent, text, size, form),
         || get_continent_adjective(continent, text, size, form));
     PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continent, form as u8, r, n, mo, mr));

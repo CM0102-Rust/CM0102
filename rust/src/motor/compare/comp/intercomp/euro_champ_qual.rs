@@ -25,8 +25,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(thi
         r
     });
     let (to, tr) = (to.get(), tr.get());
-    // a tabela é montada pela virtual +0x3c (original nos dois lados) e tem bytes que ela não grava (sobra do malloc):
-    // confere só que os dois lados a montaram
+    // the table is built by virtual +0x3c (original on both sides) and has bytes it does not write (malloc leftover):
+    // checks only that both sides built it
     let table = to != 0 && tr != 0;
     if tr != 0 && tr != to {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_group_team_count(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> i16>(IDX_GET_GROUP_TEAM_COUNT);
     let r = o(this, g);
     if !matches!(*((this + 0xf6) as *const i8), 1 | 2) {
-        return r; // simplification: o formato desconhecido mostra a caixa: só a original
+        return r; // simplification: the unknown format shows the message box: original only
     }
     let n = group_team_count(this, g);
     PLACAR.registrar(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));

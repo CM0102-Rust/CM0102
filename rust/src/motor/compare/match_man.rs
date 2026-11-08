@@ -41,9 +41,9 @@ pub(crate) unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, fla
     if is_recording_top_level() {
         return f(p, pos, flags, clube, limit, o);
     }
-    // simplification: sem as regiões do sorteador. A nota não sorteia: o único sorteio vem da 0x62ed70, que
-    // atualiza o físico do jogador (0x62c680) só na primeira consulta e guarda; a cópia, depois da
-    // original, não o refaz. Devolver o sorteador entre as duas acusava essa diferença de cache.
+    // simplification: without the draw generator’s regions. The rating does not draw: the only random roll comes from 0x62ed70, which
+    // updates the player’s fitness (0x62c680) only on the first query and stores it; the copy, after the
+    // original, it does not redo it. Restoring the roller between the two exposed this cache difference.
     let reg = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     let rastros = core::cell::RefCell::new((Vec::new(), Vec::new()));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "C" fn comparar_lineup_slot_score(
     if is_recording_top_level() {
         return o(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday);
     }
-    // sem as regiões do sorteador, pelo mesmo motivo da nota fora da partida (0x62ed70 com cache)
+    // without the randomizer’s regions, for the same reason as the rating outside the match (0x62ed70 with cache)
     let regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regions,
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "C" fn comparar_pick(
     let n1 = (a2 as u8 as i8).max(0) as usize;
     let n = ((a4 as u8 as i8 as i32 + a5 as u8 as i8 as i32).max(0)) as usize;
     if is_recording_top_level() {
-        // dentro de uma comparacao com fita: unidade com vetores (a escala le e escreve na pilha de quem chama)
+        // inside a comparison with tape: unit with vectors (the scale reads and writes the caller’s stack)
         return call_recording_buffers(
             0x6e2000,
             0,
@@ -118,9 +118,9 @@ pub(crate) unsafe extern "C" fn comparar_pick(
             || call() as u32,
         ) as u8;
     }
-    // Sonda (so na comparacao): a 0x6dbc50, no modo 2, nunca escreve o curto da 1a vaga extra e passa
-    // o lixo da pilha a escala (retorno 0x6dd383). Conta quantas vezes ele nao e zero e se zera-lo muda
-    // a escala (a original duas vezes: com o lixo e com 0).
+    // Probe (comparison only): 0x6dbc50, in mode 2, never writes the short of the 1st extra slot and passes
+    // the stack garbage at the scale (return 0x6dd383). Counts how often it is not zero and whether zeroing it changes
+    // the scale (the original twice: with the garbage and with 0).
     if crate::desvios::RETORNO == 0x6dd383 && a5 as u8 != 0 && a15 != 0 {
         use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
         static CHAMADAS: AtomicU32 = AtomicU32::new(0);
@@ -148,7 +148,7 @@ pub(crate) unsafe extern "C" fn comparar_pick(
             ));
         }
     }
-    // a saida e as datas estaticas que a nota (0x6e2f20) toca
+    // the output and the static dates that the rating (0x6e2f20) touches
     let reg = [(a6, 4 * n), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1)];
     let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, call, || pick(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15));
     PLACAR.registrar(igual && r == rr, || format!("pick(n {} vagas {}+{} modo {:#x}) original={} rust={} {:x?} x {:x?}", a2 as u8 as i8, a4 as u8 as i8, a5 as u8 as i8, a7, r, rr, mo, mr));
@@ -159,8 +159,8 @@ pub(crate) unsafe extern "C" fn comparar_pick(
 pub(crate) unsafe extern "thiscall" fn comparar_stance(c: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_STANCE);
     let m = *((c + 0x12) as *const usize);
-    // os ativos (motor+4/+5, 0x6cbbb0), o fator dos dois lados, as datas (0x54cdb0) e o ponteiro da
-    // tabela que a busca na liga (0x4a4850) ordena
+    // the active ones (engine+4/+5, 0x6cbbb0), the factor of both sides, the dates (0x54cdb0) and the pointer of the
+    // table that the league search (0x4a4850) sorts
     let reg = [(m + 4, 2), (m + 0x476a, 8), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_COMP_STATS_SORT_CONTEXT, 4)];
     let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(c), || stance(c));
     PLACAR.registrar(igual && r == rr, || format!("stance(lado {}) original={} rust={} {:x?} x {:x?}", byte(c, 0x18), r, rr, mo, mr));
@@ -172,11 +172,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_formation(c: usize, ficha
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u8>(IDX_CHOOSE_FORMATION);
     let n = (a2 as u8 as i8).max(0) as usize;
     if is_recording_top_level() {
-        // dentro de uma comparacao com fita: unidade com vetores (as fichas estao na pilha de quem chama)
+        // inside a comparison with a tape: unit with vectors (the profiles are on the caller’s stack)
         return call_recording_buffers(0x6e0230, c, [0, a2, a3, a4, 0], &[(fichas, 4 * n)], &[], || o(c, fichas, a2, a3, a4) as u32) as u8;
     }
-    // o sorteio, o motor, a copia da tatica (+0x2b), as linhas do clube no banco de taticas (a formacao
-    // gravada e o que as instrucoes mexem), as datas da nota (0x6e2f20) e o ponteiro da busca na liga
+    // the random roll, the engine, the tactic copy (+0x2b), the club’s rows in the tactics bank (the formation
+    // written and what the instructions touch), the rating dates (0x6e2f20) and the search pointer in the league
     let m = *((c + 0x12) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_COMP_STATS_SORT_CONTEXT, 4)]);
@@ -203,8 +203,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_formation(c: usize, ficha
 /// Comparer for `instructions` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_instructions(c: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INSTRUCTIONS);
-    // o sorteio, o motor (a marcacao individual no bloco tatico), a tatica copiada (+0x2b) e as linhas
-    // do clube no banco de taticas
+    // the random roll, the engine (man-marking in the tactics block), the copied tactics (+0x2b) and the rows
+    // of the club in the tactics database
     let m = *((c + 0x12) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4)]);
@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_instructions(c: usize) {
 pub(crate) unsafe extern "thiscall" fn comparar_put_in_place(c: usize, pos: u32, person: usize, extra: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32) -> u8>(IDX_PUT_IN_PLACE);
     if is_recording_top_level() {
-        // dentro dos titulares (ou da comissao): unidade da fita
+        // inside the starters (or the staff): tape unit
         return call_recording(FN_MATCH_MAN_PLACE_PLAYER_IN_TEAM, c, [pos, person as u32, extra, 0, 0], || o(c, pos, person, extra) as u32) as u8;
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -262,7 +262,7 @@ pub(crate) unsafe extern "C" fn comparar_order_by_condition(a: *const usize, b: 
 pub(crate) unsafe extern "thiscall" fn comparar_starters(c: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_STARTERS);
     if is_recording_top_level() {
-        // dentro da comissao do inicio da partida: unidade da fita
+        // inside the staff at the start of the match: tape unit
         return call_recording(FN_MATCH_MAN_PLACE_SELECTED_PLAYERS, c, [0, 0, 0, 0, 0], || o(c) as u32) as u8;
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -357,7 +357,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_best_rated(this: usize) -> i8 {
 /// Comparer for `rate_player` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_rate_player(person: usize, player: usize, clube: usize) -> i16 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> i16>(IDX_RATE_PLAYER);
-    // a 0x54cdb0 mexe na data estatica dela: a comparacao restaura
+    // 0x54cdb0 touches its static date: the comparison restores it
     let reg = [crate::aleatorio::REGIOES_DO_ESTADO[0], crate::aleatorio::REGIOES_DO_ESTADO[1], (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(person, player, clube), || rate_player(person, player, clube));
     PLACAR.registrar(igual && r == n, || format!("rate_player() original={} rust={} {:x?} x {:x?}", r, n, mo, mr));

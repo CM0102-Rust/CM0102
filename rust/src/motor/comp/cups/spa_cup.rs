@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
         crate::comparacao::ramo("cqt_5 copa do rei refeita");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
         let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPACUP_COLLECT_ENTRANTS);
-        // simplification: nas caixas a original zera só o al (o resto do eax vem da caixa); quem chama lê o byte
+        // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
         if inscritos(this) < 0 {
             show_error_at(0xa82810, 0x161);
             return 0;
@@ -56,8 +56,8 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
     base(this, today, stage)
 }
 
-// simplification: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
-// original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
+// simplification: the season turn frees and rebuilds the tables and the cup update plays and draws: they do not run twice. Only the
+// original; the plan: +0x45 goes to 1 when the condition holds, otherwise it stays.
 
 /// record_season_honours of a cup: calls virtual +0x30 of its final stage ([+0xc][o/4]) and returns its eax.
 ///
@@ -103,7 +103,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_record_season_honours_63d770(this
     record_season_honours(this, 0x3c, "cqt_5 historico da copa da serie c")
 }
 
-// simplification: o histórico grava nas estatísticas das competições (acha ou acrescenta entradas: aloca); só a original
+// simplification: the history writes to the competition statistics (finds or appends entries: allocates); original only
 
 
 

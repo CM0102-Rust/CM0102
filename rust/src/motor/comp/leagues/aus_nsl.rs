@@ -155,14 +155,14 @@ pub(crate) unsafe fn set_nsl_rules(o: usize) {
     write_u8_at(o, 0xc4, 2);
     write_u8_at(o, 0xc6, 2);
     write_u8_at(o, 0x52, 2);
-    write_u16_at(o, 0x3c, 3); // três turnos
+    write_u16_at(o, 0x3c, 3); // three shifts
     write_u8_at(o, 0xc2, 3); // cqj8: os pontos por vitória da NSL
     write_u8_at(o, 0x4a, 3);
     write_u8_at(o, 0xc3, 1);
     write_u8_at(o, 0x42, 1);
-    write_u8_at(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora
+    write_u8_at(o, 0xc5, 1); // tiebreakers: goal difference, goals for, away goals
     write_u8_at(o, 0xc7, 4);
-    write_u8_at(o, 0xbe, 6); // os seis da fase final
+    write_u8_at(o, 0xbe, 6); // the six of the final stage
     write_u32_at(o, 0x1c, 0xffff_ffff);
     write_u32_at(o, 0x20, 0xffff_ffff);
     write_u16_at(o, 0xd9, 0x28); // 0x8 fase seguinte, 0x20 eliminados marcados
@@ -183,12 +183,12 @@ pub(crate) unsafe fn set_mls_rules(o: usize) {
     write_u8_at(o, 0xc3, 1); // cqj8: os pontos por empate da MLS
     write_u16_at(o, 0xab, 0xc2);
     write_u8_at(o, 0x42, 1);
-    write_u8_at(o, 0xc5, 1); // desempates: saldo, gols pró, confronto direto
+    write_u8_at(o, 0xc5, 1); // tiebreakers: goal difference, goals scored, head-to-head
     write_u8_at(o, 0xc7, 3);
     write_u8_at(o, 0xbe, 1);
     write_u32_at(o, 0x1c, 0xffff_ffff);
     write_u32_at(o, 0x20, 0xffff_ffff);
-    write_u16_at(o, 0xd9, 0x48); // 0x8 fase seguinte, 0x40 rodadas em ordem fixa
+    write_u16_at(o, 0xd9, 0x48); // 0x8 next stage, 0x40 rounds in fixed order
     write_u16_at(o, 0x3c, 4);
     write_u16_at(o, 0xa7, 0x20); // 32 jogos por time
 }

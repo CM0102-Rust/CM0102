@@ -139,8 +139,8 @@ pub(crate) unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jo
             }
             if st == 2 || st == 0xff {
                 if fazer {
-                    // simplification: a original empurra eax (lixo do chamador acima da palavra) e ecx/edx inteiros; a
-                    // 0x4bf850 e a 0x86c000 só leem as palavras: vão as palavras.
+                    // simplification: the original pushes eax (caller garbage above the word) and whole ecx/edx; the
+                    // 0x4bf850 and 0x86c000 only read the words: the words are passed.
                     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
                     crate::comparacao::ramo("cqk_7 eliminado do estadual");
                     let weight = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, rounds);

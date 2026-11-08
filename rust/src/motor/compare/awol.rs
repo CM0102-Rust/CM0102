@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_missed_training(this: usize,
         let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
         let k = contract_of(read_usize(G_CONTRACT_MANAGER), person);
         if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE)) == 0 {
-            // simplification: tira a falta da lista (libera o nó): só a original
+            // simplification: removes the foul from the list (frees the node): original only
             return o(this, person);
         }
     }

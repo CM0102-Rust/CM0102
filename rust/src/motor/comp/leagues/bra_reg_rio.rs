@@ -660,7 +660,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
             }
             i += 1;
         }
-        // simplification: a lista de 8 bytes fica sem liberar, como na original.
+        // simplification: the 8-byte list is not freed, as in the original.
         return;
     }
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
@@ -668,8 +668,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     let t = table(this, 2, &mut rodadas, &mut extra, 0);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = new(0xb2);
-    // simplification: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
-    // virtual são words na pilha; o ano vai no dx); o construtor só lê as palavras.
+    // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
+    // virtual are words on the stack; the year goes in dx); the constructor only reads the words.
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
@@ -758,8 +758,8 @@ pub(crate) unsafe fn bra_reg_rio_create_state_league_table(this: usize, n: i16, 
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if is_in_state_league(clube, g) {
-            // simplification: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
-            // byte. Com girar = 0, (k + 0) % n = k.
+            // simplification: the original pushes the row in eax with the high bits of the state league’s id; 0x687430 only reads the
+            // byte. With girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
             k = k.wrapping_add(1);

@@ -83,8 +83,8 @@ pub(crate) unsafe fn finalize_league_table(league: usize) {
 }
 
 
-// simplification: fecha temporadas e move clubes entre as ligas (contratos, técnicos, notícias): não roda duas vezes; só a
-// original. A cópia leva o ramo.
+// simplification: closes seasons and moves clubs between leagues (contracts, managers, news): does not run twice; only the
+// original. The copy takes the branch.
 
 
 /// the prize money news to the club's human manager, only when the prize exceeds 50 × the club reputation: the
@@ -136,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, clube:
     deliver(read_u32_as_usize(G_NEWS), p, clube);
 }
 
-// simplification: entrega a notícia (aloca); só a original. A cópia leva o ramo.
+// simplification: delivers the news (allocates); original only. The copy takes the branch.
 
 /// the TV rights news to the club's human manager: the club, the competition, the amount and the year
 /// Original: `Comp::send_tv_rights_news` (0x48ea40, comp.cpp, thiscall, ret 8).
@@ -162,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, clube: u
     deliver(read_u32_as_usize(G_NEWS), p, clube);
 }
 
-// simplification: entrega a notícia (aloca); só a original. A cópia leva o ramo.
+// simplification: delivers the news (allocates); original only. The copy takes the branch.
 
 
 

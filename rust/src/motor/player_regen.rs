@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     core::ptr::write_unaligned((p + 0x24) as *mut u32, 0);
     core::ptr::write_unaligned((p + 0x4e) as *mut u32, 0);
     core::ptr::write_unaligned((p + 0x52) as *mut u32, 0);
-    // os idiomas: a original empurra o dword do argumento com o byte de baixo trocado (as chamadas leem o byte)
+    // the languages: the original pushes the argument’s dword with the low byte replaced (the calls read the byte)
     let tirar_idioma: unsafe extern "thiscall" fn(usize, usize, i8) = core::mem::transmute(FN_PLAYERSTATS_REMOVE_LANGUAGE);
     for k in 1..=0x40i8 {
         tirar_idioma(read_u32_as_usize(G_PLAYER_STATS), p, k);
@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         let v = weight(p, k);
         if v != 0 && v >= base {
             let q = (v as i32 - base as i32) / 0x4b;
-            // simplification: a fluência vai num dword da pilha com só o byte de baixo gravado (a 0x7c6a30 lê o byte)
+            // simplification: the fluency goes in a stack dword with only the low byte written (0x7c6a30 reads the byte)
             let level = if q > 0xa { 0xa } else { q as u8 };
             append(read_u32_as_usize(G_PLAYER_STATS), p, k as u8 as u32, level as u32, 1);
         }
@@ -208,7 +208,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     let nac = read_u32_as_usize(p + 0x1a);
     let age: i8;
     if nac != 0 && *((nac + 0x11c) as *const u8) == 0 && read_i32(nac + 0x88) < 0x15e {
-        // a nação pequena: a idade pela reputação dela e a habilidade pela PA
+        // the small nation: age by its reputation and ability by PA
         let r1 = friendly_random(read_i32(nac + 0x88));
         let r2 = friendly_random(1000);
         age = if r1 < r2 {
@@ -301,7 +301,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
             cap_current_ability(f, 0x8c, 0x32);
         }
     } else {
-        // a nação grande ou sem nação: a habilidade pela posição e a idade por sorteio(10000)
+        // the big nation or no nation: the ability by position and the age by random roll(10000)
         if *((f + 0x15) as *const u8) == 0x14 {
             roll_current_ability(f, 0x968e48, 0x968e80);
         } else if *((f + 0x11) as *const u8) == 0x14 || *((f + 0x10) as *const u8) == 0x14 {
@@ -390,7 +390,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         write_i8(f + 0x1b, (r as i8).wrapping_add(5));
     }
     adjust_personality_attribute(f + 0x1b, 5, 5, 0xa, 0xa, 8);
-    // +0x36 pelo +0x1b
+    // +0x36 by +0x1b
     let a = read_i8(f + 0x1b);
     let v = if a > 0xf {
         (friendly_random(0xb) as i8).wrapping_add(0xa)
@@ -404,7 +404,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         (friendly_random(0xa) as i8).wrapping_add(5)
     };
     write_i8(f + 0x36, v);
-    // +0x1d (o goleiro de 20 com 4/5 pela PA)
+    // +0x1d (the 20-rated goalkeeper with 4/5 by PA)
     if read_i8(f + 0xf) == 0x14 && friendly_random(5) != 0 {
         let r = friendly_random(0x14);
         let v = if read_i16(f + 7) as i32 > r + 0x64 {
@@ -450,7 +450,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
             add_random_if_below(f + 0x44, 0xa, 5);
         }
     }
-    // +0x3c pela idade
+    // +0x3c by age
     if age < 0x12 {
         let r = friendly_random(0x14);
         write_i8(f + 0x3c, (r as i8).wrapping_add(1));
@@ -468,7 +468,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         let r = friendly_random(5);
         write_i8(f + 0x3c, read_i8(f + 0x3c).wrapping_add(r as i8));
     }
-    // +0x3d pela idade
+    // +0x3d by age
     let r = friendly_random(0x14);
     write_i8(f + 0x3d, (r as i8).wrapping_add(1));
     if age < 0x12 {
@@ -486,7 +486,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         let r = friendly_random(5);
         write_i8(f + 0x3d, read_i8(f + 0x3d).wrapping_add(r as i8));
     }
-    // +0x1e, +0x24, +0x2c, +0x2f (e +0x21) pela idade
+    // +0x1e, +0x24, +0x2c, +0x2f (and +0x21) by age
     if age < 0x18 {
         if age < 0x12 {
             subtract_random(f + 0x1e, 0x28);
@@ -924,8 +924,8 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
     if acertar && read_u32_as_usize(p + 0x39) == 0 && read_i32(item + 4) != -1 {
         core::ptr::write_unaligned((item + 4) as *mut i32, -1);
     }
-    // simplification: a original empurra o motivo e a marca de anunciada em registradores com bytes de cima que sobram; a
-    // 0x7a92e0 lê os bytes
+    // simplification: the original pushes the reason and the announced mark in registers with leftover high bytes; the
+    // 0x7a92e0 reads the bytes
     let noticia: unsafe extern "stdcall" fn(usize, u32, u32) = core::mem::transmute(FN_PLAYER_REGEN_POST_RETIREMENT_NEWS);
     noticia(p, *((item + 0x18) as *const u8) as u32, *((item + 0x19) as *const u8) as u32);
     let offers: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_REMOVE_PENDING_OFFERS_FOR_STAFF);
@@ -977,7 +977,7 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
         bench = read_u32_as_usize(p + 0x69) != 0 && read_u32_as_usize(p + 0x61) != 0;
     }
     if bench {
-        // o jogador com registro de não jogador: a ficha vai para o banco dos regens e ele segue como não jogador
+        // the player with a non-player record: the record goes to the regen database and he stays a non-player
         crate::comparacao::ramo("cqd_10 jogador para o banco");
         call_on_global_manager(0x7c6650, G_PLAYER_STATS, p);
         call_on_global_manager(0x55e1d0, G_DISCIPLINE, p);
@@ -1005,7 +1005,7 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
         player_regen_remove_retirement(this, item);
         return;
     }
-    // a vaga para o regen: hoje (até 29 anos) ou de 1 a 65 dias depois (se passar do dia 365, sorteio(35) do ano
+    // the slot for the regen: today (up to age 29) or 1 to 65 days later (past day 365, random roll(35) of the year
     // seguinte)
     slot[0] = read_i32(item) as u32;
     let today = read_u32_as_usize(G_CURRENT_DATE) as u32;
@@ -1107,7 +1107,7 @@ pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
             let id = read_i32(item);
             if *retirement_flags_byte(id) & 0x30 != 0x10 {
                 let anunciar: unsafe extern "stdcall" fn(usize, u32) = core::mem::transmute(FN_PLAYER_REGEN_POST_RETIREMENT_ANNOUNCEMENT_NEWS);
-                // simplification: a original empurra o motivo no edx com bytes de cima que sobram; a 0x7aa340 lê o byte
+                // simplification: the original pushes the reason in edx with leftover upper bytes; 0x7aa340 reads the byte
                 anunciar(read_u32_as_usize(G_STAFF_TABLE).wrapping_add((id as isize * 0x6e) as usize), *((item + 0x18) as *const u8) as u32);
             }
             let id = read_i32(item);
@@ -1121,8 +1121,8 @@ pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
     qsort(read_u32_as_usize(this + 0x10), read_u32_as_usize(this + 0x14) as u32, 0xc, 0x7ae240);
 }
 
-// simplification: chama as notícias (alocam e entregam), o regen como não jogador, os contratos novos e as listas: o caminho
-// só se sabe rodando e não pode rodar duas vezes. Só a original; a cópia leva os ramos e a carreira a prova.
+// simplification: calls the news (they allocate and deliver), the regen as a non-player, the new contracts and the lists: the path
+// is only known by running and cannot run twice. Original only; the copy carries the branches and the career proves it.
 
 /// news item 0xbba about the retirement for the managers (all, the country, the division, the club or the interested
 /// clubs, by fame) and the club insurance payout when injury retires a valuable player
@@ -1157,7 +1157,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     crate::comparacao::ramo("cqd_10 noticia da aposentadoria");
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nw = local.as_mut_ptr() as usize;
     construct(nw, 0xbba, 0);
     write(nw, 0, read_u32_as_usize(p) as u32);
@@ -1236,7 +1236,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     }
 }
 
-// simplification: aloca e entrega a notícia (0x77bbe0, 0x786780...). Só a original; a cópia leva o ramo.
+// simplification: allocates and delivers the news item (0x77bbe0, 0x786780...). Original only; the copy carries the branch.
 
 /// news item 0xbce about the youth player joining the club, with the assistant manager or a coach verdict on his
 /// ability
@@ -1258,7 +1258,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: 
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let vista: unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16 = core::mem::transmute(FN_MATCH_MAN_JUDGE_PLAYER_ABILITY);
-    let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nw = local.as_mut_ptr() as usize;
     let (mut v1, mut v2) = (0i8, 0i8);
     let mut who = 0usize;
@@ -1281,7 +1281,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: 
             let r = friendly_random(0x9c4);
             let v = r.wrapping_add(read_i16(c + 0x80) as i32 / 2);
             let x = match_pl_ftol(v as f64 + read_i8(c + 0x7f) as f64 * read_f64_at(0x96afc8)); // 0x96afc8 = 12.5
-            // simplification: a original empurra o eax inteiro do _ftol e o da primeira vista; a 0x6e86d0 lê a palavra
+            // simplification: the original pushes the whole eax of _ftol and that of the first view; 0x6e86d0 reads the word
             let a = vista(t, j, c, 2, x as i16);
             let b = vista(t, j, c, 1, a);
             let rep = read_i16(c + 0x80) as i32;
@@ -1324,7 +1324,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: 
     reach(read_u32_as_usize(G_NEWS), nw, c, 0, 0, 0, 0);
 }
 
-// simplification: aloca e entrega a notícia e sorteia a opinião: só a original; a cópia leva o ramo.
+// simplification: allocates and delivers the news and rolls the opinion: original only; the copy takes the branch.
 
 
 
@@ -1384,7 +1384,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
     if *((clube + club::PROFESSIONAL_STATUS) as *const u8) == 3 && read_i32(person + staff::VALUE) > 0x1388 {
         write_i32(person + staff::VALUE, 0x1388);
     }
-    // simplification: a original grava o ano na palavra de baixo do argumento `clube` e empurra o dword; a 0x549f70 lê 16 bits
+    // simplification: the original writes the year in the low word of the `clube` argument and pushes the dword; 0x549f70 reads 16 bits
     let year = *(G_CURRENT_DATE_YEAR as *const u16) as u32;
     let (mut d, mut ret) = ([0u8; 8], [0u8; 8]);
     let day_and_year = if *((person + staff::YEAR_OF_BIRTH) as *const i8) < 0x13 {
@@ -1602,7 +1602,7 @@ pub(crate) unsafe fn non_player_age_limit(person: usize, out: usize) -> i8 {
     if t == 0 {
         t = read_i8(person + staff::JOB_FOR_NATION);
         if t == 0 {
-            t = out as u8 as i8; // simplification: a original lê aqui o byte baixo do argumento `saida`
+            t = out as u8 as i8; // simplification: the original reads the low byte of the `saida` argument here
         }
     }
     let (n, base) = match t {
@@ -1710,7 +1710,7 @@ pub(crate) unsafe fn set_retirement_dates(person: usize, out: usize, away: unsaf
     write_u16(out + 0xa, ano1);
     write_u16(out + 8, dia1);
     let t = 0xb63d60usize.wrapping_add((k as usize) * 0x48);
-    let d2 = (sortear(30) as u16).wrapping_add(read_u16(t + 0x15)); // o fim de temporada da nação
+    let d2 = (sortear(30) as u16).wrapping_add(read_u16(t + 0x15)); // the nation’s end of season
     write_u16(out + 0x10, d2);
     let more_one = *((t + 0x1d) as *const u8) != 0;
     if d2 as i16 > 0x16d {
@@ -1953,8 +1953,8 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
 /// (0x7a8510). No fim o qsort da lista ([this+4], conta +8, 26 bytes, 0x7ae2a0).
 pub(crate) unsafe extern "thiscall" fn build_initial_retirement_list(this: usize) {
     crate::comparacao::ramo("cpr_8 lista inicial");
-    // simplification: a original constrói as duas datas da entrada (0x54a110) e deixa o resto como estava na pilha; a
-    // 0x7a79c0 grava tudo o que a 0x7a8510 copia antes de devolver 1 (a terceira data local nunca é lida: fica de fora)
+    // simplification: the original builds the entry’s two dates (0x54a110) and leaves the rest as it was on the stack; the
+    // 0x7a79c0 writes everything 0x7a8510 copies before returning 1 (the third local date is never read: left out)
     let mut e = [0u8; 0x1a];
     let default: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     default(e.as_mut_ptr().add(8));
@@ -1992,8 +1992,8 @@ pub(crate) unsafe fn retirement_decision_regions(out: usize) -> Vec<(usize, usiz
 
 
 
-// simplification: a lista inicial acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo
-// Rust e a carreira provam a cópia.
+// simplification: the initial list appends (realloc) and rolls in each test: it does not run twice. Original only; the mode
+// Rust and the career prove the copy.
 
 
 
@@ -2014,8 +2014,8 @@ pub(crate) unsafe fn zero_dword(a: usize) {
 /// (0x4cf5a0) com +0x49. Os outros: aposentadoria pela idade (0x7a7310) ou, sem ela, do desempregado (0x7a8050); quem
 /// se aposenta entra na lista (0x7a8510). No fim o qsort da lista (0x7ae2a0).
 pub(crate) unsafe extern "thiscall" fn find_new_retirements(this: usize) {
-    // simplification: a original constrói as duas datas da entrada (0x54a110) e deixa o resto como estava na pilha; as duas
-    // decisões gravam tudo o que a 0x7a8510 copia antes de devolver 1 (a terceira data local nunca é lida: fica de fora)
+    // simplification: the original builds the two entry dates (0x54a110) and leaves the rest as it was on the stack; the two
+    // decisions write everything 0x7a8510 copies before returning 1 (the third local date is never read: left out)
     let mut e = [0u8; 0x1a];
     let default: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     default(e.as_mut_ptr().add(8));
@@ -2157,8 +2157,8 @@ pub(crate) unsafe extern "stdcall" fn player_regen_retire_from_non_playing_staff
 }
 
 
-// simplification: a busca acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo Rust e a
-// carreira provam a cópia.
+// simplification: the search appends (realloc) and rolls on each test: it does not run twice. Original only; Rust mode and the
+// career runs prove the copy.
 
 /// Does leaving jobs only touch the person and the two clubs (not a club manager nor coach/scout jobs of a human club)?
 ///
@@ -2186,8 +2186,8 @@ pub(crate) unsafe fn job_exit_regions(person: usize) -> Vec<(usize, usize)> {
     vec![(person, 0x6e), (read_u32_as_usize(person + staff::CLUB_JOB), 0x245), (read_u32_as_usize(person + staff::NATIONAL_JOB), 0x245)]
 }
 
-// simplification: o histórico vai para o arquivo (não roda duas vezes) e a cópia sem ele só grava [0xae1080]: só a
-// original; a cópia leva o ramo.
+// simplification: the history goes to the file (does not run twice) and the copy without it only writes [0xae1080]: only the
+// original; the copy takes the branch.
 
 
 
@@ -2376,7 +2376,7 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
     }
     let fica_no_clube = match read_i8(p + 0x3d) as i32 {
         0 => false,
-        1..=10 => return, // comissão: a original sai pelo fim da rotina
+        1..=10 => return, // staff: the original exits through the end of the routine
         12 => {
             write_i8(p + 0x3d, 5);
             true
@@ -2403,7 +2403,7 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
         0 => false,
         1..=10 => return,
         12 => {
-            write_i8(p + 0x3d, 5); // no +0x3d, como a original
+            write_i8(p + 0x3d, 5); // in +0x3d, like the original
             true
         }
         13 => {
@@ -2481,7 +2481,7 @@ pub(crate) unsafe extern "thiscall" fn pick_best_club_for_player(_this: usize, p
         if candidate {
             let squad = squad_of(clube, 0, 0);
             if can_club_bid(player, clube) && (squad as i8) < 0x32 {
-                // simplification: a original empurra o byte do elenco com lixo nos bits altos; a 0x7ad220 só lê o byte
+                // simplification: the original pushes the squad byte with garbage in the high bits; 0x7ad220 reads only the byte
                 let s = rating_of(player, clube, squad as u32) as i16;
                 if s > melhor_nota {
                     crate::comparacao::ramo("cpn_4 clube melhor para o jovem");
@@ -2617,7 +2617,7 @@ pub(crate) unsafe extern "thiscall" fn add_spare_non_player_record(this: usize, 
     write_usize(item, id as usize);
     write_usize(item + 4, nacao as usize);
     write_usize(item + 8, second as usize);
-    write_usize(this + 0x20, n.wrapping_add(1)); // mais uma reserva
+    write_usize(this + 0x20, n.wrapping_add(1)); // one more reserve
 }
 
 /// appends the record fields to the 26-byte pending retirement table (+4), growing by 250
@@ -2646,7 +2646,7 @@ pub(crate) unsafe extern "thiscall" fn add_retirement(this: usize, r: usize) {
         write_u16(item() + o, core::ptr::read_unaligned((r + o) as *const u16));
     }
     *((item() + 0x19) as *mut u8) = *((r + 0x19) as *const u8);
-    write_usize(this + 8, read_usize(this + 8).wrapping_add(1)); // mais uma aposentadoria
+    write_usize(this + 8, read_usize(this + 8).wrapping_add(1)); // one more retirement
 }
 
 /// the person enters the regen queue (+0x10) with the dates; the non-player data in the spare list (+0x1c, random
@@ -2682,7 +2682,7 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
     write_usize(queue, id as usize);
     write_u16(queue + 4, core::ptr::read_unaligned((entry + 4) as *const u16));
     write_u16(queue + 6, core::ptr::read_unaligned((entry + 6) as *const u16));
-    write_usize(this + 0x14, read_usize(this + 0x14).wrapping_add(1)); // mais uma na fila do regen
+    write_usize(this + 0x14, read_usize(this + 0x14).wrapping_add(1)); // one more in the regen queue
     if read_usize(person + staff::NON_PLAYER) != 0 {
         if read_usize(this + 0x20) == read_usize(this + 0x24).wrapping_sub(1) {
             let p = crt_realloc(read_usize(this + 0x1c), read_usize(this + 0x24).wrapping_add(250) << 4);
@@ -2712,7 +2712,7 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
             write_usize(this + 0x3c, p);
             write_usize(this + 0x44, read_usize(this + 0x44).wrapping_add(250));
             if read_usize(this + 0x40) == 0 {
-                regen_out_of_memory(0xae9); // a original confere a conta (+0x40), não o ponteiro
+                regen_out_of_memory(0xae9); // the original checks the count (+0x40), not the pointer
             }
         }
         let item = || read_usize(this + 0x3c).wrapping_add(read_usize(this + 0x40) << 4);
@@ -2761,7 +2761,7 @@ pub(crate) unsafe extern "thiscall" fn remove_retirement(this: usize, key: usize
         k += 1;
     }
     let end = (read_u32(this + 4) as usize).wrapping_add((read_u32(this + 8) as usize).wrapping_mul(26)).wrapping_sub(26);
-    core::ptr::write_unaligned(end as *mut u32, u32::MAX); // a última sem pessoa
+    core::ptr::write_unaligned(end as *mut u32, u32::MAX); // the last one without a person
     *((end + 0x18) as *mut u8) = 0;
     for o in [8usize, 0xa, 0x10, 0x12] {
         core::ptr::write_unaligned((end + o) as *mut u16, 0);
@@ -2801,7 +2801,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(p
         if read_u32(person + staff::CLUB_JOB) != 0 || read_u32(person + staff::NATIONAL_JOB) != 0 {
             return 0;
         }
-        *((manager + 0xa) as *const i16) < 50 && friendly_random(5) == 0 // o técnico fraco
+        *((manager + 0xa) as *const i16) < 50 && friendly_random(5) == 0 // the weak manager
     } else if read_u32(person + staff::PLAYER) == 0 {
         false
     } else {
@@ -2815,7 +2815,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(p
             let days = years.wrapping_mul(365).wrapping_sub(*((person + staff::DATE_JOINED_CLUB) as *const i16) as i32).wrapping_add(*(G_CURRENT_DATE as *const i16) as i32);
             if days > 0x16d {
                 let rating = *((read_u32(person + staff::PLAYER) as usize + 0xb) as *const i16) as i32;
-                friendly_random(rating) < 0x2ee // o sorteio pela nota
+                friendly_random(rating) < 0x2ee // the roll by the rating
             } else {
                 false
             }
@@ -2845,7 +2845,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(p
 /// [pt] { 0x7a8b70 } (thiscall, ret 4, player_regen.cpp): `regen_queue_entry_assign`: copia a entrada da fila de regens
 /// (0xc bytes) de `origem`: a pessoa (+0) e a data do regen em +4 (0x417c10, retorno numa local). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn regen_queue_entry_assign(this: usize, source: usize) -> usize {
-    core::ptr::write_unaligned(this as *mut u32, core::ptr::read_unaligned(source as *const u32)); // a pessoa do regen
+    core::ptr::write_unaligned(this as *mut u32, core::ptr::read_unaligned(source as *const u32)); // the regen’s person
     let copy: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut local = [0u8; 8];
     copy(this + 4, &mut local, source + 4);
@@ -2871,7 +2871,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_pick_staff_for_non_player_da
         let n = read_usize(p + 0x1a);
         if n != 0 && read_usize(n) == nacao {
             let s = rating(this, p);
-            if s > melhor && s > 0 { // a melhor da nação
+            if s > melhor && s > 0 { // the nation’s best
                 melhor = s;
                 escolhida = p;
             }
@@ -2883,7 +2883,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_pick_staff_for_non_player_da
     }
     crate::comparacao::ramo("doador de qualquer nação");
     melhor = -15000;
-    let base = read_usize(G_STAFF_TABLE); // relida, como na original
+    let base = read_usize(G_STAFF_TABLE); // reread, as in the original
     i = 0;
     while i < how_many() {
         let p = base + 0x6e * i as usize;
@@ -3062,7 +3062,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_club_for_player(player:
     let nacao = u(player, 0x1a);
     let nation_of_club = u(clube, 0x53);
     if nacao == nation_of_club {
-        s = s.wrapping_add(0x3e8); // mesma nação
+        s = s.wrapping_add(0x3e8); // same nation
     }
     let g = |a: usize| *(a as *const u32);
     let (gales, inglaterra, escocia) = (g(KEY_NATION_WALES), g(KEY_NATION_ENGLAND), g(KEY_NATION_SCOTLAND));
@@ -3283,7 +3283,7 @@ pub(crate) unsafe extern "thiscall" fn is_retirement_pending(this: usize, person
     while i < n {
         if read_usize(read_usize(this + 4) + 0x1a * i as usize) == id {
             crate::comparacao::ramo("cpq_10 aposentadoria marcada");
-            return 1; // está na lista
+            return 1; // is in the list
         }
         i += 1;
     }

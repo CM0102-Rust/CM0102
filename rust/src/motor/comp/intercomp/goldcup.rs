@@ -55,7 +55,7 @@ pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
     let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
     let mut ids = [-1i32; 2];
     let (a, b) = ids.split_at_mut(1);
-    // simplification: a original empurra o eax com o ano nos 16 bits baixos e sobra nos altos; a 0x5fa730 só lê o word
+    // simplification: the original pushes eax with the year in the low 16 bits and leftovers in the high ones; 0x5fa730 only reads the word
     let how_many = sedes(read_u32_as_usize(G_HOST_COUNTRY), read_u32_as_usize(KEY_CLUB_COMP_COPA_AMERICA), year as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
     let mut k = 0i16;
     while k < how_many as i16 {
@@ -140,9 +140,9 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
     soltar(v);
 }
 
-// simplification: a estatística acha ou cria a entrada de cada seleção (aloca): não roda duas vezes. Só a original; o plano:
-// a lista ordenada pela reputação antes, e depois a posição (+0x72 da entrada, 0x4a4850 Comp_Stats::find_club_entry) de
-// cada uma das 12 igual à da faixa.
+// simplification: the statistic finds or creates each national team’s entry (allocates): does not run twice. Original only; the plan:
+// the list sorted by reputation first, and then the position (+0x72 of the entry, 0x4a4850 Comp_Stats::find_club_entry) of
+// each of the 12 equal to the band’s.
 
 /// rule: the Copa América is every 2 years: when it ends, the table and stages are undone, the season goes to the
 /// statistics history, the year goes up 2 and the rules are set up again
@@ -191,8 +191,8 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
     }
 }
 
-// simplification: libera as tabelas e destrói as fases: não roda duas vezes. Só a original; o plano: o ano sobe 2, +0x45 = 0,
-// +0x30 = −1, +0xba = 0 e +0x4c = 0 (as regras gravam a tabela das rodadas de novo em +0xba: conferida só que existe
+// simplification: frees the tables and destroys the stages: does not run twice. Original only; the plan: the year goes up 2, +0x45 = 0,
+// +0x30 = −1, +0xba = 0 and +0x4c = 0 (the rules write the round table again at +0xba: only checked that it exists
 // quando havia antes).
 
 
@@ -236,8 +236,8 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
     let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
-    // simplification: nas duas voltas antes do sorteio e nos erros a original devolve só o al = 0 (o resto do eax é sobra das
-    // chamadas de antes); quem chama lê o byte
+    // simplification: in the two passes before the draw and on errors the original returns only al = 0 (the rest of eax is leftover from the
+    // earlier calls); the caller reads the byte
     if year_of_today < year || (year_of_today == year && (day_of_today as i16) < day as i16) {
         return 0;
     }
@@ -269,9 +269,9 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
     league(this, today, full)
 }
 
-// simplification: a lista, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano no
-// dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do primeiro grupo e as duas
-// fases criadas e a fase atual (+0x30) a última delas (1).
+// simplification: the list, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan in the
+// draw day (the copy’s condition): +0x45 = 1, the list +0xee and +0xf2 zeroed, the first group’s table and the two
+// stages created, and the current stage (+0x30) is the last of them (1).
 
 /// rule: group A of the Copa América has 4 nations, drawn entries 0, 3, 6 and 9 (the groups are interleaved in the
 /// list), each in the row of its order; human managers get the group draw news
@@ -296,7 +296,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
     let mut i = 0i8;
     while (i as i16) < read_i16(this + 0x3e) {
         crate::comparacao::ramo("cqr_13 linha do primeiro grupo");
-        // simplification: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
         i = i.wrapping_add(1);
     }
@@ -304,8 +304,8 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
     1
 }
 
-// simplification: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
-// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado 3i com a posição i (+4).
+// simplification: the table is allocated (and each row allocates the history) and the news goes to the managers: does not run twice. Only the
+// original; the plan: returns 1, 4 teams and in row i (0x3b bytes) the drawn 3i with position i (+4).
 
 /// rule: groups B and C of the Copa América are league stages with drawn entries g + 1, g + 4, g + 7 and g + 10, the
 /// cup's rules and year and the cup's round table for the group (6, 10 and 13 July); human managers get the news
@@ -385,8 +385,8 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
     1
 }
 
-// simplification: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
-// fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// simplification: the stage is allocated and the news goes to the managers: does not run twice. Original only; the plan: returns 1 with the
+// stage at [+0xc][g], +0x30 = g, the stage with 4 teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // sorteados g + 1, g + 4, g + 7 e g + 10 (em qualquer ordem: o construtor ordena a tabela).
 
 /// Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
@@ -766,7 +766,7 @@ pub(crate) unsafe fn goldcup_write_rule_fields(this: usize, campos: &[(usize, u8
 pub(crate) unsafe fn competition_date_word(this: usize, day: u32, month: u32, year: i16, week: u32) -> u16 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    // simplification: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
+    // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16).wrapping_add(year) as u16 as u32;
     data(d.as_mut_ptr(), day, month, a, week);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
@@ -816,13 +816,13 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 
     finish_rules_setup(this, word, 0)
 }
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 pub(crate) const AFRICAN_NATIONS_RULE_FIELDS: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1),
     (0xc3, 1, 1), (0xc4, 1, 0xa), (0xc5, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 pub(crate) const OCEANIA_RULE_FIELDS: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x43, 1, 2), (0xc6, 1, 2), (0x3c, 2, 1), (0xc3, 1, 1),
     (0xc4, 1, 0xa), (0xc5, 1, 1), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
@@ -843,7 +843,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules_91ecf0(this: usize) 
     finish_rules_setup(this, word, 0)
 }
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 /// rule: the Copa América moves on one stage when the current one ends; after the 2 group stages (on reaching 2) it
 /// builds the knockout; going past the last stage is an error

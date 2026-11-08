@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions
     if read_i32(this + 8) > 0 && read_i32(read_usize(this) + 8) != -1 {
         join(media_staff_by_id(read_i32(read_usize(this) + 8)), new);
     }
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, sheet); // os contratos lidos acima não contam
+    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, sheet); // the contracts read above do not count
     let before = crate::comparacao::Memoria::ler(&reg);
     MEDIA_REACTION_DRY_RUN = true;
     MEDIA_REACTION_STOPPED = false;
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this:
 /// [pt] Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original (a cópia
 /// prova no modo Rust, pelo ramo).
 pub(crate) unsafe extern "thiscall" fn comparar_write_financial_trouble_news_text(this: usize, noticia: usize, corpo: u32, out: usize) {
-    // simplification: o objeto de texto não pode receber o texto duas vezes; só a original roda aqui
+    // simplification: the text object cannot receive the text twice; only the original runs here
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_FINANCIAL_TROUBLE_NEWS_TEXT)(this, noticia, corpo, out);
 }
 
@@ -269,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
     reg.push((this, 0xc));
     reg.push((read_usize(this), (read_usize(this + 8) as i32).max(0) as usize * 0x17));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| expire_story_log(this)));
-    // mo.0[2] e mr.0[2]: ponteiro, capacidade e conta depois de cada lado
+    // mo.0[2] and mr.0[2]: pointer, capacity and count after each side
     PLACAR.registrar(igual, || format!("expire_story_log {:x?} x {:x?}", mo.0[2].1, mr.0[2].1));
 }
 
@@ -368,7 +368,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_former_international_pundit
     if assunto == 0 && clube == 0 {
         return o(this, clube, assunto);
     }
-    // o comentarista sai só do sorteio
+    // the commentator comes only from the random roll
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, clube, assunto),
         || crate::aleatorio::sem_contar(|| pick_former_international_pundit(this, clube, assunto)));
     PLACAR.registrar(igual && r == n, || format!("pick_former_international_pundit {:#x} x {:#x} {:x?} x {:x?}", r, n, mo, mr));

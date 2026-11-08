@@ -172,9 +172,9 @@ pub(crate) unsafe extern "thiscall" fn pick_day_match(day: usize) -> u32 {
     found
 }
 
-// simplification: a escalacao de cada lado chama a automatica (0x6dbc50, que aloca a lista e le a pilha) e o
-// dia de jogos libera motores e listas: sem comparacao propria, validados pela carreira (Rust x
-// original), como o nascimento e o fim do motor. As rotinas que chamam seguem comparadas.
+// simplification: each side’s line-up calls the automatic one (0x6dbc50, which allocates the list and reads the stack) and the
+// match day releases engines and lists: no comparison of its own, validated by the career (Rust x
+// original), like the creation and the end of the engine. The calling routines are still compared.
 
 /// starts the day's next match after the current one (+0x2f): skips the decided ones, those of a human club and those
 /// already started; creates the engine (0x6b7e50) and prepares it (0x6b7f20); in the 1st round with none, moves to the
@@ -427,14 +427,14 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
         two(u(this, 0), f);
     }
     let clube: unsafe extern "C" fn(usize, usize, usize, u32, usize) = core::mem::transmute(FN_MATCH_DAY_POST_PLAYER_REACTION_NEWS);
-    // simplification: a rodada vai como dword com os altos zerados; a original passa sobra da pilha neles (lidos como byte)
+    // simplification: the round goes as a dword with the high bytes zeroed; the original passes stack leftovers in them (read as a byte)
     clube(u(jogo, 0x1c), u(jogo, 0x20), jogo, round[0] as u32, summary);
     clube(u(jogo, 0x20), u(jogo, 0x1c), jogo, round[1] as u32, summary);
     1
 }
 
-// simplification: o dia de jogos cria e libera motores e resumos e chama dezenas de rotinas ainda
-// originais; sem comparacao propria, validadas pela carreira (Rust x original), como as da 149a.
+// simplification: match day creates and frees engines and summaries and calls dozens of routines still
+// originals; no comparison of their own, validated by the career (Rust x original), like those of the 149th.
 
 /// plays the day. On a network, ties the humans to their matches (0x11d-byte scoreboard, 0x765480, 0x5fcff0/0x5fd100)
 /// and plays them to the end; then each match without an engine: with a human on a network, steps the current one
@@ -478,7 +478,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     let sheet: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
     let warn_human: unsafe extern "C" fn(usize, u32, u32, u32, u32) = core::mem::transmute(FN_OPEN_MANAGER_CLUB_SCREEN);
     let level: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_HUMAN_MANAGER_GET_COMMENTARY_SPEED);
-    // 0x5fe290 (ret 8): a partida e o humano (a original empilha o humano antes do teste)
+    // 0x5fe290 (ret 8): the match and the human (the original pushes the human before the test)
     let em_rede: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_WATCHING_FIXTURE);
     let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
     let f5fd2f0: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SET_ON_HOLIDAY);
@@ -505,7 +505,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     let data_text: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_DATE_GET_LONG_DATE_STRING);
 
     let terminou = |e: u8| e == 2 || e == 8;
-    // joga ate o fim (passos de -1), contando as terminadas em +0x25
+    // plays to the end (steps of -1), counting those finished in +0x25
     let until_end = |p: usize| {
         while !terminou(*((p + 0x67) as *const u8)) {
             let e = laco(u(p, 0x57), -1) as u8;
@@ -515,7 +515,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
             }
         }
     };
-    // libera o motor e tira a partida da fila
+    // frees the engine and removes the match from the queue
     let without_engine = |p: usize| {
         let m = u(p, 0x57);
         if m != 0 {
@@ -610,7 +610,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                                 core::ptr::write_unaligned((u(p, 0x5b) as isize + 5 + 4 * x) as *mut u32, 1);
                                 *((u(p, 0x5b) + 0x105) as *mut u8) += 1;
                             }
-                            // simplification: o indice e de 0 a 15 (os humanos); fora disso a original escreveria na pilha
+                            // simplification: the index is 0 to 15 (the humans); outside that the original would write to the stack
                             let x = indice(G_SCREEN_MANAGER, h) as i16;
                             if (0..16).contains(&x) {
                                 vistos[x as usize] = 1;
@@ -665,7 +665,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
             }
         }
 
-        // as partidas sem humano, uma a uma
+        // the matches without a human, one by one
         *(G_MATCH_DAY_PLAYING_FLAG as *mut u32) = 1;
         let mut placar_escrito = false;
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
@@ -721,7 +721,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                         without_engine(p);
                         if !rapido {
                             crate::comparacao::ramo("placar na barra");
-                            // o placar com a porcentagem do dia na barra
+                            // the scoreboard with the day’s percentage on the bar
                             let n = read(0x21);
                             let pct = if n != 0 { read(0x25).wrapping_mul(100) / n } else { 0 } as i8 as i32;
                             let (c, casa, fora) = (u(p, 0x18), u(p, 0x20), u(p, 0x24));
@@ -743,7 +743,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
             k += 1;
         }
 
-        // o fechamento de cada partida
+        // the closing of each match
         ajustar_relogio(hora);
         andar(day, 1);
         *(G_MATCH_DAY_PLAYING_FLAG as *mut u32) = 0;
@@ -783,8 +783,8 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     }
 }
 
-// simplification: o laco do dia cria e libera motores e resumos e mexe na tela; sem comparacao propria,
-// validado pela carreira (Rust x original), como as da 151a.
+// simplification: the day loop creates and frees engines and summaries and touches the screen; no comparison of its own,
+// validated by the career (Rust x original), like those of the 151st.
 
 /// sets up the day (date, mode 0..2): zeroes the vectors, gathers the pending matches of each list (0x5ae6a0), records
 /// the already decided ones (0x923630/0x923cc0), groups by list and by competition (qsort 0x6b6510), points each match
@@ -837,7 +837,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
         return day;
     }
     preparar_historia(u(G_RESERVE_COMP, 0));
-    // cresce um vetor (ponteiro +o, capacidade +o+4, contagem +o+8) de 5 em 5; false sem memoria
+    // grows an array (pointer +o, capacity +o+4, count +o+8) in steps of 5; false when out of memory
     let crescer = |o: usize, size: u32| -> bool {
         if read(o + 8) == read(o + 4) {
             let cap = read(o + 4) + 5;
@@ -867,7 +867,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
                         let mut copia = [0u8; 0x100];
                         core::ptr::copy(x as *const u8, copia.as_mut_ptr(), 0x4f);
                         *((x + 0x43) as *mut u8) = 0xfe;
-                        // simplification: o 2o argumento vai so com o byte; a original passa sobra da pilha nos altos (lidos como byte)
+                        // simplification: the 2nd argument goes with only the byte; the original passes stack leftovers in the high part (read as a byte)
                         mark(u(G_WEATHER, 0), x, r as u32);
                         write(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr());
                         join(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr(), 1);
@@ -966,8 +966,8 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
 
 
 
-// simplification: a montagem do dia aloca os vetores e chama rotinas ainda originais; o lado e os sons sao
-// so leitura e tela. Sem comparacao propria, validadas pela carreira (Rust x original).
+// simplification: the day’s setup allocates the vectors and calls routines still original; the side and the sounds are
+// read-only and screen. No comparison of its own, validated by the career (Rust x original).
 
 /// Memory regions 0x6b5040 marks for a match day: day +0x29..+0x2e, each group +0x14, each competition +0xc..+0x13 and
 /// each match +0x53.
@@ -1162,7 +1162,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         crate::comparacao::ramo("sem humano competicao direta");
         return final_();
     }
-    // os 16 humanos no fim da tabela de pessoas
+    // the 16 humans at the end of the people table
     let base = g(G_STAFF_TABLE);
     for k in 0..16isize {
         let pe = (base as isize + (read(0xae2364) as isize - 1 - k) * 0x6e) as usize;
@@ -1234,7 +1234,7 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: u
     let ub = |a: usize| *(a as *const u8);
     if clube == 0 || partida == 0 || other == 0 {
         // simplification: a original mostra a caixa "Error" (match_day.cpp, linhas 0xc45/0xc4a/0xc4f); nao
-        // acontece no jogo
+        // happens in the game
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return;
     }
@@ -1351,14 +1351,14 @@ pub(crate) unsafe fn dispatch_post_match_call(routine: usize, this: usize, a: [u
         0x759610 => core::mem::transmute::<usize, T3>(routine)(this, a[0], a[1], a[2]),
         0x744240 => core::mem::transmute::<usize, T4>(routine)(this, a[0], a[1], a[2], a[3]),
         0x72c1f0 => core::mem::transmute::<usize, T5>(routine)(this, a[0], a[1], a[2], a[3], a[4]),
-        // cdecl: quem chama limpa a pilha, os argumentos a mais nao sao lidos
+        // cdecl: the caller cleans the stack, the extra arguments are not read
         _ => core::mem::transmute::<usize, C4>(routine)(a[0], a[1], a[2], a[3]),
     }
 }
 
-// --- portas do pos-jogo: as 14 rotinas do banco com efeitos (e a consulta 0x7c3a40), gravadas na fita so durante as
-// comparacoes do pos-jogo (RECORD_POST_MATCH); para os outros chamadores do jogo so repassam. Devolvem
-// edx:eax inteiro (nenhuma devolve ponto flutuante: conferido na 132a leva).
+// --- post-match ports: the 14 database routines with side effects (and the query 0x7c3a40), recorded on the tape only during the
+// post-match comparisons (RECORD_POST_MATCH); for the game’s other callers they just pass through. They return
+// edx:eax integer (none returns floating point: checked in the 132nd batch).
 pub(crate) static RECORD_POST_MATCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 pub(crate) static mut PORTAS_POS: [usize; 15] = [0; 15];
 pub(crate) const POS_PROLOGUES: [Prologo; 15] = [
@@ -1548,7 +1548,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     for i in 0..0x10usize {
         let idx = (*(G_STAFF_COUNT as *const usize)).wrapping_add(i).wrapping_sub(0x10);
         let q = u(G_STAFF_TABLE, 0).wrapping_add(idx.wrapping_mul(110));
-        // como a original, sem conferir a ficha nula do outro humano
+        // like the original, without checking the other human’s null record
         if *((q + 0x5f) as *const u8) != 0 && q != p && u(sheet(q), 0xe2) == jogo {
             let minha = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const u16);
             if indice(G_SCREEN_MANAGER, q) == minha {
@@ -1627,16 +1627,16 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
     let games: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let destroy_list: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
-    // simplification: a lista nasce zerada aqui, que é tudo o que o construtor 0x68d020 faz
+    // simplification: the list is born zeroed here, which is all the constructor 0x68d020 does
     let mut list = [0u8; 14];
     let l = list.as_mut_ptr() as usize;
     let table = *(stats as *const usize);
     let e = table.wrapping_add((k as usize).wrapping_mul(12));
-    // a original empurra os registradores inteiros: em cima, os 16 bits de [this] e de k × 3
+    // the original pushes the whole registers: on top, the 16 bits of [this] and of k × 3
     let d1 = (table as u32 & 0xffff_0000) | *((e + 8) as *const u16) as u32;
     let d2 = ((k as u32).wrapping_mul(3) & 0xffff_0000) | *((e + 0xa) as *const u16) as u32;
     games(*(G_FIXTURE_MANAGER as *const usize), d1, d2, d1, d2, *(e as *const u32), l, u32::MAX, 0xffff_fffe, u32::MAX);
-    // o cursor (+0xa) começa na cabeça (+2)
+    // the cursor (+0xa) starts at the head (+2)
     core::ptr::copy(list.as_ptr().add(2), list.as_mut_ptr().add(0xa), 4);
     let clube = *((e + 4) as *const u32);
     let mut f = next(l);
@@ -1652,9 +1652,9 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
     0
 }
 
-// simplification: a partida deixada cria e libera o motor, anda a partida até o fim e a registra no arquivo
-// temporário: rodar duas vezes não dá, então o comparador só chama a original; a cópia se prova no
-// modo Rust (o ramo), na sessão do Lucas com rede (só um jogador da rede saindo a chama).
+// simplification: the abandoned match creates and frees the engine, plays the match to the end and records it in the file
+// temporary: running twice is not possible, so the comparer only calls the original; the copy proves itself in the
+// Rust mode (the branch), in Lucas’s network session (only a network player leaving calls it).
 
 
 /// one step of the human's match on a network, by the clock and the humans' scoreboard (everyone sees each state;
@@ -1697,7 +1697,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     let state = pl as *mut u8;
     let eu = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
     let visto = |i: isize| ((pl as isize) + 0x85 + 4 * i) as *mut u32;
-    // todos viram de novo: so o humano da vez marca e espera
+    // everyone turns again: only the current human marks and waits
     let rever = || {
         core::ptr::write_bytes((pl + 0x85) as *mut u8, 0, 0x40);
         core::ptr::write_unaligned(visto(eu), 1);

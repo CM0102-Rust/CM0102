@@ -451,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     if (faixa_l(j, 0) != 0 || faixa_l(j, 1) != 0) && (dura(kind) || kind == 0x2e) && sortear(3) != 0 {
         return 0;
     }
-    // vantagem: (20, ou 5 na faixa do proprio lado) x (+0x5c da ficha de `outro`)^1,5 / (1 ou 3)
+    // advantage: (20, or 5 in the band of its own side) x (+0x5c of `outro`’s profile)^1.5 / (1 or 3)
     let a = if faixa_l(j, byte(j, 0x27)) != 0 { 5.0 } else { 20.0 };
     let b = byte(*((other + 0x69) as *const usize), 0x5c) as f64;
     let div = if *((other + 0x1a6) as *const usize) != j { 1.0 } else { 3.0 };
@@ -514,7 +514,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             *grav = sortear(*grav as i32) as i8;
         }
     };
-    // ajuste final pela ficha de `outro` (+0x5c): 1 -> `um`; >= 6 -> +1 abaixo de 10; senao `senao`
+    // final adjustment from `outro`’s record (+0x5c): 1 -> `um`; >= 6 -> +1 below 10; otherwise `senao`
     let by_sheet = |um: i32, senao: i32| {
         if *advantage != 0 && other != 0 {
             let c = byte(*((other + 0x69) as *const usize), 0x5c);

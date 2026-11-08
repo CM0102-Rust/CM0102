@@ -4,5 +4,5 @@ MUTACOES = [
     ('dbv1_reputacao_x50', '            let a = w(nj + 0xc).wrapping_mul(50);', '            let a = w(nj + 0xc).wrapping_mul(49); // mutacao'),
     ('dbv1_metade', '                    set_attr_cell_value(&mut v3, c, (x as i32 / 2) as i16);', '                    set_attr_cell_value(&mut v3, c, (x as i32 / 3) as i16); // mutacao'),
     ('dbv1_sorteio_potencial', '            if sorteio(2000) == 0 {', '            if sorteio(1999) == 0 { // mutacao'),
-    ('dbv1_molde_250', '                    cont -= 1; // os 250 sorteados', '                    cont -= 2; // mutacao: 125 sorteados'),
+    ('dbv1_molde_250', '                    cont -= 1; // the 250 drawn', '                    cont -= 2; // mutacao: 125 sorteados'),
 ]

@@ -1,10 +1,10 @@
 use super::*;
 
 //
-// O x87 do jogo roda em precisao dupla (padrao do Windows): cada operacao arredonda para 53 bits,
-// como f64 em SSE2. O que importa reproduzir e onde o original arredonda para float (32 bits):
-// `fstp`+`fld` compara o valor ja arredondado; `fst` seguido de comparacao compara o de 53 bits.
-// As constantes sao lidas do proprio .rdata do jogo.
+// The game’s x87 runs in double precision (Windows default): each operation rounds to 53 bits,
+// as f64 in SSE2. What matters to reproduce is where the original rounds to float (32 bits):
+// `fstp`+`fld` compares the already rounded value; `fst` followed by a comparison compares the 53-bit one.
+// The constants are read from the game’s own .rdata.
 
 /// Reads an f32 at an absolute address.
 pub(crate) unsafe fn read_f32_at(a: usize) -> f32 {
@@ -150,13 +150,13 @@ pub(crate) unsafe extern "thiscall" fn closest_to_goal(this: usize, j: usize) ->
     for k in 0..20 {
         let p = block(other) + k * 0x1be;
         if byte(p, 0x19) >= 0 && match_player_position(p) != 1 && !(match_player_distance_to_cell(p, 4, row) > limit) {
-            return 0; // C0|C3: menor, igual ou sem ordem
+            return 0; // C0|C3: less, equal or unordered
         }
     }
     for k in 0..20 {
         let p = block(s as isize) + k * 0x1be;
         if byte(p, 0x19) >= 0 && match_player_position(p) != 1 && !(match_player_distance_to_cell(p, 4, row) >= limit) {
-            return 2; // C0: menor ou sem ordem
+            return 2; // C0: less than or unordered
         }
     }
     1
@@ -241,8 +241,8 @@ pub(crate) unsafe extern "thiscall" fn position_place_players(this: usize, j: us
     let lado1 = (lado(j) == 1) as i8;
     let s = lado(j);
     let posse = byte(this, 0x8eae);
-    // atacando: o time dele tem a posse (ou o jogador guardado em 0xf57a e do lado dele), ou a
-    // bola esta na entrada da area do adversario com 0x8ea9 marcado
+    // attacking: his team has possession (or the player stored in 0xf57a is on his side), or the
+    // ball is at the edge of the opponent’s area with 0x8ea9 set
     let atacando: i8 = if posse as i32 == (s == 0) as i32 {
         0
     } else if s == posse {
@@ -1580,7 +1580,7 @@ pub(crate) unsafe fn punish_challenger_foul_injected(m: usize, e: usize, j: usiz
         *b(m, 0x8eb2) = 5;
         *((m + 0x478a) as *mut usize) = j;
         *w(e, 0x35) = (*w(e, 0x35)).wrapping_sub(500);
-        // no chute (0x6f6c00) o penalti ainda mexe no +0x17 de quem fez
+        // in the shot (0x6f6c00) the penalty still changes the scorer’s +0x17
         if ajustar_no_penalti && sortear(byte(*((e + 0x69) as *const usize), 0x5a) as i32) == 0 {
             let r = sortear(10);
             if adjust(e, (r as u8).wrapping_neg() as i8) != 0 {
@@ -1635,7 +1635,7 @@ pub(crate) unsafe fn punish_challenger_foul_injected(m: usize, e: usize, j: usiz
             } else {
                 narrate(call, som, u32::MAX, ub(j, 0x27), u32::MAX);
             }
-            // a cobranca longe do gol adversario (lado 1: linha < 4; lado 0: > 7)
+            // the set piece far from the opponent’s goal (side 1: row < 4; side 0: > 7)
             let far = (byte(j, 0x27) == 1 && byte(j, 0x103) < 4) || (byte(j, 0x27) == 0 && byte(j, 0x103) > 7);
             if som == 0x1f79 && advantage == 0 && far {
                 if kind == 7 {
@@ -1745,7 +1745,7 @@ pub(crate) unsafe fn tackle_injected(j: usize, strong: u8, call: &mut dyn FnMut(
     };
     let par = |p: usize| ub(p, 0x2e) | ub(p, 0x27) << 8;
     let zero = |p: usize| (byte(p, 0x27) == 0) as u32;
-    // na area de quem defende contra o lado de `p` (colunas 2 a 6, linhas 10-11 ou 0-1)
+    // in the area of whoever defends against `p`’s side (columns 2 to 6, rows 10-11 or 0-1)
     let in_the_box = |p: usize, lado1: bool| {
         (2..=6).contains(&byte(p, 0x102)) && if lado1 { (10..=11).contains(&byte(p, 0x103)) } else { (0..=1).contains(&byte(p, 0x103)) }
     };
@@ -1788,7 +1788,7 @@ pub(crate) unsafe fn tackle_injected(j: usize, strong: u8, call: &mut dyn FnMut(
                     crate::comparacao::ramo("tackle so registra");
                     register(m, lance as i16 as u16, e as u32, j as u32, 0, kind, *b(j, 0x102), *b(j, 0x103), cartao, grav as u8);
                 } else {
-                    // a falta com punicao
+                    // the foul with a punishment
                     crate::comparacao::ramo("tackle falta punida");
                     punish_challenger_foul_injected(m, e, j, kind, cartao, grav, arriscado, advantage, lance, false, &["tackle penalty", "tackle expulsao", "tackle pick_restart_taker", "tackle vantagem"], call);
                     return;
@@ -1826,7 +1826,7 @@ pub(crate) unsafe fn tackle_injected(j: usize, strong: u8, call: &mut dyn FnMut(
                     let strength = nota.wrapping_sub(at);
                     let r = save_shot_injected(e, strength, &mut |rotina, this, x| {
                         if rotina == 0x6d6f70 {
-                            // a defesa narra com o quinto campo inteiro e o sexto -1
+                            // the defense narrates with the fifth field whole and the sixth -1
                             call(rotina, this, [x[0], x[1], x[2], x[3], (x[4] & 0xff) | 0xff00])
                         } else {
                             call(rotina, this, x)
@@ -1957,7 +1957,7 @@ pub(crate) unsafe fn tackle_injected(j: usize, strong: u8, call: &mut dyn FnMut(
 /// [pt] Despacho real das chamadas injetadas da dividida (e das rotinas que ela leva junto).
 pub(crate) unsafe fn dispatch_tackle_calls(routine: usize, this: usize, a: [u32; 5]) -> u32 {
     match routine {
-        // codigo | a7 << 16 (a7 com sinal), a5 | a6 << 8
+        // code | a7 << 16 (a7 signed), a5 | a6 << 8
         0x6d6f70 => add_match_event(this, [a[0] & 0xffff, a[1], a[2], a[3], a[4] & 0xff, (a[4] >> 8) & 0xff, (a[0] >> 16) as u8 as i8 as u32]),
         0x716e10 | 0x6e1090 => {
             let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(routine);
@@ -2111,7 +2111,7 @@ pub(crate) unsafe fn punish_contester_foul_injected(j: usize, mut t: u8, card: u
                 narrate(call, som, u32::MAX, zero(j), u32::MAX);
             }
             if som == 0x1f79 {
-                // o cobrador longe do gol que ataca (lado 1: linha < 4; lado 0: > 7)
+                // the taker far from the goal he attacks (side 1: row < 4; side 0: > 7)
                 let far = (byte(c, 0x27) == 1 && byte(c, 0x103) < 4) || (byte(c, 0x27) == 0 && byte(c, 0x103) > 7);
                 if t == 7 {
                     if far && !area_de(c, byte(j, 0x27) == 1) {
@@ -2182,7 +2182,7 @@ pub(crate) unsafe fn contest_ball_injected(j: usize, strength: i16, kind_in: i8,
     let narrate = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32| {
         call(FN_MATCH_EVENTS_ADD_EVENT, *((m + 0x8f7a) as *const usize), [code, m as u32, a3, a4, a5]);
     };
-    // na area que o lado de `p` defende (lado 1: linhas 10-11; os outros: 0-1), colunas 2 a 6
+    // in the area that `p`’s side defends (side 1: rows 10-11; the others: 0-1), columns 2 to 6
     let area_de = |p: usize, lado1: bool| {
         (2..=6).contains(&byte(p, 0x102)) && if lado1 { (10..=11).contains(&byte(p, 0x103)) } else { (0..=1).contains(&byte(p, 0x103)) }
     };
@@ -2214,7 +2214,7 @@ pub(crate) unsafe fn contest_ball_injected(j: usize, strength: i16, kind_in: i8,
             }
             _ => {
                 // simplification: a original mostra a caixa "Error" (versao, arquivo, linha 0x17e2); tipo
-                // fora de 0..5 nao acontece no jogo
+                // outside 0..5 does not happen in the game
                 *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
                 return 0;
             }
@@ -2241,7 +2241,7 @@ pub(crate) unsafe fn contest_ball_injected(j: usize, strength: i16, kind_in: i8,
         espirra(call, 0, j);
         return 1;
     }
-    // o lance e o atributo que o disputa
+    // the play and the attribute that contests it
     let em_area = in_the_box();
     let escolher = |kind: i8| -> (i16, i16) {
         if kind == 4 {
@@ -2277,7 +2277,7 @@ pub(crate) unsafe fn contest_ball_injected(j: usize, strength: i16, kind_in: i8,
             crate::comparacao::ramo("respond falta registrada");
             register(m, code as u16, j as u32, 0, 0, t, *b(j, 0x102), *b(j, 0x103), cartao, grav);
         } else {
-            // a falta com punicao
+            // the foul with a punishment
             crate::comparacao::ramo("respond falta punida");
             let mut weight = 0f32;
             punish(m, j, &mut t, cartao as i8, grav as i8, 0, &mut weight);
@@ -2355,7 +2355,7 @@ pub(crate) unsafe fn contest_ball_injected(j: usize, strength: i16, kind_in: i8,
                         narrate(call, som, u32::MAX, zero(j), u32::MAX);
                     }
                     if som == 0x1f79 {
-                        // o cobrador longe do gol que ataca (lado 1: linha < 4; lado 0: > 7)
+                        // the taker far from the goal he attacks (side 1: row < 4; side 0: > 7)
                         let far = (byte(c, 0x27) == 1 && byte(c, 0x103) < 4) || (byte(c, 0x27) == 0 && byte(c, 0x103) > 7);
                         if t == 7 {
                             if far && !area_de(c, byte(j, 0x27) == 1) {
@@ -2510,11 +2510,11 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
     let narrate = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32| {
         call(FN_MATCH_EVENTS_ADD_EVENT, *((m + 0x8f7a) as *const usize), [code, m as u32, a3, a4, a5]);
     };
-    // nas colunas 2 a 6, linhas 10-11 (`lado1`) ou 0-1
+    // in columns 2 to 6, rows 10-11 (`lado1`) or 0-1
     let area_de = |p: usize, lado1: bool| {
         (2..=6).contains(&byte(p, 0x102)) && if lado1 { (10..=11).contains(&byte(p, 0x103)) } else { (0..=1).contains(&byte(p, 0x103)) }
     };
-    // o desafiante longe do gol dele pela tabela e atras do extremo, ou o chutador sem como bater
+    // the challenger far from his goal by the table and behind the wide player, or the shooter unable to shoot
     let count_shot = |e: usize| {
         let dy = byte(e, 0x103) as i32 - if byte(e, 0x27) != 0 { 11 } else { 0 };
         !(distance_table_cell_yx(dy, byte(e, 0x102) as i32 - 4) as f64 > 1.0 && atras(*((e + 0x19e) as *const usize), e) == 0) && can_shoot_from_here(j)
@@ -2541,7 +2541,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
         }
     }
     let owner = *((m + 0xf57a) as *const usize);
-    // vira para o gol ou para o alvo
+    // turns towards goal or towards the target
     if (ang as i16) <= 0x5a {
         let r = sortear(200);
         let to_goal = byte(j, 0x10c) as i32 * byte(j, 0x105) as i32 > r || (chance as f64) < 2.0 || path(m, j, 0) != 0;
@@ -2600,7 +2600,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
     let s3 = sortear(angulo as i16 as i32);
     let rating_shot = (s1 - s2 - s3 + sortear(strength as i32)) as i16;
     tire_fatigue(j, -1.0, lance as i16);
-    // a falta do chutador
+    // the shooter’s foul
     let (mut cartao, mut grav) = (0u8, 0u8);
     let t = decidir(m, j, lance as i16 as u16, &mut cartao, &mut grav);
     if t != 0 {
@@ -2628,7 +2628,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
         }
         let mut advantage = 0u8;
         let mut checar_chutador = true;
-        // a falta do desafiante
+        // the challenger’s foul
         if nota >= rating_shot || sortear(5) == 0 {
             let td = foul(m, e, j, ld, -1, &mut cartao, gr, &mut advantage);
             if byte(m, 0x8ebb) != 0 && area_de(e, byte(j, 0x27) == 0)
@@ -2649,7 +2649,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
                 }
             }
         }
-        // a falta do chutador sobre o desafiante
+        // the taker’s foul on the challenger
         if checar_chutador && (rating_shot > nota || sortear(5) == 0) {
             let mut tj = foul(m, j, e, lance, -1, &mut cartao, gr, &mut advantage);
             if byte(m, 0x8ebb) != 0 && area_de(j, byte(j, 0x27) == 1)
@@ -2741,7 +2741,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
                                 narrate(call, som, u32::MAX, zero(j), u32::MAX);
                             }
                             if som == 0x1f79 && advantage == 0 {
-                                // o cobrador longe do gol que ataca (lado 1: linha < 4; lado 0: > 7)
+                                // the taker far from the goal he attacks (side 1: row < 4; side 0: > 7)
                                 let far = (byte(cb, 0x27) == 1 && byte(cb, 0x103) < 4) || (byte(cb, 0x27) == 0 && byte(cb, 0x103) > 7);
                                 if tj == 7 {
                                     if far && !area_de(cb, byte(j, 0x27) == 1) {
@@ -2790,7 +2790,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
         if rating_shot > nota {
             break 'contest;
         }
-        // o desafiante fica com a bola
+        // the challenger keeps the ball
         crate::comparacao::ramo("shot desafiante ganha");
         let narrou = (special(ld) != 0 || advantage != 0 || sortear(*w(e, 0x31) as i32) < -10)
             && area_de(e, byte(e, 0x27) == 1)
@@ -3004,7 +3004,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
             call(FN_MATCH_PLAYER_TAKE_TURN, j, [0; 5]);
         }
     }
-    // fora da area de ataque o jogador pode crescer
+    // outside the attacking area the player may push forward
     if !area_de(j, byte(j, 0x27) == 0) && sortear(*w(j, 0x31) as i32) < -10 {
         crate::comparacao::ramo("shot cresce");
         let p = read_f32_at(j + 0x1a2) as f64 * 1.0499999523162842;
@@ -3086,7 +3086,7 @@ pub(crate) unsafe fn shot_outcome_injected(p: usize, f_in: f32, call: &mut dyn F
         crate::comparacao::ramo("desfecho goleiro defende");
         goalkeeper_save(g, byte(p, 0x102), byte(p, 0x103), b18, -1, &mut b16, &mut b13)
     } else {
-        // simplification: com o proprio goleiro chutando, a original le b13/b16 sem valor (zerados no
+        // simplification: with the goalkeeper himself shooting, the original reads b13/b16 without a value (zeroed in the
         // original determinizado)
         0
     };
@@ -3139,7 +3139,7 @@ pub(crate) unsafe fn shot_outcome_injected(p: usize, f_in: f32, call: &mut dyn F
         *bm(0x1cd) = 1;
         return;
     }
-    // no alvo
+    // on target
     let k = defesa as i16 as i32;
     let parte = if k + q as i32 == 0 { 0 } else { (q as i32 * 100) / (k + q as i32) };
     let parte = parte as i16;
@@ -3633,7 +3633,7 @@ pub(crate) unsafe fn shot_on_goal_injected(p: usize, f_in: f32, call: &mut dyn F
         narrate(call, 0x20d6, byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8, 0);
     }
     narrate(call, 0x1fff, p2e, p27, 0);
-    // a disputa de penaltis: a falta (0x6bac40) e as narracoes do cobrador
+    // the penalty shootout: the foul (0x6bac40) and the taker’s commentary
     let penalties = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
         crate::comparacao::ramo("shot a gol nos penalties");
         narrate(call, 0x20ed, u32::MAX, p27, 0);
@@ -3671,7 +3671,7 @@ pub(crate) unsafe fn shot_on_goal_injected(p: usize, f_in: f32, call: &mut dyn F
         penalties(call);
         return;
     }
-    // as marcas: o ultimo argumento e a contagem
+    // the marks: the last argument and the count
     let c = |o: usize| *w(o);
     let redondo = |v: i16, d: i16| v >= d && v % d == 0;
     let mark: Option<(u32, i16)> = if byte(p, 0x30) != 0 && byte(p, 0xc) == 1 {
@@ -3934,7 +3934,7 @@ pub(crate) unsafe fn player_move_injected(p: usize, x: i8, y: i8, code: i16, con
         if e != 0 {
             tackle_injury_with(m, p, code, e, lance as i16, 0, call);
         }
-        // a narracao da aproximacao
+        // the commentary of the approach
         let acao = *w(p, 0x198);
         if !(0xf..=0x12).contains(&acao) && !tabela1(p) && sortear(0x14) == 0 {
             let value = || {
@@ -4145,7 +4145,7 @@ pub(crate) unsafe fn move_action_commentary_injected(m: usize, p: usize, e: usiz
     let (px, py) = (byte(p, 0x102), byte(p, 0x103));
     let mut conduz = conduz_in;
     let defesa_400 = || *((m + 0x9766 + other as usize * 0x18e3) as *const u32) & 0x400 != 0;
-    // a narracao com o desafiante (0x2173 pelo +0x71, 0x1f4a; com o goleiro 0x1f55/0x2158)
+    // the commentary with the challenger (0x2173 by +0x71, 0x1f4a; with the goalkeeper 0x1f55/0x2158)
     let com_desafiante = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
         let cod = if !tabela1(e) {
             let v = read_f32_at(p + 0x71);
@@ -4158,7 +4158,7 @@ pub(crate) unsafe fn move_action_commentary_injected(m: usize, p: usize, e: usiz
         };
         narrate(call, cod, par(e));
     };
-    // a arvore sem desafiante, a partir do alvo
+    // the tree without a challenger, starting from the target
     let sem_desafiante = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
         if is_in_attacked_box(side, x, y) && !is_in_attacked_box(side, px, py) {
             narrate(call, 0x1f50, u32::MAX);
@@ -4257,7 +4257,7 @@ pub(crate) unsafe fn move_action_commentary_injected(m: usize, p: usize, e: usiz
             }
         }
         _ => {
-            // a original mostra a caixa de erro ("unknown action") e zera 0xb67a34
+            // the original shows the error box (”unknown action”) and clears 0xb67a34
             *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         }
     }
@@ -4317,7 +4317,7 @@ pub(crate) unsafe fn challenger_wins_injected(m: usize, p: usize, e: usize, lanc
         }
     }
     call(FN_MATCH_PLAYER_TAKE_POSSESSION, e, [0; 5]);
-    // `p` perde: mais na propria area
+    // `p` loses: more in his own area
     if is_in_attacked_box((side == 0) as i8, byte(p, 0x102), byte(p, 0x103)) {
         crate::comparacao::ramo("movimento perde na area");
         *w(p, 0x35) = (*w(p, 0x35)).wrapping_sub(0xfa);
@@ -4470,7 +4470,7 @@ pub(crate) unsafe fn punish_move_foul_injected(m: usize, e: usize, p: usize, mut
     }
     let sent_off = matches!(kind, 3..=6);
     if colour as i16 > -1 {
-        // o evento 0x82 (cartao 4/5 pelos motivos 5, 10, 11 e o historico do jogador)
+        // event 0x82 (card 4/5 for reasons 5, 10, 11 and the player’s history)
         let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
         let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
         let v = match_pl_ftol(average(u(G_PLAYER_STATS, 0), u(e, 0x6d), 0xb, 2, 6.5)) as i8;
@@ -4729,7 +4729,7 @@ pub(crate) unsafe fn grid_step_injected(m: usize, p: usize, ox: i8, oy: i8, nx: 
             *w(p, 0x35) = (*w(p, 0x35)).wrapping_add(4);
         }
     }
-    // vira para um terco do caminho ate a bola
+    // turns a third of the way toward the ball
     if p == u(m, 0xf582) {
         return;
     }
@@ -4918,7 +4918,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
     let mut l64 = 0u16;
     let (mut l5f, mut l37) = (false, false);
     let mut la4 = 0i32;
-    // a lista da pressao (0x68d020: contador e cabeca/cauda); so a copia do modo Rust a enche
+    // the pressure list (0x68d020: counter and head/tail); only the Rust-mode copy fills it
     let mut list = [0u8; 14];
     let la = list.as_mut_ptr() as usize;
     let pass_ball = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, kind: u32, r: usize, moveu: u8, x: i8, y: i8| {
@@ -5015,7 +5015,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
             8 => *b(m, 0x8eb2) = 0,
             _ => {}
         }
-        // em jogo: o alvo (casa de 0x6c2be0) e as notas
+        // in play: the target (cell of 0x6c2be0) and the ratings
         let (l74, l36): (i8, i8);
         if mode == 4 {
             l74 = 4;
@@ -5089,7 +5089,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
             l14 = 4000 - l30;
             l44 = 2000 - l30 / 2;
         }
-        // a nota do chute
+        // the shot rating
         if byte(m, 0x8ea9) == 4 {
             if ff < read_f64_at(0x967890) || ((y0() == 0 || y0() == 0xb) && (x0() as i32 - 4).abs() == 1) { // 0x967890 = 1
                 l10 = match_pl_ftol(fl(0xa9) * read_f32_at(0x96d750) as f64 + read_f32_at(0x968dac) as f64 - (400 * l27 as i32) as f64); // 0x96d750 = 75, 0x968dac = 2500
@@ -5150,7 +5150,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
                 l4c = true;
             }
         }
-        // o fim de jogo: a dividida para ganhar tempo
+        // the end of the match: the challenge to waste time
         if l68 == 0 && l30 < 3000 && mode != 4 && (*w(m, 0x8ed0) as i32 / 11) > sortear(0x14) + 0x46 && !is_in_attacked_box(side, x0(), y0()) && byte(p, 0x106) != 0 && byte(m, 0x8ea9) < 3 {
             let e = sortear(byte(u(p, 0x69), 0x5c) as i32);
             if e < sortear(10) && side_under_control(m, side) != 0 {
@@ -5160,7 +5160,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
                         crate::comparacao::ramo("conducao segura a bola");
                         call(FN_MATCH_PLAYER_HOLD_BALL, p, [1, 0, 0, 0, 0]);
                         *w(p, 0x198) = 0x10;
-                        // ver o fim da 0x7139cb
+                        // see the end of 0x7139cb
                         break 'fim;
                     }
                     if is_in_attacking_half(side, y0()) && *w(p, 0x29) > -0x14 && l10 < 0 {
@@ -5235,7 +5235,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
                 break 'fim;
             }
         }
-        // a meta (o meio do gol atacado) e a boca do gol
+        // the target (the middle of the attacked goal) and the goal mouth
         let ty: i8 = if side == 0 { 0xb } else { 0 };
         let na_boca = || y0() == ty && (3..=5).contains(&x0());
         let consegue = || can_play(p, 4, ty, 0, 0.0, 0.0, core::ptr::null_mut()) != 0;
@@ -5271,7 +5271,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
         if !na_boca() && !consegue() && is_in_attacking_half(side, y0()) {
             l14 = l14.wrapping_add(2000 - l30);
         }
-        // a casa para onde conduzir (0x6bce80)
+        // the square to carry the ball to (0x6bce80)
         let (mut sx, mut sy) = (l74, l36);
         let mut l43 = choose_square(m, p, &mut sx, &mut sy, (l68 != 0) as u32 + 2) as i8;
         let bottom = (side == 1 && y0() < 3) || (side == 0 && y0() > 8);
@@ -5303,7 +5303,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
             }
             l10 -= 650;
         }
-        // o chute de fora da area
+        // the shot from outside the box
         let in_the_box = is_in_attacked_box(side, x0(), y0());
         if (2..=6).contains(&x0()) && !in_the_box && byte(m, 0x8ea9) != 4 {
             let t = table_a(m, p);
@@ -5357,7 +5357,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
                 l10 = l10.wrapping_add((*w(p, 0x29) as i32 + r * 200) * 2);
             }
         }
-        // o lance de efeito e a pressao
+        // the swerving move and the pressure
         let c = byte(m, 0x8ea9);
         if c < 2 || (ff > read_f64_at(0x96d7a8) && c < 4) { // 0x96d7a8 = 1.41
             let mut out = 0u16;
@@ -5395,7 +5395,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
         } else if !is_in_defended_box(side, x0(), y0()) {
             let e = sortear(match_pl_ftol(byte(p, 0x106) as f64 * read_f64_at(0x968dd8))); // 0x968dd8 = 30
             if e > sortear(200) {
-                // os adversarios na mesma casa
+                // the opponents on the same square
                 let home = m + 0x215e + (y0() as isize + x0() as isize * 12) as usize * 90;
                 let other = (side == 0) as usize;
                 let mut i = 0i8;
@@ -5408,7 +5408,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
                 }
             }
         }
-        // o desconto da conducao (ebx do original)
+        // the dribbling discount (the original’s ebx)
         let k = match_pl_ftol(game_pow(byte(m, 0x8ea9) as f64, read_f64_at(0x968930)) * read_f64_at(0x96d828)); // 0x968930 = 3, 0x96d828 = -200
         let mut nc = (-(*w(p, 0x29) as i32) - *w(p, 0x19c) as i32 * 10) * 10;
         nc = nc.wrapping_sub(match_pl_ftol((read_f32_at(0x96d1b0) as f64 - fl(0x4d)) * read_f32_at(0x96d820) as f64)).wrapping_sub(k); // 0x96d1b0 = 10000, 0x96d820 = -0.200000003
@@ -5435,7 +5435,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
             nc = 0;
         }
         l14 = l14.wrapping_sub(nc);
-        // na linha de fundo, fora do meio: cruza (ou guarda a jogada ensaiada)
+        // on the byline, away from the middle: crosses (or keeps the set play)
         if off_centre(x0()) != 0 && !(m != 0 && byte(m, 0x8ea9) >= 3) && ((side == 0 && y0() == 0xb) || (side == 1 && y0() == 0)) {
             if l58 != 0 && matches!(l8c, 8 | 7 | 6) {
                 l30 += 1500;
@@ -5640,7 +5640,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
             }
         }
     }
-    // o destrutor da lista (0x68d040): na copia Rust da comparacao ela fica vazia
+    // the list’s destructor (0x68d040): in the comparison’s Rust copy it stays empty
     let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     destroy(la);
     volta
@@ -5733,7 +5733,7 @@ pub(crate) unsafe fn compare_dribble(p: usize, mode: u32) -> u32 {
         },
         |chamar| {
             dribble_injected(p, mode as u8, &mut |rotina, this, args| match rotina {
-                // passe, lancamento e dividida: as unidades deles entram na fita da conducao
+                // pass, long ball and challenge: their units go on the dribbling tape
                 0x6fa250 => {
                     pass_ball_injected(this, args[0] as u8, args[1] as usize, args[3], args[4], &mut |r, t, a| {
                         let mask = match r {
@@ -5754,7 +5754,7 @@ pub(crate) unsafe fn compare_dribble(p: usize, mode: u32) -> u32 {
                             0x6cd490 => [0xff, 0, 0, 0, 0],
                             _ => [u32::MAX; 5],
                         };
-                        // a porta da 0x6fad40 grava (x, y, tipo, receptor, coluna); a linha do alvo nao entra
+                        // the port of 0x6fad40 writes (x, y, type, receiver, column); the target row is not included
                         let a = if r == 0x6fad40 { [a[0], a[1], a[2], 0, a[3]] } else { a };
                         chamar(r, t, a, mask)
                     });
@@ -5780,7 +5780,7 @@ pub(crate) unsafe fn compare_dribble(p: usize, mode: u32) -> u32 {
                     let mask = match rotina {
                         0x6d6f70 => [0xff_ffff, u32::MAX, 0xff, 0xff, 0xff],
                         0x6f09f0 => [0xff, 0xff, 0xffff, 0xff, 0xff],
-                        // a cabeca da lista da pressao: so a copia do modo Rust a enche
+                        // the head of the pressure list: only the Rust-mode copy fills it
                         0x702050 => [0xff, u32::MAX, 0xffff, 0xff, 0],
                         _ => [u32::MAX; 5],
                     };
@@ -5983,7 +5983,7 @@ pub(crate) unsafe fn pass_foul_injected(m: usize, e: usize, p: usize, mut kind: 
             if grav as i32 > sortear(7) + 2 { 0x210a } else { -1 }
         }
     };
-    // o evento 0x82 (cartao 4/5 pelos motivos 5, 10, 11 e o historico do jogador)
+    // event 0x82 (card 4/5 for reasons 5, 10, 11 and the player’s history)
     let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let v = match_pl_ftol(average(u(G_PLAYER_STATS, 0), u(e, 0x6d), 0xb, 2, 6.5)) as i8;
@@ -6160,7 +6160,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
     let m = u(p, 0x19e);
     let side = byte(p, 0x27);
     let (mut tipo, mut tx, mut ty) = (kind_in, tx_in, ty_in);
-    // narracao com sete argumentos (a5 | a6 << 8 e a7 << 16 no codigo)
+    // commentary with seven arguments (a5 | a6 << 8 and a7 << 16 in the code)
     let narrar7 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: i8| {
         call(FN_MATCH_EVENTS_ADD_EVENT, u(m, 0x8f7a), [code | (a7 as u8 as u32) << 16, m as u32, a3, a4, (a5 & 0xff) | (a6 & 0xff) << 8]);
     };
@@ -6190,7 +6190,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
     let mut out_play = 0u16;
     classify_move(p, tipo as i16, x, y, tx, ty, (d as f64 + read_f64_at(0x967890)) as f32, &mut out_play); // 0x967890 = 1
     let l20 = sortear(out_play as i16 as i32);
-    // a nota do passe pelo tipo
+    // the pass rating by type
     let mut l13 = false;
     let wp = |o: usize| *w(p, o);
     let mut bp: i16 = match tipo {
@@ -6226,7 +6226,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
         }
     }
     let r1 = sortear(r0 as i16 as i32);
-    // a nota do ataque: so os 16 bits baixos sao lidos depois
+    // the attack rating: only the low 16 bits are read later
     let l44 = wp(0x19c).wrapping_sub(r1 as i16).wrapping_add(sortear(bp as i32) as i16).wrapping_add(wp(0x29));
     // o desafiante
     let (mut a, mut bb, mut nota, mut lance, mut arriscado) = (0u8, 0u8, 0i16, 0i8, 0i8);
@@ -6252,13 +6252,13 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
                 return 0;
             }
         }
-        // o registro do lance pula a conta do penalti (0x6fb667 vai direto a 0x6fc0e5)
+        // the incident record skips the penalty calculation (0x6fb667 goes straight to 0x6fc0e5)
         let penalty = kind_foul == 0 && vantagem != 0 && (is_in_attacked_box(side, byte(p, 0x102), byte(p, 0x103)) || arriscado != 0);
         crate::comparacao::ramo("passe desarmado");
         pass_intercepted_injected(m, p, e, lance, nota, a, vantagem, penalty, call);
         return 0;
     }
-    // sem desafiante: o folego de quem passa
+    // no challenger: the stamina of the passer
     if !is_in_attacked_box(side, byte(p, 0x102), byte(p, 0x103)) && sortear(*w(p, 0x31) as i32) < -10 {
         crate::comparacao::ramo("passe sem folego");
         let person = u(p, 0x69);
@@ -6302,7 +6302,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
     *w(m, 0x8ed6) = l44.wrapping_sub(nota);
     *b(m, 0x8eb9) = x as u8;
     *b(m, 0x8ea6) = y as u8;
-    // a precisao do passe
+    // the pass accuracy
     let mut factor = (byte(m, 0x8ea9) as f64 * read_f64_at(0x968e80) + read_f64_at(0x967890)) as f32; // 0x968e80 = 0.3, 0x967890 = 1
     let c = match byte(m, 0x4756) {
         1 => 0x96d7bc,
@@ -6342,7 +6342,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
             d = distance_between(x, y, nx, ny);
         }
     }
-    // o custo do passe
+    // the cost of the pass
     if receptor != 0 {
         if *out != 0 && limit(side as u8, ty) != 0 {
             *w(p, 0x35) = wp(0x35).wrapping_sub(if m != 0 && table_a(m, p) == 1 { 0xd } else { 0x14 });
@@ -6357,7 +6357,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
     } else {
         *w(p, 0x35) = wp(0x35).wrapping_sub(0x24);
     }
-    // a narracao da aproximacao (para onde ele leva a jogada)
+    // the approach commentary (where he takes the move)
     let acao = wp(0x198);
     let setpiece = matches!(tipo, 6 | 7 | 8 | 0x5e);
     if !matches!(acao, 0x12 | 0x11 | 0x10 | 0xf) && tipo != 8 && !setpiece && !l13 {
@@ -6398,7 +6398,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
             }
         }
     }
-    // a direcao do passe e a narracao pelo tipo
+    // the pass direction and the commentary by type
     let mut l54: i32 = -1;
     let rp = |o: usize| if receptor != 0 { ub(receptor, o) } else { 0 };
     let (bl, al): (u8, u8);
@@ -6599,7 +6599,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
             }
         }
         _ => {
-            // simplification: o original para o jogo ("MATCH_PLAYER::pass() - unknown pass"); os chamadores so usam os 16 tipos acima
+            // simplification: the original stops the game (”MATCH_PLAYER::pass() - unknown pass”); the callers only use the 16 types above
             linha(&format!("motor: execute_pass: tipo desconhecido {:#x}", tipo));
             std::process::abort();
         }
@@ -6645,7 +6645,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
     let cy = ty.clamp(0, 0xb);
     let cx = tx.clamp(0, 8);
     *w(m, 0x8ed8) = by_difference(m, x, y, cx, cy) as i16;
-    // 0x7003b0: o lado do passe e a conta de posse
+    // 0x7003b0: the side of the pass and the possession count
     *b(m, 0x8eab) = side as u8;
     if side != -1 {
         *b(m, 0x8d46 + side as isize as usize) = (*b(m, 0x8d46 + side as isize as usize)).wrapping_add(1);
@@ -6801,7 +6801,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn F
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let marks: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GET_FLAGS);
     let protegido: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_MEDIA_HAS_STORY_FOR_PLAYER);
-    // as que mexem no banco vao por `chamar` (no modo Rust a rotina do jogo; na comparacao, a fita)
+    // those that touch the database go through `chamar` (in Rust mode the game routine; in comparison, the tape)
     let ch = core::cell::RefCell::new(call);
     let duas = |n: usize, a: usize, b: usize, p: usize| (ch.borrow_mut())(0x759610, n, [a as u32, b as u32, p as u32, 0, 0]);
     let remove_40 = |c: usize, f: u32| (ch.borrow_mut())(0x8676d0, c, [f, 0, 0, 0, 0]);
@@ -6812,7 +6812,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn F
     let kind_0b = |p: usize, c: usize, pa: usize| (ch.borrow_mut())(0x7daf50, 0, [p as u32, c as u32, pa as u32, 0, 0]);
     let kind_1e = |n: usize, ev: usize, pa: usize| (ch.borrow_mut())(0x733a60, n, [ev as u32, pa as u32, 0, 0, 0]);
     let reserve = |t: usize, p: usize, um: u32| (ch.borrow_mut())(0x547af0, 0, [t as u32, p as u32, um, 0, 0]);
-    // as consultas que alcancam a 0x68d0d0 (aloca) tambem vao por `chamar`
+    // the queries that reach 0x68d0d0 (allocates) also go through `chamar`
     let away = |c: usize| (ch.borrow_mut())(0x53b900, 0, [c as u32, 0, 0, 0, 0]) as i32;
     let contrato = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
     let teste_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
@@ -6821,7 +6821,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn F
     let read = |p: usize| core::ptr::read_unaligned(p as *const i32);
     let person = |id: i32| (*(G_STAFF_TABLE as *const usize) as isize + id as isize * 0x6e) as usize;
     let c45 = |c: usize| core::ptr::read_unaligned((c + 0x45) as *const u32);
-    // a palavra +o da linha do clube em [[0xb67a44]] menos `menos`, entre 1 e 10000
+    // the word +o of the club’s row in [[0xb67a44]] minus `menos`, between 1 and 10000
     let adjust = |clube: usize, o: usize, minus: i16| {
         let row = (**(G_MANAGER_MANAGER as *const *const usize) as isize + read(clube) as isize * 0x49) as usize;
         let w = (row + o) as *mut i16;
@@ -7116,7 +7116,7 @@ pub(crate) unsafe fn long_ball_injected(j: usize, mode: i8, refinar: u8, call: &
     let s = |n: i32| sortear(n) as i8;
     let dir = byte(j, 0x27);
     let ang = *((j + 0x19a) as *const i16);
-    // os lados para onde a bola vai, pela direcao do jogador
+    // the sides where the ball goes, by the player’s direction
     let (mut f12, mut f13, mut f14, mut f15) = (false, false, false, false);
     if !(0x32..=0x136).contains(&ang) {
         if dir == 1 {
@@ -7156,7 +7156,7 @@ pub(crate) unsafe fn long_ball_injected(j: usize, mode: i8, refinar: u8, call: &
     let (bx, by) = (|| byte(m(), 0x8ea7), || byte(m(), 0x8ea8));
     let kind: u32;
     let (mut tx, mut ty): (i8, i8);
-    // a coluna e a linha conforme os lados: (desvio do sorteio, passo)
+    // the column and the row according to the sides: (roll offset, step)
     let mira = |base: i8, for_minus: bool, for_more: bool, n: i32, step_towards: i8, n_middle: i32| -> i8 {
         if for_minus {
             base.wrapping_sub(s(n)).wrapping_sub(step_towards)
@@ -7168,7 +7168,7 @@ pub(crate) unsafe fn long_ball_injected(j: usize, mode: i8, refinar: u8, call: &
         }
     };
     let x = byte(j, 0x102);
-    // fcomp + test ah,1: perto do gol quando a distancia e menor (NaN conta como menor)
+    // fcomp + test ah,1: near the goal when the distance is smaller (NaN counts as smaller)
     let refina;
     if !(d as f64 >= read_f64_at(0x9688a0)) && !(2..=6).contains(&x) && mode != 4 { // 0x9688a0 = 5
         kind = 0x5e;
@@ -7177,10 +7177,10 @@ pub(crate) unsafe fn long_ball_injected(j: usize, mode: i8, refinar: u8, call: &
         refina = mode != -1;
     } else {
         let y = byte(j, 0x103);
-        // dir 1 ataca para a linha 0: y >= 6 e o campo dele (e o mesmo com dir 0 e y < 6)
+        // dir 1 attacks toward row 0: y >= 6 is its half (and likewise with dir 0 and y < 6)
         let field_own = (dir == 1 && y >= 6) || (dir == 0 && y < 6);
         if !field_own {
-            // do meio para a frente
+            // from the middle forward
             if mode == 4 {
                 kind = 0x5c;
                 ty = mira(by(), f15, f14, 2, 1, 2);
@@ -7256,7 +7256,7 @@ pub(crate) unsafe fn long_ball_injected(j: usize, mode: i8, refinar: u8, call: &
         }
     }
     *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(1);
-    // (x, y, tipo, coluna e linha do alvo): o receptor e zero
+    // (x, y, type, column and row of the target): the receiver is zero
     let r = call(FN_MATCH_PLAYER_PASS, j, [x as u8 as u32, byte(j, 0x103) as u8 as u32, kind, tx as u8 as u32, ty as u8 as u32]);
     if r as u8 == 0 {
         return;
@@ -7436,7 +7436,7 @@ pub(crate) unsafe fn player_decide_injected(j: usize, call: &mut dyn FnMut(usize
     let w = |o: usize| (j + o) as *mut u16;
     let b = |o: usize| byte(j, o);
     let u = |a: usize| *(a as *const usize);
-    // os marcados por ele se mexem (0x714d40) quando o sorteio deixa
+    // the players marked by him move (0x714d40) when the random roll allows
     let marcados = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
         let mut k = 0i8;
         while k < b(0x101) {
@@ -7472,7 +7472,7 @@ pub(crate) unsafe fn player_decide_injected(j: usize, call: &mut dyn FnMut(usize
             let v4d = *((j + 0x4d) as *const f32);
             let r1 = sortear(0x41);
             let r2 = sortear(10);
-            // fcomp + test ah,0x41: segue so se passar do sorteio (NaN desliga)
+            // fcomp + test ah,0x41: continues only if above the random roll (NaN switches it off)
             if !(r2 as f64 + v4d as f64 * read_f64_at(0x96d818) > r1 as f64) { // 0x96d818 = 0.0078125
                 marcados(call);
                 *w(0x198) = 0x67;
@@ -7503,7 +7503,7 @@ pub(crate) unsafe fn player_decide_injected(j: usize, call: &mut dyn FnMut(usize
                 dist_point(j, 4, 0)
             };
             let r = sortear(0xc);
-            // fcomp + test ah,0x41: so longe (sorteio maior que a distancia, NaN nao)
+            // fcomp + test ah,0x41: only far (draw greater than the distance, NaN not)
             if r as f64 > d as f64 && (b(0x10d) as i32) < sortear(10) {
                 desliga(call, false);
                 return;
@@ -7621,13 +7621,13 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
     let rep = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, x: i8, y: i8, a: i32| {
         c(0x6f09f0, j, [x as u8 as u32, y as u8 as u32, a as u32, 0, 0]);
     };
-    // distancia da tabela entre o jogador e (x, y)
+    // table distance between the player and (x, y)
     let dist_table = |x: i8, y: i8| {
         let lin = (byte(j, 0x103) as i32 - y as i32).abs() as i8 as isize;
         let col = (byte(j, 0x102) as i32 - x as i32).abs() as i8 as isize;
         read_f32_at((0xa15e44 + 4 * (lin * 9 + col)) as usize)
     };
-    // pega a bola parada na casa dela: aponta, narra e pega (0x6f0630)
+    // picks up the dead ball on its square: points, narrates and picks up (0x6f0630)
     let pegar_e_narrar = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32| {
         c(0x6d6f70, u(m + 0x8f7a), [code, m as u32, b(0x2e) as u8 as u32, dir as u8 as u32, u32::MAX]);
         c(0x6f0630, j, [0; 5]);
@@ -7656,7 +7656,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
         call(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL, j, [x as u32, y as u32, 0, 0, 0]);
         return;
     }
-    // infiltracao para alem da linha de impedimento (0x7a)
+    // run beyond the offside line (0x7a)
     {
         let (x, y) = (b(0x102), b(0x103));
         let r = sortear(0x19);
@@ -7749,7 +7749,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
                 let (mut tx, mut ty) = (byte(marcado, 0x102), byte(marcado, 0x103));
                 if limit((dir == 0) as u8, ty) == 0 && !ousado {
                     let r = sortear(0x15);
-                    // fcomp + test ah,0x41: so passo a frente se o sorteio for maior (NaN nao)
+                    // fcomp + test ah,0x41: only steps forward if the roll is greater (not NaN)
                     if r as f64 > *((marcado + 0xad) as *const f32) as f64 {
                         if dir == 0 && ty > 0 {
                             ty -= 1;
@@ -7768,7 +7768,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
             }
         }
     }
-    // pressao: alvo na bola, ou a casa de 0x6c2be0
+    // pressure: target on the ball, or the square from 0x6c2be0
     let (mut px, mut py) = (0i8, 0i8);
     let mut pressiona = false;
     if ae != -1 && t & 1 == 0 {
@@ -7823,7 +7823,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
             }
             return;
         }
-        // test ah,0x41 / je: segue quando a distancia nao passa do limite (NaN tambem segue)
+        // test ah,0x41 / je: continues when the distance does not exceed the limit (NaN also continues)
         if of_side(m, j) != 0 && !(dist_table(bx, by) as f64 > read_f64_at(0x968940)) { // 0x968940 = 1.5
             if band(dir as u8, bx, by) != 0 && !(ae != -1 && (b(0x106) != 0 || b(0x10a) != 0)) {
                 *w(0x198) = 0x103;
@@ -7846,7 +7846,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
     if ae != -1 && in_bottom && band(dir as u8, bx, by) != 0 {
         let q = keep(m, dir);
         if q == 0 {
-            // a original mostra a caixa de erro e encerra o jogo (0x5cc7d0, 0x5a8f60, exit(-1))
+            // the original shows the error box and quits the game (0x5cc7d0, 0x5a8f60, exit(-1))
             let f1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
             let f2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
             let exit: unsafe extern "C" fn(i32) = core::mem::transmute(FN_CRT_EXIT);
@@ -7984,7 +7984,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: usize, call: &mut dyn FnMut(usi
     let reposicionar = |c: &mut dyn FnMut(usize, [u32; 5]) -> u32, x: i8, y: i8, a: i32| {
         c(0x6f09f0, [x as u8 as u32, y as u8 as u32, a as u32, 0, 0]);
     };
-    // procura uma casa livre (0x6bce80 com `flags`) e vai para ela com a acao `acao`
+    // looks for a free cell (0x6bce80 with `flags`) and moves to it with action `acao`
     let subir = |c: &mut dyn FnMut(usize, [u32; 5]) -> u32, flags: u32, acao: u16, sum_35: bool| -> bool {
         let (mut x, mut y) = (0i8, 0i8);
         if escolher(m, j, &mut x, &mut y, flags) == 0 {
@@ -8020,7 +8020,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: usize, call: &mut dyn FnMut(usi
             return;
         }
     }
-    // tenta subir para uma casa livre: sorteio(20 ou 50) < (1 - 0x35 x c) x 0x101 x 0x107
+    // tries to move up to a free cell: random roll(20 or 50) < (1 - 0x35 x c) x 0x101 x 0x107
     let arrancar = |c: &mut dyn FnMut(usize, [u32; 5]) -> u32| -> bool {
         let t = byte(j, 0x107);
         let n = if ta() & 0x40 != 0 { 20 } else { 50 };
@@ -8036,7 +8036,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: usize, call: &mut dyn FnMut(usi
         let far = (2..=6).contains(&x) || {
             let lin = (y as i32 - byte(m, 0x8ea8) as i32).abs() as i8 as isize;
             let col = (x as i32 - byte(m, 0x8ea7) as i32).abs() as i8 as isize;
-            // fcomp + test ah,0x41: so passa se a distancia for maior que 2 (NaN nao)
+            // fcomp + test ah,0x41: only passes if the distance is greater than 2 (NaN does not)
             read_f32_at((0xa15e44 + 4 * (lin * 9 + col)) as usize) as f64 > read_f64_at(0x968950) // 0x968950 = 2
         };
         if far {
@@ -8117,16 +8117,16 @@ pub(crate) unsafe fn off_ball_decide_injected(j: usize, call: &mut dyn FnMut(usi
     let marcado = *((j + 0x1aa) as *const usize);
     if marcado != 0 {
         let pm = byte(marcado, 0x19);
-        // posicao -5 ou -1: a original mostra a caixa de erro e segue para a diferenca do jogador
+        // position -5 or -1: the original shows the error box and goes on to the player’s difference
         if pm != -5 && pm != -1 {
             *w(0x198) = 0x105;
             let (mut tx, mut ty) = (byte(marcado, 0x102), byte(marcado, 0x103));
             if byte(j, 0x10a) == 0 {
-                // sem 0x10a nao segue o marcado: cai na diferenca do jogador (com 0x198 = 0x105)
+                // without 0x10a it does not follow the marked player: falls to the player’s difference (with 0x198 = 0x105)
             } else {
                 if limit((dir == 0) as u8, ty) == 0 && !ousado {
                     let r = sortear(0x15);
-                    // fcomp + test ah,0x41: so passo a frente se o sorteio for maior (NaN nao)
+                    // fcomp + test ah,0x41: only steps forward if the roll is greater (not NaN)
                     if r as f64 > *((marcado + 0xad) as *const f32) as f64 {
                         if dir == 0 && ty > 0 {
                             ty -= 1;
@@ -8270,7 +8270,7 @@ pub(crate) unsafe extern "thiscall" fn evolve_moment(this: usize) {
     let b1 = *((this + 1) as *const u8);
     if b1 > 50 {
         let v = game_pow((b1 as i32 - 50) as f64, read_f64_at(0x968928)) * read_f32_at(0x96d22c) as f64; // 0x968928 = 1.25, 0x96d22c = 0.25
-        // fcom + test ah,0x41: so passa de 25 quando maior (NaN fica)
+        // fcom + test ah,0x41: only passes 25 when greater (NaN stays)
         let v = if v > read_f64_at(0x968890) { read_f32_at(0x96af88) as f64 } else { v }; // 0x968890 = 25, 0x96af88 = 25
         *f(0x4d) = (*f(0x4d) as f64 - v) as f32;
     }
@@ -8415,7 +8415,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     atributos(this);
     let bl: i8 = if b(sheet(), 0xf) > 15 { 20 } else { match_pl_ftol(b(sheet(), 0xf) as f64 * q(0x969040) + q(0x9688a0)) as i8 };
     *p37 = 0;
-    // a posicao na tabela A contra os atributos de +0x10..+0x1a
+    // the position in table A against the attributes at +0x10..+0x1a
     let greater_13_14 = || core::cmp::max(fb(0x14) - 5, fb(0x13));
     let x: Option<f64> = if ta() & 1 != 0 {
         soma37((bl as i16 as i32) * 2 - 40);
@@ -8471,7 +8471,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     if ta() & 0x1000 != 0 {
         soma37(fb(0x1a) - 20);
     }
-    // a tabela B, quando difere da A
+    // table B, when it differs from A
     if tb() != ta() {
         let tres_quartos = |v: i32| soma37(match_pl_ftol(v as f64 * q(0x969530)) as i16 as i32);
         let b_altas = || tb() & 0x100 != 0 || tb() & 0x200 != 0 || tb() & 0x400 != 0;
@@ -8558,7 +8558,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     word(0x142, (t(0x79) + t(0x81)) / 2);
     word(0x146, t(0x99));
     word(0x148, t(0x99));
-    // o quadrado de +0xe5 fica na pilha do x87 entre as contas seguintes
+    // the square of +0xe5 stays on the x87 stack between the following calculations
     let e5q = rd(0xe5) * rd(0xe5);
     let a = match_pl_ftol((e5q + q(0x967890)) * q(0x968968)) as i16 as i32;
     let t99 = t(0x99);
@@ -8611,7 +8611,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     word(0x164, 200);
     word(0x18a, (qd(0x81) + qd(0xd9)) / 2);
 
-    // as 63 palavras de +0x11a ajustadas por +0x37 (tabela de casos do original)
+    // the 63 words of +0x11a adjusted by +0x37 (the original’s case table)
     const CASOS: [u8; 63] = [
         0, 0, 1, 2, 2, 2, 3, 3, 3, 1, 3, 3, 1, 1, 1, 4, 4, 4, 4, 1, 5, 6, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3,
         3, 1, 1, 1, 1, 1, 1, 7, 7, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 2, 5, 5, 5, 2, 1, 6, 3, 3, 1,
@@ -8677,7 +8677,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     let (mut l28, mut l18, mut l24, mut l1c, mut l14) = (0f32, 0f32, 0f32, 0f32, 0f32);
     let l12 = byte(person(), 0x18) as i32;
 
-    // o jogador designado (vaga marcada da tatica do lado)
+    // the designated player (marked slot of the side’s tactic)
     let j = designado(engine());
     if j != 0 && *((j + 0x6d) as *const usize) != 0 {
         l18 = ((rating(j) as f64 - q(0x968e08)) * q(0x96d6f8)) as f32;
@@ -8789,7 +8789,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         l14 = (l14 as f64 + f(0x968990)) as f32;
     }
     *((this + 0x3b) as *mut i16) = match_pl_ftol(((byte(this, 0x17) as i32 - 10) * byte(this, 0x118) as i32) as f64 * q(0x969020) + w(this, 0x3b) as f64) as i16;
-    // bonus de juventude (+0x14 do quadro tatico, casa +0x69) em L14
+    // youth bonus (+0x14 of the tactics frame, cell +0x69) in L14
     {
         let t = *((engine() + 0x4792) as *const usize);
         if t != 0 {
@@ -8846,10 +8846,10 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     let maior150 = *p3b > 150;
     let w3 = || *p3b as f64;
     let zera = |o: usize| *((this + o) as *mut u32) = 0;
-    // fst + comparacao com o valor ainda nao arredondado
+    // fst + comparison with the value not yet rounded
     let guarda = |o: usize, v: f64| {
         wr(o, v);
-        // fcomp + test ah,1: NaN conta como menor (C0 ligado), como na original
+        // fcomp + test ah,1: NaN counts as less (C0 set), as in the original
         if !(v >= q(0x9689a0)) {
             zera(o);
         }
@@ -8859,7 +8859,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     let jx = |l: i32| *((engine() as isize + 0x904d + 208 * l as isize) as *const usize);
     let of_bench = || {
-        // o tecnico do lado (+0x904d) e a pessoa dele, quando o clube nao e humano
+        // the side’s manager (+0x904d) and his person, when the club is not human
         if human(club_side(), 0, 1, 0, 0) != 0 {
             return 0;
         }
@@ -8940,7 +8940,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     if t1c as f64 > q(0x969508) && maior150 {
         wr(0xb5, game_pow(t1c as f64 - q(0x969508), q(0x968978)) + q(0x969508));
     }
-    // L18 pelo byte +0x33
+    // L18 by byte +0x33
     let b33 = fb(0x33);
     l18 = (if l12f > 36 {
         b33 * q(0x969040)
@@ -8987,7 +8987,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         pow(0xc5, q(0x969550), q(0x968928));
     }
     guarda(0xc9, (fb(0x38) + fb(0x38) + w3() - l5c) * q(0x967880));
-    // L1c pelo byte +0x39
+    // L1c by byte +0x39
     let b39 = fb(0x39);
     l1c = (if l12f > 36 { b39 * q(0x969040) } else { b39 }) as f32;
     if par_880() {
@@ -9042,13 +9042,13 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     if rd(0xcd) > q(0x969508) && maior150 && ta() != 1 {
         pow(0xcd, q(0x969508), q(0x968978));
     }
-    // L28 pelo byte +0x3a; +0xd1, +0xdd, +0xe9
+    // L28 by byte +0x3a; +0xd1, +0xdd, +0xe9
     let b3a = fb(0x3a);
     l28 = (if l12f > 39 { b3a * q(0x9689b0) } else if l12f > 37 { b3a * q(0x9689d8) } else { b3a }) as f32;
     guarda(0xd1, (l28 as f64 + l28 as f64 + w3() - l14 as f64) * q(0x967880));
     guarda(0xdd, (fb(0x3e) + fb(0x3e) + w3() - l44) * q(0x967880));
     guarda(0xe9, (fb(0x41) + fb(0x41) + w3()) * q(0x967880));
-    // L28 pelo byte +0x43 (e a palavra +5); +0xf1
+    // L28 by byte +0x43 (and word +5); +0xf1
     let b43 = b(sheet(), 0x43);
     if b43 > 10 {
         let w5 = w(sheet(), 5);
@@ -9065,7 +9065,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     if rd(0xf1) > q(0x96d4e8) && maior150 {
         pow(0xf1, q(0x96d4e8), q(0x968978));
     }
-    // +0x71 e companhia (bytes da ficha), limitados pelo tipo do motor (+1: 1, 8, 32)
+    // +0x71 and the like (record bytes), limited by the engine type (+1: 1, 8, 32)
     let m1 = byte(engine(), 1) as i32;
     let s = byte(sheet(), 0x44).wrapping_add(byte(sheet(), 0x3d));
     let mut cl = byte(sheet(), 0x1b);
@@ -9191,7 +9191,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
             if pn != 0 {
                 let id = *(pn as *const u32);
                 let g = |a: usize| *(a as *const u32);
-                // a original so poupa a nacao igual as tres globais ao mesmo tempo
+                // the original only spares the nation equal to the three globals at the same time
                 if !(id == g(KEY_NATION_UNITED_STATES) && id == g(KEY_NATION_CANADA) && id == g(KEY_NATION_MEXICO)) {
                     wr(0xf5, rd(0xf5) * f(0x96a32c));
                 }
@@ -9288,7 +9288,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
             }
         }
     }
-    // preferencias da pessoa (clubes do adversario e do proprio lado, tecnicos, designado)
+    // the person’s preferences (clubs of the opponent and of his own side, managers, designated)
     let t = *((engine() + 0x4792) as *const usize);
     if byte(t, 0x40) == 0 {
         return;
@@ -9340,7 +9340,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         wr(0xf5, rd(0xf5) + f(0x968990));
         wr(0xe1, rd(0xe1) + f(0x968990));
     }
-    // historico do contrato (+0x10 e +0x14 sobre +0xc jogos)
+    // contract history (+0x10 and +0x14 over +0xc matches)
     if l2c != 0 {
         let c = l2c;
         let c0c = *((c + 0xc) as *const i32);
@@ -9517,7 +9517,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
         *som = 0x1f7f;
         return (sortear(w(0x180) as i32 * 5) + 0x96) as u16;
     }
-    // escolha do tipo
+    // choice of type
     'escolha: {
         if *kind == 0x35 {
             break 'escolha;
@@ -9546,7 +9546,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
                 } else {
                     let (gy, gx) = (byte(gk, 0x103) as i32, byte(gk, 0x102) as i32);
                     let t1 = if lado(gk) == 1 { distance_table_cell_yx(gy - 0xb, gx - 4) } else { distance_table_cell_yx(gy, gx - 4) };
-                    // goleiro longe da propria meta (>= 2) e do atacante (>= 1): cobertura direta;
+                    // goalkeeper far from his own goal (>= 2) and from the attacker (>= 1): direct cover;
                     // senao, sorteio(0x29) contra sorteio(2000) e distancia ao gol < 1,5
                     let longe_da_meta = t1 as f64 >= read_f64_at(0x968950); // 0x968950 = 2
                     let direta = longe_da_meta && {
@@ -9692,7 +9692,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
         let r1 = sortear(w(0x29) as i32);
         e = r1 + sortear(bp as i16 as i32);
     }
-    // angulo (fora das colunas centrais)
+    // angle (outside the central columns)
     let x = byte(j, 0x102);
     if !(3..=5).contains(&x) {
         let l = lado(j);
@@ -9722,7 +9722,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
         e -= sortear(match_pl_ftol(m as f64 * read_f64_at(0x9688a0) / f)); // 0x9688a0 = 5
         *q39 = (*q39).wrapping_add((-(m / 2)) as u16);
     }
-    // chute de longe (fora da area, distancia > 2,2): variacao pelo vento/gramado do motor
+    // long shot (outside the area, distance > 2.2): variation by the engine’s wind/pitch
     let mut far = false;
     if dist > read_f64_at(0x96d7d0) { // 0x96d7d0 = 2.2
         let (x, y) = (byte(j, 0x102), byte(j, 0x103));

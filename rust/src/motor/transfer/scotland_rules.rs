@@ -24,9 +24,9 @@ pub(crate) unsafe fn loan_owner_club(player: usize) -> Option<usize> {
 /// [pt] A recusa "fora da janela" (motivo 9), com o adjetivo da nação das regras (+0xa).
 pub(crate) unsafe fn refuse_outside_window(this: usize, msg: usize, reason: *mut u16) -> u32 {
     if msg != 0 {
-        // 0x6181d0: push 2; push 100; push buffer; push nação; add esp, 0x10 -> cdecl
+        // 0x6181d0: push 2; push 100; push buffer; push nation; add esp, 0x10 -> cdecl
         let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_NATION_GET_NATIONALITY_ADJECTIVE);
-        // 0x66f4e0: push ...; push formato; push destino; add esp, 0x14 -> cdecl variádica
+        // 0x66f4e0: push ...; push format; push destination; add esp, 0x14 -> variadic cdecl
         let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
         let mut buf = [0u8; 100];
         adjetivo(read_usize(this + 0xa), buf.as_mut_ptr(), 100, 2);
@@ -89,7 +89,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
         *ini_month = (*ini_month).wrapping_sub(0xc);
         *ini_year = (*ini_year).wrapping_add(1);
     }
-    // 0x4d45f0: push a1; mov ecx, [0xae1050] -> thiscall, ret 4 (o mês do fim da temporada)
+    // 0x4d45f0: push a1; mov ecx, [0xae1050] -> thiscall, ret 4 (the month the season ends)
     let month_of_end: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
     let e = month_of_end(read_usize(G_CONTRACT_MANAGER), a1) as i8;
     *end_month = e;

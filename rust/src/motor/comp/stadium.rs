@@ -57,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let search: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let state = (this + 0x18) as *mut u8;
-    // a chave: só o campo da ordem e o +0xc (0) contam para os comparadores
+    // the key: only the order field and +0xc (0) matter to the comparers
     let mut key = [0u32; 4];
     let mut cmp = 0usize;
     let mut e;
@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
     if cmp != 0 {
         e = search(k, read_u32_as_usize(this + 0xc), read_u32_as_usize(this + 0x10) as u32, 0x10, cmp);
         if e != 0 {
-            // volta até a primeira vaga da mesma chave
+            // loop back to the first slot with the same key
             loop {
                 if read_u32_as_usize(this + 0xc) >= e {
                     break;
@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                     }
                 }
                 if (nacao != 0 || cont != 0) && call_stadium_compare(cmp, e, k) != 0 {
-                    // outra chave: fim da busca
+                    // another key: end of the search
                     i = 0x1e;
                     count = false;
                     break 'vaga;
@@ -210,7 +210,7 @@ pub(crate) unsafe fn stadium_choice_regions(this: usize, extra: Option<(usize, u
     }
     let mut r = [(0usize, 0usize); 6];
     let mut m = 0;
-    // a nota do estádio neutro (0x85da00) sorteia: o estado do sorteador entra (e a cópia roda sem contar)
+    // the neutral stadium rating (0x85da00) rolls: the roller state goes in (and the copy runs without counting)
     for x in crate::aleatorio::REGIOES_DO_ESTADO {
         r[m] = x;
         m += 1;
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     };
     let neutro = (fx + 0x3c) as *mut u8;
     let mut f = marcas;
-    // 0 = as regras gerais (0x85c5a7); 1 = a regra inglesa de 4 (0x85c38e)
+    // 0 = the general rules (0x85c5a7); 1 = the English rule of 4 (0x85c38e)
     let mut step_towards = 0;
     if f == 0x8000 {
         let monaco = read_u32_as_usize(G_KEY_CLUB_AS_MONACO);
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             }
         }
     }
-    // as regras gerais
+    // the general rules
     *neutro = 1;
     if f & 0x10 != 0 {
         if estadio as i32 == -1 {
@@ -365,7 +365,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     let comp = read_u32_as_usize(fx + 0x14);
     let sede: unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
     let (mut a, mut b) = (0u32, 0u32);
-    // simplification: a original empurra o eax com o ano (word +0x2c) nos 16 bits baixos e sobra nos altos; a 0x5fa730 só lê o word
+    // simplification: the original pushes eax with the year (word +0x2c) in the low 16 bits and leftover in the high ones; 0x5fa730 only reads the word
     let r = sede(read_u32_as_usize(G_HOST_COUNTRY), read_u32_as_usize(comp) as u32, *((fx + 0x2c) as *const u16) as u32, &mut a, &mut b, 1) as u8;
     let mut alvo;
     let mut alt = 0usize;
@@ -481,7 +481,7 @@ pub(crate) unsafe fn apply_side_factor_floor(jogo: usize, side: u8, f: &mut [f64
         }
     };
     let high = |lim: i16| -> bool {
-        // os lados além do 1 contam como alto (como a original)
+        // sides beyond 1 count as high (like the original)
         side > 1 || rep(side) >= lim
     };
     if t == 8 {
@@ -627,7 +627,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         let v = adjust + f[k];
         f[k] = v;
         if side <= 1 {
-            // o mandante (lado 0) contra o visitante; o visitante com os papéis trocados
+            // the home team (side 0) against the away team; the away team with the roles swapped
             let (eu, outro, clube) = if side == 0 { (rc, rf, home) } else { (rf, rc, away) };
             if eu < 0xf || eu < outro {
                 f[k] = outro as i32 as f64 / eu as i32 as f64 * v;
@@ -651,8 +651,8 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         apply_side_factor_floor(jogo, side, &mut f);
         side += 1;
     }
-    let mut pc: i32; // o público do mandante ([esp+0x14] / esi)
-    let mut pf: i32; // o do visitante ([esp+0x18])
+    let mut pc: i32; // the home side’s attendance ([esp+0x14] / esi)
+    let mut pf: i32; // the away team’s ([esp+0x18])
     let est = read_u32_as_usize(jogo + 0x18);
     if est != 0 && read_u8(jogo + 0x3c) == 0 {
         let c_est = stadium_city(est);
@@ -734,7 +734,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         pc = match_pl_ftol(read_i32(home + 0x73) as f64 * f[0]);
         pf = match_pl_ftol(read_i32(away + 0x73) as f64 * f[1]);
     }
-    // os clássicos
+    // the derbies
     let (home, away) = (read_u32_as_usize(jogo + 0x1c), read_u32_as_usize(jogo + 0x20));
     let rival = |a: usize, b: usize| read_u32_as_usize(a + 0xb3) == b || read_u32_as_usize(a + 0xb7) == b || read_u32_as_usize(a + 0xbb) == b;
     if rival(home, away) {
@@ -949,7 +949,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
     match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * rating as f64) // 0x968d60 = 0.004, 0x9689b0 = 0.8
 }
 
-// simplification: sorteia (e, com a marca 4, sorteia os lugares): só a original; a cópia leva o ramo.
+// simplification: rolls random numbers (and, with flag 4, draws the places): original only; the copy takes the branch.
 
 /// 1 − distance × k (squared without +0x3c), divided by (reputation + 1)² when far and with reputation; with minimums
 /// by the base, by type 10 (0.2), by both clubs of the same nation (0.05) and a general one
@@ -999,7 +999,7 @@ pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, 
 
 
 
-// simplification: abre o arquivo, aloca e sorteia: só a original; a cópia leva o ramo.
+// simplification: opens the file, allocates and rolls: original only; the copy takes the branch.
 
 
 
@@ -1080,7 +1080,7 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: 
         return;
     }
     let (dia, ano) = (read_u16(today) as i16, read_u16(today + 2));
-    // k em 32 bits, o índice em 16 com sinal (como a original: [esp+0x10] e si)
+    // k in 32 bits, the index in 16 signed (like the original: [esp+0x10] and si)
     let mut k = 0u32;
     let mut i = 0i16;
     loop {
@@ -1104,7 +1104,7 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: 
     let n = read_usize(this + 4) as i32;
     if k < n {
         let de = list.wrapping_add(((n - k - 1) as usize).wrapping_mul(12));
-        // rep movsd para a frente: as regiões podem se sobrepor
+        // forward rep movsd: the regions may overlap
         for j in 0..(k as usize * 3) {
             write_u32(list + j * 4, read_usize(de + j * 4) as u32);
         }
@@ -1227,7 +1227,7 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
     if hc == 0 {
         show_error_at(0xa835b0, 0x858);
     } else {
-        // as sedes: só achadas (a original não as usa depois); as saídas se sobrepõem como na original
+        // the venues: only found (the original does not use them afterwards); the outputs overlap as in the original
         let mut s = [0u32; 8];
         let mut b = sedes(hc, read_u32(KEY_CLUB_COMP_FIFA_WORLD_CUP), s.as_mut_ptr(), s.as_mut_ptr().add(1)) as i8;
         b = b.wrapping_add(sedes(hc, read_u32(KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP), s.as_mut_ptr().add(b as usize), s.as_mut_ptr().add(b as usize + 1)) as i8);

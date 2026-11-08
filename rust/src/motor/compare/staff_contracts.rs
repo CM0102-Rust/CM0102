@@ -13,7 +13,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_active_release_clause(c: usi
 
 /// Comparer for `check_fifa_protected_period` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: usize, x: usize, no_limite: *mut u32, years: *mut u8) -> u32 {
-    // as saídas como estavam antes: a cópia parte delas (a original só grava `anos` no período)
+    // the outputs as they were before: the copy starts from them (the original only writes `anos` in the period)
     let (mut nl, mut na) = (if no_limite.is_null() { 0 } else { *no_limite }, if years.is_null() { 0 } else { *years });
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(IDX_CHECK_FIFA_PROTECTED_PERIOD)(c, x, no_limite, years);
     let (ol, oa) = (if no_limite.is_null() { 0 } else { *no_limite }, if years.is_null() { 0 } else { *years });

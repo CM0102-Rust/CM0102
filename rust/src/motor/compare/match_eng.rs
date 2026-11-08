@@ -35,8 +35,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_restart_play(m: usize) {
 
 /// Comparer for `engine_loop` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_engine_loop(m: usize, n: u32) -> u32 {
-    // simplification: orquestrador sem conta propria; a fita dele fotografaria o motor a cada decisao de
-    // jogador. Validado pela carreira (Rust x original); as rotinas que ele chama seguem comparadas.
+    // simplification: orchestrator with no calculation of its own; its tape would snapshot the engine at every decision of
+    // player. Validated by the career (Rust x original); the routines it calls remain compared.
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_ENGINE_LOOP)(m, n)
 }
 
@@ -57,11 +57,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_destroy_engine(m: usize) {
 
 /// Comparer for `com_fita` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: impl FnOnce() -> R, rust: impl FnOnce(&mut dyn FnMut(usize, usize, [u32; 5], [u32; 5]) -> u32) -> R) -> (R, R, bool, bool, usize) {
-    // a fita de fora (comparacao aninhada dentro de uma unidade gravada) volta no fim
+    // the outer tape (comparison nested inside a recorded unit) comes back at the end
     let externa = tape_lock().take();
     *tape_lock() = Some((reg.clone(), Vec::new()));
-    // contexto proprio: a rotina comparada pode estar dentro de uma chamada gravavel em andamento (a
-    // 0x6f5b80 roda dentro da 0x6f09f0 no jogo normal); as chamadas dela contam a partir de zero
+    // own context: the compared routine may be inside a recordable call in progress (the
+    // 0x6f5b80 runs inside 0x6f09f0 in the normal game); its calls count from zero
     let level = RECORDABLE_DEPTH.swap(0, std::sync::atomic::Ordering::Relaxed);
     TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()).clear();
     *REQUESTED_BUFFERS.lock().unwrap_or_else(|e| e.into_inner()) = None;
@@ -79,7 +79,7 @@ pub(crate) unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: im
         || {
             let g = gravadas.borrow();
             let mut prox = g.iter();
-            // (rotina, this, argumentos, mascara dos argumentos que a rotina chamada le)
+            // (routine, this, arguments, mask of the arguments the called routine reads)
             let (n, rr) = crate::aleatorio::rastrear(|| crate::aleatorio::sem_contar(|| {
                 rust(&mut |rotina, this, a, mascara| match prox.next() {
                     Some((gr, gt, ga, resposta, antes, depois, vetores)) if *gr == rotina && *gt == this && (0..5).all(|i| ga[i] & mascara[i] == a[i] & mascara[i]) => {
@@ -129,8 +129,8 @@ pub(crate) unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: im
             n
         },
     );
-    // os sorteios (pedido, resultado) tambem tem de bater: `sortear(5)` no lugar de `sortear(6)` com o
-    // mesmo resultado nao muda a memoria nem o estado do gerador, mas e outra rotina (131a leva)
+    // the random rolls (request, result) must also match: `sortear(5)` instead of `sortear(6)` with the
+    // same result does not change memory or the generator state, but it is another routine (131st batch)
     if sequencia.get() && rastros.borrow().0 != rastros.borrow().1 {
         *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) = "sorteios diferentes".to_string();
         sequencia.set(false);
@@ -145,7 +145,7 @@ pub(crate) unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: im
     }
     if !igual || !sequencia.get() {
         let (ro, rr) = &*rastros.borrow();
-        // a partir de pouco antes do primeiro sorteio diferente
+        // starting a little before the first differing draw
         let i = ro.iter().zip(rr.iter()).take_while(|(a, b)| a == b).count().saturating_sub(3);
         TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()).push_str(&format!(" | sorteios ({} x {}, desde o {}) original {:?} rust {:?}", ro.len(), rr.len(), i, &ro[i..ro.len().min(i + 12)], &rr[i..rr.len().min(i + 12)]));
     }
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "C" fn comparar_match_wrap_up(m: usize) {
 /// Comparer for `injure` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_injure(m: usize, kind: u32, chance: u32, p: usize, o: usize) {
     if is_recording() {
-        // unidade da fita de fora; por dentro, a propria comparacao (fita aninhada)
+        // unit of the outer tape; inside, its own comparison (nested tape)
         call_recording(FN_CM3_MATCH_ENGINE_INJURE_PLAYER, m, [kind, chance, p as u32, o as u32, 0], || {
             compare_injure_with_tape(m, kind, chance, p, o);
             0
@@ -261,7 +261,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_referee_grade(m: usize) {
     if is_recording_top_level() {
         return o(m);
     }
-    // o sorteio e a ficha do arbitro
+    // the random roll and the referee’s record
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let referee = *((m + 0xf5b6) as *const usize);
     if referee != 0 && *(G_OFFICIALS_MANAGER as *const usize) != 0 {
@@ -277,8 +277,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_quick_simulation(m: usize) {
     if is_recording_top_level() {
         return o(m);
     }
-    // o motor inteiro, o sorteio, o erro, 0xae1080, a linha da tatica dos dois clubes (a expulsao
-    // pode trocar o capitao) e o registro da partida (placares e agregado)
+    // the whole engine, the random roll, the error, 0xae1080, the tactic row of both clubs (the sending-off
+    // may change the captain) and the match record (scores and aggregate)
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + 0x4792) as *const usize);
@@ -373,7 +373,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_team_strength(this: usize, l: i8
 
 /// O pontape inicial mexe em todo o motor (jogadores, grade, bola): compara o objeto inteiro.
 pub(crate) unsafe extern "thiscall" fn comparar_kick_off(this: usize) {
-    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    // inside the restart comparison (0x6c54a0) the set piece is a tape unit
     if is_recording_restart() {
         let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_KICK_OFF);
         call_recording(FN_CM3_MATCH_ENGINE_SET_UP_KICK_OFF, this, [0; 5], || {
@@ -413,8 +413,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_fine_positions(this: usize, out:
 /// Comparer for `next_list_item` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_next_list_item(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_NEXT_LIST_ITEM);
-    // o jogo chama bilhoes de vezes (carga de carreira com todas as ligas): o cursor de 4 bytes fica
-    // numa variavel, sem as copias alocadas do `lado_a_lado` (que tomavam ~90% do tempo)
+    // the game calls it billions of times (career load with all leagues): the 4-byte cursor stays
+    // in a variable, without the allocated copies of `lado_a_lado` (which took ~90% of the time)
     let cursor = (this + 0xa) as *mut u32;
     let before = cursor.read_unaligned();
     let r = o(this);
@@ -454,8 +454,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_intercept(this: usize, x: i8, y:
     if is_recording_top_level() {
         return o(this, x, y, a3, goal, a5, a6);
     }
-    // o que as jogadas mudam e a copia Rust le: a grade inteira, os bytes de todos os jogadores, os
-    // campos da bola no motor e o sorteio
+    // what the plays change and the Rust copy reads: the whole grid, the bytes of all players, the
+    // ball fields in the engine and the random roll
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(this + 0x215e, 9 * 12 * 90), (this + 0x8ea0, 0x20), (this + 0x4780, 0x10), (this + 0xf570, 0x44)]);
     for l in 0..2i8 {
@@ -478,8 +478,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_substitutions(m: usize) {
     if is_recording_top_level() {
         return o(m);
     }
-    // o motor inteiro (jogadores e comissoes), o sorteio, o erro, 0xae1080 e a linha da tatica dos dois
-    // clubes (o capitao em +0x52, que a substituicao troca)
+    // the whole engine (players and staff), the random roll, the error, 0xae1080 and the tactics row of both
+    // clubs (the captain at +0x52, which the substitution changes)
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + 0x4792) as *const usize);
@@ -506,7 +506,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_punishments(m: usize, first: usi
     if is_recording_top_level() {
         return o(m, first);
     }
-    // o motor inteiro, o sorteio, o erro, 0xae1080 e a linha da tatica dos dois clubes (o capitao)
+    // the whole engine, the random state, the error, 0xae1080 and the tactics row of both clubs (the captain)
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + 0x4792) as *const usize);
@@ -535,7 +535,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_penalties(m: usize, mode: u32) {
     if is_recording_top_level() {
         return o(m, mode);
     }
-    // o motor inteiro, o sorteio, o erro, o narrador (+0x8f7a aponta para fora) e o placar da partida
+    // the whole engine, the random roll, the error, the commentator (+0x8f7a points outside) and the match score
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let jogo = *((m + 0x4792) as *const usize);
     reg.extend([(m, MOTOR), (0xb67a34, 4), (*((m + 0x8f7a) as *const usize), 1), (jogo + 0x49, 2)]);
@@ -560,7 +560,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_foul(m: usize) -> u8 {
     if is_recording_top_level() {
         return o(m);
     }
-    // o motor inteiro, o sorteio, o erro, 0xae1080 e a linha da tatica dos dois clubes (a expulsao
+    // the whole engine, the random roll, the error, 0xae1080 and the tactic row of both clubs (the sending-off
     // pode trocar o capitao)
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
@@ -593,7 +593,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_contest(m: usize, x: u32, y: u32
         return o(m, x, y);
     }
     ADVANTAGE_UNANSWERED.store(false, std::sync::atomic::Ordering::Relaxed);
-    // o motor inteiro, o sorteio, o erro, 0xae1080 e a linha da tatica dos dois clubes (a expulsao
+    // the whole engine, the random roll, the error, 0xae1080 and the tactic row of both clubs (the sending-off
     // pode trocar o capitao)
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
@@ -619,7 +619,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_contest(m: usize, x: u32, y: u32
     RECORD_716.store(write, std::sync::atomic::Ordering::Relaxed);
     let certo = igual && sequencia && r == rr;
     if !certo && ADVANTAGE_UNANSWERED.swap(false, std::sync::atomic::Ordering::Relaxed) {
-        // a original leu lixo da pilha como vantagem (ver `tackle_contest_with`): conta a parte
+        // the original read stack garbage as an advantage (see `tackle_contest_with`): counts the part
         let n = CONTEST_STACK_GARBAGE.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
         if n <= 20 || n.is_power_of_two() {
             linha(&format!("motor: LIXO_DE_PILHA contest({}, {}) vantagem sem resposta do juiz ({} ate agora): {}", x as i8, y as i8, n, tape_detail()));
@@ -637,12 +637,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_left(m: usize, j: usize, 
     if is_recording_top_level() {
         return o(m, j, ja_away);
     }
-    // o motor inteiro (a grade, os jogadores, a comissao +0x9032), o sorteio e o que a forca do lado
+    // the whole engine (the grid, the players, the staff +0x9032), the random roll and what the side’s strength
     // e o erro tocam
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    // o capitao guardado na linha da tatica (+0x52) dos dois clubes: a substituicao (0x6e1090) o troca
-    // antes de a comparada conferir se quem saiu era o capitao
+    // the captain kept in the tactic row (+0x52) of both clubs: the substitution (0x6e1090) swaps him
+    // before the compared one checks whether the player who left was the captain
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let t = *((m + 0x4792) as *const usize);
@@ -668,7 +668,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tackle_injury(m: usize, a: usize
     if is_recording_top_level() {
         return o(m, a, kind, b, kind_b, direct);
     }
-    // o sorteio, os dois jogadores, os registros de lesao deles e o que a 0x6d0980 mexe no motor
+    // the random state, the two players, their injury records and what 0x6d0980 changes in the engine
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m + 0x8ea0, 0x20), (m + 0xf582, 4), (m + 0xf639, 2)]);
     let table = *(*(G_INJURY as *const usize) as *const usize);
@@ -726,7 +726,7 @@ pub(crate) unsafe extern "C" fn comparar_develop_player(jm: usize, person: usize
 pub(crate) unsafe extern "thiscall" fn comparar_opposition_challenge(m: usize, atacante: usize, side: i8, kind: i8, a: *mut u8, b: *mut u8, rating: *mut i16, lance: *mut i8, arriscado: *mut i8, free: u8) -> usize {
     type F = unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize;
     let o = original_fn::<F>(IDX_OPPOSITION_CHALLENGE);
-    // as saidas, o sorteio e o folego (+0x4d) dos 40 jogadores (quem vence cansa)
+    // the exits, the random roll and the stamina (+0x4d) of the 40 players (the winner tires)
     let mut reg = [(0usize, 0usize); 48];
     reg[0] = crate::aleatorio::REGIOES_DO_ESTADO[0];
     reg[1] = crate::aleatorio::REGIOES_DO_ESTADO[1];
@@ -813,7 +813,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_deflect_ball(this: usize, x: i8,
 
 /// Comparer for `line_up_set_piece` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_line_up_set_piece(this: usize) {
-    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    // inside the restart comparison (0x6c54a0) the set piece is a tape unit
     if is_recording_restart() {
         let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LINE_UP_SET_PIECE);
         call_recording(FN_CM3_MATCH_ENGINE_SET_UP_FREE_KICK, this, [0; 5], || {
@@ -832,7 +832,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_line_up_set_piece(this: usize) {
 
 /// Comparer for `line_up_kickoff` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_line_up_kickoff(this: usize) {
-    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    // inside the restart comparison (0x6c54a0) the set piece is a tape unit
     if is_recording_restart() {
         let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LINE_UP_KICKOFF);
         call_recording(FN_CM3_MATCH_ENGINE_SET_UP_GOAL_KICK, this, [0; 5], || {
@@ -842,8 +842,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_line_up_kickoff(this: usize) {
         return;
     }
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LINE_UP_KICKOFF);
-    // tudo o que a arrumacao (e o que ela chama) grava: o motor de 0x1a0, a grade, os 40 jogadores, a
-    // bola e as posses (0x215e..0x8f00) e os ponteiros de 0xf56e
+    // everything the arrangement (and what it calls) writes: the 0x1a0 engine, the grid, the 40 players, the
+    // ball and possessions (0x215e..0x8f00) and the pointers at 0xf56e
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(this + 0x1a0, 0x30), (this + 0x215e, 0x8f00 - 0x215e), (this + 0xf56e, 0x48)]);
     let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| line_up_kickoff(this)));
@@ -857,8 +857,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_look_for_play(this: usize, side:
     if is_recording_top_level() {
         return o(this, side, group, a3, a4, mode, a6, a7);
     }
-    // o que a jogada muda e a copia Rust le: a lista e a quantidade do lado, os bytes de cada
-    // jogador, o jogador marcado no motor e o sorteio
+    // what the move changes and the Rust copy reads: the side’s list and count, the bytes of each
+    // player, the player marked in the engine and the random roll
     let base = (group as isize + side as isize) as usize;
     let list = (group as isize + side as isize * 44) as usize;
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -1004,7 +1004,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_taker(this: usize, side: 
 
 /// Comparer for `throw_in` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_throw_in(this: usize) {
-    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    // inside the restart comparison (0x6c54a0) the set piece is a tape unit
     if is_recording_restart() {
         let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_THROW_IN);
         call_recording(FN_CM3_MATCH_ENGINE_SET_UP_THROW_IN, this, [0; 5], || {
@@ -1018,7 +1018,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_throw_in(this: usize) {
 
 /// Comparer for `corner` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_corner(this: usize) {
-    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    // inside the restart comparison (0x6c54a0) the set piece is a tape unit
     if is_recording_restart() {
         let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CORNER);
         call_recording(FN_CM3_MATCH_ENGINE_SET_UP_CORNER_KICK, this, [0; 5], || {
@@ -1032,7 +1032,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_corner(this: usize) {
 
 /// Comparer for `penalty` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_penalty(this: usize) {
-    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    // inside the restart comparison (0x6c54a0) the set piece is a tape unit
     if is_recording_restart() {
         let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PENALTY);
         call_recording(FN_CM3_MATCH_ENGINE_SET_UP_PENALTY, this, [0; 5], || {

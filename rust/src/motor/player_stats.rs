@@ -176,7 +176,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         }
         core::ptr::write_bytes(dados as *mut u8, 0, 32); // cqh8: o registro da categoria zerado
     }
-    // sem nação do clube (ou fora da tabela) ou na temporada dela: a marca que pede os 365 dias
+    // no club nation (or outside the table) or within its season: the flag that asks for the 365 days
     let mark = if clube == 0 || read_u32_as_usize(clube + club::NATION) == 0 {
         true
     } else {
@@ -348,7 +348,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         r.gravar(history_entry_at(buf, *count, cat as i32));
         last = r;
     }
-    // o ano, o clube e o tipo do grupo aberto (o tipo começa em 0xff: o primeiro nó sempre abre grupo)
+    // the year, the club and the type of the open group (the type starts at 0xff: the first node always opens a group)
     let mut year_current = u16::from_le_bytes([last.0[0], last.0[1]]);
     let mut club_current = u32::from_le_bytes([last.0[2], last.0[3], last.0[4], last.0[5]]);
     let mut kind_current: u8 = 0xff;
@@ -429,7 +429,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         erase(list);
     }
     *count += 6;
-    // (3) a transferência e o tipo descem do grupo seguinte
+    // (3) the transfer and the type move down from the next group
     let n = *count;
     for i in 0..n {
         let e = buf + i as usize * HISTORY_ENTRY_SIZE;
@@ -441,7 +441,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
             *((e + 0x2a) as *mut u8) = read_u8(e + 0x2a) & 0xf8;
         }
     }
-    // (4) as entradas iguais do grupo seguinte somam e a de cima some
+    // (4) equal entries of the next group add up and the one above disappears
     let mut k = 6i32;
     while k - 6 < *count {
         let ei = buf + (k - 6) as usize * HISTORY_ENTRY_SIZE;
@@ -471,7 +471,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         }
         k += 1;
     }
-    // (5) os grupos vazios somem (ano 0)
+    // (5) empty groups disappear (year 0)
     let mut g = 0i32;
     while g < *count {
         let e = buf + g as usize * HISTORY_ENTRY_SIZE;
@@ -511,7 +511,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         }
         g += 6;
     }
-    // (6) os grupos de ano 0 saem e os seguintes descem
+    // (6) the year-0 groups leave and the following ones move down
     let mut i = 0i32;
     while i < *count {
         let e = buf + (i / 6) as usize * 0x102;
@@ -668,7 +668,7 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
     } else {
         (t as f64 / n as f64) as f32
     };
-    // simplification: sem o registro 4 a original lê a vaga do byte n com os 3 bytes de cima sem valor; a cópia usa zero
+    // simplification: without record 4 the original reads the slot of byte n with the 3 upper bytes without a value; the copy uses zero
     let mut c4 = f32::from_bits(n as u32);
     let r4 = record(this, player, 4);
     if r4 != 0 {
@@ -676,7 +676,7 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
         let v = read_i16(r4 + 0xe) as f64;
         c4 = if k < 8 { (((8 - k as i32) as f64 * 3.0 + v) * 0.125) as f32 } else { (v / k as f64) as f32 };
     }
-    let mut c5 = 0.0f64; // simplification: sem o registro 5, a original carrega uma vaga sem valor; a cópia usa zero
+    let mut c5 = 0.0f64; // simplification: without record 5, the original loads an uninitialized slot; the copy uses zero
     let r5 = record(this, player, 5);
     if r5 != 0 {
         let k = *(r5 as *const u8);
@@ -788,8 +788,8 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(person: usiz
 
 
 
-// simplification: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
-// cópia leva o ramo.
+// simplification: the history goes to the file (does not run twice) and the copy writes nothing else: original only; the
+// copy takes the branch.
 
 
 
@@ -841,7 +841,7 @@ pub(crate) unsafe extern "thiscall" fn get_category_record(this: usize, player: 
         Some(v) => v,
         _ => return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CATEGORY_RECORD)(this, player, category),
     };
-    let i = read_usize(slot) as i32; // o índice da categoria
+    let i = read_usize(slot) as i32; // the category index
     if i <= -1 {
         return 0;
     }
@@ -893,7 +893,7 @@ pub(crate) unsafe extern "thiscall" fn create_stats(this: usize, player: usize, 
         }
     }
     crate::comparacao::ramo("cpq_10 registro novo");
-    write_usize(slot, read_usize(this + 0xc)); // o índice novo
+    write_usize(slot, read_usize(this + 0xc)); // the new index
     write_usize(this + 0xc, read_usize(this + 0xc).wrapping_add(1));
     let r = read_usize(this + 4).wrapping_add(read_usize(slot) << 5);
     core::ptr::write_bytes(r as *mut u8, 0, 0x20);
@@ -915,7 +915,7 @@ pub(crate) unsafe fn find_language_record(this: usize, person: usize, language: 
     let bsearch: unsafe extern "C" fn(*const u8, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let mut key = [0u8; 8];
     core::ptr::write_unaligned(key.as_mut_ptr() as *mut u32, read_u32_as_usize(person) as u32);
-    key[4] = language; // a comparação só lê o byte +4 da chave
+    key[4] = language; // the comparison only reads byte +4 of the key
     bsearch(key.as_ptr(), read_u32_as_usize(this + 0x3c), read_u32_as_usize(this + 0x44) as u32, 6, 0x7c6d40)
 }
 
@@ -1004,9 +1004,9 @@ pub(crate) unsafe extern "thiscall" fn improve_language(this: usize, person: usi
 /// (+0x61): a original (caixa fatal). Devolve o que a 0x58f110 devolve. Do regen (0x7a59e0).
 pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, person: usize) -> usize {
     if person == 0 || read_u32_as_usize(person + staff::PLAYER) == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER)(this, person); // caixa fatal: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER)(this, person); // fatal box: original only
     }
-    let r = read_u32_as_usize(this + 0x30).wrapping_add(read_u32_as_usize(read_u32_as_usize(person + staff::PLAYER)).wrapping_mul(39)); // o id da ficha de jogador (+0x61), não o da pessoa
+    let r = read_u32_as_usize(this + 0x30).wrapping_add(read_u32_as_usize(read_u32_as_usize(person + staff::PLAYER)).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
     for k in 0..6usize {
         let i = read_u32_as_usize(r + 4 * k);
         if i as u32 == 0xffff_ffff {
@@ -1045,7 +1045,7 @@ pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pe
 pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person: usize, clube: usize, language: u32, by_contract: u32) -> u8 {
     let language = language as u8;
     if person != 0 && read_usize(person) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
-        return if read_u8(read_usize(person + staff::NATION) + 0x77) == language { 10 } else { 0 }; // o técnico humano
+        return if read_u8(read_usize(person + staff::NATION) + 0x77) == language { 10 } else { 0 }; // the human manager
     }
     if by_contract != 0 {
         let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
@@ -1062,7 +1062,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
             return true;
         }
         let s = read_usize(person + staff::SECOND_NATION);
-        s != 0 && read_u8(s + 0x77) == l // a segunda nação
+        s != 0 && read_u8(s + 0x77) == l // the second nation
     };
     if clube != 0 {
         let n = read_usize(clube + club::NATION);
@@ -1108,7 +1108,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
 /// fim a forma (+0x24..+0x26) anda meio byte e recebe a nota. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
     if p == 0 || jogo == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PLAYER_STATS_RECORD_MATCH)(this, p, jogo); // as caixas
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PLAYER_STATS_RECORD_MATCH)(this, p, jogo); // the boxes
     }
     let create: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_CREATE_STATS);
     let sheet: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
@@ -1233,9 +1233,9 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
     while i < read_i32(G_CLUB_COUNT) {
         let clube = injury_club_by_index(i);
         if injury_is_national_team(clube) {
-            break; // a primeira seleção encerra
+            break; // the first national team ends it
         }
-        let k = indice(clube) as u8 as i8 as isize; // só o al
+        let k = indice(clube) as u8 as i8 as isize; // only al
         if (0xb63d60usize).wrapping_add((k * 72) as usize) == nacao {
             for s in 0..50usize {
                 let p = read_usize(clube + club::SQUAD + 4 * s);
@@ -1267,7 +1267,7 @@ pub(crate) unsafe extern "thiscall" fn remove_language(stats: usize, sheet: usiz
         return;
     }
     let search: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    // simplification: o byte 5 da chave fica com lixo de pilha na original; o comparador 0x7c6d40 só lê id e idioma
+    // simplification: byte 5 of the key holds stack garbage in the original; the comparer 0x7c6d40 only reads id and language
     let mut key = [0u8; 6];
     key[..4].copy_from_slice(&(*(sheet as *const u32)).to_le_bytes());
     key[4] = language as u8;
@@ -1379,7 +1379,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
 /// competição, 0. Devolve só `ax`.
 pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, cod: i8) -> u16 {
     let k = |a: usize| *(a as *const i32);
-    // como na original: a primeira constante igual ao id decide (sem o código certo, vai aos códigos)
+    // as in the original: the first constant equal to the id decides (without the right code, goes to the codes)
     let special = |id: i32| -> u8 {
         if id == k(KEY_NATION_SWEDEN) {
             (cod == 0x16 || cod == 0x20) as u8

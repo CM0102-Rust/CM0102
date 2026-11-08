@@ -71,8 +71,8 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
     write_u32_from_usize(this + 0x30, 3);
 }
 
-// simplification: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][3] com 8 times,
-// o +4 da copa e os 8 cruzados (lidos antes pelas tabelas, +0xb1 de cada grupo) na lista dela (+0xa7, 6 bytes; como
+// simplification: allocates the stage and sets up the round: does not run twice. Original only; the plan: the stage at [+0xc][3] with 8 teams,
+// the cup’s +4 and the 8 cross-paired ones (read earlier through the tables, +0xb1 of each group) in its list (+0xa7, 6 bytes; as
 // conjunto) e +0x30 = 3.
 
 /// AsiaCupWinner::advance_stage(): moves the Asian Cup Winners' Cup to its next stage (+0x30); on reaching stage 1
@@ -95,8 +95,8 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize
     }
 }
 
-// simplification: as finais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da última
-// fase, que dá a caixa e não muda nada).
+// simplification: the finals allocate and draw: they do not run twice. Original only; the plan: +0x30 goes up one (outside the last
+// stage, which shows the box and changes nothing).
 
 /// The 4 Asian Cup Winners' Cup finalists: alive entrants of the two zones' knockouts, 2nd and 3rd swapped.
 ///
@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
         return show_error_at(0x987b60, 0x34b);
     }
     crate::comparacao::ramo("cqt_13 finalistas da recopa asiatica");
-    // simplification: com menos de 4 vivos a original deixa nas vagas o que o malloc deu; a cópia grava 0 (nesta carreira são 4)
+    // simplification: with fewer than 4 alive the original leaves in the slots what malloc gave; the copy writes 0 (in this career there are 4)
     for (k, &c) in asian_cup_winners_finalists(this).iter().enumerate() {
         write_u32_from_usize(list + k * 4, c);
     }
@@ -172,8 +172,8 @@ pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
     soltar(list);
 }
 
-// simplification: aloca a fase e sorteia a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4
-// times, o +4 da copa e os 4 finalistas (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto).
+// simplification: allocates the stage and draws the round: it does not run twice. Original only; the plan: the stage in [+0xc][1] with 4
+// teams, the cup’s +4 and the 4 finalists (read earlier) in its list (+0xa7, 6 bytes; as a set).
 
 /// rule: the Asian Cup Winners' Cup has, in each zone (stages −1 and 0, ids 0x480 and 0x481), three two-legged
 /// qualifying rounds: 1st on 23/8, 2nd on 20/9, quarter-finals on 24 March of the following year (21 days between legs

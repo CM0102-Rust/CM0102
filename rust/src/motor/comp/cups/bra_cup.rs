@@ -55,7 +55,7 @@ pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, file: u
     *((this + 0xab) as *mut u8) = 0;
     *((this + 0xb1) as *mut u8) = 0;
     let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
-    // simplification: nas caixas a original sai com o eax da caixa (0x5e8290); quem chama a virada não lê a devolução
+    // simplification: in the boxes the original exits with the box’s eax (0x5e8290); the caller of the turnover does not read the return
     if inscritos(this) < 0 {
         show_error_at(file, rows[0]);
         return 0;

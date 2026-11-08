@@ -121,5 +121,5 @@ pub(crate) unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
     base(this)
 }
 
-// simplification: libera as tabelas e destrói a base; não pode rodar duas vezes: só a original
+// simplification: frees the tables and destroys the database; cannot run twice: original only
 

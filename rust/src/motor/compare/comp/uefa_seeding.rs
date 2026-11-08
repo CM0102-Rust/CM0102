@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_intertoto_places(this: us
 pub(crate) unsafe extern "thiscall" fn comparar_assign_uefa_cup_places(this: usize, clubs: usize, count: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_UEFA_CUP_PLACES);
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
-    // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
+    // the competition history too: 0x4afd80 reorders it (tied rows: the previous order changes the club found)
     let mut reg = vec![(this, 0x698), (read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubs, count), || crate::aleatorio::sem_contar(|| assign_uefa_cup_places(this, clubs, count)));
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_english_intertoto_club(this
 ///
 /// [pt] Só a original (refaz as vagas pelas rotinas de dentro, solta a tabela, entrega notícias); a cópia leva o contador.
 pub(crate) unsafe extern "thiscall" fn comparar_update_season(this: usize, diario: u32) {
-    // simplification: refaz a classificação inteira e entrega notícias: não dá para rodar duas vezes
+    // simplification: redoes the whole table and delivers news items: cannot run twice
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_UPDATE_SEASON)(this, diario)
 }
 
@@ -124,7 +124,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_season(this: usize, diari
 ///
 /// [pt] Comparador da 0x905510: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_uefa_seeding_save_to_temp_file(this: usize) {
-    // simplification: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
-    // (o .tmp vai no .qst pelo zadd_matching_files)
+    // simplification: writes a file to CM3_TEMP (cannot run twice); the copy is proven by the save proof
+    // (the .tmp goes into the .qst via zadd_matching_files)
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UEFA_SEEDING_SAVE_TO_TEMP_FILE)(this)
 }

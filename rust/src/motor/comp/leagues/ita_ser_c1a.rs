@@ -110,7 +110,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
-    // a Supercopa da Série C1
+    // the Série C1 Super Cup
     let cup = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
     let inscritos = read_u32_as_usize(cup + 0xa7);
     let champion = ita_ser_c1a_league_row_club(this, 0);

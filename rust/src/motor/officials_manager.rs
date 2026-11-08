@@ -402,7 +402,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
     } else {
         let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
         if friendly(read_usize(G_FRIENDLY), comp) != 0 {
-            faixa_da_nacao(read_i32(read_usize(home + 0x53))) // como a original, sem conferir a nação
+            faixa_da_nacao(read_i32(read_usize(home + 0x53))) // like the original, without checking the nation
         } else {
             let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp).wrapping_mul(4) as usize));
             if c == 0 {

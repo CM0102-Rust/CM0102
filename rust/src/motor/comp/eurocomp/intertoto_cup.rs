@@ -334,9 +334,9 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
     base(this, today, stage)
 }
 
-// simplification: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano, feito
-// antes: se +0xb2 passa de 0 a 1 com a Copa da UEFA, o livro dela (+0x14) ganha os vencedores (intertoto_winners_for_uefa), em
-// ordem e com a situação 4, e +0x36 sobe tanto quanto; senão o livro não cresce.
+// simplification: the cup update (0x51f890) plays and rolls: it does not run twice. Only the original runs; the plan, done
+// before: if +0xb2 goes from 0 to 1 with the UEFA Cup, its book (+0x14) gets the winners (intertoto_winners_for_uefa), in
+// order and with status 4, and +0x36 goes up as much; otherwise the book does not grow.
 
 /// rule: the winner of an Intertoto final gets the qualification record for the UEFA Cup (round 0xa, weight 60 to 100
 /// by round) and moves to the UEFA Cup; a club going through gets the next round record (weight round × 99 / (rounds −
@@ -372,17 +372,17 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
             }
             let div = n as i32 - 1;
             if div == 0 {
-                return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, outcome, a3, a4, jogo, a6); // simplification: a original cai na divisão
+                return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, outcome, a3, a4, jogo, a6); // simplification: the original falls into the division
             }
             let q = (r as i32 * 99) / div;
             let weight = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32; // inc al
             let round = core::ptr::read_unaligned((read_u32_as_usize(this + 0xa3).wrapping_add((next as isize * 0x68) as usize) + 7) as *const u16) as u32;
-            // simplification: a fase vai num registrador cujos 16 bits altos são os do movsx da rodada seguinte (zero); limpa
+            // simplification: the stage goes in a register whose high 16 bits are those of the next round’s movsx (zero); clears
             european_cup_add_qualified_record(clube, read_u32_as_usize(this + 4), core::ptr::read_unaligned((jogo + 0x32) as *const u16) as u32, round, weight);
         }
         0xff | 2 => {
             let weight = scale_by_round(0x14, 0x50, read_i16(jogo + 0x34), read_i16(this + 0x3c) as u16 as u32);
-            // simplification: a rodada +0x30 vai num registrador com lixo nos 16 bits altos; a 0x86c000 só usa a palavra
+            // simplification: round +0x30 goes in a register with garbage in the high 16 bits; 0x86c000 only uses the word
             european_cup_add_knocked_out_record(clube, read_u32_as_usize(this + 4), 0, core::ptr::read_unaligned((jogo + 0x30) as *const u16) as u32, weight);
             crate::comparacao::ramo("cqi_10 caiu no intertoto");
             leave_euro_competition(clube); // cqi10: quem cai no Intertoto sai da competição europeia
@@ -392,10 +392,10 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
     0
 }
 
-// simplification: os registros vão para o histórico das pessoas (reputação, moral): não rodam duas vezes. Só a original roda;
-// o plano confere o +0x1db do clube: [0x9cf6f0] para o vencedor, −1 para quem cai, intacto nos outros.
+// simplification: the records go to the people’s history (reputation, morale): they do not run twice. Only the original runs;
+// the plan checks the club’s +0x1db: [0x9cf6f0] for the winner, −1 for those knocked out, untouched for the others.
 
 
-// simplification: a base grava os registros (histórico, reputação, moral) e pode dar a vaga da UEFA ao campeão: não roda duas
-// vezes. Só a original roda; o plano confere o +0x1db do clube (−1 nos desfechos 1, 2 e 0xff, intacto nos outros).
+// simplification: the base writes the records (history, reputation, morale) and may give the UEFA place to the champion: does not run
+// times. Only the original runs; the plan checks the club’s +0x1db (−1 on outcomes 1, 2 and 0xff, untouched on the others).
 

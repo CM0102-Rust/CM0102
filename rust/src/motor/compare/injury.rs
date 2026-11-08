@@ -104,11 +104,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_injury(this: usize, kind_arg
         if r == -1 {
             current != -1 || read_usize(this + 4) == 0
         } else if r < 0 || current != r {
-            r >= 0 // trocada depois (a recaída lesionou de novo): nada a conferir
+            r >= 0 // replaced later (the relapse injured him again): nothing to check
         } else {
             let l = injury_entry(this, r as usize);
-            // a recaída (0x62e500) pode lesionar de novo a própria pessoa com 0x4d/0x4e/0x4f: a troca libera esta vaga e
-            // a nova lesão a reocupa (a primeira livre), com o tipo dela; confere a nova
+            // the relapse (0x62e500) may injure the person themselves again with 0x4d/0x4e/0x4f: the swap frees this slot and
+            // the new injury reoccupies it (the first free one), with its type; checks the new one
             let t = read_u8(l) as i8;
             let kind = if t != kind && (0x4d..=0x4f).contains(&t) { t } else { kind };
             read_u8(l) as i8 == kind
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_injury_daily_update(this: usize)
     }
     *core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS) = Some((reg, mr));
     o(this);
-    // sem a 0x62e010 desviada (desligada), a original não passou pelo ponto de conferência: fica sem comparação
+    // without 0x62e010 hooked (disabled), the original did not go through the checkpoint: it stays without comparison
     *core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS) = None;
 }
 
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize,
         return o(this, jogo, partida);
     }
     if read_i32(this + 0x28) != 0 {
-        reg.push((read_i32(this + 0x28) as usize + 0xa, 4)); // o cursor da lista das batidas
+        reg.push((read_i32(this + 0x28) as usize + 0xa, 4)); // the cursor of the kicks list
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, partida), || crate::aleatorio::sem_contar(|| apply_match_effects(this, jogo, partida)));
     PLACAR.registrar(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", jogo, partida, mo, mr));
@@ -482,7 +482,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_training_load(injuries: usiz
 pub(crate) unsafe extern "thiscall" fn comparar_update_player_fitness(this: usize, person: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPDATE_PLAYER_FITNESS);
     if *(G_FITNESS_UPDATE_STATIC_INIT_FLAGS as *const u8) & 7 != 7 || person == 0 || read_i32(person) < 0 || read_i32(person) >= read_i32(G_STAFF_COUNT) || read_usize(person + staff::PLAYER) == 0 {
-        return o(this, person); // simplification: as estáticas e o atexit da primeira vez não podem rodar duas vezes
+        return o(this, person); // simplification: the statics and the first-time atexit cannot run twice
     }
     let id = read_i32(person) as usize;
     let rec = read_usize(this).wrapping_add(id.wrapping_mul(31));
@@ -516,13 +516,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_daily_wear(t: usize, id: i32) {
 /// Comparer for `choose_injury_type` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_choose_injury_type(injuries: usize, category: i8, severity: i8, player: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8>(IDX_CHOOSE_INJURY_TYPE);
-    // simplification: jogador nulo abre a caixa de erro do 0x62ed70; não roda duas vezes
+    // simplification: a null player opens the error box of 0x62ed70; does not run twice
     if player == 0 {
         return o(injuries, category, severity, player);
     }
-    // simplification: a 0x62ed70 (primeiro efeito da 0x62d140, antes de qualquer sorteio dela) passa pela
-    // 0x62c680, que sorteia só na primeira consulta do dia e guarda em cache; chamá-la aqui antes enche o
-    // cache na mesma ordem da original, e os dois lados do lado_a_lado acham o cache cheio
+    // simplification: 0x62ed70 (first effect of 0x62d140, before any random roll of its own) goes through the
+    // 0x62c680, which rolls only on the first query of the day and caches it; calling it here first fills the
+    // cache in the same order as the original, and both sides of lado_a_lado find the cache full
     let current: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
     current(injuries, player);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO,

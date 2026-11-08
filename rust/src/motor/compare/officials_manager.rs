@@ -174,6 +174,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_operator(this:
 ///
 /// [pt] Comparador da 0x79bb80: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_save_official_stats(this: usize, save: usize) -> u8 {
-    // simplification: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
+    // simplification: writes to the save container (cannot run twice); the copy is proven by the save proof
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_SAVE_OFFICIAL_STATS)(this, save)
 }

@@ -96,7 +96,7 @@ pub(crate) unsafe fn build_single_stage_cup_rounds(this: usize, stage: u32, roun
 pub(crate) unsafe fn compare_cup_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if stage as u8 != 0xff {
-        // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: outside stage −1 neither of the two writes anything; the outputs may not even exist
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
@@ -210,7 +210,7 @@ pub(crate) unsafe fn jap_j_cup_random(n: i32) -> i32 {
 /// esp, 0xc -> cdecl; já em Rust).
 pub(crate) unsafe fn sort_and_shuffle_top_clubs(v: *mut usize, n: i32, escolhas: u32) {
     let f: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
-    // simplification: a original empurra a conta com lixo nos 16 bits altos; a 0x4afbd0 lê a palavra
+    // simplification: the original pushes the count with garbage in the high 16 bits; 0x4afbd0 reads the word
     f(v as usize, n as i16 as u16 as u32, escolhas);
 }
 
@@ -336,8 +336,8 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x20);
     let comp = |id: usize| read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b));
     let (a, b) = (comp(KEY_CLUB_COMP_AMERICAN_A_LEAGUE), comp(KEY_CLUB_COMP_AMERICAN_USISL));
-    // simplification: os vetores locais da original começam com o que estava na pilha; com menos de 10 clubes numa das
-    // ligas ela copiaria essa sobra (e a 0x4afbd0 já daria a caixa): a cópia começa com zero
+    // simplification: the original’s local vectors start with whatever was on the stack; with fewer than 10 clubs in one of the
+    // leagues it would copy that leftover (and 0x4afbd0 would already show the box): the copy starts with zero
     let mut va = [0usize; 50];
     let mut vb = [0usize; 50];
     let (mut na, mut nb) = (0i8, 0i8);
@@ -455,7 +455,7 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
             vd[0] = if na >= 0 { va[na as usize] } else { 0 };
         }
     } else {
-        // simplification: sem clubes a original lê o vetor fora do lugar (índice −1); a cópia usa zero e cai na caixa abaixo
+        // simplification: with no clubs the original reads the vector out of place (index −1); the copy uses zero and falls into the box below
         na = na.wrapping_sub(1);
         nd = 1;
         vd[0] = 0;

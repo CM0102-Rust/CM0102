@@ -356,8 +356,8 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
     dressing_room_friction(p, clube, k);
 }
 
-// simplification: sorteia e mexe nas preferências (0x547a10, 0x547af0, 0x547c10, 0x547c50), briga e queixa: só a original;
-// a cópia leva os ramos (roda todo dia).
+// simplification: rolls and touches the preferences (0x547a10, 0x547af0, 0x547c10, 0x547c50), quarrel and complaint: original only;
+// the copy takes the branches (runs every day).
 
 /// each squad player with a contract and preferences: the first team-mate he dislikes; with day % 14 + id = 0, the
 /// complaint against the manager, the assistant or another (0x587c60) and the flag on the contract (0x867700)
@@ -383,8 +383,8 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(clube: usiz
     }
 }
 
-// simplification: a queixa (0x587c60) e a marca no vínculo (0x867700) não rodam duas vezes: só a original; a cópia leva o
-// ramo do atrito.
+// simplification: the complaint (0x587c60) and the mark on the link (0x867700) do not run twice: original only; the copy carries the
+// friction branch.
 
 /// True if the person has a valid id, belongs to the club (+0x39) and has a player record.
 ///
@@ -462,7 +462,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
     }
 }
 
-// simplification: sorteia e muda o moral (0x544710, que também sorteia): só a original; a cópia leva os ramos.
+// simplification: rolls random numbers and changes morale (0x544710, which also rolls): original only; the copy takes the branches.
 
 
 
@@ -599,7 +599,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     }
 }
 
-// simplification: sorteia e a falta (0x41a360) multa, sorteia e mexe na forma: só a original; a cópia leva os ramos.
+// simplification: draws and the foul (0x41a360) fines, draws and changes the form: original only; the copy carries the branches.
 
 /// each competition in the list gets the day (virtual +0x14 with the game date and the flag); with the flag, the next
 /// step of [0xae2a58] (0x5aaf00)
@@ -626,7 +626,7 @@ pub(crate) unsafe extern "C" fn game_update_comps_for_date(mark: u32) {
     }
 }
 
-// simplification: passa o dia de todas as competições (virtuais) e do [0xae2a58]: só a original; a cópia leva o ramo.
+// simplification: advances the day of all competitions (virtual) and of [0xae2a58]: original only; the copy takes the branch.
 
 /// Address of the club's board confidence word (+6 of its 73-byte row in [this]).
 ///

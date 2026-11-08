@@ -357,7 +357,7 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
     if core::ptr::read_unaligned((this + 0x439) as *const i16) == 0x7d1 {
         euro_cfg(this, t, k);
     }
-    // simplification: a original devolve o ax com os bytes altos do eax que sobraram (quem chama lê só o si); a cópia, zero
+    // simplification: the original returns ax with the leftover high bytes of eax (the caller reads only si); the copy, zero
     k as u16 as u32
 }
 

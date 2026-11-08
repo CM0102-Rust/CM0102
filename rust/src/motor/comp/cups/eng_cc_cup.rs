@@ -109,7 +109,7 @@ pub(crate) unsafe fn eng_cc_cup_written_round_bytes(t: usize, n: i16) -> Vec<u8>
 pub(crate) unsafe fn eng_cc_cup_compare_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if stage as u8 != 0xff {
-        // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: outside stage −1 neither of the two writes anything; the outputs may not even exist
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
@@ -620,7 +620,7 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
         crate::comparacao::ramo("cqn_10 virada da copa da liga");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqn10: a Copa da Liga refeita uma vez
         let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGCCCUP_COLLECT_ENTRANTS);
-        // simplification: nas caixas a original zera só o al (o resto do eax vem da caixa); quem chama lê o byte
+        // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
         if inscritos(this) < 0 {
             show_error_at(0x9c4224, 0x161);
             return 0;
@@ -638,8 +638,8 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
     eng_cc_cup_cup_update_for_date(this, today, stage)
 }
 
-// simplification: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
-// original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
+// simplification: the season turn frees and rebuilds the tables and the cup update plays and draws: they do not run twice. Only the
+// original; the plan: +0x45 goes to 1 when the condition holds, otherwise it stays.
 
 /// rule: the FA Cup gathers its entrants on 3 October each year (Date(3, 9): month 9 is October; the community map says
 /// September), rebuilds the rounds and the tree and draws the preliminary round, once per season (+0x45); on 1 October
@@ -657,10 +657,10 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
 pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date_570550(this: usize, today: usize, stage: u32) -> u32 {
     if read_u32_as_usize(this + 0x45) == 0 && stage != 0 {
         if is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), today) && *((this + 0xb2) as *const u8) == 0 {
-            // simplification: a pergunta de 1999 monta e entrega uma notícia (só nesse dia, fora de qualquer carreira nova)
+            // simplification: the 1999 question builds and delivers a news item (only on that day, outside any new career)
             return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_CC_CUP_UPDATE_FOR_DATE_570550)(this, today, stage);
         }
-        // simplification: o ano vai no ax com o resto do eax nos bytes altos; a 0x549f70 o lê como palavra
+        // simplification: the year goes in ax with the rest of eax in the high bytes; 0x549f70 reads it as a word
         if is_date_today(make_date_dword(3, 9, read_i16(today + 2) as u16 as u32, 0xffff_ffff), today) { // cqn10: as inscrições da Copa da Inglaterra em 3/10
             free_season_tables(this);
             crate::comparacao::ramo("cqn_10 inscricoes da copa da inglaterra");
@@ -686,9 +686,9 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date_570550(this: u
     eng_cc_cup_cup_update_for_date(this, today, stage)
 }
 
-// simplification: como a da Copa da Liga, só a original; o plano: +0x45 vai a 1 em 3 de outubro (com +0x45 = 0 e a fase), fora
-// do caminho de 1999.
+// simplification: like the League Cup one, original only; the plan: +0x45 goes to 1 on 3 October (with +0x45 = 0 and the stage), outside
+// of the 1999 path.
 
 
-// simplification: a convocação mexe nos elencos e a atualização da copa joga: não rodam duas vezes. Só a original roda.
+// simplification: the call-up touches the squads and the cup update plays: they do not run twice. Only the original runs.
 

@@ -72,7 +72,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
     let zero = |p: usize| (byte(p, 0x27) == 0) as u32;
     let m = *((j + 0x19e) as *const usize);
-    // o setimo argumento da narracao vai no alto do codigo (ver `dispatch_tackle_calls`)
+    // the commentary’s seventh argument goes in the high part of the code (see `dispatch_tackle_calls`)
     let narrar7 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32, a7: i8| {
         call(FN_MATCH_EVENTS_ADD_EVENT, *((m + 0x8f7a) as *const usize), [code | (a7 as u8 as u32) << 16, m as u32, a3, a4, a5]);
     };
@@ -98,7 +98,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         4 => sortear(0x708),
         _ => {
             // simplification: a original mostra a caixa "Error" (versao, arquivo, linha 0x4755); +0x8ea9
-            // fora de 0..4 nao acontece no jogo
+            // outside 0..4 does not happen in the game
             *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
             return 0;
         }
@@ -164,7 +164,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
             crate::comparacao::ramo("play falta registrada");
             register(m, lance as u16, j as u32, 0, 0, t, *b(j, 0x102), *b(j, 0x103), cartao, grav);
         } else {
-            // a falta com punicao
+            // the foul with a punishment
             crate::comparacao::ramo("play falta punida");
             let mut weight = 0f32;
             punish(m, j, &mut t, cartao as i8, grav as i8, foul_strong as u8, &mut weight);
@@ -312,9 +312,9 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
 
 pub(crate) use crate::conteiner::{abrir_no_conteiner, buscar_no_conteiner, posicao_no_conteiner};
 
-// simplification: o conteiner abre arquivos, aloca 650 KB por item e le do disco; sem comparacao propria,
-// validado pela carreira (Rust x original; o banco e os historicos passam por aqui o tempo todo) e
-// pelo save de enchimento acima de 2 GB.
+// simplification: the container opens files, allocates 650 KB per item and reads from disk; without its own comparison,
+// validated by the career (Rust x original; the database and the histories pass through here all the time) and
+// by the filler save above 2 GB.
 
 
 
@@ -349,7 +349,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
     let noticia = |n: usize, p: usize, c: usize, tp: u32, pa: usize, z: u32| (ch.borrow_mut())(0x72c1f0, n, [p as u32, c as u32, tp, pa as u32, z]);
     let news_34 = |n: usize, p: usize, c: usize, tp: u32, pa: usize| (ch.borrow_mut())(0x744240, n, [p as u32, c as u32, tp, pa as u32, 0]);
     let por_20 = |c: usize, f: u32| (ch.borrow_mut())(0x867560, c, [f, 0, 0, 0, 0]);
-    // simplification: a 0x7c1e30 (devolve ponto flutuante) tambem alcanca a 0x68d0d0 em 3 niveis, fica direta
+    // simplification: 0x7c1e30 (returns floating point) also reaches 0x68d0d0 in 3 levels, stays direct
     let contrato = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
     let teste_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
     let g = |a: usize| *(a as *const usize);
@@ -448,7 +448,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 }
             }
         }
-        // o tecnico e os auxiliares
+        // the manager and the assistants
         let id = read(ts + 0x184);
         if id > -1 {
             crate::comparacao::ramo("jogadores tecnico");
@@ -497,10 +497,10 @@ pub(crate) unsafe fn original_fn<F: Copy>(i: usize) -> F {
 
 // --- gravar e reproduzir: 0x6f5c30 (3,9 KB, sorteia e altera jogadores) chamada por 0x6cd330 ---
 //
-// Na comparacao a original roda e cada chamada dela a 0x6f5c30 entra na fita (porta abaixo, so
-// durante esta comparacao); a copia Rust recebe a resposta e o efeito gravados (a 0x6f5c30 altera os
-// proximos jogadores da lista, que a original pula). No autoteste (jogadores sinteticos) a porta
-// responde de forma sintetica, sem rodar a rotina real.
+// In comparison mode the original runs and each of its calls to 0x6f5c30 goes onto the tape (port below, only
+// during this comparison); the Rust copy receives the recorded return value and effect (0x6f5c30 changes the
+// next players in the list, which the original skips). In the self-test (synthetic players) the port
+// responds synthetically, without running the real routine.
 
 pub(crate) static mut MATCH_PLAYER_RESPOND_TRAMPOLINE: usize = 0;
 pub(crate) static RECORD_6F5C30: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -526,9 +526,9 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
         }
         return rodar() as u8;
     }
-    // a comparacao da 0x6f5c30 (128a leva): o desvio dela e esta porta. Ela so e chamada pela
+    // the comparison of 0x6f5c30 (128th batch): its hook is this port. It is only called by
     // 0x6cd330 (`search_on_side`), cuja comparacao a grava como unidade: a comparacao roda dentro
-    // da unidade (aninhada, com a fita de fora guardada)
+    // of the unit (nested, with the outer tape saved)
     let comparar = || comparar_respond(p, a, b, c, d, &rodar) as u32;
     if RECORD_6F5C30.load(Relaxed) && is_recording() {
         return call_recording(FN_MATCH_PLAYER_TRY_INTERCEPT_BALL, p, [a, b, c, d, 0], comparar) as u8;

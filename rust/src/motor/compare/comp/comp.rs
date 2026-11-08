@@ -95,7 +95,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_stadium(estad
 pub(crate) unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index(active: i8) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i8) -> i32>(IDX_COMP_KEY_NATION_ENTRY_FROM_ACTIVE_INDEX);
     if key_nation_by_active_index(active).is_none() {
-        return o(active); // simplification: a caixa não roda duas vezes
+        return o(active); // simplification: the box does not run twice
     }
     let r = o(active);
     let n = comp_key_nation_entry_from_active_index(active);
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_match_importance(thi
 pub(crate) unsafe extern "thiscall" fn comparar_get_stage(this: usize, k: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_GET_STAGE);
     if k < -1 || k > read_usize(this + 0x30) as i32 {
-        return o(this, k); // simplification: a caixa, só a original
+        return o(this, k); // simplification: the box, original only
     }
     let r = o(this, k);
     let n = get_stage(this, k);
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp:
 pub(crate) unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: usize, stage: i32, round: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN);
     if stage < -1 && stage <= read_usize(this + 0x30) as i32 {
-        return o(this, stage, round); // simplification: a caixa, só a original
+        return o(this, stage, round); // simplification: the box, original only
     }
     let r = o(this, stage, round);
     let n = are_round_fixtures_known(this, stage, round);

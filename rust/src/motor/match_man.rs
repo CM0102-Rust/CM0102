@@ -99,7 +99,7 @@ pub(crate) unsafe extern "C" fn pick(
         free(jog);
         return 0;
     }
-    // a nota de `pessoa` (com o jogador `j`) na vaga `i`
+    // the rating of `pessoa` (with player `j`) in slot `i`
     let rating = |person: usize, j: usize, i: i32| -> i32 {
         let i = i as usize;
         rating_fn(
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "C" fn pick(
         }
     };
     if n < m {
-        // menos pessoas que vagas: cada pessoa livre procura a melhor vaga
+        // fewer people than slots: each free person looks for the best slot
         let mut colocadas = 0i8;
         let mut voltas = 0;
         while (colocadas as i32) < n && voltas < 10000 {
@@ -169,7 +169,7 @@ pub(crate) unsafe extern "C" fn pick(
             }
         }
     } else {
-        // mais pessoas: cada vaga pega a melhor; os repetidos sao resolvidos depois
+        // more people: each slot takes the best; duplicates are resolved later
         let mut conflitos = 0i8;
         let mut best_rating = 0i32;
         for i in 0..m {
@@ -245,7 +245,7 @@ pub(crate) unsafe extern "C" fn pick(
             }
         }
     }
-    // as extras: as pessoas que sobraram, pela propria 0x6e2000
+    // the extras: the people left over, via 0x6e2000 itself
     if x != 0 {
         let mut rest = [0usize; 128];
         let mut c = 0usize;
@@ -260,7 +260,7 @@ pub(crate) unsafe extern "C" fn pick(
             marks, bytes, a14, curtos + 2 * m as usize,
         );
     }
-    // trocas de pares enquanto a soma melhorar
+    // pair swaps while the sum improves
     let player_of = |p: usize| -> usize {
         if comissao == 0 {
             return 0;
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
     let (clube_a, clube_b) = (u(c, 0x2f), u(c, 0x33));
     let (rep_a, rep_b) = (w(clube_a, 0x80), w(clube_b, 0x80));
     let rodando = byte(m, 0x8ea5) != 0;
-    // a forca de cada lado (so os 16 bits contam, como no original)
+    // each side’s strength (only the 16 bits count, as in the original)
     let (mut own, mut other) = (rep_a, rep_b);
     if rodando {
         let rating: unsafe extern "C" fn(usize, usize, usize, u32, u32) -> i16 = core::mem::transmute(FN_MATCH_MAN_JUDGE_PLAYER_ABILITY);
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
             }
         }
     }
-    // os expulsos: 0x6cbbb0 conta os ativos de cada lado
+    // the sent-off players: 0x6cbbb0 counts the active ones on each side
     let mut x13 = 0i8;
     if rodando {
         let count: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_COUNT_PLAYERS_ON_PITCH);
@@ -438,7 +438,7 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
             h += h;
             let comp = if p14 == u(clube_a, 0x57) { u(u(G_COMP_OBJECT_TABLE, 0), 4 * u(jogo, 0)) } else { 0 };
             if comp != 0 && u(comp, 8) != 0 {
-                // a liga: quem esta acima na tabela e quanto falta
+                // the league: who is above in the table and how far behind
                 let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
                 let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
                 let e = search(u(comp, 8), clube_a);
@@ -650,7 +650,7 @@ pub(crate) unsafe extern "thiscall" fn choose_formation(c: usize, fichas: usize,
     };
     let side = byte(c, 0x18) as isize;
     core::ptr::copy_nonoverlapping(tactic as *const u8, (m as isize + 0x91e2 + 0x18e3 * side) as *mut u8, 0x18e3);
-    // simplification: sem tatica (ou sem +0x2b) o original para o jogo com erro (match_man.cpp 0xc1d); aqui so nao copia
+    // simplification: without tactics (or without +0x2b) the original stops the game with an error (match_man.cpp 0xc1d); here it just does not copy
     let copy = u(c, 0x2b);
     if tactic != 0 && copy != 0 {
         core::ptr::copy_nonoverlapping(tactic as *const u8, copy as *mut u8, 0x18e3);
@@ -678,7 +678,7 @@ pub(crate) unsafe fn judge_formations(
     let mark_b: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(FN_FORMATION_GET_MARKING_TYPE);
     let clube = u(c, 0x2f);
     let n = a2 as u8 as i8 as i32;
-    // as notas de cada setor (g) e faixa (s): a soma das duas melhores pessoas
+    // the ratings of each sector (g) and band (s): the sum of the two best people
     let mut table = [0i32; 35];
     for g in 0..7 {
         for s in 0..5 {
@@ -853,7 +853,7 @@ pub(crate) unsafe fn judge_formations(
             }
             sum = sum.wrapping_add(table[setor * 5 + band as usize]);
         }
-        // o equilibrio dos setores
+        // the balance of the sectors
         let z = (f18 as f64 - f44 as f64) as f32 as f64;
         let q = |v: f32| game_pow(v as f64, 2.0);
         let s_ = (q(f44) + q(f44) + q(f20)) - (q(f18) + q(f18)) - q(f28);
@@ -977,7 +977,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     bench(tat(), u(c, 0x2f), 1, 0, byte(c, 0x19) as i32);
     let m = u(c, 0x12);
     let block = |k: usize| m + 0x22d8 * byte(c, 0x18) as isize as usize + 0x4796 + 0x1be * k;
-    // o acumulado dos que sabem cobrar
+    // the running total of those who can take set pieces
     for k in 0..20 {
         let j = block(k);
         if byte(j, 0x19) >= 0 && table(j) & 0x40 != 0 && table(j) & 0x200 != 0 {
@@ -1129,14 +1129,14 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                 }
             }
         }
-        // os passes
+        // the passes
         let q = f38 * 10.0;
         if (a(0x12) as f64) < q {
             mark(t(), byte(j, 0x19) as u8 as u32, 0x10000000, 0);
         } else if f38 * 13.0 < a(0x12) as f64 {
             mark(t(), byte(j, 0x19) as u8 as u32, 0x20000000, 0);
         }
-        // chutes de longe
+        // long shots
         if (tb() & 8 != 0 || tb() & 0x10 != 0 || tb() & 0x20 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 {
             let a2 = a(2);
             if (tc(0x1f) as i32 / 5) as f64 + q > a2 as f64 {
@@ -1175,7 +1175,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                 }
             }
         }
-        // desarmes: os de meio e ataque (ou quem desarma bem) entram pela nota mais alta
+        // tackles: midfielders and attackers (or good tacklers) go in by the highest rating
         {
             let pj = || byte(j, 0x19) as u8 as u32;
             let entra = tb() & 0x10 != 0 || tb() & 0x20 != 0 || tb() & 0x40 != 0 || f38 * 16.0 < a(0xb) as f64;
@@ -1215,7 +1215,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         } else if k2 - l28 > a(8) as f64 {
             mark(t(), pj(), 0, 8);
         }
-        // cruzamentos pela tabela
+        // crosses by the table
         let tv = tb() as i16 as i32;
         let b = || a(0x16) + a(7);
         match tv {
@@ -1280,7 +1280,7 @@ pub(crate) unsafe extern "thiscall" fn put_in_place(c: usize, pos: u32, person: 
     })
 }
 
-// Porta de 0x6eaea0 (inicia o jogador na vaga): unidade da fita na comparacao.
+// Port of 0x6eaea0 (starts the player in the slot): a tape unit in comparison.
 pub(crate) static mut INIT_MATCH_PLAYER_TRAMPOLINE: usize = 0;
 pub(crate) const PROLOGUE_6EAEA0: Prologo = Prologo { endereco: 0x6eaea0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x1c] };
 
@@ -1556,13 +1556,13 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     *b(0x12) = strong as u8;
     *tb(0x16) = 0;
 
-    // fora do humano: pesa o jogo de hoje contra o proximo da lista (poupar para o mais importante?)
+    // outside the human: weighs today’s match against the next one in the list (save players for the more important one?)
     if byte(t, 0x19) == 0 && h16(clube, 0x80) >= 0x1770 && *(jogo as *const i32) != -2 && human(clube, 0, 1, 0, 0) == 0 && national_team(clube) == 0 && strong > 0x1e {
         more_days(G_CURRENT_DATE, f + 0xa4, 1);
         more_days(G_CURRENT_DATE, f + 0x40, 7);
         let r = games(u(G_FIXTURE_MANAGER, 0), rd(0xa4), rd(0xa6), rd(0x40), rd(0x42), *(clube as *const u32), f + 0x80, u32::MAX, 0xffff_fffe, 1);
         if r as u16 != 0 {
-            // 333 x a reputacao da competicao (.69; a da [0x9cf6f8] na tabela [0xae23d0]) + reputacao/3
+            // 333 x the competition’s reputation (.69; that of [0x9cf6f8] in table [0xae23d0]) + reputation/3
             let weight = |comp: usize, rival: usize| -> i32 {
                 let c = if *(comp as *const u32) == *(KEY_CLUB_COMP_INTER_TOTO_CUP as *const u32) { u(G_CLUB_COMP_TABLE, 0) + u(KEY_CLUB_COMP_UEFA_CUP, 0).wrapping_mul(0x6b) } else { comp };
                 (h16(c, 0x69) as i32 * 333).wrapping_add(h16(rival, 0x80) as i32 / 3)
@@ -1636,7 +1636,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                     }
                 }
                 wd(0x18, l18 as u32);
-                // o proximo jogo daqui a 1..7 dias pesa mais (o de 4 dias, nada)
+                // the next match in 1..7 days weighs more (the one in 4 days, nothing)
                 for (k, c) in [Some(0x96d4c0usize), Some(0x96d4b8), Some(0x96d4b0), None, Some(0x96d4a8), Some(0x96d4a0), Some(0x96d498)].iter().enumerate() {
                     let p = more_days(G_CURRENT_DATE, f + 0x48, k as u32 + 1);
                     wd(0x24, *(p as *const u32));
@@ -1661,9 +1661,9 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
         }
     }
 
-    // poupando: as mascaras das vagas e a primeira escala, com os que podem jogar
+    // resting players: the slot masks and the first scale, with those who can play
     let emprestado_fora = |p: usize| -> bool {
-        // emprestado (0x4cf6d0) a outro clube que nao o parceiro (0x540a50)?
+        // loaned (0x4cf6d0) to a club other than the partner (0x540a50)?
         let owner = |p: usize| {
             let c = contrato(u(G_CONTRACT_MANAGER, 0), p);
             *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
@@ -1753,7 +1753,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
         pick(f + 0x278, rd(0x18), f + 0x50, rd(0x30), 0, f + 0x56c, a7, clube, t, u(t, 0x1b) as u32, 0, 0, 0, 0, 0);
     }
 
-    // os candidatos: quem pode jogar entra na lista; no modo 1 os das vagas marcadas so as ocupam
+    // the candidates: whoever can play enters the list; in mode 1 those of the marked slots only fill them
     let humano19 = byte(t, 0x19) as i32 as u32;
     let bl = mode as u8;
     if bl == 2 {
@@ -1843,7 +1843,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
         mode = (mode & !0xff) | 2;
     }
 
-    // as marcas da escala
+    // the scale marks
     let mut mask: u32 = if national_team(clube) != 0 { 0x208a09c } else { 0xca0ca };
     if byte(t, 0x19) != 0 {
         mask = (mask | 0x20100) ^ 0x80000;
@@ -1880,7 +1880,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     }
     wd(0x14, mask);
 
-    // as tres referencias (a maior ficha +0xd + +0xb, sem repetir)
+    // the three references (the highest record +0xd + +0xb, without repeating)
     if *b(0x18) != 0 && bl == 2 {
         let r = best(t, f + 0x278, rd(0x18));
         *((t + 0x3b) as *mut usize) = r;
@@ -1919,7 +1919,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     }
     formacao(t, f + 0x278, rd(0x18), rd(0x14), mode);
 
-    // as vagas: as 11 da formacao (casas, marcas) e as extras sorteadas
+    // the slots: the 11 of the formation (squares, marks) and the extra drawn ones
     let n = *b(0x13) as i8 as i32;
     wd(0x30, n as u32);
     *b(0x12) = 0;
@@ -1978,7 +1978,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             wd(0x5c0 + 8 * k, 0);
             *b(0xb4 + k) = 0;
             ww(0xe8 + 2 * k, sorteio(10) as i16);
-            // como na original: zera o curto da vaga seguinte (o desta fica com o que havia)
+            // as in the original: zeroes the short of the next slot (this one keeps what it had)
             ww(0x214 + 2 * (*b(0x12) as i8 as usize), 0);
             if extra(0xe8 + 2 * k, k, 10) {
                 ww(0x100, 1);
@@ -2003,7 +2003,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
         wd(0x20, n as u32);
     }
 
-    // o rodizio (0x8cf880 aponta quem descansa; 0x6e8910 reavalia), no maximo duas voltas
+    // the rotation (0x8cf880 points out who rests; 0x6e8910 re-evaluates), at most two rounds
     if *(jogo as *const i32) != -2 {
         *b(0x2e) = 0;
         let mut r = rodizio(u(G_TRANSFER_MANAGER, 0), clube, jogo, 0, f + 0x14c, 2, f + 0x78);
@@ -2038,7 +2038,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             } else {
                 0
             };
-            // simplification: o 6o argumento leva so o byte (n - 11); a original passa sobra de ebx nos altos (lidos como byte)
+            // simplification: the 6th argument carries only the byte (n - 11); the original passes ebx leftovers in the high bytes (read as a byte)
             reavaliar(clube, u(t, 0x1b), f + 0x78, rd(0x14), 0xb, nb.wrapping_sub(0xb) as u32, rd(0x20), f + 0x340, v, w, f + 0x14c, f + 0xe8, f + 0x214, f + 0x5bc, f + 0xb4, 0);
             free(v);
             if w != 0 {
@@ -2067,7 +2067,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
         }
     }
 
-    // nas vagas, o capitao, as instrucoes
+    // in the slots, the captain, the instructions
     let cap = best(t, f + 0x14c, 0xb);
     let n = rd(0x30) as i32;
     for k in 0..n.max(0) as usize {
@@ -2087,7 +2087,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     let name = core::ffi::CStr::from_ptr(name as *const core::ffi::c_char).to_bytes();
     let special = name != b"3-4-3" && name != b"3-5-2 Attacking";
 
-    // as ordens gerais pela postura (0x5b50d0)
+    // the general orders by stance (0x5b50d0)
     let g = |x: u32| geral(u(t, 0x2b), x);
     let a = |x: u32| {
         g(x);
@@ -2155,7 +2155,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             } else if e(0xe) > lim(0xf) && special {
                 a(0x10000);
             } else if e(0xe) <= 5 && weight_of_side() != 0 && !(disposicao(n_final as isize) > read_f64_at(0x967890)) { // 0x967890 = 1
-                // como na original: le a disposicao no indice do total de vagas (o ebx do laco), nao do lado
+                // as in the original: reads the formation at the index of the total slots (the loop’s ebx), not the side’s
                 g(0x8000);
                 if e(0x13) < lim(4) { bx(0x1000) } else { cx() }
             } else {
@@ -2167,8 +2167,8 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     *b(0x37) as i8
 }
 
-// simplification: aloca a lista e os vetores do rodizio e chama 24 rotinas ainda originais; sem comparacao
-// propria, validada pela carreira (Rust x original), como as da 145a, 148a e 149a.
+// simplification: allocates the list and the rotation arrays and calls 24 routines still original; no comparison
+// own, validated by the career (Rust x original), like those of the 145th, 148th and 149th.
 
 /// Match clock minute (+0x8ed0 / 11) capped at the end of the current period (+0x8ed4: 45, 90, 105, 120).
 ///
@@ -2261,7 +2261,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
         bpos[i] = byte_pos(u(0x2b), pos[i]);
     }
     let comp = u(0x37);
-    // os reservas entram logo depois das vagas (o resto da lista ordenada fica de fora)
+    // the substitutes come right after the slots (the rest of the sorted list is left out)
     let mut n1 = slots;
     let limit = (*((comp + 0x4d) as *const u8) & 0xf) as i32 + 0xb;
     if limit > 0xb {
@@ -2280,7 +2280,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
     for i in 0..n1 {
         fichas[i] = *((list[i] + 0x69) as *const usize);
     }
-    // o modo da escala
+    // the scale mode
     let clube = u(0x2f);
     let strength = |o: usize| w(*((c + o) as *const usize), 0x80) as i32;
     let mut mode: u32 = if national_team(clube) != 0 { 0x1ffffd2 + 0x8a0cb } else { 0x8a0cb };
@@ -2395,7 +2395,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
     for i in 0..ne {
         let (sai, entra) = (sairam[i], entraram[i]);
         let comentarios = byte(m, 0x8ebb) != 0;
-        // cansaco: primeiro o que sai, depois o que entra
+        // fatigue: first the one going off, then the one coming on
         let cansado = if comentarios && sortear(w(sai, 0x31) as i32) < -10 {
             Some(sai)
         } else if comentarios && sortear(w(entra, 0x31) as i32) < -10 {
@@ -2785,7 +2785,7 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
     let res = |k: i8| (reserve as isize + 4 * k as isize) as *mut usize;
     let sai = |k: i32| (out as isize + 4 * k as isize) as *mut usize;
     let w = |base: usize, k: i32| *((base as isize + 2 * k as isize) as *const u16);
-    // tira `alvo` (ou a posição `k`) da reserva, pondo o último no lugar
+    // removes `alvo` (or position `k`) from the reserves, putting the last one in its place
     let remove = |k: i8, nr: &mut i8| {
         if (k as i32) < *nr as i32 - 1 {
             *res(k) = *res(*nr - 1);
@@ -3023,7 +3023,7 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
     }
 }
 
-// ---- as notas do jogador do match_man.cpp (0x6e6340 fora da partida, 0x6e2f20 para uma vaga): partes comuns ----
+// ---- the player ratings from match_man.cpp (0x6e6340 outside the match, 0x6e2f20 for a slot): common parts ----
 
 /// Date `a` (day +0 signed, year +2 unsigned) is before date `b`.
 ///
@@ -3470,7 +3470,7 @@ pub(crate) unsafe fn scout_knowledge_bonus(p: usize, f: usize, clube: usize, con
         let e = kb(0xe);
         let k1a = kb(0x1a) * fb(0x32);
         let k1f = kb(0x1f) * (f44 - 10);
-        // os craques: (+0x26 / 3) x +0x1b x +0x36 / 1500, com +0x26 > 30 e +0x36 > 15
+        // the stars: (+0x26 / 3) x +0x1b x +0x36 / 1500, with +0x26 > 30 and +0x36 > 15
         let craque = |ecx: i32| if fb(0x26) > 0x1e && fb(0x36) > 0xf { ecx + fb(0x26) / 3 * fb(0x1b) * fb(0x36) / 1500 } else { ecx };
         if pos & 6 != 0 {
             ecx += k1a / 40 + (fb(0x28) - 10) * e / 10 + fb(0x26) * e / 500 + fb(0x27) * e / 350 + fb(0x43) * e / 250 + k1f / 8 - 10;
@@ -3783,7 +3783,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
             return -10000;
         }
     }
-    // daqui em diante o original reaproveita o lugar do limite para contas: não corta mais
+    // from here on the original reuses the limit’s slot for calculations: it no longer cuts
     if flags & 0x40000 != 0 && da_base {
         sum += recent_form_bonus(p, f, clube, o, cont);
     }
@@ -4139,7 +4139,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
         let em = |o: usize| *((side + o) as *const usize) == p;
         l4c += if em(6) { 0x1e } else if em(0xa) { 0x14 } else if em(0xe) { 0xa } else { 0 };
     }
-    // o cansaço do minuto da partida reduz o extra
+    // fatigue at the match minute reduces the extra
     let by_minute = |v: i32| {
         if reg == 0 {
             v

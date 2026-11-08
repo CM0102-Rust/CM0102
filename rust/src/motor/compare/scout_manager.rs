@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this:
     let base = read_usize(this + 0x5c);
     let mut copy: Vec<u8> = (0..n0 * 0x11).map(|k| read_u8(base + k)).collect();
     copy.push(0);
-    // o ensaio poda a cópia: troca o vetor e a conta do `this` pelos da cópia e devolve depois
+    // the trial run prunes the copy: swaps the vector and the count of `this` for the copy’s and restores them afterwards
     let (b0, c0) = (read_usize(this + 0x5c), read_i32(this + 0x64));
     core::ptr::write_unaligned((this + 0x5c) as *mut usize, copy.as_mut_ptr() as usize);
     let state = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);

@@ -306,7 +306,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 
     *((this + 0xbf) as *mut u8) = 0;
     *((this + 0xc0) as *mut u8) = 0;
     *((this + 0xc1) as *mut u8) = 0;
-    // simplification: a original grava em +0x1c o id de [0x9cf624] (o mesmo global que a Segunda espanhola usa para a
+    // simplification: the original writes to +0x1c the id of [0x9cf624] (the same global the Spanish Segunda uses for the
     // Primera); fiel.
     write_u32_from_usize(this + 0x1c, read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION));
     write_u32_from_usize(this + 0x20, 0xffff_ffff);
@@ -580,7 +580,7 @@ pub(crate) unsafe fn create_french_table(this: usize, clubs: usize, n: i16, file
         let clube = read_usize(clubs + (i as usize) * 4);
         let id = read_usize(read_usize(clube + club::DIVISION));
         let mark = marcadas.iter().any(|&g| read_usize(g) == id) as u32; // cqk6: a marca dos clubes de divisão maior
-        // simplification: a original empurra a linha no ecx com os bits de cima do id da competição; a 0x687430 só lê o
+        // simplification: the original pushes the row in ecx with the upper bits of the competition id; 0x687430 only reads the
         // byte.
         let row = k; // cqk6: a linha k recebe o k-ésimo clube da lista
         iniciar(this, row as u32, clube, mark, 0);

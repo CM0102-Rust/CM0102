@@ -156,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_international_date_table(t
     let (t, n) = (read_usize(this + 0x34ec), read_i32(this + 0x34f0));
     if t == 0 || n != 0x6e {
         campos.escrever();
-        return o(this); // simplification: sem memória na cópia, só a original
+        return o(this); // simplification: without memory in the copy, original only
     }
     let mr = crate::comparacao::Memoria::ler(&[(t, 0x898), (this + 0x34f0, 6)]);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_PLAN_CLUB_FRIENDLIES)(this, entradas, ordenados, count);
     let (p, n, cap, z) = (read_usize(this + 0x34d8), read_i32(this + 0x34e0), read_i32(this + 0x34e4), read_i32(this + 0x34dc));
     if p == 0 {
-        return; // sem memória: a caixa
+        return; // out of memory: the message box
     }
     let order: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_COMPARE_CALL_UP_RECORDS_BY_DATE);
     let ordenado = (1..n.max(0) as usize).all(|i| order(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
@@ -238,14 +238,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usi
     let a = if m != 0 { read_usize(m + 0xc) } else { 0 };
     let other = if m != 0 { other_friendly_club(m) } else { 0 };
     if a == 0 || (other != 0 && (read_usize(a + 0x53) == 0 || read_usize(other + 0x53) == 0)) {
-        return o(this, m, force); // simplification: sem quem pede ou sem nação, só a original
+        return o(this, m, force); // simplification: with no requester or no nation, original only
     }
     let s = if friendly_needs_decision(m, force) { friendly_reply(m, false) } else { read_u8(m + 0x18) };
     let slot: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
     let v = if s == 3 || s == 4 { slot(this, read_i16(m) as u16 as u32, read_i16(m + 2) as u16 as u32, read_usize(m + 0x14), read_usize(m + 0x10)) } else { 0 };
     o(this, m, force);
     let ok = if s == 3 || s == 4 {
-        // o pedido foi liberado: só a vaga
+        // the request was released: only the slot
         v == 0 || if s == 3 { read_u8(v + 0x18) == 3 } else { read_usize(v + 0x10) == 0 && read_u8(v + 0x18) == 0 }
     } else {
         read_u8(m + 0x18) == s && !list_holds(read_usize(this + 0x34d4), m)
@@ -320,7 +320,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_friendly_get_rest_days_for_kind(k
 ///
 /// [pt] Comparador: anda o calendário e planeja (aloca, sorteia): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_friendly_update_for_date(this: usize, today: usize, active: u32) -> u32 {
-    // simplification: cancela torneios, tira pedidos e cria amistosos (não roda duas vezes); a cópia se prova pela carreira
+    // simplification: cancels tournaments, removes requests and creates friendlies (does not run twice); the copy is proven by the career
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_FRIENDLY_UPDATE_FOR_DATE)(this, today, active)
 }
 
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_friendly_update_for_date(this: u
 ///
 /// [pt] Comparador: monta e planeja os amistosos da IA (aloca, sorteia): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_plan_ai_preseason_friendlies(this: usize) {
-    // simplification: os torneios, as excursões e os amistosos sorteiam e alocam; a cópia se prova pela carreira
+    // simplification: the tournaments, the tours and the friendlies roll and allocate; the copy is proved by the career
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PLAN_AI_PRESEASON_FRIENDLIES)(this)
 }
 
@@ -354,7 +354,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_preseason_windows(this: usiz
 ///
 /// [pt] Comparador: sorteia, monta amistosos e cria listas (não roda duas vezes): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_schedule_tour_matches(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
-    // simplification: o sorteio e os amistosos novos não rodam duas vezes; a cópia se prova pela carreira
+    // simplification: the draw and the new friendlies do not run twice; the copy is proven by the career
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_SCHEDULE_TOUR_MATCHES)(this, cand, adv, n)
 }
 
@@ -397,7 +397,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, 
     let same = if ocupada {
         r == 0
     } else {
-        // simplification: r = 0 sem estar ocupada só sem memória (a caixa já saiu): não confere
+        // simplification: r = 0 without being occupied only when out of memory (the box has already shown): not checked
         r == 0 || (read_u16(r) == dia && read_u16(r + 2) == ano && read_u32_as_usize(r + 0xc) == clube && read_u32_as_usize(r + 8) == 0
             && *((r + 0x18) as *const u8) == 1 && read_u32_as_usize(r + 0x10) == casa && read_u32_as_usize(r + 0x14) == fora)
     };
@@ -461,7 +461,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usiz
     if jogo == 0 || read_usize(this + 0x34c8) == 0 {
         return o(this, jogo, clear_slot);
     }
-    // simplification: a 0x68d1f0 acha o nó pelo conteúdo do item; o plano supõe itens de conteúdo distinto (o normal)
+    // simplification: 0x68d1f0 finds the node by the item’s content; the plan assumes items with distinct content (the normal case)
     let l4 = read_usize(this + 0x34d4);
     let esperado4: Vec<usize> = if l4 != 0 { list_items_capped(l4).into_iter().filter(|&e| read_usize(e) != jogo).collect() } else { Vec::new() };
     let mut esperado8 = list_items_capped(read_usize(this + 0x34c8));
@@ -533,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_planned_friendly(this: usize
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_ADD_PLANNED_FRIENDLY)(this, anfitriao, home, away, data);
     let v = read_usize(this + 0x34d8);
     if v == 0 {
-        return; // sem memória: a caixa já saiu
+        return; // out of memory: the box has already shown
     }
     let item = v.wrapping_add(n.wrapping_mul(0x14));
     let done = [read_usize(item), read_usize(item + 4), 0, read_usize(item + 8), read_usize(item + 0xc), read_usize(item + 0x10)];
@@ -647,7 +647,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_club_from_ai_plans(amisto
     }
     let list = *((amistosos + 0x34c8) as *const usize);
     if list != 0 {
-        // o cursor e o ponteiro +0xc de cada amistoso da lista (percorrida aqui antes; as duas
+        // the cursor and the +0xc pointer of each friendly in the list (traversed here before; the two
         // rotinas reiniciam o cursor)
         regions.push((list + 0xa, 4));
         let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);

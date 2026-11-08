@@ -325,8 +325,8 @@ pub(crate) unsafe fn fill_state_league_table(this: usize, n: i16, file: usize, r
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if is_in_state_league(clube, g) {
-            // simplification: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
-            // byte. Com girar = 0, (k + 0) % n = k.
+            // simplification: the original pushes the row in eax with the high bits of the state league’s id; 0x687430 only reads the
+            // byte. With girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
             k = k.wrapping_add(1);
@@ -413,7 +413,7 @@ pub(crate) unsafe fn bra_reg_bahia_table_row_club(league: usize, l: usize) -> us
 /// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe fn bra_reg_bahia_build_knockout_from_table(this: usize, rows: &[usize], sementes: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
     let n = rows.len();
-    // as sementes: a original grava os bytes na pilha antes de alocar (iguais às linhas, mas constantes à parte)
+    // the seeds: the original writes the bytes on the stack before allocating (same as the rows, but separate constants)
     let mut s = [0u8; 8];
     s[..sementes.len()].copy_from_slice(sementes);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -430,8 +430,8 @@ pub(crate) unsafe fn bra_reg_bahia_build_knockout_from_table(this: usize, rows: 
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = new(0xb2);
-    // simplification: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
-    // virtual são words na pilha; o ano vai no cx); o construtor só lê as palavras.
+    // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
+    // virtual are words on the stack; the year goes in cx); the constructor only reads the words.
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =

@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, clube: us
     }
     let instrucao = |i: usize| (*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 2 + 4 * i) as *mut u32;
     let ocupados = (this + 0x5f0) as *mut u8;
-    // o espaco do humano da vez, se houver
+    // the space of the current human, if any
     let espaco = || {
         let human = *((G_SCREEN_RECORDS_MANAGER + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize * 0x300) as *const usize);
         if human == 0 {
@@ -237,7 +237,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     let narrate = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, c: u8, side: usize| {
         call(FN_MATCH_EVENTS_ADD_EVENT, u(m, 0x8f7a), [code, m as u32, c as u32, side as u32, u32::MAX]);
     };
-    // goleiros (tabela 1) ativos do lado sofrem o gol
+    // active goalkeepers (table 1) of the side concede the goal
     let goleiros = |side: usize| {
         for i in 0..20 {
             let q = jog(side, i);
@@ -270,7 +270,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             side = if c7 != 0 { round as usize } else { (round == 0) as usize };
             let other = (side == 0) as usize;
             let strong = || sortear(word(0x1de, side) + word(0x1da, side)) > sortear(word(0x1da, other) + word(0x1de, other));
-            // os tres ataques (o terceiro pela forca)
+            // the three attacks (the third by strength)
             for k in 0..3 {
                 if k >= 2 && !strong() {
                     continue;
@@ -348,7 +348,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 add(p, -0xf);
                 more(b(0xf5ca + side * 0x36));
             }
-            // os cartoes do outro lado, ou o tipo do lance
+            // the other side’s cards, or the type of the move
             local_28 = 0;
             let mut c20 = false;
             if sortear(word(0x1ea, other)) > sortear(0x640) {
@@ -379,7 +379,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         expulsar(c, call);
                     }
                     if *((mo + 0xf5cb) as *const u8) > 4 {
-                        // abandono: 3 x 0 para o lado da vez
+                        // abandonment: 3 x 0 for the side whose turn it is
                         crate::comparacao::ramo("simulacao rapida abandono");
                         end = true;
                         *b(0xf5bd + other * 0x36) = 0;
@@ -407,7 +407,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 c20 = true;
                 more(b(0xf5c7 + side * 0x36));
             }
-            // o fator do placar
+            // the score factor
             let d = goals(side) - goals(other);
             let goal_difference = if side == 0 { *pb(0x4b) as i32 - *pb(0x4c) as i32 } else { *pb(0x4c) as i32 - *pb(0x4b) as i32 };
             let x = if goal_difference + d > 3 {
@@ -512,7 +512,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 break;
             }
         }
-        // o fim do periodo
+        // the end of the period
         mais16(w(0x8ed0));
         let t = *w(0x8ed0);
         let w38 = *((pt() + 0x38) as *const u16);
@@ -595,7 +595,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         *pb(0x4b) = (*pb(0x4b)).wrapping_add(*pb(a));
         *pb(0x4c) = (*pb(0x4c)).wrapping_add(*pb(x));
     }
-    // o gol do mando
+    // the home goal
     let c1 = u(pt(), 0x1c);
     if c1 != 0 && u(pt(), 0x14) == u(c1, 0x57) && (*pb(0x43) as i32 + *pb(0x44) as i32) < 5 && *pb(0x43) == *pb(0x44) && sortear(4) == 0 {
         let (r0, r1) = (*((c1 + 0x80) as *const i16) as i32, *((u(pt(), 0x20) + 0x80) as *const i16) as i32);
@@ -611,7 +611,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             narrate(call, 0x1fcc, c, s);
         }
     }
-    // as lesoes (duas passadas pelo ultimo lado da vez)
+    // the injuries (two passes over the last side of the turn)
     if *(pt() as *const i32) != -2 {
         for _ in 0..2 {
             for i in 0..20 {
@@ -646,7 +646,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             }
         }
     }
-    // as notas
+    // the ratings
     for s in 0..2 {
         for i in 0..20i8 {
             let p = jog(s, i);
@@ -1001,7 +1001,7 @@ pub(crate) unsafe fn lineup_regions(this: usize, clube: usize, team: u32) -> Vec
 /// Clube ou pessoa nulos: a original (caixa "Error", 0).
 pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize, clube: usize, person: usize, team: u32, papeis: u32) -> u32 {
     if clube == 0 || person == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_REMOVE_PLAYER_FROM_SELECTION)(this, clube, person, team, papeis); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_REMOVE_PLAYER_FROM_SELECTION)(this, clube, person, team, papeis); // message box: original only
     }
     let l = club_tactics_index(clube, team);
     if l == -1 {
@@ -1019,8 +1019,8 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
     if papeis != 0 {
         let of_row: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> usize = core::mem::transmute(FN_TACTICS_GET_PLAYMAKER);
         let extra: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_PLAYMAKER);
-        // simplification: a original empurra o tipo e o lado com sobra nos bytes altos (o deslocamento da linha e a pilha);
-        // as chamadas leem só o byte baixo, e a cópia passa os valores limpos
+        // simplification: the original pushes the type and the side with leftovers in the high bytes (the row offset and the stack);
+        // the calls read only the low byte, and the copy passes clean values
         let batedor: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_TACTICS_GET_SET_PIECE_TAKER);
         let mark: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_SET_PIECE_TAKER);
         for qual in 0..2u32 {
@@ -1053,7 +1053,7 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
 pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, clube: usize, a: u32, b: u32, team: u32) -> u32 {
     let (va, vb) = (a as u8 as i8, b as u8 as i8);
     if clube == 0 || !(0..=0x13).contains(&va) || !(0..=0x13).contains(&vb) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_SWAP_SELECTION_SLOTS)(this, clube, a, b, team); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_SWAP_SELECTION_SLOTS)(this, clube, a, b, team); // message box: original only
     }
     let l = club_tactics_index(clube, team);
     if l == -1 {
@@ -1254,7 +1254,7 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, clube: usize,
 /// índice − conta); blocos de 0x18e3 bytes. Clube nulo: a original (caixa "Error", 0).
 pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, team: u32) -> usize {
     if clube == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CLUB_TACTIC)(this, clube, team); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CLUB_TACTIC)(this, clube, team); // message box: original only
     }
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     if human(clube, 1, 1, 0, 0) != 0 {

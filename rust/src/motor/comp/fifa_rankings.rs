@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
         }
     }
     pontuar(this);
-    // a original guarda a conta no lugar do argumento (a data): sem o vetor, a conta fica sendo o ponteiro
+    // the original keeps the count in the argument’s place (the date): without the vector, the count stays as the pointer
     let mut n = data as i32;
     let v = order(this, &mut n);
     let mut k = 0i32;
@@ -168,8 +168,8 @@ pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nacao: usize, 
     crate::comparacao::ramo("cpt_2 resultado");
 }
 
-// simplification: a original pode realocar o histórico (não roda duas vezes): o plano antes (conta, capacidade, pontos, mês e
-// ano), a original roda e a entrada nova é conferida; a cópia leva o ramo.
+// simplification: the original may reallocate the history (does not run twice): the plan beforehand (count, capacity, points, month and
+// year), the original runs and the new entry is checked; the copy takes the branch.
 
 /// the national side's strength tier from 1 to 4, by reputation and ranking position
 /// Original: `FIFA_RANKINGS::get_nation_strength_tier` (0x58e190, fifa_rankings.cpp, thiscall, ret 4).
@@ -299,8 +299,8 @@ pub(crate) unsafe extern "thiscall" fn collect_ranked_order(this: usize, count: 
     v
 }
 
-// simplification: as duas alocam o vetor; a original roda primeiro (o vetor dela volta ao chamador), a cópia depois, e o
-// vetor da cópia é liberado (0x9452ca) depois da conferência da conta e dos ponteiros.
+// simplification: both allocate the vector; the original runs first (its vector goes back to the caller), the copy after, and the
+// the copy’s vector is freed (0x9452ca) after checking the count and the pointers.
 
 /// qsort order of the ranking: the highest score first
 /// Original: `compare_ranking_score_desc` (0x58e240, fifa_rankings.cpp, cdecl).

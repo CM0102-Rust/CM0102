@@ -63,9 +63,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
     league(this, today, full)
 }
 
-// simplification: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
-// no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 7 fases
-// criadas e a fase atual (+0x30) a última delas.
+// simplification: the clubs (shuffled), the tables, the matches and the league day do not run twice. Original only; the plan
+// on the draw day (the copy’s condition): +0x45 = 1, the list +0xee zeroed, the first group’s table and the 7 stages
+// created and the current stage (+0x30) the last of them.
 
 /// rule: group 1 of the Copa Libertadores has 4 clubs, the first 4 drawn, each in the row of its order; human managers
 /// get the group draw news
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
     let mut i = 0i8;
     while (i as i16) < read_i16(this + 0x3e) {
         crate::comparacao::ramo("cqr_10 linha do primeiro grupo");
-        // simplification: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, conmebol_liber_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
@@ -98,8 +98,8 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
     1
 }
 
-// simplification: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
-// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
+// simplification: the table is allocated (and each row allocates the history) and the news goes to the managers: does not run twice. Only the
+// original; the plan: returns 1, 4 teams and in row i (0x3b bytes) the drawn team i with position i (+4).
 
 /// rule: each of the other groups of the Copa Libertadores is a league stage with the next 4 drawn clubs (4g + 4 to 4g
 /// + 7), the cup's rules and year and the cup's round table for the group; human managers get the news
@@ -181,8 +181,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
     1
 }
 
-// simplification: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
-// fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// simplification: the stage is allocated and the news goes to the managers: does not run twice. Original only; the plan: returns 1 with the
+// stage in [+0xc][g], +0x30 = g, the stage with the teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 
 /// As regras de um grupo continental (a virtual +0x8c, set_up_rules, numa liga de grupo): os campos de byte e palavra
@@ -216,7 +216,7 @@ pub(crate) unsafe fn apply_cup_rules(this: usize, g: &ContinentalGroupRules, day
     }
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    // simplification: o ano vai num registrador que pode ter lixo nos 16 bits altos; a 0x549f70 o lê como palavra
+    // simplification: the year goes in a register that may have garbage in the high 16 bits; 0x549f70 reads it as a word
     data(d.as_mut_ptr(), day, g.mes, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, g.semana);
     core::ptr::write_unaligned((this + 0xb6) as *mut u16, core::ptr::read_unaligned(d.as_ptr() as *const u16));
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);
@@ -296,13 +296,13 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) 
     apply_cup_rules(this, &LIBERTADORES_RULES, day, win)
 }
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 
 
@@ -402,7 +402,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
         match d {
             0xff => {
                 let weight = scale_by_round(0x32, 0x64, read_i16(jogo + 0x34), 4);
-                // simplification: +0x30 vai num registrador com lixo nos 16 bits altos; a 0x86c000 só usa a palavra
+                // simplification: +0x30 goes in a register with garbage in the high 16 bits; 0x86c000 only uses the word
                 european_cup_add_knocked_out_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
             }
             0 => {
@@ -435,9 +435,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
     0
 }
 
-// simplification: os registros (histórico, convocações), o arquivo das estatísticas e as posições previstas do Mundial não
-// rodam duas vezes. Só a original; o plano: a devolução 0 e, no título (fase 7, desfecho 1), o campeão na vaga do
-// Mundial Interclubes que a regra escolhe (0 se lá está um clube do continente [0x9cfa1c], senão 1).
+// simplification: the records (history, call-ups), the statistics file and the predicted World Cup positions do not
+// run twice. Original only; the plan: return 0 and, in the title (stage 7, outcome 1), the champion in the slot of the
+// Club World Championship chosen by the rule (0 if a club from continent [0x9cfa1c] is there, otherwise 1).
 
 /// rule: the Libertadores has seven group stages (0 to 6) and the knockout at stage 7 (the top two of each group, 16
 /// clubs); going past the last stage is an error (the box)
@@ -461,8 +461,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_advance_stage(this: usize)
     }
 }
 
-// simplification: o mata-mata (0x4c3d10) aloca a fase e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um
-// (fora da última fase, que dá a caixa).
+// simplification: the knockout (0x4c3d10) allocates the stage and draws: does not run twice. Original only; the plan: +0x30 goes up one
+// (outside the last stage, which gives the message box).
 
 /// rule: the Copa Libertadores starts with six-round groups on Tuesdays [inference: weekday 2], from 25/2 to 1/4 (each
 /// group a league stage, id 0x3e9 + stage, up to stage 6: 8 groups [inference]); then the knockout (stage 7) over two

@@ -32,7 +32,7 @@ pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0xa7) as *mut u16, 0xffff);
     let construct: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut data = [0u32; 2];
-    // simplification: a original empurra o ano no ecx com os 16 bits altos do ponteiro da copa; a 0x549f70 lê a palavra
+    // simplification: the original pushes the year in ecx with the high 16 bits of the cup pointer; 0x549f70 reads the word
     construct(&mut data, 0xa, 2, read_i16(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio
     core::ptr::write_unaligned((this + 0xb6) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);

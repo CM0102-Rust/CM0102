@@ -69,7 +69,7 @@ pub(crate) unsafe fn offer_renewal_if_due(clube: usize, p: usize, k: usize) {
     }
     let oferecer: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, f64, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_OFFER_CONTRACT);
     // 0x4cda70: push 1; push 0x3ff00000; push 0; push −1; push 0; push 0; push p; mov ecx, [0xae1050] -> thiscall
-    // (p, 0, 0, −1, 1.0 em dois dwords, 1)
+    // (p, 0, 0, −1, 1.0 in two dwords, 1)
     oferecer(read_usize(G_CONTRACT_MANAGER), p, 0, 0, -1, 1.0, 1);
 }
 
@@ -185,7 +185,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         }
     }
     let n = ((read_i16(obj + 0x3e) as i32) - 1).wrapping_mul(read_i16(obj + 0x3c) as i32);
-    let threshold = match_pl_ftol(n as f64 * read_f64_at(0x968f78)) as i16; // o ftol fica no word (movsx word depois); 0x968f78 = 0.33
+    let threshold = match_pl_ftol(n as f64 * read_f64_at(0x968f78)) as i16; // the ftol stays in the word (movsx word afterwards); 0x968f78 = 0.33
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 5;
@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         }
         append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(t), &e);
         let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
-        // 0x86f5b0: push 1; push técnico; mov ecx, edi (o this) -> thiscall (ret 8)
+        // 0x86f5b0: push 1; push manager; mov ecx, edi (the this) -> thiscall (ret 8)
         let r = record(this, read_usize(clube + club::MANAGER), 1);
         if r != 0 {
             core::ptr::write_unaligned((r + 0x8c) as *mut i16, read_i16(r + 0x8c).wrapping_add(1));
@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube
         let r = record(this, read_usize(clube + club::MANAGER), 1);
         if r != 0 {
             core::ptr::write_unaligned((r + 0x8a) as *mut i16, read_i16(r + 0x8a).wrapping_add(1));
-            // fild peso; fld 4,0; _CIpow (base em st1); fmul 0,5; ftol
+            // fild weight; fld 4.0; _CIpow (base in st1); fmul 0.5; ftol
             let v = match_pl_ftol(game_pow(read_i16(comp + competition::CLUB_COMP_REPUTATION) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: o peso do título; 0x968938 = 4, 0x968968 = 0.5
             write_i32(r + 0xb6, read_i32(r + 0xb6).wrapping_add(v));
             write_i32(r + 0xca, read_i32(r + 0xca).wrapping_add(v));
@@ -340,7 +340,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube
         offer_renewal_if_due(clube, p, k);
     }
     let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
-    // 0x76d940 e 0x774f30: push comp; mov ecx, [0xb74318] (a 0x76d940 não lê o ecx e só compara o id; ret 4 nas duas)
+    // 0x76d940 and 0x774f30: push comp; mov ecx, [0xb74318] (0x76d940 does not read ecx and only compares the id; ret 4 in both)
     if guardada(read_usize(G_NATIONAL_TEAMS), read_usize(jogo + 0x14)) != 0 {
         if STAFF_HISTORY_DRY_RUN {
             DRY_RUN_STRAY_SCRATCH_DATE = true;
@@ -387,7 +387,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, clube: usi
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let mut contratos = Vec::new();
-    let mut fichas = Vec::new(); // (moral da ficha, contrato ou 0, moral de antes), na ordem do elenco
+    let mut fichas = Vec::new(); // (morale from the record, contract or 0, previous morale), in squad order
     for j in 0..50usize {
         let p = read_usize(clube + club::SQUAD + 4 * j);
         if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
@@ -415,12 +415,12 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, clube: usi
     if DRY_RUN_STRAY_SCRATCH_DATE {
         count.retain(|&(a, _)| a != G_DAYS_SINCE_SCRATCH_DATE);
     }
-    // A renovação da original sorteia (0x4cda70): o moral dos jogadores depois do primeiro renovado (0x544710 sorteia)
-    // sai de outro ponto do sorteador; o dele e os de antes entram na conta.
+    // The original’s renewal rolls (0x4cda70): the players’ morale after the first renewed one (0x544710 rolls)
+    // comes from another point of the random generator; his and the previous ones enter the count.
     let corte = renovados.first().and_then(|r| fichas.iter().position(|&(_, k, _)| k == *r)).unwrap_or(fichas.len());
     count.extend(fichas.iter().take(corte + 1).map(|&(m, _, _)| (m, 1)));
     count.extend(contratos.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + 0x44, 1)));
-    // Os de depois, pela faixa da 0x544710: o moral m sobe de 0 a 20 (+20 ou +10 sorteados), preso em 1..20.
+    // The later ones, by the range of 0x544710: morale m rises from 0 to 20 (+20 or +10 drawn), clamped to 1..20.
     let band = |&(m, _, m0): &(usize, usize, i8)| -> bool {
         let (m0, v) = (m0 as i32, *(m as *const i8) as i32);
         v >= m0.clamp(1, 20) && v <= (m0 + 20).clamp(1, 20)
@@ -578,9 +578,9 @@ pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize
             increment_i16(v + 0x92);
         }
     }
-    // a saída da 0x48e190 vai na vaga do argumento `jogo` da original, que começa com o próprio jogo
+    // the output of 0x48e190 goes in the slot of the original’s `jogo` argument, which starts with the match itself
     let mut out = p as u32;
-    let mut stored = ba; // o [esp+0x10] da original: o bônus do mandante, depois a nota dele
+    let mut stored = ba; // the original’s [esp+0x10]: the home side’s bonus, then its rating
     let comp = read_usize(p + 0x14);
     if a != 0 {
         crate::comparacao::ramo("cqa_11 nota do mandante");
@@ -642,7 +642,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_finish_records(this: usize, le
     }
 }
 
-// simplification: só grava o histórico no arquivo (não roda duas vezes): só a original; a cópia leva o ramo.
+// simplification: only writes the history to the file (does not run twice): original only; the copy takes the branch.
 
 /// O ensaio do comparador da 0x86dc30: a cópia sem o histórico (arquivo).
 pub(crate) static mut SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN: bool = false;
@@ -994,8 +994,8 @@ pub(crate) unsafe extern "thiscall" fn add_team_of_year_record(this: usize, pers
     append_person_history_by_id(true, this, read_u32_as_usize(person), &e);
 }
 
-// simplification: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
-// cópia leva o ramo.
+// simplification: the history goes to the file (does not run twice) and the copy writes nothing else: original only; the
+// copy takes the branch.
 
 /// Returns the club manager's points record from G_STAFF_RECORDS (0x86f5b0, creating it), or 0 without a manager (uses
 /// G_STAFF_RECORDS instead of this).
@@ -1031,7 +1031,7 @@ pub(crate) unsafe extern "C" fn staff_records_compare_clubs_by_manager_points(a:
     read_i32(rb + 0xba).wrapping_sub(read_i32(ra + 0xba)) // cps10: mais pontos primeiro
 }
 
-// simplification: a 0x86f5b0 cria o registro que falta; a original roda antes e a cópia só acha os que ela criou.
+// simplification: 0x86f5b0 creates the missing record; the original runs first and the copy only finds the ones it created.
 
 
 
@@ -1411,7 +1411,7 @@ pub(crate) unsafe fn record_qualification(this: usize, clube: usize, comp: usize
     if r == 0 {
         return;
     }
-    // simplification: a original faz pow(x, 2,0) (0x945ff0): x × x, exato para a importância (16 bits)
+    // simplification: the original does pow(x, 2.0) (0x945ff0): x × x, exact for the importance (16 bits)
     let x = read_i16(comp + competition::CLUB_COMP_REPUTATION) as f64;
     let points = match_pl_ftol(x * x * (weight as u8 as i8 as i32) as f64);
     staff_records_add_i32(r + 0xb6, points);
@@ -1547,7 +1547,7 @@ pub(crate) unsafe fn for_each_swap_item(t: usize, mut f: impl FnMut(usize)) {
 /// [pt] O tipo do cargo é de jogador (0x53b620: 11, 12, 13 ou 15)?
 pub(crate) unsafe fn staff_records_is_player_job(job: u8) -> bool {
     let f: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
-    f(job as u32) != 0 // simplification: a original empurra o registro com o byte no al; a 0x53b620 lê só o byte
+    f(job as u32) != 0 // simplification: the original pushes the register with the byte in al; 0x53b620 reads only the byte
 }
 
 /// Returns the manager's points record (FN_STAFF_RECORDS_GET_MANAGER_RECORD with create).
@@ -1604,7 +1604,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: usize, write: bool) {
                 for_each_swap_item(t, |x| staff_records_add_i64(r + 0xac, read_i32(staff_records_staff_by_id(read_usize(x)) + 0x52)));
             }
         }
-        // o histórico do técnico comprador: a compra e cada jogador dado na troca
+        // the buying manager’s history: the purchase and each player given in the swap
         stamp_game_date(e.as_mut_ptr());
         e[0xc] = 0x64;
         put_i32(&mut e, 8, club_job_id(manager));
@@ -1646,7 +1646,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: usize, write: bool) {
                 for_each_swap_item(t, |x| staff_records_add_i64(r + 0xa4, read_i32(staff_records_staff_by_id(read_usize(x)) + 0x52)));
             }
         }
-        // o histórico do técnico vendedor: a venda e cada jogador recebido na troca
+        // the selling manager’s history: the sale and each player received in the swap
         stamp_game_date(e.as_mut_ptr());
         e[0xc] = 0x65;
         put_i32(&mut e, 8, club_job_id(manager));
@@ -1666,7 +1666,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: usize, write: bool) {
             append_person_history_by_id(write, this, read_usize(manager), &e);
         });
     }
-    // o histórico do jogador transferido e o de cada jogador da troca
+    // the history of the transferred player and that of each player in the swap
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x66;
     put_i32(&mut e, 8, club_job_id(pessoa));
@@ -1760,8 +1760,8 @@ pub(crate) unsafe extern "thiscall" fn add_knocked_out_record(this: usize, clube
     end_national_duty(clube, comp);
 }
 
-// simplification: o histórico vai para o arquivo e as convocações acabam (não rodam duas vezes) e a cópia sem eles não mexe
-// em nada: só a original; a cópia leva os ramos.
+// simplification: the history goes to the file and the call-ups end (they do not run twice) and the copy without them does not touch
+// in nothing: original only; the copy carries the branches.
 
 /// the manager history (type 7, with the round) and the end of the national team duty in the stored competition
 /// Original: `Staff_Records::add_failed_to_qualify_record` (0x86c1d0, staff_records.cpp, thiscall, ret 0x10).
@@ -1781,7 +1781,7 @@ pub(crate) unsafe extern "thiscall" fn add_failed_to_qualify_record(this: usize,
     end_national_duty(clube, comp);
 }
 
-// simplification: como a eliminação: só a original.
+// simplification: like the elimination: original only.
 
 
 
@@ -1833,7 +1833,7 @@ pub(crate) unsafe extern "thiscall" fn staff_records_daily_update(this: usize, d
         for k in 0..n.max(0) as usize {
             let e = base.wrapping_add(k * MANAGER_RECORD_SIZE);
             write_usize(e + 0xca, 0);
-            write_usize(e + 0xce, 0); // os pontos do mês
+            write_usize(e + 0xce, 0); // the month’s points
         }
         let m = date_month(data);
         core::ptr::write_unaligned((this + 0x14) as *mut i16, m);
@@ -1927,7 +1927,7 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
         let manager = read_usize(clube + club::MANAGER);
         if manager != 0 && read_usize(manager + 0x39) != 0 {
             let mut d = [0u32; 2];
-            let q = before(G_CURRENT_DATE, d.as_mut_ptr(), 2); // duas semanas atrás
+            let q = before(G_CURRENT_DATE, d.as_mut_ptr(), 2); // two weeks ago
             let lo = read_usize(q) as u32;
             let year = (lo >> 16) as u16;
             let year_manager = read_i16(manager + 0x40) as u16;
@@ -1938,7 +1938,7 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
                 let r = record(this, manager, 1);
                 if r != 0 {
                     let points = read_i32(r + 0xce);
-                    if points > best_points { // o melhor do mês
+                    if points > best_points { // the best of the month
                         crate::comparacao::ramo("cpo_3 melhor do mes");
                         best_points = points;
                         best = read_usize(clube + club::MANAGER);
@@ -2028,13 +2028,13 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: u
                 return 0;
             }
             crate::comparacao::ramo("cpp_3 criar registro");
-            write_u32(r + 0x86, read_u32(person)); // a vaga fica com ele
+            write_u32(r + 0x86, read_u32(person)); // the slot stays with him
             break r;
         }
         if owner == read_u32(person) as i32 {
             break r;
         }
-        // a vaga é de outro: zera o registro da ficha dele e olha de novo
+        // the slot belongs to someone else: zero his profile record and look again
         let z = (read_u32(this + 8) as usize).wrapping_add((read_u32(read_u32(person + staff::NON_PLAYER) as usize) as usize).wrapping_mul(0xd2));
         core::ptr::write_bytes(z as *mut u8, 0, 0xd2);
         for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e, 0x72] {
@@ -2060,7 +2060,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: u
     let (dia, ano) = (read_i16(G_GAME_START_DATE), core::ptr::read_unaligned(G_GAME_START_DATE_YEAR as *const u16));
     let today_year = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
     if ano > today_year || (ano == today_year && dia > read_i16(G_CURRENT_DATE)) {
-        return r; // a data de [0xdd6ec8] ainda não chegou
+        return r; // the date in [0xdd6ec8] has not come yet
     }
     if read_u32(r + 0x4a) as i32 == -1 {
         let clube = read_u32(person + staff::CLUB_JOB) as usize;
@@ -2096,7 +2096,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: u
     }
     let current = read_u32(r + 0x4a);
     if read_u32(r + 0x72) == current && read_i16(r + 0x50) == read_i16(r + 0x78) && read_i16(r + 0x4e) == read_i16(r + 0x76) {
-        contract_manager_assign_date(r + 0x7e, G_CURRENT_DATE); // a mais curta é a atual: vai até hoje
+        contract_manager_assign_date(r + 0x7e, G_CURRENT_DATE); // the shortest is the current one: runs until today
         return r;
     }
     if current as i32 == -1 {
@@ -2186,12 +2186,12 @@ pub(crate) unsafe extern "thiscall" fn add_loan_records(this: usize, person: usi
 /// deslocamento = −1). Pessoa nula: a original (caixa fatal: o jogo termina).
 pub(crate) unsafe extern "thiscall" fn rewind_staff_history(this: usize, person: usize) {
     if person == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REWIND_STAFF_HISTORY)(this, person); // caixa fatal: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REWIND_STAFF_HISTORY)(this, person); // fatal box: original only
     }
     crate::comparacao::ramo("cpk_7 recomecar historico");
     let par = read_usize(this + 0xc).wrapping_add(read_usize(person).wrapping_mul(8));
     let without_last: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FILE_LLIST_RESET_LAST_OFFSET);
-    without_last(read_usize(this), par, par + 4); // o último deslocamento
+    without_last(read_usize(this), par, par + 4); // the last offset
 }
 
 

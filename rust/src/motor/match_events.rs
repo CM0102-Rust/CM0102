@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
         read(&mut versao as *mut i32 as usize, 4, 1, f);
         read(&mut numero as *mut i32 as usize, 4, 1, f);
         if versao != 1 {
-            // como na original: o arquivo fica aberto
+            // as in the original: the file stays open
             show_error_at(0xa159b0, if k == 0 { 0xbf6 } else { 0xc11 });
             return 0;
         }
@@ -135,8 +135,8 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
 }
 
 
-// simplification: os eventos gravados mexem em arquivos e o passo em rede so roda em jogo em rede; sem
-// comparacao propria, validados pela carreira (Rust x original).
+// simplification: the recorded events touch files and the network step only runs in a network game; without
+// own comparison, validated by the career (Rust x original).
 
 /// Like show_error_at (error box at file/line), then cleanup and exit(-1) like the original.
 ///
@@ -228,7 +228,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     if f != 0 {
         *(FIM as *mut u8) = 1;
     } else {
-        // simplification: a original testa [0xb6b723] de novo aqui; ele acabou de ser visto zerado
+        // simplification: the original tests [0xb6b723] again here; it has just been seen cleared
         *(FIM as *mut u8) = 1;
         f = open(path(0x9b5348, 0xa15c3c), 0x9899fc);
         if f == 0 {
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         }
         c
     };
-    // um campo ate a virgula ou o fim da linha, no buffer; devolve o ultimo caractere lido
+    // a field up to the comma or the end of the line, into the buffer; returns the last character read
     let field = || {
         let mut c = pula_brancos_e_le();
         let mut n = 0usize;
@@ -340,7 +340,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 }
             }
             0x3e => {
-                // `>`: mais um som no evento aberto
+                // `>`: one more sound in the open event
                 if current == -1 {
                     fatal_error_at(FONTE, 0xd49);
                 }
@@ -378,7 +378,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 core::ptr::write_unaligned((e + 0xc) as *mut i16, how_many(e) + 1);
             }
             0x47 | 0x67 | 0x52 | 0x72 => {
-                // `G`/`R`: os dois textos do ultimo som
+                // `G`/`R`: the two texts of the last sound
                 let (o, sem, cheio, ja, alocacao, marca) = if c == 0x47 || c == 0x67 {
                     (0x108usize, 0xd80, 0xd82, 0xd84, 0xd97, 0xdc3)
                 } else {
@@ -396,7 +396,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                     fatal_error_at(FONTE, ja);
                 }
                 let t = text(alocacao, marca);
-                // a original grava o ponteiro antes de copiar; o resultado e o mesmo
+                // the original writes the pointer before copying; the result is the same
                 core::ptr::write_unaligned(field_text as *mut usize, t);
             }
             _ => {
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         }
     }
 
-    // os pesos: (maior x 10) / peso de cada som, e +0xe a soma; evento sem som ganha o padrao
+    // the weights: (largest x 10) / weight of each sound, and +0xe the sum; an event without sound gets the default
     for k in 0..0x2a5i32 {
         let e = event(k);
         if sons(e) == 0 {
@@ -431,8 +431,8 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     close(f);
 }
 
-// simplification: le arquivo, aloca os textos e grava a tabela global; sem comparacao propria, validada
-// pela carreira (Rust x original) e pela comparacao da tabela no fim da leitura.
+// simplification: reads a file, allocates the texts and writes the global table; no comparison of its own, validated
+// by the career (Rust x original) and by the comparison of the table at the end of the read.
 
 /// the event sound's `R` text with the tokens replaced (`<P1>` player, `<T1>`/`<T2>` club, `<C>` competition, `<F>`
 /// stage, `<D>`/`<N>` number, `<rf>`/`<Rf>` referee), `{...}` prefix and suffix (0x6701f0) and upper case; writes to
@@ -511,7 +511,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
     let b = |o: usize| *((ev + o) as *const u8);
     let mut pos: i16 = 0;
     let mut out: i16 = 0;
-    // o prefixo `{...}` logo antes da marca
+    // the `{...}` prefix right before the mark
     let prefixo = |pos: i16, p: &mut [u8; 0x100]| {
         p[0] = 0;
         if pos > 1 && (t(pos - 1) == b'}' || t(pos - 1) == b']') {
@@ -529,7 +529,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
             p[(c - 1) as usize] = 0;
         }
     };
-    // o sufixo `{...}` logo depois do `>` da marca (a procura comeca em `inicio`)
+    // the `{...}` suffix right after the tag’s `>` (the search starts at `inicio`)
     let sufixo = |start: i16, x: &mut [u8; 0x100]| {
         x[0] = 0;
         let mut fe = start;
@@ -675,7 +675,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                                         format_text(TEMP, if x as u8 == b'R' { 0xa15a14 } else { 0xa159e0 });
                                     }
                                 }
-                                // como na original: o texto pronto vira o formato
+                                // as in the original: the finished text becomes the format
                                 format(dest(out), TEMP);
                             }
                         }
@@ -683,7 +683,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                     b'O' | b'o' | b'Y' | b'y' => {}
                     _ => show_error_at(0xa159b0, 0xb10),
                 }
-                // fim da marca: ate o `>`; o tamanho e recontado
+                // end of the tag: up to the `>`; the length is recounted
                 if t(pos) != b'>' {
                     let mut j = pos;
                     loop {
@@ -717,7 +717,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 }
 
 
-// simplification: so roda em jogo em rede (cria e libera motor e resumo); sem comparacao propria.
+// simplification: only runs in network games (creates and frees engine and summary); no comparison of its own.
 
 /// restores the crowd sound, builds the event's `G` text (like 0x6d8d10) into a line with the club colours (`<O>` the
 /// other's, `<Y>`/`<R>` the default ones), wraps or cuts with "..." by the width (0x5e5ad0, 0x90cb20), draws on the
@@ -795,7 +795,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         if core::ptr::read_unaligned((sons() as isize + which() * 0x110 + 0x108) as *const usize) == 0 {
             return 0;
         }
-        // as cores do clube do lance (uniforme do lado)
+        // the colours of the move’s club (the side’s kit)
         let side = b(6);
         let mut club_id = if side != 0 { *((ctx + 4) as *const usize) } else { *(ctx as *const usize) };
         let kit = *((ctx as isize + side as i8 as isize * 1573 + 0x152) as *const u8) as u32;
@@ -917,7 +917,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                         b'P' | b'p' => {
                             let (lado_j, idx) = if t(pos + 2) == b'1' && b(5) != 0xff { (b(5), b(6)) } else { (b(7), b(8)) };
                             if lado_j != 0xff {
-                                // a largura do texto inteiro (ate o `|`) decide o nome curto
+                                // the width of the whole text (up to the `|`) decides the short name
                                 let mut n = 0usize;
                                 while *((s + n) as *const u8) != 0 && *((s + n) as *const u8) != b'|' {
                                     inteiro[n] = *((s + n) as *const u8);
@@ -976,7 +976,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             write(out, r);
                         }
                         b'O' | b'o' => {
-                            // as cores do outro clube
+                            // the other club’s colours
                             let side = b(6);
                             club_id = if side != 0 { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
                             let a = (side == 0) as isize;
@@ -1061,7 +1061,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
             }
         }
         *(dest(out) as *mut u8) = 0;
-        // larga demais: quebra ou corta numa palavra com "..."
+        // too wide: wraps or cuts at a word with ”...”
         if width_of_text(font, row.as_ptr()) > width - 0x10 {
             let mut n = 0usize;
             while row[n] != 0 {
@@ -1114,7 +1114,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         mostrar(SOM, painel, if *((e + 3) as *const u8) != 0 { 0x1001 } else { 1 });
     }
 
-    // o som do evento
+    // the event sound
     *(((nar as isize) + eu() + 0x10) as *mut u8) = 0xff;
     if b(0xd) as i8 <= 0 && *((nar + 0x2db0) as *const u8) >= 0x65 {
         let som = (sons() as isize + which() * 0x110) as usize;
@@ -1141,7 +1141,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     0
 }
 
-// simplification: desenha no painel e toca som; sem comparacao propria (so roda com a tela da partida).
+// simplification: draws on the panel and plays sound; no comparison of its own (only runs with the match screen).
 
 /// Advances the commentary queue read position (+0xc, ring of 12), marks the slot and switches the queue off on
 /// reaching write/saved position; returns whether it did.
@@ -1282,7 +1282,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
 
 
 
-// simplification: escreve em `buf` e chama a 0x53e140 e a 0x541f90 (efeitos fora); comparação pelo texto
+// simplification: writes into `buf` and calls 0x53e140 and 0x541f90 (effects outside); comparison by the text
 
 /// Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
 #[derive(Clone, Copy)]
@@ -1646,9 +1646,9 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
 /// chama esta rotina por dentro): a trajetória do jogo comparando não muda.
 pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32) {
     let state = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    // a mídia falsa: no registro de notícias (0x757da0 busca por sujeito -1, id do clube, tipo -1 e
-    // subtipo, registros de 0x17 bytes em ordem), uma notícia de hoje de cada subtipo que os
-    // comentários consultam, para os dois clubes
+    // the fake media: in the news log (0x757da0 searches by subject -1, club id, type -1 and
+    // subtype, records of 0x17 bytes in order), one of today’s news items of each subtype that the
+    // the comments query, for both clubs
     let c = *((m + 0x4792) as *const usize);
     let today = *(G_CURRENT_DATE as *const [u8; 8]);
     let mut records: Vec<[u8; 0x17]> = Vec::new();
@@ -1675,7 +1675,7 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
     let midia = *(G_MEDIA as *const usize);
     let minute = core::ptr::read_unaligned((m + 0x8ed0) as *const i16);
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| {
-        // 0: o estado real; 1: com as notícias; 2: com as notícias no minuto 31
+        // 0: the real state; 1: with the news; 2: with the news at minute 31
         for cenario in 0..3 {
             *(G_MEDIA as *mut usize) = if cenario == 0 { midia } else { falsa.as_ptr() as usize };
             core::ptr::write_unaligned((m + 0x8ed0) as *mut i16, if cenario == 2 { 31 * 11 } else { minute });
@@ -1807,8 +1807,8 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
     *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *mut u32) = u32::MAX;
 }
 
-// simplification: as tres enfileiram narracao, tocam som ou liberam memoria (nao rodam duas vezes): sem
-// comparacao propria, provadas pela carreira (fila de 19414 partidas, 285 mil eventos na frente).
+// simplification: all three queue commentary, play sound or free memory (do not run twice): without
+// own comparison, proven by the career (queue of 19414 matches, 285 thousand events ahead).
 
 
 

@@ -115,7 +115,7 @@ pub(crate) unsafe extern "C" fn comparar_fix_man_load_fixture_leg_checks() {
 pub(crate) unsafe extern "thiscall" fn comparar_find_new_fixture_date(this: usize, jogo: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIND_NEW_FIXTURE_DATE);
     let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_ROUND_VARIANT);
-    // a caixa da janela sem data (+0x24, tipo 2) apareceria duas vezes: só a original
+    // the window box without a date (+0x24, type 2) would appear twice: original only
     if jogo == 0 || matches!(units_digit(read_u16(jogo + 0x30) as i16 as i32), 3 | 4) || (read_u8(jogo + 0x3a) == 2 && read_u16(jogo + 0x24) == 0) {
         return o(this, jogo);
     }
@@ -145,8 +145,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_year(this: usize, year: u32)
 ///
 /// [pt] Comparador da 0x5af040: só a original.
 pub(crate) unsafe extern "C" fn comparar_fix_man_save_club_dates() {
-    // simplification: grava o arquivo do save (não pode rodar duas vezes); a cópia é provada pela prova do save (o .qst
-    // gravado no modo rust com e sem a leva, item a item: club_dates.tmp)
+    // simplification: writes the save file (cannot run twice); the copy is proved by the save proof (the .qst
+    // written in Rust mode with and without the batch, item by item: club_dates.tmp)
     original_fn::<unsafe extern "C" fn()>(IDX_FIX_MAN_SAVE_CLUB_DATES)()
 }
 
@@ -154,8 +154,8 @@ pub(crate) unsafe extern "C" fn comparar_fix_man_save_club_dates() {
 ///
 /// [pt] Comparador da 0x5aee90: só a original.
 pub(crate) unsafe extern "C" fn comparar_fix_man_load_club_dates() {
-    // simplification: aloca a tabela global e lê o arquivo (não pode rodar duas vezes); a cópia é provada pela carga do
-    // save de férias na prova do save (levas/N/CARGA) e, sem o arquivo, pela carreira nova
+    // simplification: allocates the global table and reads the file (cannot run twice); the copy is proved by loading the
+    // holiday save in the save proof (levas/N/CARGA) and, without the file, by the new career
     original_fn::<unsafe extern "C" fn()>(IDX_FIX_MAN_LOAD_CLUB_DATES)()
 }
 
@@ -163,7 +163,7 @@ pub(crate) unsafe extern "C" fn comparar_fix_man_load_club_dates() {
 ///
 /// [pt] Comparador da 0x5af4a0: só a original.
 pub(crate) unsafe extern "C" fn comparar_fix_man_save_fixture_leg_checks() {
-    // simplification: grava o arquivo do save e anda o cursor da lista; a cópia é provada pela prova do save
+    // simplification: writes the save file and advances the list cursor; the copy is proven by the save proof
     original_fn::<unsafe extern "C" fn()>(IDX_FIX_MAN_SAVE_FIXTURE_LEG_CHECKS)()
 }
 
@@ -260,7 +260,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_INSERT_FIXTURE);
     let l = find_fixture_list(this, f);
     if l == 0 {
-        return o(this, f); // simplification: sem memória para o bloco, só a original (a caixa)
+        return o(this, f); // simplification: no memory for the block, original only (the box)
     }
     let count = read_u16(l);
     o(this, f);
@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_fixture(this: usize, f: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_REMOVE_FIXTURE);
     let l = find_fixture_list(this, f);
     if l == 0 {
-        return o(this, f); // simplification: sem memória para o bloco, só a original (a caixa)
+        return o(this, f); // simplification: no memory for the block, original only (the box)
     }
     let count = read_u16(l);
     let mut no = read_u32_as_usize(l + 2);

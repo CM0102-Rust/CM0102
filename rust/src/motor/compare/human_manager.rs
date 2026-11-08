@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_invalid_watched_fixtures(t
 
 /// Comparer for `is_fixture_watched` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, partida: usize) -> u32 {
-    // a 0x5fe290 só lê: pode rodar nos dois lados
+    // 0x5fe290 only reads: can run on both sides
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_FIXTURE_WATCHED);
     if partida == 0 {
         return o(this, partida);
@@ -103,7 +103,7 @@ pub(crate) unsafe extern "C" fn comparar_human_manager_get_stand_in_manager(club
 pub(crate) unsafe extern "thiscall" fn comparar_is_watching_fixture(this: usize, partida: usize, human: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE);
     let r = o(this, partida, human);
-    // simplification: os casos de erro (caixa) só na original
+    // simplification: the error cases (message box) only in the original
     if partida == 0 || formation_watched_match_record(this, human).is_err() {
         return r;
     }
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, holi
     let t = if manager != 0 { manager } else { read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize)) };
     let i = if t == 0 { -1 } else { (read_usize(t) as i32).wrapping_sub(read_usize(G_STAFF_COUNT) as i32).wrapping_add(0x10) };
     if i < 0 || i > (read_usize(this + 4) as i32).wrapping_sub(1) {
-        return o(this, holiday, manager); // a caixa: só a original
+        return o(this, holiday, manager); // the message box: original only
     }
     let mark = read_usize(this).wrapping_add((i as usize).wrapping_mul(0xa6ef)).wrapping_add(0x9a01);
     let (antes, conta) = (read_usize(mark), read_usize(this + 0xc) as i32);

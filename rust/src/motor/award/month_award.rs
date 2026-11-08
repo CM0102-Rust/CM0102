@@ -55,8 +55,8 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, nota
     }
 }
 
-// simplification: o trabalho dela é chamar o melhor do mês e a vaga do vencedor, que têm comparador próprio (lado a lado e em
-// ensaio); a vaga chama a notícia e o registro do prêmio, que alocam: só a original; a cópia leva o ramo.
+// simplification: its job is to call the player of the month and the winner’s slot, which have their own comparer (side by side and in
+// rehearsal); the slot calls the news and the award record, which allocate: original only; the copy takes the branch.
 
 /// Raises the award winner's reputation: the port directly in dry run, else the original 0x412f00.
 ///
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
     write_u32(v + 0x21, club_id as u32);
     if id > -1 {
         let clube = if club_id > -1 { month_award_club_by_id(club_id) } else { 0 };
-        // os bytes altos das reputações vêm do dword +0x19 no registrador, como a original empurra
+        // the high bytes of the reputations come from dword +0x19 in the register, as the original pushes
         let mark = read_usize(this + 0x19) as u32;
         let high = mark & 0xffff0000;
         crate::comparacao::ramo("cpw_6 vencedor do mes");

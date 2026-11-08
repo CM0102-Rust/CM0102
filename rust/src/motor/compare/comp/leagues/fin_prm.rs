@@ -55,7 +55,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_season_end_club_update(this: usi
     let fin = finance_of_parent_club(this, clube, &mut a);
     let estadio = read_usize(clube + club::STADIUM);
     if fin == 0 || (estadio != 0 && read_u8(clube + club::OWN_STADIUM) == 0 && read_usize(clube + club::DIVISION) != 0 && read_i32(fin) > 0x2160ec0) {
-        return o(this, clube); // simplification: a compra do estádio pode mexer no dono; só a original
+        return o(this, clube); // simplification: the stadium purchase may touch the owner; original only
     }
     let own = read_usize(this).wrapping_add((read_i32(clube) as u32).wrapping_mul(0x167) as usize);
     let mut reg = vec![(fin, 0x167), (clube, 0x245), (board_requests_row(clube), 0x49)];
@@ -108,8 +108,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_news_request_refused(this: usize
 ///
 /// [pt] Comparador da 0x59b3b0: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_save_finance_dat(this: usize, save: usize) {
-    // simplification: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    // (o .qst gravado no modo rust com e sem a leva, item a item)
+    // simplification: writes to the save container (cannot run twice); the copy is proven by the save proof
+    // (the .qst saved in rust mode with and without the batch, item by item)
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SAVE_FINANCE_DAT)(this, save)
 }
 
@@ -117,8 +117,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_save_finance_dat(this: usize, sa
 ///
 /// [pt] Comparador da 0x59b2a0: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_load_from_save(this: usize, save: usize) -> u32 {
-    // simplification: lê do contêiner (a posição do item anda; não pode rodar duas vezes); a cópia é provada pela carga
-    // do save de férias na prova do save (levas/N/CARGA)
+    // simplification: reads from the container (the item position advances; cannot run twice); the copy is proved by loading
+    // of the holiday save in the save proof (levas/N/CARGA)
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_LOAD_FROM_SAVE)(this, save)
 }
 
@@ -132,10 +132,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_match_income(table: usiz
         return o(table, partida, result);
     }
     let (Some(fm), Some(fv)) = (match_club_finance(table, partida, 0x1c), match_club_finance(table, partida, 0x20)) else {
-        return o(table, partida, result); // seleção: a original não faz nada
+        return o(table, partida, result); // national team: the original does nothing
     };
     if fm == fv {
-        return o(table, partida, result); // simplification: o mesmo registro nos dois lados, só a original
+        return o(table, partida, result); // simplification: the same record on both sides, original only
     }
     let mut reg = vec![(fm, 0x167), (fv, 0x167)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
@@ -173,12 +173,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: us
     let pres = if clube != 0 { read_usize(clube + club::CHAIRMAN) } else { 0 };
     let sheet = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
     if clube == 0 || fin == 0 {
-        return o(this, clube, fin); // simplification: sem clube ou sem finanças, só a original
+        return o(this, clube, fin); // simplification: without a club or without finances, original only
     }
     let mut extras = vec![(clube + club::PLC, 1)];
     let mut check = Vec::new();
     if sheet != 0 {
-        extras.push((sheet + 0x20, 1)); // o +0x20 da ficha cai em todo evento com ela
+        extras.push((sheet + 0x20, 1)); // the record’s +0x20 drops on every event with it
         check.push(1);
     }
     compare_rare_finance_event("try_finance_boost_event", fin, &extras, &check, || o(this, clube, fin), || try_finance_boost_event(this, clube, fin))
@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: us
 pub(crate) unsafe extern "thiscall" fn comparar_try_board_takeover(this: usize, clube: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_BOARD_TAKEOVER);
     if clube == 0 || fin == 0 {
-        return o(this, clube, fin); // simplification: sem clube ou sem finanças, só a original
+        return o(this, clube, fin); // simplification: without a club or without finances, original only
     }
     compare_rare_finance_event("try_board_takeover", fin, &[], &[], || o(this, clube, fin), || try_board_takeover(this, clube, fin))
 }

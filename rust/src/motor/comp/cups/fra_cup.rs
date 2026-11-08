@@ -95,7 +95,7 @@ pub(crate) unsafe fn single_stage_round_table(this: usize, stage: u32, rounds: *
 pub(crate) unsafe fn compare_single_stage_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if stage as u8 != 0xff {
-        // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: outside stage −1 neither of the two writes anything; the outputs may not even exist
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
@@ -316,7 +316,7 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
     enter_clubs_pass(this, &mut n, all, true, |c, n| {
         comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && read_u32_as_usize(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < limit
     });
-    // a original testa o tamanho antes de cada clube: a passada para quando a lista chega a 16
+    // the original tests the size before each club: the pass stops when the list reaches 16
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 && n * 6 < 0x60 {
         let c = eng_cc_cup_club_by_index(i);

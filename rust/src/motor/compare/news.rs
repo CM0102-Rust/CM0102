@@ -95,13 +95,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
         let p = if atual + 1 == inicio + 0x64 { inicio } else { atual + 1 };
         (p, conta + if livre_atual { 1 } else { 0 })
     };
-    // com o técnico de férias a resposta automática (0x784100) pode entregar outra notícia ao mesmo humano: o anel anda
-    // mais vagas e a conta junto (achado em 31/10/2026, quando a rotina saiu das DESLIGADAS)
+    // with the manager on holiday the automatic reply (0x784100) may deliver another news item to the same human: the ring moves
+    // more slots and the count together (found on 31/10/2026, when the routine left DESLIGADAS)
     let holiday: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
     let responde = !repetida && (*(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || holiday(read_usize(G_HUMAN_MANAGER), manager) != 0);
     let r = o(this, noticia, manager, free);
     if r == 0 {
-        PLACAR.registrar(new, || format!("deliver_to_manager devolveu 0 sem anel novo")); // só sem memória
+        PLACAR.registrar(new, || format!("deliver_to_manager devolveu 0 sem anel novo")); // only without memory
         return r;
     }
     let extra = if responde { (read_i32(e + 4) - prox).rem_euclid(0x64) } else { 0 };
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, m
 
 /// Comparer for `news_club_has_human_manager` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_news_club_has_human_manager(clube: usize) -> u32 {
-    // só consultas: as duas rodam de novo sem efeito
+    // queries only: both run again with no effect
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_NEWS_CLUB_HAS_HUMAN_MANAGER)(clube);
     let n = news_club_has_human_manager(clube);
     PLACAR.registrar(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));

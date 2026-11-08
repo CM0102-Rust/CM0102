@@ -284,7 +284,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nat
         let (mut liga, mut copa, mut cl, mut cc) = (read_usize(s), read_usize(s + 4), read_i32(s + 8), read_i32(s + 0xc));
         if cl == id {
             if cc == id {
-                cc = -1; // a copa somada à liga, que vai ao hall da fama e zera
+                cc = -1; // the cup added to the league, which goes to the hall of fame and is zeroed
                 copa = 0;
             }
             liga = 0;

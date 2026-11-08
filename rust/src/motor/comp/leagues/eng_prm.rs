@@ -362,7 +362,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
         let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             let row = k; // cqi5: a linha k recebe o k-ésimo clube da divisão
-            // simplification: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
+            // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
             iniciar(this, row as u32, clube, 0, 0);
             k = k.wrapping_add(1);

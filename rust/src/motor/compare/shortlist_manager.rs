@@ -7,7 +7,7 @@ use super::*;
 ///
 /// [pt] Comparador da 0x84a020: só a original (sorteia, faz lances e pedidos de empréstimo, aloca ofertas e termos).
 pub(crate) unsafe extern "thiscall" fn comparar_make_club_bids(this: usize, clube: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MAKE_CLUB_BIDS)(this, clube) // simplification: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MAKE_CLUB_BIDS)(this, clube) // simplification: original only
 }
 
 /// Comparer for `staff_interest_in_joining_club` (comparison mode: see the header of motor.rs).
@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_suspend_clubs_shortlisting_playe
     }
     let list = list_new(p);
     interested(this, player, list, 1, 3, 0);
-    // os itens (8 bytes: id do jogador, id do clube) pelos nós (+2 o primeiro; nó: +0 o dado, +6 o próximo)
+    // the items (8 bytes: player id, club id) through the nodes (+2 the first; node: +0 the data, +6 the next)
     let mut reg: Vec<(usize, usize)> = Vec::new();
     let mut no = read_usize(list + 2);
     while no != 0 {

@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_next_hosts(this: usize, com
 ///
 /// [pt] Só a original (sorteia, monta a lista local e entrega notícias); a cópia leva os contadores.
 pub(crate) unsafe extern "thiscall" fn comparar_host_country_daily_update(this: usize, today: usize) {
-    // simplification: entrega notícias pela 0x5faec0 e mexe na lista: não dá para rodar duas vezes
+    // simplification: delivers news through 0x5faec0 and touches the list: cannot run twice
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_HOST_COUNTRY_DAILY_UPDATE)(this, today)
 }
 
@@ -69,6 +69,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_host_country_daily_update(this: 
 ///
 /// [pt] Comparador da 0x5fb320: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_save_temp_file(this: usize) {
-    // simplification: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
+    // simplification: writes a file to CM3_TEMP (cannot run twice); the copy is proven by the save proof
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SAVE_TEMP_FILE)(this)
 }

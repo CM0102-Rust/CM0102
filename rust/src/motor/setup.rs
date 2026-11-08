@@ -103,7 +103,7 @@ pub(crate) enum LoadStep {
 /// Os passos 4..=0x2d da carga, na ordem da original, e o último (PunditList), que repete o 0x2d.
 pub(crate) const LOAD_STEPS: [LoadStep; 0x2b] = [
     LoadStep::Rotina(0x539750, 0),                                      // 4
-    LoadStep::Rotina(0x667150, 0x2555),                                 // 5 nações-chave
+    LoadStep::Rotina(0x667150, 0x2555),                                 // 5 key nations
     LoadStep::Rotina(0x669140, 0x256c),                                 // 6
     LoadStep::Objeto(0x609, 0x893dc0, G_TACTICS, 0x2581, SubsystemCtorArg::Caminho), // 7 Tactics
     LoadStep::Objeto(0x10, 0x5fb430, G_HUMAN_MANAGER, 0x2596, SubsystemCtorArg::Caminho),  // 8 HUMAN_MANAGER
@@ -129,7 +129,7 @@ pub(crate) const LOAD_STEPS: [LoadStep; 0x2b] = [
     LoadStep::Objeto(0x6a, 0x90d140, G_VIRTUAL_STAFF, 0x2759, SubsystemCtorArg::Sozinho),   // 0x1c VIRTUAL_STAFF
     LoadStep::Objeto(0x19, 0x85b670, G_STADIUM, 0x276e, SubsystemCtorArg::Sozinho),   // 0x1d Stadium
     LoadStep::Objeto(0x1184, 0x5a9cf0, G_FIXTURE_MANAGER, 0x2783, SubsystemCtorArg::Calendario), // 0x1e FIXTURE_MANAGER
-    LoadStep::Rotina(0x669180, 0x2797),                                 // 0x1f competições (key_nation_create_all_comps)
+    LoadStep::Rotina(0x669180, 0x2797),                                 // 0x1f competitions (key_nation_create_all_comps)
     LoadStep::Rotina(0x8386f0, 0x27ab),                                 // 0x20 build_comp_object_table
     LoadStep::Objeto(2, 0x859aa0, G_SQUAD_MANAGER, 0x27c0, SubsystemCtorArg::Caminho),      // 0x21 SQUAD_MANAGER
     LoadStep::Objeto(0xab, 0x7e5fc0, G_RESERVE_COMP, 0x27d5, SubsystemCtorArg::Caminho),   // 0x22 (depois 0x7e61c0)
@@ -139,12 +139,12 @@ pub(crate) const LOAD_STEPS: [LoadStep; 0x2b] = [
     LoadStep::Objeto(0x60, 0x7a5380, G_PLAYER_REGEN, 0x282c, SubsystemCtorArg::Caminho),   // 0x26 PLAYER_REGEN
     LoadStep::Objeto(0x1c, 0x68dbf0, G_MANAGER_MANAGER, 0x2840, SubsystemCtorArg::Caminho),   // 0x27 MANAGER_MANAGER
     LoadStep::Objeto(0x18, 0x72b1d0, G_MEDIA, 0x2855, SubsystemCtorArg::Caminho),   // 0x28 Media
-    LoadStep::Objeto(0x40, 0x5af630, G_FOG_OF_WAR, 0x286a, SubsystemCtorArg::Caminho),   // 0x29 FOG_OF_WAR (confere o de Media)
+    LoadStep::Objeto(0x40, 0x5af630, G_FOG_OF_WAR, 0x286a, SubsystemCtorArg::Caminho),   // 0x29 FOG_OF_WAR (checks the Media one)
     LoadStep::Objeto(0x10, 0x79b580, G_OFFICIALS_MANAGER, 0x287f, SubsystemCtorArg::Caminho),   // 0x2a OfficialsManager
     LoadStep::Objeto(8, 0x84b940, G_SIMULATED_STATS, 0x2894, SubsystemCtorArg::Caminho),      // 0x2b SimulatedStats
     LoadStep::Objeto(0xc, 0x9226c0, G_WEATHER, 0x28a9, SubsystemCtorArg::Sozinho),    // 0x2c Weather
     LoadStep::Objeto(0x688f, 0x8b0ec0, G_TRAINING_MANAGER, 0x28be, SubsystemCtorArg::Caminho), // 0x2d TRAINING_MANAGER
-    LoadStep::Objeto(0xa, 0x7da190, G_PUNDIT_LIST, 0x28d9, SubsystemCtorArg::Idioma),     // 0x2d de novo: PunditList
+    LoadStep::Objeto(0xa, 0x7da190, G_PUNDIT_LIST, 0x28d9, SubsystemCtorArg::Idioma),     // 0x2d again: PunditList
 ];
 
 /// Looks for "<root>cm0102.exe" on each CD drive: with `exigir` (start of load, honouring no-CD patches in the exe)
@@ -163,18 +163,18 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
     let close_search: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_CLOSE);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
-    // o cm0102-1080 vem sem a exigência do CD só na busca do começo: o jne do tipo (0x82aac4, 75 55) virou
-    // nop e o test do achado (0x82ab07, 85 c0) virou xor (31 c0)
+    // cm0102-1080 comes without the CD requirement only in the initial search: the type’s jne (0x82aac4, 75 55) became
+    // nop and the found test (0x82ab07, 85 c0) became xor (31 c0)
     let qualquer_unidade = exigir && *(0x82aac4 as *const u8) == 0x90;
     let always_found = exigir && *(0x82ab07 as *const u8) != 0x85;
     loop {
-        // simplification: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de unidades
+        // simplification: the buffer starts zeroed; the original would only read garbage with more than 200 bytes of units
         let mut list = [0u8; 0x100];
         if units_digit(200, list.as_mut_ptr()) != 0 && list[0] != 0 {
             let mut i = 0usize;
             loop {
                 let raiz = list.as_ptr() as usize + i;
-                // o tipo é pedido sempre (no cm0102-1080 só o salto depois dele virou nop)
+                // the type is always requested (in cm0102-1080 only the jump after it became a nop)
                 let t = kind(raiz);
                 if qualquer_unidade || t == 5 {
                     let mut name = [0u8; 0x104];
@@ -194,7 +194,7 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
                     }
                     close_search(ach);
                 }
-                // simplification: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 unidades
+                // simplification: the original walks with an i8 (steps of 4): it would only pass 127 with more than 32 units
                 i += 4;
                 if list[i] == 0 {
                     break;
@@ -272,7 +272,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
     crate::comparacao::ramo("save carregar jogo");
     let u = |a: usize| *(a as *const u32);
     let sem_memoria = |minimum: i32| u(G_MEMORY_CHECK_ENABLED) != 0 && memoria() < minimum;
-    // as duas datas locais da original (a 2ª não é usada); o destrutor delas é vazio
+    // the original’s two local dates (the 2nd is unused); their destructor is empty
     let (mut data_do_jogo, mut outra_data) = ([0u8; 8], [0u8; 8]);
     data_default(data_do_jogo.as_mut_ptr());
     data_default(outra_data.as_mut_ptr());
@@ -295,7 +295,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         liberar_tabelas();
     }
     load_bench(path, 1);
-    // disco e memória entre os passos: liga a marca e devolve 0
+    // disk and memory between steps: sets the flag and returns 0
     let falta_espaco = |minimo_disco: i32| {
         if disco(0) < minimo_disco {
             *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
@@ -383,7 +383,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         load_fatal_error(0x2427);
     }
     if v < 0x3e045 {
-        // os saves antigos: registros de 0x26 (|v| < 0x3e042) ou 0x27 bytes, convertidos
+        // old saves: records of 0x26 (|v| < 0x3e042) or 0x27 bytes, converted
         let (tam, linha_mem, linha_ler) = if v < 0x3e042 { (0x26u32, 0x242f, 0x2434) } else { (0x27, 0x24bd, 0x24c2) };
         let antigos = reservar(u(G_STAFF_STATE_COUNT).wrapping_mul(tam));
         if antigos == 0 {
@@ -483,20 +483,20 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
                             f(p, path, 0x2710)
                         }
                         SubsystemCtorArg::Calendario => {
-                            // a original empurra um dword com o ano nos 16 bits baixos e sobra de pilha nos
-                            // altos; o construtor só usa a palavra (0x54cfe0 faz & 0xffff)
+                            // the original pushes a dword with the year in the low 16 bits and stack leftover in the
+                            // high ones; the constructor only uses the word (0x54cfe0 does & 0xffff)
                             let f: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> usize = core::mem::transmute(construtor);
                             f(p, *(G_CURRENT_DATE_YEAR as *const u16) as u32, 0, 1)
                         }
                         SubsystemCtorArg::Idioma => {
-                            // a original empurra edx com o byte em dl (o resto é sobra); o construtor só lê o byte
+                            // the original pushes edx with the byte in dl (the rest is leftover); the constructor only reads the byte
                             let f: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(construtor);
                             f(p, *(G_DATABASE_NAMES_LANGUAGE as *const u8) as u32)
                         }
                     }
                 };
                 *(global as *mut usize) = o;
-                // o FOG_OF_WAR confere o global de Media (como na gravação)
+                // FOG_OF_WAR checks the Media global (as in saving)
                 let conferido = if k == 0x29 { u(G_MEDIA) as usize } else { o };
                 if conferido == 0 {
                     setup_warning(linha);
@@ -518,8 +518,8 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
     let mut tmp = [0u8; 8];
     copy_data(G_LAST_AUTOSAVE_DATE, tmp.as_mut_ptr(), G_CURRENT_DATE);
     if *(G_FIFA_TRANSFER_RULES_FEATURE_ENABLED as *const u8) != 0 {
-        // a data de mudança das regras [0xae2330] (palavra baixa: dia; alta: ano) contra a do jogo
-        // [0xae2c90]: ano sem sinal, dia com sinal
+        // the rule-change date [0xae2330] (low word: day; high: year) against the game’s
+        // [0xae2c90]: unsigned year, signed day
         let em_vigor = *(G_FIFA_TRANSFER_RULES_IN_FORCE as *const u8);
         let (dia_jogo, ano_jogo) = (*(G_CURRENT_DATE as *const i16), *(G_CURRENT_DATE_YEAR as *const u16));
         let (dia, ano) = (*(G_TRANSFER_RULE_CHANGE_DATE as *const i16), *(G_TRANSFER_RULE_CHANGE_DATE_YEAR as *const u16));
@@ -583,8 +583,8 @@ pub(crate) unsafe fn undo_holiday_managers() {
     }
 }
 
-// simplification: carrega o save inteiro (apaga e recria os subsistemas, desempacota a pasta temporária);
-// não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela carga da prova do save.
+// simplification: loads the whole save (deletes and recreates the subsystems, unpacks the temporary folder);
+// does not run twice. Original only; the copy carries the branch and is proven by the load in the save proof.
 
 /// Setup.cpp "Error" box (setup_warning) followed by fatal cleanup and exit(-1).
 ///
@@ -687,7 +687,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     let mut holiday = 0u32;
     let mut row = [0u8; 0x3e8];
     let b = row.as_mut_ptr();
-    // sem banco: carrega, aplica, zera as marcas das nações e as contagens, monta as nações-chave
+    // no database: loads, applies, zeroes the nations’ marks and the counts, builds the key nations
     let prepare_bench = |de_frente: bool, error_bench: u32, error_key: u32| {
         if load_bench(dados.as_ptr(), 1) == 0 {
             setup_fatal_error(error_bench);
@@ -901,8 +901,8 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     1
 }
 
-// simplification: cria o jogo inteiro (carrega o banco, sorteia, grava o .qst e libera tudo); não roda
-// duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst) e pelas
+// simplification: creates the whole game (loads the database, rolls, writes the .qst and frees everything); does not run
+// twice. Original only; the copy takes the branch and is proved by the save proof (the .qst) and by the
 // carreiras (o auto_setup.cfg).
 
 /// Save error box: "v%s %s.%s %d (%s)" with Setup.cpp, line and text, translated title and body, message box; the game
@@ -1088,7 +1088,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
         }
     }
     write_bench(l, a4, kind());
-    // disco e memória entre os passos: liga a marca, apaga o caminho de trabalho e devolve 0
+    // disk and memory between the steps: sets the mark, deletes the working path and returns 0
     let falta_espaco = || {
         if disco(0) < 0x19 {
             *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
@@ -1113,8 +1113,8 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
         save_error_box(0x29a3, 0xa81c88, 0xa81c70, 0xa81b5c);
         return 0;
     }
-    // general.dat: (endereço, tamanho, quantidade, linha e texto do erro); o resumo e a nação
-    // padrão saem de buffers locais; os três últimos gravam vetores e conferem a quantidade
+    // general.dat: (address, size, count, line and error text); the summary and the nation
+    // default come from local buffers; the last three write vectors and check the count
     let mut summary = [0u8; 0xf74];
     let mut field = |buf: usize, size: u32, n: u32, row: u32, msg: usize| -> bool {
         if write(buf, size, n, z) == n {
@@ -1155,8 +1155,8 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     close_item(&mut z);
     for (i, step_towards) in SAVE_STEPS.iter().enumerate() {
         let k = i as u32 + 2;
-        // antes do passo 0x11 (depois do AWARD_MANAGER) a original não apaga o caminho e pede
-        // memória >= 25 (e não >= 1)
+        // before step 0x11 (after AWARD_MANAGER) the original does not delete the path and asks
+        // memory >= 25 (and not >= 1)
         if k == 0x11 {
             if disco(0) < 0x19 {
                 *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
@@ -1234,8 +1234,8 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     1
 }
 
-// simplification: grava o save inteiro (apaga o antigo, cria o contêiner, empacota a pasta temporária);
-// não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save.
+// simplification: writes the whole save (deletes the old one, creates the container, packs the temporary folder);
+// does not run twice. Original only; the copy takes the branch and is proven by the save proof.
 
 /// file box filter for saved games: 1 if the container has id 0x16 (.sav), else 2 (ax only); a null path gives the
 /// error box
@@ -1254,8 +1254,8 @@ pub(crate) unsafe extern "C" fn check_saved_game_file(path: usize) -> u32 {
     (id & 0xffff0000) | if id != 0x16 { 2 } else { 1 }
 }
 
-// O id só lê o arquivo e libera o que aloca: as duas rodam lado a lado. Caminho nulo (caixa de
-// erro) só a original.
+// The id only reads the file and frees what it allocates: both run side by side. Null path (box of
+// error) original only.
 
 /// file box filter for quick starts: 1 if the container has id 0x17 (.qst) and the saved version is the exe one, else 2
 /// (ax only)
@@ -1280,9 +1280,9 @@ pub(crate) unsafe extern "C" fn check_quick_start_file(path: usize) -> u32 {
     (v & 0xffff0000) | if v != 0 { 1 } else { 2 }
 }
 
-// simplification: a versão (0x838eb0) abre o general.dat e não o fecha quando dá certo (o ZFILE e o
-// arquivo ficam abertos, como na original): rodar duas vezes deixaria dois. Só a original; a cópia
-// leva o ramo e roda no modo Rust (só a caixa de arquivos chama).
+// simplification: the version (0x838eb0) opens general.dat and does not close it when it succeeds (the ZFILE and the
+// file stay open, as in the original): running twice would leave two. Original only; the copy
+// takes the branch and runs in Rust mode (only the file box calls it).
 
 /// "Load Game Error" box of valid_saved_game_version with line and reason; does not clear [0xb67a34].
 ///
@@ -1298,8 +1298,8 @@ pub(crate) unsafe fn load_version_error_box(row: u32, reason: usize) {
     let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     split(0xa801dc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
-    // a 0x90d130 ignora os argumentos (devolve a versão); o sprintf da original lê nome, extensão,
-    // linha e motivo da pilha que ficou da chamada: aqui vão explícitos
+    // 0x90d130 ignores the arguments (returns the version); the original’s sprintf reads name, extension,
+    // row and reason from the stack left by the call: here they go explicitly
     let s = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     format(0xae24d0, 0x9a8120, s, nome.as_ptr(), ext.as_ptr(), row, reason);
     translate(0xae28bc, 0x9af3e0);
@@ -1344,7 +1344,7 @@ pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
             close_item(&mut z);
             return 0;
         }
-        // o resumo antigo não tem o último campo (+0xf70): a original o zera na pilha
+        // the old summary lacks the last field (+0xf70): the original zeroes it on the stack
         summary[0xf70..0xf74].fill(0);
     } else if read_item(summary.as_mut_ptr() as usize, 0xf74, 1, z) != 1 {
         load_version_error_box(0x3a55, 0xa82408);
@@ -1356,9 +1356,9 @@ pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
     (exe == gravada) as u32
 }
 
-// simplification: abre o item e, quando dá certo, não o fecha (o ZFILE e o arquivo ficam abertos, como na
-// original); nos erros, a caixa. Não roda duas vezes: só a original; a cópia leva o ramo e roda no
-// modo Rust (só a caixa de arquivos, pelo filtro do início rápido, chama).
+// simplification: opens the item and, when it succeeds, does not close it (the ZFILE and the file stay open, as in the
+// original); on errors, the box. Does not run twice: original only; the copy takes the branch and runs in
+// Rust mode (only the file box, through the quick-start filter, calls it).
 
 /// Setup.cpp "Error" box "v%s %s.%s %d" with the line, then clears G_MOUSE_LEFT_BUTTON_DOWN.
 ///
@@ -1414,8 +1414,8 @@ pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
     close_item(&mut z);
 }
 
-// simplification: acrescenta um item ao contêiner; não roda duas vezes. Só a original; a cópia leva o
-// ramo e é provada pela prova do save (o .qst gravado com e sem a leva).
+// simplification: appends an item to the container; it does not run twice. Original only; the copy takes the
+// branch and is proved by the save proof (the .qst written with and without the batch).
 
 /// reads the 2 bytes of fifa_transfer_rules.zip; if the first is 1, the rule in force becomes 5
 /// Original: `load_fifa_transfer_rules` (0x839760, Setup.cpp, cdecl).
@@ -1454,8 +1454,8 @@ pub(crate) unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
     close_item(&mut z);
 }
 
-// simplification: abre e lê o contêiner (aloca o ZFILE) e só roda na carga; segue a regra do bloco do save
-// (arquivo = só a original). A cópia leva o ramo; a etapa de carregar da prova do save a exercita.
+// simplification: opens and reads the container (allocates the ZFILE) and only runs on load; follows the save block rule
+// (file = original only). The copy takes the branch; the load step of the save proof exercises it.
 
 /// strcat: appends fonte to the end of destino.
 ///
@@ -1552,9 +1552,9 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     core::ptr::write_unaligned(summary.add(0xf70) as *mut i32, t2);
 }
 
-// Lado a lado sobre o resumo inteiro (0xf74) e o relógio do tempo de jogo ([0xdd7140], [0xdd7144]),
-// restaurados entre as duas; compara só +0..+0xf6c: o tempo de jogo e o time() (+0xf6c, +0xf70) são
-// relógio (fixos só no modo simulação), como na prova do save.
+// Side by side over the whole summary (0xf74) and the match-time clock ([0xdd7140], [0xdd7144]),
+// restored between the two; compares only +0..+0xf6c: the match time and time() (+0xf6c, +0xf70) are
+// clock (fixed only in simulation mode), as in the save proof.
 
 /// releases the screens, destroys the subsystems held in globals (destructor + delete, free, virtual destructor) in the
 /// original order, deletes the *.tmp files, frees the database tables, resets the game date and clears three flags;
@@ -1600,7 +1600,7 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
             }
         }
     };
-    // destrutor virtual (vtable[0], com 1 = apagar) + global zerado
+    // virtual destructor (vtable[0], with 1 = delete) + zeroed global
     let virtual_ = |g: usize| {
         let p = *(g as *const usize);
         if p != 0 {
@@ -1630,7 +1630,7 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
     objetos(&[(G_NATIONAL_TEAMS, 0x76a710), (G_VIRTUAL_STAFF, 0x90d2e0), (G_UEFA_SEEDING, 0x903570), (G_CONMEBOL_SEEDING, 0x5a8f60),
               (G_STAFF_RECORDS, 0x8687c0), (G_MATCH_STATS, 0x7293c0), (G_PLAYER_STATS, 0x7c0d00), (G_HOST_COUNTRY, 0x58e330),
               (G_FIXTURE_MANAGER, 0x5aa0d0), (G_HUMAN_MANAGER, 0x5fb730), (G_SCOUT_MANAGER, 0x7f6aa0), (G_NEWS, 0x785d00)]);
-    // [0xdd7ef0]: só o delete, sem destrutor
+    // [0xdd7ef0]: only the delete, no destructor
     let p = *(G_SQUAD_MANAGER as *const usize);
     if p != 0 {
         erase(p);

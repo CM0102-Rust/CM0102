@@ -231,20 +231,20 @@ pub(crate) unsafe extern "thiscall" fn send_club_international_report_news(this:
     let data_of_match: unsafe extern "C" fn(usize, usize, *mut u8) = core::mem::transmute(FN_WRITE_MATCH_RECORD_TO_NEWS);
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     // 0x945333 (qsort): push 0x778ef0; push 4; push conta; push elenco; add esp, 0x10 -> cdecl; 0x77bbe0: push 0; push
-    // 0x24; lea ecx, notícia -> thiscall; 0x785790: push valor; push índice; lea ecx, notícia -> thiscall, ret 8;
-    // 0x7e4750: push &registro; push clube; push jogo; add esp, 0xc -> cdecl; 0x7e4de0: push &índice; push &notícia;
-    // push &registro; add esp, 0xc -> cdecl; 0x7861e0: push clube; push &notícia; mov ecx, [0xb7431c] -> thiscall, ret 8
+    // 0x24; lea ecx, news -> thiscall; 0x785790: push value; push index; lea ecx, news -> thiscall, ret 8;
+    // 0x7e4750: push &record; push club; push match; add esp, 0xc -> cdecl; 0x7e4de0: push &index; push &news;
+    // push &record; add esp, 0xc -> cdecl; 0x7861e0: push club; push &news; mov ecx, [0xb7431c] -> thiscall, ret 8
     sort(squad as usize, q as i32, 4, 0x778ef0);
     if q <= 0 {
         return;
     }
     let side = (clube != read_usize(jogo + 0x1c)) as usize;
-    let mut record = [0u8; 0x20]; // a Data em +0 (0x54a110 na entrada), o resto a 0x7e4750 preenche
+    let mut record = [0u8; 0x20]; // the Date at +0 (0x54a110 on entry), the rest is filled by 0x7e4750
     let reg = record.as_mut_ptr() as usize;
     let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     data_default(reg);
     let mut montado = false;
-    let mut noticia = [0u32; 0x38]; // a notícia local (0xe0 bytes)
+    let mut noticia = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = noticia.as_mut_ptr() as usize;
     let mut i: i8 = 1;
     loop {
@@ -269,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn send_club_international_report_news(this:
                         codigos[k] = match_performance_code(result, side, other);
                         players[k] = other;
                         if other == destaque {
-                            // o destaque vai para a frente (troca com o primeiro, código junto)
+                            // the highlight goes to the front (swap with the first, code together)
                             players[k] = players[0];
                             players[0] = other;
                             codigos.swap(0, k);
@@ -303,7 +303,7 @@ pub(crate) unsafe extern "thiscall" fn send_club_international_report_news(this:
             }
             pr(how_many as i32 as u32);
             pr(read_usize(read_usize(first + 0x39)) as u32);
-            // os de depois do primeiro, pelo código, do maior para o menor (até a 3ª posição e 4 jogadores)
+            // the ones after the first, by code, from largest to smallest (up to the 3rd position and 4 players)
             let end = how_many as i32 - 1;
             let mut a: i8 = 1;
             if end > 1 {
@@ -375,9 +375,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let erase: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-    // 0x7875e0: push clube; mov ecx, [0xb7431c] -> thiscall, ret 4; 0x76d560: push jogo; push seleção; mov ecx, this ->
+    // 0x7875e0: push club; mov ecx, [0xb7431c] -> thiscall, ret 4; 0x76d560: push match; push national team; mov ecx, this ->
     // thiscall, ret 8; 0x77bbe0 / 0x785790 / 0x68d1b0 / 0x68d040: lea ecx (ou mov ecx, lista) -> thiscall; 0x7861e0:
-    // push clube; push &notícia; mov ecx, [0xb7431c] -> thiscall, ret 8; 0x944c94 (delete): push; add esp, 4 -> cdecl
+    // push club; push &news; mov ecx, [0xb7431c] -> thiscall, ret 8; 0x944c94 (delete): push; add esp, 4 -> cdecl
     let mut list = 0usize;
     let mut how_many_adv: i16 = 0;
     if adversarios != 0 {
@@ -476,7 +476,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     // 0x68d020 / 0x68d040 / 0x68d1b0: lea ecx (ou mov ecx, bloco) -> thiscall; 0x944cf1 (new): push 0xe; add esp, 4 ->
     // cdecl; 0x68d0d0: push 4; push &valor; mov ecx, lista -> thiscall, ret 8; 0x5409b0 / 0x53b4f0: push; add esp, 4 ->
-    // cdecl; 0x549ef0: push +0x28; push +0x2a; lea ecx -> thiscall, ret 8; 0x54c5b0: push n; push &saída; mov ecx, data
+    // cdecl; 0x549ef0: push +0x28; push +0x2a; lea ecx -> thiscall, ret 8; 0x54c5b0: push n; push &output; mov ecx, date
     // -> thiscall, ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24
     let ensaio = (*core::ptr::addr_of!(FIXTURE_OPPONENTS_PLAN)).is_some();
     let mut local = [0u8; 16];
@@ -498,8 +498,8 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
             append(nl, v, 4);
         }
     };
-    // o 9º argumento da 0x5acbe0: o dword do argumento `jogo` na pilha (ou do 0x53b4f0 gravado em cima) com o byte baixo
-    // trocado pelo +0x40 do jogo
+    // the 9th argument of 0x5acbe0: the dword of the `jogo` argument on the stack (or of 0x53b4f0 written over it) with the low byte
+    // replaced by the match’s +0x40
     let mut cell: usize = jogo;
     let home = jogo + 0x1c;
     if read_usize(read_usize(home) + 0x53) == read_usize(national_team + 0x53) {
@@ -688,8 +688,8 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nacao: usize, t: i8, data: 
     let pode_mudar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_CAN_CHANGE_SQUAD);
     // 0x53b620: push byte +0x3d; add esp, 4 -> cdecl; 0x62c400: push j; mov ecx, [0xb63d28] -> thiscall ret 4 (al);
     // 0x7a7eb0: push j; mov ecx, [0xb7434c] -> stdcall ret 4 (al); 0x547d30: push clube; push j; add esp, 0xc (junto
-    // com o da 0x53b3d0) -> cdecl; 0x4cf5a0: push j; mov ecx, [0xae1050] -> thiscall ret 4; 0x55d270: push 0; push 1;
-    // push [p + 0x14]; push j; mov ecx, [0xae28f0] -> thiscall ret 0x10; 0x76db00: 6 pushes (nação, 0, j, 0, 0, 0);
+    // with that of 0x53b3d0) -> cdecl; 0x4cf5a0: push j; mov ecx, [0xae1050] -> thiscall ret 4; 0x55d270: push 0; push 1;
+    // push [p + 0x14]; push j; mov ecx, [0xae28f0] -> thiscall ret 0x10; 0x76db00: 6 pushes (nation, 0, j, 0, 0, 0);
     // mov ecx, this -> thiscall ret 0x18
     if j == 0 || kind_ok(read_u8(j + 0x3d) as u32) == 0 || lesao(read_usize(G_INJURY), j) != 0 {
         return false;
@@ -711,8 +711,8 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nacao: usize, t: i8, data: 
         let mut contract_ok = true;
         if k == read_usize(KEY_CLUB_COMP_FRIENDLY) || k == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) || k == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
             if other_nation(c) {
-                // amistoso, B e sub-21 internacionais: clube de outra nação só com reputação (+0x80) até 0.8 da do
-                // adversário (o mandante +0x1c é o próprio time: o visitante +0x20); fora dos amistosos, não
+                // international friendlies, B and under-21: a club from another nation only with reputation (+0x80) up to 0.8 of the
+                // opponent (the home team +0x1c is the team itself: the away team +0x20); outside friendlies, no
                 if k != read_usize(KEY_CLUB_COMP_FRIENDLY) {
                     return false;
                 }
@@ -722,7 +722,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nacao: usize, t: i8, data: 
                     return false;
                 }
             }
-            // clube com jogo (a tabela +0x24 pelo id do clube) e contrato com +0x3d acima de −10: não
+            // club with a match (table +0x24 by club id) and contract with +0x3d above −10: no
             if read_u8(read_usize(this + 0x24).wrapping_add(read_usize(c))) != 0 {
                 let x = contrato(read_usize(G_CONTRACT_MANAGER), j);
                 if x != 0 && (read_u8(contrato(read_usize(G_CONTRACT_MANAGER), j) + 0x3d) as i8) > -10 {
@@ -735,7 +735,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nacao: usize, t: i8, data: 
         } else if other_nation(c) && read_usize(c + 0x57) != 0
             && (read_i16(read_usize(p + 0x14) + 0x69) as f64) < read_i16(read_usize(c + 0x57) + 0x69) as f64 * 0.7
         {
-            // nas outras competições, clube de outra nação cuja liga (+0x57) tem +0x69 acima da da competição / 0.7
+            // in the other competitions, a club from another nation whose league (+0x57) has +0x69 above the competition’s / 0.7
             return false;
         }
         if suspenso(read_usize(G_DISCIPLINE), j, read_usize(p + 0x14), 1, 0) != 0 {
@@ -760,7 +760,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nacao: usize, t: i8, data: 
             return false;
         }
     }
-    // com a marca, só depois da data do elenco do tipo (ano +2 sem sinal, dia +0 com sinal)
+    // with the flag, only after the squad date of the type (year +2 unsigned, day +0 signed)
     let after = |a: usize| {
         let (ya, da) = (read_u16(data + 2), read_i16(data));
         let (yr, dr) = (read_u16(a + 2), read_i16(a));
@@ -778,9 +778,9 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nacao: usize, t: i8, data: 
     }
     let nat = read_usize(j + 0x1a);
     if nat != nacao {
-        // de outra nação: sem time, sem a marca +0x22, sem o bit 2 do +0xc do registro de 79 bytes, com a segunda
-        // nação (+0x1e) nesta; entra se esta tiver +0x8e maior, ou (clube da mesma confederação +0x71 ou sem clube)
-        // com +0x85 de 5 para cima
+        // from another nation: no team, no +0x22 mark, no bit 2 of +0xc in the 79-byte record, with the second
+        // nation (+0x1e) in this one; it gets in if this one has a higher +0x8e, or (club in the same confederation +0x71 or no club)
+        // with +0x85 of 5 or more
         if tj != 0 || read_u8(j + 0x22) != 0 || read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(j).wrapping_mul(0x4f)) + 0xc) & 2 != 0
             || read_usize(j + 0x1e) != nacao || nat == 0
         {
@@ -817,7 +817,7 @@ pub(crate) unsafe fn collect_squad_candidates(this: usize, nacao: usize, t: i8, 
             for _ in ini..fim {
                 let j = read_usize(*cursor);
                 if is_squad_candidate(this, nacao, t, data, p, squad, reg, lim, j) {
-                    // simplification: a original grava em local_32c[(char) n]; de 128 em diante ela escreveria antes do vetor
+                    // simplification: the original writes to local_32c[(char) n]; from 128 on it would write before the vector
                     if (n as i8) >= 0 {
                         cand[n as usize] = j;
                     }
@@ -886,9 +886,9 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
     // 0x549ef0: push +0x28; push +0x2a; lea ecx, saida -> thiscall ret 8 (palavras); 0x54c8e0: push n; push saida; mov
     // ecx, data -> thiscall ret 8; 0x417c10: push origem; push saida; lea ecx, destino -> thiscall ret 8; 0x54a110: lea
     // ecx -> thiscall; 0x944cf1 (new): push 0xe; add esp, 4 -> cdecl; 0x68d020: mov ecx, bloco -> thiscall ret 0;
-    // 0x68d0d0: push 0x12; push item; mov ecx, [this] -> thiscall ret 8; 0x76d880: push nação; mov ecx, this ->
+    // 0x68d0d0: push 0x12; push item; mov ecx, [this] -> thiscall ret 8; 0x76d880: push nation; mov ecx, this ->
     // thiscall ret 4; 0x76d430: 4 pushes (partida, tipo, +0x42, +0x43) -> stdcall ret 0x10; 0x600a50: 5 pushes (time,
-    // 0, 1, 0, 0); add esp -> cdecl; 0x5fd6b0: push 0; push técnico; mov ecx, [0xb63c98] -> thiscall ret 8 (al);
+    // 0, 1, 0, 0); add esp -> cdecl; 0x5fd6b0: push 0; push manager; mov ecx, [0xb63c98] -> thiscall ret 8 (al);
     // 0x5409b0: push; add esp, 4 -> cdecl; 0x62ed70: push j; mov ecx, [0xb63d28] -> thiscall ret 4; 0x896c60: push 1;
     // push time; push j; push elenco; mov ecx, [0xde1d08] -> thiscall ret 0x10; 0x76f1a0: 3 pushes (elenco, time,
     // partida); mov ecx, this -> ret 0xc; 0x6e2000: 15 pushes; add esp, 0x3c -> cdecl; 0x5b7d20: push +0x61; add esp,
@@ -931,7 +931,7 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
             let x = data_new(p88c, read_u16(p + 0x2a) as u32, read_u16(p + 0x28) as u32);
             copy(r + 0x3a, p87c, x);
         } else {
-            // a nação de cada lado (+0x53 do time) e a casa dela no vetor [this + 0x36]
+            // each side’s nation (+0x53 of the team) and its cell in the vector [this + 0x36]
             let nac = |o: usize| read_usize(read_usize(p + o) + 0x53);
             let home = |o: usize| read_usize(nac(o)).wrapping_add(read_usize(this + 0x36));
             if read_usize(p) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) {
@@ -986,7 +986,7 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
     }
     let size = r + 0x42;
     let codigos = squad_position_codes(read_u8(size));
-    // saem do elenco: os de outro time; os com a marca; no tipo 0 com o bit 1 de +0x4e da partida, os sem ela
+    // leave the squad: those from another team; those with the mark; in type 0 with bit 1 of the match’s +0x4e, those without it
     for k in 0..50 {
         let s = elenco + 0xd7 + 4 * k;
         let j = read_usize(s);
@@ -1019,7 +1019,7 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
     pick(cand.as_ptr() as usize, n as u32, codigos.as_ptr() as usize, (mode & !0xff) | read_u8(size) as u32, 0,
         out.as_mut_ptr() as usize, mode, elenco, 0, 0, 0, 0, 0, 0, 0);
     let mut i = 0usize;
-    // simplification: a original não limita a 50 (o jogo pede até 26)
+    // simplification: the original does not limit to 50 (the game asks for up to 26)
     while (i as i32) < read_u8(size) as i8 as i32 && i < 50 {
         let j = out[i];
         if j != 0 && codigos[i] & mask(read_usize(j + 0x61)) != 0 {
@@ -1028,7 +1028,7 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
             }
             let tj = read_usize(j + 0x24);
             if tj != elenco && tj != 0 {
-                // de outro time: sai da vaga de lá (com a permissão, a marca de convocado do tipo dele zera) e da tática
+                // from another team: leaves the slot there (with permission, the call-up mark of its type is zeroed) and the tactic
                 let v = ((read_u8(j + 0x5e) as i8 as i32 & 8) >> 3) as u32;
                 let c3: u8 = if second(tj) == 0 { (v != 0) as u8 } else if v != 0 { 1 } else { 2 };
                 let mut c = read_usize(j + 0x24) + 0xd7;
@@ -1046,7 +1046,7 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
                 cursor = c;
                 remove(tactic(), read_usize(j + 0x24), j, v, 1);
             } else if tj == elenco && read_u8(j + 0x5e) & marca == 0 {
-                // já do time sem a marca: sai das vagas da tática do time (time da tática invertido)
+                // already of the team without the mark: leaves the team’s tactic slots (tactic team reversed)
                 let bz = (time == 0) as u32;
                 let c3: u8 = if second(elenco) == 0 { (bz != 0) as u8 } else if bz != 0 { 1 } else { 2 };
                 for v in 0..20 {
@@ -1054,7 +1054,7 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
                         continue;
                     }
                     clear_slot(tactic(), read_usize(j + 0x24), v, bz);
-                    // a original passa como jogador o dword do último ponteiro de percurso (cursor): reproduzido
+                    // the original passes as the player the dword of the last traversal pointer (cursor): reproduced
                     if c3 != 0 && pode_mudar(this, read_usize(read_usize(j + 0x24) + 0x53), c3 as u32, read_usize(cursor), 0, 0, 0) != 0 {
                         write_u8(reg + 0x43 + c3 as usize * 0x14, 0);
                         break;
@@ -1166,7 +1166,7 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
     let nacional = read_usize(player + 0x24);
     if nacional != 0 {
         let sem_bit = (read_u8(player + 0x5e) & 4 == 0) as u32;
-        // simplification: a original empurra o lado com os 24 bits altos de ecx sobrando; a 0x5acbe0 só lê o byte
+        // simplification: the original pushes the side with the high 24 bits of ecx left over; 0x5acbe0 only reads the byte
         let games: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 =
             core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
         let n = games(read_usize(G_FIXTURE_MANAGER), read_usize(plo) as u32, read_usize(plo + 2) as u32, read_usize(phi) as u32, read_usize(phi + 2) as u32,
@@ -1370,9 +1370,9 @@ pub(crate) unsafe fn national_teams_list_items(list: usize) -> Vec<usize> {
     v
 }
 
-// simplification: a 0x775580 acrescenta nós (aloca): só a original roda. O plano, feito antes pelos nós (sem mexer nos
-// cursores): as competições das convocações que ainda não estão em `saida`, na ordem, sem repetir; depois, a devolução
-// é quantas e os últimos itens de `saida` (4 bytes cada) são elas.
+// simplification: 0x775580 appends nodes (allocates): only the original runs. The plan, made earlier through the nodes (without touching the
+// cursors): the call-up competitions not yet in `saida`, in order, without repeats; then, the return value
+// is how many and the last items of `saida` (4 bytes each) are them.
 
 
 
@@ -1548,7 +1548,7 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
         }
     }
     crate::comparacao::ramo("cpx_13 noticia do convocado");
-    let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construct(n, 0x21, 0);
     write(n, 0, read_usize(player) as u32);
@@ -1585,8 +1585,8 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
 
 
 
-// simplification: a virtual +0x44 da copa acrescenta registros às pessoas e a notícia vai às caixas dos técnicos (alocam): só
-// a original; a cópia leva o ramo.
+// simplification: the cup’s virtual +0x44 appends records to people and the news goes to the managers’ inboxes (they allocate): only
+// the original; the copy takes the branch.
 
 
 /// O ensaio do comparador da 0x76b600: a cópia roda sem o ranking da FIFA (0x58cf70, acrescenta pontos ao histórico),
@@ -1723,7 +1723,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
                 *((person + staff::INT_APPS) as *mut u8) = (*((person + staff::INT_APPS) as *const u8)).wrapping_add(1); // cpw12: um jogo
                 *((person + staff::INT_GOALS) as *mut u8) = (*((person + staff::INT_GOALS) as *const u8)).wrapping_add(*((slot + 0x21) as *const u8)); // cpw12: os gols
                 if !INTERNATIONAL_RESULT_DRY_RUN {
-                    // a original empurra o edx com o curto dos jogos embaixo e o alto de 55 × id da nação
+                    // the original pushes edx with the short of the matches below and the high part of 55 × nation id
                     let id_nation = read_usize(read_usize(clube + club::NATION)) as u32;
                     let n = core::ptr::read_unaligned(games) as u16 as u32;
                     game_by_national_team(read_usize(G_TRANSFER_MANAGER), person, (id_nation.wrapping_mul(0x37) & 0xffff_0000) | n);
@@ -1754,7 +1754,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
         let destaque_id = read_usize((m + 0x625 * lado + 0x190) .wrapping_add((0x49 * destaque_k) as usize));
         let destaque = read_usize(G_STAFF_TABLE).wrapping_add(destaque_id.wrapping_mul(staff::SIZE));
         if !INTERNATIONAL_RESULT_DRY_RUN {
-            // simplification: a original empurra a conta num dword da local com só o byte de baixo gravado; a 0x7706c0 lê o byte
+            // simplification: the original pushes the count in a dword of the local with only the low byte written; 0x7706c0 reads the byte
             noticia(this, clube, p, m, destaque, list.as_mut_ptr(), q as u32);
         }
     }
@@ -1917,8 +1917,8 @@ pub(crate) unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: u
     let repetidos: unsafe extern "stdcall" fn(usize) = core::mem::transmute(FN_NATIONAL_TEAMS_REMOVE_DUPLICATE_SQUAD_ENTRIES);
     let nacao = read_usize(clube + club::NATION);
     let rec = nation_record(this, nacao);
-    // simplification: a original empurra o dword da local com o tipo só no byte de baixo (os outros são sobra de pilha); as
-    // chamadas leem só o byte
+    // simplification: the original pushes the local’s dword with the type only in the low byte (the others are stack leftovers); the
+    // calls read only the byte
     let kind = call_up_type(clube, p);
     let inj = lesao(read_usize(G_INJURY), p);
     if inj != 0 && read_u8(inj) == 0x51 {
@@ -1955,9 +1955,9 @@ pub(crate) unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: u
     remove(this, nacao, kind as u32, p);
     let a = (slot + 0x45) as *mut u8;
     *a = (*a).wrapping_add(1);
-    // a base vai no eax da original: o endereço da vaga com o byte de baixo trocado por (tipo == 2)
+    // the base goes in the original’s eax: the slot address with the low byte replaced by (tipo == 2)
     let level = level_of(p, rec, (slot as u32 & !0xff) | (kind == 2) as u32);
-    // a local do nível é a do registro com o byte de baixo trocado (só o byte é lido)
+    // the level’s local is the record’s with the low byte replaced (only the byte is read)
     let level = (rec as u32 & !0xff) | level as u32;
     let pede = 'decide: {
         if human(clube, 0, 1, 0, 0) == 0 {
@@ -2092,7 +2092,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_replacement_needed_ne
     write(n, 5, um);
     set_news_injury_severity(n, p);
     write(n, 7, 0);
-    // simplification: a marca vai num dword da local com só o byte de baixo gravado; a 0x53c590 lê só o byte
+    // simplification: the mark goes in a dword of the local with only the low byte written; 0x53c590 reads only the byte
     write(n, 8, count(time, marca, 0) as i8 as i32 as u32);
     write(n, 9, level as u8 as i8 as i32 as u32);
     write(n, 0xa, kind as u8 as i8 as i32 as u32);
@@ -2169,7 +2169,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
         }
     }
     let s = kind as u8;
-    // a marca vai na local [esp+0x1c] só no byte de baixo (o resto é sobra de pilha); a 0x53c590 lê só o byte
+    // the flag goes in the local [esp+0x1c] only in the low byte (the rest is stack leftover); 0x53c590 reads only the byte
     let (time, segundo, marca) = match s {
         0 => (principal(nacao), 0u32, 4u32),
         1 => (principal(nacao), 1, 8),
@@ -2241,7 +2241,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
         let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
         let search: unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, u32, i32, i32, i32, u32, i32, u32, u32, u32, u32, usize, u32, i32, u32, u32) -> u16 =
             core::mem::transmute(FN_FIXTURE_MANAGER_SCAN_FIXTURES);
-        // as vagas da data que a busca lê (a palavra do ano, o dword do dia, o byte da fatia), como a original monta
+        // the date slots the search reads (the year word, the day dword, the slice byte), as the original builds them
         let mut v_year: u32 = ano as u32;
         let mut v_day: u32 = today;
         let mut slice: u8 = 0;
@@ -2324,15 +2324,15 @@ pub(crate) unsafe fn has_too_many_called_up(this: usize, clube: usize, a: usize,
         let (dia, ano) = national_teams_date_day_year(e);
         k = k.wrapping_add(1);
         if a_ano > ano || (a_ano == ano && a_dia > dia) {
-            continue; // antes da janela
+            continue; // before the window
         }
         if b_ano < ano || (b_ano == ano && b_dia < dia) {
-            break; // depois da janela: a lista está em ordem
+            break; // after the window: the list is in order
         }
         crate::comparacao::ramo("cpp_12 convocado na janela");
         sum = sum.wrapping_add(*((e + 8) as *const i8));
     }
-    sum > 2 // mais de dois convocados
+    sum > 2 // more than two called up
 }
 
 /// friendly fixture: 1; otherwise 0 when the home or away club (a plain club) has more than 2 players on call-up from a
@@ -2351,8 +2351,8 @@ pub(crate) unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, jo
     let more_days: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let amistosa: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     let (mut d, mut a, mut b) = ([0u8; 8], [0u8; 8], [0u8; 8]);
-    // simplification: a original empurra as palavras +0x2a e +0x28 com o alto do registro (lixo); a 0x549ef0 só lê as
-    // palavras baixas: a cópia passa as palavras limpas.
+    // simplification: the original pushes the words +0x2a and +0x28 with the high part of the register (garbage); 0x549ef0 only reads the
+    // low words: the copy passes the clean words.
     data_new(d.as_mut_ptr(), *((jogo + 0x2a) as *const u16) as u32, *((jogo + 0x28) as *const u16) as u32);
     minus_days(d.as_mut_ptr(), a.as_mut_ptr(), 1);
     more_days(d.as_mut_ptr(), b.as_mut_ptr(), 1);
@@ -2365,7 +2365,7 @@ pub(crate) unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, jo
     }
     if has_too_many_called_up(this, read_usize(jogo + 0x20), pa, pb) {
         crate::comparacao::ramo("cpp_12 visitante convocado");
-        return 0; // o visitante com convocados demais
+        return 0; // the away club with too many called up
     }
     1
 }
@@ -2381,7 +2381,7 @@ pub(crate) unsafe extern "C" fn compare_call_up_records_by_date(a: usize, b: usi
     let after: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let (d0, d1) = (read_usize(b) as u32, read_usize(b + 4) as u32);
     let r = if before(a, d0, d1) != 0 { -1 } else { (after(a, d0, d1) != 0) as i32 };
-    r // a convocação mais cedo primeiro
+    r // the earliest call-up first
 }
 
 /// with nation and finals both non-null, appends the pair to the new qualifiers list (+0x28)
@@ -2441,7 +2441,7 @@ pub(crate) unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -
     let nova = read_u32_as_usize(comp) as u32;
     let mut p = NationCurrentCompUpdate { vaga, nova: Some(nova), fila, na_fila: None, avisa: read_u32_as_usize(G_MANAGER_MANAGER) != 0 };
     if atual != 0xffff_ffff {
-        let r = read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add((atual as usize).wrapping_mul(107)); // registros de 107 bytes
+        let r = read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add((atual as usize).wrapping_mul(107)); // 107-byte records
         if r != 0 && is_major_finals(read_u32_as_usize(r) as u32) {
             return NationCurrentCompUpdate { vaga, nova: None, fila, na_fila: Some(nova), avisa: false };
         }
@@ -2535,7 +2535,7 @@ pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, dat
             continue;
         }
         for fatia in 0..3u32 {
-            // a original empurra a fatia num dword de pilha com o alto de lixo e o grupo no al: a 0x5abf10 só lê os bytes
+            // the original pushes the slice in a stack dword with a garbage high part and the group in al: 0x5abf10 only reads the bytes
             let list = get_fixture_list_for_date(data, fatia, *((e + 0x14) as *const u8) as u32);
             if list == 0 {
                 continue;
@@ -2554,7 +2554,7 @@ pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, dat
                         }
                     } else {
                         let comp = read_u32_as_usize(jogo + 0x14);
-                        // o visitante +0x60 é lido sem conferir o ponteiro (como a original)
+                        // the away side +0x60 is read without checking the pointer (like the original)
                         let code = if casa != 0 && (read_u32_as_usize(casa + 0x57) == comp || read_u32_as_usize(fora + 0x60) == comp) { 1 } else { 2 };
                         crate::comparacao::ramo("cpo_13 clubes com jogo");
                         mark_club_code(this, casa, n, code); // o mandante
@@ -2603,7 +2603,7 @@ pub(crate) unsafe fn end_call_ups(this: usize, passa: impl Fn(usize) -> bool) {
         if passa(r) {
             let mut data = [0u8; 8];
             let day = *more_days(G_CURRENT_DATE, data.as_mut_ptr(), 1);
-            core::ptr::write_unaligned((r + 0x10) as *mut u16, day); // o dia de amanhã
+            core::ptr::write_unaligned((r + 0x10) as *mut u16, day); // tomorrow’s day
         }
         r = next(read_usize(this));
     }
@@ -2676,7 +2676,7 @@ pub(crate) unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
             loop {
                 let e = read_usize(rec).wrapping_add(9usize.wrapping_mul(k as i32 as usize));
                 if before(e, *(G_CURRENT_DATE as *const u32), *(G_CURRENT_DATE_LEAP as *const u32)) != 0 {
-                    vencidas = vencidas.wrapping_add(1); // uma vencida
+                    vencidas = vencidas.wrapping_add(1); // one won
                 }
                 k = k.wrapping_add(1);
                 if k >= count(rec) {
@@ -2750,7 +2750,7 @@ pub(crate) unsafe fn remove_from_tactics(team: usize, p: usize) {
 /// [pt] A pessoa sai da seleção: sem time (+0x24), sem a marca +0x28 e só com os bits de clube (& 3) em +0x5e.
 pub(crate) unsafe fn clear_national_call_up(p: usize) {
     core::ptr::write_unaligned((p + 0x24) as *mut usize, 0);
-    *((p + 0x28) as *mut u8) = 0; // a marca de convocado
+    *((p + 0x28) as *mut u8) = 0; // the call-up mark
     *((p + 0x5e) as *mut u8) &= 3;
 }
 
@@ -2832,7 +2832,7 @@ pub(crate) unsafe extern "thiscall" fn release_overage_u21_players(this: usize, 
     for c in 0..50usize {
         let slot = team + 0xd7 + 4 * c;
         let p = read_usize(slot);
-        if p != 0 && *((p + 0x18) as *const i8) > 0x15 { // acima de 21 anos
+        if p != 0 && *((p + 0x18) as *const i8) > 0x15 { // over 21 years old
             remove_from_tactics(team, p);
             clear_national_call_up(p);
             core::ptr::write_unaligned(slot as *mut usize, 0);
@@ -2873,7 +2873,7 @@ pub(crate) unsafe extern "thiscall" fn clear_current_competition(this: usize, na
         crate::comparacao::ramo("seleção a competição seguinte");
         core::ptr::write_unaligned(current as *mut i32, v); // a seguinte vira a atual
         *(next as *mut i32) = -1;
-        notify_manager_manager(nacao); // o aviso da competição seguinte
+        notify_manager_manager(nacao); // the notice of the next competition
     }
 }
 
@@ -2921,7 +2921,7 @@ pub(crate) unsafe extern "thiscall" fn release_competitions_of_continent(this: u
                 crate::comparacao::ramo("seleção continente a seguinte vira a atual");
                 *((read_usize(this + 4) + 0x6e * i as usize + 4) as *mut i32) = v;
                 *((read_usize(this + 8) + 4 * i as usize) as *mut i32) = -1;
-                notify_manager_manager(nacao); // o aviso do continente
+                notify_manager_manager(nacao); // the continent warning
             }
         }
         i += 1;
@@ -2930,7 +2930,7 @@ pub(crate) unsafe extern "thiscall" fn release_competitions_of_continent(this: u
 
 /// Comparador: o aviso 0x6a3770 sorteia e mexe nos técnicos (não pode rodar duas vezes): só a original; a prova é a
 /// carreira e o ramo da cópia no modo Rust.
-// simplification: só a original (4 chamadas na carreira); comparar pedia separar a decisão do aviso.
+// simplification: original only (4 calls in the career); comparing would require separating the decision from the warning.
 
 /// in the pool of the level, the first eligible player of the nation who plays a position of the one leaving (0x5b7d20)
 /// is called up (0x776250, leaving another squad first through 0x7762f0) with the news (0x76fd10); nobody: clears the
@@ -2999,7 +2999,7 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: u
         if suspenso(*(G_DISCIPLINE as *const usize), q, comp, 1, 0) != 0 {
             continue;
         }
-        if positions(read_usize(q + 0x61)) as u8 & mask & 0x7f == 0 { // as posições de quem sai
+        if positions(read_usize(q + 0x61)) as u8 & mask & 0x7f == 0 { // the positions of those leaving
             continue;
         }
         let team = read_usize(q + 0x24);
@@ -3023,7 +3023,7 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: u
         }
         crate::comparacao::ramo("substituto convocado");
         por(this, nacao, kind, q);
-        *(slot as *mut u8) = read_u8(slot).wrapping_sub(1); // uma vaga a menos
+        *(slot as *mut u8) = read_u8(slot).wrapping_sub(1); // one slot fewer
         noticia(this, q, nacao, kind);
         return;
     }
@@ -3032,7 +3032,7 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: u
 
 /// Comparador: a entrada no elenco sai com a notícia (0x76fd10) e a saída do outro mexe na tática: só a original
 /// (a 0x776250 e a 0x7762f0 que ela chama passam pelos comparadores delas).
-// simplification: só a original; a prova é a carreira (140 chamadas) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the career (140 calls) and the copy’s branch in Rust mode.
 
 
 
@@ -3088,7 +3088,7 @@ pub(crate) unsafe fn add_to_reserves(this: usize, p: usize, rec: usize, sub: u32
         let mut j = last;
         while j >= ini {
             if rating < slot_person_rating(slot(j)) {
-                pos = j + 1; // depois das de nota maior
+                pos = j + 1; // after the ones with a higher rating
                 break;
             }
             j -= 1;
@@ -3138,7 +3138,7 @@ pub(crate) unsafe extern "thiscall" fn build_selection_pools(this: usize) {
     while n < *(G_STAFF_COUNT as *const i32) {
         let can = read_usize(p + 0x1a) != 0
             && read_usize(p + 0x61) != 0
-            && *((p + 0x18) as *const i8) > 0x10 // mais de 16 anos
+            && *((p + 0x18) as *const i8) > 0x10 // over 16 years old
             && (read_usize(p + 0x24) == 0 || read_u8(p + 0x28) == 0xb)
             && player(read_u8(p + 0x3d) as u32) != 0
             && read_usize(p + 0x39) != 0;
@@ -3195,7 +3195,7 @@ pub(crate) unsafe extern "C" fn compare_by_club(a: usize, b: usize) -> i32 {
         return -1;
     }
     if cx != cy {
-        return (*(cx as *const i32)).wrapping_sub(*(cy as *const i32)); // o id do clube
+        return (*(cx as *const i32)).wrapping_sub(*(cy as *const i32)); // the club id
     }
     let (mx, my) = (read_u8(x + 0x5e), read_u8(y + 0x5e));
     if mx & 4 != 0 && my & 8 != 0 {
@@ -3362,7 +3362,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_daily_update(this: usize, 
         free(read_usize(this + 0x24));
         write_usize(this + 0x24, 0);
     }
-    // simplification: a original empurra o ano (palavra) e a semana com sobra de registrador em cima; a 0x549f70 lê as palavras
+    // simplification: the original pushes the year (word) and the week with register leftovers on top; 0x549f70 reads the words
     let year = read_u16(today + 2) as u32;
     let mut t = [0u8; 8];
     let pt = t.as_mut_ptr() as usize;
@@ -3375,8 +3375,8 @@ pub(crate) unsafe extern "thiscall" fn national_teams_daily_update(this: usize, 
     }
     let fixman = read_usize(G_FIXTURE_MANAGER);
     for fatia in 0u32..3 {
-        // os dwords da original: o ano (com os 2 bytes seguintes da data) e o dia (com o ano em cima); simplification: a
-        // fatia vai sem a sobra de pilha dos bytes de cima (a 0x5abf10 faz and 0xff)
+        // the original’s dwords: the year (with the next 2 bytes of the date) and the day (with the year on top); simplification: the
+        // slice goes without the stack leftover in the upper bytes (0x5abf10 does and 0xff)
         let l0 = list(fixman, read_usize(d + 2) as u32, read_usize(d) as u32, fatia, 0);
         let l1 = list(fixman, read_usize(d + 2) as u32, read_usize(d) as u32, fatia, 1);
         if ((l0 != 0 && read_i16(l0) != 0) || (l1 != 0 && read_i16(l1) != 0)) && read_usize(this + 0x24) == 0 {
@@ -3473,7 +3473,7 @@ pub(crate) unsafe extern "thiscall" fn record_club_call_ups(this: usize, team: u
     let minus: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let (mut t1, mut t2) = ([0u8; 8], [0u8; 8]);
-    // simplification: a original empurra os curtos +0x2a e +0x28 com o alto do registro; a 0x549ef0 só lê os curtos
+    // simplification: the original pushes the shorts +0x2a and +0x28 with the high part of the register; 0x549ef0 only reads the shorts
     let r = new(t1.as_mut_ptr(), *((p + 0x2a) as *const u16) as u32, *((p + 0x28) as *const u16) as u32);
     copy(d.as_mut_ptr(), t2.as_mut_ptr(), r);
     if second(team) != 0 || b != 0 {

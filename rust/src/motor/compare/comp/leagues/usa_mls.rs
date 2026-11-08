@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_create_final_stage(this:
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_FINAL_STAGE)(this);
     let stage = read_usize(read_usize(this + 0xc) + 0xc);
-    // simplification: com menos de dois vencedores a original lê vagas da lista sem valor; aí só a fase é conferida.
+    // simplification: with fewer than two winners the original reads uninitialized slots from the list; then only the stage is checked.
     let same = stage != 0 && n < 2 || stage != 0 && {
         let l = read_usize(stage + 0xa7);
         let (x, y) = (read_usize(l), read_usize(l + 6));
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "C" fn comparar_usa_mls_get_club_all_star_conference(cl
     let r = original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_USA_MLS_GET_CLUB_ALL_STAR_CONFERENCE)(clube);
     let nacao = read_u32_as_usize(clube + club::DIVISION);
     if nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && r == 0 {
-        return r; // o caso de erro (a caixa já saiu na original)
+        return r; // the error case (the box has already been shown in the original)
     }
     let n = usa_mls_get_club_all_star_conference(clube);
     PLACAR.registrar(r == n, || format!("usa_mls_get_club_all_star_conference({:x}) original={:x} rust={:x}", clube, r, n));

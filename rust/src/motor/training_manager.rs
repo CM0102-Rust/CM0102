@@ -124,7 +124,7 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
                 3 => (non_player_attribute_rating(f, 0x10) + b(0x12)) / 2,
                 _ => non_player_attribute_rating(f, 0x11),
             };
-            // o byte de baixo, com sinal, em float dividido pelo float da quantidade (precisão dupla do x87)
+            // the low byte, signed, as float divided by the float of the quantity (x87 double precision)
             let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade
             crate::comparacao::ramo("cqf_7 nota do treinador");
             *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         show_error_at(0xa8ccd0, 0x195);
         return;
     }
-    let mut d = [0i8; 8]; // o progresso das cinco categorias (a original zera um dword e um byte)
+    let mut d = [0i8; 8]; // the progress of the five categories (the original clears a dword and a byte)
     let e = training_entry_of_staff(this, p);
     let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_PLAYER_SCHEDULE);
     let prog = programa(this, p);
@@ -398,7 +398,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     let level: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_TRAINING_SCHEDULE_GET_CATEGORY_LEVEL);
     let factor: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACHING_FACTOR);
     for k in 0..5usize {
-        // simplification: a original empurra a categoria num dword cujos bytes de cima sobram da pilha; a 0x8b4f50 e a
+        // simplification: the original pushes the category in a dword whose upper bytes are stack leftovers; 0x8b4f50 and
         // 0x8b41d0 leem o byte
         let lv = level(prog, k as u32) as u8 as i8;
         let base = (lv as i16).wrapping_mul(2).wrapping_add(0x3c); // cqd8: o peso do nível
@@ -414,7 +414,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             if read_i8(read_u32_as_usize(p + 0x61) + 0xf) > 0x12 {
                 let r = if k == 4 { friendly_random(2) } else { friendly_random(4) };
                 if r != 0 {
-                    continue; // goleiro: a categoria quase não anda
+                    continue; // goalkeeper: the category barely moves
                 }
             }
             if weight > 0x64 {
@@ -454,7 +454,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         let reclamar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
         let infeliz: unsafe extern "C" fn(usize) = core::mem::transmute(FN_NEWS_POST_PLAYER_UNHAPPY_WITH_TRAINING);
         let mut k = 0i8;
-        let mut it = q + 7; // a taxa do item (+7); a nota em +6, a máscara em +4
+        let mut it = q + 7; // the item’s fee (+7); the rating at +6, the mask at +4
         loop {
             for _ in 0..voltas {
                 let taxa = read_i8(it);
@@ -465,8 +465,8 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                     }
                     let c = contract_of_club;
                     if c != 0 && read_u32_as_usize(c + 0x45) & 0x8000 == 0 {
-                        // simplification: a original empurra a máscara no ecx com os 16 bits de cima que sobram; a 0x8b4770
-                        // lê a palavra
+                        // simplification: the original pushes the mask in ecx with the leftover upper 16 bits; 0x8b4770
+                        // reads the word
                         let apt = aptidao(this, p, read_u16(it - 3) as u32) as u8 as i8;
                         let t = read_i8(it);
                         let quer = (t > 0x32 && friendly_random(100 - t as i32) < 10) || (apt < 0xc && friendly_random(apt as i32) < 2);
@@ -706,7 +706,7 @@ pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usi
     }
     let f = read_u32_as_usize(p + 0x61);
     let rating_of: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_PLAYER_ATTRIBUTE_RATING);
-    // simplification: a original empurra o byte do atributo num registrador com os bytes de cima que sobram; a 0x544380 lê
+    // simplification: the original pushes the attribute byte in a register with leftover upper bytes; 0x544380 reads
     // o byte
     let rating = |o: usize| rating_of(f, *((f + o) as *const u8) as u32) as u8 as i8 as i32;
     let b = |o: usize| read_i8(f + o) as i32;
@@ -821,7 +821,7 @@ pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
         for (vaga, t) in [(0usize, -1i8), (1, 0), (2, 1), (3, 2), (4, 3), (5, 4)] {
             kind(human_schedule_slot(this, person, vaga), vaga as i8, t);
         }
-        // simplification: a original empurra a vaga 8 e 9 num dword só com o byte baixo gravado; as duas chamadas leem o byte.
+        // simplification: the original pushes slots 8 and 9 in a single dword with only the low byte written; both calls read the byte.
         for (vaga, t) in [(6i8, 5i8), (7, 6), (8, 7), (9, 7)] {
             kind(human(this, person, vaga), vaga, t);
         }
@@ -1021,7 +1021,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         return;
     }
     let e = read_u32_as_usize(this + 0x651d) + 6 * read_i32(f) as usize;
-    // a categoria 3 (o meio byte alto de +4)
+    // category 3 (the high nibble of +4)
     let k = read_i8(d + 3);
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 4) >> 4) as i32);
@@ -1039,7 +1039,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         }
         add_high_nibble(e + 4, k); // cpt9: guarda o progresso da categoria 3
     }
-    // a categoria 0 (o meio byte baixo de +3)
+    // category 0 (the low nibble of +3)
     let k = read_i8(d);
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 3) << 4 >> 4) as i32);
@@ -1055,7 +1055,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         }
         add_low_nibble(e + 3, k);
     }
-    // a categoria 2 (o meio byte baixo de +4)
+    // category 2 (the low nibble of +4)
     let k = read_i8(d + 2);
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 4) << 4 >> 4) as i32);
@@ -1067,7 +1067,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         }
         add_low_nibble(e + 4, k);
     }
-    // a categoria 1 (o meio byte alto de +3)
+    // category 1 (the high nibble of +3)
     let k = read_i8(d + 1);
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 3) >> 4) as i32);
@@ -1081,7 +1081,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         }
         add_high_nibble(e + 3, k);
     }
-    // a categoria 4 (o meio byte baixo de +5)
+    // category 4 (the low nibble of +5)
     let k = read_i8(d + 4);
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 5) << 4 >> 4) as i32);
@@ -1092,7 +1092,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         }
         add_low_nibble(e + 5, k);
     }
-    // o treino de posição
+    // position training
     let find: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let mut p = 0usize;
     let n = find(this, person, &mut p);
@@ -1224,7 +1224,7 @@ pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *c
 
 
 
-// simplification: a reserva perde o item (não roda duas vezes): só a original; a cópia leva o ramo.
+// simplification: the reserve loses the item (does not run twice): original only; the copy takes the branch.
 
 /// allocates the 6-byte training entry of every player data record and puts goalkeepers (goalkeeping rating 15 or more)
 /// on schedule 6 and the others on 1

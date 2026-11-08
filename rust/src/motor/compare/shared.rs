@@ -202,9 +202,9 @@ pub(crate) unsafe fn comparar_respond(p: usize, a: u32, b: u32, c: u32, d: u32, 
 pub(crate) unsafe extern "thiscall" fn comparar_procurar(this: usize, side: i8, group: usize, a3: u32, a4: u32, a5: u32, a6: u32, mode: i8) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, usize, u32, u32, u32, u32, i8) -> u8>(IDX_SEARCH_ON_SIDE);
-    // A copia Rust tem de ver o estado que a original viu: 0x6f5c30 altera o jogador que recebe
-    // (0x2b, 0x19) e pode tira-lo da lista, entao a lista, a quantidade e esses bytes de cada jogador
-    // entram nas regioes (a fita os grava depois de cada chamada).
+    // The Rust copy must see the state the original saw: 0x6f5c30 changes the receiving player
+    // (0x2b, 0x19) and may remove it from the list, so the list, the count and these bytes of each player
+    // go into the regions (the tape records them after each call).
     let list = (group as isize + side as isize * 44) as *const usize;
     let mut regions = vec![(this + 0x1a5, 2), ((group as isize + side as isize) as usize + 0x58, 1), (list as usize, 44)];
     for i in 0..byte((group as isize + side as isize) as usize, 0x58).clamp(0, 11) as usize {

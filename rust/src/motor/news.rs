@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, noticia: usize
         0 => {
             crate::comparacao::ramo("cpn_1 alcance do clube");
             two = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-            clube // o técnico do clube
+            clube // the club’s manager
         }
         1 => {
             two = core::mem::transmute(FN_NEWS_SEND_TO_DIVISION_MANAGERS);
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, noticia
     if manager == 0 {
         return 0;
     }
-    if read_i32(manager) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) { // a máquina
+    if read_i32(manager) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) { // the machine
         return 0;
     }
     crate::comparacao::ramo("cpn_1 noticia ao tecnico humano");
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: 
     }
     let slot = |k: i32| read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
     if read_usize(slot(previous) + 0xd6) == read_usize(noticia + 0xd6) {
-        return 1; // a mesma notícia de novo
+        return 1; // the same news again
     }
     if read_usize(slot(current) + 0xda) == 0 {
         write_usize(e + 8, read_usize(e + 8).wrapping_sub(1));
@@ -353,7 +353,7 @@ pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, manager: us
             return 1;
         }
         crate::comparacao::ramo("cpn_2 respond todas");
-        respond(slot, manager, clube); // a resposta automática
+        respond(slot, manager, clube); // the automatic reply
         k -= 1;
         if k == read_i32(e + 4) - 1 {
             return 1;
@@ -395,7 +395,7 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: us
         }
         let slot = read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
         if *((slot + 4) as *const u8) == 1 && read_usize(slot + 0xda) == 0 {
-            return 1; // importante e não lida
+            return 1; // important and unread
         }
         k -= 1;
         if k == read_i32(e + 4) - 1 {
@@ -430,13 +430,13 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, 
         while *text.add(n as usize) != 0 {
             n += 1;
         }
-        let quartos = ((n + 1 + 3) & !3) / 4; // o tamanho com o zero, em campos de 4 bytes
+        let quartos = ((n + 1 + 3) & !3) / 4; // the size including the zero, in 4-byte fields
         let mut p = (quartos as u8).wrapping_add(field as u8);
         crate::comparacao::ramo("cpn_2 proximo campo do texto");
         if p as i8 > 0x32 {
             p = 0x32;
         }
-        *next = p; // o próximo campo livre
+        *next = p; // the next free field
     }
     1
 }
@@ -454,19 +454,19 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, 
 /// continente nulos: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, noticia: usize, continent: usize) -> u32 {
     if noticia == 0 || continent == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, noticia, continent); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, noticia, continent); // message box: original only
     }
     deliver_to_human_managers(this, noticia, 3, |p| {
         let c = read_usize(p + 0x39);
         if c != 0 {
             let n = read_usize(c + 0x53);
-            if n != 0 && read_usize(n + 0x71) == continent { // o continente da nação do clube
+            if n != 0 && read_usize(n + 0x71) == continent { // the continent of the club’s nation
                 crate::comparacao::ramo("cpk_5 continente pelo clube");
                 return true;
             }
         }
         let s = read_usize(p + 0x1a);
-        s != 0 && read_usize(s + 0x71) == continent // o continente da nação da pessoa
+        s != 0 && read_usize(s + 0x71) == continent // the continent of the person’s nation
     }) as u32
 }
 
@@ -479,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
 /// "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
     if noticia == 0 || comp == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, noticia, comp); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, noticia, comp); // message box: original only
     }
     let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     if nacao != 0 {
@@ -515,7 +515,7 @@ pub(crate) unsafe fn manager_of_news_club(noticia: usize, o: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn is_important_for(noticia: usize, person: usize) -> u8 {
     let t = read_usize(noticia) as i32;
     if person == 0 || !(1..=0x1790).contains(&t) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_IMPORTANT_FOR)(noticia, person); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_IMPORTANT_FOR)(noticia, person); // message box: original only
     }
     let category: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);
     let r = match category(noticia) as u8 {
@@ -525,7 +525,7 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(noticia: usize, person: 
             0xfa0 | 0xfa4 | 0xfad | 0xfae | 0xfaf | 0xfb0 | 0xfb2 | 0xfb4 | 0xfb7 | 0xfb8 | 0xfbb | 0xfbf | 0xfc0 => true,
             0xfa1 => {
                 crate::comparacao::ramo("cpk_5 importante oferta pelo clube");
-                manager_of_news_club(noticia, 0x19) == person // o técnico do clube da oferta
+                manager_of_news_club(noticia, 0x19) == person // the manager of the offering club
             }
             0xfb6 => manager_of_news_club(noticia, 0x15) == person || manager_of_news_club(noticia, 0x19) == person,
             _ => false,
@@ -552,7 +552,7 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(noticia: usize, person: 
 pub(crate) unsafe extern "thiscall" fn get_slot_string(noticia: usize, given: u32, target: *mut u8, n: i32) -> u32 {
     let k = given as u8 as i8;
     if !(0..0x32).contains(&k) || target.is_null() || n < 1 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_GET_SLOT_STRING)(noticia, given, target, n); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_GET_SLOT_STRING)(noticia, given, target, n); // message box: original only
     }
     crate::comparacao::ramo("cpk_6 texto do dado");
     let source = (noticia + 5 + 4 * k as usize) as *const u8; // o dado
@@ -616,7 +616,7 @@ pub(crate) unsafe fn deliver_to_human_managers(this: usize, noticia: usize, reac
 /// (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, noticia: usize) -> u32 {
     if noticia == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, noticia); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, noticia); // message box: original only
     }
     deliver_to_human_managers(this, noticia, 4, |_| true) as u32
 }
@@ -630,11 +630,11 @@ pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, noticia
 /// primeira recusada. Notícia ou divisão nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, noticia: usize, division: usize) -> u32 {
     if noticia == 0 || division == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, noticia, division); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, noticia, division); // message box: original only
     }
     deliver_to_human_managers(this, noticia, 1, |p| {
         let c = read_usize(p + 0x39);
-        c != 0 && read_usize(c + 0x57) == division // a divisão do clube
+        c != 0 && read_usize(c + 0x57) == division // the club’s division
     }) as u32
 }
 
@@ -647,11 +647,11 @@ pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, no
 /// Notícia ou nação nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     if noticia == 0 || nacao == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, noticia, nacao); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, noticia, nacao); // message box: original only
     }
     deliver_to_human_managers(this, noticia, 2, |p| {
         let (c, s) = (read_usize(p + 0x39), read_usize(p + 0x24));
-        (c != 0 && read_usize(c + 0x53) == nacao) || (s != 0 && read_usize(s + 0x53) == nacao) // o clube ou a seleção
+        (c != 0 && read_usize(c + 0x53) == nacao) || (s != 0 && read_usize(s + 0x53) == nacao) // the club or the national team
     });
     0
 }
@@ -670,9 +670,9 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, noti
 /// encerra. Devolve 0. Notícia ou nação nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     if noticia == 0 || nacao == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, noticia, nacao); // caixa: só a original
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, noticia, nacao); // message box: original only
     }
-    *((noticia + 0xde) as *mut u8) = 2; // o alcance da nação
+    *((noticia + 0xde) as *mut u8) = 2; // the nation’s reach
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_DELIVER_TO_MANAGER);
     for i in 0..0x10usize {
         let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE));
@@ -749,7 +749,7 @@ pub(crate) unsafe extern "thiscall" fn count_unread(noticias: usize, manager: us
         *total = 0;
     }
     if category as u8 == 0 {
-        return *total; // total da caixa
+        return *total; // message box total
     }
     let start = *(entry as *const i32);
     if start == -1 {
@@ -809,7 +809,7 @@ pub(crate) unsafe extern "thiscall" fn set_item_slot(noticias: usize, manager: u
     }
     match target {
         Some(n) => {
-            core::ptr::write_unaligned((n + 5 + 4 * slot as usize) as *mut u32, value); // marca na caixa
+            core::ptr::write_unaligned((n + 5 + 4 * slot as usize) as *mut u32, value); // mark in the box
             1
         }
         None => 0,
@@ -1028,7 +1028,7 @@ pub(crate) unsafe extern "thiscall" fn news_operator(this: usize, source: usize)
     d(0);
     b(4);
     for k in 0..50 {
-        d(5 + 4 * k); // as fichas da notícia
+        d(5 + 4 * k); // the news item’s records
     }
     copy_record_date(this + 0xcd, source + 0xcd);
     b(0xd5);

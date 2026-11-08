@@ -27,7 +27,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usi
 pub(crate) unsafe extern "thiscall" fn comparar_set_club_final_position(this: usize, clube: usize, pos: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_SET_CLUB_FINAL_POSITION);
     if clube == 0 {
-        return o(this, clube, pos); // simplification: a caixa, só a original
+        return o(this, clube, pos); // simplification: the box, original only
     }
     let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let before = search(this, clube);
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_classify_tie_result_for_news(
 pub(crate) unsafe extern "C" fn comparar_comp_util_write_fixture_to_news_slots(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut u8) -> u32>(IDX_COMP_UTIL_WRITE_FIXTURE_TO_NEWS_SLOTS);
     let k = *cursor as i8;
-    // índice fora de 0..49 em algum dos 18: a 0x785790 abre a caixa de erro; só a original
+    // index outside 0..49 in any of the 18: 0x785790 opens the error box; original only
     if !(0..0x32 - 17).contains(&k) {
         return o(jogo, noticia, cursor);
     }
@@ -156,7 +156,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_write_fixture_to_news_slots(j
 pub(crate) unsafe extern "C" fn comparar_comp_util_format_stage_round_name(stage: u32, round: u32, out: *mut u8, size: i32, estilo: u32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(IDX_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
     if out.is_null() || size < 0xc8 {
-        return o(stage, round, out, size, estilo); // a caixa: só a original
+        return o(stage, round, out, size, estilo); // the message box: original only
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(out as usize, (size as usize).min(0x400))],
         || o(stage, round, out, size, estilo), || comp_util_format_stage_round_name(stage, round, out, size, estilo));
@@ -183,7 +183,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_scale_by_round(low: u32, high
 pub(crate) unsafe extern "C" fn comparar_comp_util_add_history_record(league: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32) -> usize>(IDX_COMP_UTIL_ADD_HISTORY_RECORD);
     if free_comp_history_row() == 0 {
-        return o(league, a, b, c, d); // cresce (realloc): só a original
+        return o(league, a, b, c, d); // grows (realloc): original only
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&comp_history_regions(), || o(league, a, b, c, d), || comp_util_add_history_record(league, a, b, c, d));
     PLACAR.registrar(igual && r == n, || format!("comp_util_add_history_record({:x}, {:x}, {:x}, {:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", league, a, b, c, d, r, n, mo, mr));

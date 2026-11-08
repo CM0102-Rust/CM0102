@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_offer(this: usize, 
     let cap = if conta == lidas { lidas.wrapping_add(0x32) } else { lidas };
     let (vaga, _) = find_offer_slot_and_rival(read_u32_as_usize(this), lidas, cap, conta, alvo, comprador, read_u32_as_usize(this + 0x85e) as i32, first);
     let serie = read_u32_as_usize(this + 0x85a);
-    o(this, offer, terms); // simplification: só a original
+    o(this, offer, terms); // simplification: original only
     if vaga == -1 {
         return;
     }
@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_offer(this: usize, 
 ///
 /// [pt] Comparador da 0x8c0660: só a original (entrega notícias, agenda a oferta, mexe nas listas de observação).
 pub(crate) unsafe extern "thiscall" fn comparar_accept_loan_offer(this: usize, slot: *mut usize, mark: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32)>(IDX_ACCEPT_LOAN_OFFER)(this, slot, mark) // simplification: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32)>(IDX_ACCEPT_LOAN_OFFER)(this, slot, mark) // simplification: original only
 }
 
 /// Comparer for `handle_player_accepted_terms` (comparison mode: see the header of motor.rs).
@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_accept_loan_offer(this: usize, s
 /// [pt] Comparador da 0x8c2180: só a original (entrega notícias, conclui ou recusa o empréstimo, assina contrato, registra a
 /// transferência, mexe nas listas).
 pub(crate) unsafe extern "thiscall" fn comparar_handle_player_accepted_terms(this: usize, person: usize, slot: i32, contrato: usize, kind: u32, noticia: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, usize, u32, u32)>(IDX_HANDLE_PLAYER_ACCEPTED_TERMS)(this, person, slot, contrato, kind, noticia) // simplification: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, usize, u32, u32)>(IDX_HANDLE_PLAYER_ACCEPTED_TERMS)(this, person, slot, contrato, kind, noticia) // simplification: original only
 }
 
 /// Comparer for `ai_respond_to_bid` (comparison mode: see the header of motor.rs).
@@ -49,14 +49,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_handle_player_accepted_terms(thi
 /// [pt] Comparador da 0x8c8090: só a original (aceita, recusa ou contrapropõe, reagenda, mexe nas listas de observação e
 /// aloca e solta as opções).
 pub(crate) unsafe extern "thiscall" fn comparar_ai_respond_to_bid(this: usize, slot: usize, ensaio: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_AI_RESPOND_TO_BID)(this, slot, ensaio) // simplification: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_AI_RESPOND_TO_BID)(this, slot, ensaio) // simplification: original only
 }
 
 /// Comparer for `add_loan_negotiation` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x8bee50: só a original (a lista de contratos cresce, a negociação nova é alocada).
 pub(crate) unsafe extern "thiscall" fn comparar_add_loan_negotiation(this: usize, o: usize, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(IDX_ADD_LOAN_NEGOTIATION)(this, o, a2, a3, a4, a5) // simplification: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(IDX_ADD_LOAN_NEGOTIATION)(this, o, a2, a3, a4, a5) // simplification: original only
 }
 
 /// Comparer for `make_exchange_option` (comparison mode: see the header of motor.rs).
@@ -96,14 +96,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_make_exchange_option(this: usize
 /// [pt] Comparador da 0x8c0080: só a original (muda o status, reagenda, solta a troca, aloca notícias e chama a resposta da
 /// IA).
 pub(crate) unsafe extern "thiscall" fn comparar_accept_transfer_bid(this: usize, slot: usize, mark: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ACCEPT_TRANSFER_BID)(this, slot, mark) // simplification: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ACCEPT_TRANSFER_BID)(this, slot, mark) // simplification: original only
 }
 
 /// Comparer for `post_offer_made_news` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x8d3090: só a original (a notícia vai aos técnicos e não tem outro efeito).
 pub(crate) unsafe extern "thiscall" fn comparar_post_offer_made_news(this: usize, o: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_OFFER_MADE_NEWS)(this, o) // simplification: só a notícia
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_OFFER_MADE_NEWS)(this, o) // simplification: only the news item
 }
 
 /// Comparer for `transfer_manager_can_loan_player` (comparison mode: see the header of motor.rs).
@@ -217,7 +217,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_transfer_manager_daily_update(th
 ///
 /// [pt] Comparador da 0x8c63a0: só a original (cada ramo muda o status, reagenda, aloca notícias, conclui ou tira a oferta).
 pub(crate) unsafe extern "thiscall" fn comparar_process_due_offer(this: usize, slot: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_PROCESS_DUE_OFFER)(this, slot) // simplification: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_PROCESS_DUE_OFFER)(this, slot) // simplification: original only
 }
 
 /// Comparer for `check_offer_restrictions` (comparison mode: see the header of motor.rs).
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_due_offer(this: usize, s
 /// [pt] Comparador da 0x8cfc90: só a original (a vaga no elenco, 0x8cd450, pode liberar o jogador mais barato, e a lista de
 /// observação aloca nós).
 pub(crate) unsafe extern "thiscall" fn comparar_check_offer_restrictions(this: usize, o: usize, decide: usize, reason: *mut u16, without_squad: u32) -> u8 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u16, u32) -> u8>(IDX_CHECK_OFFER_RESTRICTIONS)(this, o, decide, reason, without_squad) // simplification: só a original
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u16, u32) -> u8>(IDX_CHECK_OFFER_RESTRICTIONS)(this, o, decide, reason, without_squad) // simplification: original only
 }
 
 /// Comparer for `pay_former_club_fee_cuts` (comparison mode: see the header of motor.rs).
@@ -384,7 +384,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_
     let v = read_usize(this + 0x93a);
     let n = read_usize(this + 0x93e) as i32;
     if is_national_team(read_usize(jogo + 0x1c)) != 0 || v == 0 || n <= 0 {
-        return o(this, jogo, partida); // simplification: só a original (lixo da pilha ou sem permissões)
+        return o(this, jogo, partida); // simplification: original only (stack garbage or no permissions)
     }
     let regions = [(v, n as usize * 0xe)];
     let before = crate::comparacao::Memoria::ler(&regions);
@@ -394,7 +394,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_
     let mr = crate::comparacao::Memoria::ler(&regions);
     before.escrever();
     o(this, jogo, partida);
-    // a original não realoca o vetor (os prêmios mexem em outros vetores)
+    // the original does not reallocate the vector (the awards touch other vectors)
     let mo = crate::comparacao::Memoria::ler(&regions);
     PLACAR.registrar(mo == mr, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
@@ -412,7 +412,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_international_team_appearanc
     let target = core::slice::from_raw_parts(record as *const u8, 0xd).to_vec();
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_INTERNATIONAL_TEAM_APPEARANCE_MONEY)(this, record);
     if read_usize(this + 0x898) == 0 {
-        return; // sem memória: a caixa já saiu
+        return; // out of memory: the box has already shown
     }
     let count = read_usize(this + 0x8a0);
     let ok = count == n.wrapping_add(1) && vector_contains_record(read_usize(this + 0x898), count, 0xd, &target);
@@ -435,7 +435,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_free_transfer_staff(this: usize,
         return;
     }
     if read_usize(this + 0x862) == 0 {
-        return; // sem memória: a caixa já saiu
+        return; // out of memory: the box has already shown
     }
     let r = read_usize(this + 0x862).wrapping_add(n.wrapping_mul(0x25));
     let mut ok = read_usize(this + 0x86a) == n.wrapping_add(1)
@@ -572,7 +572,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_settle_previous_transfer_clauses
     let mut alguma = has(read_usize(offer + 0xc));
     if l != 0 {
         regions.push((l, 0xe));
-        // o percurso sem mexer no cursor da lista: os nós (+0 o item, +6 o próximo) a partir da cabeça +2
+        // the traversal without moving the list cursor: the nodes (+0 the item, +6 the next) starting from the head +2
         let mut no = read_usize(l + 2);
         let mut n = 0;
         while no != 0 && n < 64 {
@@ -838,7 +838,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_future_transfer(this: usize,
     target[8..].copy_from_slice(&(read_usize(offer + 0x20) as u32).to_le_bytes());
     o(this, offer, data);
     if read_usize(this + 0x920) == 0 {
-        return; // sem memória: a caixa já saiu
+        return; // out of memory: the box has already shown
     }
     let count = read_usize(this + 0x928);
     let mark = *staff_flags_byte(this, read_usize(offer + 0xc));
@@ -902,7 +902,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_next_sale_percentage(this: u
     let target = core::slice::from_raw_parts(record as *const u8, 0xd).to_vec();
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_NEXT_SALE_PERCENTAGE)(this, record);
     if read_usize(this + 0x880) == 0 {
-        return; // sem memória: a caixa já saiu
+        return; // out of memory: the box has already shown
     }
     let count = read_usize(this + 0x888);
     let ok = count == n.wrapping_add(1) && vector_contains_record(read_usize(this + 0x880), count, 0xd, &target);
@@ -1163,7 +1163,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_past_transfer(this: usize, r
     let font = core::slice::from_raw_parts(record as *const u8, 0x1d).to_vec();
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ADD_PAST_TRANSFER)(this, record);
     if read_usize(this + 0x862) == 0 {
-        return r; // sem memória: a caixa já saiu
+        return r; // out of memory: the box has already shown
     }
     let new = read_usize(this + 0x862).wrapping_add(n.wrapping_mul(0x25));
     let gravado = core::slice::from_raw_parts(new as *const u8, 0x1d);
@@ -1185,7 +1185,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_work_permit(this: usize, per
     target[0xa..0xe].copy_from_slice(&(read_usize(nacao) as u32).to_le_bytes());
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADD_WORK_PERMIT)(this, person, nacao, year, not_used, sort);
     if read_usize(this + 0x93a) == 0 {
-        return; // sem memória: a caixa já saiu
+        return; // out of memory: the box has already shown
     }
     let count = read_usize(this + 0x93e);
     let mark = *((read_usize(this + 0x86e).wrapping_add(read_usize(person).wrapping_mul(8))) as *const u8);
@@ -1202,7 +1202,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_first_team_appearance_money(
     let target = core::slice::from_raw_parts(record as *const u8, 0xd).to_vec();
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_FIRST_TEAM_APPEARANCE_MONEY)(this, record);
     if read_usize(this + 0x88c) == 0 {
-        return; // sem memória: a caixa já saiu
+        return; // out of memory: the box has already shown
     }
     let count = read_usize(this + 0x894);
     let ok = count == n.wrapping_add(1) && vector_contains_record(read_usize(this + 0x88c), count, 0xd, &target);
@@ -1330,7 +1330,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_can_sign_player(manager: usize, 
 pub(crate) unsafe extern "thiscall" fn comparar_get_exchange_offers_for_player(manager: usize, player: usize, out: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_GET_EXCHANGE_OFFERS_FOR_PLAYER);
     if out != 0 {
-        // simplification: com lista de saída a original anexa (aloca); só a original
+        // simplification: with an output list the original appends (allocates); original only
         return o(manager, player, out);
     }
     let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
@@ -1339,7 +1339,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_exchange_offers_for_player(m
         let p = transfer_manager_contract_club(player);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = stored;
         if p != 0 {
-            // os cursores das listas de troca das ofertas do clube (as que a rotina pode percorrer)
+            // the cursors of the swap lists of the club’s offers (those the routine may walk through)
             let clube = *(p as *const u32);
             for i in 0..(*((manager + 4) as *const i32)).max(0) as usize {
                 let offer = *((*(manager as *const usize) + 4 * i) as *const usize);
@@ -1358,7 +1358,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_exchange_offers_for_player(m
 /// Comparer for `transfer_manager_close_offer_contract_offers` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_transfer_manager_close_offer_contract_offers(offer: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(IDX_TRANSFER_MANAGER_CLOSE_OFFER_CONTRACT_OFFERS);
-    // as propostas que podem fechar: as do id do alvo e dos ids da troca (o clube não filtra aqui)
+    // the proposals that can close: those of the target’s id and of the swap ids (the club does not filter here)
     let mut ids = vec![*((offer + 0xc) as *const u32)];
     let l = *((offer + 4) as *const usize);
     if l != 0 {
@@ -1384,8 +1384,8 @@ pub(crate) unsafe extern "stdcall" fn comparar_transfer_manager_close_offer_cont
 /// Comparer for `queue_free_transfer` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_queue_free_transfer(manager: usize, person: usize, reason: u8, compensacao: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8, u32)>(IDX_QUEUE_FREE_TRANSFER);
-    // simplification: a fila aloca um nó (não roda duas vezes): a cópia só monta o registro (0x4cf6d0 é
-    // consulta pura), a original põe na fila e confere-se o nó novo da cauda
+    // simplification: the queue allocates a node (does not run twice): the copy only builds the record (0x4cf6d0 is
+    // pure query), the original queues it and the new tail node is checked
     let mut record = None;
     if !queue_free_transfer_with(manager, person, reason, compensacao, &mut |_, r| record = Some(*r)) {
         return o(manager, person, reason, compensacao);
@@ -1404,7 +1404,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_free_transfer(manager: usi
 pub(crate) unsafe extern "thiscall" fn comparar_get_exchange_negotiations_for_player(manager: usize, person: usize, out: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_GET_EXCHANGE_NEGOTIATIONS_FOR_PLAYER);
     if out != 0 {
-        // simplification: com lista de saída (só a tela 0x47ec79) a original anexa (aloca); só a original
+        // simplification: with an output list (only screen 0x47ec79) the original appends (allocates); original only
         return o(manager, person, out);
     }
     let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
@@ -1413,7 +1413,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_exchange_negotiations_for_pl
         let p = transfer_manager_contract_club(person);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = stored;
         if p != 0 {
-            // os cursores das listas de troca das negociações do clube (as que a rotina pode percorrer)
+            // the cursors of the swap lists of the club’s negotiations (the ones the routine may traverse)
             let clube = *(p as *const u32);
             let negociacoes = *((manager + 0xc) as *const usize);
             for i in 0..(*((manager + 0x10) as *const i32)).max(0) as usize {
@@ -1433,11 +1433,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_exchange_negotiations_for_pl
 /// Comparer for `get_offers_for_player` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_get_offers_for_player(this: usize, person: *const i32, list: usize, all: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, usize, u32) -> u32>(IDX_GET_OFFERS_FOR_PLAYER);
-    // simplification: com `lista` a original aloca nós (0x68d0d0) e não pode rodar duas vezes; só ela
+    // simplification: with `lista` the original allocates nodes (0x68d0d0) and cannot run twice; original only
     if list != 0 || person.is_null() {
         return o(this, person, list, all);
     }
-    // a original só mexe no cursor da lista da oferta achada
+    // the original only touches the list cursor of the offer found
     let e = offer_for_player(this, *person);
     let l = if e == 0 { 0 } else { *(e as *const usize) };
     let reg = if l == 0 { vec![] } else { vec![(l, 0xe)] };
@@ -1648,7 +1648,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_transfer_manager_get_loan_period
 /// [pt] Comparador da 0x8c6bc0: só a original (ela só grava nas locais; os avisos das regras alocam notícias e as ofertas
 /// em espera mudam de status e são reagendadas).
 pub(crate) unsafe extern "thiscall" fn comparar_update_transfer_window_news(this: usize, today: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPDATE_TRANSFER_WINDOW_NEWS)(this, today) // simplification: nada próprio a conferir
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPDATE_TRANSFER_WINDOW_NEWS)(this, today) // simplification: nothing of its own to check
 }
 
 /// Comparer for `note_terms_offered_to_main_player` (comparison mode: see the header of motor.rs).

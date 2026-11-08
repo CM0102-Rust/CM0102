@@ -515,8 +515,8 @@ pub(crate) unsafe fn create_schedule(this: usize, stage: u32, rounds: *mut i16, 
             return 0;
         }
         crate::comparacao::ramo(name_g);
-        // o ano vai com lixo nos bytes altos na original (o registrador de antes com a palavra +0x40 por cima); a
-        // 0x68a160 só usa os 16 bits de baixo: a cópia passa o ano limpo
+        // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
+        // 0x68a160 only uses the low 16 bits: the copy passes the clean year
         let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
         for (r, &(dia, mes, semana, codigo)) in groups.iter().enumerate() {
             data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
@@ -568,7 +568,7 @@ pub(crate) unsafe fn written_group_schedule_bytes(t: usize, n: i16) -> Vec<u8> {
 pub(crate) unsafe fn ita_cup_compare_schedule(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize, limit: i8) -> usize {
     if stage as u8 as i8 > limit {
-        // simplification: acima do mata-mata nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: above the knockout neither of the two writes anything; the outputs may not even exist
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
@@ -1060,13 +1060,13 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_init_team_list(this: usize) -> i3
 /// das rodadas. Desempates: os quatro códigos de +0xc5..+0xc8 (docs/.md §2.7).
 #[derive(Clone, Copy)]
 pub(crate) struct GroupStageRules {
-    pub(crate) vitoria: u8,     // +0xc2: pontos por vitória
+    pub(crate) vitoria: u8,     // +0xc2: points per win
     pub(crate) empate: u8,      // +0xc3: pontos por empate
-    pub(crate) categoria: u8,   // +0xc4: a categoria de cada jogo (vai para o +0x3a da partida)
+    pub(crate) categoria: u8,   // +0xc4: the category of each match (goes to the match’s +0x3a)
     pub(crate) desempate: [u8; 4], // +0xc5..+0xc8
-    pub(crate) vagas: u8,       // +0xbe: vagas de cima (classificados por grupo)
-    pub(crate) premio: Option<u32>, // +0x28: o fundo de prêmios (a Copa dos Campeões não grava)
-    pub(crate) bits: Option<u16>,   // +0xd9: a palavra de bits de regra (só a Copa dos Campeões grava: 8)
+    pub(crate) vagas: u8,       // +0xbe: top places (qualified per group)
+    pub(crate) premio: Option<u32>, // +0x28: the prize fund (the Champions Cup does not write it)
+    pub(crate) bits: Option<u16>,   // +0xd9: the rule bit word (only the Champions Cup writes it: 8)
 }
 
 pub(crate) const ITALIAN_CUP_GROUP_RULES: GroupStageRules = GroupStageRules { vitoria: 3, empate: 1, categoria: 4, desempate: [4, 1, 2, 0], vagas: 1, premio: Some(0xc3500), bits: None };
@@ -1138,7 +1138,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 
     set_cup_league_rules(this, &g, 1)
 }
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 /// rule: the Serie C Italian Cup groups follow the Italian Cup rules (single round robin, 3/1, tiebreak 4, 1, 2, one
 /// qualifier per group); prize fund of 300,000
@@ -1152,8 +1152,8 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules_63d6e0(this: usize) 
     set_cup_league_rules(this, &SERIE_C_CUP_RULES, turnos)
 }
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+// simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 

@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: us
     soltar(knockout);
     o(this);
     if plan.iter().any(|&(k, _)| k as usize >= n) {
-        return; // a original lê além do vetor: sem conferência
+        return; // the original reads past the vector: no check
     }
     let errado = plan.iter().find(|&&(k, p)| {
         let c = v[k as usize] as usize;
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "C" fn comparar_european_cup_compare_phase2_draw_entrie
 pub(crate) unsafe extern "thiscall" fn comparar_european_cup_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, stage: u32, a: u32, jogo: usize, end: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_EUROPEAN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let (d, f) = (outcome as u8, stage as u8);
-    // as faixas da original comparam o byte da fase com sinal (0x80 a 0xfe contam como fase 1)
+    // the original’s bands compare the stage byte as signed (0x80 to 0xfe count as stage 1)
     let sai = if f == 0xff {
         d == 0xff || d == 2
     } else if (f as i8) < 0xc {
@@ -254,12 +254,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_fixture(this: usize, jog
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FIXTURE);
     let (a, b) = if jogo != 0 { (read_usize(jogo + 0x1c), read_usize(jogo + 0x20)) } else { (0, 0) };
     if a == 0 || b == 0 {
-        return o(this, jogo, arg); // simplification: sem clube, só a original
+        return o(this, jogo, arg); // simplification: without a club, original only
     }
     let (ca, cb) = (nation_coefficient_word(a), nation_coefficient_word(b));
     let (fa, fb) = (european_cup_club_finance(a), european_cup_club_finance(b));
     if ca == 0 || cb == 0 || fa == 0 || fb == 0 {
-        return o(this, jogo, arg); // simplification: sem nação, seleção ou finanças, só a original (cai do mesmo jeito)
+        return o(this, jogo, arg); // simplification: without nation, national team or finances, original only (crashes the same way)
     }
     let check = [(ca, 2), (cb, 2)];
     let before = crate::comparacao::Memoria::ler(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
@@ -271,7 +271,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_fixture(this: usize, jog
     before.escrever();
     o(this, jogo, arg);
     if read_i32(this + 0x30) != stage {
-        return; // simplification: a fase andou na base e o sorteio somou coeficiente: sem comparação
+        return; // simplification: the stage advanced in the database and the draw added coefficient: no comparison
     }
     let mo = crate::comparacao::Memoria::ler(&check);
     PLACAR.registrar(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(t
     let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let e = search(read_usize(this + 8), clube);
     if e == 0 {
-        return o(this, clube, stage, p1, p2, p3); // simplification: sem registro, só a original
+        return o(this, clube, stage, p1, p2, p3); // simplification: without a record, original only
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &[(e + 0x73, 3)],

@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_match_day_interest(d: usize) -> 
     if is_recording_top_level() {
         return o(d);
     }
-    // simplification: a 0x5fe8d0 (lista dos humanos) roda nas duas; ela refaz a lista do zero
+    // simplification: 0x5fe8d0 (the humans list) runs in both; it rebuilds the list from scratch
     let reg = match_day_marked_regions(d);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(d), || match_day_interest(d));
     PLACAR.registrar(igual && r == n, || format!("match_day_interest original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
@@ -80,7 +80,7 @@ pub(crate) unsafe fn comparar_pos(name: &str, reg: Vec<(usize, usize)>, original
 /// Comparer for `post_match_events` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_post_match_events(partida: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_POST_MATCH_EVENTS);
-    // o cursor da lista, as linhas dos dois clubes em [[0xb67a44]] e as flags dos contratos dos eventos
+    // the list cursor, the two clubs’ rows in [[0xb67a44]] and the flags of the events’ contracts
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let list = *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *const usize);
     if list != 0 {
@@ -116,8 +116,8 @@ pub(crate) unsafe extern "C" fn comparar_post_match_events(partida: usize) {
 /// Comparer for `post_match_players` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_post_match_players(partida: usize, t: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize)>(IDX_POST_MATCH_PLAYERS);
-    // as fichas dos jogadores (+0x45, +9 a +0xe), os contratos, +0x80 dos clubes e as fichas do
-    // tecnico e dos auxiliares (+8 a +0xd)
+    // the player records (+0x45, +9 to +0xe), the contracts, +0x80 of the clubs and the records of the
+    // manager and of the assistants (+8 to +0xd)
     let g = |a: usize| *(a as *const usize);
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "C" fn comparar_post_match_players(partida: usize, t: u
 /// Comparer for `post_match_club` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_post_match_club(clube: usize, other: usize, partida: usize, n: u32, t: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(IDX_POST_MATCH_CLUB);
-    // a copia nao escreve no banco: so as chamadas e o sorteio
+    // the copy does not write to the database: only the calls and the random rolls
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     comparar_pos("post_match_club", reg, || o(clube, other, partida, n, t), |chamar| post_match_club_with(clube, other, partida, n, t, chamar));
 }

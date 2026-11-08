@@ -176,7 +176,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
             || read_u32_as_usize(e) == read_u32_as_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES)
             || (read_u32_as_usize(e) == read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) && read_u16(e + 4) == 0x7d6 && read_u32_as_usize(e + 6) == read_u32_as_usize(KEY_NATION_GERMANY));
         if !pular {
-            // a notícia local (0xe8 bytes, como nas outras cópias)
+            // the local news (0xe8 bytes, as in the other copies)
             let mut n = [0u8; 0xe8];
             let p = n.as_mut_ptr() as usize;
             if k == -1 {
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
     }
 }
 
-// simplification: entrega notícias (aloca); só a original. A cópia leva o ramo.
+// simplification: delivers news items (allocates); original only. The copy takes the branch.
 
 /// reads HostCountry.tmp (the count and the 0x22-byte entries into a new block); without the file 0 (a new game builds
 /// the default table); read errors with the error box
@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     1
 }
 
-// simplification: abre o arquivo e aloca; só a original. A cópia leva os ramos.
+// simplification: opens the file and allocates; original only. The copy takes the branches.
 
 
 
@@ -303,7 +303,7 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: 
         e += 0x22;
         i += 1;
     }
-    // simplification: a original devolve o al = 0 com os bytes altos do eax (o ponteiro da entrada); quem chama lê o al
+    // simplification: the original returns al = 0 with the high bytes of eax (the entry pointer); the caller reads al
     0
 }
 
@@ -331,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a
         e += 0x22;
         i += 1;
     }
-    // simplification: a original devolve o al = 0 com os bytes altos do eax (o ponteiro da entrada); quem chama lê o al
+    // simplification: the original returns al = 0 with the high bytes of eax (the entry pointer); the caller reads al
     0
 }
 

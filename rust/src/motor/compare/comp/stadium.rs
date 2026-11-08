@@ -9,7 +9,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marks: u32, cont: usize, nacao: usize, data: usize, home: usize, away: usize, partida: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(IDX_FIND_AVAILABLE_VENUE);
     let Some((r, m)) = stadium_choice_regions(this, None) else {
-        // simplification: a reserva pode alocar a lista; só a original
+        // simplification: the reserve may allocate the list; original only
         return o(this, marks, cont, nacao, data, home, away, partida);
     };
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marks, cont, nacao, data, home, away, partida), || {
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, m
         return o(this, marks, partida, estadio);
     }
     let Some((r, m)) = stadium_choice_regions(this, Some((partida, 0x44))) else {
-        // simplification: a reserva pode alocar a lista; só a original
+        // simplification: the reserve may allocate the list; original only
         return o(this, marks, partida, estadio);
     };
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marks, partida, estadio), || crate::aleatorio::sem_contar(|| set_fixture_venue(this, marks, partida, estadio)));

@@ -93,7 +93,7 @@ pub(crate) type V1Converter = unsafe extern "C" fn(usize, i32, usize, u32) -> i3
 /// Comparador de um conversor: com `fread` (use_zip = 0), a original lê, o arquivo volta (`fseek` 0x946a22 à
 /// posição do `ftell` 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo
 /// parou. Fica a posição da Rust (a mesma, se iguais).
-// simplification: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
+// simplification: with zread (the container) original only; the save is version 2 and does not get here.
 
 
 
@@ -151,11 +151,11 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 17, n, stream)
     };
-    (escritos == n) as i32 // gravar histórico de pessoas
+    (escritos == n) as i32 // write people’s history
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (saving the game) and the copy’s branch in Rust mode.
 
 /// writes n 107-byte records (club_comp.dat, in two calls: the competitions and the 127 reserve ones; nation_comp.dat)
 /// in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went
@@ -173,11 +173,11 @@ pub(crate) unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 107, n, stream)
     };
-    (escritos == n) as i32 // gravar competições
+    (escritos == n) as i32 // save competitions
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (saving the game) and the copy’s branch in Rust mode.
 
 /// writes n 26-byte records (club_comp_history.dat and nation_comp_history.dat, ids 19 and 20) in one go, through
 /// zwrite (save) or fwrite (Data folder); 1 if everything went
@@ -195,11 +195,11 @@ pub(crate) unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_z
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 26, n, stream)
     };
-    (escritos == n) as i32 // gravar históricos de competição
+    (escritos == n) as i32 // write competition histories
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (saving the game) and the copy’s branch in Rust mode.
 
 /// writes n 101-byte records (staff_comp.dat, id 11) in one go, through zwrite (save) or fwrite (Data folder); 1 if
 /// everything went
@@ -217,11 +217,11 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_comps(stream: usize, use_zi
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 101, n, stream)
     };
-    (escritos == n) as i32 // gravar competições de pessoal
+    (escritos == n) as i32 // save staff competitions
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (saving the game) and the copy’s branch in Rust mode.
 
 /// writes n 43-byte records (officials.dat, id 7) in one go, through zwrite (save) or fwrite (Data folder); 1 if
 /// everything went
@@ -239,11 +239,11 @@ pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip:
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 43, n, stream)
     };
-    (escritos == n) as i32 // gravar árbitros
+    (escritos == n) as i32 // save referees
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (saving the game) and the copy’s branch in Rust mode.
 
 /// writes n 58-byte records (colour.dat, id 2, and staff_comp_history.dat, id 18: the same routine for both) in one go,
 /// through zwrite (save) or fwrite (Data folder); 1 if everything went
@@ -261,11 +261,11 @@ pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_z
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 58, n, stream)
     };
-    (escritos == n) as i32 // gravar registros de 58 bytes
+    (escritos == n) as i32 // save 58-byte records
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (saving the game) and the copy’s branch in Rust mode.
 
 /// writes n 60-byte records (first_names.dat, second_names.dat and common_names.dat, ids 13 to 15) in one go, through
 /// zwrite (save) or fwrite (Data folder); 1 if everything went (it only writes, despite the community name)
@@ -287,7 +287,7 @@ pub(crate) unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usiz
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (saving the game) and the copy’s branch in Rust mode.
 
 /// Builds a .dat path with _makepath(dest, 0, folder, name, 0) (FN_CRT_MAKEPATH).
 ///
@@ -361,7 +361,7 @@ pub(crate) unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the written table) and the copy’s branch in Rust mode.
 
 /// writes the nation.dat (id 4) table of 290-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
 /// everything went out
@@ -384,7 +384,7 @@ pub(crate) unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the written table) and the copy’s branch in Rust mode.
 
 /// writes the city.dat (id 21) table of 56-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
 /// everything went out
@@ -407,7 +407,7 @@ pub(crate) unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i3
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the written table) and the copy’s branch in Rust mode.
 
 /// writes the stadium.dat table of 78-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything
 /// went out
@@ -430,7 +430,7 @@ pub(crate) unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: 
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the written table) and the copy’s branch in Rust mode.
 
 /// writes the club.dat and nat_club.dat (ids 0, 1) table of 581-byte records in one go, through zwrite (save) or fwrite
 /// (Data); 1 if everything went out
@@ -453,7 +453,7 @@ pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the written table) and the copy’s branch in Rust mode.
 
 /// writes the staff.dat (staff, 110 bytes; id 6) table of 110-byte records in one go, through zwrite (save) or fwrite
 /// (Data); 1 if everything went out
@@ -476,7 +476,7 @@ pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the written table) and the copy’s branch in Rust mode.
 
 /// writes the staff.dat non-player (id 9; the community map calls it players) table of 68-byte records in one go,
 /// through zwrite (save) or fwrite (Data); 1 if everything went out
@@ -499,7 +499,7 @@ pub(crate) unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the written table) and the copy’s branch in Rust mode.
 
 /// writes the staff.dat player (id 10; the community map calls it non_players) table of 70-byte records in one go,
 /// through zwrite (save) or fwrite (Data); 1 if everything went out
@@ -522,7 +522,7 @@ pub(crate) unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zi
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the written table) and the copy’s branch in Rust mode.
 
 /// writes the staff preferences (id 22) table of 52-byte records in one go, through zwrite (save) or fwrite (Data); 1
 /// if everything went out
@@ -545,7 +545,7 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zi
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the written table) and the copy’s branch in Rust mode.
 
 /// reads the officials.dat table (id 7) of 43-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 1 (other: box and exit); 1 if everything came
@@ -570,11 +570,11 @@ pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: 
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 43, n, stream)
     };
-    (read == n) as i32 // árbitros
+    (read == n) as i32 // referees
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the colour.dat table (id 2) of 58-byte records in one go, through zread (save) or fread (Data), with the entry
 /// version 1 (other: box and exit); 1 if everything came
@@ -603,7 +603,7 @@ pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i3
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the first_names.dat, second_names.dat and common_names.dat tables (ids 13, 14, 15) of 60-byte records in one
 /// go, through zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
@@ -633,7 +633,7 @@ pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32,
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the club.dat and nat_club.dat table (ids 0, 1) of 581-byte records in one go, through zread (save) or fread
 /// (Data), with the entry version 2, and turns reputation 0 into 1; version 1: the 0x54dc90 converter (other: box and
@@ -679,7 +679,7 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the club_comp.dat and nation_comp.dat table (ids 12, 16) of 107-byte records in one go, through zread (save)
 /// or fread (Data), with the entry version 2; version 1: the 0x54ffd0 converter (other: box and exit); 1 if everything
@@ -711,11 +711,11 @@ pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32,
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 107, n, stream)
     };
-    (read == n) as i32 // competições de clube
+    (read == n) as i32 // club competitions
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the non-player table of staff.dat (id 9; the community map calls it players) of 68-byte records in one go,
 /// through zread (save) or fread (Data), with the entry version 2; version 1: the 0x54e9a0 converter (other: box and
@@ -748,11 +748,11 @@ pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i3
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 68, n, stream)
     };
-    (read == n) as i32 // não jogadores
+    (read == n) as i32 // non-players
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the player table of staff.dat (id 10; the community map calls it non_players) of 70-byte records in one go,
 /// through zread (save) or fread (Data), with the entry version 2; version 1: the 0x54f150 converter (other: box and
@@ -789,7 +789,7 @@ pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the staff.dat (staff, 110-byte file version: the save and community databases) table (id 6) of 110-byte
 /// records in one go, through zread (save) or fread (Data), with the entry version 2 (other: box and exit); 1 if
@@ -820,7 +820,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32,
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é a carga do save (a tabela lida vira o banco do jogo) e o ramo da cópia.
+// simplification: original only; the proof is loading the save (the table read becomes the game database) and the copy’s branch.
 
 /// reads the staff preferences table (id 22: the save and community databases) of 52-byte records in one go, through
 /// zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
@@ -846,11 +846,11 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 52, n, stream)
     };
-    (read == n) as i32 // preferências
+    (read == n) as i32 // preferences
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é a carga do save (a tabela lida vira o banco do jogo) e o ramo da cópia.
+// simplification: original only; the proof is loading the save (the table read becomes the game database) and the copy’s branch.
 
 /// reads the continent.dat table (id 3) of 198-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 1 (other: box and exit); 1 if everything came
@@ -879,7 +879,7 @@ pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip:
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the nation.dat table (id 4) of 290-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 2 (other: box and exit); 1 if everything came
@@ -904,11 +904,11 @@ pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i3
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 290, n, stream)
     };
-    (read == n) as i32 // nações
+    (read == n) as i32 // nations
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the city.dat table (id 21) of 56-byte records in one go, through zread (save) or fread (Data), with the entry
 /// version 1 to 2 (other: box and exit); 1 if everything came
@@ -937,7 +937,7 @@ pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the stadium.dat table (id 5) of 78-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 1 (other: box and exit); 1 if everything came
@@ -962,11 +962,11 @@ pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 78, n, stream)
     };
-    (read == n) as i32 // estádios
+    (read == n) as i32 // stadiums
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the staff.dat (staff, 157-byte file version) table (id 6) of 157-byte records in one go, through zread (save)
 /// or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
@@ -995,7 +995,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the staff_history.dat table (id 17) of 17-byte records in one go, through zread (save) or fread (Data), with
 /// the entry version 1 (other: box and exit); 1 if everything came
@@ -1020,11 +1020,11 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_z
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 17, n, stream)
     };
-    (read == n) as i32 // histórico de pessoas
+    (read == n) as i32 // people history
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the club_comp_history.dat and nation_comp_history.dat table (id 19, 20) of 26-byte records in one go, through
 /// zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
@@ -1049,11 +1049,11 @@ pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zi
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 26, n, stream)
     };
-    (read == n) as i32 // históricos de competição
+    (read == n) as i32 // competition histories
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the staff_comp.dat table (id 11) of 101-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 2 (other: box and exit); 1 if everything came
@@ -1078,11 +1078,11 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 101, n, stream)
     };
-    (read == n) as i32 // competições de pessoal
+    (read == n) as i32 // staff competitions
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads the staff_comp_history.dat table (id 18) of 58-byte records in one go, through zread (save) or fread (Data),
 /// with the entry version 1 (other: box and exit); 1 if everything came
@@ -1107,11 +1107,11 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, 
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 58, n, stream)
     };
-    (read == n) as i32 // histórico de competições de pessoal
+    (read == n) as i32 // staff competition history
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
+// simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// reads version 1 club_comp.dat / nation_comp.dat field by field (104 bytes on file for 107-byte records, holes at
 /// +0x37 and +0x52), the reputation in one byte; 0 at the first read that does not come, 1 if everything came
@@ -1136,7 +1136,7 @@ pub(crate) unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i
                     if read(&mut b as *mut u8 as usize, 1, 1, stream) == 0 {
                         return 0;
                     }
-                    ((r + o) as *mut u16).write_unaligned(b as u16); // reputação da competição
+                    ((r + o) as *mut u16).write_unaligned(b as u16); // competition reputation
                 } else if read(r + o + k * t as usize, t, 1, stream) == 0 {
                     return 0;
                 }

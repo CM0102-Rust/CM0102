@@ -9,14 +9,14 @@ use super::*;
 /// As chaves das 32 nações do sorteio real de 2002 (os globais g_key_nation_*, índice na tabela de nações [0xae23a8],
 /// 0x122 bytes cada), na ordem em que a original as grava na lista: grupos A a H, quatro por grupo.
 pub(crate) const WORLD_CUP_2002_DRAW: [usize; 32] = [
-    KEY_NATION_FRANCE, KEY_NATION_SENEGAL, KEY_NATION_URUGUAY, KEY_NATION_DENMARK, // A: França, Senegal, Uruguai, Dinamarca
-    KEY_NATION_SPAIN, KEY_NATION_SLOVENIA, KEY_NATION_PARAGUAY, KEY_NATION_SOUTH_AFRICA, // B: Espanha, Eslovênia, Paraguai, África do Sul
+    KEY_NATION_FRANCE, KEY_NATION_SENEGAL, KEY_NATION_URUGUAY, KEY_NATION_DENMARK, // A: France, Senegal, Uruguay, Denmark
+    KEY_NATION_SPAIN, KEY_NATION_SLOVENIA, KEY_NATION_PARAGUAY, KEY_NATION_SOUTH_AFRICA, // B: Spain, Slovenia, Paraguay, South Africa
     KEY_NATION_BRAZIL, KEY_NATION_TURKEY, KEY_NATION_CHINA, KEY_NATION_COSTA_RICA, // C: Brasil, Turquia, China, Costa Rica
-    KEY_NATION_SOUTH_KOREA, KEY_NATION_POLAND, KEY_NATION_UNITED_STATES, KEY_NATION_PORTUGAL, // D: Coreia do Sul, Polônia, Estados Unidos, Portugal
-    KEY_NATION_GERMANY, KEY_NATION_SAUDI_ARABIA, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_CAMEROON, // E: Alemanha, Arábia Saudita, Irlanda, Camarões
-    KEY_NATION_ARGENTINA, KEY_NATION_NIGERIA, KEY_NATION_ENGLAND, KEY_NATION_SWEDEN, // F: Argentina, Nigéria, Inglaterra, Suécia
-    KEY_NATION_ITALY, KEY_NATION_ECUADOR, KEY_NATION_CROATIA, KEY_NATION_MEXICO, // G: Itália, Equador, Croácia, México
-    KEY_NATION_JAPAN, KEY_NATION_BELGIUM, KEY_NATION_RUSSIA, KEY_NATION_TUNISIA, // H: Japão, Bélgica, Rússia, Tunísia
+    KEY_NATION_SOUTH_KOREA, KEY_NATION_POLAND, KEY_NATION_UNITED_STATES, KEY_NATION_PORTUGAL, // D: South Korea, Poland, United States, Portugal
+    KEY_NATION_GERMANY, KEY_NATION_SAUDI_ARABIA, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_CAMEROON, // E: Germany, Saudi Arabia, Ireland, Cameroon
+    KEY_NATION_ARGENTINA, KEY_NATION_NIGERIA, KEY_NATION_ENGLAND, KEY_NATION_SWEDEN, // F: Argentina, Nigeria, England, Sweden
+    KEY_NATION_ITALY, KEY_NATION_ECUADOR, KEY_NATION_CROATIA, KEY_NATION_MEXICO, // G: Italy, Ecuador, Croatia, Mexico
+    KEY_NATION_JAPAN, KEY_NATION_BELGIUM, KEY_NATION_RUSSIA, KEY_NATION_TUNISIA, // H: Japan, Belgium, Russia, Tunisia
 ];
 
 /// the draw list: the seeds in groups 1..8 (drawn among the slots still standing: the loop that hangs the game on
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
             write_u8(list + 0xe, 3);
             write_u8(this + 0xf7, 0xff);
         } else {
-            // o laço da queda de 27/12/2001 (0x92ea55): sem vaga de pé entre as 2..7, não termina
+            // the loop of the 27/12/2001 crash (0x92ea55): with no standing slot among 2..7, it never ends
             let mut k = sorteio(6).wrapping_add(2) as i16 as i32;
             while read_u8(this.wrapping_add((k * 5) as usize) + 0xf2) == 0xff {
                 k = sorteio(6).wrapping_add(2) as i16 as i32;
@@ -437,8 +437,8 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, st
         return 0;
     }
     crate::comparacao::ramo("cqf_6 tabela das rodadas");
-    // o ano vai com lixo nos bytes altos na original (o cx do ano sobre o ecx de antes); a 0x68a160 só usa os 16 bits
-    // de baixo (a 0x549f70 lê o ano como word e a palavra +2 guarda ano − base): a cópia passa o ano limpo
+    // the year carries garbage in the high bytes in the original (the year’s cx over the previous ecx); 0x68a160 only uses the 16 bits
+    // low (0x549f70 reads the year as a word and the word at +2 holds year − base): the copy passes the clean year
     let year = read_i16(this + 0x40) as u16 as u32;
     data(t, 0, 0xc, 5, 0, 4, 1, year, 1); // cqf6: a primeira rodada
     jogo(t, 0, 2, -1, -1, -1, 0);
@@ -551,8 +551,8 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
         }
     }
     sort(read_u32_as_usize(this + 0x14), read_i16(this + 0x36) as i32 as u32, 6, 0x4b07b0);
-    // simplification: as duas saídas começam em −1 (sem sede); a original as deixa com o resto da pilha quando a 0x5fa730 não
-    // acha a Copa (ela só as grava achando)
+    // simplification: both outputs start at −1 (no venue); the original leaves them with the stack leftover when 0x5fa730 does not
+    // finds the Cup (it only writes them when it finds it)
     let (mut a, mut b) = (-1i32, -1i32);
     sedes(read_u32_as_usize(G_HOST_COUNTRY), read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP), read_i16(this + 0x40) as u16 as u32, &mut a, &mut b, 1);
     let sede1 = if a != -1 { principal(read_u32_as_usize(G_NATION_TABLE).wrapping_add(a.wrapping_mul(0x122) as usize)) } else { 0 };

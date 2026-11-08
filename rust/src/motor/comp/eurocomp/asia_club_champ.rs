@@ -28,8 +28,8 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize
     }
 }
 
-// simplification: os grupos e as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
-// (os grupos gravam 2, o mesmo valor) fora da última fase, que dá a caixa e não muda nada.
+// simplification: the groups and the semifinals allocate and draw: they do not run twice. Original only; the plan: +0x30 goes up by one
+// (the groups write 2, the same value) outside the last stage, which gives the message box and changes nothing.
 
 /// The 8 group-stage teams: survivors (+5 = 1) of the first zone's knockout (up to 4) then of the second zone's (up to
 /// 8).
@@ -144,8 +144,8 @@ pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
     write_u32_from_usize(this + 0x30, 2);
 }
 
-// simplification: as fases são alocadas e as notícias vão aos técnicos: não roda duas vezes. Só a original; o plano: os vivos
-// lidos antes; depois as fases [+0xc][1] e [+0xc][2] com 4 times, o ano da copa e os 4 vivos de cada (em qualquer ordem:
+// simplification: the stages are allocated and the news goes to the managers: does not run twice. Original only; the plan: those alive
+// read before; then the stages [+0xc][1] and [+0xc][2] with 4 teams, the cup year and the 4 alive in each (in any order:
 // o construtor ordena a tabela) e +0x30 = 2.
 
 /// The 4 semi-finalists in list order: group 1 winner, group 2 runner-up, group 2 winner, group 1 runner-up.
@@ -205,8 +205,8 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(t
     soltar(list);
 }
 
-// simplification: aloca a fase e sorteia a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][3] com 4
-// times, o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio pode
+// simplification: allocates the stage and draws the round: does not run twice. Original only; the plan: the stage at [+0xc][3] with 4
+// teams, the cup’s +4 and the 4 crossed ones (read before) in its list (+0xa7, 6 bytes; as a set: the draw may
 // reordenar).
 
 /// Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:

@@ -42,14 +42,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_group_stage_63d9e
 /// Comparer for `ita_cup_create_knockout_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_CUP_CREATE_KNOCKOUT_STAGE);
-    // simplification: aloca a fase e sorteia a primeira rodada; não pode rodar duas vezes: só a original, com o plano
+    // simplification: allocates the stage and draws the first round; cannot run twice: original only, with the plan
     ita_cup_compare_knockout_stage("ita_cup_create_knockout_stage", this, 7, 16, || o(this))
 }
 
 /// Comparer for `ita_cup_create_knockout_stage_63dc10` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage_63dc10(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_CUP_CREATE_KNOCKOUT_STAGE_63DC10);
-    // simplification: monta e destrói a liga provisória, aloca a fase e sorteia; não pode rodar duas vezes: só a original
+    // simplification: builds and destroys the provisional league, allocates the stage and draws; cannot run twice: original only
     ita_cup_compare_knockout_stage("ita_cup_create_knockout_stage_63dc10", this, 0xf, 10, || o(this))
 }
 

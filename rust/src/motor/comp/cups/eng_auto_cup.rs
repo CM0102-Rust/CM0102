@@ -50,7 +50,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
     let cheia = |k: i32| k == read_u32_as_usize(this + 0xb6) as i32;
     let mut k = 0i32;
-    // 1) a segunda e a terceira divisões
+    // 1) the second and third divisions
     let mut i: i16 = 0;
     if n > 0 {
         loop {
@@ -67,8 +67,8 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             }
         }
     }
-    // 2) o rebaixado da terceira divisão para a Conference
-    // simplification: sem rebaixado a original compara depois com uma dword da pilha sem valor; a cópia usa 0 (nenhum clube)
+    // 2) the club relegated from the third division to the Conference
+    // simplification: without a relegated club the original later compares with a stack dword without a value; the copy uses 0 (no club)
     let mut found = 0usize;
     let mut i: i16 = 0;
     if n > 0 {
@@ -92,7 +92,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     }
     let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
     if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 {
-        // 3a) a Conference pela categoria
+        // 3a) the Conference by category
         let mut cat: i8 = 6;
         if k < read_u32_as_usize(this + 0xb6) as i32 {
             loop {
@@ -123,7 +123,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             }
         }
     } else {
-        // 3b) até 30 da Conference e, faltando, ingleses fora da divisão genérica; embaralhados
+        // 3b) up to 30 from the Conference and, if short, English clubs outside the generic division; shuffled
         let mut local = [0usize; 0x1e];
         let mut m: i8 = 0;
         let mut i: i16 = 0;
@@ -165,7 +165,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             }
         }
         let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
-        // simplification: a original empurra as duas palavras em dwords com lixo nos 16 bits altos; a 0x4afbd0 lê as palavras
+        // simplification: the original pushes the two words in dwords with garbage in the high 16 bits; 0x4afbd0 reads the words
         embaralhar(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (read_i16(this + 0xb6).wrapping_sub(k as i16)) as u16 as u32);
         let mut a: i16 = 0;
         while k < read_u32_as_usize(this + 0xb6) as i32 {
@@ -411,7 +411,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     soltar(v);
 }
 
-// simplification: grava nas estatísticas da copa (Comp_Stats, que acha ou acrescenta a entrada do clube: aloca); só a original
+// simplification: writes to the cup statistics (Comp_Stats, which finds or appends the club’s entry: allocates); original only
 
 /// rule: the League Trophy (Auto Windscreens) has two 28-club sections; the second takes the last 28 of the 56 chosen
 /// clubs (the array at +0xb2, already sorted by latitude and reputation: the southern section [inference]), in order,

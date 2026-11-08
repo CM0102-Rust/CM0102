@@ -24,8 +24,8 @@ pub(crate) struct ConcacafClubLists {
 /// stopping at the first national team.
 pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    // simplification: as quatro listas começam zeradas na cópia (na original, sobra de pilha que só é lida quando falta clube;
-    // o comparador manda esse caso para a original sozinha)
+    // simplification: the four lists start zeroed in the copy (in the original, stack leftover that is only read when a club is missing;
+    // the comparer sends this case to the original alone)
     let mut l = ConcacafClubLists { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
     let (mut a, mut b, mut c, mut m) = (0u8, 0u8, 0u8, 0i8);
     let mut clube = read_u32_as_usize(G_CLUB_TABLE);
@@ -136,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
     if read_u32_as_usize(read_u32_as_usize(this + 0xa7)) == 0 && stage != 0 {
         let classificar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CONCHAMP_SELECT_QUALIFIED_CLUBS);
         if classificar(this) < 0 {
-            // simplification: a 0x4c11a0 sempre devolve 1; o caso de erro fica com a caixa e o 0 da original
+            // simplification: 0x4c11a0 always returns 1; the error case stays with the box and the original’s 0
             show_error_at(0x9a7d30, 0x1ba);
             return 0;
         }
@@ -148,9 +148,9 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
     base(this, today, stage)
 }
 
-// simplification: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano: com a
-// tabela vazia e fase ≠ 0, a copa sai com 8 times e o time 0 preenchido (a 0x4c11a0 tem o seu comparador); senão +0x3e
-// não muda.
+// simplification: the cup update (0x51f890) plays and draws: does not run twice. Only the original runs; the plan: with the
+// empty table and stage ≠ 0, the cup comes out with 8 teams and team 0 filled (0x4c11a0 has its own comparer); otherwise +0x3e
+// does not change.
 
 /// rule: the cup prize fund is 2,000,000; the round table (three-round knockout) comes from virtual +0x3c
 /// Original: `ConChamp::set_up_rounds` (0x4c15f0, con_champ.cpp, thiscall, ret 0).
@@ -166,8 +166,8 @@ pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u
     1
 }
 
-// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere o fundo de
-// prêmios (+0x28 = 2.000.000) e a devolução 1.
+// simplification: virtual +0x3c allocates the rounds table: does not run twice. Original only; the plan checks the bottom of
+// prizes (+0x28 = 2,000,000) and return value 1.
 
 /// rule: the CONCACAF Champions' Cup has 8 teams in single matches: quarter-finals drawn on 1/8 and played on 28/8,
 /// semi-final on 1/9 and final on 4/9; category 8, tie-break 3; no per-round prize (−1)

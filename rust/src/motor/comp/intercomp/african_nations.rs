@@ -36,8 +36,8 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
     let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
-    // simplification: nas voltas antes do sorteio e nos erros a original devolve só o al = 0 (o resto do eax é sobra das
-    // chamadas de antes); quem chama lê o byte
+    // simplification: in the passes before the draw and on errors the original returns only al = 0 (the rest of eax is leftover from the
+    // earlier calls); the caller reads the byte
     if year_of_today < year || (year_of_today == year && (day_of_today as i16) < day as i16) {
         return 0;
     }
@@ -69,9 +69,9 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
     league(this, today, full)
 }
 
-// simplification: o sorteio, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
-// no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e as três fases
-// criadas e a fase atual (+0x30) a última delas (2).
+// simplification: the draw, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan
+// on the draw day (the copy’s condition): +0x45 = 1, the list +0xee and +0xf2 zeroed, the group A table and the three stages
+// created, and the current stage (+0x30) is the last of them (2).
 
 /// AfricanNations::draw_finalists: hosts first, then African nations by reputation, drawn from 4 pots into 4 groups of
 /// 4 stored in +0xee; returns 1 (0 on failure).
@@ -104,7 +104,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     }
     let mut ids = [-1i32; 2];
     let (a, b) = ids.split_at_mut(1);
-    // simplification: a original empurra o eax com o ano nos 16 bits baixos e sobra nos altos; a 0x5fa730 só lê o word
+    // simplification: the original pushes eax with the year in the low 16 bits and leftovers in the high ones; 0x5fa730 only reads the word
     let how_many = sedes(read_u32_as_usize(G_HOST_COUNTRY), read_u32_as_usize(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), read_i16(this + 0x40) as u16 as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
     let mut n = 0usize;
     if how_many > 0 {
@@ -242,8 +242,8 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
     1
 }
 
-// simplification: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
-// fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// simplification: the stage is allocated and the news goes to the managers: does not run twice. Original only; the plan: returns 1 with the
+// stage at [+0xc][g], +0x30 = g, the stage with 4 teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 
 
@@ -270,8 +270,8 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
     }
 }
 
-// simplification: o mata-mata (0x402090) aloca a fase e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um
-// (fora da última fase, que dá a caixa).
+// simplification: the knockout (0x402090) allocates the stage and draws: does not run twice. Original only; the plan: +0x30 goes up one
+// (outside the last stage, which gives the message box).
 
 /// rule: group A has four national teams, the first four of the draw list, in order; the managers get the draw news
 /// Original: `AfricanNations::init_group_a_table` (0x4019c0, african_nations.cpp, thiscall, ret 0).
@@ -297,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
     let mut i = 0i8;
     while (i as i16) < read_i16(this + 0x3e) {
         let national_team = read_u32_as_usize(read_u32_as_usize(this + 0xee).wrapping_add((i as isize * 4) as usize)); // cqk12: a seleção da linha
-        // simplification: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, national_team, 0, 0);
         i = i.wrapping_add(1);
     }
@@ -305,9 +305,9 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
     1
 }
 
-// simplification: a tabela é alocada (e cada linha aloca o histórico de posições) e a notícia vai aos técnicos: não roda duas
-// vezes. Só a original; o plano: 4 times, a tabela, e em cada linha i a seleção i dos sorteados (+0xee) com a posição i
-// (+4 da linha, 0x3b bytes).
+// simplification: the table is allocated (and each row allocates the position history) and the news goes to the managers: does not run
+// times. Original only; the plan: 4 teams, the table, and in each row i the national team i of those drawn (+0xee) with position i
+// (+4 of the row, 0x3b bytes).
 
 /// rule: the season honours (winner, runner-up, third) are the knockout ones
 /// Original: `AfricanNations::record_season_honours` (0x401b90, african_nations.cpp, thiscall, ret 0).
@@ -320,8 +320,8 @@ pub(crate) unsafe extern "thiscall" fn african_nations_record_season_honours(thi
     h(stage);
 }
 
-// simplification: o histórico (a virtual +0x30 do mata-mata, a 0x519a90 já em Rust com o seu comparador) não roda duas vezes;
-// a rotina não grava nada além do salto. Só a original.
+// simplification: the history (the knockout’s virtual +0x30, 0x519a90 already in Rust with its own comparer) does not run twice;
+// the routine writes nothing beyond the jump. Original only.
 
 
 
@@ -369,7 +369,7 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: usize, cl
             }
             0xff => {
                 let weight = scale_by_round(0x28, 0x64, read_i16(jogo + 0x34), 3);
-                // simplification: +0x32 e +0x30 vão em registradores com lixo nos 16 bits altos; a 0x86c000 só usa as palavras
+                // simplification: +0x32 and +0x30 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words
                 if name == 0 {
                     crate::comparacao::ramo("cqj_10 africana fora no mata-mata");
                     european_cup_add_knocked_out_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight); // cqj10: quem cai no mata-mata da Copa Africana
@@ -399,11 +399,11 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_
     national_tournament_staff_records(0, this, clube, outcome, stage, jogo, a6, 3)
 }
 
-// simplification: os registros vão para o histórico dos técnicos e encerram as convocações: não rodam duas vezes, e a rotina
-// não grava nada além deles. Só a original; o plano confere a devolução 0.
+// simplification: the records go to the managers’ history and end the call-ups: they do not run twice, and the routine
+// writes nothing besides them. Original only; the plan checks the return of 0.
 
 
-// simplification: como a da Copa Africana: só a original, a devolução 0.
+// simplification: like the African Cup one: original only, return value 0.
 
 /// Ends the national team's current competition (NationalTeams::clear_current_competition for the club's nation).
 ///
@@ -432,7 +432,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_
     let (d, f) = (outcome as u8, stage as u8 as i8);
     let comp = read_u32_as_usize(this + 4);
     let eliminar = |weight: u32| {
-        // simplification: +0x30 e +0x32 vão em registradores com lixo nos 16 bits altos; a 0x86c000 só usa as palavras
+        // simplification: +0x30 and +0x32 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words
         european_cup_add_knocked_out_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
         clear_national_team_competition(clube);
     };
@@ -464,8 +464,8 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_
     0
 }
 
-// simplification: os registros, o fim da competição da seleção e a vaga na Copa do Mundo não rodam duas vezes. Só a original;
-// o plano: a devolução 0 e, na repescagem ganha, *saida = 4 e a lista da Copa do Mundo (+0x36) um a mais (se cabia).
+// simplification: the records, the end of the national team’s competition and the World Cup place do not run twice. Original only;
+// the plan: return value 0 and, on a won play-off, *saida = 4 and the World Cup list (+0x36) one more (if it fit).
 
 /// rule: the African Nations Cup has four groups (stages −1 to 2, ids 0x3e8 to 0x3eb) of three rounds on 8, 12 and 16
 /// February, with each group's fixed matches; the knockout (stage 3) in single matches: quarter-finals on 21/2 with

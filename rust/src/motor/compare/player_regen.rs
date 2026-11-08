@@ -498,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize)
             }
             let id = read_i32(e);
             if id < 0 || id > read_i32(G_STAFF_COUNT) {
-                return o(this); // simplification: a caixa de erro só na original
+                return o(this); // simplification: the error box only in the original
             }
             k += 1;
         }
@@ -508,7 +508,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize)
         PLACAR.registrar(igual, || format!("process_regen_queue({:x}) sem vencidas {:x?} x {:x?}", this, mo, mr));
         return;
     }
-    // o regen (0x7abac0) pode pôr entradas novas na fila (na carga do save, 4 vencidas de 10 e a conta caiu só 1)
+    // the regen (0x7abac0) may put new entries in the queue (on save load, 4 expired out of 10 and the count dropped only 1)
     crate::comparacao::ramo("cpw_10 vencidas so na original");
     o(this);
 }

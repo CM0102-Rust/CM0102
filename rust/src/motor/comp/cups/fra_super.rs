@@ -99,7 +99,7 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stag
 pub(crate) unsafe fn fra_super_compare_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if stage as u8 != 0xff {
-        // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: outside stage −1 neither of the two writes anything; the outputs may not even exist
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn fra_super_create_round_table(this: usize,
         |r| r.jogo.5 = french_super_cup_venue(this))
 }
 
-// simplification: fora de 2001 a original sorteia o mando (0x90cfc0): só ela roda nesse caso.
+// simplification: outside 2001 the original rolls home advantage (0x90cfc0): only it runs in that case.
 
 /// A Supercopa da Espanha: ida e volta (7 dias entre os jogos) em agosto, sem sorteio (+0xd = 0x200), desempate de ida e
 /// volta 1.

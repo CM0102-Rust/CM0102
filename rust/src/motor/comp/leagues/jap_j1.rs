@@ -51,8 +51,8 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
     let t = table(this, 2, &mut rodadas, &mut extra, 0);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = new(0xb2);
-    // simplification: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
-    // virtual são words na pilha; o ano vai no dx); o construtor só lê as palavras.
+    // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
+    // virtual are words on the stack; the year goes in dx); the constructor only reads the words.
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =

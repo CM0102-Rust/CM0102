@@ -404,8 +404,8 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: u
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = new(0xb2);
-    // simplification: a original empurra a conta, as rodadas e a palavra +0x40 em registradores inteiros com lixo nos 16 bits
-    // altos; o construtor só lê as palavras ([esp+0x230], [esp+0x238], [esp+0x244] e [esp+0x250] com mov ax/dx).
+    // simplification: the original pushes the count, the rounds and the word +0x40 in integer registers with garbage in the high 16 bits
+    // high; the constructor only reads the words ([esp+0x230], [esp+0x238], [esp+0x244] and [esp+0x250] with mov ax/dx).
     let stage = if p != 0 {
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);

@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, person:
 /// Comparer for `fog_after_match` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_fog_after_match(partida: usize, dados: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize)>(IDX_FOG_AFTER_MATCH);
-    // os registros que a rotina pode mexer (mesmos testes, sem o 0x32 das reservas: sobra nao atrapalha)
+    // the registers the routine may touch (same tests, without the 0x32 of the reserves: leftover does not hurt)
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let n = *(G_STAFF_COUNT as *const i32);
     let mut reg: Vec<(usize, usize)> = Vec::new();

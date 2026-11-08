@@ -19,7 +19,7 @@ use super::*;
 /// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], sementes: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
     let n = rows.len();
-    // as sementes: a original grava os bytes na pilha antes de alocar (iguais às linhas, mas constantes à parte)
+    // the seeds: the original writes the bytes on the stack before allocating (same as the rows, but separate constants)
     let mut s = [0u8; 8];
     s[..sementes.len()].copy_from_slice(sementes);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -36,8 +36,8 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], sem
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = new(0xb2);
-    // simplification: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
-    // virtual são words na pilha; o ano vai no cx); o construtor só lê as palavras.
+    // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
+    // virtual are words on the stack; the year goes in cx); the constructor only reads the words.
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =

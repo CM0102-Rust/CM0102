@@ -29,7 +29,7 @@ MUTACOES = [
     ('s_faixa', '                *size = (*size).wrapping_sub(1);', '                *size = (*size).wrapping_sub(0);'),
     ('i_ultima', '    *((last - 2) as *mut u8) = 0;', '    *((last - 2) as *mut u8) = 1;'),
     ('tr_recusa', '        return 0; // recusado, sem segunda pergunta', '        return 1; // recusado, sem segunda pergunta'),
-    ('lt_ultimo_dia', '        return 0xff; // fora do último dia', '        return 0xfe; // fora do último dia'),
+    ('lt_ultimo_dia', '        return 0xff; // outside the last day', '        return 0xfe; // outside the last day'),
     ('ha_motivo', '*((this + 0x18) as *mut u8) = *((source + 0x18) as *const u8); // motivo', '*((this + 0x18) as *mut u8) = *((source + 0x18) as *const u8) ^ 1; // motivo'),
     ('dq13_reduzida', 'ability * read_f64_at(0x967880) + (v + v)', 'ability * read_f64_at(0x967880) * 2.0 + (v + v)'),
 ]

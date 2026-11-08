@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_stat(this: usize, player: us
     }
     let c = category as u8 as i8;
     let simples = which as u8 != 0x13 && c <= 6;
-    // simplification: categoria fora de 1..6 cai na caixa da 0x7c3920; nas combinadas sem o registro 4 ou 5, locais sem valor
+    // simplification: category outside 1..6 falls into the box of 0x7c3920; in the combined ones without record 4 or 5, locals without a value
     let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
     if (simples && !(1..=6).contains(&c))
         || (!simples && (100..=102).contains(&(c as i32)) && (record(this, player, 4) == 0 || record(this, player, 5) == 0))
@@ -253,7 +253,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_stats_reset_player(this: 
     if person == 0 || read_u32_as_usize(person + staff::PLAYER) == 0 {
         return o(this, person);
     }
-    let r = read_u32_as_usize(this + 0x30).wrapping_add(read_u32_as_usize(read_u32_as_usize(person + staff::PLAYER)).wrapping_mul(39)); // o id da ficha de jogador (+0x61), não o da pessoa
+    let r = read_u32_as_usize(this + 0x30).wrapping_add(read_u32_as_usize(read_u32_as_usize(person + staff::PLAYER)).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
     let mut reg = vec![(r, 39), (this + 0x38, 4)];
     for k in 0..6usize {
         let i = read_u32_as_usize(r + 4 * k);
@@ -285,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PLAYER_STATS_RECORD_MATCH);
     if p == 0 || jogo == 0 {
-        return o(this, p, jogo); // simplification: as caixas, só a original
+        return o(this, p, jogo); // simplification: the boxes, original only
     }
     let simulado = read_usize(p) as i32 == -2;
     let mut regions = vec![(this + 0x10, 0x20)];
@@ -296,7 +296,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_stats_record_match(this: 
             let mut error = false;
             let c = match_stats_category(p, lado as i32, false, &mut error);
             if error {
-                return o(this, p, jogo); // simplification: a caixa, só a original
+                return o(this, p, jogo); // simplification: the box, original only
             }
             stats_categories_for(c).into_iter().flatten().collect()
         };
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_stats_record_match(this: 
             for &c in &cats {
                 let r = player_category_record(this, dados, c);
                 if r == 0 {
-                    return o(this, p, jogo); // simplification: o registro seria criado, só a original
+                    return o(this, p, jogo); // simplification: the record would be created, original only
                 }
                 regions.push((r, 0x20));
             }

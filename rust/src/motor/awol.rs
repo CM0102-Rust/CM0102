@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     // 0x77bbe0: push 0; push 0xbc9; lea ecx -> thiscall; 0x785790: push v; push k; lea ecx -> thiscall; 0x600a50: 5
     // pushes; add esp, 0x14 -> cdecl (clube, 0, 1, 0, 0) e (clube, 1, 1, 0, 0)
-    let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construct(nt, 0xbc9, 0);
     write(nt, 0, read_usize(player) as u32);
@@ -234,8 +234,8 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     }
     let noticias = read_usize(G_NEWS);
     let of_human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    // 0x7875e0: mov ecx, [0xb7431c]; push clube (ret 4); 0x7861e0: push clube +0x39; push notícia; mov ecx, [0xb7431c];
-    // 0x7863f0: push nação; push notícia; mov ecx, [0xb7431c] -> thiscall nas três
+    // 0x7875e0: mov ecx, [0xb7431c]; push club (ret 4); 0x7861e0: push club +0x39; push news; mov ecx, [0xb7431c];
+    // 0x7863f0: push nation; push news; mov ecx, [0xb7431c] -> thiscall in all three
     let ensaio = (*core::ptr::addr_of!(AWOL_NEWS_TAPE)).is_some();
     if of_human(noticias, clube) != 0 {
         if ensaio {
@@ -343,7 +343,7 @@ pub(crate) unsafe fn awol_miss_training(this: usize, person: usize) {
 /// profissionalismo e temperamento ou moral. Cada caso resolvido sai da lista (0x68d1f0) e a marca do bit 2 troca. Uma
 /// lista que acaba antes da conta encerra o dia.
 pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
-    // (1) as ausências
+    // (1) the absences
     let l = read_usize(this);
     if l != 0 {
         awol_llist_rewind(l);
@@ -366,7 +366,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
             }
         }
     }
-    // (2) as faltas ao treino
+    // (2) missed training sessions
     let l = read_usize(this + 4);
     if l != 0 {
         awol_llist_rewind(l);
@@ -389,7 +389,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
             }
         }
     }
-    // (3) os atrasos
+    // (3) the delays
     let l = read_usize(this + 8);
     if l == 0 {
         return;
@@ -463,7 +463,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
         }
         return close_awol_case(this, r);
     }
-    // o caso novo: os colegas do clube
+    // the new case: the club’s teammates
     crate::comparacao::ramo("cpw_7 caso novo");
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let k = contract_of(read_usize(G_CONTRACT_MANAGER), person);
@@ -521,8 +521,8 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     close_awol_case(this, r);
 }
 
-// simplification: sorteia, tira e libera nós das listas (0x68d1f0), dá notícia de volta (0x419710) e de falta (0x41a360): só
-// a original; a cópia leva os ramos.
+// simplification: rolls random numbers, removes and frees list nodes (0x68d1f0), gives return news (0x419710) and absence news (0x41a360): only
+// the original; the copy takes the branches.
 
 /// bit 2 of the person flag; without a contract, clears the miss first
 /// Original: `AWOL::has_missed_training` (0x418ff0, awol.cpp, thiscall, ret 4).
@@ -591,7 +591,7 @@ pub(crate) unsafe extern "thiscall" fn has_fitness_incident(this: usize, person:
 }
 
 
-// ---- as originais que a awol_daily_update chama e que liam resíduo da pilha particular (bancada da 259ª) ----
+// ---- the originals that awol_daily_update calls and that read leftovers from the private stack (259th batch bench) ----
 
 /// O ensaio dos comparadores de `miss_training`, `end_absence` e `set_flags`: a cópia para antes
 /// das chamadas que alocam, dão notícia ou não podem rodar duas vezes e deixa em MISS_TRAINING_DECISION o que faria.
@@ -677,8 +677,8 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     *row = (*row).wrapping_add(r as u8);
     let match_condition: unsafe extern "thiscall" fn(usize, usize, u32) -> i16 = core::mem::transmute(FN_INJURY_GET_CONDITION);
     let c = match_condition(read_usize(G_INJURY), person, 0);
-    // as contas da original são de 32 bits com bytes altos de outros valores no registrador, mas só a palavra baixa
-    // chega (a condição é short na 0x62bd10)
+    // the original’s calculations are 32-bit with high bytes from other values in the register, but only the low word
+    // arrives (the condition is short in 0x62bd10)
     let queda = 0x15i16.wrapping_sub(read_u8(read_usize(person + staff::PLAYER) + 0x34) as i8 as i16).wrapping_mul(25);
     let r = friendly_random(queda as i32);
     let new = (c as u16).wrapping_sub((queda as u16).wrapping_add(r as u16).wrapping_add(0x64));
@@ -773,7 +773,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     let atribuir: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut temporaria = [0u8; 8];
     atribuir(reg.as_mut_ptr() as usize + 8, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
-    // simplification: o byte +0x10 do registro é sobra de pilha na original; a cópia grava 0 (ninguém o lê)
+    // simplification: byte +0x10 of the record is stack leftover in the original; the copy writes 0 (nobody reads it)
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     append(read_usize(this + 8), reg.as_ptr() as usize, 0x11);
     if club_has_human_manager(clube) {
@@ -787,7 +787,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
         }
         let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
         let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-        let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
+        let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
         let nt = local.as_mut_ptr() as usize;
         construct(nt, 0x138f, 0);
         set_news_slot(nt, 0, read_u32(player));
@@ -827,7 +827,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     let np = read_usize(read_usize(clube + club::MANAGER) + 0x69);
     crate::comparacao::ramo("cpz_9 multa pela forma");
     let rating: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
-    // simplification: a original empurra ecx com o byte +0x19 só no cl (os altos são sobra); a 0x544410 só lê o byte
+    // simplification: the original pushes ecx with byte +0x19 only in cl (the high ones are leftover); 0x544410 only reads the byte
     let c =friendly_random(rating(np, *((np + 0x19) as *const u8) as u32) as i32);
     let e = friendly_random(5); // cpz9: o sorteio do prazo
     let prazo = if c > e { 1 } else { 2 }; // cpz9: o prazo da multa

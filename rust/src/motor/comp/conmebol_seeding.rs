@@ -240,7 +240,7 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
         }
     }
     sort(t, k as u16 as i16 as i32, 0xc, 0x905ce0);
-    // simplification: a original devolve o ax com os bytes altos do eax que sobraram do qsort (quem chama lê o ax); a cópia, zero
+    // simplification: the original returns ax with the high bytes of eax left over from qsort (the caller reads ax); the copy, zero
     k as u16 as u32
 }
 

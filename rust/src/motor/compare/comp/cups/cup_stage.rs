@@ -22,8 +22,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize,
     let r = o(this, parent, n, teams, rounds, a5, modelo, year, stage, b2, id, b3, arvore, by_order, a14, sementes);
     let l = read_u32_as_usize(this + 0xa7);
     let t = read_u32_as_usize(this + 0xa3);
-    // a árvore (chamada no fim) reescreve partes da tabela das rodadas e da lista (na comparação de 06/11 as duas
-    // diferiam do que o construtor grava): confere os campos fixos, a tabela montada e o conjunto dos clubes da lista
+    // the tree (called at the end) rewrites parts of the round table and of the list (in the 06/11 comparison the two
+    // differed from what the constructor writes): checks the fixed fields, the built table and the set of clubs in the list
     let _ = &modelo_antes;
     let ok = r == this && read_i16(this + 0x3e) as u16 == n as u16 && read_i16(this + 0x3c) as u16 == rounds as u16 && read_i16(this + 0x40) as u16 == year as u16
         && t != 0 && l != 0 && {
