@@ -175,12 +175,12 @@ pub(crate) unsafe extern "C" fn compare_refresh_possession_bar() {
 pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_OVERVIEW_PANEL);
     let p0 = get_screen_param(0);
-    let foto = get_screen_param(0x1d);
+    let photo = get_screen_param(0x1d);
     let commentator = p0 != 0
         && core::ptr::read_unaligned((core::ptr::read_unaligned((p0 + live_match::RECORD) as *const usize) + 0x53) as *const u32) == 0
         && get_screen_param(7) != 0;
     let reg = screen_update_regions(false);
-    if overview_would_error() || commentator || (p0 != 0 && foto == 0) || reg.is_none() {
+    if overview_would_error() || commentator || (p0 != 0 && photo == 0) || reg.is_none() {
         // simplification: warning, sound, allocation and network do not run twice; those paths are proved in Rust mode
         return o(top, base);
     }
@@ -189,8 +189,8 @@ pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32,
     reg.push((0xde1f64, 0x100));
     reg.push((top as usize, 4));
     reg.push((base as usize, 4));
-    if foto != 0 {
-        reg.push((foto, 0xd7a));
+    if photo != 0 {
+        reg.push((photo, 0xd7a));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(top, base), || draw_match_overview_panel(top, base));
     SCOREBOARD.record(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
@@ -336,12 +336,12 @@ pub(crate) unsafe fn compare_pela_lista_com(name: &str, extra: &[(usize, usize)]
 /// bytes). Sem a foto ainda (o primeiro desenho), os valores a alocam: só a original roda.
 pub(crate) unsafe extern "C" fn compare_draw_action_zones_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_ACTION_ZONES_PANEL);
-    let foto = get_screen_param(0x1d);
-    if foto == 0 {
+    let photo = get_screen_param(0x1d);
+    if photo == 0 {
         // simplification: the allocation does not run twice; this design is proven in Rust mode
         return o(top, base);
     }
-    let extra = [(top as usize, 4), (G_ACTION_ZONES_STATIC_COLOUR, 2), (G_ACTION_ZONES_STATIC_GUARD, 1), (foto, 0xd7a)];
+    let extra = [(top as usize, 4), (G_ACTION_ZONES_STATIC_COLOUR, 2), (G_ACTION_ZONES_STATIC_GUARD, 1), (photo, 0xd7a)];
     compare_pela_lista_com("draw_action_zones_panel", &extra, || o(top, base), || draw_action_zones_panel(top, base));
 }
 

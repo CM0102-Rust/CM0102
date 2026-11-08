@@ -969,10 +969,10 @@ pub(crate) unsafe extern "thiscall" fn resolve_international_dates(this: usize) 
             crate::comparison::branch("cqb_3 ano para tras");
             year = year.wrapping_add(0xfffc); // cqb3: minus 4 if more than 3 years ahead
         }
-        let com_sinal = |o: usize| read_u8(e + o) as i8 as i16 as u16 as u32;
+        let with_sign = |o: usize| read_u8(e + o) as i8 as i16 as u16 as u32;
         // simplification: the day and the weekday go over an edx with a zeroed high half (like the original); the month and the year go
         // over eax, with a garbage high half, and 0x54a130 only reads the month byte and the year word: here, clean
-        (exe::date_set(e + intl_date_entry::DATE, com_sinal(1), read_u8(e + intl_date_entry::MONTH) as u32, year as u32, (com_sinal(0)) as i32) as u32);
+        (exe::date_set(e + intl_date_entry::DATE, with_sign(1), read_u8(e + intl_date_entry::MONTH) as u32, year as u32, (with_sign(0)) as i32) as u32);
         k += 1;
     }
     exe::crt_qsort(read_usize(this + friendly::INTL_DATE_TABLE), (read_i32(this + friendly::INTL_DATE_COUNT)) as u32, 0x14, 0x5cc610);
@@ -999,8 +999,8 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_tournament(this: usize) -
     }
     for i in 0..0x7fusize {
         let t = this + 0x69 * i + 0xb1;
-        let anfitriao = read_usize(t);
-        if anfitriao != 0 && anfitriao == club && read_usize(t + tournament_slot::IN_USE) != 0 {
+        let host = read_usize(t);
+        if host != 0 && host == club && read_usize(t + tournament_slot::IN_USE) != 0 {
             return t;
         }
     }
@@ -1058,7 +1058,7 @@ pub(crate) unsafe fn is_after_today(a: usize) -> bool {
 /// amistoso em data livre (0x5c4380: 3 pushes; ecx = this -> thiscall) com o de faixa (+5) maior como anfitrião e
 /// mandante; sem adversário ou com o amistoso marcado, a faixa × 0,8 (no mínimo 1). No fim, o qsort do plano pela data
 /// (0x945333: 4 pushes; add esp, 0x10 -> cdecl, pela 0x778e90).
-pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, ordenados: usize, count: u32) {
+pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries: usize, ordenados: usize, count: u32) {
     let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if read_usize(this + friendly::PLANNED_FRIENDLIES) != 0 {
         exe::crt_free(read_usize(this + friendly::PLANNED_FRIENDLIES));
@@ -1133,7 +1133,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entrada
             let mut j = 0i8;
             while read_i8(cand + 4) < how_many && j < how_many {
                 // simplification: the original pushes the dword of the band’s local (the high bytes are leftovers); 0x5c4cb0 only reads the byte
-                let opp = exe::friendly_find_friendly_opponent(this, cand, entradas, count, band as u32, 0);
+                let opp = exe::friendly_find_friendly_opponent(this, cand, entries, count, band as u32, 0);
                 let marked = if opp != 0 {
                     crate::comparison::branch("cqb_4 adversario achado");
                     if read_i8(cand + 5) > read_i8(opp + 5) { // cqb4: the one with the higher band at home
@@ -1177,14 +1177,14 @@ pub(crate) unsafe fn free_tournament_slot(this: usize) -> usize {
 /// livre: 0) ganha o anfitrião (+0), o tipo (+0xc), os bytes a e b (+0xd, +0xe), a data de início (+4, pela 0x417c10:
 /// lea ecx, [t + 4]; 2 pushes; sem add esp -> thiscall), as palavras c, d, e (+0xf, +0x11, +0x13), +0x29, +0x2d e
 /// +0x65 zerados, o nome (+0x31, com o zero) e os 4 convidados (+0x15, dwords) com as marcas +0x25..+0x28 em 1.
-pub(crate) unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: usize, kind: u32, start: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, name: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn add_tournament(this: usize, host: usize, kind: u32, start: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, name: usize) -> usize {
     let t = free_tournament_slot(this);
     if t == 0 {
         return 0;
     }
     *((t + tournament_slot::KIND) as *mut u8) = kind as u8;
     *((t + 0xd) as *mut u8) = a as u8;
-    core::ptr::write_unaligned(t as *mut usize, anfitriao);
+    core::ptr::write_unaligned(t as *mut usize, host);
     *((t + 0xe) as *mut u8) = b as u8;
     let copy: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut tmp = [0u8; 8];
@@ -2414,7 +2414,7 @@ pub(crate) unsafe extern "thiscall" fn add_friendly_match(this: usize, club: usi
 /// original zera antes. Sem achado: 0. Achado: o amistoso entra (0x5c4b60), a data vai para as listas de datas dos dois
 /// (+0x12, criadas se faltam; 8 bytes), cada um entra na lista de adversários do outro (+0xa; os 4 primeiros bytes do
 /// candidato) e as contas (+4) sobem. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, anfitriao: usize, home: usize, away: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, host: usize, home: usize, away: usize) -> u32 {
     let mut start = *((home + preseason_candidate::WINDOW_START) as *const i16);
     let mut end = *((home + preseason_candidate::WINDOW_END) as *const i16);
     let fini = *((away + preseason_candidate::WINDOW_START) as *const i16);
@@ -2456,7 +2456,7 @@ pub(crate) unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, a
         }
     }
     crate::comparison::branch("cps_12 data livre");
-    exe::friendly_add_planned_friendly(this, anfitriao, home, away, pdata);
+    exe::friendly_add_planned_friendly(this, host, home, away, pdata);
     if read_usize(home + preseason_candidate::PLANNED_DATES) == 0 {
         write_usize(home + preseason_candidate::PLANNED_DATES, alloc_empty_list());
     }
@@ -2787,7 +2787,7 @@ pub(crate) unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, c
 /// data)`: acrescenta ao vetor de 0x14 bytes [this+0x34d8] (conta +0x34e0, capacidade +0x34e4; cheio: cresce de 100
 /// em 100, realloc 0x945667; sem memória, a caixa "Error" 0x797 e volta) o amistoso: a data em +0 (0x417c10, a cópia
 /// devolvida fica na pilha) e os ids (o dword apontado por cada argumento) em +8, +0xc e +0x10; a conta sobe.
-pub(crate) unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, home: usize, away: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn add_planned_friendly(this: usize, host: usize, home: usize, away: usize, data: usize) {
     if read_usize(this + friendly::PLANNED_COUNT) == read_usize(this + friendly::PLANNED_CAPACITY) {
         crate::comparison::branch("cpm_7 amistosos crescem");
         let cap = read_usize(this + friendly::PLANNED_CAPACITY).wrapping_add(100);
@@ -2803,7 +2803,7 @@ pub(crate) unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitri
     crate::comparison::branch("cpm_7 amistoso planejado");
     let n = read_usize(this + friendly::PLANNED_COUNT);
     let item = read_usize(this + friendly::PLANNED_FRIENDLIES).wrapping_add(n.wrapping_mul(0x14));
-    write_usize(item + planned_friendly::HOST_CLUB_ID, read_usize(anfitriao));
+    write_usize(item + planned_friendly::HOST_CLUB_ID, read_usize(host));
     write_usize(item + planned_friendly::HOME_CLUB_ID, read_usize(home)); // o mandante
     write_usize(item + planned_friendly::AWAY_CLUB_ID, read_usize(away)); // o visitante
     let copiar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);

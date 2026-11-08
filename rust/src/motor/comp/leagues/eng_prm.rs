@@ -53,14 +53,14 @@ pub(crate) struct EnglishDivision {
 /// Comp_Stats::Comp_Stats 0x49ee70: push liga; mov ecx, novo -> thiscall, ret 4) em +8 e as posições previstas
 /// (League::set_predicted_positions 0x68a850: mov ecx -> thiscall, ret 0). Cada passo que falha mostra a caixa da
 /// sua linha e encerra. Devolve this.
-pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro: usize, p: &EnglishDivision) -> usize {
+pub(crate) unsafe fn construct_english_division(this: usize, year: u32, registro: usize, p: &EnglishDivision) -> usize {
     let set_up_rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.set_up_rules);
     let create_table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.create_table);
-    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
+    let sort: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     exe::new_league(this);
     write_usize(this + 4, registro);
     write_usize(this, p.vtable);
-    core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
+    core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = 9; // cql6: the discipline rule of the English leagues
     if let Some((capacidade, sentados)) = p.stadium {
         core::ptr::write_unaligned((this + league::REQUIRED_CAPACITY) as *mut u16, capacidade);
@@ -91,7 +91,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
         show_error_at(p.source_file, p.box_lines[2]);
         return this;
     }
-    if ordenar(this, 0) == 0 {
+    if sort(this, 0) == 0 {
         show_error_at(p.source_file, p.box_lines[3]);
         return this;
     }
@@ -186,8 +186,8 @@ pub(crate) static mut ENG_PRM_RULES_DRY_RUN: bool = false;
 /// [pt] Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
 /// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
 /// resultado em +0xba. Devolve 1.
-pub(crate) unsafe fn eng_prm_apply_league_rules(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
-    for &(d, t, v) in escritas {
+pub(crate) unsafe fn eng_prm_apply_league_rules(this: usize, written: &[(usize, u8, u32)]) -> u32 {
+    for &(d, t, v) in written {
         match t {
             1 => *((this + d) as *mut u8) = v as u8,
             2 => core::ptr::write_unaligned((this + d) as *mut u16, v as u16),
@@ -260,8 +260,8 @@ pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> 
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Third, 2 turnos e 3 pontos
     v.extend_from_slice(&[(0xbe, 1, 3), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 1), (0x1c, 4, read_usize(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) as u32)]);
     let nation = read_usize(read_usize(this + 4) + 0x5d);
-    let abaixo = if *((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) as u32 } else { 0xffff_ffff };
-    v.extend_from_slice(&[(0x20, 4, abaixo), (0x4a, 1, 3), (0x49, 1, 5)]);
+    let below = if *((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) as u32 } else { 0xffff_ffff };
+    v.extend_from_slice(&[(0x20, 4, below), (0x4a, 1, 3), (0x49, 1, 5)]);
     v
 }
 
@@ -276,7 +276,7 @@ pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> 
 /// original roda inteira; a faixa +0x1c..+0xec volta como estava e a cópia grava as regras sem a virtual +0x3c; os
 /// campos que a cópia grava têm de sair iguais aos da original, e a devolução 1; no fim fica a faixa da original
 /// (com a tabela de rodadas dela em +0xba, +0xa9 e +0x3a).
-pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, written: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
     let band = [(this + league::UPPER_DIVISION_ID, 0xd0)];
     let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
@@ -295,7 +295,7 @@ pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, escri
             _ => u32::from_le_bytes([b[0], b[1], b[2], b[3]]),
         }
     };
-    let difs: Vec<(usize, u32, u32)> = escritas.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
+    let difs: Vec<(usize, u32, u32)> = written.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
     SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
     r
 }
@@ -319,8 +319,8 @@ pub(crate) unsafe fn is_after_1999() -> bool {
 ///
 /// [pt] League::pay_tv_rights (0x683010: thiscall(liga, valor, filtro), ret 8): o valor a cada clube da tabela, ou só aos
 /// que vieram da competição `filtro` (+0x5b do clube).
-pub(crate) unsafe fn eng_prm_pay_tv_rights(this: usize, value: i32, filtro: usize) {
-    exe::league_pay_tv_rights(this, value, filtro);
+pub(crate) unsafe fn eng_prm_pay_tv_rights(this: usize, value: i32, filter: usize) {
+    exe::league_pay_tv_rights(this, value, filter);
 }
 
 /// The common table body: allocates the table and fills it with the division's clubs; when full, sets the prize fund,

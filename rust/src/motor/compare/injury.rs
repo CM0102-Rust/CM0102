@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_illness_outbreak(this: usize,
 /// a conta pelo menos a de antes menos os que saem.
 pub(crate) unsafe extern "thiscall" fn compare_spread_illness_outbreaks(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPREAD_ILLNESS_OUTBREAKS);
-    let cinco = five_days_ago();
+    let five = five_days_ago();
     let n0 = read_i32(this + injury_fields::OUTBREAK_COUNT);
     let hoje4 = read_usize(G_CURRENT_DATE) as u32;
     let mut saem = 0;
@@ -355,13 +355,13 @@ pub(crate) unsafe extern "thiscall" fn compare_spread_illness_outbreaks(this: us
         if ano_h < ano_e || (ano_h == ano_e && (hoje4 as u16 as i16) < read_i16(e)) {
             break;
         }
-        if is_after_outbreak(&cinco, e) {
+        if is_after_outbreak(&five, e) {
             saem += 1;
         }
     }
     o(this);
     let n = read_i32(this + injury_fields::OUTBREAK_COUNT);
-    let old = (0..n.max(0) as usize).find(|&k| is_after_outbreak(&cinco, read_usize(this + injury_fields::OUTBREAKS) + k * OUTBREAK_SIZE));
+    let old = (0..n.max(0) as usize).find(|&k| is_after_outbreak(&five, read_usize(this + injury_fields::OUTBREAKS) + k * OUTBREAK_SIZE));
     SCOREBOARD.record(old.is_none() && n >= n0 - saem, || {
         format!("spread_illness_outbreaks: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, old)
     });
@@ -407,8 +407,8 @@ pub(crate) unsafe extern "thiscall" fn compare_init_records(this: usize) {
     if v == 0 {
         return;
     }
-    let errado = (0..read_i32(G_STAFF_COUNT).max(0) as usize).find(|&k| read_u8(v + 31 * k + 0x1e) != 0x32);
-    SCOREBOARD.record(errado.is_none(), || format!("init_records: registro {:?} sem o +0x1e = 50", errado));
+    let wrong = (0..read_i32(G_STAFF_COUNT).max(0) as usize).find(|&k| read_u8(v + 31 * k + 0x1e) != 0x32);
+    SCOREBOARD.record(wrong.is_none(), || format!("init_records: registro {:?} sem o +0x1e = 50", wrong));
 }
 
 /// Comparer for `roll_recurring_injury` (comparison mode: see the header of motor.rs): `0x62d250` (treat) cannot run
@@ -499,10 +499,10 @@ pub(crate) unsafe extern "thiscall" fn compare_recover_injury(t: usize, p: *cons
 /// Comparer for `get_condition`.
 ///
 /// [pt] Comparador: pelo valor (a 0x62c400 só lê).
-pub(crate) unsafe extern "thiscall" fn compare_get_condition(this: usize, player: usize, em_porcento: u32) -> u16 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(IDX_GET_CONDITION)(this, player, em_porcento);
-    let n = get_condition(this, player, em_porcento);
-    SCOREBOARD.record(r == n, || format!("get_condition({:x}, {}) original={} rust={}", player, em_porcento, r, n));
+pub(crate) unsafe extern "thiscall" fn compare_get_condition(this: usize, player: usize, in_percent: u32) -> u16 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(IDX_GET_CONDITION)(this, player, in_percent);
+    let n = get_condition(this, player, in_percent);
+    SCOREBOARD.record(r == n, || format!("get_condition({:x}, {}) original={} rust={}", player, in_percent, r, n));
     r
 }
 

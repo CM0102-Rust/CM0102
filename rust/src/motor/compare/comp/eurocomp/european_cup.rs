@@ -68,14 +68,14 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
     if plan.iter().any(|&(k, _)| k as usize >= n) {
         return; // the original reads past the vector: no check
     }
-    let errado = plan.iter().find(|&&(k, p)| {
+    let wrong = plan.iter().find(|&&(k, p)| {
         let c = v[k as usize] as usize;
         c != 0 && {
             let e = exe::comp_stats_find_club_entry(read_usize(this + 8), c);
             e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p
         }
     });
-    SCOREBOARD.record(errado.is_none(), || format!("european_cup_rank_teams: a posição {:?} não bate", errado));
+    SCOREBOARD.record(wrong.is_none(), || format!("european_cup_rank_teams: a posição {:?} não bate", wrong));
 }
 
 /// Comparer for `draw_phase2_groups`.

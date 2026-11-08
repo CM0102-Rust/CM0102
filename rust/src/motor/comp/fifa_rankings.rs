@@ -223,7 +223,7 @@ pub(crate) unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nat
 /// (sem resultados, o +0x18). A pontuação (+0xc, f32): (+0x14 + 5/6 de +0x18 + 4/6 de +0x1c + 3/6 de +0x20 + 2/6 de
 /// +0x24 + 1/6 de +0x28, cada parte truncada) × [0x96a350].
 pub(crate) unsafe extern "thiscall" fn recalculate_scores(this: usize) {
-    let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
+    let date: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let factor = core::ptr::read_unaligned(0x96a350 as *const f64);
     let mut i = 0i32;
     if read_usize(G_NATION_COUNT) as i32 <= 0 {
@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn recalculate_scores(this: usize) {
         *((e + 0x14) as *mut i32) = year;
         let base = core::ptr::read_unaligned(G_GAME_START_DATE as *const [u8; 8]);
         let mut d = [0u8; 8];
-        let r = datar(G_CURRENT_DATE, &mut d, 0x16d);
+        let r = date(G_CURRENT_DATE, &mut d, 0x16d);
         let (by, ry) = (u16::from_le_bytes([base[2], base[3]]), read_u16(r + 2));
         let after = by > ry || (by == ry && i16::from_le_bytes([base[0], base[1]]) > read_i16(r));
         if after && read_i16(e + 0xa) < 9 {

@@ -81,17 +81,17 @@ pub(crate) unsafe extern "thiscall" fn compare_dribble(p: usize, mode: u32) -> u
 
 /// Comparer for `execute_pass`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_execute_pass(p: usize, x: u32, y: u32, kind: u32, out: *mut u8, receptor: usize, tx: u32, ty: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_execute_pass(p: usize, x: u32, y: u32, kind: u32, out: *mut u8, receiver: usize, tx: u32, ty: u32) -> u8 {
     if is_recording() {
         // outer tape unit (pass, long ball): the answer with the output byte; inside, the comparison itself
         let mut r = 0u8;
-        call_recording(FN_MATCH_PLAYER_PASS, p, [x, y, kind, receptor as u32, tx], || {
-            r = compare_execute_pass_inner(p, x, y, kind, out, receptor, tx, ty);
+        call_recording(FN_MATCH_PLAYER_PASS, p, [x, y, kind, receiver as u32, tx], || {
+            r = compare_execute_pass_inner(p, x, y, kind, out, receiver, tx, ty);
             r as u32 | ((*out as u32) << 8)
         });
         return r;
     }
-    compare_execute_pass_inner(p, x, y, kind, out, receptor, tx, ty)
+    compare_execute_pass_inner(p, x, y, kind, out, receiver, tx, ty)
 }
 
 /// Comparer for `player_side`.
@@ -413,10 +413,10 @@ pub(crate) unsafe extern "thiscall" fn compare_long_ball(j: usize, mode: i8, ref
 
 /// Comparer for `pass_ball`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_pass_ball(j: usize, kind: u8, receptor: usize, a3: u32, a4: u32, a5: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_pass_ball(j: usize, kind: u8, receiver: usize, a3: u32, a4: u32, a5: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8, usize, u32, u32, u32)>(IDX_PASS_BALL);
     if is_recording_top_level() {
-        return o(j, kind, receptor, a3, a4, a5);
+        return o(j, kind, receiver, a3, a4, a5);
     }
     let m = *((j + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -426,8 +426,8 @@ pub(crate) unsafe extern "thiscall" fn compare_pass_ball(j: usize, kind: u8, rec
         (0x6d6f70, [0xffff, u32::MAX, 0xff, 0xff, 0xff]),
         (0x7103e0, [0; 5]),
     ];
-    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(j, kind, receptor, a3, a4, a5), |chamar| {
-        pass_ball_injected(j, kind, receptor, a4, a5, &mut |rotina, this, args| {
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(j, kind, receiver, a3, a4, a5), |chamar| {
+        pass_ball_injected(j, kind, receiver, a4, a5, &mut |rotina, this, args| {
             let mask = MASCARAS.iter().find(|m| m.0 == rotina).map_or([u32::MAX; 5], |m| m.1);
             chamar(rotina, this, args, mask)
         })

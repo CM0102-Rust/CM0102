@@ -290,9 +290,9 @@ pub(crate) unsafe extern "thiscall" fn compare_insert_fixture(this: usize, f: us
     }
     let count = read_u16(l);
     o(this, f);
-    let cauda = read_usize(l + 6);
-    let same = read_u16(l) == count.wrapping_add(1) && cauda != 0
-        && core::slice::from_raw_parts(read_usize(cauda) as *const u8, 0x4f) == core::slice::from_raw_parts(f as *const u8, 0x4f);
+    let tail = read_usize(l + 6);
+    let same = read_u16(l) == count.wrapping_add(1) && tail != 0
+        && core::slice::from_raw_parts(read_usize(tail) as *const u8, 0x4f) == core::slice::from_raw_parts(f as *const u8, 0x4f);
     SCOREBOARD.record(same, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, count, read_u16(l)));
 }
 

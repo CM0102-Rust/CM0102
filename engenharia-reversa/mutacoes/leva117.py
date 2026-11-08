@@ -6,6 +6,6 @@ MUTACOES = [
     ('e_perda', "                        if swap == 0 || r_current - outra_nota < smaller_loss {", "                        if swap == 0 || r_current - outra_nota <= smaller_loss {"),
     ('e_extras', "marks, bytes, a14, curtos + 2 * m as usize,\n        );", "marks, bytes, a14, curtos,\n        );"),
     ('e_troca', "                            b_j.wrapping_add(a_i) < a_j.wrapping_add(b_i)", "                            b_j.wrapping_add(a_i) <= a_j.wrapping_add(b_i)"),
-    ('e_voltas', "        if !mudou || voltas >= 100 {", "        if !mudou || voltas >= 1 {"),
+    ('e_voltas', "        if !changed || laps >= 100 {", "        if !changed || laps >= 1 {"),
     ('e_tecnico', "        if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, staff::CLASSIFICATION) != 0 {", "        if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, staff::CLASSIFICATION) == 0 {"),
 ]

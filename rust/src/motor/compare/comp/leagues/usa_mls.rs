@@ -47,14 +47,14 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_PLAYOFF_STAGE)(this);
     let stage = read_usize(read_usize(this + league::STAGES) + 8);
     let same = stage != 0 && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == read_usize(this + 4) && {
-        let mut nela = [0usize; 8];
-        for (i, c) in nela.iter_mut().enumerate() {
+        let mut in_it = [0usize; 8];
+        for (i, c) in in_it.iter_mut().enumerate() {
             *c = read_usize(read_usize(stage + cup::TEAM_TABLE) + 6 * i);
         }
         let mut p = plan;
         p.sort_unstable();
-        nela.sort_unstable();
-        p == nela
+        in_it.sort_unstable();
+        p == in_it
     };
     SCOREBOARD.record(same, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this, stage, plan));
 }
@@ -173,11 +173,11 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
     }
     o(this);
     const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];
-    let errado = (0..12).find(|&k| {
+    let wrong = (0..12).find(|&k| {
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != LUGARES[k]
     });
-    SCOREBOARD.record(errado.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this, errado, v));
+    SCOREBOARD.record(wrong.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this, wrong, v));
 }
 
 /// Comparer for `usa_mls_get_club_array`.

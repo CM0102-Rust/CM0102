@@ -1,6 +1,6 @@
 # Mutações da 236a leva (itens dbs_1, dbs_2, dbs_3, dbt_1, dbt_2, dbt_3, dbt_4). Uso: python mutacoes.py mutacoes\leva236.py --carreira 2002-06-01
 MUTACOES = [
-    ('dbs_nome_comum', '    let c = terceiro.unwrap_or_else(|| record(G_COMMON_NAME_TABLE, common)); // o nome comum', '    let c = terceiro.unwrap_or_else(|| record(G_SECOND_NAME_TABLE, common)); // mutacao: o comum pela tabela dos sobrenomes'),
+    ('dbs_nome_comum', '    let c = third.unwrap_or_else(|| record(G_COMMON_NAME_TABLE, common)); // o nome comum', '    let c = third.unwrap_or_else(|| record(G_SECOND_NAME_TABLE, common)); // mutacao: o comum pela tabela dos sobrenomes'),
     ('dbs_nome_oficial', '            1 => { sprintf(text, 0x98f0b8, a, b); } // "%s %s"', '            1 => { sprintf(text, 0x98f0b8, b, a); } // mutacao: sobrenome primeiro'),
     ('dbs_mascara_texto', '        ((0x9b82fc, 0x9b82d0), 2, 1) // left back', '        ((0x9b82a4, 0x9b8278), 2, 1) // mutacao: right back no lugar de left back'),
     ('dbs_nome_da_posicao', '        write(0x9b7c9c, 2, 1); // utility player', '        write(0x9b7c94, 2, 1); // mutacao: "player" no lugar de "utility player"'),

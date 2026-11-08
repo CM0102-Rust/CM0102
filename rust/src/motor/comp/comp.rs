@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     given(p, 4, round as u16 as i16 as i32 as u32);
     given(p, 7, kind as u8 as i8 as i32 as u32);
     let b = |a: usize| *(a as *const i8);
-    let venceu = if partida != 0 {
+    let won = if partida != 0 {
         if read_usize(partida + fixture::HOME_CLUB) == club {
             given(p, 5, read_usize(read_usize(partida + fixture::AWAY_CLUB)) as u32);
             b(partida + fixture::HOME_RESULT_MARK) != 0 || b(partida + fixture::HOME_AGGREGATE) > b(partida + fixture::AWAY_AGGREGATE) || b(partida + fixture::HOME_GOALS) > b(partida + fixture::AWAY_GOALS)
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
         given(p, 5, u32::MAX);
         false
     };
-    given(p, 6, venceu as u32);
+    given(p, 6, won as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
 }
 

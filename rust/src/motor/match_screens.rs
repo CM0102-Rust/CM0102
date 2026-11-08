@@ -375,25 +375,25 @@ pub(crate) unsafe extern "C" fn match_stats_compare_events(a: *const u8, b: *con
 pub(crate) type MatchTabs = [u32; 0x14b4 / 4];
 
 /// Constructs the 25 match tab objects (0xd4 bytes each) with the CRT vector constructor.
-pub(crate) unsafe fn construct_match_tabs(abas: &mut MatchTabs) {
-    exe::crt_vector_constructor_iterator(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x4568f0, 0x5a53c0);
+pub(crate) unsafe fn construct_match_tabs(tabs: &mut MatchTabs) {
+    exe::crt_vector_constructor_iterator(tabs.as_mut_ptr() as usize, 0xd4, 0x19, 0x4568f0, 0x5a53c0);
 }
 
 /// Destroys the 25 match tab objects with the CRT vector destructor.
-pub(crate) unsafe fn destruct_match_tabs(abas: &mut MatchTabs) {
-    exe::crt_vector_destructor_iterator(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x5a53c0);
+pub(crate) unsafe fn destruct_match_tabs(tabs: &mut MatchTabs) {
+    exe::crt_vector_destructor_iterator(tabs.as_mut_ptr() as usize, 0xd4, 0x19, 0x5a53c0);
 }
 
 /// Address of the title text (+4) of match tab k.
 ///
 /// [pt] O título da aba `k` (texto em +4) e a marca e o valor dela.
-pub(crate) unsafe fn match_tab_title(abas: &mut MatchTabs, k: usize) -> usize {
-    abas.as_mut_ptr() as usize + k * 0xd4 + 4
+pub(crate) unsafe fn match_tab_title(tabs: &mut MatchTabs, k: usize) -> usize {
+    tabs.as_mut_ptr() as usize + k * 0xd4 + 4
 }
 /// Sets the flag and value dwords of match tab k.
-pub(crate) unsafe fn set_match_tab_flags(abas: &mut MatchTabs, k: usize, mark: u32, value: u32) {
-    abas[k * 53 + 51] = mark;
-    abas[k * 53 + 52] = value;
+pub(crate) unsafe fn set_match_tab_flags(tabs: &mut MatchTabs, k: usize, mark: u32, value: u32) {
+    tabs[k * 53 + 51] = mark;
+    tabs[k * 53 + 52] = value;
 }
 
 /// Frees the match state copy in screen param 0x1d (destroys its two team blocks, deletes it) and clears the param.
@@ -416,9 +416,9 @@ pub(crate) unsafe fn free_match_snapshot() {
 /// [pt] O fundo das telas da partida: a foto (0x41c670), senão o da competição (0x41c410), senão o do clube
 /// (0x41c250 e 0x41bfb0). Devolve o `eax` da última chamada (a original empilha o byte da cor do
 /// uniforme por cima dele).
-pub(crate) unsafe fn set_match_background(foto: usize, competition: usize, club: usize) -> usize {
-    if foto != 0 {
-        let r = exe::background_set_stadium_picture(foto, 0, 1);
+pub(crate) unsafe fn set_match_background(photo: usize, competition: usize, club: usize) -> usize {
+    if photo != 0 {
+        let r = exe::background_set_stadium_picture(photo, 0, 1);
         if r != 0 {
             return r;
         }
@@ -476,11 +476,11 @@ pub(crate) unsafe fn format_match_team_name(team: usize, so_name: u8) {
 /// sujos (aqui estendidas); `sujo` diz qual, (marcada, não marcada).
 pub(crate) unsafe fn add_commentary_speed_row(list: usize, value: u16, v: u32, sujo: (usize, usize)) -> usize {
     let row: DisplayLineFn = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
-    let marcada = v as u16 == value;
-    let k = if marcada { sujo.0 } else { sujo.1 };
+    let marked = v as u16 == value;
+    let k = if marked { sujo.0 } else { sujo.1 };
     let enderecos = [0xae31aausize, G_GUI_COLOUR_YELLOW, G_GUI_COLOUR_BLACK];
     let colour = |i: usize| if i == k { colour_with_high_bits(v as usize, enderecos[i]) } else { colour_word(enderecos[i]) };
-    let mark = if marcada { 0x2002 } else { 2 };
+    let mark = if marked { 0x2002 } else { 2 };
     row(current_human_display(), mark, 0, 0, 0, 0, 0, 0, 0x10, colour(0), colour(1), 1, 1, colour(2), 0xde1f64, 0, 0xc, value as usize, list)
 }
 
@@ -541,8 +541,8 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     };
     let write_item = |k: u32, r: usize| set_screen_param(k, r as i16 as isize as usize);
 
-    let mut abas: MatchTabs = [0; 0x14b4 / 4];
-    construct_match_tabs(&mut abas);
+    let mut tabs: MatchTabs = [0; 0x14b4 / 4];
+    construct_match_tabs(&mut tabs);
     *((exe::get_human_manager_record(0) + 0xea) as *mut u32) = 1;
     free_match_snapshot();
     let p = get_screen_param(0);
@@ -552,7 +552,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     get_screen_param(0xe);
     if mode == 1 {
         exe::background_set_picture(0);
-        destruct_match_tabs(&mut abas);
+        destruct_match_tabs(&mut tabs);
         return;
     }
     let espectadores = rd(p + live_match::SPECTATORS);
@@ -581,12 +581,12 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     caixa(sm, 0x1be, 0xa, 0x316, 0x46, 1, 0, 1, 7, 0, 0, 1, rd(p + live_match::AWAY_CLUB));
     let r = if rb(st + match_record::HOME_TEAM) == 0xfd { format(BUF, 0x9b760c) } else { format(BUF, 0x98806c, rb(st + match_record::AWAY_TEAM) as u32) };
     text_of_manager(sm, 0x2e9, 0xf, 0x311, 0x41, 0x30, colour_word(G_GUI_COLOUR_PALE_GREY), 0xc, 6, colour_with_high_bits(r as usize, G_GUI_COLOUR_BLACK), BUF, 1);
-    let agregado = sx(p + live_match::HOME_AGGREGATE);
-    if agregado > -1 {
+    let aggregate = sx(p + live_match::HOME_AGGREGATE);
+    if aggregate > -1 {
         let (a, b) = if rb(p + live_match::STATE) != 2 {
-            (agregado + rb(st + match_record::HOME_TEAM) as i32, sx(p + live_match::AWAY_AGGREGATE) + rb(st + match_record::AWAY_TEAM) as i32)
+            (aggregate + rb(st + match_record::HOME_TEAM) as i32, sx(p + live_match::AWAY_AGGREGATE) + rb(st + match_record::AWAY_TEAM) as i32)
         } else {
-            (agregado, sx(p + live_match::AWAY_AGGREGATE))
+            (aggregate, sx(p + live_match::AWAY_AGGREGATE))
         };
         text(BUF, 0xa16454, a, b);
         text_of_manager(sm, 0x1c3, 0x37, 0x2e4, 0x41, 1, 0, 0x40, 1, cor_a as usize, BUF, 1);
@@ -650,7 +650,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
         text(BUF, 0xa16408);
         let muito_rapida = add_commentary_speed_row(v, 0x14, velocidade(), (0, 1));
         text(BUF, 0xa16400);
-        let rapida = add_commentary_speed_row(v, 0x37, velocidade(), (2, 0));
+        let fast = add_commentary_speed_row(v, 0x37, velocidade(), (2, 0));
         text(BUF, 0xa163cc, 0xad9c64);
         let average = add_commentary_speed_row(v, 0x5a, velocidade(), (1, 2));
         text(BUF, 0xa163c4);
@@ -660,7 +660,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
         // the focus goes to the row above the current one (very slow to very fast and those outside the table)
         let foco = match velocidade() as i16 {
             0x37 => muito_rapida,
-            0x5a => rapida,
+            0x5a => fast,
             0x7d => average,
             0x96 => lenta,
             _ => muito_lenta,
@@ -674,21 +674,21 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     *(exe::get_human_manager_record(0) as *mut u8) = 3;
 
     // the tabs
-    text(match_tab_title(&mut abas, 0), 0xa163a8);
-    set_match_tab_flags(&mut abas, 0, 3, 1);
-    text(match_tab_title(&mut abas, 1), 0xa1639c);
-    set_match_tab_flags(&mut abas, 1, 3, 2);
-    text(match_tab_title(&mut abas, 2), 0xa1638c);
-    set_match_tab_flags(&mut abas, 2, 3, 3);
-    text(match_tab_title(&mut abas, 3), 0xa1637c);
-    set_match_tab_flags(&mut abas, 3, 3, 4);
+    text(match_tab_title(&mut tabs, 0), 0xa163a8);
+    set_match_tab_flags(&mut tabs, 0, 3, 1);
+    text(match_tab_title(&mut tabs, 1), 0xa1639c);
+    set_match_tab_flags(&mut tabs, 1, 3, 2);
+    text(match_tab_title(&mut tabs, 2), 0xa1638c);
+    set_match_tab_flags(&mut tabs, 2, 3, 3);
+    text(match_tab_title(&mut tabs, 3), 0xa1637c);
+    set_match_tab_flags(&mut tabs, 3, 3, 4);
     let t1 = rd(p + live_match::HOME_CLUB);
-    text(match_tab_title(&mut abas, 4), 0xa16364, sx(t1 + club::SHORT_GENDER_NAME), sx(t1 + club::SHORT_GENDER_NAME), t1 + club::SHORT_NAME);
-    set_match_tab_flags(&mut abas, 4, 3, 6);
-    text(match_tab_title(&mut abas, 5), 0xa16354);
-    set_match_tab_flags(&mut abas, 5, 3, 7);
-    text(match_tab_title(&mut abas, 6), 0xa16328, 0xad9c64);
-    set_match_tab_flags(&mut abas, 6, 3, 8);
+    text(match_tab_title(&mut tabs, 4), 0xa16364, sx(t1 + club::SHORT_GENDER_NAME), sx(t1 + club::SHORT_GENDER_NAME), t1 + club::SHORT_NAME);
+    set_match_tab_flags(&mut tabs, 4, 3, 6);
+    text(match_tab_title(&mut tabs, 5), 0xa16354);
+    set_match_tab_flags(&mut tabs, 5, 3, 7);
+    text(match_tab_title(&mut tabs, 6), 0xa16328, 0xad9c64);
+    set_match_tab_flags(&mut tabs, 6, 3, 8);
     let mut n: usize = 7;
     // the league table of the match (for national teams by the continent of the human’s club; cup match by stage)
     let ligas = |k: isize| rd((rd(G_COMP_OBJECT_TABLE) as isize + k * 4) as usize);
@@ -720,18 +720,18 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
             league = l;
             let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
             if l != 0 && rb(l + 0x43) == 2 && national_team(*(G_RESERVE_COMP as *const usize), rd(l + 4)) == 0 {
-                text(match_tab_title(&mut abas, 7), 0x99c280);
-                set_match_tab_flags(&mut abas, 7, 3, 0xa);
+                text(match_tab_title(&mut tabs, 7), 0x99c280);
+                set_match_tab_flags(&mut tabs, 7, 3, 0xa);
                 n = 8;
             }
         }
     }
     let t2 = rd(p + live_match::AWAY_CLUB);
-    text(match_tab_title(&mut abas, n), 0xa16364, sx(t2 + club::SHORT_GENDER_NAME), sx(t2 + club::SHORT_GENDER_NAME), t2 + club::SHORT_NAME);
-    set_match_tab_flags(&mut abas, n, 3, 9);
+    text(match_tab_title(&mut tabs, n), 0xa16364, sx(t2 + club::SHORT_GENDER_NAME), sx(t2 + club::SHORT_GENDER_NAME), t2 + club::SHORT_NAME);
+    set_match_tab_flags(&mut tabs, n, 3, 9);
     let (mut top, mut base) = (0x50i32, 0x221i32);
     let aba = aba as i8 as i32;
-    exe::gui_add_tab_bar(abas.as_mut_ptr() as usize, n as u32 + 1, aba, &mut top, &mut base, 0);
+    exe::gui_add_tab_bar(tabs.as_mut_ptr() as usize, n as u32 + 1, aba, &mut top, &mut base, 0);
     set_screen_param(8, MENOS1);
     let panel = |f: usize, top: *mut i32, base: *mut i32| {
         let g: unsafe extern "C" fn(*mut i32, *mut i32) = core::mem::transmute(f);
@@ -781,7 +781,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
             write_item(8, r);
         }
     }
-    destruct_match_tabs(&mut abas);
+    destruct_match_tabs(&mut tabs);
 }
 
 /// Handles input on the live match screen for item `item` (−1: the passing of time): commentary volume and speed, the
@@ -1229,25 +1229,25 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
     let rb = |a: usize| *(a as *const u8);
     let sx = |a: usize| *(a as *const i8) as i32;
 
-    let mut abas: MatchTabs = [0; 0x14b4 / 4];
-    construct_match_tabs(&mut abas);
+    let mut tabs: MatchTabs = [0; 0x14b4 / 4];
+    construct_match_tabs(&mut tabs);
     free_match_snapshot();
     let aba = get_screen_param(2) as u8;
     let index = get_screen_param(0x1e);
     let mut reg = get_screen_param(0x1f);
-    let mut foto = get_screen_param(0x20);
+    let mut photo = get_screen_param(0x20);
     let stats = *(G_MATCH_STATS as *const usize);
     if reg == 0 {
         reg = exe::crt_operator_new((0x4f) as u32);
         if exe::match_stats_find_record_fixture(stats, index, reg) == 0 {
             match_screens_error_box(0x90a);
             exe::crt_operator_delete(reg);
-            destruct_match_tabs(&mut abas);
+            destruct_match_tabs(&mut tabs);
             return;
         }
         set_screen_param(0x1f, reg);
     }
-    if foto == 0 {
+    if photo == 0 {
         let f = exe::crt_operator_new((0xd7a) as u32);
         if f != 0 {
             exe::crt_vector_constructor_iterator(f + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
@@ -1258,54 +1258,54 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
                 exe::crt_vector_destructor_iterator(f + match_record::HOME_TEAM, 0x625, 2, 0x453c10);
                 exe::crt_operator_delete(f);
             }
-            destruct_match_tabs(&mut abas);
+            destruct_match_tabs(&mut tabs);
             return;
         }
         set_screen_param(0x20, f);
-        foto = f;
+        photo = f;
     }
     let r = set_match_background(rd(reg + fixture::STADIUM), rd(reg + fixture::COMPETITION), rd(reg + fixture::HOME_CLUB));
     // the u16 colours (the rest of the original’s variables is stack garbage, here 0)
     let (mut cor_a, mut cor_b) = (0u32, 0u32);
-    colours(rd(reg + fixture::HOME_CLUB), (r & !0xff) | rb(foto + match_record::HOME_KIT) as usize, &mut cor_a, &mut cor_b);
+    colours(rd(reg + fixture::HOME_CLUB), (r & !0xff) | rb(photo + match_record::HOME_KIT) as usize, &mut cor_a, &mut cor_b);
     format(BUF, 0x987ff0, rd(reg + fixture::HOME_CLUB) + 0x38);
     text_of_manager(sm, 0x64, 0xa, 0x1bc, 0x46, 0x30, cor_b as usize, 1, 7, cor_a as usize, BUF, 1);
     caixa(sm, 0x64, 0xa, 0x1bc, 0x46, 1, 0, 1, 7, 0, 0, 2, rd(reg + fixture::HOME_CLUB));
-    let r = if rb(foto + match_record::HOME_TEAM) == 0xfd { text(BUF, 0xa164c4, 0xad9c64) } else { format(BUF, 0x98806c, rb(foto + match_record::HOME_TEAM) as u32) };
+    let r = if rb(photo + match_record::HOME_TEAM) == 0xfd { text(BUF, 0xa164c4, 0xad9c64) } else { format(BUF, 0x98806c, rb(photo + match_record::HOME_TEAM) as u32) };
     text_of_manager(sm, 0x18f, 0xf, 0x1b7, 0x41, 0x30, colour_word(G_GUI_COLOUR_PALE_GREY), 0xc, 6, colour_with_high_bits(r as usize, G_GUI_COLOUR_BLACK), BUF, 1);
     // the second team’s kit byte goes in a dirty (extended) ecx
-    colours(rd(reg + fixture::AWAY_CLUB), rb(foto + match_record::AWAY_KIT) as usize, &mut cor_a, &mut cor_b);
+    colours(rd(reg + fixture::AWAY_CLUB), rb(photo + match_record::AWAY_KIT) as usize, &mut cor_a, &mut cor_b);
     format(BUF, 0x987ff0, rd(reg + fixture::AWAY_CLUB) + 0x38);
     text_of_manager(sm, 0x1be, 0xa, 0x316, 0x46, 0x30, cor_b as usize, 1, 7, cor_a as usize, BUF, 1);
     caixa(sm, 0x1be, 0xa, 0x316, 0x46, 1, 0, 1, 7, 0, 0, 2, rd(reg + fixture::AWAY_CLUB));
-    let r = if rb(foto + match_record::HOME_TEAM) == 0xfd { text(BUF, 0xa164c4, 0xad9c64) } else { format(BUF, 0x98806c, rb(foto + match_record::AWAY_TEAM) as u32) };
+    let r = if rb(photo + match_record::HOME_TEAM) == 0xfd { text(BUF, 0xa164c4, 0xad9c64) } else { format(BUF, 0x98806c, rb(photo + match_record::AWAY_TEAM) as u32) };
     text_of_manager(sm, 0x2e9, 0xf, 0x311, 0x41, 0x30, colour_with_high_bits(r as usize, G_GUI_COLOUR_PALE_GREY), 0xc, 6, colour_word(G_GUI_COLOUR_BLACK), BUF, 1);
-    let agregado = sx(reg + fixture::HOME_AGGREGATE);
-    if agregado > -1 {
-        text(BUF, 0xa16454, agregado, sx(reg + fixture::AWAY_AGGREGATE));
+    let aggregate = sx(reg + fixture::HOME_AGGREGATE);
+    if aggregate > -1 {
+        text(BUF, 0xa16454, aggregate, sx(reg + fixture::AWAY_AGGREGATE));
         text_of_manager(sm, 0x1c3, 0x37, 0x2e4, 0x41, 1, 0, 0x40, 1, cor_a as usize, BUF, 1);
     }
     exe::menubar_build(4, 0);
 
-    text(match_tab_title(&mut abas, 0), 0xa163a8);
-    set_match_tab_flags(&mut abas, 0, 1, 1);
-    text(match_tab_title(&mut abas, 1), 0xa1639c);
-    set_match_tab_flags(&mut abas, 1, 1, 2);
-    text(match_tab_title(&mut abas, 2), 0xa1638c);
-    set_match_tab_flags(&mut abas, 2, 1, 3);
-    text(match_tab_title(&mut abas, 3), 0xa1637c);
-    set_match_tab_flags(&mut abas, 3, 1, 4);
+    text(match_tab_title(&mut tabs, 0), 0xa163a8);
+    set_match_tab_flags(&mut tabs, 0, 1, 1);
+    text(match_tab_title(&mut tabs, 1), 0xa1639c);
+    set_match_tab_flags(&mut tabs, 1, 1, 2);
+    text(match_tab_title(&mut tabs, 2), 0xa1638c);
+    set_match_tab_flags(&mut tabs, 2, 1, 3);
+    text(match_tab_title(&mut tabs, 3), 0xa1637c);
+    set_match_tab_flags(&mut tabs, 3, 1, 4);
     let t1 = rd(reg + fixture::HOME_CLUB);
-    text(match_tab_title(&mut abas, 4), 0xa16364, sx(t1 + club::SHORT_GENDER_NAME), sx(t1 + club::SHORT_GENDER_NAME), t1 + club::SHORT_NAME);
-    set_match_tab_flags(&mut abas, 4, 1, 5);
-    text(match_tab_title(&mut abas, 5), 0xa16354);
-    set_match_tab_flags(&mut abas, 5, 1, 6);
+    text(match_tab_title(&mut tabs, 4), 0xa16364, sx(t1 + club::SHORT_GENDER_NAME), sx(t1 + club::SHORT_GENDER_NAME), t1 + club::SHORT_NAME);
+    set_match_tab_flags(&mut tabs, 4, 1, 5);
+    text(match_tab_title(&mut tabs, 5), 0xa16354);
+    set_match_tab_flags(&mut tabs, 5, 1, 6);
     let t2 = rd(reg + fixture::AWAY_CLUB);
-    text(match_tab_title(&mut abas, 6), 0xa16364, sx(t2 + club::SHORT_GENDER_NAME), sx(t2 + club::SHORT_GENDER_NAME), t2 + club::SHORT_NAME);
-    set_match_tab_flags(&mut abas, 6, 1, 7);
+    text(match_tab_title(&mut tabs, 6), 0xa16364, sx(t2 + club::SHORT_GENDER_NAME), sx(t2 + club::SHORT_GENDER_NAME), t2 + club::SHORT_NAME);
+    set_match_tab_flags(&mut tabs, 6, 1, 7);
     let (mut top, mut base) = (0x50i32, 0x221i32);
     let aba = aba as i8 as i32;
-    exe::gui_add_tab_bar(abas.as_mut_ptr() as usize, 7, aba, &mut top, &mut base, 1);
+    exe::gui_add_tab_bar(tabs.as_mut_ptr() as usize, 7, aba, &mut top, &mut base, 1);
     let advance = (exe::screenmanager_is_forward_unavailable(sm) == 0) as u32;
     let go_back = (exe::screenmanager_is_back_unavailable(sm, 0) == 0) as u32;
     exe::gui_add_back_next_buttons(go_back, advance);
@@ -1323,7 +1323,7 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
         7 => exe::draw_team_stats_panel(1, &mut top, &mut base),
         _ => {}
     }
-    destruct_match_tabs(&mut abas);
+    destruct_match_tabs(&mut tabs);
 }
 
 // simplification: the answer touches screens, menu, network, commentary (sound) and tactics (does not run twice): in
@@ -2869,9 +2869,9 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
         for j in 0..22usize {
             let mut botao: (u32, usize) = (0, 0);
             *(BUF as *mut u8) = 0;
-            let foto = if before != 0 { row.wrapping_add(before).wrapping_add(0x190) } else { 0 };
+            let photo = if before != 0 { row.wrapping_add(before).wrapping_add(0x190) } else { 0 };
             // the row’s `o` field equal to the previous snapshot’s
-            let same = |o: usize| *((foto + o - 0x190) as *const u8) == b(o);
+            let same = |o: usize| *((photo + o - 0x190) as *const u8) == b(o);
             let id = core::ptr::read_unaligned((reg + match_record::ROW_STAFF_ID) as *const i32);
             if b(match_record::ROW_POSITION) == 0xfb {
                 continue;
@@ -2899,7 +2899,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     fonte = 0xc;
                     fundo = 0;
                     estilo = 1;
-                    if !(foto != 0 && same(0x1bc) && same(0x1bd)) {
+                    if !(photo != 0 && same(0x1bc) && same(0x1bd)) {
                         let (a, d) = (b(0x1bc), b(0x1bd));
                         // the card colour goes in the cell background ([esp+0x1c] in the original), not in the text
                         if code == 1 {
@@ -2961,7 +2961,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     fundo = 0;
                     marcas = 1;
                     if !(i >= 0xb && bi(0x1c2) <= -1)
-                        && !(foto != 0 && same(0x1c3) && same(0x1c4) && same(0x1c0) && same(0x1c2))
+                        && !(photo != 0 && same(0x1c3) && same(0x1c4) && same(0x1c0) && same(0x1c2))
                     {
                         if bi(0x1c3) > -1 {
                             text(BUF, 0xa16a68, bi(0x1c3) as i32 + 1);
@@ -2983,7 +2983,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     fonte = 0xc;
                     fundo = 0;
                     estilo = 1;
-                    if !(i >= 0xb && bi(0x1c2) <= -1) && !(foto != 0 && same(campo) && same(0x1c2)) {
+                    if !(i >= 0xb && bi(0x1c2) <= -1) && !(photo != 0 && same(campo) && same(0x1c2)) {
                         match code {
                             22 => {
                                 format(BUF, 0x98806c, bi(campo) as i32);
@@ -3602,16 +3602,16 @@ pub(crate) unsafe extern "C" fn draw_action_zones_panel(top: *mut i32, base: *mu
         core::mem::transmute(FN_DRAW_PITCH);
     field(0xb9, *top + 10, 0x2c1, *base - 0x37, &mut x0, &mut y0, &mut x1, &mut y1, 1, -1, 0x4080_0000);
     let w = x1 - x0;
-    let terco = w / 3;
+    let third = w / 3;
     let two = w.wrapping_mul(2) / 3;
     let u = |v: i32| v as usize;
 
-    row(current_human_display(), 1, u(x0 + terco), u(y0), u(x0 + terco), u(y1), 0, 0, 0x2400, colour_with_high_bits(u(w), G_ACTION_ZONES_STATIC_COLOUR), 0, 0, 0, 0, 0, 0, 0, 0, usize::MAX);
+    row(current_human_display(), 1, u(x0 + third), u(y0), u(x0 + third), u(y1), 0, 0, 0x2400, colour_with_high_bits(u(w), G_ACTION_ZONES_STATIC_COLOUR), 0, 0, 0, 0, 0, 0, 0, 0, usize::MAX);
     row(current_human_display(), 1, u(x0 + two), u(y0), u(x0 + two), u(y1), 0, 0, 0x2400, colour_with_high_bits(u(w.wrapping_mul(2)), G_ACTION_ZONES_STATIC_COLOUR), 0, 0, 0, 0, 0, 0, 0, 0, usize::MAX);
-    txt(sm, u(x0 + terco + 10), u(y0 + 5), u(x0 + two - 10), u(y0 + 0x19), 2, 0, 0xc, 2, colour_word(G_GUI_COLOUR_PALE_GREY), title.as_ptr() as usize, 1);
-    let r = txt(sm, u(x0), u(y0), u(x0 + terco), u(y1), 1, 0, 0xc, 4, colour_word(G_GUI_COLOUR_YELLOW), 0, 1);
+    txt(sm, u(x0 + third + 10), u(y0 + 5), u(x0 + two - 10), u(y0 + 0x19), 2, 0, 0xc, 2, colour_word(G_GUI_COLOUR_PALE_GREY), title.as_ptr() as usize, 1);
+    let r = txt(sm, u(x0), u(y0), u(x0 + third), u(y1), 1, 0, 0xc, 4, colour_word(G_GUI_COLOUR_YELLOW), 0, 1);
     set_screen_param(0xb, r as u16 as i16 as i32 as usize);
-    txt(sm, u(x0 + terco), u(y0), u(x0 + two), u(y1), 1, 0, 0xc, 4, colour_word(G_GUI_COLOUR_YELLOW), 0, 1);
+    txt(sm, u(x0 + third), u(y0), u(x0 + two), u(y1), 1, 0, 0xc, 4, colour_word(G_GUI_COLOUR_YELLOW), 0, 1);
     txt(sm, u(x0 + two), u(y0), u(x1), u(y1), 1, 0, 0xc, 4, colour_word(G_GUI_COLOUR_YELLOW), 0, 1);
     txt(sm, u(x0 + two + 10), u(y0 + 5), u(x1 - 10), u(y0 + 0x19), 1, 0, 0xc, 1, colour_word(G_GUI_COLOUR_YELLOW), 0, 1);
 
@@ -3632,11 +3632,11 @@ pub(crate) unsafe extern "C" fn draw_action_zones_panel(top: *mut i32, base: *mu
         txt(sm, u(l + 2), u(y1 - 0x12), u(middle), u(y1 - 12), 0x10, c1b as usize, 0xc, 1, c1a as usize, 0, 1);
         txt(sm, u(middle), u(y1 - 0x12), u(r - 2), u(y1 - 12), 0x10, c2b as usize, 0xc, 1, c2a as usize, 0, 1);
         let xm = l + d / 2;
-        let sinal = if d < 0 { 0xffff_0000 } else { 0 };
-        row(current_human_display(), 1, u(xm), u(y1 - 0x12), u(xm), u(y1 - 0x10), 0, 0, 0x400, sinal | colour_word(G_GUI_COLOUR_BLACK), 0, 0, 0, 0, 0, 0, 0, 0, usize::MAX)
+        let sign = if d < 0 { 0xffff_0000 } else { 0 };
+        row(current_human_display(), 1, u(xm), u(y1 - 0x12), u(xm), u(y1 - 0x10), 0, 0, 0x400, sign | colour_word(G_GUI_COLOUR_BLACK), 0, 0, 0, 0, 0, 0, 0, 0, usize::MAX)
     };
-    let r1 = zona((x0 + 5, x0 + terco - 5), colour_word(G_GUI_COLOUR_GREY), x0 + 10, x0 + terco - 10, (colour_with_high_bits(u(y1), G_GUI_COLOUR_GREY), colour_word(G_GUI_COLOUR_PALE_GREY)));
-    let r2 = zona((x0 + terco + 5, x0 + two - 5), colour_with_high_bits(r1, G_GUI_COLOUR_GREY), x0 + terco + 10, x0 + two - 10, (colour_with_high_bits(u(terco), G_GUI_COLOUR_GREY), colour_with_high_bits(u(w), G_GUI_COLOUR_PALE_GREY)));
+    let r1 = zona((x0 + 5, x0 + third - 5), colour_word(G_GUI_COLOUR_GREY), x0 + 10, x0 + third - 10, (colour_with_high_bits(u(y1), G_GUI_COLOUR_GREY), colour_word(G_GUI_COLOUR_PALE_GREY)));
+    let r2 = zona((x0 + third + 5, x0 + two - 5), colour_with_high_bits(r1, G_GUI_COLOUR_GREY), x0 + third + 10, x0 + two - 10, (colour_with_high_bits(u(third), G_GUI_COLOUR_GREY), colour_with_high_bits(u(w), G_GUI_COLOUR_PALE_GREY)));
     zona((x0 + two + 5, x1 - 5), colour_with_high_bits(r2, G_GUI_COLOUR_GREY), x0 + two + 10, x1 - 10, (colour_word(G_GUI_COLOUR_GREY), colour_with_high_bits(u(two), G_GUI_COLOUR_PALE_GREY)));
 
     let b = *base;
@@ -4230,7 +4230,7 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
     exe::database_get_club_kit_colours(club(4), (read_u8(e + match_record::AWAY_KIT) as u32), (cor2.as_mut_ptr()) as *mut u32, (resto2.as_mut_ptr()) as *mut u32);
     let colour = |pct: u32| u16::from_le_bytes(if pct < 0x32 { cor2 } else { cor1 }) as u32;
     let value = |field: isize| *((e as isize + side + field) as *const u8);
-    let mudou = |field: isize| copy == 0 || value(field) != *((copy as isize + side + field) as *const u8);
+    let changed = |field: isize| copy == 0 || value(field) != *((copy as isize + side + field) as *const u8);
     let pct = |field: isize, mark: isize| if value(field) == 0 || value(mark) == 0 { 0x32 } else { value(field) as u32 };
     let zona = |field: isize, mark: isize, start: i32, end: i32, d: u32| {
         let p = pct(field, mark);
@@ -4239,16 +4239,16 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
         exe::screenmanager_set_widget_rect(sm, it(d + 1), x, base - 0x12, end - 2, base - 0xc);
         exe::screenmanager_set_widget_colour(sm, it(d + 2), colour(p));
     };
-    if mudou(0x143) {
+    if changed(0x143) {
         zona(0x143, 0x768, esq + 10, (dir - esq) / 3 + esq - 10, 6);
     }
-    if mudou(0x148) {
+    if changed(0x148) {
         zona(0x148, 0x76d, (dir - esq) / 3 + esq + 10, (dir - esq) * 2 / 3 + esq - 10, 0xb);
     }
-    if mudou(0x14d) {
+    if changed(0x14d) {
         zona(0x14d, 0x772, (dir - esq) * 2 / 3 + esq + 10, dir - 10, 0x10);
     }
-    if mudou(0x13e) {
+    if changed(0x13e) {
         let p = pct(0x13e, 0x763);
         format(BUF, FORMAT_PCT, p);
         let w = (p * 0x1d2 / 100) as i32 + 0xd4;
@@ -4477,8 +4477,8 @@ pub(crate) unsafe extern "C" fn draw_team_stats_panel(side: u32, top: *mut i32, 
         2 => (G_TEAM_STATS_COLUMN_IDS_VIEW_2, r.wrapping_add(1)),
         _ => (base as usize, r.wrapping_add(1)),
     };
-    let desligar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FLAGS);
-    desligar(sm, seta, 1);
+    let disable: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FLAGS);
+    disable(sm, seta, 1);
     for c in 7..0x14usize {
         let k = *((colunas + c - 2) as *const u8) as usize;
         let rotulo = *((0xa16118 + k * 4) as *const usize);

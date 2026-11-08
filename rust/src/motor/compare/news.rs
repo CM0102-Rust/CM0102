@@ -77,8 +77,8 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
     // o plano
     let new = read_i32(e) == -1;
     let (inicio, atual, conta) = if new { (read_i32(this + news_fields::SLOT_COUNT), read_i32(this + news_fields::SLOT_COUNT), read_i32(e + 8)) } else { (read_i32(e), read_i32(e + 4), read_i32(e + 8)) };
-    let contador = read_usize(this + news_fields::LAST_ID);
-    let (id, contador_depois) = if read_usize(news + news_item::ID) == 0 { (contador.wrapping_add(1), contador.wrapping_add(1)) } else { (read_usize(news + news_item::ID), contador) };
+    let counter = read_usize(this + news_fields::LAST_ID);
+    let (id, contador_depois) = if read_usize(news + news_item::ID) == 0 { (counter.wrapping_add(1), counter.wrapping_add(1)) } else { (read_usize(news + news_item::ID), counter) };
     let mut previous = atual - 1;
     if previous < inicio {
         previous = inicio + 0x63;

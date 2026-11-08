@@ -171,9 +171,9 @@ pub(crate) unsafe fn bra_reg_minas_gerais_comp_stats_club_entry(this: usize, clu
 }
 
 /// Writes the club's current, lowest and highest progress codes (+0x73, +0x74, +0x75).
-pub(crate) unsafe fn write_progress_codes(e: usize, current: u8, minima: u8, maxima: u8) {
+pub(crate) unsafe fn write_progress_codes(e: usize, current: u8, minimum: u8, maxima: u8) {
     *((e + 0x73) as *mut u8) = current;
-    *((e + 0x74) as *mut u8) = minima;
+    *((e + 0x74) as *mut u8) = minimum;
     *((e + 0x75) as *mut u8) = maxima;
 }
 

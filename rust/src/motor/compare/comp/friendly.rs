@@ -211,8 +211,8 @@ pub(crate) unsafe extern "thiscall" fn compare_resolve_international_dates(this:
 /// [pt] Comparador da 0x5c4770: só a original (simplification: ela libera e aloca o plano, e a 0x5c4380 aloca as listas de datas e
 /// de adversários dos candidatos; não roda duas vezes), conferindo o plano que ela deixa: o plano alocado, a capacidade
 /// (+0x34e4) não menor que a conta (+0x34e0), o +0x34dc zerado e o plano em ordem de data (a 0x778e90 entre vizinhos).
-pub(crate) unsafe extern "thiscall" fn compare_plan_club_friendlies(this: usize, entradas: usize, ordenados: usize, count: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_PLAN_CLUB_FRIENDLIES)(this, entradas, ordenados, count);
+pub(crate) unsafe extern "thiscall" fn compare_plan_club_friendlies(this: usize, entries: usize, ordenados: usize, count: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_PLAN_CLUB_FRIENDLIES)(this, entries, ordenados, count);
     let (p, n, cap, z) = (read_usize(this + friendly::PLANNED_FRIENDLIES), read_i32(this + friendly::PLANNED_COUNT), read_i32(this + friendly::PLANNED_CAPACITY), read_i32(this + friendly::PLANNED_NEXT_INDEX));
     if p == 0 {
         return; // out of memory: the message box
@@ -224,7 +224,7 @@ pub(crate) unsafe extern "thiscall" fn compare_plan_club_friendlies(this: usize,
 /// Comparer for `add_tournament`.
 ///
 /// [pt] Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido passar) e a devolução.
-pub(crate) unsafe extern "thiscall" fn compare_add_tournament(this: usize, anfitriao: usize, kind: u32, start: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, name: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_add_tournament(this: usize, host: usize, kind: u32, start: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, name: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32, u32, usize, usize) -> usize>(IDX_ADD_TOURNAMENT);
     let t = free_tournament_slot(this);
     let mut size = 0usize;
@@ -232,8 +232,8 @@ pub(crate) unsafe extern "thiscall" fn compare_add_tournament(this: usize, anfit
         size += 1;
     }
     let reg = if t != 0 { vec![(t, 0x69usize.max(0x31 + size + 1))] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, anfitriao, kind, start, a, b, c, d, e, convidados, name), || add_tournament(this, anfitriao, kind, start, a, b, c, d, e, convidados, name));
-    SCOREBOARD.record(igual && r == n, || format!("add_tournament(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", anfitriao, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, host, kind, start, a, b, c, d, e, convidados, name), || add_tournament(this, host, kind, start, a, b, c, d, e, convidados, name));
+    SCOREBOARD.record(igual && r == n, || format!("add_tournament(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", host, r, mo, n, mr));
     r
 }
 
@@ -449,8 +449,8 @@ pub(crate) unsafe extern "thiscall" fn compare_add_friendly_match(this: usize, c
 }
 
 /// Comparer for `plan_friendly_on_free_date`.
-pub(crate) unsafe extern "thiscall" fn compare_plan_friendly_on_free_date(this: usize, anfitriao: usize, home: usize, away: usize) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_PLAN_FRIENDLY_ON_FREE_DATE)(this, anfitriao, home, away)
+pub(crate) unsafe extern "thiscall" fn compare_plan_friendly_on_free_date(this: usize, host: usize, home: usize, away: usize) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_PLAN_FRIENDLY_ON_FREE_DATE)(this, host, home, away)
 }
 
 /// Comparer for `friendly_is_club_free_on_date`.
@@ -573,10 +573,10 @@ pub(crate) unsafe extern "thiscall" fn compare_candidate_has_nearby_date(this: u
 ///
 /// [pt] Comparador: a original acrescenta (pode realocar, não roda duas vezes): o plano antes (a conta, os ids e a data),
 /// a original roda, confere o item novo e a conta.
-pub(crate) unsafe extern "thiscall" fn compare_add_planned_friendly(this: usize, anfitriao: usize, home: usize, away: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_add_planned_friendly(this: usize, host: usize, home: usize, away: usize, data: usize) {
     let n = read_usize(this + friendly::PLANNED_COUNT);
-    let expected = [read_usize(data), read_usize(data + 4), 0, read_usize(anfitriao), read_usize(home), read_usize(away)];
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_ADD_PLANNED_FRIENDLY)(this, anfitriao, home, away, data);
+    let expected = [read_usize(data), read_usize(data + 4), 0, read_usize(host), read_usize(home), read_usize(away)];
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_ADD_PLANNED_FRIENDLY)(this, host, home, away, data);
     let v = read_usize(this + friendly::PLANNED_FRIENDLIES);
     if v == 0 {
         return; // out of memory: the box has already shown

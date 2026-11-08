@@ -292,8 +292,8 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
         return 0;
     }
-    let mut temporaria = [0u8; 0x104];
-    copy_text(temporaria.as_mut_ptr(), folder(0x987da0, 0xad9c64));
+    let mut temporary = [0u8; 0x104];
+    copy_text(temporary.as_mut_ptr(), folder(0x987da0, 0xad9c64));
     check_game_cd(true);
     if path.is_null() {
         setup_warning(0x233b);
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         return 0;
     }
     exe::screenmanager_send_network_status_message(G_SCREEN_MANAGER, (text.as_ptr()) as usize, (2) as i32, 0x2d, -1);
-    if exe::zextract_matching_files(path, temporaria.as_ptr(), 0xa813ac) == 0 {
+    if exe::zextract_matching_files(path, temporary.as_ptr(), 0xa813ac) == 0 {
         save_error_box(0x2382, 0xa81758, 0x9c7774, 0x9c7680);
         return 0;
     }
@@ -529,11 +529,11 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         let em_vigor = *(G_FIFA_TRANSFER_RULES_IN_FORCE as *const u8);
         let (dia_jogo, ano_jogo) = (*(G_CURRENT_DATE as *const i16), *(G_CURRENT_DATE_YEAR as *const u16));
         let (dia, ano) = (*(G_TRANSFER_RULE_CHANGE_DATE as *const i16), *(G_TRANSFER_RULE_CHANGE_DATE_YEAR as *const u16));
-        let mut desligar = false;
+        let mut disable = false;
         if !(em_vigor == 0 && *(G_MAX_CONTRACT_LENGTH_YEARS as *const u8) == 0xa) {
-            desligar = ano > ano_jogo || (ano == ano_jogo && dia > dia_jogo);
+            disable = ano > ano_jogo || (ano == ano_jogo && dia > dia_jogo);
         }
-        if desligar {
+        if disable {
             *(G_FIFA_TRANSFER_RULES_IN_FORCE as *mut u8) = 0;
             *(G_MAX_CONTRACT_LENGTH_YEARS as *mut u8) = 0xa;
         } else if !(em_vigor != 0 && *(G_MAX_CONTRACT_LENGTH_YEARS as *const u8) == 5) && (ano < ano_jogo || (ano == ano_jogo && dia < dia_jogo)) {
@@ -677,8 +677,8 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     let opcoes = || *(G_CONFIG as *const usize);
     let u = |a: usize| *(a as *const u32);
     let i = |a: usize| *(a as *const i32);
-    let mut temporaria = [0u8; 0x104];
-    copy_text(temporaria.as_mut_ptr(), (exe::utils_build_file_path(0x987da0, 0xad9c64) as *const u8));
+    let mut temporary = [0u8; 0x104];
+    copy_text(temporary.as_mut_ptr(), (exe::utils_build_file_path(0x987da0, 0xad9c64) as *const u8));
     let mut dados = [0u8; 0x104];
     copy_text(dados.as_mut_ptr(), (exe::utils_build_file_path(0x9b5348, 0xad9c64) as *const u8));
     if cfg.is_null() {
@@ -923,7 +923,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
 /// `linha`, `texto`) em 0xae24d0; o título `titulo` traduzido (0x66f4e0) em 0xae28bc, o corpo
 /// `corpo` (com o texto de 0xae24d0) traduzido em 0xae26c4 e a caixa 0x5e8290. O jogo segue
 /// ([0xb67a34] fica como está, ao contrário do `setup_warning`).
-pub(crate) unsafe fn save_error_box(row: u32, text: usize, title: usize, corpo: usize) {
+pub(crate) unsafe fn save_error_box(row: u32, text: usize, title: usize, body: usize) {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let translate: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -932,7 +932,7 @@ pub(crate) unsafe fn save_error_box(row: u32, text: usize, title: usize, corpo: 
     let s = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     format(0xae24d0, 0x9a8120, s, nome.as_ptr(), ext.as_ptr(), row, text);
     translate(0xae28bc, title);
-    translate(0xae26c4, corpo, 0xae24d0);
+    translate(0xae26c4, body, 0xae24d0);
     exe::gui_show_message_box(0xae28bc, 0xae26c4, 0);
 }
 
@@ -1082,8 +1082,8 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
             return 0;
         }
     }
-    let mut temporaria = [0u8; 0x104];
-    copy_text(temporaria.as_mut_ptr(), folder(0x987da0, 0xad9c64));
+    let mut temporary = [0u8; 0x104];
+    copy_text(temporary.as_mut_ptr(), folder(0x987da0, 0xad9c64));
     if path.is_null() {
         setup_warning(0x2958);
         return 0;
@@ -1240,7 +1240,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     }
     exe::screenmanager_send_network_status_message(G_SCREEN_MANAGER, (text.as_ptr()) as usize, (0x25) as i32, 0x25, -1);
     let (t, row) = if opcoes() & 0x8000 != 0 { (3, 0x2c82) } else { (4, 0x2c8a) };
-    if exe::zadd_matching_files(l, temporaria.as_ptr(), 0xa813ac, a4, t) == 0 {
+    if exe::zadd_matching_files(l, temporary.as_ptr(), 0xa813ac, a4, t) == 0 {
         save_error_box(row, 0xa817a4, 0x9c7774, 0x9c7680);
         return 0;
     }

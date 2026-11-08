@@ -116,9 +116,9 @@ pub(crate) unsafe extern "C" fn pick(
     if n < m {
         // fewer people than slots: each free person looks for the best slot
         let mut colocadas = 0i8;
-        let mut voltas = 0;
-        while (colocadas as i32) < n && voltas < 10000 {
-            voltas += 1;
+        let mut laps = 0;
+        while (colocadas as i32) < n && laps < 10000 {
+            laps += 1;
             for k in 0..n {
                 if *us(k) != 0 {
                     continue;
@@ -193,10 +193,10 @@ pub(crate) unsafe extern "C" fn pick(
             *sai(i) = melhor;
         }
         let mut smaller_loss = 10000i32;
-        let mut voltas = 0;
+        let mut laps = 0;
         let mut k2_current = 0i32;
-        while conflitos > 0 && voltas < 10000 {
-            voltas += 1;
+        while conflitos > 0 && laps < 10000 {
+            laps += 1;
             let (mut vaga_t, mut k2_t) = (-1i32, -1i32);
             for k in 0..n {
                 let mut swap = 0usize;
@@ -272,17 +272,17 @@ pub(crate) unsafe extern "C" fn pick(
         }
         0
     };
-    let mut voltas = 0;
+    let mut laps = 0;
     loop {
-        let mut mudou = false;
+        let mut changed = false;
         let mut i = 0;
-        while i < m && !mudou {
+        while i < m && !changed {
             let a = *sai(i);
             if a != 0 && *((a + staff::PLAYER) as *const usize) != 0 {
                 let ja = player_of(a);
                 let a_i = rating(a, ja, i);
                 let mut j = i + 1;
-                while j < tot && !mudou {
+                while j < tot && !changed {
                     let b = *sai(j);
                     if b != 0 && *((b + staff::PLAYER) as *const usize) != 0 {
                         let jb = player_of(b);
@@ -295,7 +295,7 @@ pub(crate) unsafe extern "C" fn pick(
                             a_i < b_i
                         };
                         if trocar {
-                            mudou = true;
+                            changed = true;
                             let t = *sai(j);
                             *sai(j) = *sai(i);
                             *sai(i) = t;
@@ -306,8 +306,8 @@ pub(crate) unsafe extern "C" fn pick(
             }
             i += 1;
         }
-        voltas += 1;
-        if !mudou || voltas >= 100 {
+        laps += 1;
+        if !changed || laps >= 100 {
             break;
         }
     }
@@ -360,8 +360,8 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
         other = b.wrapping_mul(50) / 11;
     }
     let (mut x11, mut x12, mut x14, mut x16, mut x17) = (0i8, 0i8, 0u8, 0u8, 0u8);
-    let agregado: unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> i8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOAL_MARGIN);
-    agregado(m, side, &mut x11, &mut x12, &mut x16, &mut x17, &mut x14, 0);
+    let aggregate: unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> i8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOAL_MARGIN);
+    aggregate(m, side, &mut x11, &mut x12, &mut x16, &mut x17, &mut x14, 0);
     let own = own as i16 as i32;
     let other = other as i16 as i32;
     let f = (own - other) as f64 / ((1.5 - own as f64 * 0.0001) * 6000.0) + 1.0;
@@ -547,12 +547,12 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
         }
     }
     let factor = (m + engine::STANCE_FACTOR + 4 * lu) as *mut f32;
-    let tempo = w(m, engine::PERIOD_END);
-    if tt > 85.0 - h * 10.0 && tempo == 0x3de && (x11 as i32 + 1 == x12 as i32 || (x17 != 0 && x14 == 0 && x16 == 0 && x11 == x12)) {
+    let time = w(m, engine::PERIOD_END);
+    if tt > 85.0 - h * 10.0 && time == 0x3de && (x11 as i32 + 1 == x12 as i32 || (x17 != 0 && x14 == 0 && x16 == 0 && x11 == x12)) {
         *factor = 10.0;
         return 1;
     }
-    if sum < 5 && tt > 82.0 - h * 10.0 && tempo == 0x3de && x11 == x12 && x16 == 0 && (h > 1.0 || byte(m, 0x1ab + lu) == 1) {
+    if sum < 5 && tt > 82.0 - h * 10.0 && time == 0x3de && x11 == x12 && x16 == 0 && (h > 1.0 || byte(m, 0x1ab + lu) == 1) {
         *factor = 10.0;
         return 1;
     }
@@ -1709,7 +1709,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             }
         }
         let m5e = |p: usize| *((p + 0x5e) as *const u8);
-        let segue = if byte(t, match_manager::SELECTION_MODE) == 3 {
+        let follows = if byte(t, match_manager::SELECTION_MODE) == 3 {
             !(exe::database_is_national_team(club) != 0 && m5e(p) & 8 != 0)
         } else if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
             if exe::database_is_national_team(club) != 0 {
@@ -1735,7 +1735,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             }
             !away
         };
-        if !segue {
+        if !follows {
             continue;
         }
         if exe::database_is_national_team(club) == 0 && exe::transfer_manager_player_needs_work_permit(u(G_TRANSFER_MANAGER, 0), p, club, 0) != 0 {
@@ -1825,12 +1825,12 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 while c < *b(0x18) as i8 {
                     let p = rd(0x278 + 4 * c as usize) as usize;
                     let c16 = c as i16;
-                    let pula = p == 0
+                    let skips = p == 0
                         || *(p as *const i32) >= *(G_STAFF_COUNT as *const i32)
                         || u(p, 0x61) == 0
                         || (s == 1 && rw(0x24) == c16)
                         || (s == 2 && (rw(0x24) == c16 || rw(0x26) == c16));
-                    if !pula {
+                    if !skips {
                         let fi = u(p, 0x61);
                         let v = h16(fi, player_sheet::WORLD_REPUTATION).wrapping_add(h16(fi, player_sheet::CURRENT_REPUTATION));
                         if v > rw(0x40 + 2 * s) {
@@ -2985,9 +2985,9 @@ pub(crate) unsafe fn scouted_over_a_year_ago(o: usize, p: usize) -> bool {
     if !match_man_date_is_before(o + staff::DATE_JOINED_CLUB, p + staff::DATE_JOINED_CLUB) {
         return false;
     }
-    let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> *const [u8; 8] = core::mem::transmute(FN_DATE_SUB_DAYS);
+    let date: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> *const [u8; 8] = core::mem::transmute(FN_DATE_SUB_DAYS);
     let mut d = [0u8; 8];
-    let r = datar(G_CURRENT_DATE, &mut d, 0x16d);
+    let r = date(G_CURRENT_DATE, &mut d, 0x16d);
     match_man_date_is_before(r as usize, p + staff::DATE_JOINED_CLUB)
 }
 
@@ -3999,9 +3999,9 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     if flags & 8 != 0 && da_base {
         l4c += ftol((fb(0x45) - 10) as f64 * read_f64_at(rdata::F64_0_8));
     }
-    let marcada = mark & 0x8000 != 0 || (mark & 0x2000 != 0 && tactic & 0x100 != 0);
+    let marked = mark & 0x8000 != 0 || (mark & 0x2000 != 0 && tactic & 0x100 != 0);
     if flags & 0x8000 != 0 {
-        l4c = tactic_instruction_adjust(f, mark, bytes as u8, tactic, marcada, l4c);
+        l4c = tactic_instruction_adjust(f, mark, bytes as u8, tactic, marked, l4c);
     }
     if contract != 0 && club != 0 && flags & 0x2000000 != 0 && da_base {
         l4c = contract_adjust(p, f, club, contract, age, l4c);
@@ -4056,7 +4056,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
             let r = v + (l40 * 5 - 0x4e2) * 20;
             return if v >= 0xdac { r } else { r - 0x7a120 };
         }
-        if marcada {
+        if marked {
             v = ftol(v as f64 * read_f64_at(rdata::F64_0_0001) * v as f64);
         }
         l4c += if v < 9000 { v * 3 / 100 - 0x118 } else { (10000 - v) / -100 };
@@ -4182,7 +4182,7 @@ pub(crate) unsafe fn match_fatigue_offset(reg: usize, goalkeeper: i32) -> i32 {
 ///
 /// [pt] As marcas da tática (flag 0x8000): `marca` (o u64 das instruções, parte baixa), `bytes` (o
 /// byte das instruções) e `tatica` contra os atributos da ficha.
-pub(crate) unsafe fn tactic_instruction_adjust(f: usize, lo: u32, b1: u8, tactic: u32, marcada: bool, mut l4c: i32) -> i32 {
+pub(crate) unsafe fn tactic_instruction_adjust(f: usize, lo: u32, b1: u8, tactic: u32, marked: bool, mut l4c: i32) -> i32 {
     let fb = |k: usize| signed_byte_at(f, k);
     let x = |k: usize, c: usize| ftol((fb(k) - 10) as f64 * read_f64_at(c));
     let t13 = tactic as u8;
@@ -4194,7 +4194,7 @@ pub(crate) unsafe fn tactic_instruction_adjust(f: usize, lo: u32, b1: u8, tactic
     } else if lo & 0x10 != 0 || (um && t13 & 8 != 0) {
         l4c += x(0x36, 0x96a670) - x(0x3c, 0x96d5e8) - x(0x2e, 0x96d5e8);
     }
-    if marcada {
+    if marked {
         let c = fb(0x3c) - 15;
         let d = fb(0x44) - 15;
         let x1 = ftol((c.abs() * c) as f64 * read_f64_at(rdata::F64_NEG_0_4));

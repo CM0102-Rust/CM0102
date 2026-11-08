@@ -372,7 +372,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             if random(word(0x1ea, other)) > random(0x640) {
                 let mo = m + other * 0x36;
                 more((mo + engine::SIDE_FOUL_TALLY) as *mut u8);
-                let expulsar = |c: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
+                let send_off = |c: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
                     let p = jog(other, c as i8);
                     more((p + match_player::RED_CARDS) as *mut u8);
                     more((mo + engine::CARDS) as *mut u8);
@@ -384,7 +384,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     crate::comparison::branch("simulacao rapida expulsao");
                     let c = choose_by_condition(m, other as i8, 4);
                     add(jog(other, c as i8), -0xfa);
-                    expulsar(c, call);
+                    send_off(c, call);
                 } else if random(word(0x1ea, other)) > random(0x6a4) {
                     crate::comparison::branch("simulacao rapida give_yellow_card");
                     let c = choose_by_condition(m, other as i8, 2);
@@ -394,7 +394,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     more((mo + engine::FOULS) as *mut u8);
                     if byte(p, match_player::YELLOW_CARDS) == 2 {
                         crate::comparison::branch("simulacao rapida segundo give_yellow_card");
-                        expulsar(c, call);
+                        send_off(c, call);
                     }
                     if *((mo + engine::CARDS) as *const u8) > 4 {
                         // abandonment: 3 x 0 for the side whose turn it is
@@ -534,12 +534,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         mais16(w(engine::CLOCK));
         let t = *w(engine::CLOCK);
         let w38 = *((pt() + 0x38) as *const u16);
-        let igual_no_agregado = |a: usize, x: usize| *pb(a) as i32 + *pb(0x4b) as i32 == *pb(0x4c) as i32 + *pb(x) as i32;
+        let same_in_aggregate = |a: usize, x: usize| *pb(a) as i32 + *pb(0x4b) as i32 == *pb(0x4c) as i32 + *pb(x) as i32;
         if end {
             let (a, x) = if t <= 0x5a { (0x43, 0x44) } else { (0x47, 0x48) };
             *pb(a) = goals(0) as i8;
             *pb(x) = goals(1) as i8;
-            let desempata = if *pb(0x4b) != -1 { igual_no_agregado(0x43, 0x44) } else { *pb(0x43) == *pb(0x44) && w38 & 0xa3 != 0 };
+            let desempata = if *pb(0x4b) != -1 { same_in_aggregate(0x43, 0x44) } else { *pb(0x43) == *pb(0x44) && w38 & 0xa3 != 0 };
             if desempata {
                 *pb(a) = (*pb(a)).wrapping_add(1);
             }
@@ -560,8 +560,8 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 *pb(0x43) = goals(0) as i8;
                 *pb(0x44) = goals(1) as i8;
                 *w(engine::PERIOD_END) = 0x483;
-                let agregado = *pb(0x4b) != -1;
-                if (agregado && !igual_no_agregado(0x43, 0x44)) || (!agregado && *pb(0x43) != *pb(0x44)) {
+                let aggregate = *pb(0x4b) != -1;
+                if (aggregate && !same_in_aggregate(0x43, 0x44)) || (!aggregate && *pb(0x43) != *pb(0x44)) {
                     break 'periodo false;
                 }
                 if w38 & 0x80 != 0 {
@@ -573,7 +573,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     crate::comparison::branch("simulacao rapida prorrogacao");
                     continue 'periodo;
                 }
-                if agregado && w38 & 4 == 0 && *pb(0x44) != *pb(0x4b) && w38 & 0x4000 == 0 {
+                if aggregate && w38 & 4 == 0 && *pb(0x44) != *pb(0x4b) && w38 & 0x4000 == 0 {
                     break 'periodo false;
                 }
                 break 'periodo w38 & 0x21 != 0;
@@ -583,7 +583,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 *pb(0x47) = goals(0) as i8;
                 *pb(0x48) = goals(1) as i8;
                 if *pb(0x4b) != -1 {
-                    if !igual_no_agregado(0x47, 0x48) || (w38 & 0x4000 != 0 && *pb(0x48) != *pb(0x4b)) {
+                    if !same_in_aggregate(0x47, 0x48) || (w38 & 0x4000 != 0 && *pb(0x48) != *pb(0x4b)) {
                         break 'periodo false;
                     }
                 } else if *pb(0x47) != *pb(0x48) {

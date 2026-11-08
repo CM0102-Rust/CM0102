@@ -109,10 +109,10 @@ pub(crate) unsafe extern "thiscall" fn compare_league_update_for_date(this: usiz
 pub(crate) unsafe extern "thiscall" fn compare_create_fixtures(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FIXTURES);
     let list = read_usize(this + league::FIXED_FIXTURES);
-    let propria = list != 0 && read_i16(this + league::YEAR) as i32 == read_i16(list + 2) as u16 as i32;
+    let own = list != 0 && read_i16(this + league::YEAR) as i32 == read_i16(list + 2) as u16 as i32;
     let r = o(this);
-    let ok = !(propria && r == 1) || read_usize(this + league::FIXED_FIXTURES) == 0;
-    SCOREBOARD.record(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", propria, r, read_usize(this + league::FIXED_FIXTURES)));
+    let ok = !(own && r == 1) || read_usize(this + league::FIXED_FIXTURES) == 0;
+    SCOREBOARD.record(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", own, r, read_usize(this + league::FIXED_FIXTURES)));
     r
 }
 
@@ -120,8 +120,8 @@ pub(crate) unsafe extern "thiscall" fn compare_create_fixtures(this: usize) -> u
 ///
 /// [pt] O comparador da promoção e do rebaixamento: só a original (simplification: os contratos, o técnico demitido e as notícias
 /// não rodam duas vezes); a cópia leva o ramo.
-pub(crate) unsafe extern "thiscall" fn compare_league_promote_and_relegate(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pairs: u32, sobem: u32, descem: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_LEAGUE_PROMOTE_AND_RELEGATE)(ecx, acima, abaixo, contratos, aos_pairs, sobem, descem)
+pub(crate) unsafe extern "thiscall" fn compare_league_promote_and_relegate(ecx: usize, above: usize, below: usize, contratos: u32, aos_pairs: u32, sobem: u32, descem: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_LEAGUE_PROMOTE_AND_RELEGATE)(ecx, above, below, contratos, aos_pairs, sobem, descem)
 }
 
 /// Comparer for `update_positions_and_status` (comparison mode: see the header of motor.rs): the comparer of
@@ -288,14 +288,14 @@ pub(crate) unsafe extern "thiscall" fn compare_copy_table(league: usize) -> usiz
                     break;
                 }
             }
-            let iguais = |o_: usize, t: usize| {
+            let equal = |o_: usize, t: usize| {
                 let (a, b) = (read_usize(lt + o_), read_usize(lc + o_));
                 b != 0 && core::slice::from_raw_parts(a as *const u8, t) == core::slice::from_raw_parts(b as *const u8, t)
             };
-            if h2h && n > 1 && !iguais(5, 14 * (n - 1)) {
+            if h2h && n > 1 && !equal(5, 14 * (n - 1)) {
                 erros.push(format!("linha {} confrontos", i));
             }
-            if forma && a7 > 0 && !iguais(9, a7 as usize) {
+            if forma && a7 > 0 && !equal(9, a7 as usize) {
                 erros.push(format!("linha {} forma", i));
             }
         }
@@ -520,17 +520,17 @@ pub(crate) unsafe extern "thiscall" fn compare_league_check_complete(league: usi
 ///
 /// [pt] Comparador: as finanças (0x167 bytes) de cada clube da tabela; a cópia roda sem a notícia (a da original fica, uma
 /// vez só). Clube nulo na tabela (a caixa da 0x5a0590): só a original.
-pub(crate) unsafe extern "thiscall" fn compare_pay_tv_rights(league: usize, value: i32, filtro: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_pay_tv_rights(league: usize, value: i32, filter: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_PAY_TV_RIGHTS);
     let finances = *(G_FINANCE_TABLE as *const usize);
     let n = read_i16(league + league::CLUB_COUNT).max(0) as usize;
     let clubs: Vec<usize> = (0..n).map(|i| read_usize(read_usize(league + league::TABLE) + 0x3b * i)).collect();
     if finances == 0 || clubs.contains(&0) {
-        return o(league, value, filtro);
+        return o(league, value, filter);
     }
     let reg: Vec<(usize, usize)> = clubs.iter().map(|&c| (exe::financetable_get_club_finance(finances, c), 0x167)).collect();
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(league, value, filtro), || pay_tv_money(league, value, filtro, false));
-    SCOREBOARD.record(igual, || format!("pay_tv_rights({:x}, {}, {:x}) {:x?} x {:x?}", league, value, filtro, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(league, value, filter), || pay_tv_money(league, value, filter, false));
+    SCOREBOARD.record(igual, || format!("pay_tv_rights({:x}, {}, {:x}) {:x?} x {:x?}", league, value, filter, mo, mr));
 }
 
 /// Comparer for `league_record_season_honours`.
@@ -588,10 +588,10 @@ pub(crate) unsafe extern "C" fn compare_league_compare_table_rows(a: usize, b: u
 }
 
 /// Comparer for `league_build_round_robin_grid`.
-pub(crate) unsafe extern "stdcall" fn compare_league_build_round_robin_grid(grade: *const *mut i32, n: i32) -> u32 {
+pub(crate) unsafe extern "stdcall" fn compare_league_build_round_robin_grid(grid: *const *mut i32, n: i32) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(*const *mut i32, i32) -> u32>(IDX_LEAGUE_BUILD_ROUND_ROBIN_GRID);
-    let regions: Vec<(usize, usize)> = (1..=n.max(0)).map(|i| (*grade.offset(i as isize) as usize + 4, (n.max(1) as usize - 1) * 4)).collect();
-    let (r, s, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(grade, n), || league_build_round_robin_grid(grade, n));
+    let regions: Vec<(usize, usize)> = (1..=n.max(0)).map(|i| (*grid.offset(i as isize) as usize + 4, (n.max(1) as usize - 1) * 4)).collect();
+    let (r, s, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(grid, n), || league_build_round_robin_grid(grid, n));
     SCOREBOARD.record(igual && r == s, || format!("league_build_round_robin_grid({}) {:x?} x {:x?}", n, mo, mr));
     r
 }

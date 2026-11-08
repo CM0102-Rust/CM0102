@@ -115,8 +115,8 @@ pub(crate) unsafe extern "thiscall" fn compare_news_ground_works(this: usize, cl
 ///
 /// [pt] O comparador da notícia da obra recusada: só a original (simplification: entrega ao técnico humano e sorteia; não pode
 /// rodar duas vezes).
-pub(crate) unsafe extern "thiscall" fn compare_news_request_refused(this: usize, club: usize, assunto: u32, reason: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_NEWS_REQUEST_REFUSED)(this, club, assunto, reason)
+pub(crate) unsafe extern "thiscall" fn compare_news_request_refused(this: usize, club: usize, subject: u32, reason: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_NEWS_REQUEST_REFUSED)(this, club, subject, reason)
 }
 
 /// Comparer for `save_finance_dat`.
@@ -241,12 +241,12 @@ pub(crate) unsafe extern "thiscall" fn compare_refresh_all_wage_bills(this: usiz
 ///
 /// [pt] Comparador: sem linha da nação, só a original (a caixa); senão lado a lado na saída `passou` e na data estática da
 /// 0x54cdb0 (0xae2470), com a devolução.
-pub(crate) unsafe extern "thiscall" fn compare_finance_get_days_to_season_start(this: usize, club: usize, passou: *mut u32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_finance_get_days_to_season_start(this: usize, club: usize, passed: *mut u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> i32>(IDX_FINANCE_GET_DAYS_TO_SEASON_START);
     if (exe::key_nation_index_of_club(club) as i8) < 0 {
-        return o(this, club, passou);
+        return o(this, club, passed);
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(passou as usize, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8)], || o(this, club, passou), || finance_get_days_to_season_start(this, club, passou));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(passed as usize, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8)], || o(this, club, passed), || finance_get_days_to_season_start(this, club, passed));
     SCOREBOARD.record(igual && r == n, || format!("finance_get_days_to_season_start(clube {:#x}) original={} {:x?} rust={} {:x?}", club, r, mo, n, mr));
     r
 }

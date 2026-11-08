@@ -352,8 +352,8 @@ pub(crate) unsafe extern "C" fn get_region_name(region: u32, text: usize, size: 
     } else {
         let (adj, nome) = REGION_NAMES[r as usize - 1];
         // in the group’s languages the adjective comes with form 0xff; in the others, with the other forms
-        let usa_adjetivo = if group { fb == 0xff } else { fb != 0xff }; // (dbu)
-        format(text, if usa_adjetivo { adj } else { nome });
+        let uses_adjective = if group { fb == 0xff } else { fb != 0xff }; // (dbu)
+        format(text, if uses_adjective { adj } else { nome });
     }
     1
 }
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: 
         return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE)(continent, text, size, form);
     }
     let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-    let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
+    let adjective: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
     *(text as *mut u8) = 0;
     let own = continent + 0x23; // the record’s adjective (dbu)
     let table = if form as u8 == 0 {
@@ -424,7 +424,7 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: 
     let s = match table {
         None => own,
         Some((t, i)) => {
-            let f = adjetivo(form, i) as i8;
+            let f = adjective(form, i) as i8;
             let id = read_usize(continent);
             let row = [KEY_CONTINENT_AFRICA, KEY_CONTINENT_ASIA, KEY_CONTINENT_EUROPE, KEY_CONTINENT_NORTH_AMERICA, KEY_CONTINENT_OCEANIA].iter().position(|&g| read_usize(g) == id).unwrap_or(5);
             t[row][if (0..=3).contains(&f) { f as usize } else { 4 }]

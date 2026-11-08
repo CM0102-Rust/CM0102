@@ -128,9 +128,9 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     if list == 0 {
         return show_error_at(0x987c20, 0x348);
     }
-    let serie = read_usize(read_usize(this + league::STAGES));
-    core::ptr::write_unaligned(list as *mut usize, aus_nsl_table_row_club(serie, 0)); // cqr3: the first of the final series
-    core::ptr::write_unaligned((list + 4) as *mut usize, aus_nsl_table_row_club(serie, 1)); // cqr3: the second of the final series
+    let series = read_usize(read_usize(this + league::STAGES));
+    core::ptr::write_unaligned(list as *mut usize, aus_nsl_table_row_club(series, 0)); // cqr3: the first of the final series
+    core::ptr::write_unaligned((list + 4) as *mut usize, aus_nsl_table_row_club(series, 1)); // cqr3: the second of the final series
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 1, &mut rodadas, &mut extra, 0);

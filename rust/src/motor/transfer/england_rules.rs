@@ -190,9 +190,9 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     crate::comparison::branch("cqe_5 fora da janela");
     if msg != 0 {
         // 0x6181d0: push 2; push 100; push buffer; push nation; add esp, 0x10 -> cdecl (the nation’s adjective)
-        let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_NATION_GET_NATIONALITY_ADJECTIVE);
+        let adjective: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_NATION_GET_NATIONALITY_ADJECTIVE);
         let mut buf = [0u8; 100];
-        adjetivo(read_usize(this + 0xa), buf.as_mut_ptr(), 100, 2);
+        adjective(read_usize(this + 0xa), buf.as_mut_ptr(), 100, 2);
         text(msg, 0x987d38, 100, 100, buf.as_ptr());
     }
     if !reason.is_null() {

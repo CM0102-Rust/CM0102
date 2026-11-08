@@ -17,7 +17,7 @@ MUTACOES = [
     ('dbr_anos_em_texto', '        years = years.wrapping_sub(1); // the birthday has not come yet', '        // mutacao: sem o desconto do aniversario'),
     ('dbr_clubes_pelo_nome_curto', '    compare_text_nocase(name(a), name(b))', '    compare_text_nocase(name(b), name(a)) // mutacao: a ordem invertida'),
     ('dbr_pessoas_pelo_nome_completo', '    compare_text_nocase(na.as_ptr(), nb.as_ptr())', '    compare_text_nocase(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
-    ('dbr_confere_nomes', '    for (d, id) in [(4, name), (8, sobrenome), (0xc, common)] {', '    for (d, id) in [(4, name), (0xc, common)] { // mutacao: sem o sobrenome'),
+    ('dbr_confere_nomes', '    for (d, id) in [(4, name), (8, surname), (0xc, common)] {', '    for (d, id) in [(4, name), (0xc, common)] { // mutacao: sem o sobrenome'),
     ('dbr_latitude', '    order_by_city_coordinate(ca, cb, 0x23) // a latitude', '    order_by_city_coordinate(ca, cb, 0x2b) // mutacao: a longitude no lugar da latitude'),
     ('dbr_longitude', '    order_by_city_coordinate(ca, cb, 0x2b) // a longitude', '    order_by_city_coordinate(ca, cb, 0x23) // mutacao: a latitude no lugar da longitude'),
 ]

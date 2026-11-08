@@ -61,8 +61,8 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
     }
     if sincronizar != 0 {
         let maquina: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
-        let of_time = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize);
-        let m = maquina(G_SCREEN_MANAGER, of_time) as u16;
+        let of_team = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize);
+        let m = maquina(G_SCREEN_MANAGER, of_team) as u16;
         for j in 0..0x10i32 {
             let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - j - 1).wrapping_mul(0x6e) as usize);
             if *((p + staff::CLASSIFICATION) as *const u8) == 1 && p != manager && maquina(G_SCREEN_MANAGER, p) as u16 == m {
@@ -606,11 +606,11 @@ pub(crate) unsafe fn active_human_manager(i: usize) -> Option<usize> {
 ///
 /// [pt] Entrega a notícia a cada técnico humano ativo que `passa` (0x785d40 com 0), com o alcance `alcance` em +0xde.
 /// Devolve se todas as entregas foram aceitas (a primeira recusada encerra).
-pub(crate) unsafe fn deliver_to_human_managers(this: usize, news: usize, reach: u8, passa: impl Fn(usize) -> bool) -> bool {
+pub(crate) unsafe fn deliver_to_human_managers(this: usize, news: usize, reach: u8, passes: impl Fn(usize) -> bool) -> bool {
     *((news + news_item::REACH) as *mut u8) = reach;
     for i in 0..0x10 {
         if let Some(p) = active_human_manager(i) {
-            if passa(p) && exe::news_deliver_to_manager(this, news, p, 0) == 0 {
+            if passes(p) && exe::news_deliver_to_manager(this, news, p, 0) == 0 {
                 return false; // a entrega recusada encerra
             }
         }
@@ -918,8 +918,8 @@ pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u3
     for k in 0..50 {
         write_usize(this + news_item::DATA + 4 * k, 0);
     }
-    let mut temporaria = [0u32; 2];
-    exe::date_operator_3d(this + news_item::DATE, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
+    let mut temporary = [0u32; 2];
+    exe::date_operator_3d(this + news_item::DATE, temporary.as_mut_ptr() as usize, G_CURRENT_DATE);
     *((this + news_item::DAY_SLICE) as *mut u8) = *(G_CURRENT_DAY_SLICE as *const u8);
     write_usize(this + news_item::ID, 0);
     write_usize(this + news_item::READ, 0);

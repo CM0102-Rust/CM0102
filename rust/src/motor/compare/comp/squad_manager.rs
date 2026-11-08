@@ -8,7 +8,7 @@ use super::*;
 /// [pt] Lado a lado: o ano das inscrições (+0), a marca +0x6d de todas as pessoas com contrato (a tabela inteira) e o
 /// [0xae1080] da 0x85aae0. Com algum clube das três copas com técnico humano (a notícia não roda duas vezes), só a
 /// original.
-pub(crate) unsafe extern "thiscall" fn compare_process_euro_registration(this: usize, etapa: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_process_euro_registration(this: usize, step: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_PROCESS_EURO_REGISTRATION);
     let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     let mut has_human = false;
@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_euro_registration(this: u
         let id = read_u32(chave);
         let comp = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * id as usize) as usize;
         if comp != 0 {
-            for_each_comp_club(comp, etapa, |c| {
+            for_each_comp_club(comp, step, |c| {
                 if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == id && human(read_u32(G_NEWS) as usize, c) != 0 {
                     has_human = true;
                 }
@@ -24,18 +24,18 @@ pub(crate) unsafe extern "thiscall" fn compare_process_euro_registration(this: u
         }
     }
     if has_human {
-        return o(this, etapa);
+        return o(this, step);
     }
     let n = (read_u32(G_STAFF_COUNT) as i32).max(0) as usize;
     let reg = [(this, 2usize), (read_u32(G_STAFF_TABLE) as usize, n * staff::SIZE), (G_CONTRACT_LOOKUP_RESULT, 4)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, etapa), || process_euro_registration(this, etapa));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, step), || process_euro_registration(this, step));
     SCOREBOARD.record(igual, || {
         let base = read_u32(G_STAFF_TABLE) as usize;
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| {
             let a0 = a.0;
             a.1.iter().zip(b.1.iter()).enumerate().filter(|(_, (x, y))| x != y).map(move |(i, (x, y))| (a0 + i, *x, *y))
         }).take(12).map(|(e, x, y)| if e >= base && e < base + n * staff::SIZE { format!("pessoa {} +{:x}: {}/{}", (e - base) / 0x6e, (e - base) % 0x6e, x, y) } else { format!("{:x}: {}/{}", e, x, y) }).collect();
-        format!("process_euro_registration(etapa {}): {}", etapa as u8, d.join(", "))
+        format!("process_euro_registration(etapa {}): {}", step as u8, d.join(", "))
     });
 }
 
@@ -195,7 +195,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this:
 ///
 /// [pt] Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
 /// e a devolução.
-pub(crate) unsafe extern "thiscall" fn compare_select_euro_registered_players(this: usize, c: usize, etapa: u32, mark: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_select_euro_registered_players(this: usize, c: usize, step: u32, mark: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(IDX_SELECT_EURO_REGISTERED_PLAYERS);
     let mut sq = [0usize; 50];
     exe::database_collect_club_squad(c, sq.as_mut_ptr(), 0);
@@ -205,10 +205,10 @@ pub(crate) unsafe extern "thiscall" fn compare_select_euro_registered_players(th
             reg.push((p + staff::SQUAD_SELECTED_FOR, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, etapa, mark), || select_euro_registered_players(this, c, etapa, mark));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, step, mark), || select_euro_registered_players(this, c, step, mark));
     SCOREBOARD.record(igual && r == n, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
-        format!("select_euro_registered_players(clube {:x}, etapa {}, marca {}): original {} rust {} {}", c, etapa as u8, mark, r, n, d.join(", "))
+        format!("select_euro_registered_players(clube {:x}, etapa {}, marca {}): original {} rust {} {}", c, step as u8, mark, r, n, d.join(", "))
     });
     r
 }

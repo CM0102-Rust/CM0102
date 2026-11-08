@@ -328,12 +328,12 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
     // 0x54c5b0: push 1; push &tmp; mov ecx, 0xae2c90 -> thiscall, ret 8; 0x417c10: push data; push &copia; lea ecx,
     // [this+0x1a5] -> thiscall, ret 8
     let (mut tmp, mut copia) = ([0u32; 2], [0u32; 2]);
-    let amanha = exe::date_add_days(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã
+    let tomorrow = exe::date_add_days(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã
     if SCOUT_MATCH_DRY_RUN {
         SCOUT_MATCH_WOULD_REPORT = true;
         return 1;
     }
-    exe::date_operator_3d(this + player_search_fields::SCOUTING_START_DATE, copia.as_mut_ptr() as usize, amanha);
+    exe::date_operator_3d(this + player_search_fields::SCOUTING_START_DATE, copia.as_mut_ptr() as usize, tomorrow);
     let mut mark = copia[0] & !0xff;
     let request: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_SCOUT_MANAGER_HAS_SCOUT_REQUEST);
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
@@ -811,13 +811,13 @@ pub(crate) unsafe extern "thiscall" fn get_scout_assignment(this: usize, club: *
     if check_search_scout(this).is_none() {
         return original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(IDX_GET_SCOUT_ASSIGNMENT)(this, club, nation, region, comp, base, opponent); // message box: original only
     }
-    let marcada = read_usize(this + player_search_fields::ASSIGNED_CLUB) as i32 > -1
+    let marked = read_usize(this + player_search_fields::ASSIGNED_CLUB) as i32 > -1
         || read_usize(this + player_search_fields::ASSIGNED_NATION) as i32 > -1
         || *((this + player_search_fields::ASSIGNED_REGION) as *const i8) > -1
         || read_usize(this + player_search_fields::ASSIGNED_COMP) as i32 > -1 // the competition
         || read_usize(this + player_search_fields::ASSIGNED_BASE) != 0
         || read_usize(this + player_search_fields::ASSIGNED_OPPONENT) != 0;
-    if !marcada {
+    if !marked {
         return 0;
     }
     club.write_unaligned(read_usize(this + player_search_fields::ASSIGNED_CLUB) as u32);

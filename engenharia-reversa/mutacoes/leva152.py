@@ -6,6 +6,6 @@ MUTACOES = [
     ('j_conta', "                *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 1;\n            }\n        }\n    };", "                *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 3;\n            }\n        }\n    };"),
     ('j_fechar', "                    exe::match_day_apply_match_result(day, p);\n", ""),
     ('j_linhas', "                            exe::formation_clear_marking_targets(exe::human_manager_get_active_tactic(manager(), u(u(p, oc), 0xcf)));\n", ""),
-    ('j_andar', "        exe::set_cursor_mode(hora);\n        exe::match_day_step_background_match(day, 1);\n", "        exe::set_cursor_mode(hora);\n"),
+    ('j_andar', "        exe::set_cursor_mode(hour);\n        exe::match_day_step_background_match(day, 1);\n", "        exe::set_cursor_mode(hour);\n"),
     ('j_iniciar', "        exe::match_day_start_next_background_match(day);\n        let mut vistos", "        let mut vistos"),
 ]

@@ -81,7 +81,7 @@ pub(crate) unsafe fn ball_out_with(this: usize, side_b: u8, call: AddEventCall) 
 /// 0x6f0630; marca o lance); senao o goleiro do lado narra 0x1fe7; da meia-lua com nota acima de
 /// 200, 0x1ffd e a bola espirra sem chutador; senao 0x21d8/0x1f85/0x1f84 e a bola espirra
 /// (sorteio(3)). Nesses tres: +0x14 em +0x35, +0x12, marca o lance e sorteio(2) + 1 em +0x2b.
-pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8, strong: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
+pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, style: i8, strong: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let special: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
     let b = |p: usize, o: usize| (p + o) as *mut u8;
     let w = |p: usize, o: usize| (p + o) as *mut i16;
@@ -96,8 +96,8 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         (2..=6).contains(&byte(p, 0x102)) && if lado1 { (10..=11).contains(&byte(p, 0x103)) } else { (0..=1).contains(&byte(p, 0x103)) }
     };
     let in_the_box = || area_de(j, byte(j, match_player::SIDE) == 1);
-    let espirra = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, espalhar: i32, chutador: usize| {
-        call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [(read_u8(j + match_player::CELL_X) as u32), (read_u8(j + match_player::CELL_Y) as u32), (espalhar as u8 as u32) | (read_u8(j + match_player::SIDE) as u32) << 8, 0, chutador as u32]);
+    let espirra = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, spread: i32, shooter: usize| {
+        call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [(read_u8(j + match_player::CELL_X) as u32), (read_u8(j + match_player::CELL_Y) as u32), (spread as u8 as u32) | (read_u8(j + match_player::SIDE) as u32) << 8, 0, shooter as u32]);
     };
     if exe::cm3_match_engine_get_goalkeeper(m, byte(j, match_player::SIDE)) == j || *((m + engine::BALL_HOLDER) as *const usize) == j {
         return 0;
@@ -278,21 +278,21 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
             return 1;
         }
     }
-    let meia_lua = byte(j, match_player::CELL_X) == 4 && (byte(j, match_player::CELL_Y) == 0 || byte(j, match_player::CELL_Y) == 11);
+    let half_lua = byte(j, match_player::CELL_X) == 4 && (byte(j, match_player::CELL_Y) == 0 || byte(j, match_player::CELL_Y) == 11);
     if rating >= 400 {
         // venceu
         crate::comparison::branch("play venceu");
         *w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_add(0x1e);
         *b(j, match_player::BALLS_CONTESTED) = (*b(j, match_player::BALLS_CONTESTED)).wrapping_add(1);
         *b(j, match_player::BUSY) = (*b(j, match_player::BUSY)).wrapping_add(1);
-        if meia_lua {
+        if half_lua {
             narrate(call, 0x1ffe, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
         } else if strong != 0 {
-            narrar7(call, 0x21d6, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo);
-        } else if estilo == 5 {
+            narrar7(call, 0x21d6, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, style);
+        } else if style == 5 {
             narrar7(call, 0x1f66, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, 5);
         } else {
-            narrar7(call, 0x1f65, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo);
+            narrar7(call, 0x1f65, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, style);
         }
         call(FN_MATCH_PLAYER_TAKE_POSSESSION, j, [0; 5]);
         *w(j, match_player::ACTION) = lance;
@@ -301,7 +301,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     if exe::cm3_match_engine_get_goalkeeper(m, byte(j, match_player::SIDE)) == j {
         crate::comparison::branch("play goleiro");
         narrate(call, 0x1fe7, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
-    } else if meia_lua && rating > 200 {
+    } else if half_lua && rating > 200 {
         crate::comparison::branch("play meia-lua");
         narrate(call, 0x1ffd, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
@@ -309,11 +309,11 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     } else {
         crate::comparison::branch("play perdeu");
         if strong != 0 {
-            narrar7(call, 0x21d8, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo);
-        } else if estilo == 5 {
+            narrar7(call, 0x21d8, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, style);
+        } else if style == 5 {
             narrar7(call, 0x1f85, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, 5);
         } else {
-            narrar7(call, 0x1f84, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo);
+            narrar7(call, 0x1f84, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, style);
         }
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
         espirra(call, random(3), j);
@@ -402,7 +402,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
         let club = club_of(read(t + 4 * lado));
         let ts = t + lado * 0x625;
         let other = t + (lado == 0) as usize * 0x625;
-        let placar = |r: usize| ub(r + 0x120) + ub(r + 0x11f);
+        let scoreboard = |r: usize| ub(r + 0x120) + ub(r + 0x11f);
         for k in 0..20usize {
             let row = ts + 0x1c5 + k * 0x49;
             let id = read(row - 0x35);
@@ -419,13 +419,13 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 let nota11 = exe::comp_stats_get_player_stat(comp, g(p + staff::PLAYER), 0x11);
                 if c != 0 && matches!(*((c + contract::SQUAD_STATUS) as *const u8) & 0xf0, 0x10 | 0x20 | 0x30) {
                     let x = exe::shortlist_manager_find_club_shortlist_entry(g(g(G_TRANSFER_MANAGER) + 0x856), club, p, 0, 0);
-                    let passa = test_600a50(club, 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
+                    let passes = test_600a50(club, 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
                     let d = w(ts + 0x18e) as f64;
-                    if passa
+                    if passes
                         && w(row + 3) > 0x1388
                         && (d * 1.1 < w(row + 3) as f64 || d * 0.9 < w(row + 7) as f64 || d * 0.024 < w(g(p + staff::PLAYER) + 5) as f64)
                         && *(row as *const u8) <= 6
-                        && placar(ts) <= placar(other)
+                        && scoreboard(ts) <= scoreboard(other)
                         && ((random(10) + 5) as f64) < nota1
                         && (*((g(p + staff::PLAYER) + 0x45) as *const i8) as i32) < random(10)
                         && average() + 0.2 > nota11
@@ -438,7 +438,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             }
             if esp != 0 && comp != 0 && *((t + 0x4c) as *const u8) == 0 {
                 let nota1 = exe::comp_stats_get_player_stat(comp, g(p + staff::PLAYER), 1);
-                if *(row as *const u8) >= 9 && placar(ts) >= placar(other) && ((random(5) + 2) as f64) < nota1 && !ja_34 {
+                if *(row as *const u8) >= 9 && scoreboard(ts) >= scoreboard(other) && ((random(5) + 2) as f64) < nota1 && !ja_34 {
                     let m = average();
                     let nota11 = exe::comp_stats_get_player_stat(comp, g(p + staff::PLAYER), 0x11);
                     let r = random(9);

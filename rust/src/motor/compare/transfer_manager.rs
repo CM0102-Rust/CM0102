@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_offer(this: usize, o
     let (lidas, conta) = (read_usize(this + transfer_manager_fields::OFFER_CAPACITY) as i32, read_usize(this + transfer_manager_fields::OFFER_COUNT) as i32);
     let cap = if conta == lidas { lidas.wrapping_add(0x32) } else { lidas };
     let (vaga, _) = find_offer_slot_and_rival(read_usize(this), lidas, cap, conta, alvo, comprador, read_usize(this + transfer_manager_fields::LOWEST_FREE_SLOT) as i32, first);
-    let serie = read_usize(this + transfer_manager_fields::NEXT_SERIAL);
+    let series = read_usize(this + transfer_manager_fields::NEXT_SERIAL);
     o(this, offer, terms); // simplification: original only
     if vaga == -1 {
         return;
@@ -29,9 +29,9 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_offer(this: usize, o
     // the serial goes up at least once: a nested offer made inside the call (news, scheduling) raises it again
     // (8-league audit of 07/11/2026, ENG SCO IRL ITA ESP, 2002-050: 4625 against 4624)
     // [pt] a série sobe pelo menos uma vez: uma oferta aninhada feita dentro da chamada (notícia, agenda) a sobe de novo
-    SCOREBOARD.record(v == vaga && s == serie && s2 > serie, || format!(
+    SCOREBOARD.record(v == vaga && s == series && s2 > series, || format!(
         "add_transfer_offer(alvo {}, comprador {}): vaga original {} plano {}, série {} plano {}, próxima {} plano {}",
-        alvo, comprador, v, vaga, s, serie, s2, serie.wrapping_add(1)));
+        alvo, comprador, v, vaga, s, series, s2, series.wrapping_add(1)));
 }
 
 /// Comparer for `accept_loan_offer`.
@@ -53,8 +53,8 @@ pub(crate) unsafe extern "thiscall" fn compare_handle_player_accepted_terms(this
 ///
 /// [pt] Comparador da 0x8c8090: só a original (aceita, recusa ou contrapropõe, reagenda, mexe nas listas de observação e
 /// aloca e solta as opções).
-pub(crate) unsafe extern "thiscall" fn compare_ai_respond_to_bid(this: usize, slot: usize, ensaio: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_AI_RESPOND_TO_BID)(this, slot, ensaio) // simplification: original only
+pub(crate) unsafe extern "thiscall" fn compare_ai_respond_to_bid(this: usize, slot: usize, dry_run: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_AI_RESPOND_TO_BID)(this, slot, dry_run) // simplification: original only
 }
 
 /// Comparer for `add_loan_negotiation`.
@@ -75,18 +75,18 @@ pub(crate) unsafe extern "thiscall" fn compare_add_loan_negotiation(this: usize,
 /// [pt] Comparador da 0x8c8860: lado a lado a partir do mesmo estado de [0xae1080], *saida, *atracao e do sorteador (a
 /// 0x8e78f0 sorteia); a cópia roda sem contar sorteios. Confere a devolução, a atração, [0xae1080] e a foto da oferta
 /// nova de cada lado; a da cópia é destruída (0x8e5710) e liberada (0x944c94) e fica tudo como a original deixou.
-pub(crate) unsafe extern "thiscall" fn compare_make_exchange_option(this: usize, buyer: usize, target: usize, offer: usize, out: *mut usize, atracao: *mut i8, value: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_make_exchange_option(this: usize, buyer: usize, target: usize, offer: usize, out: *mut usize, attraction: *mut i8, value: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut usize, *mut i8, i32) -> u32>(IDX_MAKE_EXCHANGE_OPTION);
     let est = crate::rng::STATE_REGIONS;
-    let regions = [(G_CONTRACT_LOOKUP_RESULT, 4usize), (out as usize, 4), (atracao as usize, 1), est[0], est[1]];
+    let regions = [(G_CONTRACT_LOOKUP_RESULT, 4usize), (out as usize, 4), (attraction as usize, 1), est[0], est[1]];
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    let r = o(this, buyer, target, offer, out, atracao, value);
+    let r = o(this, buyer, target, offer, out, attraction, value);
     let after = crate::comparison::MemorySnapshot::read(&regions);
-    let (ao, fo) = (*atracao, if r != 0 && *out != 0 { option_offer_snapshot(*out) } else { Vec::new() });
+    let (ao, fo) = (*attraction, if r != 0 && *out != 0 { option_offer_snapshot(*out) } else { Vec::new() });
     let e_o = read_usize(G_CONTRACT_LOOKUP_RESULT);
     before.write_back();
-    let n = crate::rng::pause_trace(|| crate::rng::without_counting(|| make_exchange_option(this, buyer, target, offer, out, atracao, value)));
-    let (an, fn_) = (*atracao, if n != 0 && *out != 0 { option_offer_snapshot(*out) } else { Vec::new() });
+    let n = crate::rng::pause_trace(|| crate::rng::without_counting(|| make_exchange_option(this, buyer, target, offer, out, attraction, value)));
+    let (an, fn_) = (*attraction, if n != 0 && *out != 0 { option_offer_snapshot(*out) } else { Vec::new() });
     let e_n = read_usize(G_CONTRACT_LOOKUP_RESULT);
     if n != 0 && *out != 0 {
         let s = *out;
@@ -167,11 +167,11 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_exchange_player(this: usiz
 /// [pt] Comparador da 0x8c7690: só a original (as notícias alocam, a oferta é reagendada e segue pela 0x8c2f50). O plano,
 /// feito antes pelas consultas sem efeito (0x8c7560, 0x4cc9e0, 0x8c7950 sem sorteio): o alvo recusado devolve 0 com a
 /// oferta no status 0x10; senão 1.
-pub(crate) unsafe extern "thiscall" fn compare_check_offer_work_permits(this: usize, offer: usize, quieto: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_check_offer_work_permits(this: usize, offer: usize, quiet: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CHECK_OFFER_WORK_PERMITS);
     let (precisa, proposta, concedida) = check_work_permit(this, transfer_manager_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), transfer_manager_club_by_id(read_usize(offer + offer::BUYER_CLUB_ID)));
     let recusada = precisa && proposta != 0 && !concedida;
-    let r = o(this, offer, quieto);
+    let r = o(this, offer, quiet);
     let ok = if recusada { r == 0 && read_u8(offer + offer::STATUS) == 0x10 } else { r == 1 };
     SCOREBOARD.record(ok, || format!("check_offer_work_permits(oferta {:x}) recusada prevista {} devolveu {}", offer, recusada, r));
     r
@@ -202,10 +202,10 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_daily_update(thi
         read_i16(today + cm_date::YEAR) == read_i16(this + transfer_manager_fields::CURRENT_YEAR) && read_i16(today) == read_i16(this + transfer_manager_fields::CURRENT_DATE) && read_u8(this + transfer_manager_fields::CURRENT_SLICE) == f
     };
     let (f855, j84c) = (if sem_base { f } else { read_u8(this + transfer_manager_fields::CURRENT_SLICE) }, read_u8(this + transfer_manager_fields::DAY_CURSOR));
-    let mut amanha = [0u8; 8];
+    let mut tomorrow = [0u8; 8];
     {
-        let r = exe::date_add_days(today, amanha.as_mut_ptr() as usize, 1);
-        amanha = core::ptr::read_unaligned(r as *const [u8; 8]);
+        let r = exe::date_add_days(today, tomorrow.as_mut_ptr() as usize, 1);
+        tomorrow = core::ptr::read_unaligned(r as *const [u8; 8]);
     }
     o(this, today, slice);
     if !roda {
@@ -216,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_daily_update(thi
         let j = j84c.wrapping_add(1);
         let expected = if (j as i8) >= 0x32 { 0 } else { j };
         let base = core::ptr::read_unaligned((this + transfer_manager_fields::CURRENT_DATE) as *const [u8; 4]);
-        ok = read_u8(this + transfer_manager_fields::CURRENT_SLICE) == 0 && read_u8(this + transfer_manager_fields::DAY_CURSOR) == expected && base[..] == amanha[..4];
+        ok = read_u8(this + transfer_manager_fields::CURRENT_SLICE) == 0 && read_u8(this + transfer_manager_fields::DAY_CURSOR) == expected && base[..] == tomorrow[..4];
     } else {
         ok = read_u8(this + transfer_manager_fields::CURRENT_SLICE) == f855.wrapping_add(1);
     }
@@ -469,10 +469,10 @@ pub(crate) unsafe extern "thiscall" fn compare_post_transfer_finalised_news(this
 }
 
 /// Comparer for `free_transfer_staff`.
-pub(crate) unsafe extern "thiscall" fn compare_free_transfer_staff(this: usize, p: usize, club: usize, reason: u32, compensacao: i32, so_record: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_free_transfer_staff(this: usize, p: usize, club: usize, reason: u32, compensation: i32, so_record: u32) {
     let emprestada = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) != 0;
     let n = read_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT);
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32)>(IDX_FREE_TRANSFER_STAFF)(this, p, club, reason, compensacao, so_record);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32)>(IDX_FREE_TRANSFER_STAFF)(this, p, club, reason, compensation, so_record);
     if emprestada {
         SCOREBOARD.record(read_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT) == n, || format!("free_transfer_staff(pessoa {}) emprestada: conta {} -> {}", read_usize(p), n, read_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT)));
         return;
@@ -575,11 +575,11 @@ pub(crate) unsafe extern "thiscall" fn compare_post_transfer_agreed_news(this: u
 /// Comparer for `add_config_loan`.
 pub(crate) unsafe extern "thiscall" fn compare_add_config_loan(this: usize, p: usize, club: usize, start: usize, end: usize) {
     let tinha = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p);
-    let passa = config_loan_allowed(p, club, start, end).is_some();
+    let passes = config_loan_allowed(p, club, start, end).is_some();
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_ADD_CONFIG_LOAN)(this, p, club, start, end);
     let has = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p);
-    let same = if passa { has != 0 } else { has == tinha };
-    SCOREBOARD.record(same, || format!("add_config_loan(pessoa {:#x}) passa={} antes={:#x} depois={:#x}", read_usize(p), passa, tinha, has));
+    let same = if passes { has != 0 } else { has == tinha };
+    SCOREBOARD.record(same, || format!("add_config_loan(pessoa {:#x}) passa={} antes={:#x} depois={:#x}", read_usize(p), passes, tinha, has));
 }
 
 /// Comparer for `post_transfer_delay_request_news`.
@@ -1064,10 +1064,10 @@ pub(crate) unsafe extern "thiscall" fn compare_detach_offer_players(this: usize,
 ///
 /// [pt] Comparador: aloca a oferta e a 0x8e78f0 pode sortear: roda só a original e confere o resultado: devolve 1, a oferta
 /// guardada em `saída` tem o valor (+0x1b) e a atração ficou em 50.
-pub(crate) unsafe extern "thiscall" fn compare_build_cash_offer_option(this: usize, club: usize, player: usize, out: *mut usize, atracao: *mut u8, value: i32) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut usize, *mut u8, i32) -> u32>(IDX_BUILD_CASH_OFFER_OPTION)(this, club, player, out, atracao, value);
+pub(crate) unsafe extern "thiscall" fn compare_build_cash_offer_option(this: usize, club: usize, player: usize, out: *mut usize, attraction: *mut u8, value: i32) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut usize, *mut u8, i32) -> u32>(IDX_BUILD_CASH_OFFER_OPTION)(this, club, player, out, attraction, value);
     let offer = *out;
-    let ok = r == 1 && offer != 0 && core::ptr::read_unaligned((offer + offer::FEE) as *const i32) == value && *atracao == 0x32;
+    let ok = r == 1 && offer != 0 && core::ptr::read_unaligned((offer + offer::FEE) as *const i32) == value && *attraction == 0x32;
     SCOREBOARD.record(ok, || format!("build_cash_offer_option(jogador {:x}, valor {}) devolveu {}, oferta {:x}", read_usize(player), value, r, offer));
     r
 }
@@ -1075,14 +1075,14 @@ pub(crate) unsafe extern "thiscall" fn compare_build_cash_offer_option(this: usi
 /// Comparer for `get_offer_response_delay`.
 ///
 /// [pt] Comparador: lado a lado pelas duas saídas, o sorteio, [0xae1080] e [0xb67a34] (a caixa da falta de ficha).
-pub(crate) unsafe extern "thiscall" fn compare_get_offer_response_delay(this: usize, offer: usize, days: *mut u8, fatias: *mut u8) {
+pub(crate) unsafe extern "thiscall" fn compare_get_offer_response_delay(this: usize, offer: usize, days: *mut u8, slices: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_GET_OFFER_RESPONSE_DELAY);
-    let mut reg = vec![(days as usize, 1usize), (fatias as usize, 1), (G_CONTRACT_LOOKUP_RESULT, 4), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
+    let mut reg = vec![(days as usize, 1usize), (slices as usize, 1), (G_CONTRACT_LOOKUP_RESULT, 4), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(
         &reg,
-        || o(this, offer, days, fatias),
-        || crate::rng::without_counting(|| get_offer_response_delay(this, offer, days, fatias)),
+        || o(this, offer, days, slices),
+        || crate::rng::without_counting(|| get_offer_response_delay(this, offer, days, slices)),
     );
     SCOREBOARD.record(igual, || format!("get_offer_response_delay({:#x}) {:x?} x {:x?}", offer, mo, mr));
 }
@@ -1218,9 +1218,9 @@ pub(crate) unsafe extern "thiscall" fn compare_add_past_transfer(this: usize, re
         return r; // out of memory: the box has already shown
     }
     let new = read_usize(this + transfer_manager_fields::PAST_TRANSFERS).wrapping_add(n.wrapping_mul(0x25));
-    let gravado = core::slice::from_raw_parts(new as *const u8, 0x1d);
-    SCOREBOARD.record(r == new && read_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT) == n.wrapping_add(1) && gravado == &font[..], || {
-        format!("add_past_transfer: conta {} -> {}, devolveu {:x} (esperava {:x}), registro {:x?} x {:x?}", n, read_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT), r, new, font, gravado)
+    let written = core::slice::from_raw_parts(new as *const u8, 0x1d);
+    SCOREBOARD.record(r == new && read_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT) == n.wrapping_add(1) && written == &font[..], || {
+        format!("add_past_transfer: conta {} -> {}, devolveu {:x} (esperava {:x}), registro {:x?} x {:x?}", n, read_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT), r, new, font, written)
     });
     r
 }
@@ -1433,20 +1433,20 @@ pub(crate) unsafe extern "stdcall" fn compare_transfer_manager_close_offer_contr
 }
 
 /// Comparer for `queue_free_transfer`.
-pub(crate) unsafe extern "thiscall" fn compare_queue_free_transfer(manager: usize, person: usize, reason: u8, compensacao: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_queue_free_transfer(manager: usize, person: usize, reason: u8, compensation: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8, u32)>(IDX_QUEUE_FREE_TRANSFER);
     // simplification: the queue allocates a node (does not run twice): the copy only builds the record (0x4cf6d0 is
     // pure query), the original queues it and the new tail node is checked
     let mut record = None;
-    if !queue_free_transfer_with(manager, person, reason, compensacao, &mut |_, r| record = Some(*r)) {
-        return o(manager, person, reason, compensacao);
+    if !queue_free_transfer_with(manager, person, reason, compensation, &mut |_, r| record = Some(*r)) {
+        return o(manager, person, reason, compensation);
     }
     let l = manager + transfer_manager_fields::FREE_TRANSFER_QUEUE;
     let before = core::ptr::read_unaligned(l as *const u16);
-    o(manager, person, reason, compensacao);
+    o(manager, person, reason, compensation);
     let after = core::ptr::read_unaligned(l as *const u16);
-    let cauda = core::ptr::read_unaligned((l + llist::TAIL) as *const usize);
-    let new = if cauda == 0 { None } else { Some(*(*(cauda as *const usize) as *const [u8; 9])) };
+    let tail = core::ptr::read_unaligned((l + llist::TAIL) as *const usize);
+    let new = if tail == 0 { None } else { Some(*(*(tail as *const usize) as *const [u8; 9])) };
     SCOREBOARD.record(after == before.wrapping_add(1) && new == record,
         || format!("queue_free_transfer {} -> {} original={:x?} rust={:x?}", before, after, new, record));
 }
@@ -1633,16 +1633,16 @@ pub(crate) unsafe extern "thiscall" fn compare_hold_offers_at_window_close(this:
 /// [pt] Comparador: a original roda (a 0x68d0d0 aloca o nó) e o resultado é conferido com o plano feito antes: a data
 /// (+0x12) e a fatia (+0x1a) da oferta, a conta do balde mais 1 e a data base (+0x84d, 8 bytes) igual a hoje quando
 /// não havia.
-pub(crate) unsafe extern "thiscall" fn compare_schedule_offer(this: usize, offer: usize, days: u32, fatias: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_schedule_offer(this: usize, offer: usize, days: u32, slices: u32) -> u32 {
     let sem_base = read_i16(this + transfer_manager_fields::CURRENT_YEAR) == 0;
-    let (data, fatia, balde) = vacancy_schedule_plan(this, days as u8, fatias as u8);
+    let (data, fatia, balde) = vacancy_schedule_plan(this, days as u8, slices as u8);
     let count = read_i16(balde);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_SCHEDULE_OFFER)(this, offer, days, fatias);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_SCHEDULE_OFFER)(this, offer, days, slices);
     let gravada = core::slice::from_raw_parts((offer + offer::DUE_DATE) as *const u8, 8);
     let base_ok = !sem_base || core::slice::from_raw_parts((this + transfer_manager_fields::CURRENT_DATE) as *const u8, 8) == core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8);
     let ok = gravada == &data[..] && *((offer + offer::DUE_SLICE) as *const i8) == fatia && read_i16(balde) == count.wrapping_add(1) && base_ok;
     SCOREBOARD.record(ok, || format!("schedule_offer(dias {}, fatias {}): data {:x?} (plano {:x?}), fatia {} (plano {}), balde {:x} conta {} -> {}, base {}",
-        days as u8 as i8, fatias as u8 as i8, gravada, data, *((offer + offer::DUE_SLICE) as *const i8), fatia, balde, count, read_i16(balde), base_ok));
+        days as u8 as i8, slices as u8 as i8, gravada, data, *((offer + offer::DUE_SLICE) as *const i8), fatia, balde, count, read_i16(balde), base_ok));
     r
 }
 

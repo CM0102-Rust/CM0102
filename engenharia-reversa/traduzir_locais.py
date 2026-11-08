@@ -93,6 +93,22 @@ selecoes:national_teams mapa:map frente:front interesse:interest regiao:region s
 classe:class saiu:left laco:loop ignorar:ignore comissao:staff acao:action marcado:marked meu:my avancar:advance margem:margin
 parte:part fichas:sheets opcao:option destaque:highlight modelo:template cota:quota sementes:seeds embaralhar:shuffle
 som:sound vez:time usa:uses cod:code lin:row pres:presence ini:start cont:count'''.split()))
+# rodada 19 (08/11/2026)
+D.update(dict(x.split(':') for x in '''escritas:written escritos:written temporaria:temporary sobrenome:surname filtro:filter
+metodo:method passa:passes canto:corner vence:wins mundo:world receptor:receiver datas:dates anfitriao:host
+abaixo:below desempate:tiebreak previsto:predicted serie:series errado:wrong quieto:quiet limitar:limit remover:remove
+curto:short estilo:style fixo:fixed datar:date pula:skips fatias:slices placar:scoreboard marcada:marked contagem:count
+mudou:changed segue:follows passou:passed chutador:shooter agregado:aggregate resta:left ativos:active abas:tabs
+atracao:attraction etapa:step custo:cost fixos:fixed nela:in_it onde:where gravado:written previstos:predicted pesos:weights
+fica:stays voltas:laps ensaio:dry_run rascunho:draft desejado:wanted tres:three desligar:disable amanha:tomorrow
+vinte:twenty meia:half marcados:marked adjetivo:adjective atualizar:update corpo:body minima:minimum hora:hour
+sinal:sign expulsar:send_off narrou:narrated dominou:controlled rapida:fast arriscado:risky iguais:equal
+espalhar:spread entradas:entries acima:above propria:own conduz:carries foto:photo subtipo:subtype assunto:subject
+seis:six compensacao:compensation lugares:places grade:grid cauda:tail premios:prizes turnos:rounds pote:pot
+reduz:reduces venceu:won funcao:function devolver:return tempo:time maiuscula:capital abreviado:abbreviated
+longo:long terceiro:third sim:yes divisor:divisor terco:third contador:counter cinco:five porcento:percent'''.split()))
+INGLES |= set('''l4c ops2 desl dest alt sel desloc sev l28 difference difs cat global obs fechar2 penalties adv item16 display
+pts den esc pct transf for disp l3c desc masc ecx l24 tabela1 ult cmp cur pot nat signed sprintf esi kit ban txt'''.split())
 INGLES |= set('''original qsort without with area bsearch delta fread until zread ops ids fwrite zwrite and calloc dir rust
 malloc uefa mem one the regen conf bond respond penalty restart taker edi percent pair cid pref reg comp lado1'''.split())
 INGLES |= set(w for v in D.values() for w in v.split('_'))

@@ -7,7 +7,7 @@ use super::*;
 /// +0xbe e os rebaixados +0xc1): vitória 3, empate 1, categoria 2 (liga), clube nacional, desempates confronto
 /// direto e saldo, sem play-offs na tabela, sem liga acima nem abaixo, palavra de regras 8, 7 reservas e
 /// 3 substituições, e as palavras +0xab e +0xdb (copiadas em cada partida: +0x38 e +0x36) em 0.
-pub(crate) unsafe fn bra_reg_central_set_state_league_rules(o: usize, turnos: u16, cima: u8, relegated: u8) {
+pub(crate) unsafe fn bra_reg_central_set_state_league_rules(o: usize, rounds: u16, cima: u8, relegated: u8) {
     write_u16_at(o, 0xab, 0);
     write_u16_at(o, 0xdb, 0);
     write_u8_at(o, 0xc7, 0);
@@ -19,7 +19,7 @@ pub(crate) unsafe fn bra_reg_central_set_state_league_rules(o: usize, turnos: u1
     write_u8_at(o, 0x4a, 3);
     write_u8_at(o, 0xbe, cima);
     write_u16_at(o, 0xd9, 8);
-    write_u16_at(o, 0x3c, turnos);
+    write_u16_at(o, 0x3c, rounds);
     write_u8_at(o, 0xc3, 1);
     write_u8_at(o, 0xc4, 2);
     write_u8_at(o, 0x42, 1);

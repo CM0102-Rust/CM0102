@@ -600,7 +600,7 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     let sede1 = if a != -1 { exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(a.wrapping_mul(0x122) as usize)) } else { 0 };
     let sede2 = if b != -1 { exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(b.wrapping_mul(0x122) as usize)) } else { 0 };
     let detentor = exe::comp_util_get_latest_placed_club(read_usize(G_CLUB_COMP_TABLE).wrapping_add((read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) as i32).wrapping_mul(0x6b) as usize), 0);
-    let mut fixos = 0i8;
+    let mut fixed = 0i8;
     for i in 0..32usize {
         for (vaga, alvo) in [(0usize, detentor), (1, sede1), (2, sede2)] {
             let t = read_usize(this + 0x14);
@@ -613,13 +613,13 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
                 let t = read_usize(this + 0x14) + vaga * 6;
                 write_usize(t, c);
                 write_u16(t + 4, w);
-                if fixos < vaga as i8 + 1 {
-                    fixos = vaga as i8 + 1;
+                if fixed < vaga as i8 + 1 {
+                    fixed = vaga as i8 + 1;
                 }
             }
         }
     }
-    let mut n = fixos;
+    let mut n = fixed;
     if sede2 == sede1 || sede2 == detentor {
         n = 2;
     }
@@ -629,10 +629,10 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     exe::crt_qsort(read_usize(this + 0x14) + n as i32 as usize * 6, (0x20 - n as i32) as u32, 6, 0x4b07b0);
     for i in 0..0x20usize {
         let club = read_usize(read_usize(this + 0x14) + i * 6);
-        let pote = this + 0xf2 + i * 5;
-        write_usize(pote - 4, read_usize(club));
+        let pot = this + 0xf2 + i * 5;
+        write_usize(pot - 4, read_usize(club));
         if i < 8 {
-            write_u8(pote, 0);
+            write_u8(pot, 0);
             write_u8(read_usize(this + 0x14) + i * 6 + 4, 3);
             continue;
         }
@@ -652,7 +652,7 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
         } else {
             continue;
         };
-        write_u8(pote, p);
+        write_u8(pot, p);
         write_u8(read_usize(this + 0x14) + i * 6 + 4, s);
     }
     exe::crt_qsort(read_usize(this + 0x14) + 0x30, 0x18, 6, 0x92f660);

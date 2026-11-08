@@ -6,7 +6,7 @@ use super::*;
 /// [pt] { 0x6b59a0 } (match_day.cpp): o clube tem jogo na lista do dia ([this + 0x19], quantidade em
 /// 0x21, 0x69 bytes por jogo; mandante em 0x20, visitante em 0x24)? Com `so_marcados`, so os jogos
 /// com 0x5b preenchido. Clube nulo: o original mostra uma caixa de erro e devolve 0 (aqui, so 0).
-pub(crate) unsafe extern "thiscall" fn has_match(this: usize, club: u32, so_marcados: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn has_match(this: usize, club: u32, so_marked: u32) -> u32 {
     if club == 0 {
         return 0;
     }
@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn has_match(this: usize, club: u32, so_marc
     let base = *((this + match_day_fields::MATCHES) as *const usize) + 0x20;
     for k in 0..n.max(0) as usize {
         let game = base + 0x69 * k;
-        if so_marcados != 0 && *((game + 0x3b) as *const u32) == 0 {
+        if so_marked != 0 && *((game + 0x3b) as *const u32) == 0 {
             continue;
         }
         if *(game as *const u32) == club || *((game + 4) as *const u32) == club {
@@ -263,17 +263,17 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
 /// e tira a partida da fila [0xde2f70] (0x90d6b0). Devolve 1 se a partida terminou.
 pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32) -> u32 {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
-    let contador = G_STEP_BACKGROUND_MATCH_COUNTER as *mut i32;
-    *contador += 1;
-    if *contador > 100 {
-        *contador = 0;
+    let counter = G_STEP_BACKGROUND_MATCH_COUNTER as *mut i32;
+    *counter += 1;
+    if *counter > 100 {
+        *counter = 0;
     }
     if until_end == 0 {
         let mode = u(u(G_CONFIG, 0), 4);
-        if mode & 0x40000 != 0 && *contador % 3 > 0 {
+        if mode & 0x40000 != 0 && *counter % 3 > 0 {
             return 0;
         }
-        if mode & 0x80000 != 0 && *contador % 6 > 0 {
+        if mode & 0x80000 != 0 && *counter % 6 > 0 {
             return 0;
         }
     }
@@ -590,8 +590,8 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                                 }
                             }
                             let x = exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, h) as i16 as isize;
-                            let placar = u(p, day_match::SCOREBOARD);
-                            if core::ptr::read_unaligned((placar as isize + 5 + 4 * x) as *const u32) == 0 {
+                            let scoreboard = u(p, day_match::SCOREBOARD);
+                            if core::ptr::read_unaligned((scoreboard as isize + 5 + 4 * x) as *const u32) == 0 {
                                 let x = exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, h) as i16 as isize;
                                 core::ptr::write_unaligned((u(p, day_match::SCOREBOARD) as isize + 5 + 4 * x) as *mut u32, 1);
                                 *((u(p, day_match::SCOREBOARD) + 0x105) as *mut u8) += 1;
@@ -655,7 +655,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         *(G_MATCH_DAY_PLAYING_FLAG as *mut u32) = 1;
         let mut placar_escrito = false;
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
-        let hora = exe::get_cursor_mode();
+        let hour = exe::get_cursor_mode();
         let mut k = 0i32;
         while k < read(match_day_fields::MATCH_COUNT) {
             if *(G_INTERACTIVE_MODE_FLAG as *const u32) != 0 {
@@ -730,7 +730,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         }
 
         // the closing of each match
-        exe::set_cursor_mode(hora);
+        exe::set_cursor_mode(hour);
         exe::match_day_step_background_match(day, 1);
         *(G_MATCH_DAY_PLAYING_FLAG as *mut u32) = 0;
         let mut k = 0i32;
@@ -1026,10 +1026,10 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
             while mi <= read(comp + day_competition::LAST_MATCH) {
                 let m = (read(d + match_day_fields::MATCHES) as isize + mi as isize * 0x69) as usize;
                 pr(m + day_match::MARKED, 0);
-                let marcada = (exe::human_manager_is_human_club(g(m + day_match::HOME_CLUB), 0, *((m + day_match::HOME_SIDE_MARK) as *const u8) as u32, 0, 0) as i32) != 0
+                let marked = (exe::human_manager_is_human_club(g(m + day_match::HOME_CLUB), 0, *((m + day_match::HOME_SIDE_MARK) as *const u8) as u32, 0, 0) as i32) != 0
                     || (exe::human_manager_is_human_club(g(m + day_match::AWAY_CLUB), 0, *((m + day_match::AWAY_SIDE_MARK) as *const u8) as u32, 0, 0) as i32) != 0
                     || exe::human_manager_is_fixture_watched(g(G_HUMAN_MANAGER), m + day_match::FIXTURE_COPY) != 0;
-                if marcada {
+                if marked {
                     crate::comparison::branch("interesse partida marcada");
                     pr(m + day_match::MARKED, 1);
                     if read(grp + day_group::HAS_MARKED) == 0 {
@@ -1507,9 +1507,9 @@ pub(crate) unsafe fn contract_flags_region(person: usize, club: usize) -> Option
 /// libera o motor e tira a partida da fila [0xde2f70] (0x90d6b0).
 pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     crate::comparison::branch("telas largar a partida assistida");
-    let time = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
+    let team = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
 
-    let p = read_usize(((0xb74c26 + time() * 0x300) as usize) + 0);
+    let p = read_usize(((0xb74c26 + team() * 0x300) as usize) + 0);
     if p == 0 {
         return;
     }
@@ -1539,7 +1539,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         return;
     }
     for (k, o) in [5isize, 0x45, 0x85, 0xc5].into_iter().enumerate() {
-        let c = (summary as isize + time() * 4 + o) as *mut u32;
+        let c = (summary as isize + team() * 4 + o) as *mut u32;
         if core::ptr::read_unaligned(c) != 0 {
             core::ptr::write_unaligned(c, 0);
             let n = (summary + 0x105 + k) as *mut u8;

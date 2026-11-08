@@ -85,9 +85,9 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
         width = width.wrapping_sub(0x16);
     }
     // columns: +0x1c start and +0x10c end, by weights +0xbad
-    let pesos = |desl: usize, n: usize| (0..n).map(|k| *((area + desl + k) as *const u8) as i32).fold(0i32, |a, b| a.wrapping_add(b));
+    let weights = |desl: usize, n: usize| (0..n).map(|k| *((area + desl + k) as *const u8) as i32).fold(0i32, |a, b| a.wrapping_add(b));
     let n = *((area + 0xbab) as *const u8) as i32 - 1;
-    let sum = pesos(0xbad, (n + 1) as usize);
+    let sum = weights(0xbad, (n + 1) as usize);
     let mut acumulado = 0i32;
     let mut c = 0i32;
     while c <= n {
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     }
     // rows: +0x94 start and +0x184 end, by weights +0xbcb
     let n = *((area + 0xbac) as *const u8) as i32 - 1;
-    let sum = pesos(0xbcb, (n + 1) as usize);
+    let sum = weights(0xbcb, (n + 1) as usize);
     let mut acumulado = 0i32;
     let mut l = 0i32;
     while l <= n {
@@ -152,12 +152,12 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn init(
     area: usize, areas: usize, items: usize, index: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
-    pesos_colunas: usize, rows: u32, pesos_linhas: usize, marks: u32, colour: u32, owner: u32,
+    weights_columns: usize, rows: u32, weights_rows: usize, marks: u32, colour: u32, owner: u32,
 ) {
     crate::comparison::branch("telas iniciar a area");
     let rows = cap_area_rows(rows);
     let (mut x1, mut y1, mut x2, mut y2) = (x1, y1, x2, y2);
-    let (mut columns, mut pesos_colunas, mut rows, mut pesos_linhas) = (columns as u8, pesos_colunas, rows as u8, pesos_linhas);
+    let (mut columns, mut weights_columns, mut rows, mut weights_rows) = (columns as u8, weights_columns, rows as u8, weights_rows);
     if owner as u16 as i16 != -1 {
         core::ptr::write_bytes((area + 0xbad) as *mut u8, 1, 30);
         core::ptr::write_bytes((area + 0xbcb) as *mut u8, 1, 30);
@@ -167,8 +167,8 @@ pub(crate) unsafe extern "thiscall" fn init(
         y2 = 0;
         columns = 1;
         rows = 0;
-        pesos_colunas = 0;
-        pesos_linhas = 0;
+        weights_columns = 0;
+        weights_rows = 0;
     } else {
         if x1 > x2 {
             exe::utils_swap_bytes(&mut x1, &mut x2, 4);
@@ -208,7 +208,7 @@ pub(crate) unsafe extern "thiscall" fn init(
     if marks & 0x80000 != 0 {
         return;
     }
-    for (n, pesos, desl) in [(columns, pesos_colunas, 0xbad), (rows, pesos_linhas, 0xbcb)] {
+    for (n, pesos, desl) in [(columns, weights_columns, 0xbad), (rows, weights_rows, 0xbcb)] {
         if pesos != 0 && n != 0 && n < 30 {
             core::ptr::copy(pesos as *const u8, (area + desl) as *mut u8, n as usize);
         } else {

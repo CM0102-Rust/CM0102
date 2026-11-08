@@ -432,13 +432,13 @@ pub(crate) unsafe fn is_big_transfer(value: i32, club: usize) -> bool {
 ///
 /// [pt] Copia o bloco de recorde de `o` (+`d`: valor, a referência de 0x18 bytes, o clube, a data, a marca) para `a`.
 pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
-    let mut rascunho = [0u8; 8];
+    let mut draft = [0u8; 8];
     for k in 0..5 {
         core::ptr::write_unaligned((a + d + transfer_fee_record::HOLDER * k) as *mut usize, read_usize(o + d + transfer_fee_record::HOLDER * k));
     }
-    exe::date_operator_3d(a + d + transfer_fee_record::HOLDER_DATE, (rascunho.as_mut_ptr()) as usize, o + d + transfer_fee_record::HOLDER_DATE);
+    exe::date_operator_3d(a + d + transfer_fee_record::HOLDER_DATE, (draft.as_mut_ptr()) as usize, o + d + transfer_fee_record::HOLDER_DATE);
     core::ptr::write_unaligned((a + d + transfer_fee_record::OTHER_CLUB_ID) as *mut usize, read_usize(o + d + transfer_fee_record::OTHER_CLUB_ID));
-    exe::date_operator_3d(a + d + transfer_fee_record::DATE, (rascunho.as_mut_ptr()) as usize, o + d + transfer_fee_record::DATE);
+    exe::date_operator_3d(a + d + transfer_fee_record::DATE, (draft.as_mut_ptr()) as usize, o + d + transfer_fee_record::DATE);
     *((a + d + transfer_fee_record::FLAG) as *mut u8) = read_u8(o + d + transfer_fee_record::FLAG);
 }
 
@@ -467,7 +467,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     let contract = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, contract);
     let seller = if contract != 0 { injury_club_by_index(read_i32(contract + contract::CLUB)) } else { 0 };
-    let mut rascunho = [0u8; 8];
+    let mut draft = [0u8; 8];
     let s = exe::club_records_get_season_record(this, buyer, 1);
     let a = exe::club_records_get_all_time_record(this, buyer, 1);
     if seller == 0 {
@@ -479,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
         core::ptr::write_unaligned((s + club_record::FEE_PAID) as *mut i32, value);
         exe::fill_staff_name_ref(person, s + club_record::FEE_PAID_HOLDER);
         core::ptr::write_unaligned((s + club_record::FEE_PAID_OTHER_CLUB_ID) as *mut usize, read_usize(seller));
-        exe::date_operator_3d(s + club_record::FEE_PAID_DATE, (rascunho.as_mut_ptr()) as usize, G_CURRENT_DATE);
+        exe::date_operator_3d(s + club_record::FEE_PAID_DATE, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
         *((s + club_record::FEE_PAID_FLAG) as *mut u8) = (read_usize(t + offer::EXCHANGE_PLAYERS) != 0) as u8;
         if read_i32(t + offer::FEE) > read_i32(a + club_record::FEE_PAID) {
             copy_transfer_record(a, s, 0x313);
@@ -501,7 +501,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     core::ptr::write_unaligned((s + club_record::FEE_RECEIVED) as *mut i32, value);
     exe::fill_staff_name_ref(person, s + club_record::FEE_RECEIVED_HOLDER);
     core::ptr::write_unaligned((s + club_record::FEE_RECEIVED_OTHER_CLUB_ID) as *mut usize, read_usize(buyer));
-    exe::date_operator_3d(s + club_record::FEE_RECEIVED_DATE, (rascunho.as_mut_ptr()) as usize, G_CURRENT_DATE);
+    exe::date_operator_3d(s + club_record::FEE_RECEIVED_DATE, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
     *((s + club_record::FEE_RECEIVED_FLAG) as *mut u8) = (read_usize(t + offer::EXCHANGE_PLAYERS) != 0) as u8;
     if read_i32(t + offer::FEE) > read_i32(a + club_record::FEE_RECEIVED) {
         copy_transfer_record(a, s, 0x33c);

@@ -307,11 +307,11 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_end_season_for_nati
         plan.push((liga, copa, cl, cc));
     }
     o(this, entry);
-    let errado = (0..n).find(|&k| {
+    let wrong = (0..n).find(|&k| {
         let s = manager_record_at(this, k) + 0xba;
         plan[k as usize] != (read_usize(s), read_usize(s + 4), read_i32(s + 8), read_i32(s + 0xc))
     });
-    SCOREBOARD.record(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
+    SCOREBOARD.record(wrong.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, wrong));
 }
 
 /// Comparer for `find_manager_of_the_month`.

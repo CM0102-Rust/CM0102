@@ -39,8 +39,8 @@ pub(crate) unsafe fn post_works_news(this: usize, club: usize, value: i32, kind:
 ///
 /// [pt] A notícia da obra recusada (0x59fae0: ecx = tabela; 3 pushes; sem add esp -> thiscall, ret 0xc; sorteia 2 fora do
 /// motivo 2).
-pub(crate) unsafe fn post_works_refused_news(this: usize, club: usize, assunto: i32, reason: i32) {
-    exe::finance_post_works_cancelled_news(this, club, assunto, reason);
+pub(crate) unsafe fn post_works_refused_news(this: usize, club: usize, subject: i32, reason: i32) {
+    exe::finance_post_works_cancelled_news(this, club, subject, reason);
 }
 
 /// Club's row in the MANAGER_MANAGER board table ([[G_MANAGER_MANAGER]] + id × 0x49); byte +2 holds the board requests
@@ -324,13 +324,13 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club:
             let dif = ceiling.wrapping_sub(cap);
             v = if dif < 0 { 0 } else { dif };
         }
-        let mut terco = ceiling / 3;
-        if terco < 0x1388 {
-            terco = 0x1388;
+        let mut third = ceiling / 3;
+        if third < 0x1388 {
+            third = 0x1388;
         }
         let mut n = v as i16 as i32;
-        if n >= terco {
-            n = terco;
+        if n >= third {
+            n = third;
         }
         if (n as i16) < 0x3e8 {
             if cap < 0x7530 {
@@ -388,23 +388,23 @@ pub(crate) unsafe fn upgrade_ai_training_ground(this: usize, club: usize, goal_d
     let level = (club + club::TRAINING) as *mut i8;
     let own = || read_usize(this).wrapping_add((read_i32(club) as u32).wrapping_mul(0x167) as usize);
     let cl = *level;
-    let custo = (cl as i32) * 50000 + 75000;
+    let cost = (cl as i32) * 50000 + 75000;
     if cl < 0x14 {
         *level = cl + 1;
     }
-    charge_expense(own(), 0x8c, 0x12c, custo);
+    charge_expense(own(), 0x8c, 0x12c, cost);
     let cl = *level;
     let rep = read_i16(club + club::REPUTATION);
     if cl < 0x14 && (rep > 0x203a || balance(own()) > 0xe4e1c0) {
-        let custo = (4_500_000 - 200_000 * cl as i32).max(1_000_000);
+        let cost = (4_500_000 - 200_000 * cl as i32).max(1_000_000);
         *level = 0x14;
-        charge_expense(own(), 0x8c, 0x12c, custo);
+        charge_expense(own(), 0x8c, 0x12c, cost);
         return;
     }
     if (cl < 0x10 && rep > 0x1482) || (cl < 0x14 && rep > 0x1c52) {
-        let custo = (cl as i32) * 50000 + 75000;
+        let cost = (cl as i32) * 50000 + 75000;
         *level = cl + 1;
-        charge_expense(own(), 0x8c, 0x12c, custo);
+        charge_expense(own(), 0x8c, 0x12c, cost);
     }
 }
 
@@ -1073,7 +1073,7 @@ pub(crate) unsafe extern "thiscall" fn news_ground_works(_this: usize, club: usi
 /// estádio ou de centro de treino recusado). Sem clube, nada. A notícia 0x1788 (0x77bbe0) com o assunto (palavra com
 /// sinal) no dado 1 e no dado 2 o motivo 2 ou o sorteio(2) (0x90cfc0: push 2; add esp, 4 -> cdecl; a palavra com
 /// sinal), entregue ao técnico do clube (0x7861e0).
-pub(crate) unsafe extern "thiscall" fn news_request_refused(_this: usize, club: usize, assunto: u32, reason: u32) {
+pub(crate) unsafe extern "thiscall" fn news_request_refused(_this: usize, club: usize, subject: u32, reason: u32) {
     if club == 0 {
         return;
     }
@@ -1081,7 +1081,7 @@ pub(crate) unsafe extern "thiscall" fn news_request_refused(_this: usize, club: 
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
     exe::new_newsitem(p, 0x1788, 0);
-    write(p, 1, assunto as u16 as i16 as i32 as u32);
+    write(p, 1, subject as u16 as i16 as i32 as u32);
     let v = if reason as u16 == 2 { 2 } else { exe::utils_random(2) };
     write(p, 2, v as u16 as i16 as i32 as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
@@ -1228,9 +1228,9 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
     }
     let home = read_usize(partida + fixture::HOME_CLUB);
     let away = read_usize(partida + fixture::AWAY_CLUB);
-    let mut custo; // the original’s ebp
+    let mut cost; // the original’s ebp
     if read_u8(home + club::PROFESSIONAL_STATUS) != 1 && read_u8(away + club::PROFESSIONAL_STATUS) != 1 {
-        custo = ftol(publico as f64 * read_f64_at(rdata::F64_0_25));
+        cost = ftol(publico as f64 * read_f64_at(rdata::F64_0_25));
     } else {
         let est = read_usize(partida + fixture::STADIUM);
         let x = if est == 0 {
@@ -1257,9 +1257,9 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
             };
             cap as f64 * read_f64_at(k)
         };
-        custo = ftol(x);
-        if read_u8(partida + fixture::HOME_SIDE_MARK) != 0 && custo < 500 {
-            custo = 500;
+        cost = ftol(x);
+        if read_u8(partida + fixture::HOME_SIDE_MARK) != 0 && cost < 500 {
+            cost = 500;
         }
     }
     let home = read_usize(partida + fixture::HOME_CLUB);
@@ -1322,12 +1322,12 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
     if kind == 2 {
         dinheiro = div_trunc(dinheiro, 5);
         tv = div_trunc(tv, 2);
-        custo = div_trunc(custo, 4);
+        cost = div_trunc(cost, 4);
         gastos = div_trunc(gastos, 2);
     } else if kind != 1 {
         dinheiro = div_trunc(dinheiro, 10);
         tv = div_trunc(tv, 10);
-        custo = div_trunc(custo, 15);
+        cost = div_trunc(cost, 15);
         gastos = div_trunc(gastos, 10);
     }
     if home != 0 && nation != 0 {
@@ -1335,11 +1335,11 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         if n == read_i32(KEY_NATION_WALES) || n == read_i32(KEY_NATION_REPUBLIC_OF_IRELAND) || n == read_i32(KEY_NATION_NORTHERN_IRELAND) {
             dinheiro = div_trunc(dinheiro, 5);
             tv = div_trunc(tv, 2);
-            custo = div_trunc(custo, 4);
+            cost = div_trunc(cost, 4);
             gastos = div_trunc(gastos, 2);
         }
     }
-    let liquido = tv.wrapping_sub(gastos).wrapping_sub(custo).wrapping_add(renda);
+    let liquido = tv.wrapping_sub(gastos).wrapping_sub(cost).wrapping_add(renda);
     let add = |fin: usize, a: usize, b: usize, v: i32| {
         fin_prm_add_i32(fin + a, v);
         fin_prm_add_i32(fin + b, v);
@@ -1973,8 +1973,8 @@ pub(crate) unsafe extern "thiscall" fn refresh_all_wage_bills(this: usize) {
 /// chega ao ano da temporada (2002 com +0x17, senão o ano de [0xdd6ec8] + 1). Mês do começo (+0x34) abaixo de 2: no ano
 /// do começo (+0x2c), só depois do mês 12 − mês do começo; noutro ano, só antes do mês do começo; senão, só a 0..2
 /// meses do começo. Na janela, os dias até a data do começo (+0x2a, 0x54cdb0) se positivos; fora, 0.
-pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: usize, club: usize, passou: *mut u32) -> i32 {
-    *passou = 0;
+pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: usize, club: usize, passed: *mut u32) -> i32 {
+    *passed = 0;
     let k = exe::key_nation_index_of_club(club) as i8;
     if k < 0 {
         show_error_at(0x9c8784, 0x1185);
@@ -1983,7 +1983,7 @@ pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: u
     let e = 0xb63d60usize.wrapping_add((k as isize * 72) as usize);
     let year: u16 = if read_usize(e + 0x17) != 0 { 0x7d2 } else { (read_i16(G_GAME_START_DATE_YEAR) as u16).wrapping_add(1) };
     if read_i16(G_CURRENT_DATE_YEAR) as u16 >= year {
-        *passou = 1;
+        *passed = 1;
     }
     let start = read_u8(e + 0x34) as i8;
     let year_of_start = read_i16(e + 0x2c) as u16;
@@ -2305,8 +2305,8 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, apply: i
     let price = ftol((rep as f64 * read_f64_at(rdata::F64_0_002) + read_f64_at(rdata::F64_4)) * read_f64_at(rdata::F64_20));
     let mut income = price.wrapping_mul(new);
     let est = read_usize(club + club::STADIUM);
-    let lugares = if est != 0 { read_i32(est + stadium::CAPACITY) } else { 0 };
-    let den = if lugares != 0 { lugares as f64 * read_f64_at(rdata::F64_0_875) } else { read_f64_at(rdata::F64_1250) };
+    let places = if est != 0 { read_i32(est + stadium::CAPACITY) } else { 0 };
+    let den = if places != 0 { places as f64 * read_f64_at(rdata::F64_0_875) } else { read_f64_at(rdata::F64_1250) };
     let ratio = total as f64 / den;
     core::ptr::write_unaligned((this + finance::SEASON_TICKET_RATIO) as *mut f32, ratio as f32);
     if ratio > read_f64_at(rdata::F64_0_875) {
@@ -2358,11 +2358,11 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, apply: i
 /// Charges a works cost to the club's finance record (+0x8c, +0x12c and minus the balance).
 ///
 /// [pt] O custo da obra (+0x8c e +0x12c, menos no saldo) no registro de finanças do clube.
-pub(crate) unsafe fn charge_works_cost(this: usize, club: usize, custo: i32) {
+pub(crate) unsafe fn charge_works_cost(this: usize, club: usize, cost: i32) {
     let fin = fin_prm_club_finance(this, club);
-    add_to_i32(fin + 0x12c, custo);
-    add_to_i32(fin + 0x8c, custo);
-    add_i32_to_balance(fin, custo.wrapping_neg());
+    add_to_i32(fin + 0x12c, cost);
+    add_to_i32(fin + 0x8c, cost);
+    add_i32_to_balance(fin, cost.wrapping_neg());
 }
 
 /// Raises the training facilities level (+0x7f) by reputation (up to 20); each step charges the works to +0x8c, +0x12c
@@ -2384,9 +2384,9 @@ pub(crate) unsafe fn charge_works_cost(this: usize, club: usize, custo: i32) {
 /// acima de 7250: acima de 7250 vai a 20, senão sobe 2 (mínimo 12), e cobra o novo nível × 50000 + 75000. Teto 20.
 pub(crate) unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, club: usize) {
     let level = (club + club::TRAINING) as *mut i8;
-    let custo = (*level as i32).wrapping_mul(50000).wrapping_add(75000);
+    let cost = (*level as i32).wrapping_mul(50000).wrapping_add(75000);
     *level = if *level < 0x13 { (*level).wrapping_add(2) } else { (*level).wrapping_add(1) };
-    charge_works_cost(this, club, custo);
+    charge_works_cost(this, club, cost);
     let n = *level;
     let rep = read_i16(club + club::REPUTATION);
     let second = if n < 0x14 && rep > 0x203a {
@@ -2666,11 +2666,11 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
         *level = (*level).wrapping_sub(1);
         return;
     }
-    let lugares = read_i32(est + stadium::CAPACITY);
-    if lugares <= 0xabe || friendly_random(read_i16(club + club::REPUTATION) as i32) >= lugares {
+    let places = read_i32(est + stadium::CAPACITY);
+    if places <= 0xabe || friendly_random(read_i16(club + club::REPUTATION) as i32) >= places {
         return;
     }
-    let t = ftol(lugares as f64 * read_f64_at(rdata::F64_0_1)) as i16 as i32;
+    let t = ftol(places as f64 * read_f64_at(rdata::F64_0_1)) as i16 as i32;
     let dez = (t / 10).wrapping_mul(10);
     let close = dez as i16 as i32;
     let rest = read_i32(est + stadium::SEATING_CAPACITY);

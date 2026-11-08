@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_scout_match(this: u
     SCOUT_MATCH_DRY_RUN = false;
     let relata = SCOUT_MATCH_WOULD_REPORT;
     state.write_back();
-    let previsto = if relata {
+    let predicted = if relata {
         let mut t = [0u32; 2];
         let a = exe::date_add_days(G_CURRENT_DATE, t.as_mut_ptr() as usize, 1);
         (read_i16(a + 2) as u16, read_i16(a))
@@ -59,8 +59,8 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_scout_match(this: u
     };
     let r = o(this, game, result, out);
     let after = (read_i16(this + player_search_fields::SCOUTING_START_YEAR) as u16, read_i16(this + player_search_fields::SCOUTING_START_DATE));
-    SCOREBOARD.record(r == n && after == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
-        this, game, r, n, before, previsto, after));
+    SCOREBOARD.record(r == n && after == predicted, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
+        this, game, r, n, before, predicted, after));
     r
 }
 

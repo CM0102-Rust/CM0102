@@ -449,11 +449,11 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             }
         }
     }
-    let mut voltas = weeks;
+    let mut laps = weeks;
     let mut contract_of_club = 0usize;
-    if skip != 0 || voltas != 0 {
+    if skip != 0 || laps != 0 {
         if skip != 0 {
-            voltas = 1;
+            laps = 1;
         }
         let sheet: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
         contract_of_club = sheet(read_usize(G_CONTRACT_MANAGER), p, read_usize(p + staff::CLUB_JOB) as u32);
@@ -464,7 +464,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         let mut k = 0i8;
         let mut it = q + 7; // the item’s fee (+7); the rating at +6, the mask at +4
         loop {
-            for _ in 0..voltas {
+            for _ in 0..laps {
                 let taxa = read_i8(it);
                 if (skip != 0 && read_u16(it - 3) == skip) || taxa > 0 {
                     if friendly_random(read_i8(it) as i32) < 5 {
@@ -1069,16 +1069,16 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 4) >> 4) as i32);
         if dd != 0 {
-            let seis = dd * 6;
+            let six = dd * 6;
             add_clamped_1_20(f + player_sheet::CORNERS, dd);
-            add_clamped_125(f + player_sheet::CROSSING, seis);
-            add_clamped_125(f + player_sheet::DRIBBLING, seis);
+            add_clamped_125(f + player_sheet::CROSSING, six);
+            add_clamped_125(f + player_sheet::DRIBBLING, six);
             add_clamped_1_20(f + player_sheet::FREE_KICKS, dd);
-            add_clamped_125(f + player_sheet::HEADING, seis);
-            add_clamped_125(f + player_sheet::PASSING, seis);
-            add_clamped_125(f + player_sheet::TACKLING, seis);
+            add_clamped_125(f + player_sheet::HEADING, six);
+            add_clamped_125(f + player_sheet::PASSING, six);
+            add_clamped_125(f + player_sheet::TACKLING, six);
             add_clamped_1_20(f + player_sheet::TECHNIQUE, dd);
-            add_clamped_125(f + player_sheet::THROW_INS, seis);
+            add_clamped_125(f + player_sheet::THROW_INS, six);
         }
         add_high_nibble(e + 4, k); // cpt9: stores the progress of category 3
     }
@@ -1103,10 +1103,10 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 4) << 4 >> 4) as i32);
         if dd != 0 {
-            let seis = dd * 6;
-            add_clamped_125(f + player_sheet::FINISHING, seis);
-            add_clamped_125(f + player_sheet::LONG_SHOTS, seis);
-            add_clamped_125(f + player_sheet::PENALTIES, seis);
+            let six = dd * 6;
+            add_clamped_125(f + player_sheet::FINISHING, six);
+            add_clamped_125(f + player_sheet::LONG_SHOTS, six);
+            add_clamped_125(f + player_sheet::PENALTIES, six);
         }
         add_low_nibble(e + 4, k);
     }
@@ -1115,12 +1115,12 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 3) >> 4) as i32);
         if dd != 0 {
-            let seis = dd * 6; // cpt9: category 1, six times the step
-            add_clamped_125(f + player_sheet::DECISIONS, seis);
-            add_clamped_125(f + player_sheet::MARKING, seis);
-            add_clamped_125(f + player_sheet::MOVEMENT, seis);
+            let six = dd * 6; // cpt9: category 1, six times the step
+            add_clamped_125(f + player_sheet::DECISIONS, six);
+            add_clamped_125(f + player_sheet::MARKING, six);
+            add_clamped_125(f + player_sheet::MOVEMENT, six);
             add_clamped_1_20(f + player_sheet::TEAMWORK, dd);
-            add_clamped_125(f + player_sheet::POSITIONING, seis);
+            add_clamped_125(f + player_sheet::POSITIONING, six);
         }
         add_high_nibble(e + 3, k);
     }
@@ -1129,9 +1129,9 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 5) << 4 >> 4) as i32);
         if dd != 0 {
-            let seis = dd * 6;
-            add_clamped_125(f + player_sheet::HANDLING, seis);
-            add_clamped_125(f + player_sheet::ONE_ON_ONES, seis);
+            let six = dd * 6;
+            add_clamped_125(f + player_sheet::HANDLING, six);
+            add_clamped_125(f + player_sheet::ONE_ON_ONES, six);
         }
         add_low_nibble(e + 5, k);
     }

@@ -166,14 +166,14 @@ pub unsafe fn autoteste_dbj_1() {
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 pub(crate) unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar histórico de pessoas");
-    let escritos = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 17, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 17, n, stream)
     };
-    (escritos == n) as i32 // write people’s history
+    (written == n) as i32 // write people’s history
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
@@ -188,14 +188,14 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 pub(crate) unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar competições");
-    let escritos = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 107, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 107, n, stream)
     };
-    (escritos == n) as i32 // save competitions
+    (written == n) as i32 // save competitions
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
@@ -214,14 +214,14 @@ pub(crate) unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 pub(crate) unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar históricos de competição");
-    let escritos = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 26, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 26, n, stream)
     };
-    (escritos == n) as i32 // write competition histories
+    (written == n) as i32 // write competition histories
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
@@ -240,14 +240,14 @@ pub(crate) unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_z
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 pub(crate) unsafe extern "C" fn db_files_write_staff_comps(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar competições de pessoal");
-    let escritos = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 101, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 101, n, stream)
     };
-    (escritos == n) as i32 // save staff competitions
+    (written == n) as i32 // save staff competitions
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
@@ -266,14 +266,14 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_comps(stream: usize, use_zi
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar árbitros");
-    let escritos = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 43, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 43, n, stream)
     };
-    (escritos == n) as i32 // save referees
+    (written == n) as i32 // save referees
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
@@ -293,14 +293,14 @@ pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip:
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar registros de 58 bytes");
-    let escritos = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 58, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 58, n, stream)
     };
-    (escritos == n) as i32 // save 58-byte records
+    (written == n) as i32 // save 58-byte records
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
@@ -315,14 +315,14 @@ pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_z
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 pub(crate) unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar nomes");
-    let escritos = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 60, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 60, n, stream)
     };
-    (escritos == n) as i32 // gravar nomes
+    (written == n) as i32 // gravar nomes
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.

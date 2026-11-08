@@ -24,23 +24,23 @@ pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_advance_stage(this: usize
 /// antes: os seis primeiros da tabela. Depois, a devolução 1, a fase na vaga 0 com +0x3e = 6, +4 = o +4 da liga e os
 /// seis na tabela dela (+0xb1, como conjunto), e +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: usize) -> u32 {
-    let mut seis = [0usize; 6];
-    for (i, c) in seis.iter_mut().enumerate() {
+    let mut six = [0usize; 6];
+    for (i, c) in six.iter_mut().enumerate() {
         *c = aus_nsl_table_row_club(this, i);
     }
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FINALS_SERIES_STAGE)(this);
     let stage = read_usize(read_usize(this + league::STAGES));
     let same = r == 1 && stage != 0 && read_i16(stage + league::CLUB_COUNT) == 6 && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + league::CURRENT_STAGE) == 0 && {
-        let mut nela = [0usize; 6];
-        for (i, c) in nela.iter_mut().enumerate() {
+        let mut in_it = [0usize; 6];
+        for (i, c) in in_it.iter_mut().enumerate() {
             *c = aus_nsl_table_row_club(stage, i);
         }
-        let (mut a, mut b) = (seis, nela);
+        let (mut a, mut b) = (six, in_it);
         a.sort_unstable();
         b.sort_unstable();
         a == b
     };
-    SCOREBOARD.record(same, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, stage, seis));
+    SCOREBOARD.record(same, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, stage, six));
     r
 }
 
@@ -56,8 +56,8 @@ pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: 
 /// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
 /// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
 pub(crate) unsafe extern "thiscall" fn compare_create_grand_final_stage(this: usize) {
-    let serie = read_usize(read_usize(this + league::STAGES));
-    let (a, b) = (aus_nsl_table_row_club(serie, 0), aus_nsl_table_row_club(serie, 1));
+    let series = read_usize(read_usize(this + league::STAGES));
+    let (a, b) = (aus_nsl_table_row_club(series, 0), aus_nsl_table_row_club(series, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_GRAND_FINAL_STAGE)(this);
     let stage = read_usize(read_usize(this + league::STAGES) + 4);
     let same = stage != 0 && {

@@ -27,14 +27,14 @@ pub(crate) unsafe extern "thiscall" fn compare_area_layout(area: usize) {
 /// Comparer for `init`.
 pub(crate) unsafe extern "thiscall" fn compare_init(
     area: usize, areas: usize, items: usize, index: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
-    pesos_colunas: usize, rows: u32, pesos_linhas: usize, marks: u32, colour: u32, owner: u32,
+    weights_columns: usize, rows: u32, weights_rows: usize, marks: u32, colour: u32, owner: u32,
 ) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, i32, i32, i32, u32, usize, u32, usize, u32, u32, u32)>(IDX_INIT);
     let reg = [(area, 0xbcb + 0xff)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(
         &reg,
-        || o(area, areas, items, index, x1, y1, x2, y2, columns, pesos_colunas, cap_area_rows(rows), pesos_linhas, marks, colour, owner),
-        || init(area, areas, items, index, x1, y1, x2, y2, columns, pesos_colunas, rows, pesos_linhas, marks, colour, owner),
+        || o(area, areas, items, index, x1, y1, x2, y2, columns, weights_columns, cap_area_rows(rows), weights_rows, marks, colour, owner),
+        || init(area, areas, items, index, x1, y1, x2, y2, columns, weights_columns, rows, weights_rows, marks, colour, owner),
     );
     SCOREBOARD.record(igual, || format!("init {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
 }

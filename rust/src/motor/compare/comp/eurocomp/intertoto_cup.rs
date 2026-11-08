@@ -79,16 +79,16 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_update_for_date(thi
     let (v, k) = intertoto_winners_for_uefa(this, uefa);
     let n36 = read_i16(uefa + cup::ENTRANT_COUNT);
     let r = o(this, today, stage);
-    let passou = read_usize(this + intertoto_cup::WINNERS_SENT_TO_UEFA) == 1;
-    let previsto = if passou { n36.wrapping_add(k as i16) } else { n36 };
-    let mut same = read_i16(uefa + cup::ENTRANT_COUNT) == previsto;
-    if passou && same {
+    let passed = read_usize(this + intertoto_cup::WINNERS_SENT_TO_UEFA) == 1;
+    let predicted = if passed { n36.wrapping_add(k as i16) } else { n36 };
+    let mut same = read_i16(uefa + cup::ENTRANT_COUNT) == predicted;
+    if passed && same {
         for (j, &c) in v.iter().enumerate().take(k) {
             let l = read_usize(uefa + cup::ENTRANT_BOOK).wrapping_add(((n36 as isize) + j as isize) as usize * 6);
             same &= read_usize(l) == c && read_u8(l + 4) == 4;
         }
     }
-    SCOREBOARD.record(same, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, read_i16(uefa + cup::ENTRANT_COUNT), previsto, &v[..k]));
+    SCOREBOARD.record(same, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passed, n36, read_i16(uefa + cup::ENTRANT_COUNT), predicted, &v[..k]));
     r
 }
 
@@ -99,13 +99,13 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_update_staff_record
         return o(this, club, outcome, a3, a4, game, a6);
     }
     let before = read_usize(club + club::CONTINENTAL_COMP_ID);
-    let previsto = match outcome as u8 {
+    let predicted = match outcome as u8 {
         1 => read_usize(KEY_CLUB_COMP_UEFA_CUP),
         0xff | 2 => 0xffff_ffff,
         _ => before,
     };
     let r = o(this, club, outcome, a3, a4, game, a6);
     let after = read_usize(club + club::CONTINENTAL_COMP_ID);
-    SCOREBOARD.record(r == 0 && after == previsto, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club, outcome as u8, before, after, previsto, r));
+    SCOREBOARD.record(r == 0 && after == predicted, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club, outcome as u8, before, after, predicted, r));
     r
 }

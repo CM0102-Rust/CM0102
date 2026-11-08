@@ -644,10 +644,10 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_daily_update(this:
 }
 
 /// Comparer for `national_team_ages`.
-pub(crate) unsafe extern "stdcall" fn compare_national_team_ages(comp: usize, kind: i8, minima: *mut u8, maxima: *mut u8) {
+pub(crate) unsafe extern "stdcall" fn compare_national_team_ages(comp: usize, kind: i8, minimum: *mut u8, maxima: *mut u8) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, i8, *mut u8, *mut u8)>(IDX_NATIONAL_TEAM_AGES);
-    let reg = if minima.is_null() || maxima.is_null() { vec![] } else { vec![(minima as usize, 1), (maxima as usize, 1)] };
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(comp, kind, minima, maxima), || national_team_ages(comp, kind, minima, maxima));
+    let reg = if minimum.is_null() || maxima.is_null() { vec![] } else { vec![(minimum as usize, 1), (maxima as usize, 1)] };
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(comp, kind, minimum, maxima), || national_team_ages(comp, kind, minimum, maxima));
     SCOREBOARD.record(igual, || format!("national_team_ages({:#x}, {}) {:x?} x {:x?}", comp, kind, mo, mr));
 }
 

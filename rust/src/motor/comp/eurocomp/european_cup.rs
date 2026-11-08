@@ -136,8 +136,8 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     if groups == 0 {
         fatal_error_at(0x9c4900, 0x515);
     }
-    let slot = |g: i32, pote: i32| groups + ((pote + g * 4) * 4) as usize;
-    let mut pote = 0i32;
+    let slot = |g: i32, pot: i32| groups + ((pot + g * 4) * 4) as usize;
+    let mut pot = 0i32;
     let mut base = 0i32;
     while base < 0x20 {
         let (mut livres_b, mut livres_a) = (4i8, 4i8); // [esp+0x12] half 2, [esp+0x13] half 1
@@ -168,8 +168,8 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
                 let par = read_usize(e + 4);
                 if par != 0 {
                     if let Some(i) = (0..0x20).find(|&i| read_usize(ent(i)) == par) {
-                        let mesmo_pote = i / 8 == s / 8;
-                        let mark = if mesmo_pote {
+                        let same_pot = i / 8 == s / 8;
+                        let mark = if same_pot {
                             let m = read_u8(e + 8);
                             if (m == 2 && livres_a == 0) || (m == 1 && livres_b == 0) {
                                 false
@@ -192,15 +192,15 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             }
             let start: i32 = if read_u8(e + 8) == 1 { 0 } else { 4 };
             for g in start..start + 4 {
-                if read_usize(slot(g, pote)) == 0 {
-                    write_usize(slot(g, pote), read_usize(e));
+                if read_usize(slot(g, pot)) == 0 {
+                    write_usize(slot(g, pot), read_usize(e));
                     write_usize(e, 0);
                     break;
                 }
             }
         }
         base += 8;
-        pote += 1;
+        pot += 1;
     }
     exe::crt_free(list);
     for metade in 0..2i32 {
@@ -734,9 +734,9 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
     for b in 0..8usize {
         let e = read_usize(uefa + cup::TEAM_TABLE).wrapping_add(target);
         target = target.wrapping_sub(6);
-        let terceiro = read_usize(exe::league_get_table_row(read_usize(read_usize(this + cup::STAGES) + b * 4), (2) as i32));
+        let third = read_usize(exe::league_get_table_row(read_usize(read_usize(this + cup::STAGES) + b * 4), (2) as i32));
         write_u8(e + 4, 0);
-        write_usize(e, terceiro);
+        write_usize(e, third);
         write_u8(e + 5, 0);
         let n = read_i16(uefa + cup::ENTRANT_COUNT) as i32;
         write_usize(read_usize(uefa + cup::ENTRANT_BOOK) + (n * 6) as usize, read_usize(e));

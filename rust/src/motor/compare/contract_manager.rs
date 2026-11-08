@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_bosman_departure_news(this: 
 /// estado, comparando a oferta (0x63 bytes), o contador e a cabeça da lista (o cursor). Oferta nova (acrescentada, aloca):
 /// a cópia em ensaio monta o registro; a original acrescenta, e o nó novo (o último do jogador pelo clube) tem de ter os
 /// mesmos 0x63 primeiros bytes, com o contador + 1.
-pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decide: u32, acertado: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decides: u32, acertado: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(IDX_ADD_CONTRACT_OFFER);
     let id = read_usize(terms);
     let club = read_usize(terms + contract::CLUB);
@@ -205,12 +205,12 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
     all.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&all);
     CONTRACT_OFFER_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, terms, slot, value, mark, a5, decide, acertado)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, terms, slot, value, mark, a5, decides, acertado)));
     CONTRACT_OFFER_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&all[..n_cmp]);
     let record = DRY_RUN_CONTRACT_OFFER_RECORD;
     before.write_back();
-    o(this, terms, slot, value, mark, a5, decide, acertado);
+    o(this, terms, slot, value, mark, a5, decides, acertado);
     let mo = crate::comparison::MemorySnapshot::read(&all[..n_cmp]);
     let same = if item != 0 {
         mo == mr
@@ -585,18 +585,18 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_pending_offers_for_staff(t
     }
     let p = pending_offers_byte(*person as usize);
     let before = list_items_capped(l);
-    let mut resta = *p;
+    let mut left = *p;
     let mut expected = Vec::new();
     for &e in &before {
-        if resta != 0 && read_usize(e) as u32 == *person {
-            resta = resta.wrapping_sub(1);
+        if left != 0 && read_usize(e) as u32 == *person {
+            left = left.wrapping_sub(1);
         } else {
             expected.push(e);
         }
     }
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(IDX_REMOVE_PENDING_OFFERS_FOR_STAFF)(this, person);
     let after = list_items_capped(l);
-    SCOREBOARD.record(after == expected && *p == resta, || format!("remove_pending_offers_for_staff({}) itens {} -> {} (esperava {}), pendentes {} (esperava {})", *person, before.len(), after.len(), expected.len(), *p, resta));
+    SCOREBOARD.record(after == expected && *p == left, || format!("remove_pending_offers_for_staff({}) itens {} -> {} (esperava {}), pendentes {} (esperava {})", *person, before.len(), after.len(), expected.len(), *p, left));
 }
 
 /// Comparer for `schedule_decision_for_transfer`.
@@ -607,8 +607,8 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_decision_for_transfer(th
     let target = offer_to_schedule(read_usize(this + contract_manager_fields::CONTRACT_OFFERS), offer);
     let n = ability_above_club_reputation(offer);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCHEDULE_DECISION_FOR_TRANSFER)(this, offer);
-    let marcada = target.map_or(true, |e| *((e + contract_offer::DECISION_VALID) as *const u8) == 1);
-    SCOREBOARD.record(marcada && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", offer, target, marcada, r, n));
+    let marked = target.map_or(true, |e| *((e + contract_offer::DECISION_VALID) as *const u8) == 1);
+    SCOREBOARD.record(marked && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", offer, target, marked, r, n));
     r
 }
 

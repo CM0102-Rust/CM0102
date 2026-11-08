@@ -536,8 +536,8 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
             } else if n <= 1 && c <= 0x80 {
                 zf_put_byte(z, c);
             } else {
-                let contagem = (n as u8).wrapping_add(0x80);
-                zf_put_byte(z, contagem);
+                let count = (n as u8).wrapping_add(0x80);
+                zf_put_byte(z, count);
                 zf_put_byte(z, *repetido);
             }
         }

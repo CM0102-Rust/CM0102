@@ -817,16 +817,16 @@ pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u
 /// 0x5b3560 com a fase 0 e a faixa 0); o nome (+0) é o do arquivo (_splitpath 0x944cff); o mapa das casas (0x5b7160);
 /// +0x187f = 1, +0x1883 = senha não vazia, +0x1887 = 1. Fecha e devolve 1. Os arquivos não nativos trocam a ordem dos
 /// bytes (0x43f2d0 palavras, 0x43f300 dwords, 0x43f350 qwords).
-pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, quieto: u32, ofuscado: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, quiet: u32, ofuscado: u32) -> u32 {
     if path == 0 {
-        if quieto == 0 {
+        if quiet == 0 {
             formation_error_box(0x8d8);
         }
         return 0;
     }
     let f = exe::crt_fopen(path, 0x98f928);
     if f == 0 {
-        if quieto == 0 {
+        if quiet == 0 {
             formation_error_box(0x8e0);
         }
         return 0;
@@ -834,7 +834,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     let nativo = exe::utils_read_file_format_marker(f) != 0xf1ff_fff1;
     let mut id_ = [0u8; 4];
     if crt_fread_one(id_.as_mut_ptr() as usize, 4, f) != 1 {
-        return fail_read(quieto, 0x8ea, f);
+        return fail_read(quiet, 0x8ea, f);
     }
     let mut id = u32::from_le_bytes(id_);
     if !nativo {
@@ -845,14 +845,14 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     }
     let id = id as i32;
     if !(0x98ec54..=0x98ec5e).contains(&id) {
-        return fail_read(quieto, 0x8f7, f);
+        return fail_read(quiet, 0x8f7, f);
     }
     if id < 0x98ec59 {
-        return fail_read(quieto, 0x900, f);
+        return fail_read(quiet, 0x900, f);
     }
     let senha = this + 0x33;
     if crt_fread_one(senha, 0x32, f) != 1 {
-        return fail_read(quieto, 0x909, f);
+        return fail_read(quiet, 0x909, f);
     }
     let strlen = |a: usize| (0..).take_while(|&k| *((a + k) as *const u8) != 0).count();
     if strlen(senha) != 0 {
@@ -867,11 +867,11 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         }
     }
     if crt_fread_one(this + 0x65, 200, f) != 1 {
-        return fail_read(quieto, 0x915, f);
+        return fail_read(quiet, 0x915, f);
     }
     if id >= 0x98ec5a {
         if crt_fread_one(this + 0x187b, 4, f) != 1 {
-            return fail_read(quieto, 0x920, f);
+            return fail_read(quiet, 0x920, f);
         }
         if !nativo {
             write_u32(this + 0x187b, swap_bytes_u32(read_u32(this + 0x187b)));
@@ -880,7 +880,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         write_u32(this + 0x187b, 0);
     }
     if crt_fread_one(this + 0x12d, 0x16, f) != 1 {
-        return fail_read(quieto, 0x930, f);
+        return fail_read(quiet, 0x930, f);
     }
     if !nativo {
         exe::swap_bytes_16_array(this + 0x12d, 0xb);
@@ -888,19 +888,19 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     exe::formation_update_shape_code(this);
     if id >= 0x98ec5c {
         if crt_fread_one(this + 0x143, 0xb, f) != 1 {
-            return fail_read(quieto, 0x940, f);
+            return fail_read(quiet, 0x940, f);
         }
     } else {
         core::ptr::write_bytes((this + 0x143) as *mut u8, 0, 0xb);
     }
     if crt_fread_one(this + 0x14e, 0x16, f) != 1 {
-        return fail_read(quieto, 0x94f, f);
+        return fail_read(quiet, 0x94f, f);
     }
     if !nativo {
         exe::swap_bytes_16_array(this + 0x14e, 0xb);
     }
     if crt_fread_one(this + 0x164, 0x420, f) != 1 {
-        return fail_read(quieto, 0x959, f);
+        return fail_read(quiet, 0x959, f);
     }
     if !nativo {
         exe::swap_bytes_16_array(this + 0x164, 0x210);
@@ -908,7 +908,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     if id == 0x98ec59 || id == 0x98ec5a {
         let mut descarte = [0u8; 0x108];
         if crt_fread_one(descarte.as_mut_ptr() as usize, 0x108, f) != 1 {
-            return fail_read(quieto, 0x968, f);
+            return fail_read(quiet, 0x968, f);
         }
         if !nativo {
             exe::swap_bytes_16_array(descarte.as_mut_ptr() as usize, 0x84);
@@ -919,7 +919,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         if !nativo {
             write_u32(team, swap_bytes_u32(read_u32(team)));
         }
-    } else if quieto == 0 {
+    } else if quiet == 0 {
         formation_error_box(0x971);
     }
     if id < 0x98ec5e {
@@ -930,7 +930,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
             if !nativo {
                 exe::swap_bytes_32_array(v.as_mut_ptr() as usize, 0xb);
             }
-        } else if quieto == 0 {
+        } else if quiet == 0 {
             formation_error_box(0x97b);
         }
         for (k, x) in v.iter().enumerate() {
@@ -942,10 +942,10 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         if !nativo {
             exe::swap_bytes_64_array(this + 0x188b, 0xb);
         }
-    } else if quieto == 0 {
+    } else if quiet == 0 {
         formation_error_box(0x988);
     }
-    if crt_fread_one(this + 0x5b4, 0xb, f) != 1 && quieto == 0 {
+    if crt_fread_one(this + 0x5b4, 0xb, f) != 1 && quiet == 0 {
         formation_error_box(0x98f);
     }
     let mut v = read_u32(team);

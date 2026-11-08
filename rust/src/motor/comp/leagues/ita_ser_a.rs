@@ -505,8 +505,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
         let l = t + i as usize * 0x3b;
         if read_usize(l) == club {
             if i > 0 {
-                let acima = read_usize(l - 0x3b);
-                if acima == a || acima == b {
+                let above = read_usize(l - 0x3b);
+                if above == a || above == b {
                     // the club was below the other: they swap
                     let mut tmp = [0u8; 0x3b];
                     core::ptr::copy_nonoverlapping(l as *const u8, tmp.as_mut_ptr(), 0x3b);
@@ -523,8 +523,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
             }
             if i < read_i16(this + league::CLUB_COUNT) {
                 // simplification: the original reads the club of the next row even on the last one (4 bytes past the table), as here.
-                let abaixo = read_usize(l + 0x3b);
-                if abaixo == a || abaixo == b {
+                let below = read_usize(l + 0x3b);
+                if below == a || below == b {
                     *((t + i as usize * 0x3b + 4) as *mut u8) = i as u8;
                     let t2 = read_usize(this + league::TABLE);
                     *((t2 + i as usize * 0x3b + 0x3f) as *mut u8) = (i as u8).wrapping_add(1);
@@ -1523,8 +1523,8 @@ pub(crate) static mut ITA_SER_A_RULES_DRY_RUN: bool = false;
 /// [pt] Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
 /// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
 /// resultado em +0xba. Devolve 1.
-pub(crate) unsafe fn ita_ser_a_apply_league_rules(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
-    for &(d, t, v) in escritas {
+pub(crate) unsafe fn ita_ser_a_apply_league_rules(this: usize, written: &[(usize, u8, u32)]) -> u32 {
+    for &(d, t, v) in written {
         match t {
             1 => *((this + d) as *mut u8) = v as u8,
             2 => core::ptr::write_unaligned((this + d) as *mut u16, v as u16),
@@ -1599,8 +1599,8 @@ pub(crate) unsafe fn serie_c1b_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = italian_common_rules(this);
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3), (0xc7, 1, 0), (0xbe, 1, 1), (0xbf, 1, 4), (0xc0, 1, 4), (0xc1, 1, 1), (0x1c, 4, read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C1_A) as u32)]);
     let nation = read_usize(read_usize(this + 4) + 0x5d);
-    let abaixo = if *((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) as u32 } else { 0xffff_ffff };
-    v.push((0x20, 4, abaixo));
+    let below = if *((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) as u32 } else { 0xffff_ffff };
+    v.push((0x20, 4, below));
     v
 }
 
@@ -1610,7 +1610,7 @@ pub(crate) unsafe fn serie_c1b_rules(this: usize) -> Vec<(usize, u8, u32)> {
 /// [pt] O comparador das quatro (ensaio, como o da cqi_4): a original roda inteira; a faixa +0x1c..+0xec volta e a cópia
 /// grava as regras sem a virtual +0x3c; os campos que a cópia grava saem iguais aos da original, e a devolução 1; no
 /// fim fica a faixa da original.
-pub(crate) unsafe fn ita_ser_a_compare_league_rules(name: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn ita_ser_a_compare_league_rules(name: &str, this: usize, written: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
     let band = [(this + league::UPPER_DIVISION_ID, 0xd0)];
     let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
@@ -1629,7 +1629,7 @@ pub(crate) unsafe fn ita_ser_a_compare_league_rules(name: &str, this: usize, esc
             _ => u32::from_le_bytes([b[0], b[1], b[2], b[3]]),
         }
     };
-    let difs: Vec<(usize, u32, u32)> = escritas.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
+    let difs: Vec<(usize, u32, u32)> = written.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
     SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
     r
 }

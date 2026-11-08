@@ -546,14 +546,14 @@ pub(crate) unsafe extern "thiscall" fn sort_round_teams(cup: usize, round: u32) 
             let mut side: Option<bool> = None;
             if second {
                 let w0 = read_i16(e);
-                let livre = casa == -2 && !(nation && w0 >= 0 && fora >= 0 && teams_same_nation(cup, w0, fora));
+                let free = casa == -2 && !(nation && w0 >= 0 && fora >= 0 && teams_same_nation(cup, w0, fora));
                 if fora == -2 {
-                    if livre && exe::utils_random(2) != 0 {
+                    if free && exe::utils_random(2) != 0 {
                         side = Some(true);
-                    } else if livre || !(nation && w0 >= 0 && casa >= 0 && teams_same_nation(cup, w0, casa)) {
+                    } else if free || !(nation && w0 >= 0 && casa >= 0 && teams_same_nation(cup, w0, casa)) {
                         side = Some(false);
                     }
-                } else if livre {
+                } else if free {
                     side = Some(true);
                 }
             } else if casa < 0 && fora < 0 {
@@ -665,12 +665,12 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
             let t = tie_of_round(cup, r, cur as i16 as i32);
             let mut side: Option<bool> = None;
             if second {
-                let mut livre = false;
+                let mut free = false;
                 let mut m = false;
                 let home = read_i16(t);
                 let c0 = if home == -2 {
                     m = true;
-                    livre = true;
+                    free = true;
                     0
                 } else if home == -1 {
                     0
@@ -679,9 +679,9 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
                 };
                 let away = read_i16(t + 2);
                 let c1 = if away == -2 {
-                    if !(livre && exe::utils_random(2) != 0) {
+                    if !(free && exe::utils_random(2) != 0) {
                         m = false;
-                        livre = true;
+                        free = true;
                     }
                     0
                 } else if away == -1 {
@@ -691,7 +691,7 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
                 };
                 let same = club != 0 && rule
                     && ((c0 != 0 && read_u32(club + club::NATION) == read_u32(c0 + club::NATION)) || (c1 != 0 && read_u32(club + club::NATION) == read_u32(c1 + club::NATION)));
-                if !same && livre {
+                if !same && free {
                     side = Some(m);
                 }
             } else {
@@ -1585,10 +1585,10 @@ pub(crate) unsafe fn copy_row_59(target: usize, source: usize) {
 /// Puts table pair (i, j) in grid slots k and half + k, marks both slots and both clubs used, increments k.
 ///
 /// [pt] Põe o par (i, j) da tabela nas vagas k e metade + k da grade, marca as vagas e os dois clubes.
-pub(crate) unsafe fn place_pair(grade: usize, posto: *mut u32, used: *mut u32, table: usize, i: usize, j: usize, k: &mut i32, half: i32) {
-    copy_row_59(grade + *k as usize * CUP_LEAGUE_TABLE_ROW_SIZE, table + i * CUP_LEAGUE_TABLE_ROW_SIZE);
+pub(crate) unsafe fn place_pair(grid: usize, posto: *mut u32, used: *mut u32, table: usize, i: usize, j: usize, k: &mut i32, half: i32) {
+    copy_row_59(grid + *k as usize * CUP_LEAGUE_TABLE_ROW_SIZE, table + i * CUP_LEAGUE_TABLE_ROW_SIZE);
     let m = half + *k;
-    copy_row_59(grade + m as usize * CUP_LEAGUE_TABLE_ROW_SIZE, table + j * CUP_LEAGUE_TABLE_ROW_SIZE);
+    copy_row_59(grid + m as usize * CUP_LEAGUE_TABLE_ROW_SIZE, table + j * CUP_LEAGUE_TABLE_ROW_SIZE);
     *posto.add(m as usize) = 1;
     *posto.add(*k as usize) = 1;
     *used.add(j) = 1;
@@ -2766,12 +2766,12 @@ pub(crate) unsafe extern "C" fn cup_set_round_draw_date(rounds: usize, round: u3
 ///
 /// [pt] { 0x521eb0 } (cdecl, Cup.cpp): a data do jogo da rodada, como a do sorteio, em +3 (dia) e +5 (ano −
 /// ano-base); o horário (byte) em +6 e as marcas do mando em +0x13. Devolve o registro.
-pub(crate) unsafe extern "C" fn cup_set_round_match_date(rounds: usize, round: u32, day: u32, month: u32, years: u32, week: u32, hora: u32, base: u32, mando: u32) -> usize {
+pub(crate) unsafe extern "C" fn cup_set_round_match_date(rounds: usize, round: u32, day: u32, month: u32, years: u32, week: u32, hour: u32, base: u32, mando: u32) -> usize {
     let (d, a) = date_on_weekday(day, month, base.wrapping_add(years), week);
     let r = round_record_from_base(rounds, round);
     core::ptr::write_unaligned((r + cup_round::DAY) as *mut u16, d); // match day
     *((r + cup_round::YEAR_OFFSET) as *mut u8) = a.wrapping_sub(base as u8);
-    *((r + cup_round::TIME_SLICE) as *mut u8) = hora as u8;
+    *((r + cup_round::TIME_SLICE) as *mut u8) = hour as u8;
     core::ptr::write_unaligned((r + cup_round::VENUE_VALUE) as *mut u32, mando);
     r
 }
@@ -3495,13 +3495,13 @@ pub(crate) unsafe extern "thiscall" fn cup_rank_teams(this: usize) {
 /// [pt] { 0x521f10 } (cdecl, Cup.cpp): o dia `vaga` (0 a 7) da rodada `rodada` (registros de 104 bytes):
 /// em 7 bytes a partir de +0x23, o mando (4 bytes), o dia da semana (−1 a 6), o horário (−1 a 2) e o
 /// código (−1 a 3). Fora da faixa: a original (caixa de erro e fim do jogo). Devolve o mando.
-pub(crate) unsafe extern "C" fn cup_set_round_match_day(rounds: usize, round: i16, slot: i16, week: i16, hora: i8, code: i8, mando: u32) -> u32 {
-    if !(0..8).contains(&slot) || !(-1..=6).contains(&week) || !(-1..3).contains(&hora) || !(-1..=3).contains(&code) {
-        return original_fn::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(IDX_CUP_SET_ROUND_MATCH_DAY)(rounds, round, slot, week, hora, code, mando);
+pub(crate) unsafe extern "C" fn cup_set_round_match_day(rounds: usize, round: i16, slot: i16, week: i16, hour: i8, code: i8, mando: u32) -> u32 {
+    if !(0..8).contains(&slot) || !(-1..=6).contains(&week) || !(-1..3).contains(&hour) || !(-1..=3).contains(&code) {
+        return original_fn::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(IDX_CUP_SET_ROUND_MATCH_DAY)(rounds, round, slot, week, hour, code, mando);
     }
     let e = rounds.wrapping_add((round as isize * 104 + slot as isize * 7) as usize);
     *((e + cup_round::SLOT_WEEKDAY) as *mut u8) = week as u8; // day of the week
-    *((e + cup_round::SLOT_TIME_SLICE) as *mut u8) = hora as u8;
+    *((e + cup_round::SLOT_TIME_SLICE) as *mut u8) = hour as u8;
     *((e + cup_round::SLOT_CODE) as *mut u8) = code as u8;
     core::ptr::write_unaligned((e + cup_round::SLOT_VENUE) as *mut u32, mando);
     mando

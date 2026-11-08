@@ -385,7 +385,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
     }
     let mark: u8 = if second != 0 { 8 } else { 4 };
     let mut n: i8 = 0;
-    let mut tres = [0usize; 3];
+    let mut three = [0usize; 3];
     let mut news = [0u32; 0x38];
     let nt = news.as_mut_ptr() as usize;
     for idx in 1..=0x32usize {
@@ -398,7 +398,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
             how_many_adv = *(list as *const i16);
         }
         if n < 3 {
-            tres[n as usize] = p;
+            three[n as usize] = p;
         }
         let club = read_usize(p + staff::CLUB_JOB);
         n = n.wrapping_add(1);
@@ -430,7 +430,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
         if n <= 3 && n > 0 {
             let mut k: u8 = 0xa;
             for t in 0..n as usize {
-                let j = tres[t];
+                let j = three[t];
                 write(nt, k as u32, read_usize(j) as u32);
                 write(nt, k.wrapping_add(1) as u32, read_usize(read_usize(j + staff::FIRST_NAME) + 0x33) as u32);
                 write(nt, k.wrapping_add(2) as u32, read_usize(read_usize(j + staff::SECOND_NAME) + 0x33) as u32);
@@ -469,7 +469,7 @@ pub(crate) static mut FIXTURE_OPPONENTS_PLAN: Option<Vec<u32>> = None;
 /// competições de seleções). Devolve a lista.
 pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(this: usize, national_team: usize, game: usize) -> usize {
     let _ = this;
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
@@ -479,19 +479,19 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     // cdecl; 0x68d0d0: push 4; push &valor; mov ecx, lista -> thiscall, ret 8; 0x5409b0 / 0x53b4f0: push; add esp, 4 ->
     // cdecl; 0x549ef0: push +0x28; push +0x2a; lea ecx -> thiscall, ret 8; 0x54c5b0: push n; push &output; mov ecx, date
     // -> thiscall, ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24
-    let ensaio = (*core::ptr::addr_of!(FIXTURE_OPPONENTS_PLAN)).is_some();
+    let dry_run = (*core::ptr::addr_of!(FIXTURE_OPPONENTS_PLAN)).is_some();
     let mut local = [0u8; 16];
     let l = local.as_mut_ptr() as usize;
     exe::new_llist(l);
     let mut nl = 0usize;
-    if !ensaio {
-        let m = novo(0xe);
+    if !dry_run {
+        let m = new(0xe);
         if m != 0 {
             nl = exe::new_llist(m);
         }
     }
     let mut por = |v: usize| {
-        if ensaio {
+        if dry_run {
             if let Some(p) = &mut *core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN) {
                 p.push(read_usize(v) as u32);
             }
@@ -2230,7 +2230,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
     let today = read_usize(G_CURRENT_DATE) as u32;
     let (ano, dia) = ((today >> 16) as u16, today as u16 as i16);
     if s != 0 && manager != 0 {
-        let mut passou = false;
+        let mut passed = false;
         let list = read_usize(this);
         if list != 0 {
             core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_usize(list + llist::HEAD) as u32);
@@ -2240,14 +2240,14 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
                     let d = read_usize(it + 8) as u32;
                     let (a, dd) = ((d >> 16) as u16, d as u16 as i16);
                     if a < ano || (a == ano && dd < dia) {
-                        passou = true;
+                        passed = true;
                         break;
                     }
                 }
                 it = exe::llist_get_next(read_usize(this));
             }
         }
-        if !passou && exe::human_manager_controls_all_national_teams(read_usize(G_HUMAN_MANAGER), manager, core::ptr::null_mut()) == 0 {
+        if !passed && exe::human_manager_controls_all_national_teams(read_usize(G_HUMAN_MANAGER), manager, core::ptr::null_mut()) == 0 {
             return 1;
         }
     }
@@ -2601,7 +2601,7 @@ pub(crate) unsafe fn list_items_capped(l: usize) -> Vec<usize> {
 ///
 /// [pt] O fim das convocações da lista [this] (as duas rotinas da 0x774f30/0x774f90): do começo (cursor +0xa = +2),
 /// cada registro que `passa` recebe em +0x10 a palavra +0 (o dia) de amanhã (0x54c5b0 com 1 sobre [0xae2c90]).
-pub(crate) unsafe fn end_call_ups(this: usize, passa: impl Fn(usize) -> bool) {
+pub(crate) unsafe fn end_call_ups(this: usize, passes: impl Fn(usize) -> bool) {
     let l = read_usize(this);
     if l == 0 {
         return;
@@ -2609,7 +2609,7 @@ pub(crate) unsafe fn end_call_ups(this: usize, passa: impl Fn(usize) -> bool) {
     core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
     let mut r = exe::llist_get_next(read_usize(this));
     while r != 0 {
-        if passa(r) {
+        if passes(r) {
             let mut data = [0u8; 8];
             let day = *(exe::date_add_days(G_CURRENT_DATE, (data.as_mut_ptr()) as usize, 1) as *const u16);
             core::ptr::write_unaligned((r + 0x10) as *mut u16, day); // tomorrow’s day
@@ -3431,9 +3431,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_daily_update(this: usize, 
 /// uma seleção na competição `comp`: 23/23 nas competições olímpicas e de base ([comp+0x14] com id
 /// numa das 9 constantes 0x9cf78c…0x9cf964); 24/22 com `tipo` 1 ou acima de 2; senão 26/22.
 /// Ponteiros nulos: a original (caixa de erro).
-pub(crate) unsafe extern "stdcall" fn national_team_ages(comp: usize, kind: i8, minima: *mut u8, maxima: *mut u8) {
-    if minima.is_null() || maxima.is_null() {
-        return original_fn::<unsafe extern "stdcall" fn(usize, i8, *mut u8, *mut u8)>(IDX_NATIONAL_TEAM_AGES)(comp, kind, minima, maxima);
+pub(crate) unsafe extern "stdcall" fn national_team_ages(comp: usize, kind: i8, minimum: *mut u8, maxima: *mut u8) {
+    if minimum.is_null() || maxima.is_null() {
+        return original_fn::<unsafe extern "stdcall" fn(usize, i8, *mut u8, *mut u8)>(IDX_NATIONAL_TEAM_AGES)(comp, kind, minimum, maxima);
     }
     if comp != 0 {
         let c = *((comp + fixture::COMPETITION) as *const usize);
@@ -3443,17 +3443,17 @@ pub(crate) unsafe extern "stdcall" fn national_team_ages(comp: usize, kind: i8, 
                 .iter()
                 .any(|&a| *(a as *const i32) == id)
             {
-                *minima = 0x17;
+                *minimum = 0x17;
                 *maxima = 0x17;
                 return;
             }
         }
     }
     if kind != 0 && kind != 2 {
-        *minima = 0x18;
+        *minimum = 0x18;
         *maxima = 0x16;
     } else {
-        *minima = 0x1a;
+        *minimum = 0x1a;
         *maxima = 0x16;
     }
 }

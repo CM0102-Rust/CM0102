@@ -20,11 +20,11 @@ pub(crate) unsafe fn loan_owner_club(player: usize) -> Option<usize> {
 pub(crate) unsafe fn refuse_outside_window(this: usize, msg: usize, reason: *mut u16) -> u32 {
     if msg != 0 {
         // 0x6181d0: push 2; push 100; push buffer; push nation; add esp, 0x10 -> cdecl
-        let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_NATION_GET_NATIONALITY_ADJECTIVE);
+        let adjective: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_NATION_GET_NATIONALITY_ADJECTIVE);
         // 0x66f4e0: push ...; push format; push destination; add esp, 0x14 -> variadic cdecl
         let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
         let mut buf = [0u8; 100];
-        adjetivo(read_usize(this + 0xa), buf.as_mut_ptr(), 100, 2);
+        adjective(read_usize(this + 0xa), buf.as_mut_ptr(), 100, 2);
         text(msg, 0x987d38, 100, 100, buf.as_ptr());
     }
     if !reason.is_null() {

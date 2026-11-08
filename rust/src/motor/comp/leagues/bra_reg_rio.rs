@@ -443,7 +443,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
 ///    limpos; o k vai inteiro, como chegou). Sem memória para a fase: 0 na vaga, sem caixa.
 /// 3) [+0xc][k] = a fase, +0x30 = k (o byte com sinal) e o vetor liberado (free 0x9452ca). O quadro SEH da original só
 ///    cobre o construtor (sem destrutor no caminho normal).
-pub(crate) unsafe fn create_half_season_stage(this: usize, k: u32, file: usize, row: u32, vinte: u32, pv: usize, ramo: &'static str) {
+pub(crate) unsafe fn create_half_season_stage(this: usize, k: u32, file: usize, row: u32, twenty: u32, pv: usize, ramo: &'static str) {
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, u32, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -464,7 +464,7 @@ pub(crate) unsafe fn create_half_season_stage(this: usize, k: u32, file: usize, 
         construct(p, this, read_i16(this + league::CLUB_COUNT) as u16 as u32, clubs, 1, read_usize(this + 4), 0, 0,
                   read_u8(this + pv) as u32,
                   read_u8(this + league::DRAW_POINTS) as u32, read_u8(this + league::MATCH_CATEGORY) as u32, this + league::TIEBREAKS, slots.as_ptr(),
-                  read_i16(this + league::YEAR) as u16 as u32, k, id, 0, 1, 0, 8, vinte, 0, 2)
+                  read_i16(this + league::YEAR) as u16 as u32, k, id, 0, 1, 0, 8, twenty, 0, 2)
     } else {
         0
     };

@@ -226,10 +226,10 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
 pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> u32 {
     let m = *((p + match_player::ENGINE) as *const usize);
     let today = G_CURRENT_DATE;
-    let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
+    let date: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
     let (mut d7, mut d30) = ([0u8; 8], [0u8; 8]);
-    datar(today, &mut d7, 7);
-    datar(today, &mut d30, 0x1e);
+    date(today, &mut d7, 7);
+    date(today, &mut d30, 0x1e);
     let c = code as u16 as i16 as i32;
     if !(0x1f40..=0x21e4).contains(&c) {
         return 0;
@@ -290,12 +290,12 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         0x21b4 => atuacao >= random(0x7d0) + 0x1b58 && algum(0x28, 0x3b, &d7),
         0x21b5 => atuacao > random(1000) + 0x1f40 && b(0x30) != 0,
         0x21b6 => {
-            let sim = atuacao > random(0x7d0) + 0x1c52 && b(0xc) == 1 && in_field > 0x41 && b(0x30) != 0;
-            if sim {
+            let yes = atuacao > random(0x7d0) + 0x1c52 && b(0xc) == 1 && in_field > 0x41 && b(0x30) != 0;
+            if yes {
                 crate::comparison::branch("destaque marca 21b5");
                 *((m + 0xbf2 + side as usize * 4000) as *mut u32) = 1;
             }
-            sim
+            yes
         }
         0x21b7 => b(0x30) != 0 && b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && in_field >= 0x37 && atuacao <= limit(in_field),
         0x21b8 => {
@@ -1889,8 +1889,8 @@ pub(crate) unsafe extern "thiscall" fn get_player_injury_status(this: usize, per
     if read_usize(person) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;
     }
-    let atualizar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
-    atualizar(this, person);
+    let update: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
+    update(this, person);
     injury_status(this, person)
 }
 
@@ -2046,8 +2046,8 @@ pub(crate) unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: u
         }
     }
     let e = read_usize(this + injury_fields::OUTBREAKS).wrapping_add((read_i32(this + injury_fields::OUTBREAK_COUNT) as usize).wrapping_mul(OUTBREAK_SIZE));
-    let mut rascunho = [0u8; 8];
-    exe::date_operator_3d(e, (rascunho.as_mut_ptr()) as usize, data);
+    let mut draft = [0u8; 8];
+    exe::date_operator_3d(e, (draft.as_mut_ptr()) as usize, data);
     *((e + 8) as *mut u8) = kind;
     core::ptr::write_unaligned((e + 9) as *mut i32, club_i);
     let id = if partida != 0 { read_i32(partida) } else { -1 };
@@ -2061,9 +2061,9 @@ pub(crate) unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: u
 ///
 /// [pt] A data de cinco dias atrás (0x54c8e0 sobre a data do jogo).
 pub(crate) unsafe fn five_days_ago() -> [u8; 8] {
-    let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
+    let date: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
     let mut d = [0u8; 8];
-    datar(G_CURRENT_DATE, &mut d, 5); // five days ago
+    date(G_CURRENT_DATE, &mut d, 5); // five days ago
     d
 }
 
@@ -2097,7 +2097,7 @@ pub(crate) unsafe fn is_after_outbreak(limit: &[u8; 8], e: usize) -> bool {
 /// byte baixo da dword do deslocamento do surto, como a original; a partida do surto). No fim, os que saem vão
 /// embora do começo do vetor (os outros descem) e a conta cai.
 pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
-    let cinco = five_days_ago();
+    let five = five_days_ago();
     let injure: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(FN_INJURY_ADD_INJURY);
     let mut removidos: i32 = 0;
     let mut k: i32 = 0;
@@ -2109,7 +2109,7 @@ pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
         if ano_h < ano_e || (ano_h == ano_e && (hoje4 as u16 as i16) < read_i16(e)) {
             break; // the first outbreak after today
         }
-        if is_after_outbreak(&cinco, e) {
+        if is_after_outbreak(&five, e) {
             crate::comparison::branch("cpp_8 surto antigo");
             removidos += 1;
         } else {
@@ -2316,8 +2316,8 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
     let mut person = read_usize(G_STAFF_TABLE);
     let mut i = 0i32;
     while i < read_i32(G_STAFF_COUNT) {
-        let mut rascunho = [0u8; 8];
-        exe::date_operator_3d(r, (rascunho.as_mut_ptr()) as usize, G_CURRENT_DATE);
+        let mut draft = [0u8; 8];
+        exe::date_operator_3d(r, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
         core::ptr::write_unaligned((r + physical_record::FATIGUE) as *mut u16, 0);
         core::ptr::write_unaligned((r + 8) as *mut u16, 10000);
         core::ptr::write_unaligned((r + physical_record::CONDITION) as *mut u16, 10000);
@@ -2553,8 +2553,8 @@ pub(crate) unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32)
         exe::injury_end_player_injury(this, person, 0);
     }
     exe::injury_reset_player_history(this, read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
-    let mut rascunho = [0u8; 8];
-    exe::date_operator_3d(r, (rascunho.as_mut_ptr()) as usize, G_CURRENT_DATE); // today’s date
+    let mut draft = [0u8; 8];
+    exe::date_operator_3d(r, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE); // today’s date
     core::ptr::write_unaligned((r + 8) as *mut u16, 10000);
     core::ptr::write_unaligned((r + physical_record::CONDITION) as *mut u16, 10000);
     core::ptr::write_unaligned((r + physical_record::FATIGUE) as *mut i16, 0); // no fatigue
@@ -2620,13 +2620,13 @@ compare_value!(compare_table_penalty, table_penalty, IDX_TABLE_PENALTY, (linha: 
 /// forma (+0xa) × condição de jogo (+8) / 10.000 do registro de 31 bytes [this] do id, no mínimo 100 e no máximo 9000
 /// enquanto ele se recupera (0x62c400 = 1); em porcentagem (× 0x96bac8 + 0x968968, _ftol), no máximo 100. Pessoa fora
 /// dos jogadores ([0xae2364]): 100 ou 10.000. Jogador nulo: 0.
-pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, player: usize, em_porcento: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, player: usize, in_percent: u32) -> u16 {
     if player == 0 {
         return 0;
     }
     let id = read_usize(player) as i32;
     if id >= read_usize(G_STAFF_COUNT) as i32 {
-        return if em_porcento != 0 { 100 } else { 10_000 };
+        return if in_percent != 0 { 100 } else { 10_000 };
     }
     let recuperando = exe::injury_get_player_injury_status(this, player) == 1;
     let r = read_usize(this).wrapping_add((id as usize).wrapping_mul(31));
@@ -2638,7 +2638,7 @@ pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, player: usize,
     } else {
         100
     };
-    if em_porcento != 0 {
+    if in_percent != 0 {
         c = ftol(c as i16 as f64 * read_f32_at(rdata::F32_0_009999999776) as f64 + read_f64_at(rdata::F64_0_5));
         if c as i16 > 100 {
             c = 100;
@@ -2657,18 +2657,18 @@ pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, player: usize,
 /// [pt] { 0x62c510 } (thiscall, ret 8, injury.cpp): `Injury::get_match_condition(jogador, em_porcento)`: sem jogador, 0; id
 /// fora das pessoas ([0xae2364]): 10000 (100 em porcento); senão atualiza o físico do dia (0x62c680, uma vez por dia)
 /// e devolve a condição (registro de 31 bytes em [this], +0xa), em porcento × 0,01f truncado. Só o ax é o retorno.
-pub(crate) unsafe extern "thiscall" fn get_match_condition(this: usize, player: usize, em_porcento: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn get_match_condition(this: usize, player: usize, in_percent: u32) -> u16 {
     if player == 0 {
         return 0;
     }
     let id = *(player as *const i32);
     if id >= *(G_STAFF_COUNT as *const i32) {
-        return if em_porcento != 0 { 100 } else { 10000 };
+        return if in_percent != 0 { 100 } else { 10000 };
     }
-    let atualizar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
-    atualizar(this, player);
+    let update: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
+    update(this, player);
     let c = core::ptr::read_unaligned((*(this as *const usize)).wrapping_add((*(player as *const i32) as usize).wrapping_mul(31)).wrapping_add(0xa) as *const i16);
-    if em_porcento != 0 {
+    if in_percent != 0 {
         return ftol(c as f64 * *(0x96bac8 as *const f32) as f64) as u16; // in percent
     }
     c as u16

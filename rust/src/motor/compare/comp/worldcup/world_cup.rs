@@ -130,11 +130,11 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions
     exe::crt_qsort((v.as_mut_ptr()) as usize, n as u32, 4, 0x4b07d0);
     o(this);
     const FAIXAS: [u8; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
-    let errado = (0..32).find(|&k| {
+    let wrong = (0..32).find(|&k| {
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != FAIXAS[k]
     });
-    SCOREBOARD.record(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
+    SCOREBOARD.record(wrong.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", wrong));
 }
 
 /// Comparer for `world_cup_create_schedule`.

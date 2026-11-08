@@ -245,25 +245,25 @@ pub(crate) unsafe extern "thiscall" fn compare_rate_player_form_for_story(this: 
 ///
 /// [pt] Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original (a cópia
 /// prova no modo Rust, pelo ramo).
-pub(crate) unsafe extern "thiscall" fn compare_write_financial_trouble_news_text(this: usize, news: usize, corpo: u32, out: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_write_financial_trouble_news_text(this: usize, news: usize, body: u32, out: usize) {
     // simplification: the text object cannot receive the text twice; only the original runs here
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_FINANCIAL_TROUBLE_NEWS_TEXT)(this, news, corpo, out);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_FINANCIAL_TROUBLE_NEWS_TEXT)(this, news, body, out);
 }
 
 /// Comparer for `log_story`.
 ///
 /// [pt] Comparador: a original pode alocar e realocar (não roda duas vezes): o registro esperado antes; confere a conta e
 /// que o registro esperado está na lista (a ordem é a do qsort).
-pub(crate) unsafe extern "thiscall" fn compare_log_story(this: usize, a: usize, b: usize, kind: u32, subtipo: u32, reply: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_log_story(this: usize, a: usize, b: usize, kind: u32, subtype: u32, reply: u32) {
     let n = read_usize(this + media_fields::STORY_LOG_COUNT);
-    let expected = build_news_log_record(a, b, kind, subtipo, reply);
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_LOG_STORY)(this, a, b, kind, subtipo, reply);
+    let expected = build_news_log_record(a, b, kind, subtype, reply);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_LOG_STORY)(this, a, b, kind, subtype, reply);
     let m = read_usize(this + media_fields::STORY_LOG_COUNT);
     let found = (0..m).any(|k| {
         core::slice::from_raw_parts(read_usize(this).wrapping_add(k * 0x17) as *const u8, 0x17) == &expected[..]
     });
     SCOREBOARD.record(m == n.wrapping_add(1) && found, || {
-        format!("log_story(tipo {:#x}, subtipo {}) conta {} -> {}, esperado {:x?} achou {}", kind, subtipo as u8 as i8, n, m, expected, found)
+        format!("log_story(tipo {:#x}, subtipo {}) conta {} -> {}, esperado {:x?} achou {}", kind, subtype as u8 as i8, n, m, expected, found)
     });
 }
 
@@ -287,10 +287,10 @@ pub(crate) unsafe extern "thiscall" fn compare_expire_story_log(this: usize) {
 /// Comparer for `has_logged_story`.
 ///
 /// [pt] Comparador: pelo valor (a busca e a data padrão da chave só leem).
-pub(crate) unsafe extern "thiscall" fn compare_has_logged_story(this: usize, a: usize, b: usize, kind: u32, subtipo: u32, desde: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(IDX_HAS_LOGGED_STORY)(this, a, b, kind, subtipo, desde);
-    let n = has_logged_story(this, a, b, kind, subtipo, desde);
-    SCOREBOARD.record(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", kind, subtipo as u16 as i16, desde != 0, r, n));
+pub(crate) unsafe extern "thiscall" fn compare_has_logged_story(this: usize, a: usize, b: usize, kind: u32, subtype: u32, desde: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(IDX_HAS_LOGGED_STORY)(this, a, b, kind, subtype, desde);
+    let n = has_logged_story(this, a, b, kind, subtype, desde);
+    SCOREBOARD.record(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", kind, subtype as u16 as i16, desde != 0, r, n));
     r
 }
 
@@ -374,14 +374,14 @@ pub(crate) unsafe extern "stdcall" fn compare_media_queue_player_apology_news(pl
 }
 
 /// Comparer for `pick_former_international_pundit`.
-pub(crate) unsafe extern "thiscall" fn compare_pick_former_international_pundit(this: usize, club: usize, assunto: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_pick_former_international_pundit(this: usize, club: usize, subject: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_PICK_FORMER_INTERNATIONAL_PUNDIT);
-    if assunto == 0 && club == 0 {
-        return o(this, club, assunto);
+    if subject == 0 && club == 0 {
+        return o(this, club, subject);
     }
     // the commentator comes only from the random roll
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, || o(this, club, assunto),
-        || crate::rng::without_counting(|| pick_former_international_pundit(this, club, assunto)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, || o(this, club, subject),
+        || crate::rng::without_counting(|| pick_former_international_pundit(this, club, subject)));
     SCOREBOARD.record(igual && r == n, || format!("pick_former_international_pundit {:#x} x {:#x} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

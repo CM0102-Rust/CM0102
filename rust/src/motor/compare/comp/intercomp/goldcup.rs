@@ -45,11 +45,11 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_set_predicted_positions(t
     let mut v: Vec<usize> = (0..12).map(|i| read_usize(read_usize(this + goldcup::DRAWN_CLUBS) + i * 4)).collect();
     exe::crt_qsort((v.as_mut_ptr()) as usize, 12, 4, 0x4b07d0);
     o(this);
-    let errado = (0..12).find(|&k| {
+    let wrong = (0..12).find(|&k| {
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
     });
-    SCOREBOARD.record(errado.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
+    SCOREBOARD.record(wrong.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", wrong));
 }
 
 /// Comparer for `goldcup_start_new_season`.
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_create_group_table(this: 
     if list == 0 {
         return o(this);
     }
-    let previstos: [usize; 4] = core::array::from_fn(|i| read_usize(list + i * 12));
+    let predicted: [usize; 4] = core::array::from_fn(|i| read_usize(list + i * 12));
     let r = o(this);
     let t = read_usize(this + league::TABLE);
     let mut read = [(0usize, 0u8); 4];
@@ -99,8 +99,8 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_create_group_table(this: 
             *l = (read_usize(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
         }
     }
-    let same = r == 1 && read_i16(this + league::CLUB_COUNT) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    SCOREBOARD.record(same, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    let same = r == 1 && read_i16(this + league::CLUB_COUNT) == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
+    SCOREBOARD.record(same, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, predicted));
     r
 }
 

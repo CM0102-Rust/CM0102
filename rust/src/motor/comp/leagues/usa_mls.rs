@@ -377,11 +377,11 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: usize, code: i16, 
     original();
     let stage = read_usize(read_usize(this + league::STAGES) + 4 * k);
     let same = stage != 0 && read_i16(stage + league::STAGE_ID) == code && read_usize(this + league::CURRENT_STAGE) == k && read_i16(stage + league::CLUB_COUNT) == read_i16(this + league::CLUB_COUNT) && {
-        let mut nela = [0usize; 8];
-        for (j, c) in nela.iter_mut().enumerate().take(n) {
+        let mut in_it = [0usize; 8];
+        for (j, c) in in_it.iter_mut().enumerate().take(n) {
             *c = read_usize(read_usize(stage + league::TABLE) + j * 0x3b);
         }
-        let (mut a, mut b) = (plan, nela);
+        let (mut a, mut b) = (plan, in_it);
         a[..n].sort_unstable();
         b[..n].sort_unstable();
         a[..n] == b[..n]
@@ -530,8 +530,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
     exe::crt_qsort(v + 4 * n as usize, n as u32, 4, 0x4b07d0);
     let n = read_i16(this + league::CLUB_COUNT) as i32;
     exe::crt_qsort(v + 8 * n as usize, n as u32, 4, 0x4b07d0);
-    let lugares: [u32; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10]; // cqs2: the predicted positions of the three divisions
-    for (k, p) in lugares.iter().enumerate() {
+    let places: [u32; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10]; // cqs2: the predicted positions of the three divisions
+    for (k, p) in places.iter().enumerate() {
         position(read_usize(this + 8), read_usize(v + 4 * k), *p);
     }
     crate::comparison::branch("cqs_2 posicoes previstas");

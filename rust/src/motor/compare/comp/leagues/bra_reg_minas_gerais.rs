@@ -87,8 +87,8 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_set_club_pro
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let (n, l, dest) = mineiro_end_of_stage(this, club, status, stage, game, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_MINAS_GERAIS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, game, a6);
-    let gravado = if l == 0 { dest } else { *((l + league_table_row::STATUS) as *const u8) };
-    SCOREBOARD.record(r == n && gravado == dest, || format!("bra_reg_minas_gerais_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    let written = if l == 0 { dest } else { *((l + league_table_row::STATUS) as *const u8) };
+    SCOREBOARD.record(r == n && written == dest, || format!("bra_reg_minas_gerais_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, written as i8, dest as i8));
     r
 }
 

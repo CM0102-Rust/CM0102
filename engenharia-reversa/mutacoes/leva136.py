@@ -3,7 +3,7 @@ MUTACOES = [
     ('c_angulo', "{ (11 - ang as i16 as i32 / 10) * q } else { q * 2 };", "{ (12 - ang as i16 as i32 / 10) * q } else { q * 2 };"),
     ('c_forca', "c.wrapping_mul(c).wrapping_mul(c).wrapping_mul(20)", "c.wrapping_mul(c).wrapping_mul(c).wrapping_mul(21)"),
     ('c_ao_gol', "(chance as f64) < 2.0 || exe::cm3_match_engine_is_path_ahead_clear(m, j, 0) != 0", "(chance as f64) < 2.1 || exe::cm3_match_engine_is_path_ahead_clear(m, j, 0) != 0"),
-    ('c_cabeca', "&& random(na_propria as i32 * 500 + 100 + byte(", "&& random(na_propria as i32 * 500 + 101 + byte(", "shot cabecada"),
+    ('c_cabeca', "&& random(in_own as i32 * 500 + 100 + byte(", "&& random(in_own as i32 * 500 + 101 + byte(", "shot cabecada"),
     ('c_doze', "&& strength as i32 > (20 - byte(j, match_player::MOMENT_AGILITY) as i32) * 7", "&& strength as i32 > (20 - byte(j, match_player::MOMENT_AGILITY) as i32) * 8", "shot 0xc de longe"),
     ('c_volei', "if random(v as i32) > r1 { (*w(j, 0x176), 0x2e) }", "if random(v as i32) >= r1 { (*w(j, 0x176), 0x2e) }"),
     ('c_3b', "&& (chance as f64) < 1.41", "&& (chance as f64) < 1.4"),

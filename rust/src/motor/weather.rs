@@ -454,24 +454,24 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
     let chuva = *clima.add(1);
     let t = *clima.add(2) as i8;
     let mark = *((est + stadium::UNDER_SOIL_HEATING) as *const u8) != 0;
-    let lugares = read_i32(est + stadium::CAPACITY);
+    let places = read_i32(est + stadium::CAPACITY);
     let morno = (1..0x1d).contains(&t);
     if chuva == 5 && morno {
         if mark {
-            return if lugares > 0x6b6c { 2 } else { 1 };
+            return if places > 0x6b6c { 2 } else { 1 };
         }
-        return if lugares <= 0x445c { 8 } else { 1 };
+        return if places <= 0x445c { 8 } else { 1 };
     }
     if chuva == 1 && morno {
         if !mark {
             return 2;
         }
-        let cut = if lugares > 0x6b6c { 4 } else { 6 };
+        let cut = if places > 0x6b6c { 4 } else { 6 };
         return if h >= cut { 0 } else { 2 };
     }
     if (chuva == 2 || chuva == 3) && morno {
         if mark {
-            if lugares <= 0x6b6c {
+            if places <= 0x6b6c {
                 return if h >= 4 { 0 } else { 2 };
             }
             return if h != 0 { 0 } else { 2 };
@@ -480,27 +480,27 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
     }
     if chuva == 4 && morno {
         if mark {
-            if lugares <= 0x6b6c {
+            if places <= 0x6b6c {
                 return 2;
             }
             return if h >= 3 { 0 } else { 2 };
         }
-        return if lugares > 0x445c { 2 } else { 1 };
+        return if places > 0x445c { 2 } else { 1 };
     }
     if t < 1 && (chuva == 1 || chuva == 8) {
-        if mark || lugares > 0xafc8 {
+        if mark || places > 0xafc8 {
             return 2;
         }
-        return if lugares <= 0x30d4 { 0x10 } else { 1 };
+        return if places <= 0x30d4 { 0x10 } else { 1 };
     }
     if chuva == 9 {
         if mark {
-            return if lugares > 0x7530 { 2 } else { 1 };
+            return if places > 0x7530 { 2 } else { 1 };
         }
-        return if lugares <= 0x4e20 { 0x20 } else { 1 };
+        return if places <= 0x4e20 { 0x20 } else { 1 };
     }
     if chuva == 0 && t >= 0x1d {
-        return if lugares <= 0x88b8 { 0x40 } else { 4 };
+        return if places <= 0x88b8 { 0x40 } else { 4 };
     }
     0
 }

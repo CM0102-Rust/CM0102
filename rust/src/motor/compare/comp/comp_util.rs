@@ -152,13 +152,13 @@ pub(crate) unsafe extern "C" fn compare_comp_util_write_fixture_to_news_slots(ga
 /// Comparer for `comp_util_format_stage_round_name`.
 ///
 /// [pt] Comparador da 0x4bffc0: lado a lado na saída (até o tamanho, no máximo 0x400 bytes) e na devolução.
-pub(crate) unsafe extern "C" fn compare_comp_util_format_stage_round_name(stage: u32, round: u32, out: *mut u8, size: i32, estilo: u32) -> i32 {
+pub(crate) unsafe extern "C" fn compare_comp_util_format_stage_round_name(stage: u32, round: u32, out: *mut u8, size: i32, style: u32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(IDX_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
     if out.is_null() || size < 0xc8 {
-        return o(stage, round, out, size, estilo); // the message box: original only
+        return o(stage, round, out, size, style); // the message box: original only
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out as usize, (size as usize).min(0x400))],
-        || o(stage, round, out, size, estilo), || comp_util_format_stage_round_name(stage, round, out, size, estilo));
+        || o(stage, round, out, size, style), || comp_util_format_stage_round_name(stage, round, out, size, style));
     SCOREBOARD.record(igual && r == n, || format!("comp_util_format_stage_round_name({}, {}) {} x {} {:x?} x {:x?}", stage as i16, round as i16, r, n, mo, mr));
     r
 }

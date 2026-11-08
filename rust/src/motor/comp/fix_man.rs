@@ -373,9 +373,9 @@ pub(crate) unsafe fn add_clash_by_type(grav: *mut i32, list: usize, x: usize, co
 /// If severity is still 0 sets it to 0x14 or 1 (common tail of the same-club/same-stadium branches).
 ///
 /// [pt] O fim comum dos ramos do mesmo clube e do mesmo estádio (0x5adf91/0x5ae060): sem gravidade, 0x14 (`vinte`) ou 1.
-pub(crate) unsafe fn default_clash_severity(grav: *mut i32, vinte: bool) {
+pub(crate) unsafe fn default_clash_severity(grav: *mut i32, twenty: bool) {
     if *grav == 0 {
-        *grav = if vinte { 0x14 } else { 1 };
+        *grav = if twenty { 0x14 } else { 1 };
     }
 }
 
@@ -968,10 +968,10 @@ pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, game: 
 pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, clear: u32) -> u32 {
     let new_data: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE);
     let entrar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
-    let contagem = G_ADD_FIXTURE_RETRY_COUNT as *mut i16;
+    let count = G_ADD_FIXTURE_RETRY_COUNT as *mut i16;
     let mut entrou = false;
     if clear != 0 {
-        *contagem = 0;
+        *count = 0;
     }
     exe::fix_man_record_club_fixture_years(game);
     write_u16(game + fixture::REFEREE, 0xffff);
@@ -1018,10 +1018,10 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
             }
         }
     }
-    if *contagem < 10 {
+    if *count < 10 {
         let (l, g) = fix_man_find_fixture_clashes(this, game, 0);
         if l != 0 || g != 0 {
-            *contagem = (*contagem).wrapping_add(1);
+            *count = (*count).wrapping_add(1);
             if g == 0x14 {
                 crate::comparison::branch("cqc_4 mesmo dia");
                 exe::fixture_manager_resolve_same_day_clash(this, game, l); // cqc4: the same-day conflict
@@ -1425,12 +1425,12 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     if national_team(read_usize(v + fixture::HOME_CLUB)) != 0 {
         pv = pv.wrapping_add(0x15);
     }
-    let novo_vence = pn > pv // cqb13: a prioridade maior fica
+    let new_wins = pn > pv // cqb13: a prioridade maior fica
         || (pn == pv && read_i16(read_usize(n + 0x1c) + 0x80) > read_i16(read_usize(v + fixture::HOME_CLUB) + 0x80));
-    if novo_vence {
+    if new_wins {
         crate::comparison::branch("cqb_13 novo vence");
     }
-    let sai_old = novo_vence && *((v + fixture::HOME_GOALS) as *const u8) == 0xff; // cqb13: the one in the list not yet played
+    let sai_old = new_wins && *((v + fixture::HOME_GOALS) as *const u8) == 0xff; // cqb13: the one in the list not yet played
     if SAME_DAY_CLASH_DRY_RUN {
         return 1;
     }
@@ -1550,8 +1550,8 @@ pub(crate) unsafe fn fix_man_date_add_days(d: usize, out: *mut u8, n: u32) -> us
 
 /// Assigns date `origem` to `destino` (0x417c10).
 pub(crate) unsafe fn date_assign_ptr(target: *mut u8, source: usize) {
-    let mut temporaria = [0u8; 8];
-    exe::date_operator_3d(target as usize, temporaria.as_mut_ptr() as usize, source);
+    let mut temporary = [0u8; 8];
+    exe::date_operator_3d(target as usize, temporary.as_mut_ptr() as usize, source);
 }
 
 /// Finds the club's fixtures between two dates into a list (FIXTURE_MANAGER find_fixtures 0x5acbe0, any comp/type, side
@@ -2234,12 +2234,12 @@ pub(crate) unsafe extern "stdcall" fn fix_man_comp_has_fixture_on_date(data: usi
 ///
 /// [pt] Os itens que a original acrescentou à `lista` (depois da cauda de antes) são os da lista provisória `nova`, na
 /// mesma ordem, 0x4f bytes cada?
-pub(crate) unsafe fn appended_items_match(list: usize, count_before: u16, cauda_antes: u32, new: usize) -> bool {
+pub(crate) unsafe fn appended_items_match(list: usize, count_before: u16, tail_before: u32, new: usize) -> bool {
     let acrescentados = (*(list as *const u16)).wrapping_sub(count_before);
     if acrescentados != *(new as *const u16) {
         return false;
     }
-    let mut a = if count_before == 0 { read_u32(list + 2) } else { read_u32(cauda_antes as usize + 6) } as usize;
+    let mut a = if count_before == 0 { read_u32(list + 2) } else { read_u32(tail_before as usize + 6) } as usize;
     let mut b = read_u32(new + 2) as usize;
     for _ in 0..acrescentados {
         if a == 0 || b == 0 {
@@ -2260,14 +2260,14 @@ pub(crate) unsafe fn appended_items_match(list: usize, count_before: u16, cauda_
 ///
 /// [pt] Roda a cópia com uma lista provisória (0x68d020; destruída pela 0x68d040) e confere os itens contra os que a
 /// original acrescentou à lista real.
-pub(crate) unsafe fn run_with_temp_list(list: usize, count_before: u16, cauda_antes: u32, copy: impl FnOnce(usize) -> u32) -> (u32, bool) {
+pub(crate) unsafe fn run_with_temp_list(list: usize, count_before: u16, tail_before: u32, copy: impl FnOnce(usize) -> u32) -> (u32, bool) {
     let mut new = [0u8; 0x10];
     let p = new.as_mut_ptr() as usize;
     exe::new_llist(p);
     let n = copy(p);
-    let iguais = appended_items_match(list, count_before, cauda_antes, p);
+    let equal = appended_items_match(list, count_before, tail_before, p);
     exe::drop_llist(p);
-    (n, iguais)
+    (n, equal)
 }
 
 /// Fixture list for (year, day, slice, group) via 0x5abf10 with the cursor rewound; 0 if null.

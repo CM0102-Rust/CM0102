@@ -1,7 +1,7 @@
 # Mutações da 268a leva (itens cqe_1, cqe_2, cqe_3, cqe_4, cqe_5, cqe_6). Uso: python mutacoes.py mutacoes\leva268.py --carreira 2002-06-01
 MUTACOES = [
     ('cqe1_aceita_menos', 'if v as f64 * read_f64_at(rdata::F64_0_85) < request_f && troca_recusada == 0 {', 'if v as f64 * 1.2 < request_f && troca_recusada == 0 {', 'cqe_1 aceita'),
-    ('cqe1_sem_contraproposta', 'if v as f64 * read_f64_at(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && ensaio == 0 { // cqe1: a contraproposta', 'if v as f64 * read_f64_at(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && ensaio == 0 && false { // mutacao: sem contraproposta', 'cqe_1 contraproposta'),
+    ('cqe1_sem_contraproposta', 'if v as f64 * read_f64_at(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && dry_run == 0 { // cqe1: a contraproposta', 'if v as f64 * read_f64_at(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && dry_run == 0 && false { // mutacao: sem contraproposta', 'cqe_1 contraproposta'),
     ('cqe1_preco_sempre_o_piso', 'let price = if k > floor { // cqe1: the price by value k', 'let price = if k > floor && false { // mutacao: sempre o piso', 'cqe_1 preço pelo k'),
     ('cqe2_preco_pela_metade', 'write_usize(new + offer::FEE, value as u32 as usize); // cqe2: the option price', 'write_usize(new + offer::FEE, (value / 2) as u32 as usize); // mutacao: a metade', 'cqe_2 opção montada'),
     ('cqe2_lista_do_vendedor_invertida', 'if read_u8(reg + club_shortlist::ACTIVE) == 0 { // cqe2: the seller without an active scouting list', 'if read_u8(reg + club_shortlist::ACTIVE) != 0 { // mutacao: invertido', 'cqe_2 opção montada'),

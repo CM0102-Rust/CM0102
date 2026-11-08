@@ -6,6 +6,6 @@ MUTACOES = [
     ('p_coluna', "        let column = 4i8.wrapping_sub(s1).wrapping_add(random(2) as i8);", "        let column = 5i8.wrapping_sub(s1).wrapping_add(random(2) as i8);"),
     ('p_meio', "if l == 1 { 6 } else { 5 })", "if l == 1 { 5 } else { 5 })"),
     ('p_fundo', "(x, if (l == 1) != sai { 11 - s3 } else { s3 })", "(x, if (l == 1) == sai { 11 - s3 } else { s3 })"),
-    ('p_contador', "    *contador = (*contador).wrapping_add(1);", "    *contador = (*contador).wrapping_add(2);"),
+    ('p_contador', "    *counter = (*counter).wrapping_add(1);", "    *counter = (*counter).wrapping_add(2);"),
     ('p_apontar', "4, if side_b != 0 { 1 } else { 10 });", "4, if side_b != 0 { 2 } else { 10 });"),
 ]

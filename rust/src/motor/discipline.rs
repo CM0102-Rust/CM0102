@@ -140,8 +140,8 @@ pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduz: u32, m
 /// jogos (+0 ≠ 0xff): `novo` ≠ 0xff tira `novo` jogos (abaixo de 0: zera e solta), senão `reduz` tira `menos_jogos` e
 /// solta se ficar até o contador (+1), senão solta; por dias: `dias_fixo` ≠ −1 tira `menos_dias` (até 0: zera e solta),
 /// senão `reduz` tira e solta até 0, senão solta. Soltar: 0x556d00 com o índice.
-pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32, rule: u32, reduz: u32, minus_games: u32, minus_days: u32, new: u32, dias_fixo: u32, _x: u32) {
-    let r = appeal_plan(this, id, rule, reduz, minus_games, minus_days, new, dias_fixo);
+pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32, rule: u32, reduces: u32, minus_games: u32, minus_days: u32, new: u32, days_fixed: u32, _x: u32) {
+    let r = appeal_plan(this, id, rule, reduces, minus_games, minus_days, new, days_fixed);
     if r.suspensao == 0 {
         return;
     }
@@ -484,7 +484,7 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
     let club = if contract == 0 { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(contract + contract::CLUB).wrapping_mul(club::SIZE)) };
     let list = this + discipline_fields::HELD_BANS;
     write_u32(list + llist::CURSOR, read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32);
-    let remover: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
+    let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     let mut marks = [0u32; 4];
     let mut item = exe::llist_get_next(list);
     while item != 0 && *((r + discipline_record::HELD_BAN_COUNT) as *const i8) > 0 {
@@ -503,7 +503,7 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
             let v = r.wrapping_add(k.wrapping_mul(5));
             write_u32(v, read_usize(item + held_ban::SLOT_DATA) as u32);
             *((v + 4) as *mut u8) = *((item + 9) as *const u8);
-            remover(list, item); // libera o item
+            remove(list, item); // libera o item
             *((r + discipline_record::HELD_BAN_COUNT) as *mut u8) = (*((r + discipline_record::HELD_BAN_COUNT) as *const u8)).wrapping_sub(1);
         }
         item = exe::llist_get_next(list);
@@ -1066,11 +1066,11 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
     }
     let list = this + discipline_fields::HELD_BANS;
     write_u32(list + llist::CURSOR, read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32);
-    let remover: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
+    let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     let mut item = exe::llist_get_next(list);
     while item != 0 && *((r + discipline_record::HELD_BAN_COUNT) as *const i8) > 0 {
         if read_usize(item) as u32 == id {
-            remover(list, item); // libera o item
+            remove(list, item); // libera o item
             *((r + discipline_record::HELD_BAN_COUNT) as *mut u8) = (*((r + discipline_record::HELD_BAN_COUNT) as *const u8)).wrapping_sub(1);
         }
         item = exe::llist_get_next(list);

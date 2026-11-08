@@ -7,7 +7,7 @@ MUTACOES = [
     ('j_4', "        if (x as i16) < 4 { 4 } else { x as i16 }", "        if (x as i16) < 5 { 5 } else { x as i16 }"),
     ('j_fmundo', "    } else if byte(partida, fixture::CATEGORY) == 8 {\n        f_mundo = 1;", "    } else if byte(partida, fixture::CATEGORY) == 8 {\n        f_mundo = 2;"),
     ('j_1_3', "    let dif = (value as f64 - global_stats_ratio(alt != 0)) * read_f32_at(rdata::F32_1_299999952) as f64;", "    let dif = (value as f64 - global_stats_ratio(alt != 0)) * read_f64_at(rdata::F64_0_5);"),
-    ('j_bonus', "        novo_mundo = novo_mundo.max(t);", ""),
+    ('j_bonus', "        new_world = new_world.max(t);", ""),
     ('j_375', "band(atual, read_f32_at(rdata::F32_250) as f64, read_f32_at(rdata::F32_375) as f64,", "band(atual, read_f32_at(rdata::F32_250) as f64, read_f32_at(rdata::F32_300) as f64,"),
     ('j_100', "band(mundo, read_f32_at(rdata::F32_500) as f64, (nv * 100) as f64,", "band(mundo, read_f32_at(rdata::F32_500) as f64, (nv * 101) as f64,"),
     ('j_3000', "cap(c / f_mundo, 3000, mundo)", "cap(c / f_mundo, 5000, mundo)"),

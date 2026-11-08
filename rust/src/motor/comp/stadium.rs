@@ -169,7 +169,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                         break 'vaga;
                     }
                     let p = i as i32 % 9;
-                    let time = (marks & 0x40 != 0 && p == 0)
+                    let team = (marks & 0x40 != 0 && p == 0)
                         || (marks & 0x80 != 0 && p == 1)
                         || (marks & 0x100 != 0 && p == 2)
                         || (marks & 0x200 != 0 && p == 3)
@@ -178,7 +178,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                         || (marks & 0x1000 != 0 && p == 6)
                         || (marks & 0x2000 != 0 && p == 7)
                         || (marks & 0x4000 != 0 && p == 8);
-                    if time && ((partida != 0 && read_usize(partida) == read_usize(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION)) || is_stadium_free(this, read_usize(e + 0xc), data)) {
+                    if team && ((partida != 0 && read_usize(partida) == read_usize(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION)) || is_stadium_free(this, read_usize(e + 0xc), data)) {
                         crate::comparison::branch("cqo_1 rodizio");
                         add_stadium_booking(this, read_usize(e + 0xc), data);
                         return read_usize(e + 0xc);
@@ -950,7 +950,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
             }
         }
     }
-    let lugares = read_i32(est + stadium::CAPACITY);
+    let places = read_i32(est + stadium::CAPACITY);
     if m & 0x20 != 0 {
         let mut expected: i32 = 0x2710;
         if game != 0 {
@@ -976,10 +976,10 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
                 }
             }
         }
-        if lugares > expected {
+        if places > expected {
             rating = ftol(rating as f64 * read_f64_at(rdata::F64_1_2));
         }
-        let (l, e) = (lugares as f64, expected as f64);
+        let (l, e) = (places as f64, expected as f64);
         let t = e * read_f64_at(rdata::F64_1_5);
         if l > t {
             rating = ftol(rating as f64 / ((l - t) * read_f64_at(rdata::F64_8_333333333ENEG_05) + read_f64_at(rdata::F64_1)));
@@ -993,7 +993,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
             rating = ftol(rating as f64 * read_f64_at(rdata::F64_0_9));
         }
     } else if m & 4 != 0 {
-        rating = friendly_random(lugares);
+        rating = friendly_random(places);
     }
     crate::comparison::branch("cpt_7 nota do estadio");
     let r = friendly_random(100); // cpt7: the random draw of the rating

@@ -608,7 +608,7 @@ pub(crate) const SCOUT_MANAGER_DATE_STATICS: [(usize, usize); 8] = [(G_ADD_DAYS_
 ///
 /// [pt] O corpo da 0x5cbb00. No `ensaio` (o comparador), nada se grava e nada se chama além das consultas: devolve o par
 /// (primeira entrada, quantas) que iria à 0x5cbdf0, ou None se a original não a chamaria.
-pub(crate) unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option<(usize, u32)> {
+pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Option<(usize, u32)> {
     // 0x54a110: thiscall(date) (lea ecx); 0x54c770: thiscall(0xae2c90, output, 0xc) (mov ecx, 0xae2c90; 2 push);
     // 0x68d080: thiscall(list) (mov ecx, list; no push); 0x945333: cdecl(array, count, size, comparison) (add esp,
     // 0x10); 0x5cbdd0: thiscall(entry, year) (mov ecx, entry; 1 push); 0x417c10: thiscall(destination, output, source)
@@ -628,7 +628,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option
     let mut lim = [0u8; 8];
     weeks(G_CURRENT_DATE, &mut lim, 0xc); // cpy4: hoje + 12 semanas
     let today = read_u16(G_CURRENT_DATE);
-    if today == 0 && !ensaio {
+    if today == 0 && !dry_run {
         crate::comparison::branch("cpy_4 virada do ano");
         let mut i = 0i32;
         while i < read_usize(G_NATION_COUNT) as i32 {
@@ -690,7 +690,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option
         how_many += 1;
         e += 0x14;
     }
-    if ensaio {
+    if dry_run {
         return Some((first, how_many));
     }
     crate::comparison::branch("cpy_4 amistosos marcados");
@@ -896,8 +896,8 @@ pub(crate) unsafe extern "thiscall" fn is_player_shortlisted(this: usize, person
 pub(crate) unsafe extern "thiscall" fn scout_record(t: usize, which: i8, manager: *const i32) -> usize {
     let mut p = manager;
     if (0..=9).contains(&which) && p.is_null() {
-        let time = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-        p = core::ptr::read_unaligned((0xb74c26 + time * 0x300) as usize as *const *const i32);
+        let team = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
+        p = core::ptr::read_unaligned((0xb74c26 + team * 0x300) as usize as *const *const i32);
     }
     if !(0..=9).contains(&which) || p.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, i8, *const i32) -> usize>(IDX_SCOUT_RECORD)(t, which, manager);

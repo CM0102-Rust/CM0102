@@ -90,13 +90,13 @@ pub(crate) unsafe extern "thiscall" fn compare_set_formation_flag(t: usize, m: u
 ///
 /// [pt] Comparador: lado a lado na formação (0x18e3 bytes: até as instruções dos jogadores em +0x188b + 0x58) e na
 /// devolução; o arquivo é aberto e lido pelas duas (só leitura).
-pub(crate) unsafe extern "thiscall" fn compare_load_from_disk(this: usize, path: usize, quieto: u32, ofuscado: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_load_from_disk(this: usize, path: usize, quiet: u32, ofuscado: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_LOAD_FROM_DISK);
     if this == 0 {
-        return o(this, path, quieto, ofuscado);
+        return o(this, path, quiet, ofuscado);
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x18e3)], || o(this, path, quieto, ofuscado),
-        || load_from_disk(this, path, quieto, ofuscado));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x18e3)], || o(this, path, quiet, ofuscado),
+        || load_from_disk(this, path, quiet, ofuscado));
     SCOREBOARD.record(igual && r == n, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&k| a[k] != b[k]).take(8).collect();

@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_first_group_
     if list == 0 {
         return o(this);
     }
-    let previstos: [usize; 4] = core::array::from_fn(|i| read_usize(list + i * 4));
+    let predicted: [usize; 4] = core::array::from_fn(|i| read_usize(list + i * 4));
     let r = o(this);
     let t = read_usize(this + league::TABLE);
     let mut read = [(0usize, 0u8); 4];
@@ -40,8 +40,8 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_first_group_
             *l = (read_usize(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
         }
     }
-    let same = r == 1 && read_i16(this + league::CLUB_COUNT) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    SCOREBOARD.record(same, || format!("conmebol_merc_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    let same = r == 1 && read_i16(this + league::CLUB_COUNT) == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
+    SCOREBOARD.record(same, || format!("conmebol_merc_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, predicted));
     r
 }
 

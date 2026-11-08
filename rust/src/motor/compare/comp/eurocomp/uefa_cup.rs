@@ -56,9 +56,9 @@ pub(crate) unsafe extern "thiscall" fn compare_uefa_cup_update_staff_records_for
     }
     let d = outcome as u8;
     let before = read_usize(club + club::CONTINENTAL_COMP_ID);
-    let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { before };
+    let predicted = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { before };
     let r = o(this, club, outcome, a3, a4, game, a6);
     let after = read_usize(club + club::CONTINENTAL_COMP_ID);
-    SCOREBOARD.record(r == 0 && after == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club, d, before, after, previsto, r));
+    SCOREBOARD.record(r == 0 && after == predicted, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club, d, before, after, predicted, r));
     r
 }

@@ -46,8 +46,8 @@ pub(crate) unsafe extern "thiscall" fn compare_build_engine(m: usize) -> usize {
 }
 
 /// Comparer for `prepare_match`.
-pub(crate) unsafe extern "thiscall" fn compare_prepare_match(m: usize, game: usize, rapida: u32, commentator: usize, ao_vivo: u32) -> u8 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u8>(IDX_PREPARE_MATCH)(m, game, rapida, commentator, ao_vivo)
+pub(crate) unsafe extern "thiscall" fn compare_prepare_match(m: usize, game: usize, fast: u32, commentator: usize, ao_vivo: u32) -> u8 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u8>(IDX_PREPARE_MATCH)(m, game, fast, commentator, ao_vivo)
 }
 
 /// Comparer for `destroy_engine`.
@@ -332,11 +332,11 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_factor(this: usize, f: f32)
 }
 
 /// Comparer for `engine_punish_move`.
-pub(crate) unsafe extern "thiscall" fn compare_engine_punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32, expulsar: u8) {
+pub(crate) unsafe extern "thiscall" fn compare_engine_punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32, send_off: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8)>(IDX_ENGINE_PUNISH_MOVE);
     let mut reg = card_regions(this, j, kind, weight);
     reg.push((other + 0x15, 1));
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, other, kind, x, sev, flag, weight, expulsar), || crate::rng::without_counting(|| engine_punish_move(this, j, other, kind, x, sev, flag, weight, expulsar)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, other, kind, x, sev, flag, weight, send_off), || crate::rng::without_counting(|| engine_punish_move(this, j, other, kind, x, sev, flag, weight, send_off)));
     SCOREBOARD.record(igual, || format!("engine_punish_move original={:x?} rust={:x?}", mo, mr));
 }
 
@@ -723,7 +723,7 @@ pub(crate) unsafe extern "C" fn compare_develop_player(jm: usize, person: usize,
 
 /// Comparer for `opposition_challenge`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_opposition_challenge(m: usize, atacante: usize, side: i8, kind: i8, a: *mut u8, b: *mut u8, rating: *mut i16, lance: *mut i8, arriscado: *mut i8, free: u8) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_opposition_challenge(m: usize, atacante: usize, side: i8, kind: i8, a: *mut u8, b: *mut u8, rating: *mut i16, lance: *mut i8, risky: *mut i8, free: u8) -> usize {
     type F = unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize;
     let o = original_fn::<F>(IDX_OPPOSITION_CHALLENGE);
     // the exits, the random roll and the stamina (+0x4d) of the 40 players (the winner tires)
@@ -732,7 +732,7 @@ pub(crate) unsafe extern "thiscall" fn compare_opposition_challenge(m: usize, at
     reg[1] = crate::rng::STATE_REGIONS[1];
     reg[2] = (rating as usize, 2);
     reg[3] = (lance as usize, 1);
-    reg[4] = (arriscado as usize, 1);
+    reg[4] = (risky as usize, 1);
     reg[5] = (a as usize, if a.is_null() { 0 } else { 1 });
     reg[6] = (b as usize, if b.is_null() { 0 } else { 1 });
     for l in 0..2i8 {
@@ -740,8 +740,8 @@ pub(crate) unsafe extern "thiscall" fn compare_opposition_challenge(m: usize, at
             reg[7 + l as usize * 20 + k] = (side_player_slot(m, l, k) + 0x4d, 4);
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg[..47], || o(m, atacante, side, kind, a, b, rating, lance, arriscado, free), || {
-        crate::rng::without_counting(|| opposition_challenge(m, atacante, side, kind, a, b, rating, lance, arriscado, free))
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg[..47], || o(m, atacante, side, kind, a, b, rating, lance, risky, free), || {
+        crate::rng::without_counting(|| opposition_challenge(m, atacante, side, kind, a, b, rating, lance, risky, free))
     });
     SCOREBOARD.record(igual && r == n, || format!("opposition_challenge(tipo {:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", kind, r, n, mo, mr));
     r
@@ -792,23 +792,23 @@ pub(crate) unsafe extern "thiscall" fn compare_period_completed(m: usize) -> u8 
 
 /// Comparer for `deflect_ball`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_deflect_ball(this: usize, x: i8, y: i8, espalhar: i8, side: i8, inside: u8, cansa: u8, chutador: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_deflect_ball(this: usize, x: i8, y: i8, spread: i8, side: i8, inside: u8, cansa: u8, shooter: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, u8, u8, usize)>(IDX_DEFLECT_BALL);
     if is_recording_top_level() {
-        call_recording(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, this, [x as u8 as u32, y as u8 as u32, espalhar as u8 as u32 | (side as u8 as u32) << 8, inside as u32, chutador as u32], || {
-            o(this, x, y, espalhar, side, inside, cansa, chutador);
+        call_recording(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, this, [x as u8 as u32, y as u8 as u32, spread as u8 as u32 | (side as u8 as u32) << 8, inside as u32, shooter as u32], || {
+            o(this, x, y, spread, side, inside, cansa, shooter);
             0
         });
         return;
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(this + 0x1a0, 0x30), (this + engine::GRID, 0x8f00 - 0x215e), (this + engine::FORMATION_TABLE, 0xa0)]);
-    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(this, x, y, espalhar, side, inside, cansa, chutador), |chamar| {
-        deflect_ball_with(this, x, y, espalhar, side, inside, cansa, chutador, &mut |rotina, alvo, args| {
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(this, x, y, spread, side, inside, cansa, shooter), |chamar| {
+        deflect_ball_with(this, x, y, spread, side, inside, cansa, shooter, &mut |rotina, alvo, args| {
             chamar(rotina, alvo, args, if rotina == 0x6cd490 { [0xff, 0, 0, 0, 0] } else { [u32::MAX, 0, 0, 0, 0] })
         })
     });
-    SCOREBOARD.record(igual && sequencia, || format!("deflect_ball({}, {} espalhar {} lado {}) {} chamadas: {}", x, y, espalhar, side, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("deflect_ball({}, {} espalhar {} lado {}) {} chamadas: {}", x, y, spread, side, k, tape_detail()));
 }
 
 /// Comparer for `line_up_set_piece`.

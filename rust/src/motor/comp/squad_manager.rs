@@ -11,10 +11,10 @@ pub(crate) const EUROPEAN_REGISTRATION_CUPS: [usize; 3] = [KEY_CLUB_COMP_UEFA_EU
 ///
 /// [pt] Os clubes da competição `comp` pelo método +0x58 dela (thiscall(comp, &lista, etapa), devolve a conta em ax); a
 /// lista alocada é solta pela 0x9452ca depois de `cada` passar por todos.
-pub(crate) unsafe fn for_each_comp_club(comp: usize, etapa: u32, mut cada: impl FnMut(usize)) {
+pub(crate) unsafe fn for_each_comp_club(comp: usize, step: u32, mut cada: impl FnMut(usize)) {
     let metodo: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(read_u32(read_u32(comp) as usize + 0x58) as usize);
     let mut list = 0usize;
-    let n = metodo(comp, &mut list, etapa) as i16 as i32;
+    let n = metodo(comp, &mut list, step) as i16 as i32;
     for i in 0..n.max(0) as usize {
         cada(read_u32(list + 4 * i) as usize);
     }
@@ -44,9 +44,9 @@ pub(crate) unsafe fn for_each_comp_club(comp: usize, etapa: u32, mut cada: impl 
 /// etapa) que está nela (+0x1db = o id): com técnico humano (0x7875e0, ecx = [0xb7431c]) recebe a notícia da inscrição
 /// (0x85b020(this, clube, id, etapa), original); senão a inscrição é feita (0x85aae0(clube, etapa, 0), com ecx =
 /// [0xdd7ef0]).
-pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, etapa: u32) {
+pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, step: u32) {
     let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    if etapa as u8 == 1 {
+    if step as u8 == 1 {
         *(this as *mut u16) = *(G_CURRENT_DATE_YEAR as *const u16);
         let mut i = 0i32;
         while i < read_u32(G_STAFF_COUNT) as i32 {
@@ -63,15 +63,15 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, et
         if comp == 0 {
             continue;
         }
-        for_each_comp_club(comp, etapa, |c| {
+        for_each_comp_club(comp, step, |c| {
             if c == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != id {
                 return;
             }
             if human(read_u32(G_NEWS) as usize, c) != 0 {
-                exe::squad_manager_send_euro_registration_news(this, c, id, etapa);
+                exe::squad_manager_send_euro_registration_news(this, c, id, step);
             } else {
                 crate::comparison::branch("cqn_3 inscreve o clube");
-                exe::squad_manager_select_euro_registered_players(read_u32(G_SQUAD_MANAGER) as usize, c, etapa, 0); // cqn3: enters the club
+                exe::squad_manager_select_euro_registered_players(read_u32(G_SQUAD_MANAGER) as usize, c, step, 0); // cqn3: enters the club
             }
         });
     }
@@ -293,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
     }
     let pref = preferred_squad_numbers(read_u32(p + staff::PLAYER) as usize).unwrap_or([0xff; 5]);
     // the number with the club’s sign: positive with a human manager, negative without
-    let sinal = |k: u8| -> u32 {
+    let sign = |k: u8| -> u32 {
         if exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {
             k.wrapping_add(1) as u32
         } else {
@@ -304,7 +304,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
     while pref[b] != 0xff {
         let k = pref[b];
         if used[k as i8 as usize] == 0 {
-            exe::squad_manager_set_squad_number(this, p, c, sinal(k));
+            exe::squad_manager_set_squad_number(this, p, c, sign(k));
             used[k as usize] = 1;
             crate::comparison::branch("cql_2 numero da posicao");
             return; // cql2: the position number
@@ -315,14 +315,14 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
         }
     }
     if let Some(k) = (11u8..50).find(|&k| used[k as usize] == 0) {
-        exe::squad_manager_set_squad_number(this, p, c, sinal(k));
+        exe::squad_manager_set_squad_number(this, p, c, sign(k));
         used[k as usize] = 1;
     }
     if exe::squad_manager_get_squad_number(this, p, c) != 0 {
         return;
     }
     if let Some(k) = (0u8..=10).rev().find(|&k| used[k as usize] == 0) {
-        exe::squad_manager_set_squad_number(this, p, c, sinal(k));
+        exe::squad_manager_set_squad_number(this, p, c, sign(k));
     }
 }
 
@@ -432,12 +432,12 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
     }
     // `vez` = −1, −2... (char), the order of each one; `k` = 1, 2... the same order as a positive number
     for i in 0..50usize {
-        let time = (-1 - i as i32) as i8;
+        let team = (-1 - i as i32) as i8;
         let x = order[i];
         if x == 0 {
             continue;
         }
-        if time < -21 {
+        if team < -21 {
             let ct = exe::contract_manager_get_contract_for_club(read_u32(G_CONTRACT_MANAGER) as usize, x, c);
             let t = if ct != 0 { *((ct + contract::SQUAD_STATUS) as *const u8) & 0xf0 } else { 0 };
             if ct == 0 || t == 0x60 || t == 0x70 {
@@ -449,7 +449,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         if nb == 0 {
             if stored[i] == 0 {
                 stored[i] = x;
-                exe::squad_manager_set_squad_number(this, x, c, time as u8 as u32);
+                exe::squad_manager_set_squad_number(this, x, c, team as u8 as u32);
             }
             continue;
         }
@@ -460,7 +460,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         }
         if keep != 0 {
             exe::squad_manager_set_squad_number(this, x, c, nb.wrapping_neg() as u8 as u32);
-        } else if (nb < 12 && time < -11) || (nb >= 12 && time > -12) {
+        } else if (nb < 12 && team < -11) || (nb >= 12 && team > -12) {
             crate::comparison::branch("cql_2 perde o numero");
             exe::squad_manager_set_squad_number(this, x, c, 0); // cql2: the out-of-place number
             continue;
@@ -641,13 +641,13 @@ pub(crate) const EURO_REFERENCE_LINEUP_SLOTS: [u16; 25] = [
 /// mínimo 21). Depois cada escalado: na etapa 1, é inscrito (1 com `marca`, senão 2) e contado; nas outras, quem ainda
 /// não é 2 nem tem a marca 8 é inscrito do mesmo jeito enquanto a conta for menor que as vagas da escalação. Devolve a
 /// conta dos inscritos (char).
-pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usize, etapa: u32, mark: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usize, step: u32, mark: u32) -> u8 {
     let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
-    let etapa = etapa as u8;
+    let step = step as u8;
     let mut sq = [0usize; 50];
     exe::database_collect_club_squad(c, sq.as_mut_ptr(), 0);
-    let reservas: u8 = if etapa == 1 { if mark != 0 { 0xe } else { 9 } } else { 0xe };
+    let reservas: u8 = if step == 1 { if mark != 0 { 0xe } else { 9 } } else { 0xe };
     let mut cand = [0usize; 50];
     let mut n = 0u8;
     let mut count = 0i8;
@@ -668,7 +668,7 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
         cand[n as i8 as usize] = p;
         n = n.wrapping_add(1);
         let a = *m6d(p);
-        if a == 0 || etapa == 1 {
+        if a == 0 || step == 1 {
             continue;
         }
         if a == 1 {
@@ -683,7 +683,7 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
     let slots = EURO_REFERENCE_LINEUP_SLOTS;
     let mut esc = [0usize; 50];
     pick(cand.as_ptr() as usize, n as u32, slots.as_ptr() as usize, 0xb, reservas as u32, esc.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
-    if etapa == 3 {
+    if step == 3 {
         let mut d = 0i8;
         while d < n as i8 && tirados < 2 {
             let p = cand[d as usize];
@@ -704,7 +704,7 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
         let p = esc[b as usize];
         if p != 0 {
             let v = if mark != 0 { 1 } else { 2 };
-            if etapa == 1 {
+            if step == 1 {
                 crate::comparison::branch("cql_3 inscreve na etapa 1");
                 *m6d(p) = v; // cql3: inscreve
                 count = count.wrapping_add(1);

@@ -129,9 +129,9 @@ pub(crate) unsafe extern "thiscall" fn compare_post_board_ultimatum_news(this: u
 /// Comparer for `news_board_ultimatum_text`.
 ///
 /// [pt] Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original.
-pub(crate) unsafe extern "stdcall" fn compare_news_board_ultimatum_text(news: usize, corpo: u32, out: usize) {
+pub(crate) unsafe extern "stdcall" fn compare_news_board_ultimatum_text(news: usize, body: u32, out: usize) {
     // simplification: the text object cannot receive the text twice; only the original runs here
-    original_fn::<unsafe extern "stdcall" fn(usize, u32, usize)>(IDX_NEWS_BOARD_ULTIMATUM_TEXT)(news, corpo, out);
+    original_fn::<unsafe extern "stdcall" fn(usize, u32, usize)>(IDX_NEWS_BOARD_ULTIMATUM_TEXT)(news, body, out);
 }
 
 /// Comparer for `post_manager_under_pressure_news`.
@@ -465,10 +465,10 @@ pub(crate) unsafe extern "thiscall" fn compare_update_board_after_fixture(this: 
 /// Comparer for `is_staff_suitable_for_job`.
 ///
 /// [pt] Comparador: a rotina só lê (o interesse 0x844780 sem a saída das razões): pela devolução.
-pub(crate) unsafe extern "thiscall" fn compare_is_staff_suitable_for_job(this: usize, person: usize, club: usize, nota_minima: f64) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(IDX_IS_STAFF_SUITABLE_FOR_JOB)(this, person, club, nota_minima);
-    let n = is_staff_suitable_for_job(this, person, club, nota_minima);
-    SCOREBOARD.record(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", person, club, nota_minima, r, n));
+pub(crate) unsafe extern "thiscall" fn compare_is_staff_suitable_for_job(this: usize, person: usize, club: usize, rating_minimum: f64) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(IDX_IS_STAFF_SUITABLE_FOR_JOB)(this, person, club, rating_minimum);
+    let n = is_staff_suitable_for_job(this, person, club, rating_minimum);
+    SCOREBOARD.record(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", person, club, rating_minimum, r, n));
     r
 }
 

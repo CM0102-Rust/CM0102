@@ -160,8 +160,8 @@ pub(crate) unsafe extern "thiscall" fn compare_set_human_field(t: usize, value: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD);
     let mut p = manager;
     if p.is_null() {
-        let time = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-        p = core::ptr::read_unaligned((0xb74c26 + time * 0x300) as usize as *const *const i32);
+        let team = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
+        p = core::ptr::read_unaligned((0xb74c26 + team * 0x300) as usize as *const *const i32);
     }
     let reg = if p.is_null() {
         vec![]

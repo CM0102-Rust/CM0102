@@ -46,9 +46,9 @@ pub(crate) unsafe extern "thiscall" fn compare_serve_international_bans(this: us
 /// [pt] Comparador: o órgão tira as suspensões pendentes (0x7e91d0, lista que solta nós) e a 0x556d00 pode gravar o
 /// histórico: só a original, com o plano antes; confere a suspensão solta (+0 = 0xff, +2 = −1) ou os jogos e os dias
 /// novos.
-pub(crate) unsafe extern "thiscall" fn compare_apply_appeal_result(this: usize, id: u32, rule: u32, reduz: u32, minus_games: u32, minus_days: u32, new: u32, dias_fixo: u32, x: u32) {
-    let r = appeal_plan(this, id, rule, reduz, minus_games, minus_days, new, dias_fixo);
-    original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32)>(IDX_APPLY_APPEAL_RESULT)(this, id, rule, reduz, minus_games, minus_days, new, dias_fixo, x);
+pub(crate) unsafe extern "thiscall" fn compare_apply_appeal_result(this: usize, id: u32, rule: u32, reduces: u32, minus_games: u32, minus_days: u32, new: u32, days_fixed: u32, x: u32) {
+    let r = appeal_plan(this, id, rule, reduces, minus_games, minus_days, new, days_fixed);
+    original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32)>(IDX_APPLY_APPEAL_RESULT)(this, id, rule, reduces, minus_games, minus_days, new, days_fixed, x);
     if r.suspensao == 0 {
         return;
     }
@@ -310,18 +310,18 @@ pub(crate) unsafe extern "thiscall" fn compare_drop_held_bans(this: usize, perso
     let l = this + discipline_fields::HELD_BANS;
     let n = stored_suspension_counter(this, *person as usize);
     let before = list_items_capped(l);
-    let mut resta = *n;
+    let mut left = *n;
     let mut expected = Vec::new();
     for &e in &before {
-        if resta > 0 && read_usize(e) as u32 == *person {
-            resta -= 1;
+        if left > 0 && read_usize(e) as u32 == *person {
+            left -= 1;
         } else {
             expected.push(e);
         }
     }
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(IDX_DROP_HELD_BANS)(this, person);
     let after = list_items_capped(l);
-    SCOREBOARD.record(after == expected && *n == resta, || format!("drop_held_bans({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *person, before.len(), after.len(), expected.len(), *n, resta));
+    SCOREBOARD.record(after == expected && *n == left, || format!("drop_held_bans({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *person, before.len(), after.len(), expected.len(), *n, left));
 }
 
 /// Comparer for `hold_bans_for_loan`.
@@ -366,13 +366,13 @@ pub(crate) unsafe extern "thiscall" fn compare_process_match(this: usize, partid
 /// original roda; confere o registro (0xff, conta 0) e as entradas livres (+0 = −1).
 pub(crate) unsafe extern "thiscall" fn compare_discipline_remove_player(this: usize, id: u32) {
     let r = read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29));
-    let mut entradas = Vec::new();
+    let mut entries = Vec::new();
     for k in 0..4usize {
         let rule = *((r + k * 5) as *const u8);
         if rule != 0xff {
             let e = ruling_body_entry(ruling_body_of_rule(this, rule), id);
             if e != 0 {
-                entradas.push(e);
+                entries.push(e);
             }
         }
     }
@@ -380,8 +380,8 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_remove_player(this: us
     let mut after = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, after.as_mut_ptr(), 29);
     let ok = after[..0x1c].iter().all(|&b| b == 0xff) && after[0x1c] == 0
-        && entradas.iter().all(|&e| read_usize(e) as u32 == 0xffff_ffff);
-    SCOREBOARD.record(ok, || format!("discipline_remove_player({}) registro {:02x?} entradas {:x?}", id, after, entradas));
+        && entries.iter().all(|&e| read_usize(e) as u32 == 0xffff_ffff);
+    SCOREBOARD.record(ok, || format!("discipline_remove_player({}) registro {:02x?} entradas {:x?}", id, after, entries));
 }
 
 /// Comparer for `find_held_ban`.

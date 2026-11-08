@@ -35,8 +35,8 @@ pub(crate) unsafe extern "thiscall" fn compare_compact_entries(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_COMPACT_ENTRIES)(this);
     let n = (expected.len() / 0xe) as u32;
     let p = read_usize(this + ruling_body::ENTRIES);
-    let iguais = p != 0 && core::slice::from_raw_parts(p as *const u8, expected.len()) == &expected[..];
-    SCOREBOARD.record(read_usize(this + ruling_body::ENTRY_COUNT) as u32 == n && read_usize(this + ruling_body::ENTRY_CAPACITY) as u32 == n + 100 && iguais, || {
-        format!("compact_entries: conta {} (esperava {}), capacidade {}, entradas iguais {}", read_usize(this + ruling_body::ENTRY_COUNT), n, read_usize(this + ruling_body::ENTRY_CAPACITY), iguais)
+    let equal = p != 0 && core::slice::from_raw_parts(p as *const u8, expected.len()) == &expected[..];
+    SCOREBOARD.record(read_usize(this + ruling_body::ENTRY_COUNT) as u32 == n && read_usize(this + ruling_body::ENTRY_CAPACITY) as u32 == n + 100 && equal, || {
+        format!("compact_entries: conta {} (esperava {}), capacidade {}, entradas iguais {}", read_usize(this + ruling_body::ENTRY_COUNT), n, read_usize(this + ruling_body::ENTRY_CAPACITY), equal)
     });
 }

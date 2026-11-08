@@ -872,8 +872,8 @@ pub(crate) unsafe fn set_contract_flags_or_stop(c: usize, marks: u32) -> bool {
 /// livre (0x8c1870) e com mais de 20 anos ou reputação acima de 4250.
 pub(crate) unsafe fn would_request_transfer(c: usize, marks: u32) -> bool {
     let person = media_staff_by_id(read_i32(c));
-    let funcao = *((person + staff::JOB_FOR_CLUB) as *const u8);
-    if funcao != 0xb && funcao != 0xf && funcao != 0xd {
+    let function = *((person + staff::JOB_FOR_CLUB) as *const u8);
+    if function != 0xb && function != 0xf && function != 0xd {
         return false;
     }
     let club = read_usize(G_CLUB_TABLE).wrapping_add((read_i32(c + contract::CLUB) as u32).wrapping_mul(0x245) as usize);
@@ -1023,7 +1023,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     if sheet == 0 || read_i8_as_i32(p + staff::AGE) < 0x13 || read_i16(sheet + player_sheet::CURRENT_REPUTATION) < 0x109a {
         return;
     }
-    let mut mudou = false;
+    let mut changed = false;
     // (A) the media story at the front of the queue
     if read_i32(this + media_fields::STORY_LOG_COUNT) > 0 {
         let h = read_usize(this);
@@ -1037,7 +1037,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
                     let c = media_contract_for_club(q, new);
                     if c != 0 {
                         crate::comparison::branch("cqa_13 historia da midia");
-                        mudou = true;
+                        changed = true;
                         if kind == 1 {
                             if apply_event_flags_or_stop(c, 0x8000000, 0) || apply_event_flags_or_stop(c, 0x80000000, p) {
                                 return;
@@ -1118,7 +1118,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
         if read_i32(c + 0x45) & 0x20000000 != 0 {
             let rp = current_reputation(p);
             if rp > 0x1482 || rp as i32 - 0x4e2 > read_i16(new + club::REPUTATION) as i32 {
-                mudou = true;
+                changed = true;
                 if strength > 0x28 || friendly_random(read_i8_as_i32(m + staff::PRESSURE)) != 0 {
                     crate::comparison::branch("cqa_13 queixa limpa");
                     if clear_grievances_or_stop(c, 0x20000000) { // cqa13: chega alguém maior
@@ -1142,7 +1142,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             }
         }
     }
-    if mudou {
+    if changed {
         let sheet = read_usize(p + staff::PLAYER);
         if read_i16(sheet + player_sheet::WORLD_REPUTATION) > 0x186a
             && read_i16(sheet + player_sheet::CURRENT_REPUTATION) as i32 + 0x2ee > read_i16(new + club::REPUTATION) as i32
@@ -1157,7 +1157,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
         }
     }
     // (C) the old club’s squad
-    let mut mudou = false;
+    let mut changed = false;
     if old == 0 || read_usize(old + club::DIVISION) == 0 {
         return;
     }
@@ -1233,7 +1233,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             if apply_event_flags_or_stop(c, queixa, p) {
                 return;
             }
-            mudou = true;
+            changed = true;
         }
         if read_i8_as_i32(m + staff::AGE) > 0x17 && media_contract_flags(c) & 0x400 == 0 && read_i8_as_i32(m + staff::AMBITION) > 0xf {
             let r = (friendly_random(10) as u8).wrapping_add(10) as i8;
@@ -1241,20 +1241,20 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
                 return;
             }
         }
-        let iguais = || natural_position_mask(p) == natural_position_mask(m);
-        if (strength < lim2 || same < 2) && iguais() && media_contract_flags(c) & 0x200 != 0 {
+        let equal = || natural_position_mask(p) == natural_position_mask(m);
+        if (strength < lim2 || same < 2) && equal() && media_contract_flags(c) & 0x200 != 0 {
             clear_contract_flags(c, 0x200);
         }
         let remove_800 = if strength < lim2 {
             let r1 = friendly_random(read_i8_as_i32(p + staff::PRESSURE));
-            (r1 > friendly_random(10) && iguais()) || same < 2
+            (r1 > friendly_random(10) && equal()) || same < 2
         } else {
             same < 2
         };
         if remove_800 && media_contract_flags(c) & 0x800 != 0 {
             clear_contract_flags(c, 0x800);
         }
-        if ((strength < lim2 && iguais()) || same < 2) && read_i32(c + 0x45) as u32 & 0x80000000 != 0 && clear_grievances_or_stop(c, 0x80000000) {
+        if ((strength < lim2 && equal()) || same < 2) && read_i32(c + 0x45) as u32 & 0x80000000 != 0 && clear_grievances_or_stop(c, 0x80000000) {
             return;
         }
         if media_contract_flags(c) & 0x400 != 0 {
@@ -1269,7 +1269,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             }
         }
     }
-    if !mudou || read_i8_as_i32(p + staff::AGE) >= 0x23 {
+    if !changed || read_i8_as_i32(p + staff::AGE) >= 0x23 {
         return;
     }
     let sheet = read_usize(p + staff::PLAYER);
@@ -2226,7 +2226,7 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
 /// título ou o corpo da notícia do clube em crise: lê os campos 0 (o clube), 1 (a gravidade) e 2 da notícia (0x785830),
 /// monta em 0xde1f64 (0x66f4e0) o texto pela gravidade (> 0x1a5e, > 0xcb2 no corpo; > 0x1a5e no título) com o nome do
 /// clube (+0x38) e o gênero (+0x52), põe na `saida` (0x4ae660) e liga o nome ao clube (0x4ae8a0, tipo 0x7d5).
-pub(crate) unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: usize, news: usize, corpo: u32, out: usize) {
+pub(crate) unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: usize, news: usize, body: u32, out: usize) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let by_text: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_TEXT_SET_STRING);
     let ligar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_TEXT_ADD_LINK);
@@ -2237,7 +2237,7 @@ pub(crate) unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: 
     let club = read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(club::SIZE));
     let name = club + club::SHORT_NAME;
     let gender = read_i8(club + club::SHORT_GENDER_NAME) as i32;
-    let template = if corpo != 0 {
+    let template = if body != 0 {
         if severity > 0x1a5e {
             0xa436fc
         } else if severity > 0xcb2 {
@@ -2276,13 +2276,13 @@ pub(crate) unsafe fn media_id_or_minus_one(p: usize) -> usize {
 /// Builds the 23-byte record 0x757a50 stores (today's date, two ids, response, subtype, type).
 ///
 /// [pt] Os 23 bytes que a 0x757a50 grava no registro (data de hoje [0xae2c90], ids, resposta, subtipo, tipo).
-pub(crate) unsafe fn build_news_log_record(a: usize, b: usize, kind: u32, subtipo: u32, reply: u32) -> [u8; 0x17] {
+pub(crate) unsafe fn build_news_log_record(a: usize, b: usize, kind: u32, subtype: u32, reply: u32) -> [u8; 0x17] {
     let mut r = [0u8; 0x17];
     r[..8].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
     r[8..0xc].copy_from_slice(&(media_id_or_minus_one(a) as u32).to_le_bytes());
     r[0xc..0x10].copy_from_slice(&(media_id_or_minus_one(b) as u32).to_le_bytes());
     r[0x10] = reply as u8;
-    r[0x11..0x13].copy_from_slice(&(subtipo as u8 as i8 as i16).to_le_bytes());
+    r[0x11..0x13].copy_from_slice(&(subtype as u8 as i8 as i16).to_le_bytes());
     r[0x13..].copy_from_slice(&kind.to_le_bytes());
     r
 }
@@ -2306,7 +2306,7 @@ pub(crate) unsafe fn sort_news_log(base: usize, n: usize) {
 /// [0xae2c90]), o id de `a` (+8) e o de `b` (+0xc) (−1 sem eles), o `tipo` (+0x13), o `subtipo` (byte com sinal, em
 /// palavra +0x11) e a `resposta` (+0x10); a conta sobe e o registro é reordenado (qsort 0x945333 com 0x757ee0). Sem
 /// registro, aloca 20 (0x944e46; sem memória, caixa 0x6e11 e fim); cheio, cresce 20 (realloc 0x945667; caixa 0x6e1c).
-pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize, kind: u32, subtipo: u32, reply: u32) {
+pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize, kind: u32, subtype: u32, reply: u32) {
     crate::comparison::branch("cpl_6 registrar historia");
     if read_usize(this) == 0 {
         let p = exe::crt_malloc(0x1cc);
@@ -2332,7 +2332,7 @@ pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize
     write_usize(item() + 0xc, media_id_or_minus_one(b));
     copy_record_date(item(), G_CURRENT_DATE);
     write_usize(item() + 0x13, kind as usize);
-    core::ptr::write_unaligned((item() + 0x11) as *mut i16, subtipo as u8 as i8 as i16);
+    core::ptr::write_unaligned((item() + 0x11) as *mut i16, subtype as u8 as i8 as i16);
     *((item() + 0x10) as *mut u8) = reply as u8;
     let n = read_usize(this + media_fields::STORY_LOG_COUNT).wrapping_add(1);
     write_usize(this + media_fields::STORY_LOG_COUNT, n); // one more story
@@ -2356,7 +2356,7 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
     if read_usize(this) == 0 {
         return;
     }
-    let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
+    let date: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let mut i = 0i32;
     while i < read_usize(this + media_fields::STORY_LOG_COUNT) as i32 {
         let r = read_usize(this).wrapping_add((i as usize).wrapping_mul(0x17));
@@ -2368,7 +2368,7 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
             100 // the days of the other stories
         };
         let mut local = [0u8; 8];
-        let limit = datar(G_CURRENT_DATE, &mut local, days);
+        let limit = date(G_CURRENT_DATE, &mut local, days);
         if media_date_before(r, limit) {
             let n = read_usize(this + media_fields::STORY_LOG_COUNT);
             let last = read_usize(this).wrapping_add(n.wrapping_mul(0x17)).wrapping_sub(0x17);
@@ -2397,10 +2397,10 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
 /// `a` nem a data: 1 se achou. As outras: busca binária (bsearch 0x946464 com 0x757ee0) pela chave {id de `a` ou −1,
 /// id de `b`, tipo, subtipo} (a data padrão 0x54a110 na chave, que a comparação não lê); achou e sem `desde`, 1; com
 /// `desde`, 1 se a história não é anterior a ela. Senão 0. `b` não pode ser nulo (a original lê sem conferir).
-pub(crate) unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b: usize, kind: u32, subtipo: u32, desde: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b: usize, kind: u32, subtype: u32, desde: usize) -> u32 {
     let mut key = [0u8; 0x17];
     exe::date_date_54a110(key.as_mut_ptr() as usize);
-    let s = subtipo as u16;
+    let s = subtype as u16;
     if kind == 0xbdf {
         crate::comparison::branch("cpl_6 historia do time ja contada");
         let n = read_usize(this + media_fields::STORY_LOG_COUNT) as i32;
@@ -2736,8 +2736,8 @@ pub(crate) unsafe extern "stdcall" fn media_queue_player_apology_news(player: us
     write(n, 0, read_i32(player) as u32);
     write(n, 1, read_i32(read_i32(player + staff::FIRST_NAME) as usize + 0x33) as u32);
     write(n, 2, read_i32(read_i32(player + staff::SECOND_NAME) as usize + 0x33) as u32);
-    let terceiro = read_i32(player + staff::COMMON_NAME) as usize;
-    write(n, 3, if terceiro == 0 { u32::MAX } else { read_i32(terceiro + 0x33) as u32 });
+    let third = read_i32(player + staff::COMMON_NAME) as usize;
+    write(n, 3, if third == 0 { u32::MAX } else { read_i32(third + 0x33) as u32 });
     write(n, 4, read_i32(club) as u32);
     let h = historia as i32;
     write(n, 5, h as u32);
@@ -2768,8 +2768,8 @@ pub(crate) unsafe extern "stdcall" fn media_queue_player_apology_news(player: us
 /// assunto: tem de ser da nação do clube, +0x53). De outra nação: a reputação tem de vencer 6500 +
 /// sorteio de 100, a ficha +0xc ≥ 6000 e o assunto não pode desgostar dele (0x547840). Fica o de
 /// maior peso (o primeiro aceito sempre entra). Sem clube e sem assunto: 0.
-pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, club: usize, assunto: usize) -> usize {
-    if assunto == 0 && club == 0 {
+pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, club: usize, subject: usize) -> usize {
+    if subject == 0 && club == 0 {
         return 0;
     }
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
@@ -2800,13 +2800,13 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
         }
         let nation = u(p + staff::NATION);
         let mut weight = exe::utils_random(injury_word_0c(nation).wrapping_mul(*((p + staff::INT_APPS) as *const u8) as i32));
-        let same_nation = if assunto == 0 {
+        let same_nation = if subject == 0 {
             if nation != u(club + club::NATION) {
                 continue;
             }
             true
         } else {
-            nation == u(assunto + staff::NATION)
+            nation == u(subject + staff::NATION)
         };
         if same_nation {
             weight = weight.wrapping_add(weight);
@@ -2814,7 +2814,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
             let cut = exe::utils_random(100).wrapping_add(0x1964);
             if injury_word_0c(nation) < cut
                 || core::ptr::read_unaligned((u(p + staff::NON_PLAYER) + 0xc) as *const i16) < 0x1770
-                || exe::staff_is_disliked_by(assunto, p) != 0
+                || exe::staff_is_disliked_by(subject, p) != 0
             {
                 continue;
             }

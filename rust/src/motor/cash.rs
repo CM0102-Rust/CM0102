@@ -33,8 +33,8 @@ pub(crate) fn swap_bytes_u32(v: u32) -> u32 {
 /// Failed read: box unless quiet, closes the file and returns 0.
 ///
 /// [pt] A leitura que falha e encerra: sem `quieto`, a caixa; o arquivo fecha e devolve 0.
-pub(crate) unsafe fn fail_read(quieto: u32, row: u32, f: usize) -> u32 {
-    if quieto == 0 {
+pub(crate) unsafe fn fail_read(quiet: u32, row: u32, f: usize) -> u32 {
+    if quiet == 0 {
         formation_error_box(row);
     }
     cash_crt_fclose(f);

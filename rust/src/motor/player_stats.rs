@@ -1329,22 +1329,22 @@ pub(crate) unsafe extern "thiscall" fn remove_language(stats: usize, sheet: usiz
     let mut key = [0u8; 6];
     key[..4].copy_from_slice(&(*(sheet as *const u32)).to_le_bytes());
     key[4] = language as u8;
-    let contagem = (stats + player_stats_fields::LANGUAGE_COUNT) as *mut i32;
-    let achada = search(key.as_ptr() as usize, table, *contagem as u32, 6, 0x7c6d40);
+    let count = (stats + player_stats_fields::LANGUAGE_COUNT) as *mut i32;
+    let achada = search(key.as_ptr() as usize, table, *count as u32, 6, 0x7c6d40);
     if achada == 0 {
         return;
     }
     let mut i = (achada.wrapping_sub(table) as u32 / 6) as i32;
-    while i < *contagem - 1 {
+    while i < *count - 1 {
         let (para, de) = (table + 6 * i as usize, table + 6 * (i + 1) as usize);
         core::ptr::write_unaligned(para as *mut u32, core::ptr::read_unaligned(de as *const u32));
         core::ptr::write_unaligned((para + language_entry::LANGUAGE) as *mut u16, core::ptr::read_unaligned((de + language_entry::LANGUAGE) as *const u16));
         i += 1;
     }
-    let last = (table as isize + *contagem as isize * 6) as usize;
+    let last = (table as isize + *count as isize * 6) as usize;
     core::ptr::write_unaligned((last - 6) as *mut u32, u32::MAX);
     *((last - 2) as *mut u8) = 0;
-    *contagem -= 1;
+    *count -= 1;
 }
 
 /// Returns the player's league appearances (field 1) or league goals (field 2) at the club, as a float.

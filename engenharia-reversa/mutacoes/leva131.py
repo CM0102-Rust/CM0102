@@ -12,5 +12,5 @@ MUTACOES = [
     ('j_n11_sorteio', "&& ((random(10) + 5) as f64) < nota1", "&& ((random(10) + 4) as f64) < nota1", "jogadores noticia 0x11"),
     ('j_n11_nota', "d * 1.1 < w(row + 3) as f64", "d * 1.2 < w(row + 3) as f64", "jogadores noticia 0x11"),
     ('j_n34', "if r as f64 * 0.1 + m + 0.5 < nota11 {", "if r as f64 * 0.1 + m + 0.4 < nota11 {", "jogadores noticia 0x34"),
-    ('j_n34_linha', "if *(row as *const u8) >= 9 && placar(ts)", "if *(row as *const u8) >= 8 && placar(ts)", "jogadores noticia 0x34"),
+    ('j_n34_linha', "if *(row as *const u8) >= 9 && scoreboard(ts)", "if *(row as *const u8) >= 8 && scoreboard(ts)", "jogadores noticia 0x34"),
 ]

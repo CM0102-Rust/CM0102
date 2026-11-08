@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
 /// 1,25; com `flag`, sorteio(3000) acima de 375 e vermelho (tipo 5), senao amarelo com desconto
 /// (acima de 50, ou na area); sem `flag`, vermelho pela severidade (marca 0x16 com `expulsar`),
 /// amarelo contra sorteio(6) ou -25. Conta a falta no jogador e 0x15 no outro.
-pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, severidade: i8, flag: u8, weight: *mut f32, expulsar: u8) {
+pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, severidade: i8, flag: u8, weight: *mut f32, send_off: u8) {
     *weight = 1.5;
     if byte(j, match_player::POSITION) < 0 {
         *weight = 10.0;
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
                 *kind = 4;
                 *weight = 5.0;
                 *((j + if byte(j, match_player::YELLOW_CARDS) != 0 { 0x26 } else { 0x25 }) as *mut i8) = x;
-                if expulsar != 0 {
+                if send_off != 0 {
                     *((j + match_player::SENT_OFF) as *mut u8) = 1;
                 }
             } else if severidade as i32 > random(6) {
@@ -471,8 +471,8 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             5..=9 => -1,
             _ => (sev > 2) as i8 - 3,
         };
-        let placar = *((m + engine::SIDE_FOUL_TALLY + 54 * side_j as usize) as *const u8) as i32;
-        if placar > byte(arb, 0x27) as i32 + 5 {
+        let scoreboard = *((m + engine::SIDE_FOUL_TALLY + 54 * side_j as usize) as *const u8) as i32;
+        if scoreboard > byte(arb, 0x27) as i32 + 5 {
             *paciencia = (*paciencia).wrapping_add(0xff6a);
             rigor = rigor.wrapping_add(1);
             let z = random(4);
@@ -612,9 +612,9 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             }
         }
         0x13 | 0x21 | 0x22 => {
-            let segue = random(ftol(read_f64_at(rdata::F64_75) / factor)) == 0
+            let follows = random(ftol(read_f64_at(rdata::F64_75) / factor)) == 0
                 || (who == 0x6c && random(if *advantage != 0 { 2 } else { 6 }) == 0);
-            if segue && ((exe::match_player_is_in_penalty_area(j, (byte(j, match_player::SIDE)) as u8) as u8) == 0 || random(ftol(read_f64_at(rdata::F64_18) / factor)) == 0) {
+            if follows && ((exe::match_player_is_in_penalty_area(j, (byte(j, match_player::SIDE)) as u8) as u8) == 0 || random(ftol(read_f64_at(rdata::F64_18) / factor)) == 0) {
                 res = 1;
                 let a = random(dureza);
                 let b = random(5);

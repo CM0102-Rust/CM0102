@@ -810,12 +810,12 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: usize) {
     let f = read_usize(p + staff::PLAYER);
     let t = ftol(read_i16(f + player_sheet::CURRENT_REPUTATION) as f64 + game_pow(r as f64, 3.0));
     let r1 = friendly_random(t);
-    let passa = r1 > friendly_random(50000) || { // cqd10: the random draw to become a manager
+    let passes = r1 > friendly_random(50000) || { // cqd10: the random draw to become a manager
         let r3 = friendly_random(0x30d40).wrapping_add(0x30d40);
         let v = (read_i16(read_usize(p + staff::NATION) + 0x8e) as i32).wrapping_mul(*((p + staff::INT_APPS) as *const u8) as i32);
         v > r3
     };
-    if !passa || read_i32(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) <= 2 {
+    if !passes || read_i32(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) <= 2 {
         return;
     }
     crate::comparison::branch("cqd_10 vira tecnico");
@@ -866,9 +866,9 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
     }
     let old = read_i32(item + retirement_entry::CLUB_ID);
     let club = read_usize(p + staff::CLUB_JOB);
-    let mudou = if old != -1 { club != 0 && read_i32(club) != old } else { club != 0 };
+    let changed = if old != -1 { club != 0 && read_i32(club) != old } else { club != 0 };
     let mut fix = true;
-    if mudou {
+    if changed {
         if exe::date_days_since(G_CURRENT_DATE, read_usize(p + staff::DATE_JOINED_CLUB) as u32, read_usize(p + 0x42) as u32) < 0xd2 && read_i8(p + staff::AGE) < 0x26 {
             fix = false;
             let c = contract_of_uncached(p);
@@ -2386,7 +2386,7 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
     if read_usize(p + staff::NATIONAL_JOB) != 0 {
         remove_from_team(p, 0x24);
     }
-    let fica_no_clube = match read_i8(p + staff::JOB_FOR_CLUB) as i32 {
+    let stays_in_club = match read_i8(p + staff::JOB_FOR_CLUB) as i32 {
         0 => false,
         1..=10 => return, // staff: the original exits through the end of the routine
         12 => {
@@ -2411,7 +2411,7 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
             false
         }
     };
-    let fica_na_selecao = match read_i8(p + staff::JOB_FOR_NATION) as i32 {
+    let stays_in_national_team = match read_i8(p + staff::JOB_FOR_NATION) as i32 {
         0 => false,
         1..=10 => return,
         12 => {
@@ -2435,10 +2435,10 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
             false
         }
     };
-    if !fica_no_clube {
+    if !stays_in_club {
         core::ptr::write_unaligned((p + staff::CLUB_JOB) as *mut usize, 0);
     }
-    if !fica_na_selecao {
+    if !stays_in_national_team {
         core::ptr::write_unaligned((p + staff::NATIONAL_JOB) as *mut usize, 0);
     }
 }

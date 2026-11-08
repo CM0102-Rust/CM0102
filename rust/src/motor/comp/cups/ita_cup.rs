@@ -463,14 +463,14 @@ pub(crate) unsafe fn ita_cup_compare_knockout_stage(name: &str, this: usize, sta
 /// linha dele (+0x37 = 6). 3) A liga provisória destruída (a virtual 0 com 1). 4) Nas vagas 22 a 31, os 10 cabeças de chave
 /// que entram direto (`take_direct_entrants`). 5) A fase 15 (`create_knockout_stage`), sem sementes, e a caixa da linha 0x304.
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
-    let desempate: [u8; 4] = [1, 2, 3, 0];
+    let tiebreak: [u8; 4] = [1, 2, 3, 0];
     let p = exe::crt_operator_new(0xee);
     let league = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, i32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
             core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
         construct(p, this, 0x10, 0, 0, read_usize(this + 4), 0, 0, *((this + league::WIN_POINTS) as *const u8) as u32, *((this + league::DRAW_POINTS) as *const u8) as u32, 0,
-            desempate.as_ptr() as usize, this + league::PROMOTED_COUNT, read_i16(this + league::YEAR) as u16 as u32, -2, 0, 0, 1, 0, 2, -1, 0, 2)
+            tiebreak.as_ptr() as usize, this + league::PROMOTED_COUNT, read_i16(this + league::YEAR) as u16 as u32, -2, 0, 0, 1, 0, 2, -1, 0, 2)
     } else {
         0
     };
@@ -850,20 +850,20 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
     sort_pointers(v.as_mut_ptr() as usize, k as u32, 0x640590);
     let mut m = 0i32;
     for _ in 0..8 {
-        let mut pote = 0usize;
-        while pote < 32 {
+        let mut pot = 0usize;
+        while pot < 32 {
             crate::comparison::branch("cqo_11 potes da copa da italia");
             let mut r = jap_j_cup_random(8) as i8 as i32; // cqo11: the club drawn from each pot
-            while v[pote + r as usize] == 0 {
+            while v[pot + r as usize] == 0 {
                 r += 1;
                 if r == 8 {
                     r = 0;
                 }
             }
             m += 1;
-            core::ptr::write_unaligned((l + (m as usize - 1) * 4) as *mut u32, v[pote + r as usize] as u32);
-            v[pote + r as usize] = 0;
-            pote += 8;
+            core::ptr::write_unaligned((l + (m as usize - 1) * 4) as *mut u32, v[pot + r as usize] as u32);
+            v[pot + r as usize] = 0;
+            pot += 8;
         }
     }
     'b: {
@@ -1090,7 +1090,7 @@ pub(crate) const CHAMPIONS_CUP_RULES: GroupStageRules = GroupStageRules { vitori
 /// [pt] Grava as regras `g` na liga `this`: sobe/cai para nenhuma (+0x1c, +0x20 = −1), um turno (+0x3c = 1), o tipo 1
 /// (+0x42, clubes), sem play-offs nem rebaixamento (+0xbf, +0xc0, +0xc1 = 0); depois a tabela das rodadas da virtual
 /// +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
-pub(crate) unsafe fn set_cup_league_rules(this: usize, g: &GroupStageRules, turnos: i16) -> u32 {
+pub(crate) unsafe fn set_cup_league_rules(this: usize, g: &GroupStageRules, rounds: i16) -> u32 {
     let b = |o: usize, v: u8| *((this + o) as *mut u8) = v;
     b(0xc2, g.vitoria);
     b(0xc3, g.empate);
@@ -1105,7 +1105,7 @@ pub(crate) unsafe fn set_cup_league_rules(this: usize, g: &GroupStageRules, turn
     b(0x42, 1);
     core::ptr::write_unaligned((this + league::UPPER_DIVISION_ID) as *mut i32, -1);
     core::ptr::write_unaligned((this + league::LOWER_DIVISION_ID) as *mut i32, -1);
-    core::ptr::write_unaligned((this + league::LEGS) as *mut i16, turnos);
+    core::ptr::write_unaligned((this + league::LEGS) as *mut i16, rounds);
     if let Some(p) = g.premio {
         core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut u32, p);
     }

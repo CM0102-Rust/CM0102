@@ -478,13 +478,13 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
     }
     let v = variant as u16 as i16;
     if v > 0 {
-        let mut resta = v as u8 as i8;
+        let mut left = v as u8 as i8;
         let mut c = *(s as *const u8);
         if c != 0 {
             loop {
                 if c == b'|' {
-                    resta = resta.wrapping_sub(1);
-                    if resta <= 0 {
+                    left = left.wrapping_sub(1);
+                    if left <= 0 {
                         s += 1;
                         break;
                     }
@@ -641,10 +641,10 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                     }
                     b'R' | b'r' => {
                         if t(pos + 2) == b'f' {
-                            let fixo = if x as u8 == b'R' { 0xa15a14usize } else { 0xa159e0 };
+                            let fixed = if x as u8 == b'R' { 0xa15a14usize } else { 0xa159e0 };
                             let referee = core::ptr::read_unaligned((ctx + 0x40) as *const i32);
                             if referee <= -1 {
-                                format_text(dest(out), fixo);
+                                format_text(dest(out), fixed);
                             } else {
                                 let rest = ((b(7) as i8 as i32 + b(5) as i8 as i32 + core::ptr::read_unaligned((ctx + 4) as *const i32)) % 5) as i8;
                                 let sheet = (*(G_OFFICIAL_TABLE as *const usize)).wrapping_add((referee as usize).wrapping_mul(0x2b));
@@ -789,13 +789,13 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         let mut s = core::ptr::read_unaligned((sons() as isize + which() * 0x110 + 0x108) as *const usize);
         let v = b(0xd) as i8;
         if v > 0 {
-            let mut resta = v;
+            let mut left = v;
             let mut c = *(s as *const u8);
             if c != 0 {
                 loop {
                     if c == b'|' {
-                        resta -= 1;
-                        if resta <= 0 {
+                        left -= 1;
+                        if left <= 0 {
                             s += 1;
                             break;
                         }
@@ -910,8 +910,8 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                     n += 1;
                                 }
                                 inteiro[n] = 0;
-                                let curto = (exe::font_text_width(font, inteiro.as_ptr()) as i16) < 0x12c;
-                                exe::match_events_format_player_name(ctx, lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, curto as u32, mode, 1);
+                                let short = (exe::font_text_width(font, inteiro.as_ptr()) as i16) < 0x12c;
+                                exe::match_events_format_player_name(ctx, lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, short as u32, mode, 1);
                                 sufixo(pos + 3, &mut suf);
                                 let r = exe::langlib_apply_grammar_modifier(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
                                 if t(pos + 3) == b'C' || t(pos + 3) == b'c' {
@@ -979,10 +979,10 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 colours_default(&mut cor1, &mut cor2, G_GUI_COLOUR_RED);
                                 *(dest(out) as *mut u8) = 0;
                             } else {
-                                let fixo = if x == b'R' { 0xa15a14usize } else { 0xa159e0 };
+                                let fixed = if x == b'R' { 0xa15a14usize } else { 0xa159e0 };
                                 let referee = core::ptr::read_unaligned((ctx + 0x40) as *const i32);
                                 if referee <= -1 {
-                                    format_text(dest(out), fixo);
+                                    format_text(dest(out), fixed);
                                 } else {
                                     let sum = (b(7) as i8 as i32)
                                         .wrapping_add(b(5) as i8 as i32)
@@ -1009,7 +1009,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                             format_text(0xb67dd8, 0xa159ec, arb.as_ptr());
                                         }
                                         _ => {
-                                            format_text(0xb67dd8, fixo);
+                                            format_text(0xb67dd8, fixed);
                                         }
                                     }
                                     format(dest(out), 0xb67dd8);
@@ -1240,10 +1240,10 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
 /// algum dos 100 jogadores de um dos dois clubes (+0, +4; lista da 0x541f90) com outro id ou outro
 /// nome tem a mesma forma 5, a forma `longa`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, side: i8, buf: *mut u8, size: u32, curto: u8, _x: u32, longa: u32) {
+pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, side: i8, buf: *mut u8, size: u32, short: u8, _x: u32, longa: u32) {
     let r = (pt as isize + player as isize * 0x49 + side as isize * 0x625) as usize;
     let d = |o: usize| *((r + o) as *const u32);
-    if curto != 0 && random(5) == 0 {
+    if short != 0 && random(5) == 0 {
         exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, 1, d(0x190));
         return;
     }
@@ -1840,7 +1840,7 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
         }
         let start = *((e + commentary_queue::SOUND_START_TIMES + 4 * k) as *const u32);
         let end = (*((e + commentary_queue::SOUND_DURATION) as *const u32)).wrapping_add(start);
-        let passou = now > end || now < start;
+        let passed = now > end || now < start;
         let canal = (e + commentary_queue::SOUND_CHANNELS + k) as *mut u8;
         if *canal != 0xff {
             if *canal == 0xfe {
@@ -1852,7 +1852,7 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
             exe::screenmanager_stop_sound(G_SCREEN_MANAGER, *canal as u32);
             *canal = 0xff;
         }
-        if !passou {
+        if !passed {
             return 0;
         }
     }

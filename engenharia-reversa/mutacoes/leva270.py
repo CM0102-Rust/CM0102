@@ -29,7 +29,7 @@ MUTACOES = [
     ('cqf9_artrite_trocada', 'if strncmp(name, 0xa6b3a8, 8) == 0 { 0x4c } else { 0x4b }', 'if strncmp(name, 0xa6b3a8, 8) == 0 { 0x4b } else { 0x4c }', 'cqf_9 lesao pelo nome'),
     ('cqf10_nota_minima_5', 'if (rating as i8) < 0xf { // cqf10: a nota mínima', 'if (rating as i8) < 0x5 { // mutacao: nota minima 5', 'cqf_10 avaliar jogador'),
     ('cqf10_reputacao_2000', '&& exe::database_get_staff_reputation_for_viewer(p, scout, 0) >= 0xfa0 { // cqf10: perceived reputation', '&& reputacao(p, scout, 0) >= 0x7d0 { // mutacao: reputacao 2000', 'cqf_10 avaliar jogador'),
-    ('cqf10_comeco_em_tres_dias', 'let amanha = exe::date_add_days(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã', 'let amanha = exe::date_add_days(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 3); // mutacao: tres dias', 'cqf_10 relatorio'),
+    ('cqf10_comeco_em_tres_dias', 'let tomorrow = exe::date_add_days(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã', 'let tomorrow = exe::date_add_days(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 3); // mutacao: tres dias', 'cqf_10 relatorio'),
     ('cqf11_sem_sorteio', 'let r = random_or_tape(2); // cqf11: the news random draw', 'let r = 0; // mutacao: sem o sorteio', 'cqf_11 noticia do clube'),
     ('cqf11_um_grupo_so', 'if read_usize(other + staff::CLUB_JOB) != read_usize(first + staff::CLUB_JOB) {', 'if false && read_usize(other + staff::CLUB_JOB) != read_usize(first + staff::CLUB_JOB) { // mutacao: um grupo so', 'cqf_11 noticia do clube'),
     ('cqf11_sem_tirar_do_elenco', '                    *pj = 0;', '                    let _ = pj; // mutacao: o jogador fica no elenco', 'cqf_11 noticia do clube'),

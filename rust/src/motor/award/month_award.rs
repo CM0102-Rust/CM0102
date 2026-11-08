@@ -61,11 +61,11 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, note
 /// Raises the award winner's reputation: the port directly in dry run, else the original 0x412f00.
 ///
 /// [pt] A reputação do premiado: no ensaio, a cópia direto (sem as listas dos clubes); senão pelo endereço (0x412f00).
-pub(crate) unsafe fn raise_winner_reputation(person: usize, club: usize, nation: u32, mundo: u32, player: u32) {
+pub(crate) unsafe fn raise_winner_reputation(person: usize, club: usize, nation: u32, world: u32, player: u32) {
     if MONTH_AWARD_DRY_RUN {
-        return award_raise_winner_reputation(person, club, nation, mundo, player);
+        return award_raise_winner_reputation(person, club, nation, world, player);
     }
-    exe::award_raise_winner_reputation(person, club, nation, mundo, player);
+    exe::award_raise_winner_reputation(person, club, nation, world, player);
 }
 
 /// Finds the month slot, stores the person and the club, raises the winner's reputation, sends the news and records the

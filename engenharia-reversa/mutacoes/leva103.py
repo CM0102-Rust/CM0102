@@ -1,6 +1,6 @@
 # Mutacoes da leva103 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva103.py --jogo 2001-08-20
 MUTACOES = [
-    ('p_passou', "    let passou = |end: i32| *w(engine::CLOCK) as i32 > byte(m, engine::STOPPAGE_TIME) as i32 + end;", "    let passou = |end: i32| *w(engine::CLOCK) as i32 >= byte(m, engine::STOPPAGE_TIME) as i32 + end;"),
+    ('p_passou', "    let passed = |end: i32| *w(engine::CLOCK) as i32 > byte(m, engine::STOPPAGE_TIME) as i32 + end;", "    let passed = |end: i32| *w(engine::CLOCK) as i32 >= byte(m, engine::STOPPAGE_TIME) as i32 + end;"),
     ('p_intervalo', "            *tb(fixture::HOME_GOALS_HALF_TIME) = byte(m, engine::SCORE);", "            *tb(fixture::HOME_GOALS_HALF_TIME) = byte(m, engine::SCORE_SIDE1);"),
     ('p_20f1', "            fala(call, 0x20f1);", "            fala(call, 0x20f2);"),
     ('p_3de', "            call(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m, [0x3de, 0, 0, 0, 0]);\n            recuperar(0);", "            call(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m, [0x3df, 0, 0, 0, 0]);\n            recuperar(0);"),

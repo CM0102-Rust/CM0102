@@ -784,26 +784,26 @@ pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usiz
 /// sem saída ou com menos de 200 bytes, a caixa (linha 0x26a1) e 0. Zera a saída; com fase e rodada, "{fase} {rodada}"
 /// (0x66f4e0 com o modelo 0x9a7cfc, os nomes de 100 bytes da 0x4b4850 e os gêneros da 0x4ba8f0); só uma delas, o nome
 /// dela direto na saída (0x4b4850 com o tamanho); nenhuma, só o zero. Devolve 1 (0 na caixa).
-pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(stage: u32, round: u32, out: *mut u8, size: i32, estilo: u32) -> i32 {
+pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(stage: u32, round: u32, out: *mut u8, size: i32, style: u32) -> i32 {
     if out.is_null() || size < 0xc8 {
-        return original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(IDX_COMP_UTIL_FORMAT_STAGE_ROUND_NAME)(stage, round, out, size, estilo); // a caixa
+        return original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(IDX_COMP_UTIL_FORMAT_STAGE_ROUND_NAME)(stage, round, out, size, style); // a caixa
     }
     // 0x4b4850: 4 pushes (style, id, size, output); add esp -> cdecl; 0x4ba8f0: push style; push id -> cdecl
     let name: unsafe extern "C" fn(*mut u8, i32, u32, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME);
     *out = 0;
     if stage != 0 && round != 0 {
         let (mut a, mut b) = ([0u8; 0x64], [0u8; 0x64]);
-        name(a.as_mut_ptr(), 0x64, stage, estilo);
-        let ga = exe::comp_util_get_stage_name_gender(stage, estilo) as i8 as i32 as u32;
-        name(b.as_mut_ptr(), 0x64, round, estilo);
-        let gb = exe::comp_util_get_stage_name_gender(round, estilo) as i8 as i32 as u32;
+        name(a.as_mut_ptr(), 0x64, stage, style);
+        let ga = exe::comp_util_get_stage_name_gender(stage, style) as i8 as i32 as u32;
+        name(b.as_mut_ptr(), 0x64, round, style);
+        let gb = exe::comp_util_get_stage_name_gender(round, style) as i8 as i32 as u32;
         // 0x66f4e0: 8 pushes; add esp, 0x20 -> cdecl (output, template, ga, ga, gb, gb, &a, &b)
         let text: unsafe extern "C" fn(*mut u8, usize, u32, u32, u32, u32, *const u8, *const u8) -> usize = core::mem::transmute(FN_LANGLIB_SPRINTF);
         text(out, 0x9a7cfc, ga, ga, gb, gb, a.as_ptr(), b.as_ptr());
     } else if stage != 0 {
-        name(out, size, stage, estilo);
+        name(out, size, stage, style);
     } else if round != 0 {
-        name(out, size, round, estilo);
+        name(out, size, round, style);
     } else {
         return 0; // neither of the two: 0 (0x4c0136)
     }

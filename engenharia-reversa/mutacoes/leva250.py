@@ -17,7 +17,7 @@ MUTACOES = [
     ('cpn_oferta_um_dia_depois', 'let r = exe::date_add_days(G_CURRENT_DATE, (tmp.as_mut_ptr()) as usize, days as i16 as i32 as u32);', 'let r = exe::date_add_days(G_CURRENT_DATE, (tmp.as_mut_ptr()) as usize, (days as i16 + 1) as i32 as u32); // mutacao: um dia depois', 'cpn_5 agendar oferta'),
     ('cpn_estatuto_lista', 'return (read_u8(e + shortlist_slot::FLAGS) >> 1) & 0xf; // bits 1..4 of the entry', 'return (read_u8(e + shortlist_slot::FLAGS) >> 2) & 0xf; // mutacao: os bits 2..5', 'cpn_6 estatuto pela lista'),
     ('cpn_estatuto_contrato', 'read_u8(k + contract::SQUAD_STATUS) >> 4 // the high nibble of the contract', 'read_u8(k + contract::SQUAD_STATUS) & 0xf // mutacao: o nibble baixo', 'cpn_6 estatuto pelo contrato'),
-    ('cpn_alvos_evento', 'atualizar(this, p, club, 3, kind);', 'let _ = (atualizar, kind); // mutacao: sem o evento 3', 'cpn_6 alvo fora do clube'),
+    ('cpn_alvos_evento', 'update(this, p, club, 3, kind);', 'let _ = (update, kind); // mutacao: sem o evento 3', 'cpn_6 alvo fora do clube'),
     ('cpn_busca_mesma_regiao', 'return 1; // the same region as the club’s nation', 'return 0; // mutacao: a mesma regiao nao cobre', 'cpn_7 mesma regiao'),
     ('cpn_busca_nacao_do_olheiro', 'return 1; // the nation is not foreign for the scout', 'return 0; // mutacao: a nacao do olheiro nao cobre', 'cpn_7 nacao do olheiro'),
     ('cpn_amistoso_lista', 'remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), game) // removes the match from the friendlies list', '1 // mutacao: o jogo fica na lista', 'cpn_7 tirar o amistoso'),

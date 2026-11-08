@@ -390,8 +390,8 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
     }
     write_u32(c + 0x40, read_usize(c + 0x40) as u32 | marks);
     let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(c) as usize).wrapping_mul(staff::SIZE));
-    let funcao = read_u8(person + staff::JOB_FOR_CLUB);
-    if funcao == 0xc || funcao == 0xd || funcao == 0xf {
+    let function = read_u8(person + staff::JOB_FOR_CLUB);
+    if function == 0xc || function == 0xd || function == 0xf {
         return;
     }
     let morale = read_u8(c + 0x44) as i8;
@@ -442,7 +442,7 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
         return 1;
     }
     let category: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
-    let desejado: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, u32, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_SET_TO_DESIRED_CONTRACT);
+    let wanted: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, u32, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_SET_TO_DESIRED_CONTRACT);
     // the local contract (0x50 bytes) as the original leaves it before 0x85fc50; it fills in the rest
     let mut local = [0u8; 0x50];
     let l = local.as_mut_ptr() as usize;
@@ -459,7 +459,7 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     } else {
         current as u32
     };
-    desejado(l, person, friendly_club_by_id(read_usize(this + contract::CLUB)), -1, status, 0xb, 0, 0);
+    wanted(l, person, friendly_club_by_id(read_usize(this + contract::CLUB)), -1, status, 0xb, 0, 0);
     let v1 = calc_contract_value(this, person, l) as f32;
     let v2 = calc_contract_value(l, person, l) as f64;
     let mut ratio = if v2 == read_f32_at(rdata::F32_0) as f64 {
@@ -626,7 +626,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
         }
     }
     let rating = rating as i8;
-    let sim = (b59 < 15 && *((t + contract::TRANSFER_STATUS) as *const u8) & 1 != 0)
+    let yes = (b59 < 15 && *((t + contract::TRANSFER_STATUS) as *const u8) & 1 != 0)
         || (m1 != 0 && b59 < 10 && rating < 25)
         || (funcoes & 0x20020 != 0 && rating < 25)
         || (funcoes & 0x200 != 0 && rating < 18)
@@ -635,5 +635,5 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
         || ((funcoes & 0x82200 != 0 || tecnica) && b5b < 10 && rating < 20)
         || funcoes & 0x111 != 0
         || (b44 as i32) < -0x46 - b59 as i32;
-    sim as u32
+    yes as u32
 }

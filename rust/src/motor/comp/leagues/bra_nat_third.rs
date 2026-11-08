@@ -401,7 +401,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let slots: [u8; 4] = [2, 0, 0, 0];
-    let desempate: [u8; 4] = [1, 2, 4, 0];
+    let tiebreak: [u8; 4] = [1, 2, 4, 0];
     let mut v = [0usize; 8];
     let second = read_usize(read_usize(this + league::STAGES) + 0x1c);
     let mut n = 0usize;
@@ -423,7 +423,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         let p = exe::crt_operator_new(0xee);
         let stage = if p != 0 {
             construct(p, this, 4, v[4 * (k as usize - 8)..].as_ptr(), 2, read_usize(this + 4), t, rodadas as u16 as u32, 3, 1, 5,
-                      desempate.as_ptr(), slots.as_ptr(), read_i16(this + league::YEAR) as u16 as u32, k, extra as u16 as u32, 0x14, 1, 0, 2, -1, 0, 2)
+                      tiebreak.as_ptr(), slots.as_ptr(), read_i16(this + league::YEAR) as u16 as u32, k, extra as u16 as u32, 0x14, 1, 0, 2, -1, 0, 2)
         } else {
             0
         };

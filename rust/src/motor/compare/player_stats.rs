@@ -368,11 +368,11 @@ pub(crate) unsafe extern "thiscall" fn compare_end_season_for_key_nation(this: u
 pub(crate) unsafe extern "thiscall" fn compare_remove_language(stats: usize, sheet: usize, language: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_REMOVE_LANGUAGE);
     let table = *((stats + player_stats_fields::LANGUAGES) as *const usize);
-    let contagem = *((stats + player_stats_fields::LANGUAGE_COUNT) as *const i32);
-    if table == 0 || contagem <= 0 {
+    let count = *((stats + player_stats_fields::LANGUAGE_COUNT) as *const i32);
+    if table == 0 || count <= 0 {
         return o(stats, sheet, language);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(stats + player_stats_fields::LANGUAGE_COUNT, 4), (table, contagem as usize * 6)],
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(stats + player_stats_fields::LANGUAGE_COUNT, 4), (table, count as usize * 6)],
         || o(stats, sheet, language), || remove_language(stats, sheet, language));
     SCOREBOARD.record(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", language, mo.0[0].1, mr.0[0].1));
 }

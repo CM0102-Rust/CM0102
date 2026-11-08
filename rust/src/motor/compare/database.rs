@@ -63,28 +63,28 @@ pub(crate) unsafe extern "C" fn compare_database_player_initialisation(data: usi
 }
 
 /// Comparer for `database_format_name_from_strings`.
-pub(crate) unsafe extern "C" fn compare_database_format_name_from_strings(name: usize, sobrenome: usize, common: usize, text: usize, size: u32, form: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_format_name_from_strings(name: usize, surname: usize, common: usize, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_STRINGS);
     if text == 0 || (size as u16 as i16) < 0x69 || !(1..=7).contains(&(form as u8)) {
-        return o(name, sobrenome, common, text, size, form); // message box: original only
+        return o(name, surname, common, text, size, form); // message box: original only
     }
     // the produced text (up to the given size, at most 128 bytes)
     let n = (size as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(name, sobrenome, common, text, size, form),
-        || database_format_name_from_strings(name, sobrenome, common, text, size, form));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(name, surname, common, text, size, form),
+        || database_format_name_from_strings(name, surname, common, text, size, form));
     SCOREBOARD.record(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", form as u8, r, x, mo, mr));
     r
 }
 
 /// Comparer for `database_get_job_name`.
-pub(crate) unsafe extern "C" fn compare_database_get_job_name(job: u32, curto: u32, maiuscula: u32, gender: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_get_job_name(job: u32, short: u32, capital: u32, gender: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, u32, usize) -> usize>(IDX_DATABASE_GET_JOB_NAME);
     // the text [0xae19b4] and the gender byte, if any
     let regions = [(G_JOB_NAME_BUFFER, 100usize), (gender, 1)];
     let reg = if gender != 0 { &regions[..] } else { &regions[..1] };
-    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(job, curto, maiuscula, gender),
-        || database_get_job_name(job, curto, maiuscula, gender));
-    SCOREBOARD.record(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", job as u8 as i8, curto, maiuscula, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(job, short, capital, gender),
+        || database_get_job_name(job, short, capital, gender));
+    SCOREBOARD.record(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", job as u8 as i8, short, capital, r, x, mo, mr));
     r
 }
 
@@ -111,16 +111,16 @@ pub(crate) unsafe extern "C" fn compare_club_get_national_team_name(club: usize,
 }
 
 /// Comparer for `database_get_player_attribute_name`.
-pub(crate) unsafe extern "C" fn compare_database_get_player_attribute_name(attribute: u32, text: usize, size: u32, abreviado: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_get_player_attribute_name(attribute: u32, text: usize, size: u32, abbreviated: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_PLAYER_ATTRIBUTE_NAME);
     let x = attribute as u8 as i8;
     if !(1..=0x1f).contains(&x) || text == 0 || (size as u16 as i16) < 100 {
-        return o(attribute, text, size, abreviado); // message box: original only
+        return o(attribute, text, size, abbreviated); // message box: original only
     }
     // the first 100 bytes (the minimum accepted size): the names fit in them
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 100)], || o(attribute, text, size, abreviado),
-        || database_get_player_attribute_name(attribute, text, size, abreviado));
-    SCOREBOARD.record(igual && r == n, || format!("database_get_player_attribute_name({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 100)], || o(attribute, text, size, abbreviated),
+        || database_get_player_attribute_name(attribute, text, size, abbreviated));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_player_attribute_name({}, {}) original={} rust={} {:x?} x {:x?}", x, abbreviated, r, n, mo, mr));
     r
 }
 
@@ -140,16 +140,16 @@ pub(crate) unsafe extern "C" fn compare_database_format_player_positions(player:
 }
 
 /// Comparer for `database_format_name_from_ids`.
-pub(crate) unsafe extern "C" fn compare_database_format_name_from_ids(name: i32, sobrenome: i32, common: i32, text: usize, size: u32, form: u32, person: i32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_format_name_from_ids(name: i32, surname: i32, common: i32, text: usize, size: u32, form: u32, person: i32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_IDS);
     if text == 0 || (size as i16) < 0x69 {
-        return o(name, sobrenome, common, text, size, form, person); // message box: original only
+        return o(name, surname, common, text, size, form, person); // message box: original only
     }
     // the produced text (up to the given size, at most 128 bytes)
     let n = (size as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(name, sobrenome, common, text, size, form, person),
-        || database_format_name_from_ids(name, sobrenome, common, text, size, form, person));
-    SCOREBOARD.record(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", name, sobrenome, common, form, person, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(name, surname, common, text, size, form, person),
+        || database_format_name_from_ids(name, surname, common, text, size, form, person));
+    SCOREBOARD.record(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", name, surname, common, form, person, r, x, mo, mr));
     r
 }
 
@@ -167,15 +167,15 @@ pub(crate) unsafe extern "C" fn compare_database_format_official_name(oficial: u
 }
 
 /// Comparer for `position_mask_get_text`.
-pub(crate) unsafe extern "C" fn compare_position_mask_get_text(mask: u32, text: usize, maiuscula: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_position_mask_get_text(mask: u32, text: usize, capital: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32) -> u8>(IDX_POSITION_MASK_GET_TEXT);
     if text == 0 {
-        return o(mask, text, maiuscula);
+        return o(mask, text, capital);
     }
     // no size: the translated names fit in 128
-    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 128)], || o(mask, text, maiuscula),
-        || position_mask_get_text(mask, text, maiuscula));
-    SCOREBOARD.record(igual && r == x, || format!("position_mask_get_text({:x}, {}) original={} rust={} {:x?} x {:x?}", mask, maiuscula as u8, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 128)], || o(mask, text, capital),
+        || position_mask_get_text(mask, text, capital));
+    SCOREBOARD.record(igual && r == x, || format!("position_mask_get_text({:x}, {}) original={} rust={} {:x?} x {:x?}", mask, capital as u8, r, x, mo, mr));
     r
 }
 
@@ -287,17 +287,17 @@ pub(crate) unsafe extern "C" fn compare_staff_get_player_attribute_for_viewer(wh
 }
 
 /// Comparer for `database_get_non_player_attribute_name`.
-pub(crate) unsafe extern "C" fn compare_database_get_non_player_attribute_name(attribute: u32, text: usize, size: u32, abreviado: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_get_non_player_attribute_name(attribute: u32, text: usize, size: u32, abbreviated: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_NON_PLAYER_ATTRIBUTE_NAME);
     let x = attribute as u8 as i8;
     if !(1..=12).contains(&x) || text == 0 || (size as u16 as i16) < 100 {
-        return o(attribute, text, size, abreviado);
+        return o(attribute, text, size, abbreviated);
     }
     // the first 100 bytes (the minimum accepted size): the names fit in them
     let reg = [(text, 100)];
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(attribute, text, size, abreviado),
-        || database_get_non_player_attribute_name(attribute, text, size, abreviado));
-    SCOREBOARD.record(igual && r == n, || format!("database_get_non_player_attribute_name({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, text, size as u16 as i16, abreviado, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(attribute, text, size, abbreviated),
+        || database_get_non_player_attribute_name(attribute, text, size, abbreviated));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_non_player_attribute_name({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, text, size as u16 as i16, abbreviated, r, n, mo, mr));
     r
 }
 
@@ -510,14 +510,14 @@ pub(crate) unsafe extern "C" fn compare_database_compare_staff_by_full_name(a: u
 }
 
 /// Comparer for `database_staff_matches_names`.
-pub(crate) unsafe extern "C" fn compare_database_staff_matches_names(person: usize, name: u32, sobrenome: u32, common: u32, data: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_staff_matches_names(person: usize, name: u32, surname: u32, common: u32, data: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(IDX_DATABASE_STAFF_MATCHES_NAMES);
     if person == 0 {
-        return o(person, name, sobrenome, common, data); // message box: original only
+        return o(person, name, surname, common, data); // message box: original only
     }
-    let r = o(person, name, sobrenome, common, data);
-    let n = database_staff_matches_names(person, name, sobrenome, common, data);
-    SCOREBOARD.record(r == n, || format!("database_staff_matches_names({:x}, {:x}, {:x}, {:x}, {:x}) original={} rust={}", person, name, sobrenome, common, data, r, n));
+    let r = o(person, name, surname, common, data);
+    let n = database_staff_matches_names(person, name, surname, common, data);
+    SCOREBOARD.record(r == n, || format!("database_staff_matches_names({:x}, {:x}, {:x}, {:x}, {:x}) original={} rust={}", person, name, surname, common, data, r, n));
     r
 }
 
@@ -1140,10 +1140,10 @@ pub(crate) unsafe extern "C" fn compare_database_build_nation_name_index() {
 }
 
 /// Comparer for `database_remove_staff_from_club`.
-pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: usize, person: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: usize, person: usize, data: usize, disable: u32, como_jogador: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB);
     if club == 0 || person == 0 {
-        return o(club, person, data, desligar, como_jogador); // 0 or box: original only
+        return o(club, person, data, disable, como_jogador); // 0 or box: original only
     }
     // the club, the person and, for the senior national team, the U21 (the only other place the routine zeroes)
     let mut regions = vec![(club, 581), (person, 110)];
@@ -1155,10 +1155,10 @@ pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: us
             regions.push((s, 581));
         }
     }
-    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(club, person, data, desligar, como_jogador),
-        || database_remove_staff_from_club(club, person, data, desligar, como_jogador));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(club, person, data, disable, como_jogador),
+        || database_remove_staff_from_club(club, person, data, disable, como_jogador));
     SCOREBOARD.record(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
-        club, person, data != 0, desligar, r, m, mo, mr));
+        club, person, data != 0, disable, r, m, mo, mr));
     r
 }
 
@@ -1258,15 +1258,15 @@ pub(crate) unsafe extern "C" fn compare_database_add_staff_to_club(club: usize, 
 }
 
 /// Comparer for `database_count_club_squad`.
-pub(crate) unsafe extern "C" fn compare_database_count_club_squad(club: usize, mode: u32, filtro: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_database_count_club_squad(club: usize, mode: u32, filter: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_DATABASE_COUNT_CLUB_SQUAD);
     if club == 0 {
-        return o(club, mode, filtro); // message box: original only
+        return o(club, mode, filter); // message box: original only
     }
     // 0x540a50 may zero the club’s +0x244; the filter writes the last contract to [0xae1080]
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club + club::HAS_LINKED_CLUB, 1), (G_CONTRACT_LOOKUP_RESULT, 4)],
-        || o(club, mode, filtro), || database_count_club_squad(club, mode, filtro));
-    SCOREBOARD.record(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", club, mode as u8, filtro, r, n, mo, mr));
+        || o(club, mode, filter), || database_count_club_squad(club, mode, filter));
+    SCOREBOARD.record(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", club, mode as u8, filter, r, n, mo, mr));
     r
 }
 
@@ -1381,15 +1381,15 @@ pub(crate) unsafe extern "C" fn compare_database_pick_second_name_for_nation(nat
 }
 
 /// Comparer for `database_format_staff_name`.
-pub(crate) unsafe extern "C" fn compare_database_format_staff_name(person: usize, target: usize, size: u32, estilo: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_format_staff_name(person: usize, target: usize, size: u32, style: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_STAFF_NAME);
-    if person == 0 || target == 0 || (size as i16) < 0x69 || !(1..=7).contains(&(estilo as u8)) {
-        return o(person, target, size, estilo); // message box: original only
+    if person == 0 || target == 0 || (size as i16) < 0x69 || !(1..=7).contains(&(style as u8)) {
+        return o(person, target, size, style); // message box: original only
     }
     // the destination has at least 0x69 bytes (the routine requires it); 0x600740 and 0x6005e0 only read
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(target, 0x69)], || o(person, target, size, estilo),
-        || database_format_staff_name(person, target, size, estilo));
-    SCOREBOARD.record(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", person, estilo as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(target, 0x69)], || o(person, target, size, style),
+        || database_format_staff_name(person, target, size, style));
+    SCOREBOARD.record(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", person, style as u8, r, n, mo, mr));
     r
 }
 

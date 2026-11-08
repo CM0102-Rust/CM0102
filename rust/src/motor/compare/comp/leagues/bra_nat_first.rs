@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_set_up_rules(this: 
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, l, dest) = serie_a_staff_records(this, club, status, stage, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_FIRST_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, a5, a6);
-    let gravado = if l == 0 { dest } else { *((l + league_table_row::STATUS) as *const u8) };
-    SCOREBOARD.record(r == n && gravado == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    let written = if l == 0 { dest } else { *((l + league_table_row::STATUS) as *const u8) };
+    SCOREBOARD.record(r == n && written == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, written as i8, dest as i8));
     r
 }

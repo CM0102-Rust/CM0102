@@ -22,28 +22,28 @@ use super::*;
 /// gerente das listas. Não jogador (+0x69) num prêmio que não é de jogador: as três sobem até os pisos (+0xc mundial,
 /// +8 pela nação do clube, +0xa nacional) e, com clube, a confiança da diretoria (+6 da linha de 73 bytes) + 1000, entre
 /// 6500 e 10000. Só as palavras baixas das reputações valem.
-pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, club: usize, nation: u32, mundo: u32, player: u32) {
+pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, club: usize, nation: u32, world: u32, player: u32) {
     let nation = nation as u16 as i16;
-    let mundo = mundo as u16 as i16;
+    let world = world as u16 as i16;
     let p = read_usize(person + staff::PLAYER);
     if p != 0 && player != 0 {
         crate::comparison::branch("cpw_6 premio de jogador");
-        add_to_word(p + player_sheet::WORLD_REPUTATION, ftol(mundo as i32 as f64 * read_f64_at(rdata::F64_0_05))); // cpw6: the worldwide increase;
+        add_to_word(p + player_sheet::WORLD_REPUTATION, ftol(world as i32 as f64 * read_f64_at(rdata::F64_0_05))); // cpw6: the worldwide increase;
         if read_i16(p + player_sheet::WORLD_REPUTATION) > 10000 {
             write_i16(p + player_sheet::WORLD_REPUTATION, 10000);
         }
-        if read_i16(p + player_sheet::WORLD_REPUTATION) <= mundo { // cpw6: o piso mundial
-            write_i16(p + player_sheet::WORLD_REPUTATION, mundo);
+        if read_i16(p + player_sheet::WORLD_REPUTATION) <= world { // cpw6: o piso mundial
+            write_i16(p + player_sheet::WORLD_REPUTATION, world);
         }
         if club != 0 && read_usize(club + club::NATION) == read_usize(person + staff::NATION) { // cpw6: the club of the player’s nation
             add_to_word(p + player_sheet::HOME_REPUTATION, ftol(nation as i32 as f64 * read_f64_at(rdata::F64_0_1)));
             clamp_word(p + player_sheet::HOME_REPUTATION, nation);
         } else {
-            add_to_word(p + player_sheet::HOME_REPUTATION, ftol((nation as i32 + mundo as i32) as f64 * read_f64_at(rdata::F64_0_025)));
+            add_to_word(p + player_sheet::HOME_REPUTATION, ftol((nation as i32 + world as i32) as f64 * read_f64_at(rdata::F64_0_025)));
             if read_i16(p + player_sheet::HOME_REPUTATION) > 10000 {
                 write_i16(p + player_sheet::HOME_REPUTATION, 10000);
             }
-            let floor = nation as i32 / 2 + mundo as i32 / 2;
+            let floor = nation as i32 / 2 + world as i32 / 2;
             if (read_i16(p + player_sheet::HOME_REPUTATION) as i32) <= floor {
                 write_i16(p + player_sheet::HOME_REPUTATION, floor as i16);
             }
@@ -60,15 +60,15 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
     if np == 0 || player != 0 {
         return;
     }
-    if read_i16(np + non_player::WORLD_REPUTATION) <= mundo {
-        write_i16(np + non_player::WORLD_REPUTATION, mundo);
+    if read_i16(np + non_player::WORLD_REPUTATION) <= world {
+        write_i16(np + non_player::WORLD_REPUTATION, world);
     }
     if club != 0 && read_usize(club + club::NATION) == read_usize(person + staff::NATION) {
         if read_i16(np + non_player::HOME_REPUTATION) <= nation {
             write_i16(np + non_player::HOME_REPUTATION, nation);
         }
     } else {
-        let floor = nation as i32 / 2 + mundo as i32 / 2;
+        let floor = nation as i32 / 2 + world as i32 / 2;
         if (read_i16(np + non_player::HOME_REPUTATION) as i32) <= floor {
             write_i16(np + non_player::HOME_REPUTATION, floor as i16);
         }

@@ -63,11 +63,11 @@ pub(crate) unsafe extern "thiscall" fn compare_next_event(t: usize, out: *mut us
 
 /// Comparer for `commentary_player_name`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn compare_commentary_player_name(pt: usize, player: i8, side: i8, buf: *mut u8, size: u32, curto: u8, x: u32, longa: u32) {
+pub(crate) unsafe extern "C" fn compare_commentary_player_name(pt: usize, player: i8, side: i8, buf: *mut u8, size: u32, short: u8, x: u32, longa: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(IDX_COMMENTARY_PLAYER_NAME);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((buf as usize, size as usize));
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pt, player, side, buf, size, curto, x, longa), || crate::rng::without_counting(|| commentary_player_name(pt, player, side, buf, size, curto, x, longa)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pt, player, side, buf, size, short, x, longa), || crate::rng::without_counting(|| commentary_player_name(pt, player, side, buf, size, short, x, longa)));
     SCOREBOARD.record(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", player, side, mo, mr));
 }
 

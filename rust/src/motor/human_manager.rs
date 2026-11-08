@@ -30,8 +30,8 @@ pub(crate) unsafe extern "C" fn human_club(club: usize, without_tactic: u32, any
                 if force != 0 || any != 0 {
                     return 1;
                 }
-                let sim = if exe::database_is_national_team(club) != 0 { exe::human_manager_controls_all_national_teams(h, person, core::ptr::null_mut()) as u32 } else { exe::human_manager_controls_reserve_team(h, person) };
-                if sim != 0 {
+                let yes = if exe::database_is_national_team(club) != 0 { exe::human_manager_controls_all_national_teams(h, person, core::ptr::null_mut()) as u32 } else { exe::human_manager_controls_reserve_team(h, person) };
+                if yes != 0 {
                     return 1;
                 }
             }
@@ -650,8 +650,8 @@ pub(crate) unsafe extern "C" fn human_runs_club(club: usize, any: u32, force: i8
         if c == 0 {
             return original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(0, any, force);
         }
-        let time = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-        let human = core::ptr::read_unaligned((0xb74c26 + time * 0x300) as usize as *const usize);
+        let team = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
+        let human = core::ptr::read_unaligned((0xb74c26 + team * 0x300) as usize as *const usize);
         let manager = core::ptr::read_unaligned((c + club::MANAGER) as *const usize);
         'proximo: {
             if manager == 0 || human != manager {
@@ -696,8 +696,8 @@ pub(crate) unsafe extern "C" fn human_runs_club(club: usize, any: u32, force: i8
 pub(crate) unsafe extern "thiscall" fn set_human_field(t: usize, value: u32, manager: *const i32) -> u32 {
     let mut p = manager;
     if p.is_null() {
-        let time = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-        p = core::ptr::read_unaligned((0xb74c26 + time * 0x300) as usize as *const *const i32);
+        let team = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
+        p = core::ptr::read_unaligned((0xb74c26 + team * 0x300) as usize as *const *const i32);
     }
     if p.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD)(t, value, manager);

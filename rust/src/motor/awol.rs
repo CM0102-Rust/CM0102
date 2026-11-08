@@ -122,11 +122,11 @@ pub(crate) unsafe fn plan_toggle_mark_and_unlist(this: usize, person: usize, bit
         return (Some((p, m ^ bit)), l, items);
     }
     let count = (read_i16(l) as i32).max(0) as usize;
-    let mut fica = items.clone();
+    let mut stays = items.clone();
     if let Some(k) = items.iter().take(count).position(|&x| read_usize(x) == read_usize(person)) {
-        fica.remove(k);
+        stays.remove(k);
     }
-    (Some((p, m ^ bit)), l, fica)
+    (Some((p, m ^ bit)), l, stays)
 }
 
 /// Comparer of the two: runs only the original and checks the mark and remaining list against the plan.
@@ -223,11 +223,11 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     } else {
         let who = if taped_random(2) != 0 {
             let mut k;
-            let mut voltas = 0;
+            let mut laps = 0;
             loop {
                 k = taped_random(5);
-                voltas += 1;
-                if voltas >= 1000 || read_usize(club.wrapping_add(k as usize * 4) + 0x19f) != 0 {
+                laps += 1;
+                if laps >= 1000 || read_usize(club.wrapping_add(k as usize * 4) + 0x19f) != 0 {
                     break;
                 }
             }
@@ -252,23 +252,23 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     let of_human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     // 0x7875e0: mov ecx, [0xb7431c]; push club (ret 4); 0x7861e0: push club +0x39; push news; mov ecx, [0xb7431c];
     // 0x7863f0: push nation; push news; mov ecx, [0xb7431c] -> thiscall in all three
-    let ensaio = (*core::ptr::addr_of!(AWOL_NEWS_TAPE)).is_some();
+    let dry_run = (*core::ptr::addr_of!(AWOL_NEWS_TAPE)).is_some();
     if of_human(news, club) != 0 {
-        if ensaio {
+        if dry_run {
             AWOL_NEWS_DESTINATION = (1, read_usize(player + staff::CLUB_JOB));
         } else {
             exe::news_send_to_club_manager(news, nt, read_usize(player + staff::CLUB_JOB));
         }
         return;
     }
-    let nacao = read_usize(club + club::NATION);
-    if nacao == 0 || read_i16(read_usize(player + staff::PLAYER) + 0xb) <= 0x1c52 {
+    let nation = read_usize(club + club::NATION);
+    if nation == 0 || read_i16(read_usize(player + staff::PLAYER) + 0xb) <= 0x1c52 {
         return;
     }
-    if ensaio {
-        AWOL_NEWS_DESTINATION = (2, nacao);
+    if dry_run {
+        AWOL_NEWS_DESTINATION = (2, nation);
     } else {
-        exe::news_send_to_nation_managers(news, nt, nacao);
+        exe::news_send_to_nation_managers(news, nt, nation);
     }
 }
 
@@ -813,8 +813,8 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     }
     reg[..4].copy_from_slice(&read_u32(player).to_le_bytes());
     reg[4..8].copy_from_slice(&read_u32(club).to_le_bytes());
-    let mut temporaria = [0u8; 8];
-    exe::date_operator_3d(reg.as_mut_ptr() as usize + 8, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
+    let mut temporary = [0u8; 8];
+    exe::date_operator_3d(reg.as_mut_ptr() as usize + 8, temporary.as_mut_ptr() as usize, G_CURRENT_DATE);
     // simplification: byte +0x10 of the record is stack leftover in the original; the copy writes 0 (nobody reads it)
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     append(read_usize(this + 8), reg.as_ptr() as usize, 0x11);
