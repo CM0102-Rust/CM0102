@@ -431,7 +431,7 @@ pub(crate) unsafe fn tie_on_zone_boundary(league: usize, z: &[u8; 64]) -> bool {
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let day: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     let sort: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_ITA_LEAGUE_SORT_CLUBS_LEVEL_ON_POINTS);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let r = day(this, today, full);
     // simplification: a original devolve o byte do dia de liga com os bits de cima do eax que sobram da última chamada; o
     // laço das competições só lê o byte.
@@ -450,7 +450,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
             if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: o par da Série A na fronteira
                 sort(this, points as u16 as u32);
                 write_u32_from_usize(this + 0x2c, 1);
-                let v = alocar(4);
+                let v = alloc(4);
                 write_u32_from_usize(this + 0xc, v);
                 let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x28));
                 proxima(this);
@@ -482,7 +482,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date_647050(this: usize, today: usize, full: u32) -> u32 {
     let day: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     let sort: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_ITA_LEAGUE_SORT_CLUBS_LEVEL_ON_POINTS);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let r = day(this, today, full);
     if read_u32_as_usize(this + 0xdd) == 0 || read_u32_as_usize(this + 0x2c) != 0 || full == 0 || read_u32_as_usize(this + 0xe6) == 0 {
         return r;
@@ -503,7 +503,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date_647050(this: us
     }
     if found {
         write_u32_from_usize(this + 0x2c, 1);
-        let v = alocar(4);
+        let v = alloc(4);
         write_u32_from_usize(this + 0xc, v);
         let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x28));
         proxima(this);
@@ -1795,8 +1795,8 @@ pub(crate) unsafe fn ita_ser_a_compare_league_rules(name: &str, this: usize, esc
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve se encheu.
 pub(crate) unsafe fn ita_ser_a_fill_league_table(this: usize, n: i16, file: usize, row: u32, g: usize) -> Option<bool> {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);

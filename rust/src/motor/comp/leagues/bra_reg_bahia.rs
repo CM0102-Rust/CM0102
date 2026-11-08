@@ -223,7 +223,7 @@ pub(crate) unsafe fn state_league_new_season(this: usize, table: usize, file: us
 /// [pt] A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o mata-mata
 /// (`mata_mata`, call direto com o ecx da liga -> thiscall, ret 0).
-pub(crate) unsafe fn state_league_advance_stage(this: usize, file: usize, row: u32, mata_mata: usize) {
+pub(crate) unsafe fn state_league_advance_stage(this: usize, file: usize, row: u32, knockout_knockout: usize) {
     let stage = read_usize(this + 0x30) as i32;
     if stage >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return show_error_at(file, row);
@@ -231,7 +231,7 @@ pub(crate) unsafe fn state_league_advance_stage(this: usize, file: usize, row: u
     let stage = stage + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, stage);
     if stage == 0 {
-        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(mata_mata);
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(knockout_knockout);
         f(this);
     }
 }

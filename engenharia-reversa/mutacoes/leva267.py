@@ -27,7 +27,7 @@ MUTACOES = [
     ('cqd12_bosman_invertida', '    if bosman(manager, person(contrato)) == 0 { // cqd12: sem a lei Bosman', '    if bosman(manager, person(contrato)) != 0 { // mutacao: a lei Bosman invertida', 'cqd_12 com lei Bosman'),
     ('cqd12_fator_invertido', '    (read_i32(slot + 3) as f64 * factor > read_i32(slot + 0xb) as f64) as u32', '    (read_i32(slot + 3) as f64 * factor < read_i32(slot + 0xb) as f64) as u32 // mutacao: comparacao invertida', 'cqd_12 faixa pelo fator'),
     ('cqd12_longe_recusa', '            return 1; // cqd12: as faixas 9-14', '            return 0; // mutacao: as faixas 9-14 recusam', 'cqd_12 faixa longe'),
-    ('cqd13_todos_destacados', '        if f > limiar as f64 { // cqd13: acima do limiar', '        if f >= 0.0 { // mutacao: todos acima do limiar', 'cqd_13 jogador destacado do campeao'),
+    ('cqd13_todos_destacados', '        if f > threshold as f64 { // cqd13: acima do limiar', '        if f >= 0.0 { // mutacao: todos acima do limiar', 'cqd_13 jogador destacado do campeao'),
     ('cqd13_moral_zero', '            morale(p, 0x14, 1); // cqd13: o moral do jogador destacado', '            morale(p, 0, 1); // mutacao: moral sem delta', 'cqd_13 jogador destacado do campeao'),
     ('cqd13_contrato_50', '            add_contract_morale(k, 100); // cqd13: o contrato do jogador destacado', '            add_contract_morale(k, 50); // mutacao: +50 no contrato', 'cqd_13 contrato do destacado'),
 ]

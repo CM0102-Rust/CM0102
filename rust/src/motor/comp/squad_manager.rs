@@ -253,7 +253,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let number: unsafe extern "thiscall" fn(usize, usize, usize) -> i8 = core::mem::transmute(FN_SQUAD_MANAGER_GET_SQUAD_NUMBER);
     let write: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_SQUAD_MANAGER_SET_SQUAD_NUMBER);
-    let mut usado = [0u8; 50];
+    let mut used = [0u8; 50];
     let mut list = [0usize; 50];
     squad(c, list.as_mut_ptr(), 0);
     sort(list.as_mut_ptr() as usize, 0x32, 4, 0x540130);
@@ -269,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
         if is_contracted_staff(x) {
             let n = (number(this, x, c) as i32).abs() as u8;
             if n != 0 {
-                usado[(n as i8 as isize - 1) as usize] = 1;
+                used[(n as i8 as isize - 1) as usize] = 1;
             }
         }
     }
@@ -288,9 +288,9 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
     let mut b = 0usize;
     while pref[b] != 0xff {
         let k = pref[b];
-        if usado[k as i8 as usize] == 0 {
+        if used[k as i8 as usize] == 0 {
             write(this, p, c, sinal(k));
-            usado[k as usize] = 1;
+            used[k as usize] = 1;
             crate::comparacao::ramo("cql_2 numero da posicao");
             return; // cql2: o número da posição
         }
@@ -299,14 +299,14 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
             break;
         }
     }
-    if let Some(k) = (11u8..50).find(|&k| usado[k as usize] == 0) {
+    if let Some(k) = (11u8..50).find(|&k| used[k as usize] == 0) {
         write(this, p, c, sinal(k));
-        usado[k as usize] = 1;
+        used[k as usize] = 1;
     }
     if number(this, p, c) != 0 {
         return;
     }
-    if let Some(k) = (0u8..=10).rev().find(|&k| usado[k as usize] == 0) {
+    if let Some(k) = (0u8..=10).rev().find(|&k| used[k as usize] == 0) {
         write(this, p, c, sinal(k));
     }
 }
@@ -358,7 +358,7 @@ pub(crate) const SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS: [u16; 20] = [
 /// com o sinal trocado; quem não tem número ganha o da sua ordem (1º o 1...) se livre. Os 40 primeiros sem número que
 /// têm contrato com o clube (fora os tipos 6 e 7) ganham um pela 0x85a470. No fim, cada número guardado é regravado:
 /// positivo (o número) com técnico humano (0x600a50(c, 0, 1, 0, 0)), senão −1, −2... na ordem dos números.
-pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, manter: u32) {
+pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, keep: u32) {
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
@@ -368,7 +368,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
     let write: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_SQUAD_MANAGER_SET_SQUAD_NUMBER);
     let dar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SQUAD_MANAGER_ALLOCATE_SQUAD_NUMBER);
     let mut stored = [0usize; 50]; // por número − 1
-    let mut ordem = [0usize; 50];
+    let mut order = [0usize; 50];
     let mut all = [0usize; 50];
     let mut n = 0usize;
     for k in 0..50 {
@@ -393,39 +393,39 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
     }
     let slots = SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS;
     crate::comparacao::ramo("cql_2 escala");
-    pick(all.as_ptr() as usize, n as u32, slots.as_ptr() as usize, 0xb, 9, ordem.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
+    pick(all.as_ptr() as usize, n as u32, slots.as_ptr() as usize, 0xb, 9, order.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
     let mut free = 0usize;
     for &x in all[..n].iter() {
-        if ordem[..20].contains(&x) {
+        if order[..20].contains(&x) {
             continue;
         }
-        while free < 50 && ordem[free] != 0 {
+        while free < 50 && order[free] != 0 {
             free += 1;
         }
         if free < 50 {
-            ordem[free] = x;
+            order[free] = x;
         }
     }
-    sort(ordem[20..].as_mut_ptr() as usize, 0x1e, 4, 0x540130);
+    sort(order[20..].as_mut_ptr() as usize, 0x1e, 4, 0x540130);
     let mut a = 0usize;
     for b in 0..50 {
-        let x = ordem[b];
+        let x = order[b];
         if x == 0 || b <= a {
             continue;
         }
-        while a < b && ordem[a] != 0 {
+        while a < b && order[a] != 0 {
             a += 1;
         }
         if a < b {
-            ordem[a] = x;
+            order[a] = x;
             a += 1;
-            ordem[b] = 0;
+            order[b] = 0;
         }
     }
     // `vez` = −1, −2... (char), a ordem de cada um; `k` = 1, 2... a mesma ordem em positivo
     for i in 0..50usize {
         let vez = (-1 - i as i32) as i8;
-        let x = ordem[i];
+        let x = order[i];
         if x == 0 {
             continue;
         }
@@ -450,7 +450,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
             write(this, x, c, 0);
             continue;
         }
-        if manter != 0 {
+        if keep != 0 {
             write(this, x, c, nb.wrapping_neg() as u8 as u32);
         } else if (nb < 12 && vez < -11) || (nb >= 12 && vez > -12) {
             crate::comparacao::ramo("cql_2 perde o numero");
@@ -462,7 +462,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         }
     }
     for b in 0..40usize {
-        let x = ordem[b];
+        let x = order[b];
         if x == 0 {
             continue;
         }

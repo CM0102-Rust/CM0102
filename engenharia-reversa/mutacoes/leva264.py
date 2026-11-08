@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cqb1_tv_menor', 'tv = match_pl_ftol((q as f64 + read_f64_at(0x968f98)) * publico as f64); // cqb1: a TV pelo público (1,75)', 'tv = ftol((q as f64 + read_f64_at(0x968928)) * publico as f64); // mutacao: 1,25 no lugar de 1,75', 'cqb_1 publico pagante'),
     ('cqb1_liquido_pela_metade', 'add(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante', 'add(mandante, 0x140, 0xa0, liquido / 2); // mutacao: o liquido pela metade', 'cqb_1 liquido ao mandante'),
-    ('cqb1_preco_por_400', 'let preco = div_trunc(read_i16(home + 0x80) as i32, 500); // cqb1: o preço pela reputação', 'let preco = div_trunc(read_i16(home + 0x80) as i32, 400); // mutacao: por 400', 'cqb_1 preco pela reputacao'),
+    ('cqb1_preco_por_400', 'let price = div_trunc(read_i16(home + 0x80) as i32, 500); // cqb1: o preço pela reputação', 'let price = div_trunc(read_i16(home + 0x80) as i32, 400); // mutacao: por 400', 'cqb_1 preco pela reputacao'),
     ('cqb2_divisor_maior', 'read_f64_at(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa', 'read_f64_at(0x967880) // mutacao: 0,1 no lugar de 0,0075', 'cqb_2 divisor da faixa 0 baixa'),
     ('cqb2_sorteio_a_mais_com_ficha', 'let r1 = friendly_random(match_pl_ftol(read_f64_at(0x968dd8) / div)); // cqb2: o sorteio com a ficha', 'let r1 = { friendly_random(5); friendly_random(ftol(read_f64_at(0x968dd8) / div)) }; // mutacao: um sorteio a mais', 'cqb_2 com a ficha'),
     ('cqb2_sorteio_a_mais_sem_ficha', 'let r = friendly_random(match_pl_ftol(read_f64_at(0x96a728) / div)); // cqb2: o sorteio sem a ficha', 'let r = { friendly_random(5); friendly_random(ftol(read_f64_at(0x96a728) / div)) }; // mutacao: um sorteio a mais', 'cqb_2 sem a ficha'),

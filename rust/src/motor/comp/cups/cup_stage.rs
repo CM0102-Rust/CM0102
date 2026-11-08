@@ -24,7 +24,7 @@ use super::*;
 /// Devolve this.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: usize, n: u32, teams: usize, rounds: u32, a5: u32, modelo: usize, year: u32, stage: u32, b2: u32,
-    id: u32, b3: u32, arvore: u32, por_ordem: u32, a14: u32, sementes: usize) -> usize {
+    id: u32, b3: u32, arvore: u32, by_order: u32, a14: u32, sementes: usize) -> usize {
     const F: usize = 0x9b5944;
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_CUP);
     base(this);
@@ -46,8 +46,8 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
     write_u8(this + 0x4a, *((parent + 0x4a) as *const u8));
     write_u32_from_usize(this + 0x28, a14 as usize);
     let size = (rounds as u16 as i16 as i32 * 0x68) as u32;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(size);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc(size);
     write_u32_from_usize(this + 0xa3, t);
     if t == 0 {
         show_error_at(F, 0x48);
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
         write_u8(read_u32_as_usize(this + 0xa7) + e + 5, 0);
         let s = if sementes != 0 {
             *((sementes + i as usize) as *const u8) // cqs7: a semente do vetor
-        } else if por_ordem != 0 {
+        } else if by_order != 0 {
             i as u8
         } else {
             0

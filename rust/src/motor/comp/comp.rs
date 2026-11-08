@@ -206,8 +206,8 @@ pub(crate) unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
 /// (linhas de 0x3b bytes), noutra os de +0xa7 (6 bytes), sem os nulos e os repetidos, até 200; grava o vetor em
 /// `lista` e devolve a conta (word, no ax).
 pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list: *mut usize, _x: u32) -> u16 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alocar(0x320);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let v = alloc(0x320);
     if v == 0 {
         show_error_at(0x99b80c, 0x681);
         *list = 0;

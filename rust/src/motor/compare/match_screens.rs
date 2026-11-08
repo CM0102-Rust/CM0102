@@ -225,8 +225,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_match_screens_record_match(stats
 }
 
 /// Comparer for `write_match_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_write_match_record(stats: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_WRITE_MATCH_RECORD)(stats, jogo, r, eventos)
+pub(crate) unsafe extern "thiscall" fn comparar_write_match_record(stats: usize, jogo: usize, r: usize, events: usize) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_WRITE_MATCH_RECORD)(stats, jogo, r, events)
 }
 
 /// Comparer for `fill_team_stats_rows` (comparison mode: see the header of motor.rs).
@@ -236,9 +236,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_write_match_record(stats: usize,
 /// vai pela rede ou parâmetro 0x1c fora de 1 e 2: só a original.
 pub(crate) unsafe extern "C" fn comparar_fill_team_stats_rows(mode: u32, area: usize) {
     let o = original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_FILL_TEAM_STATS_ROWS);
-    let coluna = get_screen_param(0x1c) as u8;
+    let column = get_screen_param(0x1c) as u8;
     let mut reg = match screen_update_regions(mode != 0) {
-        Some(r) if coluna == 1 || coluna == 2 => r,
+        Some(r) if column == 1 || column == 2 => r,
         _ => return o(mode, area),
     };
     reg.extend(screen_param_regions());

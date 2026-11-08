@@ -12,13 +12,13 @@ pub(crate) unsafe extern "C" fn comparar_chance_to_know(person: usize, level: i8
 }
 
 /// Comparer for `know_person` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, person: usize, fonte: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, person: usize, font: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_KNOW_PERSON);
     let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if person != 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
         reg.push(((*(this as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9)), 9));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, person, fonte), || crate::aleatorio::sem_contar(|| know_person(this, person, fonte)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, person, font), || crate::aleatorio::sem_contar(|| know_person(this, person, font)));
     PLACAR.registrar(igual, || format!("know_person original={:x?} rust={:x?}", mo, mr));
 }
 

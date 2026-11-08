@@ -12,11 +12,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_referee(a: usize) -> u
 }
 
 /// Comparer for `init_strictness` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_init_strictness(this: usize, motor: u32, person: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_init_strictness(this: usize, engine: u32, person: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_INIT_STRICTNESS);
     let mut reg = vec![(this, 10)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, motor, person), || crate::aleatorio::sem_contar(|| init_strictness(this, motor, person)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, engine, person), || crate::aleatorio::sem_contar(|| init_strictness(this, engine, person)));
     PLACAR.registrar(igual, || format!("init_strictness original={:x?} rust={:x?}", mo, mr));
 }
 
@@ -31,8 +31,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_counts(this: usize) -> u8 {
 /// Comparer for `decide_foul` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_decide_foul(this: usize, j: usize, code: u16, kind: *mut u8, value: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_DECIDE_FOUL);
-    let motor = *(this as *const usize);
-    let mut reg = vec![(this + 8, 2), (kind as usize, 1), (value as usize, 1), (motor + 0x475a, 16)];
+    let engine = *(this as *const usize);
+    let mut reg = vec![(this + 8, 2), (kind as usize, 1), (value as usize, 1), (engine + 0x475a, 16)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, code, kind, value), || crate::aleatorio::sem_contar(|| decide_foul(this, j, code, kind, value)));
     PLACAR.registrar(igual && r == n, || format!("decide_foul({:#x}) original={} {:x?} rust={} {:x?}", code, r, mo, n, mr));
@@ -61,10 +61,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_punish_move(this: usize, j: usiz
 /// Comparer for `foul_decision` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_foul_decision(
-    this: usize, j: usize, other: usize, kind: i8, who: i8, cartao: *mut u8, grav: *mut i8, advantage: *mut u8,
+    this: usize, j: usize, other: usize, kind: i8, who: i8, card: *mut u8, grav: *mut i8, advantage: *mut u8,
 ) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8>(IDX_FOUL_DECISION);
-    let mut regions = vec![(this + 8, 2), (cartao as usize, 1), (grav as usize, 1), (advantage as usize, 1)];
+    let mut regions = vec![(this + 8, 2), (card as usize, 1), (grav as usize, 1), (advantage as usize, 1)];
     for p in [j, other] {
         if p != 0 {
             regions.push((p, 0x1be));
@@ -73,8 +73,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_foul_decision(
     regions.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regions,
-        || o(this, j, other, kind, who, cartao, grav, advantage),
-        || crate::aleatorio::sem_contar(|| foul_decision(this, j, other, kind, who, cartao, grav, advantage)),
+        || o(this, j, other, kind, who, card, grav, advantage),
+        || crate::aleatorio::sem_contar(|| foul_decision(this, j, other, kind, who, card, grav, advantage)),
     );
     PLACAR.registrar(igual && r == v, || {
         let (a, b) = (&mo.0, &mr.0);

@@ -105,8 +105,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_fixtures(this: usize) -> 
 ///
 /// [pt] O comparador da promoção e do rebaixamento: só a original (simplification: os contratos, o técnico demitido e as notícias
 /// não rodam duas vezes); a cópia leva o ramo.
-pub(crate) unsafe extern "thiscall" fn comparar_league_promote_and_relegate(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pares: u32, sobem: u32, descem: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_LEAGUE_PROMOTE_AND_RELEGATE)(ecx, acima, abaixo, contratos, aos_pares, sobem, descem)
+pub(crate) unsafe extern "thiscall" fn comparar_league_promote_and_relegate(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pairs: u32, sobem: u32, descem: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_LEAGUE_PROMOTE_AND_RELEGATE)(ecx, acima, abaixo, contratos, aos_pairs, sobem, descem)
 }
 
 /// Comparer for `update_positions_and_status` (comparison mode: see the header of motor.rs).
@@ -607,8 +607,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_calc_prize_fund(league: usize, c
 }
 
 /// Comparer for `league_process_promotion_relegation_chain` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_league_process_promotion_relegation_chain(this: usize, aos_pares: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_LEAGUE_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, aos_pares)
+pub(crate) unsafe extern "thiscall" fn comparar_league_process_promotion_relegation_chain(this: usize, aos_pairs: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_LEAGUE_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, aos_pairs)
 }
 
 /// Comparer for `move_club_to_division` (comparison mode: see the header of motor.rs).

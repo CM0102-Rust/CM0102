@@ -88,13 +88,13 @@ pub(crate) unsafe extern "C" fn pick(
             lc = manager(*(G_HUMAN_MANAGER as *const usize), p);
         }
     }
-    let usado = calloc(n as u32, 1);
-    let us = |k: i32| (usado + k as usize) as *mut i8;
+    let used = calloc(n as u32, 1);
+    let us = |k: i32| (used + k as usize) as *mut i8;
     for i in 0..tot {
         *sai(i) = 0;
     }
     if m == 0 && x == 0 {
-        free(usado);
+        free(used);
         liberar_param(free);
         free(jog);
         return 0;
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "C" fn pick(
             }
             *sai(i) = melhor;
         }
-        let mut menor_perda = 10000i32;
+        let mut smaller_loss = 10000i32;
         let mut voltas = 0;
         let mut k2_current = 0i32;
         while conflitos > 0 && voltas < 10000 {
@@ -225,11 +225,11 @@ pub(crate) unsafe extern "C" fn pick(
                                 k2_current = k2;
                             }
                         }
-                        if swap == 0 || r_current - outra_nota < menor_perda {
+                        if swap == 0 || r_current - outra_nota < smaller_loss {
                             vaga_t = j;
                             swap = outra;
                             k2_t = k2_current;
-                            menor_perda = (r_current - outra_nota) as i16 as i32;
+                            smaller_loss = (r_current - outra_nota) as i16 as i32;
                         }
                     }
                     if swap != 0 {
@@ -247,16 +247,16 @@ pub(crate) unsafe extern "C" fn pick(
     }
     // as extras: as pessoas que sobraram, pela propria 0x6e2000
     if x != 0 {
-        let mut resto = [0usize; 128];
+        let mut rest = [0usize; 128];
         let mut c = 0usize;
         for k in 0..n {
             if *us(k) == 0 {
-                resto[c] = pes(k);
+                rest[c] = pes(k);
                 c += 1;
             }
         }
         recursiva(
-            resto.as_ptr() as usize, c as u32, codigos + 2 * m as usize, x as u32, 0, out + 4 * m as usize, mode | 0x200, clube, comissao, a10, 0,
+            rest.as_ptr() as usize, c as u32, codigos + 2 * m as usize, x as u32, 0, out + 4 * m as usize, mode | 0x200, clube, comissao, a10, 0,
             marks, bytes, a14, curtos + 2 * m as usize,
         );
     }
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "C" fn pick(
             break;
         }
     }
-    free(usado);
+    free(used);
     free(jog);
     liberar_param(free);
     1
@@ -796,46 +796,46 @@ pub(crate) unsafe fn judge_formations(
                     x += byte(manager, 0x1a) as f64 * 1.5 - 15.0;
                 }
             }
-            let mais = |v: &mut f32, q: f64| *v = (*v as f64 + q) as f32;
+            let more = |v: &mut f32, q: f64| *v = (*v as f64 + q) as f32;
             let (mut setor, mut band) = (0usize, -1i32);
             if p1 & 1 != 0 {
                 band = 2;
             } else if p1 & 2 != 0 {
-                mais(&mut f18, 1.0);
+                more(&mut f18, 1.0);
                 setor = 1;
             } else if p1 & 4 != 0 {
-                mais(&mut f18, 1.0);
+                more(&mut f18, 1.0);
                 setor = 2;
             } else if p1 & 8 != 0 {
-                mais(&mut f28, 1.0);
+                more(&mut f28, 1.0);
                 setor = 3;
             } else if p1 & 0x10 != 0 {
-                mais(&mut f54, 1.0);
+                more(&mut f54, 1.0);
                 setor = 4;
             } else if p1 & 0x20 != 0 {
-                mais(&mut f20, 1.0);
+                more(&mut f20, 1.0);
                 setor = 5;
             } else {
-                mais(&mut f44, 1.0);
+                more(&mut f44, 1.0);
                 setor = 6;
             }
             if p2 & 2 != 0 {
-                mais(&mut f18, 0.5);
+                more(&mut f18, 0.5);
                 setor = 1;
             } else if p2 & 4 != 0 {
-                mais(&mut f18, 0.5);
+                more(&mut f18, 0.5);
                 setor = 2;
             } else if p2 & 8 != 0 {
-                mais(&mut f28, 0.5);
+                more(&mut f28, 0.5);
                 setor = 3;
             } else if p2 & 0x10 != 0 {
-                mais(&mut f54, 0.5);
+                more(&mut f54, 0.5);
                 setor = 4;
             } else if p2 & 0x20 != 0 {
-                mais(&mut f20, 0.5);
+                more(&mut f20, 0.5);
                 setor = 5;
             } else if p2 & 0x40 != 0 {
-                mais(&mut f44, 0.5);
+                more(&mut f44, 0.5);
                 setor = 6;
             }
             if band == -1 {
@@ -1004,8 +1004,8 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         let tb = || table(j);
         let fb = |o: usize| byte(u(j, 0x6d), o);
         let div = 13 - (attr_tec2(u(c, 0x1f), 0xb) as i32) / 2;
-        let resto = (*(u(c, 0x1f) as *const i32)).wrapping_add(*(f as *const i32)) % div;
-        let mut f38 = (resto as f64 * 0.05 + 1.0) * f40 * 1.2;
+        let rest = (*(u(c, 0x1f) as *const i32)).wrapping_add(*(f as *const i32)) % div;
+        let mut f38 = (rest as f64 * 0.05 + 1.0) * f40 * 1.2;
         if f38 < 0.6 {
             f38 = 0.6;
         }
@@ -1491,7 +1491,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     let destroy_list: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    let mais_dias: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+    let more_days: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let strength: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(FN_DATABASE_COUNT_CLUB_SQUAD);
@@ -1547,7 +1547,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
 
     list_new(f + 0x80);
     data_default(f + 0x38);
-    mais_dias(G_CURRENT_DATE, f + 0xac, 2);
+    more_days(G_CURRENT_DATE, f + 0xac, 2);
     if other == 0 {
         match_man_fatal_error(0x174);
     }
@@ -1558,8 +1558,8 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
 
     // fora do humano: pesa o jogo de hoje contra o proximo da lista (poupar para o mais importante?)
     if byte(t, 0x19) == 0 && h16(clube, 0x80) >= 0x1770 && *(jogo as *const i32) != -2 && human(clube, 0, 1, 0, 0) == 0 && national_team(clube) == 0 && strong > 0x1e {
-        mais_dias(G_CURRENT_DATE, f + 0xa4, 1);
-        mais_dias(G_CURRENT_DATE, f + 0x40, 7);
+        more_days(G_CURRENT_DATE, f + 0xa4, 1);
+        more_days(G_CURRENT_DATE, f + 0x40, 7);
         let r = games(u(G_FIXTURE_MANAGER, 0), rd(0xa4), rd(0xa6), rd(0x40), rd(0x42), *(clube as *const u32), f + 0x80, u32::MAX, 0xffff_fffe, 1);
         if r as u16 != 0 {
             // 333 x a reputacao da competicao (.69; a da [0x9cf6f8] na tabela [0xae23d0]) + reputacao/3
@@ -1638,7 +1638,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 wd(0x18, l18 as u32);
                 // o proximo jogo daqui a 1..7 dias pesa mais (o de 4 dias, nada)
                 for (k, c) in [Some(0x96d4c0usize), Some(0x96d4b8), Some(0x96d4b0), None, Some(0x96d4a8), Some(0x96d4a0), Some(0x96d498)].iter().enumerate() {
-                    let p = mais_dias(G_CURRENT_DATE, f + 0x48, k as u32 + 1);
+                    let p = more_days(G_CURRENT_DATE, f + 0x48, k as u32 + 1);
                     wd(0x24, *(p as *const u32));
                     wd(0x28, *((p + 4) as *const u32));
                     if rw(0x26) == rw(0x3a) && rw(0x24) == rw(0x38) {
@@ -2216,12 +2216,12 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
     let entrar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_PLACE_PLAYER_AT_ENTRY_CELL);
     let remove: unsafe extern "thiscall" fn(usize, usize, i8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REMOVE_PLAYER_FROM_PITCH);
     let recompor: unsafe extern "thiscall" fn(usize, i8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_CLEAR_GOALKEEPER);
-    let manter: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOALKEEPER);
+    let keep: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOALKEEPER);
     let avaliar: unsafe extern "C" fn(usize, usize, usize) -> i16 = core::mem::transmute(FN_MATCH_MAN_GET_CAPTAIN_SCORE);
     let u = |o: usize| *((c + o) as *const usize);
     let w = |p: usize, o: usize| *((p + o) as *const i16);
-    let trocas = byte(c, 0x17);
-    if trocas == 0 {
+    let swaps = byte(c, 0x17);
+    if swaps == 0 {
         return;
     }
     let mut list = [0usize; 20];
@@ -2235,7 +2235,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
         }
     }
     qsort(list.as_mut_ptr() as usize, n as u32, 4, if n < 11 { 0x6e0df0 } else { 0x6e0fe0 });
-    let slots = (trocas as i32).min(n as i32).max(0) as usize;
+    let slots = (swaps as i32).min(n as i32).max(0) as usize;
     let mut table = [0u16; 20];
     let mut tab_b = [0u16; 20];
     let mut pos = [0i8; 20];
@@ -2297,7 +2297,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
         }
         if !done {
             let r = sortear(0xbb8) + 0xbb8;
-            let checa_selecao = if strength(0x2f) - strength(0x33) > r {
+            let check_national_team = if strength(0x2f) - strength(0x33) > r {
                 mode |= 0x100;
                 true
             } else if byte(c, 0x1a) != 3 {
@@ -2306,7 +2306,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
                 let id = *(comp as *const i32);
                 id <= -1 || in_competition(*((*(G_COMP_OBJECT_TABLE as *const usize) + id as usize * 4) as *const usize), clube) != 0
             };
-            if checa_selecao {
+            if check_national_team {
                 if national_team(clube) == 0 {
                     mode |= 0x10000;
                 }
@@ -2382,7 +2382,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
         }
     }
     recompor(m, byte(c, 0x18));
-    manter(m, byte(c, 0x18));
+    keep(m, byte(c, 0x18));
     let commentator = *((m + 0x8f7a) as *const usize);
     let side_c = byte(c, 0x18) as u8 as u32;
     let code = match ne {
@@ -2699,7 +2699,7 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, clube:
     let e = contrato(*(G_CONTRACT_MANAGER as *const usize), p, clube);
     if e != 0 {
         x = byte(e, 0x44) as f64 * d8(0x968ef8) + d8(0x968968);
-        let ajuste = match byte(e, 0x4f) as u8 >> 4 {
+        let adjust = match byte(e, 0x4f) as u8 >> 4 {
             0 | 5 => -d8(0x9688b0),
             1 => d8(0x968e18),
             2 => d8(0x968950),
@@ -2709,8 +2709,8 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, clube:
             8 => -d8(0x968ff8),
             _ => 0.0,
         };
-        if ajuste != 0.0 {
-            x += ajuste;
+        if adjust != 0.0 {
+            x += adjust;
         }
     }
     let a = if national_team(clube) != 0 {
@@ -2839,9 +2839,9 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
     let mut choice = [0usize; 50];
     let mut foul = r(5);
     if foul < r(2) {
-        let mut trocas = r(2) - foul;
+        let mut swaps = r(2) - foul;
         foul = r(3);
-        if trocas != 0 {
+        if swaps != 0 {
             let mut nv = 0i8;
             let mut k = 0i8;
             while k < nt {
@@ -2919,8 +2919,8 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
                         }
                     }
                     slot[e] = -1;
-                    trocas -= 1;
-                    if trocas == 0 {
+                    swaps -= 1;
+                    if swaps == 0 {
                         break;
                     }
                 }
@@ -3177,7 +3177,7 @@ pub(crate) unsafe fn form_bonus(p: usize, f: usize, clube: usize, who: usize, ag
         let y = v as f64 * read_f32_at(0x96d61c) as f64 + read_f32_at(0x96d618) as f64; // 0x96d61c = 0.05000000075, 0x96d618 = 6.800000191
         (if y > read_f64_at(0x96d610) { read_f64_at(0x96d610) } else { y }) as f32 // 0x96d610 = 7.3
     };
-    let razao = || {
+    let ratio = || {
         let (m10, m18) = (*((notas + 0x10) as *const f64), *((notas + 0x18) as *const f64));
         if m18 == read_f64_at(0x9689a0) { read_f64_at(0x968998) } else { m10 / m18 } // 0x9689a0 = 0, 0x968998 = 6.8
     };
@@ -3189,7 +3189,7 @@ pub(crate) unsafe fn form_bonus(p: usize, f: usize, clube: usize, who: usize, ag
     }
     let mut x = player_stat(f, 6, 0x12, x) as f32;
     if teto_veterano && age > 0x21 {
-        let r = razao() + read_f64_at(0x968fd0); // 0x968fd0 = 0.125
+        let r = ratio() + read_f64_at(0x968fd0); // 0x968fd0 = 0.125
         if (x as f64) > r {
             x = r as f32;
         }
@@ -3198,8 +3198,8 @@ pub(crate) unsafe fn form_bonus(p: usize, f: usize, clube: usize, who: usize, ag
         let d = match_man_days_since_date(p) as f64;
         x = (((read_f64_at(0x969070) - d) * read_f64_at(0x968eb0) + x as f64 * d) * read_f64_at(0x968e10)) as f32; // 0x969070 = 365, 0x968eb0 = 7.5, 0x968e10 = 0.002739726027
         let fb_p = signed_byte_at(*((p + 0x61) as *const usize), 0xf);
-        if age as i32 > fb_p / 10 + 0x22 && x as f64 > razao() {
-            x = ((razao() + x as f64) * read_f32_at(0x968f18) as f64) as f32; // 0x968f18 = 0.5
+        if age as i32 > fb_p / 10 + 0x22 && x as f64 > ratio() {
+            x = ((ratio() + x as f64) * read_f32_at(0x968f18) as f64) as f32; // 0x968f18 = 0.5
         }
     }
     let xf = x as f64;
@@ -3920,7 +3920,7 @@ pub(crate) unsafe fn outside_nation_penalty(p: usize, clube: usize, flags: u32, 
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, side: usize, manager: usize, limit: i32, mark: u32, _marca_alta: u32,
-    bytes: u32, tactic: u32, pos2: u32, ferias: usize,
+    bytes: u32, tactic: u32, pos2: u32, holiday: usize,
 ) -> i32 {
     if p == 0 || f == 0 {
         return -10000;
@@ -3939,8 +3939,8 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
         l24 = value(bd, p, 0);
         l28 = l24 as i16 as i32 / 100;
     }
-    let limit = if ferias != 0 { 0 } else { limit };
-    let active = ferias != 0 || limit > -1;
+    let limit = if holiday != 0 { 0 } else { limit };
+    let active = holiday != 0 || limit > -1;
     let (conhece, obs) = if side != 0 {
         (*((side + 0x1f) as *const usize), *((side + 0x1b) as *const usize))
     } else if manager != 0 {
@@ -4151,7 +4151,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     if flags & 0x10000 != 0 {
         if contrato != 0 {
             let mut extra = by_minute(contract_extra(p, contrato, flags, l28));
-            if ferias != 0 {
+            if holiday != 0 {
                 extra = match_pl_ftol(extra as f64 * read_f64_at(0x9689e0)); // 0x9689e0 = 0.25
             }
             l4c += extra;
@@ -4175,8 +4175,8 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     }
     l4c = own_club_bonus(p, clube, l4c);
     l4c = combine_rating(flags, base, l4c);
-    if ferias != 0 && (pos & 1 == 0 || masc & 1 != 0) {
-        l4c = holiday_selection_bonus(p, clube, ferias, pos, base, without_value, value, l4c);
+    if holiday != 0 && (pos & 1 == 0 || masc & 1 != 0) {
+        l4c = holiday_selection_bonus(p, clube, holiday, pos, base, without_value, value, l4c);
     }
     l4c
 }
@@ -4311,21 +4311,21 @@ pub(crate) unsafe fn tactic_instruction_adjust(f: usize, lo: u32, b1: u8, tactic
 /// posição (pelo menos 10000) se estiver entre os 11 e o técnico (0x5fea50) aceitar a posição; senão
 /// 200 x a nota (nunca negativa), com a nota negativa pela metade; pesado pelo valor do jogador.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn holiday_selection_bonus(p: usize, clube: usize, ferias: usize, pos: u32, base: i32, without_value: u32, value: i32, mut l4c: i32) -> i32 {
+pub(crate) unsafe fn holiday_selection_bonus(p: usize, clube: usize, holiday: usize, pos: u32, base: i32, without_value: u32, value: i32, mut l4c: i32) -> i32 {
     let id = *(p as *const i32);
-    let Some(k) = (0..16usize).find(|&k| *((ferias + 8 * k) as *const i32) == id) else {
+    let Some(k) = (0..16usize).find(|&k| *((holiday + 8 * k) as *const i32) == id) else {
         return l4c;
     };
-    let aceita = || {
+    let accepted = || {
         let g: unsafe extern "thiscall" fn(usize, i8, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
         if g(*(G_HUMAN_MANAGER as *const usize), 2, *((clube + club::MANAGER) as *const usize)) == 0 {
             return true;
         }
-        let w = *((ferias + 8 * k + 4) as *const i32);
+        let w = *((holiday + 8 * k + 4) as *const i32);
         w == pos as i16 as i32 || w == -1
     };
     let mut bonus;
-    if k < 0xb && aceita() {
+    if k < 0xb && accepted() {
         bonus = (base * 200).max(10000) + 40000;
         if l4c < 0 {
             l4c = 0;

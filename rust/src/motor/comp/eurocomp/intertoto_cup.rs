@@ -125,8 +125,8 @@ pub(crate) fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
 pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
     const F: usize = 0x9e9e14;
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x3c);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alocar(0xf0);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let v = alloc(0xf0);
     if v == 0 {
         show_error_at(F, 0x161);
         return (0, 0);
@@ -149,7 +149,7 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
         show_error_at(F, 0x172);
         return (0, 0);
     }
-    let l = alocar((n * 6) as u32);
+    let l = alloc((n * 6) as u32);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(F, 0x17c);
@@ -194,8 +194,8 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usiz
 /// conta (palavra).
 pub(crate) unsafe fn collect_club_list(this: usize, out: *mut usize, ativos: u32) -> u16 {
     let n = read_i16(this + 0x3e);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar((n as i32 * 4) as u32);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc((n as i32 * 4) as u32);
     if l == 0 {
         show_error_at(0x9e9e14, 0x2fb);
         *out = 0;

@@ -165,8 +165,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_transfer_request_withdrawn_
 }
 
 /// Comparer for `post_contract_expiry_news` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_post_contract_expiry_news(this: usize, contrato: usize, periodo: u32, bosman: u32, warn: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_POST_CONTRACT_EXPIRY_NEWS)(this, contrato, periodo, bosman, warn)
+pub(crate) unsafe extern "thiscall" fn comparar_post_contract_expiry_news(this: usize, contrato: usize, period: u32, bosman: u32, warn: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_POST_CONTRACT_EXPIRY_NEWS)(this, contrato, period, bosman, warn)
 }
 
 /// Comparer for `post_bosman_departure_news` (comparison mode: see the header of motor.rs).
@@ -180,30 +180,30 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_bosman_departure_news(this:
 /// estado, comparando a oferta (0x63 bytes), o contador e a cabeça da lista (o cursor). Oferta nova (acrescentada, aloca):
 /// a cópia em ensaio monta o registro; a original acrescenta, e o nó novo (o último do jogador pelo clube) tem de ter os
 /// mesmos 0x63 primeiros bytes, com o contador + 1.
-pub(crate) unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, termos: usize, slot: i32, value: u32, mark: u32, a5: u32, decidir: u32, acertado: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decidir: u32, acertado: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(IDX_ADD_CONTRACT_OFFER);
-    let id = read_usize(termos);
-    let clube = read_usize(termos + 4);
-    let cont = contract_offer_counter(termos);
+    let id = read_usize(terms);
+    let clube = read_usize(terms + 4);
+    let cont = contract_offer_counter(terms);
     let l = read_usize(this + 0x34);
     let item = if read_u8(cont) != 0 && l != 0 { find_contract_offer(l, id, clube) } else { 0 };
-    let mut todas = vec![(cont, 1usize)];
+    let mut all = vec![(cont, 1usize)];
     if item != 0 {
-        todas.push((item, 0x63));
-        todas.push((l, 0xe));
+        all.push((item, 0x63));
+        all.push((l, 0xe));
     }
-    let n_cmp = todas.len();
-    todas.extend(TRANSFER_MANAGER_DATE_STATICS);
-    todas.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let before = crate::comparacao::Memoria::ler(&todas);
+    let n_cmp = all.len();
+    all.extend(TRANSFER_MANAGER_DATE_STATICS);
+    all.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let before = crate::comparacao::Memoria::ler(&all);
     CONTRACT_OFFER_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| add_contract_offer(this, termos, slot, value, mark, a5, decidir, acertado)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| add_contract_offer(this, terms, slot, value, mark, a5, decidir, acertado)));
     CONTRACT_OFFER_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&todas[..n_cmp]);
+    let mr = crate::comparacao::Memoria::ler(&all[..n_cmp]);
     let record = DRY_RUN_CONTRACT_OFFER_RECORD;
     before.escrever();
-    o(this, termos, slot, value, mark, a5, decidir, acertado);
-    let mo = crate::comparacao::Memoria::ler(&todas[..n_cmp]);
+    o(this, terms, slot, value, mark, a5, decidir, acertado);
+    let mo = crate::comparacao::Memoria::ler(&all[..n_cmp]);
     let same = if item != 0 {
         mo == mr
     } else {

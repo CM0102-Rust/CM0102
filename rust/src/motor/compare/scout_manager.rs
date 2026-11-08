@@ -188,10 +188,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usiz
 }
 
 /// Comparer for `scout_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_scout_record(t: usize, qual: i8, manager: *const i32) -> usize {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8, *const i32) -> usize>(IDX_SCOUT_RECORD)(t, qual, manager);
-    let n = scout_record(t, qual, manager);
-    PLACAR.registrar(r == n, || format!("scout_record({:#x}, {}, {:p}) original={:#x} rust={:#x}", t, qual, manager, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_scout_record(t: usize, which: i8, manager: *const i32) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8, *const i32) -> usize>(IDX_SCOUT_RECORD)(t, which, manager);
+    let n = scout_record(t, which, manager);
+    PLACAR.registrar(r == n, || format!("scout_record({:#x}, {}, {:p}) original={:#x} rust={:#x}", t, which, manager, r, n));
     r
 }
 

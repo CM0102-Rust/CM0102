@@ -177,16 +177,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this:
     let r = o(this);
     let (lista, t) = (read_usize(this + 0xee), read_usize(this + 0xb1));
     let mut same = r == 1 && read_i16(this + 0x3e) == 7 && lista != 0 && t != 0 && plan.len() >= 7;
-    let mut sorteados: Vec<usize> = Vec::new();
+    let mut drawn: Vec<usize> = Vec::new();
     if same {
-        sorteados = (0..plan.len()).map(|k| read_usize(lista + k * 4)).collect();
-        let rows_ok = (0..7usize).all(|j| read_usize(t + j * 0x3b) == sorteados[j]);
-        let (mut a, mut b) = (sorteados.clone(), plan.clone());
+        drawn = (0..plan.len()).map(|k| read_usize(lista + k * 4)).collect();
+        let rows_ok = (0..7usize).all(|j| read_usize(t + j * 0x3b) == drawn[j]);
+        let (mut a, mut b) = (drawn.clone(), plan.clone());
         a.sort_unstable();
         b.sort_unstable();
         same = rows_ok && a == b;
     }
-    PLACAR.registrar(same, || format!("bra_nat_third_create_table({:#x}) original={} plano={:x?} lista={:x?}", this, r, plan, sorteados));
+    PLACAR.registrar(same, || format!("bra_nat_third_create_table({:#x}) original={} plano={:x?} lista={:x?}", this, r, plan, drawn));
     r
 }
 

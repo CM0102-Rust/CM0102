@@ -72,8 +72,8 @@ pub(crate) unsafe fn eng_cc_cup_create_single_stage_round_table(this: usize, sta
     }
     *rounds = table.len() as i16;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(table.len() as u32 * 0x68);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc(table.len() as u32 * 0x68);
     if t == 0 {
         show_error_at(file, row);
         return 0;
@@ -320,8 +320,8 @@ pub(crate) unsafe fn came_from_division(c: usize, de: usize) -> bool {
 pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x5c);
     *((this + 0xb2) as *mut u8) = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar(0x228);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc(0x228);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9c4224, 0x18f);
@@ -458,8 +458,8 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: usize, re
 /// ponteiros em +0xb2, a partir do 28º: +0x70), classe e situação 0. Devolve 1.
 pub(crate) unsafe fn collect_auto_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x1c);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar(0xa8);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc(0xa8);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9c4180, 0x19f);
@@ -500,8 +500,8 @@ pub(crate) unsafe fn latest_placed_club(id: usize, place: u32) -> usize {
 /// 0xe3 e 0). Classe e situação 0 nos dois; devolve 1.
 pub(crate) unsafe fn select_charity_shield_teams(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar(0xc);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc(0xc);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9c425c, 0xc5);

@@ -15,7 +15,7 @@ MUTACOES = [
     ('cpe_amistoso_sorteio', 'if friendly_random(5) == 1 { // o adversário do amistoso', 'if friendly_random(5) == 2 { // mutacao: outro sorteio'),
     ('cpe_excursao_sorteio', 'if friendly_random(2) == 1 { // o adversário da excursão', 'if friendly_random(2) == 0 { // mutacao: o outro lado do sorteio'),
     ('cpe_resultado_pontos_casa', 'league_add_i16(r + 0x27, points(read_usize(p + 0x1c))); // os pontos do mandante', 'league_add_i16(r + 0x27, points(read_usize(p + 0x1c)).wrapping_mul(2)); // mutacao: o dobro'),
-    ('cpe_pontos_vitoria', 'if venceu(pb(0x43), pb(0x44)) { ganho(0xc2) } else { 0 } // os pontos da vitória', 'if venceu(pb(0x43), pb(0x44)) { ganho(0xc2).wrapping_add(1) } else { 0 } // mutacao: um a mais'),
+    ('cpe_pontos_vitoria', 'if venceu(pb(0x43), pb(0x44)) { gain(0xc2) } else { 0 } // os pontos da vitória', 'if venceu(pb(0x43), pb(0x44)) { gain(0xc2).wrapping_add(1) } else { 0 } // mutacao: um a mais'),
     ('cpe_confronto_posicao', 'let dif = *((b + 4) as *const i8) as i32 - *((a + 4) as *const i8) as i32; // a posição do confronto', 'let dif = *((a + 4) as *const i8) as i32 - *((b + 4) as *const i8) as i32; // mutacao: invertida'),
     ('cpe_datas_ano', 'if ya < yb { // o ano antes\n        return -1;', 'if ya < yb { // mutacao: invertido\n        return 1;'),
     ('cpe_linha_do_clube', 'if read_usize(r) == clube { // a linha do clube\n                return r;', 'if read_usize(r) == clube { // mutacao: nunca acha\n                return 0;'),

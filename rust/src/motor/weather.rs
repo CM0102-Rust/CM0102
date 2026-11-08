@@ -549,7 +549,7 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
 /// períodos (0x922d20) em +0x1e, +0x31, +0x44 e +0x57. Devolve 1 se leu tudo (só o al, como a original).
 pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao: usize) -> u8 {
     let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
-    let periodo: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_WEATHER_READ_REGION_PERIOD);
+    let period: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_WEATHER_READ_REGION_PERIOD);
     crate::comparacao::ramo("cpt_5 regiao do clima");
     let mut row = [0u8; 2000];
     if read_config_line(f, row.as_mut_ptr()) == 0 {
@@ -559,7 +559,7 @@ pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao
         return 0;
     }
     for k in [0x1e, 0x31, 0x44, 0x57] {
-        if periodo(this, f, regiao + k) == 0 {
+        if period(this, f, regiao + k) == 0 {
             return 0;
         }
     }
@@ -576,7 +576,7 @@ pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao
 /// "Error" (weather.cpp, 0xea) e 0. Uma linha (0x90cba0) com o formato de 0xad4e2c (o nome e 18 inteiros: o dia,
 /// cinco W, cinco P e sete H); com os 19 lidos, o período (0x13 bytes) recebe o dia (palavra em +0) e os 17 bytes
 /// seguintes (+2..+0x12). Devolve 1 se leu (só o al).
-pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize, periodo: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize, period: usize) -> u8 {
     let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
     if f == 0 {
         show_error_at(0xad4dec, 0xea);
@@ -597,9 +597,9 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
     if n != 0x13 {
         return 0;
     }
-    core::ptr::write_unaligned(periodo as *mut u16, v[0] as u16);
+    core::ptr::write_unaligned(period as *mut u16, v[0] as u16);
     for k in 1..18usize {
-        *((periodo + 1 + k) as *mut u8) = v[k] as u8;
+        *((period + 1 + k) as *mut u8) = v[k] as u8;
     }
     1
 }

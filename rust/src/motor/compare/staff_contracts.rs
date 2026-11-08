@@ -80,16 +80,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_expiry_band(this: usize) -> 
 /// [pt] Comparador: sem `conferir`, lado a lado pelas queixas e pelo registro de opiniões da pessoa (79 bytes, o que a
 /// 0x549c90 escreve); com `conferir`, a retirada (0x4d9460) mexe na transferência: só a original (a 0x867240 passa
 /// pelo comparador dela).
-pub(crate) unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize, conferir: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize, check: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CLEAR_ALL_GRIEVANCES);
-    if conferir != 0 {
-        return o(this, conferir);
+    if check != 0 {
+        return o(this, check);
     }
     let mut reg = vec![(this + 0x45, 4)];
     if let Some(c) = database_staff_state_record(staff_of_contract(this)) {
         reg.push((c, 79));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, conferir), || clear_all_grievances(this, conferir));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, check), || clear_all_grievances(this, check));
     PLACAR.registrar(igual, || format!("clear_all_grievances({:x}) {:x?} x {:x?}", this, mo, mr));
 }
 

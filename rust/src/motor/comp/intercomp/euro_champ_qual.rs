@@ -108,8 +108,8 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
     let size: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_EUROCHAMPQUAL_GET_GROUP_TEAM_COUNT);
     let n = size(this, 0xffff_ffff);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar((n as i32 * 0x3b) as u32);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc((n as i32 * 0x3b) as u32);
     core::ptr::write_unaligned((this + 0xb1) as *mut u32, t as u32);
     if t == 0 {
         show_error_at(0x9c4674, 0x2d2);

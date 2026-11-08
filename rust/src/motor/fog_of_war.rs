@@ -19,7 +19,7 @@ pub(crate) unsafe extern "C" fn chance_to_know(person: usize, level: i8) -> i32 
 /// pelo id): grava a data de hoje (0xae2c90) em +1; sem observador (`fonte` +0x69) o nivel (+0)
 /// vai a 3. Com ele e nivel abaixo de 3: c = 0x544410(observador, byte +0x17), sorteio(c) (byte);
 /// c < 15 e sorteio 0: nivel + 1; senao nivel 0 e sorteio < 6: 2; senao 3.
-pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, fonte: usize) {
+pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, font: usize) {
     if person == 0 || *(person as *const i32) >= *(G_STAFF_COUNT as *const i32) {
         return;
     }
@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
     let mut data = [0u8; 8];
     let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     copy(reg + 1, data.as_mut_ptr() as usize, G_CURRENT_DATE);
-    let obs = if fonte == 0 { 0 } else { *((fonte + 0x69) as *const usize) };
+    let obs = if font == 0 { 0 } else { *((font + 0x69) as *const usize) };
     let level = reg as *mut u8;
     if obs == 0 {
         *level = 3;

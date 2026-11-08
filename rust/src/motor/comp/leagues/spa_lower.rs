@@ -280,7 +280,7 @@ pub(crate) const LOWER_ODD_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerC
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40, cada uma com a rodada
 /// do Natal; as outras devolvem 0. Fonte 0xa82980.
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -288,7 +288,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, st
             }
             *rounds = 42;
             *extra = 0;
-            let t = alocar(0xaaa);
+            let t = alloc(0xaaa);
             if t == 0 {
                 show_error_at(0xa82880, 0x8b);
                 return 0;
@@ -460,11 +460,11 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
 /// (al = a linha, os bits de cima são lixo de outra conta; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret
 /// 0x10). Devolve se encheu.
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x16);
-    let t = alocar(0x512);
+    let t = alloc(0x512);
     write_u32_from_usize(this + 0xb1, t);
     if t == 0 {
         show_error_at(0xa82880, 0x2ac);
@@ -499,9 +499,9 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     crate::comparacao::ramo("cqm_6 tabela da divisao de baixo");
     let mut list = spanish_lower_candidates();
     let how_many = list.len() as u16 as u32;
-    let faltam = (read_i16(this + 0x3e) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
+    let missing = (read_i16(this + 0x3e) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
     list.resize(100, 0);
-    embaralhar(list.as_mut_ptr() as usize, how_many, faltam);
+    embaralhar(list.as_mut_ptr() as usize, how_many, missing);
     let mut j: i16 = 0;
     while j < how_many as u16 as i16 && (k as i8 as i16) < read_i16(this + 0x3e) {
         let c = list[j as usize];

@@ -679,8 +679,8 @@ pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino:
 /// Pointer to the training load byte (+0x1e) of a player's 31-byte condition record.
 ///
 /// [pt] O byte da carga de treino do jogador `*id` no registro de condição (31 bytes por jogador, +0x1e).
-pub(crate) unsafe fn training_load_byte(lesoes: usize, id: *const i32) -> *mut u8 {
-    (*(lesoes as *const usize) as isize + *id as isize * 31 + 0x1e) as *mut u8
+pub(crate) unsafe fn training_load_byte(injuries: usize, id: *const i32) -> *mut u8 {
+    (*(injuries as *const usize) as isize + *id as isize * 31 + 0x1e) as *mut u8
 }
 
 

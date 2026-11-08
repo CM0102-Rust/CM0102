@@ -300,18 +300,18 @@ pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
 /// formação). A linha vem do setor (tabelas de 4 pela altura; no ataque, os laterais 0x80/0x800
 /// sobem 1, ou 1/4 nos setores 2 e 4); a coluna, do lado (tabelas de 5); depois os encostos nas
 /// faixas e os limites. Argumentos fora da faixa: a original (caixa de erro e 0). Devolve 1.
-pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, ataque: i8, band: u32, out: *mut i16) -> u32 {
+pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, attack: i8, band: u32, out: *mut i16) -> u32 {
     let low = band as u16 as i16;
     let high = (band >> 16) as u16 as i16;
-    if !(0..=1).contains(&ataque) || !(0..=2).contains(&low) || !(0..=3).contains(&high) {
-        return original_fn::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(IDX_PITCH_CELL)(mask, ataque, band, out);
+    if !(0..=1).contains(&attack) || !(0..=2).contains(&low) || !(0..=3).contains(&high) {
+        return original_fn::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(IDX_PITCH_CELL)(mask, attack, band, out);
     }
     let split: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
     let (mut setor, mut lado) = (0u16, 0u16);
     split(mask, &mut setor, &mut lado);
     let a = high as usize;
     let throw_in = lado & 0x80 != 0 || lado & 0x800 != 0;
-    let at = ataque != 0;
+    let at = attack != 0;
     // a linha (saida[1])
     let row: i16 = if setor & 1 != 0 {
         if at { [0, 2, 4, 6][a] } else { [0, 1, 2, 3][a] }
@@ -382,7 +382,7 @@ pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, ataque: i8, band: u32, out
     // os encostos: com `perto`, um passo na faixa; sem, cinco (fora do goleiro)
     let near = (setor & 1 != 0 && high > 0)
         || (setor & 6 != 0 && high == 0)
-        || (setor & 0x40 != 0 && lado & 0x700 != 0 && high == 3 && ataque == 1);
+        || (setor & 0x40 != 0 && lado & 0x700 != 0 && high == 3 && attack == 1);
     let step_towards = if near { 1 } else if setor & 1 == 0 { 5 } else { 0 };
     if step_towards != 0 {
         let v = *out as i32;
@@ -673,8 +673,8 @@ pub(crate) unsafe extern "thiscall" fn build_position_lookup(this: usize) -> u32
                 let i = (12 * k + 4 * a18 + a14) as usize;
                 for y in 3 * a18..3 * a18 + 3 {
                     for x in 3 * a14..3 * a14 + 3 {
-                        let coluna = core::ptr::read_unaligned((this + i * 4 + 0x164) as *const i16) as i32;
-                        let c = (coluna * 9 / 27) as u8;
+                        let column = core::ptr::read_unaligned((this + i * 4 + 0x164) as *const i16) as i32;
+                        let c = (column * 9 / 27) as u8;
                         let p = (this as isize + 0x5eb + ((9 * k + y) * 12 + x) as isize) as *mut u8;
                         *p = (*p & 0xf0) | (c & 0xf);
                         let row = core::ptr::read_unaligned((this + i * 4 + 0x166) as *const i16) as i32;
@@ -722,13 +722,13 @@ pub(crate) unsafe fn formation_watched_match_record(this: usize, human: usize) -
 /// [pt] { 0x5b3c70 } (thiscall, ret 0x10, formation.cpp): a casa guardada da vaga `vaga` 0..10 com
 /// `ataque` 0/1 e `faixa` (palavra baixa 0..2, alta 0..3): o dword +0x164 + 4×(alta + 4×(baixa +
 /// 3×(ataque + 2×vaga))) vai para `*saida`. Devolve 1. Fora das faixas: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn stored_cell(t: usize, slot: i8, ataque: i8, band: u32, out: *mut u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn stored_cell(t: usize, slot: i8, attack: i8, band: u32, out: *mut u32) -> u32 {
     let low = band as u16 as i16;
     let high = (band >> 16) as u16 as i16;
-    if !(0..=10).contains(&slot) || !(0..=1).contains(&ataque) || !(0..=2).contains(&low) || !(0..=3).contains(&high) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(IDX_STORED_CELL)(t, slot, ataque, band, out);
+    if !(0..=10).contains(&slot) || !(0..=1).contains(&attack) || !(0..=2).contains(&low) || !(0..=3).contains(&high) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(IDX_STORED_CELL)(t, slot, attack, band, out);
     }
-    let i = high as usize + 4 * (low as usize + 3 * (ataque as usize + 2 * slot as usize));
+    let i = high as usize + 4 * (low as usize + 3 * (attack as usize + 2 * slot as usize));
     *out = core::ptr::read_unaligned((t + 0x164 + 4 * i) as *const u32);
     1
 }
@@ -929,12 +929,12 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         write_u32(team, read_u32(team) | 0x20000);
     }
     let guardada: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32 = core::mem::transmute(FN_FORMATION_GET_SLOT_COORDINATE);
-    let refazer: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) -> u32 = core::mem::transmute(FN_FORMATION_SET_SLOT_COORDINATE);
+    let redo: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) -> u32 = core::mem::transmute(FN_FORMATION_SET_SLOT_COORDINATE);
     let mut c = 0u32;
     for vaga in 0..0xbi32 {
         guardada(this, vaga as i8, 0, 0, &mut c); // cqg8: a casa guardada da fase 0
         crate::comparacao::ramo("cqg_8 posicoes refeitas");
-        refazer(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa
+        redo(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa
     }
     let split: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_STRTOK);
     split(path, 0, 0, this, 0);

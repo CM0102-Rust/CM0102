@@ -262,11 +262,11 @@ pub(crate) unsafe extern "thiscall" fn days_to_end_date(this: usize) -> u32 {
 /// [pt] { 0x867520 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::clear_all_grievances(conferir)`: zera as
 /// queixas (+0x45), tira os vínculos de opinião da pessoa (0x549c90) e, com `conferir`, confere a retirada do pedido de
 /// transferência (0x867240 com 0).
-pub(crate) unsafe extern "thiscall" fn clear_all_grievances(this: usize, conferir: u32) {
+pub(crate) unsafe extern "thiscall" fn clear_all_grievances(this: usize, check: u32) {
     core::ptr::write_unaligned((this + 0x45) as *mut u32, 0); // as queixas
     let vinculos: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_CLEAR_OPINION_LINKS);
     vinculos(staff_of_contract(this));
-    if conferir != 0 {
+    if check != 0 {
         let retirada: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_STAFF_CONTRACT_CHECK_TRANSFER_REQUEST_WITHDRAWAL);
         retirada(this, 0);
     }
@@ -329,13 +329,13 @@ pub(crate) unsafe extern "thiscall" fn check_transfer_request_withdrawal(this: u
     if (read_u8(this + 0x3d) as i8) < 15 {
         *((this + 0x3d) as *mut u8) = 15; // a felicidade mínima
     }
-    let conferir: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_STAFF_CONTRACT_CHECK_TRANSFER_REQUEST_WITHDRAWAL);
+    let check: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_STAFF_CONTRACT_CHECK_TRANSFER_REQUEST_WITHDRAWAL);
     let contract_bond: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_STAFF_REMOVE_OPINION_LINK);
     for bit in [0x10u32, 1, 4, 8, 0x100, 0x80, 0x10000] {
         let q = read_u32(this + 0x45);
         if q & bit != 0 {
             core::ptr::write_unaligned((this + 0x45) as *mut u32, q & !bit); // a queixa apagada
-            conferir(this, q);
+            check(this, q);
             contract_bond(staff_of_contract(this), bit as i32);
         }
     }
@@ -376,8 +376,8 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
     if quer_sair(c) == 0 {
         return;
     }
-    let futura: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
-    if futura(read_usize(G_TRANSFER_MANAGER), person, 0) != 0 || read_u8(c + 0x4e) & 9 != 0 {
+    let future: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
+    if future(read_usize(G_TRANSFER_MANAGER), person, 0) != 0 || read_u8(c + 0x4e) & 9 != 0 {
         return;
     }
     let in_queue: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_IS_QUEUED_FOR_FREE_TRANSFER);
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     desejado(l, person, friendly_club_by_id(read_usize(this + 4)), -1, status, 0xb, 0, 0);
     let v1 = calc_contract_value(this, person, l) as f32;
     let v2 = calc_contract_value(l, person, l) as f64;
-    let mut razao = if v2 == read_f32_at(0x968970) as f64 { // 0x968970 = 0
+    let mut ratio = if v2 == read_f32_at(0x968970) as f64 { // 0x968970 = 0
         read_f32_at(0x968970) as f64 // 0x968970 = 0
     } else {
         v1 as f64 * read_f32_at(0x968960) as f64 / v2 // 0x968960 = 100
@@ -444,13 +444,13 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     let adapt = read_u8(person + staff::LOYALITY) as i8 as i32;
     if days < adapt.wrapping_mul(15).wrapping_add(100) {
         crate::comparacao::ramo("cpw_1 contratado ha pouco");
-        razao = razao + read_f32_at(0x969560) as f64 + adapt as f64 * read_f64_at(0x968eb0) - (days / 2) as f64; // cpw1: o desconto do recém-contratado; 0x969560 = 50, 0x968eb0 = 7.5
+        ratio = ratio + read_f32_at(0x969560) as f64 + adapt as f64 * read_f64_at(0x968eb0) - (days / 2) as f64; // cpw1: o desconto do recém-contratado; 0x969560 = 50, 0x968eb0 = 7.5
     }
     crate::comparacao::ramo("cpw_1 satisfacao avaliada");
-    if !(razao >= read_f32_at(0x969560) as f64) { // cpw1: o limite da insatisfação; 0x969560 = 50
+    if !(ratio >= read_f32_at(0x969560) as f64) { // cpw1: o limite da insatisfação; 0x969560 = 50
         return 1;
     }
-    if razao < read_f32_at(0x96ff70) as f64 { // cpw1: o limite da satisfação; 0x96ff70 = 80
+    if ratio < read_f32_at(0x96ff70) as f64 { // cpw1: o limite da satisfação; 0x96ff70 = 80
         3
     } else {
         2

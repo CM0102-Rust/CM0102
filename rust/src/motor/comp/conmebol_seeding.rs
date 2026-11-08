@@ -187,10 +187,10 @@ pub(crate) unsafe extern "thiscall" fn is_mercosur_invited_club(_this: usize, cl
 /// divisão de uma competição sem o +0x11c, a divisão e o +0x5f do clube zeram). Ordena pela nação (qsort 0x945333 com
 /// 0x905ce0). Devolve o número de clubes (só os 16 bits baixos contam).
 pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let t = alocar((read_u32(G_CLUB_COUNT) as i32).wrapping_mul(12) as u32);
+    let t = alloc((read_u32(G_CLUB_COUNT) as i32).wrapping_mul(12) as u32);
     *out = t;
     if t == 0 {
         show_error_at(0x9a7ed8, 0xbb);

@@ -12,7 +12,7 @@ MUTACOES = [
     ('c_desafiante', "if nota >= rating_shot || sortear(5) == 0 {", "if nota > rating_shot || sortear(5) == 0 {"),
     ('c_chutador', "if checar_chutador && (rating_shot > nota || sortear(5) == 0) {", "if checar_chutador && (rating_shot >= nota || sortear(5) == 0) {"),
     ('c_ajuste_penalti', "if ajustar_no_penalti && sortear(byte(", "if !ajustar_no_penalti && sortear(byte(", "shot penalty do desafiante"),
-    ('c_ganho', "mais(w(e, 0x35), if far { ganho.wrapping_mul(2) } else { ganho });", "mais(w(e, 0x35), if far { ganho.wrapping_mul(3) } else { ganho });"),
+    ('c_ganho', "more(w(e, 0x35), if far { gain.wrapping_mul(2) } else { gain });", "more(w(e, 0x35), if far { gain.wrapping_mul(3) } else { gain });"),
     ('c_cabeca_216', "if r + byte(pj, 0x2e) as i32 + 3 < byte(pe, 0x2e) as i32 {", "if r + byte(pj, 0x2e) as i32 + 4 < byte(pe, 0x2e) as i32 {", "shot de cabeca com desafiante"),
     ('c_longe', "let code = if strength < -500 {", "let code = if strength < -400 {", "shot narra de longe"),
     ('c_posse', "let v = match_pl_ftol(rating_shot as f64 * read_f64_at(0x96d7a0));", "let v = match_pl_ftol(rating_shot as f64 * read_f64_at(0x96d7a0) * 1.01);"),

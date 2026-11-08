@@ -73,8 +73,8 @@ pub(crate) unsafe fn build_single_stage_cup_rounds(this: usize, stage: u32, roun
     }
     *rounds = table.len() as i16;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(table.len() as u32 * 0x68);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc(table.len() as u32 * 0x68);
     if t == 0 {
         show_error_at(file, row);
         return 0;
@@ -232,8 +232,8 @@ pub(crate) unsafe fn sort_entrants(base: usize, n: u32) {
 /// qsort (0x522190) das 16 inscrições a partir da 11ª (+0x42). Devolve 1 com a lista cheia, senão 0.
 pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x1c);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar(0xa8);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc(0xa8);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9eaf14, 0x11a);
@@ -409,8 +409,8 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_collect_entrants_90b530(this: u
 /// (+0x5f), até encher; o qsort (0x522190) das 16 últimas inscrições. Devolve 1 com a lista cheia, senão 0.
 pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x50);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar(0x1e0);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc(0x1e0);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9eab90, 0x147);

@@ -60,9 +60,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: us
     sort(v.as_mut_ptr(), n as i32);
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut nm, mut id) = (0i16, 0i16);
-    let mata = rounds_of_cup(this, 0xc, &mut nm, &mut id, 0);
-    let plan = if mata != 0 { planned_final_positions(this, mata, nm).0 } else { Vec::new() };
-    soltar(mata);
+    let knockout = rounds_of_cup(this, 0xc, &mut nm, &mut id, 0);
+    let plan = if knockout != 0 { planned_final_positions(this, knockout, nm).0 } else { Vec::new() };
+    soltar(knockout);
     o(this);
     if plan.iter().any(|&(k, _)| k as usize >= n) {
         return; // a original lê além do vetor: sem conferência
@@ -82,13 +82,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: us
 /// [pt] Só a original (sorteia, paga prêmios, aloca as fases e manda notícias; e se chama de novo), conferindo o plano: na
 /// chamada de fora (tentativa 0), as fases 8..11 existem, +0x30 = 11 e os clubes das tabelas delas (+0xb1, linhas de
 /// 0x3b bytes) são os 16 classificados.
-pub(crate) unsafe extern "thiscall" fn comparar_draw_phase2_groups(this: usize, tentativa: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_draw_phase2_groups(this: usize, attempt: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW_PHASE2_GROUPS);
-    if tentativa as u8 != 0 || read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) * 4) == 0 {
-        return o(this, tentativa);
+    if attempt as u8 != 0 || read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) * 4) == 0 {
+        return o(this, attempt);
     }
     let plan = second_stage_clubs(this);
-    o(this, tentativa);
+    o(this, attempt);
     let mut vistos = Vec::with_capacity(16);
     let mut ok = read_u32_as_usize(this + 0x30) == 11;
     for h in 8..12usize {
@@ -261,19 +261,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_fixture(this: usize, jog
     if ca == 0 || cb == 0 || fa == 0 || fb == 0 {
         return o(this, jogo, arg); // simplification: sem nação, seleção ou finanças, só a original (cai do mesmo jeito)
     }
-    let conferir = [(ca, 2), (cb, 2)];
+    let check = [(ca, 2), (cb, 2)];
     let before = crate::comparacao::Memoria::ler(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
     let stage = read_i32(this + 0x30);
     EUROPEAN_CUP_FIXTURE_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| process_fixture(this, jogo, arg)));
     EUROPEAN_CUP_FIXTURE_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&conferir);
+    let mr = crate::comparacao::Memoria::ler(&check);
     before.escrever();
     o(this, jogo, arg);
     if read_i32(this + 0x30) != stage {
         return; // simplification: a fase andou na base e o sorteio somou coeficiente: sem comparação
     }
-    let mo = crate::comparacao::Memoria::ler(&conferir);
+    let mo = crate::comparacao::Memoria::ler(&check);
     PLACAR.registrar(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
 }
 

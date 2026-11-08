@@ -176,7 +176,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     let number: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_947311);
     let numero_curto: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_94739C);
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let procurar: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_STRSTR);
     let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_UTILS_FILE_EXISTS);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     const TABELA: usize = 0xb68788;
     const FIM: usize = 0xb6b723;
     const BUF: usize = 0xde1f64;
-    let evento = |k: i32| TABELA.wrapping_add((k as isize * 0x12) as usize);
+    let event = |k: i32| TABELA.wrapping_add((k as isize * 0x12) as usize);
     let sons = |e: usize| core::ptr::read_unaligned((e + 8) as *const usize);
     let how_many = |e: usize| core::ptr::read_unaligned((e + 0xc) as *const i16);
     let weight = |e: usize| (e + 0xe) as *mut i32;
@@ -266,7 +266,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
             c = read(f);
         }
         *((BUF + n) as *mut u8) = 0;
-        let t = alocar(n as u32 + 1);
+        let t = alloc(n as u32 + 1);
         if t == 0 {
             fatal_error_at(FONTE, linha_alocacao);
         }
@@ -296,7 +296,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
             0x3d => {
                 // `=`: confere o evento anterior e abre o novo
                 if current != -1 {
-                    let e = evento(current);
+                    let e = event(current);
                     let s = sons(e);
                     if s == 0 {
                         format(BUF, 0xa15b38, current);
@@ -315,7 +315,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                     format(BUF, 0xa15aa0, current);
                     fatal_error_at(FONTE, 0xcfb);
                 }
-                let e = evento(current);
+                let e = event(current);
                 let mut c = 0;
                 for o in 0..7usize {
                     c = field();
@@ -344,7 +344,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 if current == -1 {
                     fatal_error_at(FONTE, 0xd49);
                 }
-                let e = evento(current);
+                let e = event(current);
                 let new = realloc(sons(e), (how_many(e) as i32 + 1) as u32 * 0x110);
                 if new == 0 {
                     fatal_error_at(FONTE, 0xd50);
@@ -387,7 +387,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 if current == -1 {
                     fatal_error_at(FONTE, sem);
                 }
-                let e = evento(current);
+                let e = event(current);
                 if how_many(e) == 0 {
                     fatal_error_at(FONTE, cheio);
                 }
@@ -410,7 +410,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 
     // os pesos: (maior x 10) / peso de cada som, e +0xe a soma; evento sem som ganha o padrao
     for k in 0..0x2a5i32 {
-        let e = evento(k);
+        let e = event(k);
         if sons(e) == 0 {
             core::ptr::write_unaligned((e + 8) as *mut usize, 0xb68670);
             core::ptr::write_unaligned((e + 0xc) as *mut i16, 1);
@@ -450,7 +450,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 /// a letra seguinte `C` poe em maiusculas (0x90c2d0). Escreve em [0xb67ea0] (e devolve), recontando
 /// o tamanho por `strlen` depois de cada marca, como a original; sem evento, sem texto ou sem o
 /// trecho pedido, 0. Marca desconhecida avisa 0xb10.
-pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i32, variante: u32) -> usize {
+pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i32, variant: u32) -> usize {
     const BUF: usize = 0xb67ea0;
     const TEMP: usize = 0xb67dd8;
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -473,15 +473,15 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
         return 0;
     }
     let n = core::ptr::read_unaligned((e + 0xc) as *const i16);
-    let qual = (ev + 2) as *mut i16;
-    if *qual as i32 > n as i32 - 1 {
-        *qual = n.wrapping_sub(1);
+    let which = (ev + 2) as *mut i16;
+    if *which as i32 > n as i32 - 1 {
+        *which = n.wrapping_sub(1);
     }
-    let mut s = core::ptr::read_unaligned((sons as isize + *qual as isize * 0x110 + 0x10c) as *const usize);
+    let mut s = core::ptr::read_unaligned((sons as isize + *which as isize * 0x110 + 0x10c) as *const usize);
     if s == 0 {
         return 0;
     }
-    let v = variante as u16 as i16;
+    let v = variant as u16 as i16;
     if v > 0 {
         let mut resta = v as u8 as i8;
         let mut c = *(s as *const u8);
@@ -651,13 +651,13 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                             if referee <= -1 {
                                 format_text(dest(out), fixo);
                             } else {
-                                let resto = ((b(7) as i8 as i32 + b(5) as i8 as i32 + core::ptr::read_unaligned((ctx + 4) as *const i32)) % 5) as i8;
+                                let rest = ((b(7) as i8 as i32 + b(5) as i8 as i32 + core::ptr::read_unaligned((ctx + 4) as *const i32)) % 5) as i8;
                                 let sheet = (*(G_OFFICIAL_TABLE as *const usize)).wrapping_add((referee as usize).wrapping_mul(0x2b));
-                                let mode = if language() == 4 && resto == 0 {
+                                let mode = if language() == 4 && rest == 0 {
                                     1
-                                } else if resto == 0 {
+                                } else if rest == 0 {
                                     5
-                                } else if resto > 0 && resto <= 2 {
+                                } else if rest > 0 && rest <= 2 {
                                     1
                                 } else {
                                     0
@@ -737,13 +737,13 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 /// evento (0x8025e0 no canal pela opcao 6, lado pela opcao 5), e marca a hora e a duracao do som
 /// (+0x2d6c, +0x2dac = peso x volume / 100).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, largura: i32, quebrar: u32, fonte: usize, mode: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
     let tocando: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_SOUND_PLAYING);
     let parar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
     let tocar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_PLAY_SOUND);
     let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let largura_do_texto: unsafe extern "C" fn(usize, *const u8) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
-    let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u8, *mut u8) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
+    let width_of_text: unsafe extern "C" fn(usize, *const u8) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
+    let colours_of_club: unsafe extern "C" fn(usize, u32, *mut u8, *mut u8) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let name_of_player: unsafe extern "C" fn(usize, i32, i32, *mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_FORMAT_PLAYER_NAME);
@@ -781,7 +781,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     let b = |o: usize| *((ev + o) as *const u8);
     let k = ((*(ev as *const u16) & 0x7fff) as i32 - 0x1f40) as i16;
     let e = (TABELA + k as isize * 18) as usize;
-    let qual = || *((ev + 2) as *const i16) as isize;
+    let which = || *((ev + 2) as *const i16) as isize;
     let sons = || core::ptr::read_unaligned((e + 8) as *const usize);
     let mut cor1 = [0u8; 4];
     let mut cor2 = [0u8; 4];
@@ -792,15 +792,15 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         if sons() == 0 {
             return 0;
         }
-        if core::ptr::read_unaligned((sons() as isize + qual() * 0x110 + 0x108) as *const usize) == 0 {
+        if core::ptr::read_unaligned((sons() as isize + which() * 0x110 + 0x108) as *const usize) == 0 {
             return 0;
         }
         // as cores do clube do lance (uniforme do lado)
         let side = b(6);
         let mut club_id = if side != 0 { *((ctx + 4) as *const usize) } else { *(ctx as *const usize) };
         let kit = *((ctx as isize + side as i8 as isize * 1573 + 0x152) as *const u8) as u32;
-        cores_do_clube((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
-        let mut s = core::ptr::read_unaligned((sons() as isize + qual() * 0x110 + 0x108) as *const usize);
+        colours_of_club((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
+        let mut s = core::ptr::read_unaligned((sons() as isize + which() * 0x110 + 0x108) as *const usize);
         let v = b(0xd) as i8;
         if v > 0 {
             let mut resta = v;
@@ -881,7 +881,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         let mut inteiro = [0u8; 0x800];
         let mut arb = [0u8; 0xd0];
         let mut text_stage = [0u8; 0x800];
-        let cores_padrao = |c1: &mut [u8; 4], c2: &mut [u8; 4], second: usize| {
+        let colours_default = |c1: &mut [u8; 4], c2: &mut [u8; 4], second: usize| {
             core::ptr::write_unaligned(c1.as_mut_ptr() as *mut u16, *(G_GUI_COLOUR_BLACK as *const u16));
             core::ptr::write_unaligned(c2.as_mut_ptr() as *mut u16, *(second as *const u16));
         };
@@ -924,7 +924,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                     n += 1;
                                 }
                                 inteiro[n] = 0;
-                                let curto = (largura_do_texto(fonte, inteiro.as_ptr()) as i16) < 0x12c;
+                                let curto = (width_of_text(font, inteiro.as_ptr()) as i16) < 0x12c;
                                 name_of_player(ctx, lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, curto as u32, mode, 1);
                                 sufixo(pos + 3, &mut suf);
                                 let r = compor(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
@@ -981,16 +981,16 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             club_id = if side != 0 { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
                             let a = (side == 0) as isize;
                             let kit = *((ctx as isize + a * 1573 + 0x152) as *const u8) as u32;
-                            cores_do_clube((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
+                            colours_of_club((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
                             *(dest(out) as *mut u8) = 0;
                         }
                         b'Y' | b'y' => {
-                            cores_padrao(&mut cor1, &mut cor2, 0xaebdec);
+                            colours_default(&mut cor1, &mut cor2, 0xaebdec);
                             *(dest(out) as *mut u8) = 0;
                         }
                         b'R' | b'r' => {
                             if t(pos + 2) != b'f' {
-                                cores_padrao(&mut cor1, &mut cor2, 0xae31a8);
+                                colours_default(&mut cor1, &mut cor2, 0xae31a8);
                                 *(dest(out) as *mut u8) = 0;
                             } else {
                                 let fixo = if x == b'R' { 0xa15a14usize } else { 0xa159e0 };
@@ -1002,13 +1002,13 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                         .wrapping_add(b(5) as i8 as i32)
                                         .wrapping_add(core::ptr::read_unaligned((ctx + 4) as *const i32))
                                         .wrapping_add(club_id as i32);
-                                    let resto = (sum % 5) as i8;
+                                    let rest = (sum % 5) as i8;
                                     let sheet = (*(G_OFFICIAL_TABLE as *const usize)).wrapping_add((referee as usize).wrapping_mul(0x2b));
-                                    let mode_name = if language() == 4 && resto == 0 {
+                                    let mode_name = if language() == 4 && rest == 0 {
                                         1
-                                    } else if resto == 0 {
+                                    } else if rest == 0 {
                                         5
-                                    } else if resto > 0 && resto <= 2 {
+                                    } else if rest > 0 && rest <= 2 {
                                         1
                                     } else {
                                         0
@@ -1062,7 +1062,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         }
         *(dest(out) as *mut u8) = 0;
         // larga demais: quebra ou corta numa palavra com "..."
-        if largura_do_texto(fonte, row.as_ptr()) > largura - 0x10 {
+        if width_of_text(font, row.as_ptr()) > width - 0x10 {
             let mut n = 0usize;
             while row[n] != 0 {
                 n += 1;
@@ -1074,7 +1074,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                 loop {
                     si -= 1;
                     *(dest(si) as *mut u8) = 0;
-                    if largura_do_texto(fonte, row.as_ptr()) <= largura - 0x10 {
+                    if width_of_text(font, row.as_ptr()) <= width - 0x10 {
                         if si > 0 {
                             loop {
                                 if *(dest(si - 1) as *const u8) == b' ' {
@@ -1107,7 +1107,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
             }
         }
         colour_of_bottom(SOM, painel, core::ptr::read_unaligned(cor2.as_ptr() as *const u32));
-        fonte_do_painel(SOM, painel, fonte);
+        fonte_do_painel(SOM, painel, font);
         colour_of_text(SOM, painel, core::ptr::read_unaligned(cor1.as_ptr() as *const u32));
         texto_do_painel(SOM, painel, row.as_ptr());
         margem(SOM, painel, 0x30);
@@ -1117,7 +1117,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     // o som do evento
     *(((nar as isize) + eu() + 0x10) as *mut u8) = 0xff;
     if b(0xd) as i8 <= 0 && *((nar + 0x2db0) as *const u8) >= 0x65 {
-        let som = (sons() as isize + qual() * 0x110) as usize;
+        let som = (sons() as isize + which() * 0x110) as usize;
         if *((som + 4) as *const u8) != 0 {
             let canal = if *((e + 6) as *const u8) == 0 { 0xb6b722usize } else { ((nar as isize) + eu() + 0x10) as usize };
             *(G_MATCH_EVENTS_CURRENT_SLOT_PTR as *mut usize) = canal;
@@ -1135,7 +1135,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     }
     let now = relogio();
     core::ptr::write_unaligned(((nar as isize) + eu() * 4 + 0x2d6c) as *mut u32, now);
-    let weight = *((sons() as isize + qual() * 0x110 + 2) as *const i16) as i32;
+    let weight = *((sons() as isize + which() * 0x110 + 2) as *const i16) as i32;
     let volume = *((nar + 0x2db0) as *const u8) as i32;
     core::ptr::write_unaligned((nar + 0x2dac) as *mut i32, (weight.wrapping_mul(volume) / 100) as i16 as i32);
     0
@@ -1192,9 +1192,9 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
         }
         p = slot(t);
     }
-    let evento = (*(p as *const u16) & 0x7fff).wrapping_add(0xe0c0) as i16 as isize;
+    let event = (*(p as *const u16) & 0x7fff).wrapping_add(0xe0c0) as i16 as isize;
     let record = *(p as *const i16).add(1) as isize;
-    let table = *((0xb68790 + evento * 0x12) as *const isize);
+    let table = *((0xb68790 + event * 0x12) as *const isize);
     let text = *((table + record * 0x110 + 0x108) as *const *const u8);
     let n = {
         let mut k = 0usize;

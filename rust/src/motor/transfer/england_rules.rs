@@ -8,9 +8,9 @@ use super::*;
 /// no início da janela e 0 no fim; duas datas por janela) alocada em +4 (0x944e46; sem memória, a caixa da linha
 /// `linha` do fonte `arquivo`).
 pub(crate) unsafe fn set_transfer_windows(this: usize, n: u8, t: &[[u8; 6]], file: usize, row: u32) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     *((this + 8) as *mut u8) = n;
-    let j = alocar((t.len() * 6) as u32);
+    let j = alloc((t.len() * 6) as u32);
     core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
     if j == 0 {
         show_error_at(file, row);
@@ -48,7 +48,7 @@ pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: imp
     let campos = a[..4] == s[..4] && a[8..] == s[8..0x19];
     let (ja, jb) = (read_u32(this + 4) as usize, read_u32(r + 4) as usize);
     let n = s[8] as usize * 12;
-    let janelas = if ja != 0 && jb != 0 {
+    let windows = if ja != 0 && jb != 0 {
         core::slice::from_raw_parts(ja as *const u8, n) == core::slice::from_raw_parts(jb as *const u8, n)
     } else {
         ja == jb
@@ -56,7 +56,7 @@ pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: imp
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.registrar(campos && janelas, || format!("{}: campos {} janelas {}", name, campos, janelas));
+    PLACAR.registrar(campos && windows, || format!("{}: campos {} janelas {}", name, campos, windows));
 }
 
 /// A janela da Inglaterra: de 2 de junho (andando para a segunda-feira [inferência]) a 26 de março (andando para a quinta-feira [inferência]).
@@ -215,8 +215,8 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         return 0;
     }
     // 0x8e8e50: push 0; push 0xae2c90; mov ecx, edi (this) -> thiscall, ret 8 (a janela aberta hoje)
-    let janela: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
-    if janela(this, G_CURRENT_DATE, 0) != 0 {
+    let window: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
+    if window(this, G_CURRENT_DATE, 0) != 0 {
         return 1;
     }
     crate::comparacao::ramo("cqe_5 fora da janela");

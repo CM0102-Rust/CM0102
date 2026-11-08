@@ -74,14 +74,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_player_match_rating_verdict(
 /// Comparer for `build_board_player_performance_text` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado nos primeiros 0x200 bytes da saída (o único chamador, 0x6a69c0, passa um texto de 1500).
-pub(crate) unsafe extern "stdcall" fn comparar_build_board_player_performance_text(ids: *const i32, win: u32, out: usize, variante: u32) {
+pub(crate) unsafe extern "stdcall" fn comparar_build_board_player_performance_text(ids: *const i32, win: u32, out: usize, variant: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(*const i32, u32, usize, u32)>(IDX_BUILD_BOARD_PLAYER_PERFORMANCE_TEXT);
     if ids.is_null() || (*ids == -1 && (*ids.add(1) != -1 || *ids.add(2) != -1)) {
-        return o(ids, win, out, variante);
+        return o(ids, win, out, variant);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(out, 0x200)], || o(ids, win, out, variante),
-        || build_board_player_performance_text(ids, win, out, variante));
-    PLACAR.registrar(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", win as u8, variante,
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(out, 0x200)], || o(ids, win, out, variant),
+        || build_board_player_performance_text(ids, win, out, variant));
+    PLACAR.registrar(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", win as u8, variant,
         String::from_utf8_lossy(&mo.0[0].1[..0x40]), String::from_utf8_lossy(&mr.0[0].1[..0x40])));
 }
 
@@ -186,8 +186,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_ban_appeals(this: usize)
 }
 
 /// Comparer for `consider_sacking_manager` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_consider_sacking_manager(this: usize, clube: usize, conferir: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_CONSIDER_SACKING_MANAGER)(this, clube, conferir)
+pub(crate) unsafe extern "thiscall" fn comparar_consider_sacking_manager(this: usize, clube: usize, check: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_CONSIDER_SACKING_MANAGER)(this, clube, check)
 }
 
 /// Comparer for `issue_board_ultimatum` (comparison mode: see the header of motor.rs).
@@ -206,10 +206,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_issue_board_ultimatum(this: usiz
 }
 
 /// Comparer for `remove_club_manager` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize, clube: usize, kind: u32, reason: u32, manter: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize, clube: usize, kind: u32, reason: u32, keep: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_REMOVE_CLUB_MANAGER);
     let tira = manager_and_role(clube).is_some();
-    o(this, clube, kind, reason, manter);
+    o(this, clube, kind, reason, keep);
     if !tira {
         return;
     }
@@ -231,8 +231,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize,
         }
     }
     let conf = read_i16(club_board_row(this, clube) + 6);
-    PLACAR.registrar(sobra == 0 && (manter != 0 || conf == 0xdac), || {
-        format!("remove_club_manager(clube {:x}, tipo {}, manter {}) marcas que sobraram {:#x}, confiança {}", clube, kind as u8, manter, sobra, conf)
+    PLACAR.registrar(sobra == 0 && (keep != 0 || conf == 0xdac), || {
+        format!("remove_club_manager(clube {:x}, tipo {}, manter {}) marcas que sobraram {:#x}, confiança {}", clube, kind as u8, keep, sobra, conf)
     });
 }
 

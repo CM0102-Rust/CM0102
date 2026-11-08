@@ -38,9 +38,9 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
 /// vaga mesmo nula (como na original); sem fase, a caixa da linha 0x25c; com ela, +0x30 = 2. O quadro SEH da original
 /// só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let list = alocar(8);
+    let list = alloc(8);
     if list == 0 {
         return show_error_at(0x9eabc8, 0x245);
     }
@@ -107,8 +107,8 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     }
     let stats = read_usize(this + 8);
     if stats != 0 {
-        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        arquivar(stats, 1);
+        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
+        archive(stats, 1);
     }
     if (read_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
@@ -126,8 +126,8 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     }
     free(read_usize(this + 0xc));
     core::ptr::write_unaligned((this + 0x2c) as *mut u32, 3);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alocar(0xc);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let v = alloc(0xc);
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     if v == 0 {
         show_error_at(0x9eabc8, 0x1b4);
@@ -184,8 +184,8 @@ pub(crate) unsafe fn is_in_division(clube: usize, g: usize) -> bool {
 /// `linha`). Devolve a tabela (0 sem memória).
 pub(crate) unsafe fn alloc_league_table(this: usize, n: i16, file: usize, row: u32) -> usize {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);

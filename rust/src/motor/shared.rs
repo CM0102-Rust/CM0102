@@ -58,12 +58,12 @@ pub(crate) unsafe fn ball_out_with(this: usize, side_b: u8, call: AddEventCall) 
 /// 0x6f0630; marca o lance); senao o goleiro do lado narra 0x1fe7; da meia-lua com nota acima de
 /// 200, 0x1ffd e a bola espirra sem chutador; senao 0x21d8/0x1f85/0x1f84 e a bola espirra
 /// (sorteio(3)). Nesses tres: +0x14 em +0x35, +0x12, marca o lance e sorteio(2) + 1 em +0x2b.
-pub(crate) unsafe fn play_with(j: usize, strength: i16, altura: f32, estilo: i8, strong: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
+pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8, strong: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let table: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     let goalkeeper_of: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOALKEEPER);
     let decidir: unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_FOUL);
     let register: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SET_PENDING_FOUL);
-    let punir: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_DECIDE_BOOKING);
+    let punish: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_DECIDE_BOOKING);
     let pick_restart_taker: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_PICK_RESTART_TAKER);
     let special: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
     let to_team: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SCALE_SIDE_ANGER_FROM_PLAYER);
@@ -90,7 +90,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, altura: f32, estilo: i8,
     if byte(m, 0x8eae) != byte(j, 0x27) && byte(j, 0x10d) == 0 {
         return 0;
     }
-    let mut ataque: i32 = match byte(m, 0x8ea9) {
+    let mut attack: i32 = match byte(m, 0x8ea9) {
         0 => sortear(300),
         1 => sortear(400),
         2 => sortear(500),
@@ -103,12 +103,12 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, altura: f32, estilo: i8,
             return 0;
         }
     };
-    let st = altura as f64 + 1.0;
+    let st = height as f64 + 1.0;
     if st > 0.0 {
-        ataque = match_pl_ftol(ataque as i16 as f64 / st);
+        attack = match_pl_ftol(attack as i16 as f64 / st);
     }
     if byte(m, 0x8eab) == byte(j, 0x27) {
-        if sortear(ataque as i16 as i32 + 100) != 0 {
+        if sortear(attack as i16 as i32 + 100) != 0 {
             return 0;
         }
         crate::comparacao::ramo("play bola do proprio lado");
@@ -147,7 +147,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, altura: f32, estilo: i8,
         valor = match_pl_ftol(valor as f64 * 0.85) as i16;
     }
     let v = sortear(valor as i32);
-    let rating = (v - strength as i32 / 3 - ataque) as i16;
+    let rating = (v - strength as i32 / 3 - attack) as i16;
     if rating < -100 {
         crate::comparacao::ramo("play nota muito baixa");
         *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(sortear(2) as u8);
@@ -167,7 +167,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, altura: f32, estilo: i8,
             // a falta com punicao
             crate::comparacao::ramo("play falta punida");
             let mut weight = 0f32;
-            punir(m, j, &mut t, cartao as i8, grav as i8, foul_strong as u8, &mut weight);
+            punish(m, j, &mut t, cartao as i8, grav as i8, foul_strong as u8, &mut weight);
             narrate(call, 0x1fe8, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
             let colour: i32 = match t {
                 2 => 0x1ff9,
@@ -206,7 +206,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, altura: f32, estilo: i8,
             if som == 0x1f7a {
                 narrate(call, 0x1f7a, u32::MAX, zero(j), u32::MAX);
             }
-            let expulso = matches!(t, 3..=6);
+            let sent_off = matches!(t, 3..=6);
             if colour > -1 {
                 if sortear(4) == 0 {
                     let a = sortear(grav as i8 as i32);
@@ -221,7 +221,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, altura: f32, estilo: i8,
                     narrate(call, 0x2109, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
                 }
                 narrate(call, colour as u32, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
-                if expulso {
+                if sent_off {
                     player_left_pitch_with(m, j, 0, call);
                 }
             }
@@ -253,7 +253,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, altura: f32, estilo: i8,
                     if sortear(3) == 0 {
                         narrate(call, 0x20e0, u32::MAX, ub(j, 0x27), u32::MAX);
                     }
-                    if (expulso || som == 0x1f7a) && sortear(2) == 0 {
+                    if (sent_off || som == 0x1f7a) && sortear(2) == 0 {
                         narrate(call, 0x20d9, u32::MAX, ub(j, 0x27), u32::MAX);
                     }
                 }

@@ -2,7 +2,7 @@
 MUTACOES = [
     ('d_chance', "        if *c > 0x32 && sortear(3) != 0 {", "        if *c > 0x33 && sortear(3) != 0 {"),
     ('d_folego', "        let mut x = fl(p, 0x4d) * f4(0x968f18) + f4(0x968db0);", "        let mut x = fl(p, 0x4d) * f4(0x968f18) + f4(0x96d2dc);"),
-    ('d_ramo', "        let v = if ramo > 10 {", "        let v = if ramo > 11 {"),
+    ('d_ramo', "        let v = if branch > 10 {", "        let v = if branch > 11 {"),
     ('d_grau', "            if t > d8(0x968930) {", "            if t > d8(0x9688a0) {"),
     ('d_risco', "        if sortear(50000) >= match_pl_ftol(f[i] as f64 * f4(0x968a78)) {\n            continue;", "        if sortear(50000) >= match_pl_ftol(f[i] as f64 * f4(0x968a78) * 2.0) {\n            continue;"),
     ('d_dono', "                    let k = [0x96d440, 0x96d430, 0x967880, 0x96d438, 0, 0x968fd0, 0x968a98, 0x96d448, 0, 0, 0x968918][r as usize];", "                    let k = [0x96d440, 0x96d430, 0x968918, 0x96d438, 0, 0x968fd0, 0x968a98, 0x96d448, 0, 0, 0x968918][r as usize];"),

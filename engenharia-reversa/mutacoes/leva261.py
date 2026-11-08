@@ -38,5 +38,5 @@ MUTACOES = [
     ('cpy12_fisio_sem_sorteio', '                let r = sorteio(200); // cpy12: o sorteio da gravidade', '                let r: i32 = 200; // mutacao: sem o sorteio da gravidade', 'cpy_12 fisioterapeuta avalia'),
     ('cpy13_sem_compensacao', '        pay(fin, comp); // cpy13: a compensação ao clube', '        pay(fin, 0); // mutacao: sem a compensação', 'cpy_13 compensacao paga'),
     ('cpy13_fica_na_escalacao', '            escalacao(read_usize(G_TACTICS), read_usize(p + 0x39), p, 1, 1); // cpy13: as escalações', '            let _ = escalacao; // mutacao: fica na escalação do time principal', 'cpy_13 sai do clube atual'),
-    ('cpy13_sem_listas', '        listas(read_usize(this + 0x856), p, clube, 4, 2); // cpy13: a situação nas listas de observação', '        let _ = listas; // mutacao: sem a situação nas listas', 'cpy_13 liberado'),
+    ('cpy13_sem_listas', '        lists(read_usize(this + 0x856), p, clube, 4, 2); // cpy13: a situação nas listas de observação', '        let _ = lists; // mutacao: sem a situação nas listas', 'cpy_13 liberado'),
 ]

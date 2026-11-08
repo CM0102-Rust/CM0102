@@ -26,8 +26,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_fix_man_daily_update(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_list(this: usize, year: u32, day: u32, slice: u32, kind: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(IDX_GET_FIXTURE_LIST);
     let other = read_u32_as_usize(this + 0x112c);
-    let direto = read_i16(this + 0x1130) == year as i16 || (other != 0 && read_i16(other + 0x1130) == year as i16);
-    if !direto {
+    let direct = read_i16(this + 0x1130) == year as i16 || (other != 0 && read_i16(other + 0x1130) == year as i16);
+    if !direct {
         return o(this, year, day, slice, kind);
     }
     let r = o(this, year, day, slice, kind);

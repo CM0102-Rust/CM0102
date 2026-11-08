@@ -471,7 +471,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
     let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+    let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let find: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, i32, i32, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     // 0x68d020 / 0x68d040 / 0x68d1b0: lea ecx (ou mov ecx, bloco) -> thiscall; 0x944cf1 (new): push 0xe; add esp, 4 ->
@@ -520,8 +520,8 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     let (p0, p1, p2) = (d0.as_mut_ptr() as usize, d1.as_mut_ptr() as usize, d2.as_mut_ptr() as usize);
     let day_year = |p: usize| (read_usize(p) as u32, core::ptr::read_unaligned((p + 2) as *const u32));
     data_new(p0, *((jogo + 0x2a) as *const u16) as u32, *((jogo + 0x28) as *const u16) as u32);
-    mais(p0, p1, 1);
-    mais(p1, p2, 0xd);
+    more(p0, p1, 1);
+    more(p1, p2, 0xd);
     let (a1, a2) = day_year(p1);
     let (a3, a4) = day_year(p2);
     find(read_usize(G_FIXTURE_MANAGER), a1, a2, a3, a4, read_usize(national_team) as u32, l, -1, -2, cell as u32);
@@ -1158,11 +1158,11 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
         }
     }
     let minus: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+    let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let (mut lo, mut hi) = ([0u8; 8], [0u8; 8]);
     let (plo, phi) = (lo.as_mut_ptr() as usize, hi.as_mut_ptr() as usize);
     minus(data, plo, 1); // cpz6: a véspera
-    mais(data, phi, 1); // cpz6: o dia seguinte
+    more(data, phi, 1); // cpz6: o dia seguinte
     let nacional = read_usize(player + 0x24);
     if nacional != 0 {
         let sem_bit = (read_u8(player + 0x5e) & 4 == 0) as u32;
@@ -1855,10 +1855,10 @@ pub(crate) unsafe fn set_news_player_slots(n: usize, p: usize) {
 pub(crate) unsafe fn set_news_injury_severity(n: usize, p: usize) {
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
-    let gravidade: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_INJURY_GET_TYPE_CATEGORY);
+    let severity: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_INJURY_GET_TYPE_CATEGORY);
     let v = if lesao(read_usize(G_INJURY), p) != 0 {
         let t = read_u8(lesao(read_usize(G_INJURY), p)) as i8;
-        gravidade(read_usize(G_INJURY), t) as i8 as i32
+        severity(read_usize(G_INJURY), t) as i8 as i32
     } else {
         0
     };
@@ -2348,14 +2348,14 @@ pub(crate) unsafe fn has_too_many_called_up(this: usize, clube: usize, a: usize,
 pub(crate) unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, jogo: usize) -> u32 {
     let data_new: unsafe extern "thiscall" fn(*mut u8, u32, u32) = core::mem::transmute(FN_DATE_DATE);
     let minus_days: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let mais_dias: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+    let more_days: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let amistosa: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     let (mut d, mut a, mut b) = ([0u8; 8], [0u8; 8], [0u8; 8]);
     // simplification: a original empurra as palavras +0x2a e +0x28 com o alto do registro (lixo); a 0x549ef0 só lê as
     // palavras baixas: a cópia passa as palavras limpas.
     data_new(d.as_mut_ptr(), *((jogo + 0x2a) as *const u16) as u32, *((jogo + 0x28) as *const u16) as u32);
     minus_days(d.as_mut_ptr(), a.as_mut_ptr(), 1);
-    mais_dias(d.as_mut_ptr(), b.as_mut_ptr(), 1);
+    more_days(d.as_mut_ptr(), b.as_mut_ptr(), 1);
     if amistosa(read_usize(G_FRIENDLY), read_usize(jogo + 0x14)) != 0 {
         return 1;
     }
@@ -2597,12 +2597,12 @@ pub(crate) unsafe fn end_call_ups(this: usize, passa: impl Fn(usize) -> bool) {
     }
     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let mais_dias: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> *const u16 = core::mem::transmute(FN_DATE_ADD_DAYS);
+    let more_days: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> *const u16 = core::mem::transmute(FN_DATE_ADD_DAYS);
     let mut r = next(read_usize(this));
     while r != 0 {
         if passa(r) {
             let mut data = [0u8; 8];
-            let day = *mais_dias(G_CURRENT_DATE, data.as_mut_ptr(), 1);
+            let day = *more_days(G_CURRENT_DATE, data.as_mut_ptr(), 1);
             core::ptr::write_unaligned((r + 0x10) as *mut u16, day); // o dia de amanhã
         }
         r = next(read_usize(this));
@@ -2698,9 +2698,9 @@ pub(crate) unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
                 }
             }
         }
-        let resto = count(rec).wrapping_sub(vencidas);
-        *((rec + 5) as *mut i8) = resto;
-        if resto == 0 && read_usize(rec) != 0 {
+        let rest = count(rec).wrapping_sub(vencidas);
+        *((rec + 5) as *mut i8) = rest;
+        if rest == 0 && read_usize(rec) != 0 {
             crate::comparacao::ramo("convocações soltar o vetor");
             free(read_usize(rec));
             *((rec + 4) as *mut u8) = 0;
@@ -2947,7 +2947,7 @@ pub(crate) unsafe extern "thiscall" fn release_competitions_of_continent(this: u
 /// sai de lá (0x7762f0). Entra (0x776250), a vaga do tipo (+0x45) desce 1 e sai a notícia (0x76fd10). Ninguém: zera
 /// +0x45. Sem SEH, sem sorteio; a local do tipo do outro elenco é gravada antes de ler (só o byte vale).
 pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: usize, kind: u32, level: u32, saindo: usize) {
-    let posicoes: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
+    let positions: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let not_likes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
     let state: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
@@ -2959,7 +2959,7 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: u
     let remove: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_NATIONALTEAMS_REMOVE_PLAYER_FROM_SQUAD);
     let por: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_NATIONALTEAMS_ADD_PLAYER_TO_SQUAD);
     let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_NATIONAL_TEAMS_POST_PLAYER_CALLED_UP_NEWS);
-    let mask = posicoes(read_usize(saindo + 0x61)) as u8;
+    let mask = positions(read_usize(saindo + 0x61)) as u8;
     let t = kind as u8 as i8;
     let level = level as u8 as i8;
     let rec = read_usize(this + 4).wrapping_add((*(nacao as *const i32)).wrapping_mul(0x6e) as usize);
@@ -2999,7 +2999,7 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: u
         if suspenso(*(G_DISCIPLINE as *const usize), q, comp, 1, 0) != 0 {
             continue;
         }
-        if posicoes(read_usize(q + 0x61)) as u8 & mask & 0x7f == 0 { // as posições de quem sai
+        if positions(read_usize(q + 0x61)) as u8 & mask & 0x7f == 0 { // as posições de quem sai
             continue;
         }
         let team = read_usize(q + 0x24);
@@ -3342,7 +3342,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_daily_update(this: usize, 
     let weeks: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_WEEKS);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let dma: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
-    let refazer: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_NATIONALTEAMS_BUILD_SELECTION_POOLS);
+    let redo: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_NATIONALTEAMS_BUILD_SELECTION_POOLS);
     let list: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_GET_FIXTURE_LIST);
     let remarcar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_RESCHEDULE_CLASHING_CLUB_FIXTURES);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
@@ -3371,7 +3371,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_daily_update(this: usize, 
         || is_today(dma(pt, 1, 7, year, u32::MAX), today)
     {
         crate::comparacao::ramo("cqc_12 refaz as reservas");
-        refazer(this);
+        redo(this);
     }
     let fixman = read_usize(G_FIXTURE_MANAGER);
     for fatia in 0u32..3 {

@@ -3,7 +3,7 @@ MUTACOES = [
     ('s_formacao', "        *w(0x198) = 0x68;\n        call(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL", "        *w(0x198) = 0x69;\n        call(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL"),
     ('s_marca', "            sortear(0x14).wrapping_add(byte(j, 0x107) as i32) != 0", "            sortear(0x14).wrapping_add(byte(j, 0x107) as i32) == 0"),
     ('s_chance', "        let n = if ta() & 0x40 != 0 { 20 } else { 50 };", "        let n = if ta() & 0x40 != 0 { 20 } else { 51 };"),
-    ('s_ataque', "    let no_ataque = (dir == 1 && y < 3) || (dir == 0 && y > 8);", "    let no_ataque = (dir == 1 && y < 4) || (dir == 0 && y > 8);"),
+    ('s_ataque', "    let in_attack = (dir == 1 && y < 3) || (dir == 0 && y > 8);", "    let in_attack = (dir == 1 && y < 4) || (dir == 0 && y > 8);"),
     ('s_canto', "                    (ax, ay) = (0, 11);", "                    (ax, ay) = (1, 11);"),
     ('s_fundo', "        ax = ((ax as i32 + 4) / 2) as i8;", "        ax = ((ax as i32 + 5) / 2) as i8;"),
     ('s_marcado', "                        if tx <= 2 {\n                            tx += 1;", "                        if tx <= 2 {\n                            tx += 2;"),

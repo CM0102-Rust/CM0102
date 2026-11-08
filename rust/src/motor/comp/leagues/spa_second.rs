@@ -237,7 +237,7 @@ pub(crate) const SEGUNDA_EVEN_CHRISTMAS_SCHEDULE: SpaSecondChristmasSchedule = S
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40 (no ano par com a rodada
 /// do Natal; no ímpar sem); as outras devolvem 0. Fonte 0xa829bc.
 pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
             }
             *rounds = 42;
             *extra = 0;
-            let t = alocar(0xaaa);
+            let t = alloc(0xaaa);
             if t == 0 {
                 show_error_at(0xa828bc, 0xa9);
                 return 0;
@@ -300,11 +300,11 @@ pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u
 /// Primera ([0x9cf624]) leva o destino −4 (+0x37 = 0xfc: não pode subir). Cheia: o fundo de prêmios (+0x28 =
 /// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 e 1; senão 0.
 pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let premios: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x16);
-    let t = alocar(0x512);
+    let t = alloc(0x512);
     write_u32_from_usize(this + 0xb1, t);
     if t == 0 {
         show_error_at(0xa828bc, 0x298);

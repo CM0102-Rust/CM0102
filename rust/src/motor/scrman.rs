@@ -38,11 +38,11 @@ pub(crate) unsafe fn copy_to_work_text(source: usize) {
 /// (+8 > +4 de `rodadas`); senão o nome (+0x38).
 pub(crate) unsafe fn panel_competition_name(c: usize, rounds: usize) {
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let mais_de_uma = core::ptr::read_unaligned((rounds + 8) as *const i32) > core::ptr::read_unaligned((rounds + 4) as *const i32);
+    let more_of_one = core::ptr::read_unaligned((rounds + 8) as *const i32) > core::ptr::read_unaligned((rounds + 4) as *const i32);
     let key = *(c as *const usize);
-    if key == *(KEY_CLUB_COMP_FRIENDLY as *const usize) && mais_de_uma {
+    if key == *(KEY_CLUB_COMP_FRIENDLY as *const usize) && more_of_one {
         text(0xde1f64, 0xa1631c);
-    } else if key == *(KEY_CLUB_COMP_RESERVE as *const usize) && mais_de_uma {
+    } else if key == *(KEY_CLUB_COMP_RESERVE as *const usize) && more_of_one {
         text(0xde1f64, 0xa16310);
     } else {
         copy_to_work_text(c + 0x38);

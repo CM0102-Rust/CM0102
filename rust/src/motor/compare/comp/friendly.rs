@@ -193,8 +193,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize
     if p == 0 {
         return; // sem memória: a caixa
     }
-    let ordem: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_COMPARE_CALL_UP_RECORDS_BY_DATE);
-    let ordenado = (1..n.max(0) as usize).all(|i| ordem(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
+    let order: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_COMPARE_CALL_UP_RECORDS_BY_DATE);
+    let ordenado = (1..n.max(0) as usize).all(|i| order(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
     PLACAR.registrar(n >= 0 && cap >= n && z == 0 && ordenado, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
 }
 
@@ -232,18 +232,18 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_human_club_open_invitation(
 /// liberado pela 0x5c87b0). O plano, feito antes: a decisão (friendly_reply) e a vaga do amistoso (0x5c6740). Com 3 ou 4,
 /// a vaga fica com +0x18 = 3, ou com +0x10 = 0 e +0x18 = 0; sem decisão, o pedido continua com a mesma situação e sai
 /// da lista das respostas (+0x34d4). Sem quem pede ou sem nação num dos dois: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usize, forcar: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usize, force: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FRIENDLY_REPLY);
     LAST_FRIENDLY_REPLY = m;
     let a = if m != 0 { read_usize(m + 0xc) } else { 0 };
     let other = if m != 0 { other_friendly_club(m) } else { 0 };
     if a == 0 || (other != 0 && (read_usize(a + 0x53) == 0 || read_usize(other + 0x53) == 0)) {
-        return o(this, m, forcar); // simplification: sem quem pede ou sem nação, só a original
+        return o(this, m, force); // simplification: sem quem pede ou sem nação, só a original
     }
-    let s = if friendly_needs_decision(m, forcar) { friendly_reply(m, false) } else { read_u8(m + 0x18) };
+    let s = if friendly_needs_decision(m, force) { friendly_reply(m, false) } else { read_u8(m + 0x18) };
     let slot: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
     let v = if s == 3 || s == 4 { slot(this, read_i16(m) as u16 as u32, read_i16(m + 2) as u16 as u32, read_usize(m + 0x14), read_usize(m + 0x10)) } else { 0 };
-    o(this, m, forcar);
+    o(this, m, force);
     let ok = if s == 3 || s == 4 {
         // o pedido foi liberado: só a vaga
         v == 0 || if s == 3 { read_u8(v + 0x18) == 3 } else { read_usize(v + 0x10) == 0 && read_u8(v + 0x18) == 0 }

@@ -89,14 +89,14 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
 /// sinal; de novo enquanto a vaga do pote já saiu) entre os 4 do pote (a lista nas vagas 4p a 4p + 3) vai para a vaga 4j
 /// + p dos grupos e sai do pote (zerado). A lista liberada (0x9452ca) e +0xee = os grupos. Devolve 1.
 pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
     core::ptr::write_unaligned((this + 0xf2) as *mut u16, 0x10);
-    let list = alocar(0xc8);
+    let list = alloc(0xc8);
     write_u32_from_usize(this + 0xee, list);
     if list == 0 {
         show_error_at(0x9870f8, 0x349);
@@ -133,7 +133,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     }
     let h = how_many as i32;
     sort(read_u32_as_usize(this + 0xee) + (h as isize * 4) as usize, (n as i32 - h) as u32, 4, 0x4b07d0); // cqs13: as não sedes pela reputação
-    let groups = alocar(0x40);
+    let groups = alloc(0x40);
     if groups == 0 {
         show_error_at(0x9870f8, 0x380);
         return 0;
@@ -179,14 +179,14 @@ pub(crate) unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
 /// em [+0xc][g]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x2f2 e 0. Com ela:
 /// +0x30 = g, a notícia do grupo (0x684230 na fase) e 1.
 pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: usize, g: i32) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alocar(0x10);
+    let teams = alloc(0x10);
     if teams == 0 {
         show_error_at(0x9870f8, 0x2dc);
         return 0;
@@ -265,8 +265,8 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
     core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
     if f == 3 { // cqk12: o mata-mata da Copa Africana depois dos grupos
         crate::comparacao::ramo("cqk_12 mata-mata da copa africana");
-        let mata: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AFRICANNATIONS_CREATE_KNOCKOUT_STAGE);
-        mata(this);
+        let knockout: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AFRICANNATIONS_CREATE_KNOCKOUT_STAGE);
+        knockout(this);
     }
 }
 
@@ -363,8 +363,8 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: usize, cl
             0 => {
                 let r = read_i16(jogo + 0x34);
                 let weight = scale_by_round(0x28, 0x64, r, 3);
-                let mata = read_u32_as_usize(read_u32_as_usize(this + 0xc) + groups as usize * 4);
-                let round = read_i16(read_u32_as_usize(mata + 0xa3).wrapping_add((r as isize * 0x68) as usize) + 0x6f) as u16 as u32;
+                let knockout = read_u32_as_usize(read_u32_as_usize(this + 0xc) + groups as usize * 4);
+                let round = read_i16(read_u32_as_usize(knockout + 0xa3).wrapping_add((r as isize * 0x68) as usize) + 0x6f) as u16 as u32;
                 european_cup_add_qualified_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, round, weight);
             }
             0xff => {

@@ -192,11 +192,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_set_piece_taker(this: usize,
 }
 
 /// Comparer for `extra_tactic_slot` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_extra_tactic_slot(t: usize, clube: usize, qual: i8, person: *const u32, human: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_extra_tactic_slot(t: usize, clube: usize, which: i8, person: *const u32, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_EXTRA_TACTIC_SLOT);
     let reg = regioes_da_tabela(t, clube, human);
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, clube, qual, person, human), || extra_tactic_slot(t, clube, qual, person, human));
-    PLACAR.registrar(igual && r == v, || format!("extra_tactic_slot({:#x}, {:#x}, {}, {}) original={} {:x?} rust={} {:x?}", t, clube, qual, human, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, clube, which, person, human), || extra_tactic_slot(t, clube, which, person, human));
+    PLACAR.registrar(igual && r == v, || format!("extra_tactic_slot({:#x}, {:#x}, {}, {}) original={} {:x?} rust={} {:x?}", t, clube, which, human, r, mo, v, mr));
     r
 }
 

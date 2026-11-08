@@ -103,7 +103,7 @@ pub(crate) const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas
 /// da pilha ou de outros registradores; o construtor só lê a palavra (0x522e00: mov ax, word ptr [esp + ...]) e a
 /// cópia passa zero neles.
 pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows: [u32; 3], lista_primeiro: bool) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let stage_of_cup: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
@@ -119,7 +119,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     } else {
         write_u32_from_usize(inscritos, champion);
     }
-    let list = alocar(0x10);
+    let list = alloc(0x10);
     if list == 0 {
         show_error_at(file, rows[0]);
         return;
@@ -132,10 +132,10 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     let record = read_u32_as_usize(this + 4);
     let (mut rodadas, mut extra) = (0u32, 0u32);
     let gabarito = calendario(this, 0, &mut rodadas, &mut extra, 0);
-    let posicoes: [u8; 4] = [4, 1, 3, 2]; // cql5: as posições do play-off
+    let positions: [u8; 4] = [4, 1, 3, 2]; // cql5: as posições do play-off
     let mut stage = new(0xb2);
     if stage != 0 {
-        stage = stage_of_cup(stage, this, clubs, list, rodadas & 0xffff, record, gabarito, year, 0, 1, extra & 0xffff, 0x14, 0, 0, 0, posicoes.as_ptr());
+        stage = stage_of_cup(stage, this, clubs, list, rodadas & 0xffff, record, gabarito, year, 0, 1, extra & 0xffff, 0x14, 0, 0, 0, positions.as_ptr());
     }
     write_u32_from_usize(read_u32_as_usize(this + 0xc), stage);
     if read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
@@ -150,10 +150,10 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     for (k, &i) in PLAYOUT_ROWS.iter().enumerate() {
         write_u32_from_usize(list + k * 4, ita_ser_c1a_league_row_club(this, i));
     }
-    let posicoes: [u8; 4] = [0x10, 0xd, 0xf, 0xe];
+    let positions: [u8; 4] = [0x10, 0xd, 0xf, 0xe];
     let mut stage = new(0xb2);
     if stage != 0 {
-        stage = stage_of_cup(stage, this, clubs, list, rodadas & 0xffff, record, gabarito, year, 1, 1, extra & 0xffff, 0x14, 0, 0, 0, posicoes.as_ptr());
+        stage = stage_of_cup(stage, this, clubs, list, rodadas & 0xffff, record, gabarito, year, 1, 1, extra & 0xffff, 0x14, 0, 0, 0, positions.as_ptr());
     }
     write_u32_from_usize(read_u32_as_usize(this + 0xc) + 4, stage);
     if lista_primeiro {

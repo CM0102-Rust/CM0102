@@ -17,18 +17,18 @@ include!("../adjetivos_nacao.rs");
 /// texto: em cada cadeia a primeira chave igual ao id (+0) copia a fonte da forma (0..4, as outras pela 6ª coluna; 0
 /// não copia, 1 é o nome) e passa à cadeia seguinte; no fim, com o texto vazio, o nome (nos idiomas 4 e 5 não: fica
 /// vazio). Nos outros idiomas (o inglês, 0), o nome. Devolve 1. Sem SEH, sem locais, sem sorteio.
-pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, text: usize, size: u32, genero: u32) -> u32 {
+pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, text: usize, size: u32, gender: u32) -> u32 {
     core::ptr::write_volatile(text as *mut u8, 0); // antes dos testes, como a original (texto nulo: a mesma falha)
     if nacao == 0 || text == 0 || (size as u16 as i16) < 50 {
         return 0;
     }
     let name = nacao + nation::NATIONALITY; // o nome da nação
-    if genero as u8 != 0 {
+    if gender as u8 != 0 {
         let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
         let i = language();
         if let Some(&(_, nome_se_vazio, cadeias)) = ADJETIVOS_DA_NACAO.iter().find(|x| x.0 == i) {
             let form: unsafe extern "C" fn(u32, i32) -> u32 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
-            let f = form(genero, i) as u8 as usize;
+            let f = form(gender, i) as u8 as usize;
             let id = core::ptr::read_unaligned(nacao as *const i32);
             for cadeia in cadeias {
                 if let Some((_, fontes)) = cadeia.iter().find(|e| *(e.0 as *const i32) == id) {
@@ -56,9 +56,9 @@ include!("../chaves_fixas.rs");
 ///
 /// [pt] Uma cadeia de _stricmp (0x951c50) em linha (cores, continentes): o primeiro texto igual ao `nome` grava `linha` na
 /// global dele e a cadeia acaba.
-pub(crate) unsafe fn match_key_name_chain(name: usize, pares: &[(u32, u32)], row: u32) {
+pub(crate) unsafe fn match_key_name_chain(name: usize, pairs: &[(u32, u32)], row: u32) {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
-    for &(texto, global) in pares {
+    for &(texto, global) in pairs {
         if stricmp(name, texto as usize) == 0 {
             *(global as *mut u32) = row;
             return;
@@ -135,7 +135,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
     if f != 0 {
         let version: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_UTILS_READ_FILE_FORMAT_MARKER);
         let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+        let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
         let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         let pular: unsafe extern "C" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
         let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
@@ -149,7 +149,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
         }
         // a tabela de `n` linhas de `passo` bytes: lida e entregue a `f` (o fseek por cima se a memória faltar)
         let table = |n: i32, step_towards: u32, f_: &mut dyn FnMut(u32)| {
-            let b = alocar((n as u32).wrapping_mul(step_towards));
+            let b = alloc((n as u32).wrapping_mul(step_towards));
             if b != 0 {
                 read(b, step_towards, n as u32, f);
                 f_(b as u32);
@@ -180,7 +180,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
             key_ids_loop(|| c[3], |i| { nacao(em(b, i, 0x6d), i as u32); }); // nações do eng.lng
         });
         // os prêmios: a memória antes de pular as duas tabelas de 0x34
-        let b = alocar((c[7] as u32).wrapping_mul(0x4f));
+        let b = alloc((c[7] as u32).wrapping_mul(0x4f));
         pular(f, (c[6] as u32).wrapping_mul(0x34), 1);
         pular(f, (c[4] as u32).wrapping_mul(0x34), 1);
         if b != 0 {
@@ -2323,17 +2323,17 @@ pub(crate) unsafe extern "C" fn match_staff_comp_key_id(name: usize, row: u32) -
     r as u32 // o eax do último _stricmp (chave de competição de pessoa)
 }
 
-pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, text: usize, size: u32, genero: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, text: usize, size: u32, gender: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_NATION_GET_NATIONALITY_ADJECTIVE);
     if text == 0 {
-        return o(nacao, text, size, genero);
+        return o(nacao, text, size, gender);
     }
     // o texto produzido (até o tamanho dado, de 1 a 128 bytes; abaixo de 50 só o zero do começo)
     let n = ((size as u16 as i16).max(1) as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(nacao, text, size, genero),
-        || nation_get_nationality_adjective(nacao, text, size, genero));
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(nacao, text, size, gender),
+        || nation_get_nationality_adjective(nacao, text, size, gender));
     PLACAR.registrar(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
-        nacao, size as u16 as i16, genero as u8, r, x, mo, mr));
+        nacao, size as u16 as i16, gender as u8, r, x, mo, mr));
     r
 }
 

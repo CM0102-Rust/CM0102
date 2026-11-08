@@ -9,8 +9,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_transfer_interest(this: 
 }
 
 /// Comparer for `news_create_not_for_sale_story` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_news_create_not_for_sale_story(player: usize, clube: usize, presidente: usize, other: usize) {
-    original_fn::<unsafe extern "C" fn(usize, usize, usize, usize)>(IDX_NEWS_CREATE_NOT_FOR_SALE_STORY)(player, clube, presidente, other)
+pub(crate) unsafe extern "C" fn comparar_news_create_not_for_sale_story(player: usize, clube: usize, chairman: usize, other: usize) {
+    original_fn::<unsafe extern "C" fn(usize, usize, usize, usize)>(IDX_NEWS_CREATE_NOT_FOR_SALE_STORY)(player, clube, chairman, other)
 }
 
 /// Comparer for `queue_trophy_praise_story` (comparison mode: see the header of motor.rs).
@@ -165,16 +165,16 @@ pub(crate) unsafe extern "C" fn comparar_media_pick_outlet_type_for_person(perso
 ///
 /// [pt] Comparador: a original sorteia e entrega a notícia (não pode rodar duas vezes): roda só ela e confere o plano feito
 /// antes: a confiança da torcida nova (a variação é pura).
-pub(crate) unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, target: u32, variante: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, target: u32, variant: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADJUST_SUPPORTER_CONFIDENCE);
     if clube == 0 {
-        return o(this, clube, sujeito, topico, target, variante);
+        return o(this, clube, sujeito, topico, target, variant);
     }
     let p = manager_manager_row(clube) + 8;
     let before = read_i16(p);
     let v = fan_confidence_change(clube, target);
     let expected = before.wrapping_add(v).clamp(1, 10000);
-    o(this, clube, sujeito, topico, target, variante);
+    o(this, clube, sujeito, topico, target, variant);
     let after = read_i16(manager_manager_row(clube) + 8);
     PLACAR.registrar(after == expected, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, target as i16, before, v, expected, after));
 }
@@ -182,16 +182,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this
 /// Comparer for `adjust_board_confidence` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: como o da torcida, pela confiança da diretoria nova.
-pub(crate) unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, target: u32, variante: u32, sexto: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, target: u32, variant: u32, sexto: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_ADJUST_BOARD_CONFIDENCE);
     if clube == 0 {
-        return o(this, clube, sujeito, topico, target, variante, sexto);
+        return o(this, clube, sujeito, topico, target, variant, sexto);
     }
     let p = manager_manager_row(clube) + 6;
     let before = read_i16(p);
     let v = board_confidence_change(clube, target);
     let expected = before.wrapping_add(v).clamp(1, 10000);
-    o(this, clube, sujeito, topico, target, variante, sexto);
+    o(this, clube, sujeito, topico, target, variant, sexto);
     let after = read_i16(manager_manager_row(clube) + 6);
     PLACAR.registrar(after == expected, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, target as i32, before, v, expected, after));
 }
@@ -200,8 +200,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: us
 ///
 /// [pt] Comparador: a gratidão sorteia, sobe +0x44 da ficha e entrega a notícia: só a original (a prova é a carreira e o
 /// modo Rust).
-pub(crate) unsafe extern "thiscall" fn comparar_queue_player_gratitude_news(this: usize, player: usize, clube: usize, kind: u32, variante: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_QUEUE_PLAYER_GRATITUDE_NEWS)(this, player, clube, kind, variante)
+pub(crate) unsafe extern "thiscall" fn comparar_queue_player_gratitude_news(this: usize, player: usize, clube: usize, kind: u32, variant: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_QUEUE_PLAYER_GRATITUDE_NEWS)(this, player, clube, kind, variant)
 }
 
 /// Comparer for `post_player_backing_request_news` (comparison mode: see the header of motor.rs).

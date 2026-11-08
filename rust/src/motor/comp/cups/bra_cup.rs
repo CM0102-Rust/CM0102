@@ -148,8 +148,8 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, s
 /// lista +0x14 (6 bytes), a situação +5 = 0xff e a classe +4 = 0. Devolve 1.
 pub(crate) unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x47);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar(0x1aa);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc(0x1aa);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x98a3bc, 0x143);
@@ -159,8 +159,8 @@ pub(crate) unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
     let mut i = 0i16;
     while i < read_i16(this + 0x3e) {
         let o = i as usize * 6;
-        let fonte = o; // cqo12: a inscrição de cada vaga
-        let c = read_u32_as_usize(read_u32_as_usize(this + 0x14) + fonte);
+        let font = o; // cqo12: a inscrição de cada vaga
+        let c = read_u32_as_usize(read_u32_as_usize(this + 0x14) + font);
         let e = read_u32_as_usize(this + 0xa7) + o;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
         *((e + 5) as *mut u8) = 0xff;

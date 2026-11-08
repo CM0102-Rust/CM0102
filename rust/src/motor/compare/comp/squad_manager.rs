@@ -104,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usiz
 ///
 /// [pt] Lado a lado: o +0x3a dos contratos de quem está no elenco do clube e no do clube ligado (as únicas pessoas que a
 /// rotina e a 0x85a470 numeram) e a marca da caixa.
-pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: usize, c: usize, manter: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: usize, c: usize, keep: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CLUB_SQUAD_NUMBERS);
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut ps: Vec<usize> = (0..50).map(|k| read_u32(c + 0xd7 + 4 * k) as usize).collect();
@@ -113,10 +113,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: 
         ps.extend((0..50).map(|k| read_u32(l + 0xd7 + 4 * k) as usize));
     }
     let reg = squad_number_regions(&ps);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, manter), || assign_club_squad_numbers(this, c, manter));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, keep), || assign_club_squad_numbers(this, c, keep));
     PLACAR.registrar(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
-        format!("assign_club_squad_numbers(clube {:x}, manter {}): {}", c, manter, d.join(", "))
+        format!("assign_club_squad_numbers(clube {:x}, manter {}): {}", c, keep, d.join(", "))
     });
 }
 

@@ -3,7 +3,7 @@ MUTACOES = [
     ('e_ocupante', "                        if ocupante == 0 || rating(ocupante, jg(k), i) < r {", "                        if ocupante == 0 || rating(ocupante, jg(k), i) <= r {"),
     ('e_impar', "            let exit = if *((codigos + 2 * i as usize) as *const u8) & 1 != 0 { f < 10 } else { f == 20 };", "            let exit = if *((codigos + 2 * i as usize) as *const u8) & 1 != 0 { f < 9 } else { f == 20 };"),
     ('e_melhor', "                if melhor == 0 || r > best_rating {\n                    melhor = cand;", "                if melhor == 0 || r >= best_rating {\n                    melhor = cand;"),
-    ('e_perda', "                        if swap == 0 || r_current - outra_nota < menor_perda {", "                        if swap == 0 || r_current - outra_nota <= menor_perda {"),
+    ('e_perda', "                        if swap == 0 || r_current - outra_nota < smaller_loss {", "                        if swap == 0 || r_current - outra_nota <= smaller_loss {"),
     ('e_extras', "marks, bytes, a14, curtos + 2 * m as usize,\n        );", "marks, bytes, a14, curtos,\n        );"),
     ('e_troca', "                            b_j.wrapping_add(a_i) < a_j.wrapping_add(b_i)", "                            b_j.wrapping_add(a_i) <= a_j.wrapping_add(b_i)"),
     ('e_voltas', "        if !mudou || voltas >= 100 {", "        if !mudou || voltas >= 1 {"),

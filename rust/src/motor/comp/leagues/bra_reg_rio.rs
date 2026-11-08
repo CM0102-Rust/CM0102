@@ -636,8 +636,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
 ///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usize) {
     let sementes: [u8; 4] = [0, 1, 0, 0];
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let list = alocar(8);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let list = alloc(8);
     if list == 0 {
         return show_error_at(0x98b014, 0x226);
     }

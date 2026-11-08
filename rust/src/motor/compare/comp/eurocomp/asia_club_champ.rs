@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_group_stages(this: usize)
     }
     let v = group_stage_qualifiers(this);
     o(this);
-    let confere = |g: usize, de: &[usize]| {
+    let checks = |g: usize, de: &[usize]| {
         let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g * 4);
         let t = if f != 0 { read_u32_as_usize(f + 0xb1) } else { 0 };
         if t == 0 || read_i16(f + 0x3e) != 4 || read_i16(f + 0x40) != read_i16(this + 0x40) {
@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_group_stages(this: usize)
         b.sort_unstable();
         a == b
     };
-    let ok = confere(1, &v[..4]) && confere(2, &v[4..]) && read_u32_as_usize(this + 0x30) == 2;
+    let ok = checks(1, &v[..4]) && checks(2, &v[4..]) && read_u32_as_usize(this + 0x30) == 2;
     PLACAR.registrar(ok, || format!("create_group_stages({:#x}): os grupos não batem com os vivos {:x?}", this, v));
 }
 

@@ -68,7 +68,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     }
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-    let futura: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
+    let future: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construct(nt, 0xbc6, 0);
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     set_news_slot(nt, 8, (prazo as u8 == 1) as u32);
     let kind = *((c + 0x4f) as *const u8) & 0xf0;
     set_news_slot(nt, 9, (kind == 0x70) as u32);
-    set_news_slot(nt, 0xa, (futura(read_usize(G_TRANSFER_MANAGER), player, 0) != 0) as u32);
+    set_news_slot(nt, 0xa, (future(read_usize(G_TRANSFER_MANAGER), player, 0) != 0) as u32);
     set_news_slot(nt, 0xb, efeitos as i8 as u32);
     let jogo = (read_i8_as_i32(player + 0x18) > 0x17 && kind == 0x10) || kind == 0x20;
     set_news_slot(nt, 0xc, jogo as u32);

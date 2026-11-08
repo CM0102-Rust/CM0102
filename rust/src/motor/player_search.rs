@@ -225,9 +225,9 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, result: usize, o
     if id_scout <= -1 {
         return 0;
     }
-    let confere: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
+    let checks: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
     // 0x53e990: 5 pushes; add esp, 0x14 -> cdecl
-    if confere(staff_records_staff_by_id(id_scout as usize), read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) == 0 {
+    if checks(staff_records_staff_by_id(id_scout as usize), read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) == 0 {
         return 0;
     }
     let scout = staff_records_staff_by_id(read_i32(this + 0x180) as usize);
@@ -321,12 +321,12 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, result: usize, o
     crate::comparacao::ramo("cqf_10 relatorio");
     // o começo da lista vai a amanhã (0x54c5b0 com 1, 0x417c10 grava em +0x1a5); o byte baixo do dword da data copiada
     // vira o contador dos dois lados e vai inteiro como 7º argumento da 0x7b62a0
-    let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+    let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     // 0x54c5b0: push 1; push &tmp; mov ecx, 0xae2c90 -> thiscall, ret 8; 0x417c10: push data; push &copia; lea ecx,
     // [this+0x1a5] -> thiscall, ret 8
     let (mut tmp, mut copia) = ([0u32; 2], [0u32; 2]);
-    let amanha = mais(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã
+    let amanha = more(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã
     if SCOUT_MATCH_DRY_RUN {
         SCOUT_MATCH_WOULD_REPORT = true;
         return 1;
@@ -455,8 +455,8 @@ pub(crate) unsafe extern "thiscall" fn contains_player(this: usize, person: usiz
         crate::comparacao::ramo("cqa_6 busca vazia");
         return 0; // cqa6: sem resultados, não está
     }
-    let referencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_FILL_STAFF_NAME_REF);
-    referencia(person, k);
+    let reference: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_FILL_STAFF_NAME_REF);
+    reference(person, k);
     let bsearch: unsafe extern "C" fn(usize, usize, usize, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let r = bsearch(k, read_usize(this + 0x1ee), read_usize(this + 0x1f6), 0x2d, 0x7bce50);
     if r == 0 {
@@ -719,8 +719,8 @@ pub(crate) unsafe extern "thiscall" fn get_scout(this: usize) -> usize {
         return 0;
     }
     let person = (read_u32(G_STAFF_TABLE) as usize).wrapping_add((i as usize).wrapping_mul(110));
-    let confere: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
-    if confere(person, read_u32(this + 0x174), read_u32(this + 0x178), read_u32(this + 0x17c), this + 0x184) == 0 {
+    let checks: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
+    if checks(person, read_u32(this + 0x174), read_u32(this + 0x178), read_u32(this + 0x17c), this + 0x184) == 0 {
         return 0; // a vaga mudou de pessoa
     }
     person
@@ -858,9 +858,9 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nacao: u
     let mut person = 0usize;
     let i = read_usize(this + 0x180) as i32;
     if i > -1 {
-        let confere: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
+        let checks: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
         let p = read_usize(G_STAFF_TABLE).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
-        if confere(p, read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) != 0 {
+        if checks(p, read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) != 0 {
             person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(this + 0x180).wrapping_mul(staff::SIZE));
         }
     }

@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize,
     let duas = read_u8(e + 0x21) == 2;
     let home = if full { read_u32_as_usize(cup_team_entry(this, read_i16(t))) } else { 0 };
     let ic = if home != 0 { read_u32_as_usize(home) as u32 } else { u32::MAX };
-    let conferir = ad == 0 && full && ic != u32::MAX;
+    let check = ad == 0 && full && ic != u32::MAX;
     // o fim da janela: a data da rodada (+ os dias até a volta), amanhã ou a data da rodada seguinte (+0x6b/+0x6d), o
     // que vier depois, + 14 dias. Com conflito, a 0x5aa680 remarca o jogo (0x5ab510): copa (tipo 2) até a data da
     // rodada seguinte (sem ela, 2 semanas), os outros tipos até 2 semanas depois; com mais ligas acontece (a 1a rodada
@@ -51,13 +51,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize,
         last
     };
     let end = add_days_to_day_year(last.max(amanha).max(next), 14);
-    let before = if conferir { club_fixtures_until(ic, id, end) } else { 0 };
+    let before = if check { club_fixtures_until(ic, id, end) } else { 0 };
     let r = o(this, round, tie, adiar);
     let mark = read_u8(t + 0x34);
     let mut ok = r == 1 && mark == if ad != 0 { 2 } else { 3 };
     let mut expected = 0;
     let mut after = 0;
-    if conferir && read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + id as usize * 4) != 0 {
+    if check && read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + id as usize * 4) != 0 {
         expected = 1 + duas as u32;
         after = club_fixtures_until(ic, id, end);
         ok = ok && after == before + expected;

@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
     let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let f = open(path(0x987da0, 0x9cf10c), 0x98f928);
     if f == 0 {
@@ -238,7 +238,7 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
         return 0;
     }
     let n = read_u16(this + 4) as i16 as i32;
-    let b = alocar((n * 0x22) as u32);
+    let b = alloc((n * 0x22) as u32);
     write_u32(this, b as u32);
     if b == 0 {
         show_error_at(0x9cf0d8, 0x452);

@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_na_linha(this: usize, x1: i8, y1
 ///
 /// [pt] Sorteia e grava `saida`: mesmo estado do gerador para as duas, o jogo segue com o da original.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_consegue(this: usize, a: i8, b: i8, calcular: i8, strength: f32, ajuste: f32, out: *mut u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_consegue(this: usize, a: i8, b: i8, calcular: i8, strength: f32, adjust: f32, out: *mut u8) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, f32, f32, *mut u8) -> u8>(IDX_CAN_PLAY);
     let mut regions: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if !out.is_null() {
@@ -286,10 +286,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_consegue(this: usize, a: i8, b: 
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regions,
-        || f(this, a, b, calcular, strength, ajuste, out),
-        || crate::aleatorio::sem_contar(|| can_play(this, a, b, calcular, strength, ajuste, out)),
+        || f(this, a, b, calcular, strength, adjust, out),
+        || crate::aleatorio::sem_contar(|| can_play(this, a, b, calcular, strength, adjust, out)),
     );
-    PLACAR.registrar(igual && r == n, || format!("can_play({}, {}, {}, {}, {}) original={} rust={} {:x?} {:x?}", a, b, calcular, strength, ajuste, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("can_play({}, {}, {}, {}, {}) original={} rust={} {:x?} {:x?}", a, b, calcular, strength, adjust, r, n, mo, mr));
     r
 }
 

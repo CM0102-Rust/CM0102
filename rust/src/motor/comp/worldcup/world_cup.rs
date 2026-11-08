@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
     let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let stage: unsafe extern "thiscall" fn(usize, i32, usize) -> u32 = core::mem::transmute(FN_WORLDCUP_CREATE_GROUP_STAGE);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let cartoes: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_RULINGBODY_RESET_BOOKINGS_FOR_CLUB);
+    let cards: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_RULINGBODY_RESET_BOOKINGS_FOR_CLUB);
     let list = sortear(this);
     if group_one(this, list) == 0 {
         show_error_at(0xad5888, 0x46d);
@@ -156,8 +156,8 @@ pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
     soltar(list);
     let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
     predicted(this);
-    let orgao = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + 0x50) as i8 as i32 * 4) as usize));
-    cartoes(orgao, 0);
+    let body = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + 0x50) as i8 as i32 * 4) as usize));
+    cards(body, 0);
 }
 
 
@@ -212,11 +212,11 @@ pub(crate) unsafe fn draw_list_club(list: usize, i: usize) -> usize {
 /// limpo), até 4 linhas ou o fim das 32 entradas; depois a notícia dos grupos (0x684230 mov ecx, this -> thiscall).
 /// Devolve 1.
 pub(crate) unsafe extern "thiscall" fn world_cup_create_group_table(this: usize, list: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let row_of_table: unsafe extern "thiscall" fn(usize, u32, usize, u32, usize) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     write_u16(this + 0x3e, 4);
-    let t = alocar(0xec);
+    let t = alloc(0xec);
     write_u32_from_usize(this + 0xb1, t);
     if t == 0 {
         show_error_at(0xad5888, 0x2b1);
@@ -265,14 +265,14 @@ pub(crate) unsafe fn group_clubs(list: usize, g: i32) -> Vec<usize> {
 /// rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x380 e 0. Com ela: +0x30 = g e a notícia do grupo
 /// (0x684230 na fase). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize, g: i32, list: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
+    let teams = alloc(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if teams == 0 {
         show_error_at(0xad5888, 0x366);
         return 0;
@@ -350,7 +350,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
 /// da nação de cada clube (+0x53) vira a Copa (0x775220 push [+4]; push nação; mov ecx, [0xb74318] -> thiscall, ret 8)
 /// e o vetor é liberado (0x9452ca).
 pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let competicao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_SET_CURRENT_COMPETITION);
@@ -363,7 +363,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
         show_error_at(0xad5888, 0x678);
         write_u16(this + 0x36, 0x20);
     }
-    let v = alocar(((read_i16(this + 0x36) as i32) << 2) as u32);
+    let v = alloc(((read_i16(this + 0x36) as i32) << 2) as u32);
     if v == 0 {
         show_error_at(0xad5888, 0x680);
         return;
@@ -423,7 +423,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, st
     if f >= 7 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_WORLD_CUP_CREATE_SCHEDULE)(this, stage, rounds, id, league);
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     if !league.is_null() {
@@ -431,7 +431,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, st
     }
     *rounds = 3; // cqf6: três rodadas
     *id = (f as i16).wrapping_add(0x420);
-    let t = alocar(0xc3);
+    let t = alloc(0xc3);
     if t == 0 {
         show_error_at(0xad5888, 0xcc);
         return 0;

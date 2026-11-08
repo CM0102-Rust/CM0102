@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cqe1_aceita_menos', 'if v as f64 * read_f64_at(0x969520) < request_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido', 'if v as f64 * 1.2 < request_f && troca_recusada == 0 { // mutacao: a opção × 1,2 abaixo do pedido', 'cqe_1 aceita'),
     ('cqe1_sem_contraproposta', 'if v as f64 * read_f64_at(0x969040) < request_f && kind != 1 && kind != 2 && ensaio == 0 { // cqe1: a contraproposta', 'if v as f64 * read_f64_at(0x969040) < request_f && kind != 1 && kind != 2 && ensaio == 0 && false { // mutacao: sem contraproposta', 'cqe_1 contraproposta'),
-    ('cqe1_preco_sempre_o_piso', 'let preco = if k > floor { // cqe1: o preço pelo valor k', 'let preco = if k > floor && false { // mutacao: sempre o piso', 'cqe_1 preço pelo k'),
+    ('cqe1_preco_sempre_o_piso', 'let price = if k > floor { // cqe1: o preço pelo valor k', 'let price = if k > floor && false { // mutacao: sempre o piso', 'cqe_1 preço pelo k'),
     ('cqe2_preco_pela_metade', 'write_u32_from_usize(new + 0x1b, value as u32 as usize); // cqe2: o preço da opção', 'write_u32_from_usize(new + 0x1b, (value / 2) as u32 as usize); // mutacao: a metade', 'cqe_2 opção montada'),
     ('cqe2_lista_do_vendedor_invertida', 'if read_u8(reg + 4) == 0 { // cqe2: o vendedor sem lista de observação ativa', 'if read_u8(reg + 4) != 0 { // mutacao: invertido', 'cqe_2 opção montada'),
     ('cqe2_so_o_alvo', 'if id <= -1 { // cqe2: a vaga sem alvo', 'if true { // mutacao: so o alvo', 'cqe_2 vaga com alvo'),

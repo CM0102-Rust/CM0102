@@ -176,12 +176,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: us
         return o(this, clube, fin); // simplification: sem clube ou sem finanças, só a original
     }
     let mut extras = vec![(clube + club::PLC, 1)];
-    let mut conferir = Vec::new();
+    let mut check = Vec::new();
     if sheet != 0 {
         extras.push((sheet + 0x20, 1)); // o +0x20 da ficha cai em todo evento com ela
-        conferir.push(1);
+        check.push(1);
     }
-    compare_rare_finance_event("try_finance_boost_event", fin, &extras, &conferir, || o(this, clube, fin), || try_finance_boost_event(this, clube, fin))
+    compare_rare_finance_event("try_finance_boost_event", fin, &extras, &check, || o(this, clube, fin), || try_finance_boost_event(this, clube, fin))
 }
 
 /// Comparer for `try_board_takeover` (comparison mode: see the header of motor.rs).

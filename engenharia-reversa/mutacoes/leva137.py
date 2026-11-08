@@ -1,8 +1,8 @@
 # Mutacoes da leva137 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva137.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
     ('a_minuto', "let mut rating = (*((m + 0xf5ba) as *const i16) as i32 / 1000) as i8;", "let mut rating = (*((m + 0xf5ba) as *const i16) as i32 / 1001) as i8;"),
-    ('a_cartoes', "    if cartoes > 2 {\n        rating = rating.wrapping_sub(2);", "    if cartoes > 3 {\n        rating = rating.wrapping_sub(2);"),
-    ('a_sem_cartao', "    } else if cartoes == 0 {\n        rating = rating.wrapping_add(1);", "    } else if cartoes == 0 {\n        rating = rating.wrapping_add(2);"),
+    ('a_cartoes', "    if cards > 2 {\n        rating = rating.wrapping_sub(2);", "    if cards > 3 {\n        rating = rating.wrapping_sub(2);"),
+    ('a_sem_cartao', "    } else if cards == 0 {\n        rating = rating.wrapping_add(1);", "    } else if cards == 0 {\n        rating = rating.wrapping_add(2);"),
     ('a_faltas', "    if faltas > 5 {\n        rating = rating.wrapping_sub(1);", "    if faltas > 6 {\n        rating = rating.wrapping_sub(1);"),
     ('a_quatro', "if rating < 4 && sortear(500) != 0 {", "if rating < 4 && sortear(499) != 0 {"),
     ('a_oito', "} else if rating > 8 && sortear(0x19) != 0 {", "} else if rating > 8 && sortear(0x18) != 0 {"),

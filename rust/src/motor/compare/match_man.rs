@@ -67,18 +67,18 @@ pub(crate) unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, fla
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn comparar_lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, side: usize, manager: usize, limit: i32, mark: u32, marca_alta: u32,
-    bytes: u32, tactic: u32, pos2: u32, ferias: usize,
+    bytes: u32, tactic: u32, pos2: u32, holiday: usize,
 ) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, usize, i32, u32, u32, u32, u32, u32, usize) -> i32>(IDX_LINEUP_SLOT_SCORE);
     if is_recording_top_level() {
-        return o(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, ferias);
+        return o(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday);
     }
     // sem as regiões do sorteador, pelo mesmo motivo da nota fora da partida (0x62ed70 com cache)
     let regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regions,
-        || o(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, ferias),
-        || crate::aleatorio::sem_contar(|| lineup_slot_score(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, ferias)),
+        || o(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday),
+        || crate::aleatorio::sem_contar(|| lineup_slot_score(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday)),
     );
     PLACAR.registrar(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, mark, r, n, mo, mr));
     r

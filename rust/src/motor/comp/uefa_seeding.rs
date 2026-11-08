@@ -304,11 +304,11 @@ pub(crate) unsafe fn assign_comp_place(this: usize, c: usize, comp: u32, stage: 
 /// 0x905ce0) e, em 2001, aplica a ordem do euro.cfg (0x9059e0, original). Devolve o número de clubes (só os 16 bits
 /// baixos contam: quem chama lê o si).
 pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: *mut usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let euro_cfg: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_APPLY_EURO_CFG_ORDER);
-    let t = alocar((read_u32(G_CLUB_COUNT) as i32).wrapping_mul(12) as u32);
+    let t = alloc((read_u32(G_CLUB_COUNT) as i32).wrapping_mul(12) as u32);
     *out = t;
     if t == 0 {
         show_error_at(0xaa1a1c, 0x2ed);
@@ -646,7 +646,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
             slots[2] = slots[2].wrapping_add(1); // cqi3: a vaga do fair play
         }
         let um = || enesimo(this, clubs, count, read_u32(e), 1, 1, 0);
-        let mut escolhidos = 0u8;
+        let mut chosen = 0u8;
         let (mut vencedor, mut vice) = (0usize, 0usize);
         let mut f = 1u8;
         while f < 3 {
@@ -656,7 +656,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                 let mut j = 0i8;
                 loop {
                     let mut tentar_de_novo = false;
-                    let c = if escolhidos == 0 {
+                    let c = if chosen == 0 {
                         if read_u8(nacao + nation::NATION_LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
@@ -711,7 +711,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                                 }
                             }
                         }
-                    } else if escolhidos == 1 {
+                    } else if chosen == 1 {
                         if read_u8(nacao + nation::NATION_LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
@@ -733,7 +733,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                     if tentar_de_novo {
                         j -= 1;
                     } else {
-                        escolhidos = escolhidos.wrapping_add(1);
+                        chosen = chosen.wrapping_add(1);
                         if c != 0 {
                             enter_uefa_cup(this, c, f, r as i32, &mut colocados);
                             if colocados as i16 as i32 - count_extra as i32 + 1 >= 0x76 {
@@ -801,22 +801,22 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     crate::comparacao::ramo("cqi_3 voluntario ingles");
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let division: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_DIVISION_MANAGERS);
-    let clube_sorteado = || {
+    let club_drawn = || {
         let s = sorteio(read_i16(league + 0x3e) as i32) as i16 as i32;
         read_u32((read_u32(league + 0xb1) as usize).wrapping_add((s * 0x3b) as usize)) as usize
     };
-    let mut tentativas = 0i8;
-    while (read_u8(this + 0x43f) as i8) < 6 && tentativas < 0x50 {
-        tentativas += 1;
-        let c = clube_sorteado();
+    let mut attempts = 0i8;
+    while (read_u8(this + 0x43f) as i8) < 6 && attempts < 0x50 {
+        attempts += 1;
+        let c = club_drawn();
         if human(c, 0, 1, 0, 0) == 0 && read_u32(c + 0x1db) == u32::MAX {
             if read_u32(this + 0x43b) == 0 {
                 *((this + 0x43f) as *mut u8) = 0;
-                let l = alocar(0x78);
+                let l = alloc(0x78);
                 core::ptr::write_unaligned((this + 0x43b) as *mut u32, l as u32);
                 if l == 0 {
                     show_error_at(0xaa1a1c, 0xf9);
@@ -853,7 +853,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
         }
     }
     while best == 0 {
-        let c = clube_sorteado();
+        let c = club_drawn();
         if read_u32(c + 0x1db) == u32::MAX {
             best = c;
         }

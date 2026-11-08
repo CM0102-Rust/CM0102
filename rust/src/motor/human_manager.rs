@@ -12,7 +12,7 @@ use super::*;
 /// `qualquer`: sim. Senao, selecao: 0x5fd6b0; clube: 0x5fd480. Se nao, e o clube e do segundo
 /// conjunto de selecoes (0x5409b0), repete com a selecao principal da nacao dele (0x53b3d0),
 /// ja sem `qualquer`. Clube nulo: a original (caixa de erro, zera 0xb67a34, 0).
-pub(crate) unsafe extern "C" fn human_club(clube: usize, without_tactic: u32, qualquer: u8, person: usize, forcar: u32) -> u32 {
+pub(crate) unsafe extern "C" fn human_club(clube: usize, without_tactic: u32, qualquer: u8, person: usize, force: u32) -> u32 {
     let h = *(G_HUMAN_MANAGER as *const usize);
     let (mut clube, mut qualquer, mut person) = (clube, qualquer, person);
     let t9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
@@ -23,7 +23,7 @@ pub(crate) unsafe extern "C" fn human_club(clube: usize, without_tactic: u32, qu
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     loop {
         if clube == 0 {
-            return original_fn::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB)(0, without_tactic, qualquer, person, forcar);
+            return original_fn::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB)(0, without_tactic, qualquer, person, force);
         }
         if person == 0 {
             person = *((clube + club::MANAGER) as *const usize);
@@ -33,7 +33,7 @@ pub(crate) unsafe extern "C" fn human_club(clube: usize, without_tactic: u32, qu
             let tactic = without_tactic == 0
                 && (t9ace(h, person) != 0 || matches!(human_manager_record_checked(h, person), Ok(r) if *((r + 0x9a01) as *const u32) != 0));
             if !tactic {
-                if forcar != 0 || qualquer != 0 {
+                if force != 0 || qualquer != 0 {
                     return 1;
                 }
                 let sim = if is_national_team(clube) != 0 { t9a06(h, person, core::ptr::null_mut()) as u32 } else { t9a05(h, person) };
@@ -626,7 +626,7 @@ pub(crate) unsafe extern "thiscall" fn remove_nickname_from_all(this: usize, id:
 /// (+0xcf); sem `qualquer`, não pode ter as marcas +0x9ace (0x5fe040) nem +0x9a01 no registro de
 /// humanos [0xb63c98]; e então basta `forcar`, o clube ser seleção (0x53b900) ou a marca +0x9a05
 /// (0x5fd480). Clube nulo: a original (caixa de erro e 0).
-pub(crate) unsafe extern "C" fn human_runs_club(clube: usize, qualquer: u32, forcar: i8) -> u32 {
+pub(crate) unsafe extern "C" fn human_runs_club(clube: usize, qualquer: u32, force: i8) -> u32 {
     let manager_9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
     let manager_9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
@@ -635,7 +635,7 @@ pub(crate) unsafe extern "C" fn human_runs_club(clube: usize, qualquer: u32, for
     let mut c = clube;
     loop {
         if c == 0 {
-            return original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(0, qualquer, forcar);
+            return original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(0, qualquer, force);
         }
         let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         let human = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const usize);
@@ -657,7 +657,7 @@ pub(crate) unsafe extern "C" fn human_runs_club(clube: usize, qualquer: u32, for
                     break 'proximo;
                 }
             }
-            if forcar != 0 || is_national_team(c) != 0 || manager_9a05(humanos, human) != 0 {
+            if force != 0 || is_national_team(c) != 0 || manager_9a05(humanos, human) != 0 {
                 crate::comparacao::ramo("humano manda no clube");
                 return 1;
             }
@@ -706,7 +706,7 @@ pub(crate) unsafe extern "thiscall" fn set_human_field(t: usize, value: u32, man
 /// passa a `férias`, com a conta dos humanos de férias (+0xc) subindo ao ligar e descendo ao desligar; ao ligar, as
 /// notícias pendentes do técnico com o clube (+0x39) e com a seleção (+0x24) são respondidas (0x7874b0); com o dia em
 /// [0xb67a50], o interesse do dia (0x6b5040).
-pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, ferias: u32, manager: usize) {
+pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, holiday: u32, manager: usize) {
     let mut t = manager;
     if t == 0 {
         t = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize));
@@ -723,16 +723,16 @@ pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, ferias: u32, 
     let mark = read_usize(this).wrapping_add((i as usize).wrapping_mul(0xa6ef)).wrapping_add(0x9a01);
     let count = (this + 0xc) as *mut i32;
     let before = read_usize(mark);
-    if ferias != 0 {
+    if holiday != 0 {
         if before == 0 {
             *count = (*count).wrapping_add(1);
         }
     } else if before != 0 {
         *count = (*count).wrapping_sub(1);
     }
-    core::ptr::write_unaligned(mark as *mut u32, ferias);
+    core::ptr::write_unaligned(mark as *mut u32, holiday);
     crate::comparacao::ramo("cpy_13 ferias do humano");
-    if ferias != 0 {
+    if holiday != 0 {
         let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_AUTO_RESPOND_ALL);
         if read_usize(t + 0x39) != 0 {
             respond(read_usize(G_NEWS), t, read_usize(t + 0x39));

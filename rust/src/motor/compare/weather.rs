@@ -63,8 +63,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_read_region(this: usize, f: usiz
 }
 
 /// Comparer for `read_region_period` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_read_region_period(this: usize, f: usize, periodo: usize) -> u8 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_READ_REGION_PERIOD)(this, f, periodo)
+pub(crate) unsafe extern "thiscall" fn comparar_read_region_period(this: usize, f: usize, period: usize) -> u8 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_READ_REGION_PERIOD)(this, f, period)
 }
 
 /// Comparer for `load_config` (comparison mode: see the header of motor.rs).

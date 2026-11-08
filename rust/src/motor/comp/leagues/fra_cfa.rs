@@ -232,7 +232,7 @@ pub(crate) struct C1BracketVariant {
 /// final); 1 os play-outs (é_liga = 0, 1 rodada, extra 0, 0x68 bytes); as outras devolvem 0 sem gravar nada. Sem memória
 /// (malloc 0x944e46: push; add esp, 4 -> cdecl): a caixa da linha da fase e 0. Devolve a tabela.
 pub(crate) unsafe fn create_c1_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32, p: &C1BracketVariant) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let (k, l, n, x, tamanho) = match stage as u8 {
         0xff => (0, 1, 0x22, 0, 0x8a2),
         0 => (1, 0, 2, 0xa0, 0xd0),
@@ -244,7 +244,7 @@ pub(crate) unsafe fn create_c1_schedule(this: usize, stage: u32, rounds: *mut i1
     }
     *rounds = n;
     *extra = x;
-    let t = alocar(tamanho);
+    let t = alloc(tamanho);
     if t == 0 {
         show_error_at(p.arquivo, p.linhas[k]);
         return 0;
@@ -566,8 +566,8 @@ pub(crate) unsafe extern "thiscall" fn destroy_fra_lower(this: usize) {
 /// cuja competição (+0x57, o id no +0) é uma de `marcadas`. Devolve se encheu (a conta das linhas = +0x3e).
 pub(crate) unsafe fn create_french_table(this: usize, clubs: usize, n: i16, file: usize, row: u32, marcadas: &[usize]) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);

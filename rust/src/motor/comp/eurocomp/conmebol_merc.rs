@@ -140,14 +140,14 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x211 e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: usize, g: i32) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
+    let teams = alloc(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if teams == 0 {
         show_error_at(0x9a7e5c, 0x1fb);
         return 0;
@@ -225,9 +225,9 @@ pub(crate) type ConmebolMercGroupRound = (u32, u32, u32, u32);
 /// rodadas pela `eng_cc_cup_write_cup_round` com o ano +0x40 da copa (com sinal) e as palavras de `a_mais` (rodada, deslocamento,
 /// valor). Acima de `limite`: devolve 0 sem gravar nada.
 pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32, limit: i8, groups: &[ConmebolMercGroupRound],
-    mata: &[EngCcCupCupRound], a_mais: &[(usize, usize, u16)], file: usize, row_g: u32, row_m: u32, name_g: &'static str, name: &'static str) -> usize {
+    knockout: &[EngCcCupCupRound], more: &[(usize, usize, u16)], file: usize, row_g: u32, row_m: u32, name_g: &'static str, name: &'static str) -> usize {
     let f = stage as u8 as i8;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if f < limit {
         let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
         let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
@@ -236,7 +236,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
         }
         *rounds = groups.len() as i16;
         *extra = (f as i16).wrapping_add(0x3e9);
-        let t = alocar(groups.len() as u32 * 0x41);
+        let t = alloc(groups.len() as u32 * 0x41);
         if t == 0 {
             show_error_at(file, row_g);
             return 0;
@@ -257,19 +257,19 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
     if !league.is_null() {
         *league = 0;
     }
-    *rounds = mata.len() as i16;
+    *rounds = knockout.len() as i16;
     *extra = 0;
-    let t = alocar(mata.len() as u32 * 0x68);
+    let t = alloc(knockout.len() as u32 * 0x68);
     if t == 0 {
         show_error_at(file, row_m);
         return 0;
     }
     crate::comparacao::ramo(name);
     let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    for (i, r) in mata.iter().enumerate() {
+    for (i, r) in knockout.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
     }
-    for &(r, o, v) in a_mais {
+    for &(r, o, v) in more {
         core::ptr::write_unaligned((t + r * 0x68 + o) as *mut u16, v);
     }
     t
@@ -282,7 +282,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas (grupos ou mata-mata, este com as
 /// palavras de `a_mais`) têm de ser iguais; a tabela da cópia é liberada (0x9452ca). Acima do mata-mata só a original.
-pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32, limit: i8, a_mais: &[(usize, usize, u16)],
+pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32, limit: i8, more: &[(usize, usize, u16)],
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = stage as u8 as i8;
     if f > limit {
@@ -296,7 +296,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let outs = *rounds == r2 && *extra == e2 && (league.is_null() || *league == l2);
-    let mais = |t: usize| a_mais.iter().flat_map(|&(r, o, _)| core::slice::from_raw_parts((t + r * 0x68 + o) as *const u8, 2).to_vec()).collect::<Vec<u8>>();
+    let mais = |t: usize| more.iter().flat_map(|&(r, o, _)| core::slice::from_raw_parts((t + r * 0x68 + o) as *const u8, 2).to_vec()).collect::<Vec<u8>>();
     let table = if a != 0 && b != 0 {
         if f < limit {
             written_group_schedule_bytes(a, *rounds) == written_group_schedule_bytes(b, r2)
@@ -368,8 +368,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize
 /// conferir o espaço; a lista é embaralhada (0x4afb40 com +0xf2). Devolve 1.
 pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x14);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar(0x50);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc(0x50);
     core::ptr::write_unaligned((this + 0xee) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9a7e5c, 0x2c6);

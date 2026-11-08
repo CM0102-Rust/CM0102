@@ -273,7 +273,7 @@ pub(crate) const PRIMERA_ODD_YEAR_CHRISTMAS: SpaFirstChristmasSchedule = SpaFirs
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 38 rodadas, a tabela pela paridade do ano +0x40 (o resto da divisão com
 /// sinal: `movsx; and 0x80000001; jns`), cada uma com a rodada do Natal; as outras devolvem 0. Fonte 0xa82944.
 pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -281,7 +281,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, st
             }
             *rounds = 38;
             *extra = 0;
-            let t = alocar(0x9a6);
+            let t = alloc(0x9a6);
             if t == 0 {
                 show_error_at(0xa82844, 0xb0);
                 return 0;
@@ -432,8 +432,8 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, esc
 /// thiscall(liga, valor, 0), ret 8) e 1.
 pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(0x49c);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc(0x49c);
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
         show_error_at(0xa82844, 0x250);

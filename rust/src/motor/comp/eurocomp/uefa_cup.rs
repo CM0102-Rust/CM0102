@@ -99,8 +99,8 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x36) as *mut i16, 0);
     let n = k.wrapping_add(0x1b);
     core::ptr::write_unaligned((this + 0x38) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar((n as i32 * 6) as u32);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc((n as i32 * 6) as u32);
     write_u32_from_usize(this + 0x14, t);
     if t == 0 {
         show_error_at(F, 0x21a);
@@ -150,8 +150,8 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
     }
     *rounds = 9;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(0x3a8);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc(0x3a8);
     if t == 0 {
         show_error_at(0xaa19e0, 0xe0);
         return 0;

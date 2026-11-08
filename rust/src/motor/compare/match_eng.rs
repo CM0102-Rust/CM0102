@@ -240,17 +240,17 @@ pub(crate) unsafe extern "C" fn comparar_action_order(a: *const usize, b: *const
 }
 
 /// Comparer for `context_commentary` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_context_commentary(m: usize, side: u32, evento: u32, out: *mut i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_context_commentary(m: usize, side: u32, event: u32, out: *mut i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32>(IDX_CONTEXT_COMMENTARY);
     if is_recording_top_level() {
-        return o(m, side, evento, out);
+        return o(m, side, event, out);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if !out.is_null() {
         reg.push((out as usize, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m, side, evento, out), || crate::aleatorio::sem_contar(|| context_commentary(m, side, evento, out)));
-    PLACAR.registrar(igual && r == n, || format!("context_commentary({}, {:#x}) original={} rust={} {:x?} x {:x?}", side as u8, evento as u16, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m, side, event, out), || crate::aleatorio::sem_contar(|| context_commentary(m, side, event, out)));
+    PLACAR.registrar(igual && r == n, || format!("context_commentary({}, {:#x}) original={} rust={} {:x?} x {:x?}", side as u8, event as u16, r, n, mo, mr));
     probe_context_commentary(m, o);
     r
 }
@@ -663,10 +663,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_left(m: usize, j: usize, 
 }
 
 /// Comparer for `tackle_injury` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_tackle_injury(m: usize, a: usize, kind: u32, b: usize, kind_b: u32, direto: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_tackle_injury(m: usize, a: usize, kind: u32, b: usize, kind_b: u32, direct: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32)>(IDX_TACKLE_INJURY);
     if is_recording_top_level() {
-        return o(m, a, kind, b, kind_b, direto);
+        return o(m, a, kind, b, kind_b, direct);
     }
     // o sorteio, os dois jogadores, os registros de lesao deles e o que a 0x6d0980 mexe no motor
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -681,12 +681,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_tackle_injury(m: usize, a: usize
             }
         }
     }
-    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(m, a, kind, b, kind_b, direto), |chamar| {
-        tackle_injury_with(m, a, kind as u16 as i16, b, kind_b as u16 as i16, direto as u8, &mut |rotina, this, args| {
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(m, a, kind, b, kind_b, direct), |chamar| {
+        tackle_injury_with(m, a, kind as u16 as i16, b, kind_b as u16 as i16, direct as u8, &mut |rotina, this, args| {
             chamar(rotina, this, args, if rotina == 0x62ed70 { [u32::MAX, 0, 0, 0, 0] } else { [0xff, 0xff, u32::MAX, u32::MAX, 0] })
         })
     });
-    PLACAR.registrar(igual && sequencia, || format!("tackle_injury(lances {}, {} direto {}) {} chamadas: {}", kind as i16, kind_b as i16, direto as u8, k, tape_detail()));
+    PLACAR.registrar(igual && sequencia, || format!("tackle_injury(lances {}, {} direto {}) {} chamadas: {}", kind as i16, kind_b as i16, direct as u8, k, tape_detail()));
 }
 
 /// Comparer for `kit` (comparison mode: see the header of motor.rs).

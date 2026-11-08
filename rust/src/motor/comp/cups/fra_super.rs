@@ -65,7 +65,7 @@ pub(crate) unsafe fn fra_super_write_cup_round(t: usize, i: u32, r: &FraSuperCup
 /// devolve 0) com cada rodada; devolve a tabela. `ajuste` mexe na primeira rodada depois da alocação (o mando sorteado da
 /// Supercopa francesa).
 pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32, table: &[FraSuperCupRound], file: usize, row: u32, name: &'static str,
-    ajuste: impl FnOnce(&mut FraSuperCupRound)) -> usize {
+    adjust: impl FnOnce(&mut FraSuperCupRound)) -> usize {
     if stage as u8 != 0xff {
         return 0;
     }
@@ -74,15 +74,15 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stag
     }
     *rounds = table.len() as i16;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(table.len() as u32 * 0x68);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc(table.len() as u32 * 0x68);
     if t == 0 {
         show_error_at(file, row);
         return 0;
     }
     crate::comparacao::ramo(name);
     let mut t0 = table[0];
-    ajuste(&mut t0);
+    adjust(&mut t0);
     let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         fra_super_write_cup_round(t, i as u32, if i == 0 { &t0 } else { r }, year);

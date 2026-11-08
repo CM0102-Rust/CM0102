@@ -186,8 +186,8 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
     }
     *rounds = 3;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(0x138);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc(0x138);
     if t == 0 {
         show_error_at(0x9a7d30, 0x97);
         return 0;

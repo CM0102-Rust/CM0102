@@ -108,10 +108,10 @@ pub(crate) unsafe extern "thiscall" fn end_day(day: usize) {
     while k < *d(0x21) as i32 {
         let p = *d(0x19) + k as usize * 0x69;
         let q = |o: usize| (p + o) as *mut usize;
-        let motor = *q(0x57);
-        if motor != 0 {
-            destroy_engine(motor);
-            free(motor);
+        let engine = *q(0x57);
+        if engine != 0 {
+            destroy_engine(engine);
+            free(engine);
             *q(0x57) = 0;
             remove(*(G_VIRTUAL_STAFF as *const usize), p + 4);
         }
@@ -220,11 +220,11 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
             {
                 remove(u(G_VIRTUAL_STAFF, 0), p + 4, -3, 0);
                 let mem = new(0xf63b);
-                let motor = if mem != 0 { construct(mem) } else { 0 };
-                *((p + 0x57) as *mut usize) = motor;
-                if motor != 0 {
+                let engine = if mem != 0 { construct(mem) } else { 0 };
+                *((p + 0x57) as *mut usize) = engine;
+                if engine != 0 {
                     let r = rapida(p + 4);
-                    prepare(motor, p + 4, r, 0, 0);
+                    prepare(engine, p + 4, r, 0, 0);
                     por(0x2f, k);
                     crate::comparacao::ramo("dia partida iniciada");
                     return 1;
@@ -319,10 +319,10 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
         return 0;
     }
     register(u(G_MATCH_STATS, 0), u(p, 0x57), mem);
-    let motor = u(p, 0x57);
-    if motor != 0 {
-        destroy_engine(motor);
-        free(motor);
+    let engine = u(p, 0x57);
+    if engine != 0 {
+        destroy_engine(engine);
+        free(engine);
     }
     *((p + 0x57) as *mut usize) = 0;
     remove(u(G_VIRTUAL_STAFF, 0), p + 4);
@@ -402,9 +402,9 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     }
     *(G_GAME_UNSAVED_CHANGES_FLAG as *mut u32) = 1;
     let players: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_MATCH_DAY_APPLY_POST_MATCH_PLAYER_CHANGES);
-    let eventos: unsafe extern "C" fn(usize) = core::mem::transmute(FN_MATCH_DAY_PROCESS_PLAYER_INCIDENTS);
+    let events: unsafe extern "C" fn(usize) = core::mem::transmute(FN_MATCH_DAY_PROCESS_PLAYER_INCIDENTS);
     players(jogo, summary);
-    eventos(jogo);
+    events(jogo);
     let two = |this: usize, f: usize| {
         let g: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(f);
         g(this, jogo, summary);
@@ -516,7 +516,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         }
     };
     // libera o motor e tira a partida da fila
-    let sem_motor = |p: usize| {
+    let without_engine = |p: usize| {
         let m = u(p, 0x57);
         if m != 0 {
             destroy_engine(m);
@@ -525,7 +525,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         por(p, 0x57, 0);
         remove(u(G_VIRTUAL_STAFF, 0), p + 4);
     };
-    let novo_motor = |p: usize| {
+    let new_engine = |p: usize| {
         let mem = new(0xf63b);
         let m = if mem != 0 { construct(mem) } else { 0 };
         por(p, 0x57, m);
@@ -657,7 +657,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                 if u(p, 0x53) != 0 && u(p, 0x57) != 0 {
                     until_end(p);
                     register(u(G_MATCH_STATS, 0), u(p, 0x57), u(p, 0x5f));
-                    sem_motor(p);
+                    without_engine(p);
                     free(u(p, 0x5b));
                     por(p, 0x5b, 0);
                 }
@@ -704,7 +704,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                     continue 'reinicio;
                 }
                 remove_of_queue(u(G_VIRTUAL_STAFF, 0), p + 4, -2, 0);
-                let m = novo_motor(p);
+                let m = new_engine(p);
                 if m == 0 {
                     show_error_at(0xa15708, 0x39d);
                 } else {
@@ -718,7 +718,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                         show_error_at(0xa15708, 0x3b5);
                     } else {
                         register(u(G_MATCH_STATS, 0), u(p, 0x57), summary);
-                        sem_motor(p);
+                        without_engine(p);
                         if !rapido {
                             crate::comparacao::ramo("placar na barra");
                             // o placar com a porcentagem do dia na barra
@@ -1572,11 +1572,11 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     if !sozinho {
         return;
     }
-    let motor = (jogo + 0x57) as *mut usize;
-    if core::ptr::read_unaligned(motor) == 0 {
+    let engine = (jogo + 0x57) as *mut usize;
+    if core::ptr::read_unaligned(engine) == 0 {
         let mem = new(0xf63b);
         let m = if mem != 0 { construct(mem) } else { 0 };
-        core::ptr::write_unaligned(motor, m);
+        core::ptr::write_unaligned(engine, m);
         if m == 0 {
             show_error_at(0xa15708, 0xa4b);
             return;
@@ -1585,7 +1585,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     }
     let state = (jogo + 0x67) as *mut u8;
     while *state != 2 && *state != 8 {
-        let e = laco(core::ptr::read_unaligned(motor), -1) as u8;
+        let e = laco(core::ptr::read_unaligned(engine), -1) as u8;
         *state = e;
         if e == 2 || e == 8 {
             *((u(G_MATCH_DAY, 0) + 0x25) as *mut i32) += 1;
@@ -1601,14 +1601,14 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
             show_error_at(0xa15708, 0xa68);
             return;
         }
-        register(u(G_MATCH_STATS, 0), core::ptr::read_unaligned(motor), mem);
+        register(u(G_MATCH_STATS, 0), core::ptr::read_unaligned(engine), mem);
     }
-    let m = core::ptr::read_unaligned(motor);
+    let m = core::ptr::read_unaligned(engine);
     if m != 0 {
         destroy_engine(m);
         free(m);
     }
-    core::ptr::write_unaligned(motor, 0);
+    core::ptr::write_unaligned(engine, 0);
     remove(u(G_VIRTUAL_STAFF, 0), jogo + 4);
 }
 
@@ -1693,7 +1693,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     }
     let pl = u(p, 0x5b);
     crate::comparacao::ramo("step_towards em rede");
-    let motor = u(p, 0x57);
+    let engine = u(p, 0x57);
     let state = pl as *mut u8;
     let eu = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
     let visto = |i: isize| ((pl as isize) + 0x85 + 4 * i) as *mut u32;
@@ -1704,7 +1704,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
         *((pl + 0x107) as *mut u8) = 1;
     };
     let mostrar_evento = |ev: usize| {
-        if table(u(motor, 0x8f7a), *(ev as *const u16) as u32) == 2 {
+        if table(u(engine, 0x8f7a), *(ev as *const u16) as u32) == 2 {
             por(pl, 0x115, 1);
         }
         por(pl, 1, ev as u32);
@@ -1724,15 +1724,15 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     if *((pl + 0x108) as *const u8) != 0 {
         return seguir();
     }
-    if *state & 8 != 0 && sons(u(motor, 0x8f7a), pl + 5) == 0 {
+    if *state & 8 != 0 && sons(u(engine, 0x8f7a), pl + 5) == 0 {
         return seguir();
     }
-    let espera = if *((u(motor, 0x8f7a) + 0x2db0) as *const u8) == 0x14 { 0 } else { u(pl, 0x109) as u32 };
+    let espera = if *((u(engine, 0x8f7a) + 0x2db0) as *const u8) == 0x14 { 0 } else { u(pl, 0x109) as u32 };
     if relogio() < (u(pl, 0x10d) as u32).wrapping_add(espera) {
         return seguir();
     }
     if *state & 8 != 0 {
-        let ev = next_event(u(motor, 0x8f7a), 0);
+        let ev = next_event(u(engine, 0x8f7a), 0);
         if ev != 0 {
             mostrar_evento(ev);
             por(pl, 0x10d, relogio());
@@ -1741,13 +1741,13 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     }
     if u(pl, 0x111) != 0 {
         por(pl, 0x115, 0);
-        let r = laco(motor, 1) as u8;
+        let r = laco(engine, 1) as u8;
         *((p + 0x67) as *mut u8) = r;
         if r == 2 || r == 8 {
             *((day + 0x25) as *mut i32) += 1;
         }
-        if *((u(motor, 0x8f7a) + 5) as *const u8) != 0 {
-            let ev = next_event(u(motor, 0x8f7a), 0);
+        if *((u(engine, 0x8f7a) + 5) as *const u8) != 0 {
+            let ev = next_event(u(engine, 0x8f7a), 0);
             if ev != 0 {
                 mostrar_evento(ev);
                 por(pl, 0x10d, relogio());
@@ -1773,20 +1773,20 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     if *((p + 0x67) as *const u8) == 4 {
         mark(0x20);
     }
-    if byte(motor, 0xf5bd) as i32 > *((summary + 0x11f) as *const u8) as i32 {
+    if byte(engine, 0xf5bd) as i32 > *((summary + 0x11f) as *const u8) as i32 {
         mark(1);
     }
-    if byte(motor, 0xf5f3) as i32 > *((u(p, 0x5f) + 0x744) as *const u8) as i32 {
+    if byte(engine, 0xf5f3) as i32 > *((u(p, 0x5f) + 0x744) as *const u8) as i32 {
         mark(2);
     }
     if u(pl, 0x115) != 0 {
         mark(0x10);
     }
-    if *((motor + 0x8eb2) as *const u8) != 0 {
+    if *((engine + 0x8eb2) as *const u8) != 0 {
         mark(0x80);
     }
     let r = u(p, 0x5f);
-    if *((motor + 0x8ed0) as *const i16) as i32 / 11 > *((r + 0x4d) as *const i16) as i32 {
+    if *((engine + 0x8ed0) as *const i16) as i32 / 11 > *((r + 0x4d) as *const i16) as i32 {
         *state |= 4;
         por(pl, 0x109, (0x226 - 50 * *((u(p, 0x5f) + 0x51) as *const i16) as i32) as u32);
     }
@@ -1796,7 +1796,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     }
     rever();
     por(pl, 0x10d, relogio());
-    register(u(G_MATCH_STATS, 0), motor, u(p, 0x5f), 1);
+    register(u(G_MATCH_STATS, 0), engine, u(p, 0x5f), 1);
     let s = u(u(day, 0x34), 0x5f);
     let swap = if s != 0 {
         let a = competicao(*((u(p, 0x5f) + 0x4f) as *const u16) as u32, 1) as i8;
@@ -1853,9 +1853,9 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usiz
     }
     crate::comparacao::ramo("partida em rede confirmada");
     let mem = new(0xf63b);
-    let motor = if mem != 0 { construct(mem) } else { 0 };
-    por(p, 0x57, motor);
-    if motor == 0 {
+    let engine = if mem != 0 { construct(mem) } else { 0 };
+    por(p, 0x57, engine);
+    if engine == 0 {
         show_error_at(FONTE, 0x4d0);
         return 0;
     }
@@ -1867,7 +1867,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usiz
         por(p, 0x5f, r);
         r
     };
-    if prepare(motor, p + 4, 0, 0, 1) as i8 == 0 {
+    if prepare(engine, p + 4, 0, 0, 1) as i8 == 0 {
         let terminou = |e: u8| e == 2 || e == 8;
         let state = (p + 0x67) as *mut u8;
         while !terminou(*state) {

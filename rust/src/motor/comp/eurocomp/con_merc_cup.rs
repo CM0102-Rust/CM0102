@@ -93,7 +93,7 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
 /// sorteada): os classificados lidos antes (o grupo 1 nas linhas, as fases pelas linhas da tabela +0xb1 delas, como a
 /// 0x6826d0); depois a fase em [+0xc][`mata`] com +0x3e = `times`, o +4 da copa e os clubes da lista dela (+0xa7, 6
 /// bytes) iguais aos do plano como conjunto (o sorteio pode reordenar).
-pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: usize, teams: usize, stages: usize, mata: usize, original: impl FnOnce()) {
+pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: usize, teams: usize, stages: usize, knockout: usize, original: impl FnOnce()) {
     let q = qualifiers_per_group(this).max(0) as usize;
     let mut plan: Vec<usize> = (0..q).map(|i| read_u32_as_usize(read_u32_as_usize(this + 0xb1) + i * 0x3b)).collect();
     for f in 0..stages {
@@ -103,7 +103,7 @@ pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: usize
         }
     }
     original();
-    let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + mata * 4);
+    let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + knockout * 4);
     if stage == 0 {
         PLACAR.registrar(false, || format!("{}({:#x}) sem fase", name, this));
         return;
@@ -196,14 +196,14 @@ impl NationClubList {
 /// A original guarda as listas na pilha sem zerá-las: com menos clubes que as vagas, ela lê sobra; a cópia lê zero
 /// [inferência: nesta carreira as quatro nações e a MLS têm clubes que bastam; o comparador confere a lista].
 pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let sort: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     write_u32_from_usize(this + 0xf2, 0x10);
     let americana = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP) * 4);
-    let list = alocar(0x40);
+    let list = alloc(0x40);
     write_u32_from_usize(this + 0xee, list);
     if list == 0 {
         show_error_at(0x9a7d6c, 0x262);
@@ -447,14 +447,14 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(thi
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x1ff e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alocar(0x10);
+    let teams = alloc(0x10);
     if teams == 0 {
         show_error_at(0x9a7d6c, 0x1e9);
         return 0;

@@ -12,11 +12,11 @@ pub(crate) unsafe extern "C" fn comparar_position_mask(p: usize) -> u16 {
 }
 
 /// Comparer for `pitch_cell` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_pitch_cell(mask: u32, ataque: i8, band: u32, out: *mut i16) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_pitch_cell(mask: u32, attack: i8, band: u32, out: *mut i16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(IDX_PITCH_CELL);
     let reg = [(out as usize, 4)];
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(mask, ataque, band, out), || pitch_cell(mask, ataque, band, out));
-    PLACAR.registrar(igual && r == v, || format!("pitch_cell({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", mask, ataque, band, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(mask, attack, band, out), || pitch_cell(mask, attack, band, out));
+    PLACAR.registrar(igual && r == v, || format!("pitch_cell({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", mask, attack, band, r, mo, v, mr));
     r
 }
 
@@ -69,11 +69,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_position_lookup(this: usiz
 }
 
 /// Comparer for `stored_cell` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_stored_cell(t: usize, slot: i8, ataque: i8, band: u32, out: *mut u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_stored_cell(t: usize, slot: i8, attack: i8, band: u32, out: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(IDX_STORED_CELL);
     let reg = [(out as usize, 4)];
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(t, slot, ataque, band, out), || stored_cell(t, slot, ataque, band, out));
-    PLACAR.registrar(igual && r == v, || format!("stored_cell({:#x}, {}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, slot, ataque, band, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(t, slot, attack, band, out), || stored_cell(t, slot, attack, band, out));
+    PLACAR.registrar(igual && r == v, || format!("stored_cell({:#x}, {}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, slot, attack, band, r, mo, v, mr));
     r
 }
 

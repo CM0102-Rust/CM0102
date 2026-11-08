@@ -9,10 +9,10 @@ use super::*;
 /// em ensaio (sem ordenar), a partir dos mesmos recordes: os 14 primeiros bytes dos registros da temporada e de sempre
 /// de cada clube da cadeia, o cabeçalho da fila (+0x24..+0x30) e a fila; e a devolução. Liga nula ou com +0x44 ≠ 0xff,
 /// registro a criar (0x4528d0/0x452710 alocam) ou fila que pode crescer: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize, liga0: usize, sempre: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize, liga0: usize, always: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS);
     if liga0 == 0 || read_u8(liga0 + 0x44) != 0xff {
-        return o(this, liga0, sempre); // simplification: as caixas, só a original
+        return o(this, liga0, always); // simplification: as caixas, só a original
     }
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(t
             }
             let (t, s) = (club_season_record(this, clube, 0), club_all_time_record(this, clube, 0));
             if t == 0 || s == 0 {
-                return o(this, liga0, sempre); // simplification: o registro seria criado, só a original
+                return o(this, liga0, always); // simplification: o registro seria criado, só a original
             }
             regions.push((t, 0xe));
             regions.push((s, 0xe));
@@ -38,21 +38,21 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(t
     }
     let queue = read_usize(this + 0x24);
     if (read_usize(this + 0x2c) as i32).wrapping_add(podem_entrar) > read_usize(this + 0x28) as i32 || (queue == 0 && podem_entrar > 0) {
-        return o(this, liga0, sempre); // simplification: a fila pode crescer (realoca), só a original
+        return o(this, liga0, always); // simplification: a fila pode crescer (realoca), só a original
     }
     if queue != 0 {
         regions.push((queue, 6 * read_usize(this + 0x28)));
     }
     let before = crate::comparacao::Memoria::ler(&regions);
-    let ro = o(this, liga0, sempre);
+    let ro = o(this, liga0, always);
     let mo = crate::comparacao::Memoria::ler(&regions);
     before.escrever();
     POSITION_RECORDS_DRY_RUN = true;
-    let rr = crate::aleatorio::pausar_rastro(|| update_league_position_records(this, liga0, sempre));
+    let rr = crate::aleatorio::pausar_rastro(|| update_league_position_records(this, liga0, always));
     POSITION_RECORDS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regions);
     mo.escrever();
-    PLACAR.registrar(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
+    PLACAR.registrar(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, always, ro, mo, rr, mr));
     ro
 }
 
@@ -103,8 +103,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this
         return r;
     }
     let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
-    let sempre: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
-    let records = || [season(this, buyer, 1), sempre(this, buyer, 1), season(this, seller, 1), sempre(this, seller, 1)];
+    let always: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
+    let records = || [season(this, buyer, 1), always(this, buyer, 1), season(this, seller, 1), always(this, seller, 1)];
     let value = read_i32(t + 0x1b);
     let rg = records();
     // (valor, clube) de cada recorde: pago da temporada e de sempre do comprador, recebido do vendedor
@@ -154,10 +154,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize,
         return o(this, value, buyer, seller); // simplification: com realloc da fila, só a original
     }
     let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
-    let sempre: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
-    let _ = [season(this, seller, 1), sempre(this, seller, 1), season(this, buyer, 1), sempre(this, buyer, 1)];
+    let always: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
+    let _ = [season(this, seller, 1), always(this, seller, 1), season(this, buyer, 1), always(this, buyer, 1)];
     // criar o registro do comprador pode realocar o vetor e mover o do vendedor: pega os quatro de novo (agora só acha)
-    let regs = [season(this, seller, 1), sempre(this, seller, 1), season(this, buyer, 1), sempre(this, buyer, 1)];
+    let regs = [season(this, seller, 1), always(this, seller, 1), season(this, buyer, 1), always(this, buyer, 1)];
     let queue = read_usize(this + 0x24).wrapping_add(read_usize(this + 0x2c).wrapping_mul(6));
     let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + 0x2c, 4), (queue, 12)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, value, buyer, seller), || add_transfer_totals(this, value, buyer, seller));
@@ -174,8 +174,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_club_records_update_career_recor
     if player == 0 || clube == 0 {
         return o(this, player, clube, games, goals);
     }
-    let sempre: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
-    let reg = sempre(this, clube, 1);
+    let always: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
+    let reg = always(this, clube, 1);
     if reg == 0 {
         return o(this, player, clube, games, goals);
     }

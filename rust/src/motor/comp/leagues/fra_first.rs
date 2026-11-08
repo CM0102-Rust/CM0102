@@ -990,8 +990,8 @@ pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: usize, esc
 /// (+0x57, o id no +0) é a do global `g`, na ordem do banco, cada um na linha seguinte (League::init_table_row
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve se encheu.
 pub(crate) unsafe fn fra_first_fill_league_table(this: usize, file: usize, row: u32, g: usize) -> Option<bool> {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
@@ -1098,7 +1098,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, st
     if stage as u8 != 0xff {
         return 0;
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let year = core::ptr::read_unaligned((this + 0x40) as *const u16);
     let n: i16 = if year == 0x7d1 { 0x22 } else { 0x26 }; // cqo6: 34 rodadas em 2001, 38 depois
     if !league.is_null() {
@@ -1106,7 +1106,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, st
     }
     *rounds = n;
     *extra = 0;
-    let t = alocar((n as i32 * 0x41) as u32);
+    let t = alloc((n as i32 * 0x41) as u32);
     if t == 0 {
         show_error_at(0x9ccb5c, 0xd1);
         return 0;

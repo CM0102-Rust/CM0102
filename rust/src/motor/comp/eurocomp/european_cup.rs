@@ -332,13 +332,13 @@ pub(crate) unsafe extern "C" fn european_cup_compare_clubs_by_seed(a: *const usi
 ///    em toda rodada, cada um dos seguintes ganha o contador do começo da rodada (que sobe a cada um).
 /// 2) A segunda fase: 2 × (4 clubes com o contador; o contador sobe 4). 3) A primeira fase: 2 × (8 clubes; sobe 8).
 /// 4) As preliminares, da última para a primeira: cada clube da rodada com o contador do começo dela (sobe a cada um).
-pub(crate) unsafe fn planned_final_positions(this: usize, mata: usize, nm: i16) -> (Vec<(i16, u8)>, usize) {
+pub(crate) unsafe fn planned_final_positions(this: usize, knockout: usize, nm: i16) -> (Vec<(i16, u8)>, usize) {
     let mut v = Vec::new();
     let mut i = 0i16;
     let mut cont = 1u8;
     let mut r = nm.wrapping_sub(1);
     while r >= 0 {
-        let n = read_i16(mata + r as usize * 0x68 + 0x1a);
+        let n = read_i16(knockout + r as usize * 0x68 + 0x1a);
         if r == nm.wrapping_sub(1) {
             let mut k = 0i16;
             while k < n {
@@ -351,7 +351,7 @@ pub(crate) unsafe fn planned_final_positions(this: usize, mata: usize, nm: i16) 
         }
         let p = cont;
         let mut k = 0i16;
-        while k < read_i16(mata + r as usize * 0x68 + 0x1a) {
+        while k < read_i16(knockout + r as usize * 0x68 + 0x1a) {
             v.push((i, p));
             i += 1;
             cont = cont.wrapping_add(1);
@@ -359,7 +359,7 @@ pub(crate) unsafe fn planned_final_positions(this: usize, mata: usize, nm: i16) 
         }
         r -= 1;
     }
-    let n_mata = v.len();
+    let n_knockout = v.len();
     for &(vezes, quantos) in &[(2, 4u8), (2, 8u8)] {
         for _ in 0..vezes {
             let p = cont;
@@ -383,7 +383,7 @@ pub(crate) unsafe fn planned_final_positions(this: usize, mata: usize, nm: i16) 
         }
         r -= 1;
     }
-    (v, n_mata)
+    (v, n_knockout)
 }
 
 /// the entrants sorted by strength and each one's predicted position: the knockout from the final back, the second and
@@ -398,7 +398,7 @@ pub(crate) unsafe fn planned_final_positions(this: usize, mata: usize, nm: i16) 
 /// clube; mov ecx, [+8] -> thiscall, ret 8; a original empurra o dword da pilha com a posição no byte de baixo e lixo
 /// nos outros, e a 0x4a2540 só grava o byte: a cópia passa o byte limpo) no plano de `planned_final_positions`; o vetor liberado.
 pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sort: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SORT_CLUBS_BY_STRENGTH);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
@@ -406,7 +406,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
         show_error_at(0x9c4900, 0x81b);
         return;
     }
-    let v = alocar(((read_i16(this + 0x36) as i32) << 2) as u32);
+    let v = alloc(((read_i16(this + 0x36) as i32) << 2) as u32);
     if v == 0 {
         show_error_at(0x9c4900, 0x823);
         return;
@@ -419,17 +419,17 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
     sort(v, read_i16(this + 0x36) as i32);
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut nm, mut id) = (0i16, 0i16);
-    let mata = rounds_of_cup(this, 0xc, &mut nm, &mut id, 0);
+    let knockout = rounds_of_cup(this, 0xc, &mut nm, &mut id, 0);
     // as posições do mata-mata antes de liberar a tabela dele, as outras depois (como a original)
-    let (plano, n_mata) = planned_final_positions(this, mata, nm);
+    let (plano, n_mata) = planned_final_positions(this, knockout, nm);
     for (j, &(k, p)) in plano.iter().enumerate() {
         if j == n_mata {
-            soltar(mata);
+            soltar(knockout);
         }
         position(read_u32_as_usize(this + 8), read_u32_as_usize(v + k as usize * 4), p as u32);
     }
     if n_mata == plano.len() {
-        soltar(mata);
+        soltar(knockout);
     }
     soltar(v);
 }
@@ -479,14 +479,14 @@ pub(crate) unsafe fn copy_group_entry(para: usize, de: usize) {
 ///    caixa da linha 0x729): nas últimas 8 vagas da tabela +0xa7 dela, de trás para a frente, na tabela +0x14 com a
 ///    situação 5 e com a competição europeia do clube = a UEFA; os quartos (push 3) ficam sem competição europeia (−1);
 ///    depois as posições previstas da UEFA (método +0x5c).
-pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
+pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: u32) {
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let row: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
-    let cartoes: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_RULINGBODY_RESET_BOOKINGS_FOR_CLUB);
+    let cards: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_RULINGBODY_RESET_BOOKINGS_FOR_CLUB);
     let points: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_ADD_NATION_POINTS);
     let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
     let prize: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
@@ -526,8 +526,8 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa
     }
     sort(w, 0x10, 7, 0x5871e0);
     for i in 0..16 {
-        let orgao = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + 0x50) as i8 as i32 * 4) as usize));
-        cartoes(orgao, read_u32_as_usize(e7(w, i)));
+        let body = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + 0x50) as i8 as i32 * 4) as usize));
+        cards(body, read_u32_as_usize(e7(w, i)));
     }
     let r = zerada(0x10, 7);
     if r == 0 {
@@ -560,7 +560,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa
             }
         }
     }
-    let mut ordem = [0u8, 1, 2, 3];
+    let mut order = [0u8, 1, 2, 3];
     for i in 0..16i32 {
         let p = e7(r, i);
         let mut minus = 4i8;
@@ -570,10 +570,10 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa
             let a = sorteio(4) as i8 as usize;
             let b = sorteio(4) as i8 as usize; // cqg6: a troca da ordem dos grupos
             crate::comparacao::ramo("cqg_6 troca da ordem");
-            ordem.swap(a, b);
+            order.swap(a, b);
         }
         for q in 0..4usize {
-            let gr = ordem[q] as i8 as i32;
+            let gr = order[q] as i8 as i32;
             let mut n = 0i8;
             let mut conflito = false;
             for j in 0..4i32 {
@@ -590,7 +590,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa
             let vaga = read_u32_as_usize(e7(g, s + gr * 4)) == 0 || read_u32_as_usize(e7(g, s + 1 + gr * 4)) == 0;
             if vaga && !conflito && n < minus {
                 minus = n;
-                best = ordem[q];
+                best = order[q];
             }
         }
         if best != 0xff {
@@ -606,20 +606,20 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa
         if read_u32_as_usize(p) == 0 {
             continue;
         }
-        if (tentativa as u8 as i8) < 0x14 {
+        if (attempt as u8 as i8) < 0x14 {
             crate::comparacao::ramo("cqg_6 sorteio de novo");
             soltar(g);
             soltar(r);
             soltar(w);
             let of_new: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_EUROPEANCUP_DRAW_PHASE2_GROUPS);
-            of_new(this, (tentativa as u8).wrapping_add(1) as u32);
+            of_new(this, (attempt as u8).wrapping_add(1) as u32);
             return;
         }
         if let Some(v) = (0..16).map(|j| e7(g, j)).find(|&v| read_u32_as_usize(v) == 0) {
             copy_group_entry(v, p);
         }
     }
-    let t = alocar(0x40);
+    let t = alloc(0x40);
     for i in 0..16usize {
         write_u32_from_usize(t + i * 4, read_u32_as_usize(e7(g, i as i32)));
     }
@@ -862,8 +862,8 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
             }
             0 => {
                 let weight = scale_by_round(0x4b, 0x64, read_i16(jogo + 0x34), 2);
-                let mata = read_usize(read_usize(this + 0xc) + 0x30);
-                let rounds = read_usize(mata + 0xa3);
+                let knockout = read_usize(read_usize(this + 0xc) + 0x30);
+                let rounds = read_usize(knockout + 0xa3);
                 let r = read_i16(jogo + 0x34) as i32;
                 // os bits de cima do registrador que a original empurra são os do ponteiro das fases (+0xc)
                 let round = (read_usize(this + 0xc) as u32 & 0xffff_0000) | read_i16(rounds.wrapping_add((r as usize).wrapping_mul(0x68)) + 0x6f) as u16 as u32;
@@ -935,8 +935,8 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     }
     crate::comparacao::ramo("cpz_4 sorteio das quartas");
     let [a, b, c, d] = draw_four_groups();
-    let ordem: [(i8, u32); 8] = [(a, 0), (b, 1), (a, 1), (b, 0), (c, 0), (d, 1), (c, 1), (d, 0)];
-    for (k, &(g, l)) in ordem.iter().enumerate() {
+    let order: [(i8, u32); 8] = [(a, 0), (b, 1), (a, 1), (b, 0), (c, 0), (d, 1), (c, 1), (d, 0)];
+    for (k, &(g, l)) in order.iter().enumerate() {
         core::ptr::write_unaligned((list + 4 * k) as *mut usize, second_stage_group_club(this, g, l));
     }
     let tv: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_RULINGBODY_RESET_BOOKINGS_FOR_CLUB);
@@ -1019,8 +1019,8 @@ pub(crate) unsafe extern "thiscall" fn european_cup_collect_club_list(this: usiz
             return base(this, out, 0);
         }
     };
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alocar(0x11c);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let v = alloc(0x11c);
     if v == 0 {
         show_error_at(0x9c4900, linha);
         core::ptr::write_unaligned(out as *mut usize, 0);
@@ -1409,7 +1409,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
     if f == -1 || f >= 0xc {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_EUROPEAN_CUP_CREATE_ROUND_TABLE)(this, stage, rounds, id, league);
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     if !league.is_null() {
@@ -1417,13 +1417,13 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
     }
     *rounds = 6;
     *id = (f as i16).wrapping_add(0x43d);
-    let t = alocar(0x186);
+    let t = alloc(0x186);
     if t == 0 {
         show_error_at(0x9c4900, if f < 8 { 0x17a } else { 0x1aa });
         return 0;
     }
     let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as u16 as u32;
-    let metade = if f < 8 {
+    let half = if f < 8 {
         if f < 4 { 0 } else { 1 }
     } else {
         let construct: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
@@ -1437,7 +1437,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
         if f < 10 { 2 } else { 3 }
     };
     crate::comparacao::ramo("cqh_4 tabela das rodadas");
-    for &(i, dia, mes, anos, semana) in GROUP_STAGE_DATES[metade].iter() {
+    for &(i, dia, mes, anos, semana) in GROUP_STAGE_DATES[half].iter() {
         data(t, i, dia, mes, anos, semana, 2, year, 0);
     }
     for r in 0..6 {

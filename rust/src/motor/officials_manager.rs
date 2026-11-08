@@ -476,7 +476,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
             }
         }
     };
-    let sorteado = if n == 1 {
+    let drawn = if n == 1 {
         ini
     } else {
         crate::comparacao::ramo("cpy_8 arbitro sorteado");
@@ -486,7 +486,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
         let sheet = read_usize(G_OFFICIAL_TABLE).wrapping_add(k.wrapping_mul(0x2b) as usize);
         read_u8(read_usize(this + 8).wrapping_add(read_usize(sheet))) != 0
     };
-    let mut k = sorteado;
+    let mut k = drawn;
     if ocupado(k) {
         let end = n.wrapping_add(ini);
         loop {
@@ -494,7 +494,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
             if k >= end {
                 k = ini;
             }
-            if k == sorteado || !ocupado(k) {
+            if k == drawn || !ocupado(k) {
                 break;
             }
         }

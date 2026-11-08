@@ -2,7 +2,7 @@
 MUTACOES = [
     ('i_decidida', "            if byte(p, 0x47) != -2\n", "            if byte(p, 0x47) != -3\n"),
     ('i_volta', "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, -1);", "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, 0);"),
-    ('i_rapida', "                    prepare(motor, p + 4, r, 0, 0);", "                    prepare(motor, p + 4, 1, 0, 0);"),
+    ('i_rapida', "                    prepare(engine, p + 4, r, 0, 0);", "                    prepare(engine, p + 4, 1, 0, 0);"),
     ('a_passo', "        step_towards(1);\n", "        step_towards(2);\n"),
     ('a_conta', "            *((day + 0x25) as *mut i32) += 1;", "            *((day + 0x25) as *mut i32) += 2;"),
     ('a_fim', "    let end = |e: u8| e == 2 || e == 8;", "    let end = |e: u8| e == 2;"),

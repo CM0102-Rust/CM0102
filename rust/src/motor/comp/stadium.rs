@@ -607,14 +607,14 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             f[k] += read_f64_at(0x968950); // 0x968950 = 2
         }
         let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-        let mut ajuste = read_f64_at(0x9689a0); // 0x9689a0 = 0
+        let mut adjust = read_f64_at(0x9689a0); // 0x9689a0 = 0
         if friendly(read_u32_as_usize(G_FRIENDLY), comp) == 0 && read_u32_as_usize(G_COMP_OBJECT_TABLE) != 0 && read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(comp) * 4) != 0 && read_u32_as_usize(G_RESERVE_COMP) != 0 {
             let group: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
             if group(read_u32_as_usize(jogo + 0x14)) == 0 {
                 let league = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(read_u32_as_usize(jogo + 0x14)) * 4);
                 if read_u8(league + 0x43) != 2 {
                     let x = (read_u8(jogo + 0x34).wrapping_sub(read_u8(league + 0x3c)) as i8) as i32 as f64;
-                    ajuste = if x < read_f64_at(0x96fe28) { // 0x96fe28 = -6
+                    adjust = if x < read_f64_at(0x96fe28) { // 0x96fe28 = -6
                         read_f64_at(0x96fe28) // 0x96fe28 = -6
                     } else if x <= read_f64_at(0x9688a0) { // 0x9688a0 = 5
                         x
@@ -624,7 +624,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
                 }
             }
         }
-        let v = ajuste + f[k];
+        let v = adjust + f[k];
         f[k] = v;
         if side <= 1 {
             // o mandante (lado 0) contra o visitante; o visitante com os papéis trocados
@@ -1046,8 +1046,8 @@ pub(crate) unsafe fn sort_stadium_list(list: usize, n: u32) {
 /// 0x85e380).
 pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: usize) {
     if read_u16(today) == 0 {
-        let refazer: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_STADIUM_BUILD_VENUE_LIST);
-        refazer(this);
+        let redo: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_STADIUM_BUILD_VENUE_LIST);
+        redo(this);
     }
     if read_u16(today + 2) < 0x7d3 {
         let nacao = england_nation();
@@ -1126,8 +1126,8 @@ pub(crate) unsafe extern "thiscall" fn add_booking(this: usize, estadio: usize, 
         return show_error_at(0xa835b0, 0x810);
     }
     if read_usize(this) == 0 {
-        let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-        let l = alocar(0x168);
+        let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+        let l = alloc(0x168);
         write_u32(this, l as u32);
         if l == 0 {
             return show_error_at(0xa835b0, 0x81b);
@@ -1212,7 +1212,7 @@ pub(crate) unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> 
 /// 0x85e2f0) e +0x18 = 1.
 pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let sedes: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_NEXT_HOSTS);
@@ -1253,7 +1253,7 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
             continue; // cqn3: o estádio pequeno fica de fora
         }
         if *lista == 0 {
-            *lista = alocar(0x1e0);
+            *lista = alloc(0x1e0);
             if *lista == 0 {
                 show_error_at(0xa835b0, 0x89c);
                 return;

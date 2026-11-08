@@ -59,7 +59,20 @@ rebaixados:relegated promovidos:promoted pontuacao:score empate:draw vitoria:win
 reputacao:reputation publico:attendance capacidade:capacity financeiro:financial receita:income despesa:expense
 diretoria:board torcida:fans moral:morale felicidade:happiness habilidade:ability potencial:potential atual:current
 pai:parent filho:child primeiros:first ultimos:last novos:new velhos:old vazio:empty cheio:full ativo:active ativa:active
-dentro:inside chegada:arrival partida:match ponto:point unidade:unit unidades:units dezena:ten'''.split())
+dentro:inside chegada:arrival partida:match ponto:point unidade:unit unidades:units dezena:ten
+alocar:alloc mais:more motor:engine ramo:branch mata:knockout forcar:force ajuste:adjust checa:check referencia:reference
+janela:window janelas:windows colunas:columns coluna:column altura:height largura:width futura:future genero:gender
+variante:variant posicoes:positions campos:fields fonte:font ataque:attack lesoes:injuries todas:all aceita:accepted
+ordem:order razao:ratio desmarcar:unmark preco:price destinatarios:recipients conferir:check confere:checks resto:rest
+metade:half qual:which arquivar:archive sempre:always trocas:swaps periodo:period interessados:interested termos:terms
+listas:lists evento:event eventos:events cartao:card cartoes:cards formacao:formation refazer:redo direto:direct
+casos:cases orgao:body disciplina:discipline ferias:holiday pares:pairs gravidade:severity presidente:chairman
+manter:keep midia:media punir:punish expulso:sent_off tentativas:attempts tentativa:attempt cores:colours usado:used
+bonus:bonus sorteados:drawn sorteado:drawn escolhidos:chosen candidatos:candidates candidato:candidate faltam:missing
+falto:missing restante:remaining restantes:remaining quantidade:amount limiar:threshold saldo:balance ganho:gain
+perda:loss chance:chance ofertante:bidder interessado:interested lista_negra:blacklist recusa:refusal aceite:accept'''.split())
+# as palavras inglesas que o próprio dicionário produz contam como inglês (nomes já meio traduzidos)
+INGLES_DO_DIC = set(w for v in D.values() for w in v.split('_'))
 PREP = {'do': 'of', 'da': 'of', 'de': 'of', 'dos': 'of', 'das': 'of', 'no': 'in', 'na': 'in', 'nos': 'in', 'nas': 'in',
         'em': 'in', 'com': 'with', 'sem': 'without', 'por': 'by', 'pelo': 'by', 'pela': 'by', 'ao': 'to', 'para': 'for',
         'ate': 'until', 'e': 'and', 'o': '', 'a': '', 'os': '', 'as': '', 'um': 'one', 'uma': 'one'}
@@ -70,6 +83,7 @@ value count size index len ptr addr flag flags mask bit bits byte bytes word cod
 next prev first last left right top bottom high low start end begin open close read write load save find get set put add
 sub mul div mod copy move swap sort list table row rows col cols cell grid map key keys val vals tmp temp aux src dst buf
 str msg err res ret arg args opt cfg ctx env obj ref ptr box vec hash lock time date day days year years month week'''.split())
+INGLES |= INGLES_DO_DIC
 CURTO = re.compile(r'^[a-z]{1,3}\d*$|^[a-z]\d+$|^\d')
 NOME = re.compile(r'\blet (?:mut )?([a-z_][a-z0-9_]*)\b|[(,|]\s*(?:mut )?([a-z_][a-z0-9_]*): ')
 

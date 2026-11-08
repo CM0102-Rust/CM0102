@@ -284,7 +284,7 @@ pub(crate) const DIVISION_THREE_PLAYOFF_1: EngCcCupCupRound = cql10r((0x11, 4, 1
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`DIVISION_TWO_CHRISTMAS`); a fase 0, os play-offs (semifinais e
 /// final); as outras devolvem 0. Fonte 0x9c43e8.
 pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -292,7 +292,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
             }
             *rounds = 46;
             *extra = 0;
-            let t = alocar(0xbae);
+            let t = alloc(0xbae);
             if t == 0 {
                 show_error_at(0x9c43e8, 0xae);
                 return 0;
@@ -308,7 +308,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
             }
             *rounds = 2;
             *extra = 0xa0;
-            let t = alocar(0xd0);
+            let t = alloc(0xd0);
             if t == 0 {
                 show_error_at(0x9c43e8, 0x1b5);
                 return 0;
@@ -332,7 +332,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
 /// [pt] { 0x5770e0 } (thiscall, ret 0x10, eng_third.cpp, 3.692 bytes, método +0x3c): `EngThird::create_schedule`: o mesmo
 /// código da segunda (as mesmas rodadas), com a data da final dos play-offs um dia antes. Fonte 0x9c4424.
 pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule_5770e0(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -340,7 +340,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule_5770e0(this: u
             }
             *rounds = 46;
             *extra = 0;
-            let t = alocar(0xbae);
+            let t = alloc(0xbae);
             if t == 0 {
                 show_error_at(0x9c4424, 0xb3);
                 return 0;
@@ -356,7 +356,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule_5770e0(this: u
             }
             *rounds = 2;
             *extra = 0xa0;
-            let t = alocar(0xd0);
+            let t = alloc(0xd0);
             if t == 0 {
                 show_error_at(0x9c4424, 0x1ba);
                 return 0;

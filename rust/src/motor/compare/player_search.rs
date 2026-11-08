@@ -40,9 +40,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_search_scout_match(this: 
     let relata = SCOUT_MATCH_WOULD_REPORT;
     state.escrever();
     let previsto = if relata {
-        let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+        let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
         let mut t = [0u32; 2];
-        let a = mais(G_CURRENT_DATE, t.as_mut_ptr() as usize, 1);
+        let a = more(G_CURRENT_DATE, t.as_mut_ptr() as usize, 1);
         (read_i16(a + 2) as u16, read_i16(a))
     } else {
         (read_i16(this + 0x1a7) as u16, read_i16(this + 0x1a5))

@@ -211,13 +211,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_take_ball(this: usize) {
     }
     let m = *((this + 0x19e) as *const usize);
     let mut reg = vec![(this, 0x1be)];
-    let motor = |mm: usize, reg: &mut Vec<(usize, usize)>| {
+    let engine = |mm: usize, reg: &mut Vec<(usize, usize)>| {
         for (a, n) in [(0x1a0usize, 0x30usize), (0x4780, 0x10), (0x8d40, 0x10), (0x8ea0, 0x40), (0xf570, 0x40)] {
             reg.push((mm + a, n));
         }
     };
     if m != 0 {
-        motor(m, &mut reg);
+        engine(m, &mut reg);
         for campo in [0xf582usize, 0xf576] {
             let p = *((m + campo) as *const usize);
             if p != 0 && p != this {
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_take_ball(this: usize) {
                 reg.push((p + 0x190, 0x10));
                 let mp = *((p + 0x19e) as *const usize);
                 if mp != 0 && mp != m {
-                    motor(mp, &mut reg);
+                    engine(mp, &mut reg);
                 }
             }
         }
@@ -244,10 +244,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_to(this: usize, x: i8, y: i
         });
         return;
     }
-    let motor = *((this + 0x19e) as *const usize);
-    let antiga = occupancy_grid_cell(motor, byte(this, 0x102), byte(this, 0x103)) as usize;
-    let new = occupancy_grid_cell(motor, x, y) as usize;
-    let mut reg = vec![(this + 0x28, 1), (this + 0x102, 2), (antiga, 90), (new, 90), (motor + 0x8ea7, 2)];
+    let engine = *((this + 0x19e) as *const usize);
+    let antiga = occupancy_grid_cell(engine, byte(this, 0x102), byte(this, 0x103)) as usize;
+    let new = occupancy_grid_cell(engine, x, y) as usize;
+    let mut reg = vec![(this + 0x28, 1), (this + 0x102, 2), (antiga, 90), (new, 90), (engine + 0x8ea7, 2)];
     let (l, v) = (lado(this), byte(this, 0x28));
     let n = byte(antiga, 0x58 + l as usize);
     if v >= 0 && n > 0 {
@@ -301,9 +301,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_match_performance(this: usize, m
     // +0xaf do motor e o estado do sorteio
     let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((this, 0x1be));
-    let motor = *((this + 0x19e) as *const usize);
-    if motor != 0 {
-        reg.push(((motor as isize + 0xaf + byte(this, 0x27) as isize) as usize, 1));
+    let engine = *((this + 0x19e) as *const usize);
+    if engine != 0 {
+        reg.push(((engine as isize + 0xaf + byte(this, 0x27) as isize) as usize, 1));
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, mark), || crate::aleatorio::sem_contar(|| match_performance(this, mark)));
     PLACAR.registrar(igual, || format!("match_performance({}) original={:x?} rust={:x?}", mark, mo, mr));
@@ -515,18 +515,18 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_off_ball(j: usize, a: u32
 }
 
 /// Comparer for `advance_row` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_advance_row(this: usize, direto: u8) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_advance_row(this: usize, direct: u8) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> u32>(IDX_ADVANCE_ROW);
     if is_recording_top_level() {
-        return call_recording(FN_MATCH_PLAYER_DROP_BACK_ONE_ROW, this, [direto as u32, 0, 0, 0, 0], || o(this, direto));
+        return call_recording(FN_MATCH_PLAYER_DROP_BACK_ONE_ROW, this, [direct as u32, 0, 0, 0, 0], || o(this, direct));
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((this + 0x102, 2));
-    let (r, _, igual, sequencia, k) = comparar_com_fita(reg, || o(this, direto), |chamar| {
-        advance_row_injected(this, direto, &mut |rotina, a| chamar(rotina, this, a, XY_ARG_MASK))
+    let (r, _, igual, sequencia, k) = comparar_com_fita(reg, || o(this, direct), |chamar| {
+        advance_row_injected(this, direct, &mut |rotina, a| chamar(rotina, this, a, XY_ARG_MASK))
     });
     // a resposta e o `eax` da chamada (o movimento nao devolve nada): nao entra na comparacao
-    PLACAR.registrar(igual && sequencia && k == 1, || format!("advance_row({}) {} chamadas", direto, k));
+    PLACAR.registrar(igual && sequencia && k == 1, || format!("advance_row({}) {} chamadas", direct, k));
     r
 }
 

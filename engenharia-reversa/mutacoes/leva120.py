@@ -1,6 +1,6 @@
 # Mutacoes da leva120 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva120.py --jogo 2001-08-20
 MUTACOES = [
-    ('i_fator', "        let mut f38 = (resto as f64 * 0.05 + 1.0) * f40 * 1.2;", "        let mut f38 = (resto as f64 * 0.05 + 1.0) * f40 * 1.25;"),
+    ('i_fator', "        let mut f38 = (rest as f64 * 0.05 + 1.0) * f40 * 1.2;", "        let mut f38 = (rest as f64 * 0.05 + 1.0) * f40 * 1.25;"),
     ('i_ritmo', "    let r = if ritmo <= 8 {\n        2", "    let r = if ritmo <= 9 {\n        2"),
     ('i_passe', "        if (a(0x12) as f64) < q {", "        if (a(0x12) as f64) <= q + 1.0 {"),
     ('i_cobranca', "        if k1 - l28 < a(8) as f64 {", "        if k1 - l28 + 1.0 < a(8) as f64 {"),

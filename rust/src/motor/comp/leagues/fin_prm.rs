@@ -1335,9 +1335,9 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         }
         return;
     }
-    let metade = match_pl_ftol(dinheiro as f64 * read_f64_at(0x968968)); // 0x968968 = 0.5
-    add(mandante, 0x158, 0xb8, metade);
-    add(visitante, 0x158, 0xb8, metade);
+    let half = match_pl_ftol(dinheiro as f64 * read_f64_at(0x968968)); // 0x968968 = 0.5
+    add(mandante, 0x158, 0xb8, half);
+    add(visitante, 0x158, 0xb8, half);
     let l2 = div_trunc(liquido, 2);
     add(mandante, 0x140, 0xa0, l2);
     add(visitante, 0x140, 0xa0, l2);
@@ -1372,17 +1372,17 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, partida:
     } else {
         let home = read_usize(partida + 0x1c);
         crate::comparacao::ramo("cqb_1 preco pela injury_word_0c");
-        let preco = div_trunc(read_i16(home + 0x80) as i32, 500); // cqb1: o preço pela reputação
+        let price = div_trunc(read_i16(home + 0x80) as i32, 500); // cqb1: o preço pela reputação
         let friendly = comp != 0 && {
             let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
             f(read_usize(G_FRIENDLY), comp) != 0
         };
         if comp == 0 || friendly {
-            v = match_pl_ftol(preco as f64 * read_f64_at(0x968968) * attendance as f64); // 0x968968 = 0.5
+            v = match_pl_ftol(price as f64 * read_f64_at(0x968968) * attendance as f64); // 0x968968 = 0.5
         } else if read_u8(home + 0x64) == 1 || read_u8(read_usize(partida + 0x20) + 0x64) == 1 {
-            v = preco.wrapping_add(4).wrapping_mul(attendance);
+            v = price.wrapping_add(4).wrapping_mul(attendance);
         } else {
-            v = preco.wrapping_add(3).wrapping_mul(attendance);
+            v = price.wrapping_add(3).wrapping_mul(attendance);
         }
         if fin != 0 && read_usize(home + 0x57) == comp {
             let desconto = *((fin + 0x160) as *const f32) as f64;
@@ -1632,7 +1632,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
 /// troca do presidente na 0x59e940): a cópia e a original a partir do mesmo estado (o registro de finanças, o sorteio e
 /// os `extras`). Sem evento: tudo igual; com evento: a devolução, o saldo, +0xb4, +0x154, +0x165 e os `conferir` (a
 /// tipo da notícia e a marca +0x82 dependem da verba, e os sorteios depois dela também).
-pub(crate) unsafe fn compare_rare_finance_event(name: &str, fin: usize, extras: &[(usize, usize)], conferir: &[usize], original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn compare_rare_finance_event(name: &str, fin: usize, extras: &[(usize, usize)], check: &[usize], original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
     let mut regions = vec![(fin, 0x167)];
     regions.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     regions.extend_from_slice(extras);
@@ -1649,7 +1649,7 @@ pub(crate) unsafe fn compare_rare_finance_event(name: &str, fin: usize, extras: 
     } else {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let campos = r == n && a[..8] == b[..8] && a[0xb4..0xb8] == b[0xb4..0xb8] && a[0x154..0x158] == b[0x154..0x158] && a[0x165] == b[0x165];
-        campos && conferir.iter().all(|&k| mo.0[3 + k].1 == mr.0[3 + k].1)
+        campos && check.iter().all(|&k| mo.0[3 + k].1 == mr.0[3 + k].1)
     };
     PLACAR.registrar(same, || format!("{}(fin {:#x}) original={} {:x?} rust={} {:x?}", name, fin, r, mo, n, mr));
     r
@@ -1930,7 +1930,7 @@ pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: u
     let start = read_u8(e + 0x34) as i8;
     let year_of_start = read_i16(e + 0x2c) as u16;
     let month = month_of(G_CURRENT_DATE) as i8;
-    let janela = if start < 2 {
+    let window = if start < 2 {
         if year_of_start == read_i16(G_CURRENT_DATE_YEAR) as u16 {
             month as i32 > 12 - start as i32
         } else {
@@ -1940,7 +1940,7 @@ pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: u
         let d = start.wrapping_sub(month);
         (0..=2).contains(&d)
     };
-    if !janela {
+    if !window {
         return 0;
     }
     let r = days_until(e + 0x2a, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32);
@@ -2219,14 +2219,14 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar:
     let new = (r + 0x5f).wrapping_mul(b) / 100;
     let total = ja.wrapping_add(new);
     core::ptr::write_unaligned((this + 0x18) as *mut i32, total); // cpv5: os ingressos vendidos
-    let preco = match_pl_ftol((rep as f64 * read_f64_at(0x969048) + read_f64_at(0x968938)) * read_f64_at(0x968ea8)); // 0x969048 = 0.002, 0x968938 = 4, 0x968ea8 = 20
-    let mut income = preco.wrapping_mul(new);
+    let price = match_pl_ftol((rep as f64 * read_f64_at(0x969048) + read_f64_at(0x968938)) * read_f64_at(0x968ea8)); // 0x969048 = 0.002, 0x968938 = 4, 0x968ea8 = 20
+    let mut income = price.wrapping_mul(new);
     let est = read_usize(clube + club::STADIUM);
     let lugares = if est != 0 { read_i32(est + 0x3c) } else { 0 };
     let den = if lugares != 0 { lugares as f64 * read_f64_at(0x96a678) } else { read_f64_at(0x96a5e8) }; // 0x96a678 = 0.875, 0x96a5e8 = 1250
-    let razao = total as f64 / den;
-    core::ptr::write_unaligned((this + 0x160) as *mut f32, razao as f32);
-    if razao > read_f64_at(0x96a678) { // 0x96a678 = 0.875
+    let ratio = total as f64 / den;
+    core::ptr::write_unaligned((this + 0x160) as *mut f32, ratio as f32);
+    if ratio > read_f64_at(0x96a678) { // 0x96a678 = 0.875
         core::ptr::write_unaligned((this + 0x160) as *mut u32, 0x3f600000);
     }
     let nac = read_usize(clube + club::NATION);
@@ -2585,9 +2585,9 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
     let t = match_pl_ftol(lugares as f64 * read_f64_at(0x967880)) as i16 as i32; // 0x967880 = 0.1
     let dez = (t / 10).wrapping_mul(10);
     let close = dez as i16 as i32;
-    let resto = read_i32(est + 0x40);
-    let tirou = if resto > close {
-        core::ptr::write_unaligned((est + 0x40) as *mut i32, resto - close);
+    let rest = read_i32(est + 0x40);
+    let tirou = if rest > close {
+        core::ptr::write_unaligned((est + 0x40) as *mut i32, rest - close);
         1
     } else {
         0

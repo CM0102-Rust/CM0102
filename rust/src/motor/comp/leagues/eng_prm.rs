@@ -347,8 +347,8 @@ pub(crate) unsafe fn eng_prm_pay_tv_rights(this: usize, value: i32, filtro: usiz
 /// +0x28 (League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4), +0xe1 = 1, o dinheiro da TV (`pagar`) e 1.
 pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize, row: u32, g: usize, cota: i32, pay: impl FnOnce()) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
@@ -453,7 +453,7 @@ pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i1
 /// [pt] { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
 /// &extra, &é_liga)`: só a fase −1, 38 rodadas (`PREMIERSHIP_CHRISTMAS`); as outras devolvem 0. Fonte 0x9c43b0.
 pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -461,7 +461,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stag
             }
             *rounds = 38;
             *extra = 0;
-            let t = alocar(0x9a6);
+            let t = alloc(0x9a6);
             if t == 0 {
                 show_error_at(0x9c43b0, 0xa7);
                 return 0;

@@ -68,11 +68,11 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+    let more: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let chegar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_CAN_CLUB_BID_FOR_PLAYER);
     let reply: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_MEDIA_PICK_AI_MANAGER_RESPONSE);
     let forcas: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_GET_PLAYER_STRENGTH_FLAGS);
-    let posicoes: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
+    let positions: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
     let listada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED_OR_REQUESTED);
     let to_manager: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     if read_i32(this + 0x14) == 0 {
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         let mut today = [0u8; 8];
         core::ptr::copy_nonoverlapping(G_CURRENT_DATE as *const u8, today.as_mut_ptr(), 8);
         let mut end = [0u8; 8];
-        let p = mais(r + 8, end.as_mut_ptr(), 0x1f); // cqc10: o interesse vale 31 dias
+        let p = more(r + 8, end.as_mut_ptr(), 0x1f); // cqc10: o interesse vale 31 dias
         crate::comparacao::ramo("cqc_10 interesse");
         let (hd, ha) = (i16::from_le_bytes([today[0], today[1]]), u16::from_le_bytes([today[2], today[3]]));
         let vencido = ha > read_i16(p + 2) as u16 || (ha == read_i16(p + 2) as u16 && hd > read_i16(p));
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             };
             write(n, 7, resp);
             write(n, 8, forcas(person, dono));
-            write(n, 9, posicoes(read_usize(person + staff::PLAYER)) as i16 as i32 as u32);
+            write(n, 9, positions(read_usize(person + staff::PLAYER)) as i16 as i32 as u32);
             if manager_owner != 0 {
                 set_person_name_slots(write, n, 0xa, manager_owner);
             } else {
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
 /// 0xfbe (0x77bbe0) com o jogador, o outro clube (ou −1), o clube e um sorteio(3); o presidente, se gosta do jogador
 /// (0x547810) ou com sorteio(+0x16 da ficha dele) acima de sorteio(20), senão −1 no 7; reputação (+0xd da ficha) acima de
 /// 8000: a todos os técnicos (0x786780), senão aos humanos interessados (0x8d1da0 com 0xd8, até 30, 0x7861e0).
-pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(player: usize, clube: usize, presidente: usize, other: usize) {
+pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(player: usize, clube: usize, chairman: usize, other: usize) {
     if player == 0 || read_usize(player + 0x61) == 0 || clube == 0 {
         return;
     }
@@ -307,12 +307,12 @@ pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(player: usize, cl
     write(n, 5, read_usize(clube) as u32);
     let s = friendly_random(3);
     write(n, 6, s as u32);
-    let cita = gosta(player, presidente) != 0 || (presidente != 0 && read_usize(presidente + 0x69) != 0 && {
-        let a = friendly_random(read_i8(read_usize(presidente + 0x69) + 0x16) as i32);
+    let cita = gosta(player, chairman) != 0 || (chairman != 0 && read_usize(chairman + 0x69) != 0 && {
+        let a = friendly_random(read_i8(read_usize(chairman + 0x69) + 0x16) as i32);
         a > friendly_random(0x14)
     });
     if cita {
-        set_person_name_slots(write, n, 7, presidente);
+        set_person_name_slots(write, n, 7, chairman);
     } else {
         write(n, 7, 0xffff_ffff);
     }
@@ -875,8 +875,8 @@ pub(crate) unsafe fn would_request_transfer(c: usize, marks: u32) -> bool {
     if !exit {
         return false;
     }
-    let futura: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
-    if futura(read_usize(G_TRANSFER_MANAGER), person, 0) != 0 || *((c + 0x4e) as *const u8) & 9 != 0 {
+    let future: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
+    if future(read_usize(G_TRANSFER_MANAGER), person, 0) != 0 || *((c + 0x4e) as *const u8) & 9 != 0 {
         return false;
     }
     let in_queue: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_IS_QUEUED_FOR_FREE_TRANSFER);
@@ -1151,7 +1151,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
         (0x23, 0x2e)
     };
     let same = same_position(velho, natural_position_mask(p)) as i8 as i32;
-    let candidato: unsafe extern "C" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_STAFF_IS_BEST_FAVOURED_CANDIDATE);
+    let candidate: unsafe extern "C" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_STAFF_IS_BEST_FAVOURED_CANDIDATE);
     for j in 0..50usize {
         let m = read_usize(velho + 0xd7 + 4 * j);
         if m == 0 || read_usize(m + 0x61) == 0 || m == p {
@@ -1192,7 +1192,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
         if second
             && read_i8_as_i32(p + 0x18) > 0x17
             && flag as u8 != 0
-            && candidato(m, new, p) != 0
+            && candidate(m, new, p) != 0
             && natural_position_mask(p) != natural_position_mask(m)
             && friendly_random(read_i8_as_i32(m + 0x5b)) < q + 5
         {
@@ -1296,7 +1296,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let veiculo: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_MEDIA_PICK_OUTLET_TYPE_FOR_PERSON);
     let comentarista: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32 = core::mem::transmute(FN_PUNDITLIST_PICK_RANDOM_PUNDIT);
-    let posicoes: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
+    let positions: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let reply: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_MEDIA_PICK_AI_MANAGER_RESPONSE);
     let mut local = [0u32; 0x3a]; // a notícia local (0xe0 bytes)
@@ -1312,7 +1312,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
     write(nt, 6, v);
     let nacao = read_usize(clube + club::NATION);
     write(nt, 7, comentarista(read_usize(G_PUNDIT_LIST), clube, v, if nacao != 0 { read_i32(nacao) } else { -1 }) as u32);
-    write(nt, 8, posicoes(read_usize(p + 0x61)) as i16 as i32 as u32);
+    write(nt, 8, positions(read_usize(p + 0x61)) as i16 as i32 as u32);
     write(nt, 9, kind as u8 as i8 as i32 as u32);
     let mut r = 0u32;
     if human(read_usize(p + 0x39), 0, 1, 0, 0) == 0 {
@@ -1619,7 +1619,7 @@ pub(crate) unsafe fn add_clamped_confidence(p: usize, v: i16) {
 /// tópico, 2 = variante, 3 = sorteio(4), 4 = id do clube, 5 = o grau (5 abaixo de −750, 4 negativa, 3 até 750, 2
 /// acima), 6..9 o técnico; com sujeito, 10..13 o sujeito e 14 = 6 favorito, 7 rejeitado, 8 nenhum; depois −1, a
 /// confiança nova e 0.
-pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, target: u32, variante: u32) {
+pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, target: u32, variant: u32) {
     let v = fan_confidence_change(clube, target);
     crate::comparacao::ramo("cpo_5 goal_crowd_reaction");
     if clube != 0 {
@@ -1639,7 +1639,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize,
     construct(n, 0xbe0, 0);
     write(n, 0, 0);
     write(n, 1, topico as i16 as i32 as u32);
-    write(n, 2, variante as i8 as i32 as u32);
+    write(n, 2, variant as i8 as i32 as u32);
     let s = sorteio(4);
     write(n, 3, s as u32);
     write(n, 4, read_usize(clube) as u32);
@@ -1681,7 +1681,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize,
 /// confiança nova, o sexto (com ele 1 e a palavra +0xe), e as marcas do sujeito: contrato 0x10/0x20 acima de 25 anos,
 /// média das notas acima da média da liga × 5, +0x59 e +0x5b acima de 14, mais de 1500 dias no clube, valor (0x4d0c60)
 /// acima de 4.500.000 e reputação (+5 da ficha) acima de 140.
-pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, target: u32, variante: u32, sexto: u32) {
+pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, target: u32, variant: u32, sexto: u32) {
     let v = board_confidence_change(clube, target);
     crate::comparacao::ramo("cpo_5 diretoria");
     if clube != 0 {
@@ -1707,7 +1707,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     construct(n, 0xbe0, 0);
     write(n, 0, 1);
     write(n, 1, topico as i16 as i32 as u32);
-    write(n, 2, variante as i8 as i32 as u32);
+    write(n, 2, variant as i8 as i32 as u32);
     let s = sorteio(4);
     write(n, 3, s as u32);
     write(n, 4, read_usize(clube) as u32);
@@ -1724,10 +1724,10 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     set_person_name_slots(write, n, 6, read_usize(clube + club::MANAGER));
     let mut b: i8 = if sujeito != 0 {
         set_person_name_slots(write, n, 10, sujeito);
-        let presidente = read_usize(clube + club::CHAIRMAN);
-        let r = if gosta(sujeito, presidente) != 0 {
+        let chairman = read_usize(clube + club::CHAIRMAN);
+        let r = if gosta(sujeito, chairman) != 0 {
             6
-        } else if not_likes(sujeito, presidente) != 0 {
+        } else if not_likes(sujeito, chairman) != 0 {
             7
         } else {
             8
@@ -1738,9 +1738,9 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
         write(n, 10, u32::MAX);
         0xb
     };
-    let presidente = read_usize(clube + club::CHAIRMAN);
-    if presidente != 0 {
-        set_person_name_slots(write, n, b, presidente);
+    let chairman = read_usize(clube + club::CHAIRMAN);
+    if chairman != 0 {
+        set_person_name_slots(write, n, b, chairman);
         b += 4;
     } else {
         write(n, b, u32::MAX);
@@ -1852,7 +1852,7 @@ pub(crate) const GRATITUDE_DRAW_CASE: [u8; 0x26] = [0, 5, 1, 5, 2, 3, 0, 3, 5, 2
 /// 0x2000 ou 8 em +0x45, os tipos 0, 2, 4, 7, 9, 0xe e 0x23 viram 0x12 (+0x5d ≥ sorteio(10)) ou 0x21; lesionado
 /// (0x62ed70): 0xc. Nos tipos 0, 6, 14 e 17: com +0x44 da ficha abaixo de 10, sorteio(3) + 2; senão sorteio(5), e 0 ou 1
 /// sobe +0x44 da ficha (até 20).
-pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, player: usize, clube: usize, kind: u32, variante: u32) {
+pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, player: usize, clube: usize, kind: u32, variant: u32) {
     if player == 0 || read_usize(player + 0x61) == 0 || clube == 0 || read_usize(clube + club::MANAGER) == 0 {
         return;
     }
@@ -1894,7 +1894,7 @@ pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, 
     }
     let t = t as i16 as i32;
     gravar(n, 5, t as u32);
-    gravar(n, 6, variante as i8 as i32 as u32);
+    gravar(n, 6, variant as i8 as i32 as u32);
     let v = match if (t as u32) <= 0x25 { GRATITUDE_DRAW_CASE[t as usize] } else { 5 } {
         0 => {
             let sheet = read_usize(player + 0x61);
@@ -2009,7 +2009,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     crate::comparacao::ramo("cpo_7 reacao a critica");
     let (construir, gravar) = news_item_fns();
     let category: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
-    let clubes_interessados: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(FN_TRANSFER_MANAGER_COLLECT_PLAYER_NEWS_RECIPIENTS);
+    let clubs_interested: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(FN_TRANSFER_MANAGER_COLLECT_PLAYER_NEWS_RECIPIENTS);
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
@@ -2044,7 +2044,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     set_person_slots_optional(gravar, n, 9, read_usize(clube + club::MANAGER), false);
     let mut clubs = [0usize; 0x1e];
     let tm = read_usize(G_TRANSFER_MANAGER);
-    let k = if tm != 0 { clubes_interessados(tm, player, 0x21a, clubs.as_mut_ptr(), 0x1e) as i8 } else { 0 };
+    let k = if tm != 0 { clubs_interested(tm, player, 0x21a, clubs.as_mut_ptr(), 0x1e) as i8 } else { 0 };
     for i in 0..k.max(0) as usize {
         deliver(read_usize(G_NEWS), n, clubs[i]);
     }
@@ -2210,25 +2210,25 @@ pub(crate) unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: 
     let ligar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_TEXT_ADD_LINK);
     crate::comparacao::ramo("cpn_3 texto da crise financeira");
     let id = field(noticia, 0);
-    let gravidade = field(noticia, 1);
+    let severity = field(noticia, 1);
     field(noticia, 2);
     let clube = read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(club::SIZE));
     let name = clube + club::SHORT_NAME;
-    let genero = read_i8(clube + club::SHORT_GENDER_NAME) as i32;
+    let gender = read_i8(clube + club::SHORT_GENDER_NAME) as i32;
     let modelo = if corpo != 0 {
-        if gravidade > 0x1a5e {
+        if severity > 0x1a5e {
             0xa436fc
-        } else if gravidade > 0xcb2 {
+        } else if severity > 0xcb2 {
             0xa43644
         } else {
             0xa43594
         }
-    } else if gravidade > 0x1a5e {
+    } else if severity > 0x1a5e {
         0xa43560 // "... financial mess"
     } else {
         0xa43528 // "Financial trouble at ..."
     };
-    format(0xde1f64, modelo, genero, genero, name);
+    format(0xde1f64, modelo, gender, gender, name);
     by_text(out, 0xde1f64);
     ligar(out, name, 0x7d5, clube);
 }
@@ -2289,8 +2289,8 @@ pub(crate) unsafe fn sort_news_log(base: usize, n: usize) {
 pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize, kind: u32, subtipo: u32, reply: u32) {
     crate::comparacao::ramo("cpl_6 registrar historia");
     if read_usize(this) == 0 {
-        let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-        let p = alocar(0x1cc);
+        let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+        let p = alloc(0x1cc);
         write_usize(this, p);
         if p == 0 {
             show_error_at(0xa17bec, 0x6e11);
@@ -2454,8 +2454,8 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, player
     }
     crate::comparacao::ramo("cpl_7 interesse novo");
     if read_usize(this + 0xc) == 0 {
-        let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-        let p = alocar(0x1f4);
+        let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+        let p = alloc(0x1f4);
         write_usize(this + 0xc, p);
         if p == 0 {
             show_error_at(0xa17bec, 0x665d);
@@ -2652,12 +2652,12 @@ pub(crate) unsafe extern "thiscall" fn get_finable_story_kind(midia: usize, play
 ///
 /// [pt] O registro de notícias da mídia (`this`: +0 os registros de 0x17 bytes, +8 quantos): algum com o
 /// jogador em +8 que `aceita`?
-pub(crate) unsafe fn any_news_for_player(midia: usize, id: i32, aceita: impl Fn(usize) -> bool) -> bool {
+pub(crate) unsafe fn any_news_for_player(midia: usize, id: i32, accepted: impl Fn(usize) -> bool) -> bool {
     let n = *((midia + 8) as *const i32);
     let base = *(midia as *const usize);
     (0..n.max(0) as usize).any(|k| {
         let r = base + k * 0x17;
-        core::ptr::read_unaligned((r + 8) as *const i32) == id && aceita(r)
+        core::ptr::read_unaligned((r + 8) as *const i32) == id && accepted(r)
     })
 }
 
@@ -2739,11 +2739,11 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
     let injury_word_0c = |nacao: usize| core::ptr::read_unaligned((nacao + nation::REPUTATION) as *const i16) as i32;
     let (mut melhor, mut maior) = (0usize, 0i32);
     for _ in 0..150 {
-        let mut tentativas = 0;
+        let mut attempts = 0;
         let p = loop {
             let r = sorteio(*(G_STAFF_COUNT as *const i32));
-            tentativas += 1;
-            if tentativas >= 100 {
+            attempts += 1;
+            if attempts >= 100 {
                 break 0;
             }
             let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((r as usize).wrapping_mul(110));

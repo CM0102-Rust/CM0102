@@ -148,10 +148,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: u
 }
 
 /// Comparer for `human_runs_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_human_runs_club(clube: usize, qualquer: u32, forcar: i8) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(clube, qualquer, forcar);
-    let n = human_runs_club(clube, qualquer, forcar);
-    PLACAR.registrar(r == n, || format!("human_runs_club({:#x}, {}, {}) original={} rust={}", clube, qualquer, forcar, r, n));
+pub(crate) unsafe extern "C" fn comparar_human_runs_club(clube: usize, qualquer: u32, force: i8) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(clube, qualquer, force);
+    let n = human_runs_club(clube, qualquer, force);
+    PLACAR.registrar(r == n, || format!("human_runs_club({:#x}, {}, {}) original={} rust={}", clube, qualquer, force, r, n));
     r
 }
 
@@ -175,19 +175,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_human_field(t: usize, value:
 }
 
 /// Comparer for `set_on_holiday` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, ferias: u32, manager: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, holiday: u32, manager: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_SET_ON_HOLIDAY);
     let t = if manager != 0 { manager } else { read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize)) };
     let i = if t == 0 { -1 } else { (read_usize(t) as i32).wrapping_sub(read_usize(G_STAFF_COUNT) as i32).wrapping_add(0x10) };
     if i < 0 || i > (read_usize(this + 4) as i32).wrapping_sub(1) {
-        return o(this, ferias, manager); // a caixa: só a original
+        return o(this, holiday, manager); // a caixa: só a original
     }
     let mark = read_usize(this).wrapping_add((i as usize).wrapping_mul(0xa6ef)).wrapping_add(0x9a01);
     let (antes, conta) = (read_usize(mark), read_usize(this + 0xc) as i32);
-    let esperada = conta + if ferias != 0 && antes == 0 { 1 } else if ferias == 0 && antes != 0 { -1 } else { 0 };
-    o(this, ferias, manager);
+    let esperada = conta + if holiday != 0 && antes == 0 { 1 } else if holiday == 0 && antes != 0 { -1 } else { 0 };
+    o(this, holiday, manager);
     let (depois, conta2) = (read_usize(mark) as u32, read_usize(this + 0xc) as i32);
-    PLACAR.registrar(depois == ferias && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", ferias, t, antes, depois, conta, conta2, esperada));
+    PLACAR.registrar(depois == holiday && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", holiday, t, antes, depois, conta, conta2, esperada));
 }
 
 /// Comparer for `square_bit` (comparison mode: see the header of motor.rs).

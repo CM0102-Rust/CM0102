@@ -34,11 +34,11 @@ pub(crate) const COPA_AMERICA_2001_NATIONS: [usize; 12] = [
 /// linha 0x3bc e devolve 0; com 12, a lista ordenada pela reputação (qsort 0x945333 com 0x4b07d0: 4 pushes; add esp ->
 /// cdecl) e devolve 1.
 pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     write_u32_from_usize(this + 0xf2, 0xc);
-    let list = alocar(0x30);
+    let list = alloc(0x30);
     write_u32_from_usize(this + 0xee, list);
     if list == 0 {
         show_error_at(0x9cd640, 0x37b);
@@ -119,14 +119,14 @@ pub(crate) const COPA_AMERICA_PREDICTED_PLACES: [u32; 12] = [1, 2, 3, 3, 5, 5, 5
 /// estatística (0x4a2540 Comp_Stats::set_club_final_position: push posição; push clube; mov ecx, [+8] -> thiscall,
 /// ret 8): 1, 2, 3, 3, quatro 5, 9 e três 10 (as 12 primeiras da cópia); a cópia liberada (0x9452ca).
 pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if read_u32_as_usize(this + 8) == 0 {
         return show_error_at(0x9cd640, 0x419);
     }
-    let v = alocar((read_u32_as_usize(this + 0xf2) << 2) as u32);
+    let v = alloc((read_u32_as_usize(this + 0xf2) << 2) as u32);
     if v == 0 {
         return show_error_at(0x9cd640, 0x421);
     }
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
 pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
     let release_table: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
+    let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
     write_u32_from_usize(this + 0x4c, 0);
     release_table(this, 0);
     if read_u32_as_usize(this + 0xba) != 0 {
@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
         write_u32_from_usize(this + 0xba, 0);
     }
     if read_u32_as_usize(this + 8) != 0 {
-        arquivar(read_u32_as_usize(this + 8), 1);
+        archive(read_u32_as_usize(this + 8), 1);
     }
     if (read_u32_as_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
@@ -322,14 +322,14 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
 /// em [+0xc][g]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x2d6 e 0. Com ela:
 /// +0x30 = g, a notícia do grupo (0x684230 na fase) e 1.
 pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g: i32) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alocar(0x10);
+    let teams = alloc(0x10);
     if teams == 0 {
         show_error_at(0x9cd640, 0x2bf);
         return 0;

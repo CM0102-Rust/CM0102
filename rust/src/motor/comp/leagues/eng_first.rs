@@ -324,7 +324,7 @@ pub(crate) const PREMIERSHIP_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChri
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`DIVISION_ONE_CHRISTMAS`, as datas da segunda com faixas de TV);
 /// a fase 0, os play-offs; as outras devolvem 0. Fonte 0x9c4374.
 pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -332,7 +332,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
             }
             *rounds = 46;
             *extra = 0;
-            let t = alocar(0xbae);
+            let t = alloc(0xbae);
             if t == 0 {
                 show_error_at(0x9c4374, 0xae);
                 return 0;
@@ -348,7 +348,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
             }
             *rounds = 2;
             *extra = 0xa0;
-            let t = alocar(0xd0);
+            let t = alloc(0xd0);
             if t == 0 {
                 show_error_at(0x9c4374, 0x1ed);
                 return 0;
@@ -390,8 +390,8 @@ pub(crate) unsafe fn eng_first_league_row_club(league: usize, k: usize) -> usize
 /// thiscall(fase, 0), ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: usize, row_without_list: u32, row_without_stage: u32, a10: Option<u32>, name: &'static str) {
     let n = read_u8(this + 0xbf) as i8 as i32;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let list = alocar((n << 2) as u32);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let list = alloc((n << 2) as u32);
     if list == 0 {
         return show_error_at(file, row_without_list);
     }

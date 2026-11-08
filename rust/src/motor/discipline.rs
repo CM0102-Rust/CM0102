@@ -205,10 +205,10 @@ pub(crate) unsafe fn discipline_record(this: usize, id: u32) -> usize {
 ///
 /// [pt] O órgão vale para o clube? Com nação (+0x17 ≠ −1): a nação do clube (+0x53) é ela; sem nação, com continente
 /// (+0x1b ≠ −1): o continente da nação do clube (+0x71) é ele; sem os dois, vale sempre. Clube nulo ou sem nação: não.
-pub(crate) unsafe fn ruling_body_covers_club(orgao: usize, clube: usize) -> bool {
-    let nacao = read_u32_as_usize(orgao + 0x17) as u32;
+pub(crate) unsafe fn ruling_body_covers_club(body: usize, clube: usize) -> bool {
+    let nacao = read_u32_as_usize(body + 0x17) as u32;
     if nacao == 0xffff_ffff {
-        let continent = read_u32_as_usize(orgao + 0x1b) as u32;
+        let continent = read_u32_as_usize(body + 0x1b) as u32;
         if continent == 0xffff_ffff {
             return true;
         }
@@ -375,11 +375,11 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
         if rule == 0xff {
             continue;
         }
-        let orgao = ruling_body_of_rule(this, rule);
-        if ruling_body_covers_club(orgao, clube) {
+        let body = ruling_body_of_rule(this, rule);
+        if ruling_body_covers_club(body, clube) {
             continue;
         }
-        let e = ruling_body_entry(orgao, id);
+        let e = ruling_body_entry(body, id);
         if e == 0 {
             continue;
         }
@@ -496,11 +496,11 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
         if marks[k] != 0 || k == 3 || rule == 0xff {
             continue;
         }
-        let orgao = ruling_body_of_rule(this, rule);
-        if ruling_body_covers_club(orgao, clube) {
+        let body = ruling_body_of_rule(this, rule);
+        if ruling_body_covers_club(body, clube) {
             continue;
         }
-        let e = ruling_body_entry(orgao, id);
+        let e = ruling_body_entry(body, id);
         if e != 0 {
             crate::comparacao::ramo("cpo_11 fim do emprestimo solta a vaga");
             release_entry_ban(this, id, e);
@@ -571,9 +571,9 @@ pub(crate) unsafe fn ruling_body_for_rule(this: usize, rule: u8) -> usize {
 /// The person's 14-byte entry in a ruling body (0x7e82e0 without creating; +6 ban index).
 ///
 /// [pt] A entrada (14 bytes; +6 o índice da suspensão, −1 sem) da pessoa no órgão: 0x7e82e0 sem criar (só lê).
-pub(crate) unsafe fn ruling_body_entry(orgao: usize, id: u32) -> usize {
+pub(crate) unsafe fn ruling_body_entry(body: usize, id: u32) -> usize {
     let find: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_RULINGBODY_FIND_OR_ADD_DISCIPLINE_ENTRY);
-    find(orgao, id, 0)
+    find(body, id, 0)
 }
 
 /// Person's item (id, nation) in the discipline nation index by bsearch on his nation, then on his second nation; 0 if
@@ -641,9 +641,9 @@ pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count
         j.cumprida = n == games;
     } else {
         let mut end = [0u8; 8];
-        let mais_dias: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+        let more_days: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
         // a original empurra o edx com os dias no dx e, no alto, o do índice × 5 (zero abaixo de 13108 suspensões)
-        let f = mais_dias(s + 4, end.as_mut_ptr(), (cinco & 0xffff_0000) | read_i16(s + 2) as u16 as u32);
+        let f = more_days(s + 4, end.as_mut_ptr(), (cinco & 0xffff_0000) | read_i16(s + 2) as u16 as u32);
         let (dia1, ano1) = (read_i16(f), read_i16(f + 2) as u16);
         if ano < ano1 || (ano == ano1 && dia < dia1) {
             return j;
@@ -934,11 +934,11 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pers
     if comp == 0 || person == 0 {
         return 0;
     }
-    let orgao = *((comp + 0x50) as *const u8);
-    if orgao == 0xff {
+    let body = *((comp + 0x50) as *const u8);
+    if body == 0xff {
         return 0;
     }
-    let o = read_usize(read_usize(this).wrapping_add((orgao as i8 as i32 as u32).wrapping_mul(4) as usize));
+    let o = read_usize(read_usize(this).wrapping_add((body as i8 as i32 as u32).wrapping_mul(4) as usize));
     if o == 0 {
         return 0;
     }
@@ -952,10 +952,10 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pers
 ///
 /// [pt] { 0x55cae0 } (thiscall, ret 0xc, discipline.cpp): a punição da linha `linha` (29 bytes) e da coluna
 /// `coluna` (5 bytes) da tabela [this+0x14]: o dword +1 se o byte +0 for `tipo`, senão −1.
-pub(crate) unsafe extern "thiscall" fn table_penalty(t: usize, row: i32, coluna: i8, kind: i8) -> i32 {
+pub(crate) unsafe extern "thiscall" fn table_penalty(t: usize, row: i32, column: i8, kind: i8) -> i32 {
     let e = (*((t + 0x14) as *const usize))
         .wrapping_add((row as usize).wrapping_mul(29))
-        .wrapping_add((coluna as isize * 5) as usize);
+        .wrapping_add((column as isize * 5) as usize);
     if *(e as *const i8) == kind {
         core::ptr::read_unaligned((e + 1) as *const i32)
     } else {

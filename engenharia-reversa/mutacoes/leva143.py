@@ -17,7 +17,7 @@ MUTACOES = [
     ('m_livre', "            *w(p, 0x35) = (*w(p, 0x35)).wrapping_add(4);", "            *w(p, 0x35) = (*w(p, 0x35)).wrapping_add(5);", "movimento domina a bola livre"),
     ('m_direcao', "let dx = byte(m, 0x8ea7) as i32 + 4 + nx as i32;", "let dx = byte(m, 0x8ea7) as i32 + 5 + nx as i32;"),
     ('m_perde', "            add(p, -0x96);", "            add(p, -0x95);", "movimento perde a bola"),
-    ('m_vence', "ganho = match_pl_ftol(ganho as f64 * read_f64_at(0x969520)) as i16;", "ganho = match_pl_ftol(ganho as f64 * read_f64_at(0x969520) * 1.01) as i16;", "movimento desafiante vence"),
+    ('m_vence', "gain = match_pl_ftol(gain as f64 * read_f64_at(0x969520)) as i16;", "gain = match_pl_ftol(gain as f64 * read_f64_at(0x969520) * 1.01) as i16;", "movimento desafiante vence"),
     ('m_penalti', "if sortear(byte(u(e, 0x69), 0x5a) as i32 + 6) == 0 {", "if sortear(byte(u(e, 0x69), 0x5a) as i32 + 7) == 0 {", "movimento penalty"),
     ('m_acao', "            narrate(call, 0x1f4c, u32::MAX);", "            narrate(call, 0x1f4d, u32::MAX);"),
     ('m_2173', "if strong && sortear(match_pl_ftol(read_f32_at(p + 0x95) as f64)) < sortear(0x1e) { 0x2173 } else { 0x1f4a }", "if strong && sortear(match_pl_ftol(read_f32_at(p + 0x95) as f64)) < sortear(0x1f) { 0x2173 } else { 0x1f4a }"),

@@ -121,14 +121,14 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
 /// não lê: a cópia passa os valores limpos) em [+0xc][0]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase:
 /// a caixa da linha 0x2ad e 0. Com ela: +0x30 = 0, a notícia do grupo (0x684230 na fase) e 1.
 pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alocar(0x10);
+    let teams = alloc(0x10);
     if teams == 0 {
         show_error_at(0xa6a068, 0x296);
         return 0;
@@ -267,13 +267,13 @@ pub(crate) unsafe fn place_pot_pair(this: usize, k: usize, first: usize, second:
 /// A original guarda as listas na pilha sem zerá-las; com menos clubes que o lido ela lê sobra; a cópia lê zero
 /// [inferência: nesta carreira as listas têm clubes que bastam; o comparador confere a lista].
 pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let melanesia: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_MELANESIAN_NATION);
     let polinesia: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_POLYNESIAN_NATION);
     write_u32_from_usize(this + 0xf2, 8);
-    let list = alocar(0x20);
+    let list = alloc(0x20);
     write_u32_from_usize(this + 0xee, list);
     if list == 0 {
         show_error_at(0xa6a068, 0x307);
@@ -389,11 +389,11 @@ pub(crate) unsafe fn semifinalists(this: usize) -> [usize; 4] {
 /// da linha 0x2e3 e volta. Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall,
 /// ret 4).
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    let list = alocar(0x10);
+    let list = alloc(0x10);
     if list == 0 {
         return show_error_at(0xa6a068, 0x2cb);
     }
@@ -646,10 +646,10 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: 
 /// create_team_entries 0x40d4d0, o mesmo corpo): +0x3e = 16 e a tabela (0x944e46 de 0x60 em +0xa7; sem memória, a caixa
 /// `linha` de `arquivo` e −1); a vaga i recebe o clube i dos classificados (+0xb2, ponteiros; `ordem` dá o índice) com
 /// classe e situação 0. Devolve 1.
-pub(crate) unsafe fn build_team_table(this: usize, file: usize, row: u32, name: &'static str, ordem: impl Fn(i16) -> i16) -> i32 {
+pub(crate) unsafe fn build_team_table(this: usize, file: usize, row: u32, name: &'static str, order: impl Fn(i16) -> i16) -> i32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x10);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar(0x60);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc(0x60);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(file, row);
@@ -658,7 +658,7 @@ pub(crate) unsafe fn build_team_table(this: usize, file: usize, row: u32, name: 
     crate::comparacao::ramo(name);
     let mut i: i16 = 0;
     while i < core::ptr::read_unaligned((this + 0x3e) as *const i16) {
-        let c = read_u32_as_usize(read_u32_as_usize(this + 0xb2) + ordem(i) as usize * 4);
+        let c = read_u32_as_usize(read_u32_as_usize(this + 0xb2) + order(i) as usize * 4);
         let e = read_u32_as_usize(this + 0xa7) + i as usize * 6;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
         *((e + 4) as *mut u8) = 0;

@@ -280,8 +280,8 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: 
     if current.wrapping_add(1) == start.wrapping_add(0x64) {
         write_usize(e + 4, start as usize);
     }
-    let ferias: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
-    if *(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || ferias(read_usize(G_HUMAN_MANAGER), manager) != 0 {
+    let holiday: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
+    if *(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || holiday(read_usize(G_HUMAN_MANAGER), manager) != 0 {
         let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWSITEM_AUTO_RESPOND);
         crate::comparacao::ramo("cpn_1 resposta automatica");
         respond(slot(current), manager, read_usize(manager + 0x39)); // o clube
@@ -701,8 +701,8 @@ pub(crate) unsafe fn check_search_scout(this: usize) -> Option<usize> {
         return None;
     }
     let p = read_usize(G_STAFF_TABLE).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
-    let confere: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
-    if confere(p, read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) == 0 || p == 0 {
+    let checks: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
+    if checks(p, read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) == 0 || p == 0 {
         return None;
     }
     Some(p)
@@ -832,9 +832,9 @@ pub(crate) unsafe extern "stdcall" fn news_club_has_human_manager(clube: usize) 
         return r;
     }
     let manager: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_MANAGER);
-    let ferias: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
+    let holiday: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
     let t = manager(clube);
-    ferias(*(G_HUMAN_MANAGER as *const usize), t);
+    holiday(*(G_HUMAN_MANAGER as *const usize), t);
     1 // humano
 }
 
@@ -935,7 +935,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
     }
     let kind: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);
     let copy: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWSITEM_OPERATOR_3D);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let mut array = 0usize;
     let mut k = read_i32(e + 4) - 1;
     loop {
@@ -948,7 +948,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
         }
         if category as u8 == 0 || kind(slot) as u8 == category as u8 {
             if array == 0 {
-                array = alocar(0x571c);
+                array = alloc(0x571c);
                 if array == 0 {
                     show_error_at(0xa693ec, 0x222a);
                     return 0;

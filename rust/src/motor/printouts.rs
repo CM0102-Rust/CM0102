@@ -66,13 +66,13 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
                 break;
             }
             if *((p + 0xca) as *const i8) == t {
-                let aceita = if nacao == -1 {
+                let accepted = if nacao == -1 {
                     crate::comparacao::ramo("cpz_10 comentarista de qualquer nacao");
                     true // cpz10: qualquer nação
                 } else {
                     read_u32(p + 0xcf) as i32 == nacao
                 };
-                if aceita {
+                if accepted {
                     ids[n] = read_i16_as_i32(p) as i16;
                     n += 1;
                     if n >= 20 {

@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i
     });
     let ((ao, to), (ar, tr)) = (lo.get(), lr.get());
     let same_in = |x: usize, y: usize, n: usize| (x == 0 && y == 0) || (x != 0 && y != 0 && core::slice::from_raw_parts(x as *const u8, n) == core::slice::from_raw_parts(y as *const u8, n));
-    let listas = same_in(ao, ar, 0xa1 * 6) && (a != 1 || same_in(to, tr, read_i16(this + 0x36).max(0) as usize * 6));
+    let lists = same_in(ao, ar, 0xa1 * 6) && (a != 1 || same_in(to, tr, read_i16(this + 0x36).max(0) as usize * 6));
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if ar != 0 && ar != ao {
         soltar(ar);
@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i
     if tr != 0 && tr != to && tr != t0 {
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && listas, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, listas));
+    PLACAR.registrar(igual && a == b && lists, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, lists));
     a
 }
 

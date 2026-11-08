@@ -120,8 +120,8 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
 /// [0xae2364], contrato de empréstimo 0x4cf6d0) não pode (0x25).
 pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player_661770(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     // 0x8e8c40: push janela; push 0xae2c90; ecx = this -> thiscall, ret 8
-    let na_janela: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_WINDOW_CONTAINS_DATE);
-    if na_janela(this, G_CURRENT_DATE, read_usize(this + 4)) == 0 && na_janela(this, G_CURRENT_DATE, read_usize(this + 4) + 0xc) == 0 {
+    let in_window: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_WINDOW_CONTAINS_DATE);
+    if in_window(this, G_CURRENT_DATE, read_usize(this + 4)) == 0 && in_window(this, G_CURRENT_DATE, read_usize(this + 4) + 0xc) == 0 {
         crate::comparacao::ramo("cqe_6 italia fora da janela");
         return refuse_outside_window(this, msg, reason);
     }

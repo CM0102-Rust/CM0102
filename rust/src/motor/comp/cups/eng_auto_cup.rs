@@ -39,8 +39,8 @@ pub(crate) unsafe fn push_section_club(this: usize, k: &mut i32, c: usize) {
 /// a do Sul [inferência]) pela reputação, da menor para a maior (qsort com 0x4b0810); devolve 1. Sem encher, 0.
 pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     write_u32_from_usize(this + 0xb6, 0x38);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alocar(0xe0);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let l = alloc(0xe0);
     write_u32_from_usize(this + 0xb2, l);
     if l == 0 {
         show_error_at(0x9c4180, 0x24c);
@@ -179,10 +179,10 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     crate::comparacao::ramo("cqs_5 chaves do trofeu da liga");
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     sort(read_u32_as_usize(this + 0xb2), read_u32_as_usize(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
-    let metade = (read_u32_as_usize(this + 0xb6) as i32) / 2;
-    sort(read_u32_as_usize(this + 0xb2), metade as u32, 4, 0x4b0810);
-    let metade = (read_u32_as_usize(this + 0xb6) as i32) / 2;
-    sort(read_u32_as_usize(this + 0xb2) + metade as usize * 4, metade as u32, 4, 0x4b0810);
+    let half = (read_u32_as_usize(this + 0xb6) as i32) / 2;
+    sort(read_u32_as_usize(this + 0xb2), half as u32, 4, 0x4b0810);
+    let half = (read_u32_as_usize(this + 0xb6) as i32) / 2;
+    sort(read_u32_as_usize(this + 0xb2) + half as usize * 4, half as u32, 4, 0x4b0810);
     1
 }
 
@@ -215,9 +215,9 @@ pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 
 /// (word), +0x51 (byte), 0, 0, 0, sem sementes; os words e bytes vão com lixo em cima, que o construtor não lê) em
 /// [+0xc][0]; o vetor e a tabela liberados (0x9452ca). Sem fase, a caixa da linha 0x300; com ela, +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let teams = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
+    let teams = alloc(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if teams == 0 {
         return show_error_at(0x9c4180, 0x2e9);
     }
@@ -299,9 +299,9 @@ pub(crate) unsafe fn first_entrant_with_status(l: usize, n: i32, s: u8) -> Optio
 /// fase, a caixa da linha 0x35a (o vetor fica, como na original). Com ela, o sorteio da rodada (Cup::draw_round 0x51c410:
 /// push 0; mov ecx, fase -> thiscall, ret 4) e o vetor liberado.
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let l = alocar(8);
+    let l = alloc(8);
     if l == 0 {
         return show_error_at(0x9c4180, 0x337);
     }
@@ -357,8 +357,8 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     if read_u32_as_usize(this + 8) == 0 {
         return show_error_at(0x9c4180, 0x3bb);
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alocar(((read_i16(this + 0x3e) as i32) << 3) as u32);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let v = alloc(((read_i16(this + 0x3e) as i32) << 3) as u32);
     if v == 0 {
         return show_error_at(0x9c4180, 0x3c3);
     }

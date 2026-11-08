@@ -2,11 +2,11 @@
 # O quarto campo e o ramo (marca ramo("...") no motor.rs): sem passagem na base, a mutacao e pulada.
 MUTACOES = [
     ('j_ataque', "        1 => sortear(400),\n        2 => sortear(500),", "        1 => sortear(401),\n        2 => sortear(500),"),
-    ('j_altura', "ataque = match_pl_ftol(ataque as i16 as f64 / st);", "ataque = match_pl_ftol(ataque as i16 as f64 / (st + 0.1));"),
-    ('j_proprio', "if sortear(ataque as i16 as i32 + 100) != 0 {\n            return 0;\n        }\n        crate::comparacao::ramo(\"play bola", "if sortear(ataque as i16 as i32 + 101) != 0 {\n            return 0;\n        }\n        crate::comparacao::ramo(\"play bola", "play bola do proprio lado"),
+    ('j_altura', "attack = match_pl_ftol(attack as i16 as f64 / st);", "attack = match_pl_ftol(attack as i16 as f64 / (st + 0.1));"),
+    ('j_proprio', "if sortear(attack as i16 as i32 + 100) != 0 {\n            return 0;\n        }\n        crate::comparacao::ramo(\"play bola", "if sortear(attack as i16 as i32 + 101) != 0 {\n            return 0;\n        }\n        crate::comparacao::ramo(\"play bola", "play bola do proprio lado"),
     ('j_cabeca', "((*w(j, 0x164)).wrapping_shl(1), 0x25)", "(*w(j, 0x164), 0x25)", "play cabecada"),
     ('j_forte', "valor = match_pl_ftol(valor as f64 * 0.85) as i16;", "valor = match_pl_ftol(valor as f64 * 0.86) as i16;", "play forte"),
-    ('j_nota', "let rating = (v - strength as i32 / 3 - ataque) as i16;", "let rating = (v - strength as i32 / 2 - ataque) as i16;"),
+    ('j_nota', "let rating = (v - strength as i32 / 3 - attack) as i16;", "let rating = (v - strength as i32 / 2 - attack) as i16;"),
     ('j_baixa', "crate::comparacao::ramo(\"play nota muito baixa\");\n        *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(sortear(2) as u8);", "crate::comparacao::ramo(\"play nota muito baixa\");\n        *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(sortear(3) as u8);", "play nota muito baixa"),
     ('j_falta_forte', "let foul_strong = strength as i32 > sortear(0x96) + 0xc8;", "let foul_strong = strength as i32 > sortear(0x97) + 0xc8;"),
     ('j_registra', "register(m, lance as u16, j as u32, 0, 0, t, *b(j, 0x102), *b(j, 0x103), cartao, grav);", "register(m, lance as u16, j as u32, 0, 0, t, *b(j, 0x103), *b(j, 0x102), cartao, grav);", "play falta registrada"),

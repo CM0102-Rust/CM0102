@@ -208,10 +208,10 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
         }
         add_to_word(p + 0xb, match_pl_ftol(nac as i32 as f64 * read_f64_at(0x967880))); // 0x967880 = 0.1
         clamp_word(p + 0xb, nac);
-        let listas = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856);
-        if listas != 0 && !MONTH_AWARD_DRY_RUN {
+        let lists = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856);
+        if lists != 0 && !MONTH_AWARD_DRY_RUN {
             let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_PLAYER_TO_CLUB_SHORTLISTS);
-            f(listas, person, 1);
+            f(lists, person, 1);
         }
         return;
     }

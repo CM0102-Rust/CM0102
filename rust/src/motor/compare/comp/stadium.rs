@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_venue_list(this: usize) {
     let campos = a[..0xc] == s[..0xc] && a[0x10..0x20] == s[0x10..0x20];
     let (la, lb) = (read_u32(this + 0xc) as usize, read_u32(r + 0xc) as usize);
     let n = (read_u32(this + 0x10) as i32).max(0) as usize * 16;
-    let listas = if la != 0 && lb != 0 {
+    let lists = if la != 0 && lb != 0 {
         core::slice::from_raw_parts(la as *const u8, n) == core::slice::from_raw_parts(lb as *const u8, n)
     } else {
         la == lb
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_venue_list(this: usize) {
     if lb != 0 {
         soltar(lb);
     }
-    PLACAR.registrar(campos && listas, || format!("build_venue_list: campos {} listas {} (contas {} e {})", campos, listas, read_u32(this + 0x10) as i32, read_u32(r + 0x10) as i32));
+    PLACAR.registrar(campos && lists, || format!("build_venue_list: campos {} listas {} (contas {} e {})", campos, lists, read_u32(this + 0x10) as i32, read_u32(r + 0x10) as i32));
 }
 
 /// Comparer for `stadium_compare_venues_by_capacity` (comparison mode: see the header of motor.rs).

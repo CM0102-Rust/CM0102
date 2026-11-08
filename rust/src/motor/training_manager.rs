@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
     let aux = auxiliar(clube);
     let mut tr = [0usize; 5];
     treinadores(clube, tr.as_mut_ptr());
-    let candidato = |k: i32| if k < 0 { aux } else { tr[k as usize] };
+    let candidate = |k: i32| if k < 0 { aux } else { tr[k as usize] };
     for v in 0..6 {
         let e = t + 9 * v;
         let id = read_i32(e);
@@ -76,14 +76,14 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
             continue;
         }
         if !(-1..5).any(|k| {
-            let p = candidato(k);
+            let p = candidate(k);
             p != 0 && read_i32(p) == id
         }) {
             clear_coach_slot(e);
         }
     }
     for k in -1..5 {
-        let p = candidato(k);
+        let p = candidate(k);
         if p == 0 || read_u32_as_usize(p + 0x69) == 0 {
             continue;
         }
@@ -1100,7 +1100,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         return;
     }
     let de15 = |o: usize| (read_i8(f + o) >= 0xf) as i8;
-    let mut posicoes = de15(0xf) + de15(0x10) + de15(0x11) + de15(0x12) + de15(0x13) + de15(0x14) + de15(0x15);
+    let mut positions = de15(0xf) + de15(0x10) + de15(0x11) + de15(0x12) + de15(0x13) + de15(0x14) + de15(0x15);
     let mut lados = de15(0x18) + de15(0x19) + de15(0x17);
     for j in 0..n as usize {
         let item = p + 8 * j;
@@ -1124,9 +1124,9 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
                 *((f + field) as *mut u8) = 1;
                 lados -= 1;
             }
-        } else if posicoes > 1 {
+        } else if positions > 1 {
             *((f + field) as *mut u8) = 1;
-            posicoes -= 1;
+            positions -= 1;
         }
     }
 }
@@ -1213,8 +1213,8 @@ pub(crate) unsafe extern "thiscall" fn has_fast_position_training(this: usize, p
 /// que faltam de cada jogador. Devolve dia / 7 (o chamador não lê).
 pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *const i16) -> i32 {
     let v = *day as i32;
-    let resto = v % 7; // cpt10: a semana de 7 dias
-    if resto == 0 { // cpt10: o sétimo dia
+    let rest = v % 7; // cpt10: a semana de 7 dias
+    if rest == 0 { // cpt10: o sétimo dia
         crate::comparacao::ramo("cpt_10 semana");
         let s = (this + 0x688d) as *mut u16;
         *s = (*s).wrapping_add(1); // cpt10: mais uma semana

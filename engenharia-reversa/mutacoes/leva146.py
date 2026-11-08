@@ -12,7 +12,7 @@ MUTACOES = [
     ('p_registra', "if sortear(10) == 0 && arriscado == 0 {", "if sortear(11) == 0 && arriscado == 0 {", "passe falta so registra"),
     ('p_penalti', "if sortear(byte(u(e, 0x69), 0x5a) as i32) == 0 {\n            let r = sortear(10);", "if sortear(byte(u(e, 0x69), 0x5a) as i32) == 0 {\n            let r = sortear(9);", "passe penalty"),
     ('p_desarme', "*w(e, 0x19c) = ((rating as i32 - 400) as i16).clamp(-200, 200);", "*w(e, 0x19c) = ((rating as i32 - 401) as i16).clamp(-200, 200);", "passe desarmado"),
-    ('p_ganho', "let ganho: i16 = if dominou { 0x78 } else { 0xc8 };\n    let far = t() & 4 == 0 && t() & 2 == 0;", "let ganho: i16 = if dominou { 0x78 } else { 0xc9 };\n    let far = t() & 4 == 0 && t() & 2 == 0;", "passe desarmado"),
+    ('p_ganho', "let gain: i16 = if dominou { 0x78 } else { 0xc8 };\n    let far = t() & 4 == 0 && t() & 2 == 0;", "let gain: i16 = if dominou { 0x78 } else { 0xc9 };\n    let far = t() & 4 == 0 && t() & 2 == 0;", "passe desarmado"),
     ('p_sem_folego', "let lim = ((25 - byte(person, 0x5d) as i32) * 2) as f32;", "let lim = ((26 - byte(person, 0x5d) as i32) * 2) as f32;", "passe sem folego"),
     ('p_fator', "        1 => 0x96d7bc,\n        2 => 0x96d3d4,", "        1 => 0x96d3d4,\n        2 => 0x96d3d4,"),
     ('p_impreciso', "let e8 = match_pl_ftol((factor as f64 * d as f64 + read_f64_at(0x967890)) * read_f64_at(0x968968)) as i8 as i32;", "let e8 = match_pl_ftol((factor as f64 * d as f64 + read_f64_at(0x967890)) * read_f64_at(0x968968) * 1.2) as i8 as i32;", "passe impreciso"),

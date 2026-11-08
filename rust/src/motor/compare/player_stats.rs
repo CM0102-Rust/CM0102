@@ -4,10 +4,10 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../player_stats.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `player_statistic` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_player_statistic(r: *const u8, qual: i8, weight: f32) -> f64 {
-    let o = original_fn::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_PLAYER_STATISTIC)(r, qual, weight);
-    let n = player_statistic(r, qual, weight);
-    PLACAR.registrar(o.to_bits() == n.to_bits(), || format!("player_statistic({:p}, {}, {}) original={} rust={}", r, qual, weight, o, n));
+pub(crate) unsafe extern "stdcall" fn comparar_player_statistic(r: *const u8, which: i8, weight: f32) -> f64 {
+    let o = original_fn::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_PLAYER_STATISTIC)(r, which, weight);
+    let n = player_statistic(r, which, weight);
+    PLACAR.registrar(o.to_bits() == n.to_bits(), || format!("player_statistic({:p}, {}, {}) original={} rust={}", r, which, weight, o, n));
     o
 }
 
@@ -104,24 +104,24 @@ pub(crate) unsafe extern "C" fn comparar_player_stats_compare_history_by_staff(a
 }
 
 /// Comparer for `get_stat` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_get_stat(this: usize, player: usize, category: u32, qual: u32, default: f32) -> f64 {
+pub(crate) unsafe extern "thiscall" fn comparar_get_stat(this: usize, player: usize, category: u32, which: u32, default: f32) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64>(IDX_GET_STAT);
     if player == 0 || (read_usize(player) as i32) >= read_usize(G_PLAYER_DATA_COUNT) as i32 {
-        return o(this, player, category, qual, default);
+        return o(this, player, category, which, default);
     }
     let c = category as u8 as i8;
-    let simples = qual as u8 != 0x13 && c <= 6;
+    let simples = which as u8 != 0x13 && c <= 6;
     // simplification: categoria fora de 1..6 cai na caixa da 0x7c3920; nas combinadas sem o registro 4 ou 5, locais sem valor
     let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
     if (simples && !(1..=6).contains(&c))
         || (!simples && (100..=102).contains(&(c as i32)) && (record(this, player, 4) == 0 || record(this, player, 5) == 0))
     {
-        return o(this, player, category, qual, default);
+        return o(this, player, category, which, default);
     }
-    let r = o(this, player, category, qual, default);
-    let n = get_stat(this, player, category, qual, default);
+    let r = o(this, player, category, which, default);
+    let n = get_stat(this, player, category, which, default);
     PLACAR.registrar(r.to_bits() == n.to_bits(), || {
-        format!("get_stat(jogador {}, categoria {}, qual {}, padrão {}) original={} rust={}", read_usize(player) as i32, c, qual as u8, default, r, n)
+        format!("get_stat(jogador {}, categoria {}, qual {}, padrão {}) original={} rust={}", read_usize(player) as i32, c, which as u8, default, r, n)
     });
     r
 }

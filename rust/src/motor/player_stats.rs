@@ -10,21 +10,21 @@ use super::*;
 /// 21 as médias por jogo; 18 a média de +0xe com menos de 20 jogos completada por `peso` (vezes
 /// 0.05f); 20 a nota (2×+9 − +0xa + jogos, completada por 1.5 com menos de 20 jogos; 1.5f sem
 /// jogos); 22 o inteiro. Sem divisor: 0.0. `r` nulo, 19 ou fora de 1..22: a original (caixa de erro).
-pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, qual: i8, weight: f32) -> f64 {
-    if r.is_null() || !(1..=22).contains(&qual) || qual == 19 {
-        return original_fn::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_PLAYER_STATISTIC)(r, qual, weight);
+pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, which: i8, weight: f32) -> f64 {
+    if r.is_null() || !(1..=22).contains(&which) || which == 19 {
+        return original_fn::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_PLAYER_STATISTIC)(r, which, weight);
     }
     let b = |o: usize| *r.add(o) as f64;
     let w = |o: usize| core::ptr::read_unaligned(r.add(o) as *const i16) as f64;
     let games = *r;
     let cem = read_f32_at(0x968960) as f64; // 0x968960 = 100
     let vinte_avos = read_f32_at(0x96d61c) as f64; // 0x96d61c = 0.05000000075
-    match qual {
+    match which {
         1 => b(0),
-        2..=4 => b(qual as usize),
-        5..=12 => b(qual as usize + 1),
+        2..=4 => b(which as usize),
+        5..=12 => b(which as usize + 1),
         13 | 16 => {
-            let (n, d) = if qual == 13 { (0x12, 0x10) } else { (0x1a, 0x18) };
+            let (n, d) = if which == 13 { (0x12, 0x10) } else { (0x1a, 0x18) };
             if core::ptr::read_unaligned(r.add(d) as *const i16) > 0 {
                 w(n) / w(d) * cem
             } else {
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, qual: i8, w
             }
         }
         14 | 15 | 17 | 21 => {
-            let o = match qual { 14 => 0x14, 15 => 0x16, 17 => 0xe, _ => 0x18 };
+            let o = match which { 14 => 0x14, 15 => 0x16, 17 => 0xe, _ => 0x18 };
             if games != 0 { w(o) / games as f64 } else { 0.0 }
         }
         18 => {
@@ -632,7 +632,7 @@ pub(crate) unsafe extern "C" fn player_stats_compare_history_by_staff(a: usize, 
 /// o registro 4 ou 5 a original lê locais sem valor (a cópia usa zero; o comparador deixa esses casos com a original).
 /// Pela escolha da escalação 0x6e2f20, pelo MATCH_PLAYER::setup 0x6eaea0, pela reputação do clube 0x545e90, pela força
 /// do jogador 0x546ab0, pelo dia da comissão 0x5ce2d0 e por outras. Quente: sem contador.
-pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, category: u32, qual: u32, default: f32) -> f64 {
+pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, category: u32, which: u32, default: f32) -> f64 {
     if player == 0 {
         show_error_at(0xa78310, 0x659);
         return 0.0;
@@ -641,13 +641,13 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
         return 0.0;
     }
     let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
-    if qual as u8 != 0x13 && category as u8 as i8 <= 6 {
+    if which as u8 != 0x13 && category as u8 as i8 <= 6 {
         let r = record(this, player, category);
         if r != 0 {
             let value: unsafe extern "stdcall" fn(usize, u32, u32) -> f64 = core::mem::transmute(FN_PLAYER_STATS_GET_RECORD_VALUE);
-            return value(r, qual, default.to_bits()); // cpu3: o valor do registro
+            return value(r, which, default.to_bits()); // cpu3: o valor do registro
         }
-        if qual as u8 == 0x12 || qual as u8 == 0x14 {
+        if which as u8 == 0x12 || which as u8 == 0x14 {
             return default as f64; // cpu3: sem registro, o padrao
         }
         return 0.0; // cpu3: sem registro, zero
@@ -1228,7 +1228,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
     }
     let indice: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
-    let arquivar: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, i32, u32) = core::mem::transmute(FN_PLAYERSTATS_ARCHIVE_PLAYER_STATS);
+    let archive: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, i32, u32) = core::mem::transmute(FN_PLAYERSTATS_ARCHIVE_PLAYER_STATS);
     let mut i = 0i32;
     while i < read_i32(G_CLUB_COUNT) {
         let clube = injury_club_by_index(i);
@@ -1244,7 +1244,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
                 }
                 if loan(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + 0x39) == clube {
                     crate::comparacao::ramo("cpp_10 arquivar");
-                    arquivar(this, p, -1, 0, 0, -1, 0);
+                    archive(this, p, -1, 0, 0, -1, 0);
                 }
             }
         }

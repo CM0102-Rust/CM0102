@@ -97,8 +97,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
     };
     // com o técnico de férias a resposta automática (0x784100) pode entregar outra notícia ao mesmo humano: o anel anda
     // mais vagas e a conta junto (achado em 31/10/2026, quando a rotina saiu das DESLIGADAS)
-    let ferias: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
-    let responde = !repetida && (*(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || ferias(read_usize(G_HUMAN_MANAGER), manager) != 0);
+    let holiday: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
+    let responde = !repetida && (*(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || holiday(read_usize(G_HUMAN_MANAGER), manager) != 0);
     let r = o(this, noticia, manager, free);
     if r == 0 {
         PLACAR.registrar(new, || format!("deliver_to_manager devolveu 0 sem anel novo")); // só sem memória

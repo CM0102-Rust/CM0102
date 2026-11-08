@@ -185,7 +185,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         }
     }
     let n = ((read_i16(obj + 0x3e) as i32) - 1).wrapping_mul(read_i16(obj + 0x3c) as i32);
-    let limiar = match_pl_ftol(n as f64 * read_f64_at(0x968f78)) as i16; // o ftol fica no word (movsx word depois); 0x968f78 = 0.33
+    let threshold = match_pl_ftol(n as f64 * read_f64_at(0x968f78)) as i16; // o ftol fica no word (movsx word depois); 0x968f78 = 0.33
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 5;
@@ -212,9 +212,9 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
             write_i32(r + 0xba, read_i32(r + 0xba).wrapping_add(v));
         }
     }
-    let presidente = read_usize(clube + club::CHAIRMAN);
-    if presidente != 0 {
-        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(presidente), &e);
+    let chairman = read_usize(clube + club::CHAIRMAN);
+    if chairman != 0 {
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
     }
     let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let morale: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
@@ -229,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
             continue;
         }
         let f = average(read_usize(G_PLAYER_STATS), read_usize(p + 0x61), 2, 1, 6.5);
-        if f > limiar as f64 { // cqd13: acima do limiar
+        if f > threshold as f64 { // cqd13: acima do limiar
             crate::comparacao::ramo("cqd_13 jogador destacado do campeao");
             append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(p), &e);
             morale(p, 0x14, 1); // cqd13: o moral do jogador destacado
@@ -309,9 +309,9 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube
             }
         }
     }
-    let presidente = read_usize(clube + club::CHAIRMAN);
-    if presidente != 0 {
-        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(presidente), &e);
+    let chairman = read_usize(clube + club::CHAIRMAN);
+    if chairman != 0 {
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
     }
     let escalacao = partida + 0x190 + 0x625 * (clube != read_usize(jogo + 0x1c)) as usize;
     add_lineup_histories(this, clube, escalacao, &e);
@@ -762,9 +762,9 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, clube: usize, jogo: usi
         }
         append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(t), &e);
     }
-    let presidente = read_usize(clube + club::CHAIRMAN);
-    if presidente != 0 {
-        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(presidente), &e);
+    let chairman = read_usize(clube + club::CHAIRMAN);
+    if chairman != 0 {
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(chairman), &e);
     }
     let escalacao = partida + 0x190 + 0x625 * (clube != read_usize(jogo + 0x1c)) as usize;
     for j in 0..0x14usize {

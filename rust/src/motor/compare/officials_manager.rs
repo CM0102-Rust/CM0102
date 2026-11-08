@@ -129,16 +129,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_off
     let total = read_i32(G_OFFICIAL_COUNT);
     let t = read_usize(G_OFFICIAL_TABLE);
     let mut usada = vec![false; total.max(0) as usize];
-    let mut faltam = Vec::new();
+    let mut missing = Vec::new();
     for (k, g) in novas.iter().enumerate() {
         match (0..usada.len()).find(|&j| !usada[j] && same_official_record(g, t + j * 0x2b)) {
             Some(j) => usada[j] = true,
-            None => faltam.push(k),
+            None => missing.push(k),
         }
     }
-    let same = estado_orig == estado_rust && total == before.wrapping_add(count) && faltam.is_empty();
+    let same = estado_orig == estado_rust && total == before.wrapping_add(count) && missing.is_empty();
     PLACAR.registrar(same, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
-        count, nacao, total, before, estado_orig == estado_rust, faltam));
+        count, nacao, total, before, estado_orig == estado_rust, missing));
 }
 
 /// Comparer for `officials_manager_validate_officials` (comparison mode: see the header of motor.rs).

@@ -32,21 +32,21 @@ pub(crate) unsafe extern "C" fn comparar_read_events_cfg() {
 ///
 /// [pt] O texto do evento so escreve nos buffers de texto ([0xb67ea0], [0xb67dd8]) e no `qual` do evento:
 /// a original e a copia montam o mesmo texto e o resultado e conferido.
-pub(crate) unsafe extern "stdcall" fn comparar_event_text(ev: usize, ctx: usize, comp: i32, variante: u32) -> usize {
+pub(crate) unsafe extern "stdcall" fn comparar_event_text(ev: usize, ctx: usize, comp: i32, variant: u32) -> usize {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i32, u32) -> usize>(IDX_EVENT_TEXT);
     if ev == 0 {
-        return o(ev, ctx, comp, variante);
+        return o(ev, ctx, comp, variant);
     }
     let reg = [(ev + 2, 2), (0xb67ea0, 0x400), (0xb67dd8, 0xc8)];
-    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(ev, ctx, comp, variante) as u32, || event_text(ev, ctx, comp, variante) as u32);
-    PLACAR.registrar(igual && r == rr, || format!("event_text(codigo {:#x} variante {}) original={:#x} rust={:#x} {:x?} x {:x?}", *(ev as *const u16), variante, r, rr, mo, mr));
+    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(ev, ctx, comp, variant) as u32, || event_text(ev, ctx, comp, variant) as u32);
+    PLACAR.registrar(igual && r == rr, || format!("event_text(codigo {:#x} variante {}) original={:#x} rust={:#x} {:x?} x {:x?}", *(ev as *const u16), variant, r, rr, mo, mr));
     r as usize
 }
 
 /// Comparer for `commentate_on_panel` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, largura: i32, quebrar: u32, fonte: usize, mode: u32) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, painel, largura, quebrar, fonte, mode)
+pub(crate) unsafe extern "thiscall" fn comparar_commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, painel, width, quebrar, font, mode)
 }
 
 /// Comparer for `next_event` (comparison mode: see the header of motor.rs).

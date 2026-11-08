@@ -171,9 +171,9 @@ pub(crate) unsafe fn sort_clubs_by_strength(v: *mut u32, k: *mut i32, n: i32) {
 /// pela força (0x4c0720), a maior primeiro, com as chaves num vetor temporário (0x944e46 / 0x9452ca; a original o
 /// enche de 0x60 antes, tudo sobrescrito). Sem memória: a caixa (linha 0x292d) e nada.
 pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i32) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let k = alocar((n as u32).wrapping_mul(4));
+    let k = alloc((n as u32).wrapping_mul(4));
     if k == 0 {
         return show_error_at(0x99ec20, 0x292d);
     }
@@ -759,14 +759,14 @@ pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(stage: u32, ro
     }
     // 0x4b4850: 4 pushes (estilo, id, tamanho, saída); add esp -> cdecl; 0x4ba8f0: push estilo; push id -> cdecl
     let name: unsafe extern "C" fn(*mut u8, i32, u32, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME);
-    let genero: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME_GENDER);
+    let gender: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME_GENDER);
     *out = 0;
     if stage != 0 && round != 0 {
         let (mut a, mut b) = ([0u8; 0x64], [0u8; 0x64]);
         name(a.as_mut_ptr(), 0x64, stage, estilo);
-        let ga = genero(stage, estilo) as i8 as i32 as u32;
+        let ga = gender(stage, estilo) as i8 as i32 as u32;
         name(b.as_mut_ptr(), 0x64, round, estilo);
-        let gb = genero(round, estilo) as i8 as i32 as u32;
+        let gb = gender(round, estilo) as i8 as i32 as u32;
         // 0x66f4e0: 8 pushes; add esp, 0x20 -> cdecl (saída, modelo, ga, ga, gb, gb, &a, &b)
         let text: unsafe extern "C" fn(*mut u8, usize, u32, u32, u32, u32, *const u8, *const u8) -> usize = core::mem::transmute(FN_LANGLIB_SPRINTF);
         text(out, 0x9a7cfc, ga, ga, gb, gb, a.as_ptr(), b.as_ptr());

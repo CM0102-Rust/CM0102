@@ -7,7 +7,7 @@ MUTACOES = [
     ('cpu2_primavera_fora', 'return 1; // cpu2: antes do fim, na temporada', 'return 0; // mutacao: antes do fim, fora'),
     ('cpu2_janela_na_temporada', 'return 0; // cpu2: entre o fim e o inicio, fora', 'return 1; // mutacao: entre o fim e o inicio, na temporada'),
     ('cpu3_sem_registro_zero', 'return default as f64; // cpu3: sem registro, o padrao', 'return 0.0; // mutacao: sem registro, zero'),
-    ('cpu3_meio_ponto_a_mais', 'return value(r, qual, default.to_bits()); // cpu3: o valor do registro', 'return value(r, qual, default.to_bits()) + 0.5; // mutacao: meio ponto a mais'),
+    ('cpu3_meio_ponto_a_mais', 'return value(r, which, default.to_bits()); // cpu3: o valor do registro', 'return value(r, which, default.to_bits()) + 0.5; // mutacao: meio ponto a mais'),
     ('cpu3_sem_registro_o_padrao', 'return 0.0; // cpu3: sem registro, zero', 'return default as f64; // mutacao: o padrao para todos'),
     ('cpu4_nenhuma_clausula', 'return 1; // cpu4: com a clausula ativa', 'return 0; // mutacao: nenhuma clausula ativa'),
     ('cpu4_sem_regras_livre', 'return 1; // cpu4: sem as regras novas', 'return 0; // mutacao: sem as regras novas, livre'),

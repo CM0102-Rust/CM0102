@@ -17,7 +17,7 @@ MUTACOES = [
     ('cpz5_razao_normal_sem_q', 'core::ptr::write_unaligned(f(0x18), r * g * q2 * q); // cpz5: a razão da postura normal', 'core::ptr::write_unaligned(f(0x18), r * g * q2); // mutacao: sem o ultimo fator q', 'cpz_5 linha da tatica'),
     ('cpz6_convocado_joga_pelo_clube', 'return sai(read_usize(player + 0x24)); // cpz6: a serviço da seleção', 'return sai(0); // mutacao: o convocado joga pelo clube', 'cpz_6 a servico da selecao'),
     ('cpz6_ja_no_time_joga_pelo_clube', 'return sai(read_usize(player + 0x24)); // cpz6: já no time da seleção', 'return sai(0); // mutacao: o ja convocado joga pelo clube', 'cpz_6 no time da selecao'),
-    ('cpz6_janela_ate_3_dias', 'mais(data, phi, 1); // cpz6: o dia seguinte', 'mais(data, phi, 3); // mutacao: a janela vai ate 3 dias depois', 'cpz_6 a servico da selecao'),
+    ('cpz6_janela_ate_3_dias', 'more(data, phi, 1); // cpz6: o dia seguinte', 'more(data, phi, 3); // mutacao: a janela vai ate 3 dias depois', 'cpz_6 a servico da selecao'),
     ('cpz7_mandante_com_os_gols_do_visitante', '*s(0x19) = read_u8(jogo + 0x43); // cpz7: os gols do mandante', '*s(0x19) = read_u8(jogo + 0x44); // mutacao: os gols do visitante', 'cpz_7 placar do mandante'),
     ('cpz7_visitante_sofre_os_proprios_gols', '*s(0x1a) = read_u8(jogo + 0x43); // cpz7: os gols sofridos pelo visitante', '*s(0x1a) = read_u8(jogo + 0x44); // mutacao: os gols do proprio visitante', 'cpz_7 placar do visitante'),
     ('cpz7_mandante_pelo_visitante', 'if clube as u32 == read_u32(jogo + 0x1c) { // cpz7: o clube é o mandante', 'if clube as u32 == read_u32(jogo + 0x20) { // mutacao: o mandante pelo visitante', 'cpz_7 placar do mandante'),

@@ -122,9 +122,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this
         if rule == 0xff {
             continue;
         }
-        let orgao = ruling_body_of_rule(this, rule);
-        if !ruling_body_covers_club(orgao, clube) {
-            let e = ruling_body_entry(orgao, id);
+        let body = ruling_body_of_rule(this, rule);
+        if !ruling_body_covers_club(body, clube) {
+            let e = ruling_body_entry(body, id);
             if e != 0 {
                 duvida[k] = plan[..k].iter().any(|x| *x == Some(e));
                 plan[k] = Some(e);

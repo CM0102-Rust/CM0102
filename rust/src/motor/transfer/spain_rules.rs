@@ -86,8 +86,8 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows_5c15e0(
 /// [0x968990] jogos do jogador na liga (0x7c1e30 da ficha +0x61, tipo 2, 1, 6,5): 0x1f.
 pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     // 0x8e8e50: push 0; push 0xae2c90; mov ecx, edi (this) -> thiscall, ret 8
-    let janela: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
-    if janela(this, G_CURRENT_DATE, 0) == 0 {
+    let window: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
+    if window(this, G_CURRENT_DATE, 0) == 0 {
         crate::comparacao::ramo("cqe_6 espanha fora da janela");
         return refuse_outside_window(this, msg, reason);
     }
