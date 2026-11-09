@@ -160,11 +160,11 @@ unsafe extern "thiscall" fn pay_fee_and_record_clauses(this: usize, oferta: usiz
         let fv = financas(tabela(), vendedor);
         if fc != 0 {
             let s = (fc + 0x1c) as *mut i32;
-            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970420)));
+            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64(0x970420)));
         }
         if fv != 0 {
             let s = (fv + 0x1c) as *mut i32;
-            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970418)));
+            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64(0x970418)));
         }
         por_na_lista(this + 0x872, r.as_ptr(), 0xd);
     }
@@ -241,7 +241,7 @@ unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(oferta: usi
     }
     if estrito != 0 {
         let w2 = ponderado(oferta, 0, 0, 1, 0, 1);
-        if !((pedido as f64) < w2 as f64 * read_f64_at(0x968de8)) {
+        if !((pedido as f64) < w2 as f64 * read_f64(0x968de8)) {
             return 0;
         }
     }

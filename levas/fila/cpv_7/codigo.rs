@@ -47,7 +47,7 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
     let nac = cpv7_d(clube + 0x53);
     let mut w;
     if nac == 0 {
-        w = match_pl_ftol(padrao as f64 * read_f64_at(0x9689e0));
+        w = match_pl_ftol(padrao as f64 * read_f64(0x9689e0));
     } else {
         let tipo = (cpv7_b(nac + 0x7e) as i8).clamp(1, 3);
         let k = cpv7_b(nac + 0x85) as i8 as i32;
@@ -58,12 +58,12 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
             if e(0x9cf2e4) || e(0x9cf360) || e(0x9cf488) {
                 if cpv7_w(clube + 0x80) > 0x1c52 {
                     crate::comparison::branch("cpv_7 big club");
-                    w = match_pl_ftol(w as f64 * read_f64_at(0x9689b8)); // cpv7: o clube grande da Inglaterra, Itália e Espanha
+                    w = match_pl_ftol(w as f64 * read_f64(0x9689b8)); // cpv7: o clube grande da Inglaterra, Itália e Espanha
                 }
             } else if e(0x9cf36c) {
             } else if e(0x9cf4f8) {
                 if w > 0x6d6 {
-                    w = match_pl_ftol(w.wrapping_sub(0x6d6) as f64 * read_f64_at(0x969040) + read_f64_at(0x96a5f8));
+                    w = match_pl_ftol(w.wrapping_sub(0x6d6) as f64 * read_f64(0x969040) + read_f64(0x96a5f8));
                 }
             } else {
                 let (base, limiar, soma) = if e(0x9cf314) || e(0x9cf300) || e(0x9cf45c) || e(0x9cf338) {
@@ -73,29 +73,29 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
                 } else {
                     (0x968e80, 0x2ee, 0x96a5f0)
                 };
-                let mut f = read_f64_at(base);
+                let mut f = read_f64(base);
                 if r50 > k.wrapping_mul(10) {
                     let d = if k >= 1 { k } else { 1 };
-                    f = r50 as f64 / d as f64 * read_f64_at(0x967880) * read_f64_at(base);
+                    f = r50 as f64 / d as f64 * read_f64(0x967880) * read_f64(base);
                 }
                 if w > limiar {
-                    if f > read_f64_at(0x967890) {
-                        f = read_f64_at(0x967890);
+                    if f > read_f64(0x967890) {
+                        f = read_f64(0x967890);
                     }
-                    w = match_pl_ftol(w.wrapping_sub(limiar) as f64 * f + read_f64_at(soma));
+                    w = match_pl_ftol(w.wrapping_sub(limiar) as f64 * f + read_f64(soma));
                 }
             }
         }
         let liga = cpv7_d(clube + 0x57);
         if liga != 0 {
             crate::comparison::branch("cpv_7 league weight");
-            w = match_pl_ftol(cpv7_w(liga + 0x69) as f64 * w as f64 * read_f64_at(0x968918)); // cpv7: o peso da liga
+            w = match_pl_ftol(cpv7_w(liga + 0x69) as f64 * w as f64 * read_f64(0x968918)); // cpv7: o peso da liga
         }
     }
     match band(this) as i8 {
-        -2 => w = match_pl_ftol(w as f64 * read_f64_at(0x969040)),
-        -1 => w = match_pl_ftol(w as f64 * read_f64_at(0x9689d0)),
-        1 => w = match_pl_ftol(w as f64 * read_f64_at(0x968940)),
+        -2 => w = match_pl_ftol(w as f64 * read_f64(0x969040)),
+        -1 => w = match_pl_ftol(w as f64 * read_f64(0x9689d0)),
+        1 => w = match_pl_ftol(w as f64 * read_f64(0x968940)),
         2 => w = w.wrapping_add(w),
         _ => {}
     }
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn compare_pay_bonuses(this: usize, valor: i32) {
 /// (MANAGER_MANAGER::handle_board_request 0x6a91b0) e pela 0x6acee8: o teto salarial (+0x14) vira (percentual + 100) ×
 /// 0,01 × teto, truncado.
 unsafe extern "thiscall" fn adjust_max_wage(this: usize, write_percent_pair: i8) {
-    let v = match_pl_ftol((write_percent_pair as i32 + 100) as f64 * read_f64_at(0x967898) * cpv7_i(this + 0x14) as f64);
+    let v = match_pl_ftol((write_percent_pair as i32 + 100) as f64 * read_f64(0x967898) * cpv7_i(this + 0x14) as f64);
     core::ptr::write_unaligned((this + 0x14) as *mut i32, v);
 }
 

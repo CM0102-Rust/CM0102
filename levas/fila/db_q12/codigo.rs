@@ -59,22 +59,22 @@ unsafe extern "C" fn staff_compute_non_player_attribute(pessoa: usize, nao_jogad
     let formula = |d: usize| {
         let b = *((nao_jogador + d) as *const i8) as f64;
         let x = (*((nao_jogador + 4) as *const i16) as f64 + (b + b)) * 0.05 + 10.0;
-        let y = (x * x * 0.1 + x) * read_f64_at(0x968a80) + 0.5;
+        let y = (x * x * 0.1 + x) * read_f64(0x968a80) + 0.5;
         match_pl_ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y }) as u8
     };
     match a {
-        1 => byte(pessoa, 0x56),
+        1 => read_i8(pessoa + 0x56),
         2 => formula(0x11),
         3 => formula(0x10),
-        4 => byte(pessoa, 0x58),
+        4 => read_i8(pessoa + 0x58),
         5 => formula(0x17),
         6 => formula(0x18),
-        7 => byte(nao_jogador, 0x14),
+        7 => read_i8(nao_jogador + 0x14),
         8 => formula(0x19),
         9 => formula(0x1b),
         10 => formula(0x1e),
         11 => formula(0x21),
-        _ => byte(nao_jogador, 0x22),
+        _ => read_i8(nao_jogador + 0x22),
     }
 }
 

@@ -70,13 +70,13 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
         renda = cqb1_i(resultado + 0x38);
         let q = div_trunc(1, cqb1_sortear(10).wrapping_add(2));
         crate::comparison::branch("cqb_1 paying attendance");
-        tv = match_pl_ftol((q as f64 + read_f64_at(0x968f98)) * publico as f64); // cqb1: a TV pelo público (1,75)
+        tv = match_pl_ftol((q as f64 + read_f64(0x968f98)) * publico as f64); // cqb1: a TV pelo público (1,75)
     }
     let casa = cqb1_d(partida + 0x1c);
     let fora = cqb1_d(partida + 0x20);
     let mut custo; // o ebp da original
     if cqb1_b(casa + 0x64) != 1 && cqb1_b(fora + 0x64) != 1 {
-        custo = match_pl_ftol(publico as f64 * read_f64_at(0x9689e0));
+        custo = match_pl_ftol(publico as f64 * read_f64(0x9689e0));
     } else {
         let est = cqb1_d(partida + 0x18);
         let x = if est == 0 {
@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
             } else {
                 0x968968
             };
-            publico as f64 * read_f64_at(k)
+            publico as f64 * read_f64(k)
         } else {
             let cap = cqb1_i(est + 0x3c);
             let k = if cap > 17500 {
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
             } else {
                 0x969510
             };
-            cap as f64 * read_f64_at(k)
+            cap as f64 * read_f64(k)
         };
         custo = match_pl_ftol(x);
         if cqb1_b(partida + 0x40) != 0 && custo < 500 {
@@ -114,18 +114,18 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
         let rep = cqb1_w(casa + 0x80);
         if rep != 0 {
             let r = cqb1_sortear(0xc8);
-            let x = (r as f64 + publico as f64 * read_f64_at(0x968928)) + rep as f64 * read_f64_at(0x968968) + read_f64_at(0x96a6b0);
+            let x = (r as f64 + publico as f64 * read_f64(0x968928)) + rep as f64 * read_f64(0x968968) + read_f64(0x96a6b0);
             gastos = match_pl_ftol(x);
             if rep > 0x128e {
-                gastos = match_pl_ftol(gastos as f64 * read_f64_at(0x968928));
+                gastos = match_pl_ftol(gastos as f64 * read_f64(0x968928));
             }
         } else {
             let r = cqb1_sortear(0x190);
-            gastos = match_pl_ftol((r as f64 + publico as f64 * read_f64_at(0x968928)) + read_f64_at(0x96a690));
+            gastos = match_pl_ftol((r as f64 + publico as f64 * read_f64(0x968928)) + read_f64(0x96a690));
         }
     } else {
         let rep = cqb1_w(casa + 0x80);
-        let r1 = if rep != 0 { cqb1_sortear(match_pl_ftol(rep as i32 as f64 * read_f64_at(0x9689e0))) } else { cqb1_sortear(0xfa) };
+        let r1 = if rep != 0 { cqb1_sortear(match_pl_ftol(rep as i32 as f64 * read_f64(0x9689e0))) } else { cqb1_sortear(0xfa) };
         let r1f = r1 as f32; // fstp dword: o primeiro sorteio guardado em float
         let r2 = cqb1_sortear(0xfa);
         gastos = match_pl_ftol((r2 as f64 + r1f as f64) + publico as f64);
@@ -193,8 +193,8 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
     };
     if cqb1_b(partida + 0x3c) == 0 && cqb1_d(cqb1_d(partida + 0x1c) + 0x57) == cqb1_d(partida + 0x14) {
         let x = dinheiro as f64;
-        somar(mandante, 0x158, 0xb8, match_pl_ftol(x * read_f64_at(0x969040)));
-        somar(visitante, 0x158, 0xb8, match_pl_ftol(x * read_f64_at(0x9689e0)));
+        somar(mandante, 0x158, 0xb8, match_pl_ftol(x * read_f64(0x969040)));
+        somar(visitante, 0x158, 0xb8, match_pl_ftol(x * read_f64(0x9689e0)));
         crate::comparison::branch("cqb_1 net to the home side");
         somar(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante
         let casa = cqb1_d(partida + 0x1c);
@@ -202,14 +202,14 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
         if cqb1_b(casa + 0x6d) != 0 && est != 0 {
             let base = cqb1_i(est + 0x3c);
             let r = cqb1_sortear(0xf).wrapping_add(1);
-            let c = match_pl_ftol((r as f64 * read_f64_at(0x967898) + read_f64_at(0x969520)) * base as f64);
+            let c = match_pl_ftol((r as f64 * read_f64(0x967898) + read_f64(0x969520)) * base as f64);
             cpz13_somar32(mandante + 0x12c, c);
             cpz13_somar32(mandante + 0x8c, c);
             add_to_balance(mandante, -(c as i64));
         }
         return;
     }
-    let metade = match_pl_ftol(dinheiro as f64 * read_f64_at(0x968968));
+    let metade = match_pl_ftol(dinheiro as f64 * read_f64(0x968968));
     somar(mandante, 0x158, 0xb8, metade);
     somar(visitante, 0x158, 0xb8, metade);
     let l2 = div_trunc(liquido, 2);
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, pu
             f(cqb1_d(0xae2c74), comp) != 0
         };
         if comp == 0 || amistoso {
-            v = match_pl_ftol(preco as f64 * read_f64_at(0x968968) * publico as f64);
+            v = match_pl_ftol(preco as f64 * read_f64(0x968968) * publico as f64);
         } else if cqb1_b(casa + 0x64) == 1 || cqb1_b(cqb1_d(partida + 0x20) + 0x64) == 1 {
             v = preco.wrapping_add(4).wrapping_mul(publico);
         } else {
@@ -304,10 +304,10 @@ unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, pu
         }
     };
     if let Some(k) = k {
-        v = match_pl_ftol(v as f64 * read_f64_at(k));
+        v = match_pl_ftol(v as f64 * read_f64(k));
     }
     if nac != 0 && cqb1_i(nac) == cqb1_i(0x9cf314) {
-        v = match_pl_ftol(v as f64 * read_f64_at(0x968978));
+        v = match_pl_ftol(v as f64 * read_f64(0x968978));
     }
     v
 }

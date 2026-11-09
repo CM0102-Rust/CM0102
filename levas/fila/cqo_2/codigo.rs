@@ -51,59 +51,59 @@ unsafe fn apply_side_factor_floor(jogo: usize, lado: u8, f: &mut [f64; 2]) {
         let a = cqo2_w(jogo + 0x30) as u16;
         if a == 0x96 {
             if alto(0x1676) {
-                piso(&mut f[k], read_f64_at(0x9690a8));
+                piso(&mut f[k], read_f64(0x9690a8));
             } else {
-                piso(&mut f[k], read_f64_at(0x968e38));
+                piso(&mut f[k], read_f64(0x968e38));
             }
-        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) {
+        } else if a == 0x82 && f[k] < read_f64(0x968e18) {
             if alto(0x1676) {
-                piso(&mut f[k], read_f64_at(0x968ec8));
+                piso(&mut f[k], read_f64(0x968ec8));
             } else {
-                piso(&mut f[k], read_f64_at(0x968930));
+                piso(&mut f[k], read_f64(0x968930));
             }
         } else if lado > 1 || rep(lado) >= 0x1676 {
-            piso(&mut f[k], read_f64_at(0x9689b8));
+            piso(&mut f[k], read_f64(0x9689b8));
         } else if rep(lado) >= 0x109a {
-            piso(&mut f[k], read_f64_at(0x968928));
+            piso(&mut f[k], read_f64(0x968928));
         } else {
-            piso(&mut f[k], read_f64_at(0x968f98));
+            piso(&mut f[k], read_f64(0x968f98));
         }
     }
     if t == 6 {
         let a = cqo2_w(jogo + 0x30) as u16;
         if a == 0x96 {
             if alto(0x109a) {
-                piso(&mut f[k], read_f64_at(0x9690a8));
+                piso(&mut f[k], read_f64(0x9690a8));
             } else {
-                piso(&mut f[k], read_f64_at(0x968e38));
+                piso(&mut f[k], read_f64(0x968e38));
             }
-        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) {
-            f[k] = read_f64_at(0x968e18);
+        } else if a == 0x82 && f[k] < read_f64(0x968e18) {
+            f[k] = read_f64(0x968e18);
         } else {
-            piso(&mut f[k], read_f64_at(0x968928));
+            piso(&mut f[k], read_f64(0x968928));
         }
     } else if cqo2_w(jogo + 0x30) as u16 == 0x96 && t == 5 {
         if alto(0x109a) {
-            piso(&mut f[k], read_f64_at(0x9690a8));
+            piso(&mut f[k], read_f64(0x9690a8));
         } else {
-            piso(&mut f[k], read_f64_at(0x968e38));
+            piso(&mut f[k], read_f64(0x968e38));
         }
     } else if cqo2_w(jogo + 0x32) as u16 == 0xa0 && t == 5 {
         if lado == 0 {
-            if rep(0) < 0x109a && f[0] < read_f64_at(0x96fe20) {
-                f[0] = read_f64_at(0x96fe20);
+            if rep(0) < 0x109a && f[0] < read_f64(0x96fe20) {
+                f[0] = read_f64(0x96fe20);
             } else {
-                piso(&mut f[0], read_f64_at(0x968e18));
+                piso(&mut f[0], read_f64(0x968e18));
             }
         } else {
-            piso(&mut f[k], read_f64_at(0x968e18));
+            piso(&mut f[k], read_f64(0x968e18));
         }
-    } else if t == 10 && f[k] < read_f64_at(0x968928) {
-        f[k] = read_f64_at(0x968928);
-    } else if t == 9 && f[k] < read_f64_at(0x9689b0) {
-        f[k] = read_f64_at(0x9689b0);
+    } else if t == 10 && f[k] < read_f64(0x968928) {
+        f[k] = read_f64(0x968928);
+    } else if t == 9 && f[k] < read_f64(0x9689b0) {
+        f[k] = read_f64(0x9689b0);
     } else {
-        piso(&mut f[k], read_f64_at(0x967880));
+        piso(&mut f[k], read_f64(0x967880));
     }
 }
 
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
         let comp = cqo2_d(jogo + 0x14);
         if comp != 0 {
             f[k] = cqo2_w(comp + 0x69) as i32 as f64;
-            if f[k] < read_f64_at(0x967890) {
+            if f[k] < read_f64(0x967890) {
                 f[k] = 1.0;
             }
         } else {
@@ -157,22 +157,22 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
         }
         let t = cqo2_b(jogo + 0x3a);
         if t == 8 || t == 10 || t == 6 {
-            f[k] += read_f64_at(0x968950);
+            f[k] += read_f64(0x968950);
         }
         let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
-        let mut ajuste = read_f64_at(0x9689a0);
+        let mut ajuste = read_f64(0x9689a0);
         if amistoso(cqo2_d(0xae2c74), comp) == 0 && cqo2_d(0xadadfc) != 0 && cqo2_d(cqo2_d(0xadadfc) + cqo2_d(comp) * 4) != 0 && cqo2_d(0xb74434) != 0 {
             let grupo: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7e6f20usize);
             if grupo(cqo2_d(jogo + 0x14)) == 0 {
                 let liga = cqo2_d(cqo2_d(0xadadfc) + cqo2_d(cqo2_d(jogo + 0x14)) * 4);
                 if cqo2_b(liga + 0x43) != 2 {
                     let x = (cqo2_b(jogo + 0x34).wrapping_sub(cqo2_b(liga + 0x3c)) as i8) as i32 as f64;
-                    ajuste = if x < read_f64_at(0x96fe28) {
-                        read_f64_at(0x96fe28)
-                    } else if x <= read_f64_at(0x9688a0) {
+                    ajuste = if x < read_f64(0x96fe28) {
+                        read_f64(0x96fe28)
+                    } else if x <= read_f64(0x9688a0) {
                         x
                     } else {
-                        read_f64_at(0x9688a0)
+                        read_f64(0x9688a0)
                     };
                 }
             }
@@ -186,19 +186,19 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
                 f[k] = outro as i32 as f64 / eu as i32 as f64 * v;
             }
             if outro > 0x11 {
-                f[k] *= read_f64_at(0x9689c0);
+                f[k] *= read_f64(0x9689c0);
             }
             if outro > 0xc && eu < 0xe {
-                f[k] *= read_f64_at(0x968928);
+                f[k] *= read_f64(0x968928);
             }
             let _ = clube;
             let lg = cqo2_d(cqo2_d(jogo + if lado == 0 { 0x1c } else { 0x20 }) + 0x57);
             if lg != 0 && cqo2_w(lg + 0x69) != 0 {
                 f[k] /= cqo2_w(lg + 0x69) as i32 as f64;
             } else if cqo2_b(jogo + 0x3a) == 0xa {
-                f[k] *= read_f64_at(0x968918);
+                f[k] *= read_f64(0x968918);
             } else {
-                f[k] *= read_f64_at(0x967888); // cqo2: o fator sem a liga do clube
+                f[k] *= read_f64(0x967888); // cqo2: o fator sem a liga do clube
             }
         }
         apply_side_factor_floor(jogo, lado, &mut f);
@@ -213,15 +213,15 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
         let c_fora = stadium_city(cqo2_d(fora + 0x69));
         let fator: unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64 = core::mem::transmute(0x85d8a0usize);
         let mut d = fator(this, jogo, c_est, c_casa, f[0]);
-        if d < read_f64_at(0x968f20) {
-            d = read_f64_at(0x968f20);
+        if d < read_f64(0x968f20) {
+            d = read_f64(0x968f20);
         }
         pc = match_pl_ftol(cqo2_i(casa + 0x73) as f64 * f[0] * d);
         let mut d = fator(this, jogo, c_est, c_fora, f[1]);
-        if d < read_f64_at(0x968f20) {
-            d = read_f64_at(0x968f20);
+        if d < read_f64(0x968f20) {
+            d = read_f64(0x968f20);
         }
-        pf = match_pl_ftol(cqo2_i(fora + 0x77).wrapping_add(cqo2_i(fora + 0x73)) as f64 * f[1] * d * read_f64_at(0x968968));
+        pf = match_pl_ftol(cqo2_i(fora + 0x77).wrapping_add(cqo2_i(fora + 0x73)) as f64 * f[1] * d * read_f64(0x968968));
         let comp = cqo2_d(jogo + 0x14);
         if comp != 0 && casa != 0 && cqo2_d(casa + 0x57) == comp {
             let liga = cqo2_d(cqo2_d(0xadadfc) + cqo2_d(comp) * 4);
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
                             } else if cl < 4 {
                                 2
                             } else {
-                                match_pl_ftol(ax as i32 as f64 * read_f64_at(0x9689e0)) as i16
+                                match_pl_ftol(ax as i32 as f64 * read_f64(0x9689e0)) as i16
                             };
                         }
                         let m = if bl < 4 && dl == 1 { 25 } else { 15 };
@@ -292,16 +292,16 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
     let rival = |a: usize, b: usize| cqo2_d(a + 0xb3) == b || cqo2_d(a + 0xb7) == b || cqo2_d(a + 0xbb) == b;
     if rival(casa, fora) {
         crate::comparison::branch("cqo_2 derby");
-        pc = match_pl_ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico
+        pc = match_pl_ftol(pc as f64 * read_f64(0x968940)); // cqo2: o clássico
     } else if cqo2_d(casa + 0x69) != 0 && cqo2_d(fora + 0x69) != 0 && cqo2_d(cqo2_d(casa + 0x69) + 0x38) == cqo2_d(cqo2_d(fora + 0x69) + 0x38) {
-        pc = match_pl_ftol(pc as f64 * read_f64_at(0x969588));
+        pc = match_pl_ftol(pc as f64 * read_f64(0x969588));
     }
     if rival(fora, casa) {
-        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969588));
+        pf = match_pl_ftol(pf as f64 * read_f64(0x969588));
     }
     if cqo2_b(jogo + 0x3c) == 0 && cqo2_b(jogo + 0x3b) != 0xff {
-        pc = match_pl_ftol(pc as f64 * read_f64_at(0x9689b8));
-        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969520));
+        pc = match_pl_ftol(pc as f64 * read_f64(0x9689b8));
+        pf = match_pl_ftol(pf as f64 * read_f64(0x969520));
     }
     let comp = cqo2_d(jogo + 0x14);
     if comp != 0 && casa != 0 && cqo2_d(casa + 0x57) == comp && cqo2_b(casa + 0x6d) != 0 {
@@ -326,7 +326,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
             if pc < n * 250 {
                 pc = n * 250;
             } else if pc > n * 1500 {
-                pc = n * 1500 - match_pl_ftol((pc - n * 1500) as f64 * read_f64_at(0x968f30));
+                pc = n * 1500 - match_pl_ftol((pc - n * 1500) as f64 * read_f64(0x968f30));
             }
         }
     }
@@ -344,9 +344,9 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
             let vis = if cqo2_b(jogo + 0x3c) == 0 {
                 let a = lot as f64;
                 let x = a - cqo2_i(cqo2_d(jogo + 0x20) + 0x73) as f64 * f[0];
-                let y = a * read_f64_at(0x968f20);
+                let y = a * read_f64(0x968f20);
                 let z = if x < y { x } else { y };
-                let w = a * read_f64_at(0x967888);
+                let w = a * read_f64(0x967888);
                 match_pl_ftol(if w > z { w } else { z })
             } else {
                 lot / 2

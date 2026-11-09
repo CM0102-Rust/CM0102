@@ -932,7 +932,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
         crate::comparison::branch("cpt_8 coaches");
         soma = ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: the average of the coaches
     }
-    let r = ftol(soma as f64 * read_f64_at(rdata::F64_5_714285714));
+    let r = ftol(soma as f64 * read_f64(rdata::F64_5_714285714));
     if (r as i16) < 0x32 {
         return 0x32;
     }
@@ -976,12 +976,12 @@ pub(crate) unsafe extern "thiscall" fn get_coach_assignments(this: usize, manage
 /// para cima, 100. Pela update_player_training (0x8b1750, o jogador do clube humano), pela set_player_schedule
 /// (0x8b2250) e pela reassign_squad_schedules (0x8b2470); vai para a ficha de forma (Injury::set_training_load 0x62c660).
 pub(crate) unsafe extern "thiscall" fn get_training_load(this: usize) -> i32 {
-    let a = ftol((read_i8(this + 4) as f64) * read_f64_at(rdata::F64_NEG_1_3)) as i16;
-    let mut s = ftol((read_i8(this + 8) as f64) * read_f64_at(rdata::F64_0_5)) as i16;
+    let a = ftol((read_i8(this + 4) as f64) * read_f64(rdata::F64_NEG_1_3)) as i16;
+    let mut s = ftol((read_i8(this + 8) as f64) * read_f64(rdata::F64_0_5)) as i16;
     s = s.wrapping_sub(a);
-    s = s.wrapping_sub(ftol((read_i8(this + 7) as f64) * read_f64_at(rdata::F64_NEG_0_5)) as i16);
-    s = s.wrapping_sub(ftol((read_i8(this + 6) as f64) * read_f64_at(rdata::F64_NEG_0_5)) as i16);
-    s = s.wrapping_sub(ftol((read_i8(this + 5) as f64) * read_f64_at(rdata::F64_NEG_0_5)) as i16);
+    s = s.wrapping_sub(ftol((read_i8(this + 7) as f64) * read_f64(rdata::F64_NEG_0_5)) as i16);
+    s = s.wrapping_sub(ftol((read_i8(this + 6) as f64) * read_f64(rdata::F64_NEG_0_5)) as i16);
+    s = s.wrapping_sub(ftol((read_i8(this + 5) as f64) * read_f64(rdata::F64_NEG_0_5)) as i16);
     if s >= 0x64 {
         return 0x64;
     }

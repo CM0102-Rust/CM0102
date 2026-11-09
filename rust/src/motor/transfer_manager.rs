@@ -776,7 +776,7 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usiz
                 best_attraction = attraction[i];
             }
             let v = value(opcoes[i], 0, 0, 1, 1, 1);
-            if v as f64 * read_f64_at(rdata::F64_0_85) < request_f && troca_recusada == 0 { // cqe1: the option × 0.85 below the asking price;
+            if v as f64 * read_f64(rdata::F64_0_85) < request_f && troca_recusada == 0 { // cqe1: the option × 0.85 below the asking price;
                 crate::comparison::branch("cqe_1 accepts");
                 if dry_run == 0 {
                     exe::transfer_manager_accept_transfer_bid(this, slot, 0);
@@ -799,15 +799,15 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usiz
         let request_f = request as f64;
         let v = value(best, 0, 0, 0, 0, 1);
         let kind = read_usize(o + offer::OFFER_KIND) & 0xf;
-        if v as f64 * read_f64_at(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && dry_run == 0 { // cqe1: a contraproposta;
+        if v as f64 * read_f64(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && dry_run == 0 { // cqe1: a contraproposta;
             crate::comparison::branch("cqe_1 counter-offer");
             write_u8(best + offer::COMPLETION_TIMING, (read_u8(best + offer::COMPLETION_TIMING) & 0xf0) | (read_u8(o + offer::COMPLETION_TIMING) & 0xf));
             exe::transfer_manager_add_transfer_negotiation(this, o, best, 0);
         } else {
             let w = read_usize(target + staff::VALUE) as i32;
             let (tf, wf) = (total as f64, w as f64);
-            if (tf < wf * read_f64_at(rdata::F64_0_55) && w.wrapping_sub(total) > 2000000)
-                || (tf < wf * read_f64_at(rdata::F64_0_1) && w.wrapping_sub(total) > 100000 && dry_run == 0)
+            if (tf < wf * read_f64(rdata::F64_0_55) && w.wrapping_sub(total) > 2000000)
+                || (tf < wf * read_f64(rdata::F64_0_1) && w.wrapping_sub(total) > 100000 && dry_run == 0)
             {
                 reason = 10;
             }
@@ -999,7 +999,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, buyer: 
     crate::comparison::branch("cqe_2 option built");
     *attraction = 0x32; // cqe2: the attraction of the option
     write_usize(new + offer::FEE, value as u32 as usize); // cqe2: the option price
-    let mut ceiling = ftol(value as f64 * read_f64_at(rdata::F64_1_1));
+    let mut ceiling = ftol(value as f64 * read_f64(rdata::F64_1_1));
     // simplification: the position, the base rating, the marks and the status carry over from one slot to the next (the original leaves them on the
     // stack without value up to the first slot with record +0x61; a candidate without a record does not happen: they start at zero). The flags
     // outside 0..4 of the reach (which 0x5408c0 does not return) would be the previous ebp, initially the offer pointer.
@@ -1097,7 +1097,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, buyer: 
                         ((i as i32 * 0x25) as u32 & 0xffff_ff00) | status_of_slot(i) as u32
                     };
                     let r = interest(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), x, seller, 1, 0, st, 0);
-                    if !(r >= read_f64_at(rdata::F64_3_15)) { // cqe2: the interest below 3.15;
+                    if !(r >= read_f64(rdata::F64_3_15)) { // cqe2: the interest below 3.15;
                         break 'jogador;
                     }
                     crate::comparison::branch("cqe_2 interest");
@@ -1111,7 +1111,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, buyer: 
                     if nx == 0 || base == 0 {
                         break 'jogador;
                     }
-                    if !(nx as f64 / base as f64 > read_f64_at(rdata::F64_0_9)) { // cqe2: the rating up to 0.9 of the base;
+                    if !(nx as f64 / base as f64 > read_f64(rdata::F64_0_9)) { // cqe2: the rating up to 0.9 of the base;
                         break 'jogador;
                     }
                     crate::comparison::branch("cqe_2 swap rating");
@@ -1381,7 +1381,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
             }
             let job = read_u8(p + 5);
             // simplification: the original pushes edx with byte +5 and the high bytes of what 0x600a50 left in it; 0x85fc50
-            // reads only the byte (mov cl, [esp+0x284])
+            // reads only the read_i8(mov cl + ([esp+0x284]))
             let salary = wanted(pc, person, seller, u32::MAX, job as u32, 0xb, 0, 0);
             let t = exe::finance_get_max_wage(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), seller), person, job as u32);
             crate::comparison::branch("cqd_2 expensive swap");
@@ -4558,16 +4558,16 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     // simplification: the original pushes the dword of the slot where it stored the byte (the rest is stack leftover); 0x846920 only reads the
     // byte
     let x = exe::shortlist_manager_staff_interest_in_joining_club(lists, p, buyer, 1, 0, e as u32, 0);
-    let pw = game_pow(x, read_f64_at(rdata::F64_4));
-    let a = x * read_f64_at(rdata::F64_300);
+    let pw = game_pow(x, read_f64(rdata::F64_4));
+    let a = x * read_f64(rdata::F64_300);
     let v = if !(pw >= a) { pw } else { a };
-    let mut n = ftol(game_pow(read_i8_as_i32(p + staff::TEMPERAMENT) as f64, read_f64_at(rdata::F64_2)) * read_f64_at(rdata::F64_8) - read_f64_at(rdata::F64_1600)) as i16;
+    let mut n = ftol(game_pow(read_i8_as_i32(p + staff::TEMPERAMENT) as f64, read_f64(rdata::F64_2)) * read_f64(rdata::F64_8) - read_f64(rdata::F64_1600)) as i16;
     let sheet = read_usize(p + staff::PLAYER);
     n = n.wrapping_sub((read_i16(sheet + player_sheet::CURRENT_REPUTATION) as i32 / 40) as i16);
     n = n.wrapping_sub(ftol(v) as i16);
-    n = n.wrapping_sub(ftol(game_pow(read_i8_as_i32(p + staff::AMBITION) as f64, read_f64_at(rdata::F64_2))) as i16);
-    n = n.wrapping_add(ftol(game_pow(read_i8_as_i32(p + staff::PROFESSIONALISM) as f64, read_f64_at(rdata::F64_3))) as i16);
-    n = n.wrapping_add(ftol(game_pow(read_i8_as_i32(p + staff::LOYALTY) as f64, read_f64_at(rdata::F64_3))) as i16);
+    n = n.wrapping_sub(ftol(game_pow(read_i8_as_i32(p + staff::AMBITION) as f64, read_f64(rdata::F64_2))) as i16);
+    n = n.wrapping_add(ftol(game_pow(read_i8_as_i32(p + staff::PROFESSIONALISM) as f64, read_f64(rdata::F64_3))) as i16);
+    n = n.wrapping_add(ftol(game_pow(read_i8_as_i32(p + staff::LOYALTY) as f64, read_f64(rdata::F64_3))) as i16);
     if c2 == 0 {
         return;
     }
@@ -4576,7 +4576,7 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
         n = n.wrapping_add((-2000i32).wrapping_sub(random(0x1770)) as i16); // cpx2: the discount of the listed player
     }
     crate::comparison::branch("cpx_2 interest evaluated");
-    if !(x >= read_f64_at(rdata::F64_5_5)) { // cpx2: o interesse mínimo;
+    if !(x >= read_f64(rdata::F64_5_5)) { // cpx2: o interesse mínimo;
         return;
     }
     if n as i32 >= -random(0x2bc) {
@@ -4590,8 +4590,8 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     }
     let value: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_PLAYER_VALUE);
     let price: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_ASKING_PRICE);
-    let a1 = ftol(value(read_usize(G_CONTRACT_MANAGER), p, of_contract, 0, -1, 0) as f64 * read_f64_at(rdata::F64_1_5));
-    let b1 = ftol(price(read_usize(G_CONTRACT_MANAGER), of_contract, buyer, p, 0, 1, 1) as f64 * read_f64_at(rdata::F64_0_8));
+    let a1 = ftol(value(read_usize(G_CONTRACT_MANAGER), p, of_contract, 0, -1, 0) as f64 * read_f64(rdata::F64_1_5));
+    let b1 = ftol(price(read_usize(G_CONTRACT_MANAGER), of_contract, buyer, p, 0, 1, 1) as f64 * read_f64(rdata::F64_0_8));
     let pond = exe::transfer_offer_get_weighted_value(o, 0, 0, 0, 1, 1);
     let smaller = if a1 < b1 { a1 } else { b1 };
     if pond < smaller {
@@ -4618,7 +4618,7 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
             }
         }
     }
-    if x > read_f64_at(rdata::F64_10) || n < -5000 || (smaller as f64) < pond as f64 * read_f64_at(rdata::F64_0_75) {
+    if x > read_f64(rdata::F64_10) || n < -5000 || (smaller as f64) < pond as f64 * read_f64(rdata::F64_0_75) {
         exe::staff_add_disliked_staff(p, read_usize(of_contract + club::MANAGER), 1);
     }
 }
@@ -7505,11 +7505,11 @@ pub(crate) unsafe extern "thiscall" fn pay_fee_and_record_clauses(this: usize, o
         let fv = exe::financetable_get_club_finance(table(), seller);
         if fc != 0 {
             let s = (fc + finance::INSTALMENT_BALANCE) as *mut i32;
-            *s = (*s).wrapping_add(ftol(parcela as f64 * read_f64_at(rdata::F64_NEG_0_2380952381)));
+            *s = (*s).wrapping_add(ftol(parcela as f64 * read_f64(rdata::F64_NEG_0_2380952381)));
         }
         if fv != 0 {
             let s = (fv + finance::INSTALMENT_BALANCE) as *mut i32;
-            *s = (*s).wrapping_add(ftol(parcela as f64 * read_f64_at(rdata::F64_0_2380952381)));
+            *s = (*s).wrapping_add(ftol(parcela as f64 * read_f64(rdata::F64_0_2380952381)));
         }
         by_in_list(this + transfer_manager_fields::INSTALMENTS, r.as_ptr(), 0xd);
     }
@@ -7593,7 +7593,7 @@ pub(crate) unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(
     }
     if estrito != 0 {
         let w2 = exe::transfer_offer_get_weighted_value(offer, 0, 0, 1, 0, 1);
-        if !((request as f64) < w2 as f64 * read_f64_at(rdata::F64_1_3)) {
+        if !((request as f64) < w2 as f64 * read_f64(rdata::F64_1_3)) {
             return 0;
         }
     }
@@ -8262,9 +8262,9 @@ pub(crate) unsafe extern "thiscall" fn get_offer_response_delay(this: usize, off
             && status > 0
         {
             let interest: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> f64 = core::mem::transmute(FN_SHORTLIST_MANAGER_STAFF_INTEREST_IN_JOINING_CLUB);
-            if interest(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), p, buyer, 0, 0, 1, 0) > read_f64_at(rdata::F64_3_15) {
-                let x = deadline as i32 as f64 * read_f64_at(rdata::F64_2_5);
-                let ceiling = read_f64_at(rdata::F64_30);
+            if interest(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), p, buyer, 0, 0, 1, 0) > read_f64(rdata::F64_3_15) {
+                let x = deadline as i32 as f64 * read_f64(rdata::F64_2_5);
+                let ceiling = read_f64(rdata::F64_30);
                 value = Some(ftol(if ceiling < x || x.is_nan() { ceiling } else { x }) as u8);
             }
         }
@@ -8324,8 +8324,8 @@ pub(crate) unsafe extern "thiscall" fn pay_transfer_instalments(this: usize) {
         *((e + instalment::REMAINING) as *mut i8) = n;
         let fracoes = if n < 4 { Some((0x968918, 0x968f30)) } else if n < 8 { Some((0x967880, 0x969518)) } else { None };
         if let Some((a, b)) = fracoes {
-            write_u32(fp + finance::INSTALMENT_BALANCE, read_i32(fp + finance::INSTALMENT_BALANCE).wrapping_add(ftol(read_i32(e) as f64 * read_f64_at(a))) as u32);
-            write_u32(fr + finance::INSTALMENT_BALANCE, read_i32(fr + finance::INSTALMENT_BALANCE).wrapping_add(ftol(read_i32(e) as f64 * read_f64_at(b))) as u32);
+            write_u32(fp + finance::INSTALMENT_BALANCE, read_i32(fp + finance::INSTALMENT_BALANCE).wrapping_add(ftol(read_i32(e) as f64 * read_f64(a))) as u32);
+            write_u32(fr + finance::INSTALMENT_BALANCE, read_i32(fr + finance::INSTALMENT_BALANCE).wrapping_add(ftol(read_i32(e) as f64 * read_f64(b))) as u32);
         }
         if read_u8(e + instalment::REMAINING) == 0 {
             crate::comparison::branch("cpo_10 instalment finished");
@@ -8769,7 +8769,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_veto(_this: usize, offer: usi
         crate::comparison::branch("cpl_2 board veto values");
         for k in [0xb, 9, 0xd] {
             let p = (read_usize(player + staff::PLAYER) + k) as *mut i16;
-            core::ptr::write_unaligned(p, ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(rdata::F64_0_9)) as i16); // 90%;
+            core::ptr::write_unaligned(p, ftol(core::ptr::read_unaligned(p) as f64 * read_f64(rdata::F64_0_9)) as i16); // 90%;
         }
         return 1;
     }
@@ -9769,7 +9769,7 @@ pub(crate) unsafe extern "thiscall" fn get_selection_limit(this: usize, partida:
 /// (0xe-byte entries in `[+0x93a]`); else 0.
 ///
 /// Ret 4: `TRANSFER_MANAGER::find_work_permit(person)`: the person's work permit: id outside the `[0xae2364]` (signed),
-/// 0; without flag 0x20 in the id's byte (8 bytes each, in `[+0x86e]`), 0; otherwise the binary search (bsearch
+/// 0; without flag 0x20 in the id's read_i8(8 bytes each + (in `[+0x86e]`)), 0; otherwise the binary search (bsearch
 /// `exe::crt_bsearch`, 0xe-byte records in `[+0x93a]`, `[+0x93e]` of them, comparison 0x8e55c0) by the id. Null person: reads
 /// address 0 as the original.
 /// Original: `TRANSFER_MANAGER::find_work_permit` (0x8c7260, transfer_manager.cpp, thiscall, ret 4).

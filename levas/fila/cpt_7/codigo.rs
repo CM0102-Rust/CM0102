@@ -21,7 +21,7 @@ unsafe fn cpt7_sortear(n: i32) -> i32 {
 unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
     let dx = (cpt7_f(a + 0x23) - cpt7_f(b + 0x23)).abs();
     let dy = (cpt7_f(a + 0x2b) - cpt7_f(b + 0x2b)).abs();
-    match_pl_ftol((dy * dy + dx * dx).sqrt() * read_f64_at(0x96fe40))
+    match_pl_ftol((dy * dy + dx * dx).sqrt() * read_f64(0x96fe40))
 }
 
 /// { 0x85da00 } (thiscall, ret 0x14, stadium.cpp): `Stadium::score_venue_for_fixture(estadio, marcas, casa, fora,
@@ -64,8 +64,8 @@ unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, ma
                 }
             } else {
                 let (f1, f2, f3) = (d1 as f64, d2 as f64, d3 as f64);
-                let perto = f1 * read_f64_at(0x96fe38);
-                let longe = f1 * read_f64_at(0x969088);
+                let perto = f1 * read_f64(0x96fe38);
+                let longe = f1 * read_f64(0x969088);
                 if f2 < perto && f3 < perto {
                     nota = 200000;
                 } else if !(f2 < longe && f3 < longe) {
@@ -101,27 +101,27 @@ unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, ma
             }
         }
         if lugares > esperado {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968978));
+            nota = match_pl_ftol(nota as f64 * read_f64(0x968978));
         }
         let (l, e) = (lugares as f64, esperado as f64);
-        let t = e * read_f64_at(0x968940);
+        let t = e * read_f64(0x968940);
         if l > t {
-            nota = match_pl_ftol(nota as f64 / ((l - t) * read_f64_at(0x96fe30) + read_f64_at(0x967890)));
-        } else if l < e * read_f64_at(0x968e80) {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x967880));
-        } else if l < e * read_f64_at(0x968968) {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e80));
-        } else if l < e * read_f64_at(0x968e40) {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e40));
-        } else if l < e * read_f64_at(0x9689d8) {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x9689d8));
+            nota = match_pl_ftol(nota as f64 / ((l - t) * read_f64(0x96fe30) + read_f64(0x967890)));
+        } else if l < e * read_f64(0x968e80) {
+            nota = match_pl_ftol(nota as f64 * read_f64(0x967880));
+        } else if l < e * read_f64(0x968968) {
+            nota = match_pl_ftol(nota as f64 * read_f64(0x968e80));
+        } else if l < e * read_f64(0x968e40) {
+            nota = match_pl_ftol(nota as f64 * read_f64(0x968e40));
+        } else if l < e * read_f64(0x9689d8) {
+            nota = match_pl_ftol(nota as f64 * read_f64(0x9689d8));
         }
     } else if m & 4 != 0 {
         nota = cpt7_sortear(lugares);
     }
     crate::comparison::branch("cpt_7 stadium rating");
     let r = cpt7_sortear(100); // cpt7: o sorteio da nota
-    match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * nota as f64)
+    match_pl_ftol((r as f64 * read_f64(0x968d60) + read_f64(0x9689b0)) * nota as f64)
 }
 
 // ponytail: sorteia (e, com a marca 4, sorteia os lugares): só a original; a cópia leva o ramo.
@@ -143,30 +143,30 @@ unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, jogo: usize
     let mut d = (dx * dx + dy * dy).sqrt();
     let tipo = *((jogo + 0x3a) as *const u8);
     if core::ptr::read_unaligned((jogo + 0x30) as *const u16) == 0xa0 && tipo == 5 {
-        d *= read_f64_at(0x968968);
+        d *= read_f64(0x968968);
     }
-    let mut f = read_f64_at(0x967890) - d * read_f64_at(0x96afe0);
+    let mut f = read_f64(0x967890) - d * read_f64(0x96afe0);
     if *((jogo + 0x3c) as *const u8) == 0 {
         f *= f;
     }
-    if d > read_f64_at(0x9689a0) && r > read_f64_at(0x9689a0) {
-        let q = r + read_f64_at(0x967890);
+    if d > read_f64(0x9689a0) && r > read_f64(0x9689a0) {
+        let q = r + read_f64(0x967890);
         f /= q * q;
     }
-    if base > read_f64_at(0x969558) {
-        let minimo = read_f64_at(0x967890) - (read_f64_at(0x968ea8) - base) * read_f64_at(0x968f20);
+    if base > read_f64(0x969558) {
+        let minimo = read_f64(0x967890) - (read_f64(0x968ea8) - base) * read_f64(0x968f20);
         if f < minimo {
             return minimo;
         }
     }
-    if tipo == 0xa && f < read_f64_at(0x968918) {
-        return read_f64_at(0x968918);
+    if tipo == 0xa && f < read_f64(0x968918) {
+        return read_f64(0x968918);
     }
-    if f < read_f64_at(0x967888) && cpt7_d(cpt7_d(jogo + 0x1c) + 0x53) == nacao {
-        return read_f64_at(0x967888);
+    if f < read_f64(0x967888) && cpt7_d(cpt7_d(jogo + 0x1c) + 0x53) == nacao {
+        return read_f64(0x967888);
     }
-    if f < read_f64_at(0x96d2c8) {
-        return read_f64_at(0x96d2c8);
+    if f < read_f64(0x96d2c8) {
+        return read_f64(0x96d2c8);
     }
     f
 }
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn load_config(this: usize) {
         for j in 0..3usize {
             let a = cpt7_sortear(100);
             let b = cpt7_sortear(100); // cpt7: o segundo sorteio da medida
-            *((cpt7_d(this + 4) + k * 4 + j) as *mut u8) = match_pl_ftol(a.wrapping_add(b) as f64 * read_f64_at(0x968968)) as u8;
+            *((cpt7_d(this + 4) + k * 4 + j) as *mut u8) = match_pl_ftol(a.wrapping_add(b) as f64 * read_f64(0x968968)) as u8;
         }
         let v = cpt7_sortear(3); // cpt7: o vento inicial
         *((cpt7_d(this + 4) + k * 4 + 3) as *mut u8) = v as u8;

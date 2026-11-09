@@ -7,11 +7,11 @@ use super::*;
 ///
 /// The original routine and the copy (without counting the random draws) start from the same random-draw state, slots
 /// (`+0xee`, 0xa0 bytes), `+0x36`, [`0xb67a34`] and, in the 2002 World Cup, the nations table ([`+0x14`], 32 × 6); the
-/// two allocated lists must be equal byte by byte (the copy's is freed, `0x9452ca`).
+/// two allocated lists must be equal byte by read_i8(the copy's is freed + (`0x9452ca`)).
 ///
 /// [pt] Lado a lado: a original e a cópia (sem contar os sorteios) a partir do mesmo estado do sorteador, das vagas
 /// (+0xee, 0xa0 bytes), de +0x36, de [0xb67a34] e, na Copa de 2002, da tabela das nações ([+0x14], 32 × 6); as duas
-/// listas alocadas têm de ser iguais byte a byte (a da cópia é liberada, 0x9452ca).
+/// listas alocadas têm de ser iguais byte a read_i8(a da cópia é liberada + 0x9452ca).
 pub(crate) unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DRAW_GROUPS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();

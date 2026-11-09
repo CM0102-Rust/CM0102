@@ -62,7 +62,7 @@ unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: usize) -> u
             return 0;
         }
         let n = dbp_i16(liga + 0x3e) as i32;
-        let peso = |k: i32| read_f64_at(0x9b59c0 + 8 * k.clamp(0, 19) as usize);
+        let peso = |k: i32| read_f64(0x9b59c0 + 8 * k.clamp(0, 19) as usize);
         let mut posicao = *((e + 0x73) as *const u8) as i32 - 1;
         if n != 0 && n != 20 {
             posicao = posicao * 20 / n;
@@ -72,32 +72,32 @@ unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: usize) -> u
         if jogos < 20 {
             let antes = *((clube + 0x5f) as *const i8) as i32;
             let w = if dbp_u32(clube + 0x5b) != comp {
-                read_f64_at(0x968de8)
+                read_f64(0x968de8)
             } else if n != 0 && n != 20 {
                 peso((antes * 20 - 20) / n)
             } else if (1..21).contains(&antes) {
                 peso(antes - 1)
             } else {
-                read_f64_at(0x968de8)
+                read_f64(0x968de8)
             };
-            v = ((20 - jogos) as f64 * w + jogos as f64 * v) * read_f64_at(0x967888);
+            v = ((20 - jogos) as f64 * w + jogos as f64 * v) * read_f64(0x967888);
         }
         let mut bonus = 0;
         if pessoa != 0 && dbp_u32(pessoa + 0x61) != 0 && database_club_of_contract(pessoa) == clube {
             let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
             let m = media(dbp_u32(0xb74350), dbp_u32(pessoa + 0x61), 6, 0x14, v as f32);
-            v = (m + v) * read_f64_at(0x968968);
+            v = (m + v) * read_f64(0x968968);
             bonus = club_preference_bonus(clube, pessoa);
         }
-        let mut x = v * read_f64_at(0x969558) - read_f64_at(0x969550); // o peso entre 0 e 10
-        let (baixo, teto) = (read_f64_at(0x9689a0), read_f64_at(0x9688b0));
+        let mut x = v * read_f64(0x969558) - read_f64(0x969550); // o peso entre 0 e 10
+        let (baixo, teto) = (read_f64(0x9689a0), read_f64(0x9688b0));
         if baixo > x {
             x = baixo;
         } else if !(teto >= x) {
             x = teto; // fcomp: acima do teto ou NaN
         }
         let cx = (divisao as i32).wrapping_mul(500) as i16 as f64; // imul cx, cx, 0x1f4: 16 bits
-        let r = ((teto - x) * rep as f64 + cx * x) * read_f64_at(0x967880);
+        let r = ((teto - x) * rep as f64 + cx * x) * read_f64(0x967880);
         return (match_pl_ftol(r) as u32).wrapping_add(bonus as u32);
     }
     // sem liga, ou o clube já à altura da divisão: a reputação ±500; a parte alta do eax é o que sobrou

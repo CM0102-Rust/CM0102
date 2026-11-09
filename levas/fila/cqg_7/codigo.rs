@@ -42,16 +42,16 @@ unsafe fn staff_state_byte(p: usize, k: usize) -> *mut u8 {
 
 /// O inteiro × a constante double do .rdata, truncado (fild; fmul qword; _ftol), em 16 bits.
 unsafe fn mul_rdata_const(v: i16, k: usize) -> i16 {
-    match_pl_ftol(v as f64 * read_f64_at(k)) as i16
+    match_pl_ftol(v as f64 * read_f64(k)) as i16
 }
 
 /// A habilidade (ficha +5) pelo sorteio: r = sorteio(trunc(PA × m1)); trunc(r + PA × m2) (fild r; fild PA; fmul m2;
 /// faddp; _ftol), a PA na ficha +7.
 unsafe fn roll_current_ability(f: usize, m1: usize, m2: usize) {
     let pa = cqg7_w(f + 7) as f64;
-    let r = cqg7_sortear(match_pl_ftol(pa * read_f64_at(m1)));
+    let r = cqg7_sortear(match_pl_ftol(pa * read_f64(m1)));
     crate::comparison::branch("cqg_7 ability");
-    cqg7_pw(f + 5, match_pl_ftol(r as f64 + pa * read_f64_at(m2)) as i16); // cqg7: a habilidade sorteada pela PA
+    cqg7_pw(f + 5, match_pl_ftol(r as f64 + pa * read_f64(m2)) as i16); // cqg7: a habilidade sorteada pela PA
 }
 
 /// O acerto de um atributo de personalidade de 1..20: acima de 15 cai sorteio(`cai`); abaixo de `a1` sobe sorteio(`s1`);

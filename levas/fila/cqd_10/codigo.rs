@@ -61,7 +61,7 @@ unsafe fn set_coach_attributes(p: usize, f: usize, nj: usize, k: f64, tetos: [f6
     core::ptr::write_unaligned((nj + 0xa) as *mut u16, coach_attribute_capped(q, cqd10_w(f + 0xb) as f64, k, tetos[0]));
     let q = game_pow(r, 2.0);
     core::ptr::write_unaligned((nj + 8) as *mut u16, coach_attribute_capped(q, cqd10_w(f + 9) as f64, k, tetos[1]));
-    let q = game_pow(r, 2.0) * read_f64_at(0x969040);
+    let q = game_pow(r, 2.0) * read_f64(0x969040);
     core::ptr::write_unaligned((nj + 0xc) as *mut u16, coach_attribute_capped(q, cqd10_w(f + 0xd) as f64, k, tetos[2]));
 }
 
@@ -111,11 +111,11 @@ unsafe fn maybe_become_coach(this: usize, p: usize) {
     let f = cqd10_d(p + 0x61);
     let nj = cqd10_d(p + 0x69);
     if cqd10_w(f + 0xb) > 0x1d4c {
-        set_coach_attributes(p, f, nj, read_f64_at(0x9689d8), [read_f64_at(0x9690b8), read_f64_at(0x9690b8), read_f64_at(0x96e298)]);
+        set_coach_attributes(p, f, nj, read_f64(0x9689d8), [read_f64(0x9690b8), read_f64(0x9690b8), read_f64(0x96e298)]);
     } else if cqd10_sortear(cqd10_b(p + 0x57) as i32) != 0 {
-        set_coach_attributes(p, f, nj, read_f64_at(0x969040), [read_f64_at(0x96d300), read_f64_at(0x96d300), read_f64_at(0x96e290)]);
+        set_coach_attributes(p, f, nj, read_f64(0x969040), [read_f64(0x96d300), read_f64(0x96d300), read_f64(0x96e290)]);
     } else {
-        set_coach_attributes(p, f, nj, read_f64_at(0x968968), [read_f64_at(0x96e288), read_f64_at(0x96e288), read_f64_at(0x967890)]);
+        set_coach_attributes(p, f, nj, read_f64(0x968968), [read_f64(0x96e288), read_f64(0x96e288), read_f64(0x967890)]);
     }
 }
 
@@ -504,7 +504,7 @@ unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: usize, c: u
         if t != 0 {
             let r = cqd10_sortear(0x9c4);
             let v = r.wrapping_add(cqd10_w(c + 0x80) as i32 / 2);
-            let x = match_pl_ftol(v as f64 + cqd10_b(c + 0x7f) as f64 * read_f64_at(0x96afc8));
+            let x = match_pl_ftol(v as f64 + cqd10_b(c + 0x7f) as f64 * read_f64(0x96afc8));
             // ponytail: a original empurra o eax inteiro do _ftol e o da primeira vista; a 0x6e86d0 lê a palavra
             let a = vista(t, j, c, 2, x as i16);
             let b = vista(t, j, c, 1, a);

@@ -1,7 +1,7 @@
 # Mutacoes da leva121 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva121.py --jogo 2001-08-20
 MUTACOES = [
-    ('c_pontas', "    if byte(a, match_player::POSITION) == -2 {\n        return Some(-1);", "    if byte(a, match_player::POSITION) == -3 {\n        return Some(-1);"),
-    ('c_goleiro', "    if exe::match_player_get_position(a) == 1 && byte(read_usize(a + match_player::PLAYER), 0xf) < 20 {", "    if exe::match_player_get_position(a) == 1 && byte(read_usize(a + match_player::PLAYER), 0xf) < 19 {"),
+    ('c_pontas', "    if read_i8(a + match_player::POSITION) == -2 {\n        return Some(-1);", "    if read_i8(a + match_player::POSITION) == -3 {\n        return Some(-1);"),
+    ('c_goleiro', "    if exe::match_player_get_position(a) == 1 && read_i8(read_usize(a + match_player::PLAYER) + 0xf) < 20 {", "    if exe::match_player_get_position(a) == 1 && read_i8(read_usize(a + match_player::PLAYER) + 0xf) < 19 {"),
     ('c_peso', "            4 | 2 => ftol(v as f64 * 1.35),", "            4 | 2 => ftol(v as f64 * 1.3),"),
     ('c_oito', "    let vb = pesar(match_condition(b), 1.25);", "    let vb = pesar(match_condition(b), 1.2);"),
     ('c_condicao', "    match_condition(a).wrapping_sub(vb)", "    match_condition(a).wrapping_sub(vb).wrapping_add(1)"),

@@ -78,12 +78,12 @@ unsafe extern "stdcall" fn contract_manager_raise_match_morale(pessoa: usize, cl
         return;
     }
     let a = core::ptr::read_unaligned((jogador + 0xb) as *const i16) as i32 - core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32;
-    let x = (a as f64 + cph3_b(pessoa + 0x18) as i8 as f64 * read_f64_at(0x968d90)) - read_f64_at(0x968d88);
-    let mut y = (if x < read_f64_at(0x9689a0) { x * read_f64_at(0x968d80) } else { x * read_f64_at(0x968d78) }) + read_f64_at(0x967890);
-    if y < read_f64_at(0x967898) {
-        y = read_f64_at(0x967898);
-    } else if y > read_f64_at(0x968950) {
-        y = read_f64_at(0x968950);
+    let x = (a as f64 + cph3_b(pessoa + 0x18) as i8 as f64 * read_f64(0x968d90)) - read_f64(0x968d88);
+    let mut y = (if x < read_f64(0x9689a0) { x * read_f64(0x968d80) } else { x * read_f64(0x968d78) }) + read_f64(0x967890);
+    if y < read_f64(0x967898) {
+        y = read_f64(0x967898);
+    } else if y > read_f64(0x968950) {
+        y = read_f64(0x968950);
     }
     let felicidade = (cph3_b(contrato + 0x3f) as i8 as i32 + 5) as f64; // +0x3f + 5
     let mut ganho = match_pl_ftol(felicidade / y) as u8 as i8;

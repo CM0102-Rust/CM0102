@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
                     }
                 }
                 let c = n();
-                if sorteio(match_pl_ftol(game_pow(c as f64, read_f64_at(0x968930)) + read_f64_at(0x9688a8))) == 0 {
+                if sorteio(match_pl_ftol(game_pow(c as f64, read_f64(0x968930)) + read_f64(0x9688a8))) == 0 {
                     return 0x2000;
                 }
                 let a = sorteio(n());
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
     if tipo == 1 || tipo == 3 || cpy12_d(j + 0x39) == 0 || humano(clube, 1, 1, 0, 0) == 0 {
         return 0;
     }
-    let x = cpy12_w(clube + 0x80) as f64 * read_f64_at(0x968918);
+    let x = cpy12_w(clube + 0x80) as f64 * read_f64(0x968918);
     let mut limit = match_pl_ftol(x * x);
     if limit < 0x249f0 {
         limit = 0x249f0;
@@ -183,10 +183,10 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
         if p > v + v && mais > 0x19 {
             add_board_confidence(this, clube, 6, -0x4e2);
             add_board_confidence(this, clube, 0x14, -0x4e2);
-        } else if pedido > 0x4c4b40 && mais > 0 && p > v * read_f64_at(0x968e18) {
+        } else if pedido > 0x4c4b40 && mais > 0 && p > v * read_f64(0x968e18) {
             add_board_confidence(this, clube, 6, -0x4e2);
             add_board_confidence(this, clube, 0x14, -0x4e2);
-        } else if p > v * read_f64_at(0x969000) {
+        } else if p > v * read_f64(0x969000) {
             add_board_confidence(this, clube, 6, -500);
             add_board_confidence(this, clube, 0x14, -500);
             add_board_confidence(this, clube, 0x16, -0xfa);
@@ -216,12 +216,12 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
     }
     let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     let k = match band(fin) {
-        2 => read_f64_at(0x96d1f8),
-        1 => read_f64_at(0x96d1f0),
-        _ => read_f64_at(0x968ea0),
+        2 => read_f64(0x96d1f8),
+        1 => read_f64(0x96d1f0),
+        _ => read_f64(0x968ea0),
     };
-    let teto = match_pl_ftol(limit as f64 * read_f64_at(0x96a5d0) + menor as f64 + k);
-    if !(valor as f64 * read_f64_at(0x96d1e8) > teto as f64) {
+    let teto = match_pl_ftol(limit as f64 * read_f64(0x96a5d0) + menor as f64 + k);
+    if !(valor as f64 * read_f64(0x96d1e8) > teto as f64) {
         return 0;
     }
     crate::comparison::branch("cpy_12 board finds it expensive");

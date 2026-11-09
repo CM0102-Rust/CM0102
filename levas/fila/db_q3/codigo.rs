@@ -30,9 +30,9 @@ unsafe extern "C" fn staff_is_transfer_listed_or_requested(pessoa: usize, clube:
 /// A nota de 1 a 20 de um atributo relativo (de 0x543540, 0x544380 e 0x5442f0): x = v × 0,05 + 10;
 /// (x² × 0,1 + x) × 1/3 + 0,5, entre 1 e 20, truncada (`_ftol`).
 unsafe fn attribute_rating(v: f64) -> u8 {
-    let x = v * read_f64_at(0x967888) + read_f64_at(0x9688b0);
-    let z = (x * x * read_f64_at(0x967880) + x) * read_f64_at(0x968a80) + read_f64_at(0x968968); // arredonda
-    let (minimo, maximo) = (read_f64_at(0x967890), read_f64_at(0x968ea8));
+    let x = v * read_f64(0x967888) + read_f64(0x9688b0);
+    let z = (x * x * read_f64(0x967880) + x) * read_f64(0x968a80) + read_f64(0x968968); // arredonda
+    let (minimo, maximo) = (read_f64(0x967890), read_f64(0x968ea8));
     match_pl_ftol(if z > minimo {
         if z < maximo {
             z
@@ -61,7 +61,7 @@ unsafe extern "C" fn staff_compute_player_attribute(pessoa: usize, jogador: usiz
     let byte = |d: usize| b(d) as u8;
     let habilidade = core::ptr::read_unaligned((jogador + 5) as *const i16) as i32;
     let nota = |d: usize| attribute_rating((2 * b(d) as i32 + habilidade) as f64);
-    let nota_h = |d: usize| attribute_rating(habilidade as f64 * read_f64_at(0x967880) + (2 * b(d) as i32) as f64);
+    let nota_h = |d: usize| attribute_rating(habilidade as f64 * read_f64(0x967880) + (2 * b(d) as i32) as f64);
     let goleiro = b(0xf);
     match a {
         1 => byte(0x1b),

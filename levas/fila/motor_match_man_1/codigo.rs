@@ -370,7 +370,7 @@ unsafe fn position_rating(f: usize, m: u32, masc: u32, tab: usize, principal: bo
     } else if m & 0x20 != 0 {
         if sem_ala {
             let a = fb(0x14) as f64;
-            let meio = (fb(0x14) + fb(0x1a)) as f64 * read_f64_at(0x968968);
+            let meio = (fb(0x14) + fb(0x1a)) as f64 * read_f64(0x968968);
             t(match_pl_ftol(if a <= meio { meio } else { a }))
         } else {
             t(fb(0x14))
@@ -406,16 +406,16 @@ unsafe fn position_attribute_adjust(f: usize, m: u32) -> i32 {
 /// clube do jogador, pesada pelos dias) à soma, por `cont`.
 unsafe fn recent_form_bonus(p: usize, f: usize, clube: usize, quem: usize, cont: i8) -> i32 {
     let media: unsafe extern "thiscall" fn(usize, usize) -> i8 = core::mem::transmute(0x7c1950usize);
-    let mut x = (media(*(0xb74350 as *const usize), f) as f64 * read_f64_at(0x968918)) as f32;
+    let mut x = (media(*(0xb74350 as *const usize), f) as f64 * read_f64(0x968918)) as f32;
     if clube == *((p + 0x39) as *const usize) && quem != 0 && scouted_over_a_year_ago(quem, p) {
         let d = match_man_days_since_date(p) as f64;
-        x = (((read_f64_at(0x969070) - d) * read_f64_at(0x968eb0) + d * x as f64) * read_f64_at(0x968e10)) as f32;
+        x = (((read_f64(0x969070) - d) * read_f64(0x968eb0) + d * x as f64) * read_f64(0x968e10)) as f32;
     }
     let x = x as f64;
-    if x > read_f64_at(0x968998) {
-        match_pl_ftol((x * read_f64_at(0x96d638) - read_f64_at(0x96d630)) * cont as f64) as i8 as i32
-    } else if x > read_f64_at(0x9689a0) {
-        match_pl_ftol((x * read_f64_at(0x96d628) - read_f64_at(0x96d620)) * cont as f64) as i8 as i32
+    if x > read_f64(0x968998) {
+        match_pl_ftol((x * read_f64(0x96d638) - read_f64(0x96d630)) * cont as f64) as i8 as i32
+    } else if x > read_f64(0x9689a0) {
+        match_pl_ftol((x * read_f64(0x96d628) - read_f64(0x96d620)) * cont as f64) as i8 as i32
     } else {
         0
     }
@@ -428,12 +428,12 @@ unsafe fn recent_form_bonus(p: usize, f: usize, clube: usize, quem: usize, cont:
 unsafe fn form_bonus(p: usize, f: usize, clube: usize, quem: usize, idade: i8, cont: i8, soma: i32, l3c: i32, teto_veterano: bool, ultimo: u32) -> i32 {
     let notas = *(0xb74350 as *const usize);
     let teto = |v: i32| {
-        let y = v as f64 * read_f32_at(0x96d61c) as f64 + read_f32_at(0x96d618) as f64;
-        (if y > read_f64_at(0x96d610) { read_f64_at(0x96d610) } else { y }) as f32
+        let y = v as f64 * read_f32(0x96d61c) as f64 + read_f32(0x96d618) as f64;
+        (if y > read_f64(0x96d610) { read_f64(0x96d610) } else { y }) as f32
     };
     let razao = || {
         let (m10, m18) = (*((notas + 0x10) as *const f64), *((notas + 0x18) as *const f64));
-        if m18 == read_f64_at(0x9689a0) { read_f64_at(0x968998) } else { m10 / m18 }
+        if m18 == read_f64(0x9689a0) { read_f64(0x968998) } else { m10 / m18 }
     };
     let mut x = f32::from_bits(0x40d9999a);
     if cont != 0 && soma / cont as i32 > 0x96 {
@@ -443,37 +443,37 @@ unsafe fn form_bonus(p: usize, f: usize, clube: usize, quem: usize, idade: i8, c
     }
     let mut x = player_stat(f, 6, 0x12, x) as f32;
     if teto_veterano && idade > 0x21 {
-        let r = razao() + read_f64_at(0x968fd0);
+        let r = razao() + read_f64(0x968fd0);
         if (x as f64) > r {
             x = r as f32;
         }
     }
     if clube == *((p + 0x39) as *const usize) && quem != 0 && scouted_over_a_year_ago(quem, p) {
         let d = match_man_days_since_date(p) as f64;
-        x = (((read_f64_at(0x969070) - d) * read_f64_at(0x968eb0) + x as f64 * d) * read_f64_at(0x968e10)) as f32;
+        x = (((read_f64(0x969070) - d) * read_f64(0x968eb0) + x as f64 * d) * read_f64(0x968e10)) as f32;
         let fb_p = signed_byte_at(*((p + 0x61) as *const usize), 0xf);
         if idade as i32 > fb_p / 10 + 0x22 && x as f64 > razao() {
-            x = ((razao() + x as f64) * read_f32_at(0x968f18) as f64) as f32;
+            x = ((razao() + x as f64) * read_f32(0x968f18) as f64) as f32;
         }
     }
     let xf = x as f64;
     let c = cont as f64;
     let mut soma = soma;
-    if xf > read_f64_at(0x968f10) || (xf <= read_f64_at(0x968998) && xf > read_f64_at(0x9689a0)) {
-        soma += match_pl_ftol((xf * read_f32_at(0x96af88) as f64 - read_f32_at(0x96d608) as f64) * c) as i8 as i32;
-    } else if xf > read_f64_at(0x968998) {
-        soma += match_pl_ftol((xf * read_f64_at(0x96afc8) - read_f64_at(0x96d510)) * c) as i8 as i32;
+    if xf > read_f64(0x968f10) || (xf <= read_f64(0x968998) && xf > read_f64(0x9689a0)) {
+        soma += match_pl_ftol((xf * read_f32(0x96af88) as f64 - read_f32(0x96d608) as f64) * c) as i8 as i32;
+    } else if xf > read_f64(0x968998) {
+        soma += match_pl_ftol((xf * read_f64(0x96afc8) - read_f64(0x96d510)) * c) as i8 as i32;
     }
     let dono = *((p + 0x39) as *const usize);
     if clube != 0 && (clube == dono || (dono != 0 && *((clube + 0x53) as *const usize) == *((dono + 0x53) as *const usize))) {
-        let xk = (xf * read_f64_at(0x9689d8)) as f32;
+        let xk = (xf * read_f64(0x9689d8)) as f32;
         let r = player_stat(f, 1, 0x12, xk);
-        if r > read_f64_at(0x968998) {
-            soma += match_pl_ftol((r * read_f64_at(0x96d628) - read_f64_at(0x96d600)) * c) as i8 as i32;
+        if r > read_f64(0x968998) {
+            soma += match_pl_ftol((r * read_f64(0x96d628) - read_f64(0x96d600)) * c) as i8 as i32;
         } else if r < xk as f64 {
-            soma += match_pl_ftol((r * read_f32_at(0x96d5f8) as f64 / xk as f64 - read_f32_at(0x96d5f8) as f64) * c) as i8 as i32;
+            soma += match_pl_ftol((r * read_f32(0x96d5f8) as f64 / xk as f64 - read_f32(0x96d5f8) as f64) * c) as i8 as i32;
         }
-        soma += match_pl_ftol((player_stat(f, 6, 0x14, f32::from_bits(ultimo)) * read_f64_at(0x968e30) - read_f64_at(0x96d5f0)) * c);
+        soma += match_pl_ftol((player_stat(f, 6, 0x14, f32::from_bits(ultimo)) * read_f64(0x968e30) - read_f64(0x96d5f0)) * c);
     }
     soma
 }
@@ -502,8 +502,8 @@ unsafe fn age_and_foreigner_adjust(p: usize, f: usize, clube: usize, flags: u32,
     let fb = |k: usize| signed_byte_at(f, k);
     if flags & 0x100 != 0 {
         let cl = if masc & 1 != 0 { 0x1d } else { 0x19 };
-        let y = read_f64_at(0x968e38) - cont as f64 * read_f64_at(0x968f80);
-        if idade as i32 > cl && y > read_f64_at(0x9689a0) {
+        let y = read_f64(0x968e38) - cont as f64 * read_f64(0x968f80);
+        if idade as i32 > cl && y > read_f64(0x9689a0) {
             l4c -= match_pl_ftol((idade as i32 - cl) as f64 * y);
         }
     }
@@ -513,7 +513,7 @@ unsafe fn age_and_foreigner_adjust(p: usize, f: usize, clube: usize, flags: u32,
             l4c += (s - 20) * (s - 20) / 250;
         }
     }
-    l4c += match_pl_ftol((fb(0x2f) - 10) as f64 * read_f64_at(0x96a670));
+    l4c += match_pl_ftol((fb(0x2f) - 10) as f64 * read_f64(0x96a670));
     let nac = *((clube + 0x53) as *const usize);
     let pais = *((p + 0x1a) as *const usize);
     if nac == 0 || *((nac + 0x77) as *const u8) == *((pais + 0x77) as *const u8) {
@@ -523,10 +523,10 @@ unsafe fn age_and_foreigner_adjust(p: usize, f: usize, clube: usize, flags: u32,
     let mut c = g(*(0xb74350 as *const usize), p, clube, (nac as u32 & !0xff) | *((nac + 0x77) as *const u8) as u32, 1) as u8 as i8;
     if flags & 0x100 != 0 {
         let k = (idade as u8).wrapping_sub((*((p + 0x56) as *const i8) / 2) as u8).wrapping_add(5) as i8;
-        let m = read_f64_at(0x96d5d0) - k as f64 * read_f64_at(0x96d0e8);
+        let m = read_f64(0x96d5d0) - k as f64 * read_f64(0x96d0e8);
         c = match_pl_ftol(if c as f64 > m { c as f64 } else { m }) as i8;
     } else {
-        let y = l4c as f64 * read_f64_at(0x96d1e0) - read_f64_at(0x9688a0);
+        let y = l4c as f64 * read_f64(0x96d1e0) - read_f64(0x9688a0);
         if (c as f64) < y {
             c = match_pl_ftol(y) as i8;
         }
@@ -539,7 +539,7 @@ unsafe fn age_and_foreigner_adjust(p: usize, f: usize, clube: usize, flags: u32,
         const IGUAL: [usize; 10] = [0x96a6a8, 0x96d588, 0x96d590, 0x96d598, 0x96d5a0, 0x96d5a8, 0x96d5b0, 0x96d5b8, 0x96d5c0, 0x96d5c8];
         const OUTRO: [usize; 10] = [0x96d588, 0x96d590, 0x96d598, 0x96d5a0, 0x96d5a8, 0x96d5b0, 0x96d5b8, 0x96d5c0, 0x96d5c8, 0x968e50];
         let t = if *((pais + 0x76) as *const u8) == 0xe { &IGUAL } else { &OUTRO };
-        l4c = match_pl_ftol(l4c as f64 * read_f64_at(t[c as usize]));
+        l4c = match_pl_ftol(l4c as f64 * read_f64(t[c as usize]));
     }
     l4c
 }
@@ -554,7 +554,7 @@ unsafe fn contract_adjust(p: usize, f: usize, clube: usize, contrato: usize, ida
     if dono == 0 {
         let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
         if dias(0xae2c90, *((p + 0x3e) as *const u32), *((p + 0x42) as *const u32)) > 0x3c {
-            l4c = mul(l4c, read_f64_at(0x969040));
+            l4c = mul(l4c, read_f64(0x969040));
         }
     } else {
         let lim = core::ptr::read_unaligned((dono + 0x80) as *const i16) as i32 - 0x4e2;
@@ -566,42 +566,42 @@ unsafe fn contract_adjust(p: usize, f: usize, clube: usize, contrato: usize, ida
             if ax >= 0x7d {
                 None
             } else {
-                let mut st = read_f32_at(0x96d248) as f64;
+                let mut st = read_f32(0x96d248) as f64;
                 if dx != 0 {
-                    st = lim as f64 / dx as f64 * ax as f64 * read_f32_at(0x96d5d8) as f64;
-                    if st > read_f64_at(0x967890) {
-                        st = read_f32_at(0x968e70) as f64;
-                    } else if st < read_f64_at(0x969040) {
-                        st = read_f32_at(0x96d248) as f64;
+                    st = lim as f64 / dx as f64 * ax as f64 * read_f32(0x96d5d8) as f64;
+                    if st > read_f64(0x967890) {
+                        st = read_f32(0x968e70) as f64;
+                    } else if st < read_f64(0x969040) {
+                        st = read_f32(0x96d248) as f64;
                     }
                 }
                 if cl > 0x22 {
-                    st *= read_f64_at(0x969040);
+                    st *= read_f64(0x969040);
                 } else if cl > 0x1e {
-                    st *= read_f64_at(0x969520);
+                    st *= read_f64(0x969520);
                 } else if cl > 0x1b {
-                    st *= read_f64_at(0x9689d0);
+                    st *= read_f64(0x9689d0);
                 }
                 if fb(0xf) == 0x14 {
-                    st *= read_f64_at(if cl < 0x12 { 0x969040 } else if cl < 0x14 { 0x969520 } else { 0x9689d0 });
+                    st *= read_f64(if cl < 0x12 { 0x969040 } else if cl < 0x14 { 0x969520 } else { 0x9689d0 });
                 }
                 Some(st)
             }
         } else if ax >= 0x19 || cl <= 0x1e {
             None
         } else {
-            let mut st = read_f32_at(if cl > 0x25 { 0x968f18 } else if cl > 0x22 { 0x96d248 } else { 0x96d364 }) as f64;
+            let mut st = read_f32(if cl > 0x25 { 0x968f18 } else if cl > 0x22 { 0x96d248 } else { 0x96d364 }) as f64;
             if dx > 0x1482 && cl < 0x14 {
                 if ax < -0x4b {
-                    st = read_f32_at(0x968f18) as f64;
+                    st = read_f32(0x968f18) as f64;
                 } else if ax < -0x19 {
-                    st = read_f32_at(0x96d320) as f64;
+                    st = read_f32(0x96d320) as f64;
                 } else if ax < 0 {
-                    st = read_f32_at(0x96d364) as f64;
+                    st = read_f32(0x96d364) as f64;
                 }
             }
             if fb(0xf) == 0x14 {
-                st *= read_f64_at(if cl < 0x12 { 0x969040 } else if cl < 0x15 { 0x969520 } else { 0x9689d0 });
+                st *= read_f64(if cl < 0x12 { 0x969040 } else if cl < 0x15 { 0x969520 } else { 0x9689d0 });
             }
             Some(st)
         };
@@ -610,7 +610,7 @@ unsafe fn contract_adjust(p: usize, f: usize, clube: usize, contrato: usize, ida
         }
         let lesao: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x5444a0usize);
         if lesao(p, 0) != 0 {
-            l4c = mul(l4c, read_f64_at(0x9689d0));
+            l4c = mul(l4c, read_f64(0x9689d0));
         }
     }
     let (cl, al) = (idade, *((p + 0x22) as *const u8));
@@ -670,7 +670,7 @@ unsafe fn contract_adjust(p: usize, f: usize, clube: usize, contrato: usize, ida
     };
     match fator {
         Some(0) => 5,
-        Some(k) => mul(l4c, read_f64_at(k)),
+        Some(k) => mul(l4c, read_f64(k)),
         None => l4c,
     }
 }
@@ -683,22 +683,22 @@ unsafe fn scout_knowledge_bonus(p: usize, f: usize, clube: usize, conhece: usize
     let fb = |k: usize| signed_byte_at(f, k);
     let kb = |k: usize| signed_byte_at(conhece, k);
     if idade <= 0x17 {
-        l4c += match_pl_ftol((kb(0x22) - 10) as f64 * read_f64_at(0x96a670));
+        l4c += match_pl_ftol((kb(0x22) - 10) as f64 * read_f64(0x96a670));
     }
     let g = |a: usize| -> unsafe extern "C" fn(usize, usize) -> u32 { core::mem::transmute(a) };
     if g(0x547d30)(p, clube) != 0 {
-        let m = l4c as f64 * read_f64_at(0x969040);
+        let m = l4c as f64 * read_f64(0x969040);
         let x = (l4c - 10) as f64;
         l4c = match_pl_ftol(if x < m { x } else { m });
     } else if g(0x547d60)(p, clube) != 0 {
-        let m = l4c as f64 * read_f64_at(0x9689c0);
+        let m = l4c as f64 * read_f64(0x9689c0);
         let x = (l4c + 10) as f64;
         l4c = match_pl_ftol(if x > m { x } else { m });
     }
     if g(0x547840)(p, quem) != 0 {
         l4c -= 50;
     } else if g(0x547810)(p, quem) != 0 {
-        let x = l4c as f64 * read_f64_at(0x968928);
+        let x = l4c as f64 * read_f64(0x968928);
         let m = (l4c + 20) as f64;
         l4c = match_pl_ftol(if x > m { x } else { m });
     }
@@ -751,7 +751,7 @@ unsafe fn scout_knowledge_bonus(p: usize, f: usize, clube: usize, conhece: usize
         ecx += (fb(0x36) * fb(0x2e) - 200) * kb(0x13) / 500;
     }
     if ecx != 0 {
-        l4c += match_pl_ftol((read_f64_at(0x967890) - l4c as f64 * read_f64_at(0x96d580)) * ecx as f64).clamp(-0x50, 0x50);
+        l4c += match_pl_ftol((read_f64(0x967890) - l4c as f64 * read_f64(0x96d580)) * ecx as f64).clamp(-0x50, 0x50);
     }
     l4c
 }
@@ -789,11 +789,11 @@ unsafe fn contract_extra(p: usize, contrato: usize, flags: u32, l28: i32) -> i32
     let s44 = *((contrato + 0x44) as *const i8) as f64;
     let mut extra = 0i32;
     if e & 0x2808 != 0 {
-        let x = s44 * read_f64_at(0x96a670);
-        extra = match_pl_ftol(if read_f64_at(0x96d578) < x { read_f64_at(0x96d578) } else { x });
+        let x = s44 * read_f64(0x96a670);
+        extra = match_pl_ftol(if read_f64(0x96d578) < x { read_f64(0x96d578) } else { x });
     } else if e != 0 {
-        let x = s44 * read_f64_at(0x968e00);
-        extra = match_pl_ftol(if read_f64_at(0x96d410) < x { read_f64_at(0x96d410) } else { x });
+        let x = s44 * read_f64(0x968e00);
+        extra = match_pl_ftol(if read_f64(0x96d410) < x { read_f64(0x96d410) } else { x });
     }
     let t = (*((contrato + 0x4f) as *const u8) >> 4) as i8 as i32 - 1;
     let lista = match t {
@@ -807,7 +807,7 @@ unsafe fn contract_extra(p: usize, contrato: usize, flags: u32, l28: i32) -> i32
                 false
             } else {
                 let d = (*((contrato + 0x3e) as *const i8) as i32 - *((contrato + 0x3f) as *const i8) as i32) * 5;
-                extra += match_pl_ftol(d as f64 + (l28 as i16 as f64 * read_f64_at(0x968e18) - read_f64_at(0x96d570)));
+                extra += match_pl_ftol(d as f64 + (l28 as i16 as f64 * read_f64(0x968e18) - read_f64(0x96d570)));
                 true
             }
         }
@@ -847,9 +847,9 @@ unsafe fn contract_bond(p: usize, c: usize, flags: u32) -> i32 {
 /// O ajuste pela reputação (0x62c3d0) abaixo de -1000 ou acima de 500.
 unsafe fn injury_word_0c_adjust(p: usize, l4c: i32) -> i32 {
     if injury_word_0c(p) < -1000 {
-        l4c - match_pl_ftol(injury_word_0c(p) as f64 * read_f64_at(0x96a740) + read_f64_at(0x96afc8))
+        l4c - match_pl_ftol(injury_word_0c(p) as f64 * read_f64(0x96a740) + read_f64(0x96afc8))
     } else if injury_word_0c(p) > 0x1f4 {
-        l4c + match_pl_ftol(read_f64_at(0x968890) - injury_word_0c(p) as f64 * read_f64_at(0x967888))
+        l4c + match_pl_ftol(read_f64(0x968890) - injury_word_0c(p) as f64 * read_f64(0x967888))
     } else {
         l4c
     }
@@ -871,7 +871,7 @@ unsafe fn appearances_or_club_adjust(p: usize, f: usize, flags: u32, da_base: bo
     if s == 0 {
         return l4c;
     }
-    l4c + match_pl_ftol((core::ptr::read_unaligned((s + 0x69) as *const i16) as i32 - 0x10) as f64 * read_f64_at(0x9688a0))
+    l4c + match_pl_ftol((core::ptr::read_unaligned((s + 0x69) as *const i16) as i32 - 0x10) as f64 * read_f64(0x9688a0))
 }
 
 /// No próprio clube (+0x39): a nota sobe 5 ou 5%.
@@ -880,7 +880,7 @@ unsafe fn own_club_bonus(p: usize, clube: usize, l4c: i32) -> i32 {
         return l4c;
     }
     let x = (l4c + 5) as f64;
-    let m = l4c as f64 * read_f64_at(0x9689b8);
+    let m = l4c as f64 * read_f64(0x9689b8);
     match_pl_ftol(if x > m { x } else { m })
 }
 
@@ -947,7 +947,7 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
         cont = 1;
         soma = core::ptr::read_unaligned((f + 0xb) as *const i16) as i32 / 50;
         if clube == *((p + 0x39) as *const usize) && o != 0 && scouted_over_a_year_ago(o, p) {
-            soma = match_pl_ftol((read_f64_at(0x968fa8) - match_man_days_since_date(p) as f64 * read_f64_at(0x96a350)) * soma as f64);
+            soma = match_pl_ftol((read_f64(0x968fa8) - match_man_days_since_date(p) as f64 * read_f64(0x96a350)) * soma as f64);
         }
         if ativo && soma * 200 < limit {
             return -10000;
@@ -957,7 +957,7 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
         cont += 1;
         let a = core::ptr::read_unaligned((f + 9) as *const i16) as f64;
         let b = core::ptr::read_unaligned((*((p + 0x1a) as *const usize) + 0x8e) as *const i16) as f64;
-        soma += match_pl_ftol(a / ((read_f64_at(0x96d640) - b * read_f64_at(0x96a5c0)) * read_f64_at(0x968ff8)));
+        soma += match_pl_ftol(a / ((read_f64(0x96d640) - b * read_f64(0x96a5c0)) * read_f64(0x968ff8)));
         if corte(soma, cont) {
             return -10000;
         }
@@ -970,7 +970,7 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
         }
     }
     if flags & 4 != 0 && da_base {
-        let v = match_pl_ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64_at(0x968ea8));
+        let v = match_pl_ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64(0x968ea8));
         if v != 0 {
             cont += 1;
             soma += v;
@@ -1014,18 +1014,18 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
     if cont != 0 {
         l4c = soma / cont as i32;
         if l4c > 0x96 {
-            l4c = match_pl_ftol((l4c - 0x96) as f64 * read_f64_at(0x968940) + read_f64_at(0x968f50));
+            l4c = match_pl_ftol((l4c - 0x96) as f64 * read_f64(0x968940) + read_f64(0x968f50));
         }
     }
     if flags & 8 != 0 && da_base {
-        l4c += match_pl_ftol(fb(0x45) as f64 * read_f64_at(0x968940) - read_f64_at(0x968e08));
+        l4c += match_pl_ftol(fb(0x45) as f64 * read_f64(0x968940) - read_f64(0x968e08));
     }
     if flags & 0x4000 != 0 {
         let q = (0x1b58 - core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32) / 100;
         let k = (if q < 10 { 10 } else { q }) as i8 as i32;
         let lim = if fb(0xf) == 0x14 { 0x24 } else if fb(0x15) == 0x14 || fb(0x14) == 0x14 { 0x22 } else { 0x23 };
         if idade as i32 > lim {
-            let y = (read_f64_at(0x967890) - (idade as i32 - lim) as f64 / k as f64) * l4c as f64;
+            let y = (read_f64(0x967890) - (idade as i32 - lim) as f64 / k as f64) * l4c as f64;
             let m = (l4c - 5) as f64;
             l4c = match_pl_ftol(if y < m { y } else { m });
         }
@@ -1187,7 +1187,7 @@ unsafe extern "C" fn lineup_slot_score(
         cont = 1;
         soma = core::ptr::read_unaligned((f + 0xb) as *const i16) as i32 / 50;
         if clube == *((p + 0x39) as *const usize) && tecnico != 0 && scouted_over_a_year_ago(tecnico, p) {
-            soma = match_pl_ftol((read_f64_at(0x968fa8) - match_man_days_since_date(p) as f64 * read_f64_at(0x96a350)) * soma as f64);
+            soma = match_pl_ftol((read_f64(0x968fa8) - match_man_days_since_date(p) as f64 * read_f64(0x96a350)) * soma as f64);
         }
         if ativo && soma * 200 < limit {
             return -10000;
@@ -1197,7 +1197,7 @@ unsafe extern "C" fn lineup_slot_score(
         cont += 1;
         let a = core::ptr::read_unaligned((f + 9) as *const i16) as f64;
         let b = core::ptr::read_unaligned((*((p + 0x1a) as *const usize) + 0x8e) as *const i16) as f64;
-        soma += match_pl_ftol(a / ((read_f64_at(0x968950) - b * read_f64_at(0x96a5c0)) * read_f64_at(0x968ff8)));
+        soma += match_pl_ftol(a / ((read_f64(0x968950) - b * read_f64(0x96a5c0)) * read_f64(0x968ff8)));
         if corte(soma, cont) {
             return -10000;
         }
@@ -1214,7 +1214,7 @@ unsafe extern "C" fn lineup_slot_score(
         soma += (core::ptr::read_unaligned((reg + 0x35) as *const i16) as i32 - match_fatigue_offset(reg, fb(0xf))) / 50;
     }
     if flags & 4 != 0 && da_base {
-        let v = match_pl_ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64_at(0x968ea8));
+        let v = match_pl_ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64(0x968ea8));
         if v != 0 {
             cont += 1;
             soma += v;
@@ -1263,11 +1263,11 @@ unsafe extern "C" fn lineup_slot_score(
     if cont != 0 {
         l4c = soma / cont as i32;
         if l4c > 0x96 {
-            l4c = match_pl_ftol((l4c - 0x96) as f64 * read_f64_at(0x968940) + read_f64_at(0x968f50));
+            l4c = match_pl_ftol((l4c - 0x96) as f64 * read_f64(0x968940) + read_f64(0x968f50));
         }
     }
     if flags & 8 != 0 && da_base {
-        l4c += match_pl_ftol((fb(0x45) - 10) as f64 * read_f64_at(0x9689b0));
+        l4c += match_pl_ftol((fb(0x45) - 10) as f64 * read_f64(0x9689b0));
     }
     let marcada = marca & 0x8000 != 0 || (marca & 0x2000 != 0 && tatica & 0x100 != 0);
     if flags & 0x8000 != 0 {
@@ -1327,7 +1327,7 @@ unsafe extern "C" fn lineup_slot_score(
             return if v >= 0xdac { r } else { r - 0x7a120 };
         }
         if marcada {
-            v = match_pl_ftol(v as f64 * read_f64_at(0x96a5c0) * v as f64);
+            v = match_pl_ftol(v as f64 * read_f64(0x96a5c0) * v as f64);
         }
         l4c += if v < 9000 { v * 3 / 100 - 0x118 } else { (10000 - v) / -100 };
         l4c = injury_history_penalty(p, l4c);
@@ -1353,14 +1353,14 @@ unsafe extern "C" fn lineup_slot_score(
             v
         } else {
             let minuto = core::ptr::read_unaligned((*((reg + 0x19e) as *const usize) + 0x8ed0) as *const i16) as f64;
-            match_pl_ftol((read_f64_at(0x967890) - minuto * read_f64_at(0x96d268)) * v as f64)
+            match_pl_ftol((read_f64(0x967890) - minuto * read_f64(0x96d268)) * v as f64)
         }
     };
     if flags & 0x10000 != 0 {
         if contrato != 0 {
             let mut extra = pelo_minuto(contract_extra(p, contrato, flags, l28));
             if ferias != 0 {
-                extra = match_pl_ftol(extra as f64 * read_f64_at(0x9689e0));
+                extra = match_pl_ftol(extra as f64 * read_f64(0x9689e0));
             }
             l4c += extra;
         }
@@ -1448,7 +1448,7 @@ unsafe fn match_fatigue_offset(reg: usize, goleiro: i32) -> i32 {
 /// byte das instruções) e `tatica` contra os atributos da ficha.
 unsafe fn tactic_instruction_adjust(f: usize, lo: u32, b1: u8, tatica: u32, marcada: bool, mut l4c: i32) -> i32 {
     let fb = |k: usize| signed_byte_at(f, k);
-    let x = |k: usize, c: usize| match_pl_ftol((fb(k) - 10) as f64 * read_f64_at(c));
+    let x = |k: usize, c: usize| match_pl_ftol((fb(k) - 10) as f64 * read_f64(c));
     let t13 = tatica as u8;
     let um = lo & 1 != 0;
     if lo & 4 != 0 || (um && t13 & 2 != 0) {
@@ -1461,8 +1461,8 @@ unsafe fn tactic_instruction_adjust(f: usize, lo: u32, b1: u8, tatica: u32, marc
     if marcada {
         let c = fb(0x3c) - 15;
         let d = fb(0x44) - 15;
-        let x1 = match_pl_ftol((c.abs() * c) as f64 * read_f64_at(0x968fe8));
-        let x2 = match_pl_ftol((d.abs() * d) as f64 * read_f64_at(0x968e00));
+        let x1 = match_pl_ftol((c.abs() * c) as f64 * read_f64(0x968fe8));
+        let x2 = match_pl_ftol((d.abs() * d) as f64 * read_f64(0x968e00));
         l4c += fb(0x1e) / 10 + (x2 - x1);
     } else if b1 & 1 != 0 {
         l4c += fb(0x33) / 12 + (fb(0x43) / 12 - x(0x28, 0x96d5e8));
@@ -1473,9 +1473,9 @@ unsafe fn tactic_instruction_adjust(f: usize, lo: u32, b1: u8, tatica: u32, marc
         l4c += fb(0x32) / 7;
     }
     if lo & 0x40 != 0 {
-        l4c += match_pl_ftol((fb(0x3b) - 20) as f64 * read_f64_at(0x96d5e0));
+        l4c += match_pl_ftol((fb(0x3b) - 20) as f64 * read_f64(0x96d5e0));
     } else if lo & 0x100 != 0 {
-        l4c += match_pl_ftol((fb(0x30) - 20) as f64 * read_f64_at(0x96d5e0));
+        l4c += match_pl_ftol((fb(0x30) - 20) as f64 * read_f64(0x96d5e0));
     }
     if lo & 0x200000 != 0 {
         l4c += fb(0x1a) + fb(0x43) / 10 + fb(0x33) / 9 - 20;
@@ -1536,15 +1536,15 @@ unsafe fn holiday_selection_bonus(p: usize, clube: usize, ferias: usize, pos: u3
     }
     if sem_valor == 0 {
         let v = valor as f64;
-        let y = v * read_f64_at(0x968eb8);
+        let y = v * read_f64(0x968eb8);
         let z = if valor >= 0x251c {
-            y * read_f64_at(0x96d568)
+            y * read_f64(0x96d568)
         } else if valor >= 0x222e {
-            y * v * read_f64_at(0x968910)
+            y * v * read_f64(0x968910)
         } else {
             v * (y * v)
         };
-        bonus = match_pl_ftol((z * read_f64_at(0x96a600) - read_f64_at(0x967890)) * bonus as f64);
+        bonus = match_pl_ftol((z * read_f64(0x96a600) - read_f64(0x967890)) * bonus as f64);
     }
     if bonus > 0 {
         l4c += bonus;

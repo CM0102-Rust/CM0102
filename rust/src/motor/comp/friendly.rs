@@ -1145,7 +1145,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
                     1
                 };
                 if marked != 0 {
-                    let f = ftol(band as i8 as i32 as f64 * read_f64_at(rdata::F64_0_8)) as u8;
+                    let f = ftol(band as i8 as i32 as f64 * read_f64(rdata::F64_0_8)) as u8;
                     band = if (f as i8) < 1 { 1 } else { f };
                 }
                 j = j.wrapping_add(1);
@@ -1330,15 +1330,15 @@ pub(crate) unsafe fn friendly_reply(m: usize, count: bool) -> u8 {
     let o = other_friendly_club(m);
     let (na, no) = (read_usize(a + club::NATION), read_usize(o + club::NATION));
     let second = o == read_usize(m + friendly_match::HOME_CLUB);
-    let mut f = if second { read_f64_at(rdata::F64_1_32) } else { read_f64_at(rdata::F64_1_65) };
+    let mut f = if second { read_f64(rdata::F64_1_32) } else { read_f64(rdata::F64_1_65) };
     if no != na {
-        f *= read_f64_at(rdata::F64_0_925);
+        f *= read_f64(rdata::F64_0_925);
     }
     if read_u8(no + nation::ACTUAL_REGION) != read_u8(na + nation::ACTUAL_REGION) {
-        f *= read_f64_at(rdata::F64_0_85);
+        f *= read_f64(rdata::F64_0_85);
     }
     if read_i32(no + nation::CONTINENT) != read_i32(na + nation::CONTINENT) {
-        f *= read_f64_at(rdata::F64_0_85);
+        f *= read_f64(rdata::F64_0_85);
     }
     if second {
         let (fa, fo) = (read_usize(a + club::STADIUM), read_usize(o + club::STADIUM));
@@ -1348,10 +1348,10 @@ pub(crate) unsafe fn friendly_reply(m: usize, count: bool) -> u8 {
             if count {
                 crate::comparison::branch("cqa_2 friendly distance");
             }
-            let dx = read_f64_at(sa + city::LONGITUDE) - read_f64_at(so + city::LONGITUDE);
-            let dy = read_f64_at(sa + city::LATITUDE) - read_f64_at(so + city::LATITUDE);
+            let dx = read_f64(sa + city::LONGITUDE) - read_f64(so + city::LONGITUDE);
+            let dy = read_f64(sa + city::LATITUDE) - read_f64(so + city::LATITUDE);
             let i = read_i32(a + club::MIN_ATTENDANCE) as f64;
-            let v = i / (((dy * dy + dx * dx).sqrt() * read_f64_at(rdata::F64_0_55) + read_f64_at(rdata::F64_1)) * read_f64_at(rdata::F64_40000)) + read_f64_at(rdata::F64_1);
+            let v = i / (((dy * dy + dx * dx).sqrt() * read_f64(rdata::F64_0_55) + read_f64(rdata::F64_1)) * read_f64(rdata::F64_40000)) + read_f64(rdata::F64_1);
             f *= v; // cqa2: the distance factor
         }
     }
@@ -1360,7 +1360,7 @@ pub(crate) unsafe fn friendly_reply(m: usize, count: bool) -> u8 {
         crate::comparison::branch("cqa_2 friendly decision");
     }
     // fcompp/test ah, 1: C0 holds for ”less” and for ”unordered” (NaN): the >= below take the same path
-    let accepted = ra as f64 >= ro as f64 / f || f * read_f64_at(rdata::F64_600) >= ro.wrapping_sub(ra) as f64; // cqa2: accepts by reputation;
+    let accepted = ra as f64 >= ro as f64 / f || f * read_f64(rdata::F64_600) >= ro.wrapping_sub(ra) as f64; // cqa2: accepts by reputation;
     if accepted { 3 } else { 4 }
 }
 

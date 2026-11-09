@@ -77,22 +77,22 @@ unsafe extern "thiscall" fn update_club_target_reputation(this: usize, clube: us
     let alvo = (r + 5) as *mut i16;
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let w = || core::ptr::read_unaligned(alvo) as i32;
-    let por = |dif: i32, k: usize, v: i32| match_pl_ftol((dif as f64 * read_f64_at(k) + read_f64_at(0x967890)) * v as f64);
+    let por = |dif: i32, k: usize, v: i32| match_pl_ftol((dif as f64 * read_f64(k) + read_f64(0x967890)) * v as f64);
     core::ptr::write_unaligned(alvo, (core::ptr::read_unaligned((clube + 0x73) as *const i32) / 10 + 0x1194) as i16);
     if humano(clube, 1, 1, 0, 0) == 0 {
         let tecnico = u(clube + 0xcf);
         if tecnico != 0 {
-            let dif = byte(tecnico, 0x57) as i32 - byte(u(tecnico + 0x69), 0x1d) as i32;
+            let dif = read_i8(tecnico + 0x57) as i32 - read_i8(u(tecnico + 0x69) + 0x1d) as i32;
             core::ptr::write_unaligned(alvo, por(dif, 0x96a740, w()) as i16);
         }
     }
     let p = u(clube + 0xbf);
     if p != 0 && u(p + 0x69) != 0 {
-        let dif = byte(p, 0x57) as i32 - byte(u(p + 0x69), 0x1d) as i32;
+        let dif = read_i8(p + 0x57) as i32 - read_i8(u(p + 0x69) + 0x1d) as i32;
         let v = por(dif, 0x968958, w()) as i16;
         core::ptr::write_unaligned(alvo, v);
         let ficha = u(u(clube + 0xbf) + 0x69);
-        core::ptr::write_unaligned(alvo, por(byte(ficha, 0x20) as i32 - 10, 0x967878, v as i32) as i16);
+        core::ptr::write_unaligned(alvo, por(read_i8(ficha + 0x20) as i32 - 10, 0x967878, v as i32) as i16);
     }
     let piso = core::ptr::read_unaligned((clube + 0x80) as *const i16);
     let v = core::ptr::read_unaligned(alvo);
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn update_club_target_reputation(this: usize, clube: us
 unsafe extern "C" fn comp_util_write_fixture_to_news_slots(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let d = |o: usize| core::ptr::read_unaligned((jogo + o) as *const u32);
-    let b = |o: usize| byte(jogo, o) as i32 as u32;
+    let b = |o: usize| read_i8(jogo + o) as i32 as u32;
     let s = |o: usize| core::ptr::read_unaligned((jogo + o) as *const i16) as i32 as u32;
     let z = |o: usize| core::ptr::read_unaligned((jogo + o) as *const u16) as u32;
     let valores = [

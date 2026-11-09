@@ -193,7 +193,7 @@ unsafe extern "C" fn award_raise_winner_reputation(pessoa: usize, clube: usize, 
     let p = cpw6_d(pessoa + 0x61);
     if p != 0 && jogador != 0 {
         crate::comparison::branch("cpw_6 player award");
-        add_to_word(p + 0xd, match_pl_ftol(mundo as i32 as f64 * read_f64_at(0x967888))); // cpw6: o aumento mundial
+        add_to_word(p + 0xd, match_pl_ftol(mundo as i32 as f64 * read_f64(0x967888))); // cpw6: o aumento mundial
         if cpw6_w(p + 0xd) > 10000 {
             cpw6_pw(p + 0xd, 10000);
         }
@@ -201,10 +201,10 @@ unsafe extern "C" fn award_raise_winner_reputation(pessoa: usize, clube: usize, 
             cpw6_pw(p + 0xd, mundo);
         }
         if clube != 0 && cpw6_d(clube + 0x53) == cpw6_d(pessoa + 0x1a) { // cpw6: o clube da nação do jogador
-            add_to_word(p + 9, match_pl_ftol(nac as i32 as f64 * read_f64_at(0x967880)));
+            add_to_word(p + 9, match_pl_ftol(nac as i32 as f64 * read_f64(0x967880)));
             clamp_word(p + 9, nac);
         } else {
-            add_to_word(p + 9, match_pl_ftol((nac as i32 + mundo as i32) as f64 * read_f64_at(0x967878)));
+            add_to_word(p + 9, match_pl_ftol((nac as i32 + mundo as i32) as f64 * read_f64(0x967878)));
             if cpw6_w(p + 9) > 10000 {
                 cpw6_pw(p + 9, 10000);
             }
@@ -213,7 +213,7 @@ unsafe extern "C" fn award_raise_winner_reputation(pessoa: usize, clube: usize, 
                 cpw6_pw(p + 9, piso as i16);
             }
         }
-        add_to_word(p + 0xb, match_pl_ftol(nac as i32 as f64 * read_f64_at(0x967880)));
+        add_to_word(p + 0xb, match_pl_ftol(nac as i32 as f64 * read_f64(0x967880)));
         clamp_word(p + 0xb, nac);
         let listas = cpw6_d(cpw6_d(0xde1f54) + 0x856);
         if listas != 0 && !MONTH_AWARD_DRY_RUN {

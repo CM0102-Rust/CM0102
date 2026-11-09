@@ -87,12 +87,12 @@ unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize
         f += 0x100;
     }
     let mut ajuste = 0i32;
-    if m(2, 0x16) > read_f32_at(0x969570) as f64 {
+    if m(2, 0x16) > read_f32(0x969570) as f64 {
         let a = match_pl_ftol(m(2, 0xd)) as i8 as i32;
         if a > 10 {
-            ajuste = match_pl_ftol(a as f64 - read_f64_at(0x969568));
+            ajuste = match_pl_ftol(a as f64 - read_f64(0x969568));
         }
-        let x = (m(2, 5) * read_f32_at(0x969560) as f64) as f32; // fstp dword
+        let x = (m(2, 5) * read_f32(0x969560) as f64) as f32; // fstp dword
         ajuste = ajuste.wrapping_add(match_pl_ftol(x as f64 / m(2, 1)));
     }
     if b(0x37).wrapping_add(ajuste) > random(50) {
@@ -100,17 +100,17 @@ unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize
     }
     let v14 = m(2, 0xe);
     let v14f = v14 as f32; // fst dword
-    if v14 > read_f64_at(0x968f10) {
+    if v14 > read_f64(0x968f10) {
         f += 0x800000;
     }
     if b(0x39) > random(50) && b(0x3e) > random(50) {
         let mut sim = false;
-        if v14f as f64 > read_f64_at(0x9689a0) {
+        if v14f as f64 > read_f64(0x9689a0) {
             let r = random(10) + 5;
             sim = match_pl_ftol(v14f as f64) as i8 as i32 > r;
         }
         if !sim && computed_player_attribute(pessoa, 0x17) > random(5) + 15 {
-            let x = m(2, 7) * read_f64_at(0x968f50); // fstp qword
+            let x = m(2, 7) * read_f64(0x968f50); // fstp qword
             sim = m(2, 0x16) > x;
         }
         if sim {
@@ -133,7 +133,7 @@ unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize
     if computed_player_attribute(pessoa, 0xb) > random(4) + 14 {
         let x = m(2, 0xf); // fstp qword
         let r = random(20);
-        if !(r as f64 * read_f64_at(0x967880) + read_f64_at(0x968eb0) >= x) {
+        if !(r as f64 * read_f64(0x967880) + read_f64(0x968eb0) >= x) {
             f += 0x10000;
         }
     }
@@ -143,12 +143,12 @@ unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize
         let a = m(6, 2) as f32;
         let c = m(6, 1) as f32;
         let r = random(3);
-        if !((r as f64 * read_f64_at(0x967880) + read_f64_at(0x968968)) * c as f64 >= a as f64) {
+        if !((r as f64 * read_f64(0x967880) + read_f64(0x968968)) * c as f64 >= a as f64) {
             f += 0x40000;
         }
     }
-    if !(m(2, 0x15) >= read_f64_at(0x968930)) && m(2, 0x10) > read_f64_at(0x968ff8) {
-        let x = m(2, 2) * read_f64_at(0x968930); // fstp qword
+    if !(m(2, 0x15) >= read_f64(0x968930)) && m(2, 0x10) > read_f64(0x968ff8) {
+        let x = m(2, 2) * read_f64(0x968930); // fstp qword
         if m(2, 1) > x {
             f += 0x80000;
         }
@@ -179,9 +179,9 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
     let m = |tipo: u32, atributo: u32| player_stat_average(pessoa, tipo, atributo);
     let mut f = natural_position_bits(j(), [0, 0x20, 0x10, 0x40, 0x80, 0x100, 0x200], 0x800000);
     if (*((pessoa + 0x5d) as *const i8) as i32) < random(4) + 5 && (b(0x1c) > 15 || b(0x25) < 6) {
-        let a = (m(2, 0xb) * read_f32_at(0x969584) as f64) as f32; // fstp dword
+        let a = (m(2, 0xb) * read_f32(0x969584) as f64) as f32; // fstp dword
         let s = (m(2, 0xa) + a as f64) as f32; // fstp dword
-        if !(m(2, 1) * read_f32_at(0x968f18) as f64 >= s as f64) {
+        if !(m(2, 1) * read_f32(0x968f18) as f64 >= s as f64) {
             f += 1;
         }
     }
@@ -207,12 +207,12 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
         }
     }
     let mut ajuste = 0i32;
-    if m(2, 0x16) > read_f32_at(0x969570) as f64 {
+    if m(2, 0x16) > read_f32(0x969570) as f64 {
         let a = match_pl_ftol(m(2, 0xd)) as i8 as i32;
         if a > 10 {
             ajuste = 70 - a;
         }
-        let x = (m(2, 5) * read_f32_at(0x969580) as f64) as f32; // fstp dword
+        let x = (m(2, 5) * read_f32(0x969580) as f64) as f32; // fstp dword
         ajuste = ajuste.wrapping_add(match_pl_ftol(x as f64 / m(2, 1)));
     }
     if b(0x37) < random(-50).wrapping_add(ajuste) {
@@ -221,7 +221,7 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
     if b(0x39) < random(-50) && b(0x3e) < random(-50) {
         let v = m(2, 0xe);
         let vf = v as f32; // fst dword
-        if v > read_f64_at(0x9689a0) {
+        if v > read_f64(0x9689a0) {
             let r = random(10);
             if (match_pl_ftol(vf as f64) as i8 as i32) < r {
                 f += 0x800;
@@ -258,24 +258,24 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
     if b(0x11) < 15 && computed_player_attribute(pessoa, 0xb) > random(4) + 14 {
         let v = m(2, 0xf);
         let vf = v as f32; // fst dword
-        if v > read_f64_at(0x9689a0) && computed_player_attribute(pessoa, 0xb) as f64 * read_f64_at(0x969578) > vf as f64 {
+        if v > read_f64(0x9689a0) && computed_player_attribute(pessoa, 0xb) as f64 * read_f64(0x969578) > vf as f64 {
             f += 0x40000;
         }
     }
     if b(0x28) > random(5) + 13 {
         f += 0x80000;
     }
-    if m(2, 0x16) > read_f32_at(0x969570) as f64 {
+    if m(2, 0x16) > read_f32(0x969570) as f64 {
         let a = computed_player_attribute(pessoa, 0xc);
-        let t = (m(2, 0x10) + a as f64 - read_f32_at(0x968a78) as f64) as f32; // fstp dword
+        let t = (m(2, 0x10) + a as f64 - read_f32(0x968a78) as f64) as f32; // fstp dword
         if (random(20) + 20) as f64 > t as f64 {
             let x = m(6, 2); // fstp qword
-            if m(6, 1) * read_f64_at(0x969510) > x {
+            if m(6, 1) * read_f64(0x969510) > x {
                 f += 0x100000;
             }
         }
     }
-    if !(m(2, 0x15) >= read_f64_at(0x968930)) && m(2, 0x10) > read_f64_at(0x968ff8) {
+    if !(m(2, 0x15) >= read_f64(0x968930)) && m(2, 0x10) > read_f64(0x968ff8) {
         f += 0x200000;
     }
     if computed_player_attribute(pessoa, 0x14) < 7 || computed_player_attribute(pessoa, 0x14) < dbs3_i16(j() + 5) / 15 {

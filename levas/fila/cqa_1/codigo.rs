@@ -56,7 +56,7 @@ unsafe fn send_prize_news(copa: usize, clube: usize, valor: i32, seguinte: u32, 
     }
     let f: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, u32) = core::mem::transmute(0x48e3e0usize);
     // ponytail: a original empurra o dword de um local de que só grava o byte baixo (os bits altos são sobra de pilha);
-    // a notícia só lê o byte (movsx ecx, byte [esp+0x114]): aqui, o byte limpo.
+    // a notícia só lê o read_i8(movsx ecx + (byte [esp+0x114])): aqui, o byte limpo.
     f(copa, clube, valor, valor >> 31, -1, seguinte, partida, desfecho as u32);
 }
 

@@ -9,7 +9,7 @@ unsafe fn order_by_city_coordinate(ca: usize, cb: usize, d: usize) -> i32 {
         if e == 0 { 0 } else { core::ptr::read_unaligned((e + 0x38) as *const usize) }
     };
     let (xa, xb) = (cidade(ca), cidade(cb));
-    let x = if xa != 0 { core::ptr::read_unaligned((xa + d) as *const f64) } else { read_f64_at(0x9689a0) };
+    let x = if xa != 0 { core::ptr::read_unaligned((xa + d) as *const f64) } else { read_f64(0x9689a0) };
     let y = if xb != 0 { core::ptr::read_unaligned((xb + d) as *const f64) } else { 0.0 };
     if !(x >= y) {
         -1

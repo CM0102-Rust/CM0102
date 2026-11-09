@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         }
     }
     let n = ((read_i16(obj + league::CLUB_COUNT) as i32) - 1).wrapping_mul(read_i16(obj + league::LEGS) as i32);
-    let threshold = ftol(n as f64 * read_f64_at(rdata::F64_0_33)) as i16; // the ftol stays in the word (movsx word afterwards);
+    let threshold = ftol(n as f64 * read_f64(rdata::F64_0_33)) as i16; // the ftol stays in the word (movsx word afterwards);
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 5;
@@ -322,7 +322,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
         if r != 0 {
             core::ptr::write_unaligned((r + manager_record::CUPS_WON) as *mut i16, read_i16(r + manager_record::CUPS_WON).wrapping_add(1));
             // fild weight; fld 4.0; _CIpow (base in st1); fmul 0.5; ftol
-            let v = ftol(game_pow(read_i16(comp + competition::REPUTATION) as f64, read_f64_at(rdata::F64_4)) * read_f64_at(rdata::F64_0_5)); // cqd13: the title weight;
+            let v = ftol(game_pow(read_i16(comp + competition::REPUTATION) as f64, read_f64(rdata::F64_4)) * read_f64(rdata::F64_0_5)); // cqd13: the title weight;
             write_i32(r + manager_record::YEAR_POINTS, read_i32(r + manager_record::YEAR_POINTS).wrapping_add(v));
             write_i32(r + manager_record::MONTH_POINTS, read_i32(r + manager_record::MONTH_POINTS).wrapping_add(v));
             if is_national_team(club) != 0 {
@@ -747,7 +747,7 @@ pub(crate) unsafe fn append_club_history_by_id(this: usize, id: usize, e: &[u8; 
 /// [pt] Uma nota do lado do clube na partida (palavra em `a`): soma ftol(peso × k × [0x96ff88]) (produto em 32 bits) e fica
 /// no piso peso × k (16 bits) quando está abaixo dele, senão no máximo 10000 (comparações com sinal em 16 bits).
 pub(crate) unsafe fn raise_side_rating(a: usize, weight: i16, k: i32) {
-    let sum = ftol((weight as i32).wrapping_mul(k) as f64 * read_f64_at(rdata::F64_0_1639344262));
+    let sum = ftol((weight as i32).wrapping_mul(k) as f64 * read_f64(rdata::F64_0_1639344262));
     let x = read_i16(a).wrapping_add(sum as i16);
     write_i16(a, x);
     let floor = weight.wrapping_mul(k as i16);

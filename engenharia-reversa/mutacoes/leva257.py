@@ -38,5 +38,5 @@ MUTACOES = [
     ('cpu12_ultima_vaga', 'if let Some(j) = (0..n().max(0) as usize).find(|&j| *posto.add(j) == 0) { // cpu12: the first free place', 'if let Some(j) = (0..n().max(0) as usize).rev().find(|&j| *posto.add(j) == 0) { // mutacao: a ultima', 'cpu_12 club in the free slot'),
     ('cpu13_base_15', 'esi = sum / 16; // cpu13: a base', 'esi = sum / 15; // mutacao: / 15', 'cpu_13 base by reputation'),
     ('cpu13_faixa_do_meio', 'esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: the middle band', 'esi.wrapping_mul(5).wrapping_sub(4900) // mutacao: 100 a mais', 'cpu_13 faixa de 3000 a 5000'),
-    ('cpu13_rico', 'let (x, y) = (v * read_f64_at(rdata::F64_1_025), edi.wrapping_add(250) as f64); // cpu13: o rico', 'let (x, y) = (v * (read_f64_at(rdata::F64_1_025) + 0.025), edi.wrapping_add(250) as f64); // mutacao: 1,05', 'cpu_13 rich club'),
+    ('cpu13_rico', 'let (x, y) = (v * read_f64(rdata::F64_1_025), edi.wrapping_add(250) as f64); // cpu13: o rico', 'let (x, y) = (v * (read_f64(rdata::F64_1_025) + 0.025), edi.wrapping_add(250) as f64); // mutacao: 1,05', 'cpu_13 rich club'),
 ]

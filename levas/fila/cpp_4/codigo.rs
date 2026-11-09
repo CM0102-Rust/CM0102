@@ -20,12 +20,12 @@ unsafe fn perceived_club_reputation(clube: usize) -> i16 {
     let r = cpp4_w(clube + 0x80) as i32;
     let nacao = cpp4_d(clube + 0x53) as usize;
     let v = if nacao != 0 {
-        match_pl_ftol((read_u8_volatile(nacao + 0x85) as i8 as i32 * r) as f64 * read_f64_at(0x967888))
+        match_pl_ftol((read_u8_volatile(nacao + 0x85) as i8 as i32 * r) as f64 * read_f64(0x967888))
     } else {
-        match_pl_ftol(r as f64 * read_f64_at(0x96a5d0))
+        match_pl_ftol(r as f64 * read_f64(0x96a5d0))
     } as i16;
     if v > 0x203a {
-        (0x203a - match_pl_ftol((v as i32 - 0x203a) as f64 * read_f64_at(0x96d278))) as i16
+        (0x203a - match_pl_ftol((v as i32 - 0x203a) as f64 * read_f64(0x96d278))) as i16
     } else {
         v
     }
@@ -262,32 +262,32 @@ unsafe fn match_morale_drop(pessoa: usize, clube: usize, contrato: usize) -> Opt
     let idade = read_u8_volatile(pessoa + 0x18) as i8;
     let jogador = cpp4_d(pessoa + 0x61) as usize;
     let dif = cpp4_w(jogador + 0xb) as i32 - cpp4_w(clube + 0x80) as i32;
-    let mut x = ((dif as f64 + (a * 50) as f64) + idade as f64 * read_f64_at(0x968d90)) - read_f64_at(0x968db8);
+    let mut x = ((dif as f64 + (a * 50) as f64) + idade as f64 * read_f64(0x968d90)) - read_f64(0x968db8);
     let c57 = read_u8_volatile(pessoa + 0x57) as i8 as i32;
-    let teto = read_f32_at(0x968da8) as f64;
+    let teto = read_f32(0x968da8) as f64;
     let limitar = |x: f64| if x >= teto { teto } else { x };
     let al = read_u8_volatile(pessoa + 0x22);
     if b > 0x190 && idade > 0x17 && idade < 0x20 {
-        x = limitar(x + (c57 * 250) as f64 + read_f32_at(0x968db0) as f64); // nunca: b vai até 400
+        x = limitar(x + (c57 * 250) as f64 + read_f32(0x968db0) as f64); // nunca: b vai até 400
     } else if al != 0 && cpp4_w(cpp4_d(pessoa + 0x1a) as usize + 0x8e) > 0xdac && idade < 0x20 {
-        x = limitar(x + (c57 * 250 + al as i32 * 25) as f64 + read_f32_at(0x968dac) as f64);
+        x = limitar(x + (c57 * 250 + al as i32 * 25) as f64 + read_f32(0x968dac) as f64);
     } else {
         match (read_u8_volatile(contrato + 0x4f) >> 4) as i8 {
-            1 => x = limitar(x + (c57 * 250) as f64 + read_f32_at(0x968db0) as f64),
-            2 => x = limitar(x + (c57 * 125) as f64 + read_f32_at(0x968dac) as f64),
+            1 => x = limitar(x + (c57 * 250) as f64 + read_f32(0x968db0) as f64),
+            2 => x = limitar(x + (c57 * 125) as f64 + read_f32(0x968dac) as f64),
             3 => x = limitar(x + (read_u8_volatile(contrato + 0x3e) as i8 as i32 * 1000) as f64),
             _ => {}
         }
     }
-    let y = if !(x >= read_f64_at(0x9689a0)) { x * read_f64_at(0x968da0) } else { x * read_f64_at(0x968d98) };
-    let mut y = read_f64_at(0x967890) - y;
-    if !(y >= read_f64_at(0x967880)) {
-        y = read_f64_at(0x967880);
-    } else if y > read_f64_at(0x9688b0) {
-        y = read_f64_at(0x9688b0);
+    let y = if !(x >= read_f64(0x9689a0)) { x * read_f64(0x968da0) } else { x * read_f64(0x968d98) };
+    let mut y = read_f64(0x967890) - y;
+    if !(y >= read_f64(0x967880)) {
+        y = read_f64(0x967880);
+    } else if y > read_f64(0x9688b0) {
+        y = read_f64(0x9688b0);
     }
     let d = (read_u8_volatile(contrato + 0x3e) as i8 as i32 + 4) as f64;
-    Some(match_pl_ftol(d / y + read_f64_at(0x968968)) as u8 as i8)
+    Some(match_pl_ftol(d / y + read_f64(0x968968)) as u8 as i8)
 }
 
 /// A moral (+0x44) menos `m`, entre −100 e 100 (a soma em byte quando cabe).

@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn update_season_rating_record(this: usize, clube: usiz
         }
         let media = estatistica(reg, 0x11, 6.5);
         // fcomp com o −1.0 (double) e fcom com o float guardado: passa só com a média maior
-        if *nota as f64 == read_f64_at(0x968948) || media > *nota as f64 {
+        if *nota as f64 == read_f64(0x968948) || media > *nota as f64 {
             crate::comparison::branch("cpm_6 season rating record");
             *nota = media as f32;
             *((r + 0x20d) as *mut u8) = jogou;

@@ -17,7 +17,7 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
         return 0;
     }
     let c = *((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(4)) as *const usize);
-    if c == 0 || byte(c, league::COMP_TYPE) != 2 || *((c + league::CLUB_COUNT) as *const u16) == 0 {
+    if c == 0 || read_i8(c + league::COMP_TYPE) != 2 || *((c + league::CLUB_COUNT) as *const u16) == 0 {
         return 0;
     }
     let r = *((c + league::TABLE) as *const usize);
@@ -413,13 +413,13 @@ pub(crate) unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubs: usiz
 /// [pt] A nota de um clube na estatística da liga (0x4b02e0): pesos 1 nos 4 atributos (+0x72..+0x75; +0x75 e +0x74 com
 /// o peso [0x968968]) ou, com menos de 25 jogos (+4), proporcionais aos jogos; a média ponderada, na ordem do x87.
 pub(crate) unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
-    let (mut p, mut k73, mut k72) = (read_f64_at(rdata::F64_0_5), 1.0f64, 1.0f64);
+    let (mut p, mut k73, mut k72) = (read_f64(rdata::F64_0_5), 1.0f64, 1.0f64);
     let games = read_u8(e + 4);
     if games < 0x19 {
         let v = games as f64;
-        p = v * read_f64_at(rdata::F64_0_02);
-        k73 = v * read_f64_at(rdata::F64_0_04);
-        k72 = read_f64_at(rdata::F64_4) - v * read_f64_at(rdata::F64_0_1200480192);
+        p = v * read_f64(rdata::F64_0_02);
+        k73 = v * read_f64(rdata::F64_0_04);
+        k72 = read_f64(rdata::F64_4) - v * read_f64(rdata::F64_0_1200480192);
     }
     let s = read_u8(e + 0x75) as f64 * p + read_u8(e + 0x72) as f64 * k72 + b73 * k73 + read_u8(e + 0x74) as f64 * p;
     s / (p + p + k72 + k73)
@@ -464,7 +464,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     }
     let (a73, b73) = (read_u8(ea + 0x73) as i32, read_u8(eb + 0x73) as i32);
     let clubs = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16) as i32;
-    if (a73 - b73).abs() > ftol(clubs as f64 * read_f64_at(rdata::F64_0_25)) as i16 as i32 {
+    if (a73 - b73).abs() > ftol(clubs as f64 * read_f64(rdata::F64_0_25)) as i16 as i32 {
         return 0;
     }
     let (na, nb) = (league_stats_rating(ea, a73 as f64), league_stats_rating(eb, b73 as f64));
@@ -476,14 +476,14 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     // x87 comparisons: NaN counts as ”less” (C0) and ”less or equal” (C0|C3)
     let cruzadas = !(a74 > nb) && !(b74 > na);
     if virtual98() == 0 {
-        let t = clubs as f64 * read_f64_at(rdata::F64_0_3333333333);
+        let t = clubs as f64 * read_f64(rdata::F64_0_3333333333);
         if !(na >= t) && !(nb >= t) && cruzadas {
             return 1; // title race
         }
     }
     let be = read_u8(league + league::PROMOTED_COUNT) as i8 as f64;
     if virtual98() != 0 {
-        let t = clubs as f64 * read_f64_at(rdata::F64_0_2) + be;
+        let t = clubs as f64 * read_f64(rdata::F64_0_2) + be;
         if !(na > t) && !(nb > t) && cruzadas {
             return 3;
         }
@@ -495,7 +495,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     if bf == 0 {
         return 0;
     }
-    let t = clubs as f64 * read_f64_at(rdata::F64_0_2) + be + bf as f64;
+    let t = clubs as f64 * read_f64(rdata::F64_0_2) + be + bf as f64;
     if !(na > t) && !(nb > t) && cruzadas {
         3
     } else {
@@ -755,7 +755,7 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
 /// byte baixo do próprio argumento `cursor` (só a parte baixa chega à 0x785790).
 pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usize, news: usize, cursor: *mut u8) -> u32 {
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let b = |o: usize| byte(game, o) as i32 as u32;
+    let b = |o: usize| read_i8(game + o) as i32 as u32;
     let s = |o: usize| core::ptr::read_unaligned((game + o) as *const i16) as i32 as u32;
     let valores = [
         read_u32(game + 0xc), read_u32(game + 0x10), b(0x3d), b(0x3e), read_u32(game + 4), read_u32(game + 0), b(0x42), s(0x32), s(0x30),

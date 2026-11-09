@@ -32,16 +32,16 @@ unsafe fn damp_confidence_change(v: i32, gosta: bool, nao_gosta: bool) -> i16 {
     let mut v = v;
     if gosta {
         let x = v as i16 as f64;
-        v = if (v as i16) < 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) };
+        v = if (v as i16) < 0 { match_pl_ftol(x * read_f64(0x968968)) } else { match_pl_ftol(x + x) };
     } else if nao_gosta {
         let x = v as i16 as f64;
-        v = if (v as i16) > 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) };
+        v = if (v as i16) > 0 { match_pl_ftol(x * read_f64(0x968968)) } else { match_pl_ftol(x + x) };
     }
     let x = v as i16 as i32;
     if x < -1000 {
-        v = match_pl_ftol((x + 1000) as f64 * read_f64_at(0x968918) - read_f64_at(0x968908));
+        v = match_pl_ftol((x + 1000) as f64 * read_f64(0x968918) - read_f64(0x968908));
     } else if x > 1000 {
-        v = match_pl_ftol((x - 1000) as f64 * read_f64_at(0x968918) + read_f64_at(0x968908));
+        v = match_pl_ftol((x - 1000) as f64 * read_f64(0x968918) + read_f64(0x968908));
     }
     v as i16
 }
@@ -53,9 +53,9 @@ unsafe fn fan_confidence_change(clube: usize, alvo: u32) -> i16 {
     let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547790usize);
     let rejeitado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5477d0usize);
     let conf = if clube != 0 { cpo5_w(manager_manager_row(clube) + 8) as i32 } else { 0 };
-    let t = match_pl_ftol((conf - 5000) as f64 * read_f64_at(0x96d280));
+    let t = match_pl_ftol((conf - 5000) as f64 * read_f64(0x96d280));
     let d = (alvo as i32).wrapping_sub(t) as i16;
-    let v = match_pl_ftol(d as f64 * read_f64_at(0x969040));
+    let v = match_pl_ftol(d as f64 * read_f64(0x969040));
     let tecnico = cpo5_d(clube + 0xcf);
     let fav = favorito(tecnico, clube) != 0;
     let rej = !fav && rejeitado(tecnico, clube) != 0;
@@ -69,7 +69,7 @@ unsafe fn board_confidence_change(clube: usize, alvo: u32) -> i16 {
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
     let conf = if clube != 0 { cpo5_w(manager_manager_row(clube) + 6) as i32 } else { 0 };
     let s = ((conf - 6000) / 20).wrapping_add(alvo as i32) as i16;
-    let v = match_pl_ftol(s as f64 * read_f64_at(0x969040));
+    let v = match_pl_ftol(s as f64 * read_f64(0x969040));
     let (tecnico, presidente) = (cpo5_d(clube + 0xcf), cpo5_d(clube + 0xbf));
     let g = gosta(tecnico, presidente) != 0;
     let n = !g && nao_gosta(tecnico, presidente) != 0;
@@ -269,10 +269,10 @@ unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, 
         let base = cpo5_d(0xb74350);
         let notas = ratings_average(base, cpo5_d(sujeito + 0x61)) as i8 as f64;
         let base = cpo5_d(0xb74350);
-        let y = read_f64_at(base + 0x18);
-        let c0 = read_f64_at(0x9689a0);
-        let media = if !(y < c0 || y > c0) { read_f64_at(0x968998) } else { read_f64_at(base + 0x10) / y }; // sem jogos: 6,8
-        if notas > media * read_f64_at(0x9688a0) {
+        let y = read_f64(base + 0x18);
+        let c0 = read_f64(0x9689a0);
+        let media = if !(y < c0 || y > c0) { read_f64(0x968998) } else { read_f64(base + 0x10) / y }; // sem jogos: 6,8
+        if notas > media * read_f64(0x9688a0) {
             m = 1;
         }
     }

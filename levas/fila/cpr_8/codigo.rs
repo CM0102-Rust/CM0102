@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, 
         if idade <= lim {
             return 0;
         }
-        let f = match_pl_ftol(read_f64_at(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64_at(0x967880)) as i16;
+        let f = match_pl_ftol(read_f64(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64(0x967880)) as i16;
         let v = match_pl_ftol(f as f64 * cpr8_w(j + 0xb) as f64) as i16;
         if idade > 0x2d {
             break 'm 1;
@@ -291,7 +291,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
                 }
             }
         }
-        let v = match_pl_ftol((read_f64_at(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64_at(0x96a730)) * cpr8_w(j + 0xb) as f64) as i16;
+        let v = match_pl_ftol((read_f64(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64(0x96a730)) * cpr8_w(j + 0xb) as f64) as i16;
         if idade > 0x2d {
             break 'm 1;
         }
@@ -316,7 +316,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
                 }
                 if cpr8_b(pessoa + 0x57) as i32 > random(20) {
                     let (cur, pot) = (cpr8_w(j + 5) as f64, cpr8_w(j + 7) as f64);
-                    if !(pot * read_f64_at(0x969520) <= cur) {
+                    if !(pot * read_f64(0x969520) <= cur) {
                         break 'm 1;
                     }
                 }

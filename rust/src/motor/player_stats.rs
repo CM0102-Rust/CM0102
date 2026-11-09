@@ -23,8 +23,8 @@ pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, which: i8, 
     let b = |o: usize| *r.add(o) as f64;
     let w = |o: usize| core::ptr::read_unaligned(r.add(o) as *const i16) as f64;
     let games = *r;
-    let cem = read_f32_at(rdata::F32_100) as f64;
-    let vinte_avos = read_f32_at(rdata::F32_0_05000000075_AT_96D61C) as f64;
+    let cem = read_f32(rdata::F32_100) as f64;
+    let vinte_avos = read_f32(rdata::F32_0_05000000075_AT_96D61C) as f64;
     match which {
         1 => b(0),
         2..=4 => b(which as usize),
@@ -50,11 +50,11 @@ pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, which: i8, 
         }
         20 => {
             if games == 0 {
-                return read_f32_at(rdata::F32_1_5) as f64;
+                return read_f32(rdata::F32_1_5) as f64;
             }
             let rating = (*r.add(9) as i32 * 2 - *r.add(10) as i32 + games as i32) as f64;
             if games < 20 {
-                (rating + (20 - games as i32) as f64 * read_f64_at(rdata::F64_1_5)) * vinte_avos
+                (rating + (20 - games as i32) as f64 * read_f64(rdata::F64_1_5)) * vinte_avos
             } else {
                 rating / games as f64
             }

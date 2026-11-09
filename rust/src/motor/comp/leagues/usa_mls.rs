@@ -8,7 +8,7 @@ pub(crate) unsafe fn table_row_club_points(t: usize, i: usize) -> (usize, i16) {
     (read_usize(l), read_i16(l + 0x19))
 }
 
-/// Writes the 6-byte (club, points) record k into a byte vector.
+/// Writes the 6-read_i8(club + points) record k into a byte vector.
 ///
 /// [pt] Grava o registro de 6 bytes `k` (clube, pontos) do vetor `r`.
 pub(crate) fn put_club_points_record(r: &mut [u8], k: usize, (c, p): (usize, i16)) {

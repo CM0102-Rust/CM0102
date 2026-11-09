@@ -129,7 +129,7 @@ unsafe extern "C" fn staff_normalise_player_physical_attributes(pessoa: usize) {
     }
     remove_or_restore_training(pessoa, 0);
     let b = |d: usize| *((jogador + d) as *const i8) as i32;
-    let f = |x: i32, k: usize| match_pl_ftol(x as f64 * read_f64_at(k));
+    let f = |x: i32, k: usize| match_pl_ftol(x as f64 * read_f64(k));
     let menor = b(0x3b).min(b(0x30));
     let t = f(b(0x36), 0x968940) - f(b(0x2f), 0x969548) - f(b(0x2e), 0x969540) - f(b(0x1b), 0x969538)
         + (f(b(0x3f), 0x9689b0) - f(b(0x40), 0x969548) - f(menor, 0x969530)) + b(0x44);
@@ -249,7 +249,7 @@ unsafe extern "C" fn staff_normalise_player_attributes(pessoa: usize) {
     let v = vetor.as_mut_ptr();
     let (lados, ponderados) = player_attr_vector(jogador, pessoa, v);
     rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, jogador, -20, &[],
-        |x| match_pl_ftol(x as f64 * read_f64_at(0x968f98)));
+        |x| match_pl_ftol(x as f64 * read_f64(0x968f98)));
     let devolver: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x53aa10usize);
     devolver(jogador, pessoa, v as usize);
     if *((jogador + 0xf) as *const i8) >= 0xf {

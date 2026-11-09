@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn club_in_competition(this: usize, club: us
     let mut i = -1i32;
     while i <= n {
         let stage = if i == -1 { this } else { d(d(this, league::STAGES), 4 * i as usize) };
-        if byte(stage, 0x43) == 2 {
+        if read_i8(stage + 0x43) == 2 {
             grupo = stage;
         } else {
             outra = stage;

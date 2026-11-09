@@ -428,7 +428,7 @@ pub(crate) mod player_search_fields {
 /// Fields of the `shortlist_manager_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `shortlist_manager_fields`.
 #[allow(dead_code)]
 pub(crate) mod shortlist_manager_fields {
-    pub(crate) const PAIRS_BY_CLUB: usize = 0x4; // 4 byte(s): Pointer to the sorted 8-byte (person, club) pair array keyed by club (count at PAIRS_BY_CLUB_COUNT)
+    pub(crate) const PAIRS_BY_CLUB: usize = 0x4; // 4 byte(s): Pointer to the sorted 8-read_i8(person + club) pair array keyed by club (count at PAIRS_BY_CLUB_COUNT)
     pub(crate) const PAIRS_BY_PERSON_CAPACITY: usize = 0x8; // 4 byte(s): Capacity of the by-person pair array at +0 (starts at 100)
     pub(crate) const PAIRS_BY_CLUB_CAPACITY: usize = 0xc; // 4 byte(s): Capacity of the by-club pair array (starts at 100)
     pub(crate) const PAIRS_BY_PERSON_COUNT: usize = 0x10; // 4 byte(s): Number of by-person pairs

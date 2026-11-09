@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn check_board_veto(_this: usize, oferta: usize, compra
         crate::comparison::branch("cpl_2 board veto values");
         for k in [0xb, 9, 0xd] {
             let p = (cpl2_d(jogador + 0x61) + k) as *mut i16;
-            core::ptr::write_unaligned(p, match_pl_ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(0x9689d8)) as i16); // 90%
+            core::ptr::write_unaligned(p, match_pl_ftol(core::ptr::read_unaligned(p) as f64 * read_f64(0x9689d8)) as i16); // 90%
         }
         return 1;
     }
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn compare_check_board_veto(this: usize, oferta: usize,
     let m0 = if motivo.is_null() { 0 } else { *motivo };
     let r = o(this, oferta, comprador, vendedor, jogador, decide, motivo);
     let depois = ler();
-    let a_90 = antes.map(|v| match_pl_ftol(v as f64 * read_f64_at(0x9689d8)) as i16);
+    let a_90 = antes.map(|v| match_pl_ftol(v as f64 * read_f64(0x9689d8)) as i16);
     let m = if motivo.is_null() { 0 } else { *motivo };
     let ok = match (r, motivo.is_null()) {
         (0, false) => m == m0 && depois == antes,

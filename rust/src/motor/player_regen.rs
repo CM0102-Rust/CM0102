@@ -19,7 +19,7 @@ pub(crate) unsafe fn staff_state_byte(p: usize, k: usize) -> *mut u8 {
 ///
 /// [pt] O inteiro × a constante double do .rdata, truncado (fild; fmul qword; _ftol), em 16 bits.
 pub(crate) unsafe fn mul_rdata_const(v: i16, k: usize) -> i16 {
-    ftol(v as f64 * read_f64_at(k)) as i16
+    ftol(v as f64 * read_f64(k)) as i16
 }
 
 /// Sets current ability (record +5) from PA (+7): trunc(random(trunc(PA x m1)) + PA x m2).
@@ -28,9 +28,9 @@ pub(crate) unsafe fn mul_rdata_const(v: i16, k: usize) -> i16 {
 /// faddp; _ftol), a PA na ficha +7.
 pub(crate) unsafe fn roll_current_ability(f: usize, m1: usize, m2: usize) {
     let pa = read_i16(f + player_sheet::POTENTIAL_ABILITY) as f64;
-    let r = friendly_random(ftol(pa * read_f64_at(m1)));
+    let r = friendly_random(ftol(pa * read_f64(m1)));
     crate::comparison::branch("cqg_7 ability");
-    write_i16(f + player_sheet::CURRENT_ABILITY, ftol(r as f64 + pa * read_f64_at(m2)) as i16); // cqg7: the ability drawn by the PA
+    write_i16(f + player_sheet::CURRENT_ABILITY, ftol(r as f64 + pa * read_f64(m2)) as i16); // cqg7: the ability drawn by the PA
 }
 
 /// Adjusts a 1..20 personality byte: above 15 drops random(cai); below a1 rises random(s1); below a2 rises random(s2).
@@ -779,7 +779,7 @@ pub(crate) unsafe fn set_coach_attributes(p: usize, f: usize, nj: usize, k: f64,
     core::ptr::write_unaligned((nj + non_player::CURRENT_REPUTATION) as *mut u16, coach_attribute_capped(q, read_i16(f + player_sheet::CURRENT_REPUTATION) as f64, k, tetos[0]));
     let q = game_pow(r, 2.0);
     core::ptr::write_unaligned((nj + non_player::HOME_REPUTATION) as *mut u16, coach_attribute_capped(q, read_i16(f + player_sheet::HOME_REPUTATION) as f64, k, tetos[1]));
-    let q = game_pow(r, 2.0) * read_f64_at(rdata::F64_0_75);
+    let q = game_pow(r, 2.0) * read_f64(rdata::F64_0_75);
     core::ptr::write_unaligned((nj + non_player::WORLD_REPUTATION) as *mut u16, coach_attribute_capped(q, read_i16(f + player_sheet::WORLD_REPUTATION) as f64, k, tetos[2]));
 }
 
@@ -839,11 +839,11 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: usize) {
     let f = read_usize(p + staff::PLAYER);
     let nj = read_usize(p + staff::NON_PLAYER);
     if read_i16(f + player_sheet::CURRENT_REPUTATION) > 0x1d4c {
-        set_coach_attributes(p, f, nj, read_f64_at(rdata::F64_0_9), [read_f64_at(rdata::F64_7500), read_f64_at(rdata::F64_7500), read_f64_at(rdata::F64_5750)]);
+        set_coach_attributes(p, f, nj, read_f64(rdata::F64_0_9), [read_f64(rdata::F64_7500), read_f64(rdata::F64_7500), read_f64(rdata::F64_5750)]);
     } else if friendly_random(read_i8(p + staff::AMBITION) as i32) != 0 {
-        set_coach_attributes(p, f, nj, read_f64_at(rdata::F64_0_75), [read_f64_at(rdata::F64_6000), read_f64_at(rdata::F64_6000), read_f64_at(rdata::F64_3750)]);
+        set_coach_attributes(p, f, nj, read_f64(rdata::F64_0_75), [read_f64(rdata::F64_6000), read_f64(rdata::F64_6000), read_f64(rdata::F64_3750)]);
     } else {
-        set_coach_attributes(p, f, nj, read_f64_at(rdata::F64_0_5), [read_f64_at(rdata::F64_4500), read_f64_at(rdata::F64_4500), read_f64_at(rdata::F64_1)]);
+        set_coach_attributes(p, f, nj, read_f64(rdata::F64_0_5), [read_f64(rdata::F64_4500), read_f64(rdata::F64_4500), read_f64(rdata::F64_1)]);
     }
 }
 
@@ -1256,7 +1256,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: 
         if t != 0 {
             let r = friendly_random(0x9c4);
             let v = r.wrapping_add(read_i16(c + club::REPUTATION) as i32 / 2);
-            let x = ftol(v as f64 + read_i8(c + club::TRAINING) as f64 * read_f64_at(rdata::F64_12_5));
+            let x = ftol(v as f64 + read_i8(c + club::TRAINING) as f64 * read_f64(rdata::F64_12_5));
             // simplification: the original pushes the whole eax of _ftol and that of the first view; 0x6e86d0 reads the word
             let a = exe::match_man_judge_player_ability(t, j, c, 2, x as i16);
             let b = exe::match_man_judge_player_ability(t, j, c, 1, a);
@@ -1751,7 +1751,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
         if age <= lim {
             return 0;
         }
-        let f = ftol(read_f64_at(rdata::F64_1) - (age as i32 - lim as i32) as f64 * read_f64_at(rdata::F64_0_1)) as i16;
+        let f = ftol(read_f64(rdata::F64_1) - (age as i32 - lim as i32) as f64 * read_f64(rdata::F64_0_1)) as i16;
         let v = ftol(f as f64 * read_i16(j + player_sheet::CURRENT_REPUTATION) as f64) as i16;
         if age > 0x2d {
             break 'm 1;
@@ -1865,7 +1865,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
                 }
             }
         }
-        let v = ftol((read_f64_at(rdata::F64_1) - (age as i32 - lim as i32) as f64 * read_f64_at(rdata::F64_0_075)) * read_i16(j + player_sheet::CURRENT_REPUTATION) as f64) as i16;
+        let v = ftol((read_f64(rdata::F64_1) - (age as i32 - lim as i32) as f64 * read_f64(rdata::F64_0_075)) * read_i16(j + player_sheet::CURRENT_REPUTATION) as f64) as i16;
         if age > 0x2d {
             break 'm 1;
         }
@@ -1889,7 +1889,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
                 }
                 if read_i8(person + staff::AMBITION) as i32 > random(20) {
                     let (cur, pot) = (read_i16(j + player_sheet::CURRENT_ABILITY) as f64, read_i16(j + player_sheet::POTENTIAL_ABILITY) as f64);
-                    if !(pot * read_f64_at(rdata::F64_0_85) <= cur) {
+                    if !(pot * read_f64(rdata::F64_0_85) <= cur) {
                         break 'm 1;
                     }
                 }

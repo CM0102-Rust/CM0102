@@ -91,12 +91,12 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         let mut v = if rep > 0x128e {
             rep - 0x79e
         } else if rep > 0x8ca {
-            match_pl_ftol((rep - 0x8ca) as f64 * read_f64_at(0x968968) + read_f64_at(0x96a620))
+            match_pl_ftol((rep - 0x8ca) as f64 * read_f64(0x968968) + read_f64(0x96a620))
         } else {
-            match_pl_ftol(rep as f64 * read_f64_at(0x9689e0))
+            match_pl_ftol(rep as f64 * read_f64(0x9689e0))
         };
         if !tipo1 {
-            v = match_pl_ftol(v as f64 * read_f64_at(0x968968));
+            v = match_pl_ftol(v as f64 * read_f64(0x968968));
         }
         let nacao = cpz11_d(clube + 0x53);
         if nacao != 0 {
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         0x96a5c0
     };
     crate::comparison::branch("cpz_11 payroll by injury_word_0c");
-    let folha = match_pl_ftol(rep.wrapping_mul(rep) as f64 * read_f64_at(k) + cpz11_i(this + 0xc) as f64); // cpz11: a reputação na folha
+    let folha = match_pl_ftol(rep.wrapping_mul(rep) as f64 * read_f64(k) + cpz11_i(this + 0xc) as f64); // cpz11: a reputação na folha
     cpz11_por(this + 0xc, folha);
     let t = teto(this, 0, -1);
     cpz11_por(this + 0x14, t);

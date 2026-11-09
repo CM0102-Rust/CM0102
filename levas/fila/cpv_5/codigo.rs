@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, clube: 
         let s = (cpv5_b(est + 0xf) as i8 as i32).wrapping_mul(25);
         let mut v = rep.wrapping_add(s);
         if cpv5_b(clube + 0x6d) == 0 {
-            v = match_pl_ftol(v as f64 * read_f64_at(0x96a5d0));
+            v = match_pl_ftol(v as f64 * read_f64(0x96a5d0));
         }
         if v > 0x157c {
             0x96a6d0
@@ -71,10 +71,10 @@ unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, clube: 
             0x96a6b8
         }
     };
-    let base = match_pl_ftol(cpv5_i(clube + 0x73) as f64 * rep as f64 * read_f64_at(fator));
+    let base = match_pl_ftol(cpv5_i(clube + 0x73) as f64 * rep as f64 * read_f64(fator));
     crate::comparison::branch("cpv_5 merchandising");
     let r = cpv5_sortear(0xb); // cpv5: o sorteio do merchandising
-    let v = match_pl_ftol((r + 0x5f).wrapping_mul(base) as f64 * read_f64_at(0x967898));
+    let v = match_pl_ftol((r + 0x5f).wrapping_mul(base) as f64 * read_f64(0x967898));
     let fin = fin_prm_club_finance(this, clube);
     add_to_i32(fin + 0x15c, v);
     add_to_i32(fin + 0xbc, v);
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar: i32) {
     let rep = cpv5_w(clube + 0x80) as i32;
     let est = cpv5_d(clube + 0x69);
     if est != 0 && cpv5_i(est + 0x3c) < 0x5dc {
-        core::ptr::write_unaligned((est + 0x3c) as *mut i32, match_pl_ftol(rep as f64 * read_f64_at(0x968e18)));
+        core::ptr::write_unaligned((est + 0x3c) as *mut i32, match_pl_ftol(rep as f64 * read_f64(0x968e18)));
         let est = cpv5_d(clube + 0x69);
         if cpv5_i(est + 0x3c) < 0x5dc {
             core::ptr::write_unaligned((est + 0x3c) as *mut i32, 0x5dc);
@@ -116,18 +116,18 @@ unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar: i32) {
     }
     let gerente = cpv5_d(cpv5_d(0xb67a44));
     let valor = cpv5_w(gerente.wrapping_add((cpv5_d(clube) as u32).wrapping_mul(73) as usize) + 8);
-    let mut f = valor as f64 * read_f64_at(0x96a5c0);
-    if !(f > read_f64_at(0x968f20)) {
-        f = read_f64_at(0x968f20);
+    let mut f = valor as f64 * read_f64(0x96a5c0);
+    if !(f > read_f64(0x968f20)) {
+        f = read_f64(0x968f20);
     }
     let t = match_pl_ftol(cpv5_i(clube + 0x73) as f64 * f);
-    let mut g = rep as f64 * read_f64_at(0x96a680);
-    if !(g > read_f64_at(0x968968)) {
-        g = read_f64_at(0x968968);
+    let mut g = rep as f64 * read_f64(0x96a680);
+    if !(g > read_f64(0x968968)) {
+        g = read_f64(0x968968);
     }
     let u = match_pl_ftol(t as f64 * g);
     let est = cpv5_d(clube + 0x69);
-    let teto = |e: usize| if e != 0 { cpv5_i(e + 0x3c) as f64 * read_f64_at(0x96a678) } else { read_f64_at(0x96a5e8) };
+    let teto = |e: usize| if e != 0 { cpv5_i(e + 0x3c) as f64 * read_f64(0x96a678) } else { read_f64(0x96a5e8) };
     let n = match_pl_ftol(if (u as f64) < teto(est) { u as f64 } else { teto(est) });
     if n == 0 {
         return;
@@ -141,20 +141,20 @@ unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar: i32) {
         step_towards = 8;
     }
     *((this + 0x164) as *mut i8) = step_towards;
-    let b = match_pl_ftol(n.wrapping_sub(ja) as f64 * read_f32_at(0x9c8758 + step_towards as usize * 4) as f64);
+    let b = match_pl_ftol(n.wrapping_sub(ja) as f64 * read_f32(0x9c8758 + step_towards as usize * 4) as f64);
     crate::comparison::branch("cpv_5 tickets sold");
     let r = cpv5_sortear(0xb);
     let novos = (r + 0x5f).wrapping_mul(b) / 100;
     let total = ja.wrapping_add(novos);
     core::ptr::write_unaligned((this + 0x18) as *mut i32, total); // cpv5: os ingressos vendidos
-    let preco = match_pl_ftol((rep as f64 * read_f64_at(0x969048) + read_f64_at(0x968938)) * read_f64_at(0x968ea8));
+    let preco = match_pl_ftol((rep as f64 * read_f64(0x969048) + read_f64(0x968938)) * read_f64(0x968ea8));
     let mut receita = preco.wrapping_mul(novos);
     let est = cpv5_d(clube + 0x69);
     let lugares = if est != 0 { cpv5_i(est + 0x3c) } else { 0 };
-    let den = if lugares != 0 { lugares as f64 * read_f64_at(0x96a678) } else { read_f64_at(0x96a5e8) };
+    let den = if lugares != 0 { lugares as f64 * read_f64(0x96a678) } else { read_f64(0x96a5e8) };
     let razao = total as f64 / den;
     core::ptr::write_unaligned((this + 0x160) as *mut f32, razao as f32);
-    if razao > read_f64_at(0x96a678) {
+    if razao > read_f64(0x96a678) {
         core::ptr::write_unaligned((this + 0x160) as *mut u32, 0x3f600000);
     }
     let nac = cpv5_d(clube + 0x53);
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar: i32) {
         0
     };
     if fator != 0 {
-        receita = match_pl_ftol(receita as f64 * read_f64_at(fator));
+        receita = match_pl_ftol(receita as f64 * read_f64(fator));
     }
     if aplicar != 0 { // cpv5: a receita dos ingressos
         add_to_i32(this + 0xac, receita);
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar: i32) {
     let r1 = cpv5_sortear(rep);
     let r2 = cpv5_sortear(rep); // cpv5: o segundo sorteio da loja
     let k = r1.wrapping_add(r2).wrapping_add(1);
-    let v = match_pl_ftol((k as f64 * read_f64_at(0x96a350) + read_f64_at(0x967890)) * novos as f64);
+    let v = match_pl_ftol((k as f64 * read_f64(0x96a350) + read_f64(0x967890)) * novos as f64);
     add_to_i32(this + 0x15c, v);
     add_to_i32(this + 0xbc, v);
     add_i32_to_balance(this, v);

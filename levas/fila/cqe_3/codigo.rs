@@ -224,11 +224,11 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                 let f = cqe3_d(sub + 0x61);
                 if f != 0 {
                     let x = cqe3_b(f + 0x45) as i8 as f64;
-                    v = v.wrapping_add(match_pl_ftol((read_f64_at(0x968940) - x * read_f64_at(0x969020)) * v as f64));
+                    v = v.wrapping_add(match_pl_ftol((read_f64(0x968940) - x * read_f64(0x969020)) * v as f64));
                 }
                 if sob_oferta(gm, sub, 0) != 0 {
-                    let x = cqe3_d(vaga(0xb)) as i32 as f64 * read_f64_at(0x968940);
-                    v = v.wrapping_add(match_pl_ftol(if x > read_f64_at(0x968910) { x } else { read_f64_at(0x968910) }));
+                    let x = cqe3_d(vaga(0xb)) as i32 as f64 * read_f64(0x968940);
+                    v = v.wrapping_add(match_pl_ftol(if x > read_f64(0x968910) { x } else { read_f64(0x968910) }));
                 }
             }
             let c = contract_of_staff_cached(p);
@@ -243,12 +243,12 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                     // edx que a 0x600a50 deixou (lixo): a 0x85fc50 recebe um char, só o byte conta
                     let st = (e as u32 & 0xffff_ff00) | ((cqe3_b(e + 0x24) >> 1) & 0xf) as u32;
                     let r = desejado(pc, p, clube, u32::MAX, st, cqe3_b(e) as u32, 0, 0);
-                    if r as f64 == read_f64_at(0x9689a0) {
+                    if r as f64 == read_f64(0x9689a0) {
                         continue;
                     }
                     // ponytail: o cargo vai com os bytes altos do resultado e do fnstsw; a 0x5968d0 lê só o byte
                     let t = teto(financas(cqe3_d(0xae2a38), clube), p, ((cqe3_b(vaga(0x24)) >> 1) & 0xf) as u32);
-                    if (t as f64 * read_f64_at(0x968de8)) < cqe3_d(pc + 0xc) as i32 as f64 {
+                    if (t as f64 * read_f64(0x968de8)) < cqe3_d(pc + 0xc) as i32 as f64 {
                         continue;
                     }
                 }
@@ -284,14 +284,14 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                                 1 | 2 if entrada(this, vendedor, p, 0, 0) != 0 => {
                                     let rep = cqe3_w(clube + 0x80);
                                     let div = if rep < 1 { 1 } else { rep as i32 };
-                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64_at(0x967880) + rep as i32 as f64 / div as f64;
-                                    Some(if read_f64_at(0x967890) <= f { if read_f64_at(0x968dc0) < f { 1.4 } else { f } } else { 1.0 })
+                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64(0x967880) + rep as i32 as f64 / div as f64;
+                                    Some(if read_f64(0x967890) <= f { if read_f64(0x968dc0) < f { 1.4 } else { f } } else { 1.0 })
                                 }
                                 3 | 4 | 5 if entrada(this, vendedor, p, 0, 0) != 0 => {
                                     let rep = cqe3_w(clube + 0x80) as i32;
                                     let div = if rep.wrapping_mul(2) >= 1 { rep.wrapping_mul(2) } else { 1 };
-                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64_at(0x967880) + rep as f64 / div as f64 + read_f64_at(0x968968);
-                                    Some(if read_f64_at(0x967890) <= f { if read_f64_at(0x968978) < f { 1.2 } else { f } } else { 1.0 })
+                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64(0x967880) + rep as f64 / div as f64 + read_f64(0x968968);
+                                    Some(if read_f64(0x967890) <= f { if read_f64(0x968978) < f { 1.2 } else { f } } else { 1.0 })
                                 }
                                 _ => None,
                             };

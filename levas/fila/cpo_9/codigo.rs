@@ -119,12 +119,12 @@ unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(vende
         }
         let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544590usize);
         let rep = cpo9_h(comprador + 0x80) as f64;
-        if listado(jogador, 0) != 0 && rep * read_f64_at(0x968928) > cpo9_h(cpo9_d(jogador + 0x61) + 0xb) as f64 {
+        if listado(jogador, 0) != 0 && rep * read_f64(0x968928) > cpo9_h(cpo9_d(jogador + 0x61) + 0xb) as f64 {
             return 0;
         }
         let st = cpo9_b(k + 0x4f) & 0xf0;
         if st == 0x60 || st == 0x70 || cpo9_b(cpo9_d(jogador + 0x61) + 0xf) == 0x14 {
-            let v = cpo9_h(cpo9_d(jogador + 0x61) + 0xb) as f64 * read_f64_at(0x969040);
+            let v = cpo9_h(cpo9_d(jogador + 0x61) + 0xb) as f64 * read_f64(0x969040);
             if rep > v && (cpo9_b(k + 0x3d) as i8) < -50 && cpo9_d(vendedor + 0x1db) != cpo9_d(0x9cf6e8) {
                 return 0;
             }
@@ -133,7 +133,7 @@ unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(vende
     }
     let preco: i32 = if humano(vendedor, 0, 1, 0, 0) != 0 {
         let pedido_humano: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> i32 = core::mem::transmute(0x4d42d0usize);
-        let mut v = match_pl_ftol(pedido_humano(cpo9_d(0xae1050), vendedor, comprador, jogador) as f64 * read_f64_at(0x9689b0));
+        let mut v = match_pl_ftol(pedido_humano(cpo9_d(0xae1050), vendedor, comprador, jogador) as f64 * read_f64(0x9689b0));
         let clausula: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x867b50usize);
         if clausula(k) == 0 {
             let tecnico: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
@@ -163,7 +163,7 @@ unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(vende
     if humano(vendedor, 0, 1, 0, 0) != 0 && (preco.wrapping_sub(0x16e360) as i64) < oferta && listado(jogador, 0) != 0 {
         return 1;
     }
-    if preco as f64 * read_f64_at(0x96f9c0) > oferta as f64 {
+    if preco as f64 * read_f64(0x96f9c0) > oferta as f64 {
         return 2;
     }
     crate::comparison::branch("cpo_9 negotiates");

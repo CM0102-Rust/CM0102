@@ -252,11 +252,11 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
                 let f = read_usize(sub + staff::PLAYER);
                 if f != 0 {
                     let x = read_u8(f + 0x45) as i8 as f64;
-                    v = v.wrapping_add(ftol((read_f64_at(rdata::F64_1_5) - x * read_f64_at(rdata::F64_0_03333333333)) * v as f64));
+                    v = v.wrapping_add(ftol((read_f64(rdata::F64_1_5) - x * read_f64(rdata::F64_0_03333333333)) * v as f64));
                 }
                 if exe::transfer_manager_is_player_under_offer(gm, sub, 0) != 0 {
-                    let x = read_usize(slot(0xb)) as i32 as f64 * read_f64_at(rdata::F64_1_5);
-                    v = v.wrapping_add(ftol(if x > read_f64_at(rdata::F64_10000) { x } else { read_f64_at(rdata::F64_10000) }));
+                    let x = read_usize(slot(0xb)) as i32 as f64 * read_f64(rdata::F64_1_5);
+                    v = v.wrapping_add(ftol(if x > read_f64(rdata::F64_10000) { x } else { read_f64(rdata::F64_10000) }));
                 }
             }
             let c = contract_of_staff_cached(p);
@@ -271,12 +271,12 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
                     // edx left by 0x600a50 (garbage): 0x85fc50 receives a char, only the byte counts
                     let st = (e as u32 & 0xffff_ff00) | ((read_u8(e + 0x24) >> 1) & 0xf) as u32;
                     let r = wanted(pc, p, club, u32::MAX, st, read_u8(e) as u32, 0, 0);
-                    if r as f64 == read_f64_at(rdata::F64_0) {
+                    if r as f64 == read_f64(rdata::F64_0) {
                         continue;
                     }
                     // simplification: the role goes with the high bytes of the result and of fnstsw; 0x5968d0 reads only the byte
                     let t = ceiling(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club), p, ((read_u8(slot(0x24)) >> 1) & 0xf) as u32);
-                    if (t as f64 * read_f64_at(rdata::F64_1_3)) < read_usize(pc + contract::WAGE) as i32 as f64 {
+                    if (t as f64 * read_f64(rdata::F64_1_3)) < read_usize(pc + contract::WAGE) as i32 as f64 {
                         continue;
                     }
                 }
@@ -312,14 +312,14 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
                                 1 | 2 if exe::shortlist_manager_find_club_shortlist_entry(this, seller, p, 0, 0) != 0 => {
                                     let rep = read_i16(club + club::REPUTATION);
                                     let div = if rep < 1 { 1 } else { rep as i32 };
-                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64_at(rdata::F64_0_1) + rep as i32 as f64 / div as f64;
-                                    Some(if read_f64_at(rdata::F64_1) <= f { if read_f64_at(rdata::F64_1_4) < f { 1.4 } else { f } } else { 1.0 })
+                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64(rdata::F64_0_1) + rep as i32 as f64 / div as f64;
+                                    Some(if read_f64(rdata::F64_1) <= f { if read_f64(rdata::F64_1_4) < f { 1.4 } else { f } } else { 1.0 })
                                 }
                                 3 | 4 | 5 if exe::shortlist_manager_find_club_shortlist_entry(this, seller, p, 0, 0) != 0 => {
                                     let rep = read_i16(club + club::REPUTATION) as i32;
                                     let div = if rep.wrapping_mul(2) >= 1 { rep.wrapping_mul(2) } else { 1 };
-                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64_at(rdata::F64_0_1) + rep as f64 / div as f64 + read_f64_at(rdata::F64_0_5);
-                                    Some(if read_f64_at(rdata::F64_1) <= f { if read_f64_at(rdata::F64_1_2) < f { 1.2 } else { f } } else { 1.0 })
+                                    let f = (staff_state_byte_0b(p) & 0xf) as f64 * read_f64(rdata::F64_0_1) + rep as f64 / div as f64 + read_f64(rdata::F64_0_5);
+                                    Some(if read_f64(rdata::F64_1) <= f { if read_f64(rdata::F64_1_2) < f { 1.2 } else { f } } else { 1.0 })
                                 }
                                 _ => None,
                             };
@@ -2328,7 +2328,7 @@ pub(crate) unsafe extern "thiscall" fn count_slots_with_bids(this: usize, club: 
 ///
 /// `shortlist_manager_remove_from_transfer_list(pessoa)`, called by the transfer screens (`0x8f6770`, `0x8f8120`). No
 /// contract (`0x4cf5a0`): 0. With one, bit 0 of `+0x4e` (on the transfer list) is cleared and it returns 1 in the low
-/// byte (the upper ones are those of the contract pointer, as in the original).
+/// read_i8(the upper ones are those of the contract pointer + (as in the original)).
 /// Original: `shortlist_manager_remove_from_transfer_list` (0x844280, shortlist_manager.cpp, stdcall).
 ///
 /// [pt] { 0x844280 } (stdcall, ret 4, shortlist_manager.cpp): `shortlist_manager_remove_from_transfer_list(pessoa)`, pelas
@@ -3644,12 +3644,12 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_res
         }
         let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_LOAN_LISTED);
         let rep = read_i16(buyer + club::REPUTATION) as f64;
-        if listado(player, 0) != 0 && rep * read_f64_at(rdata::F64_1_25) > read_i16(read_usize(player + staff::PLAYER) + 0xb) as f64 {
+        if listado(player, 0) != 0 && rep * read_f64(rdata::F64_1_25) > read_i16(read_usize(player + staff::PLAYER) + 0xb) as f64 {
             return 0;
         }
         let st = read_u8(k + contract::SQUAD_STATUS) & 0xf0;
         if st == 0x60 || st == 0x70 || read_u8(read_usize(player + staff::PLAYER) + 0xf) == 0x14 {
-            let v = read_i16(read_usize(player + staff::PLAYER) + 0xb) as f64 * read_f64_at(rdata::F64_0_75);
+            let v = read_i16(read_usize(player + staff::PLAYER) + 0xb) as f64 * read_f64(rdata::F64_0_75);
             if rep > v && (read_u8(k + 0x3d) as i8) < -50 && read_usize(seller + club::CONTINENTAL_COMP_ID) != read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) {
                 return 0;
             }
@@ -3657,7 +3657,7 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_res
         return 2;
     }
     let price: i32 = if exe::human_manager_is_human_club(seller, 0, 1, (0) as u32, 0) != 0 {
-        let mut v = ftol(exe::contract_manager_get_human_asking_price(read_usize(G_CONTRACT_MANAGER), seller, buyer, player) as f64 * read_f64_at(rdata::F64_0_8));
+        let mut v = ftol(exe::contract_manager_get_human_asking_price(read_usize(G_CONTRACT_MANAGER), seller, buyer, player) as f64 * read_f64(rdata::F64_0_8));
         if exe::staff_contract_has_active_release_clause(k) == 0 {
             if exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), exe::database_get_club_manager(seller)) != 0 {
                 match exe::human_manager_get_holiday_option(read_usize(G_HUMAN_MANAGER), 0, exe::database_get_club_manager(seller)) as i8 {
@@ -3682,7 +3682,7 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_res
     if exe::human_manager_is_human_club(seller, 0, 1, (0) as u32, 0) != 0 && (price.wrapping_sub(0x16e360) as i64) < offer && listado(player, 0) != 0 {
         return 1;
     }
-    if price as f64 * read_f64_at(rdata::F64_0_7142857143) > offer as f64 {
+    if price as f64 * read_f64(rdata::F64_0_7142857143) > offer as f64 {
         return 2;
     }
     crate::comparison::branch("cpo_9 negotiates");
@@ -3812,26 +3812,26 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(pe
     }
     let t = manager(club);
     if exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), person, t) != 0 {
-        let a = rep as f64 * read_f64_at(rdata::F64_1_5);
-        let b = rc as f64 * read_f64_at(rdata::F64_0_75);
+        let a = rep as f64 * read_f64(rdata::F64_1_5);
+        let b = rc as f64 * read_f64(rdata::F64_0_75);
         rep = ftol(if a > b { a } else { b }) as i16;
     }
     let mut q = rep as f64 / rc as f64;
-    if q < read_f64_at(rdata::F64_0_1) {
-        q = read_f64_at(rdata::F64_0_1);
-    } else if !(q <= read_f64_at(rdata::F64_2)) {
-        q = read_f64_at(rdata::F64_2);
+    if q < read_f64(rdata::F64_0_1) {
+        q = read_f64(rdata::F64_0_1);
+    } else if !(q <= read_f64(rdata::F64_2)) {
+        q = read_f64(rdata::F64_2);
     }
     let f = q as f32 as f64; // the original keeps the ratio in a float and compares the rest by it
-    if q > read_f64_at(rdata::F64_1_5) {
+    if q > read_f64(rdata::F64_1_5) {
         return 1;
     }
-    if f > read_f64_at(rdata::F64_1_2) && rc < 0x2134 {
+    if f > read_f64(rdata::F64_1_2) && rc < 0x2134 {
         return 2;
     }
     let age = read_u8(person + staff::AGE) as i8;
-    if !(f > read_f64_at(rdata::F64_1_2)) && rep <= 0x1964 {
-        if f > read_f64_at(rdata::F64_0_6) && age < 0x17 {
+    if !(f > read_f64(rdata::F64_1_2)) && rep <= 0x1964 {
+        if f > read_f64(rdata::F64_0_6) && age < 0x17 {
             return 5;
         }
         return if age >= 0x18 { 4 } else { 6 };
@@ -3969,7 +3969,7 @@ pub(crate) unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, pl
     let status = (read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB)) as u32 & !0xff) | ((read_u8(entry + shortlist_slot::FLAGS) >> 1) & 0xf) as u32;
     let f1 = staff_interest_in_club(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), player, club, 0, 1, status);
     crate::comparison::branch("cpw_3 loan interest");
-    if !(f1 >= read_f64_at(rdata::F64_3_5)) { // cpw3: o interesse mínimo;
+    if !(f1 >= read_f64(rdata::F64_3_5)) { // cpw3: o interesse mínimo;
         return -1;
     }
     let month_of: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_MONTH);
@@ -3996,7 +3996,7 @@ pub(crate) unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, pl
     let f2 = staff_interest_in_club(this, player, club, 0, 0, 1);
     let mut meses = until_end as u8;
     crate::comparison::branch("cpw_3 count from the start");
-    if f2 >= read_f64_at(rdata::F64_2_75) { // cpw3: the interest to count from the start;
+    if f2 >= read_f64(rdata::F64_2_75) { // cpw3: the interest to count from the start;
         let n = read_usize(read_usize(club + club::NATION));
         if n != read_usize(KEY_NATION_SPAIN) && n != read_usize(KEY_NATION_PORTUGAL) && n != read_usize(KEY_NATION_ITALY) {
             meses = start as u8;
@@ -4154,22 +4154,22 @@ pub(crate) unsafe extern "thiscall" fn update_club_target_reputation(this: usize
     let target = (r + 5) as *mut i16;
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let w = || core::ptr::read_unaligned(target) as i32;
-    let por = |dif: i32, k: usize, v: i32| ftol((dif as f64 * read_f64_at(k) + read_f64_at(rdata::F64_1)) * v as f64);
+    let por = |dif: i32, k: usize, v: i32| ftol((dif as f64 * read_f64(k) + read_f64(rdata::F64_1)) * v as f64);
     core::ptr::write_unaligned(target, (core::ptr::read_unaligned((club + club::ATTENDANCE) as *const i32) / 10 + 0x1194) as i16);
     if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) == 0 {
         let manager = u(club + club::MANAGER);
         if manager != 0 {
-            let dif = byte(manager, staff::AMBITION) as i32 - byte(u(manager + staff::NON_PLAYER), 0x1d) as i32;
+            let dif = read_i8(manager + staff::AMBITION) as i32 - read_i8(u(manager + staff::NON_PLAYER) + 0x1d) as i32;
             core::ptr::write_unaligned(target, por(dif, 0x96a740, w()) as i16);
         }
     }
     let p = u(club + club::CHAIRMAN);
     if p != 0 && u(p + staff::NON_PLAYER) != 0 {
-        let dif = byte(p, staff::AMBITION) as i32 - byte(u(p + staff::NON_PLAYER), 0x1d) as i32;
+        let dif = read_i8(p + staff::AMBITION) as i32 - read_i8(u(p + staff::NON_PLAYER) + 0x1d) as i32;
         let v = por(dif, 0x968958, w()) as i16;
         core::ptr::write_unaligned(target, v);
         let sheet = u(u(club + club::CHAIRMAN) + 0x69);
-        core::ptr::write_unaligned(target, por(byte(sheet, non_player::RESOURCES) as i32 - 10, 0x967878, v as i32) as i16);
+        core::ptr::write_unaligned(target, por(read_i8(sheet + non_player::RESOURCES) as i32 - 10, 0x967878, v as i32) as i16);
     }
     let floor = core::ptr::read_unaligned((club + club::REPUTATION) as *const i16);
     let v = core::ptr::read_unaligned(target);

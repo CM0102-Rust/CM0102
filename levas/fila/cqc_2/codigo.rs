@@ -22,7 +22,7 @@ unsafe fn read_i64(a: usize) -> i64 {
 
 /// `v` × a constante f64 em `k`, truncado (_ftol).
 unsafe fn mul_exe_f64(v: i32, k: usize) -> i32 {
-    match_pl_ftol(v as f64 * read_f64_at(k))
+    match_pl_ftol(v as f64 * read_f64(k))
 }
 
 /// O clube humano (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(clube, a, 1, 0, 0)).
@@ -128,7 +128,7 @@ unsafe fn human_manager_wage_cap(pessoa: usize, np: usize, cargo: i8) -> i32 {
 unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u32) -> i32 {
     let mut cargo = cargo_arg as u8;
     let clube = cqc2_d(0xae23b4).wrapping_add((cqc2_i(fin + 8) as u32).wrapping_mul(0x245) as usize);
-    let verba = match_pl_ftol(read_i64(fin) as f64 * read_f64_at(0x968de8));
+    let verba = match_pl_ftol(read_i64(fin) as f64 * read_f64(0x968de8));
     let mut liga: i32 = 100;
     let mut fator: f64 = 0.25; // [esp + 0x3c]: 0x3fd00000_00000000
     let mut contrato: usize = 0;
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
         }
         _ => {}
     }
-    let mut s = match_pl_ftol((di as i16) as f64 * read_f64_at(0x96a5e0));
+    let mut s = match_pl_ftol((di as i16) as f64 * read_f64(0x96a5e0));
     if (s as i16) > 0x2710 {
         s = 0x2710;
     }
@@ -220,9 +220,9 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
             f = q;
             if dl == 1 {
                 let m = if e(0x9cf2e4) || e(0x9cf360) || e(0x9cf488) || e(0x9cf36c) {
-                    read_f64_at(0x967890)
+                    read_f64(0x967890)
                 } else if e(0x9cf4f8) {
-                    read_f64_at(0x969040)
+                    read_f64(0x969040)
                 } else {
                     let (k, tres) = if e(0x9cf314) || e(0x9cf300) || e(0x9cf45c) || e(0x9cf338) {
                         (0x96a5d0, false)
@@ -235,14 +235,14 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
                     };
                     let d16 = di as i16 as i32;
                     if d16 <= (bl as i32).wrapping_mul(10) {
-                        read_f64_at(k)
+                        read_f64(k)
                     } else {
                         let div = if bl < 1 { 1 } else { bl as i32 };
-                        let mut m = d16 as f64 / div as f64 * read_f64_at(0x967880) * read_f64_at(k);
-                        if tres && !(m <= read_f64_at(0x969040)) {
-                            m = read_f64_at(0x969040);
-                        } else if !(m <= read_f64_at(0x967890)) {
-                            m = read_f64_at(0x967890);
+                        let mut m = d16 as f64 / div as f64 * read_f64(0x967880) * read_f64(k);
+                        if tres && !(m <= read_f64(0x969040)) {
+                            m = read_f64(0x969040);
+                        } else if !(m <= read_f64(0x967890)) {
+                            m = read_f64(0x967890);
                         }
                         m
                     }
@@ -256,11 +256,11 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
                 let c16 = cqc2_w(lc + 0x69);
                 let cubo = |x: i32| x.wrapping_mul(x).wrapping_mul(x);
                 let v = if d2 != 0 && cqc2_w(d2 + 0x69) > c16 {
-                    let t1 = match_pl_ftol(cubo(c16 as i32) as f64 * f * read_f64_at(0x96a5c8));
-                    let t2 = match_pl_ftol(cubo(cqc2_w(d2 + 0x69) as i32) as f64 * f * read_f64_at(0x968928));
+                    let t1 = match_pl_ftol(cubo(c16 as i32) as f64 * f * read_f64(0x96a5c8));
+                    let t2 = match_pl_ftol(cubo(cqc2_w(d2 + 0x69) as i32) as f64 * f * read_f64(0x968928));
                     t2.wrapping_sub(t1)
                 } else {
-                    match_pl_ftol(cubo(c16 as i32) as f64 * f * read_f64_at(0x968e18))
+                    match_pl_ftol(cubo(c16 as i32) as f64 * f * read_f64(0x968e18))
                 };
                 liga = if v < 0xc8 { 0xc8 } else { v };
             }
@@ -302,11 +302,11 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
     }
     if pessoa != 0 {
         let repf = rep as i32 as f64;
-        let t = repf * repf * fator * read_f64_at(0x96a5c0) + cqc2_i(fin + 0x10) as f64;
+        let t = repf * repf * fator * read_f64(0x96a5c0) + cqc2_i(fin + 0x10) as f64;
         let v = contract_wage(pessoa);
         s = if (v as f64) < t {
             crate::comparison::branch("cqc_2 ceiling by injury_word_0c");
-            match_pl_ftol(repf * repf * fator * read_f64_at(0x96a5c0) + cqc2_i(fin + 0x10) as f64) // cqc2: a reputação ao quadrado
+            match_pl_ftol(repf * repf * fator * read_f64(0x96a5c0) + cqc2_i(fin + 0x10) as f64) // cqc2: a reputação ao quadrado
         } else {
             contract_wage(pessoa)
         };
@@ -316,12 +316,12 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
             let np2 = || cqc2_d(pessoa + 0x61);
             if c == 3 {
                 let bf = b20 as f64;
-                let lim = bf * read_f64_at(0x9689b0);
+                let lim = bf * read_f64(0x9689b0);
                 if (r as f64) < lim {
-                    r = if is_human_club_with(clube, 0) == 0 && np2() != 0 && cqc2_w(np2() + 0xb) > 0x1c52 { match_pl_ftol(bf * read_f64_at(0x9689d8)) } else { match_pl_ftol(lim) };
+                    r = if is_human_club_with(clube, 0) == 0 && np2() != 0 && cqc2_w(np2() + 0xb) > 0x1c52 { match_pl_ftol(bf * read_f64(0x9689d8)) } else { match_pl_ftol(lim) };
                 }
             } else if c == 2 {
-                let lim = b20 as f64 * read_f64_at(0x9689d8);
+                let lim = b20 as f64 * read_f64(0x9689d8);
                 if (r as f64) < lim {
                     r = if is_human_club_with(clube, 0) == 0 && np2() != 0 && cqc2_w(np2() + 0xb) > 0x1e46 { b20 } else { match_pl_ftol(lim) };
                 }
@@ -334,7 +334,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
             if np != 0 {
                 let teto = human_manager_wage_cap(pessoa, np, cargo as i8);
                 if teto < r {
-                    r = teto.wrapping_sub(match_pl_ftol(r.wrapping_sub(teto) as f64 * read_f64_at(0x969518)));
+                    r = teto.wrapping_sub(match_pl_ftol(r.wrapping_sub(teto) as f64 * read_f64(0x969518)));
                 }
             }
         }
@@ -352,10 +352,10 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
                     let tab = cqc2_d(cqc2_d(tm + 0x856) + 0xdc);
                     let x = cqc2_w(tab.wrapping_add((cqc2_i(clube) as usize).wrapping_mul(9)) + 5) as i32;
                     let mut m = x as f64 / div as f64;
-                    if !(read_f64_at(0x967890) < m || read_f64_at(0x967890) == m) {
-                        m = read_f64_at(0x967890);
-                    } else if read_f64_at(0x968978) < m {
-                        m = read_f64_at(0x968978);
+                    if !(read_f64(0x967890) < m || read_f64(0x967890) == m) {
+                        m = read_f64(0x967890);
+                    } else if read_f64(0x968978) < m {
+                        m = read_f64(0x968978);
                     }
                     s = match_pl_ftol(s as f64 * m);
                 }
@@ -416,12 +416,12 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
             let pres = cqc2_d(clube + 0xbf);
             if pres != 0 && cqc2_d(pres + 0x69) != 0 && (cqc2_w(clube + 0x80) as i32) < cqc2_w(cqc2_d(pessoa + 0x61) + 0xb) as i32 + 0x4e2 {
                 crate::comparison::branch("cqc_2 chairman");
-                s = match_pl_ftol(((cqc2_b(pres + 0x57) as i8 as i32) as f64 * read_f64_at(0x967898) + read_f64_at(0x9689d8)) * s as f64); // cqc2: o presidente
+                s = match_pl_ftol(((cqc2_b(pres + 0x57) as i8 as i32) as f64 * read_f64(0x967898) + read_f64(0x9689d8)) * s as f64); // cqc2: o presidente
                 // 0x547810 (push pres; push pessoa; add esp, 8 -> cdecl), 0x547790 (push clube; push pessoa; add esp, 8 -> cdecl)
                 let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
                 let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547790usize);
                 if gosta(pessoa, pres) != 0 || favorito(pessoa, clube) != 0 {
-                    s = match_pl_ftol(((cqc2_b(cqc2_d(clube + 0xbf) + 0x57) as i8 as i32) as f64 * read_f64_at(0x967898) + read_f64_at(0x967890)) * s as f64);
+                    s = match_pl_ftol(((cqc2_b(cqc2_d(clube + 0xbf) + 0x57) as i8 as i32) as f64 * read_f64(0x967898) + read_f64(0x967890)) * s as f64);
                 }
                 let pres = cqc2_d(clube + 0xbf);
                 let pc = cqc2_d(pres + 0x69);
@@ -457,7 +457,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
                             np != 0 && cqc2_w(np + 0xb) < 0x1e46
                         };
                         if ok && s > 0x14c08 {
-                            s = match_pl_ftol(s.wrapping_sub(0x14c08) as f64 * read_f64_at(0x968918) + read_f64_at(0x96a5a0));
+                            s = match_pl_ftol(s.wrapping_sub(0x14c08) as f64 * read_f64(0x968918) + read_f64(0x96a5a0));
                         }
                     }
                 }
@@ -479,13 +479,13 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
                     }
                 }
                 5 => {
-                    s = if s > 0xc80 { match_pl_ftol(s.wrapping_sub(0xc80) as f64 * read_f64_at(0x968e80) + read_f64_at(0x96a598)) } else { mul_exe_f64(s, 0x968e48) };
+                    s = if s > 0xc80 { match_pl_ftol(s.wrapping_sub(0xc80) as f64 * read_f64(0x968e80) + read_f64(0x96a598)) } else { mul_exe_f64(s, 0x968e48) };
                     if s > 0x30d4 {
                         s = 0x30d4;
                     }
                 }
                 6 => {
-                    s = if s > 0xc80 { match_pl_ftol(s.wrapping_sub(0xc80) as f64 * read_f64_at(0x968f20) + read_f64_at(0x96a590)) } else { mul_exe_f64(s, 0x968968) };
+                    s = if s > 0xc80 { match_pl_ftol(s.wrapping_sub(0xc80) as f64 * read_f64(0x968f20) + read_f64(0x96a590)) } else { mul_exe_f64(s, 0x968968) };
                     if s > 0x203a {
                         s = 0x203a;
                     }
@@ -495,9 +495,9 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
         }
     } else {
         let x = (s as i16) as i32 as f64;
-        s = match_pl_ftol(x * x * fator * read_f64_at(0x96a5c0) + cqc2_i(fin + 0x10) as f64);
+        s = match_pl_ftol(x * x * fator * read_f64(0x96a5c0) + cqc2_i(fin + 0x10) as f64);
         if s < b20 {
-            s = match_pl_ftol(s as f64 * read_f64_at(0x969040) + b20 as f64 * read_f64_at(0x9689e0));
+            s = match_pl_ftol(s as f64 * read_f64(0x969040) + b20 as f64 * read_f64(0x9689e0));
         }
         if !fin_prm_is_national_team(clube) && nac != 0 {
             if e(0x9cf314) || e(0x9cf300) {
@@ -526,12 +526,12 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
             s = 0xfa;
         }
         if cqc2_w(clube + 0x80) < 0x8ca && s > 0x834 {
-            s = match_pl_ftol((s as f64 - read_f32_at(0x96a5b8) as f64) * read_f64_at(0x968918) + read_f64_at(0x96a5b0));
+            s = match_pl_ftol((s as f64 - read_f32(0x96a5b8) as f64) * read_f64(0x968918) + read_f64(0x96a5b0));
         }
     } else if tipo == 2 {
         s = mul_exe_f64(s, 0x969040);
         if cqc2_w(clube + 0x80) < 0xabe && s > 0x4b0 {
-            s = match_pl_ftol((s as f64 - read_f32_at(0x96a588) as f64) * read_f64_at(0x968918) + read_f64_at(0x96a580));
+            s = match_pl_ftol((s as f64 - read_f32(0x96a588) as f64) * read_f64(0x968918) + read_f64(0x96a580));
         }
         if s < 0x96 {
             s = 0x96;

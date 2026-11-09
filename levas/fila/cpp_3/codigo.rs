@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
     *(((board_row_by_id(this, id)) + 2) as *mut u8) |= 1;
     let lista = cpp3_d(cpp3_d(cpp3_d(0xde1f54) as usize + 0x856) as usize + 0xdc) as usize;
     *(lista.wrapping_add((id as usize).wrapping_mul(9)) as *mut u8).add(4) = 2;
-    let k = read_f64_at(0x967880); // 0,1
+    let k = read_f64(0x967880); // 0,1
     let rep = cpp3_w(clube + 0x80) as i32;
     let tecnico = cpp3_d(clube + 0xcf) as usize;
     let ficha = cpp3_d(tecnico + 0x69) as usize;
@@ -73,26 +73,26 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
     let ficha = cpp3_d(cpp3_d(clube + 0xcf) as usize + 0x69) as usize;
     let v = cpp3_w(ficha + 0xa) as i32;
     let mut atual = v as f32; // fst dword
-    let zero = read_f32_at(0x968970) as f64;
+    let zero = read_f32(0x968970) as f64;
     if v as f64 == zero {
         let r = cpp3_w(clube + 0x80) as i32;
         atual = if r != 0 { (r / 2) as f32 } else { 5000.0 };
-    } else if (atual as f64) < read_f32_at(0x96d1a8) as f64 {
+    } else if (atual as f64) < read_f32(0x96d1a8) as f64 {
         atual = (random(0x3e8) + 0x1f4) as f32;
     }
     let d = cpp3_w(clube + 0x80) as i32;
     let divisor = if d as f64 == zero {
         atual as f64
-    } else if (d as f64) < read_f32_at(0x96d1a8) as f64 {
+    } else if (d as f64) < read_f32(0x96d1a8) as f64 {
         (random(0x2ee) + 0xfa) as f64
     } else {
         d as f64
     };
-    let mut q = ((atual as f64 / divisor) * read_f32_at(0x96d1a4) as f64) as f32; // fstp dword
-    if q as f64 > read_f64_at(0x96d1b0) {
+    let mut q = ((atual as f64 / divisor) * read_f32(0x96d1a4) as f64) as f32; // fstp dword
+    if q as f64 > read_f64(0x96d1b0) {
         crate::comparison::branch("cpp_3 base at the ceiling");
         q = 10000.0;
-    } else if !(q as f64 >= read_f32_at(0x96d1ac) as f64) {
+    } else if !(q as f64 >= read_f32(0x96d1ac) as f64) {
         q = 6500.0;
     }
     // a confiança e os humores, cada um com os seus limites

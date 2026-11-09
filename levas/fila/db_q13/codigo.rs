@@ -52,7 +52,7 @@ unsafe extern "C" fn staff_get_non_player_attribute(pessoa: usize, atributo: u32
 unsafe extern "C" fn player_attribute_rating_with_scaled_ability(jogador: usize, valor: u32) -> u32 {
     let habilidade = core::ptr::read_unaligned((jogador + 5) as *const i16) as f64;
     let v = (valor as u8 as i8) as f64;
-    attribute_rating(habilidade * read_f64_at(0x967880) + (v + v)) as u32
+    attribute_rating(habilidade * read_f64(0x967880) + (v + v)) as u32
 }
 
 unsafe extern "C" fn compare_get_adjective_form_index(indice: u32, idioma: u32) -> u8 {

@@ -1,11 +1,11 @@
 # Mutacoes da leva150 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva150.py --carreira 2002-06-01
 MUTACOES = [
-    ('a_fator', "            if factor > read_f64_at(rdata::F64_1_4) {", "            if factor > read_f64_at(rdata::F64_1) {"),
-    ('a_classico', "                esi = ftol(l14 as f64 * read_f64_at(rdata::F64_1_75));", "                esi = ftol(l14 as f64 * read_f64_at(rdata::F64_1_5));"),
+    ('a_fator', "            if factor > read_f64(rdata::F64_1_4) {", "            if factor > read_f64(rdata::F64_1) {"),
+    ('a_classico', "                esi = ftol(l14 as f64 * read_f64(rdata::F64_1_75));", "                esi = ftol(l14 as f64 * read_f64(rdata::F64_1_5));"),
     ('a_dias', "[Some(0x96d4c0usize), Some(0x96d4b8)", "[Some(0x96d4b8usize), Some(0x96d4b8)"),
     ('a_mascara', "(0x5c, 0x810)", "(0x5c, 0x804)"),
     ('a_ja_jogou', "                if exe::transfer_manager_get_ineligibility_code(u(G_TRANSFER_MANAGER, 0), p, x) != 0 || exe::nationalteams_get_international_duty_club(", "                if exe::nationalteams_get_international_duty_club("),
-    ('c_estado', "        if exe::injury_get_player_injury_status(u(G_INJURY, 0), p) == 2 || (byte(t, match_manager::TACTIC_SLOT) != 0", "        if exe::injury_get_player_injury_status(u(G_INJURY, 0), p) == 1 || (byte(t, match_manager::TACTIC_SLOT) != 0"),
+    ('c_estado', "        if exe::injury_get_player_injury_status(u(G_INJURY, 0), p) == 2 || (read_i8(t + match_manager::TACTIC_SLOT) != 0", "        if exe::injury_get_player_injury_status(u(G_INJURY, 0), p) == 1 || (read_i8(t + match_manager::TACTIC_SLOT) != 0"),
     ('c_selecao', "    let mut mask: u32 = if exe::database_is_national_team(club) != 0 { 0x208a09c } else { 0xca0ca };", "    let mut mask: u32 = if exe::database_is_national_team(club) != 0 { 0x208a09c } else { 0xca0cb };"),
     ('c_sorteio', "            let lim = exe::utils_random(3000) + 3000;", "            let lim = exe::utils_random(3000) + 2000;"),
     ('r_referencia', "                        let v = h16(fi, player_sheet::WORLD_REPUTATION).wrapping_add(h16(fi, player_sheet::CURRENT_REPUTATION));", "                        let v = h16(fi, player_sheet::WORLD_REPUTATION);"),

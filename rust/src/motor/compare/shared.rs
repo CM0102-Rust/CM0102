@@ -22,7 +22,7 @@ pub(crate) unsafe extern "C" fn compare_posicao_no_conteiner(z: usize) -> i32 {
 pub(crate) unsafe extern "thiscall" fn compare_table_a(this: usize, j: usize) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_TABLE_A)(this, j);
     let n = table_a(this, j);
-    SCOREBOARD.record(r == n, || format!("table_a(pos {}, lado {}) original={} rust={}", byte(j, match_player::POSITION), byte(j, match_player::SIDE), r, n));
+    SCOREBOARD.record(r == n, || format!("table_a(pos {}, lado {}) original={} rust={}", read_i8(j + match_player::POSITION), read_i8(j + match_player::SIDE), r, n));
     r
 }
 
@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn compare_table_a(this: usize, j: usize) ->
 pub(crate) unsafe extern "thiscall" fn compare_table_b(this: usize, j: usize) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_TABLE_B)(this, j);
     let n = table_b(this, j);
-    SCOREBOARD.record(r == n, || format!("table_b(pos {}, lado {}) original={} rust={}", byte(j, match_player::POSITION), byte(j, match_player::SIDE), r, n));
+    SCOREBOARD.record(r == n, || format!("table_b(pos {}, lado {}) original={} rust={}", read_i8(j + match_player::POSITION), read_i8(j + match_player::SIDE), r, n));
     r
 }
 
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "stdcall" fn compare_limit(l: u8, v: i8) -> u8 {
 pub(crate) unsafe extern "thiscall" fn compare_condicao(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_PLAYER_CONDITION)(this);
     let n = player_condition(this);
-    SCOREBOARD.record(r == n, || format!("player_condition(lado {}, v {}) original={} rust={}", byte(this, match_player::SIDE), byte(this, match_player::CELL_Y), r, n));
+    SCOREBOARD.record(r == n, || format!("player_condition(lado {}, v {}) original={} rust={}", read_i8(this + match_player::SIDE), read_i8(this + match_player::CELL_Y), r, n));
     r
 }
 
@@ -86,7 +86,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_table(j: usize) -> u16 {
 pub(crate) unsafe extern "thiscall" fn compare_player_difference(this: usize, j: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_PLAYER_DIFFERENCE)(this, j);
     let n = player_difference(this, j);
-    SCOREBOARD.record(r == n, || format!("player_difference(lado {}, v {}) original={} rust={}", side_of_player(j), byte(j, match_player::CELL_Y), r, n));
+    SCOREBOARD.record(r == n, || format!("player_difference(lado {}, v {}) original={} rust={}", side_of_player(j), read_i8(j + match_player::CELL_Y), r, n));
     r
 }
 
@@ -102,7 +102,7 @@ pub(crate) unsafe extern "thiscall" fn compare_side_byte(this: usize, j: usize) 
 pub(crate) unsafe extern "thiscall" fn compare_player_limit(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_PLAYER_LIMIT)(this);
     let n = player_limit(this);
-    SCOREBOARD.record(r == n, || format!("player_limit(lado {}, v {}) original={} rust={}", side_of_player(this), byte(this, match_player::CELL_Y), r, n));
+    SCOREBOARD.record(r == n, || format!("player_limit(lado {}, v {}) original={} rust={}", side_of_player(this), read_i8(this + match_player::CELL_Y), r, n));
     r
 }
 
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_limit(this: usize) -> u8 {
 pub(crate) unsafe extern "thiscall" fn compare_player_band(this: usize, l: u8) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> u32>(IDX_PLAYER_BAND)(this, l);
     let n = player_band(this, l);
-    SCOREBOARD.record(r == n, || format!("player_band({}, {}, {}) original={} rust={}", l, byte(this, match_player::CELL_X), byte(this, match_player::CELL_Y), r, n));
+    SCOREBOARD.record(r == n, || format!("player_band({}, {}, {}) original={} rust={}", l, read_i8(this + match_player::CELL_X), read_i8(this + match_player::CELL_Y), r, n));
     r
 }
 
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn compare_position_byte(this: usize, i: i8)
 pub(crate) unsafe extern "thiscall" fn compare_field_by_position(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_FIELD_BY_POSITION)(this);
     let n = field_by_position(this);
-    SCOREBOARD.record(r == n, || format!("field_by_position(lado {}, pos {}) original={} rust={}", side_of_player(this), byte(this, match_player::POSITION), r, n));
+    SCOREBOARD.record(r == n, || format!("field_by_position(lado {}, pos {}) original={} rust={}", side_of_player(this), read_i8(this + match_player::POSITION), r, n));
     r
 }
 
@@ -158,14 +158,14 @@ pub(crate) unsafe extern "thiscall" fn compare_tire_fatigue(this: usize, x: f32,
     let f = original_fn::<unsafe extern "thiscall" fn(usize, f32, i16)>(IDX_TIRE_FATIGUE);
     let regions = [(this + match_player::STAMINA, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this, x, code), || tire_fatigue(this, x, code));
-    SCOREBOARD.record(igual, || format!("tire_fatigue({}, {}, 0xd5={}) original={:x?} rust={:x?}", x, code, read_f32_at(this + match_player::STAMINA_ATTRIBUTE), mo, mr));
+    SCOREBOARD.record(igual, || format!("tire_fatigue({}, {}, 0xd5={}) original={:x?} rust={:x?}", x, code, read_f32(this + match_player::STAMINA_ATTRIBUTE), mo, mr));
 }
 
 /// Comparer for `facing`.
 pub(crate) unsafe extern "thiscall" fn compare_facing(this: usize, a: i8, b: i8) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8) -> u8>(IDX_FACING)(this, a, b);
     let n = facing(this, a, b);
-    SCOREBOARD.record(r == n, || format!("facing({}, {}, dir {}, 0x10c {}) original={} rust={}", a, b, *((this + match_player::FACING) as *const i16), byte(this, match_player::MOMENT_AGILITY), r, n));
+    SCOREBOARD.record(r == n, || format!("facing({}, {}, dir {}, 0x10c {}) original={} rust={}", a, b, *((this + match_player::FACING) as *const i16), read_i8(this + match_player::MOMENT_AGILITY), r, n));
     r
 }
 
@@ -207,7 +207,7 @@ pub(crate) unsafe extern "thiscall" fn compare_procurar(this: usize, side: i8, g
     // go into the regions (the tape records them after each call).
     let list = (group as isize + side as isize * 44) as *const usize;
     let mut regions = vec![(this + engine::SIDE_PLAYED_BALL, 2), ((group as isize + side as isize) as usize + 0x58, 1), (list as usize, 44)];
-    for i in 0..byte((group as isize + side as isize) as usize, 0x58).clamp(0, 11) as usize {
+    for i in 0..read_i8((group as isize + side as isize) as usize + 0x58).clamp(0, 11) as usize {
         let p = *list.add(i);
         regions.extend([(p + match_player::POSITION, 1), (p + match_player::BUSY, 1)]);
     }
@@ -228,7 +228,7 @@ pub(crate) unsafe extern "thiscall" fn compare_procurar(this: usize, side: i8, g
 pub(crate) unsafe extern "stdcall" fn compare_reaches(j: usize, b: i8, c: i8) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, i8, i8) -> u8>(IDX_REACHES)(j, b, c);
     let n = reaches(j, b, c);
-    SCOREBOARD.record(r == n, || format!("reaches(lado {}, x {}, y {}, {}, {}) original={} rust={}", side_of_player(j), byte(j, match_player::CELL_X), byte(j, match_player::CELL_Y), b, c, r, n));
+    SCOREBOARD.record(r == n, || format!("reaches(lado {}, x {}, y {}, {}, {}) original={} rust={}", side_of_player(j), read_i8(j + match_player::CELL_X), read_i8(j + match_player::CELL_Y), b, c, r, n));
     r
 }
 
@@ -297,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn compare_consegue(this: usize, a: i8, b: i
 pub(crate) unsafe extern "thiscall" fn compare_in_the_box(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_IN_THE_BOX)(this);
     let n = in_the_box(this);
-    SCOREBOARD.record(r == n, || format!("in_the_box(lado {}, x {}, y {}) original={} rust={}", side_of_player(this), byte(this, match_player::CELL_X), byte(this, match_player::CELL_Y), r, n));
+    SCOREBOARD.record(r == n, || format!("in_the_box(lado {}, x {}, y {}) original={} rust={}", side_of_player(this), read_i8(this + match_player::CELL_X), read_i8(this + match_player::CELL_Y), r, n));
     r
 }
 
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "thiscall" fn compare_marcas(this: usize, position: i8)
 pub(crate) unsafe extern "thiscall" fn compare_papel_ataque(j: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_ATTACKING_ROLE)(j);
     let n = attacking_role(j);
-    SCOREBOARD.record(r == n, || format!("attacking_role(lado {}, pos {}) original={} rust={}", side_of_player(j), byte(j, match_player::POSITION), r, n));
+    SCOREBOARD.record(r == n, || format!("attacking_role(lado {}, pos {}) original={} rust={}", side_of_player(j), read_i8(j + match_player::POSITION), r, n));
     r
 }
 
@@ -321,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn compare_papel_ataque(j: usize) -> u8 {
 pub(crate) unsafe extern "thiscall" fn compare_papel_defesa(j: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_DEFENDING_ROLE)(j);
     let n = defending_role(j);
-    SCOREBOARD.record(r == n, || format!("defending_role(lado {}, pos {}) original={} rust={}", side_of_player(j), byte(j, match_player::POSITION), r, n));
+    SCOREBOARD.record(r == n, || format!("defending_role(lado {}, pos {}) original={} rust={}", side_of_player(j), read_i8(j + match_player::POSITION), r, n));
     r
 }
 
@@ -330,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn compare_position_place_players(this: usiz
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8, u32)>(IDX_POSITION_PLACE_PLAYERS);
     let regions = [(sx as usize, 1), (sy as usize, 1)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this, j, sx, sy, a4), || position_place_players(this, j, sx, sy, a4));
-    SCOREBOARD.record(igual, || format!("position_place_players(lado {}, pos {}, bola {} {}) original={:x?} rust={:x?}", side_of_player(j), byte(j, match_player::POSITION), byte(this, engine::BALL_X), byte(this, engine::BALL_Y), mo, mr));
+    SCOREBOARD.record(igual, || format!("position_place_players(lado {}, pos {}, bola {} {}) original={:x?} rust={:x?}", side_of_player(j), read_i8(j + match_player::POSITION), read_i8(this + engine::BALL_X), read_i8(this + engine::BALL_Y), mo, mr));
 }
 
 /// Comparer for `linhas`.
@@ -378,7 +378,7 @@ pub(crate) unsafe extern "thiscall" fn compare_posicao_um(this: usize, l: i8) ->
 pub(crate) unsafe extern "thiscall" fn compare_caminho(this: usize, j: usize, ig: i8) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> u8>(IDX_CLEAR_PATH)(this, j, ig);
     let n = clear_path(this, j, ig);
-    SCOREBOARD.record(r == n, || format!("clear_path(lado {}, {} {}, {}) original={} rust={}", side_of_player(j), byte(j, match_player::CELL_X), byte(j, match_player::CELL_Y), ig, r, n));
+    SCOREBOARD.record(r == n, || format!("clear_path(lado {}, {} {}, {}) original={} rust={}", side_of_player(j), read_i8(j + match_player::CELL_X), read_i8(j + match_player::CELL_Y), ig, r, n));
     r
 }
 
@@ -386,7 +386,7 @@ pub(crate) unsafe extern "thiscall" fn compare_caminho(this: usize, j: usize, ig
 pub(crate) unsafe extern "thiscall" fn compare_espaco(this: usize, j: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_SPACE_AHEAD)(this, j);
     let n = space_ahead(this, j);
-    SCOREBOARD.record(r == n, || format!("space_ahead(lado {}, {} {}) original={} rust={}", side_of_player(j), byte(j, match_player::CELL_X), byte(j, match_player::CELL_Y), r, n));
+    SCOREBOARD.record(r == n, || format!("space_ahead(lado {}, {} {}) original={} rust={}", side_of_player(j), read_i8(j + match_player::CELL_X), read_i8(j + match_player::CELL_Y), r, n));
     r
 }
 
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn compare_posse(this: usize, v: i8) {
 pub(crate) unsafe extern "thiscall" fn compare_in_list(this: usize, target: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IN_LIST)(this, target);
     let n = in_list(this, target);
-    SCOREBOARD.record(r == n, || format!("in_list(n {}) original={} rust={}", byte(this, match_player::MARKER_COUNT), r, n));
+    SCOREBOARD.record(r == n, || format!("in_list(n {}) original={} rust={}", read_i8(this + match_player::MARKER_COUNT), r, n));
     r
 }
 
@@ -466,7 +466,7 @@ pub(crate) unsafe extern "stdcall" fn compare_special_code(c: i8) -> u8 {
 pub(crate) unsafe extern "thiscall" fn compare_atras(this: usize, j: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_BEHIND_THE_EXTREME)(this, j);
     let n = behind_the_extreme(this, j);
-    SCOREBOARD.record(r == n, || format!("behind_the_extreme(lado {}, y {}) original={} rust={}", side_of_player(j), byte(j, match_player::CELL_Y), r, n));
+    SCOREBOARD.record(r == n, || format!("behind_the_extreme(lado {}, y {}) original={} rust={}", side_of_player(j), read_i8(j + match_player::CELL_Y), r, n));
     r
 }
 

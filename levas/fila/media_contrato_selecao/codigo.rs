@@ -5,8 +5,8 @@
 unsafe extern "thiscall" fn game_average(t: usize, segunda: u8) -> f64 {
     let d = |o: usize| core::ptr::read_unaligned((t + o) as *const f64);
     let (n, q) = if segunda != 0 { (d(0x20), d(0x28)) } else { (d(0x10), d(0x18)) };
-    if q == read_f64_at(0x9689a0) || q.is_nan() {
-        return read_f64_at(0x968998);
+    if q == read_f64(0x9689a0) || q.is_nan() {
+        return read_f64(0x968998);
     }
     n / q
 }

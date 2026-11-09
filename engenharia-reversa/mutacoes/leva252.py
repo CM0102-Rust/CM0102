@@ -11,7 +11,7 @@ MUTACOES = [
     ('cpp_registro_sem_vaga', '            write_u32(r + manager_record::OWNER, read_u32(person)); // the slot stays with him\n            break r;', '            return 0; // mutacao: sem criar o registro', 'cpp_3 create record'),
     ('cpp_nota_do_candidato', '    if rating >= rating_minimum { 1 } else { 0 }', '    if rating >= rating_minimum + 0.5 { 1 } else { 0 } // mutacao: a nota minima mais alta'),
     ('cpp_cargo_pessoa_nula', '        return 0; // null person', '        return 1; // mutacao: a pessoa nula pode', 'cpp_4 null person'),
-    ('cpp_queda_sem_arredondar', '    Some(ftol(d / y + read_f64_at(rdata::F64_0_5)) as u8 as i8)', '    Some(ftol(d / y) as u8 as i8) // mutacao: sem o arredondamento'),
+    ('cpp_queda_sem_arredondar', '    Some(ftol(d / y + read_f64(rdata::F64_0_5)) as u8 as i8)', '    Some(ftol(d / y) as u8 as i8) // mutacao: sem o arredondamento'),
     ('cpp_goleiro', 'write_u16(v + shortlist_slot::POSITION, 1); // o goleiro', 'write_u16(v + shortlist_slot::POSITION, 2); // mutacao: o goleiro vira libero', 'cpp_5 formation slots'),
     ('cpp_verba', 'exe::shortlist_manager_allocate_transfer_budget(this, club); // the transfer budget', 'let _ = budget; // mutacao: sem redistribuir a verba', 'cpp_5 redo list'),
     ('cpp_suspender', '*((e + club_shortlist::DAYS) as *mut u8) = 0x64; // the club suspends the player', '// mutacao: o clube nao suspende o jogador', 'cpp_5 suspend club'),

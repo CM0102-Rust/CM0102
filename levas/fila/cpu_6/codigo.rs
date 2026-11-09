@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, jogo: usize
         if t < 10 {
             return (t as u8).wrapping_sub(2);
         }
-        return match_pl_ftol(t as f64 * read_f64_at(0x9689b0)) as u8;
+        return match_pl_ftol(t as f64 * read_f64(0x9689b0)) as u8;
     }
     t as u8
 }

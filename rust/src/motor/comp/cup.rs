@@ -762,7 +762,7 @@ pub(crate) unsafe fn send_prize_news(cup: usize, club: usize, value: i32, next: 
         return;
     }
     // simplification: the original pushes the dword of a local of which it writes only the low byte (the high bits are stack leftover);
-    // the news item only reads the byte (movsx ecx, byte [esp+0x114]): here, the clean byte.
+    // the news item only reads the read_i8(movsx ecx + (byte [esp+0x114])): here, the clean byte.
     exe::comp_send_prize_money_news(cup, club, value, value >> 31, -1, next, partida, (outcome as u32) as i32);
 }
 
@@ -2332,7 +2332,7 @@ pub(crate) fn interpolate_by_round(low: u32, high: u32, round: u32, rounds: u32)
     }
 }
 
-/// Level byte (+4, signed) of a cup entry.
+/// Level read_i8(+4 + signed) of a cup entry.
 ///
 /// [pt] O nível (+4, byte com sinal) e a reputação do clube (+0 → +0x80, palavra com sinal) de uma entrada de copa.
 pub(crate) unsafe fn entry_level(e: usize) -> i32 {

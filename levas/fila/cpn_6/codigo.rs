@@ -89,26 +89,26 @@ unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(pessoa: usize
     let t = tecnico(clube);
     let in_list: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7f7490usize);
     if in_list(cpn6_d(0xb74448), pessoa, t) != 0 {
-        let a = rep as f64 * read_f64_at(0x968940);
-        let b = rc as f64 * read_f64_at(0x969040);
+        let a = rep as f64 * read_f64(0x968940);
+        let b = rc as f64 * read_f64(0x969040);
         rep = match_pl_ftol(if a > b { a } else { b }) as i16;
     }
     let mut q = rep as f64 / rc as f64;
-    if q < read_f64_at(0x967880) {
-        q = read_f64_at(0x967880);
-    } else if !(q <= read_f64_at(0x968950)) {
-        q = read_f64_at(0x968950);
+    if q < read_f64(0x967880) {
+        q = read_f64(0x967880);
+    } else if !(q <= read_f64(0x968950)) {
+        q = read_f64(0x968950);
     }
     let f = q as f32 as f64; // a original guarda a razão num float e compara o resto por ele
-    if q > read_f64_at(0x968940) {
+    if q > read_f64(0x968940) {
         return 1;
     }
-    if f > read_f64_at(0x968978) && rc < 0x2134 {
+    if f > read_f64(0x968978) && rc < 0x2134 {
         return 2;
     }
     let idade = cpn6_b(pessoa + 0x18) as i8;
-    if !(f > read_f64_at(0x968978)) && rep <= 0x1964 {
-        if f > read_f64_at(0x968e48) && idade < 0x17 {
+    if !(f > read_f64(0x968978)) && rep <= 0x1964 {
+        if f > read_f64(0x968e48) && idade < 0x17 {
             return 5;
         }
         return if idade >= 0x18 { 4 } else { 6 };

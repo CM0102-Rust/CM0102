@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
         }
     }
     let n = ((cqd13_w(obj + 0x3e) as i32) - 1).wrapping_mul(cqd13_w(obj + 0x3c) as i32);
-    let limiar = match_pl_ftol(n as f64 * read_f64_at(0x968f78)) as i16; // o ftol fica no word (movsx word depois)
+    let limiar = match_pl_ftol(n as f64 * read_f64(0x968f78)) as i16; // o ftol fica no word (movsx word depois)
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 5;
@@ -283,7 +283,7 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
         if r != 0 {
             core::ptr::write_unaligned((r + 0x8a) as *mut i16, cqd13_w(r + 0x8a).wrapping_add(1));
             // fild peso; fld 4,0; _CIpow (base em st1); fmul 0,5; ftol
-            let v = match_pl_ftol(game_pow(cqd13_w(comp + 0x69) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: o peso do título
+            let v = match_pl_ftol(game_pow(cqd13_w(comp + 0x69) as f64, read_f64(0x968938)) * read_f64(0x968968)); // cqd13: o peso do título
             cqd13_pi(r + 0xb6, cqd13_i(r + 0xb6).wrapping_add(v));
             cqd13_pi(r + 0xca, cqd13_i(r + 0xca).wrapping_add(v));
             if is_national_team(clube) != 0 {

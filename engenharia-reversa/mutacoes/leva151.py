@@ -1,6 +1,6 @@
 # Mutacoes da leva151 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva151.py --carreira 2002-06-01
 MUTACOES = [
-    ('i_decidida', "            if byte(p, day_match::HOME_GOALS) != -2\n", "            if byte(p, day_match::HOME_GOALS) != -3\n"),
+    ('i_decidida', "            if read_i8(p + day_match::HOME_GOALS) != -2\n", "            if read_i8(p + day_match::HOME_GOALS) != -3\n"),
     ('i_volta', "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, -1);", "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, 0);"),
     ('i_rapida', "                    exe::cm3_match_engine_init_match(engine, p + day_match::FIXTURE_COPY, r, 0, 0);", "                    exe::cm3_match_engine_init_match(engine, p + day_match::FIXTURE_COPY, 1, 0, 0);"),
     ('a_passo', "        step_towards(1);\n", "        step_towards(2);\n"),

@@ -123,21 +123,21 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
         *b(p, match_player::INJURY_FORCES_OFF) = 1;
         *folego = (*folego as f64 - (c * c) as f64) as f32;
     } else {
-        local = random(ftol((c * c) as f64 * read_f64_at(rdata::F64_0_5))) as f32;
+        local = random(ftol((c * c) as f64 * read_f64(rdata::F64_0_5))) as f32;
         *folego = (*folego as f64 - local as f64) as f32;
-        let r = random(ftol(local as f64 * read_f32_at(rdata::F32_0_5) as f64));
+        let r = random(ftol(local as f64 * read_f32(rdata::F32_0_5) as f64));
         *((p + match_player::STAMINA_BOOST) as *mut f32) = r as f32;
         let d5 = (p + match_player::STAMINA_ATTRIBUTE) as *mut f32;
-        *d5 = (*d5 as f64 * read_f32_at(rdata::F32_0_5) as f64) as f32;
+        *d5 = (*d5 as f64 * read_f32(rdata::F32_0_5) as f64) as f32;
     }
-    if !(*folego as f64 >= read_f64_at(rdata::F64_5000)) {
+    if !(*folego as f64 >= read_f64(rdata::F64_5000)) {
         crate::comparison::branch("injury out of breath");
         *b(m, engine::SUBSTITUTION_PENDING) = 1;
         *b(p, match_player::INJURY_PENDING) = 1;
         *b(p, match_player::INJURY_FORCES_OFF) = 1;
     } else {
         let person = *((p + match_player::PLAYER) as *const usize);
-        let v = (byte(person, player_sheet::INJURY_PRONENESS) as i32 * 25) as f64 + read_f64_at(rdata::F64_7100);
+        let v = (read_i8(person + player_sheet::INJURY_PRONENESS) as i32 * 25) as f64 + read_f64(rdata::F64_7100);
         if v > *folego as f64 {
             crate::comparison::branch("injury to 5");
             write_2b(p, 5);
@@ -145,7 +145,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
             *b(p, match_player::INJURY_PENDING) = 1;
         } else {
             write_2b(p, 3);
-            if local >= read_f32_at(rdata::F32_500) && *b(p, match_player::INJURY_FORCES_OFF) != 0 {
+            if local >= read_f32(rdata::F32_500) && *b(p, match_player::INJURY_FORCES_OFF) != 0 {
                 crate::comparison::branch("injury to 3 and leaves");
                 *b(m, engine::SUBSTITUTION_PENDING) = 1;
                 *b(p, match_player::INJURY_PENDING) = 1;
@@ -153,10 +153,10 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
         }
     }
     let x = *folego as f64;
-    if !(x >= read_f64_at(rdata::F64_1)) {
-        *folego = read_f64_at(rdata::F64_1) as f32;
-    } else if x > read_f64_at(rdata::F64_10000) {
-        *folego = read_f64_at(rdata::F64_10000) as f32;
+    if !(x >= read_f64(rdata::F64_1)) {
+        *folego = read_f64(rdata::F64_1) as f32;
+    } else if x > read_f64(rdata::F64_10000) {
+        *folego = read_f64(rdata::F64_10000) as f32;
     }
     if *b(m, engine::SUBSTITUTION_PENDING) != 0 {
         *w(engine::INJURY_COUNT) = (*w(engine::INJURY_COUNT)).wrapping_add(1);
@@ -234,7 +234,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     if !(0x1f40..=0x21e4).contains(&c) {
         return 0;
     }
-    let side = byte(p, match_player::SIDE) as i32;
+    let side = read_i8(p + match_player::SIDE) as i32;
     if *((m as isize + ((c + side * 1000) * 4) as isize - 0x7ae2) as *const u32) != 0 {
         return 0;
     }
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         return 0;
     }
     let atuacao = *((p + match_player::MATCH_RATING) as *const i16) as i32;
-    let b = |o: usize| byte(p, o);
+    let b = |o: usize| read_i8(p + o);
     let minute = *((m + engine::CLOCK) as *const i16) as i32 / 11;
     let in_field = minute - b(0x1f) as i32;
     let limit = |t: i32| (t * 33 + 0xfa0).min(0x1964);
@@ -302,7 +302,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
             atuacao < 0x1964
                 && (b(0x14) as u8 as i32) > random(3)
                 && player_table(p) & 4 != 0
-                && byte(*((p + match_player::PLAYER) as *const usize), 0x11) as i32 > random(4) + 0xf
+                && read_i8(*((p + match_player::PLAYER) as *const usize) + 0x11) as i32 > random(4) + 0xf
                 && b(0xc) == 0
                 && (b(0x17) as i32) < random(6)
                 && in_field > random(0x32) + 0x1e
@@ -338,10 +338,10 @@ pub(crate) unsafe extern "thiscall" fn injury_grade(injuries: usize, person: usi
         return 0;
     }
     let r = *(injuries as *const usize) + (id as usize).wrapping_mul(31);
-    if byte(r, physical_record::RECURRING_TYPE) <= -1 {
+    if read_i8(r + physical_record::RECURRING_TYPE) <= -1 {
         return 0;
     }
-    let g = byte(r, physical_record::RECURRENCE_GRADE);
+    let g = read_i8(r + physical_record::RECURRENCE_GRADE);
     if g > 1 { g as u8 } else { 1 }
 }
 
@@ -727,7 +727,7 @@ pub(crate) fn injury_type_offset(kind: i8) -> usize {
 /// [0x967898], fimul, _ftol 0x945640; x87 em dupla precisão), no máximo 60 dias antes do fim.
 pub(crate) unsafe fn return_to_training_days(kind: i8, days: i16) -> i16 {
     let pct = read_i8_as_i32(G_INJURY_TYPE_TRAINING_RETURN_PERCENT + injury_type_offset(kind));
-    let x = ftol(pct as f64 * read_f64_at(rdata::F64_0_01) * days as f64) as i16;
+    let x = ftol(pct as f64 * read_f64(rdata::F64_0_01) * days as f64) as i16;
     if (x as i32) + 0x3c < days as i32 { days.wrapping_sub(0x3c) } else { x }
 }
 
@@ -1680,7 +1680,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
                 crate::comparison::branch("cpv_8 half");
                 v = (v as i16 as i32) / 2; // cpv8: without the match mark, half
             } else if read_i8(pessoa + staff::AGE) as i32 > exe::utils_random(3) + 0x21 {
-                v = ((v as i16 as i32) as f64 * read_f64_at(rdata::F64_1_25)) as i32;
+                v = ((v as i16 as i32) as f64 * read_f64(rdata::F64_1_25)) as i32;
             } else if (read_i8(pessoa + staff::AGE) as i32) < 0x17 - exe::utils_random(5) {
                 crate::comparison::branch("cpv_8 youngster");
                 v = v.wrapping_add(v); // cpv8: the young player counts double
@@ -2590,7 +2590,7 @@ pub(crate) unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, m
     let e = (r + physical_record::FATIGUE) as *mut i16;
     let v = core::ptr::read_unaligned(e);
     if v < -1000 {
-        let x = (v as f64 * read_f64_at(rdata::F64_NEG_0_0035) - read_f64_at(rdata::F64_2_5)) * ritmo as f64;
+        let x = (v as f64 * read_f64(rdata::F64_NEG_0_0035) - read_f64(rdata::F64_2_5)) * ritmo as f64;
         core::ptr::write_unaligned(e, (x as i32).wrapping_add(v as i32) as i16);
         return;
     }
@@ -2639,7 +2639,7 @@ pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, player: usize,
         100
     };
     if in_percent != 0 {
-        c = ftol(c as i16 as f64 * read_f32_at(rdata::F32_0_009999999776) as f64 + read_f64_at(rdata::F64_0_5));
+        c = ftol(c as i16 as f64 * read_f32(rdata::F32_0_009999999776) as f64 + read_f64(rdata::F64_0_5));
         if c as i16 > 100 {
             c = 100;
         }
@@ -2908,9 +2908,9 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     // the match condition, by the fatigue factor (+0xc)
     let cansaco = read_i16(rec + physical_record::FATIGUE);
     let mc = read_i16(rec + physical_record::CONDITION) as i32;
-    let ceiling_k = read_f64_at(rdata::F64_0_95);
+    let ceiling_k = read_f64(rdata::F64_0_95);
     let k = if cansaco > 1000 {
-        let kv = read_f64_at(rdata::F64_1_4) - cansaco as f64 * read_f64_at(rdata::F64_0_0004);
+        let kv = read_f64(rdata::F64_1_4) - cansaco as f64 * read_f64(rdata::F64_0_0004);
         if !(kv > ceiling_k) {
             kv
         } else if l3c > 0 {
@@ -2921,7 +2921,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     } else if l3c > 0 {
         ceiling_k
     } else {
-        read_f64_at(rdata::F64_1)
+        read_f64(rdata::F64_1)
     };
     let r1 = ftol(l38.wrapping_mul(500) as f64 * k);
     let r2 = ftol(l3c.wrapping_mul(250) as f64 * k);

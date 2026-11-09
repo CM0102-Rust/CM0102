@@ -1,11 +1,11 @@
 # Mutações da 264a leva (itens cqb_1, cqb_2, cqb_3, cqb_4, cqb_5, cqb_6, cqb_7, cqb_8, cqb_9, cqb_10, cqb_11, cqb_12, cqb_13). Uso: python mutacoes.py mutacoes\leva264.py --carreira 2002-06-01
 MUTACOES = [
-    ('cqb1_tv_menor', 'tv = ftol((q as f64 + read_f64_at(rdata::F64_1_75)) * publico as f64);', 'tv = ftol((q as f64 + read_f64_at(rdata::F64_1_25)) * publico as f64);', 'cqb_1 paying attendance'),
+    ('cqb1_tv_menor', 'tv = ftol((q as f64 + read_f64(rdata::F64_1_75)) * publico as f64);', 'tv = ftol((q as f64 + read_f64(rdata::F64_1_25)) * publico as f64);', 'cqb_1 paying attendance'),
     ('cqb1_liquido_pela_metade', 'add(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante', 'add(mandante, 0x140, 0xa0, liquido / 2); // mutacao: o liquido pela metade', 'cqb_1 net to the home side'),
     ('cqb1_preco_por_400', 'let price = div_trunc(read_i16(home + club::REPUTATION) as i32, 500); // cqb1: the price by reputation', 'let price = div_trunc(read_i16(home + club::REPUTATION) as i32, 400); // mutacao: por 400', 'cqb_1 preco pela reputacao'),
-    ('cqb2_divisor_maior', 'read_f64_at(rdata::F64_0_0075)', 'read_f64_at(rdata::F64_0_1)', 'cqb_2 divisor da faixa 0 baixa'),
-    ('cqb2_sorteio_a_mais_com_ficha', 'let r1 = friendly_random(ftol(read_f64_at(rdata::F64_30) / div));', 'let r1 = { friendly_random(5); friendly_random(ftol(read_f64_at(rdata::F64_30) / div)) };', 'cqb_2 with the record'),
-    ('cqb2_sorteio_a_mais_sem_ficha', 'let r = friendly_random(ftol(read_f64_at(rdata::F64_15000) / div)); // cqb2: the random draw without the player sheet', 'let r = { friendly_random(5); friendly_random(ftol(read_f64_at(rdata::F64_15000) / div)) }; // mutacao: um sorteio a mais', 'cqb_2 without the record'),
+    ('cqb2_divisor_maior', 'read_f64(rdata::F64_0_0075)', 'read_f64(rdata::F64_0_1)', 'cqb_2 divisor da faixa 0 baixa'),
+    ('cqb2_sorteio_a_mais_com_ficha', 'let r1 = friendly_random(ftol(read_f64(rdata::F64_30) / div));', 'let r1 = { friendly_random(5); friendly_random(ftol(read_f64(rdata::F64_30) / div)) };', 'cqb_2 with the record'),
+    ('cqb2_sorteio_a_mais_sem_ficha', 'let r = friendly_random(ftol(read_f64(rdata::F64_15000) / div)); // cqb2: the random draw without the player sheet', 'let r = { friendly_random(5); friendly_random(ftol(read_f64(rdata::F64_15000) / div)) }; // mutacao: um sorteio a mais', 'cqb_2 without the record'),
     ('cqb3_ano_zerado', '*((e + intl_date_entry::YEAR_OFFSET) as *mut u8) = ano; // cqb3: the year to add to the Cup’s', '*((e + intl_date_entry::YEAR_OFFSET) as *mut u8) = 0 * ano; // mutacao: o ano a somar zerado', 'cqb_3 fixture list built'),
     ('cqb3_sem_ano_para_tras', 'year = year.wrapping_add(0xfffc); // cqb3: minus 4 if more than 3 years ahead', 'year = year.wrapping_add(0); // mutacao: sem os 4 anos para tras', 'cqb_3 year backwards'),
     ('cqb3_ciclo_de_hoje', 'ciclo = ciclo.wrapping_add(1); // cqb3: the Cup year', 'break; // mutacao: o ano de hoje no lugar do da Copa', 'cqb_3 cup year ahead'),

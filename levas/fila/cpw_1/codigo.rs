@@ -62,23 +62,23 @@ unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pessoa: usize
     desejado(l, pessoa, cpw1_clube(cpw1_d(this + 4)), -1, situacao, 0xb, 0, 0);
     let v1 = calc_contract_value(this, pessoa, l) as f32;
     let v2 = calc_contract_value(l, pessoa, l) as f64;
-    let mut razao = if v2 == read_f32_at(0x968970) as f64 {
-        read_f32_at(0x968970) as f64
+    let mut razao = if v2 == read_f32(0x968970) as f64 {
+        read_f32(0x968970) as f64
     } else {
-        v1 as f64 * read_f32_at(0x968960) as f64 / v2
+        v1 as f64 * read_f32(0x968960) as f64 / v2
     };
     let anos = (cpw1_w(0xae2c92) as u16 as i32).wrapping_sub(cpw1_w(this + 0x27) as u16 as i32);
     let dias = anos.wrapping_mul(365).wrapping_sub(cpw1_w(this + 0x25) as i32).wrapping_add(cpw1_w(0xae2c90) as i32).clamp(0, 500);
     let adapt = cpw1_b(pessoa + 0x59) as i8 as i32;
     if dias < adapt.wrapping_mul(15).wrapping_add(100) {
         crate::comparison::branch("cpw_1 recently signed");
-        razao = razao + read_f32_at(0x969560) as f64 + adapt as f64 * read_f64_at(0x968eb0) - (dias / 2) as f64; // cpw1: o desconto do recém-contratado
+        razao = razao + read_f32(0x969560) as f64 + adapt as f64 * read_f64(0x968eb0) - (dias / 2) as f64; // cpw1: o desconto do recém-contratado
     }
     crate::comparison::branch("cpw_1 satisfaction evaluated");
-    if !(razao >= read_f32_at(0x969560) as f64) { // cpw1: o limite da insatisfação
+    if !(razao >= read_f32(0x969560) as f64) { // cpw1: o limite da insatisfação
         return 1;
     }
-    if razao < read_f32_at(0x96ff70) as f64 { // cpw1: o limite da satisfação
+    if razao < read_f32(0x96ff70) as f64 { // cpw1: o limite da satisfação
         3
     } else {
         2

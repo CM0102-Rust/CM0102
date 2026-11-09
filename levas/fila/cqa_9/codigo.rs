@@ -80,28 +80,28 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
     let idade = cqa9_b(pessoa + 0x18);
     let dif = auge as i32 - idade as i32;
     let mut t = dif as f64;
-    if t > read_f64_at(0x9688a0) {
-        t = read_f64_at(0x968f10) - t * read_f32_at(0x968f18) as f64;
+    if t > read_f64(0x9688a0) {
+        t = read_f64(0x968f10) - t * read_f32(0x968f18) as f64;
     }
     let a = match_pl_ftol(t).wrapping_abs();
-    let mut f = t * a as f64 * read_f32_at(0x968f08) as f64 * read_f64_at(0x968f00) + read_f64_at(0x967890);
+    let mut f = t * a as f64 * read_f32(0x968f08) as f64 * read_f64(0x968f00) + read_f64(0x967890);
     if cqa9_b(ficha + 0xf) < 0xf {
-        let nota = |o: usize, c: usize| (cqa9_b(ficha + o) as i32 - 0xf) as f64 * read_f64_at(c) + read_f64_at(0x967890);
+        let nota = |o: usize, c: usize| (cqa9_b(ficha + o) as i32 - 0xf) as f64 * read_f64(c) + read_f64(0x967890);
         let fa = nota(0x28, 0x968ef8);
-        let fb = cqa9_b(ficha + 0x27) as f64 * read_f64_at(0x968ef0) + read_f64_at(0x967890);
-        let fc = cqa9_b(ficha + 0x43) as f64 * read_f64_at(0x968e60) + read_f64_at(0x967890);
+        let fb = cqa9_b(ficha + 0x27) as f64 * read_f64(0x968ef0) + read_f64(0x967890);
+        let fc = cqa9_b(ficha + 0x43) as f64 * read_f64(0x968e60) + read_f64(0x967890);
         let fd = nota(0x36, 0x968ef8);
         let fe = nota(0x2f, 0x968ef8);
         f = fa * (fb * f) * fc * fd * fe;
     }
     let q = cqa9_b(ficha + 0x2d) as i32;
-    let fator = ((read_f64_at(0x968ee0) - (q * q) as f64 * read_f64_at(0x967888) * read_f64_at(0x968ee8)) * f) as f32;
-    let mut r = cqa9_w(ficha + 9) as f64 * read_f64_at(0x968ed8) + read_f64_at(0x968ed0);
-    if !(r >= read_f64_at(0x9689c0)) {
-        r = read_f64_at(0x9689c0);
+    let fator = ((read_f64(0x968ee0) - (q * q) as f64 * read_f64(0x967888) * read_f64(0x968ee8)) * f) as f32;
+    let mut r = cqa9_w(ficha + 9) as f64 * read_f64(0x968ed8) + read_f64(0x968ed0);
+    if !(r >= read_f64(0x9689c0)) {
+        r = read_f64(0x9689c0);
     }
-    let x: f32 = if !(fator as f64 >= read_f64_at(0x967898)) {
-        read_f64_at(0x967898) as f32
+    let x: f32 = if !(fator as f64 >= read_f64(0x967898)) {
+        read_f64(0x967898) as f32
     } else if !(r >= fator as f64) {
         r as f32
     } else {
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
         let h50 = (h.wrapping_mul(50) as i16).max(0);
         let teto = if (rep as u32) < 0x1388 { rep as u32 } else { 0x1388 };
         let s = (h50 as i32).wrapping_add(rep) as u32;
-        let y = match_pl_ftol((s as f64 + teto as f64 * x as f64) * read_f32_at(0x968f08) as f64) as u32;
+        let y = match_pl_ftol((s as f64 + teto as f64 * x as f64) * read_f32(0x968f08) as f64) as u32;
         if y <= 1 { 1 } else if y > 0x2ee0 { 0x2ee0 } else { y }
     };
     let pot = cqa9_w(ficha + 0xd);
@@ -133,12 +133,12 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
             v = c;
         }
         if pot > 0x1f40 && idade <= auge {
-            let z = pot as f64 * read_f64_at(0x968ec8) + (v >> 1) as f64 - read_f64_at(0x968ec0);
+            let z = pot as f64 * read_f64(0x968ec8) + (v >> 1) as f64 - read_f64(0x968ec0);
             let e = v as f64;
             v = match_pl_ftol(if z > e { z } else { e }) as u32;
         }
     }
-    let vv = v.wrapping_mul(v) as f64 * base * read_f64_at(0x968eb8);
+    let vv = v.wrapping_mul(v) as f64 * base * read_f64(0x968eb8);
     let mut idade_ef = idade;
     let exp = *((pessoa + 0x22) as *const u8);
     if exp != 0 && cqa9_d(pessoa + 0x1a) != 0 {
@@ -155,8 +155,8 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
         i = 0x13;
     }
     let tab = *((0x9a7f30 + i as usize) as *const i8) as i32;
-    let mut w = tab as f64 * vv * read_f64_at(0x967898);
-    let c890 = read_f64_at(0x967890);
+    let mut w = tab as f64 * vv * read_f64(0x967898);
+    let c890 = read_f64(0x967890);
     let k = if clube == 0 {
         let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
         (sorteio(3) + 1) as f64
@@ -167,35 +167,35 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
             c890
         } else {
             let mut t = cqa9_b(nat + 0x7e) as f64;
-            if !(t >= c890) || t > read_f64_at(0x968930) {
-                t = read_f64_at(0x968930);
+            if !(t >= c890) || t > read_f64(0x968930) {
+                t = read_f64(0x968930);
             }
             if div != 0 {
-                t = (t + c890) * read_f64_at(0x968968);
+                t = (t + c890) * read_f64(0x968968);
             }
             match cqa9_b(clube + 0x64) {
                 2 => t = t + t,
-                3 => t *= read_f64_at(0x968eb0),
+                3 => t *= read_f64(0x968eb0),
                 _ => {}
             }
             let n = if div != 0 { cqa9_w(div + 0x69) as i32 } else { cqa9_b(nat + 0x85) as i32 };
             let e = n.wrapping_mul(n).wrapping_mul(25).wrapping_add(cqa9_w(clube + 0x80) as i32);
-            e as f64 / (t * read_f64_at(0x968908))
+            e as f64 / (t * read_f64(0x968908))
         }
     };
-    let dd = read_f64_at(0x968ea8) - k;
-    let mut l = c890 - dd * dd * read_f64_at(0x968918) * read_f64_at(0x968a98);
-    if !(l >= read_f64_at(0x967880)) {
-        l = read_f64_at(0x967880);
-    } else if l > read_f64_at(0x9689c0) {
-        l = read_f64_at(0x9689c0);
+    let dd = read_f64(0x968ea8) - k;
+    let mut l = c890 - dd * dd * read_f64(0x968918) * read_f64(0x968a98);
+    if !(l >= read_f64(0x967880)) {
+        l = read_f64(0x967880);
+    } else if l > read_f64(0x9689c0) {
+        l = read_f64(0x9689c0);
     }
     w = l * w;
     let k2 = k * k;
-    if !(k2 * read_f64_at(0x968ea0) >= w) {
-        w = w * read_f64_at(0x9689e0) + k2 * read_f64_at(0x968e98);
+    if !(k2 * read_f64(0x968ea0) >= w) {
+        w = w * read_f64(0x9689e0) + k2 * read_f64(0x968e98);
     }
-    let piso = k * read_f64_at(0x9688e8);
+    let piso = k * read_f64(0x9688e8);
     if !(w >= piso) {
         w = piso;
     }
@@ -205,11 +205,11 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
     };
     // a nação [0x9cf434]: abaixo de [0x968e90] a curva com piso, senão × [0x9689d8]
     let curva = |w: f64, piso: f64| -> f64 {
-        if !(w >= read_f64_at(0x968e90)) {
-            let v = (w * read_f64_at(0x968e88) * read_f64_at(0x968e48) + read_f64_at(0x968e80)) * w;
-            if !(read_f64_at(0x9688e8) > v) { v } else { piso }
+        if !(w >= read_f64(0x968e90)) {
+            let v = (w * read_f64(0x968e88) * read_f64(0x968e48) + read_f64(0x968e80)) * w;
+            if !(read_f64(0x9688e8) > v) { v } else { piso }
         } else {
-            w * read_f64_at(0x9689d8)
+            w * read_f64(0x9689d8)
         }
     };
     if modo as u8 != 0 {
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
     }
     let mut nacoes = true; // 0x4d1480 (as outras nações) ou 0x4d14ad (a [0x9cf434] antes)
     if contrato == 0 {
-        w = read_f64_at(0x9689a0);
+        w = read_f64(0x9689a0);
     } else {
         let bosman: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x8d0a70usize);
         if bosman(cqa9_d(0xde1f54), pessoa) != 0 {
@@ -234,19 +234,19 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
                 if *((contrato + 0x35) as *const u8) & 0x3f == 2 {
                     dias = dias + 7 * cqa9_b(contrato + 0x3d) as i32 + 0xc8;
                 } else {
-                    w2 = w * read_f64_at(0x968968);
+                    w2 = w * read_f64(0x968968);
                 }
             }
-            let x = dias as f64 * read_f64_at(0x968e78);
+            let x = dias as f64 * read_f64(0x968e78);
             if dias < 0x15e { // cqa9: o contrato curto
                 w = w2 * x;
             } else {
-                let mut dv = read_f64_at(0x968e18) - x;
+                let mut dv = read_f64(0x968e18) - x;
                 if !(dv >= c890) {
-                    dv = read_f32_at(0x968e70) as f64;
+                    dv = read_f32(0x968e70) as f64;
                 }
-                if dv > read_f64_at(0x968950) {
-                    dv = read_f32_at(0x9689a8) as f64;
+                if dv > read_f64(0x968950) {
+                    dv = read_f32(0x9689a8) as f64;
                 }
                 w = w2 / dv;
             }
@@ -255,12 +255,12 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
     }
     if !nacoes {
         // 0x4d14ad: valor zero (ou desordenado) vai às outras nações; sem clube, ao fim
-        if !(w < read_f64_at(0x9689a0) || w > read_f64_at(0x9689a0)) {
+        if !(w < read_f64(0x9689a0) || w > read_f64(0x9689a0)) {
             nacoes = true;
         } else if clube == 0 {
             return cap_value_at_release_fee(contrato, w);
         } else if nacao_e(0x9cf434) {
-            w = curva(w, read_f64_at(0x9688e8));
+            w = curva(w, read_f64(0x9688e8));
             return cap_value_at_release_fee(contrato, w);
         } else {
             nacoes = true;
@@ -268,16 +268,16 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
     }
     if nacoes && clube != 0 {
         if nacao_e(0x9cf300) {
-            w *= read_f64_at(0x9689b0);
+            w *= read_f64(0x9689b0);
         } else if nacao_e(0x9cf484) {
-            w *= read_f64_at(0x9689e0);
-            let c = read_f64_at(0x968e68);
+            w *= read_f64(0x9689e0);
+            let c = read_f64(0x968e68);
             if w > c {
-                w = match_pl_ftol((w - c) * read_f64_at(0x968968) + c) as f64;
+                w = match_pl_ftol((w - c) * read_f64(0x968968) + c) as f64;
             }
-            let c = read_f64_at(0x9688e0);
+            let c = read_f64(0x9688e0);
             if w > c {
-                w = match_pl_ftol((w - c) * read_f64_at(0x968968) + c) as f64;
+                w = match_pl_ftol((w - c) * read_f64(0x968968) + c) as f64;
             }
         }
     }

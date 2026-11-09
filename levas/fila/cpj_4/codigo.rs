@@ -23,7 +23,7 @@ unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, oferta: usize, 
     if valor < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // abaixo do mínimo pela reputação
     }
-    if exigir != 0 && valor < match_pl_ftol(rep as f64 * rep as f64 * read_f64_at(0x967880)) {
+    if exigir != 0 && valor < match_pl_ftol(rep as f64 * rep as f64 * read_f64(0x967880)) {
         return 0;
     }
     (valor != 0 && valor > cpj4_d(rec + 0x313) as i32) as u8
@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn get_condition(this: usize, jogador: usize, em_porcen
         100
     };
     if em_porcento != 0 {
-        c = match_pl_ftol(c as i16 as f64 * read_f32_at(0x96bac8) as f64 + read_f64_at(0x968968));
+        c = match_pl_ftol(c as i16 as f64 * read_f32(0x96bac8) as f64 + read_f64(0x968968));
         if c as i16 > 100 {
             c = 100;
         }

@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
     crate::comparison::branch("cqe_2 option built");
     *atracao = 0x32; // cqe2: a atração da opção
     cqe2_pd(nova + 0x1b, valor as u32 as usize); // cqe2: o preço da opção
-    let mut teto = match_pl_ftol(valor as f64 * read_f64_at(0x9689c0));
+    let mut teto = match_pl_ftol(valor as f64 * read_f64(0x9689c0));
     // ponytail: a posição, a nota base, as marcas e o estatuto ficam de uma vaga para a outra (a original os deixa na
     // pilha sem valor até a primeira vaga com ficha +0x61; candidato sem ficha não acontece: começam em zero). As marcas
     // fora de 0..4 do alcance (que a 0x5408c0 não devolve) seriam o ebp anterior, de início o ponteiro da oferta.
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                         ((i as i32 * 0x25) as u32 & 0xffff_ff00) | estatuto_da_vaga(i) as u32
                     };
                     let r = interesse(cqe2_d(this + 0x856), x, vendedor, 1, 0, st, 0);
-                    if !(r >= read_f64_at(0x968e58)) { // cqe2: o interesse abaixo de 3,15
+                    if !(r >= read_f64(0x968e58)) { // cqe2: o interesse abaixo de 3,15
                         break 'jogador;
                     }
                     crate::comparison::branch("cqe_2 interest");
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                     if nx == 0 || base == 0 {
                         break 'jogador;
                     }
-                    if !(nx as f64 / base as f64 > read_f64_at(0x9689d8)) { // cqe2: a nota até 0,9 da base
+                    if !(nx as f64 / base as f64 > read_f64(0x9689d8)) { // cqe2: a nota até 0,9 da base
                         break 'jogador;
                     }
                     crate::comparison::branch("cqe_2 swap rating");

@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn accept_transfer_bid(this: usize, vaga: usize, marcar
             }
             let cargo = cqd2_b(p + 5);
             // ponytail: a original empurra o edx com o byte +5 e os bytes altos do que a 0x600a50 deixou nele; a 0x85fc50
-            // só lê o byte (mov cl, [esp+0x284])
+            // só lê o read_i8(mov cl + ([esp+0x284]))
             let salario = desejado(pc, pessoa, vendedor, u32::MAX, cargo as u32, 0xb, 0, 0);
             let t = teto(financas(cqd2_d(0xae2a38), vendedor), pessoa, cargo as u32);
             crate::comparison::branch("cqd_2 expensive swap");

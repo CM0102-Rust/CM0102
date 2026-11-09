@@ -41,7 +41,7 @@ unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], marca: &mut u8) {
     crate::comparison::branch("cpt_6 December");
     if (*marca as i8) < 0xc {
         crate::comparison::branch("cpt_6 December bonus");
-        h[5] = cpt6_w(na + 0x8e) as i32 as f64 * read_f64_at(0x967888) * (0xc - *marca as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro
+        h[5] = cpt6_w(na + 0x8e) as i32 as f64 * read_f64(0x967888) * (0xc - *marca as i8 as i32) as f64 * read_f64(0x968930) + h[5]; // cpt6: o bônus de dezembro
     }
     h[0] = h[1];
     h[1] = h[2];
@@ -96,8 +96,8 @@ unsafe extern "C" fn game_update_nation_coefficients() {
         loop {
             let e = vetor + i as i32 as usize * 0xc;
             *(e as *mut usize) = na;
-            let s = cpt6_f(na + 0xc0) * read_f64_at(0x968e48) + cpt6_f(na + 0xb8) * read_f64_at(0x968e00) + cpt6_f(na + 0xb0) * read_f64_at(0x968918)
-                + cpt6_f(na + 0xc8) * read_f64_at(0x9689b0) + cpt6_f(na + 0xd8) + cpt6_f(na + 0xd0);
+            let s = cpt6_f(na + 0xc0) * read_f64(0x968e48) + cpt6_f(na + 0xb8) * read_f64(0x968e00) + cpt6_f(na + 0xb0) * read_f64(0x968918)
+                + cpt6_f(na + 0xc8) * read_f64(0x9689b0) + cpt6_f(na + 0xd8) + cpt6_f(na + 0xd0);
             cpt6_pf(e + 4, s);
             if dez {
                 let mut h = nation_coefficient_history(na);

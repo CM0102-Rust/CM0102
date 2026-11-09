@@ -705,7 +705,7 @@ pub(crate) const CONFED_CUP_KNOCKOUT: [GoldcupScheduleOp; 57] = [
     Cqp12X(0x130, 0), Cqp12X(0x134, 0),
 ];
 
-/// Copa America phase description by signed phase byte (groups below 2, knockout at 2).
+/// Copa America phase description by signed phase read_i8(groups below 2 + (knockout at 2)).
 ///
 /// [pt] A fase da Copa América pelo byte com sinal: abaixo de 2 os grupos (id 0x420 + fase; os jogos de cada grupo para −1,
 /// 0 e 1), 2 o mata-mata, acima nada.

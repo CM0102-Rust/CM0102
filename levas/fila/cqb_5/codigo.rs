@@ -58,7 +58,7 @@ fn injury_type_offset(tipo: i8) -> usize {
 /// [0x967898], fimul, _ftol 0x945640; x87 em dupla precisão), no máximo 60 dias antes do fim.
 unsafe fn return_to_training_days(tipo: i8, dias: i16) -> i16 {
     let pct = cqb5_c(0x9e7adf + injury_type_offset(tipo));
-    let x = match_pl_ftol(pct as f64 * read_f64_at(0x967898) * dias as f64) as i16;
+    let x = match_pl_ftol(pct as f64 * read_f64(0x967898) * dias as f64) as i16;
     if (x as i32) + 0x3c < dias as i32 { dias.wrapping_sub(0x3c) } else { x }
 }
 

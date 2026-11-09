@@ -16,7 +16,7 @@ unsafe fn cqa8_w(a: usize) -> i16 {
     core::ptr::read_unaligned(a as *const i16)
 }
 
-/// Soma `delta` ao byte (felicidade +0x3d, moral +0x44 do contrato) entre −100 e 100, como a original: a soma em 32
+/// Soma `delta` ao read_i8(felicidade +0x3d + (moral +0x44 do contrato)) entre −100 e 100, como a original: a soma em 32
 /// bits decide o teto e o piso; dentro deles, a soma do byte.
 unsafe fn add_clamped_100(a: usize, delta: i32) {
     let v = cqa8_b(a);
@@ -37,7 +37,7 @@ unsafe fn skip_side_by_reputation(jogo: usize, lado: usize) -> bool {
     }
     let (meu, outro) = match_clubs_by_side(jogo, lado);
     let r = cqa8_w(meu + 0x80) as i32;
-    let x = r as f64 * read_f64_at(0x968928);
+    let x = r as f64 * read_f64(0x968928);
     let y = (r + 0x5dc) as f64;
     let m = if x > y { x } else { y };
     m > cqa8_w(outro + 0x80) as f64
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
                     crate::comparison::branch("cqa_8 tests the morale");
                     let m = cqa8_b(contrato + 0x44) as i32;
                     let r1 = sorteio(0x1e); // cqa8: o primeiro sorteio da moral
-                    let v = r1 as f64 + (read_f64_at(0x968d68) - m as f64 * read_f64_at(0x968d70));
+                    let v = r1 as f64 + (read_f64(0x968d68) - m as f64 * read_f64(0x968d70));
                     let r2 = sorteio(0x1e);
                     v - r2 as f64 > minutos as f64
                 };
@@ -254,11 +254,11 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
             }
             let m = cqa8_d(0xb74350);
             let x = core::ptr::read_unaligned((m + 0x18) as *const f64);
-            let c = read_f64_at(0x9689a0);
+            let c = read_f64(0x9689a0);
             // fcomp + C3: igual ou desordenado vai para a constante
-            let nota = if !(x < c || x > c) { read_f64_at(0x968998) } else { core::ptr::read_unaligned((m + 0x10) as *const f64) / x };
+            let nota = if !(x < c || x > c) { read_f64(0x968998) } else { core::ptr::read_unaligned((m + 0x10) as *const f64) / x };
             crate::comparison::branch("cqa_8 develops who was left out");
-            evoluir(0, pessoa, clube, outro, jogo, (nota - read_f64_at(0x967888)) as f32, 0, 0); // cqa8: a evolução de quem ficou de fora
+            evoluir(0, pessoa, clube, outro, jogo, (nota - read_f64(0x967888)) as f32, 0, 0); // cqa8: a evolução de quem ficou de fora
             let p = contrato as *mut u8;
             *p.add(0x3f) = 0;
             if *p.add(0x3e) != 100 {

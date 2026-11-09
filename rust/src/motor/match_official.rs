@@ -31,15 +31,15 @@ pub(crate) unsafe extern "thiscall" fn init_strictness(this: usize, engine: u32,
 /// encerra o lance (limpa e da 0); nos demais casos, 1.
 pub(crate) unsafe extern "thiscall" fn move_counts(this: usize) -> u8 {
     let p = *((this + engine::PENDING_PLAY_OFFENDER) as *const usize);
-    if byte(this, engine::PENDING_PLAY_KIND) == 0 || p == 0 {
+    if read_i8(this + engine::PENDING_PLAY_KIND) == 0 || p == 0 {
         return 0;
     }
-    let l = byte(p, 0x27);
+    let l = read_i8(p + 0x27);
     let owner = *((this + engine::BALL_HOLDER) as *const usize);
-    if owner == 0 || byte(owner, 0x27) as i32 != (l == 0) as i32 {
+    if owner == 0 || read_i8(owner + 0x27) as i32 != (l == 0) as i32 {
         return 1;
     }
-    let (y, linha) = (byte(this, engine::BALL_Y), byte(this, engine::PENDING_PLAY_Y));
+    let (y, linha) = (read_i8(this + engine::BALL_Y), read_i8(this + engine::PENDING_PLAY_Y));
     if (y > linha && l == 1) || (y < linha && l == 0) {
         clear_move(this);
         return 0;
@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn decide_foul(this: usize, j: usize, code: 
     }
     let person = *((this + 4) as *const usize);
     let v = (this + 8) as *mut u16;
-    if person != 0 && random(byte(person, 0x28) as i32 + 0xf) == 0 {
+    if person != 0 && random(read_i8(person + 0x28) as i32 + 0xf) == 0 {
         *v = (*v).wrapping_add(0xff06);
         return 0;
     }
@@ -74,11 +74,11 @@ pub(crate) unsafe extern "thiscall" fn decide_foul(this: usize, j: usize, code: 
         return 0;
     }
     *v = (*v).wrapping_add(0xaf);
-    let mark = if code == 0x25 { random(0x14) != 0 } else { random(0x9b) == 0 && byte(engine, engine::BALL_HEIGHT) > 1 };
+    let mark = if code == 0x25 { random(0x14) != 0 } else { random(0x9b) == 0 && read_i8(engine + engine::BALL_HEIGHT) > 1 };
     if !mark {
         return 0;
     }
-    let r = random(byte(j, match_player::FOULS) as u8 as i32);
+    let r = random(read_i8(j + match_player::FOULS) as u8 as i32);
     *value = (r as u8).wrapping_add(1);
     *kind = 4;
     1
@@ -108,9 +108,9 @@ pub(crate) unsafe fn give_yellow_card(j: usize, kind: *mut u8, x: i8, weight: *m
 /// [pt] Desconto na disposicao pelo cartao: ftol(c x c') ou, com 0x8ed0 / 11 acima de 45, ftol(c'' / (0x8ed0 / 11) x c').
 pub(crate) unsafe fn apply_card_penalty(engine: usize, j: usize) {
     let q = (*((engine + engine::CLOCK) as *const i16) as i32 / 11) as i16;
-    let base = if q > 0x2d { read_f32_at(rdata::F32_45) as f64 / q as f64 } else { read_f32_at(rdata::F32_1) as f64 };
+    let base = if q > 0x2d { read_f32(rdata::F32_45) as f64 / q as f64 } else { read_f32(rdata::F32_1) as f64 };
     let d = (j + match_player::MATCH_RATING) as *mut i16;
-    *d = (*d).wrapping_add(ftol(base * read_f32_at(rdata::F32_NEG_225) as f64) as i16);
+    *d = (*d).wrapping_add(ftol(base * read_f32(rdata::F32_NEG_225) as f64) as i16);
 }
 
 /// Increments the side's foul counter in the engine (0xf5c9 + 54 × side).
@@ -139,7 +139,7 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
     let engine = *(this as *const usize);
     count_foul(engine, j);
     *((j + match_player::FOULS) as *mut u8) = (*((j + match_player::FOULS) as *const u8)).wrapping_add(1);
-    if *kind != 1 || byte(engine, engine::SHOOTOUT_STATE) != 0 {
+    if *kind != 1 || read_i8(engine + engine::SHOOTOUT_STATE) != 0 {
         return;
     }
     let d = (j + match_player::MATCH_RATING) as *mut i16;
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
         *d = (*d).wrapping_add(-750);
         *kind = 6;
         *weight = 5.0;
-        *((j + if byte(j, match_player::YELLOW_CARDS) != 0 { 0x26 } else { 0x25 }) as *mut u8) = 9;
+        *((j + if read_i8(j + match_player::YELLOW_CARDS) != 0 { 0x26 } else { 0x25 }) as *mut u8) = 9;
         return;
     }
     if r <= 0x32 && !is_in_penalty_area(j) {
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
 /// amarelo contra sorteio(6) ou -25. Conta a falta no jogador e 0x15 no outro.
 pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, severidade: i8, flag: u8, weight: *mut f32, send_off: u8) {
     *weight = 1.5;
-    if byte(j, match_player::POSITION) < 0 {
+    if read_i8(j + match_player::POSITION) < 0 {
         *weight = 10.0;
         return;
     }
@@ -193,7 +193,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
             *weight = 1.25;
             count_foul(engine, j);
         }
-        1 if byte(engine, engine::SHOOTOUT_STATE) == 0 => {
+        1 if read_i8(engine + engine::SHOOTOUT_STATE) == 0 => {
             count_foul(engine, j);
             if flag != 0 {
                 let r = random(0xbb8) as i16;
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
                     *d = (*d).wrapping_add(-750);
                     *kind = 5;
                     *weight = 5.0;
-                    *((j + if byte(j, match_player::YELLOW_CARDS) != 0 { 0x26 } else { 0x25 }) as *mut u8) = 9;
+                    *((j + if read_i8(j + match_player::YELLOW_CARDS) != 0 { 0x26 } else { 0x25 }) as *mut u8) = 9;
                 } else if r > 0x32 || is_in_penalty_area(j) {
                     apply_card_penalty(engine, j);
                     give_yellow_card(j, kind, x, weight);
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
                 *d = (*d).wrapping_add(-1000);
                 *kind = 4;
                 *weight = 5.0;
-                *((j + if byte(j, match_player::YELLOW_CARDS) != 0 { 0x26 } else { 0x25 }) as *mut i8) = x;
+                *((j + if read_i8(j + match_player::YELLOW_CARDS) != 0 { 0x26 } else { 0x25 }) as *mut i8) = x;
                 if send_off != 0 {
                     *((j + match_player::SENT_OFF) as *mut u8) = 1;
                 }
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
     if exe::cm3_match_engine_is_foul_pending(engine) != 0 {
         return 0;
     }
-    let (l0, l1) = (byte(engine, engine::OFFSIDE_LINE), byte(engine, engine::OFFSIDE_LINE_SIDE1));
+    let (l0, l1) = (read_i8(engine + engine::OFFSIDE_LINE), read_i8(engine + engine::OFFSIDE_LINE_SIDE1));
     match side_b {
         0 if !(y > row && y >= l0) => return 0,
         1 if !(y < row && y <= l1) => return 0,
@@ -256,13 +256,13 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
     }
     let v = (this + 8) as *mut i16;
     let person = *((this + 4) as *const usize);
-    if person != 0 && random(byte(person, 0x29) as i32 + 0x19) == 0 {
+    if person != 0 && random(read_i8(person + 0x29) as i32 + 0x19) == 0 {
         *v = (*v).wrapping_add(-75);
         return 0;
     }
     for k in 0..20 {
         let p = side_player_slot(engine, side_b, k);
-        if byte(p, 0x19) < 0 || p == passador {
+        if read_i8(p + 0x19) < 0 || p == passador {
             continue;
         }
         if passador != 0 {
@@ -274,7 +274,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
                 continue;
             }
         }
-        let (py, a) = (byte(p, 0x103) as i32, byte(p, 0x107) as i32);
+        let (py, a) = (read_i8(p + 0x103) as i32, read_i8(p + 0x107) as i32);
         let (linha_d, sinal, perto) = match side_b {
             0 => (l0 as i32, 1, -25i16),
             1 => (l1 as i32, -1, -15i16),
@@ -284,7 +284,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
             *v = (*v).wrapping_add(perto);
             return p;
         }
-        if py == linha_d - sinal && random(ftol((a as f64) * (a as f64) * (a as f64) + read_f64_at(rdata::F64_25))) == 0 {
+        if py == linha_d - sinal && random(ftol((a as f64) * (a as f64) * (a as f64) + read_f64(rdata::F64_25))) == 0 {
             *v = (*v).wrapping_add(-15);
             return p;
         }
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn engine_look_for_offside(this: usize, side
 /// [pt] Grava o codigo do cartao no registro do jogador: 0x25 com (0x23 + 0x24) == 1 (ou <= 1, `ate_um`),
 /// 0x26 com outro total diferente de zero.
 pub(crate) unsafe fn record_card_code(j: usize, code: u8, ate_um: bool) {
-    let t = byte(j, match_player::RED_CARDS) as i32 + byte(j, match_player::YELLOW_CARDS) as i32;
+    let t = read_i8(j + match_player::RED_CARDS) as i32 + read_i8(j + match_player::YELLOW_CARDS) as i32;
     if t == 1 || (ate_um && t <= 1) {
         *((j + match_player::FIRST_CARD_CODE) as *mut u8) = code;
     } else if t != 0 {
@@ -331,10 +331,10 @@ pub(crate) unsafe fn record_card_code(j: usize, code: u8, ate_um: bool) {
 /// sorteio(3 x 0x24 + 5) + 2, ou so tipo 9. O codigo do registro fica no lugar do argumento `j`
 /// (sem gravidade conhecida, o byte baixo do ponteiro).
 pub(crate) unsafe extern "thiscall" fn card_by_severity(this: usize, j: usize, kind: *mut u8, severity: u8, flag: u8) {
-    let mut rating = random(byte(j, match_player::FOULS) as u8 as i32) as u8;
+    let mut rating = random(read_i8(j + match_player::FOULS) as u8 as i32) as u8;
     let person = *((this + 4) as *const usize);
     if person != 0 {
-        let a = byte(person, 0x25);
+        let a = read_i8(person + 0x25);
         rating = rating.wrapping_add(if a > 18 { 2 } else if a > 12 { 1 } else if a > 6 { 0 } else if a > 2 { 0xff } else { 0xfe });
     }
     let (soma, codigo) = match severity {
@@ -345,24 +345,24 @@ pub(crate) unsafe extern "thiscall" fn card_by_severity(this: usize, j: usize, k
         _ => (0, j as u8),
     };
     rating = rating.wrapping_add(soma);
-    if byte(j, match_player::YELLOW_CARDS) != 0 && (severity == 1 || severity == 6) && random(byte(person, 0x24) as i32) != 0 {
+    if read_i8(j + match_player::YELLOW_CARDS) != 0 && (severity == 1 || severity == 6) && random(read_i8(person + 0x24) as i32) != 0 {
         *kind = 9;
         return;
     }
-    let active = byte(j, match_player::POSITION) >= 0 && flag == 0;
+    let active = read_i8(j + match_player::POSITION) >= 0 && flag == 0;
     if severity != 1 && rating as i8 as i32 > random(0xf) + 7 {
         if active {
             let d = (j + match_player::MATCH_RATING) as *mut i16;
             *d = (*d).wrapping_add(-1000);
             *kind = 4;
-            let t = byte(j, match_player::RED_CARDS) as i32 + byte(j, match_player::YELLOW_CARDS) as i32;
+            let t = read_i8(j + match_player::RED_CARDS) as i32 + read_i8(j + match_player::YELLOW_CARDS) as i32;
             *((j + if t == 0 { 0x25 } else { 0x26 }) as *mut u8) = codigo;
         } else if codigo == 12 || codigo == 8 {
             record_card_code(j, codigo, true);
         }
         return;
     }
-    let r = random(3 * byte(j, match_player::YELLOW_CARDS) as i32 + 5);
+    let r = random(3 * read_i8(j + match_player::YELLOW_CARDS) as i32 + 5);
     if rating as i8 as i32 > r + 2 {
         if !active {
             return;
@@ -425,14 +425,14 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     }
     let paciencia = (this + 8) as *mut u16;
     let arb = *((this + 4) as *const usize);
-    if arb != 0 && random(byte(arb, 0x28) as i32 + 0xf) == 0 {
+    if arb != 0 && random(read_i8(arb + 0x28) as i32 + 0xf) == 0 {
         *paciencia = (*paciencia).wrapping_add(0xff06);
         return 0;
     }
     let minute = (*((m + engine::CLOCK) as *const i16) as i32 / 11) as i8;
     *paciencia = (*paciencia).wrapping_add(0xaf);
     let dura = |t: i8| t == 0x2a || t == 0xc || t == 0x15;
-    if arb != 0 && dura(kind) && (exe::match_player_is_in_penalty_area(j, (0) as u8) as u8) == 0 && (exe::match_player_is_in_penalty_area(j, (1) as u8) as u8) == 0 && random(50 - byte(arb, 0x24) as i32) == 0 {
+    if arb != 0 && dura(kind) && (exe::match_player_is_in_penalty_area(j, (0) as u8) as u8) == 0 && (exe::match_player_is_in_penalty_area(j, (1) as u8) as u8) == 0 && random(50 - read_i8(arb + 0x24) as i32) == 0 {
         *paciencia = (*paciencia).wrapping_add(0x19);
         return 0;
     }
@@ -440,10 +440,10 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         return 0;
     }
     // advantage: (20, or 5 in the band of its own side) x (+0x5c of `outro`’s profile)^1.5 / (1 or 3)
-    let a = if (exe::match_player_is_in_penalty_area(j, (byte(j, match_player::SIDE)) as u8) as u8) != 0 { 5.0 } else { 20.0 };
-    let b = byte(*((other + match_player::STAFF) as *const usize), 0x5c) as f64;
+    let a = if (exe::match_player_is_in_penalty_area(j, (read_i8(j + match_player::SIDE)) as u8) as u8) != 0 { 5.0 } else { 20.0 };
+    let b = read_i8(*((other + match_player::STAFF) as *const usize) + 0x5c) as f64;
     let div = if *((other + match_player::LAST_FOULED_BY) as *const usize) != j { 1.0 } else { 3.0 };
-    *advantage = (random(ftol(a * game_pow(b, read_f64_at(rdata::F64_1_5)) / div)) == 0) as u8;
+    *advantage = (random(ftol(a * game_pow(b, read_f64(rdata::F64_1_5)) / div)) == 0) as u8;
     let word = |p: usize, d: i16| *((p + 0x31) as *mut i16) = (*((p + 0x31) as *const i16)).wrapping_add(d);
     if *advantage != 0 {
         word(other, -4);
@@ -451,18 +451,18 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     let mut factor = 1.0f64;
     let mut rigor = 0i8;
     if arb != 0 {
-        let sev = byte(arb, 0x25);
-        factor = if sev > 10 { sev as f64 * read_f64_at(rdata::F64_0_1) } else { (sev as i32 - 10) as f64 * read_f64_at(rdata::F64_0_05) + read_f64_at(rdata::F64_1) };
-        let side_j = byte(j, match_player::SIDE);
+        let sev = read_i8(arb + 0x25);
+        factor = if sev > 10 { sev as f64 * read_f64(rdata::F64_0_1) } else { (sev as i32 - 10) as f64 * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_1) };
+        let side_j = read_i8(j + match_player::SIDE);
         let mode = *((m as isize + side_j as isize + 0x1ad) as *const i8) as f64;
-        factor += mode / (byte(arb, 0x27) as f64 * read_f64_at(rdata::F64_0_5) + read_f64_at(rdata::F64_3));
-        if byte(j, match_player::YELLOW_CARDS) != 0 {
+        factor += mode / (read_i8(arb + 0x27) as f64 * read_f64(rdata::F64_0_5) + read_f64(rdata::F64_3));
+        if read_i8(j + match_player::YELLOW_CARDS) != 0 {
             let x = random(21 - sev as i32);
             *grav = (*grav).wrapping_add((x / -5) as i8);
         }
         if *advantage != 0 {
-            let y = random(byte(arb, 0x28) as i32);
-            factor *= read_f64_at(rdata::F64_1_5) - y as f64 * read_f64_at(rdata::F64_0_05);
+            let y = random(read_i8(arb + 0x28) as i32);
+            factor *= read_f64(rdata::F64_1_5) - y as f64 * read_f64(rdata::F64_0_05);
         }
         rigor = match sev {
             20 => 2,
@@ -472,11 +472,11 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             _ => (sev > 2) as i8 - 3,
         };
         let scoreboard = *((m + engine::SIDE_FOUL_TALLY + 54 * side_j as usize) as *const u8) as i32;
-        if scoreboard > byte(arb, 0x27) as i32 + 5 {
+        if scoreboard > read_i8(arb + 0x27) as i32 + 5 {
             *paciencia = (*paciencia).wrapping_add(0xff6a);
             rigor = rigor.wrapping_add(1);
             let z = random(4);
-            factor *= (read_f64_at(rdata::F64_6) - z as f64) * read_f64_at(rdata::F64_0_1) + read_f64_at(rdata::F64_1);
+            factor *= (read_f64(rdata::F64_6) - z as f64) * read_f64(rdata::F64_0_1) + read_f64(rdata::F64_1);
         }
     }
     let partida = *((m + engine::MATCH) as *const usize);
@@ -489,9 +489,9 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             }
         }
     }
-    if read_f64_at(rdata::F64_0_1) > factor {
+    if read_f64(rdata::F64_0_1) > factor {
         factor = 0.1;
-    } else if read_f64_at(rdata::F64_10) < factor || factor.is_nan() {
+    } else if read_f64(rdata::F64_10) < factor || factor.is_nan() {
         factor = 10.0;
     }
     let dureza = *((j + match_player::FOULS) as *const u8) as i32;
@@ -504,7 +504,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     // final adjustment from `outro`’s record (+0x5c): 1 -> `um`; >= 6 -> +1 below 10; otherwise `senao`
     let by_sheet = |um: i32, senao: i32| {
         if *advantage != 0 && other != 0 {
-            let c = byte(*((other + match_player::STAFF) as *const usize), 0x5c);
+            let c = read_i8(*((other + match_player::STAFF) as *const usize) + 0x5c);
             if c == 1 {
                 *grav = (*grav).wrapping_add(um as i8);
             } else if c >= 6 {
@@ -520,7 +520,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     match kind {
         0x2a => {
             word(j, -4);
-            if random(ftol(factor * read_f64_at(rdata::F64_6))) != 0 {
+            if random(ftol(factor * read_f64(rdata::F64_6))) != 0 {
                 res = 1;
                 add(random(dureza) + 4);
                 *card = 4;
@@ -529,7 +529,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         }
         0x2b => {
             word(j, -3);
-            if random(ftol(factor * read_f64_at(rdata::F64_14))) != 0 {
+            if random(ftol(factor * read_f64(rdata::F64_14))) != 0 {
                 res = 7;
                 add(random(dureza) + 3);
                 *card = 4;
@@ -537,7 +537,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             }
         }
         0x2c => {
-            let v = ceiling(factor * read_f64_at(rdata::F64_10), read_f64_at(rdata::F64_50));
+            let v = ceiling(factor * read_f64(rdata::F64_10), read_f64(rdata::F64_50));
             word(j, -12);
             if random(ftol(v)) != 0 {
                 res = 1;
@@ -548,8 +548,8 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         }
         0x2d => {
             word(j, -4);
-            if random(ftol(factor * read_f64_at(rdata::F64_20))) != 0 {
-                if (exe::match_player_is_in_penalty_area(j, (byte(j, match_player::SIDE)) as u8) as u8) == 0 || random(0x12) == 0 {
+            if random(ftol(factor * read_f64(rdata::F64_20))) != 0 {
+                if (exe::match_player_is_in_penalty_area(j, (read_i8(j + match_player::SIDE)) as u8) as u8) == 0 || random(0x12) == 0 {
                     res = 1;
                     add(random(dureza) + rigor as i32 + 4);
                     *card = 7;
@@ -559,7 +559,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         }
         0x2e => {
             word(j, -1);
-            let r = random(ftol(factor * read_f64_at(rdata::F64_6)));
+            let r = random(ftol(factor * read_f64(rdata::F64_6)));
             if r != 0 || (other != 0 && player_table(other) == 1 && random(100) != 0) {
                 res = 1;
                 add(random(dureza) + rigor as i32 + 1);
@@ -569,9 +569,9 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         }
         0x2f | 0x60 => {
             let (v, d) = if kind == 0x2f {
-                (ceiling(factor * read_f64_at(rdata::F64_10), read_f64_at(rdata::F64_100)), -9)
+                (ceiling(factor * read_f64(rdata::F64_10), read_f64(rdata::F64_100)), -9)
             } else {
-                (factor * read_f64_at(rdata::F64_20), -25)
+                (factor * read_f64(rdata::F64_20), -25)
             };
             word(j, d);
             if random(ftol(v)) != 0 {
@@ -584,7 +584,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         }
         0x5f => {
             word(j, -12);
-            if random(ftol(factor * read_f64_at(rdata::F64_10))) != 0 {
+            if random(ftol(factor * read_f64(rdata::F64_10))) != 0 {
                 res = 1;
                 add(random(dureza + 7) + rigor as i32 + 3);
                 *card = 5;
@@ -605,16 +605,16 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
                 _ => (0x968908, -60, 0, 18),
             };
             word(j, d);
-            if random(ftol(factor * read_f64_at(k))) != 0 {
+            if random(ftol(factor * read_f64(k))) != 0 {
                 res = 1;
                 add(random(dureza + extra) + rigor as i32 + mais);
                 *card = 11;
             }
         }
         0x13 | 0x21 | 0x22 => {
-            let follows = random(ftol(read_f64_at(rdata::F64_75) / factor)) == 0
+            let follows = random(ftol(read_f64(rdata::F64_75) / factor)) == 0
                 || (who == 0x6c && random(if *advantage != 0 { 2 } else { 6 }) == 0);
-            if follows && ((exe::match_player_is_in_penalty_area(j, (byte(j, match_player::SIDE)) as u8) as u8) == 0 || random(ftol(read_f64_at(rdata::F64_18) / factor)) == 0) {
+            if follows && ((exe::match_player_is_in_penalty_area(j, (read_i8(j + match_player::SIDE)) as u8) as u8) == 0 || random(ftol(read_f64(rdata::F64_18) / factor)) == 0) {
                 res = 1;
                 let a = random(dureza);
                 let b = random(5);
@@ -624,7 +624,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             }
         }
         0x23 | 0x0c | 0x24 => {
-            if random(ftol(read_f64_at(rdata::F64_150) / factor)) == 0 {
+            if random(ftol(read_f64(rdata::F64_150) / factor)) == 0 {
                 res = if kind == 0x0c { 7 } else { 1 };
                 add(random(dureza) + 1);
                 *card = 4;
@@ -634,7 +634,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             }
         }
         0x15 | 0x38 => {
-            let r = random(ftol(read_f64_at(rdata::F64_150) / factor));
+            let r = random(ftol(read_f64(rdata::F64_150) / factor));
             if r == 0 || (other != 0 && player_table(other) == 1 && random(5) == 0) {
                 res = 1;
                 add(random(dureza) + 1);
@@ -643,7 +643,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             }
         }
         0x29 => {
-            if random(ftol(read_f64_at(rdata::F64_100) / factor)) == 0 {
+            if random(ftol(read_f64(rdata::F64_100) / factor)) == 0 {
                 res = 1;
                 add(random(dureza) + 2);
                 *card = 7;
@@ -651,7 +651,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             }
         }
         0x01 => {
-            if random(ftol(read_f64_at(rdata::F64_10000) / factor)) == 0 {
+            if random(ftol(read_f64(rdata::F64_10000) / factor)) == 0 {
                 res = 1;
                 add(random(dureza) + 1);
                 *card = 4;
@@ -662,7 +662,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     }
     let aplica: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
     if aplica(m, kind) != 0 {
-        exe::match_player_scale_anger(other, (*grav as f64 * read_f64_at(rdata::F64_0_2) + read_f64_at(rdata::F64_1)) as f32);
+        exe::match_player_scale_anger(other, (*grav as f64 * read_f64(rdata::F64_0_2) + read_f64(rdata::F64_1)) as f32);
         if exe::match_player_passes_anger_check(other, 1, 0) != 0 {
             *((other + match_player::ANGER) as *mut u8) = (*((other + match_player::ANGER) as *const u8)).wrapping_add(1);
             if exe::match_player_passes_anger_check(other, 1, 0) != 0 {

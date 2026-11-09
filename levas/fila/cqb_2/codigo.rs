@@ -60,35 +60,35 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
     let pres = cqb2_d(clube + 0xbf);
     let forte = |a: usize, b: usize| a != 0 && b != 0; // (ponteiros conferidos antes dos bytes)
     let div = match wealth_band(fin) {
-        -2 => read_f64_at(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
-        -1 => read_f64_at(if rep > 0x1482 { 0x967880 } else if rep > 0xcb2 { 0x96a730 } else { 0x967878 }),
+        -2 => read_f64(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
+        -1 => read_f64(if rep > 0x1482 { 0x967880 } else if rep > 0xcb2 { 0x96a730 } else { 0x967878 }),
         0 => {
             if rep <= 0x109a {
                 let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
                 if forte(pres, ficha) && cqb2_c(pres + 0x57) > 0xf && cqb2_c(ficha + 0x20) > 0xf {
-                    read_f64_at(0x96a740)
+                    read_f64(0x96a740)
                 } else {
                     crate::comparison::branch("cqb_2 low band 0 divisor");
-                    read_f64_at(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
+                    read_f64(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
                 }
             } else if rep < 0x186a {
                 let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
                 if forte(pres, ficha) && cqb2_c(ficha + 0x20) > 0xf && cqb2_c(pres + 0x57) > 0xf {
-                    read_f64_at(0x967888)
+                    read_f64(0x967888)
                 } else {
-                    read_f64_at(0x967878)
+                    read_f64(0x967878)
                 }
             } else {
-                read_f64_at(0x967878)
+                read_f64(0x967878)
             }
         }
-        _ => read_f64_at(0x96a350),
+        _ => read_f64(0x96a350),
     };
     let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
     let valor;
     if pres != 0 && ficha != 0 {
         crate::comparison::branch("cqb_2 with the record");
-        let r1 = cpv6_sortear(match_pl_ftol(read_f64_at(0x968dd8) / div)); // cqb2: o sorteio com a ficha
+        let r1 = cpv6_sortear(match_pl_ftol(read_f64(0x968dd8) / div)); // cqb2: o sorteio com a ficha
         let r2 = cpv6_sortear(cqb2_c(ficha + 0xf) as i32);
         if r2 <= r1 {
             return 0;
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
             return 0;
         }
         // ponytail: a original faz pow(+0x20, 2,0) (0x945ff0); o quadrado de um byte é exato nos dois
-        let mut v = match_pl_ftol(((n as f64 * n as f64) * read_f64_at(0x968930) + read_f64_at(0x96a5f0)) * rep as f64 + read_f64_at(0x9688d8));
+        let mut v = match_pl_ftol(((n as f64 * n as f64) * read_f64(0x968930) + read_f64(0x96a5f0)) * rep as f64 + read_f64(0x9688d8));
         v = if hi < 0 { v.wrapping_sub(lo as i32) } else { v.wrapping_add(lo as i32) };
         if cpv6_w(clube + 0x80) < 0x7d0 {
             let teto = rep.wrapping_mul(rep).wrapping_add(0x16e360);
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
         valor = v;
     } else {
         crate::comparison::branch("cqb_2 without the record");
-        let r = cpv6_sortear(match_pl_ftol(read_f64_at(0x96a728) / div)); // cqb2: o sorteio sem a ficha
+        let r = cpv6_sortear(match_pl_ftol(read_f64(0x96a728) / div)); // cqb2: o sorteio sem a ficha
         if rep as i32 <= r {
             return 0;
         }
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
         if cpv6_sortear(4) == 0 {
             if com_ficha {
                 let r2 = cpv6_w(clube + 0x80) as i32;
-                let t = match_pl_ftol(r2.wrapping_mul(r2) as f64 * read_f64_at(0x968e80));
+                let t = match_pl_ftol(r2.wrapping_mul(r2) as f64 * read_f64(0x968e80));
                 if valor < t && valor > 50000 {
                     tipo = 6;
                 }
@@ -243,8 +243,8 @@ unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: u
     };
     let liga = cqb2_d(clube + 0x57);
     let mut fator = if liga != 0 {
-        let k = rep as i32 as f64 * read_f64_at(0x969048) / cpv6_w(liga + 0x69) as i32 as f64;
-        if !(k >= read_f64_at(0x969040)) { read_f64_at(0x969040) } else { k } // fcomp: menor ou sem ordem (NaN) vira 0,75
+        let k = rep as i32 as f64 * read_f64(0x969048) / cpv6_w(liga + 0x69) as i32 as f64;
+        if !(k >= read_f64(0x969040)) { read_f64(0x969040) } else { k } // fcomp: menor ou sem ordem (NaN) vira 0,75
     } else {
         0.5
     };
@@ -256,7 +256,7 @@ unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: u
         return 0;
     }
     fator *= cpv6_w(clube + 0x80) as i32 as f64;
-    let r = cpv6_sortear(match_pl_ftol(read_f64_at(0x96a728) / div));
+    let r = cpv6_sortear(match_pl_ftol(read_f64(0x96a728) / div));
     if r as f64 >= fator {
         return 0;
     }

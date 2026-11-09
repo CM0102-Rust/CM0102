@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn season_end_club_update(this: usize, clube: usize) {
         }
         let rep = cqc1_w(clube + 0x80);
         let expandir = aviso
-            || (cap as f64 * read_f64_at(0x96a720)) < (local as i16 as i32) as f64
+            || (cap as f64 * read_f64(0x96a720)) < (local as i16 as i32) as f64
             || (rep.wrapping_mul(2) as i32 > cap && rep > 0x109a);
         if !expandir {
             if cqc1_sortear(0x14).wrapping_add(5) >= cqc1_w(cqc1_d(clube + 0x57) + 0x69) as i32 {
@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn season_end_club_update(this: usize, clube: usize) {
             if livre <= 0 {
                 break 'obras;
             }
-            let t = match_pl_ftol(saldo as f64 * read_f64_at(0x968918));
+            let t = match_pl_ftol(saldo as f64 * read_f64(0x968918));
             let mut v = ((t / 75) as i16 as i32 / 500) as i16 as i32 * 500;
             if v >= livre {
                 v = livre;
@@ -323,9 +323,9 @@ unsafe extern "thiscall" fn season_end_club_update(this: usize, clube: usize) {
         let base = if saldo > 0x1312d00 {
             if tipo1 { 16000 } else { 21000 }
         } else if tipo1 {
-            match_pl_ftol(saldo as f64 * read_f64_at(0x967880)) / 125
+            match_pl_ftol(saldo as f64 * read_f64(0x967880)) / 125
         } else {
-            match_pl_ftol(saldo as f64 * read_f64_at(0x968918)) / 50
+            match_pl_ftol(saldo as f64 * read_f64(0x968918)) / 50
         };
         let lim = (base as i16 as i32) / 500 * 500;
         let teto = cqc1_i(est + 0x44);

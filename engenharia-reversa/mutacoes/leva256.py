@@ -15,7 +15,7 @@ MUTACOES = [
     ('cpt5_duas_medidas', '        for k in 0..3usize { // cpt5: as três medidas', '        for k in 0..2usize { // mutacao: duas medidas', 'cpt_5 weather of the day'),
     ('cpt5_vento_mais_vezes', '        if friendly_random(10) == 0 { // cpt5: one in ten changes the wind', '        if friendly_random(10) <= 1 { // mutacao: dois em dez', 'cpt_5 weather of the day'),
     ('cpt5_vento_sem_sorteio', '            let r = friendly_random(3); // cpt5: o vento novo', '            let r = 1; // mutacao: sem o sorteio', 'cpt_5 new wind'),
-    ('cpt6_bonus_fator_1', '* read_f64_at(rdata::F64_3) + h[5];', '* read_f64_at(rdata::F64_1) + h[5];', 'cpt_6 December bonus'),
+    ('cpt6_bonus_fator_1', '* read_f64(rdata::F64_3) + h[5];', '* read_f64(rdata::F64_1) + h[5];', 'cpt_6 December bonus'),
     ('cpt6_ano_corrente_fica', '    h[5] = 0.0; // cpt6: o ano corrente zerado', '    // mutacao: o ano corrente fica', 'cpt_6 December'),
     ('cpt6_dezembro_invertido', '    let dez = read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_DECEMBER) == read_i16(G_CURRENT_DATE); // cpt6: the December day', '    let dez = read_i16(0x9cd216) != read_i16(0xae2c90); // mutacao', 'cpt_6 December'),
     ('cpt7_um_sorteio_na_medida', '            let b = friendly_random(100); // cpt7: the second random draw of the measure', '            let b = a; // mutacao: um sorteio so', 'cpt_7 initial weather'),

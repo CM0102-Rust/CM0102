@@ -7,7 +7,7 @@ MUTACOES = [
     ('cpx1_retirada_desassossega_sempre', '    if reason as u16 == 2 { // cpx1: só o motivo 2 desassossega', '    if reason as u16 == 2 || true { // mutacao: toda retirada desassossega', 'cpx_1 withdrawal without unsettling'),
     ('cpx1_sem_desmarcar_comprador', '    clear_bid_markers(this, friendly_club_by_id(read_usize(o + offer::BUYER_CLUB_ID)), p); // cpx1: unmark the bids of the buyer', '    let _ = p; // mutacao: os lances do comprador ficam marcados', 'cpx_1 refusal unmarks'),
     ('cpx2_sorteio_2000', '    if (read_i16(buyer + club::REPUTATION) as i32) > r.wrapping_add(0x109a) { // cpx2: the unsettlement random draw', '    if (read_i16(buyer + club::REPUTATION) as i32) > r.wrapping_add(2000) { // mutacao: o limite em 2000', 'cpx_2 unsettling draw'),
-    ('cpx2_interesse_4_5', '    if !(x >= read_f64_at(rdata::F64_5_5)) { // cpx2: o interesse mínimo', '    if !(x >= 4.5) { // mutacao: o interesse minimo em 4,5', 'cpx_2 interest evaluated'),
+    ('cpx2_interesse_4_5', '    if !(x >= read_f64(rdata::F64_5_5)) { // cpx2: o interesse mínimo', '    if !(x >= 4.5) { // mutacao: o interesse minimo em 4,5', 'cpx_2 interest evaluated'),
     ('cpx2_sem_desconto_do_listado', '        n = n.wrapping_add((-2000i32).wrapping_sub(random(0x1770)) as i16); // cpx2: the discount of the listed player', '        // mutacao: sem o desconto do listado', 'cpx_2 listed'),
     ('cpx3_sem_pagamento', '        with_offer(0x8ca8a0, this); // cpx3: the transfer payment', '        // mutacao: sem o pagamento', 'cpx_3 pays the transfer'),
     ('cpx3_sem_parte_dos_anteriores', '        with_offer(0x8e4f20, this); // cpx3: the share of the previous clubs', '        // mutacao: sem a parte dos clubes anteriores', 'cpx_3 share of previous clubs'),

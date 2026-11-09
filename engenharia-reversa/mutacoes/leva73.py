@@ -1,7 +1,7 @@
 # Mutacoes da leva73 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva73.py
 MUTACOES = [
     ('p_nacao', "    if n != g(KEY_NATION_SPAIN) && n != g(KEY_NATION_GERMANY) && n != g(KEY_NATION_PORTUGAL) {", "    if n != g(KEY_NATION_SPAIN) && n != g(KEY_NATION_GERMANY) {"),
-    ('p_ativo', "    if nation == 0 || (active != 0 && byte(club, club::HAS_LINKED_CLUB) == 0) {", "    if nation == 0 {"),
+    ('p_ativo', "    if nation == 0 || (active != 0 && read_i8(club + club::HAS_LINKED_CLUB) == 0) {", "    if nation == 0 {"),
     ('p_aceite_a', "        (v != -1).then_some(v)", "        (v > -1).then_some(v)"),
     ('p_aceite_b', "        (v > -1).then_some(v)\n    } else {", "        (v != -1).then_some(v)\n    } else {"),
     ('p_eh_a', "            *eh_a = 1;", "            *eh_a = 2;"),

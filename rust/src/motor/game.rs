@@ -28,7 +28,7 @@ pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], mark: &m
     crate::comparison::branch("cpt_6 December");
     if (*mark as i8) < 0xc {
         crate::comparison::branch("cpt_6 December bonus");
-        h[5] = read_i16(na + nation::REPUTATION) as i32 as f64 * read_f64_at(rdata::F64_0_05) * (0xc - *mark as i8 as i32) as f64 * read_f64_at(rdata::F64_3) + h[5]; // cpt6: the December bonus;
+        h[5] = read_i16(na + nation::REPUTATION) as i32 as f64 * read_f64(rdata::F64_0_05) * (0xc - *mark as i8 as i32) as f64 * read_f64(rdata::F64_3) + h[5]; // cpt6: the December bonus;
     }
     h[0] = h[1];
     h[1] = h[2];
@@ -85,8 +85,8 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
         loop {
             let e = array + i as i32 as usize * 0xc;
             *(e as *mut usize) = na;
-            let s = read_f64(na + nation::FIFACOEFFICIENT93) * read_f64_at(rdata::F64_0_6) + read_f64(na + nation::FIFACOEFFICIENT92) * read_f64_at(rdata::F64_0_4) + read_f64(na + nation::FIFACOEFFICIENT91) * read_f64_at(rdata::F64_0_2)
-                + read_f64(na + nation::FIFACOEFFICIENT94) * read_f64_at(rdata::F64_0_8) + read_f64(na + nation::FIFACOEFFICIENT96) + read_f64(na + nation::FIFACOEFFICIENT95);
+            let s = read_f64(na + nation::FIFACOEFFICIENT93) * read_f64(rdata::F64_0_6) + read_f64(na + nation::FIFACOEFFICIENT92) * read_f64(rdata::F64_0_4) + read_f64(na + nation::FIFACOEFFICIENT91) * read_f64(rdata::F64_0_2)
+                + read_f64(na + nation::FIFACOEFFICIENT94) * read_f64(rdata::F64_0_8) + read_f64(na + nation::FIFACOEFFICIENT96) + read_f64(na + nation::FIFACOEFFICIENT95);
             write_f64(e + 4, s);
             if dez {
                 let mut h = nation_coefficient_history(na);
@@ -694,8 +694,8 @@ pub(crate) unsafe fn training_load_byte(injuries: usize, id: *const i32) -> *mut
 /// como a original deixa no x87); com divisor zero (ou não comparável), 6.8.
 pub(crate) unsafe extern "thiscall" fn game_average(t: usize, second: u8) -> f64 {
     let (n, q) = if second != 0 { (read_f64(t + 0x20), read_f64(t + 0x28)) } else { (read_f64(t + 0x10), read_f64(t + 0x18)) };
-    if q == read_f64_at(rdata::F64_0) || q.is_nan() {
-        return read_f64_at(rdata::F64_6_8);
+    if q == read_f64(rdata::F64_0) || q.is_nan() {
+        return read_f64(rdata::F64_6_8);
     }
     n / q
 }

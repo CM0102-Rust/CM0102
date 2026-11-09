@@ -30,14 +30,14 @@ unsafe fn is_regen_entry_due(e: usize) -> bool {
 /// Uma nota do técnico refeito (um dos blocos da 0x7a65d0): P = pow(+0x22 da pessoa, 0x968950) (vezes `fator`, quando
 /// há), o maior entre P e o valor `v` da ficha, vezes `k`, no máximo `teto` (f64 em 0x...), truncado.
 unsafe fn rebuilt_coach_rating(pessoa: usize, v: i16, fator: Option<usize>, k: usize, teto: usize) -> u16 {
-    let mut p = game_pow(*((pessoa + 0x22) as *const u8) as f64, read_f64_at(0x968950));
+    let mut p = game_pow(*((pessoa + 0x22) as *const u8) as f64, read_f64(0x968950));
     if let Some(f) = fator {
-        p *= read_f64_at(f);
+        p *= read_f64(f);
     }
     let v = v as f64;
     let m = if p > v { p } else { v };
-    let mk = m * read_f64_at(k);
-    let t = read_f64_at(teto);
+    let mk = m * read_f64(k);
+    let t = read_f64(teto);
     match_pl_ftol(if !(mk >= t) { mk } else { t }) as u16
 }
 
@@ -58,7 +58,7 @@ unsafe fn place_coach_at_ai_club(s: usize) {
     let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53cb80usize);
     let rep = |k: usize| {
         let f = cpw10_w(cpw10_d(s + 0x61) + 0xb) as f64;
-        let c = cpw10_w(cpw10_d(s + 0x39) + 0x80) as f64 * read_f64_at(k);
+        let c = cpw10_w(cpw10_d(s + 0x39) + 0x80) as f64 * read_f64(k);
         c > f
     };
     if rep(0x968968) && (treinadores(cpw10_d(s + 0x39)) as i8) < 5 {

@@ -1,10 +1,10 @@
 # Mutacoes da leva106 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva106.py --jogo 2001-08-20
 MUTACOES = [
     ('e_nivel20', "            Some(n) => n.min(20),", "            Some(n) => n.min(19),"),
-    ('e_fator', "        if byte(jm, match_player::ASSISTS) == 0 {\n            factor = (factor as f64 * f4(0x96d488)) as f32;", "        if byte(jm, match_player::ASSISTS) != 0 {\n            factor = (factor as f64 * f4(0x96d488)) as f32;"),
+    ('e_fator', "        if read_i8(jm + match_player::ASSISTS) == 0 {\n            factor = (factor as f64 * f4(0x96d488)) as f32;", "        if read_i8(jm + match_player::ASSISTS) != 0 {\n            factor = (factor as f64 * f4(0x96d488)) as f32;"),
     ('e_idade', "    let age = |o: usize, min: i8| ((read_i16((sheet()) + o) as i32 / 1000) as i8).wrapping_add(0x10).max(min);", "    let age = |o: usize, min: i8| ((read_i16((sheet()) + o) as i32 / 1000) as i8).wrapping_add(0x11).max(min);"),
     ('e_div9', "        v.max(4)", "        v.max(5)"),
-    ('e_divd', "    } else if byte(comp, fixture::CATEGORY) != 8 {\n        div_d = (0xca - nivel0 as i32 * 10) as i16;", "    } else if byte(comp, fixture::CATEGORY) != 8 {\n        div_d = (0xcb - nivel0 as i32 * 10) as i16;"),
+    ('e_divd', "    } else if read_i8(comp + fixture::CATEGORY) != 8 {\n        div_d = (0xca - nivel0 as i32 * 10) as i16;", "    } else if read_i8(comp + fixture::CATEGORY) != 8 {\n        div_d = (0xcb - nivel0 as i32 * 10) as i16;"),
     ('e_desvio', "        desvio *= desvio.abs();", "        desvio *= 1.0;"),
     ('e_passo', "    let step_towards = (level as i32 as f64 * d8(0x968968) + d8(0x9688a0)) * desvio * d8(0x968ff8);", "    let step_towards = (level as i32 as f64 * d8(0x968968) + d8(0x968930)) * desvio * d8(0x968ff8);"),
     ('e_novo', "    let new_b = ((div_b as i32 - 1) * vb + nb as i16 as i32) / div_b as i32;", "    let new_b = ((div_b as i32 - 2) * vb + nb as i16 as i32) / div_b as i32;"),

@@ -75,16 +75,16 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     // ponytail: a original empurra o dword da vaga onde guardou o byte (o resto é sobra de pilha); a 0x846920 só lê o
     // byte
     let x = interesse(listas, p, comprador, 1, 0, e as u32, 0);
-    let pw = game_pow(x, read_f64_at(0x968938));
-    let a = x * read_f64_at(0x96a6b0);
+    let pw = game_pow(x, read_f64(0x968938));
+    let a = x * read_f64(0x96a6b0);
     let v = if !(pw >= a) { pw } else { a };
-    let mut n = match_pl_ftol(game_pow(cpx2_sb(p + 0x5d) as f64, read_f64_at(0x968950)) * read_f64_at(0x968f10) - read_f64_at(0x96a590)) as i16;
+    let mut n = match_pl_ftol(game_pow(cpx2_sb(p + 0x5d) as f64, read_f64(0x968950)) * read_f64(0x968f10) - read_f64(0x96a590)) as i16;
     let ficha = cpx2_d(p + 0x61);
     n = n.wrapping_sub((cpx2_w(ficha + 0xb) as i32 / 40) as i16);
     n = n.wrapping_sub(match_pl_ftol(v) as i16);
-    n = n.wrapping_sub(match_pl_ftol(game_pow(cpx2_sb(p + 0x57) as f64, read_f64_at(0x968950))) as i16);
-    n = n.wrapping_add(match_pl_ftol(game_pow(cpx2_sb(p + 0x5b) as f64, read_f64_at(0x968930))) as i16);
-    n = n.wrapping_add(match_pl_ftol(game_pow(cpx2_sb(p + 0x59) as f64, read_f64_at(0x968930))) as i16);
+    n = n.wrapping_sub(match_pl_ftol(game_pow(cpx2_sb(p + 0x57) as f64, read_f64(0x968950))) as i16);
+    n = n.wrapping_add(match_pl_ftol(game_pow(cpx2_sb(p + 0x5b) as f64, read_f64(0x968930))) as i16);
+    n = n.wrapping_add(match_pl_ftol(game_pow(cpx2_sb(p + 0x59) as f64, read_f64(0x968930))) as i16);
     if c2 == 0 {
         return;
     }
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
         n = n.wrapping_add((-2000i32).wrapping_sub(random(0x1770)) as i16); // cpx2: o desconto do listado
     }
     crate::comparison::branch("cpx_2 interest evaluated");
-    if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo
+    if !(x >= read_f64(0x96d298)) { // cpx2: o interesse mínimo
         return;
     }
     if n as i32 >= -random(0x2bc) {
@@ -108,8 +108,8 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(0x4d0c60usize);
     let preco: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(0x4d1600usize);
     let ponderado: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x8e7b50usize);
-    let a1 = match_pl_ftol(valor(cpx2_d(0xae1050), p, do_contrato, 0, -1, 0) as f64 * read_f64_at(0x968940));
-    let b1 = match_pl_ftol(preco(cpx2_d(0xae1050), do_contrato, comprador, p, 0, 1, 1) as f64 * read_f64_at(0x9689b0));
+    let a1 = match_pl_ftol(valor(cpx2_d(0xae1050), p, do_contrato, 0, -1, 0) as f64 * read_f64(0x968940));
+    let b1 = match_pl_ftol(preco(cpx2_d(0xae1050), do_contrato, comprador, p, 0, 1, 1) as f64 * read_f64(0x9689b0));
     let pond = ponderado(o, 0, 0, 0, 1, 1);
     let menor = if a1 < b1 { a1 } else { b1 };
     if pond < menor {
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
             }
         }
     }
-    if x > read_f64_at(0x9688b0) || n < -5000 || (menor as f64) < pond as f64 * read_f64_at(0x969040) {
+    if x > read_f64(0x9688b0) || n < -5000 || (menor as f64) < pond as f64 * read_f64(0x969040) {
         let desafeto: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547af0usize);
         desafeto(p, cpx2_d(do_contrato + 0xcf), 1);
     }

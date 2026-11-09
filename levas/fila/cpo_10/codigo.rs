@@ -97,9 +97,9 @@ unsafe extern "thiscall" fn get_offer_response_delay(this: usize, oferta: usize,
             && estatuto > 0
         {
             let interesse: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> f64 = core::mem::transmute(0x846920usize);
-            if interesse(cpo10_d(this + 0x856), p, comprador, 0, 0, 1, 0) > read_f64_at(0x968e58) {
-                let x = prazo as i32 as f64 * read_f64_at(0x968e18);
-                let teto = read_f64_at(0x968dd8);
+            if interesse(cpo10_d(this + 0x856), p, comprador, 0, 0, 1, 0) > read_f64(0x968e58) {
+                let x = prazo as i32 as f64 * read_f64(0x968e18);
+                let teto = read_f64(0x968dd8);
                 valor = Some(match_pl_ftol(if teto < x || x.is_nan() { teto } else { x }) as u8);
             }
         }
@@ -151,8 +151,8 @@ unsafe extern "thiscall" fn pay_transfer_instalments(this: usize) {
         *((e + 0xc) as *mut i8) = n;
         let fracoes = if n < 4 { Some((0x968918, 0x968f30)) } else if n < 8 { Some((0x967880, 0x969518)) } else { None };
         if let Some((a, b)) = fracoes {
-            cpo10_w(fp + 0x1c, cpo10_i(fp + 0x1c).wrapping_add(match_pl_ftol(cpo10_i(e) as f64 * read_f64_at(a))) as u32);
-            cpo10_w(fr + 0x1c, cpo10_i(fr + 0x1c).wrapping_add(match_pl_ftol(cpo10_i(e) as f64 * read_f64_at(b))) as u32);
+            cpo10_w(fp + 0x1c, cpo10_i(fp + 0x1c).wrapping_add(match_pl_ftol(cpo10_i(e) as f64 * read_f64(a))) as u32);
+            cpo10_w(fr + 0x1c, cpo10_i(fr + 0x1c).wrapping_add(match_pl_ftol(cpo10_i(e) as f64 * read_f64(b))) as u32);
         }
         if cpo10_b(e + 0xc) == 0 {
             crate::comparison::branch("cpo_10 instalment finished");

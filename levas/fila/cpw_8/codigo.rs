@@ -69,7 +69,7 @@ unsafe fn init_static_date(bit: u8, data: usize, destrutor: usize) {
 
 /// O trecho da forma acima de `base`: (x − base) × a constante `k` (f64), truncado a 16 bits com sinal, mais `base`.
 unsafe fn scale_above_base(x: i32, base: i32, k: usize) -> i32 {
-    (match_pl_ftol(x.wrapping_sub(base) as f64 * read_f64_at(k)) as i16 as i32).wrapping_add(base)
+    (match_pl_ftol(x.wrapping_sub(base) as f64 * read_f64(k)) as i16 as i32).wrapping_add(base)
 }
 
 /// { 0x62c680 } (thiscall, ret 4, injury.cpp, quadro SEH só das estáticas locais): `Injury::update_player_fitness(
@@ -281,9 +281,9 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     // a condição de jogo, pelo fator do cansaço (+0xc)
     let cansaco = cpw8_w(rec + 0xc);
     let mc = cpw8_w(rec + 0xa) as i32;
-    let teto_k = read_f64_at(0x9689d0);
+    let teto_k = read_f64(0x9689d0);
     let k = if cansaco > 1000 {
-        let kv = read_f64_at(0x968dc0) - cansaco as f64 * read_f64_at(0x96a608);
+        let kv = read_f64(0x968dc0) - cansaco as f64 * read_f64(0x96a608);
         if !(kv > teto_k) {
             kv
         } else if l3c > 0 {
@@ -294,7 +294,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     } else if l3c > 0 {
         teto_k
     } else {
-        read_f64_at(0x967890)
+        read_f64(0x967890)
     };
     let r1 = match_pl_ftol(l38.wrapping_mul(500) as f64 * k);
     let r2 = match_pl_ftol(l3c.wrapping_mul(250) as f64 * k);

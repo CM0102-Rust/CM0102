@@ -259,7 +259,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     let goleiros = |side: usize| {
         for i in 0..20 {
             let q = jog(side, i);
-            if byte(q, match_player::POSITION) >= 0 && player_table(q) == 1 {
+            if read_i8(q + match_player::POSITION) >= 0 && player_table(q) == 1 {
                 more((q + match_player::GOALS_CONCEDED) as *mut u8);
             }
         }
@@ -275,7 +275,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         team_strength(m, 1);
         for o in [0x1da, 0x1de, 0x1e2, 0x1e6] {
             let (a, x) = (*w(o) as f64, *w(o + 2) as f64);
-            let middle = x * read_f64_at(rdata::F64_0_5);
+            let middle = x * read_f64(rdata::F64_0_5);
             if !(a >= middle) {
                 *w(o) = ftol(middle) as i16;
             } else if a > x + x {
@@ -298,7 +298,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 let i = loop {
                     let i = random(0x14) as i8;
                     t += 1;
-                    if t >= 0x78 || byte(jog(side, i), 0x19) >= 0 {
+                    if t >= 0x78 || read_i8(jog(side, i) + 0x19) >= 0 {
                         break i;
                     }
                 };
@@ -307,7 +307,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     break;
                 }
                 let p = jog(side, i);
-                let f = (read_f32_at(p + match_player::PASSING) as f64 + read_f32_at(rdata::F32_20) as f64) as f32;
+                let f = (read_f32(p + match_player::PASSING) as f64 + read_f32(rdata::F32_20) as f64) as f32;
                 let r = random((word(0x1da, other) + 200) / 19);
                 if !(r as f64 >= f as f64) {
                     mais16(w(0xf5e4 + side * 0x36));
@@ -324,7 +324,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     break 'rodadas;
                 }
                 let p = jog(side, c as i8);
-                let f = (read_f32_at(p + match_player::TACKLING) as f64 + read_f32_at(rdata::F32_15) as f64) as f32;
+                let f = (read_f32(p + match_player::TACKLING) as f64 + read_f32(rdata::F32_15) as f64) as f32;
                 let r = random(word(0x1de, other) / 5);
                 if !(r as f64 >= f as f64) {
                     add(p, 0x28);
@@ -343,12 +343,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         end = true;
                         break 'rodadas;
                     }
-                    if byte(jog(side, i), 0x19) >= 0 {
+                    if read_i8(jog(side, i) + 0x19) >= 0 {
                         break i;
                     }
                 };
                 let p = jog(side, i);
-                let f = (read_f32_at(p + match_player::JUMPING) as f64 + read_f32_at(rdata::F32_15) as f64) as f32;
+                let f = (read_f32(p + match_player::JUMPING) as f64 + read_f32(rdata::F32_15) as f64) as f32;
                 let r = random((word(0x1f2, other) + 100) / 7);
                 if !(r as f64 >= f as f64) {
                     mais16(w(0xf5ec + side * 0x36));
@@ -361,7 +361,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 more(b(0xf5c8 + side * 0x36));
             }
             let p = jog(side, choose_by_role(m, side as u32) as i8);
-            let v = ftol(read_f32_at(p + match_player::MOVEMENT) as f64 + read_f32_at(rdata::F32_20) as f64);
+            let v = ftol(read_f32(p + match_player::MOVEMENT) as f64 + read_f32(rdata::F32_20) as f64);
             if random(v) < random(2) {
                 add(p, -0xf);
                 more(b(0xf5ca + side * 0x36));
@@ -392,7 +392,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     add(p, -0x32);
                     more((p + match_player::YELLOW_CARDS) as *mut u8);
                     more((mo + engine::FOULS) as *mut u8);
-                    if byte(p, match_player::YELLOW_CARDS) == 2 {
+                    if read_i8(p + match_player::YELLOW_CARDS) == 2 {
                         crate::comparison::branch("quick simulation second give_yellow_card");
                         send_off(c, call);
                     }
@@ -431,16 +431,16 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             let x = if goal_difference + d > 3 {
                 d as f64
             } else if goals(side) + goals(other) != 0 {
-                read_f32_at(rdata::F32_1) as f64
+                read_f32(rdata::F32_1) as f64
             } else if *w(engine::CLOCK) > 0x3c {
-                read_f32_at(rdata::F32_0_6499999762) as f64
+                read_f32(rdata::F32_0_6499999762) as f64
             } else {
-                read_f32_at(rdata::F32_0_75) as f64
+                read_f32(rdata::F32_0_75) as f64
             };
             let (v, repartir_outro): (f64, unsafe extern "thiscall" fn(usize, i8, i16)) = if c20 {
-                (word(0x1f2, other) as f64 * x * read_f64_at(rdata::F64_6_1), split_c)
+                (word(0x1f2, other) as f64 * x * read_f64(rdata::F64_6_1), split_c)
             } else {
-                (word(0x1da, other) as f64 * x * read_f64_at(rdata::F64_4_8), split_b)
+                (word(0x1da, other) as f64 * x * read_f64(rdata::F64_4_8), split_b)
             };
             let r1 = random(ftol(v));
             let l24 = random(word(0x1de, side)).wrapping_sub(r1) as i16;
@@ -502,7 +502,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         for (s, delta) in [(side, 0x4b), (other, -0x43)] {
                             for i in 0..20 {
                                 let q = jog(s, i);
-                                if byte(q, match_player::POSITION) >= 0 {
+                                if read_i8(q + match_player::POSITION) >= 0 {
                                     add(q, delta);
                                 }
                             }
@@ -635,14 +635,14 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             for i in 0..20 {
                 let p = jog(side, i);
                 let person = read_usize(p + match_player::PLAYER);
-                if byte(p, match_player::POSITION) < 0 || person == 0 {
+                if read_i8(p + match_player::POSITION) < 0 || person == 0 {
                     continue;
                 }
-                let f = read_f32_at(p + match_player::STAMINA);
-                let mut cl = (byte(person, player_sheet::INJURY_PRONENESS) as u8).wrapping_mul(2).wrapping_add(5);
-                if !(f >= read_f32_at(rdata::F32_6750)) {
+                let f = read_f32(p + match_player::STAMINA);
+                let mut cl = (read_i8(person + player_sheet::INJURY_PRONENESS) as u8).wrapping_mul(2).wrapping_add(5);
+                if !(f >= read_f32(rdata::F32_6750)) {
                     cl = cl.wrapping_add(0xf);
-                } else if !(f >= read_f32_at(rdata::F32_8000)) {
+                } else if !(f >= read_f32(rdata::F32_8000)) {
                     cl = cl.wrapping_add(5);
                 }
                 if random(cl as i8 as i32) < random(400) {
@@ -672,12 +672,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             if *(pt() as *const i32) == -2 && i < 11 {
                 crate::comparison::branch("quick simulation friendly rating");
                 let club = if s != 0 { read_usize((pt()) + 0x20) } else { read_usize((pt()) + 0x1c) };
-                let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64_at(rdata::F64_40)) * read_f64_at(rdata::F64_50);
-                let r = *((club + club::REPUTATION) as *const i16) as f64 * read_f64_at(rdata::F64_1_6) - read_f64_at(rdata::F64_6000);
-                let v = ftol(((a - r) * read_f64_at(rdata::F64_2ENEG_05) + read_f64_at(rdata::F64_1)) * *q as f64) as i16;
+                let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64(rdata::F64_40)) * read_f64(rdata::F64_50);
+                let r = *((club + club::REPUTATION) as *const i16) as f64 * read_f64(rdata::F64_1_6) - read_f64(rdata::F64_6000);
+                let v = ftol(((a - r) * read_f64(rdata::F64_2ENEG_05) + read_f64(rdata::F64_1)) * *q as f64) as i16;
                 *q = v.clamp(0xdac, 0x2ee0);
             }
-            let n = (ftol((*q as i32 + 0x1770) as f64 * read_f64_at(rdata::F64_0_0004) + read_f64_at(rdata::F64_1_83)) as i8).clamp(1, 10);
+            let n = (ftol((*q as i32 + 0x1770) as f64 * read_f64(rdata::F64_0_0004) + read_f64(rdata::F64_1_83)) as i8).clamp(1, 10);
             *((p + match_player::MATCH_GRADE) as *mut i8) = n;
             *((p + match_player::STAMINA_CEILING) as *mut u32) = *((p + match_player::STAMINA) as *const u32);
         }

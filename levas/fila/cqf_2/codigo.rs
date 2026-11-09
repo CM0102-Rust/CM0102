@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, jogador: usiz
         } else {
             let p = pedido(this, clube, 0, jogador, 0, 1, 1);
             let r = sorteio(0x29);
-            let v = match_pl_ftol((r as f64 * read_f64_at(0x967898) + read_f64_at(0x9689b0)) * p as f64); // cqf2: o preço da notícia
+            let v = match_pl_ftol((r as f64 * read_f64(0x967898) + read_f64(0x9689b0)) * p as f64); // cqf2: o preço da notícia
             if v > 0x2710 && v < 0x30d40 {
                 v / 10000 * 10000
             } else if v < 1_000_000 {
@@ -337,7 +337,7 @@ unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, jogador: usiz
                     true
                 } else {
                     let f = financas(cqf2_d(0xae2a38), cqf2_clube(cqf2_d(no + 4)));
-                    f != 0 && preco as f64 * read_f64_at(0x9689c0) <= verba(f, 0, 0, 0, 1, 0) as f64
+                    f != 0 && preco as f64 * read_f64(0x9689c0) <= verba(f, 0, 0, 0, 1, 0) as f64
                 };
                 if pode && cqf2_d(no + 4) as i32 > -1 {
                     clubes[q as usize] = cqf2_clube(cqf2_d(no + 4));

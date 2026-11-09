@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
     if lugares <= 0xabe || cpv6_sortear(cpv6_w(clube + 0x80) as i32) >= lugares {
         return;
     }
-    let t = match_pl_ftol(lugares as f64 * read_f64_at(0x967880)) as i16 as i32;
+    let t = match_pl_ftol(lugares as f64 * read_f64(0x967880)) as i16 as i32;
     let dez = (t / 10).wrapping_mul(10);
     let fechar = dez as i16 as i32;
     let resto = cpv6_i(est + 0x40);
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fi
     if rep >= r.wrapping_add(0xdac) {
         return 0;
     }
-    let n = match_pl_ftol(read_f64_at(0x969000) / div);
+    let n = match_pl_ftol(read_f64(0x969000) / div);
     let outro = cpv6_d(clube + 0xbf);
     if outro != 0 && cpv6_d(outro + 0x69) != 0 {
         if cpv6_sortear(n) != 0 {
@@ -400,15 +400,15 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
     }
     crate::comparison::branch("cpv_6 injection evaluated");
     let div = match wealth_band(fin) {
-        -2 => read_f64_at(0x9689e0),
-        -1 => read_f64_at(0x967880),
-        _ => read_f64_at(0x96a350),
+        -2 => read_f64(0x9689e0),
+        -1 => read_f64(0x967880),
+        _ => read_f64(0x96a350),
     };
     let rep = cpv6_w(clube + 0x80) as i32;
     let outro = cpv6_d(clube + 0xbf);
     let mut valor;
     if outro != 0 && cpv6_d(outro + 0x69) != 0 && cpv6_b(clube + 0x82) == 0 {
-        let r = cpv6_sortear(match_pl_ftol(read_f64_at(0x968dd8) / div));
+        let r = cpv6_sortear(match_pl_ftol(read_f64(0x968dd8) / div));
         let est = cpv6_d(cpv6_d(clube + 0xbf) + 0x69);
         if (cpv6_b(est + 0xf) as i8 as i32) <= r {
             return 0;
@@ -419,7 +419,7 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
         }
         valor = e.wrapping_mul(20).wrapping_add(0x96).wrapping_mul(rep).wrapping_add(0xb71b0);
     } else {
-        if cpv6_sortear(match_pl_ftol(read_f64_at(0x968938) / div)) != 0 {
+        if cpv6_sortear(match_pl_ftol(read_f64(0x968938) / div)) != 0 {
             return 0;
         }
         if cpv6_b(clube + 0x82) != 0 {
@@ -429,7 +429,7 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
     }
     let saldo = balance(fin);
     if (valor.wrapping_mul(10) as i64) < saldo.wrapping_neg() {
-        valor = match_pl_ftol(-(saldo as f64 * read_f64_at(0x967880)));
+        valor = match_pl_ftol(-(saldo as f64 * read_f64(0x967880)));
     }
     if cpv6_w(clube + 0x80) < 0x7d0 {
         let teto = rep.wrapping_mul(rep).wrapping_add(0x16e360);
@@ -437,7 +437,7 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
             valor = teto;
         }
     } else {
-        let maior = (valor as f64 > rep.wrapping_mul(rep) as f64 * read_f64_at(0x9689e0)) as i32;
+        let maior = (valor as f64 > rep.wrapping_mul(rep) as f64 * read_f64(0x9689e0)) as i32;
         if valor > 0x3d0900 + maior {
             valor = 0x3d0900 + maior;
         }

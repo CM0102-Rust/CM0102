@@ -48,7 +48,7 @@ unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -> i32 {
     let forca = |p: usize| {
         let s = *((p + 0x105) as *const i8) as i32 + *((p + 0x104) as *const i8) as i32;
         let w = core::ptr::read_unaligned((p + 0x3b) as *const i16) as f64;
-        match_pl_ftol(s as f64 * (w * read_f64_at(0x968ef0) + read_f64_at(0x968968)) * core::ptr::read_unaligned((p + 0x4d) as *const f32) as f64)
+        match_pl_ftol(s as f64 * (w * read_f64(0x968ef0) + read_f64(0x968968)) * core::ptr::read_unaligned((p + 0x4d) as *const f32) as f64)
     };
     forca(pb).wrapping_sub(forca(pa))
 }

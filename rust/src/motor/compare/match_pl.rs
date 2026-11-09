@@ -231,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn compare_take_ball(this: usize) {
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || take_ball(this));
-    SCOREBOARD.record(igual, || format!("take_ball(lado {}, {} {}) original={:x?} rust={:x?}", side_of_player(this), byte(this, match_player::CELL_X), byte(this, match_player::CELL_Y), mo, mr));
+    SCOREBOARD.record(igual, || format!("take_ball(lado {}, {} {}) original={:x?} rust={:x?}", side_of_player(this), read_i8(this + match_player::CELL_X), read_i8(this + match_player::CELL_Y), mo, mr));
 }
 
 /// Comparer for `move_to`.
@@ -245,11 +245,11 @@ pub(crate) unsafe extern "thiscall" fn compare_move_to(this: usize, x: i8, y: i8
         return;
     }
     let engine = *((this + match_player::ENGINE) as *const usize);
-    let old = occupancy_grid_cell(engine, byte(this, match_player::CELL_X), byte(this, match_player::CELL_Y)) as usize;
+    let old = occupancy_grid_cell(engine, read_i8(this + match_player::CELL_X), read_i8(this + match_player::CELL_Y)) as usize;
     let new = occupancy_grid_cell(engine, x, y) as usize;
     let mut reg = vec![(this + match_player::CELL_SLOT, 1), (this + match_player::CELL_X, 2), (old, 90), (new, 90), (engine + engine::BALL_X, 2)];
-    let (l, v) = (side_of_player(this), byte(this, match_player::CELL_SLOT));
-    let n = byte(old, 0x58 + l as usize);
+    let (l, v) = (side_of_player(this), read_i8(this + match_player::CELL_SLOT));
+    let n = read_i8(old + (0x58 + l as usize));
     if v >= 0 && n > 0 {
         let movido = *((old as isize + 4 * (11 * l as isize + n as isize - 1)) as *const usize);
         if movido != 0 {
@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn compare_condition_test(this: usize, code:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, usize) -> u8>(IDX_CONDITION_TEST);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, code, target), || crate::rng::without_counting(|| condition_test(this, code, target)));
-    SCOREBOARD.record(igual && r == n, || format!("condition_test({}) match_condition {} original={} rust={}", code, read_f32_at(this + match_player::CONFIDENCE), r, n));
+    SCOREBOARD.record(igual && r == n, || format!("condition_test({}) match_condition {} original={} rust={}", code, read_f32(this + match_player::CONFIDENCE), r, n));
     r
 }
 
@@ -303,7 +303,7 @@ pub(crate) unsafe extern "thiscall" fn compare_match_performance(this: usize, ma
     reg.push((this, 0x1be));
     let engine = *((this + match_player::ENGINE) as *const usize);
     if engine != 0 {
-        reg.push(((engine as isize + 0xaf + byte(this, match_player::SIDE) as isize) as usize, 1));
+        reg.push(((engine as isize + 0xaf + read_i8(this + match_player::SIDE) as isize) as usize, 1));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, mark), || crate::rng::without_counting(|| match_performance(this, mark)));
     SCOREBOARD.record(igual, || format!("match_performance({}) original={:x?} rust={:x?}", mark, mo, mr));

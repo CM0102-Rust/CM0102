@@ -1427,14 +1427,14 @@ pub(crate) unsafe fn is_regen_entry_due(e: usize) -> bool {
 /// [pt] Uma nota do técnico refeito (um dos blocos da 0x7a65d0): P = pow(+0x22 da pessoa, 0x968950) (vezes `fator`, quando
 /// há), o maior entre P e o valor `v` da ficha, vezes `k`, no máximo `teto` (f64 em 0x...), truncado.
 pub(crate) unsafe fn rebuilt_coach_rating(person: usize, v: i16, factor: Option<usize>, k: usize, ceiling: usize) -> u16 {
-    let mut p = game_pow(*((person + staff::INT_APPS) as *const u8) as f64, read_f64_at(rdata::F64_2));
+    let mut p = game_pow(*((person + staff::INT_APPS) as *const u8) as f64, read_f64(rdata::F64_2));
     if let Some(f) = factor {
-        p *= read_f64_at(f);
+        p *= read_f64(f);
     }
     let v = v as f64;
     let m = if p > v { p } else { v };
-    let mk = m * read_f64_at(k);
-    let t = read_f64_at(ceiling);
+    let mk = m * read_f64(k);
+    let t = read_f64(ceiling);
     ftol(if !(mk >= t) { mk } else { t }) as u16
 }
 
@@ -1461,7 +1461,7 @@ pub(crate) unsafe fn place_coach_at_ai_club(s: usize) {
     }
     let rep = |k: usize| {
         let f = read_i16(read_usize(s + staff::PLAYER) + 0xb) as f64;
-        let c = read_i16(read_usize(s + staff::CLUB_JOB) + 0x80) as f64 * read_f64_at(k);
+        let c = read_i16(read_usize(s + staff::CLUB_JOB) + 0x80) as f64 * read_f64(k);
         c > f
     };
     if rep(0x968968) && (exe::database_count_club_coaches(read_usize(s + staff::CLUB_JOB)) as i8) < 5 {
@@ -1566,16 +1566,16 @@ pub(crate) unsafe fn damp_confidence_change(v: i32, gosta: bool, not_likes: bool
     let mut v = v;
     if gosta {
         let x = v as i16 as f64;
-        v = if (v as i16) < 0 { ftol(x * read_f64_at(rdata::F64_0_5)) } else { ftol(x + x) };
+        v = if (v as i16) < 0 { ftol(x * read_f64(rdata::F64_0_5)) } else { ftol(x + x) };
     } else if not_likes {
         let x = v as i16 as f64;
-        v = if (v as i16) > 0 { ftol(x * read_f64_at(rdata::F64_0_5)) } else { ftol(x + x) };
+        v = if (v as i16) > 0 { ftol(x * read_f64(rdata::F64_0_5)) } else { ftol(x + x) };
     }
     let x = v as i16 as i32;
     if x < -1000 {
-        v = ftol((x + 1000) as f64 * read_f64_at(rdata::F64_0_2) - read_f64_at(rdata::F64_1000));
+        v = ftol((x + 1000) as f64 * read_f64(rdata::F64_0_2) - read_f64(rdata::F64_1000));
     } else if x > 1000 {
-        v = ftol((x - 1000) as f64 * read_f64_at(rdata::F64_0_2) + read_f64_at(rdata::F64_1000));
+        v = ftol((x - 1000) as f64 * read_f64(rdata::F64_0_2) + read_f64(rdata::F64_1000));
     }
     v as i16
 }
@@ -1590,9 +1590,9 @@ pub(crate) unsafe fn damp_confidence_change(v: i32, gosta: bool, not_likes: bool
 /// amortece. As duas consultas são puras.
 pub(crate) unsafe fn fan_confidence_change(club: usize, target: u32) -> i16 {
     let conf = if club != 0 { read_i16(manager_manager_row(club) + 8) as i32 } else { 0 };
-    let t = ftol((conf - 5000) as f64 * read_f64_at(rdata::F64_NEG_0_05));
+    let t = ftol((conf - 5000) as f64 * read_f64(rdata::F64_NEG_0_05));
     let d = (target as i32).wrapping_sub(t) as i16;
-    let v = ftol(d as f64 * read_f64_at(rdata::F64_0_75));
+    let v = ftol(d as f64 * read_f64(rdata::F64_0_75));
     let manager = read_usize(club + club::MANAGER);
     let fav = exe::club_favours_staff(manager, club) != 0;
     let rej = !fav && exe::club_dislikes_staff(manager, club) != 0;
@@ -1607,7 +1607,7 @@ pub(crate) unsafe fn fan_confidence_change(club: usize, target: u32) -> i16 {
 pub(crate) unsafe fn board_confidence_change(club: usize, target: u32) -> i16 {
     let conf = if club != 0 { read_i16(manager_manager_row(club) + 6) as i32 } else { 0 };
     let s = ((conf - 6000) / 20).wrapping_add(target as i32) as i16;
-    let v = ftol(s as f64 * read_f64_at(rdata::F64_0_75));
+    let v = ftol(s as f64 * read_f64(rdata::F64_0_75));
     let (tecnico, presidente) = (read_usize(club + club::MANAGER), read_usize(club + club::CHAIRMAN));
     let g = exe::staff_is_favoured_by(tecnico, presidente) != 0;
     let n = !g && exe::staff_is_disliked_by(tecnico, presidente) != 0;
@@ -1792,10 +1792,10 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
         let base = read_usize(G_PLAYER_STATS);
         let notes = ratings_average(base, read_usize(sujeito + staff::PLAYER)) as i8 as f64;
         let base = read_usize(G_PLAYER_STATS);
-        let y = read_f64_at(base + player_stats_fields::RATED_COUNT);
-        let c0 = read_f64_at(rdata::F64_0);
-        let average = if !(y < c0 || y > c0) { read_f64_at(rdata::F64_6_8) } else { read_f64_at(base + player_stats_fields::RATING_SUM) / y }; // no matches: 6.8;
-        if notes > average * read_f64_at(rdata::F64_5) {
+        let y = read_f64(base + player_stats_fields::RATED_COUNT);
+        let c0 = read_f64(rdata::F64_0);
+        let average = if !(y < c0 || y > c0) { read_f64(rdata::F64_6_8) } else { read_f64(base + player_stats_fields::RATING_SUM) / y }; // no matches: 6.8;
+        if notes > average * read_f64(rdata::F64_5) {
             m = 1;
         }
     }

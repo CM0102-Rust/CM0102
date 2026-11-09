@@ -1309,7 +1309,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, 
 ///
 /// `db_files_read_comps_v1(stream, use_zip, records, n)`: for each of the `n` 107-byte records, the fields of
 /// `COMPETITION_V1_LAYOUT`, each read on its own (size, 1) through `zread` `zipdir_zread` (use_zip ≠ 0) or `fread` `exe::crt_fread`;
-/// the reputation, read into one byte (the original reads it into an argument slot on its own stack, already used),
+/// the reputation, read into one read_i8(the original reads it into an argument slot on its own stack + (already used)),
 /// becomes a u16 with no arithmetic. The first read that fails gives 0 (what was already read stays); everything, 1.
 /// Called by `db_files_read_comps` `db_files_read_comps` with the entry version equal to 1; the stock database and the save are
 /// version 2. No SEH and no local variable read without a value.
@@ -1317,8 +1317,8 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, 
 ///
 /// [pt] { 0x54ffd0 } (cdecl, Db_files.cpp): `db_files_read_comps_v1(stream, use_zip, registros, n)`: para cada um dos
 /// `n` registros de 107 bytes, os campos de `COMPETITION_V1_LAYOUT`, cada um lido sozinho (tamanho, 1) por `zread`
-/// 0x932c30 (use_zip ≠ 0) ou `fread` 0x945bfe; a reputação lida num byte (a original o lê num argumento da
-/// própria pilha, já usado) vira u16 sem conta. A primeira leitura que não vem dá 0 (o que já veio fica); tudo,
+/// 0x932c30 (use_zip ≠ 0) ou `fread` 0x945bfe; a reputação lida num read_i8(a original o lê num argumento da
+/// própria pilha + (já usado)) vira u16 sem conta. A primeira leitura que não vem dá 0 (o que já veio fica); tudo,
 /// 1. Chamado por `db_files_read_comps` 0x54feb0 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
 pub(crate) unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {

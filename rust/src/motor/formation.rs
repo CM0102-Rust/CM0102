@@ -201,12 +201,12 @@ pub(crate) unsafe extern "thiscall" fn set_square(this: usize, position: i8, mas
 pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
     for k in 0..20 {
         let j = side_player_slot(this, side, k);
-        if byte(j, match_player::POSITION) < 0 {
+        if read_i8(j + match_player::POSITION) < 0 {
             continue;
         }
         let pd = *((j + match_player::PLAYER) as *const usize);
-        let sum = 10 * (byte(pd, 0x43) as i32 + byte(pd, 0x33) as i32 + byte(pd, 0x27) as i32);
-        let mut v = ftol(sum as f64 + read_f32_at(j + match_player::STAMINA) as f64);
+        let sum = 10 * (read_i8(pd + 0x43) as i32 + read_i8(pd + 0x33) as i32 + read_i8(pd + 0x27) as i32);
+        let mut v = ftol(sum as f64 + read_f32(j + match_player::STAMINA) as f64);
         // simplification: the original calls 0x717410 on every test; it only reads the player
         let r = match_player_position(j);
         if r & 1 != 0 {
@@ -227,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
         }
         if v as i16 > 8500 {
             let write: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(FN_FORMATION_SET_PLAYER_INSTRUCTION);
-            write((this as isize + 0x91e2 + 0x18e3 * side as isize) as usize, byte(j, match_player::POSITION), 0x80_0000);
+            write((this as isize + 0x91e2 + 0x18e3 * side as isize) as usize, read_i8(j + match_player::POSITION), 0x80_0000);
         }
     }
 }

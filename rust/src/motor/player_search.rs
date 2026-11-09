@@ -565,7 +565,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         esi = *forcada as i32;
     } else {
         let rep = read_i16(club + club::REPUTATION) as i32;
-        let t = ftol(read_i32(club + club::MIN_ATTENDANCE) as f64 * read_f64_at(rdata::F64_0_43) - read_f64_at(rdata::F64_430)) as i16 as i32;
+        let t = ftol(read_i32(club + club::MIN_ATTENDANCE) as f64 * read_f64(rdata::F64_0_43) - read_f64(rdata::F64_430)) as i16 as i32;
         let ebx = (if rep > t { rep } else if t > 10000 { 10000 } else { t }) as i16 as i32;
         let mut n = rep;
         let mut l = rep;
@@ -596,14 +596,14 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
     let mut edi: i32 = if esi > 9000 {
         esi.wrapping_mul(3).wrapping_add(7500)
     } else if esi > 7000 {
-        ftol(esi as f64 * read_f64_at(rdata::F64_4_75) - read_f64_at(rdata::F64_8250))
+        ftol(esi as f64 * read_f64(rdata::F64_4_75) - read_f64(rdata::F64_8250))
     } else if esi > 5000 {
-        ftol(esi as f64 * read_f64_at(rdata::F64_2_5) + read_f64_at(rdata::F64_7500))
+        ftol(esi as f64 * read_f64(rdata::F64_2_5) + read_f64(rdata::F64_7500))
     } else if esi > 3000 {
         crate::comparison::branch("cpu_13 band from 3000 to 5000");
         esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: the middle band
     } else {
-        ftol(esi as f64 * read_f64_at(rdata::F64_1_6) + read_f64_at(rdata::F64_5000))
+        ftol(esi as f64 * read_f64(rdata::F64_1_6) + read_f64(rdata::F64_5000))
     };
     if forcada.is_null() {
         let squad = (exe::database_count_club_squad(club, 0, 0) as i8);
@@ -615,18 +615,18 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
             if fin != 0 {
                 match exe::finance_get_wealth_band(fin) as i8 {
                     -2 => edi /= 2,
-                    -1 => edi = ftol(edi as f64 * read_f64_at(rdata::F64_0_6666666667)),
+                    -1 => edi = ftol(edi as f64 * read_f64(rdata::F64_0_6666666667)),
                     _ => {}
                 }
             }
         } else {
             let nation = read_i32(club + club::DIVISION) as usize;
             if with_nation(nation) {
-                let t2 = ftol(read_i16(nation + competition::REPUTATION) as i32 as f64 * read_f64_at(rdata::F64_1_35) + read_f64_at(rdata::F64_20)) as u8;
+                let t2 = ftol(read_i16(nation + competition::REPUTATION) as i32 as f64 * read_f64(rdata::F64_1_35) + read_f64(rdata::F64_20)) as u8;
                 let foul = (squad as u8).wrapping_sub(t2) as i8;
                 if foul < 0 {
                     let v = if foul > -10 { foul as i32 } else { -10 };
-                    edi = ftol((v as f64 * read_f64_at(rdata::F64_0_05) + read_f64_at(rdata::F64_1)) * edi as f64);
+                    edi = ftol((v as f64 * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_1)) * edi as f64);
                 }
             }
             let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club);
@@ -634,20 +634,20 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
                 let v = edi as f64;
                 match exe::finance_get_wealth_band(fin) as i8 {
                     -2 => {
-                        let (x, y) = (v * read_f64_at(rdata::F64_0_9090909091), edi.wrapping_sub(1000) as f64);
+                        let (x, y) = (v * read_f64(rdata::F64_0_9090909091), edi.wrapping_sub(1000) as f64);
                         edi = ftol(if x < y { x } else { y });
                     }
                     -1 => {
-                        let (x, y) = (v * read_f64_at(rdata::F64_0_9523809524), edi.wrapping_sub(500) as f64);
+                        let (x, y) = (v * read_f64(rdata::F64_0_9523809524), edi.wrapping_sub(500) as f64);
                         edi = ftol(if x < y { x } else { y });
                     }
                     1 => {
-                        let (x, y) = (v * read_f64_at(rdata::F64_1_0125), edi.wrapping_add(125) as f64);
+                        let (x, y) = (v * read_f64(rdata::F64_1_0125), edi.wrapping_add(125) as f64);
                         edi = ftol(if x > y { x } else { y });
                     }
                     2 => {
                         crate::comparison::branch("cpu_13 rich club");
-                        let (x, y) = (v * read_f64_at(rdata::F64_1_025), edi.wrapping_add(250) as f64); // cpu13: o rico;
+                        let (x, y) = (v * read_f64(rdata::F64_1_025), edi.wrapping_add(250) as f64); // cpu13: o rico;
                         edi = ftol(if x > y { x } else { y });
                     }
                     _ => {}

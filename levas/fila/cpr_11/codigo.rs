@@ -85,9 +85,9 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
         let n = cpr11_w(this + 0x3e);
         qsort(buf, n as i32 as u32, 0xe, 0x68afb0);
         let c = *((this + 0xc2) as *const i8) as f64;
-        let a = (c * read_f64_at(0x96d0e8)) as f32; // fstp no local: o primeiro arredonda para float
+        let a = (c * read_f64(0x96d0e8)) as f32; // fstp no local: o primeiro arredonda para float
         normal = a.to_bits();
-        let b = c * read_f64_at(0x96d0e0);
+        let b = c * read_f64(0x96d0e0);
         if n > 0 {
             let d = a as f64 - b;
             let step_towards = d / n as f64;
@@ -108,12 +108,12 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
     qsort(buf, cpr11_w(this + 0x3e) as i32 as u32, 0xe, 0x68afd0);
     if let Some(k) = projection_position(buf, cpr11_w(this + 0x3e), clube) {
         normal = (normal & !0xff) | (k as u8).wrapping_add(1) as u32; // a posição na forma normal
-        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(0x968940)) as u32;
+        pior = apply_form_factor(this, projection_entry(buf, k), read_f64(0x968940)) as u32;
     }
     qsort(buf, cpr11_w(this + 0x3e) as i32 as u32, 0xe, 0x68afd0);
     if let Some(k) = projection_position(buf, cpr11_w(this + 0x3e), clube) {
         melhor = (melhor & !0xff) | (k as u8).wrapping_add(1) as u32;
-        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(0x96d0d8)) as u32;
+        pior = apply_form_factor(this, projection_entry(buf, k), read_f64(0x96d0d8)) as u32;
     }
     qsort(buf, cpr11_w(this + 0x3e) as i32 as u32, 0xe, 0x68afd0);
     for k in 0..cpr11_w(this + 0x3e) as i32 {

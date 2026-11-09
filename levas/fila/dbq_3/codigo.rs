@@ -161,16 +161,16 @@ unsafe extern "C" fn staff_pick_favoured_team_mate(pessoa: usize, clube: usize) 
         let m1 = media(dbq3_u32(0xb74350), dbq3_u32(o + 0x61), 6, 1, 6.5);
         let dados = dbq3_u32(o + 0x61);
         let mut nota = dbq3_i16(dados + 0xb) as i32;
-        if m1 > read_f32_at(0x968990) as f64 {
+        if m1 > read_f32(0x968990) as f64 {
             let g = dbq3_u32(0xb74350);
             let razao = || {
-                let d = read_f64_at(g + 0x18);
-                if d == 0.0 || d.is_nan() { read_f64_at(0x968998) } else { read_f64_at(g + 0x10) / d }
+                let d = read_f64(g + 0x18);
+                if d == 0.0 || d.is_nan() { read_f64(0x968998) } else { read_f64(g + 0x10) / d }
             };
             // fcompp: C0 (abaixo ou sem ordem) soma
-            if !(razao() + read_f64_at(0x968918) >= l0) {
+            if !(razao() + read_f64(0x968918) >= l0) {
                 nota += 500;
-            } else if !(razao() + read_f64_at(0x967880) >= l0) {
+            } else if !(razao() + read_f64(0x967880) >= l0) {
                 nota += 250;
             }
         }

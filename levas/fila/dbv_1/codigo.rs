@@ -40,7 +40,7 @@ unsafe fn age_at_date(p: usize, data: usize) -> i8 {
 unsafe fn free_agent_adjust(p: usize, x: i16) -> i16 {
     let x = x as f64;
     let k = if *((p + 0x22) as *const u8) != 0 { 0x9689e0 } else { 0x968e48 };
-    match_pl_ftol(x - x * read_f64_at(k)) as i16
+    match_pl_ftol(x - x * read_f64(k)) as i16
 }
 
 fn in_range(x: i16, a: i16, b: i16) -> bool {
@@ -336,11 +336,11 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             }
             if !in_range(e34, 1, 200) {
                 let mut x: i16 = if in_range(e2c, 1, 200) {
-                    if e2c > 100 { match_pl_ftol(e2c as f64 * read_f64_at(0x9689e0)) as i16 } else { s16(3).wrapping_add(1) }
+                    if e2c > 100 { match_pl_ftol(e2c as f64 * read_f64(0x9689e0)) as i16 } else { s16(3).wrapping_add(1) }
                 } else if in_range(e20, 1, 200) {
-                    match_pl_ftol(e20 as f64 * read_f64_at(if e20 < 0xaf { 0x968f20 } else { 0x9689e0 })) as i16
+                    match_pl_ftol(e20 as f64 * read_f64(if e20 < 0xaf { 0x968f20 } else { 0x9689e0 })) as i16
                 } else if in_range(ca0, 1, 200) {
-                    let t = match_pl_ftol(ca0 as f64 * read_f64_at(0x9689e0));
+                    let t = match_pl_ftol(ca0 as f64 * read_f64(0x9689e0));
                     let r = sorteio(t);
                     s16(r).wrapping_add(1)
                 } else {
@@ -427,7 +427,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             }
             if rd(p + 0x39) == 0 && (b(p + 0x22) == 0 || age_at_date(p, data) > 0x20) {
                 let r = sorteio(6); // a original guarda ca em [0x20] só para o fild
-                let f = match_pl_ftol(ca as f64 * read_f64_at(0x969518));
+                let f = match_pl_ftol(ca as f64 * read_f64(0x969518));
                 ca = ca.wrapping_add(r.wrapping_mul(f) as i16);
                 ca = if ca < 1 { 1 } else if ca > 200 { 200 } else { ca };
             }
@@ -667,7 +667,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                         vet_j(j, p, 0xae2044, &mut e1a, core::ptr::null_mut(), core::ptr::null_mut());
                         vet_j(cj, q, 0xae2114, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
                         let dif = (w(j + 5) as i32 - w(cj + 5) as i32).abs();
-                        let mut esc = match_pl_ftol(dif as f64 * read_f64_at(0x968e18));
+                        let mut esc = match_pl_ftol(dif as f64 * read_f64(0x968e18));
                         let g0 = w(0xae2044);
                         let comparar = if g0 == 0x14 {
                             if w(0xae2114) == g0 {
@@ -815,7 +815,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
             ww(nj + 0xc, a);
             ww(nj + 8, bp);
             let rep = |x: usize| w(x + 0x80);
-            let vezes = |x: usize, k: usize| match_pl_ftol(rep(x) as f64 * read_f64_at(k)) as i16;
+            let vezes = |x: usize, k: usize| match_pl_ftol(rep(x) as f64 * read_f64(k)) as i16;
             if !in_range(a, 1, 10000) {
                 let c = rd(p + 0x39);
                 let s = rd(p + 0x24);
@@ -964,7 +964,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
                         vet_nj(nj, p, 0xae18bc, core::ptr::null_mut());
                         vet_nj(cn, q, 0xae2238, core::ptr::null_mut());
                         let dif = (w(nj + 4) as i32 - w(cn + 4) as i32).abs();
-                        let mut esc = match_pl_ftol(dif as f64 * read_f64_at(0x968e18));
+                        let mut esc = match_pl_ftol(dif as f64 * read_f64(0x968e18));
                         if w(0xae18bc) != -0x7f {
                             let mut o = 0isize;
                             loop {

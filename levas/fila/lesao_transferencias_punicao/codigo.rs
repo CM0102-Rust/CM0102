@@ -14,7 +14,7 @@ unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, marca: i16, 
     let e = (r + 0xc) as *mut i16;
     let v = core::ptr::read_unaligned(e);
     if v < -1000 {
-        let x = (v as f64 * read_f64_at(0x96bac0) - read_f64_at(0x968e18)) * ritmo as f64;
+        let x = (v as f64 * read_f64(0x96bac0) - read_f64(0x968e18)) * ritmo as f64;
         core::ptr::write_unaligned(e, (x as i32).wrapping_add(v as i32) as i16);
         return;
     }

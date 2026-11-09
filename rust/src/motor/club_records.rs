@@ -679,7 +679,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         }
         let average = estatistica(reg, 0x11, 6.5);
         // fcomp with −1.0 (double) and fcom with the stored float: passes only with the higher average
-        if *rating as f64 == read_f64_at(rdata::F64_NEG_1) || average > *rating as f64 {
+        if *rating as f64 == read_f64(rdata::F64_NEG_1) || average > *rating as f64 {
             crate::comparison::branch("cpm_6 season rating record");
             *rating = average as f32;
             *((r + club_record::SEASON_RATING_GAMES) as *mut u8) = jogou;
@@ -865,7 +865,7 @@ pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offe
     if value < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // below the minimum for the reputation
     }
-    if exigir != 0 && value < ftol(rep as f64 * rep as f64 * read_f64_at(rdata::F64_0_1)) {
+    if exigir != 0 && value < ftol(rep as f64 * rep as f64 * read_f64(rdata::F64_0_1)) {
         return 0;
     }
     (value != 0 && value > read_usize(rec + club_record::FEE_PAID) as i32) as u8

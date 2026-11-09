@@ -1,9 +1,9 @@
 # Mutacoes da leva128 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva128.py --jogo 2001-10-01
 # O quarto campo e o ramo (marca ramo("...") no motor.rs): sem passagem na base, a mutacao e pulada.
 MUTACOES = [
-    ('r_goleiro', "random(ftol(2000.0 - read_f32_at(j + match_player::HANDLING) as f64 * 40.0))", "random(ftol(2000.0 - read_f32_at(j + match_player::HANDLING) as f64 * 41.0))", "respond goalkeeper in the box"),
+    ('r_goleiro', "random(ftol(2000.0 - read_f32(j + match_player::HANDLING) as f64 * 40.0))", "random(ftol(2000.0 - read_f32(j + match_player::HANDLING) as f64 * 41.0))", "respond goalkeeper in the box"),
     ('r_tipo', "            3 => random(1000),\n            4 => random(0x708),", "            3 => random(1001),\n            4 => random(0x708),"),
-    ('r_altura', "attack = ftol(((byte(m, engine::BALL_ROLL) as i32 + 1) * attack as i16 as i32) as f64 / st);", "attack = ftol(((byte(m, engine::BALL_ROLL) as i32 + 2) * attack as i16 as i32) as f64 / st);"),
+    ('r_altura', "attack = ftol(((read_i8(m + engine::BALL_ROLL) as i32 + 1) * attack as i16 as i32) as f64 / st);", "attack = ftol(((read_i8(m + engine::BALL_ROLL) as i32 + 2) * attack as i16 as i32) as f64 / st);"),
     ('r_proprio', "        if random(attack as i16 as i32 + 100) != 0 {\n            return 0;\n        }\n        crate::comparison::branch(\"respond ball on own side\")", "        if random(attack as i16 as i32 + 101) != 0 {\n            return 0;\n        }\n        crate::comparison::branch(\"respond ball on own side\")", "respond ball on own side"),
     ('r_cabeca', "ficha5c * 200) != 0 { choose(kind)", "ficha5c * 201) != 0 { choose(kind)"),
     ('r_nota', "    if rating < 0x96 {\n        return 0;", "    if rating < 0x95 {\n        return 0;"),

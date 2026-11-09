@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     let situacao = (cpw3_d(0xae23b4).wrapping_add(cpw3_d(c + 4)) as u32 & !0xff) | ((cpw3_b(entrada + 0x24) >> 1) & 0xf) as u32;
     let f1 = staff_interest_in_club(cpw3_d(cpw3_d(0xde1f54) + 0x856), jogador, clube, 0, 1, situacao);
     crate::comparison::branch("cpw_3 loan interest");
-    if !(f1 >= read_f64_at(0x968e38)) { // cpw3: o interesse mínimo
+    if !(f1 >= read_f64(0x968e38)) { // cpw3: o interesse mínimo
         return -1;
     }
     let mes_de: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x54cfb0usize);
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     let f2 = staff_interest_in_club(this, jogador, clube, 0, 0, 1);
     let mut meses = ate_fim as u8;
     crate::comparison::branch("cpw_3 count from the start");
-    if f2 >= read_f64_at(0x9690a8) { // cpw3: o interesse para contar do início
+    if f2 >= read_f64(0x9690a8) { // cpw3: o interesse para contar do início
         let n = cpw3_d(cpw3_d(clube + 0x53));
         if n != cpw3_d(0x9cf488) && n != cpw3_d(0x9cf434) && n != cpw3_d(0x9cf360) {
             meses = inicio as u8;

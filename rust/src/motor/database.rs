@@ -88,7 +88,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
     let partida = || read_usize(m + engine::MATCH);
     let person_of = |id: i32| (*(G_STAFF_TABLE as *const usize)).wrapping_add(id as usize * staff::SIZE);
     let list = read_usize(m + engine::EVENT_LIST);
-    if list != 0 && list_global() != 0 && partida() != 0 && byte(partida(), 0x40) != 0 {
+    if list != 0 && list_global() != 0 && partida() != 0 && read_i8(partida() + 0x40) != 0 {
         *((list + llist::CURSOR) as *mut u32) = core::ptr::read_unaligned((list + llist::HEAD) as *const u32);
         let mut i: i8 = 0;
         while (i as i16) < *(list as *const i16) {
@@ -109,14 +109,14 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                 event(call, e);
             } else if kind == 0x1e {
                 let (c1c, c20) = (read_usize(pt + fixture::HOME_CLUB), read_usize(pt + fixture::AWAY_CLUB));
-                if byte(e, 0xd) != 0 {
-                    let (a, b) = (byte(pt, fixture::HOME_GOALS), byte(pt, fixture::AWAY_GOALS));
-                    let ok = b < a || (b == a && (read_i16(c1c + club::REPUTATION) as f64) < read_i16(c20 + club::REPUTATION) as f64 * read_f64_at(rdata::F64_0_7));
+                if read_i8(e + 0xd) != 0 {
+                    let (a, b) = (read_i8(pt + fixture::HOME_GOALS), read_i8(pt + fixture::AWAY_GOALS));
+                    let ok = b < a || (b == a && (read_i16(c1c + club::REPUTATION) as f64) < read_i16(c20 + club::REPUTATION) as f64 * read_f64(rdata::F64_0_7));
                     let t = read_usize(c20 + club::ASSISTANT_MANAGER);
                     if ok && t != 0 && read_usize(t + staff::NON_PLAYER) != 0 {
                         let x = read_usize(t + staff::NON_PLAYER);
-                        let r1 = random((exe::non_player_attribute_rating(x, (byte(x, 0x17) as u8 as u32) as i8) as i8) as i32);
-                        if r1 > random(0x14) && byte(x, 0x14) > 5 {
+                        let r1 = random((exe::non_player_attribute_rating(x, (read_i8(x + 0x17) as u8 as u32) as i8) as i8) as i32);
+                        if r1 > random(0x14) && read_i8(x + 0x14) > 5 {
                             crate::comparison::branch("match_wrap_up offer accepted");
                             mark(1, *(t as *const u32));
                             event(call, e);
@@ -131,12 +131,12 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                         }
                     }
                 } else {
-                    let (a, b) = (byte(pt, fixture::HOME_GOALS), byte(pt, fixture::AWAY_GOALS));
-                    let ok = b > a || (b == a && (read_i16(c20 + club::REPUTATION) as f64) < read_i16(c1c + club::REPUTATION) as f64 * read_f64_at(rdata::F64_0_6));
+                    let (a, b) = (read_i8(pt + fixture::HOME_GOALS), read_i8(pt + fixture::AWAY_GOALS));
+                    let ok = b > a || (b == a && (read_i16(c20 + club::REPUTATION) as f64) < read_i16(c1c + club::REPUTATION) as f64 * read_f64(rdata::F64_0_6));
                     let t = read_usize(c1c + club::ASSISTANT_MANAGER);
                     if ok && t != 0 && read_usize(t + staff::NON_PLAYER) != 0 {
                         let x = read_usize(t + staff::NON_PLAYER);
-                        if random((exe::non_player_attribute_rating(x, (byte(x, 0x17) as u8 as u32) as i8) as i8) as i32) > 5 && byte(x, 0x14) > 5 {
+                        if random((exe::non_player_attribute_rating(x, (read_i8(x + 0x17) as u8 as u32) as i8) as i8) as i32) > 5 && read_i8(x + 0x14) > 5 {
                             crate::comparison::branch("match_wrap_up offer accepted");
                             mark(1, *(t as *const u32));
                             event(call, e);
@@ -154,16 +154,16 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     // the event’s player on one of the two sides
                     let achar = |side: usize| (0..20usize).find(|&k| {
                         let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
-                        read_usize(p + match_player::STAFF) == person && byte(p, match_player::POSITION) >= 0
+                        read_usize(p + match_player::STAFF) == person && read_i8(p + match_player::POSITION) >= 0
                     });
                     let found = achar(0).map(|k| (k, 0)).or_else(|| achar(1).map(|k| (k, 1)));
                     if let Some((k, side)) = found {
                         let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
                         let vale = if kind == 6 {
                             crate::comparison::branch("match_wrap_up type 6 event");
-                            byte(p, match_player::YELLOW_CARDS) == 2 || byte(p, match_player::RED_CARDS) != 0
+                            read_i8(p + match_player::YELLOW_CARDS) == 2 || read_i8(p + match_player::RED_CARDS) != 0
                         } else {
-                            byte(p, match_player::MATCH_GRADE) < 7 && random(byte(p, match_player::MATCH_FORM) as i32) == 0
+                            read_i8(p + match_player::MATCH_GRADE) < 7 && random(read_i8(p + match_player::MATCH_FORM) as i32) == 0
                         };
                         if vale {
                             crate::comparison::branch("match_wrap_up player event");
@@ -183,35 +183,35 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
         let (meu, outro) = if side == 0 { (read_usize(pt + fixture::HOME_CLUB), read_usize(pt + fixture::AWAY_CLUB)) } else { (read_usize(pt + fixture::AWAY_CLUB), read_usize(pt + fixture::HOME_CLUB)) };
         for k in 0..20usize {
             let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
-            if k > 10 && byte(p, match_player::MINUTE_ON) == -1 {
+            if k > 10 && read_i8(p + match_player::MINUTE_ON) == -1 {
                 continue;
             }
             let person = read_usize(p + match_player::STAFF);
             if person != 0 && read_usize(p + match_player::PLAYER) != 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
-                call(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, p, [person as u32, meu as u32, outro as u32, (byte(p, match_player::MATCH_GRADE) as f32).to_bits(), *(m as *const u8) as u32 | 1 << 8]);
-                if list_global() != 0 && exe::database_is_national_team(meu) == 0 && byte(pt, fixture::HOME_SIDE_MARK) != 0 {
+                call(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, p, [person as u32, meu as u32, outro as u32, (read_i8(p + match_player::MATCH_GRADE) as f32).to_bits(), *(m as *const u8) as u32 | 1 << 8]);
+                if list_global() != 0 && exe::database_is_national_team(meu) == 0 && read_i8(pt + fixture::HOME_SIDE_MARK) != 0 {
                     let ct = contract(*(G_CONTRACT_MANAGER as *const usize), person, meu);
                     if ct != 0
                         && meu != 0
                         && person != read_usize(meu + club::MANAGER)
                         && read_usize(pt + fixture::COMPETITION) != 0
                         && exe::friendly_is_friendly_competition(*(G_FRIENDLY as *const usize), read_usize(pt + fixture::COMPETITION)) == 0
-                        && byte(p, match_player::MINUTE_OFF) != -1
-                        && byte(p, match_player::INJURY_MINUTE) == -1
-                        && byte(ct, 0x3d) > 0
+                        && read_i8(p + match_player::MINUTE_OFF) != -1
+                        && read_i8(p + match_player::INJURY_MINUTE) == -1
+                        && read_i8(ct + 0x3d) > 0
                         && read_i16((read_usize(p + match_player::PLAYER)) + 0xb) > 0x109a
                         && partida() != 0
-                        && byte(partida(), 0x40) != 0
+                        && read_i8(partida() + 0x40) != 0
                     {
-                        let r1 = random(ftol(read_f32_at(p + match_player::CONFIDENCE) as f64));
+                        let r1 = random(ftol(read_f32(p + match_player::CONFIDENCE) as f64));
                         if r1 > random(100) {
-                            let r3 = random(byte(person, staff::TEMPERAMENT) as i32);
+                            let r3 = random(read_i8(person + staff::TEMPERAMENT) as i32);
                             if r3 < random(10) {
-                                let f = read_f32_at(p + match_player::STAMINA);
+                                let f = read_f32(p + match_player::STAMINA);
                                 if ((random(0x5dc) + 0x1d4c) as f64) < f as f64 {
-                                    let b5b = byte(person, staff::PROFESSIONALISM);
-                                    if b5b < 6 && byte(person, staff::AMBITION) > 10 {
-                                        let r6 = random(byte(person, staff::AMBITION) as i32);
+                                    let b5b = read_i8(person + staff::PROFESSIONALISM);
+                                    if b5b < 6 && read_i8(person + staff::AMBITION) > 10 {
+                                        let r6 = random(read_i8(person + staff::AMBITION) as i32);
                                         if random(b5b as i32) < r6 {
                                             crate::comparison::branch("match_wrap_up asks to leave");
                                             let mut ev = [0u8; 0x19];
@@ -243,7 +243,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     } else if exe::staff_favours_club(person, outro) != 0 {
                         x -= 20;
                     }
-                    let (a, b, c) = (byte(person, staff::PRESSURE) as i32, byte(person, staff::PROFESSIONALISM), byte(person, staff::TEMPERAMENT));
+                    let (a, b, c) = (read_i8(person + staff::PRESSURE) as i32, read_i8(person + staff::PROFESSIONALISM), read_i8(person + staff::TEMPERAMENT));
                     if b < 6 && c < 10 {
                         let r1 = random((a * b as i32 * c as i32 + 0x14) * 100);
                         if r1 < random(x + 0x32) {
@@ -262,18 +262,18 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
             // the minutes played
             let minute = (read_i16(m + engine::CLOCK) as i32 / 11) as i8;
             let v: i8 = if k >= 11 {
-                let c = byte(p, match_player::MINUTE_ON);
+                let c = read_i8(p + match_player::MINUTE_ON);
                 if c == -1 {
                     continue;
                 }
-                let end = if byte(p, match_player::MINUTE_LEFT_PITCH) > -1 { byte(p, match_player::MINUTE_LEFT_PITCH) } else if byte(p, match_player::MINUTE_OFF) > -1 { byte(p, match_player::MINUTE_OFF) } else { minute };
+                let end = if read_i8(p + match_player::MINUTE_LEFT_PITCH) > -1 { read_i8(p + match_player::MINUTE_LEFT_PITCH) } else if read_i8(p + match_player::MINUTE_OFF) > -1 { read_i8(p + match_player::MINUTE_OFF) } else { minute };
                 end.wrapping_sub(c)
             } else if *(m as *const u8) != 0 {
                 0x5a
-            } else if byte(p, match_player::MINUTE_LEFT_PITCH) > -1 {
-                byte(p, match_player::MINUTE_LEFT_PITCH)
-            } else if byte(p, match_player::MINUTE_OFF) > -1 {
-                byte(p, match_player::MINUTE_OFF)
+            } else if read_i8(p + match_player::MINUTE_LEFT_PITCH) > -1 {
+                read_i8(p + match_player::MINUTE_LEFT_PITCH)
+            } else if read_i8(p + match_player::MINUTE_OFF) > -1 {
+                read_i8(p + match_player::MINUTE_OFF)
             } else {
                 minute
             };
@@ -281,11 +281,11 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                 continue;
             }
             soma += v as i32;
-            somap += byte(p, match_player::MATCH_GRADE) as i32 * v as i32;
+            somap += read_i8(p + match_player::MATCH_GRADE) as i32 * v as i32;
         }
         if soma != 0 {
             let q = somap as f64 / soma as f64;
-            average = if read_usize(pt + fixture::STADIUM) == read_usize(meu + club::STADIUM) { q - read_f64_at(rdata::F64_0_1) } else { q + read_f64_at(rdata::F64_0_2) };
+            average = if read_usize(pt + fixture::STADIUM) == read_usize(meu + club::STADIUM) { q - read_f64(rdata::F64_0_1) } else { q + read_f64(rdata::F64_0_2) };
         }
         crate::comparison::branch(if soma != 0 { "match_wrap_up media do lado" } else { "match_wrap_up lado sem minutos" });
         let value = (average as f32).to_bits();
@@ -492,7 +492,7 @@ pub(crate) unsafe extern "C" fn partner_club(club: usize, eh_a: *mut u32, active
         return original_fn::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(IDX_PARTNER_CLUB)(club, eh_a, active);
     }
     let nation = *((club + club::NATION) as *const usize);
-    if nation == 0 || (active != 0 && byte(club, club::HAS_LINKED_CLUB) == 0) {
+    if nation == 0 || (active != 0 && read_i8(club + club::HAS_LINKED_CLUB) == 0) {
         return 0;
     }
     let g = |a: usize| *(a as *const u32);
@@ -645,16 +645,16 @@ pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, 
         (false, true) => (0, 1),
         _ => (0, 0),
     };
-    *este = byte(this, engine::SCORE);
-    *outro = byte(this, engine::SCORE_SIDE1);
+    *este = read_i8(this + engine::SCORE);
+    *outro = read_i8(this + engine::SCORE_SIDE1);
     let partida = *((this + engine::MATCH) as *const usize);
     if exe::comp_util_get_round_variant(*((partida + fixture::ROUND_NAME) as *const i16) as i32) == 3 {
         *fase3 = 1;
     }
-    let first_leg_home = byte(partida, fixture::HOME_AGGREGATE);
+    let first_leg_home = read_i8(partida + fixture::HOME_AGGREGATE);
     if first_leg_home != -1 {
         *este = (*este).wrapping_add(first_leg_home);
-        *outro = (*outro).wrapping_add(byte(partida, fixture::AWAY_AGGREGATE));
+        *outro = (*outro).wrapping_add(read_i8(partida + fixture::AWAY_AGGREGATE));
         *first_leg = 1;
         if *este as i32 + bonus_este as i32 == *outro as i32 + bonus_outro as i32 {
             let f = *((partida + fixture::TIE_RULES) as *const u16);
@@ -776,7 +776,7 @@ pub(crate) unsafe fn age_at_date(p: usize, data: usize) -> i8 {
 pub(crate) unsafe fn free_agent_adjust(p: usize, x: i16) -> i16 {
     let x = x as f64;
     let k = if *((p + staff::INT_APPS) as *const u8) != 0 { 0x9689e0 } else { 0x968e48 };
-    ftol(x - x * read_f64_at(k)) as i16
+    ftol(x - x * read_f64(k)) as i16
 }
 
 /// True if a <= x <= b.
@@ -1083,11 +1083,11 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             }
             if !in_range(e34, 1, 200) {
                 let mut x: i16 = if in_range(e2c, 1, 200) {
-                    if e2c > 100 { ftol(e2c as f64 * read_f64_at(rdata::F64_0_25)) as i16 } else { s16(3).wrapping_add(1) }
+                    if e2c > 100 { ftol(e2c as f64 * read_f64(rdata::F64_0_25)) as i16 } else { s16(3).wrapping_add(1) }
                 } else if in_range(e20, 1, 200) {
-                    ftol(e20 as f64 * read_f64_at(if e20 < 0xaf { 0x968f20 } else { 0x9689e0 })) as i16
+                    ftol(e20 as f64 * read_f64(if e20 < 0xaf { 0x968f20 } else { 0x9689e0 })) as i16
                 } else if in_range(ca0, 1, 200) {
-                    let t = ftol(ca0 as f64 * read_f64_at(rdata::F64_0_25));
+                    let t = ftol(ca0 as f64 * read_f64(rdata::F64_0_25));
                     let r = exe::utils_random(t);
                     s16(r).wrapping_add(1)
                 } else {
@@ -1174,7 +1174,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             }
             if rd(p + staff::CLUB_JOB) == 0 && (b(p + staff::INT_APPS) == 0 || age_at_date(p, data) > 0x20) {
                 let r = exe::utils_random(6); // the original stores ca in [0x20] only for the fild
-                let f = ftol(ca as f64 * read_f64_at(rdata::F64_NEG_0_1));
+                let f = ftol(ca as f64 * read_f64(rdata::F64_NEG_0_1));
                 ca = ca.wrapping_add(r.wrapping_mul(f) as i16);
                 ca = if ca < 1 { 1 } else if ca > 200 { 200 } else { ca };
             }
@@ -1414,7 +1414,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                         exe::database_player_to_attribute_vector(j, p, G_PLAYER_INIT_ATTRIBUTE_VECTOR_A, &mut e1a, core::ptr::null_mut(), core::ptr::null_mut());
                         exe::database_player_to_attribute_vector(cj, q, G_PLAYER_INIT_ATTRIBUTE_VECTOR_B, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
                         let dif = (w(j + player_sheet::CURRENT_ABILITY) as i32 - w(cj + 5) as i32).abs();
-                        let mut esc = ftol(dif as f64 * read_f64_at(rdata::F64_2_5));
+                        let mut esc = ftol(dif as f64 * read_f64(rdata::F64_2_5));
                         let g0 = w(G_PLAYER_INIT_ATTRIBUTE_VECTOR_A);
                         let comparar = if g0 == 0x14 {
                             if w(G_PLAYER_INIT_ATTRIBUTE_VECTOR_B) == g0 {
@@ -1562,7 +1562,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             ww(nj + non_player::WORLD_REPUTATION, a);
             ww(nj + non_player::HOME_REPUTATION, bp);
             let rep = |x: usize| w(x + 0x80);
-            let vezes = |x: usize, k: usize| ftol(rep(x) as f64 * read_f64_at(k)) as i16;
+            let vezes = |x: usize, k: usize| ftol(rep(x) as f64 * read_f64(k)) as i16;
             if !in_range(a, 1, 10000) {
                 let c = rd(p + staff::CLUB_JOB);
                 let s = rd(p + staff::NATIONAL_JOB);
@@ -1711,7 +1711,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                         exe::database_non_player_to_attribute_vector(nj, p, G_NON_PLAYER_ATTRIBUTE_VECTOR, core::ptr::null_mut());
                         exe::database_non_player_to_attribute_vector(cn, q, 0xae2238, core::ptr::null_mut());
                         let dif = (w(nj + non_player::CURRENT_ABILITY) as i32 - w(cn + 4) as i32).abs();
-                        let mut esc = ftol(dif as f64 * read_f64_at(rdata::F64_2_5));
+                        let mut esc = ftol(dif as f64 * read_f64(rdata::F64_2_5));
                         if w(G_NON_PLAYER_ATTRIBUTE_VECTOR) != -0x7f {
                             let mut o = 0isize;
                             loop {
@@ -2892,16 +2892,16 @@ pub(crate) unsafe fn favourite_colleague_score(person: usize, club: usize, o: us
     let m1 = average(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 1, 6.5);
     let data = read_usize(o + staff::PLAYER);
     let mut n = read_i16_as_i32(data + player_sheet::CURRENT_REPUTATION);
-    if m1 > read_f32_at(rdata::F32_5) as f64 {
+    if m1 > read_f32(rdata::F32_5) as f64 {
         let g = read_usize(G_PLAYER_STATS);
         let ratio = || {
-            let d = read_f64_at(g + player_stats_fields::RATED_COUNT);
-            if d == 0.0 || d.is_nan() { read_f64_at(rdata::F64_6_8) } else { read_f64_at(g + player_stats_fields::RATING_SUM) / d }
+            let d = read_f64(g + player_stats_fields::RATED_COUNT);
+            if d == 0.0 || d.is_nan() { read_f64(rdata::F64_6_8) } else { read_f64(g + player_stats_fields::RATING_SUM) / d }
         };
         // fcompp: C0 (below or unordered) adds
-        if !(ratio() + read_f64_at(rdata::F64_0_2) >= l0) {
+        if !(ratio() + read_f64(rdata::F64_0_2) >= l0) {
             n += 500;
-        } else if !(ratio() + read_f64_at(rdata::F64_0_1) >= l0) {
+        } else if !(ratio() + read_f64(rdata::F64_0_1) >= l0) {
             n += 250;
         }
     }
@@ -3085,12 +3085,12 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
         f += 0x100;
     }
     let mut adjust = 0i32;
-    if m(2, 0x16) > read_f32_at(rdata::F32_180) as f64 {
+    if m(2, 0x16) > read_f32(rdata::F32_180) as f64 {
         let a = ftol(m(2, 0xd)) as i8 as i32;
         if a > 10 {
-            adjust = ftol(a as f64 - read_f64_at(rdata::F64_65));
+            adjust = ftol(a as f64 - read_f64(rdata::F64_65));
         }
-        let x = (m(2, 5) * read_f32_at(rdata::F32_50) as f64) as f32; // fstp dword;
+        let x = (m(2, 5) * read_f32(rdata::F32_50) as f64) as f32; // fstp dword;
         adjust = adjust.wrapping_add(ftol(x as f64 / m(2, 1)));
     }
     if b(0x37).wrapping_add(adjust) > random(50) {
@@ -3098,17 +3098,17 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     }
     let v14 = m(2, 0xe);
     let v14f = v14 as f32; // fst dword
-    if v14 > read_f64_at(rdata::F64_8) {
+    if v14 > read_f64(rdata::F64_8) {
         f += 0x800000;
     }
     if b(0x39) > random(50) && b(0x3e) > random(50) {
         let mut yes = false;
-        if v14f as f64 > read_f64_at(rdata::F64_0) {
+        if v14f as f64 > read_f64(rdata::F64_0) {
             let r = random(10) + 5;
             yes = ftol(v14f as f64) as i8 as i32 > r;
         }
         if !yes && computed_player_attribute(person, 0x17) > random(5) + 15 {
-            let x = m(2, 7) * read_f64_at(rdata::F64_150); // fstp qword;
+            let x = m(2, 7) * read_f64(rdata::F64_150); // fstp qword;
             yes = m(2, 0x16) > x;
         }
         if yes {
@@ -3131,7 +3131,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     if computed_player_attribute(person, 0xb) > random(4) + 14 {
         let x = m(2, 0xf); // fstp qword
         let r = random(20);
-        if !(r as f64 * read_f64_at(rdata::F64_0_1) + read_f64_at(rdata::F64_7_5) >= x) {
+        if !(r as f64 * read_f64(rdata::F64_0_1) + read_f64(rdata::F64_7_5) >= x) {
             f += 0x10000;
         }
     }
@@ -3141,12 +3141,12 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
         let a = m(6, 2) as f32;
         let c = m(6, 1) as f32;
         let r = random(3);
-        if !((r as f64 * read_f64_at(rdata::F64_0_1) + read_f64_at(rdata::F64_0_5)) * c as f64 >= a as f64) {
+        if !((r as f64 * read_f64(rdata::F64_0_1) + read_f64(rdata::F64_0_5)) * c as f64 >= a as f64) {
             f += 0x40000;
         }
     }
-    if !(m(2, 0x15) >= read_f64_at(rdata::F64_3)) && m(2, 0x10) > read_f64_at(rdata::F64_50) {
-        let x = m(2, 2) * read_f64_at(rdata::F64_3); // fstp qword;
+    if !(m(2, 0x15) >= read_f64(rdata::F64_3)) && m(2, 0x10) > read_f64(rdata::F64_50) {
+        let x = m(2, 2) * read_f64(rdata::F64_3); // fstp qword;
         if m(2, 1) > x {
             f += 0x80000;
         }
@@ -3187,9 +3187,9 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     let m = |kind: u32, attribute: u32| player_stat_average(person, kind, attribute);
     let mut f = natural_position_bits(j(), [0, 0x20, 0x10, 0x40, 0x80, 0x100, 0x200], 0x800000);
     if (*((person + staff::TEMPERAMENT) as *const i8) as i32) < random(4) + 5 && (b(0x1c) > 15 || b(0x25) < 6) {
-        let a = (m(2, 0xb) * read_f32_at(rdata::F32_3) as f64) as f32; // fstp dword;
+        let a = (m(2, 0xb) * read_f32(rdata::F32_3) as f64) as f32; // fstp dword;
         let s = (m(2, 0xa) + a as f64) as f32; // fstp dword
-        if !(m(2, 1) * read_f32_at(rdata::F32_0_5) as f64 >= s as f64) {
+        if !(m(2, 1) * read_f32(rdata::F32_0_5) as f64 >= s as f64) {
             f += 1;
         }
     }
@@ -3215,12 +3215,12 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
         }
     }
     let mut adjust = 0i32;
-    if m(2, 0x16) > read_f32_at(rdata::F32_180) as f64 {
+    if m(2, 0x16) > read_f32(rdata::F32_180) as f64 {
         let a = ftol(m(2, 0xd)) as i8 as i32;
         if a > 10 {
             adjust = 70 - a;
         }
-        let x = (m(2, 5) * read_f32_at(rdata::F32_NEG_50) as f64) as f32; // fstp dword;
+        let x = (m(2, 5) * read_f32(rdata::F32_NEG_50) as f64) as f32; // fstp dword;
         adjust = adjust.wrapping_add(ftol(x as f64 / m(2, 1)));
     }
     if b(0x37) < random(-50).wrapping_add(adjust) {
@@ -3229,7 +3229,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     if b(0x39) < random(-50) && b(0x3e) < random(-50) {
         let v = m(2, 0xe);
         let vf = v as f32; // fst dword
-        if v > read_f64_at(rdata::F64_0) {
+        if v > read_f64(rdata::F64_0) {
             let r = random(10);
             if (ftol(vf as f64) as i8 as i32) < r {
                 f += 0x800;
@@ -3266,24 +3266,24 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     if b(0x11) < 15 && computed_player_attribute(person, 0xb) > random(4) + 14 {
         let v = m(2, 0xf);
         let vf = v as f32; // fst dword
-        if v > read_f64_at(rdata::F64_0) && computed_player_attribute(person, 0xb) as f64 * read_f64_at(rdata::F64_0_28) > vf as f64 {
+        if v > read_f64(rdata::F64_0) && computed_player_attribute(person, 0xb) as f64 * read_f64(rdata::F64_0_28) > vf as f64 {
             f += 0x40000;
         }
     }
     if b(0x28) > random(5) + 13 {
         f += 0x80000;
     }
-    if m(2, 0x16) > read_f32_at(rdata::F32_180) as f64 {
+    if m(2, 0x16) > read_f32(rdata::F32_180) as f64 {
         let a = computed_player_attribute(person, 0xc);
-        let t = (m(2, 0x10) + a as f64 - read_f32_at(rdata::F32_10) as f64) as f32; // fstp dword;
+        let t = (m(2, 0x10) + a as f64 - read_f32(rdata::F32_10) as f64) as f32; // fstp dword;
         if (random(20) + 20) as f64 > t as f64 {
             let x = m(6, 2); // fstp qword
-            if m(6, 1) * read_f64_at(rdata::F64_0_35) > x {
+            if m(6, 1) * read_f64(rdata::F64_0_35) > x {
                 f += 0x100000;
             }
         }
     }
-    if !(m(2, 0x15) >= read_f64_at(rdata::F64_3)) && m(2, 0x10) > read_f64_at(rdata::F64_50) {
+    if !(m(2, 0x15) >= read_f64(rdata::F64_3)) && m(2, 0x10) > read_f64(rdata::F64_50) {
         f += 0x200000;
     }
     if computed_player_attribute(person, 0x14) < 7 || computed_player_attribute(person, 0x14) < read_i16_as_i32(j() + 5) / 15 {
@@ -4069,16 +4069,16 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         let m1 = average(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 1, 6.5);
         let data = read_usize(o + staff::PLAYER);
         let mut rating = read_i16(data + player_sheet::CURRENT_REPUTATION) as i32;
-        if m1 > read_f32_at(rdata::F32_5) as f64 {
+        if m1 > read_f32(rdata::F32_5) as f64 {
             let g = read_usize(G_PLAYER_STATS);
             let ratio = || {
-                let d = read_f64_at(g + player_stats_fields::RATED_COUNT);
-                if d == 0.0 || d.is_nan() { read_f64_at(rdata::F64_6_8) } else { read_f64_at(g + player_stats_fields::RATING_SUM) / d }
+                let d = read_f64(g + player_stats_fields::RATED_COUNT);
+                if d == 0.0 || d.is_nan() { read_f64(rdata::F64_6_8) } else { read_f64(g + player_stats_fields::RATING_SUM) / d }
             };
             // fcompp: C0 (below or unordered) adds
-            if !(ratio() + read_f64_at(rdata::F64_0_2) >= l0) {
+            if !(ratio() + read_f64(rdata::F64_0_2) >= l0) {
                 rating += 500;
-            } else if !(ratio() + read_f64_at(rdata::F64_0_1) >= l0) {
+            } else if !(ratio() + read_f64(rdata::F64_0_1) >= l0) {
                 rating += 250;
             }
         }
@@ -4362,7 +4362,7 @@ pub(crate) unsafe fn order_by_city_coordinate(ca: usize, cb: usize, d: usize) ->
         if e == 0 { 0 } else { core::ptr::read_unaligned((e + stadium::CITY) as *const usize) }
     };
     let (xa, xb) = (city(ca), city(cb));
-    let x = if xa != 0 { core::ptr::read_unaligned((xa + d) as *const f64) } else { read_f64_at(rdata::F64_0) };
+    let x = if xa != 0 { core::ptr::read_unaligned((xa + d) as *const f64) } else { read_f64(rdata::F64_0) };
     let y = if xb != 0 { core::ptr::read_unaligned((xb + d) as *const f64) } else { 0.0 };
     if !(x >= y) {
         -1
@@ -4970,7 +4970,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
             return 0;
         }
         let n = read_i16(league + league::CLUB_COUNT) as i32;
-        let weight = |k: i32| read_f64_at(0x9b59c0 + 8 * k.clamp(0, 19) as usize);
+        let weight = |k: i32| read_f64(0x9b59c0 + 8 * k.clamp(0, 19) as usize);
         let mut position = *((e + comp_stats_club::CURRENT_POSITION) as *const u8) as i32 - 1;
         if n != 0 && n != 20 {
             position = position * 20 / n;
@@ -4980,32 +4980,32 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
         if games < 20 {
             let before = *((club + club::LAST_POSITION) as *const i8) as i32;
             let w = if read_usize(club + club::LAST_DIVISION) != comp {
-                read_f64_at(rdata::F64_1_3)
+                read_f64(rdata::F64_1_3)
             } else if n != 0 && n != 20 {
                 weight((before * 20 - 20) / n)
             } else if (1..21).contains(&before) {
                 weight(before - 1)
             } else {
-                read_f64_at(rdata::F64_1_3)
+                read_f64(rdata::F64_1_3)
             };
-            v = ((20 - games) as f64 * w + games as f64 * v) * read_f64_at(rdata::F64_0_05);
+            v = ((20 - games) as f64 * w + games as f64 * v) * read_f64(rdata::F64_0_05);
         }
         let mut bonus = 0;
         if person != 0 && read_usize(person + staff::PLAYER) != 0 && database_club_of_contract(person) == club {
             let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
             let m = average(read_usize(G_PLAYER_STATS), read_usize(person + staff::PLAYER), 6, 0x14, v as f32);
-            v = (m + v) * read_f64_at(rdata::F64_0_5);
+            v = (m + v) * read_f64(rdata::F64_0_5);
             bonus = club_preference_bonus(club, person);
         }
-        let mut x = v * read_f64_at(rdata::F64_14) - read_f64_at(rdata::F64_18); // o peso entre 0 e 10;
-        let (baixo, teto) = (read_f64_at(rdata::F64_0), read_f64_at(rdata::F64_10));
+        let mut x = v * read_f64(rdata::F64_14) - read_f64(rdata::F64_18); // o peso entre 0 e 10;
+        let (baixo, teto) = (read_f64(rdata::F64_0), read_f64(rdata::F64_10));
         if baixo > x {
             x = baixo;
         } else if !(teto >= x) {
             x = teto; // fcomp: above the ceiling or NaN
         }
         let cx = (division as i32).wrapping_mul(500) as i16 as f64; // imul cx, cx, 0x1f4: 16 bits
-        let r = ((teto - x) * rep as f64 + cx * x) * read_f64_at(rdata::F64_0_1);
+        let r = ((teto - x) * rep as f64 + cx * x) * read_f64(rdata::F64_0_1);
         return (ftol(r) as u32).wrapping_add(bonus as u32);
     }
     // no league, or the club already at the division’s level: reputation ±500; the high part of eax is leftover
@@ -6757,7 +6757,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
     }
     remove_or_restore_training(person, 0);
     let b = |d: usize| *((player + d) as *const i8) as i32;
-    let f = |x: i32, k: usize| ftol(x as f64 * read_f64_at(k));
+    let f = |x: i32, k: usize| ftol(x as f64 * read_f64(k));
     let smaller = b(player_sheet::RIGHT_FOOT).min(b(player_sheet::LEFT_FOOT));
     let t = f(b(player_sheet::PLAYER_PACE), 0x968940) - f(b(player_sheet::LEADERSHIP), 0x969548) - f(b(player_sheet::JUMPING), 0x969540) - f(b(player_sheet::ACCELERATION), 0x969538)
         + (f(b(player_sheet::TEAMWORK), 0x9689b0) - f(b(player_sheet::TECHNIQUE), 0x969548) - f(smaller, 0x969530)) + b(player_sheet::WORK_RATE);
@@ -6858,7 +6858,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(person: usize)
     let v = array.as_mut_ptr();
     let (lados, ponderados) = player_attr_vector(player, person, v);
     rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, player, -20, &[],
-        |x| ftol(x as f64 * read_f64_at(rdata::F64_1_75)));
+        |x| ftol(x as f64 * read_f64(rdata::F64_1_75)));
     exe::database_attribute_vector_to_player(player, person, v as usize);
     if *((player + player_sheet::GOALKEEPER) as *const i8) >= 0xf {
         subtract_mean_2a_3a(player);
@@ -7479,7 +7479,7 @@ pub(crate) unsafe extern "C" fn staff_get_non_player_attribute(person: usize, at
 pub(crate) unsafe extern "C" fn player_attribute_rating_with_scaled_ability(player: usize, value: u32) -> u32 {
     let ability = core::ptr::read_unaligned((player + 5) as *const i16) as f64;
     let v = (value as u8 as i8) as f64;
-    attribute_rating(ability * read_f64_at(rdata::F64_0_1) + (v + v)) as u32
+    attribute_rating(ability * read_f64(rdata::F64_0_1) + (v + v)) as u32
 }
 
 /// A first name (60-byte row in [0xae23f0]) by weight.
@@ -8128,7 +8128,7 @@ pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize
     let formula = |d: usize| {
         let b = *((not_player + d) as *const i8) as f64;
         let x = (*((not_player + non_player::CURRENT_ABILITY) as *const i16) as f64 + (b + b)) * 0.05 + 10.0;
-        let y = (x * x * 0.1 + x) * read_f64_at(rdata::F64_0_3333333333) + 0.5;
+        let y = (x * x * 0.1 + x) * read_f64(rdata::F64_0_3333333333) + 0.5;
         ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y }) as u8
     };
     match a {
@@ -9172,9 +9172,9 @@ pub(crate) unsafe extern "C" fn staff_is_transfer_listed_or_requested(person: us
 /// [pt] A nota de 1 a 20 de um atributo relativo (de 0x543540, 0x544380 e 0x5442f0): x = v × 0,05 + 10;
 /// (x² × 0,1 + x) × 1/3 + 0,5, entre 1 e 20, truncada (`_ftol`).
 pub(crate) unsafe fn attribute_rating(v: f64) -> u8 {
-    let x = v * read_f64_at(rdata::F64_0_05) + read_f64_at(rdata::F64_10);
-    let z = (x * x * read_f64_at(rdata::F64_0_1) + x) * read_f64_at(rdata::F64_0_3333333333) + read_f64_at(rdata::F64_0_5); // arredonda;
-    let (minimo, maximo) = (read_f64_at(rdata::F64_1), read_f64_at(rdata::F64_20));
+    let x = v * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_10);
+    let z = (x * x * read_f64(rdata::F64_0_1) + x) * read_f64(rdata::F64_0_3333333333) + read_f64(rdata::F64_0_5); // arredonda;
+    let (minimo, maximo) = (read_f64(rdata::F64_1), read_f64(rdata::F64_20));
     ftol(if z > minimo {
         if z < maximo {
             z
@@ -9208,7 +9208,7 @@ pub(crate) unsafe extern "C" fn staff_compute_player_attribute(person: usize, pl
     let byte = |d: usize| read_i8(player + d) as u8;
     let ability = core::ptr::read_unaligned((player + 5) as *const i16) as i32;
     let rating = |d: usize| attribute_rating((2 * read_i8(player + d) as i32 + ability) as f64);
-    let rating_h = |d: usize| attribute_rating(ability as f64 * read_f64_at(rdata::F64_0_1) + (2 * read_i8(player + d) as i32) as f64);
+    let rating_h = |d: usize| attribute_rating(ability as f64 * read_f64(rdata::F64_0_1) + (2 * read_i8(player + d) as i32) as f64);
     let goalkeeper = read_i8(player + 0xf);
     match a {
         1 => byte(0x1b),

@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
                 melhor_atracao = atracao[i];
             }
             let v = valor(opcoes[i], 0, 0, 1, 1, 1);
-            if v as f64 * read_f64_at(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido
+            if v as f64 * read_f64(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido
                 crate::comparison::branch("cqe_1 accepts");
                 if ensaio == 0 {
                     aceitar(this, vaga, 0);
@@ -248,15 +248,15 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
         let pedido_f = pedido as f64;
         let v = valor(melhor, 0, 0, 0, 0, 1);
         let tipo = cqe1_d(o + 0x31) & 0xf;
-        if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta
+        if v as f64 * read_f64(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta
             crate::comparison::branch("cqe_1 counter-offer");
             cqe1_pb(melhor + 0x30, (cqe1_b(melhor + 0x30) & 0xf0) | (cqe1_b(o + 0x30) & 0xf));
             negociar(this, o, melhor, 0);
         } else {
             let w = cqe1_d(alvo + 0x52) as i32;
             let (tf, wf) = (total as f64, w as f64);
-            if (tf < wf * read_f64_at(0x96a5d8) && w.wrapping_sub(total) > 2000000)
-                || (tf < wf * read_f64_at(0x967880) && w.wrapping_sub(total) > 100000 && ensaio == 0)
+            if (tf < wf * read_f64(0x96a5d8) && w.wrapping_sub(total) > 2000000)
+                || (tf < wf * read_f64(0x967880) && w.wrapping_sub(total) > 100000 && ensaio == 0)
             {
                 motivo = 10;
             }

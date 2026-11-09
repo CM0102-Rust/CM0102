@@ -5,7 +5,7 @@ MUTACOES = [
     ('f_oito', "        *b(engine::RESTART_TYPE) = 7;\n        *b(engine::POSSESSION_SIDE) = zero(j) as u8;", "        *b(engine::RESTART_TYPE) = 6;\n        *b(engine::POSSESSION_SIDE) = zero(j) as u8;"),
     ('f_codigo', "0x2d => 0x20fd,", "0x2d => 0x20fc,"),
     ('f_cartao', "6 if !sofreu => 0x1ff5,", "6 if !sofreu => 0x1ff6,"),
-    ('f_area', "byte(read_usize(m + engine::PENDING_PLAY_OFFENDER), 0x27) == 1 { (10..=11).contains(&y) }", "byte(read_usize(m + engine::PENDING_PLAY_OFFENDER), 0x27) == 1 { (9..=11).contains(&y) }"),
+    ('f_area', "read_i8(read_usize(m + engine::PENDING_PLAY_OFFENDER) + 0x27) == 1 { (10..=11).contains(&y) }", "read_i8(read_usize(m + engine::PENDING_PLAY_OFFENDER) + 0x27) == 1 { (9..=11).contains(&y) }"),
     ('f_penalti', "*d = (*d).wrapping_sub(500);\n            sound = 0x1f7a;", "*d = (*d).wrapping_sub(499);\n            sound = 0x1f7a;"),
     ('f_parada', "matches!(k, 0 | 5..=13 | 0x3b | 0x3c)", "matches!(k, 0 | 5..=12 | 0x3b | 0x3c)"),
     ('f_nove', "if random(9) == 0 {\n        narrate(call, 0x20df", "if random(8) == 0 {\n        narrate(call, 0x20df"),

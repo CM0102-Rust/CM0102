@@ -155,14 +155,14 @@ unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, tipo: i8, r
     }
     let mut certeza: i8 = 1;
     if conhece != 0 {
-        let f = ((semente % 101) as f64 * read_f64_at(0x967898)) as f32 as f64;
+        let f = ((semente % 101) as f64 * read_f64(0x967898)) as f32 as f64;
         let x = if semente % 10 == 0 {
-            f * read_f32_at(0x96afb0) as f64
+            f * read_f32(0x96afb0) as f64
         } else {
             let nivel = *((conhece + if tipo == 2 { 0x17 } else { 0x18 }) as *const i8);
             (chance_to_know(conhece, nivel) as i8 as f64) * f
         };
-        certeza = (match_pl_ftol(x + read_f64_at(0x968968)) as i8).min(0x14);
+        certeza = (match_pl_ftol(x + read_f64(0x968968)) as i8).min(0x14);
     }
     let c32 = certeza as i32;
     let ruido = (semente % ((0x15 - c32) * 2) + c32 - 0x15) as i16 as i32;

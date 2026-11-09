@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn apply_match_effects(this: usize, jogo: usize, partid
                 crate::comparison::branch("cpv_8 half");
                 v = (v as i16 as i32) / 2; // cpv8: sem a marca do jogo, a metade
             } else if cpv8_b(pessoa + 0x18) as i32 > sorteio(3) + 0x21 {
-                v = ((v as i16 as i32) as f64 * read_f64_at(0x968928)) as i32;
+                v = ((v as i16 as i32) as f64 * read_f64(0x968928)) as i32;
             } else if (cpv8_b(pessoa + 0x18) as i32) < 0x17 - sorteio(5) {
                 crate::comparison::branch("cpv_8 youngster");
                 v = v.wrapping_add(v); // cpv8: o jovem em dobro

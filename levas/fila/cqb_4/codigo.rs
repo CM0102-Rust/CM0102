@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
                     1
                 };
                 if marcado != 0 {
-                    let f = match_pl_ftol(band as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8;
+                    let f = match_pl_ftol(band as i8 as i32 as f64 * read_f64(0x9689b0)) as u8;
                     band = if (f as i8) < 1 { 1 } else { f };
                 }
                 j = j.wrapping_add(1);

@@ -28,7 +28,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
     let p = read_usize(person + staff::PLAYER);
     if p != 0 && player != 0 {
         crate::comparison::branch("cpw_6 player award");
-        add_to_word(p + player_sheet::WORLD_REPUTATION, ftol(world as i32 as f64 * read_f64_at(rdata::F64_0_05))); // cpw6: the worldwide increase;
+        add_to_word(p + player_sheet::WORLD_REPUTATION, ftol(world as i32 as f64 * read_f64(rdata::F64_0_05))); // cpw6: the worldwide increase;
         if read_i16(p + player_sheet::WORLD_REPUTATION) > 10000 {
             write_i16(p + player_sheet::WORLD_REPUTATION, 10000);
         }
@@ -36,10 +36,10 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
             write_i16(p + player_sheet::WORLD_REPUTATION, world);
         }
         if club != 0 && read_usize(club + club::NATION) == read_usize(person + staff::NATION) { // cpw6: the club of the player’s nation
-            add_to_word(p + player_sheet::HOME_REPUTATION, ftol(nation as i32 as f64 * read_f64_at(rdata::F64_0_1)));
+            add_to_word(p + player_sheet::HOME_REPUTATION, ftol(nation as i32 as f64 * read_f64(rdata::F64_0_1)));
             clamp_word(p + player_sheet::HOME_REPUTATION, nation);
         } else {
-            add_to_word(p + player_sheet::HOME_REPUTATION, ftol((nation as i32 + world as i32) as f64 * read_f64_at(rdata::F64_0_025)));
+            add_to_word(p + player_sheet::HOME_REPUTATION, ftol((nation as i32 + world as i32) as f64 * read_f64(rdata::F64_0_025)));
             if read_i16(p + player_sheet::HOME_REPUTATION) > 10000 {
                 write_i16(p + player_sheet::HOME_REPUTATION, 10000);
             }
@@ -48,7 +48,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
                 write_i16(p + player_sheet::HOME_REPUTATION, floor as i16);
             }
         }
-        add_to_word(p + player_sheet::CURRENT_REPUTATION, ftol(nation as i32 as f64 * read_f64_at(rdata::F64_0_1)));
+        add_to_word(p + player_sheet::CURRENT_REPUTATION, ftol(nation as i32 as f64 * read_f64(rdata::F64_0_1)));
         clamp_word(p + player_sheet::CURRENT_REPUTATION, nation);
         let lists = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856);
         if lists != 0 && !MONTH_AWARD_DRY_RUN {

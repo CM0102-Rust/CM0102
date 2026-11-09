@@ -163,7 +163,7 @@ pub(crate) unsafe extern "thiscall" fn compare_stance(c: usize) -> u8 {
     // table that the league search (0x4a4850) sorts
     let reg = [(m + 4, 2), (m + engine::STANCE_FACTOR, 8), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_COMP_STATS_SORT_CONTEXT, 4)];
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(c), || stance(c));
-    SCOREBOARD.record(igual && r == rr, || format!("stance(lado {}) original={} rust={} {:x?} x {:x?}", byte(c, match_manager::SIDE), r, rr, mo, mr));
+    SCOREBOARD.record(igual && r == rr, || format!("stance(lado {}) original={} rust={} {:x?} x {:x?}", read_i8(c + match_manager::SIDE), r, rr, mo, mr));
     r
 }
 
@@ -222,7 +222,7 @@ pub(crate) unsafe extern "thiscall" fn compare_instructions(c: usize) {
         let dif = mo.0.iter().zip(mr.0.iter()).find_map(|(a, b)| {
             a.1.iter().zip(b.1.iter()).position(|(x, y)| x != y).map(|k| format!("{:#x}+{:#x}: {:x?} x {:x?}", a.0, k, &a.1[k..(k + 8).min(a.1.len())], &b.1[k..(k + 8).min(b.1.len())]))
         });
-        format!("instructions(lado {}) {}", byte(c, match_manager::SIDE), dif.unwrap_or_default())
+        format!("instructions(lado {}) {}", read_i8(c + match_manager::SIDE), dif.unwrap_or_default())
     });
 }
 
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn compare_starters(c: usize) -> u8 {
     let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(c), |chamar| {
         starters_with(c, &mut |rotina, this, args| chamar(rotina, this, args, [0xff, u32::MAX, 0xff, 0, 0]))
     });
-    SCOREBOARD.record(igual && sequencia && r == rr, || format!("starters(lado {}) original={} rust={} {} chamadas: {}", byte(c, match_manager::SIDE), r, rr, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == rr, || format!("starters(lado {}) original={} rust={} {} chamadas: {}", read_i8(c + match_manager::SIDE), r, rr, k, tape_detail()));
     r
 }
 
@@ -280,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn compare_store_tactic(c: usize) {
     let mut reg = club_rows(*((c + match_manager::CLUB) as *const usize));
     reg.push((G_MOUSE_LEFT_BUTTON_DOWN, 4));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c), || store_tactic(c));
-    SCOREBOARD.record(igual, || format!("store_tactic(humano {}) {}", byte(c, match_manager::TACTIC_SLOT), first_difference(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("store_tactic(humano {}) {}", read_i8(c + match_manager::TACTIC_SLOT), first_difference(&mo, &mr)));
 }
 
 /// Comparer for `substitute`.

@@ -37,7 +37,7 @@ unsafe fn append_club_history_by_id(this: usize, id: usize, e: &[u8; 0x40]) {
 /// Uma nota do lado do clube na partida (palavra em `a`): soma ftol(peso × k × [0x96ff88]) (produto em 32 bits) e fica
 /// no piso peso × k (16 bits) quando está abaixo dele, senão no máximo 10000 (comparações com sinal em 16 bits).
 unsafe fn raise_side_rating(a: usize, peso: i16, k: i32) {
-    let soma = match_pl_ftol((peso as i32).wrapping_mul(k) as f64 * read_f64_at(0x96ff88));
+    let soma = match_pl_ftol((peso as i32).wrapping_mul(k) as f64 * read_f64(0x96ff88));
     let x = cqa12_w(a).wrapping_add(soma as i16);
     cqa12_pw(a, x);
     let piso = peso.wrapping_mul(k as i16);

@@ -7,7 +7,7 @@ use super::*;
 /// limitado a 1..20 (NaN vira 1) e truncado.
 pub(crate) unsafe extern "C" fn chance_to_know(person: usize, level: i8) -> i32 {
     let x = (*((person + 4) as *const i16) as f64 + (level as f64 + level as f64)) * 0.05 + 10.0;
-    let y = (x * x * 0.1 + x) * read_f64_at(rdata::F64_0_3333333333) + 0.5;
+    let y = (x * x * 0.1 + x) * read_f64(rdata::F64_0_3333333333) + 0.5;
     ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y })
 }
 

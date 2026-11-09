@@ -79,15 +79,15 @@ unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
     let o = other_friendly_club(m);
     let (na, no) = (cqa2_d(a + 0x53), cqa2_d(o + 0x53));
     let segundo = o == cqa2_d(m + 0x10);
-    let mut f = if segundo { read_f64_at(0x96af38) } else { read_f64_at(0x96af20) };
+    let mut f = if segundo { read_f64(0x96af38) } else { read_f64(0x96af20) };
     if no != na {
-        f *= read_f64_at(0x96af30);
+        f *= read_f64(0x96af30);
     }
     if cqa2_b(no + 0x76) != cqa2_b(na + 0x76) {
-        f *= read_f64_at(0x969520);
+        f *= read_f64(0x969520);
     }
     if cqa2_i(no + 0x71) != cqa2_i(na + 0x71) {
-        f *= read_f64_at(0x969520);
+        f *= read_f64(0x969520);
     }
     if segundo {
         let (fa, fo) = (cqa2_d(a + 0x69), cqa2_d(o + 0x69));
@@ -97,10 +97,10 @@ unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
             if contar {
                 crate::comparison::branch("cqa_2 friendly distance");
             }
-            let dx = read_f64_at(sa + 0x2b) - read_f64_at(so + 0x2b);
-            let dy = read_f64_at(sa + 0x23) - read_f64_at(so + 0x23);
+            let dx = read_f64(sa + 0x2b) - read_f64(so + 0x2b);
+            let dy = read_f64(sa + 0x23) - read_f64(so + 0x23);
             let i = cqa2_i(a + 0x77) as f64;
-            let v = i / (((dy * dy + dx * dx).sqrt() * read_f64_at(0x96a5d8) + read_f64_at(0x967890)) * read_f64_at(0x96af28)) + read_f64_at(0x967890);
+            let v = i / (((dy * dy + dx * dx).sqrt() * read_f64(0x96a5d8) + read_f64(0x967890)) * read_f64(0x96af28)) + read_f64(0x967890);
             f *= v; // cqa2: o fator da distância
         }
     }
@@ -109,7 +109,7 @@ unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
         crate::comparison::branch("cqa_2 friendly decision");
     }
     // fcompp/test ah, 1: o C0 vale para "menor" e para "sem ordem" (NaN): os >= abaixo dão o mesmo caminho
-    let aceita = ra as f64 >= ro as f64 / f || f * read_f64_at(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação
+    let aceita = ra as f64 >= ro as f64 / f || f * read_f64(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação
     if aceita { 3 } else { 4 }
 }
 

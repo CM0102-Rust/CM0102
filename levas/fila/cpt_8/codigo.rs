@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, categ
         crate::comparison::branch("cpt_8 coaches");
         soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: a média dos treinadores
     }
-    let r = match_pl_ftol(soma as f64 * read_f64_at(0x970400));
+    let r = match_pl_ftol(soma as f64 * read_f64(0x970400));
     if (r as i16) < 0x32 {
         return 0x32;
     }
@@ -103,12 +103,12 @@ unsafe extern "thiscall" fn compare_get_coach_assignments(this: usize, tecnico: 
 /// (0x8b2250) e pela reassign_squad_schedules (0x8b2470); vai para a ficha de forma (Injury::set_training_load 0x62c660).
 unsafe extern "thiscall" fn get_training_load(this: usize) -> i32 {
     let nivel = |k: usize| *((this + k) as *const i8) as f64;
-    let a = match_pl_ftol(nivel(4) * read_f64_at(0x96f878)) as i16;
-    let mut s = match_pl_ftol(nivel(8) * read_f64_at(0x968968)) as i16;
+    let a = match_pl_ftol(nivel(4) * read_f64(0x96f878)) as i16;
+    let mut s = match_pl_ftol(nivel(8) * read_f64(0x968968)) as i16;
     s = s.wrapping_sub(a);
-    s = s.wrapping_sub(match_pl_ftol(nivel(7) * read_f64_at(0x969540)) as i16);
-    s = s.wrapping_sub(match_pl_ftol(nivel(6) * read_f64_at(0x969540)) as i16);
-    s = s.wrapping_sub(match_pl_ftol(nivel(5) * read_f64_at(0x969540)) as i16);
+    s = s.wrapping_sub(match_pl_ftol(nivel(7) * read_f64(0x969540)) as i16);
+    s = s.wrapping_sub(match_pl_ftol(nivel(6) * read_f64(0x969540)) as i16);
+    s = s.wrapping_sub(match_pl_ftol(nivel(5) * read_f64(0x969540)) as i16);
     if s >= 0x64 {
         return 0x64;
     }

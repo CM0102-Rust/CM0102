@@ -1859,7 +1859,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
                     }
                 }
                 let c = n();
-                if exe::utils_random(ftol(game_pow(c as f64, read_f64_at(rdata::F64_3)) + read_f64_at(rdata::F64_100))) == 0 {
+                if exe::utils_random(ftol(game_pow(c as f64, read_f64(rdata::F64_3)) + read_f64(rdata::F64_100))) == 0 {
                     return 0x2000;
                 }
                 let a = exe::utils_random(n());
@@ -1886,7 +1886,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
     if kind == 1 || kind == 3 || read_usize(j + staff::CLUB_JOB) == 0 || exe::human_manager_is_human_club(club, 1, 1, (0) as u32, 0) == 0 {
         return 0;
     }
-    let x = read_i16(club + club::REPUTATION) as f64 * read_f64_at(rdata::F64_0_2);
+    let x = read_i16(club + club::REPUTATION) as f64 * read_f64(rdata::F64_0_2);
     let mut limit = ftol(x * x);
     if limit < 0x249f0 {
         limit = 0x249f0;
@@ -1919,10 +1919,10 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
         if p > v + v && more > 0x19 {
             add_board_confidence(this, club, 6, -0x4e2);
             add_board_confidence(this, club, 0x14, -0x4e2);
-        } else if request > 0x4c4b40 && more > 0 && p > v * read_f64_at(rdata::F64_2_5) {
+        } else if request > 0x4c4b40 && more > 0 && p > v * read_f64(rdata::F64_2_5) {
             add_board_confidence(this, club, 6, -0x4e2);
             add_board_confidence(this, club, 0x14, -0x4e2);
-        } else if p > v * read_f64_at(rdata::F64_6) {
+        } else if p > v * read_f64(rdata::F64_6) {
             add_board_confidence(this, club, 6, -500);
             add_board_confidence(this, club, 0x14, -500);
             add_board_confidence(this, club, 0x16, -0xfa);
@@ -1950,12 +1950,12 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
         return 0;
     }
     let k = match exe::finance_get_wealth_band(fin) {
-        2 => read_f64_at(rdata::F64_1250000),
-        1 => read_f64_at(rdata::F64_650000),
-        _ => read_f64_at(rdata::F64_65000),
+        2 => read_f64(rdata::F64_1250000),
+        1 => read_f64(rdata::F64_650000),
+        _ => read_f64(rdata::F64_65000),
     };
-    let ceiling = ftol(limit as f64 * read_f64_at(rdata::F64_0_65) + smaller as f64 + k);
-    if !(value as f64 * read_f64_at(rdata::F64_0_275) > ceiling as f64) {
+    let ceiling = ftol(limit as f64 * read_f64(rdata::F64_0_65) + smaller as f64 + k);
+    if !(value as f64 * read_f64(rdata::F64_0_275) > ceiling as f64) {
         return 0;
     }
     crate::comparison::branch("cpy_12 board finds it expensive");
@@ -2466,7 +2466,7 @@ pub(crate) unsafe fn init_static_date(bit: u8, data: usize, destrutor: usize) {
 ///
 /// [pt] O trecho da forma acima de `base`: (x − base) × a constante `k` (f64), truncado a 16 bits com sinal, mais `base`.
 pub(crate) unsafe fn scale_above_base(x: i32, base: i32, k: usize) -> i32 {
-    (ftol(x.wrapping_sub(base) as f64 * read_f64_at(k)) as i16 as i32).wrapping_add(base)
+    (ftol(x.wrapping_sub(base) as f64 * read_f64(k)) as i16 as i32).wrapping_add(base)
 }
 
 /// Returns the board's league confidence (+0x12 of the club's 0x49-byte record) in bands 0 to 6 (−2000, −1000, −500,
@@ -3697,7 +3697,7 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     *(((board_row_by_id(this, id)) + 2) as *mut u8) |= 1;
     let list = read_u32(read_u32(read_u32(G_TRANSFER_MANAGER) as usize + 0x856) as usize + 0xdc) as usize;
     *(list.wrapping_add((id as usize).wrapping_mul(9)) as *mut u8).add(4) = 2;
-    let k = read_f64_at(rdata::F64_0_1); // 0,1;
+    let k = read_f64(rdata::F64_0_1); // 0,1;
     let rep = read_i16(club + club::REPUTATION) as i32;
     let manager = read_u32(club + club::MANAGER) as usize;
     let sheet = read_u32(manager + staff::NON_PLAYER) as usize;
@@ -3715,26 +3715,26 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     let sheet = read_u32(read_u32(club + club::MANAGER) as usize + 0x69) as usize;
     let v = read_i16(sheet + non_player::CURRENT_REPUTATION) as i32;
     let mut current = v as f32; // fst dword
-    let zero = read_f32_at(rdata::F32_0) as f64;
+    let zero = read_f32(rdata::F32_0) as f64;
     if v as f64 == zero {
         let r = read_i16(club + club::REPUTATION) as i32;
         current = if r != 0 { (r / 2) as f32 } else { 5000.0 };
-    } else if (current as f64) < read_f32_at(rdata::F32_500) as f64 {
+    } else if (current as f64) < read_f32(rdata::F32_500) as f64 {
         current = (random(0x3e8) + 0x1f4) as f32;
     }
     let d = read_i16(club + club::REPUTATION) as i32;
     let divisor = if d as f64 == zero {
         current as f64
-    } else if (d as f64) < read_f32_at(rdata::F32_500) as f64 {
+    } else if (d as f64) < read_f32(rdata::F32_500) as f64 {
         (random(0x2ee) + 0xfa) as f64
     } else {
         d as f64
     };
-    let mut q = ((current as f64 / divisor) * read_f32_at(rdata::F32_7500) as f64) as f32; // fstp dword;
-    if q as f64 > read_f64_at(rdata::F64_5_811479333ENEG_315) {
+    let mut q = ((current as f64 / divisor) * read_f32(rdata::F32_7500) as f64) as f32; // fstp dword;
+    if q as f64 > read_f64(rdata::F64_5_811479333ENEG_315) {
         crate::comparison::branch("cpp_3 base at the ceiling");
         q = 10000.0;
-    } else if !(q as f64 >= read_f32_at(rdata::F32_6500) as f64) {
+    } else if !(q as f64 >= read_f32(rdata::F32_6500) as f64) {
         q = 6500.0;
     }
     // confidence and moods, each with its own limits
@@ -4790,7 +4790,7 @@ pub(crate) unsafe fn comp_tribunal(this: usize, id: i32) -> Option<usize> {
     (b != 0).then_some(b)
 }
 
-/// Binary-searches the shortlist (+4, count +0x14, sorted by club) and returns all 8-byte (person, club) entries of
+/// Binary-searches the shortlist (+4, count +0x14, sorted by club) and returns all 8-read_i8(person + club) entries of
 /// club id.
 ///
 /// [pt] As entradas (8 bytes: pessoa, clube) da shortlist (+4, [+0x14] delas, ordenada pelo clube) do clube `id`: a busca

@@ -100,7 +100,7 @@ pub(crate) unsafe fn comment_standing_with(this: usize, side: u32, call: AddEven
         fala(call, 0x2170, side);
         return;
     }
-    if byte(this, engine::LIVE_MATCH) != 0 {
+    if read_i8(this + engine::LIVE_MATCH) != 0 {
         let (mut casa, mut fora, mut classificado, mut x, mut y) = (0i8, 0i8, 0u8, 0u8, 0u8);
         exe::cm3_match_engine_get_goal_margin(this, bl, &mut casa, &mut fora, &mut classificado, &mut x, &mut y, 0);
         if casa > fora || (casa == fora && classificado != 0) {
@@ -111,26 +111,26 @@ pub(crate) unsafe fn comment_standing_with(this: usize, side: u32, call: AddEven
             for k in 0..20usize {
                 let j = side_player_slot(this, bl, k);
                 if k <= 10 || *((j + match_player::MINUTE_ON) as *const u8) != 0xff {
-                    sum += byte(j, match_player::MATCH_GRADE) as f64;
+                    sum += read_i8(j + match_player::MATCH_GRADE) as f64;
                     n = n.wrapping_add(1);
                 }
             }
             // with no starter the average would be whatever was in the argument (does not happen)
             let average = if n != 0 { (sum / n as f64) as f32 as f64 } else { 0.0 };
             let strength = |o: usize| *((*((t() + o) as *const usize) + 0x80) as *const i16) as f64;
-            let x = average * read_f64_at(rdata::F64_0_5) - read_f64_at(rdata::F64_2);
+            let x = average * read_f64(rdata::F64_0_5) - read_f64(rdata::F64_2);
             if bl == 0 {
-                if average < read_f64_at(rdata::F64_7) && x * strength(0x20) < strength(0x1c) {
+                if average < read_f64(rdata::F64_7) && x * strength(0x20) < strength(0x1c) {
                     fala(call, 0x2121, 0);
                 }
                 return;
             }
-            if average < read_f64_at(rdata::F64_6_67) && x * strength(0x1c) < strength(0x20) * read_f64_at(rdata::F64_0_8) {
+            if average < read_f64(rdata::F64_6_67) && x * strength(0x1c) < strength(0x20) * read_f64(rdata::F64_0_8) {
                 fala(call, 0x2121, side);
             }
         }
     }
-    if bl != 1 || byte(this, engine::GOLDEN_GOAL_SCORED) != 0 {
+    if bl != 1 || read_i8(this + engine::GOLDEN_GOAL_SCORED) != 0 {
         return;
     }
     if read_i16(t() + 0x32) == 0 && count_t() == 0 && read_i16(t() + 0x30) == 0x82 && resolvido(0) {
@@ -2142,9 +2142,9 @@ pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, c
         let n = read_i16(this + league::CLUB_COUNT);
         exe::crt_qsort(buf, n as i32 as u32, 0xe, 0x68afb0);
         let c = *((this + league::WIN_POINTS) as *const i8) as f64;
-        let a = (c * read_f64_at(rdata::F64_0_83)) as f32; // fstp into the local: the first rounds to float;
+        let a = (c * read_f64(rdata::F64_0_83)) as f32; // fstp into the local: the first rounds to float;
         normal = a.to_bits();
-        let b = c * read_f64_at(rdata::F64_0_23);
+        let b = c * read_f64(rdata::F64_0_23);
         if n > 0 {
             let d = a as f64 - b;
             let step_towards = d / n as f64;
@@ -2165,12 +2165,12 @@ pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, c
     exe::crt_qsort(buf, read_i16(this + league::CLUB_COUNT) as i32 as u32, 0xe, 0x68afd0);
     if let Some(k) = projection_position(buf, read_i16(this + league::CLUB_COUNT), club) {
         normal = (normal & !0xff) | (k as u8).wrapping_add(1) as u32; // the position in normal form
-        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(rdata::F64_1_5)) as u32;
+        pior = apply_form_factor(this, projection_entry(buf, k), read_f64(rdata::F64_1_5)) as u32;
     }
     exe::crt_qsort(buf, read_i16(this + league::CLUB_COUNT) as i32 as u32, 0xe, 0x68afd0);
     if let Some(k) = projection_position(buf, read_i16(this + league::CLUB_COUNT), club) {
         melhor = (melhor & !0xff) | (k as u8).wrapping_add(1) as u32;
-        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(rdata::F64_0_4444444444)) as u32;
+        pior = apply_form_factor(this, projection_entry(buf, k), read_f64(rdata::F64_0_4444444444)) as u32;
     }
     exe::crt_qsort(buf, read_i16(this + league::CLUB_COUNT) as i32 as u32, 0xe, 0x68afd0);
     for k in 0..read_i16(this + league::CLUB_COUNT) as i32 {

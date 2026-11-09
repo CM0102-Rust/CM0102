@@ -257,16 +257,16 @@ unsafe fn favourite_colleague_score(pessoa: usize, clube: usize, o: usize) -> Op
     let m1 = media(dbs2_u32(0xb74350), dbs2_u32(o + 0x61), 6, 1, 6.5);
     let dados = dbs2_u32(o + 0x61);
     let mut n = dbs2_i16(dados + 0xb);
-    if m1 > read_f32_at(0x968990) as f64 {
+    if m1 > read_f32(0x968990) as f64 {
         let g = dbs2_u32(0xb74350);
         let razao = || {
-            let d = read_f64_at(g + 0x18);
-            if d == 0.0 || d.is_nan() { read_f64_at(0x968998) } else { read_f64_at(g + 0x10) / d }
+            let d = read_f64(g + 0x18);
+            if d == 0.0 || d.is_nan() { read_f64(0x968998) } else { read_f64(g + 0x10) / d }
         };
         // fcompp: C0 (abaixo ou sem ordem) soma
-        if !(razao() + read_f64_at(0x968918) >= l0) {
+        if !(razao() + read_f64(0x968918) >= l0) {
             n += 500;
-        } else if !(razao() + read_f64_at(0x967880) >= l0) {
+        } else if !(razao() + read_f64(0x967880) >= l0) {
             n += 250;
         }
     }

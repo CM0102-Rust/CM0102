@@ -40,7 +40,7 @@ pub(crate) unsafe extern "C" fn won_the_match(game: usize, club: u32) -> u8 {
         return 0;
     }
     for (a, b) in [(0x49, 0x4a), (0x47, 0x48), (0x43, 0x44)] {
-        let (pa, pb) = (byte(game, a), byte(game, b));
+        let (pa, pb) = (read_i8(game + a), read_i8(game + b));
         if pa > -1 {
             return (if home { pa > pb } else { pa < pb }) as u8;
         }
@@ -210,11 +210,11 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
         let mut k = read(match_day_fields::CURRENT_MATCH) + 1;
         while k < read(match_day_fields::MATCH_COUNT) {
             let p = u(day, match_day_fields::MATCHES).wrapping_add((k as isize * 0x69) as usize);
-            if byte(p, day_match::HOME_GOALS) != -2
-                && (byte(day, match_day_fields::PASS) != 1 || u(u(p, day_match::DAY_COMPETITION), 0x10) != 0)
+            if read_i8(p + day_match::HOME_GOALS) != -2
+                && (read_i8(day + match_day_fields::PASS) != 1 || u(u(p, day_match::DAY_COMPETITION), 0x10) != 0)
                 && exe::human_manager_is_human_club(u(p, day_match::HOME_CLUB), 0, *((p + day_match::HOME_SIDE_MARK) as *const u8) as u32, 0, 0) == 0
                 && exe::human_manager_is_human_club(u(p, day_match::AWAY_CLUB), 0, *((p + day_match::AWAY_SIDE_MARK) as *const u8) as u32, 0, 0) == 0
-                && byte(p, day_match::HOME_GOALS) == -1
+                && read_i8(p + day_match::HOME_GOALS) == -1
                 && u(p, day_match::ENGINE) == 0
                 && u(p, day_match::MARKED) == 0
             {
@@ -233,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
             }
             k += 1;
         }
-        if byte(day, match_day_fields::PASS) != 1 {
+        if read_i8(day + match_day_fields::PASS) != 1 {
             por(0x2f, -2);
             crate::comparison::branch("day no more matches");
             return 0;
@@ -387,7 +387,7 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
                 crate::comparison::branch("close human round");
             }
         }
-        if byte(p, day_match::HOME_GOALS) == -3 {
+        if read_i8(p + day_match::HOME_GOALS) == -3 {
             crate::comparison::branch("close away match");
             let mut copia = [0u8; 0x100];
             core::ptr::copy((p + day_match::FIXTURE_COPY) as *const u8, copia.as_mut_ptr(), 0x4f);
@@ -417,11 +417,11 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     };
     two(u(G_CONTRACT_MANAGER, 0), 0x4ca6d0);
     two(u(G_DISCIPLINE, 0), 0x55ca00);
-    if byte(p, day_match::HOME_GOALS) != -3 {
+    if read_i8(p + day_match::HOME_GOALS) != -3 {
         two(u(G_NATIONAL_TEAMS, 0), 0x76b600);
     }
     two(u(G_INJURY, 0), 0x62c080);
-    if byte(p, day_match::HOME_GOALS) == -3 {
+    if read_i8(p + day_match::HOME_GOALS) == -3 {
         return 1;
     }
     if *(game as *const u32) != *(KEY_CLUB_COMP_RESERVE as *const u32) {
@@ -536,7 +536,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
             let mut k = 0i32;
             while k < read(match_day_fields::MATCH_COUNT) {
                 let p = partida(k);
-                let e = byte(p, day_match::HOME_GOALS);
+                let e = read_i8(p + day_match::HOME_GOALS);
                 if e != -2 && e <= -1 && u(p, day_match::MARKED) != 0 {
                     exe::virtual_staff_fill_fixture_squads(u(G_VIRTUAL_STAFF, 0), p + day_match::FIXTURE_COPY, -1, 0);
                     let r = exe::crt_operator_new(0x11d);
@@ -681,7 +681,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                 }
             }
             let p = partida(k);
-            if byte(p, day_match::HOME_GOALS) == -1 && u(p, day_match::ENGINE) == 0 {
+            if read_i8(p + day_match::HOME_GOALS) == -1 && u(p, day_match::ENGINE) == 0 {
                 let with_human = human(u(p, day_match::HOME_CLUB), 0, b(p, day_match::HOME_SIDE_MARK) as u32, 0, 0) != 0 || human(u(p, day_match::AWAY_CLUB), 0, b(p, day_match::AWAY_SIDE_MARK) as u32, 0, 0) != 0;
                 if with_human && rede() {
                     exe::match_day_step_background_match(day, 1);
@@ -711,11 +711,11 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                             let n = read(match_day_fields::MATCH_COUNT);
                             let pct = if n != 0 { read(match_day_fields::FINISHED_COUNT).wrapping_mul(100) / n } else { 0 } as i8 as i32;
                             let (c, casa, fora) = (u(p, day_match::COMPETITION), u(p, day_match::HOME_CLUB), u(p, day_match::AWAY_CLUB));
-                            let (a52, b52) = (byte(casa, club::SHORT_GENDER_NAME) as i32, byte(fora, club::SHORT_GENDER_NAME) as i32);
-                            let (g1, g2) = if byte(p, day_match::HOME_AGGREGATE) > -1 { (byte(p, day_match::HOME_AGGREGATE), byte(p, day_match::AWAY_AGGREGATE)) } else { (byte(p, day_match::HOME_GOALS), byte(p, day_match::AWAY_GOALS)) };
+                            let (a52, b52) = (read_i8(casa + club::SHORT_GENDER_NAME) as i32, read_i8(fora + club::SHORT_GENDER_NAME) as i32);
+                            let (g1, g2) = if read_i8(p + day_match::HOME_AGGREGATE) > -1 { (read_i8(p + day_match::HOME_AGGREGATE), read_i8(p + day_match::AWAY_AGGREGATE)) } else { (read_i8(p + day_match::HOME_GOALS), read_i8(p + day_match::AWAY_GOALS)) };
                             if c != 0 {
                                 crate::comparison::branch("score with competition");
-                                let c37 = byte(c, 0x37) as i32;
+                                let c37 = read_i8(c + 0x37) as i32;
                                 text(0xde1f64, 0xa157b4, c37, c37, a52, a52, b52, b52, c + 4, casa + club::SHORT_NAME, g1 as i32, fora + club::SHORT_NAME, g2 as i32, pct, 0xa15850usize);
                             } else {
                                 text(0xde1f64, 0xa15734, a52, a52, b52, b52, casa + club::SHORT_NAME, g1 as i32, fora + club::SHORT_NAME, g2 as i32, pct, 0xa15850usize);
@@ -736,7 +736,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         let mut k = 0i32;
         while k < read(match_day_fields::MATCH_COUNT) {
             let p = partida(k);
-            if byte(p, day_match::HOME_GOALS) != -2 {
+            if read_i8(p + day_match::HOME_GOALS) != -2 {
                 if u(p, day_match::SUMMARY) == 0 {
                     show_error_at(0xa15708, 0x3fb);
                 } else {
@@ -844,7 +844,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
             let mut group = 0usize;
             let mut x = exe::llist_get_next(list);
             while x != 0 {
-                let e = byte(x, fixture::HOME_GOALS);
+                let e = read_i8(x + fixture::HOME_GOALS);
                 if e <= -1 && e != -2 {
                     let r = exe::weather_check_postponement(read_usize(G_WEATHER + 0), x);
                     if r & 1 != 0 {
@@ -1243,9 +1243,9 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
             if free
                 && g(s + staff::PLAYER) != 0
                 && w(g(s + staff::PLAYER) + 0xb) > 0x109a
-                && byte(s, staff::LOYALTY) > 5
-                && byte(s, staff::AMBITION) > 0xf
-                && byte(s, staff::DETERMINATION) > 0xa
+                && read_i8(s + staff::LOYALTY) > 5
+                && read_i8(s + staff::AMBITION) > 0xf
+                && read_i8(s + staff::DETERMINATION) > 0xa
                 && n > 2
                 && random(n as i32) != 0
             {
@@ -1263,19 +1263,19 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
             continue;
         }
         let p = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
-        if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(G_STAFF_COUNT)) || byte(p, staff::YEAR_OF_BIRTH) > 0x14 {
+        if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(G_STAFF_COUNT)) || read_i8(p + staff::YEAR_OF_BIRTH) > 0x14 {
             continue;
         }
         let c = exe::contract_manager_get_contract(g(G_CONTRACT_MANAGER), p);
         if c == 0 || read(c + 0x45) != 0 || ub(partida + fixture::HOME_SIDE_MARK) == 0 || ub(partida + fixture::AWAY_SIDE_MARK) == 0 {
             continue;
         }
-        if read(partida + fixture::COMPETITION) == 0 || read(partida + fixture::COMPETITION) != read(club + club::DIVISION) || away(club) != 0 || byte(p, staff::LOYALTY) <= 0xf {
+        if read(partida + fixture::COMPETITION) == 0 || read(partida + fixture::COMPETITION) != read(club + club::DIVISION) || away(club) != 0 || read_i8(p + staff::LOYALTY) <= 0xf {
             continue;
         }
         crate::comparison::branch("club youth");
         let r = random(5);
-        if byte(p, staff::AMBITION) <= (r as u8).wrapping_add(10) as i8 || g(p + staff::PLAYER) == 0 || w(g(p + staff::PLAYER) + 0xb) >= 0x109a {
+        if read_i8(p + staff::AMBITION) <= (r as u8).wrapping_add(10) as i8 || g(p + staff::PLAYER) == 0 || w(g(p + staff::PLAYER) + 0xb) >= 0x109a {
             continue;
         }
         if test_7c3a40(g(G_PLAYER_STATS), p, club) == 0 {
@@ -1756,10 +1756,10 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     if *((p + day_match::STATE) as *const u8) == 4 {
         mark(0x20);
     }
-    if byte(engine, engine::SCORE) as i32 > *((summary + match_summary::SIDES) as *const u8) as i32 {
+    if read_i8(engine + engine::SCORE) as i32 > *((summary + match_summary::SIDES) as *const u8) as i32 {
         mark(1);
     }
-    if byte(engine, engine::SCORE_SIDE1) as i32 > *((u(p, day_match::SUMMARY) + 0x744) as *const u8) as i32 {
+    if read_i8(engine + engine::SCORE_SIDE1) as i32 > *((u(p, day_match::SUMMARY) + 0x744) as *const u8) as i32 {
         mark(2);
     }
     if u(pl, 0x115) != 0 {

@@ -29,7 +29,7 @@ unsafe extern "thiscall" fn update_city_weather(this: usize) {
         for k in 0..3usize { // cpt5: as três medidas
             let p = cpt5_d(this + 4) + i * 4 + k;
             let r = cpt5_sortear(100);
-            *(p as *mut u8) = match_pl_ftol((r as i16 as i32 + *(p as *const i8) as i32) as f64 * read_f64_at(0x968968)) as u8;
+            *(p as *mut u8) = match_pl_ftol((r as i16 as i32 + *(p as *const i8) as i32) as f64 * read_f64(0x968968)) as u8;
             let p = cpt5_d(this + 4) + i * 4 + k;
             let v = *(p as *const i8);
             if v < 0 {

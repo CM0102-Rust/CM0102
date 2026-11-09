@@ -24,7 +24,7 @@
 //! - `FN_*` (`exe_fns.rs`): the address of an exe function the routine still calls (through `transmute`).
 //! - `G_*` (`globals.rs`): the address of an exe global (`G_CLUB_TABLE`, `G_CURRENT_DATE`); `club::DIVISION`,
 //!   `staff::...` (`fields.rs`): the offset of a named field in a record (`clube + club::DIVISION`).
-//! - `show_error_at(file, line)`: the game's error box; `read_f64_at(addr)`: a float constant read from the exe; `ftol`: the
+//! - `show_error_at(file, line)`: the game's error box; `read_f64(addr)`: a float constant read from the exe; `ftol`: the
 //!   compiler's float-to-int conversion, as the original does it.
 //! - `[inferência]` / `[inference]`: something read from the code but not proven by a test.
 //! - Comments like `// cqi4: ...` mark the points the mutation tests change (`engenharia-reversa/mutacoes/`).
@@ -2236,19 +2236,15 @@ const ENGINE_SIZE: usize = 0xf63b;
 
 const GLOBAL_TABLE: usize = 0xb67c30;
 
-unsafe fn byte(p: usize, off: usize) -> i8 {
-    *((p + off) as *const i8)
-}
-
 /// The player's value in a table of 11 words (one per side), by the player's position (0..=10).
 ///
 /// [pt] Valor do jogador numa tabela de 11 palavras (uma por lado), pela posicao dele (0..=10).
 unsafe fn table_by_position(this: usize, jogador: usize, campo: usize) -> u16 {
-    let posicao = byte(jogador, match_player::POSITION);
+    let posicao = read_i8(jogador + match_player::POSITION);
     if !(0..=10).contains(&posicao) {
         return 0;
     }
-    let lado = byte(jogador, match_player::SIDE) as isize;
+    let lado = read_i8(jogador + match_player::SIDE) as isize;
     let tabela = *((this as isize + campo as isize + lado * 4) as *const usize) as *const u16;
     *tabela.add(posicao as usize)
 }
@@ -2257,7 +2253,7 @@ unsafe fn table_by_position(this: usize, jogador: usize, campo: usize) -> u16 {
 ///
 /// [pt] { 0x714d30 } (match_pl.cpp, 4 bytes, nao desviavel): lado do jogador. Lido direto.
 unsafe fn side_of_player(player: usize) -> i8 {
-    byte(player, match_player::SIDE)
+    read_i8(player + match_player::SIDE)
 }
 
 unsafe fn random(n: i32) -> i32 {
@@ -3372,7 +3368,7 @@ compare_split!(compare_split_e, split_e, IDX_SPLIT_E);
 compare_split!(compare_split_f, split_f, IDX_SPLIT_F);
 unsafe extern "thiscall" fn compare_remove_from_list(this: usize, alvo: usize) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_REMOVE_FROM_LIST);
-    let n = byte(this, match_player::MARKER_COUNT).max(0) as usize;
+    let n = read_i8(this + match_player::MARKER_COUNT).max(0) as usize;
     let reg = [(this + match_player::MARKER_COUNT, 1), (this + match_player::MARKERS, 4 * n)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, alvo), || remove_from_list(this, alvo));
     SCOREBOARD.record(igual && r == x, || format!("remove_from_list(n {}) original={} {:x?} rust={} {:x?}", n, r, mo, x, mr));
@@ -3407,7 +3403,7 @@ unsafe extern "thiscall" fn compare_choose_by_role_b(this: usize, arg: u32) -> u
 unsafe extern "thiscall" fn compare_formation_square(this: usize, j: usize, x: *mut u8, y: *mut u8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_FORMATION_SQUARE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this, j, x, y), || formation_square(this, j, x, y));
-    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", byte(this, engine::POSSESSION_SIDE), byte(j, match_player::SIDE), byte(j, match_player::POSITION), mo, mr));
+    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", read_i8(this + engine::POSSESSION_SIDE), read_i8(j + match_player::SIDE), read_i8(j + match_player::POSITION), mo, mr));
 }
 
 unsafe extern "thiscall" fn compare_compute_percentages(this: usize, i: i8) {
@@ -8301,7 +8297,7 @@ unsafe fn grid_inconsistent(m: usize) -> Option<String> {
         for y in 0..12i8 {
             let casa = occupancy_grid_cell(m, x, y) as usize;
             for l in 0..2usize {
-                let n = byte(casa, 0x58 + l);
+                let n = read_i8(casa + (0x58 + l));
                 if !(0..=11).contains(&n) {
                     return Some(format!("casa ({},{}) lado {} contagem {}", x, y, l, n));
                 }
@@ -8311,8 +8307,8 @@ unsafe fn grid_inconsistent(m: usize) -> Option<String> {
                     if p < base || p >= base + 20 * 0x1be || (p - base) % 0x1be != 0 {
                         return Some(format!("casa ({},{}) lado {} entrada {}/{} = {:#x}", x, y, l, i, n, p));
                     }
-                    if byte(p, match_player::CELL_X) != x || byte(p, match_player::CELL_Y) != y || byte(p, match_player::CELL_SLOT) != i as i8 {
-                        return Some(format!("casa ({},{}) lado {} entrada {}: jogador em ({},{}) indice {}", x, y, l, i, byte(p, match_player::CELL_X), byte(p, match_player::CELL_Y), byte(p, match_player::CELL_SLOT)));
+                    if read_i8(p + match_player::CELL_X) != x || read_i8(p + match_player::CELL_Y) != y || read_i8(p + match_player::CELL_SLOT) != i as i8 {
+                        return Some(format!("casa ({},{}) lado {} entrada {}: jogador em ({},{}) indice {}", x, y, l, i, read_i8(p + match_player::CELL_X), read_i8(p + match_player::CELL_Y), read_i8(p + match_player::CELL_SLOT)));
                     }
                 }
             }
@@ -8453,7 +8449,7 @@ pub unsafe fn autoteste(casos: u64) {
             compare_tire_fatigue(j, x, codigo);
             *((j + 0x10c) as *mut i8) = ((q >> 50) % 25) as i8 - 2;
             *((j + 0x19a) as *mut i16) = ((q >> 54) % 400) as i16 - 20;
-            compare_facing(j, byte(j, 0x102).wrapping_add(((q >> 58) % 11) as i8 - 5), byte(j, 0x103).wrapping_add(((q >> 61) % 7) as i8 - 3));
+            compare_facing(j, read_i8(j + 0x102).wrapping_add(((q >> 58) % 11) as i8 - 5), read_i8(j + 0x103).wrapping_add(((q >> 61) % 7) as i8 - 3));
             // batch 5
             let g = s.next_u64();
             let gp = grupo.as_mut_ptr() as usize;
@@ -8693,7 +8689,7 @@ pub unsafe fn autoteste(casos: u64) {
             compare_pressao_area(m, ((h3 >> 19) % 2) as i8);
             let (a3, b3) = (((h3 >> 20) % 10) as i8 - 1, ((h3 >> 24) % 13) as i8 - 1);
             compare_mais_proximo(m, jj3, a3, b3);
-            compare_mais_proximo(m, jj3, byte(jj3, 0x102), byte(jj3, 0x103));
+            compare_mais_proximo(m, jj3, read_i8(jj3 + 0x102), read_i8(jj3 + 0x103));
             compare_pressao_ponto(m, ((h3 >> 28) % 2) as i8, a3, b3, ((h3 >> 29) & 1) as i8);
             compare_smallest_distance(m, ((h3 >> 30) % 2) as i8, a3, b3, ((h3 >> 31) & 1) as i8);
             // batch 14 (tables with varied role bits, including none and 0x700)
@@ -8768,7 +8764,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             compare_remove_from_list(j, ((h7 >> 24) % 6) as usize);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h7 >> 28) % 4) as usize];
-            *((m as isize + 0x4592 + byte(j, 0x27) as isize) as *mut i8) = ((h7 >> 30) % 14) as i8 - 2;
+            *((m as isize + 0x4592 + read_i8(j + 0x27) as isize) as *mut i8) = ((h7 >> 30) % 14) as i8 - 2;
             compare_take_the_field(m, j);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h7 >> 34) % 4) as usize];
             *((j + 0x19e) as *mut usize) = m;
@@ -8795,17 +8791,17 @@ pub unsafe fn autoteste(casos: u64) {
             let (x9, y9) = (((h9 >> 20) % 11) as i8 - 1, ((h9 >> 24) % 15) as i8 - 2);
             compare_clear_path(m, [0i8, 1, 2, -1][((h9 >> 28) % 4) as usize], x9, y9);
             let pp9 = m + 0x4796 + 8920 * ((h9 >> 30) % 2) as usize + ((h9 >> 31) % 20) as usize * 0x1be;
-            compare_clear_path(m, ((h9 >> 36) % 2) as i8, byte(pp9, 0x102), byte(pp9, 0x103));
+            compare_clear_path(m, ((h9 >> 36) % 2) as i8, read_i8(pp9 + 0x102), read_i8(pp9 + 0x103));
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h9 >> 37) % 4) as usize];
             *((j + 0x102) as *mut i8) = ((h9 >> 39) % 9) as i8;
             *((j + 0x103) as *mut i8) = ((h9 >> 43) % 12) as i8;
             *((j + 0x10c) as *mut i8) = ((h9 >> 47) % 25) as i8 - 2;
-            let (xa, ya) = if (h9 >> 52) % 6 == 0 { (byte(j, 0x102), byte(j, 0x103)) } else { (((h9 >> 55) % 9) as i8, ((h9 >> 59) % 12) as i8) };
+            let (xa, ya) = if (h9 >> 52) % 6 == 0 { (read_i8(j + 0x102), read_i8(j + 0x103)) } else { (((h9 >> 55) % 9) as i8, ((h9 >> 59) % 12) as i8) };
             if (h9 >> 63) == 1 {
                 // at the exact threshold: 0x10c + 10 equal to the difference of the words
-                let fundo9: i8 = if byte(j, 0x27) != 0 { 11 } else { 0 };
-                let dif = (by_difference(m, xa, ya, 4, fundo9) as i16 as i32 - by_difference(m, xa, ya, byte(j, 0x102), byte(j, 0x103)) as i16 as i32).abs() - 10;
+                let fundo9: i8 = if read_i8(j + 0x27) != 0 { 11 } else { 0 };
+                let dif = (by_difference(m, xa, ya, 4, fundo9) as i16 as i32 - by_difference(m, xa, ya, read_i8(j + 0x102), read_i8(j + 0x103)) as i16 as i32).abs() - 10;
                 if (-128..=127).contains(&dif) {
                     *((j + 0x10c) as *mut i8) = dif as i8;
                 }
@@ -8924,8 +8920,8 @@ pub unsafe fn autoteste(casos: u64) {
             }
             compare_role_880(j);
             *((j + 0x19) as *mut i8) = ((h17 >> 56) % 14) as i8 - 1;
-            *((m + 0x9766 + 6371 * byte(j, 0x27) as usize) as *mut u32) = (h18 as u32) & 0x1801000;
-            *((m + 6 + byte(j, 0x27) as usize) as *mut u8) = (h18 >> 32) as u8;
+            *((m + 0x9766 + 6371 * read_i8(j + 0x27) as usize) as *mut u32) = (h18 as u32) & 0x1801000;
+            *((m + 6 + read_i8(j + 0x27) as usize) as *mut u8) = (h18 >> 32) as u8;
             compare_player_marks_rot(j);
             compare_mark_800000(j);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h18 >> 40) % 4) as usize];
@@ -9164,7 +9160,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x19) as *mut i8) = ((h36 >> 2) % 11) as i8;
             *((j + 0x2b) as *mut i8) = [0i8, 1, 2, -1][((h36 >> 6) % 4) as usize];
             *((j + 0x102) as *mut i8) = [1i8, 2, 4, 6, 7][((h36 >> 8) % 5) as usize];
-            let yg = if byte(j, 0x27) == 1 { [9i8, 10, 11, 5][((h36 >> 11) % 4) as usize] } else { [0i8, 1, 2, 5][((h36 >> 11) % 4) as usize] };
+            let yg = if read_i8(j + 0x27) == 1 { [9i8, 10, 11, 5][((h36 >> 11) % 4) as usize] } else { [0i8, 1, 2, 5][((h36 >> 11) % 4) as usize] };
             *((j + 0x103) as *mut i8) = yg;
             *((j + 0x168) as *mut i16) = ((h36 >> 13) % 1200) as i16 - 100;
             *((j + 0x16a) as *mut i16) = ((h36 >> 24) % 1200) as i16 - 100;
@@ -9197,7 +9193,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((jm + 0x28) as *mut i8) = if (h38 >> 40) % 4 == 0 { -1 } else { ((h38 >> 42) % n_ant as u64) as i8 };
             if cn != ca {
                 *((cn + 0x58 + lj as usize) as *mut i8) = ((h38 >> 46) % 11) as i8;
-            } else if byte(jm, 0x28) < 0 {
+            } else if read_i8(jm + 0x28) < 0 {
                 *((cn + 0x58 + lj as usize) as *mut i8) = ((h38 >> 46) % 11) as i8;
             }
             *((m + 0xf582) as *mut usize) = if (h38 >> 50) % 2 == 0 { jm } else { o };
@@ -9435,7 +9431,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((p + 0x102) as *mut i8) = rx;
                 *((p + 0x103) as *mut i8) = ry;
                 let casa = occupancy_grid_cell(m, rx, ry) as usize;
-                let n = byte(casa, 0x58 + l);
+                let n = read_i8(casa + (0x58 + l));
                 *((casa as isize + 4 * (11 * l as isize + n as isize)) as *mut usize) = p;
                 *((casa + 0x58 + l) as *mut i8) = n + 1;
                 *((p + 0x28) as *mut i8) = n;
@@ -9470,7 +9466,7 @@ pub unsafe fn autoteste(casos: u64) {
             // batch 47: fine positions (the kick-off grid stays consistent; positions 0..=10)
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
-                let v = byte(p, 0x19);
+                let v = read_i8(p + 0x19);
                 if !(0..=10).contains(&v) {
                     *((p + 0x19) as *mut i8) = (k % 11) as i8;
                 }
@@ -9595,7 +9591,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let mut tipo = [1i8, 2, 4, 5, 5, 5, 6, 7, 8][((r0 >> 23) % 9) as usize];
                     let ofs = if lado56 != 0 { 0 } else { 11 };
                     let (cx, ax) = ((a7 as i32 - 4).abs(), (a8 as i32 - ofs).abs());
-                    if (tipo == 6 || tipo == 7) && (2..=6).contains(&a7) && cx <= 8 && ax <= 11 && (distance_table_cell(ax, cx) as f64) < read_f64_at(rdata::F64_4_1) {
+                    if (tipo == 6 || tipo == 7) && (2..=6).contains(&a7) && cx <= 8 && ax <= 11 && (distance_table_cell(ax, cx) as f64) < read_f64(rdata::F64_4_1) {
                         tipo = 8; // near the goal the free kick consults the tactics
                     }
                     let excl = if tipo == 5 && (r0 >> 27) % 3 == 0 { excl56.as_ptr() as usize } else { 0 };
