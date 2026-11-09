@@ -981,16 +981,16 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
         let clear: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_CLEAR_MANAGER_RECORD);
         clear(read_usize(G_STAFF_RECORDS), nj);
         let c = read_usize(p + staff::CLUB_JOB);
-        let job = |p: usize| read_i8(p + staff::JOB_FOR_CLUB);
-        let exit = if c == 0 || job(p) == 5 {
+        let job = |p: Staff| (p.job_for_club() as i8);
+        let exit = if c == 0 || job(Staff(p)) == 5 {
             true
         } else {
-            if exe::human_manager_is_human_club(c, 1, 1, 0, 0) != 0 && !matches!(job(p), 1 | 3 | 2 | 4) {
+            if exe::human_manager_is_human_club(c, 1, 1, 0, 0) != 0 && !matches!(job(Staff(p)), 1 | 3 | 2 | 4) {
                 true
             } else if friendly_random(4) != 0 {
                 false
             } else {
-                !matches!(job(p), 1 | 3 | 2 | 4 | 0xa | 9)
+                !matches!(job(Staff(p)), 1 | 3 | 2 | 4 | 0xa | 9)
             }
         };
         if exit {

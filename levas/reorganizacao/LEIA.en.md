@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 10: the closures
+
+`tipar_registros.py --closures Type,..`: a local closure whose `usize` parameter is used as a record (`let zero =
+|p: usize| (read_i8(p + match_player::SIDE) == 0) as u32`) takes the type (`|p: MatchPlayer| (p.side() == 0) as u32`);
+the body is converted like a typed variable and the calls by the compiler (278 fixes). 81 closures. `.addr()` outside
+the wrappers 5,160 → 5,041 (and 122 `Type(..)` where the call passed an untyped `usize`). Left as they are: the generic
+`call` of the comparison recording and the comparers' `o` (the original routine), which take `usize` on purpose.
+Mutations: 9 replacements fixed (they called the closure or the typed function with a `usize`). Proof: 7cc445c2 ×2,
+detector equal, comparison 0.
+
 ## Migration to typed records, batch 9: contract, nation and finance
 
 The full package for three medium records: 202 + 126 + 29 variables; 22 functions take `Contract`, 6 `Nation`, 3

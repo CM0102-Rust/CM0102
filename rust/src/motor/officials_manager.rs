@@ -410,15 +410,15 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
             } else {
                 let kind = read_u8(c + cup::CLUB_SIDES) as i8;
                 if kind == 2 || kind == 4 {
-                    let continent_of = |club: usize| {
-                        let n = read_usize(club + club::NATION);
+                    let continent_of = |club: Club| {
+                        let n = club.nation().addr();
                         if n != 0 && read_usize(n + nation::CONTINENT) != 0 { Some(read_i32(read_usize(n + nation::CONTINENT))) } else { None }
                     };
                     let continent = if comp.continent() != 0 {
                         read_i32(comp.continent())
-                    } else if let Some(k) = continent_of(home.addr()) {
+                    } else if let Some(k) = continent_of(home) {
                         k
-                    } else if let Some(k) = continent_of(away) {
+                    } else if let Some(k) = continent_of(Club(away)) {
                         k
                     } else {
                         random(read_i32(G_CONTINENT_COUNT))

@@ -35,7 +35,7 @@ MUTACOES = [
     ('cql2_regrava_um_abaixo', 'exe::squad_manager_set_squad_number(this, x, c, v as u8 as u32); // cql2: regrava negativo', 'exe::squad_manager_set_squad_number(this, x, c, v.wrapping_sub(1) as u8 as u32); // mutacao', 'cql_2 rewrites negative'),
     ('cql3_nenhuma_liga_numerada', 'cada(c.addr()); // cql3: numera a liga', '// mutacao', 'cql_3 numbers the league'),
     ('cql3_numero_do_banco_zero', 'exe::squad_manager_set_squad_number(this, p, c, k as u32); // cql3: the bench number', 'exe::squad_manager_set_squad_number(this, p, c, 0); // mutacao', 'cql_3 bench number'),
-    ('cql3_inscricao_trocada', '*m6d(p) = v; // cql3: inscreve depois', '*m6d(p) = v ^ 3; // mutacao', 'cql_3 registers later'),
+    ('cql3_inscricao_trocada', '*m6d(Staff(p)) = v; // cql3: inscreve depois', '*m6d(Staff(p)) = v ^ 3; // mutacao', 'cql_3 registers later'),
     ('cqm1_holanda', '[0x0c, 0x00, 0x06, 0x08, 0x05, 0x01], // cqm1: a Holanda', '[0x0c, 0x00, 0x06, 0x08, 0x09, 0x01], // mutacao: abre em outubro (fechada de julho a setembro)', 'cqm_1 netherlands'),
     ('cqm1_croacia', '[0x05, 0x00, 0xff, 0x01, 0x05, 0x01], // cqm1: a Croácia', '[0x05, 0x00, 0xff, 0x01, 0x09, 0x01], // mutacao: abre em outubro (fechada de julho a setembro)', 'cqm_1 croatia'),
     ('cqm1_irlanda', '[0x0d, 0x00, 0xff, 0x0a, 0x04, 0x01], // cqm1: a Irlanda', '[0x0d, 0x00, 0xff, 0x0a, 0x09, 0x01], // mutacao: abre em outubro (fechada de julho a setembro)', 'cqm_1 ireland'),

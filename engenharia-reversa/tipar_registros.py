@@ -632,6 +632,63 @@ def expandir_fechos(grava):
         gravar_mutacoes(trocas_mut)
 
 
+FECHO_DEF = re.compile(r'\blet (\w+) = (move )?\|([^|]*)\|\s*')
+
+
+def tipar_closures(tipos, grava):
+    """Local closures whose usize parameter is used as a record (`let zero = |p: usize| read_i8(p + match_player::SIDE)
+    == 0;`) take the record type (`|p: MatchPlayer| p.side() == 0`); the body is converted like a typed variable and
+    the calls are fixed by the compiler (`zero(j.addr())` -> `zero(j)`)."""
+    t_rec = open(os.path.join(SRC, 'motor', 'records.rs'), encoding='utf-8').read()
+    mod_de = {}
+    for m in re.finditer(r'/// A `(\w+)` record in the game.*\n(?:.*\n){0,3}pub\(crate\) struct (\w+)\(', t_rec):
+        if m.group(2) in tipos:
+            mod_de[m.group(1)] = m.group(2)
+    conv = {mod: Conversor(mod) for mod in mod_de}
+    n = 0
+    for raiz, _, fs in os.walk(SRC):
+        for f in fs:
+            p = os.path.join(raiz, f)
+            if not f.endswith('.rs') or f in ('records.rs', 'fields.rs', 'exe_calls.rs', 'mem.rs'):
+                continue
+            t = open(p, encoding='utf-8').read()
+            mk = mascara(t)
+            ed = []
+            for m in FECHO_DEF.finditer(mk):
+                fim = fim_da_expressao(mk, m.end())
+                if fim < 0:
+                    continue
+                params = [x.strip() for x in m.group(3).split(',') if x.strip()]
+                corpo, corpo_mk = t[m.end():fim], mk[m.end():fim]
+                novos, mudou = [], False
+                for prm in params:
+                    pm = re.fullmatch(r'(\w+)\s*:\s*usize', prm)
+                    if not pm:
+                        novos.append(prm)
+                        continue
+                    x = pm.group(1)
+                    usados = set(re.findall(r'(?<![\w.])%s\s*\+\s*([a-z_]+)::[A-Z]' % re.escape(x), corpo_mk)) & set(mod_de)
+                    if len(usados) != 1 or re.search(r'(?<![\w.])%s\s*(\+|-|\*|/|&|\||\^)?=(?!=)' % re.escape(x), corpo_mk):
+                        novos.append(prm)
+                        continue
+                    mod = usados.pop()
+                    corpo = conv[mod].converter_trecho(corpo, {x})
+                    novos.append('%s: %s' % (x, mod_de[mod]))
+                    mudou = True
+                if mudou:
+                    ed.append((m.start(), fim, 'let %s = %s|%s| %s' % (m.group(1), m.group(2) or '', ', '.join(novos), corpo.strip())))
+            if ed:
+                n += len(ed)
+                for a, b, novo in sorted(ed, reverse=True):
+                    t = t[:a] + novo + t[b:]
+                if grava:
+                    open(p, 'w', encoding='utf-8').write(t)
+    print('%d closures passam a receber o tipo' % n)
+    if grava:
+        ajustar_pelo_compilador(list(tipos))
+        tirar_addr_exe(True)
+
+
 def carregar_mutacoes():
     mutacoes = []
     pasta = os.path.join(R, 'engenharia-reversa', 'mutacoes')
@@ -675,6 +732,8 @@ def gravar_mutacoes(trocas_mut):
 
 
 def main():
+    if '--closures' in sys.argv:
+        return tipar_closures(sys.argv[sys.argv.index('--closures') + 1].split(','), '--gravar' in sys.argv)
     if '--fechos' in sys.argv:
         return expandir_fechos('--gravar' in sys.argv)
     if '--propagar' in sys.argv:

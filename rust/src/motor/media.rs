@@ -2788,7 +2788,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
         return 0;
     }
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
-    let injury_word_0c = |nation: usize| core::ptr::read_unaligned((nation + nation::REPUTATION) as *const i16) as i32;
+    let injury_word_0c = |nation: Nation| nation.reputation() as i32;
     let (mut melhor, mut maior) = (0usize, 0i32);
     for _ in 0..150 {
         let mut attempts = 0;
@@ -2814,7 +2814,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
             continue;
         }
         let nation = u(p + staff::NATION);
-        let mut weight = exe::utils_random(injury_word_0c(nation).wrapping_mul(*((p + staff::INT_APPS) as *const u8) as i32));
+        let mut weight = exe::utils_random(injury_word_0c(Nation(nation)).wrapping_mul(*((p + staff::INT_APPS) as *const u8) as i32));
         let same_nation = if subject.is_null() {
             if nation != u(club.addr() + club::NATION) {
                 continue;
@@ -2827,7 +2827,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
             weight = weight.wrapping_add(weight);
         } else {
             let cut = exe::utils_random(100).wrapping_add(0x1964);
-            if injury_word_0c(nation) < cut
+            if injury_word_0c(Nation(nation)) < cut
                 || core::ptr::read_unaligned((u(p + staff::NON_PLAYER) + 0xc) as *const i16) < 0x1770
                 || exe::staff_is_disliked_by(subject, p) != 0
             {
@@ -3365,8 +3365,8 @@ pub(crate) unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, club:
         if (r.division().addr() as u32) != (club.division().addr() as u32) {
             continue;
         }
-        let injury_word_0c = |c: usize| *((c + club::REPUTATION) as *const i16) as i32;
-        if injury_word_0c(club.addr()) + 0x2ee >= injury_word_0c(r.addr()) {
+        let injury_word_0c = |c: Club| c.reputation() as i32;
+        if injury_word_0c(club) + 0x2ee >= injury_word_0c(r) {
             continue; // the rival is not much bigger
         }
         if friendly_random(3) != 0 {

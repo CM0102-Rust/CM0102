@@ -1,7 +1,7 @@
 # Mutacoes da leva54 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva54.py
 MUTACOES = [
     ('n_menos2', "    let mut level: i8 = if *(partida.addr() as *const i32) == -2 {", "    let mut level: i8 = if *(partida.addr() as *const i32) == -1 {"),
-    ('n_500', "((rep_de(outro) / 500 + comp.reputation()", "((rep_de(outro) / 1000 + comp.reputation()"),
+    ('n_500', "((rep_de(Club(outro)) / 500 + comp.reputation()", "((rep_de(Club(outro)) / 1000 + comp.reputation()"),
     ('n_teto', "        v.min(20)\n", "        v.min(19)\n"),
     ('n_21', ".wrapping_add(16).max(21) as i16;", ".wrapping_add(16).max(20) as i16;"),
     ('n_mais1', "        ceiling().wrapping_sub(level as i16).wrapping_add(1)\n", "        ceiling().wrapping_sub(level as i16)\n"),

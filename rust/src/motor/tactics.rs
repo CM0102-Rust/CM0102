@@ -244,8 +244,8 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     let mais16 = |p: *mut i16| *p = (*p).wrapping_add(1);
     let word = |o: usize, side: usize| *((m + o + 2 * side) as *const i16) as i32;
     let jog = |side: usize, i: i8| (m as isize + 0x4796 + (i as isize + side as isize * 20) * 0x1be) as usize;
-    let add = |p: usize, d: i16| {
-        let q = (p + match_player::MATCH_RATING) as *mut i16;
+    let add = |p: MatchPlayer, d: i16| {
+        let q = (p.addr() + match_player::MATCH_RATING) as *mut i16;
         *q = (*q).wrapping_add(d);
     };
     let pt = || read_usize(m + engine::MATCH);
@@ -310,9 +310,9 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 let r = random((word(0x1da, other) + 200) / 19);
                 if !(r as f64 >= f as f64) {
                     mais16(w(0xf5e4 + side * 0x36));
-                    add(p, 0x28);
+                    add(MatchPlayer(p), 0x28);
                 } else {
-                    add(p, -0x1e);
+                    add(MatchPlayer(p), -0x1e);
                 }
             }
             if strong() {
@@ -326,10 +326,10 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 let f = (read_f32(p + match_player::TACKLING) as f64 + read_f32(rdata::F32_15) as f64) as f32;
                 let r = random(word(0x1de, other) / 5);
                 if !(r as f64 >= f as f64) {
-                    add(p, 0x28);
+                    add(MatchPlayer(p), 0x28);
                     mais16(w(0xf5e8 + side * 0x36));
                 } else {
-                    add(p, -10);
+                    add(MatchPlayer(p), -10);
                 }
             }
             if strong() {
@@ -351,9 +351,9 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 let r = random((word(0x1f2, other) + 100) / 7);
                 if !(r as f64 >= f as f64) {
                     mais16(w(0xf5ec + side * 0x36));
-                    add(p, 0x14);
+                    add(MatchPlayer(p), 0x14);
                 } else {
-                    add(p, -8);
+                    add(MatchPlayer(p), -8);
                 }
             }
             if random(10) == 0 {
@@ -362,7 +362,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             let p = jog(side, choose_by_role(m, side as u32) as i8);
             let v = ftol(read_f32(p + match_player::MOVEMENT) as f64 + read_f32(rdata::F32_20) as f64);
             if random(v) < random(2) {
-                add(p, -0xf);
+                add(MatchPlayer(p), -0xf);
                 more(b(0xf5ca + side * 0x36));
             }
             // the other side’s cards, or the type of the move
@@ -382,13 +382,13 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 if random(word(0x1ea, other)) > random(0x61a8) {
                     crate::comparison::branch("quick simulation sending off");
                     let c = choose_by_condition(m, other as i8, 4);
-                    add(jog(other, c as i8), -0xfa);
+                    add(MatchPlayer(jog(other, c as i8)), -0xfa);
                     send_off(c, call);
                 } else if random(word(0x1ea, other)) > random(0x6a4) {
                     crate::comparison::branch("quick simulation give_yellow_card");
                     let c = choose_by_condition(m, other as i8, 2);
                     let p = jog(other, c as i8);
-                    add(p, -0x32);
+                    add(MatchPlayer(p), -0x32);
                     more((p + match_player::YELLOW_CARDS) as *mut u8);
                     more((mo + engine::FOULS) as *mut u8);
                     if read_i8(p + match_player::YELLOW_CARDS) == 2 {
@@ -472,7 +472,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         let c9 = choose_by_role_c(m, side as u32, local_28 as u32);
                         let p = jog(side, c9 as i8);
                         more((p + match_player::GOALS) as *mut u8);
-                        add(p, 0x1db);
+                        add(MatchPlayer(p), 0x1db);
                         goleiros(other);
                         if local_28 != 0 {
                             crate::comparison::branch("quick simulation penalty goal");
@@ -494,7 +494,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         if c8 > -1 {
                             let q = jog(side, c8);
                             more((q + match_player::ASSISTS) as *mut u8);
-                            add(q, 0x15e);
+                            add(MatchPlayer(q), 0x15e);
                         }
                         more(b(0xf5c2 + other * 0x36));
                         more((ml + engine::SCORE) as *mut u8);
@@ -502,7 +502,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                             for i in 0..20 {
                                 let q = jog(s, i);
                                 if read_i8(q + match_player::POSITION) >= 0 {
-                                    add(q, delta);
+                                    add(MatchPlayer(q), delta);
                                 }
                             }
                         }
@@ -519,7 +519,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                             narrate(call, 0x1fce, c, side);
                             let p = jog(side, c as i8);
                             more((p + match_player::PENALTIES_TAKEN) as *mut u8);
-                            add(p, -500);
+                            add(MatchPlayer(p), -500);
                         }
                     }
                 }
@@ -623,7 +623,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             let c = choose_by_role_c(m, s as u32, local_28 as u32);
             let p = jog(s, c as i8);
             more((p + match_player::GOALS) as *mut u8);
-            add(p, 0x1db);
+            add(MatchPlayer(p), 0x1db);
             goleiros(1 - s);
             narrate(call, 0x1fcc, c, s);
         }

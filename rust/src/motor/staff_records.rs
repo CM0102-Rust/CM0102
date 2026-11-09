@@ -1942,7 +1942,7 @@ pub(crate) unsafe extern "thiscall" fn staff_records_end_season_for_nation(this:
     }
     let comp = read_usize(entry);
     let id = if comp != 0 { read_i32(comp) } else { -1 };
-    let guarda = |c: usize| c != 0 && *((c + nation::LEAGUE_SELECTED) as *const u8) != 0;
+    let guarda = |c: Nation| !c.is_null() && c.league_selected() != 0;
     let base = read_usize(this + staff_records_fields::MANAGER_RECORDS);
     let mut k = 0i32;
     while k < manager_record_count() {
@@ -1955,13 +1955,13 @@ pub(crate) unsafe extern "thiscall" fn staff_records_end_season_for_nation(this:
                 write_usize(s + 0xc, usize::MAX);
                 write_usize(s + 4, 0);
             }
-            if guarda(read_usize(entry)) {
+            if guarda(Nation(read_usize(entry))) {
                 exe::halloffame_add_league_entry(read_usize(G_HALL_OF_FAME), staff_records_staff_by_id(read_usize(s - 0x34)), id, read_usize(s));
             }
             write_usize(s, 0);
             write_usize(s + 8, usize::MAX);
         } else if cup == id {
-            if guarda(read_usize(entry)) {
+            if guarda(Nation(read_usize(entry))) {
                 exe::halloffame_add_league_entry(read_usize(G_HALL_OF_FAME), staff_records_staff_by_id(read_usize(s - 0x34)), id, read_usize(s + 4));
             }
             write_usize(s + 4, 0);

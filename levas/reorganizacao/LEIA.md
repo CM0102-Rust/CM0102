@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 10: as closures
+
+`tipar_registros.py --closures Tipo,..`: uma closure local cujo parâmetro `usize` é usado como um registro (`let zero =
+|p: usize| (read_i8(p + match_player::SIDE) == 0) as u32`) passa a receber o tipo (`|p: MatchPlayer| (p.side() == 0) as
+u32`); o corpo é convertido como uma variável tipada e as chamadas, pelo compilador (278 ajustes). 81 closures.
+`.addr()` fora dos invólucros 5.160 → 5.041 (e 122 `Tipo(..)` onde a chamada passava um `usize` sem tipo). Ficam como
+estão: o `call` genérico da gravação da comparação e o `o` (a rotina original) dos comparadores, que recebem `usize` de
+propósito. Mutações: 9 textos de troca acertados (chamavam a closure ou a função tipada com `usize`). Prova: 7cc445c2 ×2,
+detector igual, comparação 0.
+
 ## Migração para os registros tipados, leva 9: contrato, nação e finanças
 
 O pacote completo para três registros médios: 202 + 126 + 29 variáveis; 22 funções recebem `Contract`, 6 `Nation`, 3

@@ -654,7 +654,7 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
     let mut n = 0u8;
     let mut count = 0i8;
     let mut tirados = 0i8;
-    let m6d = |p: usize| (p + staff::SQUAD_SELECTED_FOR) as *mut u8;
+    let m6d = |p: Staff| (p.addr() + staff::SQUAD_SELECTED_FOR) as *mut u8;
     for &p in sq.iter() {
         if p == 0 || read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
             continue;
@@ -664,21 +664,21 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
         if !k.is_null() && k.contract_type() & 0x3f == 5 {
             continue;
         }
-        if exe::contract_manager_get_loan_contract(read_u32(G_CONTRACT_MANAGER) as usize, p) != 0 || *m6d(p) & 0x18 != 0 {
+        if exe::contract_manager_get_loan_contract(read_u32(G_CONTRACT_MANAGER) as usize, p) != 0 || *m6d(Staff(p)) & 0x18 != 0 {
             continue;
         }
         cand[n as i8 as usize] = p;
         n = n.wrapping_add(1);
-        let a = *m6d(p);
+        let a = *m6d(Staff(p));
         if a == 0 || step == 1 {
             continue;
         }
         if a == 1 {
-            *m6d(p) = 0;
+            *m6d(Staff(p)) = 0;
         } else if a == 4 {
-            *m6d(p) = 2;
+            *m6d(Staff(p)) = 2;
         }
-        if *m6d(p) == 2 {
+        if *m6d(Staff(p)) == 2 {
             count = count.wrapping_add(1);
         }
     }
@@ -689,8 +689,8 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
         let mut d = 0i8;
         while d < n as i8 && tirados < 2 {
             let p = cand[d as usize];
-            if p != 0 && *m6d(p) == 2 && !esc[..0x19].contains(&p) {
-                *m6d(p) = if mark != 0 { 4 } else { 0 };
+            if p != 0 && *m6d(Staff(p)) == 2 && !esc[..0x19].contains(&p) {
+                *m6d(Staff(p)) = if mark != 0 { 4 } else { 0 };
                 tirados += 1;
                 count = count.wrapping_sub(1);
                 if count <= 0x15 {
@@ -708,13 +708,13 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
             let v = if mark != 0 { 1 } else { 2 };
             if step == 1 {
                 crate::comparison::branch("cql_3 registers in stage 1");
-                *m6d(p) = v; // cql3: inscreve
+                *m6d(Staff(p)) = v; // cql3: inscreve
                 count = count.wrapping_add(1);
             } else {
-                let a = *m6d(p);
+                let a = *m6d(Staff(p));
                 if a != 2 && a & 8 == 0 && (count as i32) < total {
                     crate::comparison::branch("cql_3 registers later");
-                    *m6d(p) = v; // cql3: inscreve depois
+                    *m6d(Staff(p)) = v; // cql3: inscreve depois
                     count = count.wrapping_add(1);
                 }
             }

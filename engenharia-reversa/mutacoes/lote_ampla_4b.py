@@ -8,6 +8,6 @@ MUTACOES = [
     ('t_desmarca', '    *staff_flags_ptr(manager, id) &= 0xbf;', '    *staff_flags_ptr(manager, id) &= 0x3f;'),
     ('t_vaga', '    if k < *((table + transfer_manager_fields::OFFER_CAPACITY) as *const i32) {', '    if k <= *((table + transfer_manager_fields::OFFER_CAPACITY) as *const i32) {'),
     ('r_ids', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e, 0x72] {', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e] {'),
-    ('s_empate', '        if best == 0 || injury_word_0c(c.addr()) > injury_word_0c(best) {', '        if best == 0 || injury_word_0c(c.addr()) >= injury_word_0c(best) {'),
+    ('s_empate', '        if best == 0 || injury_word_0c(c) > injury_word_0c(Staff(best)) {', '        if best == 0 || injury_word_0c(c) >= injury_word_0c(Staff(best)) {'),
     ('c_clube', '    *club = (*(G_CLUB_TABLE as *const usize) as isize + (contract.club() as i32) as isize * 581) as usize;', '    *club = (*(G_CLUB_TABLE as *const usize) as isize + (contract.club() as i32) as isize * 580) as usize;'),
 ]

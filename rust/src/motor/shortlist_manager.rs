@@ -1440,13 +1440,13 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             e0 *= k(0x968940);
         }
         let mut x = e0 * f8;
-        let sem_pedida = |c: usize| c == 0 || read_u8(c + contract::LEAVING_ON_BOSMAN) == 0;
+        let sem_pedida = |c: Contract| c.is_null() || c.leaving_on_bosman() == 0;
         if !p6.is_null() {
             if e0 < k(0x968e48) {
-                let ok = b4 as f64 > k(0x968978) && l8c != 0 && l84 == 0 && x > k(0x968928) && ea < 4 && ea > 0 && sem_pedida(c);
+                let ok = b4 as f64 > k(0x968978) && l8c != 0 && l84 == 0 && x > k(0x968928) && ea < 4 && ea > 0 && sem_pedida(Contract(c));
                 *p6 |= if ok { 0x400000 } else { 0x800000 };
             } else if e0 > k(0x968940) && b4 as f64 > k(0x968978) && l8c == 0 && l84 != 0
-                && !(d4 != 0 && read_i16(d4 + club::REPUTATION) >= 0x1d4c) && p5b < 4 && p5b > 0 && sem_pedida(c)
+                && !(d4 != 0 && read_i16(d4 + club::REPUTATION) >= 0x1d4c) && p5b < 4 && p5b > 0 && sem_pedida(Contract(c))
             {
                 *p6 |= 0x200000;
             }

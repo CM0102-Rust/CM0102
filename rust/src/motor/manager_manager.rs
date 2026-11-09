@@ -4892,8 +4892,8 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
             return 0;
         }
     }
-    let time = |p: usize| exe::date_days_since(G_CURRENT_DATE, read_u32(p + staff::DATE_JOINED_CLUB), read_u32(p + 0x42));
-    let limit = |p: usize| (read_u8_volatile(p + staff::LOYALTY) as i8 as i32 + 0x15) * 10;
+    let time = |p: Staff| exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), read_u32(p.addr() + 0x42));
+    let limit = |p: Staff| (read_u8_volatile(p.addr() + staff::LOYALTY) as i8 as i32 + 0x15) * 10;
     if read_u8_volatile(person.addr() + staff::JOB_FOR_CLUB) == 0xb {
         let player = (person.player() as u32) as usize;
         if player != 0 && read_i16(player + player_sheet::CURRENT_REPUTATION) > 0x128e && rep(club.addr()) < 0x1a5e {
@@ -4932,7 +4932,7 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
             if rep(current) > rep(club.addr()) {
                 return 0;
             }
-            if time(person.addr()) < limit(person.addr()) && rep((person.club_job() as u32) as usize) > 0x1482 {
+            if time(person) < limit(person) && rep((person.club_job() as u32) as usize) > 0x1482 {
                 return 0;
             }
         }
@@ -4963,7 +4963,7 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
         if (person.club_job() as u32) == 0 {
             return 1;
         }
-        if time(person.addr()) > limit(person.addr()) {
+        if time(person) > limit(person) {
             let r = rep((person.club_job() as u32) as usize);
             if r < 0x1e46 && (r as i32 + 0x2ee) < rep(club.addr()) as i32 {
                 return 1;

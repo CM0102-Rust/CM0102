@@ -5,7 +5,7 @@ MUTACOES = [
     ('c_tipo5_b', '    if c.contract_type() & 0x3f == 5 {\n        return 8;', '    if c.contract_type() & 0x3f == 5 {\n        return 7;'),
     ('o_campos', '    for o in [0x36, 0x38, 0x34] {', '    for o in [0x36, 0x34, 0x38] {'),
     ('r_banco', '            cod2[i] = w(curtos, j);', '            cod2[i] = w(codes, j);'),
-    ('r_idade', '            3 => p != 0 && read_i8(rule + 1) < *((p + staff::YEAR_OF_BIRTH) as *const i8),', '            3 => p != 0 && read_i8(rule + 1) <= *((p + staff::YEAR_OF_BIRTH) as *const i8),'),
+    ('r_idade', '            3 => !p.is_null() && read_i8(rule + 1) < (p.year_of_birth() as i8),', '            3 => !p.is_null() && read_i8(rule + 1) <= (p.year_of_birth() as i8),'),
     ('n_veterano', '            Some(0x9689e0)', '            Some(0x968968)'),
     ('t_item', '        if *p == *(e as *const i32) {', '        if *p == *((e + 4) as *const i32) {'),
     ('m_marca', '    (t.promoted_count() != 0 && (t.league_flags() as u8) & 2 != 0) as u32', '    (t.promoted_count() != 0 && (t.league_flags() as u8) & 1 != 0) as u32'),

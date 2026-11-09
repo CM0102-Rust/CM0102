@@ -99,10 +99,10 @@ pub(crate) unsafe extern "C" fn pick(
         return 0;
     }
     // the rating of `pessoa` (with player `j`) in slot `i`
-    let rating = |person: usize, j: usize, i: i32| -> i32 {
+    let rating = |person: Staff, j: usize, i: i32| -> i32 {
         let i = i as usize;
         rating_fn(
-            person, *((person + staff::PLAYER) as *const usize), j, *((codes + 2 * i) as *const u16) as u32, mode, club.addr(), staff, a10, u32::MAX,
+            person.addr(), person.player(), j, *((codes + 2 * i) as *const u16) as u32, mode, club.addr(), staff, a10, u32::MAX,
             *((marks + 8 * i) as *const u32), *((marks + 8 * i + 4) as *const u32), *((bytes + i) as *const u8) as u32, a14,
             *((curtos + 2 * i) as *const u16) as u32, lc,
         )
@@ -130,10 +130,10 @@ pub(crate) unsafe extern "C" fn pick(
                 }
                 let (mut melhor, mut best_rating) = (-1i32, 0i32);
                 for i in 0..m {
-                    let r = rating(cand, jg(k), i);
+                    let r = rating(Staff(cand), jg(k), i);
                     if melhor == -1 || r > best_rating {
                         let ocupante = *sai(i);
-                        if ocupante == 0 || rating(ocupante, jg(k), i) < r {
+                        if ocupante == 0 || rating(Staff(ocupante), jg(k), i) < r {
                             melhor = i;
                             best_rating = r;
                         }
@@ -178,7 +178,7 @@ pub(crate) unsafe extern "C" fn pick(
                 if cand == 0 || *((cand + staff::PLAYER) as *const usize) == 0 {
                     continue;
                 }
-                let r = rating(cand, jg(k), i);
+                let r = rating(Staff(cand), jg(k), i);
                 if melhor == 0 || r > best_rating {
                     melhor = cand;
                     best_rating = r;
@@ -210,14 +210,14 @@ pub(crate) unsafe extern "C" fn pick(
                         if cand != *sai(j) {
                             continue;
                         }
-                        let r_current = rating(cand, jg(k), j);
+                        let r_current = rating(Staff(cand), jg(k), j);
                         let (mut outra, mut outra_nota) = (0usize, 0i32);
                         for k2 in 0..n {
                             let o = Staff(pes(k2));
                             if o.is_null() || o.player() == 0 || o.addr() == cand {
                                 continue;
                             }
-                            let r = rating(o.addr(), jg(k2), j);
+                            let r = rating(o, jg(k2), j);
                             if (outra == 0 || r > outra_nota) && (r < r_current || *us(k2) == 0) {
                                 outra_nota = r;
                                 outra = o.addr();
@@ -281,16 +281,16 @@ pub(crate) unsafe extern "C" fn pick(
             let a = Staff(*sai(i));
             if !a.is_null() && a.player() != 0 {
                 let ja = player_of(a.addr());
-                let a_i = rating(a.addr(), ja, i);
+                let a_i = rating(a, ja, i);
                 let mut j = i + 1;
                 while j < tot && !changed {
                     let b = Staff(*sai(j));
                     if !b.is_null() && b.player() != 0 {
                         let jb = player_of(b.addr());
-                        let b_i = rating(b.addr(), jb, i);
+                        let b_i = rating(b, jb, i);
                         let trocar = if j < m {
-                            let a_j = rating(a.addr(), ja, j);
-                            let b_j = rating(b.addr(), jb, j);
+                            let a_j = rating(a, ja, j);
+                            let b_j = rating(b, jb, j);
                             b_j.wrapping_add(a_i) < a_j.wrapping_add(b_i)
                         } else {
                             a_i < b_i
@@ -2705,12 +2705,12 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     let rating: unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32) -> i32 =
         core::mem::transmute(FN_MATCH_MAN_SCORE_PLAYER_FOR_ROLE);
-    let restrito = |p: usize| -> bool {
+    let restrito = |p: Staff| -> bool {
         let nation = (club.nation().addr() as u32);
         match read_i8(rule + 0) {
-            1 => p != 0 && exe::database_is_staff_foreign(p, (nation) as usize, 1) != 0 && exe::database_is_staff_eu_national(p, (nation) as usize) == 0,
-            2 => p != 0 && exe::database_is_staff_foreign(p, (nation) as usize, 1) != 0,
-            3 => p != 0 && read_i8(rule + 1) < *((p + staff::YEAR_OF_BIRTH) as *const i8),
+            1 => !p.is_null() && exe::database_is_staff_foreign(p, (nation) as usize, 1) != 0 && exe::database_is_staff_eu_national(p, (nation) as usize) == 0,
+            2 => !p.is_null() && exe::database_is_staff_foreign(p, (nation) as usize, 1) != 0,
+            3 => !p.is_null() && read_i8(rule + 1) < (p.year_of_birth() as i8),
             _ => false,
         }
     };
@@ -2751,7 +2751,7 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
             if reserve == 0 {
                 break;
             }
-            if restrito(*res(k)) {
+            if restrito(Staff(*res(k))) {
                 let last = (k as i32) < nr as i32 - 1;
                 remove(k, &mut nr);
                 if last {
@@ -2779,7 +2779,7 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
             let mut nv = 0i8;
             let mut k = 0i8;
             while k < nt {
-                if restrito(*((starters + 4 * k as usize) as *const usize)) {
+                if restrito(Staff(*((starters + 4 * k as usize) as *const usize))) {
                     let i = nv as usize;
                     slot[i] = k;
                     code[i] = w(codes, k as i32);
@@ -2793,7 +2793,7 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
             let mut nc = 0i8;
             for k in 0..nb.max(0) as usize {
                 let q = *((bench + 4 * k) as *const usize);
-                if q != 0 && !restrito(q) {
+                if q != 0 && !restrito(Staff(q)) {
                     cand[nc as usize] = q;
                     nc += 1;
                 }
@@ -2830,10 +2830,10 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
                         if current == 0 {
                             continue;
                         }
-                        let valer = |p: usize| rating(p, *((p + staff::PLAYER) as *const usize), 0, code[k] as u32, mode, club.addr(), side, manager as u32, u32::MAX,
+                        let valer = |p: Staff| rating(p.addr(), p.player(), 0, code[k] as u32, mode, club.addr(), side, manager as u32, u32::MAX,
                             m8[2 * k], m8[2 * k + 1], b1[k] as u32, mark, cod2[k] as u32, 0);
-                        let a = valer(current);
-                        let b = if choice[k] == 0 { -1000000 } else { valer(choice[k]) };
+                        let a = valer(Staff(current));
+                        let b = if choice[k] == 0 { -1000000 } else { valer(Staff(choice[k])) };
                         if esc == -1 || a.wrapping_sub(b) < best {
                             best = a.wrapping_sub(b);
                             esc = k as i32;
@@ -2890,7 +2890,7 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
     let mut k = 0i8;
     while k < nb {
         let j = nt as i32 + k as i32;
-        if restrito(*sai(j)) {
+        if restrito(Staff(*sai(j))) {
             let i = nv as usize;
             code[i] = w(codes, j);
             cod2[i] = w(curtos, j);
@@ -2933,9 +2933,9 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
                     if current == 0 {
                         continue;
                     }
-                    let valer = |p: usize| rating(p, *((p + staff::PLAYER) as *const usize), 0, code[k] as u32, mode, club.addr(), side, manager as u32, u32::MAX, 0, 0, 0, 0, cod2[k] as u32, 0);
-                    let a = valer(current);
-                    let b = if choice[k] == 0 { -1000000 } else { valer(choice[k]) };
+                    let valer = |p: Staff| rating(p.addr(), p.player(), 0, code[k] as u32, mode, club.addr(), side, manager as u32, u32::MAX, 0, 0, 0, 0, cod2[k] as u32, 0);
+                    let a = valer(Staff(current));
+                    let b = if choice[k] == 0 { -1000000 } else { valer(Staff(choice[k])) };
                     if esc == -1 || a.wrapping_sub(b) < best {
                         best = a.wrapping_sub(b);
                         esc = k as i32;

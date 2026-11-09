@@ -11,7 +11,7 @@ MUTACOES = [
     ('dbl_tirar_vinculo', '        write_state_i32(c, 0x3b, -1); // empties the second link', '        // mutacao: o segundo vínculo fica com o id'),
     ('dbl_auxiliar', '    rd(p.addr() + club::ASSISTANT_MANAGER) // the partner’s assistant', '    rd(club.addr() + 0xd3) // mutacao: o auxiliar do proprio clube no lugar do parceiro'),
     ('dbl_treinadores', '        let t = rd(p.addr() + club::COACHES + 4 * j); // the partner’s coaches', '        let t = rd(club.addr() + 0x19f + 4 * j); // mutacao: os treinadores do proprio clube no lugar dos do parceiro'),
-    ('dbl_contar_treinadores', '        n = n.wrapping_add(contar(p)); // and the partner’s', '        // mutacao: sem os treinadores do parceiro'),
+    ('dbl_contar_treinadores', '        n = n.wrapping_add(contar(Club(p))); // and the partner’s', '        // mutacao: sem os treinadores do Club(p)arceiro'),
     ('dbp_clube_tirar_favorita', '        remove_from_list3(club.addr() + club::FAV_STAFF1, person); // the club’s favorites', '        remove_from_list3(club.addr() + 0xa7, person); // mutacao: dos rejeitados do clube'),
     ('dbp_pessoas_favoritas', '[0x1cusize, 0x20, 0x24].into_iter().enumerate() { // the three favorites', '[0x1cusize, 0x20, 0x20].into_iter().enumerate() { // mutacao: a segunda no lugar da terceira'),
     ('dbp_tirar_clube_favorito', '        remove_from_list3(pref + 4, club); // the favorite clubs', '        remove_from_list3(pref + 0x10, club); // mutacao: dos clubes rejeitados'),

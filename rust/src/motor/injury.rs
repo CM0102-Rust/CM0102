@@ -539,14 +539,14 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     if a < b {
                         let r = friendly_random(4);
                         let f = read_usize(p + staff::PLAYER);
-                        let subir_57 = |p: usize| {
-                            if read_i8(p + staff::AMBITION) < 0x14 {
-                                *((p + staff::AMBITION) as *mut i8) += 1;
+                        let subir_57 = |p: Staff| {
+                            if p.ambition() < 0x14 {
+                                *((p.addr() + staff::AMBITION) as *mut i8) += 1;
                             }
                         };
-                        let descer_5d_44 = |p: usize, f: usize| {
-                            if read_i8(p + staff::TEMPERAMENT) > 1 {
-                                *((p + staff::TEMPERAMENT) as *mut i8) -= 1;
+                        let descer_5d_44 = |p: Staff, f: usize| {
+                            if p.temperament() > 1 {
+                                *((p.addr() + staff::TEMPERAMENT) as *mut i8) -= 1;
                             }
                             if read_i8(f + player_sheet::WORK_RATE) > 1 {
                                 *((f + player_sheet::WORK_RATE) as *mut i8) -= 1;
@@ -554,12 +554,12 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                         };
                         crate::comparison::branch("cqf_9 fitness by holidays");
                         if r == 0 {
-                            subir_57(p); // cqf9: random draw 0 raises +0x57
-                            descer_5d_44(p, f);
+                            subir_57(Staff(p)); // cqf9: random draw 0 raises +0x57
+                            descer_5d_44(Staff(p), f);
                         } else if r == 1 {
-                            subir_57(p);
+                            subir_57(Staff(p));
                         } else {
-                            descer_5d_44(p, f);
+                            descer_5d_44(Staff(p), f);
                         }
                         if r == 0 || r == 1 {
                             if read_i8(p + staff::LOYALTY) > 1 {

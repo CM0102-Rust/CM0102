@@ -1146,11 +1146,11 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
         }
     }
     // the relegated club goes down to the lower competition and loses the human manager in a competition with no active registration
-    let descer = |club: usize| {
+    let descer = |club: Club| {
         let comp = below.competition().addr();
-        let old = read_usize(club + club::DIVISION);
-        write_usize(club + club::LAST_DIVISION, old);
-        write_usize(club + club::DIVISION, comp);
+        let old = club.division().addr();
+        write_usize(club.addr() + club::LAST_DIVISION, old);
+        write_usize(club.addr() + club::DIVISION, comp);
         exe::contract_manager_trigger_relegation_clauses(read_usize(G_CONTRACT_MANAGER), club, old);
         let table = read_usize(G_COMP_OBJECT_TABLE);
         if table == 0 || comp == 0 || read_usize(table + read_usize(comp) * 4) == 0 {
@@ -1176,7 +1176,7 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
                 if j < n {
                     let le = below.table() + j as usize * 0x3b;
                     exe::league_move_club_to_division(ecx, read_usize(le), above.competition().addr(), 0);
-                    descer(read_usize(ue));
+                    descer(Club(read_usize(ue)));
                     desceram = desceram.wrapping_add(1);
                     subiram = subiram.wrapping_add(1);
                     write_u8(le + league_table_row::STATUS, 0xff);
@@ -1190,7 +1190,7 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
         while i < above.club_count() as i32 {
             let ue = above.table() + i as usize * 0x3b;
             if read_u8(ue + league_table_row::STATUS) == 3 {
-                descer(read_usize(ue));
+                descer(Club(read_usize(ue)));
                 desceram = desceram.wrapping_add(1);
                 write_u8(ue + league_table_row::STATUS, 0xff);
             }

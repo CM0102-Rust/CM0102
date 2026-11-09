@@ -718,10 +718,10 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data
     if !p.is_null() {
         let k = read_usize(p.addr());
         let c = j.club_job();
-        let other_nation = |c: usize| c != 0 && read_usize(c + club::NATION) != 0 && read_usize(read_usize(c + club::NATION) + 0x71) != nation.continent();
+        let other_nation = |c: Club| !c.is_null() && c.nation().addr() != 0 && read_usize(c.nation().addr() + 0x71) != nation.continent();
         let mut contract_ok = true;
         if k == read_usize(KEY_CLUB_COMP_FRIENDLY) || k == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) || k == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
-            if other_nation(c) {
+            if other_nation(Club(c)) {
                 // international friendlies, B and under-21: a club from another nation only with reputation (+0x80) up to 0.8 of the
                 // opponent (the home team +0x1c is the team itself: the away team +0x20); outside friendlies, no
                 if k != read_usize(KEY_CLUB_COMP_FRIENDLY) {
@@ -743,7 +743,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data
             if !contract_ok {
                 return false;
             }
-        } else if other_nation(c) && read_usize(c + club::DIVISION) != 0
+        } else if other_nation(Club(c)) && read_usize(c + club::DIVISION) != 0
             && (read_i16(p.competition() + 0x69) as f64) < read_i16(read_usize(c + club::DIVISION) + 0x69) as f64 * 0.7
         {
             // in the other competitions, a club from another nation whose league (+0x57) has +0x69 above the competition’s / 0.7

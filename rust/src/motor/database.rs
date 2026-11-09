@@ -302,11 +302,11 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
 ///
 /// [pt] Despacho real das chamadas injetadas do fechamento.
 pub(crate) unsafe fn dispatch_wrap_up_call(routine: usize, this: usize, a: [u32; 5]) -> u32 {
-    let m = |p: usize| *((p + match_player::ENGINE) as *const usize);
+    let m = |p: MatchPlayer| p.engine();
     match routine {
         0x6d26b0 => {
             let f: unsafe extern "C" fn(usize, usize, usize, usize, usize, f32, u32, u32) = core::mem::transmute(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH);
-            f(this, a[0] as usize, a[1] as usize, a[2] as usize, *((m(this) + 0x4792) as *const usize), f32::from_bits(a[3]), a[4] & 0xff, (a[4] >> 8) & 0xff);
+            f(this, a[0] as usize, a[1] as usize, a[2] as usize, *((m(MatchPlayer(this)) + 0x4792) as *const usize), f32::from_bits(a[3]), a[4] & 0xff, (a[4] >> 8) & 0xff);
         }
         0x6d3610 => {
             let f: unsafe extern "C" fn(usize, usize, usize, usize, f32, u8, u8) = core::mem::transmute(FN_UPDATE_MANAGER_REPUTATION_AFTER_MATCH);
@@ -3350,14 +3350,14 @@ pub(crate) unsafe extern "C" fn database_count_club_physios(club: usize) -> u8 {
     if club == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_PHYSIOS)(club);
     }
-    let validos = |c: usize| {
+    let validos = |c: Club| {
         (0..3).filter(|k| {
-            let p = core::ptr::read_unaligned((c + club::PHYSIOS + 4 * k) as *const usize);
+            let p = core::ptr::read_unaligned((c.addr() + club::PHYSIOS + 4 * k) as *const usize);
             p != 0 && *(p as *const i32) < *(G_STAFF_COUNT as *const i32)
         }).count() as u8
     };
     let b = database_linked_b_team(club, core::ptr::null_mut());
-    validos(club) + if b != 0 { validos(b) } else { 0 } // those of the club and of the B team (dbt)
+    validos(Club(club)) + if b != 0 { validos(Club(b)) } else { 0 } // those of the club and of the B team (dbt)
 }
 
 /// `club_is_b_team(club)`: 1 if the club has a partner (`exe::club_get_linked_b_team` with `active`) and is its B team (`is_a` = 0),
@@ -4371,11 +4371,11 @@ pub(crate) unsafe extern "C" fn database_staff_matches_names(person: usize, name
 /// estádio ou sem cidade, a de `ca` vale [0x9689a0] e a de `cb` vale 0. −1 se a de `ca` é menor (ou NaN: o `fcom`
 /// com C0), 1 se maior, 0 se igual.
 pub(crate) unsafe fn order_by_city_coordinate(ca: usize, cb: usize, d: usize) -> i32 {
-    let city = |c: usize| {
-        let e = core::ptr::read_unaligned((c + club::STADIUM) as *const usize);
+    let city = |c: Club| {
+        let e = c.stadium().addr();
         if e == 0 { 0 } else { core::ptr::read_unaligned((e + stadium::CITY) as *const usize) }
     };
-    let (xa, xb) = (city(ca), city(cb));
+    let (xa, xb) = (city(Club(ca)), city(Club(cb)));
     let x = if xa != 0 { core::ptr::read_unaligned((xa + d) as *const f64) } else { read_f64(rdata::F64_0) };
     let y = if xb != 0 { core::ptr::read_unaligned((xb + d) as *const f64) } else { 0.0 };
     if !(x >= y) {
@@ -5214,12 +5214,12 @@ pub(crate) unsafe extern "C" fn staff_get_favoured_staff(person: usize, array: u
     if person == 0 {
         return n;
     }
-    let pref = |p: usize| core::ptr::read_unaligned((p + staff::STAFF_PREFERENCES) as *const usize);
-    if pref(person) == 0 || array == 0 {
+    let pref = |p: Staff| p.staff_preferences();
+    if pref(Staff(person)) == 0 || array == 0 {
         return n;
     }
     for (k, d) in [0x1cusize, 0x20, 0x24].into_iter().enumerate() { // the three favorites
-        let p = core::ptr::read_unaligned((pref(person) + d) as *const usize);
+        let p = core::ptr::read_unaligned((pref(Staff(person)) + d) as *const usize);
         if p != 0 {
             let i = if k == 0 { 0 } else { *n as isize };
             core::ptr::write_unaligned((array as isize + 4 * i) as *mut usize, p);
@@ -5480,17 +5480,17 @@ pub(crate) unsafe extern "C" fn database_count_club_coaches(club: usize) -> u8 {
     if club == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_COACHES)(club);
     }
-    let contar = |c: usize| {
+    let contar = |c: Club| {
         let total = *(G_STAFF_COUNT as *const i32);
         (0..5).filter(|&j| {
-            let t = core::ptr::read_unaligned((c + club::COACHES + 4 * j) as *const usize);
+            let t = core::ptr::read_unaligned((c.addr() + club::COACHES + 4 * j) as *const usize);
             t != 0 && *(t as *const i32) < total // valid coach
         }).count() as u8
     };
-    let mut n = contar(club);
+    let mut n = contar(Club(club));
     let p = exe::club_get_linked_b_team(club, (0) as *mut u32, 1);
     if p != 0 {
-        n = n.wrapping_add(contar(p)); // and the partner’s
+        n = n.wrapping_add(contar(Club(p))); // and the partner’s
     }
     n
 }
@@ -5852,7 +5852,7 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let gi = |a: usize| read_i32(a);
     let rd = |a: usize| read_usize(a);
-    let rep = |c: usize| core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32;
+    let rep = |c: Club| c.reputation() as i32;
     let byte = |a: usize| *(a as *const u8);
     if any_coach_missing_from_club() {
         database_error_box(0x62f);
@@ -5876,7 +5876,7 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
                 continue;
             }
             let mut has = (0..k).filter(|&j| rd(c + d + 4 * j) != 0).count() as i32;
-            let target = ((rep(c) + 500) * k as i32 / 10000).clamp(1, k as i32); // the commission by reputation
+            let target = ((rep(Club(c)) + 500) * k as i32 / 10000).clamp(1, k as i32); // the commission by reputation
             while has < target {
                 has += 1;
                 if gerados >= 23000 {
@@ -5904,7 +5904,7 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
             continue;
         }
         let nation = rd(c + club::NATION);
-        let vale = national_team(c) || (nation != 0 && rd(c + club::DIVISION) != 0 && byte(nation + nation::LEAGUE_SELECTED) != 0 && rep(c) != 0) || rep(c) > 7500;
+        let vale = national_team(c) || (nation != 0 && rd(c + club::DIVISION) != 0 && byte(nation + nation::LEAGUE_SELECTED) != 0 && rep(Club(c)) != 0) || rep(Club(c)) > 7500;
         if !vale || rd(c + club::MANAGER) != 0 {
             continue;
         }
@@ -5965,8 +5965,8 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     let rd = |a: usize| read_usize(a);
     let wi = |a: usize, v: i32| core::ptr::write_unaligned(a as *mut i32, v);
     let wr = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut usize, v);
-    let rep = |c: usize| core::ptr::read_unaligned((c + club::REPUTATION) as *const i16);
-    let rep_id = |id: i32| rep(rd(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(581)));
+    let rep = |c: Club| c.reputation();
+    let rep_id = |id: i32| rep(Club(rd(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(581))));
     let byte = |a: usize| *(a as *const u8);
     let new = exe::crt_operator_new((gi(G_CLUB_COUNT) as u32).wrapping_mul(4));
     if new == 0 {
@@ -6003,11 +6003,11 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
             if enters {
                 if cont < limit {
                     wi(l + cont as usize * 4, gi(c));
-                    if cont == 0 || rep(c) < rep_id(gi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4)) {
+                    if cont == 0 || rep(Club(c)) < rep_id(gi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4)) {
                         wi(l + nation_club_bucket::WEAKEST_SLOT, cont);
                     }
                     wi(l + nation_club_bucket::CLUB_COUNT, cont + 1);
-                } else if rep(c) > rep_id(gi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4)) {
+                } else if rep(Club(c)) > rep_id(gi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4)) {
                     wi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4, gi(c));
                     for j in 0..cont {
                         if j == 0 || rep_id(gi(l + j as usize * 4)) < rep_id(gi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4)) {
@@ -6081,7 +6081,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
             true
         } else {
             let nation = rd(c + club::NATION);
-            !(nation == 0 || byte(nation + nation::LEAGUE_SELECTED) == 0 || (gi(nation) == gi(KEY_NATION_ENGLAND) && rep(c) <= 500 && pequena))
+            !(nation == 0 || byte(nation + nation::LEAGUE_SELECTED) == 0 || (gi(nation) == gi(KEY_NATION_ENGLAND) && rep(Club(c)) <= 500 && pequena))
         };
         let home = new.wrapping_add((id as usize).wrapping_mul(4));
         if stays {
@@ -6582,11 +6582,11 @@ pub(crate) unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b
     if pb == 0 {
         return -1;
     }
-    let ability = |p: usize| {
-        let j = core::ptr::read_unaligned((p + staff::PLAYER) as *const usize);
+    let ability = |p: Staff| {
+        let j = p.player();
         if j != 0 { core::ptr::read_unaligned((j + player_sheet::CURRENT_REPUTATION) as *const i16) } else { 0 }
     };
-    ability(pb) as i32 - ability(pa) as i32 // the largest first
+    ability(Staff(pb)) as i32 - ability(Staff(pa)) as i32 // the largest first
 }
 
 /// qsort comparison of the squad in the team strength (club_squad_strength_band `club_squad_strength_band`): person pointers.
@@ -7054,8 +7054,8 @@ pub unsafe fn autoteste_dbj_2() {
 pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let goalkeeper = |q: usize| {
-        let j = rd(q + staff::PLAYER);
+    let goalkeeper = |q: Staff| {
+        let j = rd(q.addr() + staff::PLAYER);
         j != 0 && *((j + player_sheet::GOALKEEPER) as *const i8) >= 0xf
     };
     let mut club = *(G_CLUB_TABLE as *const usize);
@@ -7075,7 +7075,7 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
                 for &q in v.iter() {
                     if q != 0 {
                         total += 1;
-                        if goalkeeper(q) {
+                        if goalkeeper(Staff(q)) {
                             goleiros += 1;
                         }
                     }
@@ -7084,7 +7084,7 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
                 while k >= 0 && total > 48 { // the combined squad at 48
                     let q = v[k as usize];
                     if q != 0 {
-                        let g = goalkeeper(q);
+                        let g = goalkeeper(Staff(q));
                         if !(g && goleiros < 3) {
                             if g {
                                 goleiros -= 1;
@@ -8515,19 +8515,19 @@ pub(crate) unsafe extern "C" fn database_get_club_kit_colours(club: usize, kit: 
 /// ou vindo da 0x53b3d0): a original com nulo (caixa "Error" e 0).
 pub(crate) unsafe extern "C" fn database_get_club_manager(club: usize) -> usize {
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let manager = |c: usize| core::ptr::read_unaligned((c + club::MANAGER) as *const usize);
+    let manager = |c: Club| c.manager().addr();
     let mut c = club;
     loop {
         if c == 0 {
             return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_MANAGER)(0);
         }
-        let t = manager(c);
+        let t = manager(Club(c));
         if t != 0 {
             return t; // the club’s manager
         }
         let p = partner(c, 0, 1);
-        if p != 0 && manager(p) != 0 {
-            return manager(p);
+        if p != 0 && manager(Club(p)) != 0 {
+            return manager(Club(p));
         }
         if *(c as *const i32) < (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32)) {
             return 0;
