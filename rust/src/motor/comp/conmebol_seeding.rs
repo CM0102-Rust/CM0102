@@ -4,8 +4,7 @@ use super::*;
 /// entered.
 ///
 /// [pt] O clube `c` (não nulo e ainda sem vaga, +0x1db = −1) entra na Libertadores na fase `fase`. Devolve se entrou.
-pub(crate) unsafe fn enter_libertadores(c: usize, stage: u8) -> bool {
-    let c = Club(c);
+pub(crate) unsafe fn enter_libertadores(c: Club, stage: u8) -> bool {
     if c.is_null() || c.continental_comp_id() != u32::MAX {
         return false;
     }
@@ -46,24 +45,24 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
                 if c == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
                     c = exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_BRAZILIAN_CUP), 1);
                 }
-                if enter_libertadores(c, 2) {
+                if enter_libertadores(Club(c), 2) {
                     n = 1;
                 }
                 let id = read_u32(this + 0x71);
-                if id != u32::MAX && enter_libertadores(contract_manager_club_by_id(id), 2) {
+                if id != u32::MAX && enter_libertadores(Club(contract_manager_club_by_id(id)), 2) {
                     n = n.wrapping_add(1);
                 }
             } else {
-                if enter_libertadores(contract_manager_club_by_id(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS)), 2) {
+                if enter_libertadores(Club(contract_manager_club_by_id(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS))), 2) {
                     crate::comparison::branch("cqj_1 brazil fixed");
                     n = 1; // cqj1: o Palmeiras
                 }
-                if enter_libertadores(contract_manager_club_by_id(read_u32(G_KEY_CLUB_CRUZEIRO_ESPORTE_CLUBE)), 2) {
+                if enter_libertadores(Club(contract_manager_club_by_id(read_u32(G_KEY_CLUB_CRUZEIRO_ESPORTE_CLUBE))), 2) {
                     n = n.wrapping_add(1);
                 }
             }
             for lugar in [0u32, 1] {
-                if enter_libertadores(exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION), lugar), 2) {
+                if enter_libertadores(Club(exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION), lugar)), 2) {
                     n = n.wrapping_add(1);
                 }
             }
@@ -72,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
             let c = exe::conmebolseeding_find_nth_unqualified_club_of_nation(this, clubs, count, read_u32(e), 1, 1, 0);
             if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                 crate::comparison::branch("cqj_1 nation quota");
-                enter_libertadores(c, 2); // cqj1: the quota slot
+                enter_libertadores(Club(c), 2); // cqj1: the quota slot
             }
             n = n.wrapping_add(1);
         }
@@ -120,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this
             if without_slot != 0 && !c.is_null() && c.continental_comp_id() != u32::MAX {
                 crate::comparison::branch("cqj_1 already with a place");
                 p += 12; // cqj1: skips the club that already has a slot
-            } else if without_human != 0 && !c.is_null() && exe::human_manager_is_human_club(c.addr(), 0, 1, 0, 0) != 0 {
+            } else if without_human != 0 && !c.is_null() && exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {
                 p += 12;
             } else {
                 if foul == 0 {

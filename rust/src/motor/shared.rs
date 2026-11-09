@@ -416,7 +416,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 let nota1 = exe::comp_stats_get_player_stat(comp, g(p + staff::PLAYER), 1);
                 let nota11 = exe::comp_stats_get_player_stat(comp, g(p + staff::PLAYER), 0x11);
                 if c != 0 && matches!(*((c + contract::SQUAD_STATUS) as *const u8) & 0xf0, 0x10 | 0x20 | 0x30) {
-                    let x = exe::shortlist_manager_find_club_shortlist_entry(g(g(G_TRANSFER_MANAGER) + 0x856), club.addr(), p, 0, 0);
+                    let x = exe::shortlist_manager_find_club_shortlist_entry(g(g(G_TRANSFER_MANAGER) + 0x856), club, p, 0, 0);
                     let passes = test_600a50(club.addr(), 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
                     let d = w(ts + 0x18e) as f64;
                     if passes

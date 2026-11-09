@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
             plan[0] = (value, read_usize(seller));
             if value > plan[1].0 {
                 plan[1] = plan[0];
-                if is_big_transfer(value, buyer) && !record_news_queued(this, read_usize(buyer), 0x1c) {
+                if is_big_transfer(value, Club(buyer)) && !record_news_queued(this, read_usize(buyer), 0x1c) {
                     queue += 1;
                 }
             }
@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
             plan[2] = (value, read_usize(buyer));
             if value > plan[3].0 {
                 plan[3] = plan[2];
-                if is_big_transfer(value, seller) && !record_news_queued(this, read_usize(seller), 0x1d) {
+                if is_big_transfer(value, Club(seller)) && !record_news_queued(this, read_usize(seller), 0x1d) {
                     queue += 1;
                 }
             }

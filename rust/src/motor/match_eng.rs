@@ -7090,7 +7090,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let nivel0 = level as i16;
     let div_b = (age(0xb, 0x16) as i16).wrapping_sub(nivel0);
     let mut grande = false;
-    let ja_national_team = exe::database_is_national_team(club.addr()) != 0;
+    let ja_national_team = exe::database_is_national_team(club) != 0;
     let div_9 = if ja_national_team
         || (*(comp as *const i32) == -2 && (club.nation().addr() as i32) != 0 && (club.nation().addr() as i32) == *((person + staff::NATION) as *const i32))
         || (of_game != 0 && *((of_game + competition::NATION) as *const i32) == *((person + staff::NATION) as *const i32))
@@ -7111,7 +7111,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
         (a, if flag { a } else { c }, c)
     };
     let div_d: i16;
-    if exe::database_is_national_team(club.addr()) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         div_d = (age(0xd, 0x15) as i16).wrapping_sub(nivel0);
         if read_i8(comp + fixture::CATEGORY) == 0xa
             && *(G_NATIONAL_TEAMS as *const usize) != 0
@@ -7252,8 +7252,8 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let td = band(new_d, cd, pot * 50 - 10000, pot * 50 + 1250);
     let rd = preso(cd, f_d, f4(0x96d1a8), (level as i32 * 100) as f64, td);
     // the club’s reputation pulls +0xb
-    if exe::database_is_national_team(club.addr()) == 0 && level > 10 {
-        let e = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club.addr());
+    if exe::database_is_national_team(club) == 0 && level > 10 {
+        let e = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club);
         if e != 0 {
             let mut id = read_i8(person + staff::YEAR_OF_BIRTH) as i32 as f32;
             if read_f32(rdata::F32_19) < id {
@@ -8695,7 +8695,7 @@ pub(crate) unsafe extern "thiscall" fn side_strength(this: usize, side: i8) {
         let main = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = main;
         let club = Club(if main == 0 { 0 } else { (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((main + 4) as *const i32) as usize).wrapping_mul(581)) });
-        let c = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club.addr());
+        let c = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club);
         if c != 0 && !club.is_null() {
             let sheet = *((j + match_player::PLAYER) as *const usize);
             if (read_i8(sheet + player_sheet::LEADERSHIP) as i32) > random(20)
@@ -11283,7 +11283,7 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
     let club = Club(*((c + if l != 0 { 0x20 } else { 0x1c }) as *const usize));
     let mut row = 0usize;
     if competition != 0 && *((competition + 8) as *const u32) != 0 {
-        row = exe::comp_stats_find_club_entry(*((competition + 8) as *const usize), club.addr());
+        row = exe::comp_stats_find_club_entry(*((competition + 8) as *const usize), club);
     }
     let in_competition = || {
         let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_CLUB_STILL_IN_CONTENTION);

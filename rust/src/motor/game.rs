@@ -192,8 +192,7 @@ pub(crate) unsafe fn is_disliked_by(target: usize, person: usize) -> u32 {
 /// gosta; achado, e só quando dia % 14 + id da pessoa dá zero (na prática a pessoa de id 0 a cada 14 dias), a queixa
 /// (0x587c60) contra o técnico (+0xcf, tipo 0), o auxiliar (+0xd3, 1) ou outro (2) e a marca no vínculo `k` (0x867700
 /// com 0x2000, 0x1000 ou 0x800).
-pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
-    let club = Club(club);
+pub(crate) unsafe fn dressing_room_friction(p: usize, club: Club, k: usize) {
     let mut j = 0usize;
     loop {
         if j >= 0x32 {
@@ -349,7 +348,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
     if read_usize(p + staff::STAFF_PREFERENCES) == 0 {
         return;
     }
-    dressing_room_friction(p, club.addr(), k);
+    dressing_room_friction(p, club, k);
 }
 
 // simplification: rolls and touches the preferences (0x547a10, 0x547af0, 0x547c10, 0x547c50), quarrel and complaint: original only;
@@ -376,7 +375,7 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize
         if read_usize(p + staff::STAFF_PREFERENCES) == 0 {
             continue;
         }
-        dressing_room_friction(p, club.addr(), k);
+        dressing_room_friction(p, club, k);
     }
 }
 

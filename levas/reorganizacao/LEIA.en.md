@@ -29,6 +29,23 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 2: the club in signatures
+
+- The `Addr` trait (records.rs): an address in the game's memory, `usize` or a typed record pointer. The `exe::`
+  wrappers take `impl Addr` where the original passes a pointer (`involucros_exe.py`), so `exe::x(club)` needs no
+  `.addr()` (442 removed in the code, 27 in the mutations: `tipar_registros.py --exe`). `i32` implements `Addr` only
+  for the untyped `0`.
+- Our functions that took a club as `usize` and typed it on entry now take `Club` (112;
+  `tipar_registros.py --assinaturas Club`); the calls were fixed by the compiler (294: `y.addr()` → `y`, the rest
+  `Club(..)`).
+- `registros.py` keeps a field's type once generated (the usage count changes as the code moves to the methods).
+- `seguir_ancoras.py COMMIT`: follows the mutation anchors broken by a mechanical change (12 followed; 3 replacement
+  texts fixed by hand).
+
+`.addr()` outside the wrappers: 2,246 → 1,700. What is left: functions that take the club as `usize` without reading
+a field (they only pass it on) and arrays/other widths (`club.addr() + club::SQUAD + v * 4`). Proof: 7cc445c2 ×2,
+detector equal, comparison 0; the 27 changed mutations compile.
+
 ## Migration to typed records, batch 1: the club
 
 `engenharia-reversa/tipar_registros.py club`: in a function, the variable used as `x + club::FIELD` becomes a `Club`

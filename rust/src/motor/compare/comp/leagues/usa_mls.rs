@@ -104,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_table(this: usize)
     let mut i: i16 = 0;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n < 4 {
         let c = base + i as u16 as usize * club::SIZE;
-        if is_in_mls_division(this, c, 0x413) {
+        if is_in_mls_division(this, Club(c), 0x413) {
             plan[n] = c;
             n += 1;
         }

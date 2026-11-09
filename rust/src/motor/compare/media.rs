@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
     if !club.is_null() && player != 0 {
         reg.push((club.addr() + club::FAV_STAFF1, 24));
         reg.extend(contract_region(player, club.addr()));
-        for &p in club_staff_vector(club.addr(), &mut |r, t, a| dispatch_post_match_call(r, t, a)).iter().take(57) {
+        for &p in club_staff_vector(club, &mut |r, t, a| dispatch_post_match_call(r, t, a)).iter().take(57) {
             if p == 0 {
                 continue;
             }
@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
         }
     }
     compare_pos("apply_squad_reaction_to_player_story", reg, || o(this, topic, player, club.addr(), ids, n),
-        |chamar| squad_reaction_to_story_with(topic, player, club.addr(), ids, n, chamar));
+        |chamar| squad_reaction_to_story_with(topic, player, club, ids, n, chamar));
 }
 
 /// Comparer for `warn_squad_of_position_rival`.
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn compare_warn_squad_of_position_rival(this
             }
         }
     }
-    compare_pos("warn_squad_of_position_rival", reg, || o(this, player, club.addr(), a, b), |chamar| warn_position_rivals_with(player, club.addr(), chamar));
+    compare_pos("warn_squad_of_position_rival", reg, || o(this, player, club.addr(), a, b), |chamar| warn_position_rivals_with(player, club, chamar));
 }
 
 /// Comparer for `media_format_response_option_label`.
@@ -185,7 +185,7 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_supporter_confidence(this:
     }
     let p = manager_manager_row(club) + 8;
     let before = read_i16(p);
-    let v = fan_confidence_change(club, target);
+    let v = fan_confidence_change(Club(club), target);
     let expected = before.wrapping_add(v).clamp(1, 10000);
     o(this, club, sujeito, topic, target, variant);
     let after = read_i16(manager_manager_row(club) + 8);
@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_board_confidence(this: usi
     }
     let p = manager_manager_row(club) + 6;
     let before = read_i16(p);
-    let v = board_confidence_change(club, target);
+    let v = board_confidence_change(Club(club), target);
     let expected = before.wrapping_add(v).clamp(1, 10000);
     o(this, club, sujeito, topic, target, variant, sexto);
     let after = read_i16(manager_manager_row(club) + 6);

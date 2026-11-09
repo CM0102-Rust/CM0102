@@ -30,7 +30,7 @@ pub(crate) unsafe extern "stdcall" fn compare_fog_after_match(partida: usize, da
     let mut reg: Vec<(usize, usize)> = Vec::new();
     for lado in 0..2usize {
         let club = Club(*((partida + fixture::AWAY_CLUB - 4 * lado) as *const usize));
-        if exe::human_manager_is_human_club(club.addr(), 0, (1) as u32, (0) as u32, 0) == 0 || club.manager().addr() == 0 {
+        if exe::human_manager_is_human_club(club, 0, (1) as u32, (0) as u32, 0) == 0 || club.manager().addr() == 0 {
             continue;
         }
         let q = club.manager().addr();

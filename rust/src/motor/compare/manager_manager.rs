@@ -222,13 +222,13 @@ pub(crate) unsafe extern "thiscall" fn compare_issue_board_ultimatum(this: usize
 pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, club: usize, kind: u32, reason: u32, keep: u32) {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_REMOVE_CLUB_MANAGER);
-    let tira = manager_and_role(club.addr()).is_some();
+    let tira = manager_and_role(club).is_some();
     o(this, club.addr(), kind, reason, keep);
     if !tira {
         return;
     }
     let mut sobra = 0u32;
-    if exe::database_is_national_team(club.addr()) == 0 {
+    if exe::database_is_national_team(club) == 0 {
         for k in 0..50usize {
             let p = read_usize(club.addr() + club::SQUAD + 4 * k);
             if p == 0 || read_usize(p + staff::PLAYER) == 0 {
@@ -405,10 +405,10 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_staff_from_club(this: usiz
     let mut c = [0u8; 0x1e0];
     core::ptr::copy_nonoverlapping(person as *const u8, s.as_mut_ptr(), 0x40);
     core::ptr::copy_nonoverlapping(club as *const u8, c.as_mut_ptr(), 0x1e0);
-    detach_staff_from_club(person, s.as_mut_ptr() as usize, club, c.as_mut_ptr() as usize);
-    let expected = staff_job_fields(s.as_ptr() as usize, c.as_ptr() as usize);
+    detach_staff_from_club(person, s.as_mut_ptr() as usize, club, Club(c.as_mut_ptr() as usize));
+    let expected = staff_job_fields(s.as_ptr() as usize, Club(c.as_ptr() as usize));
     let r = o(this, person, club);
-    let after = staff_job_fields(person, club);
+    let after = staff_job_fields(person, Club(club));
     SCOREBOARD.record(after == expected, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
         read_usize(person), read_u8(person + staff::JOB_FOR_CLUB) as i8, read_usize(club), after.0, after.1, expected.0, expected.1));
     r

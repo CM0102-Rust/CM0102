@@ -159,7 +159,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_club(club: usize, other: usiz
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(IDX_POST_MATCH_CLUB);
     // the copy does not write to the database: only the calls and the random rolls
     let reg = crate::rng::STATE_REGIONS.to_vec();
-    compare_pos("post_match_club", reg, || o(club, other, partida, n, t), |chamar| post_match_club_with(club, other, partida, n, t, chamar));
+    compare_pos("post_match_club", reg, || o(club, other, partida, n, t), |chamar| post_match_club_with(Club(club), other, partida, n, t, chamar));
 }
 
 /// Comparer for `match_day_drop_viewer_and_finish_match`.

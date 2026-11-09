@@ -62,14 +62,14 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
     if tecnico == 0 && human(club.addr(), 1, 1, 0, 0) == 0 {
         return;
     }
-    if exe::database_is_national_team(club.addr()) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         return;
     }
     let manager = if tecnico == 0 { club.manager().addr() } else { tecnico };
     let t = exe::training_manager_get_coach_assignments(this, manager);
-    let aux = exe::database_get_club_assistant(club.addr());
+    let aux = exe::database_get_club_assistant(club);
     let mut tr = [0usize; 5];
-    exe::database_get_club_coaches(club.addr(), tr.as_mut_ptr());
+    exe::database_get_club_coaches(club, tr.as_mut_ptr());
     let candidate = |k: i32| if k < 0 { aux } else { tr[k as usize] };
     for v in 0..6 {
         let e = t + 9 * v;

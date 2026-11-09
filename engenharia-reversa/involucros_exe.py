@@ -128,10 +128,11 @@ def main():
     for fn in sorted(canon):
         conv, params, ret = partes(canon[fn])
         L.append('    #[inline(always)]')
-        L.append('    pub(crate) unsafe fn %s(%s)%s {' % (nome_de(fn), ', '.join('a%d: %s' % (i, t) for i, t in enumerate(params)),
+        # a `usize` parameter takes a raw address or any typed record pointer (`impl Addr`, records.rs): `exe::x(club)`
+        L.append('    pub(crate) unsafe fn %s(%s)%s {' % (nome_de(fn), ', '.join('a%d: %s' % (i, 'impl Addr' if norm(t) == 'usize' else t) for i, t in enumerate(params)),
                                                          (' -> ' + ret) if ret else ''))
         L.append('        let f: %s = core::mem::transmute(%s);' % (canon[fn], fn))
-        L.append('        f(%s)' % ', '.join('a%d' % i for i in range(len(params))))
+        L.append('        f(%s)' % ', '.join('a%d.addr()' % i if norm(t) == 'usize' else 'a%d' % i for i, t in enumerate(params)))
         L.append('    }')
     L.append('}')
     if '--so-arquivo' in sys.argv:

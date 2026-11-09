@@ -39,7 +39,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nation: usize) -> u8 
 /// temporada 0x59b4c0, pelo contrato desejado 0x85fc50, pelo ano da temporada 0x669950 e outras. Sem contador.
 pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
     let club = Club(club);
-    if exe::database_is_national_team(club.addr()) == 0 {
+    if exe::database_is_national_team(club) == 0 {
         let nation = club.nation().addr();
         if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
             for k in 0..0x23usize {
@@ -51,7 +51,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
             return 0;
         }
     }
-    if exe::database_is_national_team(club.addr()) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         return 1;
     }
     let nation = club.nation().addr(); // cpu1: the nation of the continent
@@ -66,10 +66,9 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
 /// Would the club hit the `key_nation_index_of_club` "Error" box (not a national team, nation selected but not in the league table)?
 ///
 /// [pt] Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
-pub(crate) unsafe fn hits_key_nation_error(club: usize) -> bool {
-    let club = Club(club);
+pub(crate) unsafe fn hits_key_nation_error(club: Club) -> bool {
     let nation = club.nation().addr();
-    exe::database_is_national_team(club.addr()) == 0
+    exe::database_is_national_team(club) == 0
         && nation != 0
         && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0
         && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation)

@@ -2255,8 +2255,7 @@ pub(crate) unsafe extern "thiscall" fn create_due_planned_friendlies(this: usize
 ///
 /// [pt] O estádio do clube (+0x69) já tem jogo na data em alguma fatia (0x5ae870 do calendário [0xae2a58] com −1)? Sem
 /// estádio: não.
-pub(crate) unsafe fn stadium_busy_on(club: usize, data: usize) -> bool {
-    let club = Club(club);
+pub(crate) unsafe fn stadium_busy_on(club: Club, data: usize) -> bool {
     let stadium = club.stadium().addr();
     if stadium == 0 {
         return false;
@@ -2270,9 +2269,9 @@ pub(crate) unsafe fn stadium_busy_on(club: usize, data: usize) -> bool {
 /// [pt] O estádio de quem joga em casa (o clube com `em_casa`, senão o adversário, se houver) está ocupado na data?
 pub(crate) unsafe fn home_stadium_busy_on(club: usize, data: usize, opponent: usize, in_home: u32) -> bool {
     if in_home != 0 {
-        stadium_busy_on(club, data)
+        stadium_busy_on(Club(club), data)
     } else {
-        opponent != 0 && stadium_busy_on(opponent, data)
+        opponent != 0 && stadium_busy_on(Club(opponent), data)
     }
 }
 
@@ -2483,7 +2482,7 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
     let r = exe::date_add_days(data, p1, folga as u32);
     exe::date_operator_3d(pb, p0, r);
     let nation = (club.nation().addr() as u32) as usize;
-    if k != 0 && exe::database_is_national_team(club.addr()) == 0 && nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
+    if k != 0 && exe::database_is_national_team(club) == 0 && nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
         let reg = ((exe::key_nation_index_of_nation(nation) as u32) as u8 as i8 as isize * 72) as usize;
         let start = G_LEAGUE_WORLD_CUP_START_DATE.wrapping_add(reg); // the key nation’s season
         let (iano, idia) = (read_u16(start + 2), read_u16(start + 0) as i16);
@@ -2784,8 +2783,7 @@ pub(crate) unsafe fn already_opponent(c: usize, club: usize) -> bool {
 ///
 /// [pt] Fora pela data: no ano do amistoso ([0xae2c90], com sinal, contra +0x34e8 do Friendly, sem sinal) o clube `op`
 /// com +0x1db igual ao float de [0x9cf6f8] (comparado como inteiro).
-pub(crate) unsafe fn excluded_by_intertoto(this: usize, op: usize) -> bool {
-    let op = Club(op);
+pub(crate) unsafe fn excluded_by_intertoto(this: usize, op: Club) -> bool {
     *(G_CURRENT_DATE as *const i16) as i32 == core::ptr::read_unaligned((this + friendly::PRESEASON_PLAN_DAY_A) as *const u16) as i32
         && (op.continental_comp_id() as usize) as u32 == *(KEY_CLUB_COMP_INTER_TOTO_CUP as *const u32)
 }
@@ -2800,8 +2798,7 @@ pub(crate) unsafe fn are_rival_clubs(a: usize, b: usize) -> bool {
 /// True if the clubs' nations (+0x53) are rivals (+0x110/+0x114/+0x118, either direction).
 ///
 /// [pt] As nações (+0x53) dos clubes são rivais (+0x110, +0x114, +0x118, nos dois sentidos)?
-pub(crate) unsafe fn are_rival_nations(a: usize, b: usize) -> bool {
-    let b = Club(b);
+pub(crate) unsafe fn are_rival_nations(a: usize, b: Club) -> bool {
     let a = Club(a);
     let (na, nb) = (a.nation().addr(), b.nation().addr());
     [0x110usize, 0x114, 0x118].iter().any(|&o| na == read_usize(nb + o) || nb == read_usize(na + o))
@@ -2872,14 +2869,14 @@ pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, club:
                     }
                 }
             }
-            if already_opponent(c, club) || excluded_by_intertoto(this, op.addr()) {
+            if already_opponent(c, club) || excluded_by_intertoto(this, op) {
                 break 'proximo;
             }
             let (fc, fcl) = (read_i16(c + preseason_candidate::WINDOW_START), read_i16(club + preseason_candidate::WINDOW_START));
             if fc != -1 && fcl != -1 && (fc > read_i16(club + preseason_candidate::WINDOW_END) || fcl > read_i16(c + preseason_candidate::WINDOW_END)) {
                 break 'proximo;
             }
-            if are_rival_clubs(cp.addr(), op.addr()) || (are_rival_nations(cp.addr(), op.addr()) && friendly_random(2) == 0) {
+            if are_rival_clubs(cp.addr(), op.addr()) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
             if cp.division().addr() == op.division().addr() {
@@ -2976,10 +2973,10 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usi
             return 0;
         }
         'proximo: {
-            if read_i8(c + 5) > band_max as i8 || excluded_by_intertoto(this, op.addr()) || cp == op || already_opponent(c, club) {
+            if read_i8(c + 5) > band_max as i8 || excluded_by_intertoto(this, op) || cp == op || already_opponent(c, club) {
                 break 'proximo;
             }
-            if are_rival_clubs(cp.addr(), op.addr()) || (are_rival_nations(cp.addr(), op.addr()) && friendly_random(2) == 0) {
+            if are_rival_clubs(cp.addr(), op.addr()) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
             if cp.division().addr() == op.division().addr() {

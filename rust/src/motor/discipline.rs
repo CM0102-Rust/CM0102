@@ -10,8 +10,7 @@ use super::*;
 /// [pt] Os itens (8 bytes: +0 id da pessoa, +4 id da nação) do índice das nações da disciplina ([this+0xc], conta +0x12
 /// com sinal) da nação do `time` (+0x53), na ordem do índice: bsearch (0x946464 com 0x55e5f0, cdecl) pela chave (−1,
 /// nação), que iguala qualquer pessoa da nação; volta até o primeiro igual e segue até o último. 0 itens sem achar.
-pub(crate) unsafe fn nation_index_range(this: usize, team: usize) -> (usize, usize) {
-    let team = Club(team);
+pub(crate) unsafe fn nation_index_range(this: usize, team: Club) -> (usize, usize) {
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let key = [u32::MAX, read_usize(team.nation().addr()) as u32];
     let base = read_usize(this + discipline_fields::NATION_INDEX);
@@ -51,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, tea
     let mut l = [0u8; 14];
     let list = l.as_mut_ptr() as usize;
     exe::new_llist(list);
-    let (ini, fim) = nation_index_range(this, team);
+    let (ini, fim) = nation_index_range(this, Club(team));
     if ini != 0 {
         let mut e = ini;
         while e < fim {
@@ -211,8 +210,7 @@ pub(crate) unsafe fn discipline_record(this: usize, id: u32) -> usize {
 ///
 /// [pt] O órgão vale para o clube? Com nação (+0x17 ≠ −1): a nação do clube (+0x53) é ela; sem nação, com continente
 /// (+0x1b ≠ −1): o continente da nação do clube (+0x71) é ele; sem os dois, vale sempre. Clube nulo ou sem nação: não.
-pub(crate) unsafe fn ruling_body_covers_club(body: usize, club: usize) -> bool {
-    let club = Club(club);
+pub(crate) unsafe fn ruling_body_covers_club(body: usize, club: Club) -> bool {
     let nation = read_usize(body + ruling_body::NATION_ID) as u32;
     if nation == 0xffff_ffff {
         let continent = read_usize(body + ruling_body::CONTINENT_ID) as u32;
@@ -387,7 +385,7 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
             continue;
         }
         let body = ruling_body_of_rule(this, rule);
-        if ruling_body_covers_club(body, club) {
+        if ruling_body_covers_club(body, Club(club)) {
             continue;
         }
         let e = ruling_body_entry(body, id);
@@ -450,7 +448,7 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
             continue;
         }
         let orgao = ruling_body_of_rule(this, slots[k * 5]);
-        if !ruling_body_covers_club(orgao, clube) {
+        if !ruling_body_covers_club(orgao, Club(clube)) {
             let e = ruling_body_entry(orgao, id);
             if e != 0 {
                 p.soltas.push((k, e));
@@ -514,7 +512,7 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
             continue;
         }
         let body = ruling_body_of_rule(this, rule);
-        if ruling_body_covers_club(body, club) {
+        if ruling_body_covers_club(body, Club(club)) {
             continue;
         }
         let e = ruling_body_entry(body, id);
@@ -877,7 +875,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
     crate::comparison::branch("cpk_3 suspended by the competition");
     let club = Club(read_usize(player + staff::CLUB_JOB));
     if !club.is_null() {
-        if exe::human_manager_is_human_club(club.addr(), 0, 1, (0) as u32, 0) != 0 {
+        if exe::human_manager_is_human_club(club, 0, 1, (0) as u32, 0) != 0 {
             if let Some(s) = (0..20).map(|k| club.addr() + club::TEAM_SELECTED + k * 4).find(|&s| read_usize(s) == player) {
                 *(s as *mut usize) = 0; // leaves the slot
             }

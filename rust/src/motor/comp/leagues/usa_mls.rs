@@ -209,9 +209,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
 ///
 /// [pt] O código de divisão do clube `c` na MLS (usa_mls_get_club_division 0x909ec0: push c; call; add esp, 4 -> cdecl; a
 /// palavra baixa do eax: 0x413, 0x47b ou 0x414), se ele é da competição da liga (+0x57 do clube = +4 da liga).
-pub(crate) unsafe fn is_in_mls_division(this: usize, c: usize, code: i16) -> bool {
-    let c = Club(c);
-    c.division().addr() == read_usize(this + 4) && (exe::usa_mls_get_club_division(c.addr()) as u32) as u16 as i16 == code
+pub(crate) unsafe fn is_in_mls_division(this: usize, c: Club, code: i16) -> bool {
+    c.division().addr() == read_usize(this + 4) && (exe::usa_mls_get_club_division(c) as u32) as u16 as i16 == code
 }
 
 /// Creates the MLS table (the first division, code 0x413): the four clubs of the competition with that division code,
@@ -243,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 
     let mut i: i16 = 0;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n < read_i16(this + league::CLUB_COUNT) {
         let c = base + i as u16 as usize * club::SIZE;
-        if is_in_mls_division(this, c, 0x413) {
+        if is_in_mls_division(this, Club(c), 0x413) {
             exe::league_init_table_row(this, n as u8 as u32, c, 0, 0); // cqs1: the next row of the first division
             n += 1;
         }
@@ -300,7 +299,7 @@ pub(crate) unsafe fn create_division_stage(this: usize, code: i16, k: u32, curre
     let mut i = 0i32;
     while i < read_usize(G_CLUB_COUNT) as i32 && n < read_i16(this + league::CLUB_COUNT) {
         let c = base + i as usize * club::SIZE;
-        if is_in_mls_division(this, c, code) {
+        if is_in_mls_division(this, Club(c), code) {
             core::ptr::write_unaligned((v + 4 * n as usize) as *mut usize, c);
             n += 1;
         }
@@ -367,7 +366,7 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: usize, code: i16, 
     let mut i = 0i32;
     while i < read_usize(G_CLUB_COUNT) as i32 && (n as i16) < read_i16(this + league::CLUB_COUNT) && n < 8 {
         let c = base + i as usize * club::SIZE;
-        if is_in_mls_division(this, c, code) {
+        if is_in_mls_division(this, Club(c), code) {
             plan[n] = c;
             n += 1;
         }

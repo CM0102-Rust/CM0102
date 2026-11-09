@@ -15,7 +15,7 @@ use super::*;
 /// vezes: o plano antes (as pessoas da nação e, de cada uma, o que a 0x556e90 fará, serve_ban_match_plan), a original roda;
 /// confere, pessoa a pessoa, o contador novo ou a suspensão solta (livre: +0 = 0xff, +2 = −1).
 pub(crate) unsafe extern "thiscall" fn compare_serve_international_bans(this: usize, team: usize) {
-    let (ini, fim) = nation_index_range(this, team);
+    let (ini, fim) = nation_index_range(this, Club(team));
     let mut plan = Vec::new();
     let mut e = ini;
     while ini != 0 && e < fim {
@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this:
             continue;
         }
         let body = ruling_body_of_rule(this, rule);
-        if !ruling_body_covers_club(body, club) {
+        if !ruling_body_covers_club(body, Club(club)) {
             let e = ruling_body_entry(body, id);
             if e != 0 {
                 duvida[k] = plan[..k].iter().any(|x| *x == Some(e));

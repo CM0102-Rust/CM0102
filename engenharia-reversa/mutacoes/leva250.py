@@ -7,7 +7,7 @@ MUTACOES = [
     ('cpn_responder_so_a_nova', 'k -= 1;\n        if k == read_i32(e + 4) - 1 {\n            return 1;', 'k -= 1;\n        if true { // mutacao: so a mais nova\n            return 1;', 'cpn_2 respond all'),
     ('cpn_proximo_campo', '*next = p; // the next free field', '*next = p.wrapping_add(1); // mutacao: um campo adiante', 'cpn_2 next text field'),
     ('cpn_poucas_partidas', 'r = r * s1f as f64 * (1.0f32 / 12.0) as f64; // fewer than 12 matches', 'r = r * s1f as f64 * (1.0f32 / 6.0) as f64; // mutacao: s1/6', 'cpn_3 few matches'),
-    ('cpn_nota_negativa', 'r = r * player_club_reputation_ratio(player, club); // the refusal by reputation', 'r = r / player_club_reputation_ratio(player, club); // mutacao: dividida', 'cpn_3 negative rating'),
+    ('cpn_nota_negativa', 'r = r * player_club_reputation_ratio(player, Club(club)); // the refusal by reputation', 'r = r / player_club_reputation_ratio(player, Club(club)); // mutacao: dividida', 'cpn_3 negative rating'),
     ('cpn_peso_da_historia', 'weight as f64 * (1.0f32 / 60.0) as f64; // the weight of the story', 'weight as f64 * (1.0f32 / 30.0) as f64; // mutacao: 1/30', 'cpn_3 player rating'),
     ('cpn_aposentado_vira_treinador', 'write_i8(p + staff::JOB_FOR_CLUB, 0x10); // aposentado', 'write_i8(p + staff::JOB_FOR_CLUB, 5); // mutacao: vira treinador', 'cpn_4 retired player'),
     ('cpn_jovem_primeiro_clube', 'if s > melhor_nota {', 'if melhor == 0 { // mutacao: o primeiro clube valido', 'cpn_4 better club for the youngster'),

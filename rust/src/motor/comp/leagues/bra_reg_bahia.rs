@@ -304,8 +304,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_advance_stage(this: usize) 
 ///
 /// [pt] O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
 /// estadual) não é nula e o id do registro (+0) é o do global.
-pub(crate) unsafe fn is_in_state_league(club: usize, g: usize) -> bool {
-    let club = Club(club);
+pub(crate) unsafe fn is_in_state_league(club: Club, g: usize) -> bool {
     let comp = club.reserve_division().addr();
     comp != 0 && read_usize(comp) == read_usize(g)
 }
@@ -337,7 +336,7 @@ pub(crate) unsafe fn fill_state_league_table(this: usize, n: i16, file: usize, r
     let mut i: i16 = 0;
     let mut club = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        if is_in_state_league(club, g) {
+        if is_in_state_league(Club(club), g) {
             // simplification: the original pushes the row in eax with the high bits of the state league’s id; 0x687430 only reads the
             // byte. With girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;

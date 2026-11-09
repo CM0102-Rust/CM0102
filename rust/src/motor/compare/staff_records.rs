@@ -12,7 +12,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_champions_record(this:
     }
     let t = club.manager().addr();
     let notes = if t != 0 && read_usize(t + staff::NON_PLAYER) != 0 { (read_usize(t + staff::NON_PLAYER) + 8, 6) } else { (club.addr() + club::REPUTATION, 2) };
-    compare_champion_update("add_league_champions_record", this, club.addr(), notes, true, || o(this, club.addr(), comp),
+    compare_champion_update("add_league_champions_record", this, club, notes, true, || o(this, club.addr(), comp),
         || add_league_champions_record(this, club.addr(), comp));
 }
 
@@ -23,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usiz
         return o(this, club, game, partida);
     }
     let notes = (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club) as usize, 6);
-    compare_champion_update("add_cup_winners_record", this, club, notes, false, || o(this, club, game, partida),
+    compare_champion_update("add_cup_winners_record", this, Club(club), notes, false, || o(this, club, game, partida),
         || add_cup_winners_record(this, club, game, partida));
 }
 
@@ -54,8 +54,8 @@ pub(crate) unsafe extern "thiscall" fn compare_record_match_result(this: usize, 
     if *((p + fixture::CATEGORY) as *const u8) == 1 {
         return o(this, p, m);
     }
-    let a = club_manager_record(this, read_usize(p + fixture::HOME_CLUB));
-    let v = club_manager_record(this, read_usize(p + fixture::AWAY_CLUB));
+    let a = club_manager_record(this, Club(read_usize(p + fixture::HOME_CLUB)));
+    let v = club_manager_record(this, Club(read_usize(p + fixture::AWAY_CLUB)));
     let mut reg = Vec::new();
     for r in [a, v] {
         if r != 0 {
@@ -102,14 +102,14 @@ pub(crate) unsafe extern "thiscall" fn compare_add_supporters_player_of_year_rec
 /// Comparer for `add_cup_runners_up_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_cup_runners_up_record(this: usize, club: usize, game: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_RUNNERS_UP_RECORD);
-    compare_cup_placed("add_cup_runners_up_record", club, game, partida, || o(this, club, game, partida),
+    compare_cup_placed("add_cup_runners_up_record", Club(club), game, partida, || o(this, club, game, partida),
         || add_cup_runners_up_record(this, club, game, partida))
 }
 
 /// Comparer for `add_cup_third_place_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_cup_third_place_record(this: usize, club: usize, game: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_THIRD_PLACE_RECORD);
-    compare_cup_placed("add_cup_third_place_record", club, game, partida, || o(this, club, game, partida),
+    compare_cup_placed("add_cup_third_place_record", Club(club), game, partida, || o(this, club, game, partida),
         || add_cup_third_place_record(this, club, game, partida))
 }
 
@@ -166,13 +166,13 @@ pub(crate) unsafe extern "C" fn compare_staff_records_compare_clubs_by_manager_p
 /// os sorteios); com renovação de contrato ou clube/competição nulos, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_promotion_record(this: usize, club: usize, comp: usize, weight: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_ADD_PROMOTION_RECORD);
-    let reg = if club != 0 && comp != 0 { promotion_regions(this, club, true) } else { None };
+    let reg = if club != 0 && comp != 0 { promotion_regions(this, Club(club), true) } else { None };
     let reg = match reg {
         Some(r) => r,
         None => return o(this, club, comp, weight),
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, comp, weight),
-        || crate::rng::without_counting(|| apply_promotion(this, club, comp, weight, false)));
+        || crate::rng::without_counting(|| apply_promotion(this, Club(club), comp, weight, false)));
     SCOREBOARD.record(igual, || format!("add_promotion_record(clube {:x}, peso {}) {:x?} x {:x?}", club, weight as u8 as i8, mo, mr));
 }
 
@@ -181,13 +181,13 @@ pub(crate) unsafe extern "thiscall" fn compare_add_promotion_record(this: usize,
 /// [pt] Comparador: como o do acesso (sem o registro de pontos, que o rebaixamento não usa).
 pub(crate) unsafe extern "thiscall" fn compare_add_relegation_record(this: usize, club: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_RELEGATION_RECORD);
-    let reg = if club != 0 && comp != 0 { promotion_regions(this, club, false) } else { None };
+    let reg = if club != 0 && comp != 0 { promotion_regions(this, Club(club), false) } else { None };
     let reg = match reg {
         Some(r) => r,
         None => return o(this, club, comp),
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, comp),
-        || crate::rng::without_counting(|| apply_relegation(this, club, comp, false)));
+        || crate::rng::without_counting(|| apply_relegation(this, Club(club), comp, false)));
     SCOREBOARD.record(igual, || format!("add_relegation_record(clube {:x}) {:x?} x {:x?}", club, mo, mr));
 }
 
@@ -206,7 +206,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_qualified_for_round_record(th
         return o(this, club.addr(), comp, stage, round, weight);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, club.addr(), comp, stage, round, weight),
-        || record_qualification(this, club.addr(), comp, stage, round, weight, false));
+        || record_qualification(this, club, comp, stage, round, weight, false));
     SCOREBOARD.record(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", club.addr(), weight as u8 as i8, mo, mr));
 }
 

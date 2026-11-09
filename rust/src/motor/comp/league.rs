@@ -227,14 +227,14 @@ pub(crate) unsafe extern "thiscall" fn relegate_club_to_division(_this: usize, c
     let old = club.division().addr();
     core::ptr::write_unaligned((club.addr() + club::DIVISION) as *mut u32, division as u32);
     core::ptr::write_unaligned((club.addr() + club::LAST_DIVISION) as *mut u32, old as u32);
-    exe::contract_manager_trigger_relegation_clauses(read_usize(G_CONTRACT_MANAGER), club.addr(), old);
+    exe::contract_manager_trigger_relegation_clauses(read_usize(G_CONTRACT_MANAGER), club, old);
     let comps = read_usize(G_COMP_OBJECT_TABLE);
     if comps != 0 && division != 0 && read_usize(comps + read_usize(division) * 4) != 0 {
         return;
     }
-    if exe::human_manager_is_human_club(club.addr(), 1, 1, 0, 0) != 0 {
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
         crate::comparison::branch("cqh_4 manager leaves");
-        exe::manager_manager_remove_club_manager(read_usize(G_MANAGER_MANAGER), club.addr(), 1, 7, 0);
+        exe::manager_manager_remove_club_manager(read_usize(G_MANAGER_MANAGER), club, 1, 7, 0);
     }
 }
 
@@ -1812,7 +1812,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     if out as u8 != 0xff {
         let nacao = club.nation().addr();
         let continent = if nacao != 0 { read_usize(nacao + nation::CONTINENT) } else { 0 };
-        exe::news_send_by_scope(news, n, club.addr(), read_usize(league + 4), nacao, continent, out);
+        exe::news_send_by_scope(news, n, club, read_usize(league + 4), nacao, continent, out);
         return 1;
     }
     // the competition’s promotion (+0x1c) or relegation (+0x20) division, 0x6b records in [0xae23d0]
@@ -1836,7 +1836,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
             other(0x1c);
         }
         7 | 6 | 0xfe => {
-            exe::news_send_to_club_manager(news, n, club.addr());
+            exe::news_send_to_club_manager(news, n, club);
         }
         1 | 2 => {
             exe::news_send_to_division_managers(news, n, read_usize(league + 4));
@@ -3128,7 +3128,7 @@ pub(crate) unsafe fn pay_tv_money(league: usize, value: i32, filter: usize, news
         let row = read_usize(league + league::TABLE) + 0x3b * i as i32 as usize;
         let club = Club(read_usize(row));
         if filter == 0 || club.last_division().addr() == filter {
-            exe::finance_add_tv_revenue(exe::financetable_get_club_finance(*(G_FINANCE_TABLE as *const usize), club.addr()), value); // the TV money
+            exe::finance_add_tv_revenue(exe::financetable_get_club_finance(*(G_FINANCE_TABLE as *const usize), club), value); // the TV money
             if news {
                 exe::comp_send_tv_rights_news(league, read_usize(read_usize(league + league::TABLE) + 0x3b * i as i32 as usize), value);
             }
@@ -3206,7 +3206,7 @@ pub(crate) unsafe extern "thiscall" fn league_record_season_honours(league: usiz
             highlight = exe::database_get_national_team(nation(a));
         }
     }
-    exe::comp_util_add_history_record(league, champion.addr(), runner_up, third, highlight) // champion, runner-up, third
+    exe::comp_util_add_history_record(league, champion, runner_up, third, highlight) // champion, runner-up, third
 }
 
 /// Memory regions of the club competition history: count, pointer and the 26-byte rows.
@@ -3830,13 +3830,13 @@ pub(crate) unsafe extern "thiscall" fn league_process_promotion_relegation_chain
 pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club: usize, division: usize, slot: u32) {
     let club = Club(club);
     crate::comparison::branch("cpm_3 change division");
-    let before = exe::squad_manager_club_uses_squad_numbers(read_usize(G_SQUAD_MANAGER), club.addr(), (0) as u32);
+    let before = exe::squad_manager_club_uses_squad_numbers(read_usize(G_SQUAD_MANAGER), club, (0) as u32);
     write_usize(club.addr() + club::LAST_DIVISION, club.division().addr()); // the division of the last season
     write_usize(club.addr() + club::DIVISION, division);
-    let numeros = (before == 0 && exe::squad_manager_club_uses_squad_numbers(read_usize(G_SQUAD_MANAGER), club.addr(), (0) as u32) != 0) as u32;
-    exe::contract_manager_reset_division_clauses(read_usize(G_CONTRACT_MANAGER), club.addr(), numeros);
+    let numeros = (before == 0 && exe::squad_manager_club_uses_squad_numbers(read_usize(G_SQUAD_MANAGER), club, (0) as u32) != 0) as u32;
+    exe::contract_manager_reset_division_clauses(read_usize(G_CONTRACT_MANAGER), club, numeros);
     if slot != 0 && club.manager().addr() == 0 {
-        exe::manager_manager_add_job_vacancy(read_usize(G_MANAGER_MANAGER), club.addr(), 0);
+        exe::manager_manager_add_job_vacancy(read_usize(G_MANAGER_MANAGER), club, 0);
     }
     if division == 0 {
         return;
@@ -3850,7 +3850,7 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club:
             if required_capacity != -1 {
                 crate::comparison::branch("cpm_3 division stadium");
                 let required_seats = core::ptr::read_unaligned((comp + league::REQUIRED_SEATS) as *const i16);
-                let f = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club.addr());
+                let f = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
                 (exe::finance_upgrade_stadium_for_league(f, required_seats as i32, required_capacity as i32, id, 0) as u32); // the stadium works
             }
         }
@@ -4080,10 +4080,10 @@ pub(crate) unsafe extern "thiscall" fn limit_club_division_tier(this: usize, val
     while i < *((this + league::CLUB_COUNT) as *const i16) {
         let row = || read_usize(this + league::TABLE).wrapping_add(i as isize as usize * 0x3b);
         if away != 0xfd && *((row() + 0x37) as *const u8) != away {
-            cap_professional_status(read_usize(row()), value, baixar);
+            cap_professional_status(Club(read_usize(row())), value, baixar);
         }
         if inside != 0xfd && *((row() + 0x37) as *const u8) == inside {
-            cap_professional_status(read_usize(row()), value, baixar);
+            cap_professional_status(Club(read_usize(row())), value, baixar);
         }
         i = i.wrapping_add(1);
     }

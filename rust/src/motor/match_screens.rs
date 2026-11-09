@@ -448,13 +448,12 @@ pub(crate) unsafe fn match_screens_error_box(row: u32) {
 ///
 /// [pt] O nome do time no texto 0xde1f64 do cabeçalho da partida: só o nome ("  %s") com `so_o_nome`;
 /// senão a seleção B ("'B'", 0x53b900) ou o time reserva ("Res.").
-pub(crate) unsafe fn format_match_team_name(team: usize, so_name: u8) {
-    let team = Club(team);
+pub(crate) unsafe fn format_match_team_name(team: Club, so_name: u8) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     if so_name != 0 {
         format(0xde1f64, 0x987ff0, team.addr() + club::SHORT_NAME);
-    } else if exe::database_is_national_team(team.addr()) != 0 {
+    } else if exe::database_is_national_team(team) != 0 {
         let c = team.gender_name() as i32;
         text(0xde1f64, 0xa164a4, c, c, team.addr() + club::NAME);
     } else {
@@ -569,13 +568,13 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     // uniforme vai num registrador sujo (estendido)
     let (mut cor_a, mut cor_b) = (0u32, 0u32);
     colours(rd(p + live_match::HOME_CLUB), rb(st + match_record::HOME_KIT) as usize, &mut cor_a, &mut cor_b);
-    format_match_team_name(rd(p + live_match::HOME_CLUB), rb(p + live_match::HOME_SIDE_MARK));
+    format_match_team_name(Club(rd(p + live_match::HOME_CLUB)), rb(p + live_match::HOME_SIDE_MARK));
     text_of_manager(sm, 0x64, 0xa, 0x1bc, 0x46, 0x30, cor_b as usize, 1, 7, cor_a as usize, BUF, 1);
     caixa(sm, 0x64, 0xa, 0x1bc, 0x46, 1, 0, 1, 7, 0, 0, 1, rd(p + live_match::HOME_CLUB));
     let r = if rb(st + match_record::HOME_TEAM) == 0xfd { format(BUF, 0x9b760c) } else { format(BUF, 0x98806c, rb(st + match_record::HOME_TEAM) as u32) };
     text_of_manager(sm, 0x18f, 0xf, 0x1b7, 0x41, 0x30, colour_word(G_GUI_COLOUR_PALE_GREY), 0xc, 6, colour_with_high_bits(r as usize, G_GUI_COLOUR_BLACK), BUF, 1);
     colours(rd(p + live_match::AWAY_CLUB), rb(st + match_record::AWAY_KIT) as usize, &mut cor_a, &mut cor_b);
-    format_match_team_name(rd(p + live_match::AWAY_CLUB), rb(p + live_match::AWAY_SIDE_MARK));
+    format_match_team_name(Club(rd(p + live_match::AWAY_CLUB)), rb(p + live_match::AWAY_SIDE_MARK));
     text_of_manager(sm, 0x1be, 0xa, 0x316, 0x46, 0x30, cor_b as usize, 1, 7, cor_a as usize, BUF, 1);
     caixa(sm, 0x1be, 0xa, 0x316, 0x46, 1, 0, 1, 7, 0, 0, 1, rd(p + live_match::AWAY_CLUB));
     let r = if rb(st + match_record::HOME_TEAM) == 0xfd { format(BUF, 0x9b760c) } else { format(BUF, 0x98806c, rb(st + match_record::AWAY_TEAM) as u32) };
@@ -2063,7 +2062,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
         } else if agora > antes {
             row(current_human_display(), 0x40001, 0, 0, 0, 0, 1, queue, 1, colour_with_high_bits(ret, 0xaebdcc), 0, 0xc, 0, colour_word(G_GUI_COLOUR_RED), 0, 0, 0, 0, lst);
         }
-        let colour = if exe::human_manager_is_human_club(club.addr(), 0, 1, 0, 0) != 0 { colour_word(G_GUI_COLOUR_YELLOW) } else { colour_word(G_GUI_COLOUR_PALE_GREY) };
+        let colour = if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 { colour_word(G_GUI_COLOUR_YELLOW) } else { colour_word(G_GUI_COLOUR_PALE_GREY) };
         cell(sm, lst, 2, queue, 1, 0, 1, 3, colour, club.addr() + club::SHORT_NAME, 0x7d5, club.addr());
         let d = r + column.wrapping_mul(14);
         for (o, col) in [(0x11usize, 4usize), (0x12, 5), (0x13, 6), (0x14, 7)] {
@@ -3132,11 +3131,11 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                         for (side, desvio) in [(0x1cusize, 0u32), (0x20, 4)] {
                             let team = Club(u(m4 + side));
                             format(BUF, 0x987ff0, team.addr() + club::SHORT_NAME);
-                            let h = exe::human_manager_is_human_club(team.addr(), 0, 1, 0, 0);
+                            let h = exe::human_manager_is_human_club(team, 0, 1, 0, 0);
                             exe::screenmanager_set_widget_text_colour(sm, it + desvio, if h != 0 { colour_word_u32(G_GUI_COLOUR_YELLOW) } else { colour_word_u32(0xaebde8) });
                             exe::screenmanager_set_widget_text(sm, it + desvio, BUF);
                             exe::screenmanager_set_widget_id(sm, it + desvio, if b(m4 + fixture::HOME_SIDE_MARK + desvio as usize / 4) != 0 { 0x7d5 } else { 0x7d6 });
-                            exe::screenmanager_set_widget_data(sm, it + desvio, team.addr());
+                            exe::screenmanager_set_widget_data(sm, it + desvio, team);
                             if desvio == 0 {
                                 match g1 {
                                     0xfe => text(BUF, 0x99c9e4, 0xad9c64),

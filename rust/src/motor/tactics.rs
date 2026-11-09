@@ -776,8 +776,8 @@ pub(crate) unsafe extern "thiscall" fn row_person(this: usize, club: usize, whic
 /// outros casos, o id do clube.
 pub(crate) unsafe extern "stdcall" fn tactics_row(club: usize, human: u32) -> i32 {
     let club = Club(club);
-    if exe::human_manager_is_human_club(club.addr(), 1, (1) as u32, (0) as u32, 0) != 0 && human != 0 {
-        if exe::club_is_national_team(club.addr()) != 0 {
+    if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0 && human != 0 {
+        if exe::club_is_national_team(club) != 0 {
             return -1;
         }
         let manager = club.manager().addr();
@@ -786,7 +786,7 @@ pub(crate) unsafe extern "stdcall" fn tactics_row(club: usize, human: u32) -> i3
         }
         let clubs = *(G_CLUB_COUNT as *const i32);
         let base = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(manager as *const i32));
-        let i = base.wrapping_add(if exe::database_is_national_team(club.addr()) != 0 { 0xf } else { -1 }).wrapping_add(clubs);
+        let i = base.wrapping_add(if exe::database_is_national_team(club) != 0 { 0xf } else { -1 }).wrapping_add(clubs);
         if i < 0 || i >= clubs.wrapping_add(0x20) {
             return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club.addr(), human);
         }
@@ -1299,11 +1299,11 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
     if club.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CLUB_TACTIC)(this, club.addr(), team); // message box: original only
     }
-    if exe::human_manager_is_human_club(club.addr(), 1, (1) as u32, (0) as u32, 0) != 0 {
+    if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0 {
         let manager = read_usize(G_HUMAN_MANAGER);
         if exe::human_manager_is_on_holiday(manager, club.manager().addr()) == 0 || exe::human_manager_get_holiday_option(manager, 2, club.manager().addr()) != 0 {
             crate::comparison::branch("cpx_8 human tactic");
-            exe::human_manager_select_tactic_slot(manager, (team) as i32, club.addr(), club.manager().addr()); // cpx8: the slot by team
+            exe::human_manager_select_tactic_slot(manager, (team) as i32, club, club.manager().addr()); // cpx8: the slot by team
             return exe::human_manager_get_active_tactic(manager, club.manager().addr());
         }
     }
@@ -1416,7 +1416,7 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
         core::ptr::write_unaligned(home, -1);
         return 0;
     }
-    if exe::database_is_national_team(club.addr()) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         let nation = core::ptr::read_unaligned((p + staff::NATIONAL_JOB) as *const usize);
         if nation == 0 || core::ptr::read_unaligned((nation + nation::THREE_LETTER_NAME) as *const u32) != core::ptr::read_unaligned((club.addr() + club::NATION) as *const u32) {
             core::ptr::write_unaligned(home, -1);

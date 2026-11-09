@@ -5,6 +5,28 @@ use super::*;
 // code uses, checked against the original routines). Fields wider than 8 bytes give only their address.
 // [pt] Os ponteiros tipados dos registros, gerados do fields.rs: `club.reputation()` lê o campo com o tipo dele.
 
+/// Anything that is an address in the game's memory: a raw `usize` or a typed record pointer. The exe:: wrappers take
+/// `impl Addr` where the original passes a pointer, so `exe::x(club)` needs no `.addr()`. `i32` is here only for
+/// untyped integer literals (`exe::x(this, 0)`): Rust gives a bare `0` the type `i32`.
+/// [pt] Um endereço na memória do jogo: `usize` cru ou um ponteiro de registro tipado (os invólucros exe:: aceitam os dois).
+pub(crate) trait Addr: Copy {
+    fn addr(self) -> usize;
+}
+
+impl Addr for usize {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self
+    }
+}
+
+impl Addr for i32 {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self as usize
+    }
+}
+
 /// A `city` record in the game's memory (fields in `fields::city`). [pt] Um registro `city` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -74,6 +96,13 @@ impl City {
     #[inline(always)]
     pub(crate) unsafe fn set_weather(self, v: i32) {
         write_i32(self.0 + city::WEATHER, v)
+    }
+}
+
+impl Addr for City {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -476,6 +505,13 @@ impl Club {
     }
 }
 
+impl Addr for Club {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `competition` record in the game's memory (fields in `fields::competition`). [pt] Um registro `competition` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -564,6 +600,13 @@ impl Competition {
     #[inline(always)]
     pub(crate) unsafe fn set_reputation(self, v: i16) {
         write_i16(self.0 + competition::REPUTATION, v)
+    }
+}
+
+impl Addr for Competition {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -834,6 +877,13 @@ impl Contract {
     #[inline(always)]
     pub(crate) unsafe fn set_squad_status(self, v: u8) {
         write_u8(self.0 + contract::SQUAD_STATUS, v)
+    }
+}
+
+impl Addr for Contract {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -1162,6 +1212,13 @@ impl Nation {
     }
 }
 
+impl Addr for Nation {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `stadium` record in the game's memory (fields in `fields::stadium`). [pt] Um registro `stadium` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -1263,6 +1320,13 @@ impl Stadium {
     #[inline(always)]
     pub(crate) unsafe fn set_under_soil_heating(self, v: u8) {
         write_u8(self.0 + stadium::UNDER_SOIL_HEATING, v)
+    }
+}
+
+impl Addr for Stadium {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -1578,6 +1642,13 @@ impl Staff {
     }
 }
 
+impl Addr for Staff {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `bra_nat_third` record in the game's memory (fields in `fields::bra_nat_third`). [pt] Um registro `bra_nat_third` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -1602,6 +1673,13 @@ impl BraNatThird {
     #[inline(always)]
     pub(crate) unsafe fn set_club_list(self, v: usize) {
         write_usize(self.0 + bra_nat_third::CLUB_LIST, v)
+    }
+}
+
+impl Addr for BraNatThird {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -1719,6 +1797,13 @@ impl ContractManagerFields {
     #[inline(always)]
     pub(crate) unsafe fn set_held_offers(self, v: usize) {
         write_usize(self.0 + contract_manager_fields::HELD_OFFERS, v)
+    }
+}
+
+impl Addr for ContractManagerFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -1983,6 +2068,13 @@ impl Cup {
     }
 }
 
+impl Addr for Cup {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `eng_auto_cup` record in the game's memory (fields in `fields::eng_auto_cup`). [pt] Um registro `eng_auto_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2019,6 +2111,13 @@ impl EngAutoCup {
     }
 }
 
+impl Addr for EngAutoCup {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `eng_cc_cup` record in the game's memory (fields in `fields::eng_cc_cup`). [pt] Um registro `eng_cc_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2043,6 +2142,13 @@ impl EngCcCup {
     #[inline(always)]
     pub(crate) unsafe fn set_european_entrant_count(self, v: i8) {
         write_i8(self.0 + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, v)
+    }
+}
+
+impl Addr for EngCcCup {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -2091,6 +2197,13 @@ impl EngFaCup {
     }
 }
 
+impl Addr for EngFaCup {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `fra_first` record in the game's memory (fields in `fields::fra_first`). [pt] Um registro `fra_first` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2124,6 +2237,13 @@ impl FraFirst {
     #[inline(always)]
     pub(crate) unsafe fn set_lower_marker(self, v: usize) {
         write_usize(self.0 + fra_first::LOWER_MARKER, v)
+    }
+}
+
+impl Addr for FraFirst {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -2326,6 +2446,13 @@ impl Friendly {
     }
 }
 
+impl Addr for Friendly {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `injury_fields` record in the game's memory (fields in `fields::injury_fields`). [pt] Um registro `injury_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2434,6 +2561,13 @@ impl InjuryFields {
     }
 }
 
+impl Addr for InjuryFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `intertoto_cup` record in the game's memory (fields in `fields::intertoto_cup`). [pt] Um registro `intertoto_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2458,6 +2592,13 @@ impl IntertotoCup {
     #[inline(always)]
     pub(crate) unsafe fn set_winners_sent_to_uefa(self, v: usize) {
         write_usize(self.0 + intertoto_cup::WINNERS_SENT_TO_UEFA, v)
+    }
+}
+
+impl Addr for IntertotoCup {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -2929,6 +3070,13 @@ impl League {
     }
 }
 
+impl Addr for League {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `player_regen_fields` record in the game's memory (fields in `fields::player_regen_fields`). [pt] Um registro `player_regen_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -3052,6 +3200,13 @@ impl PlayerRegenFields {
     #[inline(always)]
     pub(crate) unsafe fn set_player_data_pool_capacity(self, v: usize) {
         write_usize(self.0 + player_regen_fields::PLAYER_DATA_POOL_CAPACITY, v)
+    }
+}
+
+impl Addr for PlayerRegenFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -3190,6 +3345,13 @@ impl PlayerSearchFields {
     }
 }
 
+impl Addr for PlayerSearchFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `shortlist_manager_fields` record in the game's memory (fields in `fields::shortlist_manager_fields`). [pt] Um registro `shortlist_manager_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -3283,6 +3445,13 @@ impl ShortlistManagerFields {
     #[inline(always)]
     pub(crate) unsafe fn set_club_shortlists(self, v: usize) {
         write_usize(self.0 + shortlist_manager_fields::CLUB_SHORTLISTS, v)
+    }
+}
+
+impl Addr for ShortlistManagerFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -3602,6 +3771,13 @@ impl TransferManagerFields {
     }
 }
 
+impl Addr for TransferManagerFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `uefa_cup` record in the game's memory (fields in `fields::uefa_cup`). [pt] Um registro `uefa_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -3626,6 +3802,13 @@ impl UefaCup {
     #[inline(always)]
     pub(crate) unsafe fn set_preliminary_club_count(self, v: i8) {
         write_i8(self.0 + uefa_cup::PRELIMINARY_CLUB_COUNT, v)
+    }
+}
+
+impl Addr for UefaCup {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -3869,6 +4052,13 @@ impl Offer {
     #[inline(always)]
     pub(crate) unsafe fn set_instalments(self, v: u8) {
         write_u8(self.0 + offer::INSTALMENTS, v)
+    }
+}
+
+impl Addr for Offer {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -4409,6 +4599,13 @@ impl PlayerSheet {
     #[inline(always)]
     pub(crate) unsafe fn set_player_morale(self, v: i8) {
         write_i8(self.0 + player_sheet::PLAYER_MORALE, v)
+    }
+}
+
+impl Addr for PlayerSheet {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -5879,6 +6076,13 @@ impl Engine {
     }
 }
 
+impl Addr for Engine {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `match_player` record in the game's memory (fields in `fields::match_player`). [pt] Um registro `match_player` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -7027,6 +7231,13 @@ impl MatchPlayer {
     }
 }
 
+impl Addr for MatchPlayer {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `non_player` record in the game's memory (fields in `fields::non_player`). [pt] Um registro `non_player` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -7288,6 +7499,13 @@ impl NonPlayer {
     }
 }
 
+impl Addr for NonPlayer {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `preferences` record in the game's memory (fields in `fields::preferences`). [pt] Um registro `preferences` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -7366,6 +7584,13 @@ impl Preferences {
     #[inline(always)]
     pub(crate) unsafe fn set_staff_disliked_staff1(self, v: i32) {
         write_i32(self.0 + preferences::STAFF_DISLIKED_STAFF1, v)
+    }
+}
+
+impl Addr for Preferences {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -7756,6 +7981,13 @@ impl Fixture {
     }
 }
 
+impl Addr for Fixture {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `match_manager` record in the game's memory (fields in `fields::match_manager`). [pt] Um registro `match_manager` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -7969,6 +8201,13 @@ impl MatchManager {
     #[inline(always)]
     pub(crate) unsafe fn set_tactics_row(self, v: u8) {
         write_u8(self.0 + match_manager::TACTICS_ROW, v)
+    }
+}
+
+impl Addr for MatchManager {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -8364,6 +8603,13 @@ impl Finance {
     }
 }
 
+impl Addr for Finance {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `stadium_obj` record in the game's memory (fields in `fields::stadium_obj`). [pt] Um registro `stadium_obj` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -8445,6 +8691,13 @@ impl StadiumObj {
     }
 }
 
+impl Addr for StadiumObj {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `fixture_manager` record in the game's memory (fields in `fields::fixture_manager`). [pt] Um registro `fixture_manager` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -8522,6 +8775,13 @@ impl FixtureManager {
     }
 }
 
+impl Addr for FixtureManager {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `age_record` record in the game's memory (fields in `fields::age_record`). [pt] Um registro `age_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -8547,6 +8807,13 @@ impl AgeRecord {
     #[inline(always)]
     pub(crate) fn match_date_addr(self) -> usize {
         self.0 + age_record::MATCH_DATE
+    }
+}
+
+impl Addr for AgeRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -8595,6 +8862,13 @@ impl AppearanceClause {
     }
 }
 
+impl Addr for AppearanceClause {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `ban_appeal` record in the game's memory (fields in `fields::ban_appeal`). [pt] Um registro `ban_appeal` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -8633,6 +8907,13 @@ impl BanAppeal {
     #[inline(always)]
     pub(crate) unsafe fn set_rules(self, v: i32) {
         write_i32(self.0 + ban_appeal::RULES, v)
+    }
+}
+
+impl Addr for BanAppeal {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -8717,6 +8998,13 @@ impl BanRecord {
     }
 }
 
+impl Addr for BanRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `ban_slot` record in the game's memory (fields in `fields::ban_slot`). [pt] Um registro `ban_slot` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -8750,6 +9038,13 @@ impl BanSlot {
     #[inline(always)]
     pub(crate) unsafe fn set_value(self, v: u32) {
         write_u32(self.0 + ban_slot::VALUE, v)
+    }
+}
+
+impl Addr for BanSlot {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -8897,6 +9192,13 @@ impl BoardRecord {
     }
 }
 
+impl Addr for BoardRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `career_entry` record in the game's memory (fields in `fields::career_entry`). [pt] Um registro `career_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -8978,6 +9280,13 @@ impl CareerEntry {
     }
 }
 
+impl Addr for CareerEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `club_discipline_record` record in the game's memory (fields in `fields::club_discipline_record`). [pt] Um registro `club_discipline_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9016,6 +9325,13 @@ impl ClubDisciplineRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_year(self, v: u16) {
         write_u16(self.0 + club_discipline_record::YEAR, v)
+    }
+}
+
+impl Addr for ClubDisciplineRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -9242,6 +9558,13 @@ impl ClubRecord {
     }
 }
 
+impl Addr for ClubRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `club_record_entry` record in the game's memory (fields in `fields::club_record_entry`). [pt] Um registro `club_record_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9284,6 +9607,13 @@ impl ClubRecordEntry {
     #[inline(always)]
     pub(crate) unsafe fn set_seasons(self, v: i16) {
         write_i16(self.0 + club_record_entry::SEASONS, v)
+    }
+}
+
+impl Addr for ClubRecordEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -9395,6 +9725,13 @@ impl ClubRecordsFields {
     }
 }
 
+impl Addr for ClubRecordsFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `club_shortlist` record in the game's memory (fields in `fields::club_shortlist`). [pt] Um registro `club_shortlist` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9428,6 +9765,13 @@ impl ClubShortlist {
     #[inline(always)]
     pub(crate) unsafe fn set_days(self, v: u8) {
         write_u8(self.0 + club_shortlist::DAYS, v)
+    }
+}
+
+impl Addr for ClubShortlist {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -9528,6 +9872,13 @@ impl CommentaryQueue {
     }
 }
 
+impl Addr for CommentaryQueue {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `comp_stats_club` record in the game's memory (fields in `fields::comp_stats_club`). [pt] Um registro `comp_stats_club` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9579,6 +9930,13 @@ impl CompStatsClub {
     #[inline(always)]
     pub(crate) unsafe fn set_worst_position(self, v: u8) {
         write_u8(self.0 + comp_stats_club::WORST_POSITION, v)
+    }
+}
+
+impl Addr for CompStatsClub {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -9695,6 +10053,13 @@ impl ContractOffer {
     }
 }
 
+impl Addr for ContractOffer {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `contract_talks` record in the game's memory (fields in `fields::contract_talks`). [pt] Um registro `contract_talks` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9731,6 +10096,13 @@ impl ContractTalks {
     }
 }
 
+impl Addr for ContractTalks {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `count_record` record in the game's memory (fields in `fields::count_record`). [pt] Um registro `count_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9756,6 +10128,13 @@ impl CountRecord {
     #[inline(always)]
     pub(crate) fn holder_date_addr(self) -> usize {
         self.0 + count_record::HOLDER_DATE
+    }
+}
+
+impl Addr for CountRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -9966,6 +10345,13 @@ impl CupRound {
     }
 }
 
+impl Addr for CupRound {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `cup_tie` record in the game's memory (fields in `fields::cup_tie`). [pt] Um registro `cup_tie` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10074,6 +10460,13 @@ impl CupTie {
     }
 }
 
+impl Addr for CupTie {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `day_competition` record in the game's memory (fields in `fields::day_competition`). [pt] Um registro `day_competition` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10146,6 +10539,13 @@ impl DayCompetition {
     }
 }
 
+impl Addr for DayCompetition {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `day_group` record in the game's memory (fields in `fields::day_group`). [pt] Um registro `day_group` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10206,6 +10606,13 @@ impl DayGroup {
     #[inline(always)]
     pub(crate) unsafe fn set_has_marked(self, v: i32) {
         write_i32(self.0 + day_group::HAS_MARKED, v)
+    }
+}
+
+impl Addr for DayGroup {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -10380,6 +10787,13 @@ impl DayMatch {
     }
 }
 
+impl Addr for DayMatch {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `decision_date` record in the game's memory (fields in `fields::decision_date`). [pt] Um registro `decision_date` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10422,6 +10836,13 @@ impl DecisionDate {
     #[inline(always)]
     pub(crate) unsafe fn set_kind(self, v: u8) {
         write_u8(self.0 + decision_date::KIND, v)
+    }
+}
+
+impl Addr for DecisionDate {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -10538,6 +10959,13 @@ impl DisciplineFields {
     }
 }
 
+impl Addr for DisciplineFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `discipline_record` record in the game's memory (fields in `fields::discipline_record`). [pt] Um registro `discipline_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10580,6 +11008,13 @@ impl DisciplineRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_held_ban_count(self, v: u8) {
         write_u8(self.0 + discipline_record::HELD_BAN_COUNT, v)
+    }
+}
+
+impl Addr for DisciplineRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -10664,6 +11099,13 @@ impl EnglishNameTables {
     }
 }
 
+impl Addr for EnglishNameTables {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `event_type` record in the game's memory (fields in `fields::event_type`). [pt] Um registro `event_type` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10709,6 +11151,13 @@ impl EventType {
     }
 }
 
+impl Addr for EventType {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `exchange_player` record in the game's memory (fields in `fields::exchange_player`). [pt] Um registro `exchange_player` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10745,6 +11194,13 @@ impl ExchangePlayer {
     }
 }
 
+impl Addr for ExchangePlayer {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `fans_player_record` record in the game's memory (fields in `fields::fans_player_record`). [pt] Um registro `fans_player_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10769,6 +11225,13 @@ impl FansPlayerRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_year(self, v: u16) {
         write_u16(self.0 + fans_player_record::YEAR, v)
+    }
+}
+
+impl Addr for FansPlayerRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -10805,6 +11268,13 @@ impl FreeTransferEntry {
     #[inline(always)]
     pub(crate) unsafe fn set_compensation(self, v: usize) {
         write_usize(self.0 + free_transfer_entry::COMPENSATION, v)
+    }
+}
+
+impl Addr for FreeTransferEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -10867,6 +11337,13 @@ impl FriendlyMatch {
     }
 }
 
+impl Addr for FriendlyMatch {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `future_transfer` record in the game's memory (fields in `fields::future_transfer`). [pt] Um registro `future_transfer` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10891,6 +11368,13 @@ impl FutureTransfer {
     #[inline(always)]
     pub(crate) unsafe fn set_offer_slot(self, v: usize) {
         write_usize(self.0 + future_transfer::OFFER_SLOT, v)
+    }
+}
+
+impl Addr for FutureTransfer {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -10924,6 +11408,13 @@ impl GoalsInMatchRecord {
     #[inline(always)]
     pub(crate) fn match_addr(self) -> usize {
         self.0 + goals_in_match_record::MATCH
+    }
+}
+
+impl Addr for GoalsInMatchRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -10963,6 +11454,13 @@ impl HeldBan {
     }
 }
 
+impl Addr for HeldBan {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `human_manager_sheet` record in the game's memory (fields in `fields::human_manager_sheet`). [pt] Um registro `human_manager_sheet` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10999,6 +11497,13 @@ impl HumanManagerSheet {
     }
 }
 
+impl Addr for HumanManagerSheet {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `illness_outbreak` record in the game's memory (fields in `fields::illness_outbreak`). [pt] Um registro `illness_outbreak` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11023,6 +11528,13 @@ impl IllnessOutbreak {
     #[inline(always)]
     pub(crate) unsafe fn set_club_id(self, v: i32) {
         write_i32(self.0 + illness_outbreak::CLUB_ID, v)
+    }
+}
+
+impl Addr for IllnessOutbreak {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -11098,6 +11610,13 @@ impl InjuryEntry {
     }
 }
 
+impl Addr for InjuryEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `instalment` record in the game's memory (fields in `fields::instalment`). [pt] Um registro `instalment` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11140,6 +11659,13 @@ impl Instalment {
     #[inline(always)]
     pub(crate) unsafe fn set_remaining(self, v: u8) {
         write_u8(self.0 + instalment::REMAINING, v)
+    }
+}
+
+impl Addr for Instalment {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -11220,6 +11746,13 @@ impl IntlDateEntry {
     }
 }
 
+impl Addr for IntlDateEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `job_vacancy` record in the game's memory (fields in `fields::job_vacancy`). [pt] Um registro `job_vacancy` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11244,6 +11777,13 @@ impl JobVacancy {
     #[inline(always)]
     pub(crate) unsafe fn set_club_id(self, v: usize) {
         write_usize(self.0 + job_vacancy::CLUB_ID, v)
+    }
+}
+
+impl Addr for JobVacancy {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -11283,6 +11823,13 @@ impl KeyNationRecord {
     }
 }
 
+impl Addr for KeyNationRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `language_entry` record in the game's memory (fields in `fields::language_entry`). [pt] Um registro `language_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11316,6 +11863,13 @@ impl LanguageEntry {
     #[inline(always)]
     pub(crate) unsafe fn set_fluency(self, v: u8) {
         write_u8(self.0 + language_entry::FLUENCY, v)
+    }
+}
+
+impl Addr for LanguageEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -11379,6 +11933,13 @@ impl LeagueProjection {
     #[inline(always)]
     pub(crate) unsafe fn set_played(self, v: i16) {
         write_i16(self.0 + league_projection::PLAYED, v)
+    }
+}
+
+impl Addr for LeagueProjection {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -11469,6 +12030,13 @@ impl LeagueRoundDate {
     #[inline(always)]
     pub(crate) unsafe fn set_venue_value(self, v: i32) {
         write_i32(self.0 + league_round_date::VENUE_VALUE, v)
+    }
+}
+
+impl Addr for LeagueRoundDate {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -11742,6 +12310,13 @@ impl LeagueTableRow {
     }
 }
 
+impl Addr for LeagueTableRow {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `lineup_row` record in the game's memory (fields in `fields::lineup_row`). [pt] Um registro `lineup_row` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11793,6 +12368,13 @@ impl LineupRow {
     #[inline(always)]
     pub(crate) unsafe fn set_rating(self, v: u8) {
         write_u8(self.0 + lineup_row::RATING, v)
+    }
+}
+
+impl Addr for LineupRow {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -11963,6 +12545,13 @@ impl LiveMatch {
     }
 }
 
+impl Addr for LiveMatch {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `llist` record in the game's memory (fields in `fields::llist`). [pt] Um registro `llist` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -12014,6 +12603,13 @@ impl Llist {
     #[inline(always)]
     pub(crate) unsafe fn set_cursor(self, v: usize) {
         write_usize(self.0 + llist::CURSOR, v)
+    }
+}
+
+impl Addr for Llist {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -12071,6 +12667,13 @@ impl LlistNode {
     }
 }
 
+impl Addr for LlistNode {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `loan_negotiation` record in the game's memory (fields in `fields::loan_negotiation`). [pt] Um registro `loan_negotiation` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -12095,6 +12698,13 @@ impl LoanNegotiation {
     #[inline(always)]
     pub(crate) unsafe fn set_club_id(self, v: usize) {
         write_usize(self.0 + loan_negotiation::CLUB_ID, v)
+    }
+}
+
+impl Addr for LoanNegotiation {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -12127,6 +12737,13 @@ impl ManOfMatchRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_year(self, v: u16) {
         write_u16(self.0 + man_of_match_record::YEAR, v)
+    }
+}
+
+impl Addr for ManOfMatchRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -12190,6 +12807,13 @@ impl ManagerManagerFields {
     #[inline(always)]
     pub(crate) unsafe fn set_ban_appeal_list(self, v: usize) {
         write_usize(self.0 + manager_manager_fields::BAN_APPEAL_LIST, v)
+    }
+}
+
+impl Addr for ManagerManagerFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -12618,6 +13242,13 @@ impl ManagerRecord {
     }
 }
 
+impl Addr for ManagerRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `match_day_fields` record in the game's memory (fields in `fields::match_day_fields`). [pt] Um registro `match_day_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -12789,6 +13420,13 @@ impl MatchDayFields {
     }
 }
 
+impl Addr for MatchDayFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `match_events_fields` record in the game's memory (fields in `fields::match_events_fields`). [pt] Um registro `match_events_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -12827,6 +13465,13 @@ impl MatchEventsFields {
     #[inline(always)]
     pub(crate) unsafe fn set_commentary_speed(self, v: u8) {
         write_u8(self.0 + match_events_fields::COMMENTARY_SPEED, v)
+    }
+}
+
+impl Addr for MatchEventsFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -13491,6 +14136,13 @@ impl MatchRecord {
     }
 }
 
+impl Addr for MatchRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `match_record_row` record in the game's memory (fields in `fields::match_record_row`). [pt] Um registro `match_record_row` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -13664,6 +14316,13 @@ impl MatchRecordRow {
     #[inline(always)]
     pub(crate) unsafe fn set_match_grade(self, v: u8) {
         write_u8(self.0 + match_record_row::MATCH_GRADE, v)
+    }
+}
+
+impl Addr for MatchRecordRow {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -13936,6 +14595,13 @@ impl MatchRecordTeam {
     }
 }
 
+impl Addr for MatchRecordTeam {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `match_spectators` record in the game's memory (fields in `fields::match_spectators`). [pt] Um registro `match_spectators` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -13983,6 +14649,13 @@ impl MatchSpectators {
     #[inline(always)]
     pub(crate) unsafe fn set_closed(self, v: i32) {
         write_i32(self.0 + match_spectators::CLOSED, v)
+    }
+}
+
+impl Addr for MatchSpectators {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -14045,6 +14718,13 @@ impl MatchStats {
     }
 }
 
+impl Addr for MatchStats {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `match_stats_entry` record in the game's memory (fields in `fields::match_stats_entry`). [pt] Um registro `match_stats_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14096,6 +14776,13 @@ impl MatchStatsEntry {
     #[inline(always)]
     pub(crate) unsafe fn set_year(self, v: u16) {
         write_u16(self.0 + match_stats_entry::YEAR, v)
+    }
+}
+
+impl Addr for MatchStatsEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -14163,6 +14850,13 @@ impl MatchStatsRecord {
     }
 }
 
+impl Addr for MatchStatsRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `match_summary` record in the game's memory (fields in `fields::match_summary`). [pt] Um registro `match_summary` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14187,6 +14881,13 @@ impl MatchSummary {
     #[inline(always)]
     pub(crate) unsafe fn set_sides(self, v: u8) {
         write_u8(self.0 + match_summary::SIDES, v)
+    }
+}
+
+impl Addr for MatchSummary {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -14262,6 +14963,13 @@ impl MediaFields {
     }
 }
 
+impl Addr for MediaFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `nation_index_item` record in the game's memory (fields in `fields::nation_index_item`). [pt] Um registro `nation_index_item` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14286,6 +14994,13 @@ impl NationIndexItem {
     #[inline(always)]
     pub(crate) unsafe fn set_nation_id(self, v: usize) {
         write_usize(self.0 + nation_index_item::NATION_ID, v)
+    }
+}
+
+impl Addr for NationIndexItem {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -14364,6 +15079,13 @@ impl NationalSquadRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_u21_called_up_mark(self, v: u8) {
         write_u8(self.0 + national_squad_record::U21_CALLED_UP_MARK, v)
+    }
+}
+
+impl Addr for NationalSquadRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -14462,6 +15184,13 @@ impl NationalTeamsFields {
     }
 }
 
+impl Addr for NationalTeamsFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `news_fields` record in the game's memory (fields in `fields::news_fields`). [pt] Um registro `news_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14504,6 +15233,13 @@ impl NewsFields {
     #[inline(always)]
     pub(crate) unsafe fn set_last_id(self, v: usize) {
         write_usize(self.0 + news_fields::LAST_ID, v)
+    }
+}
+
+impl Addr for NewsFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -14593,6 +15329,13 @@ impl NewsItem {
     }
 }
 
+impl Addr for NewsItem {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `official` record in the game's memory (fields in `fields::official`). [pt] Um registro `official` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14662,6 +15405,13 @@ impl Official {
     #[inline(always)]
     pub(crate) unsafe fn set_rating(self, v: i16) {
         write_i16(self.0 + official::RATING, v)
+    }
+}
+
+impl Addr for Official {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -14737,6 +15487,13 @@ impl OfficialStats {
     }
 }
 
+impl Addr for OfficialStats {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `officials_comp_slot` record in the game's memory (fields in `fields::officials_comp_slot`). [pt] Um registro `officials_comp_slot` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14791,6 +15548,13 @@ impl OfficialsCompSlot {
     }
 }
 
+impl Addr for OfficialsCompSlot {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `officials_manager_fields` record in the game's memory (fields in `fields::officials_manager_fields`). [pt] Um registro `officials_manager_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14842,6 +15606,13 @@ impl OfficialsManagerFields {
     #[inline(always)]
     pub(crate) unsafe fn set_nation_blocks(self, v: usize) {
         write_usize(self.0 + officials_manager_fields::NATION_BLOCKS, v)
+    }
+}
+
+impl Addr for OfficialsManagerFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -14910,6 +15681,13 @@ impl OfficialsNationBlock {
     #[inline(always)]
     pub(crate) fn comp_slots_addr(self) -> usize {
         self.0 + officials_nation_block::COMP_SLOTS
+    }
+}
+
+impl Addr for OfficialsNationBlock {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -14999,6 +15777,13 @@ impl PastTransfer {
     }
 }
 
+impl Addr for PastTransfer {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `person_transfer_record` record in the game's memory (fields in `fields::person_transfer_record`). [pt] Um registro `person_transfer_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15050,6 +15835,13 @@ impl PersonTransferRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_international_apps_at_deal(self, v: u8) {
         write_u8(self.0 + person_transfer_record::INTERNATIONAL_APPS_AT_DEAL, v)
+    }
+}
+
+impl Addr for PersonTransferRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -15152,6 +15944,13 @@ impl PhysicalRecord {
     }
 }
 
+impl Addr for PhysicalRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `planned_friendly` record in the game's memory (fields in `fields::planned_friendly`). [pt] Um registro `planned_friendly` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15199,6 +15998,13 @@ impl PlannedFriendly {
     #[inline(always)]
     pub(crate) unsafe fn set_away_club_id(self, v: usize) {
         write_usize(self.0 + planned_friendly::AWAY_CLUB_ID, v)
+    }
+}
+
+impl Addr for PlannedFriendly {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -15301,6 +16107,13 @@ impl PlayerCategoryStats {
     }
 }
 
+impl Addr for PlayerCategoryStats {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `player_stats_entry` record in the game's memory (fields in `fields::player_stats_entry`). [pt] Um registro `player_stats_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15370,6 +16183,13 @@ impl PlayerStatsEntry {
     #[inline(always)]
     pub(crate) unsafe fn set_last_rating(self, v: u8) {
         write_u8(self.0 + player_stats_entry::LAST_RATING, v)
+    }
+}
+
+impl Addr for PlayerStatsEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -15508,6 +16328,13 @@ impl PlayerStatsFields {
     }
 }
 
+impl Addr for PlayerStatsFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `preseason_candidate` record in the game's memory (fields in `fields::preseason_candidate`). [pt] Um registro `preseason_candidate` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15589,6 +16416,13 @@ impl PreseasonCandidate {
     }
 }
 
+impl Addr for PreseasonCandidate {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `rating_record` record in the game's memory (fields in `fields::rating_record`). [pt] Um registro `rating_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15630,6 +16464,13 @@ impl RatingRecord {
     }
 }
 
+impl Addr for RatingRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `record_holder` record in the game's memory (fields in `fields::record_holder`). [pt] Um registro `record_holder` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15650,6 +16491,13 @@ impl RecordHolder {
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + record_holder::DATE
+    }
+}
+
+impl Addr for RecordHolder {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -15686,6 +16534,13 @@ impl RecordNewsItem {
     #[inline(always)]
     pub(crate) unsafe fn set_period(self, v: u8) {
         write_u8(self.0 + record_news_item::PERIOD, v)
+    }
+}
+
+impl Addr for RecordNewsItem {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -15734,6 +16589,13 @@ impl RegenPoolItem {
     }
 }
 
+impl Addr for RegenPoolItem {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `regen_queue_entry` record in the game's memory (fields in `fields::regen_queue_entry`). [pt] Um registro `regen_queue_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15767,6 +16629,13 @@ impl RegenQueueEntry {
     #[inline(always)]
     pub(crate) unsafe fn set_regen_year(self, v: u16) {
         write_u16(self.0 + regen_queue_entry::REGEN_YEAR, v)
+    }
+}
+
+impl Addr for RegenQueueEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -15856,6 +16725,13 @@ impl RetirementEntry {
     }
 }
 
+impl Addr for RetirementEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `ruling_body` record in the game's memory (fields in `fields::ruling_body`). [pt] Um registro `ruling_body` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15919,6 +16795,13 @@ impl RulingBody {
     }
 }
 
+impl Addr for RulingBody {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `ruling_body_entry` record in the game's memory (fields in `fields::ruling_body_entry`). [pt] Um registro `ruling_body_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15955,6 +16838,13 @@ impl RulingBodyEntry {
     }
 }
 
+impl Addr for RulingBodyEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `run_record` record in the game's memory (fields in `fields::run_record`). [pt] Um registro `run_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15980,6 +16870,13 @@ impl RunRecord {
     #[inline(always)]
     pub(crate) fn end_date_addr(self) -> usize {
         self.0 + run_record::END_DATE
+    }
+}
+
+impl Addr for RunRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -16037,6 +16934,13 @@ impl ScheduledFriendlySlot {
     }
 }
 
+impl Addr for ScheduledFriendlySlot {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `scout_manager_fields` record in the game's memory (fields in `fields::scout_manager_fields`). [pt] Um registro `scout_manager_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16083,6 +16987,13 @@ impl ScoutManagerFields {
     }
 }
 
+impl Addr for ScoutManagerFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `scout_report` record in the game's memory (fields in `fields::scout_report`). [pt] Um registro `scout_report` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16116,6 +17027,13 @@ impl ScoutReport {
     #[inline(always)]
     pub(crate) unsafe fn set_club_id(self, v: usize) {
         write_usize(self.0 + scout_report::CLUB_ID, v)
+    }
+}
+
+impl Addr for ScoutReport {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -16173,6 +17091,13 @@ impl ScoutRequest {
     }
 }
 
+impl Addr for ScoutRequest {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `sell_on_clause` record in the game's memory (fields in `fields::sell_on_clause`). [pt] Um registro `sell_on_clause` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16218,6 +17143,13 @@ impl SellOnClause {
     }
 }
 
+impl Addr for SellOnClause {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `shortlist_pair` record in the game's memory (fields in `fields::shortlist_pair`). [pt] Um registro `shortlist_pair` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16242,6 +17174,13 @@ impl ShortlistPair {
     #[inline(always)]
     pub(crate) unsafe fn set_club_id(self, v: usize) {
         write_usize(self.0 + shortlist_pair::CLUB_ID, v)
+    }
+}
+
+impl Addr for ShortlistPair {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -16340,6 +17279,13 @@ impl ShortlistSlot {
     }
 }
 
+impl Addr for ShortlistSlot {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `staff_records_fields` record in the game's memory (fields in `fields::staff_records_fields`). [pt] Um registro `staff_records_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16421,6 +17367,13 @@ impl StaffRecordsFields {
     }
 }
 
+impl Addr for StaffRecordsFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `staff_state` record in the game's memory (fields in `fields::staff_state`). [pt] Um registro `staff_state` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16472,6 +17425,13 @@ impl StaffState {
     #[inline(always)]
     pub(crate) unsafe fn set_former_club_weight(self, v: u8) {
         write_u8(self.0 + staff_state::FORMER_CLUB_WEIGHT, v)
+    }
+}
+
+impl Addr for StaffState {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -16540,6 +17500,13 @@ impl StoryLogEntry {
     #[inline(always)]
     pub(crate) unsafe fn set_type(self, v: usize) {
         write_usize(self.0 + story_log_entry::TYPE, v)
+    }
+}
+
+impl Addr for StoryLogEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -16661,6 +17628,13 @@ impl TacticsFields {
     }
 }
 
+impl Addr for TacticsFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `tactics_row` record in the game's memory (fields in `fields::tactics_row`). [pt] Um registro `tactics_row` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16711,6 +17685,13 @@ impl TacticsRow {
     }
 }
 
+impl Addr for TacticsRow {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `tally_record` record in the game's memory (fields in `fields::tally_record`). [pt] Um registro `tally_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16731,6 +17712,13 @@ impl TallyRecord {
     #[inline(always)]
     pub(crate) fn holder_date_addr(self) -> usize {
         self.0 + tally_record::HOLDER_DATE
+    }
+}
+
+impl Addr for TallyRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -16821,6 +17809,13 @@ impl TournamentSlot {
     }
 }
 
+impl Addr for TournamentSlot {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `transfer_fee_record` record in the game's memory (fields in `fields::transfer_fee_record`). [pt] Um registro `transfer_fee_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16869,6 +17864,13 @@ impl TransferFeeRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_flag(self, v: u8) {
         write_u8(self.0 + transfer_fee_record::FLAG, v)
+    }
+}
+
+impl Addr for TransferFeeRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -16953,6 +17955,13 @@ impl TransferInterest {
     }
 }
 
+impl Addr for TransferInterest {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `transfer_rules` record in the game's memory (fields in `fields::transfer_rules`). [pt] Um registro `transfer_rules` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16998,6 +18007,13 @@ impl TransferRules {
     }
 }
 
+impl Addr for TransferRules {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `transfer_window` record in the game's memory (fields in `fields::transfer_window`). [pt] Um registro `transfer_window` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17034,6 +18050,13 @@ impl TransferWindow {
     }
 }
 
+impl Addr for TransferWindow {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `undo_slot` record in the game's memory (fields in `fields::undo_slot`). [pt] Um registro `undo_slot` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17067,6 +18090,13 @@ impl UndoSlot {
     #[inline(always)]
     pub(crate) unsafe fn set_in_use(self, v: u32) {
         write_u32(self.0 + undo_slot::IN_USE, v)
+    }
+}
+
+impl Addr for UndoSlot {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -17124,6 +18154,13 @@ impl WorkPermit {
     }
 }
 
+impl Addr for WorkPermit {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `cm_date` record in the game's memory (fields in `fields::cm_date`). [pt] Um registro `cm_date` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17157,6 +18194,13 @@ impl CmDate {
     #[inline(always)]
     pub(crate) unsafe fn set_leap_year(self, v: usize) {
         write_usize(self.0 + cm_date::LEAP_YEAR, v)
+    }
+}
+
+impl Addr for CmDate {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -17196,6 +18240,13 @@ impl AfricanNations {
     }
 }
 
+impl Addr for AfricanNations {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `awol_fields` record in the game's memory (fields in `fields::awol_fields`). [pt] Um registro `awol_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17220,6 +18271,13 @@ impl AwolFields {
     #[inline(always)]
     pub(crate) unsafe fn set_person_flags(self, v: usize) {
         write_usize(self.0 + awol_fields::PERSON_FLAGS, v)
+    }
+}
+
+impl Addr for AwolFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -17277,6 +18335,13 @@ impl CompHistoryRow {
     }
 }
 
+impl Addr for CompHistoryRow {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `con_merc_cup` record in the game's memory (fields in `fields::con_merc_cup`). [pt] Um registro `con_merc_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17306,6 +18371,13 @@ impl ConMercCup {
     #[inline(always)]
     pub(crate) fn drawn_club_count_addr(self) -> usize {
         self.0 + con_merc_cup::DRAWN_CLUB_COUNT
+    }
+}
+
+impl Addr for ConMercCup {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -17345,6 +18417,13 @@ impl ConmebolLiber {
     }
 }
 
+impl Addr for ConmebolLiber {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `conmebol_merc` record in the game's memory (fields in `fields::conmebol_merc`). [pt] Um registro `conmebol_merc` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17374,6 +18453,13 @@ impl ConmebolMerc {
     #[inline(always)]
     pub(crate) fn drawn_club_count_addr(self) -> usize {
         self.0 + conmebol_merc::DRAWN_CLUB_COUNT
+    }
+}
+
+impl Addr for ConmebolMerc {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -17413,6 +18499,13 @@ impl ConmebolSeeding {
     }
 }
 
+impl Addr for ConmebolSeeding {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `euro_champ_qual` record in the game's memory (fields in `fields::euro_champ_qual`). [pt] Um registro `euro_champ_qual` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17437,6 +18530,13 @@ impl EuroChampQual {
     #[inline(always)]
     pub(crate) unsafe fn set_group_format(self, v: i8) {
         write_i8(self.0 + euro_champ_qual::GROUP_FORMAT, v)
+    }
+}
+
+impl Addr for EuroChampQual {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -17510,6 +18610,13 @@ impl FormationFields {
     }
 }
 
+impl Addr for FormationFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `goldcup` record in the game's memory (fields in `fields::goldcup`). [pt] Um registro `goldcup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17546,6 +18653,13 @@ impl Goldcup {
     }
 }
 
+impl Addr for Goldcup {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `grid_cell` record in the game's memory (fields in `fields::grid_cell`). [pt] Um registro `grid_cell` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17575,6 +18689,13 @@ impl GridCell {
     #[inline(always)]
     pub(crate) unsafe fn set_occupant_count(self, v: i16) {
         write_i16(self.0 + grid_cell::OCCUPANT_COUNT, v)
+    }
+}
+
+impl Addr for GridCell {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -17641,6 +18762,13 @@ impl MatchIncident {
     }
 }
 
+impl Addr for MatchIncident {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `nation_club_bucket` record in the game's memory (fields in `fields::nation_club_bucket`). [pt] Um registro `nation_club_bucket` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17674,6 +18802,13 @@ impl NationClubBucket {
     #[inline(always)]
     pub(crate) unsafe fn set_weakest_slot(self, v: i32) {
         write_i32(self.0 + nation_club_bucket::WEAKEST_SLOT, v)
+    }
+}
+
+impl Addr for NationClubBucket {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 
@@ -17776,6 +18911,13 @@ impl NationNameIndex {
     }
 }
 
+impl Addr for NationNameIndex {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `oceania_club_champ` record in the game's memory (fields in `fields::oceania_club_champ`). [pt] Um registro `oceania_club_champ` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17808,6 +18950,13 @@ impl OceaniaClubChamp {
     }
 }
 
+impl Addr for OceaniaClubChamp {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
 /// A `uefa_seeding` record in the game's memory (fields in `fields::uefa_seeding`). [pt] Um registro `uefa_seeding` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17837,6 +18986,13 @@ impl UefaSeeding {
     #[inline(always)]
     pub(crate) fn cup_finals_addr(self) -> usize {
         self.0 + uefa_seeding::CUP_FINALS
+    }
+}
+
+impl Addr for UefaSeeding {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
     }
 }
 

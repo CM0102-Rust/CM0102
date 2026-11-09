@@ -378,7 +378,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
             // simplification: round +0x30 goes in a register with garbage in the high 16 bits; 0x86c000 only uses the word
             european_cup_add_knocked_out_record(club.addr(), read_usize(this + 4), 0, core::ptr::read_unaligned((game + 0x30) as *const u16) as u32, weight);
             crate::comparison::branch("cqi_10 dropped into intertoto");
-            leave_euro_competition(club.addr()); // cqi10: whoever is knocked out in the Intertoto leaves the European competition
+            leave_euro_competition(club); // cqi10: whoever is knocked out in the Intertoto leaves the European competition
         }
         _ => {}
     }

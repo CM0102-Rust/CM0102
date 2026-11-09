@@ -176,8 +176,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
 /// True if the club's division (+0x57) is non-null and its id equals the competition id in global g.
 ///
 /// [pt] O clube é da divisão do global `g`: a divisão do clube (+0x57) não é nula e o id do registro (+0) é o do global.
-pub(crate) unsafe fn is_in_division(club: usize, g: usize) -> bool {
-    let club = Club(club);
+pub(crate) unsafe fn is_in_division(club: Club, g: usize) -> bool {
     let comp = club.division().addr();
     comp != 0 && read_usize(comp) == read_usize(g)
 }
@@ -220,7 +219,7 @@ pub(crate) unsafe fn fill_japanese_table(this: usize, g: usize, girar: u8, ramo:
     let mut i: i16 = 0;
     let mut club = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        if is_in_division(club, g) {
+        if is_in_division(Club(club), g) {
             if (k as i8 as i16) < read_i16(this + league::CLUB_COUNT) {
                 jap_j1_init_table_row(this, k, read_i16(this + league::CLUB_COUNT), girar, club);
                 k = k.wrapping_add(1);
@@ -283,7 +282,7 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: 
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 {
         let club = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        if is_in_division(club, g) {
+        if is_in_division(Club(club), g) {
             plan.push(club);
         }
         i += 1;

@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usi
     let mut plan: Vec<(usize, bool)> = Vec::new();
     for i in 0..n.max(0) as usize {
         let c = base + i * club::SIZE;
-        if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
+        if spa_lower_is_in_comp(Club(c), KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             plan.push((c, is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION)));
             if plan.len() == 0x16 {
                 break;

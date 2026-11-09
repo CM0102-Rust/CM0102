@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_duty_competitions(this: u
 /// mexe nos elencos), a comparação não vale e fica a original; senão os registros têm de bater.
 pub(crate) unsafe extern "thiscall" fn compare_select_squads_for_fixture(this: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SELECT_SQUADS_FOR_FIXTURE);
-    let regions = [(club_nation_record(this, read_usize(p + fixture::HOME_CLUB)) + 0x32, 0x3a), (club_nation_record(this, read_usize(p + fixture::AWAY_CLUB)) + 0x32, 0x3a)];
+    let regions = [(club_nation_record(this, Club(read_usize(p + fixture::HOME_CLUB))) + 0x32, 0x3a), (club_nation_record(this, Club(read_usize(p + fixture::AWAY_CLUB))) + 0x32, 0x3a)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     o(this, p);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
@@ -472,7 +472,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_player_to_squad(this: usize, 
     if team == 0 || p == 0 {
         return o(this, nation, kind, p);
     }
-    let reg = squad_change_regions(team, p);
+    let reg = squad_change_regions(Club(team), p);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nation, kind, p), || add_player_to_squad(this, nation, kind, p));
     SCOREBOARD.record(igual, || format!("add_player_to_squad({:x}, {}, {:x}) {:x?} x {:x?}", nation, kind as u8, p, mo, mr));
 }
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player_from
     if team == 0 || p == 0 {
         return o(this, nation, kind, p);
     }
-    let reg = squad_change_regions(team, p);
+    let reg = squad_change_regions(Club(team), p);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nation, kind, p), || national_teams_remove_player_from_squad(this, nation, kind, p));
     SCOREBOARD.record(igual, || format!("national_teams_remove_player_from_squad({:x}, {}, {:x}) {:x?} x {:x?}", nation, kind as u8, p, mo, mr));
 }
@@ -665,7 +665,7 @@ pub(crate) unsafe extern "stdcall" fn compare_national_team_ages(comp: usize, ki
 pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize, team: usize, b: u32, p: usize) {
     let team = Club(team);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_RECORD_CLUB_CALL_UPS);
-    if p != 0 && callup_array_full(this, team.addr()) {
+    if p != 0 && callup_array_full(this, team) {
         let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
         let mut expected: Vec<u32> = (0..0x32usize).map(|i| read_usize(team.addr() + club::SQUAD + 4 * i) as u32).collect();
         // the CRT’s own qsort (the order of equals is its own), outside the original’s trace
@@ -687,7 +687,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
             continue;
         }
         vistos.push(c);
-        if let Some(rec) = club_callup_record(this, c) {
+        if let Some(rec) = club_callup_record(this, Club(c)) {
             reg.push((rec, 6));
             let cap = *((rec + 4) as *const i8);
             if read_usize(rec) != 0 && cap > 0 {

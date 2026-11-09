@@ -32,7 +32,7 @@ MUTACOES = [
     ('cql1_numero_com_sinal_trocado', '*((k + 0x3a) as *mut i8) = n; // cql1: writes to the contract', '*((k + 0x3a) as *mut i8) = n.wrapping_neg(); // mutacao', 'cql_1 writes into contract'),
     ('cql2_posicao_e_mais_um', 'return; // cql2: the position number', '// mutacao', 'cql_2 position number'),
     ('cql2_escala_sem_goleiro', '0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os titulares', '0x4, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // mutacao', 'cql_2 picks the team'),
-    ('cql2_regrava_um_abaixo', 'exe::squad_manager_set_squad_number(this, x, c.addr(), v as u8 as u32); // cql2: regrava negativo', 'exe::squad_manager_set_squad_number(this, x, c.addr(), v.wrapping_sub(1) as u8 as u32); // mutacao', 'cql_2 rewrites negative'),
+    ('cql2_regrava_um_abaixo', 'exe::squad_manager_set_squad_number(this, x, c, v as u8 as u32); // cql2: regrava negativo', 'exe::squad_manager_set_squad_number(this, x, c, v.wrapping_sub(1) as u8 as u32); // mutacao', 'cql_2 rewrites negative'),
     ('cql3_nenhuma_liga_numerada', 'cada(c); // cql3: numera a liga', '// mutacao', 'cql_3 numbers the league'),
     ('cql3_numero_do_banco_zero', 'exe::squad_manager_set_squad_number(this, p, c, k as u32); // cql3: the bench number', 'exe::squad_manager_set_squad_number(this, p, c, 0); // mutacao', 'cql_3 bench number'),
     ('cql3_inscricao_trocada', '*m6d(p) = v; // cql3: inscreve depois', '*m6d(p) = v ^ 3; // mutacao', 'cql_3 registers later'),

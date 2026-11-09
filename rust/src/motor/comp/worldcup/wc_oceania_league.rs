@@ -21,14 +21,14 @@ pub(crate) unsafe extern "thiscall" fn wc_oceania_league_update_staff_records_fo
     let eliminar = |weight: u32| {
         // simplification: +0x30 and +0x32 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words
         european_cup_add_knocked_out_record(club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
-        clear_national_team_competition(club);
+        clear_national_team_competition(Club(club));
     };
     if f < 1 {
         if d == 6 {
             european_cup_add_qualified_record(club, comp, 0, 0x82, 0x14);
         } else if d == 0xfe {
             european_cup_add_failed_to_qualify_record(club, comp, 0x41c, 0x14);
-            clear_national_team_competition(club);
+            clear_national_team_competition(Club(club));
         }
     } else if f == 1 {
         if d == 1 {

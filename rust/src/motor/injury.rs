@@ -393,8 +393,7 @@ pub(crate) unsafe fn injury_add_to_preference_list(routine: usize, p: usize, man
 /// Removes the club manager from the player's rejected list and, with random(+0x59) > 5, adds him to the favourites.
 ///
 /// [pt] O técnico gostar mais: tira dos rejeitados e, com sorteio(+0x59) acima de 5, põe nos favoritos.
-pub(crate) unsafe fn like_manager_more(p: usize, club: usize) {
-    let club = Club(club);
+pub(crate) unsafe fn like_manager_more(p: usize, club: Club) {
     if club.manager().addr() != 0 && call_preference_routine(0x547840, p, club.manager().addr()) != 0 {
         call_preference_routine(0x547c50, p, club.manager().addr());
     }
@@ -511,7 +510,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                 }
                 if feliz && caiu {
                     res = 2;
-                    like_manager_more(p, club);
+                    like_manager_more(p, Club(club));
                 } else {
                     if read_usize(G_AWOL) != 0 && read_i8(p + staff::LOYALTY) < 0xc {
                         let a = friendly_random(read_i8(p + staff::LOYALTY) as i32);
@@ -605,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     if v > 10 {
                         f1 = 1;
                         if club != 0 {
-                            like_manager_more(p, club);
+                            like_manager_more(p, Club(club));
                         }
                     }
                 }
@@ -2161,7 +2160,7 @@ pub(crate) unsafe extern "stdcall" fn injury_player_in_close_season(person: usiz
     let mut convocado = false;
     let national_team = Club(read_usize(person + staff::NATIONAL_JOB));
     if !national_team.is_null() {
-        let k = exe::national_teams_get_squad_slot(national_team.addr(), (read_u8(person + staff::PLAYING_SQUAD) & 8) as u32);
+        let k = exe::national_teams_get_squad_slot(national_team, (read_u8(person + staff::PLAYING_SQUAD) & 8) as u32);
         // simplification: the original pushes the argument’s dword with only the low byte replaced by al; 0x76e040 reads only the byte
         let q = exe::nationalteams_get_squad_slot_record(read_usize(G_NATIONAL_TEAMS), national_team.nation().addr(), k as u32);
         let lo = read_usize(q) as u32;
@@ -2172,7 +2171,7 @@ pub(crate) unsafe extern "stdcall" fn injury_player_in_close_season(person: usiz
     if club.is_null() || convocado || (club.continental_comp_id() as i32) != -1 {
         return 0;
     }
-    if exe::key_nation_club_in_season(club.addr(), (start.as_mut_ptr()) as *mut u32 as usize, (end.as_mut_ptr()) as *mut u32 as usize) != 0 {
+    if exe::key_nation_club_in_season(club, (start.as_mut_ptr()) as *mut u32 as usize, (end.as_mut_ptr()) as *mut u32 as usize) != 0 {
         return 0;
     }
     if (exe::date_days_since(G_CURRENT_DATE, end[0], end[1]) as u16) < 0x28 {
@@ -2336,8 +2335,7 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
 /// [pt] A nação em cuja lista dos jovens o clube entra (0x7acfc0): nenhuma para seleção (0x53b900), sem nação (+0x53),
 /// nação sem +0x71 ou os dois clubes de 0x9d00a4/0x9d00a8. Nação com +0x11c: só com +0x80 até 2 e divisão (+0x57);
 /// sem: com divisão.
-pub(crate) unsafe fn injury_youth_list_nation(club: usize) -> usize {
-    let club = Club(club);
+pub(crate) unsafe fn injury_youth_list_nation(club: Club) -> usize {
     if injury_is_national_team(club.addr()) {
         return 0;
     }
@@ -2749,7 +2747,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
         let national_team = Club(read_usize(person + staff::NATIONAL_JOB));
         let mut ocupado = false;
         if !national_team.is_null() {
-            let k = exe::national_teams_get_squad_slot(national_team.addr(), (*((person + staff::PLAYING_SQUAD) as *const u8) & 8) as u32);
+            let k = exe::national_teams_get_squad_slot(national_team, (*((person + staff::PLAYING_SQUAD) as *const u8) & 8) as u32);
             // simplification: the original pushes the argument with al on top (the rest is the person pointer); only the byte counts
             let d = exe::nationalteams_get_squad_slot_record(read_usize(G_NATIONAL_TEAMS), national_team.nation().addr(), (person as u32 & 0xffff_ff00) | k as u32);
             let (ano, hoje) = (read_u16(d + 2), read_u16(G_CURRENT_DATE_YEAR));

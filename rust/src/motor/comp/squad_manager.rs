@@ -387,7 +387,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
             n += 1;
         }
     }
-    let l = Club(exe::club_get_linked_b_team(c.addr(), (0) as *mut u32, 1));
+    let l = Club(exe::club_get_linked_b_team(c, (0) as *mut u32, 1));
     if !l.is_null() {
         for k in 0..50 {
             if n >= 50 {
@@ -439,31 +439,31 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
             continue;
         }
         if team < -21 {
-            let ct = exe::contract_manager_get_contract_for_club(read_u32(G_CONTRACT_MANAGER) as usize, x, c.addr());
+            let ct = exe::contract_manager_get_contract_for_club(read_u32(G_CONTRACT_MANAGER) as usize, x, c);
             let t = if ct != 0 { *((ct + contract::SQUAD_STATUS) as *const u8) & 0xf0 } else { 0 };
             if ct == 0 || t == 0x60 || t == 0x70 {
-                exe::squad_manager_set_squad_number(this, x, c.addr(), 0);
+                exe::squad_manager_set_squad_number(this, x, c, 0);
                 continue;
             }
         }
-        let nb = (exe::squad_manager_get_squad_number(this, x, c.addr()) as i32).abs() as u8 as i8;
+        let nb = (exe::squad_manager_get_squad_number(this, x, c) as i32).abs() as u8 as i8;
         if nb == 0 {
             if stored[i] == 0 {
                 stored[i] = x;
-                exe::squad_manager_set_squad_number(this, x, c.addr(), team as u8 as u32);
+                exe::squad_manager_set_squad_number(this, x, c, team as u8 as u32);
             }
             continue;
         }
         let slot = (nb as isize - 1) as usize;
         if stored[slot] != 0 {
-            exe::squad_manager_set_squad_number(this, x, c.addr(), 0);
+            exe::squad_manager_set_squad_number(this, x, c, 0);
             continue;
         }
         if keep != 0 {
-            exe::squad_manager_set_squad_number(this, x, c.addr(), nb.wrapping_neg() as u8 as u32);
+            exe::squad_manager_set_squad_number(this, x, c, nb.wrapping_neg() as u8 as u32);
         } else if (nb < 12 && team < -11) || (nb >= 12 && team > -12) {
             crate::comparison::branch("cql_2 loses the number");
-            exe::squad_manager_set_squad_number(this, x, c.addr(), 0); // cql2: the out-of-place number
+            exe::squad_manager_set_squad_number(this, x, c, 0); // cql2: the out-of-place number
             continue;
         }
         if nb > 0 {
@@ -475,7 +475,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         if x == 0 {
             continue;
         }
-        let ct = exe::contract_manager_get_contract_for_club(read_u32(G_CONTRACT_MANAGER) as usize, x, c.addr());
+        let ct = exe::contract_manager_get_contract_for_club(read_u32(G_CONTRACT_MANAGER) as usize, x, c);
         if ct == 0 {
             continue;
         }
@@ -483,14 +483,14 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         if t == 0x60 || t == 0x70 {
             continue;
         }
-        if exe::squad_manager_get_squad_number(this, x, c.addr()) == 0 {
-            exe::squad_manager_allocate_squad_number(this, c.addr(), x);
+        if exe::squad_manager_get_squad_number(this, x, c) == 0 {
+            exe::squad_manager_allocate_squad_number(this, c, x);
         }
     }
-    if exe::human_manager_is_human_club(c.addr(), 0, 1, 0, 0) != 0 {
+    if exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {
         for (k, &x) in stored.iter().enumerate() {
             if x != 0 {
-                exe::squad_manager_set_squad_number(this, x, c.addr(), k as u32 + 1);
+                exe::squad_manager_set_squad_number(this, x, c, k as u32 + 1);
             }
         }
     } else {
@@ -498,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         for &x in stored.iter() {
             if x != 0 {
                 crate::comparison::branch("cql_2 rewrites negative");
-                exe::squad_manager_set_squad_number(this, x, c.addr(), v as u8 as u32); // cql2: regrava negativo
+                exe::squad_manager_set_squad_number(this, x, c, v as u8 as u32); // cql2: regrava negativo
             }
             v = v.wrapping_sub(1);
         }

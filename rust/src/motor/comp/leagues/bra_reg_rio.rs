@@ -167,8 +167,7 @@ pub(crate) unsafe fn league_comp_reputation(league: usize) -> i32 {
 /// [pt] O piso que sobe com a reputação `r` (dos ramos que puxam o público para cima): com r < 5, 250 × r × f; senão
 /// 750 × (r − 4) × f + 1000 (a original compara com a parte inteira + 1000 e grava a conta com 1000 somado antes do
 /// truncamento). Abaixo dele, o público vai a ele e o recorde (+0x7b) sobe até ele.
-pub(crate) unsafe fn raise_attendance_floor(c: usize, r: i32, f: f64) {
-    let c = Club(c);
+pub(crate) unsafe fn raise_attendance_floor(c: Club, r: i32, f: f64) {
     let lim = if r < 5 {
         let lim = ftol((r.wrapping_mul(250)) as f64 * f);
         if c.attendance() >= lim {
@@ -191,8 +190,7 @@ pub(crate) unsafe fn raise_attendance_floor(c: usize, r: i32, f: f64) {
 /// Caps club attendance (+0x73) at lim, lowering the minimum (+0x77) to it.
 ///
 /// [pt] O teto `lim` do público: acima dele, o público cai a ele e o mínimo (+0x77) desce até ele.
-pub(crate) unsafe fn cap_attendance(c: usize, lim: i32) {
-    let c = Club(c);
+pub(crate) unsafe fn cap_attendance(c: Club, lim: i32) {
     if c.attendance() > lim {
         c.set_attendance(lim);
         if lim < c.min_attendance() {
@@ -324,7 +322,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 } else {
                     add(v);
                 }
-                raise_attendance_floor(c.addr(), league_comp_reputation(cima), f);
+                raise_attendance_floor(c, league_comp_reputation(cima), f);
                 crate::comparison::branch("cqt_4 attendance of promoted");
             }
         } else if *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) != 0 && pos as i32 <= *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) as i32 {
@@ -370,7 +368,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 add(r.wrapping_add(v));
                 let rb = league_comp_reputation(low);
                 let lim = if rb > 7 { ftol(rb.wrapping_mul(3000) as f64 * f) } else { ftol(rb.wrapping_mul(2000) as f64 * f) };
-                cap_attendance(c.addr(), lim);
+                cap_attendance(c, lim);
                 crate::comparison::branch("cqt_4 attendance of relegated");
             }
         } else {
@@ -391,10 +389,10 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 c.set_attendance(ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
             }
             crate::comparison::branch("cqt_4 attendance of mid-table");
-            raise_attendance_floor(c.addr(), league_comp_reputation(league), f);
+            raise_attendance_floor(c, league_comp_reputation(league), f);
             let r = league_comp_reputation(league);
             let ceiling = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };
-            cap_attendance(c.addr(), ceiling);
+            cap_attendance(c, ceiling);
         }
         if c.attendance() < 500 {
             c.set_attendance(500);
@@ -798,7 +796,7 @@ pub(crate) unsafe fn bra_reg_rio_compare_state_league_table(name: &str, this: us
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
         let club = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        if is_in_state_league(club, g) {
+        if is_in_state_league(Club(club), g) {
             plan.push(club);
         }
         i += 1;

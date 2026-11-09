@@ -71,7 +71,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_post_youth_promotion_
 pub(crate) unsafe extern "stdcall" fn compare_player_regen_sign_for_club(person: usize, club: usize) -> u8 {
     let club = Club(club);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(IDX_PLAYER_REGEN_SIGN_FOR_CLUB);
-    let k = first_free_squad_slot(club.addr());
+    let k = first_free_squad_slot(club);
     let r = o(person, club.addr());
     if k == 0x32 {
         SCOREBOARD.record(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) sem vaga original={}", person, club.addr(), r));
@@ -420,7 +420,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_nation_club_lists(this: usi
     let base = read_usize(G_CLUB_TABLE);
     for j in 0..read_i32(G_CLUB_COUNT).max(0) as usize {
         let club = base + j * club::SIZE;
-        let nation = injury_youth_list_nation(club);
+        let nation = injury_youth_list_nation(Club(club));
         if nation != 0 && (read_i32(nation) as usize) < n {
             plan[read_i32(nation) as usize].push(read_usize(club));
         }

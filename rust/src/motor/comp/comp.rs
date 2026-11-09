@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
         false
     };
     exe::newsitem_set_slot(p, (6) as u32 as i8, won as u32);
-    exe::news_send_to_club_manager(read_usize(G_NEWS), p, club.addr());
+    exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
 }
 
 // simplification: delivers the news (allocates); original only. The copy takes the branch.
@@ -468,7 +468,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
         }
     }
     // 0x53b900: push club; add esp, 4 -> cdecl
-    if exe::database_is_national_team(club.addr()) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         return 0;
     }
     crate::comparison::branch("cqb_12 club without key nation");
@@ -523,8 +523,7 @@ pub(crate) unsafe extern "C" fn comp_key_nation_entry_from_active_index(active: 
 /// [pt] O registro de convocações do clube `c` em [this + 0x20] (6 bytes: +0 vetor de entradas de 9 bytes, +4 capacidade,
 /// +5 quantas), se o clube conta: id dentro dos [0xae235c] − 2 × [0xae2350] registros, com nação (+0x53) marcada
 /// (+0x11c) e que não é a de [0x9cf260].
-pub(crate) unsafe fn club_callup_record(this: usize, c: usize) -> Option<usize> {
-    let c = Club(c);
+pub(crate) unsafe fn club_callup_record(this: usize, c: Club) -> Option<usize> {
     let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let id = read_usize(c.addr()) as i32;
     if id >= n || id < 0 {
@@ -547,7 +546,7 @@ pub(crate) unsafe fn club_callup_record(this: usize, c: usize) -> Option<usize> 
 /// entrada nova (com o vetor cheio, mais 3 vagas por 0x945667) com a data e a conta, e o vetor reordenado pela data
 /// (qsort 0x945333 com 0x778e90). Sem memória: a caixa (linha 0x21c8) e false (a rotina para).
 pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut u8) -> bool {
-    let rec = match club_callup_record(this, c) {
+    let rec = match club_callup_record(this, Club(c)) {
         Some(r) => r,
         None => return true,
     };
@@ -589,14 +588,13 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
 ///
 /// [pt] O registro de algum clube que a 0x7771c0 pode somar está com o vetor cheio (capacidade = quantas, inclusive sem
 /// vetor)? Então ela pode realocar.
-pub(crate) unsafe fn callup_array_full(this: usize, team: usize) -> bool {
-    let team = Club(team);
+pub(crate) unsafe fn callup_array_full(this: usize, team: Club) -> bool {
     (0..0x32usize).any(|i| {
         let s = read_usize(team.addr() + club::SQUAD + 4 * i);
         if s == 0 || read_usize(s) as i32 >= read_usize(G_STAFF_COUNT) as i32 || read_usize(s + staff::CLUB_JOB) == 0 {
             return false;
         }
-        match club_callup_record(this, read_usize(s + staff::CLUB_JOB)) {
+        match club_callup_record(this, Club(read_usize(s + staff::CLUB_JOB))) {
             Some(rec) => *((rec + 4) as *const i8) == *((rec + 5) as *const i8),
             None => false,
         }
@@ -673,7 +671,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
             if let Some(k) = row(a) {
                 return *((0xb63d74 + 72 * k) as *const u8); // cpt3: the friendly’s nation
             }
-            return if exe::database_is_national_team(home.addr()) != 0 { 0 } else { 3 };
+            return if exe::database_is_national_team(home) != 0 { 0 } else { 3 };
         }
     }
     if read_usize(comp + competition::NATION) != 0 {

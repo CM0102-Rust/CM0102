@@ -14,7 +14,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_index_of_nation(nation: usize
 /// Comparer for `key_nation_index_of_club`.
 pub(crate) unsafe extern "C" fn compare_key_nation_index_of_club(club: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_CLUB);
-    if hits_key_nation_error(club) {
+    if hits_key_nation_error(Club(club)) {
         return o(club);
     }
     let r = o(club);
@@ -26,7 +26,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_index_of_club(club: usize) ->
 /// Comparer for `key_nation_get_club_season_year`.
 pub(crate) unsafe extern "C" fn compare_key_nation_get_club_season_year(club: usize) -> u16 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_KEY_NATION_GET_CLUB_SEASON_YEAR);
-    if club != 0 && hits_key_nation_error(club) {
+    if club != 0 && hits_key_nation_error(Club(club)) {
         return o(club);
     }
     let r = o(club);

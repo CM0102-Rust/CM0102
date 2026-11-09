@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_club_squad_numbers(this: u
     let c = Club(c);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CLUB_SQUAD_NUMBERS);
     let mut ps: Vec<usize> = (0..50).map(|k| read_u32(c.addr() + club::SQUAD + 4 * k) as usize).collect();
-    let l = Club(exe::club_get_linked_b_team(c.addr(), (0) as *mut u32, 1));
+    let l = Club(exe::club_get_linked_b_team(c, (0) as *mut u32, 1));
     if !l.is_null() {
         ps.extend((0..50).map(|k| read_u32(l.addr() + club::SQUAD + 4 * k) as usize));
     }

@@ -1094,7 +1094,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         return if read_u8(read_usize(person + staff::NATION) + 0x77) == language { 10 } else { 0 }; // the human manager
     }
     if by_contract != 0 {
-        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club.addr());
+        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
         if c != 0 {
             let cp = Club(read_usize(person + staff::CLUB_JOB));
             if !cp.is_null() && club.nation().addr() == cp.nation().addr() {
@@ -1286,7 +1286,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
         if injury_is_national_team(club.addr()) {
             break; // the first national team ends it
         }
-        let k = (exe::key_nation_index_of_club(club.addr()) as i8) as isize; // only al
+        let k = (exe::key_nation_index_of_club(club) as i8) as isize; // only al
         if (0xb63d60usize).wrapping_add((k * 72) as usize) == nation {
             for s in 0..50usize {
                 let p = read_usize(club.addr() + club::SQUAD + 4 * s);

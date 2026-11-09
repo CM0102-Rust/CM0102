@@ -282,7 +282,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game
     if a == 0 || b == 0 {
         return o(this, game, arg); // simplification: without a club, original only
     }
-    let (ca, cb) = (nation_coefficient_word(a), nation_coefficient_word(b));
+    let (ca, cb) = (nation_coefficient_word(Club(a)), nation_coefficient_word(Club(b)));
     let (fa, fb) = (european_cup_club_finance(a), european_cup_club_finance(b));
     if ca == 0 || cb == 0 || fa == 0 || fb == 0 {
         return o(this, game, arg); // simplification: without nation, national team or finances, original only (crashes the same way)

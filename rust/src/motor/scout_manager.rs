@@ -33,7 +33,7 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
     // ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24 (ax)
     let player = staff_records_staff_by_id(read_usize(request + scout_request::PLAYER_ID));
     let club = Club(friendly_club_by_id(read_usize(request)));
-    if exe::human_manager_is_human_club(club.addr(), 1, 1, 0, 0) == 0 {
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 {
         return (true, false, 0, 0, 0);
     }
     let manager = club.manager().addr();
@@ -73,7 +73,7 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
     }
     let mut direct = false;
     if !seu.is_null() {
-        let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, seu.addr());
+        let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, seu);
         if k != 0 {
             let s = read_u8(k + contract::SQUAD_STATUS) & 0xf0;
             direct = s == 0x60 || s == 0x70 || s == 0;
@@ -1000,7 +1000,7 @@ pub(crate) unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nation
     if c.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CAN_CLUB_SCOUT_NATION)(this, nation, club); // message box: original only
     }
-    let f = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c.addr());
+    let f = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c);
     if f != 0 && core::ptr::read_unaligned(f as *const i64) < 1_000_000 && c.reputation() < 5000 {
         if *((c.nation().addr() + 0x76) as *const u8) != *((nation + nation::ACTUAL_REGION) as *const u8) { // outside the region
             crate::comparison::branch("cpk_6 scout outside the region");

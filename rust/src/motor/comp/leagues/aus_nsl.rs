@@ -265,7 +265,7 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
         if (k as i16) >= read_i16(this + league::CLUB_COUNT) {
             break;
         }
-        if is_in_division(club, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
+        if is_in_division(Club(club), KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
             jap_j1_init_table_row(this, k as u8, read_i16(this + league::CLUB_COUNT), 0, club); // cqm9: the NSL row
             k = k.wrapping_add(1);
         }

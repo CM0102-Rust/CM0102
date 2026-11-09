@@ -1218,8 +1218,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
 /// Club's division level (word +0x69 of its division +0x57), or 0 without division.
 ///
 /// [pt] O nível da divisão do clube: a palavra +0x69 da divisão (+0x57), ou 0 sem divisão.
-pub(crate) unsafe fn division_level(club: usize) -> i16 {
-    let club = Club(club);
+pub(crate) unsafe fn division_level(club: Club) -> i16 {
     let d = club.division().addr();
     if d != 0 {
         read_i16(d + competition::REPUTATION)
@@ -1234,7 +1233,7 @@ pub(crate) unsafe fn division_level(club: usize) -> i16 {
 /// [pt] { 0x522360 } (thiscall, ret 8, Cup.cpp; o this não é lido; a virtual +0x90 da copa base):
 /// `Cup::club_in_higher_division(a, b)`: o clube de nível menor (+0x57 → +0x69, com sinal; 0 sem divisão); empate, 0.
 pub(crate) unsafe extern "thiscall" fn club_in_higher_division(_this: usize, a: usize, b: usize) -> usize {
-    let (na, nb) = (division_level(a), division_level(b));
+    let (na, nb) = (division_level(Club(a)), division_level(Club(b)));
     if na < nb {
         a
     } else if na == nb {
@@ -2358,8 +2357,7 @@ pub(crate) unsafe extern "C" fn cup_compare_entries_by_level_asc(a: usize, b: us
 ///
 /// [pt] Leva o byte +0x64 do clube (com sinal) até `valor`: para baixo (`baixar` ≠ 0) se está acima, para cima se está
 /// abaixo.
-pub(crate) unsafe fn cap_professional_status(club: usize, value: i8, baixar: u32) {
-    let club = Club(club);
+pub(crate) unsafe fn cap_professional_status(club: Club, value: i8, baixar: u32) {
     let p = (club.addr() + club::PROFESSIONAL_STATUS) as *mut i8;
     let muda = if baixar != 0 { *p > value } else { *p < value };
     if muda {
@@ -2900,7 +2898,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     exe::newsitem_set_slot(n, 0, read_usize(club.addr()) as u32);
     exe::newsitem_set_slot(n, 1, read_usize(read_usize(cup + 4)) as u32);
     exe::newsitem_set_slot(n, 2, outcome as u8 as i8 as i32 as u32);
-    exe::newsitem_set_slot(n, 3, exe::comp_util_classify_tie_result_for_news(club.addr(), p) as i8 as i32 as u32);
+    exe::newsitem_set_slot(n, 3, exe::comp_util_classify_tie_result_for_news(club, p) as i8 as i32 as u32);
     exe::newsitem_set_slot(n, 4, r as u32);
     // simplification: the cursor is a stack dword with 5 in the low byte (the rest is leftover); only the low byte counts
     let mut cursor = [5u8, 0, 0, 0];
@@ -2917,14 +2915,14 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     if out as u8 != 0xff {
         let nation = club.nation().addr();
         let continent = if nation != 0 { read_usize(nation + nation::CONTINENT) } else { 0 };
-        exe::news_send_by_scope(news, n, club.addr(), read_usize(cup + 4), nation, continent, out);
+        exe::news_send_by_scope(news, n, club, read_usize(cup + 4), nation, continent, out);
         return 1;
     }
     let round = read_i16(p + fixture::ROUND_NAME);
     if (outcome as u8 == 1 && round == 0x96) || (outcome as u8 == 3 && round == 0x8c) {
         exe::news_send_to_comp_region(news, n, read_usize(cup + 4));
     } else {
-        exe::news_send_to_club_manager(news, n, club.addr());
+        exe::news_send_to_club_manager(news, n, club);
     }
     1
 }

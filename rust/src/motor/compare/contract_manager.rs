@@ -409,7 +409,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_lower_match_mora
         return o(this, person, club, contract);
     }
     let before = read_u8_volatile(contract + contract::MORALE) as i8;
-    let plan = match_morale_drop(person, club, contract);
+    let plan = match_morale_drop(person, Club(club), contract);
     // deleting a complaint (0x8674e0) recalculates the contract (0x867240), which may rewrite morale: with a complaint marked before
     // or a drop above 5 (the branches that always delete), original only
     if read_u8_volatile(contract + contract::GRIEVANCES) & 0x14 != 0 || plan.is_some_and(|m| m > 5) {

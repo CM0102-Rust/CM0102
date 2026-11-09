@@ -328,8 +328,7 @@ pub(crate) unsafe fn day_of_year(day: u32, month: u32, year: u32) -> (u16, u16) 
 /// True if the club's division (+0x57) has the given competition id.
 ///
 /// [pt] O jogo `x` está na liga de id [0x9cf590] por um dos clubes (+0x57 → +0).
-pub(crate) unsafe fn is_in_league(club: usize, id: i32) -> bool {
-    let club = Club(club);
+pub(crate) unsafe fn is_in_league(club: Club, id: i32) -> bool {
     let l = club.division().addr();
     l != 0 && read_i32(l) == id
 }
@@ -529,9 +528,9 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                                 if ((h.reputation() as u16) as i16 > 0x1388 || (a.reputation() as u16) as i16 > 0x1388) && comp_clash_rule(game, game, x) != 0 {
                                     add_clash_by_type(grav, list, x, true);
                                 }
-                            } else if read_i32(x) == read_i32(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS) && (is_in_league(h.addr(), read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) || is_in_league(a.addr(), read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE))) {
+                            } else if read_i32(x) == read_i32(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS) && (is_in_league(h, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) || is_in_league(a, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE))) {
                                 *grav = 0x13;
-                            } else if read_i32(game) == read_i32(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS) && (is_in_league(c1.addr(), read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) || is_in_league(c2.addr(), read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE))) {
+                            } else if read_i32(game) == read_i32(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS) && (is_in_league(c1, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) || is_in_league(c2, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE))) {
                                 add_clash_by_type(grav, list, x, false);
                             } else if e_sel != 0
                                 && exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION)) == 0

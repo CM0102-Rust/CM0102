@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(thi
 pub(crate) unsafe extern "thiscall" fn compare_season_end_club_update(this: usize, club: usize) {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE);
-    if club.is_null() || exe::database_is_national_team(club.addr()) != 0 || fin_prm_has_human_manager(club.addr()) {
+    if club.is_null() || exe::database_is_national_team(club) != 0 || fin_prm_has_human_manager(club) {
         return o(this, club.addr());
     }
     let mut a = 0u32;

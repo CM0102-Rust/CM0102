@@ -100,8 +100,7 @@ pub(crate) unsafe extern "C" fn staff_contract_is_bonus_type_allowed(person: usi
 /// limpa os vínculos de opinião da pessoa do contrato (0x549c90 com o registro [0xae23bc] + id × 0x6e), zera +0x40,
 /// põe 4 em +0x4e, zera a felicidade (+0x3f) e +0x3e; com o clube e a nação dele (+0x53), o nível do idioma da nação
 /// (+0x77) para a pessoa (0x7c6830 em [0xb74350], sem o contrato; no máximo 10) nos 4 bits baixos de +0x4f.
-pub(crate) unsafe fn reset_contract_morale(this: usize, person: usize, club: usize) {
-    let club = Club(club);
+pub(crate) unsafe fn reset_contract_morale(this: usize, person: usize, club: Club) {
     crate::comparison::branch("cpl_5 morale zeroed");
     write_u8(this + contract::MORALE, 0);
     write_u8(this + contract::TRANSFER_STATUS, 0);
@@ -112,7 +111,7 @@ pub(crate) unsafe fn reset_contract_morale(this: usize, person: usize, club: usi
     write_u8(this + contract::MATCHES_LEFT_OUT, 0); // a felicidade
     write_u8(this + contract::UNHAPPY_FLAG, 0);
     if !club.is_null() && club.nation().addr() != 0 {
-        let r = exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), person, club.addr(), read_u8(club.nation().addr() + 0x77) as u32, 0) as i8;
+        let r = exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), person, club, read_u8(club.nation().addr() + 0x77) as u32, 0) as i8;
         let c = if r > 10 { 10 } else { r } as u8;
         let b = read_u8(this + contract::SQUAD_STATUS);
         write_u8(this + contract::SQUAD_STATUS, (b & 0xf0) | (c & 0xf));
@@ -127,7 +126,7 @@ pub(crate) unsafe fn reset_contract_morale(this: usize, person: usize, club: usi
 /// `reset_contract_morale`. Pela assinatura do contrato (CONTRACT_MANAGER::sign_contract 0x4cf720, nos termos que
 /// depois são copiados para o contrato guardado).
 pub(crate) unsafe extern "thiscall" fn reset_morale_state(this: usize, person: usize, club: usize) {
-    reset_contract_morale(this, person, club);
+    reset_contract_morale(this, person, Club(club));
 }
 
 /// Builds the offer from the current contract: person, club, wage × percent / 100, today, the end date, flags, morale
@@ -169,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, p
     write_u8(this + 0x3a, 0);
     write_u8(this + contract::LEAVING_ON_BOSMAN, 0);
     write_usize(this + contract::TRANSFER_ARRANGED_FOR, usize::MAX);
-    reset_contract_morale(this, person, club);
+    reset_contract_morale(this, person, Club(club));
     core::ptr::write_unaligned((this + 0x3b) as *mut u16, 0);
     for k in 0x1c..=0x20 {
         write_u8(this + k, 0);

@@ -590,7 +590,7 @@ pub(crate) unsafe fn create_french_table(this: usize, clubs: usize, n: i16, file
         // simplification: the original pushes the row in ecx with the upper bits of the competition id; 0x687430 only reads the
         // byte.
         let row = k; // cqk6: row k receives the k-th club of the list
-        exe::league_init_table_row(this, row as u32, club.addr(), mark, 0);
+        exe::league_init_table_row(this, row as u32, club, mark, 0);
         k = k.wrapping_add(1);
         i = i.wrapping_add(1);
     }

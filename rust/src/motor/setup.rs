@@ -887,11 +887,11 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     let club = Club(loop {
         let r = exe::utils_random(i(G_CLUB_COUNT));
         let c = Club((u(G_CLUB_TABLE) as usize).wrapping_add((r as usize).wrapping_mul(club::SIZE)));
-        if exe::database_is_national_team(c.addr()) != 0 {
+        if exe::database_is_national_team(c) != 0 {
             continue;
         }
         let nation = core::ptr::read_unaligned((c.addr() + club::NATION) as *const usize);
-        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) & 2 == 0 || exe::club_can_be_managed(c.addr()) == 0 {
+        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) & 2 == 0 || exe::club_can_be_managed(c) == 0 {
             continue;
         }
         break c.addr();
@@ -901,7 +901,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     core::ptr::write_unaligned((p + staff::FIRST_NAME) as *mut u32, (exe::database_pick_first_name_for_nation(nation) as u32));
     let n2 = (exe::database_pick_second_name_for_nation(core::ptr::read_unaligned((p + staff::NATION) as *const usize)) as u32);
     core::ptr::write_unaligned((p + staff::SECOND_NAME) as *mut u32, n2);
-    exe::appoint_human_manager_to_club(p, club.addr());
+    exe::appoint_human_manager_to_club(p, club);
     1
 }
 

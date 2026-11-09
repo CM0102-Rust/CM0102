@@ -290,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         let id = read_usize(e);
         let kind = read_u8(e + record_news_item::RECORD_TYPE);
         let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(id).wrapping_add(id.wrapping_mul(0x244)));
-        if human(club.addr()) == 0 && exe::database_is_national_team(club.addr()) == 0 {
+        if human(club.addr()) == 0 && exe::database_is_national_team(club) == 0 {
             continue;
         }
         crate::comparison::branch("cpx_12 record news");
@@ -303,10 +303,10 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         }
         // simplification: the original pushes the local’s dword with the type in the low byte (the rest is leftover); 0x453120 reads the byte
         exe::club_records_write_record_news_fields(id, reg, kind as u32, n);
-        if exe::database_is_national_team(club.addr()) != 0 {
+        if exe::database_is_national_team(club) != 0 {
             exe::news_send_to_nation_managers(read_usize(G_NEWS), n, club.nation().addr());
         } else {
-            exe::news_send_to_club_manager(read_usize(G_NEWS), n, club.addr());
+            exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
         }
     }
     if read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY) as i32 >= 100 {
@@ -424,8 +424,7 @@ pub(crate) unsafe fn record_news_queued(this: usize, id: usize, kind: u8) -> boo
 /// Transfer value >= 1000 x (club reputation + 300).
 ///
 /// [pt] A transferência de recorde do clube passa de 1000 × (reputação (+0x80) + 300)?
-pub(crate) unsafe fn is_big_transfer(value: i32, club: usize) -> bool {
-    let club = Club(club);
+pub(crate) unsafe fn is_big_transfer(value: i32, club: Club) -> bool {
     value >= (club.reputation() as i32 + 300).wrapping_mul(1000)
 }
 
@@ -469,8 +468,8 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, contract);
     let seller = if contract != 0 { injury_club_by_index(read_i32(contract + contract::CLUB)) } else { 0 };
     let mut draft = [0u8; 8];
-    let s = exe::club_records_get_season_record(this, buyer.addr(), 1);
-    let a = exe::club_records_get_all_time_record(this, buyer.addr(), 1);
+    let s = exe::club_records_get_season_record(this, buyer, 1);
+    let a = exe::club_records_get_all_time_record(this, buyer, 1);
     if seller == 0 {
         return 1;
     }
@@ -484,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
         *((s + club_record::FEE_PAID_FLAG) as *mut u8) = (read_usize(t + offer::EXCHANGE_PLAYERS) != 0) as u8;
         if read_i32(t + offer::FEE) > read_i32(a + club_record::FEE_PAID) {
             copy_transfer_record(a, s, 0x313);
-            if is_big_transfer(read_i32(a + club_record::FEE_PAID), buyer.addr()) {
+            if is_big_transfer(read_i32(a + club_record::FEE_PAID), buyer) {
                 crate::comparison::branch("cpp_10 big transfer");
                 if !record_news_queued(this, read_usize(buyer.addr()), 0x1c) {
                     exe::club_records_queue_record_news(this, read_usize(buyer.addr()) as u32, 0x1c);
@@ -506,7 +505,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     *((s + club_record::FEE_RECEIVED_FLAG) as *mut u8) = (read_usize(t + offer::EXCHANGE_PLAYERS) != 0) as u8;
     if read_i32(t + offer::FEE) > read_i32(a + club_record::FEE_RECEIVED) {
         copy_transfer_record(a, s, 0x33c);
-        if is_big_transfer(read_i32(a + club_record::FEE_RECEIVED), seller) && !record_news_queued(this, read_usize(seller), 0x1d) {
+        if is_big_transfer(read_i32(a + club_record::FEE_RECEIVED), Club(seller)) && !record_news_queued(this, read_usize(seller), 0x1d) {
             exe::club_records_queue_record_news(this, read_usize(seller) as u32, 0x1d);
         }
     }
@@ -553,11 +552,11 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
         write_usize(field, if v == -1 { value } else { v.wrapping_add(value) } as usize);
     };
     // the seller: the amount received
-    let t = exe::club_records_get_season_record(this, seller.addr(), 1);
-    let s = exe::club_records_get_all_time_record(this, seller.addr(), 1);
+    let t = exe::club_records_get_season_record(this, seller, 1);
+    let s = exe::club_records_get_all_time_record(this, seller, 1);
     add(t + club_record::TRANSFER_INCOME);
     write_i16(t + club_record::TRANSFER_INCOME_YEAR, 0);
-    let year = (exe::key_nation_get_club_season_year(seller.addr()) as u32) as i16;
+    let year = (exe::key_nation_get_club_season_year(seller) as u32) as i16;
     if (read_usize(s + club_record::TRANSFER_INCOME) as i32) < read_usize(t + club_record::TRANSFER_INCOME) as i32 {
         let minimum = (seller.reputation() as i32 + 500).wrapping_mul(1000);
         if read_usize(t + club_record::TRANSFER_INCOME) as i32 >= minimum && year != read_i16(s + club_record::TRANSFER_INCOME_YEAR) && !is_record_news_queued(this, read_usize(seller.addr()), 0x1f) {
@@ -568,11 +567,11 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
         write_i16(s + club_record::TRANSFER_INCOME_YEAR, year);
     }
     // the buyer: the amount spent
-    let t = exe::club_records_get_season_record(this, buyer.addr(), 1);
-    let s = exe::club_records_get_all_time_record(this, buyer.addr(), 1);
+    let t = exe::club_records_get_season_record(this, buyer, 1);
+    let s = exe::club_records_get_all_time_record(this, buyer, 1);
     add(t + club_record::TRANSFER_SPENDING);
     write_i16(t + club_record::TRANSFER_SPENDING_YEAR, 0);
-    let year = (exe::key_nation_get_club_season_year(buyer.addr()) as u32) as i16;
+    let year = (exe::key_nation_get_club_season_year(buyer) as u32) as i16;
     if (read_usize(t + club_record::TRANSFER_SPENDING) as i32) > read_usize(s + club_record::TRANSFER_SPENDING) as i32 {
         let minimum = (buyer.reputation() as i32 + 500).wrapping_mul(1000);
         // the original checks the minimum against the old record (the ecx that still holds the all-time one)
@@ -652,7 +651,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
     if *((entry + club_record_entry::SEASON_GAMES) as *const u8) == 0 {
         return 0;
     }
-    let r = exe::club_records_get_season_record(this, club.addr(), 0);
+    let r = exe::club_records_get_season_record(this, club, 0);
     if r == 0 {
         return 0;
     }
@@ -668,7 +667,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         if est == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             continue;
         }
-        if read_usize(p + staff::CLUB_JOB) != club.addr() && read_usize(p + staff::CLUB_JOB) != exe::club_get_linked_b_team(club.addr(), (0) as *mut u32, 1) {
+        if read_usize(p + staff::CLUB_JOB) != club.addr() && read_usize(p + staff::CLUB_JOB) != exe::club_get_linked_b_team(club, (0) as *mut u32, 1) {
             continue;
         }
         let reg = exe::playerstats_get_category_record(read_usize(G_PLAYER_STATS), est, 6);
@@ -858,7 +857,7 @@ pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offe
         return 0;
     }
     let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + offer::BUYER_CLUB_ID).wrapping_mul(club::SIZE)));
-    let rec = exe::club_records_get_all_time_record(this, club.addr(), 1);
+    let rec = exe::club_records_get_all_time_record(this, club, 1);
     if rec == 0 || club.is_null() {
         return 0;
     }

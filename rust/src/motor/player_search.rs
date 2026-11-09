@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
-        if club_obs.manager().addr() != 0 && exe::human_manager_is_human_club(club_obs.addr(), 0, 1, 0, 0) != 0 && read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
+        if club_obs.manager().addr() != 0 && exe::human_manager_is_human_club(club_obs, 0, 1, 0, 0) != 0 && read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
             let q = exe::fog_of_war_get_manager_map(read_usize(G_FOG_OF_WAR), club_obs.manager().addr());
             if q != 0 {
                 exe::fog_of_war_map_raise_knowledge(q, p, 0);
@@ -606,12 +606,12 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         ftol(esi as f64 * read_f64(rdata::F64_1_6) + read_f64(rdata::F64_5000))
     };
     if forcada.is_null() {
-        let squad = (exe::database_count_club_squad(club.addr(), 0, 0) as i8);
+        let squad = (exe::database_count_club_squad(club, 0, 0) as i8);
         let with_nation = |c: usize| c != 0 && read_i32((read_i32(G_COMP_OBJECT_TABLE) as usize).wrapping_add(read_i32(c) as usize * 4)) != 0;
         if squad < 16 && with_nation(nation) {
             edi /= 2;
         } else if squad < 20 && with_nation(nation) {
-            let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club.addr());
+            let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club);
             if fin != 0 {
                 match exe::finance_get_wealth_band(fin) as i8 {
                     -2 => edi /= 2,
@@ -629,7 +629,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
                     edi = ftol((v as f64 * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_1)) * edi as f64);
                 }
             }
-            let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club.addr());
+            let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club);
             if fin != 0 {
                 let v = edi as f64;
                 match exe::finance_get_wealth_band(fin) as i8 {
@@ -724,8 +724,7 @@ pub(crate) unsafe extern "thiscall" fn get_scout(this: usize) -> usize {
 /// Rival club's manager (+0xcf) passes the draws: random(+0x5c) == 0 and random(+0x57) > 5.
 ///
 /// [pt] O técnico (+0xcf) de um clube rival passa nos sorteios (sorteio(+0x5c) = 0 e sorteio(+0x57) > 5)?
-pub(crate) unsafe fn rival_manager_passes_draws(c: usize) -> bool {
-    let c = Club(c);
+pub(crate) unsafe fn rival_manager_passes_draws(c: Club) -> bool {
     friendly_random(*(((c.manager().addr() as u32) as usize + 0x5c) as *const i8) as i32) == 0
         && friendly_random(*(((c.manager().addr() as u32) as usize + 0x57) as *const i8) as i32) > 5
 }
@@ -895,6 +894,6 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: 
         crate::comparison::branch("cpn_7 scout nation");
         return 1; // the nation is not foreign for the scout
     }
-    (exe::scout_manager_can_club_scout_nation(read_usize(G_SCOUT_MANAGER), nation, club.addr()) != 0) as u32
+    (exe::scout_manager_can_club_scout_nation(read_usize(G_SCOUT_MANAGER), nation, club) != 0) as u32
 }
 

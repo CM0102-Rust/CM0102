@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_coach_assignments(this: us
         return o(this, club.addr(), tecnico);
     }
     let mut reg = vec![(club.addr() + club::HAS_LINKED_CLUB, 1)];
-    if (tecnico != 0 || exe::human_manager_is_human_club(club.addr(), 1, (1) as u32, (0) as u32, 0) != 0) && exe::database_is_national_team(club.addr()) == 0 {
+    if (tecnico != 0 || exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0) && exe::database_is_national_team(club) == 0 {
         let manager = if tecnico == 0 { club.manager().addr() } else { tecnico };
         if manager == 0 || !(0..0x10).contains(&read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1)) {
             return o(this, club.addr(), tecnico);

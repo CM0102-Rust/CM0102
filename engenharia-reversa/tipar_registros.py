@@ -232,7 +232,126 @@ class Conversor:
         return novo, xs
 
 
+def tirar_addr_exe(grava):
+    """`exe::x(club.addr())` -> `exe::x(club)` where the wrapper's parameter is `impl Addr` (a pointer in the original)."""
+    calls = open(os.path.join(SRC, 'motor', 'exe_calls.rs'), encoding='utf-8').read()
+    params = {}
+    for m in re.finditer(r'pub\(crate\) unsafe fn (\w+)\(([^)]*)\)', calls):
+        params[m.group(1)] = ['impl Addr' in p for p in m.group(2).split(',')] if m.group(2).strip() else []
+    n = 0
+    arqs = [os.path.join(raiz, f) for raiz, _, fs in os.walk(SRC) for f in fs if f.endswith('.rs') and f != 'exe_calls.rs']
+    pasta = os.path.join(R, 'engenharia-reversa', 'mutacoes')
+    arqs += [os.path.join(pasta, f) for f in os.listdir(pasta) if f.endswith('.py')]
+    for p in arqs:
+        if True:
+            t = open(p, encoding='utf-8').read()
+            mk = t if p.endswith('.py') else mascara(t)  # the mutation lists hold the code inside strings
+            edicoes = []
+            for m in re.finditer(r'(?<![\w:])exe::(\w+)\(', mk):
+                ps = params.get(m.group(1))
+                if not ps:
+                    continue
+                args, fim = ie.args_da_chamada(mk, m.end() - 1)
+                if not args or len(args) != len(ps):
+                    continue
+                pos = m.end()
+                for k, a in enumerate(args):
+                    ini = mk.index(a, pos) if a else pos
+                    pos = ini + len(a)
+                    if ps[k] and re.fullmatch(r'[a-z_][a-z0-9_]*\.addr\(\)', a):
+                        edicoes.append((ini, ini + len(a), a[:-len('.addr()')]))
+            if edicoes:
+                n += len(edicoes)
+                for a, b, novo in sorted(edicoes, reverse=True):
+                    t = t[:a] + novo + t[b:]
+                if grava:
+                    open(p, 'w', encoding='utf-8').write(t)
+    print('%d `.addr()` tirados de argumentos exe::' % n)
+
+
+def assinaturas(tipo, grava):
+    """Our helpers that rebind a parameter (`fn f(club: usize) { let club = Club(club); ..`) take the type instead
+    (`fn f(club: Club)`); then the callers, driven by the compiler: an argument `y.addr()` becomes `y`, any other
+    becomes `Club(..)`. A function used as a function pointer (a callback, a table) goes back to its old signature."""
+    import json as js
+    import subprocess
+    trocadas = {}  # (file, function) -> (param, old head text)
+    for raiz, _, fs in os.walk(SRC):
+        for f in fs:
+            p = os.path.join(raiz, f)
+            if not f.endswith('.rs') or f in ('records.rs', 'exe_calls.rs'):
+                continue
+            t = open(p, encoding='utf-8').read()
+            partes, pos = [], 0
+            for nome, a, b in mover_rotinas.blocos(t):
+                bloco = t[a:b]
+                m = re.search(r'^((?:pub\(crate\) )?unsafe fn \w+\()([^)]*)\)([^{]*)\{\n([ \t]*)let (\w+) = %s\(\5\);\n' % tipo, bloco, re.M)
+                if not m or 'extern' in bloco[:m.start()].split('\n')[-1]:
+                    continue
+                x = m.group(5)
+                ps = m.group(2)
+                ps2 = re.sub(r'\b%s\s*:\s*usize\b' % re.escape(x), '%s: %s' % (x, tipo), ps, count=1)
+                if ps2 == ps:
+                    continue
+                novo = bloco[:m.start()] + m.group(1) + ps2 + ')' + m.group(3) + '{\n' + bloco[m.end():]
+                trocadas[(p, nome)] = x
+                partes += [t[pos:a], novo]
+                pos = b
+            partes.append(t[pos:])
+            if grava and partes != [t]:
+                open(p, 'w', encoding='utf-8').write(''.join(partes))
+    print('%d funções passam a receber %s' % (len(trocadas), tipo))
+    if not grava:
+        return
+    for volta in range(40):
+        r = subprocess.run(['cargo', 'build', '--release', '--message-format=json'], cwd=os.path.join(R, 'rust'),
+                           capture_output=True, text=True, encoding='utf-8', errors='replace')
+        erros = []
+        for l in r.stdout.splitlines():
+            try:
+                d = js.loads(l)
+            except ValueError:
+                continue
+            if d.get('reason') == 'compiler-message' and d['message']['level'] == 'error':
+                erros.append(d['message'])
+        if not erros:
+            print('compila (volta %d)' % volta)
+            return
+        edicoes = collections.defaultdict(list)
+        voltar = set()
+        for e in erros:
+            sp = next((s for s in e['spans'] if s['is_primary']), None)
+            if not sp:
+                continue
+            arq = os.path.normpath(os.path.join(R, 'rust', sp['file_name']))
+            txt = e['message'] + ' ' + ' '.join((s.get('label') or '') for s in e['spans'])
+            if ('expected `%s`, found `usize`' % tipo) in txt or ('expected `%s`, found integer' % tipo) in txt:
+                edicoes[arq].append((sp['byte_start'], sp['byte_end']))
+            elif 'fn(' in txt or 'fn item' in txt:
+                voltar.add((arq, sp['line_start']))
+            else:
+                print('erro não tratado:', sp['file_name'], sp['line_start'], e['message'][:120])
+        n = 0
+        for arq, spans in edicoes.items():
+            b = open(arq, 'rb').read()
+            for a_, b_ in sorted(set(spans), reverse=True):
+                s = b[a_:b_].decode('utf-8')
+                novo = s[:-len('.addr()')] if re.fullmatch(r'[a-z_][a-z0-9_]*\.addr\(\)', s) else '%s(%s)' % (tipo, s)
+                b = b[:a_] + novo.encode('utf-8') + b[b_:]
+                n += 1
+            open(arq, 'wb').write(b)
+        if voltar:
+            print('usadas como ponteiro de função (voltar à mão):', sorted(voltar)[:10])
+        print('volta %d: %d erros, %d argumentos ajustados' % (volta, len(erros), n))
+        if n == 0:
+            sys.exit('parou: erros que a ferramenta não trata')
+
+
 def main():
+    if '--assinaturas' in sys.argv:
+        return assinaturas(sys.argv[sys.argv.index('--assinaturas') + 1], '--gravar' in sys.argv)
+    if '--exe' in sys.argv:
+        return tirar_addr_exe('--gravar' in sys.argv)
     mod = sys.argv[1]
     grava = '--gravar' in sys.argv
     cv = Conversor(mod)

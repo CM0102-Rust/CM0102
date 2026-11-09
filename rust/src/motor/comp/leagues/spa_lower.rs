@@ -297,8 +297,7 @@ pub(crate) unsafe fn comp_record_of_key(g: usize) -> usize {
 /// Is the club's competition (+0x57) the one with key id [g]?
 ///
 /// [pt] A competição do clube (+0x57, o id no +0) é a de id [g]?
-pub(crate) unsafe fn spa_lower_is_in_comp(c: usize, g: usize) -> bool {
-    let c = Club(c);
+pub(crate) unsafe fn spa_lower_is_in_comp(c: Club, g: usize) -> bool {
     let comp = c.division().addr();
     comp != 0 && read_usize(comp) == read_usize(g)
 }
@@ -355,7 +354,7 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u3
 pub(crate) unsafe fn is_b_team_of_comp_club(c: usize, g: usize) -> bool {
     let mut eh_a: u32 = 0;
     let p = exe::club_get_linked_b_team(c, &mut eh_a, 1);
-    p != 0 && eh_a == 0 && spa_lower_is_in_comp(p, g)
+    p != 0 && eh_a == 0 && spa_lower_is_in_comp(Club(p), g)
 }
 
 /// The candidates of the Spanish lower division, from the original routine's local record of 100.
@@ -383,7 +382,7 @@ pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
             let group = [KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B1, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B2, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B3, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B4].iter().any(|&g| id == read_usize(g));
             if group || (read_usize(nation) == read_usize(KEY_NATION_SPAIN) && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) {
                 let mut eh_a: u32 = 0;
-                if exe::club_get_linked_b_team(c.addr(), &mut eh_a, 1) == 0 {
+                if exe::club_get_linked_b_team(c, &mut eh_a, 1) == 0 {
                     v.push(c.addr());
                 }
             }
@@ -409,7 +408,7 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
         let nation = c.nation().addr();
         if comp != 0 && nation != 0 && read_usize(nation) == read_usize(KEY_NATION_SPAIN) && read_usize(comp) != read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_usize(comp) != read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             let mut eh_a: u32 = 0;
-            let p = Club(exe::club_get_linked_b_team(c.addr(), &mut eh_a, 1));
+            let p = Club(exe::club_get_linked_b_team(c, &mut eh_a, 1));
             let enters = !p.is_null() && eh_a == 0 && p.division().addr() != 0 && (*k as i8 as i16) < rows && read_usize(p.division().addr()) == read_usize(g);
             if enters {
                 *k = k.wrapping_add(1);
@@ -451,7 +450,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * club::SIZE;
-        if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
+        if spa_lower_is_in_comp(Club(c), KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
             write_usize(c + club::DIVISION, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
         }
         i = i.wrapping_add(1);

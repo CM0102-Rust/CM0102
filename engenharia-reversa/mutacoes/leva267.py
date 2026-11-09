@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cqd2_aceita_um_dia_depois', 'exe::transfer_manager_schedule_offer(this, o, 0, 1); // cqd2: a próxima fatia', 'exe::transfer_manager_schedule_offer(this, o, 1, 1); // mutacao: um dia depois', 'cqd_2 bid accepted'),
     ('cqd2_emprestimo_recusado', 'if !(r >= 0.75) { // cqd2: the target does not want to move', 'if !(r >= 2.0) { // mutacao: o alvo quase nunca quer se mudar', 'cqd_2 loan'),
-    ('cqd2_clube_chega_sempre', 'if exe::transfer_manager_can_club_bid_for_player(this, player, club.addr(), &mut reason, 0) == 0 { // cqd2: the club cannot reach the player', 'if exe::transfer_manager_can_club_bid_for_player(this, player, club.addr(), &mut reason, 0) == 0 && false { // mutacao: o clube chega sempre', 'cqd_2 club arrives'),
+    ('cqd2_clube_chega_sempre', 'if exe::transfer_manager_can_club_bid_for_player(this, player, club, &mut reason, 0) == 0 { // cqd2: the club cannot reach the player', 'if exe::transfer_manager_can_club_bid_for_player(this, player, club, &mut reason, 0) == 0 && false { // mutacao: o clube chega sempre', 'cqd_2 club arrives'),
     ('cqd5_tv_cinco_semanas', 'exe::date_add_weeks(pd0, (px) as *mut [u8; 8], 4); // cqd5: a TV quatro semanas adiante', 'exe::date_add_weeks(pd0, (px) as *mut [u8; 8], 5); // mutacao: cinco semanas', 'cqd_5 matches for tv'),
     ('cqd5_mando_trocado', 'let (ea, eb) = (ea, eb); // cqd5: the home and away sides', 'let (ea, eb) = (eb, ea); // mutacao: o mando trocado', 'cqd_5 fixture list match'),
     ('cqd5_ordem_sem_sorteio', 'exe::league_draw_team_order(this, n as u32); // cqd5: the order of the clubs', '// mutacao: a ordem dos clubes sem sorteio', 'cqd_5 order drawn'),

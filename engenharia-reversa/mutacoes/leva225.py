@@ -1,7 +1,7 @@
 # Mutações da 225a leva (itens db_q10, db_q11, db_q12). Uso: python mutacoes.py mutacoes\leva225.py --carreira 2002-06-01
 MUTACOES = [
     ('dq10_contar', '            n = n.wrapping_add(1);\n        }\n        n\n', '            n = n.wrapping_add(2);\n        }\n        n\n'),
-    ('dq10_reunir', 'array.add(i), squad_slot(club, i)', 'array.add(i), squad_slot(club, 49 - i)'),
+    ('dq10_reunir', 'array.add(i), squad_slot(Club(club), i)', 'array.add(i), squad_slot(Club(club), 49 - i)'),
     ('dq10_dirigido', '    (*((read_usize(club + 0x53) + 0x11c) as *const u8) & 2 != 0) as u8', '    (*((read_usize(club + 0x53) + 0x11c) as *const u8) & 4 != 0) as u8'),
     ('dq11_nao_jogador', '        last = *((array + 3 * k) as *const u8);', '        last = *((array + 3 * k + 1) as *const u8);'),
     ('dq11_jogador', '*((player + d as usize) as *mut u8) = *((array + 3 * i) as *const u8);', '*((player + d as usize) as *mut u8) = *((array + 3 * i + 1) as *const u8);'),

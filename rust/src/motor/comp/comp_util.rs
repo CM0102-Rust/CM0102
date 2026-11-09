@@ -290,7 +290,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, ga
         }
         return if club.addr() != home { 2 } else { 1 };
     }
-    if exe::database_is_national_team(club.addr()) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         let nation = read_ptr(field as usize + 0x38);
         if nation != 0 && read_u32(nation + city::NATION) == (club.nation().addr() as u32) {
             return 1;
@@ -459,8 +459,8 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     if league == 0 || read_usize(league + 8) == 0 {
         return 0;
     }
-    let ea = exe::comp_stats_find_club_entry(read_usize(league + 8), a.addr());
-    let eb = exe::comp_stats_find_club_entry(read_usize(league + 8), b.addr());
+    let ea = exe::comp_stats_find_club_entry(read_usize(league + 8), a);
+    let eb = exe::comp_stats_find_club_entry(read_usize(league + 8), b);
     if ea == 0 || eb == 0 || read_usize(league + league::CURRENT_STAGE) as i32 != -1 || read_u8(league + league::COMP_TYPE) != 2 {
         return 0;
     }
@@ -535,7 +535,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
     if finances == 0 {
         strength = core::ptr::read_unaligned((club.addr() + club::CASH) as *const i32) / 400;
     } else {
-        let f = exe::financetable_get_club_finance(finances, club.addr());
+        let f = exe::financetable_get_club_finance(finances, club);
         if f != 0 {
             strength = (core::ptr::read_unaligned(f as *const i64) / 300) as i32;
         }
@@ -545,7 +545,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
     let mut players = [0usize; 50];
     let mut escalados = [0usize; 15];
     let codes: [u16; 15] = [1, 0x804, 0x84, 0x204, 0x204, 0x204, 0x810, 0x90, 0x210, 0x210, 0x210, 0x40, 0x40, 0x40, 0x40];
-    exe::database_collect_club_squad(club.addr(), squad.as_mut_ptr(), 0);
+    exe::database_collect_club_squad(club, squad.as_mut_ptr(), 0);
     let mut k: i8 = 0;
     for &p in squad.iter() {
         if p != 0 && read_usize(p + staff::PLAYER) != 0 {
@@ -557,7 +557,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
     pick(players.as_ptr() as usize, k as u8 as u32, codes.as_ptr() as usize, 0xf, 0, escalados.as_mut_ptr() as usize, 0x840, club.addr(), 0, 0, 0, 0, 0, 0, 0);
     for (j, &p) in escalados.iter().enumerate() {
         if p != 0 {
-            strength = strength.wrapping_add(exe::match_man_score_player_for_selection(p, codes[j] as u32, 0x840, club.addr(), -1, 0));
+            strength = strength.wrapping_add(exe::match_man_score_player_for_selection(p, codes[j] as u32, 0x840, club, -1, 0));
         }
     }
     strength

@@ -28,6 +28,23 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 2: o clube nas assinaturas
+
+- O traço `Addr` (records.rs): um endereço na memória do jogo, `usize` ou um ponteiro de registro tipado. Os invólucros
+  `exe::` recebem `impl Addr` onde o original passa um ponteiro (`involucros_exe.py`), então `exe::x(club)` dispensa o
+  `.addr()` (442 tirados no código, 27 nas mutações: `tipar_registros.py --exe`). `i32` implementa `Addr` só para o `0`
+  sem tipo.
+- As nossas funções que recebiam um clube em `usize` e o tipavam na entrada recebem `Club` (112;
+  `tipar_registros.py --assinaturas Club`); as chamadas foram ajustadas pelo compilador (294: `y.addr()` → `y`, o resto
+  `Club(..)`).
+- O `registros.py` fixa o tipo de um campo depois de gerado (a contagem dos usos muda à medida que o código vira método).
+- `seguir_ancoras.py COMMIT`: segue as âncoras de mutação quebradas por uma troca mecânica (12 seguidas; 3 textos de
+  troca acertados à mão).
+
+`.addr()` fora dos invólucros: 2.246 → 1.700. O que sobra: funções que recebem o clube como `usize` sem ler campo dele
+(só repassam) e vetores/larguras diferentes (`club.addr() + club::SQUAD + v * 4`). Prova: 7cc445c2 ×2, detector igual,
+comparação 0; as 27 mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 1: o clube
 
 `engenharia-reversa/tipar_registros.py club`: numa função, a variável usada como `x + club::CAMPO` passa a ser um

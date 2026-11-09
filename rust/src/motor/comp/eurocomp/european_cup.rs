@@ -3,8 +3,7 @@ use super::*;
 /// The club's nation (+0x53).
 ///
 /// [pt] A nação do clube (+0x53).
-pub(crate) unsafe fn club_nation(club: usize) -> usize {
-    let club = Club(club);
+pub(crate) unsafe fn club_nation(club: Club) -> usize {
     club.nation().addr()
 }
 
@@ -124,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         }
         for i in (j + 1)..0x20 {
             let o = ent(i);
-            if read_usize(o + 4) == 0 && club_nation(read_usize(e)) == club_nation(read_usize(o)) {
+            if read_usize(o + 4) == 0 && club_nation(Club(read_usize(e))) == club_nation(Club(read_usize(o))) {
                 crate::comparison::branch("cqg_4 partner from same nation");
                 write_usize(e + 4, read_usize(o)); // cqg4: the partner from the same nation
                 write_usize(o + 4, read_usize(e));
@@ -208,14 +207,14 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         for p in 0..4i32 {
             let mut g = start;
             while g < fim {
-                let nation = club_nation(read_usize(slot(g, p)));
-                let repetida = (0..4).any(|q| q != p && nation == club_nation(read_usize(slot(g, q))));
+                let nation = club_nation(Club(read_usize(slot(g, p))));
+                let repetida = (0..4).any(|q| q != p && nation == club_nation(Club(read_usize(slot(g, q)))));
                 if repetida {
                     for g2 in start..fim {
                         if g2 == g {
                             continue;
                         }
-                        if (0..4).all(|q| club_nation(read_usize(slot(g, p))) != club_nation(read_usize(slot(g2, q)))) {
+                        if (0..4).all(|q| club_nation(Club(read_usize(slot(g, p)))) != club_nation(Club(read_usize(slot(g2, q))))) {
                             crate::comparison::branch("cqg_4 swap by nation");
                             let x = read_usize(slot(g, p));
                             write_usize(slot(g, p), read_usize(slot(g2, p)));
@@ -232,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         let row = slot(g, 0);
         for q in 0..4usize {
             let c = read_usize(row + q * 4);
-            exe::uefaseeding_add_nation_points(read_usize(G_UEFA_SEEDING), club_nation(c), 1);
+            exe::uefaseeding_add_nation_points(read_usize(G_UEFA_SEEDING), club_nation(Club(c)), 1);
             let value = 1_800_000i32; // cqg4: the group stage prize
             crate::comparison::branch("cqg_4 group stage prize");
             exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), value);
@@ -564,7 +563,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
     }
     for i in 0..16 {
         for j in 0..16 {
-            if club_nation(read_usize(e7(w, i))) == club_nation(read_usize(e7(w, j))) {
+            if club_nation(Club(read_usize(e7(w, i)))) == club_nation(Club(read_usize(e7(w, j)))) {
                 write_u8(e7(w, i) + 4, read_u8(e7(w, i) + 4).wrapping_add(1));
             }
         }
@@ -626,7 +625,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
                 let club = read_usize(v);
                 if club != 0 {
                     n += 1;
-                    if read_u8(v + 5) == read_u8(p + 5) || club_nation(club) == club_nation(read_usize(p)) { // cqg6: same group or nation
+                    if read_u8(v + 5) == read_u8(p + 5) || club_nation(Club(club)) == club_nation(Club(read_usize(p))) { // cqg6: same group or nation
                         conflito = true;
                         break;
                     }
@@ -670,7 +669,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
     for h in 0..4i32 {
         for q in 0..4i32 {
             let c = read_usize(e7(g, h * 4 + q));
-            exe::uefaseeding_add_nation_points(read_usize(G_UEFA_SEEDING), club_nation(c), 1);
+            exe::uefaseeding_add_nation_points(read_usize(G_UEFA_SEEDING), club_nation(Club(c)), 1);
             let value = 1_200_000i32; // cqg6: the second stage prize
             crate::comparison::branch("cqg_6 second stage prize");
             exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), value);
@@ -779,7 +778,7 @@ pub(crate) unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usiz
     if r != 0 {
         return r;
     }
-    let r = read_i16(club_nation(read_usize(b)) + 0x8e) as i32 - read_i16(club_nation(read_usize(a)) + 0x8e) as i32;
+    let r = read_i16(club_nation(Club(read_usize(b))) + 0x8e) as i32 - read_i16(club_nation(Club(read_usize(a))) + 0x8e) as i32;
     if r != 0 {
         return r;
     }
@@ -819,8 +818,7 @@ pub(crate) unsafe fn european_cup_add_knocked_out_record(club: usize, comp: usiz
 /// Removes the club from its European competition this season (EURO_FLAG +0x1db = -1).
 ///
 /// [pt] O clube sai da competição europeia da temporada (+0x1db = −1).
-pub(crate) unsafe fn leave_euro_competition(club: usize) {
-    let club = Club(club);
+pub(crate) unsafe fn leave_euro_competition(club: Club) {
     core::ptr::write_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *mut i32, -1);
 }
 
@@ -885,7 +883,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 // simplification: +0x32 and +0x30 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words.
                 european_cup_add_knocked_out_record(club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
                 crate::comparison::branch("cpz_4 out in qualifying");
-                leave_euro_competition(club); // cpz4: whoever is knocked out in qualifying leaves the European competition
+                leave_euro_competition(Club(club)); // cpz4: whoever is knocked out in qualifying leaves the European competition
             }
             _ => {}
         }
@@ -895,7 +893,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
         } else if d == 0xfe {
             european_cup_add_failed_to_qualify_record(club, comp, 0x449, 0x32);
             crate::comparison::branch("cpz_4 out in stage 1");
-            leave_euro_competition(club); // cpz4: whoever is knocked out in stage 1 leaves the European competition
+            leave_euro_competition(Club(club)); // cpz4: whoever is knocked out in stage 1 leaves the European competition
         }
     } else if (f as i8) < 0xc {
         if d == 6 {
@@ -903,17 +901,17 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
             european_cup_add_qualified_record(club, comp, 0, 0x78, 0x32); // cpz4: passar da fase 2 pesa 0x32
         } else if d == 0xfe {
             european_cup_add_failed_to_qualify_record(club, comp, 0x44a, 0x32);
-            leave_euro_competition(club);
+            leave_euro_competition(Club(club));
         }
     } else if f == 0xc {
         match d {
             1 => {
                 exe::staff_records_add_cup_winners_record(eng_second_staff_records(), club, game, end);
-                leave_euro_competition(club);
+                leave_euro_competition(Club(club));
             }
             2 => {
                 exe::staff_records_add_cup_runners_up_record(eng_second_staff_records(), club, game, end);
-                leave_euro_competition(club);
+                leave_euro_competition(Club(club));
             }
             0 => {
                 let weight = scale_by_round(0x4b, 0x64, read_i16(game + 0x34), 2);
@@ -927,7 +925,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
             0xff => {
                 let weight = scale_by_round(0x4b, 0x64, read_i16(game + 0x34), 2);
                 european_cup_add_knocked_out_record(club, comp, 0, read_i16(game + 0x30) as u16 as u32, weight);
-                leave_euro_competition(club);
+                leave_euro_competition(Club(club));
             }
             _ => {}
         }
@@ -1026,8 +1024,8 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
         return show_error_at(0x9c4900, 0x78a);
     }
     for g in 0..4i8 {
-        leave_euro_competition(second_stage_group_club(this, g, 2));
-        leave_euro_competition(second_stage_group_club(this, g, 3));
+        leave_euro_competition(Club(second_stage_group_club(this, g, 2)));
+        leave_euro_competition(Club(second_stage_group_club(this, g, 3)));
     }
     exe::cup_set_up_round(stage, 0);
     core::ptr::write_unaligned((this + cup::CURRENT_STAGE) as *mut i32, 0xc);
@@ -1386,8 +1384,7 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
 ///
 /// [pt] A palavra do coeficiente da nação do clube: [0xde1f58] + 18 × (+0x1df da seleção 0x53b3d0 da nação +0x53) + 0xf,
 /// como a 0x9058b0 calcula; 0 sem tabela, sem nação ou sem seleção.
-pub(crate) unsafe fn nation_coefficient_word(club: usize) -> usize {
-    let club = Club(club);
+pub(crate) unsafe fn nation_coefficient_word(club: Club) -> usize {
     let table = read_usize(G_UEFA_SEEDING);
     let nation = club.nation().addr();
     if table == 0 || nation == 0 {

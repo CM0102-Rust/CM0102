@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_th
             if without_slot != 0 && !c.is_null() && c.continental_comp_id() != u32::MAX {
                 crate::comparison::branch("cqi_1 already with a place");
                 p += 12; // cqi1: skips the club that already has a place
-            } else if without_human != 0 && !c.is_null() && exe::human_manager_is_human_club(c.addr(), 0, 1, 0, 0) != 0 {
+            } else if without_human != 0 && !c.is_null() && exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {
                 p += 12;
             } else {
                 if foul == 0 {
@@ -282,8 +282,7 @@ pub(crate) unsafe fn increment_byte(a: usize) {
 /// [pt] O clube `c` ganha a vaga na competição `comp`, na fase `fase`, se tem nação e ainda não tem vaga (+0x1db = −1):
 /// +0x1db = comp, +0x1df = fase e um clube a mais da nação `i` (+0x11). Devolve se ganhou. (O caso da nação sem entrada,
 /// −1, que a original procura pela nação do clube, não acontece: `i` vem sempre da volta pelas nações.)
-pub(crate) unsafe fn assign_comp_place(this: usize, c: usize, comp: u32, stage: u8, i: i32) -> bool {
-    let c = Club(c);
+pub(crate) unsafe fn assign_comp_place(this: usize, c: Club, comp: u32, stage: u8, i: i32) -> bool {
     if c.is_null() || (c.nation().addr() as u32) == 0 || c.continental_comp_id() != u32::MAX {
         return false;
     }
@@ -458,7 +457,7 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
                 f += 1;
             }
             if f < 5 {
-                if assign_comp_place(this, c, lc, f as u8, r as i32) {
+                if assign_comp_place(this, Club(c), lc, f as u8, r as i32) {
                     cap[f] = cap[f].wrapping_sub(1);
                 }
                 slots[f] = slots[f].wrapping_sub(1);
@@ -497,7 +496,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
             if c == 0 {
                 c = exe::uefa_find_nth_unplaced_club_of_nation(this, clubs, count, read_u32(e), 1, 1, 1);
             }
-            if assign_comp_place(this, c, it, stage, i as i8 as i32) {
+            if assign_comp_place(this, Club(c), it, stage, i as i8 as i32) {
                 colocados += 1;
             }
             if read_u8(e + 0xe) == 2 {
@@ -505,7 +504,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
                 if c == 0 {
                     c = exe::uefa_find_nth_unplaced_club_of_nation(this, clubs, count, read_u32(e), 1, 1, 1);
                 }
-                if assign_comp_place(this, c, it, stage.wrapping_add(1), i as i8 as i32) {
+                if assign_comp_place(this, Club(c), it, stage.wrapping_add(1), i as i8 as i32) {
                     colocados += 1;
                 }
             }
@@ -522,7 +521,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
                     break;
                 }
                 let c = exe::uefa_find_nth_unplaced_club_of_nation(this, clubs, count, read_u32(e), 1, 1, 0);
-                if assign_comp_place(this, c, it, (j as u8).wrapping_add(stage), i as i8 as i32) {
+                if assign_comp_place(this, Club(c), it, (j as u8).wrapping_add(stage), i as i8 as i32) {
                     crate::comparison::branch("cqi_2 club in intertoto");
                     colocados += 1; // cqi2: mais um na Intertoto
                 }
@@ -543,8 +542,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
 ///
 /// [pt] O clube `c` (com nação e ainda sem vaga) entra na Copa da UEFA na fase `fase`; um clube a mais da nação `r`. Devolve
 /// se entrou. (O caso da nação −1, que a original procura pela nação do clube, não acontece: `r` vem da volta.)
-pub(crate) unsafe fn enter_uefa_cup(this: usize, c: usize, stage: u8, r: i32, colocados: &mut i32) -> bool {
-    let c = Club(c);
+pub(crate) unsafe fn enter_uefa_cup(this: usize, c: Club, stage: u8, r: i32, colocados: &mut i32) -> bool {
     if (c.nation().addr() as u32) == 0 || c.continental_comp_id() != u32::MAX {
         return false;
     }
@@ -729,7 +727,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                     } else {
                         chosen = chosen.wrapping_add(1);
                         if c != 0 {
-                            enter_uefa_cup(this, c, f, r as i32, &mut colocados);
+                            enter_uefa_cup(this, Club(c), f, r as i32, &mut colocados);
                             if colocados as i16 as i32 - count_extra as i32 + 1 >= 0x76 {
                                 return;
                             }
@@ -749,17 +747,17 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
             if !a && !b {
                 let c = um();
                 if c != 0 {
-                    enter_uefa_cup(this, c, last_stage, r as i32, &mut colocados);
+                    enter_uefa_cup(this, Club(c), last_stage, r as i32, &mut colocados);
                 }
             } else if a && b {
                 let stage = (count_extra as u8).wrapping_mul(10).wrapping_add(3);
                 last_stage = stage;
                 if read_u32(vencedor + club::NATION) != 0 {
-                    enter_uefa_cup(this, vencedor, stage, r as i32, &mut colocados);
+                    enter_uefa_cup(this, Club(vencedor), stage, r as i32, &mut colocados);
                 }
-                enter_uefa_cup(this, vice, stage, r as i32, &mut colocados);
+                enter_uefa_cup(this, Club(vice), stage, r as i32, &mut colocados);
             } else {
-                enter_uefa_cup(this, if a { vencedor } else { vice }, last_stage, r as i32, &mut colocados);
+                enter_uefa_cup(this, if a { Club(vencedor) } else { Club(vice) }, last_stage, r as i32, &mut colocados);
             }
         }
         r += 1;

@@ -169,7 +169,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_exchange_player(this: usiz
 /// oferta no status 0x10; senão 1.
 pub(crate) unsafe extern "thiscall" fn compare_check_offer_work_permits(this: usize, offer: usize, quiet: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CHECK_OFFER_WORK_PERMITS);
-    let (precisa, proposta, concedida) = check_work_permit(this, transfer_manager_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), transfer_manager_club_by_id(read_usize(offer + offer::BUYER_CLUB_ID)));
+    let (precisa, proposta, concedida) = check_work_permit(this, transfer_manager_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), Club(transfer_manager_club_by_id(read_usize(offer + offer::BUYER_CLUB_ID))));
     let recusada = precisa && proposta != 0 && !concedida;
     let r = o(this, offer, quiet);
     let ok = if recusada { r == 0 && read_u8(offer + offer::STATUS) == 0x10 } else { r == 1 };
@@ -1298,7 +1298,7 @@ pub(crate) unsafe extern "thiscall" fn compare_write_deadline_news_text(this: us
 /// [pt] Comparador: quando as regras da nação respondem, só a original (o método é delas); senão os dois devolvem 1.
 pub(crate) unsafe extern "thiscall" fn compare_can_end_loan(this: usize, club: usize, player: usize, a: u32, b: u32, c: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32>(IDX_CAN_END_LOAN)(this, club, player, a, b, c);
-    if loan_transfer_rules(this, club, player).is_some() {
+    if loan_transfer_rules(this, Club(club), player).is_some() {
         crate::comparison::branch("can_end_loan by the rules");
         return r;
     }
@@ -1594,7 +1594,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_work_permit(this: usize, per
 /// dos humanos; com mais ligas acontece) ou gravar na seleção (+0x24), e a pessoa não fica em +0x39.
 pub(crate) unsafe extern "stdcall" fn compare_fill_vacated_staff_job(club: usize, job: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32)>(IDX_FILL_VACATED_STAFF_JOB);
-    let escolhida = if club != 0 { job_sought_by_slot(job).and_then(|c| first_unemployed_staff(club, c as u8)) } else { None };
+    let escolhida = if club != 0 { job_sought_by_slot(job).and_then(|c| first_unemployed_staff(Club(club), c as u8)) } else { None };
     let Some(p) = escolhida else {
         crate::comparison::branch("fill_vacated_staff_job nobody");
         return o(club, job);

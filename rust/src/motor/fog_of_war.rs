@@ -58,7 +58,7 @@ pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, data: usiz
     let n = || *(G_STAFF_COUNT as *const i32);
     for lado in 0..2usize {
         let club = Club(*((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize));
-        if exe::human_manager_is_human_club(club.addr(), 0, (1) as u32, (0) as u32, 0) == 0 {
+        if exe::human_manager_is_human_club(club, 0, (1) as u32, (0) as u32, 0) == 0 {
             continue;
         }
         let q = club.manager().addr();

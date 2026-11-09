@@ -4,7 +4,7 @@ MUTACOES = [
     ('p_107', "    (*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(107))\n}", "    (*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(108))\n}"),
     ('b_classe2', "    } else if flag == 0 {\n        2\n    } else {\n        1\n    };", "    } else if flag == 0 {\n        1\n    } else {\n        1\n    };"),
     ('b_flag', "        if flag == 0 { 0 } else { 1 }", "        if flag == 0 { 0 } else { 2 }"),
-    ('b_42', "    national_block_byte(this, club, flag, 0x42)", "    national_block_byte(this, club, flag, 0x41)"),
+    ('b_42', "    national_block_byte(this, Club(club), flag, 0x42)", "    national_block_byte(this, Club(club), flag, 0x41)"),
     ('e_a8', "    (id == *(G_KEY_CLUB_MLS_ALL_STARS_EAST as *const u32) || id == *(G_KEY_CLUB_MLS_ALL_STARS_WEST as *const u32)) as u32", "    (id == *(G_KEY_CLUB_MLS_ALL_STARS_EAST as *const u32)) as u32"),
     ('n_principal', "    let s = exe::database_get_national_team(*((person + staff::NATION) as *const usize));", "    let s = *((person + staff::NATION) as *const usize);"),
     ('d_marca', "    *((this + 8) as *mut u8) = *((source + 8) as *const u8);", "    *((this + 8) as *mut u8) = *((source + 7) as *const u8);"),

@@ -300,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * club::SIZE; // cqm6: club i in the database
-        if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
+        if spa_lower_is_in_comp(Club(c), KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             exe::league_init_table_row(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
                 crate::comparison::branch("cqm_6 b team in the second division");

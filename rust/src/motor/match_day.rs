@@ -1194,8 +1194,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
 /// partida da competicao do clube (+0x14 = +0x57, com +0x40/+0x41), o clube nao fora, +0x59 acima
 /// de 15, +0x57 acima de sorteio(5) + 10, +0xb da ficha abaixo de 4250 e 0x7c3a40 zero: 0x589bc0 e,
 /// sem 0x547d60, 0x547d90(pessoa, clube, 1), e fim.
-pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: usize, n: u32, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let club = Club(club);
+pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, partida: usize, n: u32, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let ch = core::cell::RefCell::new(call);
     let out = |s: usize, c: usize, o: usize, n: i32| (ch.borrow_mut())(0x5896d0, 0, [s as u32, c as u32, o as u32, n as u32, 0]);
     let f589bc0 = |p: usize, c: usize| (ch.borrow_mut())(0x589bc0, 0, [p as u32, c as u32, 0, 0, 0]);
@@ -1274,7 +1273,7 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
         if test_7c3a40(g(G_PLAYER_STATS), p, club.addr()) == 0 {
             crate::comparison::branch("club 589bc0");
             f589bc0(p, club.addr());
-            if (exe::staff_favours_club(p, club.addr()) as i32) == 0 {
+            if (exe::staff_favours_club(p, club) as i32) == 0 {
                 crate::comparison::branch("club 547d90");
                 f547d90(p, club.addr(), 1);
             }
@@ -1305,7 +1304,7 @@ pub(crate) unsafe extern "C" fn post_match_players(partida: usize, t: usize) {
 ///
 /// [pt] { 0x6b79a0 }: ver `post_match_club_with`.
 pub(crate) unsafe extern "C" fn post_match_club(club: usize, other: usize, partida: usize, n: u32, t: usize) {
-    post_match_club_with(club, other, partida, n, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
+    post_match_club_with(Club(club), other, partida, n, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
 }
 
 /// Calls one of the post-match routines with effects by game address, with the right convention and argument count.

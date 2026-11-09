@@ -66,9 +66,23 @@ def usos_por_campo():
     return out
 
 
+def tipos_ja_gerados():
+    """{(module, FIELD): type} of the records.rs already generated: a field keeps its type once generated (the usage
+    count changes as the code moves to the methods, and a type that changed would change what the code reads)."""
+    out = {}
+    if not os.path.exists(SAIDA):
+        return out
+    t = open(SAIDA, encoding='utf-8').read()
+    for m in re.finditer(r'/// `(\w+)::(\w+)` \(\+0x[0-9a-f]+\)\.\n\s*#\[inline\(always\)\]\n\s*pub\(crate\) (?:unsafe )?fn (?:r#)?(\w+)\(self\) -> (\w+)', t):
+        if not (m.group(3).endswith('_addr') and m.group(4) == 'usize'):
+            out[(m.group(1), m.group(2))] = m.group(4)
+    return out
+
+
 def main():
     cs = lc.campos()
     usos = usos_por_campo()
+    fixos = tipos_ja_gerados()
     mods = collections.OrderedDict()
     for (mod, c), (off, larg, doc_t) in cs.items():
         mods.setdefault(mod, []).append((c, off, larg, doc_t))
@@ -77,6 +91,28 @@ def main():
          '// ABI as the raw address; `club.reputation()` reads `club + club::REPUTATION` with the field\'s type (the one the',
          '// code uses, checked against the original routines). Fields wider than 8 bytes give only their address.',
          '// [pt] Os ponteiros tipados dos registros, gerados do fields.rs: `club.reputation()` lê o campo com o tipo dele.',
+         '',
+         '/// Anything that is an address in the game\'s memory: a raw `usize` or a typed record pointer. The exe:: wrappers take',
+         '/// `impl Addr` where the original passes a pointer, so `exe::x(club)` needs no `.addr()`. `i32` is here only for',
+         '/// untyped integer literals (`exe::x(this, 0)`): Rust gives a bare `0` the type `i32`.',
+         '/// [pt] Um endereço na memória do jogo: `usize` cru ou um ponteiro de registro tipado (os invólucros exe:: aceitam os dois).',
+         'pub(crate) trait Addr: Copy {',
+         '    fn addr(self) -> usize;',
+         '}',
+         '',
+         'impl Addr for usize {',
+         '    #[inline(always)]',
+         '    fn addr(self) -> usize {',
+         '        self',
+         '    }',
+         '}',
+         '',
+         'impl Addr for i32 {',
+         '    #[inline(always)]',
+         '    fn addr(self) -> usize {',
+         '        self as usize',
+         '    }',
+         '}',
          '']
     n_campos = 0
     for mod, campos in mods.items():
@@ -86,6 +122,7 @@ def main():
               'pub(crate) struct %s(pub(crate) usize);' % tipo, '', '#[allow(dead_code)]', 'impl %s {' % tipo,
               '    #[inline(always)]', '    pub(crate) fn addr(self) -> usize {', '        self.0', '    }',
               '    #[inline(always)]', '    pub(crate) fn is_null(self) -> bool {', '        self.0 == 0', '    }']
+        trait_impl = ['impl Addr for %s {' % tipo, '    #[inline(always)]', '    fn addr(self) -> usize {', '        self.0', '    }', '}', '']
         for c, off, larg, doc_t in campos:
             nome = c.lower()
             fn = 'r#' + nome if nome in KEYWORDS else nome
@@ -94,6 +131,8 @@ def main():
             t = None
             if alvo:
                 t = alvo
+            elif (mod, c) in fixos:
+                t = fixos[(mod, c)]
             elif u:
                 t = u.most_common(1)[0][0]
                 if larg and larg <= 8 and lc.LARG[t] != larg:
@@ -115,7 +154,7 @@ def main():
                       '        read_%s(self.0 + %s::%s)' % (t, mod, c), '    }',
                       '    #[inline(always)]', '    pub(crate) unsafe fn set_%s(self, v: %s) {' % (nome, t),
                       '        write_%s(self.0 + %s::%s, v)' % (t, mod, c), '    }']
-        L += ['}', '']
+        L += ['}', ''] + trait_impl
     texto = '\n'.join(L) + '\n'
     print('%d registros, %d campos com tipo' % (len(mods), n_campos))
     if '--gravar' in sys.argv:

@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                     if !is_stadium_free(this, read_usize(e + 0xc), data) {
                         break 'vaga;
                     }
-                    let n = exe::stadium_score_venue_for_fixture(this, read_usize(e + 0xc), marks, home.addr(), away.addr(), partida);
+                    let n = exe::stadium_score_venue_for_fixture(this, read_usize(e + 0xc), marks, home, away, partida);
                     if n > best {
                         best = n; // cqo1: a melhor nota
                         escolhida = e;
