@@ -18,7 +18,7 @@ MUTACOES = [
     ('dbn1_nascimento', '    let year = exe::utils_random(0x1a) + 0x794; // 1940 + up to 25', '    let year = exe::utils_random(0x1a) + 0x795; // mutacao: 1941 + ate 25'),
     ('dbn1_comissao_alvo', '            let target = ((rep(c) + 500) * k as i32 / 10000).clamp(1, k as i32); // the commission by reputation', '            let target = ((rep(c) + 500) * k as i32 / 10000).clamp(2, k as i32); // mutacao: no minimo 2'),
     ('dbn1_cortar_pessoas', '        for &d in &[0x39usize, 0x24] { // the person’s club and national team stay', '        for &d in &[0x24usize] { // mutacao: o clube da pessoa nao a segura'),
-    ('dbn1_podar', '            if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 { // a linha fica', '            if nation == 0 || nation != 0 { // mutacao: fica tambem a linha de nacao nao escolhida'),
+    ('dbn1_podar', '            if nation.is_null() || nation.league_selected() != 0 { // a linha fica', '            if nation.is_null() || !nation.is_null() { // mutacao: fica tambem a linha de nacao nao escolhida'),
     ('dbn2_cidade_sem_nacao', '        a(e + 0x1f, G_NATION_TABLE, 0x122); // the city’s nation', '        wr(e + 0x1f, 0); // mutacao: a cidade sem nacao'),
     ('dbn2_ordenar', '    exe::crt_qsort(rd(G_CLUB_REPUTATION_ORDER), gi(G_CLUB_COUNT) as u32, 4, 0x540020); // all clubs by reputation', '    exe::crt_qsort(rd(G_CLUB_REPUTATION_ORDER), (gi(0xae235c) - 1) as u32, 4, 0x540020); // mutacao: o ultimo clube fica fora da ordem'),
 ]

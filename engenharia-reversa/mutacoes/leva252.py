@@ -16,7 +16,7 @@ MUTACOES = [
     ('cpp_verba', 'exe::shortlist_manager_allocate_transfer_budget(this, club); // the transfer budget', '// mutacao: sem redistribuir a verba', 'cpp_5 redo list'),
     ('cpp_suspender', '*((e + club_shortlist::DAYS) as *mut u8) = 0x64; // the club suspends the player', '// mutacao: o clube nao suspende o jogador', 'cpp_5 suspend club'),
     ('cpp_listas_conta', 'count = count.wrapping_add(1); // one more club with him in the list', 'count = count.wrapping_add(2); // mutacao: conta dois', 'cpp_6 club added'),
-    ('cpp_a_venda', '*((c + contract::SQUAD_STATUS) as *mut u8) = (a & 0xf) | 0x70; // for sale', 'let _ = a; // mutacao: sem o estado a venda', 'cpp_6 put up for sale'),
+    ('cpp_a_venda', 'c.set_squad_status((a & 0xf) | 0x70); // for sale', 'let _ = a; // mutacao: sem o estado a venda', 'cpp_6 put up for sale'),
     ('cpp_premio', 'receber(f_old, value as u32, (value >> 31) as u32); // the former club receives', 'let _ = (receber, f_old); // mutacao: o clube antigo nao recebe', 'cpp_6 appearances bonus'),
     ('cpp_tentativa', '*((offer + offer::RESPONSE_ROUND) as *mut u8) = read_u8(offer + offer::RESPONSE_ROUND).wrapping_add(1); // one more attempt', '// mutacao: sem contar a tentativa', 'cpp_7 refusal'),
     ('cpp_soltar', 'exe::transfer_manager_remove_exchange_player(this, staff_records_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), offer, 0, 0); // the offer’s player', '// mutacao: o jogador segue nas outras ofertas', 'cpp_7 release players'),

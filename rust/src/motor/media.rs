@@ -710,11 +710,11 @@ pub(crate) unsafe fn warn_position_rivals_with(player: Staff, club: Club, call: 
             continue;
         }
         // cqb8: 0x4cf5f0 is a tape unit (direct and from inside 0x544520; 0x62c400 reaches 0x600a50)
-        let c = call(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB, read_usize(G_CONTRACT_MANAGER), [p.addr() as u32, club.addr() as u32, 0, 0, 0]) as usize;
-        if c == 0 || p.player() == 0 || read_i8(c + 0x3d) <= 0 {
+        let c = Contract(call(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB, read_usize(G_CONTRACT_MANAGER), [p.addr() as u32, club.addr() as u32, 0, 0, 0]) as usize);
+        if c.is_null() || p.player() == 0 || read_i8(c.addr() + 0x3d) <= 0 {
             continue;
         }
-        if replay_inner_tape_calls(call, || exe::injury_get_player_injury_status(read_usize(G_INJURY), player)) == 2 || read_usize(c + 0x45) & 0x101 != 0
+        if replay_inner_tape_calls(call, || exe::injury_get_player_injury_status(read_usize(G_INJURY), player)) == 2 || read_usize(c.addr() + 0x45) & 0x101 != 0
             || replay_inner_tape_calls(call, || exe::staff_is_transfer_listed_or_requested(p, club)) != 0
         {
             continue;
@@ -722,7 +722,7 @@ pub(crate) unsafe fn warn_position_rivals_with(player: Staff, club: Club, call: 
         if (p.age() as i8) <= 0x14 {
             continue;
         }
-        let t = *((c + contract::SQUAD_STATUS) as *const u8) & 0xf0;
+        let t = c.squad_status() & 0xf0;
         if t != 0x10 && t != 0x20 && t != 0x30 {
             continue;
         }
@@ -745,7 +745,7 @@ pub(crate) unsafe fn warn_position_rivals_with(player: Staff, club: Club, call: 
         if exe::staff_contract_get_flags(c) & 0x800 != 0 {
             continue;
         }
-        call(FN_STAFF_CONTRACT_SET_FLAGS, c, [0x800, 0, 0, 0, 0]);
+        call(FN_STAFF_CONTRACT_SET_FLAGS, c.addr(), [0x800, 0, 0, 0, 0]);
     }
 }
 
@@ -872,30 +872,30 @@ pub(crate) unsafe fn set_contract_flags_or_stop(c: usize, marks: u32) -> bool {
 /// fora o técnico e o auxiliar do clube do contrato, moral (+0x44) não negativa, sem +0x49, quer sair (0x866f60, com as
 /// marcas já ligadas), sem transferência futura (0x8cca10), sem os bits 1 e 8 de +0x4e, fora da fila da transferência
 /// livre (0x8c1870) e com mais de 20 anos ou reputação acima de 4250.
-pub(crate) unsafe fn would_request_transfer(c: usize, marks: u32) -> bool {
-    let person = Staff(media_staff_by_id(read_i32(c)));
+pub(crate) unsafe fn would_request_transfer(c: Contract, marks: u32) -> bool {
+    let person = Staff(media_staff_by_id(read_i32(c.addr())));
     let function = person.job_for_club();
     if function != 0xb && function != 0xf && function != 0xd {
         return false;
     }
-    let club = read_usize(G_CLUB_TABLE).wrapping_add((read_i32(c + contract::CLUB) as u32).wrapping_mul(0x245) as usize);
+    let club = read_usize(G_CLUB_TABLE).wrapping_add(((c.club() as i32) as u32).wrapping_mul(0x245) as usize);
     for o in [0xcf, 0xd3] {
         let t = read_usize(club + o);
-        if t != 0 && read_usize(c) == read_usize(t) {
+        if t != 0 && read_usize(c.addr()) == read_usize(t) {
             return false;
         }
     }
-    if read_i8_as_i32(c + 0x44) < 0 || *((c + contract::LEAVING_ON_BOSMAN) as *const u8) != 0 {
+    if read_i8_as_i32(c.addr() + 0x44) < 0 || c.leaving_on_bosman() != 0 {
         return false;
     }
-    let before = read_usize(c + 0x45);
-    core::ptr::write_unaligned((c + 0x45) as *mut usize, before | marks as usize);
+    let before = read_usize(c.addr() + 0x45);
+    core::ptr::write_unaligned((c.addr() + 0x45) as *mut usize, before | marks as usize);
     let exit = exe::staff_contract_wants_to_leave(c) != 0;
-    core::ptr::write_unaligned((c + 0x45) as *mut usize, before);
+    core::ptr::write_unaligned((c.addr() + 0x45) as *mut usize, before);
     if !exit {
         return false;
     }
-    if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), person, 0) != 0 || *((c + contract::TRANSFER_STATUS) as *const u8) & 9 != 0 {
+    if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), person, 0) != 0 || c.transfer_status() & 9 != 0 {
         return false;
     }
     if exe::transfer_manager_is_queued_for_free_transfer(read_usize(G_TRANSFER_MANAGER), person) != 0 {
@@ -909,7 +909,7 @@ pub(crate) unsafe fn would_request_transfer(c: usize, marks: u32) -> bool {
 /// [pt] As queixas do contrato (STAFF_CONTRACT::apply_event_flags 0x867700 com a pessoa). No ensaio, para antes se ela
 /// pediria transferência. Devolve se parou.
 pub(crate) unsafe fn apply_event_flags_or_stop(c: usize, marks: u32, person: Staff) -> bool {
-    if MEDIA_REACTION_DRY_RUN && would_request_transfer(c, marks) {
+    if MEDIA_REACTION_DRY_RUN && would_request_transfer(Contract(c), marks) {
         MEDIA_REACTION_STOPPED = true;
         return true;
     }
@@ -925,7 +925,7 @@ pub(crate) unsafe fn clear_grievances_or_stop(c: usize, queixas: u32) -> bool {
     if MEDIA_REACTION_DRY_RUN {
         let before = read_usize(c + 0x45);
         core::ptr::write_unaligned((c + 0x45) as *mut usize, before & !(queixas as usize));
-        let retira = should_withdraw_transfer_request(c).is_some();
+        let retira = should_withdraw_transfer_request(Contract(c)).is_some();
         core::ptr::write_unaligned((c + 0x45) as *mut usize, before);
         if retira {
             MEDIA_REACTION_STOPPED = true;
@@ -1789,9 +1789,9 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     // the subject’s marks
     let mut m = 0u32;
     if !sujeito.is_null() && sujeito.player() != 0 {
-        let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), sujeito);
-        if c != 0 && ((sujeito.age() as i8) as i32) > 0x19 {
-            let t = *((c + contract::SQUAD_STATUS) as *const u8) & 0xf0;
+        let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), sujeito));
+        if !c.is_null() && ((sujeito.age() as i8) as i32) > 0x19 {
+            let t = c.squad_status() & 0xf0;
             if t == 0x20 || t == 0x10 {
                 m = 1;
             }
@@ -2882,8 +2882,8 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             return 3;
         }
     }
-    let contract = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, club);
-    if contract == 0 {
+    let contract = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, club));
+    if contract.is_null() {
         return 3;
     }
     let mut rating = manager.addr() as i32; // without a player: the argument that occupies the slot
@@ -2898,7 +2898,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         if t == 0x10 || t == 0x20 {
             return 1;
         }
-        if t == 0x30 && read_i8_as_i32(contract + 0x3f) > 1 {
+        if t == 0x30 && read_i8_as_i32(contract.addr() + 0x3f) > 1 {
             return 1;
         }
         if read_i16(player.player() + 0xb) < 0x1482 && ch(0x14) > 0xf {
@@ -2958,11 +2958,11 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         if exe::staff_is_transfer_listed_or_requested(player, club) != 0 {
             return 2;
         }
-        let b = read_i8_as_i32(contract + 0x3d);
+        let b = read_i8_as_i32(contract.addr() + 0x3d);
         if b <= exe::utils_random(100) {
             return 3;
         }
-        if exe::staff_contract_wants_to_leave(contract) != 0 || *((contract + contract::LEAVING_ON_BOSMAN) as *const u8) != 0 {
+        if exe::staff_contract_wants_to_leave(contract) != 0 || contract.leaving_on_bosman() != 0 {
             return 3;
         }
         return if exe::utils_random(3) != 0 { 1 } else { 3 };

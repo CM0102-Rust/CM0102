@@ -5,8 +5,8 @@ MUTACOES = [
     ('dq1_estrangeira', '    1 // estrangeira', '    0 // estrangeira'),
     ('dq2_aniversario', '        years.wrapping_sub(1) // has not had a birthday yet', '        years.wrapping_sub(2) // has not had a birthday yet'),
     ('dq2_europa', '    (g(continent) == g(KEY_CONTINENT_EUROPE)) as u32 // Europa', '    (g(continent) != g(0x9cfa10)) as u32 // Europa'),
-    ('dq2_ue', '    if *((n + nation::GROUP_MEMBERSHIP) as *const u8) == 2 { return 1; } // EU nationality', '    if *((n + nation::GROUP_MEMBERSHIP) as *const u8) == 3 { return 1; } // EU nationality'),
-    ('dq3_listada', '*((v + contract::TRANSFER_STATUS) as *const u8) & 9 != 0', '*((v + contract::TRANSFER_STATUS) as *const u8) & 8 != 0'),
+    ('dq2_ue', '    if n.group_membership() == 2 { return 1; } // EU nationality', '    if n.group_membership() == 3 { return 1; } // EU nationality'),
+    ('dq3_listada', 'v.transfer_status() & 9 != 0', 'v.transfer_status() & 8 != 0'),
     ('dq3_arredonda', ' + read_f64(rdata::F64_0_5); // arredonda', ' + 0.0; // arredonda'),
     ('dq3_atributo_da_pessoa', '    exe::staff_compute_player_attribute(person, person.player(), attribute)\n', '    exe::staff_compute_player_attribute(person, person.player(), attribute).wrapping_add(1)\n'),
 ]

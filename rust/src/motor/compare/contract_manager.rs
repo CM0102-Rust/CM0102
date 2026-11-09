@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
             let Some(pessoa) = staff_of_summary_slot(slot) else { continue };
             let c = exe::contract_manager_get_contract_for_club(this, pessoa, club);
             if c != 0 {
-                for v in match_bonuses_for_slot(game, c, slot, read_i16(base + 0x154 + 2 * k)).into_iter().flatten() {
+                for v in match_bonuses_for_slot(game, Contract(c), slot, read_i16(base + 0x154 + 2 * k)).into_iter().flatten() {
                     total = total.wrapping_add(v);
                 }
             }
@@ -190,10 +190,11 @@ pub(crate) unsafe extern "thiscall" fn compare_post_bosman_departure_news(this: 
 /// a cópia em ensaio monta o registro; a original acrescenta, e o nó novo (o último do jogador pelo clube) tem de ter os
 /// mesmos 0x63 primeiros bytes, com o contador + 1.
 pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decides: u32, acertado: u32) {
+    let terms = Contract(terms);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(IDX_ADD_CONTRACT_OFFER);
-    let id = read_usize(terms);
-    let club = read_usize(terms + contract::CLUB);
-    let count = contract_offer_counter(terms);
+    let id = read_usize(terms.addr());
+    let club = terms.club();
+    let count = contract_offer_counter(terms.addr());
     let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
     let item = if read_u8(count) != 0 && l != 0 { find_contract_offer(l, id, club) } else { 0 };
     let mut all = vec![(count, 1usize)];
@@ -206,12 +207,12 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
     all.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&all);
     CONTRACT_OFFER_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, terms, slot, value, mark, a5, decides, acertado)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, terms.addr(), slot, value, mark, a5, decides, acertado)));
     CONTRACT_OFFER_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&all[..n_cmp]);
     let record = DRY_RUN_CONTRACT_OFFER_RECORD;
     before.write_back();
-    o(this, terms, slot, value, mark, a5, decides, acertado);
+    o(this, terms.addr(), slot, value, mark, a5, decides, acertado);
     let mo = crate::comparison::MemorySnapshot::read(&all[..n_cmp]);
     let same = if item != 0 {
         mo == mr
@@ -406,19 +407,20 @@ pub(crate) unsafe extern "stdcall" fn compare_staff_can_take_job(job: u32, perso
 /// [pt] Comparador: as queixas (0x867700) sorteiam e podem abrir pedido de transferência: só a original; o plano (a queda
 /// `m`, calculada antes, sem efeito) diz a moral +0x44 que ela deixa (as queixas não a gravam) ou que ela não mexe.
 pub(crate) unsafe extern "thiscall" fn compare_contract_manager_lower_match_morale(this: usize, person: usize, club: usize, contract: usize) {
+    let contract = Contract(contract);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_CONTRACT_MANAGER_LOWER_MATCH_MORALE);
-    if contract == 0 {
-        return o(this, person, club, contract);
+    if contract.is_null() {
+        return o(this, person, club, contract.addr());
     }
-    let before = read_u8_volatile(contract + contract::MORALE) as i8;
+    let before = read_u8_volatile(contract.addr() + contract::MORALE) as i8;
     let plan = match_morale_drop(Staff(person), Club(club), contract);
     // deleting a complaint (0x8674e0) recalculates the contract (0x867240), which may rewrite morale: with a complaint marked before
     // or a drop above 5 (the branches that always delete), original only
-    if read_u8_volatile(contract + contract::GRIEVANCES) & 0x14 != 0 || plan.is_some_and(|m| m > 5) {
-        return o(this, person, club, contract);
+    if read_u8_volatile(contract.addr() + contract::GRIEVANCES) & 0x14 != 0 || plan.is_some_and(|m| m > 5) {
+        return o(this, person, club, contract.addr());
     }
-    o(this, person, club, contract);
-    let after = read_u8_volatile(contract + contract::MORALE) as i8;
+    o(this, person, club, contract.addr());
+    let after = read_u8_volatile(contract.addr() + contract::MORALE) as i8;
     let esperada = plan.map_or(before, |m| lowered_morale(before, m));
     SCOREBOARD.record(after == esperada, || format!("contract_manager_lower_match_morale(queda {:?}) moral {} -> original {} plano {}", plan, before, after, esperada));
 }

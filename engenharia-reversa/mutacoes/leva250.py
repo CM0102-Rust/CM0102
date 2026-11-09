@@ -16,7 +16,7 @@ MUTACOES = [
     ('cpn_candidato_conta_o_atual', "break 'f true; // the current one is left out", "if false { break 'f true; } // mutacao: o tecnico atual entra", 'cpn_5 the current manager is left out'),
     ('cpn_oferta_um_dia_depois', 'let r = exe::date_add_days(G_CURRENT_DATE, (tmp.as_mut_ptr()) as usize, days as i16 as i32 as u32);', 'let r = exe::date_add_days(G_CURRENT_DATE, (tmp.as_mut_ptr()) as usize, (days as i16 + 1) as i32 as u32); // mutacao: um dia depois', 'cpn_5 schedule offer'),
     ('cpn_estatuto_lista', 'return (read_u8(e + shortlist_slot::FLAGS) >> 1) & 0xf; // bits 1..4 of the entry', 'return (read_u8(e + shortlist_slot::FLAGS) >> 2) & 0xf; // mutacao: os bits 2..5', 'cpn_6 status by list'),
-    ('cpn_estatuto_contrato', 'read_u8(k + contract::SQUAD_STATUS) >> 4 // the high nibble of the contract', 'read_u8(k + contract::SQUAD_STATUS) & 0xf // mutacao: o nibble baixo', 'cpn_6 status by contract'),
+    ('cpn_estatuto_contrato', 'k.squad_status() >> 4 // the high nibble of the contract', 'k.squad_status() & 0xf // mutacao: o nibble baixo', 'cpn_6 status by contract'),
     ('cpn_alvos_evento', '((exe::shortlist_manager_update_staff_status(this, p, club, 3, kind) as usize) as u32);', 'let _ = kind; // mutacao: sem o evento 3', 'cpn_6 target outside the club'),
     ('cpn_busca_mesma_regiao', 'return 1; // the same region as the club’s nation', 'return 0; // mutacao: a mesma regiao nao cobre', 'cpn_7 same region'),
     ('cpn_busca_nacao_do_olheiro', 'return 1; // the nation is not foreign for the scout', 'return 0; // mutacao: a nacao do olheiro nao cobre', 'cpn_7 scout nation'),

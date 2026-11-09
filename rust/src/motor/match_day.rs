@@ -1058,9 +1058,9 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
 pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
     let mut v = Vec::new();
     for e in (0xb63d60usize..G_KEY_NATION_ACTIVE_COUNT).step_by(0x48) {
-        let p = *(e as *const usize);
-        if p != 0 && *((p + nation::LEAGUE_SELECTED) as *const u8) & 2 != 0 {
-            let q = *((p + nation::CONTINENT) as *const usize);
+        let p = Nation(*(e as *const usize));
+        if !p.is_null() && p.league_selected() & 2 != 0 {
+            let q = p.continent();
             if q != 0 {
                 v.push(0xb67a58 + *(q as *const usize));
             }

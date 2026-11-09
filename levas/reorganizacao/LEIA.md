@@ -28,6 +28,14 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 9: contrato, nação e finanças
+
+O pacote completo para três registros médios: 202 + 126 + 29 variáveis; 22 funções recebem `Contract`, 6 `Nation`, 3
+`Finance`, e a propagação mais 10; 81 `.addr()` tirados dos invólucros. Acessos crus: contrato 634 → 228, nação 311 →
+92, finanças 158 → 44. `.addr()` fora dos invólucros 4.760 → 5.160. A revisar nos nomes: `nation::THREE_LETTER_NAME`
+é comparado com um ponteiro de nação em `tactics.rs` (o nome do campo deve estar errado). Prova: 7cc445c2 ×2,
+detector igual, comparação 0; as 62 mutações mudadas e as 4 em risco compilam (uma corrigida).
+
 ## Migração para os registros tipados, leva 8: o jogador na partida (`MatchPlayer`)
 
 O pacote completo para `match_player`, com o `this` dos métodos: 294 variáveis em 239 funções, 222 `.addr()` tirados

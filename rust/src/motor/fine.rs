@@ -45,18 +45,18 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     if player.is_null() {
         return;
     }
-    let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), player);
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k;
-    if k == 0 {
+    let k = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), player));
+    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k.addr();
+    if k.is_null() {
         return;
     }
-    let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + contract::CLUB).wrapping_mul(club::SIZE));
+    let club = read_usize(G_CLUB_TABLE).wrapping_add(k.club().wrapping_mul(club::SIZE));
     if club == 0 {
         return;
     }
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let c = contract(read_usize(G_CONTRACT_MANAGER), player.addr(), club);
-    if c == 0 {
+    let c = Contract(contract(read_usize(G_CONTRACT_MANAGER), player.addr(), club));
+    if c.is_null() {
         return;
     }
     let current = player.club_job();
@@ -81,7 +81,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
         && core::ptr::read_unaligned((player.player() + 0xb) as *const i16) > 0x1482;
     set_news_slot(nt, 7, p as u32);
     set_news_slot(nt, 8, (deadline as u8 == 1) as u32);
-    let kind = *((c + contract::SQUAD_STATUS) as *const u8) & 0xf0;
+    let kind = c.squad_status() & 0xf0;
     set_news_slot(nt, 9, (kind == 0x70) as u32);
     set_news_slot(nt, 0xa, (exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), player, (0) as u32) != 0) as u32);
     set_news_slot(nt, 0xb, efeitos as i8 as u32);

@@ -160,9 +160,9 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     p.set_nation(nation);
     if read_i32(nation + nation::NUMBER_STAFF) < 100 && friendly_random(4) == 0 {
         let k = friendly_random(read_i32(G_NATION_COUNT));
-        let other = read_usize(G_NATION_TABLE).wrapping_add((k as isize * 0x122) as usize);
-        if read_usize(other + nation::CONTINENT) != 0 && read_i32(other + nation::NUMBER_STAFF) < 100 {
-            p.set_nation(other);
+        let other = Nation(read_usize(G_NATION_TABLE).wrapping_add((k as isize * 0x122) as usize));
+        if other.continent() != 0 && other.number_staff() < 100 {
+            p.set_nation(other.addr());
         }
     }
     if nacao2_id > 0 && nacao2_id < read_i32(G_NATION_COUNT) {
@@ -1161,11 +1161,11 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
         0
     };
     let mn = read_usize(G_NEWS);
-    let pais = p.nation();
+    let pais = Nation(p.nation());
     let f = p.player();
     let nj = p.non_player();
     let cargo5 = || (p.job_for_club() as i8) == 5;
-    if pais != 0 && read_i8(pais + nation::LEAGUE_STANDARD) > 8
+    if !pais.is_null() && (pais.league_standard() as i8) > 8
         && ((f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x2134) || (nj != 0 && read_i16(nj + non_player::WORLD_REPUTATION) > 0x222e && cargo5())) {
         exe::news_send_to_all_managers(mn, nw);
     } else if (f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x1d4c) || (nj != 0 && read_i16(nj + non_player::CURRENT_REPUTATION) > 0x1c52 && cargo5()) {
@@ -1470,11 +1470,11 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_announcement_
         exe::newsitem_set_slot(n, k, read_i32(read_i32(person.addr() + o) as usize + 0x33) as u32);
     }
     exe::newsitem_set_slot(n, 4, reason as i32 as u32);
-    let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
-    write_i32(G_CONTRACT_LOOKUP_RESULT, c as i32);
+    let c = Contract(exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person));
+    write_i32(G_CONTRACT_LOOKUP_RESULT, c.addr() as i32);
     let mut club = -1i32;
-    if c != 0 && *((c + contract::CONTRACT_TYPE) as *const u8) & 0x3f != 5 {
-        let idx = read_i32(c + contract::CLUB) as u32;
+    if !c.is_null() && c.contract_type() & 0x3f != 5 {
+        let idx = (c.club() as i32) as u32;
         let record = (read_i32(G_CLUB_TABLE) as u32).wrapping_add(idx.wrapping_mul(0x245)) as usize;
         if record != 0 {
             club = read_i32(record);
@@ -1539,9 +1539,9 @@ pub(crate) unsafe extern "thiscall" fn has_spare_non_player_record(this: usize) 
 /// [pt] O contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) e, pelo clube dele (registro de 0x245 bytes pelo +4; sem
 /// contrato, 0), o contrato da pessoa com esse clube (0x4cf5f0), que a rotina devolve.
 pub(crate) unsafe fn contract_with_current_club(person: Staff) -> usize {
-    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    let club = if c != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 };
+    let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c.addr();
+    let club = if !c.is_null() { read_usize(G_CLUB_TABLE).wrapping_add(c.club().wrapping_mul(club::SIZE)) } else { 0 };
     exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club)
 }
 
@@ -1760,8 +1760,8 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
         let draws = if !club.is_null() {
             club.division().addr() == 0
         } else {
-            let n = person.nation();
-            n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) == 0
+            let n = Nation(person.nation());
+            !n.is_null() && n.league_selected() == 0
         };
         if draws {
             if random(3) != 0 {
@@ -1833,8 +1833,8 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
 /// datas (sem nação-chave válida, set_dates_no_key_nation); devolve 1.
 pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, person: usize, out: usize) -> u8 {
     let person = Staff(person);
-    let c2 = contract_with_current_club(person);
-    let status = contract_status(c2);
+    let c2 = Contract(contract_with_current_club(person));
+    let status = contract_status(c2.addr());
     let age = (person.age() as i8);
     let j = person.player();
     let reason: u8 = 'm: {
@@ -1849,17 +1849,17 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
             return 0;
         }
         if age > 0x21 {
-            if c2 == 0 {
+            if c2.is_null() {
                 lim = lim.wrapping_sub(1);
-            } else if read_usize(c2 + 0x45) != 0
-                && (read_i8(j + player_sheet::ATTACKER) == 0x14 || read_i8(j + player_sheet::ATTACKING_MIDFIELDER) == 0x14 || *((c2 + contract::SQUAD_STATUS) as *const u8) & 0xf0 == 0x70)
+            } else if read_usize(c2.addr() + 0x45) != 0
+                && (read_i8(j + player_sheet::ATTACKER) == 0x14 || read_i8(j + player_sheet::ATTACKING_MIDFIELDER) == 0x14 || c2.squad_status() & 0xf0 == 0x70)
             {
                 lim = lim.wrapping_sub(1);
             }
         }
-        if person.club_job() != 0 && c2 != 0 {
+        if person.club_job() != 0 && !c2.is_null() {
             let x = person.loyalty() as i32;
-            if (read_usize(c2 + contract::WAGE) as i32) > (x + 10).wrapping_mul(750) && read_u16(c2 + 0x2f) > read_u16(G_CURRENT_DATE_YEAR) {
+            if ((c2.wage() as usize) as i32) > (x + 10).wrapping_mul(750) && read_u16(c2.addr() + 0x2f) > read_u16(G_CURRENT_DATE_YEAR) {
                 lim = lim.wrapping_sub(1);
                 if x < 6 {
                     lim = lim.wrapping_sub(1);
@@ -1877,14 +1877,14 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
             }
         }
         let (i, l) = (age as i32, lim as i32);
-        if i > l + 2 && age > 0x1f && c2 != 0 && read_i8(c2 + contract::UNHAPPY_FLAG) > 5 {
+        if i > l + 2 && age > 0x1f && !c2.is_null() && c2.unhappy_flag() > 5 {
             break 'm 1;
         }
         if i > l + 3 {
             if person.club_job() == 0 {
                 break 'm 1;
             }
-            if c2 != 0 && ((exe::staff_contract_days_to_end_date(c2) as u32) as i16) < 300 && status < 0x32 {
+            if !c2.is_null() && ((exe::staff_contract_days_to_end_date(c2) as u32) as i16) < 300 && status < 0x32 {
                 if person.non_player() != 0 {
                     break 'm 1;
                 }
@@ -1904,8 +1904,8 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
             let lg = club.division().addr();
             lg == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(lg).wrapping_mul(4))) == 0
         } else {
-            let n = person.nation();
-            n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) == 0
+            let n = Nation(person.nation());
+            !n.is_null() && n.league_selected() == 0
         };
         if draws {
             crate::comparison::branch("cpr_8 out of the game");
@@ -1971,8 +1971,8 @@ pub(crate) unsafe extern "thiscall" fn build_initial_retirement_list(this: usize
         if id < (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10)
             && *((read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(79)) + 0xb) as *const u8) & 0x30 == 0
         {
-            let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
-            if (c == 0 || *((c + contract::LEAVING_ON_BOSMAN) as *const u8) == 0) && exe::player_regen_check_initial_retirement(this, p, e.as_mut_ptr()) != 0 {
+            let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));
+            if (c.is_null() || c.leaving_on_bosman() == 0) && exe::player_regen_check_initial_retirement(this, p, e.as_mut_ptr()) != 0 {
                 exe::player_regen_add_retirement(this, e.as_ptr());
             }
         }

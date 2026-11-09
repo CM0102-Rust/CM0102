@@ -104,8 +104,8 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             }
         }
     }
-    let nacao = read_usize(read_usize(this + 4) + 0x5d);
-    if *((nacao + nation::LEAGUE_SELECTED) as *const u8) & 4 != 0 {
+    let nacao = Nation(read_usize(read_usize(this + 4) + 0x5d));
+    if nacao.league_selected() & 4 != 0 {
         // 3a) the Conference by category
         let mut cat: i8 = 6;
         if k < read_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 {

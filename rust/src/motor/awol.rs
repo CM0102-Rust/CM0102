@@ -478,23 +478,23 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     }
     // the new case: the club’s teammates
     crate::comparison::branch("cpw_7 new case");
-    let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
-    let club = Club(if k != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 });
+    let k = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    write_u32(G_CONTRACT_LOOKUP_RESULT, k.addr() as u32);
+    let club = Club(if !k.is_null() { read_usize(G_CLUB_TABLE).wrapping_add(k.club().wrapping_mul(club::SIZE)) } else { 0 });
     if !club.is_null() {
         for v in 0..0x32usize {
             let s = Staff(club.squad(v));
             if s.is_null() || s == person || s.player() == 0 {
                 continue;
             }
-            let ct = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
-            if ct == 0 {
+            let ct = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club));
+            if ct.is_null() {
                 continue;
             }
             if exe::staff_contract_get_flags(ct) & 2 == 0 && (s.professionalism() as u8) as i8 > 0xf && (s.ambition() as u8) as i8 > 0xa {
                 let a = friendly_random((s.professionalism() as u8) as i8 as i32);
                 let b = friendly_random(0x1e);
-                let f = read_u8(ct + contract::SQUAD_STATUS) & 0xf0;
+                let f = ct.squad_status() & 0xf0;
                 if a > b && (f == 0x10 || f == 0x20) && (s.age() as u8) as i8 > 0x17 && read_i16(s.player() + 0xb) > 0x1482 {
                     exe::staff_contract_set_flags(ct, 2);
                 }
@@ -551,9 +551,9 @@ pub(crate) unsafe extern "thiscall" fn has_missed_training(this: usize, person: 
         return id as u32 & 0xffffff00;
     }
     if read_u8(read_usize(this + 0xc).wrapping_add(id as usize)) & 2 != 0 {
-        let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-        write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
-        if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + contract::CLUB).wrapping_mul(club::SIZE)) == 0 {
+        let k = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+        write_u32(G_CONTRACT_LOOKUP_RESULT, k.addr() as u32);
+        if k.is_null() || read_usize(G_CLUB_TABLE).wrapping_add(k.club().wrapping_mul(club::SIZE)) == 0 {
             exe::awol_clear_missed_training(this, person);
         }
     }
@@ -619,11 +619,11 @@ pub(crate) static mut MISS_TRAINING_DECISION: u32 = 0;
 /// Club record of contract k (id +4, G_CLUB_TABLE), or 0.
 ///
 /// [pt] O clube do contrato `k` (+4 id, [0xae23b4], 0x245 bytes), ou 0.
-pub(crate) unsafe fn awol_club_of_contract(k: usize) -> usize {
-    if k == 0 {
+pub(crate) unsafe fn awol_club_of_contract(k: Contract) -> usize {
+    if k.is_null() {
         return 0;
     }
-    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + contract::CLUB).wrapping_mul(club::SIZE))
+    read_usize(G_CLUB_TABLE).wrapping_add(k.club().wrapping_mul(club::SIZE))
 }
 
 /// Byte +0xc (repeated case) of the absence record.
@@ -673,7 +673,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     }
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
-    let club = Club(awol_club_of_contract(k));
+    let club = Club(awol_club_of_contract(Contract(k)));
     if k == 0 || club.is_null() {
         return;
     }
@@ -707,7 +707,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     *m |= 2;
     let k3 = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k3 as u32);
-    exe::awol_post_missed_training_news(person, awol_club_of_contract(k3));
+    exe::awol_post_missed_training_news(person, awol_club_of_contract(Contract(k3)));
     let row = read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(person.addr()) as usize).wrapping_mul(79)).wrapping_add(0xa) as *mut u8;
     let r = friendly_random(10);
     *row = (*row).wrapping_add(r as u8);
@@ -763,7 +763,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
-    if k != 0 && awol_club_of_contract(k) != 0 {
+    if k != 0 && awol_club_of_contract(Contract(k)) != 0 {
         if MISS_TRAINING_DRY_RUN {
             MISS_TRAINING_DECISION = 1;
         } else {

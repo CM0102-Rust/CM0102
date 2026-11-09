@@ -7,7 +7,7 @@ MUTACOES = [
     ('cpd_tirar_vaga', 'core::ptr::write_unaligned((team.addr() + club::SQUAD + 4 * c) as *mut usize, 0);', 'core::ptr::write_unaligned((team.addr() + club::SQUAD + 4 * c) as *mut usize, p); // mutacao: a vaga fica'),
     ('cpd_sub21_idade', '(p.age() as i8) > 0x15 { // over 21 years old', '(p.age() as i8) >= 0x15 { // mutacao: tambem os de 21'),
     ('cpd_atual_aviso', '        notify_manager_manager(nation); // the notice of the next competition', '        // mutacao: sem o aviso da competicao seguinte'),
-    ('cpd_continente_aviso', '                notify_manager_manager(nation); // the continent warning', '                // mutacao: sem o aviso do continente'),
+    ('cpd_continente_aviso', '                notify_manager_manager(nation.addr()); // the continent warning', '                // mutacao: sem o aviso do continente'),
     ('cpd_substituto_posicao', 'as u8 & mask & 0x7f == 0 { // the positions of those leaving', 'as u8 & mask & 0x7f != 0 { // mutacao: as outras posicoes'),
     ('cpd_reservas_posicao', 'pos = j + 1; // after the ones with a higher rating', 'pos = j; // mutacao: antes da de nota maior'),
     ('cpd_ordem_reservas', '(slot_person_rating(b) as i32) - slot_person_rating(a) as i32 // decrescente', '(slot_person_rating(a) as i32) - slot_person_rating(b) as i32 // mutacao: crescente'),

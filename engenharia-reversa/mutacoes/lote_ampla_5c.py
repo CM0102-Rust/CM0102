@@ -3,7 +3,7 @@
 # Uso: python mutacoes.py mutacoes\lote_ampla_5c.py --carreira 2003-01-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limit 14400 --sem-trava
 MUTACOES = [
     ('c_k0_b', '                if v > 0x4b { 1 } else if v >= 0x28 { 2 } else if v >= 10 { 3 } else { low(-30) }', '                if v > 0x4b { 1 } else if v >= 0x28 { 3 } else if v >= 10 { 3 } else { low(-30) }'),
-    ('c_tipo5_b', '    if *((c + contract::CONTRACT_TYPE) as *const u8) & 0x3f == 5 {\n        return 8;', '    if *((c + contract::CONTRACT_TYPE) as *const u8) & 0x3f == 5 {\n        return 7;'),
+    ('c_tipo5_b', '    if c.contract_type() & 0x3f == 5 {\n        return 8;', '    if c.contract_type() & 0x3f == 5 {\n        return 7;'),
     ('r_banco', '            cod2[i] = w(curtos, j);', '            cod2[i] = w(codes, j);'),
     ('r_idade', '            3 => p != 0 && read_i8(rule + 1) < *((p + staff::YEAR_OF_BIRTH) as *const i8),', '            3 => p != 0 && read_i8(rule + 1) <= *((p + staff::YEAR_OF_BIRTH) as *const i8),'),
     ('n_veterano', '            Some(0x9689e0)', '            Some(0x968968)'),
@@ -15,7 +15,7 @@ MUTACOES = [
     ('t_vaga', '    if k < *((table + transfer_manager_fields::OFFER_CAPACITY) as *const i32) {', '    if k <= *((table + transfer_manager_fields::OFFER_CAPACITY) as *const i32) {'),
     ('r_ids', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e, 0x72] {', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e] {'),
     ('s_empate', '        if best == 0 || injury_word_0c(c.addr()) > injury_word_0c(best) {', '        if best == 0 || injury_word_0c(c.addr()) >= injury_word_0c(best) {'),
-    ('c_clube', '    *club = (*(G_CLUB_TABLE as *const usize) as isize + *((contract + contract::CLUB) as *const i32) as isize * 581) as usize;', '    *club = (*(G_CLUB_TABLE as *const usize) as isize + *((contract + contract::CLUB) as *const i32) as isize * 580) as usize;'),
+    ('c_clube', '    *club = (*(G_CLUB_TABLE as *const usize) as isize + (contract.club() as i32) as isize * 581) as usize;', '    *club = (*(G_CLUB_TABLE as *const usize) as isize + (contract.club() as i32) as isize * 580) as usize;'),
     ('p_vaga', '        if *(p as *const i32) == id && *((p + held_ban::SLOT) as *const i8) == slot {', '        if *(p as *const i32) == id {'),
     ('a_torneio', '        if core::ptr::read_unaligned((p - 0x65) as *const usize) != 0 && object != 0 {', '        if core::ptr::read_unaligned((p - 0x65) as *const usize) != 0 && object != 0 && i > 0 {'),
     ('l_venda', '    remove_from_payment_list(manager, id, 8, 0x880, 0x888, 9);', '    remove_from_payment_list(manager, id, 8, 0x880, 0x888, 5);'),

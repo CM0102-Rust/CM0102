@@ -837,8 +837,8 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     if i(G_NATIONS_TO_LOAD_COUNT) <= 0 || i(G_SELECTED_NATION_COUNT) <= 0 {
         return 0;
     }
-    let default = u(G_MAIN_NATION) as usize;
-    if default == 0 || *((default + nation::LEAGUE_SELECTED) as *const u8) & 2 == 0 {
+    let default = Nation(u(G_MAIN_NATION) as usize);
+    if default.is_null() || default.league_selected() & 2 == 0 {
         return 0;
     }
     *(G_NEW_GAME_SETUP_DONE_FLAG as *mut u32) = 1;

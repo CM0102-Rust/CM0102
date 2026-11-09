@@ -5,9 +5,9 @@ use super::*;
 /// [pt] O clube do contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) ou 0.
 pub(crate) unsafe fn player_search_contract_club(person: Staff) -> usize {
     // 0x4cf5a0: push person; mov ecx, [0xae1050] -> thiscall, ret 4
-    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
-    if c != 0 { friendly_club_by_id(read_usize(c + contract::CLUB)) } else { 0 }
+    let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c.addr());
+    if !c.is_null() { friendly_club_by_id(c.club()) } else { 0 }
 }
 
 /// `player_search_record_scouted_club_match(match, result)`, called by the watched match (`player_search_scout_match`) when the list
@@ -849,6 +849,7 @@ pub(crate) unsafe extern "thiscall" fn get_scout_assignment(this: usize, club: *
 /// +0x7f = 2, a mesma região (+0x76) da nação do clube, a nação não estrangeira para o olheiro (0x53d980 com 1) ou os
 /// olheiros do clube cobrindo a nação (0x7f9190 do [0xb74448]). Devolve 1 ou 0.
 pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: usize) -> u32 {
+    let nation = Nation(nation);
     let mut person = 0usize;
     let i = read_usize(this + player_search_fields::SCOUT_ID) as i32;
     if i > -1 {
@@ -857,7 +858,7 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: 
             person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(this + player_search_fields::SCOUT_ID).wrapping_mul(staff::SIZE));
         }
     }
-    if read_u8(this + player_search_fields::LIST_TYPE) != 4 || person == 0 || nation == 0 {
+    if read_u8(this + player_search_fields::LIST_TYPE) != 4 || person == 0 || nation.is_null() {
         return 0;
     }
     let club = Club(read_usize(person + staff::CLUB_JOB));
@@ -866,28 +867,28 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: 
     }
     if exe::player_search_get_scout_assignment(this, this + player_search_fields::ASSIGNED_CLUB, this + player_search_fields::ASSIGNED_NATION, this + player_search_fields::ASSIGNED_REGION, this + player_search_fields::ASSIGNED_COMP, this + player_search_fields::ASSIGNED_BASE, this + player_search_fields::ASSIGNED_OPPONENT) != 0 {
         let c = read_usize(this + player_search_fields::ASSIGNED_CLUB) as i32;
-        if c > -1 && read_usize(read_usize(G_CLUB_TABLE).wrapping_add((c as usize).wrapping_mul(club::SIZE)) + 0x53) == nation {
+        if c > -1 && read_usize(read_usize(G_CLUB_TABLE).wrapping_add((c as usize).wrapping_mul(club::SIZE)) + 0x53) == nation.addr() {
             return 1;
         }
         let n = read_usize(this + player_search_fields::ASSIGNED_NATION) as i32;
-        if n > -1 && read_usize(nation) as i32 == n {
+        if n > -1 && read_usize(nation.addr()) as i32 == n {
             return 1;
         }
         let r = read_u8(this + player_search_fields::ASSIGNED_REGION);
-        if (r as i8) > -1 && read_u8(nation + nation::ACTUAL_REGION) == r {
+        if (r as i8) > -1 && nation.actual_region() == r {
             return 1;
         }
         // the original compares the same byte again when there is a base
-        if read_usize(this + player_search_fields::ASSIGNED_BASE) != 0 && read_u8(nation + nation::ACTUAL_REGION) == r {
+        if read_usize(this + player_search_fields::ASSIGNED_BASE) != 0 && nation.actual_region() == r {
             return 1;
         }
         return 0;
     }
-    let nc = club.nation().addr();
-    if read_u8(nc + nation::GROUP_MEMBERSHIP) == 2 && read_u8(nation + nation::GROUP_MEMBERSHIP) == 2 {
+    let nc = Nation(club.nation().addr());
+    if nc.group_membership() == 2 && nation.group_membership() == 2 {
         return 1;
     }
-    if read_u8(nc + nation::ACTUAL_REGION) == read_u8(nation + nation::ACTUAL_REGION) {
+    if nc.actual_region() == nation.actual_region() {
         crate::comparison::branch("cpn_7 same region");
         return 1; // the same region as the club’s nation
     }

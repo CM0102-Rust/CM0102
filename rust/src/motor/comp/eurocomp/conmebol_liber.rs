@@ -426,9 +426,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
                 final_(0x86a800);
                 let mundial = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
                 let t = read_usize(mundial + cup::TEAM_TABLE);
-                let nation = read_usize(read_usize(t) + 0x53);
+                let nation = Nation(read_usize(read_usize(t) + 0x53));
                 crate::comparison::branch("cqk_11 libertadores champion");
-                if nation != 0 && read_usize(read_usize(nation + nation::CONTINENT)) == read_usize(KEY_CONTINENT_SOUTH_AMERICA) {
+                if !nation.is_null() && read_usize(nation.continent()) == read_usize(KEY_CONTINENT_SOUTH_AMERICA) {
                     core::ptr::write_unaligned(t as *mut u32, club as u32); // cqk11: the champion in the South American slot
                 } else {
                     core::ptr::write_unaligned((t + 6) as *mut u32, club as u32);

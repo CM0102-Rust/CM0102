@@ -452,19 +452,19 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             core::ptr::write_unaligned((g(p + staff::PLAYER) + 0xd) as *mut i16, w(row + 7));
             if read(club_of(read(t)) + 0x53) == read(club_of(read(t + 4)) + 0x53) && *((row - 8) as *const u8) != 0 {
                 let v = exe::playerstats_get_stat(g(G_PLAYER_STATS), g(p + staff::PLAYER), 6, 0xb, 6.5);
-                let previous = g(p + staff::NATION);
-                let nation = g(club.addr() + club::NATION);
+                let previous = Nation(g(p + staff::NATION));
+                let nation = Nation(g(club.addr() + club::NATION));
                 let f = g(p + staff::PLAYER);
                 if !(v == 0.0 || v.is_nan())
-                    && previous != 0
-                    && nation != 0
-                    && *((previous + nation::ACTUAL_REGION) as *const u8) != *((nation + nation::ACTUAL_REGION) as *const u8)
+                    && !previous.is_null()
+                    && !nation.is_null()
+                    && previous.actual_region() != nation.actual_region()
                     && f != 0
                     && w(f + 0xb) > 0x1676
                     && read_i8(p + staff::AMBITION) > 0xa
                     && read_i8(p + staff::LOYALTY) < 0xf
                     && (read_i8(p + staff::SPORTSMANSHIP) < 0xa || read_i8(p + staff::TEMPERAMENT) < 0xa)
-                    && ((read(previous) == read(KEY_NATION_FRANCE) && random(3) == 0) || random(10) == 0)
+                    && ((read(previous.addr()) == read(KEY_NATION_FRANCE) && random(3) == 0) || random(10) == 0)
                 {
                     let c = contract(g(G_CONTRACT_MANAGER), p, club.addr());
                     if c != 0 && exe::staff_contract_get_flags(c) & 0x20 == 0 {

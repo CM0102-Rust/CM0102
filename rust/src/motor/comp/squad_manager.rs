@@ -659,9 +659,9 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
         if p == 0 || read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
             continue;
         }
-        let k = contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
-        *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = k as u32;
-        if k != 0 && *((k + contract::CONTRACT_TYPE) as *const u8) & 0x3f == 5 {
+        let k = Contract(contract(read_u32(G_CONTRACT_MANAGER) as usize, p));
+        *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = k.addr() as u32;
+        if !k.is_null() && k.contract_type() & 0x3f == 5 {
             continue;
         }
         if exe::contract_manager_get_loan_contract(read_u32(G_CONTRACT_MANAGER) as usize, p) != 0 || *m6d(p) & 0x18 != 0 {

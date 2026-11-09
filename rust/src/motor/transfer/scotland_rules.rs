@@ -7,11 +7,11 @@ use super::*;
 /// `None` (pode); senão o clube dono pelo contrato consultado de novo (0 se a segunda consulta não achar).
 pub(crate) unsafe fn loan_owner_club(player: usize) -> Option<usize> {
     let c = game_get_contract_and_store(player);
-    if c == 0 || england_rules_club_of_contract(c) == 0 {
+    if c == 0 || england_rules_club_of_contract(Contract(c)) == 0 {
         return None;
     }
     let c2 = game_get_contract_and_store(player);
-    Some(if c2 != 0 { england_rules_club_of_contract(c2) } else { 0 })
+    Some(if c2 != 0 { england_rules_club_of_contract(Contract(c2)) } else { 0 })
 }
 
 /// Loan refusal "outside the window" (reason 9) with the rules nation's adjective (+0xa) in the message.

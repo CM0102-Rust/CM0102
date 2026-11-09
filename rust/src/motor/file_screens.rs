@@ -40,15 +40,15 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     for (bit, destino) in [(2u8, summary), (1u8, summary.add(0x3e8))] {
         let mut first = true;
         for i in 0..0x23usize {
-            let n = *((G_LEAGUE_TABLE + i * 0x48) as *const usize);
-            if n == 0 || *((n + nation::LEAGUE_SELECTED) as *const u8) & bit == 0 {
+            let n = Nation(*((G_LEAGUE_TABLE + i * 0x48) as *const usize));
+            if n.is_null() || n.league_selected() & bit == 0 {
                 continue;
             }
             if first {
-                format(nation.as_mut_ptr(), n + nation::SHORT_NAME);
+                format(nation.as_mut_ptr(), n.addr() + nation::SHORT_NAME);
                 first = false;
             } else {
-                translate(nation.as_mut_ptr(), 0x9c8134, n + nation::SHORT_NAME);
+                translate(nation.as_mut_ptr(), 0x9c8134, n.addr() + nation::SHORT_NAME);
             }
             append_text(destino, nation.as_ptr());
         }
@@ -67,13 +67,13 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
         }
         exe::database_format_staff_name(p, (club_txt.sub(0x3c)) as *mut u8 as usize, 200, 1);
         let club = Club(p.club_job());
-        let nation_of = p.national_job();
-        if !club.is_null() && nation_of != 0 {
-            translate(club_txt, 0x9c80f4, club.addr() + club::SHORT_NAME, nation_of + nation::SHORT_NAME);
+        let nation_of = Nation(p.national_job());
+        if !club.is_null() && !nation_of.is_null() {
+            translate(club_txt, 0x9c80f4, club.addr() + club::SHORT_NAME, nation_of.addr() + nation::SHORT_NAME);
         } else if !club.is_null() {
             copy_text(club_txt, (club.addr() + club::SHORT_NAME) as *const u8);
-        } else if nation_of != 0 {
-            copy_text(club_txt, (nation_of + nation::SHORT_NAME) as *const u8);
+        } else if !nation_of.is_null() {
+            copy_text(club_txt, (nation_of.addr() + nation::SHORT_NAME) as *const u8);
         } else {
             *club_txt = 0;
         }

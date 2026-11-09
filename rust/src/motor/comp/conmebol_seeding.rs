@@ -205,10 +205,10 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
     let mut i = 0u32;
     if read_u32(G_CLUB_COUNT) as i32 > 0 {
         loop {
-            let nation = read_u32(c + club::NATION) as usize;
-            if nation != 0 && exe::database_is_national_team(c) == 0 {
-                let mexico = read_u32(nation) == read_u32(KEY_NATION_MEXICO); // cqj2: o México entra
-                let count = if mexico { 0 } else { read_u32(nation + nation::CONTINENT) as usize };
+            let nation = Nation(read_u32(c + club::NATION) as usize);
+            if !nation.is_null() && exe::database_is_national_team(c) == 0 {
+                let mexico = read_u32(nation.addr()) == read_u32(KEY_NATION_MEXICO); // cqj2: o México entra
+                let count = if mexico { 0 } else { (nation.continent() as u32) as usize };
                 if mexico || (count != 0 && read_u32(count) == read_u32(KEY_CONTINENT_SOUTH_AMERICA)) {
                     if mexico {
                         crate::comparison::branch("cqj_2 mexican club");
@@ -217,15 +217,15 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                     *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = u32::MAX; // cqj2: no continental place
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
                     core::ptr::write_unaligned(r as *mut u32, c as u32);
-                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation));
+                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation.addr()));
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32 / 500) as u8;
                     let division = Competition(read_u32(c + club::LAST_DIVISION) as usize);
                     if !division.is_null() {
                         crate::comparison::branch("cqj_2 division level");
                         core::ptr::write_unaligned((r + 9) as *mut u16, (division.reputation() as u16)); // cqj2: the division level
                         *((r + 0xb) as *mut u8) = *((c + club::LAST_POSITION) as *const u8);
-                        let comp = read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize;
-                        if comp == 0 || *((comp + nation::LEAGUE_SELECTED) as *const u8) == 0 {
+                        let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize);
+                        if comp.is_null() || comp.league_selected() == 0 {
                             core::ptr::write_unaligned((c + club::LAST_DIVISION) as *mut u32, 0);
                             *((c + club::LAST_POSITION) as *mut u8) = 0;
                         }

@@ -3,8 +3,8 @@ use super::*;
 /// Contract squad status (high nibble of +0x4f).
 ///
 /// [pt] O tipo do contrato (+0x4f, nibble alto).
-pub(crate) unsafe fn contract_squad_status(contract: usize) -> u8 {
-    *((contract + contract::SQUAD_STATUS) as *const u8) & 0xf0
+pub(crate) unsafe fn contract_squad_status(contract: Contract) -> u8 {
+    contract.squad_status() & 0xf0
 }
 
 /// A notícia guardada: 0xdf bytes (+0xd6 id, +0xda lida).
@@ -463,14 +463,14 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
     deliver_to_human_managers(this, news, 3, |p| {
         let c = Club(read_usize(p + staff::CLUB_JOB));
         if !c.is_null() {
-            let n = c.nation().addr();
-            if n != 0 && read_usize(n + nation::CONTINENT) == continent { // the continent of the club’s nation
+            let n = Nation(c.nation().addr());
+            if !n.is_null() && n.continent() == continent { // the continent of the club’s nation
                 crate::comparison::branch("cpk_5 continent by club");
                 return true;
             }
         }
-        let s = read_usize(p + staff::NATION);
-        s != 0 && read_usize(s + nation::CONTINENT) == continent // the continent of the person’s nation
+        let s = Nation(read_usize(p + staff::NATION));
+        !s.is_null() && s.continent() == continent // the continent of the person’s nation
     }) as u32
 }
 

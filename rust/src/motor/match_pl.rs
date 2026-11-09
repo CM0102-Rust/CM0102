@@ -1613,8 +1613,8 @@ pub(crate) unsafe fn punish_challenger_foul_injected(m: usize, e: usize, j: Matc
             if x > random(0x14) {
                 let t = *((m + engine::MATCH) as *const usize);
                 let club = Club(*((t + if j.side() != 0 { 0x20 } else { 0x1c }) as *const usize));
-                let k = club.nation().addr();
-                if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
+                let k = Nation(club.nation().addr());
+                if !k.is_null() && k.first_language() == 8 {
                     narrate(call, 0x20f5, 0, 0, u32::MAX);
                 }
             }
@@ -2111,8 +2111,8 @@ pub(crate) unsafe fn punish_contester_foul_injected(j: MatchPlayer, mut t: u8, c
             if a > random(0x14) {
                 let partida = *((m + engine::MATCH) as *const usize);
                 let club = Club(*((partida + if j.side() == 0 { 0x20 } else { 0x1c }) as *const usize));
-                let k = club.nation().addr();
-                if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
+                let k = Nation(club.nation().addr());
+                if !k.is_null() && k.first_language() == 8 {
                     narrate(call, 0x20f5, 0, 0, u32::MAX);
                 }
             }
@@ -2369,8 +2369,8 @@ pub(crate) unsafe fn contest_ball_injected(j: MatchPlayer, strength: i16, kind_i
                     if a > random(0x14) {
                         let partida = *((m + engine::MATCH) as *const usize);
                         let club = Club(*((partida + if j.side() == 0 { 0x20 } else { 0x1c }) as *const usize));
-                        let k = club.nation().addr();
-                        if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
+                        let k = Nation(club.nation().addr());
+                        if !k.is_null() && k.first_language() == 8 {
                             narrate(call, 0x20f5, 0, 0, u32::MAX);
                         }
                     }
@@ -8512,8 +8512,8 @@ pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
         }
         let x = u(t + staff::CLUB_JOB);
         if x != 0 {
-            let xn = u(x + club::NATION);
-            if u(xn + nation::CONTINENT) == edi || u(u(t + staff::NATION) + 0x71) == edi {
+            let xn = Nation(u(x + club::NATION));
+            if u(xn.addr() + nation::CONTINENT) == edi || u(u(t + staff::NATION) + 0x71) == edi {
                 return 1;
             }
             if exe::comp_includes_club(object(), exe::database_get_national_team(xn)) != 0 {
@@ -9501,11 +9501,11 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
     } else if form > 4.0 {
         form = 4.0;
     }
-    let r = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club());
+    let r = Contract(exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club()));
     let mut c = 0.0;
-    if r != 0 {
-        c = *((r + 0x44) as *const i8) as f64 * 0.013333333333333334 + 0.5;
-        c = match read_i8(r + contract::SQUAD_STATUS) as u8 >> 4 {
+    if !r.is_null() {
+        c = *((r.addr() + 0x44) as *const i8) as f64 * 0.013333333333333334 + 0.5;
+        c = match (r.squad_status() as i8) as u8 >> 4 {
             0 | 5 => c - 10.0,
             1 => c + 2.5,
             2 => c + 2.0,

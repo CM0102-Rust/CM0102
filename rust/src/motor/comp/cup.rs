@@ -1292,11 +1292,11 @@ pub(crate) unsafe fn wins_uefa_cup_place(comp: Competition, club: usize) -> bool
     if read_i32(comp.addr()) == read_i32(KEY_CLUB_COMP_ENGLISH_LEAGUE_CUP) {
         return true;
     }
-    let nation = comp.nation();
-    if nation == 0 {
+    let nation = Nation(comp.nation());
+    if nation.is_null() {
         return false;
     }
-    let continent = read_usize(nation + nation::CONTINENT);
+    let continent = nation.continent();
     if continent == 0 || read_i32(continent) != read_i32(KEY_CONTINENT_EUROPE) || cup_is_friendly_comp(comp.addr()) {
         return false;
     }
@@ -2919,8 +2919,8 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     exe::newsitem_set_slot(n, cursor[0] as i8, proxima as u32);
     let news = read_usize(G_NEWS);
     if out as u8 != 0xff {
-        let nation = club.nation().addr();
-        let continent = if nation != 0 { read_usize(nation + nation::CONTINENT) } else { 0 };
+        let nation = Nation(club.nation().addr());
+        let continent = if !nation.is_null() { nation.continent() } else { 0 };
         exe::news_send_by_scope(news, n, club, read_usize(cup + 4), nation, continent, out);
         return 1;
     }

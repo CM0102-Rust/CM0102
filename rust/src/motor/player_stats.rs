@@ -1100,11 +1100,11 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         return if read_u8(person.nation() + 0x77) == language { 10 } else { 0 }; // the human manager
     }
     if by_contract != 0 {
-        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
-        if c != 0 {
+        let c = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club));
+        if !c.is_null() {
             let cp = Club(person.club_job());
             if !cp.is_null() && club.nation().addr() == cp.nation().addr() {
-                return read_u8(c + contract::SQUAD_STATUS) & 0xf;
+                return c.squad_status() & 0xf;
             }
         }
     }
@@ -1112,12 +1112,12 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         if read_u8(person.nation() + 0x77) == l {
             return true;
         }
-        let s = person.second_nation();
-        s != 0 && read_u8(s + nation::FIRST_LANGUAGE) == l // the second nation
+        let s = Nation(person.second_nation());
+        !s.is_null() && (s.first_language() as u8) == l // the second nation
     };
     if !club.is_null() {
-        let n = club.nation().addr();
-        if n != 0 && fala(read_u8(n + nation::FIRST_LANGUAGE)) {
+        let n = Nation(club.nation().addr());
+        if !n.is_null() && fala((n.first_language() as u8)) {
             return 10;
         }
     }
@@ -1470,33 +1470,33 @@ pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> 
             0
         }
     };
-    let c1 = p.nation();
-    if c1 == 0 {
+    let c1 = Nation(p.nation());
+    if c1.is_null() {
         return 0;
     }
-    match special(k(c1)) {
+    match special(k(c1.addr())) {
         1 => return 500,
         2 => return 1000,
         _ => {}
     }
-    if *((c1 + nation::SECOND_LANGUAGE) as *const i8) == code {
+    if c1.second_language() == code {
         return 500;
     }
-    if *((c1 + nation::THIRD_LANGUAGE) as *const i8) == code {
+    if c1.third_language() == code {
         return 300;
     }
-    let c2 = p.second_nation();
-    if c2 == 0 {
+    let c2 = Nation(p.second_nation());
+    if c2.is_null() {
         return 0;
     }
-    match special(k(c2)) {
+    match special(k(c2.addr())) {
         1 => return 300,
         2 => return 500,
         _ => {}
     }
-    if *((c2 + nation::SECOND_LANGUAGE) as *const i8) == code {
+    if c2.second_language() == code {
         return 300;
     }
-    if *((c2 + nation::THIRD_LANGUAGE) as *const i8) == code { 100 } else { 0 }
+    if c2.third_language() == code { 100 } else { 0 }
 }
 

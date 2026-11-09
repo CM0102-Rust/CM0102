@@ -17,7 +17,7 @@ pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
     let mut plan = Vec::new();
     for k in 0..n.max(0) as usize {
         let na = base + k * 0x122;
-        let mut h = nation_coefficient_history(na);
+        let mut h = nation_coefficient_history(Nation(na));
         if iniciar {
             let v = read_f64(na + 0xa8);
             for x in h.iter_mut().take(5) {
@@ -26,7 +26,7 @@ pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
         }
         let mut mark = read_u8(na + 0x121);
         if dez {
-            roll_coefficient_year(na, &mut h, &mut mark);
+            roll_coefficient_year(Nation(na), &mut h, &mut mark);
         }
         plan.push((h, mark));
     }
@@ -34,7 +34,7 @@ pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
     let mut error = None;
     for (k, (h, mark)) in plan.iter().enumerate() {
         let na = base + k * 0x122;
-        let g = nation_coefficient_history(na);
+        let g = nation_coefficient_history(Nation(na));
         if (0..6).any(|j| g[j].to_bits() != h[j].to_bits()) || read_u8(na + 0x121) != *mark {
             error = Some(format!("nação {} ({:x}): {:?}/{} x plano {:?}/{}", k, na, g, read_u8(na + 0x121), h, mark));
             break;

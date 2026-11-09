@@ -422,9 +422,9 @@ pub(crate) struct ContractReturnPlan {
 pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractReturnPlan {
     let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
-    let contrato = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    let clube = if contrato == 0 { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(contrato + contract::CLUB).wrapping_mul(club::SIZE)) };
-    let mut p = ContractReturnPlan { contract: contrato, club: clube, guardadas: Vec::new(), rest: *((r + discipline_record::HELD_BAN_COUNT) as *const u8), soltas: Vec::new() };
+    let contrato = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    let clube = if contrato.is_null() { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(contrato.club().wrapping_mul(club::SIZE)) };
+    let mut p = ContractReturnPlan { contract: contrato.addr(), club: clube, guardadas: Vec::new(), rest: *((r + discipline_record::HELD_BAN_COUNT) as *const u8), soltas: Vec::new() };
     let list = this + discipline_fields::HELD_BANS;
     write_u32(list + llist::CURSOR, read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32);
     let mut slots = [0u8; 20];
@@ -478,9 +478,9 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
 pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: usize) {
     let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
-    let contract = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    write_u32(G_CONTRACT_LOOKUP_RESULT, contract as u32);
-    let club = if contract == 0 { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(contract + contract::CLUB).wrapping_mul(club::SIZE)) };
+    let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    write_u32(G_CONTRACT_LOOKUP_RESULT, contract.addr() as u32);
+    let club = if contract.is_null() { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(contract.club().wrapping_mul(club::SIZE)) };
     let list = this + discipline_fields::HELD_BANS;
     write_u32(list + llist::CURSOR, read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32);
     let mut marks = [0u32; 4];

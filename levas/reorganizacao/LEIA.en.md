@@ -29,6 +29,14 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 9: contract, nation and finance
+
+The full package for three medium records: 202 + 126 + 29 variables; 22 functions take `Contract`, 6 `Nation`, 3
+`Finance`, and propagation 10 more; 81 `.addr()` removed from the wrappers. Raw accesses: contract 634 → 228, nation
+311 → 92, finance 158 → 44. `.addr()` outside the wrappers 4,760 → 5,160. To review among the names:
+`nation::THREE_LETTER_NAME` is compared with a nation pointer in `tactics.rs` (the field name must be wrong). Proof:
+7cc445c2 ×2, detector equal, comparison 0; the 62 changed mutations and the 4 at risk compile (one fixed).
+
 ## Migration to typed records, batch 8: the player in the match (`MatchPlayer`)
 
 The full package for `match_player`, with the methods' `this`: 294 variables in 239 functions, 222 `.addr()` removed

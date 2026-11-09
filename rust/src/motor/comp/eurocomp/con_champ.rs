@@ -35,9 +35,9 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
         if exe::database_is_national_team(club) != 0 {
             break;
         }
-        let nation = read_usize(club + club::NATION);
-        if nation != 0 {
-            let id = read_usize(nation);
+        let nation = Nation(read_usize(club + club::NATION));
+        if !nation.is_null() {
+            let id = read_usize(nation.addr());
             if id == read_usize(KEY_NATION_MEXICO) {
                 if a < 0xc8 {
                     l.mex[a as usize] = club;
@@ -50,12 +50,12 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
                         l.mls[m as usize] = club;
                         m += 1;
                     }
-                } else if id != read_usize(KEY_NATION_UNITED_STATES) && read_u8(nation + nation::REGION) == 7 {
+                } else if id != read_usize(KEY_NATION_UNITED_STATES) && nation.region() == 7 {
                     if b < 0xc8 {
                         l.centro[b as usize] = club;
                         b += 1;
                     }
-                } else if read_u8(nation + nation::REGION) == 6 && c < 0xc8 {
+                } else if nation.region() == 6 && c < 0xc8 {
                     l.caribe[c as usize] = club;
                     c += 1;
                 }

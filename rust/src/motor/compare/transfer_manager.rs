@@ -392,8 +392,8 @@ pub(crate) unsafe extern "thiscall" fn compare_check_squad_limits(this: usize, c
     let same = if liberado == 0 {
         mo.0 == mr.0
     } else {
-        let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), liberado);
-        c == 0 || friendly_club_by_id(read_usize(c + contract::CLUB)) != club
+        let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), liberado));
+        c.is_null() || friendly_club_by_id(c.club()) != club
     };
     SCOREBOARD.record(same && r == n, || {
         format!("check_squad_limits(clube {:x}, oferta {:x}, fila {}) original={} rust={} liberado={:x} {:x?} x {:x?}", club, o, count_queue, r, n, liberado, mo, mr)
@@ -1676,8 +1676,8 @@ pub(crate) unsafe extern "thiscall" fn compare_find_international_appearance_mon
 /// registro do prêmio e jogos, sem efeitos).
 pub(crate) unsafe extern "thiscall" fn compare_pay_appearance_money(this: usize, player: usize, games: i32, kind: u32, arg: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32) -> u32>(IDX_PAY_APPEARANCE_MONEY);
-    let c = get_contract(player);
-    let expected = if c == 0 || friendly_club_by_id(read_usize(c + contract::CLUB)) == 0 {
+    let c = Contract(get_contract(player));
+    let expected = if c.is_null() || friendly_club_by_id(c.club()) == 0 {
         0
     } else {
         let r = appearance_bonus_record(this, player, kind);

@@ -4564,8 +4564,8 @@ pub(crate) unsafe fn shot_foul_with(m: usize, e: MatchPlayer, p: usize, kind: u8
             if x > random(0x14) {
                 let t = read_usize(m + engine::MATCH);
                 let club = Club(read_usize(t + (if e.side() == 0 { 0x20 } else { 0x1c })));
-                let k = club.nation().addr();
-                if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
+                let k = Nation(club.nation().addr());
+                if !k.is_null() && k.first_language() == 8 {
                     n7(call, 0x20f5, 0, 0);
                 }
             }
@@ -7257,15 +7257,15 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let rd = preso(cd, f_d, f4(0x96d1a8), (level as i32 * 100) as f64, td);
     // the club’s reputation pulls +0xb
     if exe::database_is_national_team(club) == 0 && level > 10 {
-        let e = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club);
-        if e != 0 {
+        let e = Contract(exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club));
+        if !e.is_null() {
             let mut id = (person.year_of_birth() as i8) as i32 as f32;
             if read_f32(rdata::F32_19) < id {
                 id = 19.0;
             }
             let k = (game_pow(id as f64 * d8(0x96a578), d8(0x968930)) * d8(0x968968)) as f32 as f64;
             let r = club.reputation() as f64;
-            let target = match read_i8(e + contract::SQUAD_STATUS) as u8 >> 4 {
+            let target = match (e.squad_status() as i8) as u8 >> 4 {
                 1 => ftol(r * k * d8(0x968978)),
                 2 => ftol(r * k * d8(0x9689c0)),
                 3 | 5 => ftol(r * k),

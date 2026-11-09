@@ -431,11 +431,11 @@ pub(crate) unsafe fn link_nations_near_date(this: usize, datas: usize, usadas: u
 /// [pt] A nação `n` (ponteiro) está numa das confederações da data: alguma das `quantas` entradas de 20 bytes a partir de
 /// `datas` tem em +0xc −1 ou a id do continente da nação (+0x71, lido sem conferir o nulo, como na original). Sem
 /// entradas: não.
-pub(crate) unsafe fn nation_in_date_confederations(datas: usize, how_many: i32, n: usize) -> bool {
+pub(crate) unsafe fn nation_in_date_confederations(datas: usize, how_many: i32, n: Nation) -> bool {
     let mut k = 0;
     while k < how_many {
         let c = read_usize(datas + intl_date_entry::CONTINENT_ID + k as usize * 0x14) as i32;
-        if c == -1 || read_usize(read_usize(n + nation::CONTINENT)) as i32 == c {
+        if c == -1 || read_usize(n.continent()) as i32 == c {
             return true;
         }
         k += 1;
@@ -446,8 +446,8 @@ pub(crate) unsafe fn nation_in_date_confederations(datas: usize, how_many: i32, 
 /// True on an Africa-only friendly date (+2 = 1) for a nation whose continent is KEY_CONTINENT_AFRICA.
 ///
 /// [pt] Na data só da África (+2 = 1), a nação africana (+0x71 = [0x9cfa08]) fica de fora.
-pub(crate) unsafe fn is_african_excluded(datas: usize, n: usize) -> bool {
-    *((datas + 2) as *const u8) == 1 && read_usize(n + nation::CONTINENT) != 0 && read_usize(read_usize(n + nation::CONTINENT)) == read_usize(KEY_CONTINENT_AFRICA)
+pub(crate) unsafe fn is_african_excluded(datas: usize, n: Nation) -> bool {
+    *((datas + 2) as *const u8) == 1 && n.continent() != 0 && read_usize(n.continent()) == read_usize(KEY_CONTINENT_AFRICA)
 }
 
 /// Second part of `arrange_international_friendlies`: for each free nation in the sorted list, finds the first suitable later free nation and
@@ -493,8 +493,8 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
     let nation = |this: usize, k: i32| read_usize(read_usize(this + friendly::SORTED_NATIONS).wrapping_add(k as usize * 4));
     let mut i: i32 = i0;
     while i < total(this) {
-        let a = nation(this, i);
-        let first_leg = read_usize(a);
+        let a = Nation(nation(this, i));
+        let first_leg = read_usize(a.addr());
         let free = match ens.as_deref() {
             Some(e) => !e.usada(first_leg),
             None => *((usadas.wrapping_add(first_leg)) as *const u8) == 0,
@@ -505,8 +505,8 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
                 if ens.is_some() && (*core::ptr::addr_of!(FRIENDLY_TAPE)).2 {
                     return; // the tape no longer matches
                 }
-                let b = nation(this, j);
-                let idb = read_usize(b);
+                let b = Nation(nation(this, j));
+                let idb = read_usize(b.addr());
                 let free_b = match ens.as_deref() {
                     Some(e) => !e.usada(idb),
                     None => *((usadas.wrapping_add(idb)) as *const u8) == 0,
@@ -514,10 +514,10 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
                 if free_b {
                     let mut v = sortear(500);
                     if nation_in_date_confederations(datas, how_many, b) && !is_african_excluded(datas, b)
-                        && (read_usize(a + nation::NUMBER_STAFF) as i32 >= 5 || read_usize(b + nation::NUMBER_STAFF) as i32 >= 5)
+                        && ((a.number_staff() as usize) as i32 >= 5 || (b.number_staff() as usize) as i32 >= 5)
                         && exe::friendly_is_banned_nation_pair(this, first_leg as i32, idb as i32) == 0
                     {
-                        if read_usize(a + nation::CONTINENT) == read_usize(b + nation::CONTINENT) {
+                        if a.continent() == b.continent() {
                             v = v.wrapping_add(sortear(1000)); // cqc11: o mesmo continente
                         }
                         if v > 400 { // cqc11: the sum above 400
@@ -1057,8 +1057,8 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     for k in 0..0x23usize {
         let league = G_LEAGUE_TABLE + k * 0x48;
-        let nation = read_usize(league);
-        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
+        let nation = Nation(read_usize(league));
+        if nation.is_null() || nation.league_selected() == 0 {
             continue;
         }
         if is_before_today(league + 0x2a) {
@@ -1072,7 +1072,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
         // the search key: a 0x16-byte candidate with the nation (+6) and the range 0xff (+5)
         let mut key = [0u8; 0x16];
         key[5] = 0xff;
-        key[6..10].copy_from_slice(&read_i32(nation).to_le_bytes());
+        key[6..10].copy_from_slice(&read_i32(nation.addr()).to_le_bytes());
         let pchave = key.as_ptr() as usize;
         let mut q = exe::crt_bsearch((&pchave) as *const usize as usize, ordenados, count, 4, 0x5c5290);
         if q == 0 {
@@ -1537,9 +1537,9 @@ pub(crate) unsafe fn nations_with_continent() -> Vec<usize> {
     let t = read_usize(G_NATION_TABLE);
     let mut i = 0;
     while i < read_i32(G_NATION_COUNT) {
-        let n = t.wrapping_add(i as usize * 0x122);
-        if read_usize(n + nation::CONTINENT) != 0 {
-            v.push(n);
+        let n = Nation(t.wrapping_add(i as usize * 0x122));
+        if n.continent() != 0 {
+            v.push(n.addr());
         }
         i += 1;
     }
@@ -1586,12 +1586,12 @@ pub(crate) unsafe extern "thiscall" fn build_nation_list(this: usize) {
 /// com o contrato do tipo 5 (+0x35 & 0x3f).
 pub(crate) unsafe fn contract_club_except_type5(p: Staff) -> usize {
     let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contract(read_usize(G_CONTRACT_MANAGER), p.addr());
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    if c == 0 || read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 5 {
+    let c = Contract(contract(read_usize(G_CONTRACT_MANAGER), p.addr()));
+    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c.addr();
+    if c.is_null() || c.contract_type() & 0x3f == 5 {
         0
     } else {
-        read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE))
+        read_usize(G_CLUB_TABLE).wrapping_add(c.club().wrapping_mul(club::SIZE))
     }
 }
 
@@ -1621,21 +1621,21 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
     if p.player() == 0 {
         return;
     }
-    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    if c == 0 || read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 5 {
+    let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));
+    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c.addr();
+    if c.is_null() || c.contract_type() & 0x3f == 5 {
         return;
     }
-    if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) == 0 {
+    if read_usize(G_CLUB_TABLE).wrapping_add(c.club().wrapping_mul(club::SIZE)) == 0 {
         return;
     }
-    let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p));
-    if k == 0 {
+    let k = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p)));
+    if k.is_null() {
         return;
     }
     let gt = read_usize(G_TRANSFER_MANAGER);
     if gt != 0 {
-        if exe::date_days_since(G_CURRENT_DATE, (read_usize(k + contract::DATE_STARTED)) as u32, (read_usize(k + 0x29)) as u32) > 0x12c {
+        if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, (read_usize(k.addr() + 0x29)) as u32) > 0x12c {
             let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), contract_club_except_type5(p), p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p.addr()) {
                 crate::comparison::branch("cpv_13 renewal");
@@ -1643,7 +1643,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
             }
         }
     }
-    if read_usize(k + 0x45) != 0 {
+    if read_usize(k.addr() + 0x45) != 0 {
         return;
     }
     let v59 = (p.loyalty() as u8) as i8;
@@ -1923,8 +1923,8 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
     let mut plan = Vec::new();
     for k in 0..0x23 {
         let ent = G_LEAGUE_TABLE + k * 0x48;
-        let nation = read_usize(ent);
-        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
+        let nation = Nation(read_usize(ent));
+        if nation.is_null() || nation.league_selected() == 0 {
             continue;
         }
         let (mut prim, mut ult) = (u32::MAX as usize, u32::MAX as usize);
@@ -1961,7 +1961,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
         }
         let mut key = [0u8; 0x16];
         key[5] = 0xff;
-        key[6..10].copy_from_slice(&(read_usize(nation) as u32).to_le_bytes());
+        key[6..10].copy_from_slice(&(read_usize(nation.addr()) as u32).to_le_bytes());
         let pchave = key.as_ptr() as usize;
         let mut q = exe::crt_bsearch((&pchave) as *const usize as usize, ptrs, n as u32, 4, 0x5c5290);
         if q == 0 {
@@ -1969,7 +1969,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
         }
         while q > ptrs {
             q -= 4;
-            if read_usize(read_usize(q) + 6) != read_usize(nation) {
+            if read_usize(read_usize(q) + 6) != read_usize(nation.addr()) {
                 q += 4;
                 break;
             }
@@ -1978,7 +1978,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
         while q < ate {
             let c = read_usize(q);
             let id = read_usize(c);
-            if read_usize(read_usize(G_CLUB_TABLE) + id * club::SIZE + 0x53) != nation {
+            if read_usize(read_usize(G_CLUB_TABLE) + id * club::SIZE + 0x53) != nation.addr() {
                 break;
             }
             let nova = id == prim || id == ult;
@@ -2483,8 +2483,8 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
     // a palavra
     let r = exe::date_add_days(data, p1, folga as u32);
     exe::date_operator_3d(pb, p0, r);
-    let nation = (club.nation().addr() as u32) as usize;
-    if k != 0 && exe::database_is_national_team(club) == 0 && nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
+    let nation = Nation((club.nation().addr() as u32) as usize);
+    if k != 0 && exe::database_is_national_team(club) == 0 && !nation.is_null() && nation.league_selected() != 0 {
         let reg = ((exe::key_nation_index_of_nation(nation) as u32) as u8 as i8 as isize * 72) as usize;
         let start = G_LEAGUE_WORLD_CUP_START_DATE.wrapping_add(reg); // the key nation’s season
         let (iano, idia) = (read_u16(start + 2), read_u16(start + 0) as i16);
@@ -3226,7 +3226,7 @@ pub(crate) unsafe extern "thiscall" fn remove_club_from_ai_plans(amistosos: usiz
 /// tira 0x90cfc0(100) e fica o maior (estrito, comparado como byte com sinal).
 pub(crate) unsafe extern "thiscall" fn pick_tour_nation(_this: usize, club: usize) -> usize {
     let club = Club(club);
-    let own = club.nation().addr();
+    let own = Nation(club.nation().addr());
     let reach: i8 = match club.reputation() {
         8000.. => 5,
         6000.. => 4,
@@ -3242,15 +3242,15 @@ pub(crate) unsafe extern "thiscall" fn pick_tour_nation(_this: usize, club: usiz
     let mut p = *(G_NATION_TABLE as *const usize);
     let mut i: i16 = 0;
     loop {
-        let candidate = p != own
+        let candidate = p != own.addr()
             && *((p + nation::NUMBER_CLUBS) as *const i16) >= 0x14
             && *((p + nation::STATE_OF_DEVELOPMENT) as *const u8) == 1
             && *((p + nation::GAME_IMPORTANCE) as *const i8) <= 2
             && *((p + nation::REPUTATION) as *const i16) >= 5;
         if candidate {
-            let continent = || *((p + nation::CONTINENT) as *const u32) == *((own + nation::CONTINENT) as *const u32);
+            let continent = || *((p + nation::CONTINENT) as *const u32) == (own.continent() as u32);
             let near = match reach {
-                2 => *((p + nation::REGION) as *const u8) == *((own + nation::REGION) as *const u8) && continent(),
+                2 => *((p + nation::REGION) as *const u8) == own.region() && continent(),
                 5.. => true,
                 _ => continent(),
             };

@@ -88,8 +88,8 @@ pub(crate) const AUSTRALIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 /// Club of a contract: club table + 0x245 x contract +4.
 ///
 /// [pt] O clube de um contrato: +4 é o índice em [0xae23b4] (registros de 0x245 bytes), como as regras calculam.
-pub(crate) unsafe fn england_rules_club_of_contract(c: usize) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE))
+pub(crate) unsafe fn england_rules_club_of_contract(c: Contract) -> usize {
+    read_usize(G_CLUB_TABLE).wrapping_add(c.club().wrapping_mul(club::SIZE))
 }
 
 /// The borrowing club's 16-byte entry in the season loans table ([[0xde1f54] + 0x91c] + id x 16; byte +0 is the count).
@@ -122,11 +122,11 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     // 0x66f4e0: the message text (push ...; push format; push destination; add esp, 0x14) -> variadic cdecl
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let c = game_get_contract_and_store(player);
-    if c == 0 || england_rules_club_of_contract(c) == 0 {
+    if c == 0 || england_rules_club_of_contract(Contract(c)) == 0 {
         return 1;
     }
     let c2 = game_get_contract_and_store(player);
-    let owner = Club(if c2 != 0 { england_rules_club_of_contract(c2) } else { 0 });
+    let owner = Club(if c2 != 0 { england_rules_club_of_contract(Contract(c2)) } else { 0 });
     let comp = club.division().addr();
     if comp == owner.division().addr() && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
         crate::comparison::branch("cqe_5 same division");
@@ -167,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
             continue;
         }
         let cp = game_get_contract_and_store(p);
-        let de = if cp != 0 { england_rules_club_of_contract(cp) } else { 0 };
+        let de = if cp != 0 { england_rules_club_of_contract(Contract(cp)) } else { 0 };
         if de != club.addr() {
             n = n.wrapping_add(1);
         }

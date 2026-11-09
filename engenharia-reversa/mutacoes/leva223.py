@@ -6,7 +6,7 @@ MUTACOES = [
     ('dq5_basco', '    BASQUE_CLUBS.iter().any(|&a| id == g(a)) as u32', '    (!BASQUE_CLUBS.iter().any(|&a| id == g(a))) as u32'),
     ('dq5_listada', '*((v + contract::TRANSFER_STATUS) as *const u8) & 1 == 0', '*((v + contract::TRANSFER_STATUS) as *const u8) & 2 == 0'),
     ('dq5_emprestimo', '*((v + contract::TRANSFER_STATUS) as *const u8) & 2 != 0) as u32', '*((v + contract::TRANSFER_STATUS) as *const u8) & 1 != 0) as u32'),
-    ('dq6_pedido', '*((v + contract::TRANSFER_STATUS) as *const u8) & 8 != 0', '*((v + contract::TRANSFER_STATUS) as *const u8) & 9 != 0'),
+    ('dq6_pedido', 'v.transfer_status() & 8 != 0', 'v.transfer_status() & 9 != 0'),
     ('dq6_nota', '(ability + 2 * (value as u8 as i8 as i32))', '(ability + 3 * (value as u8 as i8 as i32))'),
     ('dq6_reservas', '    1 // pode', '    0 // pode'),
 ]

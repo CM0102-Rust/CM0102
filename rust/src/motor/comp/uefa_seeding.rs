@@ -30,21 +30,21 @@ pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
     let mut i = 0i8;
     while i < count() {
         let e = seeding_nation_entry(this, i as i32);
-        let p = read_u32(e + 4) as usize;
+        let p = Nation(read_u32(e + 4) as usize);
         if year != 0x7d1 {
             for k in 0..10usize {
-                core::ptr::write_unaligned((p + nation::UEFACOEFFICIENT91 + k * 4) as *mut u32, read_u32(p + nation::UEFACOEFFICIENT92 + k * 4));
+                core::ptr::write_unaligned((p.addr() + nation::UEFACOEFFICIENT91 + k * 4) as *mut u32, read_u32(p.addr() + nation::UEFACOEFFICIENT92 + k * 4));
             }
             let clubs = *((e + 0x11) as *const i8);
             if clubs != 0 {
                 let points = core::ptr::read_unaligned((e + 0xf) as *const i16) as i32;
-                core::ptr::write_unaligned((p + nation::UEFACOEFFICIENT96) as *mut f64, points as f64 / clubs as i32 as f64);
+                p.set_uefacoefficient96(points as f64 / clubs as i32 as f64);
             } else {
-                core::ptr::write_unaligned((p + nation::UEFACOEFFICIENT96) as *mut u64, 0);
+                core::ptr::write_unaligned((p.addr() + nation::UEFACOEFFICIENT96) as *mut u64, 0);
             }
         }
         crate::comparison::branch("cqi_1 coefficient sum");
-        let sum = read_f64(p + nation::UEFACOEFFICIENT95) + read_f64(p + nation::UEFACOEFFICIENT94) + read_f64(p + nation::UEFACOEFFICIENT93) + read_f64(p + nation::UEFACOEFFICIENT92) + read_f64(p + nation::UEFACOEFFICIENT91); // cqi1: as 5 temporadas
+        let sum = p.uefacoefficient95() + p.uefacoefficient94() + p.uefacoefficient93() + p.uefacoefficient92() + p.uefacoefficient91(); // cqi1: as 5 temporadas
         core::ptr::write_unaligned((e + 8) as *mut f32, sum as f32);
         *((e + 0x11) as *mut u8) = 0;
         core::ptr::write_unaligned((e + 0xf) as *mut u16, 0);
@@ -74,8 +74,8 @@ pub(crate) unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
     let n = (*((this + 0x438) as *const i8)).max(0) as i32;
     let mut reg = vec![(this, 0x43b)];
     for i in 0..n {
-        let p = read_u32(seeding_nation_entry(this, i) + 4) as usize;
-        reg.push((p + nation::UEFACOEFFICIENT91, 0x30));
+        let p = Nation(read_u32(seeding_nation_entry(this, i) + 4) as usize);
+        reg.push((p.addr() + nation::UEFACOEFFICIENT91, 0x30));
         reg.push((exe::database_get_national_team(p) + 0x1df, 1));
     }
     reg
@@ -328,23 +328,23 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
     let mut i = 0u32;
     if read_u32(G_CLUB_COUNT) as i32 > 0 {
         loop {
-            let nation = read_u32(c + club::NATION) as usize;
-            if nation != 0 && exe::database_is_national_team(c) == 0 {
-                let count = read_u32(nation + nation::CONTINENT) as usize;
+            let nation = Nation(read_u32(c + club::NATION) as usize);
+            if !nation.is_null() && exe::database_is_national_team(c) == 0 {
+                let count = (nation.continent() as u32) as usize;
                 if count != 0 && read_u32(count) == read_u32(KEY_CONTINENT_EUROPE) {
                     *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = u32::MAX;
                     core::ptr::write_unaligned((read_u32(G_CLUB_STATE_TABLE) as usize).wrapping_add((read_u32(c) as usize).wrapping_mul(6)) as *mut u32, u32::MAX);
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
                     core::ptr::write_unaligned(r as *mut u32, c as u32);
-                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation));
+                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation.addr()));
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32 / 500) as u8;
                     let row = Competition(read_u32(c + club::LAST_DIVISION) as usize);
                     if !row.is_null() {
                         crate::comparison::branch("cqi_2 division level");
                         core::ptr::write_unaligned((r + 9) as *mut u16, (row.reputation() as u16)); // cqi2: the division level
                         *((r + 0xb) as *mut u8) = read_u8(c + club::LAST_POSITION);
-                        let comp = read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize;
-                        if comp == 0 || read_u8(comp + nation::LEAGUE_SELECTED) == 0 {
+                        let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize);
+                        if comp.is_null() || comp.league_selected() == 0 {
                             core::ptr::write_unaligned((c + club::LAST_DIVISION) as *mut u32, 0);
                             *((c + club::LAST_POSITION) as *mut u8) = 0;
                         }
@@ -629,8 +629,8 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
         };
         let mut slots = [0u8, f1, f2];
         let e = seeding_nation_entry(this, r as i32);
-        let nation = read_u32(e + 4) as usize;
-        if nation == nation_of_champion {
+        let nation = Nation(read_u32(e + 4) as usize);
+        if nation.addr() == nation_of_champion {
             slots[1] = slots[1].wrapping_sub(1);
         }
         if r == s1 || r == s2 || r == s3 {
@@ -649,7 +649,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                 loop {
                     let mut tentar_de_novo = false;
                     let c = if chosen == 0 {
-                        if read_u8(nation + nation::LEAGUE_SELECTED) == 0 {
+                        if nation.league_selected() == 0 {
                             um()
                         } else {
                             let cup = read_u32(G_LEAGUE_WORLD_CUP_CUP_COMP + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as usize;
@@ -666,7 +666,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                                     c
                                 } else {
                                     let mut c = exe::comp_util_get_latest_placed_club(cup, 1);
-                                    if c == 0 || read_u32(c + club::NATION) == 0 || read_u32(nation) == read_u32(KEY_NATION_BELGIUM) {
+                                    if c == 0 || read_u32(c + club::NATION) == 0 || read_u32(nation.addr()) == read_u32(KEY_NATION_BELGIUM) {
                                         c = um();
                                     }
                                     if read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
@@ -677,7 +677,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                                         let id = read_u32(cup);
                                         let year = core::ptr::read_unaligned((0xb63d7b + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as *const u16) as i32;
                                         let comp = read_u32((read_u32(G_COMP_OBJECT_TABLE) as usize).wrapping_add(id as usize * 4)) as usize;
-                                        if read_i16(comp + 0x40) as i32 == year || read_u32(nation) == read_u32(KEY_NATION_SPAIN) || read_u32(nation) == read_u32(KEY_NATION_BELGIUM) {
+                                        if read_i16(comp + 0x40) as i32 == year || read_u32(nation.addr()) == read_u32(KEY_NATION_SPAIN) || read_u32(nation.addr()) == read_u32(KEY_NATION_BELGIUM) {
                                             um()
                                         } else {
                                             let (mut v1, mut v2) = (-1i32, -1i32);
@@ -704,7 +704,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                             }
                         }
                     } else if chosen == 1 {
-                        if read_u8(nation + nation::LEAGUE_SELECTED) == 0 {
+                        if nation.league_selected() == 0 {
                             um()
                         } else {
                             let cup = read_u32(G_LEAGUE_WORLD_CUP_SECOND_CUP_COMP + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as usize;

@@ -67,11 +67,11 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
 ///
 /// [pt] Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
 pub(crate) unsafe fn hits_key_nation_error(club: Club) -> bool {
-    let nation = club.nation().addr();
+    let nation = Nation(club.nation().addr());
     exe::database_is_national_team(club) == 0
-        && nation != 0
-        && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0
-        && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation)
+        && !nation.is_null()
+        && nation.league_selected() != 0
+        && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation.addr())
 }
 
 /// Returns the club's season year: the previous year when today is before the season start day of its row.
@@ -194,14 +194,14 @@ pub(crate) unsafe extern "C" fn key_nation_club_in_season(club: usize, start: us
 /// [pt] { 0x6695c0 } (cdecl, key_nation.cpp): `key_nation_get_main_continent()`: o continente (+0x71) da nação do humano
 /// ([0xae2d08]); sem ela ou sem continente, o da primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
 pub(crate) unsafe extern "C" fn key_nation_get_main_continent() -> usize {
-    let h = read_usize(G_MAIN_NATION);
-    if h != 0 && read_usize(h + nation::CONTINENT) != 0 {
-        return read_usize(h + nation::CONTINENT);
+    let h = Nation(read_usize(G_MAIN_NATION));
+    if !h.is_null() && h.continent() != 0 {
+        return h.continent();
     }
     for k in 0..0x23usize {
-        let n = read_usize(G_LEAGUE_TABLE + 72 * k);
-        if n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) & 2 != 0 {
-            return read_usize(n + nation::CONTINENT);
+        let n = Nation(read_usize(G_LEAGUE_TABLE + 72 * k));
+        if !n.is_null() && n.league_selected() & 2 != 0 {
+            return n.continent();
         }
     }
     0
@@ -218,9 +218,9 @@ pub(crate) unsafe extern "C" fn key_nation_get_main_nation() -> usize {
         return h;
     }
     for k in 0..0x23usize {
-        let n = read_usize(G_LEAGUE_TABLE + 72 * k);
-        if n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) & 2 != 0 {
-            return n;
+        let n = Nation(read_usize(G_LEAGUE_TABLE + 72 * k));
+        if !n.is_null() && n.league_selected() & 2 != 0 {
+            return n.addr();
         }
     }
     0

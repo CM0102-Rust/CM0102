@@ -648,8 +648,8 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
     if RECOVERY_NEWS_DRY_RUN {
         return;
     }
-    let nation = if club != 0 { read_usize(club + club::NATION) } else { read_usize(p + staff::NATION) };
-    let continent = if nation != 0 { read_usize(nation + nation::CONTINENT) } else { 0 };
+    let nation = Nation(if club != 0 { read_usize(club + club::NATION) } else { read_usize(p + staff::NATION) });
+    let continent = if !nation.is_null() { nation.continent() } else { 0 };
     exe::news_send_by_scope(read_usize(G_NEWS), n, club, 0, nation, continent, force);
 }
 
@@ -2346,11 +2346,11 @@ pub(crate) unsafe fn injury_youth_list_nation(club: Club) -> usize {
     if injury_is_national_team(club) {
         return 0;
     }
-    let nation = club.nation().addr();
-    if nation == 0 || read_usize(nation + nation::CONTINENT) == 0 {
+    let nation = Nation(club.nation().addr());
+    if nation.is_null() || nation.continent() == 0 {
         return 0;
     }
-    if read_u8(nation + nation::LEAGUE_SELECTED) != 0 {
+    if nation.league_selected() != 0 {
         crate::comparison::branch("cpp_9 key nation");
         if !(club.reputation() <= 2 && club.division().addr() != 0) { // nation with +0x11c
             return 0;
@@ -2362,7 +2362,7 @@ pub(crate) unsafe fn injury_youth_list_nation(club: Club) -> usize {
     if id == read_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST) || id == read_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST) {
         return 0;
     }
-    nation
+    nation.addr()
 }
 
 /// Address of person id's 31-byte physical record (+0x12 recurring type, +0x13 level, +0x14/+0x18 injury history

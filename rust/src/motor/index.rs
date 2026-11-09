@@ -18,16 +18,17 @@ include!("../nation_adjectives.rs");
 /// não copia, 1 é o nome) e passa à cadeia seguinte; no fim, com o texto vazio, o nome (nos idiomas 4 e 5 não: fica
 /// vazio). Nos outros idiomas (o inglês, 0), o nome. Devolve 1. Sem SEH, sem locais, sem sorteio.
 pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nation: usize, text: usize, size: u32, gender: u32) -> u32 {
+    let nation = Nation(nation);
     core::ptr::write_volatile(text as *mut u8, 0); // before the tests, like the original (null text: the same failure)
-    if nation == 0 || text == 0 || (size as u16 as i16) < 50 {
+    if nation.is_null() || text == 0 || (size as u16 as i16) < 50 {
         return 0;
     }
-    let name = nation + nation::NATIONALITY; // the nation’s name
+    let name = nation.addr() + nation::NATIONALITY; // the nation’s name
     if gender as u8 != 0 {
         let i = exe::langlib_get_language();
         if let Some(&(_, nome_se_vazio, cadeias)) = ADJETIVOS_DA_NACAO.iter().find(|x| x.0 == i) {
             let f = (exe::get_adjective_form_index(gender, (i) as i32 as u32) as u32) as u8 as usize;
-            let id = core::ptr::read_unaligned(nation as *const i32);
+            let id = core::ptr::read_unaligned(nation.addr() as *const i32);
             for cadeia in cadeias {
                 if let Some((_, fontes)) = cadeia.iter().find(|e| *(e.0 as *const i32) == id) {
                     match fontes[f.min(5)] { // shapes 5..255 by the last column

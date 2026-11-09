@@ -105,8 +105,8 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_TRANSFER_FEE_RECORDS);
     let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + offer::TARGET_STAFF_ID) as usize).wrapping_mul(staff::SIZE));
     let buyer = injury_club_by_index(read_i32(t + offer::BUYER_CLUB_ID));
-    let contract = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    let seller = if contract != 0 { injury_club_by_index(read_i32(contract + contract::CLUB)) } else { 0 };
+    let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { 0 };
     if seller == 0 {
         let r = o(this, t);
         SCOREBOARD.record(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records sem vendedor: {} [G_CONTRACT_LOOKUP_RESULT]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
@@ -144,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     let now = [(read_i32(rg[0] + 0x313), read_usize(rg[0] + 0x32f)), (read_i32(rg[1] + 0x313), read_usize(rg[1] + 0x32f)),
                  (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];
     let queue_now = read_i32(this + club_records_fields::NEWS_QUEUE_COUNT);
-    SCOREBOARD.record(r == 1 && now == plan && queue_now == queue && read_usize(G_CONTRACT_LOOKUP_RESULT) == contract, || {
+    SCOREBOARD.record(r == 1 && now == plan && queue_now == queue && read_usize(G_CONTRACT_LOOKUP_RESULT) == contract.addr(), || {
         format!("update_transfer_fee_records(valor {}) plano {:x?} fila {} x {:x?} fila {}", value, plan, queue, now, queue_now)
     });
     r

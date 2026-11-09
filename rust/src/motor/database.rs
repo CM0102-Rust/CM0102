@@ -2878,8 +2878,8 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: usi
     if pref != 0 && (0..3).any(|j| read_usize(pref + preferences::STAFF_DISLIKED_STAFF1 + 4 * j) == o.addr()) {
         return None; // rejected by the person
     }
-    let contract = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), o, club);
-    if contract == 0 {
+    let contract = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), o, club));
+    if contract.is_null() {
         return None;
     }
     let rep = read_i16_as_i32(o.player() + 0xb);
@@ -2922,7 +2922,7 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: usi
         n -= 100;
     }
     n += id.wrapping_add(oid) % 500; // desempate pelos ids (dbs)
-    match *((contract + contract::SQUAD_STATUS) as *const u8) >> 4 {
+    match contract.squad_status() >> 4 {
         1 => n += 750,
         2 => n += 300,
         3 => n += 150,
@@ -2930,7 +2930,7 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: usi
     }
     let nation = person.nation();
     if nation != club.nation().addr() && o.nation() == nation {
-        if read_usize(contract + contract::GRIEVANCES) & 0x20020 != 0 {
+        if (contract.grievances() as usize) & 0x20020 != 0 {
             n += 1750;
         } else if exe::date_days_since(G_CURRENT_DATE, (person.date_joined_club()) as u32, (person.date_joined_club_leap_year()) as u32) < 350 && ((person.age() as i8) as i32) < 24 {
             n += 250;
@@ -3608,8 +3608,8 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_reputation(a: usize, b
 /// Na aba de informações da tela do clube (club_screens 0x462070, os estrangeiros).
 pub(crate) unsafe extern "C" fn database_club_nation_is_eec(club: usize) -> u32 {
     let club = Club(club);
-    let nation = club.nation().addr();
-    (nation != 0 && *((nation + nation::GROUP_MEMBERSHIP) as *const u8) == 2) as u32 // in the EEC (dbt)
+    let nation = Nation(club.nation().addr());
+    (!nation.is_null() && nation.group_membership() == 2) as u32 // in the EEC (dbt)
 }
 
 /// `get_regions_sorted_by_name(language)`: fills the global array of the 14 regions (0xae2104) with 1..14, stores
@@ -4068,8 +4068,8 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         if o.pressure() < 11 && exe::staff_get_natural_position_mask(o) == exe::staff_get_natural_position_mask(person) {
             continue;
         }
-        let contract = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), o, club);
-        if contract == 0 {
+        let contract = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), o, club));
+        if contract.is_null() {
             continue;
         }
         let rep = read_i16(o.player() + 0xb) as i32;
@@ -4112,7 +4112,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
             rating -= 100;
         }
         rating += oid.wrapping_add(id) % 500; // o desempate pelos ids
-        match *((contract + contract::SQUAD_STATUS) as *const u8) >> 4 {
+        match contract.squad_status() >> 4 {
             1 => rating += 750,
             2 => rating += 300,
             3 => rating += 150,
@@ -4120,7 +4120,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         }
         let nation = person.nation();
         if nation != club.nation().addr() && o.nation() == nation {
-            if read_usize(contract + contract::GRIEVANCES) & 0x20020 != 0 {
+            if (contract.grievances() as usize) & 0x20020 != 0 {
                 rating += 1750;
             } else if age(G_CURRENT_DATE, person.date_joined_club(), person.date_joined_club_leap_year()) < 350 && (person.age() as i8) < 24 {
                 rating += 250;
@@ -4920,12 +4920,12 @@ pub(crate) unsafe extern "C" fn club_squad_strength_band(club: usize, other: usi
 /// [pt] O clube do contrato da `pessoa` como a 0x545e90 o acha: o contrato pela 0x4cf5a0 (this = [0xae1050]), gravado
 /// em [0xae1080] como na original; com contrato, o clube de id +4 na tabela [0xae23b4] (581 bytes); sem: 0.
 pub(crate) unsafe fn database_club_of_contract(person: Staff) -> usize {
-    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    if c == 0 {
+    let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c.addr();
+    if c.is_null() {
         return 0;
     }
-    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(581))
+    read_usize(G_CLUB_TABLE).wrapping_add(c.club().wrapping_mul(581))
 }
 
 /// +500 if the club is one of the person's three favourite clubs, -500 if one of the three disliked, else 0.
@@ -6060,9 +6060,9 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
             let club = Club(rd(h + 0xa));
             let q = Staff(rd(h + 4));
             if !club.is_null() && !q.is_null() {
-                let nq = rd(q.addr() + staff::NATION);
-                let nc = rd(club.addr() + club::NATION);
-                if (nq != 0 && byte(nq + nation::LEAGUE_SELECTED) != 0) || (nc != 0 && byte(nc + nation::LEAGUE_SELECTED) != 0) {
+                let nq = Nation(rd(q.addr() + staff::NATION));
+                let nc = Nation(rd(club.addr() + club::NATION));
+                if (!nq.is_null() && byte(nq.addr() + nation::LEAGUE_SELECTED) != 0) || (!nc.is_null() && byte(nc.addr() + nation::LEAGUE_SELECTED) != 0) {
                     mark(gi(club.addr()));
                 }
             }
@@ -6164,8 +6164,8 @@ pub(crate) unsafe extern "C" fn database_prune_comp_history_table() {
         let l = read_usize(G_CLUB_COMP_HISTORY_TABLE) + i as usize * 0x1a;
         let comp = Competition(read_usize(l + 4));
         if !comp.is_null() {
-            let nation = comp.nation();
-            if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 { // a linha fica
+            let nation = Nation(comp.nation());
+            if nation.is_null() || nation.league_selected() != 0 { // a linha fica
                 core::ptr::copy(l as *const u8, (read_usize(G_CLUB_COMP_HISTORY_TABLE) + k * 0x1a) as *mut u8, 0x1a);
                 k += 1;
             }
@@ -7560,8 +7560,8 @@ pub(crate) unsafe extern "C" fn database_get_comp_colours(competition: usize, fr
     // 0x5e4800 does & 0xff on all three, so the extended bytes give the same pixel (as in 0x53b640)
     core::ptr::write_unaligned(front, *(G_GUI_COLOUR_PALE_GREY as *const u16));
     core::ptr::write_unaligned(bottom, *(G_GUI_COLOUR_DARK_BLUE as *const u16));
-    let owner = competition.nation();
-    let (a, b) = if owner != 0 { (read_usize(owner + nation::FOREGROUND_COLOUR1), read_usize(owner + nation::BACKGROUND_COLOUR1)) } else { (competition.foreground_colour(), competition.background_colour()) };
+    let owner = Nation(competition.nation());
+    let (a, b) = if !owner.is_null() { (owner.foreground_colour1(), owner.background_colour1()) } else { (competition.foreground_colour(), competition.background_colour()) };
     let pixel = |c: usize| {
         exe::graphics_rgb_to_pixel((read_u8(c + 0x37) as u32), (read_u8(c + 0x38) as u32), (read_u8(c + 0x39) as u32), (0) as u32) as u16
     };
@@ -7791,12 +7791,12 @@ pub(crate) unsafe extern "C" fn database_count_club_squad(club: usize, mode: u32
             }
             if filter != 0 && exe::contract_manager_get_loan_contract(*(G_CONTRACT_MANAGER as *const usize), p) != 0
                 && core::ptr::read_unaligned((p + staff::CLUB_JOB) as *const usize) != club {
-                let k = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), p);
-                *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k;
-                let owner = if k == 0 {
+                let k = Contract(exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), p));
+                *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k.addr();
+                let owner = if k.is_null() {
                     0
                 } else {
-                    (*(G_CLUB_TABLE as *const usize)).wrapping_add((core::ptr::read_unaligned((k + contract::CLUB) as *const u32) as usize).wrapping_mul(581))
+                    (*(G_CLUB_TABLE as *const usize)).wrapping_add(((k.club() as u32) as usize).wrapping_mul(581))
                 };
                 if owner == club {
                     continue;
@@ -8227,11 +8227,11 @@ pub(crate) const LANGUAGE_GROUP_NATIONS: [usize; 32] = [
 /// 40 nações sorteadas ([0xae2350], 0x122 bytes cada em [0xae23a8]) até achar uma do mesmo grupo com
 /// mais de 5 primeiros nomes (+0x18, nos dois casos). Devolve (quantos em `conta`, primeiro em `inicio`)
 /// se a nação escolhida tem ≥ 5 nomes; senão `None` (sorteio na tabela inteira).
-pub(crate) unsafe fn name_donor_nation(nation: usize, count: usize, start: usize) -> Option<(i32, i32)> {
+pub(crate) unsafe fn name_donor_nation(nation: Nation, count: usize, start: usize) -> Option<(i32, i32)> {
     let g = |a: usize| *(a as *const i32);
     let nations = *(G_NATION_TABLE as *const usize);
     let nation_of = |id: i32| nations.wrapping_add((id as usize).wrapping_mul(nation::SIZE));
-    let group = *((nation + nation::FIRST_LANGUAGE) as *const i8);
+    let group = nation.first_language();
     let k = (group as i32).wrapping_sub(1) as u32;
     let mut esi = 0usize;
     let mut direct = false;
@@ -8291,11 +8291,12 @@ pub(crate) unsafe fn is_acceptable_name(name: usize) -> bool {
 /// língua 0 sorteia na tabela inteira, mas devolve a linha da tabela dos SEGUNDOS nomes ([0xae23f4],
 /// assim na original); senão `name_donor_nation`. Só o rand() da CRT (não o 0x90cfc0).
 pub(crate) unsafe extern "C" fn database_pick_first_name_for_nation(nation: usize) -> usize {
+    let nation = Nation(nation);
     let row = |t: usize, i: i32| (*(t as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
-    if nation == 0 {
+    if nation.is_null() {
         return row(G_FIRST_NAME_TABLE, scaled_crt_rand(name_count_capped(0xae2398)));
     }
-    let e = nation_name_index(nation);
+    let e = nation_name_index(nation.addr());
     let how_many = *((e + nation_name_index::FIRST_NAME_COUNT) as *const i32);
     if how_many > 100 {
         let start = *(e as *const i32);
@@ -8311,7 +8312,7 @@ pub(crate) unsafe extern "C" fn database_pick_first_name_for_nation(nation: usiz
         }
         return row(G_FIRST_NAME_TABLE, escolhido);
     }
-    if *((nation + nation::FIRST_LANGUAGE) as *const u8) == 0 {
+    if (nation.first_language() as u8) == 0 {
         return row(G_SECOND_NAME_TABLE, scaled_crt_rand(name_count_capped(0xae2398)));
     }
     match name_donor_nation(nation, 0x18, 0) {
@@ -8327,11 +8328,12 @@ pub(crate) unsafe extern "C" fn database_pick_first_name_for_nation(nation: usiz
 /// Como `database_pick_first_name_for_nation` com os segundos nomes (+4, +0x1c, [0xae239c]), sem filtrar os nomes
 /// no sorteio de 20 (só o maior peso).
 pub(crate) unsafe extern "C" fn database_pick_second_name_for_nation(nation: usize) -> usize {
+    let nation = Nation(nation);
     let row = |i: i32| (*(G_SECOND_NAME_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
-    if nation == 0 {
+    if nation.is_null() {
         return row(scaled_crt_rand(name_count_capped(0xae239c)));
     }
-    let e = nation_name_index(nation);
+    let e = nation_name_index(nation.addr());
     let how_many = *((e + nation_name_index::SECOND_NAME_COUNT) as *const i32);
     if how_many > 100 {
         let start = *((e + nation_name_index::SECOND_NAME_START) as *const i32);
@@ -8346,7 +8348,7 @@ pub(crate) unsafe extern "C" fn database_pick_second_name_for_nation(nation: usi
         }
         return row(escolhido);
     }
-    if *((nation + nation::FIRST_LANGUAGE) as *const u8) == 0 {
+    if (nation.first_language() as u8) == 0 {
         return row(scaled_crt_rand(name_count_capped(0xae239c)));
     }
     match name_donor_nation(nation, 0x1c, 4) {
@@ -8786,12 +8788,12 @@ pub(crate) unsafe extern "C" fn database_is_basque_club(club: usize) -> u32 {
 pub(crate) unsafe fn contract_link_for_club(person: usize, club: usize) -> (usize, usize) {
     let mut club = club;
     if club == 0 {
-        let c = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
-        *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-        if c == 0 {
+        let c = Contract(exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person));
+        *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c.addr();
+        if c.is_null() {
             return (0, 0);
         }
-        let id = core::ptr::read_unaligned((c + contract::CLUB) as *const u32) as usize;
+        let id = (c.club() as u32) as usize;
         club = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(581));
         if club == 0 {
             return (0, 0);
@@ -8850,19 +8852,19 @@ pub(crate) unsafe extern "C" fn staff_is_listed_by_request(person: usize, club: 
     }
     let mut club = club;
     if club == 0 {
-        let c = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
-        *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-        if c == 0 {
+        let c = Contract(exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person));
+        *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c.addr();
+        if c.is_null() {
             return 0;
         }
-        let id = core::ptr::read_unaligned((c + contract::CLUB) as *const u32) as usize;
+        let id = (c.club() as u32) as usize;
         club = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(581));
         if club == 0 {
             return 0;
         }
     }
-    let v = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club);
-    (v != 0 && *((v + contract::TRANSFER_STATUS) as *const u8) & 8 != 0) as u32
+    let v = Contract(exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club));
+    (!v.is_null() && v.transfer_status() & 8 != 0) as u32
 }
 
 /// the 1 to 20 rating of 2 × the attribute byte + the player's current ability
@@ -8903,16 +8905,16 @@ pub(crate) unsafe extern "C" fn database_club_has_reserve_squad(club: usize) -> 
     if partner(club.addr(), 0, 1) != 0 {
         return 0;
     }
-    let nation = club.nation().addr();
-    if nation == 0 {
+    let nation = Nation(club.nation().addr());
+    if nation.is_null() {
         return 1;
     }
-    let n = g(nation);
+    let n = g(nation.addr());
     if id >= gi(G_CLUB_COUNT).wrapping_sub(gi(G_NATION_COUNT).wrapping_mul(2)) {
         if [KEY_NATION_SPAIN, KEY_NATION_NORWAY, KEY_NATION_ITALY, KEY_NATION_BRAZIL, KEY_NATION_ARGENTINA].iter().any(|&a| n == g(a)) {
             return 0;
         }
-        let continent = core::ptr::read_unaligned((nation + nation::CONTINENT) as *const usize);
+        let continent = nation.continent();
         if continent != 0 && (g(continent) == g(KEY_CONTINENT_OCEANIA) || g(continent) == g(KEY_CONTINENT_AFRICA)) {
             return 0;
         }
@@ -9068,16 +9070,16 @@ pub(crate) unsafe extern "C" fn database_is_staff_foreign(person: usize, nation:
         return 0;
     }
     if id == g(KEY_NATION_PORTUGAL) && exe::database_is_staff_eu_national(person, 0) == 0 {
-        let contract = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
-        if contract != 0 {
+        let contract = Contract(exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person));
+        if !contract.is_null() {
             let mut d = [0u16; 4];
             let data = exe::date_date_549f70(&mut d, 1, 0, 0x7ce, 0xffff_ffff) as *const u16; // 1/1/1998
             let (dia, ano) = (core::ptr::read_unaligned(data), core::ptr::read_unaligned(data.add(1)));
-            let year_of_contract = core::ptr::read_unaligned((contract + 0x27) as *const u16);
+            let year_of_contract = core::ptr::read_unaligned((contract.addr() + 0x27) as *const u16);
             if ano > year_of_contract {
                 return 0;
             }
-            if ano == year_of_contract && dia as i16 > core::ptr::read_unaligned((contract + contract::DATE_STARTED) as *const i16) {
+            if ano == year_of_contract && dia as i16 > (contract.date_started() as i16) {
                 return 0;
             }
         }
@@ -9115,15 +9117,16 @@ pub(crate) unsafe extern "C" fn database_get_staff_age(person: usize, data: *con
 /// FIFA ([0xae233c] = 1), no Brasil ou numa nação da Europa (continente +0x71, [0x9cfa10]) fora de
 /// Polônia, Turquia, Croácia e Rússia.
 pub(crate) unsafe extern "C" fn nation_allows_free_transfers(nation: usize) -> u32 {
+    let nation = Nation(nation);
     let g = |a: usize| *(a as *const u32);
     if *(G_FIFA_TRANSFER_RULES_IN_FORCE as *const u8) == 1 {
         return 1;
     }
-    let id = g(nation);
+    let id = g(nation.addr());
     if id == g(KEY_NATION_BRAZIL) {
         return 1; // Brasil
     }
-    let continent = core::ptr::read_unaligned((nation + nation::CONTINENT) as *const usize);
+    let continent = nation.continent();
     if continent == 0 {
         return 0;
     }
@@ -9147,14 +9150,14 @@ pub(crate) unsafe extern "C" fn nation_allows_free_transfers(nation: usize) -> u
 pub(crate) unsafe extern "C" fn database_is_staff_eu_national(person: usize, nation_of_club: usize) -> u32 {
     let person = Staff(person);
     let g = |a: usize| *(a as *const u32);
-    let n = person.nation();
-    if *((n + nation::GROUP_MEMBERSHIP) as *const u8) == 2 { return 1; } // EU nationality
-    let id = g(n);
+    let n = Nation(person.nation());
+    if n.group_membership() == 2 { return 1; } // EU nationality
+    let id = g(n.addr());
     if id == g(KEY_NATION_SWITZERLAND) {
         return 1;
     }
-    let n2 = person.second_nation();
-    if n2 != 0 && *((n2 + nation::GROUP_MEMBERSHIP) as *const u8) == 2 {
+    let n2 = Nation(person.second_nation());
+    if !n2.is_null() && n2.group_membership() == 2 {
         return 1;
     }
     if nation_of_club == 0 {
@@ -9163,7 +9166,7 @@ pub(crate) unsafe extern "C" fn database_is_staff_eu_national(person: usize, nat
     let c = g(nation_of_club);
     if c == g(KEY_NATION_GERMANY) {
         let europa = (*(G_CONTINENT_TABLE as *const usize)).wrapping_add((g(KEY_CONTINENT_EUROPE) as usize).wrapping_mul(0xc6));
-        if read_usize(n + nation::CONTINENT) == europa {
+        if n.continent() == europa {
             return 1;
         }
     }
@@ -9193,19 +9196,19 @@ pub(crate) unsafe extern "C" fn staff_is_transfer_listed_or_requested(person: us
     }
     let mut club = club;
     if club == 0 {
-        let c = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
-        *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-        if c == 0 {
+        let c = Contract(exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person));
+        *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c.addr();
+        if c.is_null() {
             return 0;
         }
-        let id = core::ptr::read_unaligned((c + contract::CLUB) as *const u32) as usize;
+        let id = (c.club() as u32) as usize;
         club = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(581));
         if club == 0 {
             return 0;
         }
     }
-    let v = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club);
-    (v != 0 && *((v + contract::TRANSFER_STATUS) as *const u8) & 9 != 0) as u32
+    let v = Contract(exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club));
+    (!v.is_null() && v.transfer_status() & 9 != 0) as u32
 }
 
 /// 1-20 rating of a relative attribute value: x = v*0.05 + 10; (x^2*0.1 + x)/3 + 0.5, clamped 1..20, truncated.

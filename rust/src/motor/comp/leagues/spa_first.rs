@@ -390,8 +390,8 @@ pub(crate) unsafe fn segunda_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = spanish_common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqk4: a Segunda joga 2 turnos
     v.extend_from_slice(&[(0xc8, 1, 3), (0xbe, 1, 3), (0xbf, 1, 0), (0xc1, 1, 4), (0x1c, 4, read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) as u32)]);
-    let nation = read_usize(read_usize(this + 4) + 0x5d);
-    let below = if *((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) as u32 } else { 0xffff_ffff };
+    let nation = Nation(read_usize(read_usize(this + 4) + 0x5d));
+    let below = if nation.league_selected() & 4 != 0 { read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) as u32 } else { 0xffff_ffff };
     v.extend_from_slice(&[(0x20, 4, below), (0x52, 1, 2)]);
     v
 }

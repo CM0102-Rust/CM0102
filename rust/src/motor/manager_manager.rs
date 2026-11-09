@@ -839,8 +839,8 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
         return;
     }
     let div = club.division().addr();
-    let nation = club.nation().addr();
-    if div == 0 || nation == 0 || read_u8(nation + nation::LEAGUE_SELECTED) == 0 || club_division_comp(club) == 0 {
+    let nation = Nation(club.nation().addr());
+    if div == 0 || nation.is_null() || nation.league_selected() == 0 || club_division_comp(club) == 0 {
         write_i16(ln() + 0xe, 0x10);
         post_expectations_news(this, club, news);
         finish_board_update(this, club);
@@ -1346,9 +1346,9 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, club: usize,
                     let q = manager_manager_staff_by_index(v.rd(6));
                     let c = read_usize(q + staff::CLUB_JOB);
                     if c != 0 {
-                        let na = read_usize(c + 0x53);
+                        let na = Nation(read_usize(c + 0x53));
                         let d57 = read_usize(c + 0x57);
-                        let strong = (na != 0 && read_u8(na + nation::LEAGUE_SELECTED) != 0 && d57 != 0
+                        let strong = (!na.is_null() && na.league_selected() != 0 && d57 != 0
                             && read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(d57) as usize).wrapping_mul(4))) != 0)
                             || read_i16(c + 0x80) > 0x1964;
                         if strong && read_u8(q + staff::JOB_FOR_CLUB) == 5 {
@@ -1891,9 +1891,9 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
         limit = 0x1e8480;
     }
     if comprando as u8 == 0 {
-        let nation = club.nation().addr();
+        let nation = Nation(club.nation().addr());
         let division = club.division().addr();
-        if nation != 0 && read_u8(nation + nation::LEAGUE_SELECTED) != 0 && division != 0 && read_usize(division) != read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && (exe::database_count_club_squad(club, 0, 0) as i8) < 0xf {
+        if !nation.is_null() && nation.league_selected() != 0 && division != 0 && read_usize(division) != read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && (exe::database_count_club_squad(club, 0, 0) as i8) < 0xf {
             add_board_confidence(this, club, 6, -0x4e2);
             add_board_confidence(this, club, 0x14, -0x4e2);
             add_board_confidence(this, club, 0x16, -500);
@@ -2377,8 +2377,8 @@ pub(crate) unsafe extern "thiscall" fn post_manager_appointment_news(this: usize
     if c == 5 {
         return;
     }
-    let nation = club.nation().addr();
-    let active = nation != 0 && read_u8(nation + nation::LEAGUE_SELECTED) != 0 && {
+    let nation = Nation(club.nation().addr());
+    let active = !nation.is_null() && nation.league_selected() != 0 && {
         let div = club.division().addr();
         div != 0 && read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(div).wrapping_mul(4) as usize)) != 0
     };
@@ -2602,9 +2602,9 @@ pub(crate) unsafe extern "thiscall" fn post_board_expectations_news(_this: usize
 /// offer_contract_club).
 ///
 /// [pt] O clube do contrato (id em +4); com `filtro`, nenhum para o contrato de tipo 5 (+0x35 & 0x3f).
-pub(crate) unsafe fn offer_contract_club(c: usize, filter: bool) -> usize {
-    if c != 0 && (!filter || read_u8(c + contract::CONTRACT_TYPE) & 0x3f != 5) {
-        friendly_club_by_id(read_usize(c + contract::CLUB))
+pub(crate) unsafe fn offer_contract_club(c: Contract, filter: bool) -> usize {
+    if !c.is_null() && (!filter || c.contract_type() & 0x3f != 5) {
+        friendly_club_by_id(c.club())
     } else {
         0
     }
@@ -3847,8 +3847,8 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     }
     if season != 0 {
         let league = (club.division().addr() as u32) as usize;
-        let nation = (club.nation().addr() as u32) as usize;
-        if league != 0 && nation != 0 && read_u8(nation + nation::LEAGUE_SELECTED) != 0 {
+        let nation = Nation((club.nation().addr() as u32) as usize);
+        if league != 0 && !nation.is_null() && nation.league_selected() != 0 {
             let comp = read_u32((read_u32(G_COMP_OBJECT_TABLE) as usize).wrapping_add((read_u32(league) as usize).wrapping_mul(4))) as usize;
             if comp != 0 {
                 let row = exe::comp_stats_find_club_entry(read_u32(comp + 8) as usize, club);
@@ -4193,8 +4193,8 @@ pub(crate) unsafe extern "thiscall" fn apply_transfer_confidence_changes(this: u
     if exe::database_is_national_team(seller) != 0 {
         return;
     }
-    let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), person.club_job());
-    if fin != 0 && *((fin + finance::CRISIS_STATE) as *const u8) == 1 {
+    let fin = Finance(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), person.club_job()));
+    if !fin.is_null() && fin.crisis_state() == 1 {
         return;
     }
     let f = fv as u32;
@@ -4385,11 +4385,11 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_remove_player_from_squad(
             person.set_national_job(0);
         }
     }
-    let r = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    if r != 0 {
-        *((r + contract::TRANSFER_STATUS) as *mut u8) = 4;
+    let r = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    if !r.is_null() {
+        r.set_transfer_status(4);
     }
-    r
+    r.addr()
 }
 
 /// Clears every one of the n pointer slots at c + base that hold the person.
@@ -4677,8 +4677,8 @@ pub(crate) unsafe extern "thiscall" fn best_manager_candidate_score(this: usize,
                 break 'f true;
             }
             if read_usize(p + staff::PLAYER) != 0 && read_usize(p + staff::CLUB_JOB) != 0 && matches!(read_u8(p + staff::JOB_FOR_CLUB), 0xb | 0xc | 0xd | 0xf) {
-                let k = contract(read_usize(G_CONTRACT_MANAGER), p, club.addr());
-                if k != 0 && read_u8(k + contract::LEAVING_ON_BOSMAN) != 0 {
+                let k = Contract(contract(read_usize(G_CONTRACT_MANAGER), p, club.addr()));
+                if !k.is_null() && k.leaving_on_bosman() != 0 {
                     break 'f true;
                 }
             }

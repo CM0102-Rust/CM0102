@@ -2624,10 +2624,10 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
         y = 4.0;
     }
     let mut x = 0.0f64;
-    let e = contract(*(G_CONTRACT_MANAGER as *const usize), p.addr(), club.addr());
-    if e != 0 {
-        x = read_i8(e + contract::MORALE) as f64 * d8(0x968ef8) + d8(0x968968);
-        let adjust = match read_i8(e + contract::SQUAD_STATUS) as u8 >> 4 {
+    let e = Contract(contract(*(G_CONTRACT_MANAGER as *const usize), p.addr(), club.addr()));
+    if !e.is_null() {
+        x = e.morale() as f64 * d8(0x968ef8) + d8(0x968968);
+        let adjust = match (e.squad_status() as i8) as u8 >> 4 {
             0 | 5 => -d8(0x9688b0),
             1 => d8(0x968e18),
             2 => d8(0x968950),
@@ -3202,12 +3202,12 @@ pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: usize, club: Club, fl
         }
     }
     l4c += ftol((fb(0x2f) - 10) as f64 * read_f64(rdata::F64_0_6666666667));
-    let nation = club.nation().addr();
-    let pais = p.nation();
-    if nation == 0 || *((nation + nation::FIRST_LANGUAGE) as *const u8) == *((pais + nation::FIRST_LANGUAGE) as *const u8) {
+    let nation = Nation(club.nation().addr());
+    let pais = Nation(p.nation());
+    if nation.is_null() || (nation.first_language() as u8) == (pais.first_language() as u8) {
         return l4c;
     }
-    let mut c = (exe::playerstats_get_language_fluency(*(G_PLAYER_STATS as *const usize), p, club, (nation as u32 & !0xff) | *((nation + nation::FIRST_LANGUAGE) as *const u8) as u32, 1) as u32) as u8 as i8;
+    let mut c = (exe::playerstats_get_language_fluency(*(G_PLAYER_STATS as *const usize), p, club, (nation.addr() as u32 & !0xff) | (nation.first_language() as u8) as u32, 1) as u32) as u8 as i8;
     if flags & 0x100 != 0 {
         let k = (age as u8).wrapping_sub((p.adaptability() / 2) as u8).wrapping_add(5) as i8;
         let m = read_f64(rdata::F64_26) - k as f64 * read_f64(rdata::F64_0_83);
@@ -3219,13 +3219,13 @@ pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: usize, club: Club, fl
         }
     }
     let b22 = p.int_apps() as i32;
-    if b22 != 0 && b22 * b22 + core::ptr::read_unaligned((pais + nation::REPUTATION) as *const i16) as i32 > 5000 && c <= 5 {
+    if b22 != 0 && b22 * b22 + pais.reputation() as i32 > 5000 && c <= 5 {
         c = 5;
     }
     if (0..=9).contains(&c) {
         const IGUAL: [usize; 10] = [0x96a6a8, 0x96d588, 0x96d590, 0x96d598, 0x96d5a0, 0x96d5a8, 0x96d5b0, 0x96d5b8, 0x96d5c0, 0x96d5c8];
         const OUTRO: [usize; 10] = [0x96d588, 0x96d590, 0x96d598, 0x96d5a0, 0x96d5a8, 0x96d5b0, 0x96d5b8, 0x96d5c0, 0x96d5c8, 0x968e50];
-        let t = if *((pais + nation::ACTUAL_REGION) as *const u8) == 0xe { &IGUAL } else { &OUTRO };
+        let t = if pais.actual_region() == 0xe { &IGUAL } else { &OUTRO };
         l4c = ftol(l4c as f64 * read_f64(t[c as usize]));
     }
     l4c
@@ -3480,9 +3480,9 @@ pub(crate) unsafe fn work_permit_appearance_pct(p: Staff) -> Option<i8> {
 ///
 /// [pt] O extra do contrato (flag 0x10000): +0x44 pelas bandeiras +0x45, o tipo (+0x4f >> 4) e a lista
 /// de transferências.
-pub(crate) unsafe fn contract_extra(p: Staff, contract: usize, flags: u32, l28: i32) -> i32 {
-    let e = *((contract + contract::GRIEVANCES) as *const u32);
-    let s44 = *((contract + contract::MORALE) as *const i8) as f64;
+pub(crate) unsafe fn contract_extra(p: Staff, contract: Contract, flags: u32, l28: i32) -> i32 {
+    let e = contract.grievances();
+    let s44 = contract.morale() as f64;
     let mut extra = 0i32;
     if e & 0x2808 != 0 {
         let x = s44 * read_f64(rdata::F64_0_6666666667);
@@ -3491,7 +3491,7 @@ pub(crate) unsafe fn contract_extra(p: Staff, contract: usize, flags: u32, l28: 
         let x = s44 * read_f64(rdata::F64_0_4);
         extra = ftol(if read_f64(rdata::F64_NEG_5) < x { read_f64(rdata::F64_NEG_5) } else { x });
     }
-    let t = (*((contract + contract::SQUAD_STATUS) as *const u8) >> 4) as i8 as i32 - 1;
+    let t = (contract.squad_status() >> 4) as i8 as i32 - 1;
     let list = match t {
         0 | 1 => {
             extra += if t == 0 { 0x19 } else { 0xf };
@@ -3502,7 +3502,7 @@ pub(crate) unsafe fn contract_extra(p: Staff, contract: usize, flags: u32, l28: 
                 extra += 10;
                 false
             } else {
-                let d = (*((contract + contract::UNHAPPY_FLAG) as *const i8) as i32 - *((contract + contract::MATCHES_LEFT_OUT) as *const i8) as i32) * 5;
+                let d = (contract.unhappy_flag() as i32 - (contract.matches_left_out() as i8) as i32) * 5;
                 extra += ftol(d as f64 + (l28 as i16 as f64 * read_f64(rdata::F64_2_5) - read_f64(rdata::F64_225)));
                 true
             }
@@ -3524,8 +3524,8 @@ pub(crate) unsafe fn contract_extra(p: Staff, contract: usize, flags: u32, l28: 
 /// Bond (flag 0x20000) by the contract's squad status: -25 to +25, or by the work-permit percentage.
 ///
 /// [pt] O vínculo (flag 0x20000) pelo tipo do contrato `c`: -25 a +25, ou pela lista de transferências.
-pub(crate) unsafe fn contract_bond(p: Staff, c: usize, flags: u32) -> i32 {
-    let t = (*((c + contract::SQUAD_STATUS) as *const u8) >> 4) as i8 as i32 - 1;
+pub(crate) unsafe fn contract_bond(p: Staff, c: Contract, flags: u32) -> i32 {
+    let t = (c.squad_status() >> 4) as i8 as i32 - 1;
     match t {
         0..=2 => {
             if flags & 0x800000 != 0 {
@@ -3771,12 +3771,12 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     l4c = outside_nation_penalty(p, club, flags, l4c);
     if flags & 0x10000 != 0 {
         if contract != 0 {
-            l4c += contract_extra(p, contract, flags, l28);
+            l4c += contract_extra(p, Contract(contract), flags, l28);
         }
     } else if flags & 0x20000 != 0 {
         let c = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), p, club);
         if c != 0 {
-            l4c += contract_bond(p, c, flags);
+            l4c += contract_bond(p, Contract(c), flags);
         }
         if without_value == 0 {
             l4c = injury_word_0c_adjust(p, l4c);
@@ -4086,7 +4086,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     };
     if flags & 0x10000 != 0 {
         if contract != 0 {
-            let mut extra = by_minute(contract_extra(p, contract, flags, l28));
+            let mut extra = by_minute(contract_extra(p, Contract(contract), flags, l28));
             if holiday != 0 {
                 extra = ftol(extra as f64 * read_f64(rdata::F64_0_25));
             }
@@ -4094,7 +4094,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
         }
     } else if flags & 0x20000 != 0 {
         if contract != 0 {
-            l4c += by_minute(contract_bond(p, contract, flags));
+            l4c += by_minute(contract_bond(p, Contract(contract), flags));
         }
         if without_value == 0 {
             l4c = injury_word_0c_adjust(p, l4c);
@@ -4103,8 +4103,8 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     l4c = appearances_or_club_adjust(p, f, flags, da_base, l4c);
     let mut base = l40;
     if !da_base && !club.is_null() {
-        let nation = club.nation().addr();
-        if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
+        let nation = Nation(club.nation().addr());
+        if !nation.is_null() && nation.league_selected() != 0 {
             l4c -= 0x46;
             base = l40 - 0x78;
         }

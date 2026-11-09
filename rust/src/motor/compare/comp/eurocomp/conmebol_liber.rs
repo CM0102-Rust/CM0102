@@ -121,8 +121,8 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_update_staff_recor
     if title {
         let mundial = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
         let t = read_usize(mundial + cup::TEAM_TABLE);
-        let nation = read_usize(read_usize(t) + 0x53);
-        slot = if nation != 0 && read_usize(read_usize(nation + nation::CONTINENT)) == read_usize(KEY_CONTINENT_SOUTH_AMERICA) { t } else { t + 6 };
+        let nation = Nation(read_usize(read_usize(t) + 0x53));
+        slot = if !nation.is_null() && read_usize(nation.continent()) == read_usize(KEY_CONTINENT_SOUTH_AMERICA) { t } else { t + 6 };
     }
     let r = o(this, club, outcome, stage, a4, game, a6);
     let same = r == 0 && (!title || read_usize(slot) == club);

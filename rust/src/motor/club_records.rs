@@ -465,9 +465,9 @@ pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
 pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + offer::TARGET_STAFF_ID) as usize).wrapping_mul(staff::SIZE));
     let buyer = Club(injury_club_by_index(read_i32(t + offer::BUYER_CLUB_ID)));
-    let contract = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, contract);
-    let seller = if contract != 0 { injury_club_by_index(read_i32(contract + contract::CLUB)) } else { 0 };
+    let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, contract.addr());
+    let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { 0 };
     let mut draft = [0u8; 8];
     let s = exe::club_records_get_season_record(this, buyer, 1);
     let a = exe::club_records_get_all_time_record(this, buyer, 1);

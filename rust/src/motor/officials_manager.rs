@@ -629,10 +629,10 @@ pub(crate) unsafe fn random_byte_plus(n: i32, k: u8) -> u8 {
 /// byte estendido), os bytes +0x24..+0x26 sorteio(10) + 5 e +0x27..+0x2a sorteio(10) + 7, +0x1a zero, o ano (+0xe)
 /// 1960 + sorteio(10) e o dia (+0xc) sorteio(300) + 1. Não grava +0, +0x10..+0x15 (a original deixa o que o realloc
 /// trouxe).
-pub(crate) unsafe fn generate_official(r: usize, nation: usize) {
+pub(crate) unsafe fn generate_official(r: usize, nation: Nation) {
     write_usize(r + 4, exe::database_pick_first_name_by_weight(nation));
     write_usize(r + 8, exe::database_pick_second_name_by_weight(nation));
-    write_usize(r + official::NATION, nation);
+    write_usize(r + official::NATION, nation.addr());
     write_i16(r + official::RATING, random_byte_plus(0x50, 1) as i8 as i16); // cpy9: a nota +0x22
     write_i16(r + official::CURRENT_ABILITY, random_byte_plus(0x50, 0x28) as i8 as i16);
     write_i16(r + official::POTENTIAL_ABILITY, random_byte_plus(0x50, 0x28) as i8 as i16);
@@ -665,7 +665,8 @@ pub(crate) unsafe fn generate_official(r: usize, nation: usize) {
 /// e o jogo para), gera `conta` fichas novas no fim (generate_official), soma a conta em [0xae2390] e ordena a tabela inteira
 /// (qsort 0x945333 com 0x79d480: nação, +0x28 × 50 + +0x22, id).
 pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_this: usize, count: i32, nation: usize) {
-    if nation != 0 && read_usize(nation + nation::CONTINENT) == 0 {
+    let nation = Nation(nation);
+    if !nation.is_null() && nation.continent() == 0 {
         return;
     }
     let before = read_i32(G_OFFICIAL_COUNT);

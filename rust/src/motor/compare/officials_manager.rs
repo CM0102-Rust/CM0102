@@ -117,9 +117,10 @@ pub(crate) unsafe extern "thiscall" fn compare_renew_officials(this: usize, comp
 /// cada ficha do ensaio esteja na tabela ordenada (campos que a original grava). Conta não positiva ou nação sem
 /// continente: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_officials_manager_add_random_officials(this: usize, count: i32, nation: usize) {
+    let nation = Nation(nation);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_OFFICIALS_MANAGER_ADD_RANDOM_OFFICIALS);
-    if count <= 0 || (nation != 0 && read_usize(nation + nation::CONTINENT) == 0) {
-        return o(this, count, nation);
+    if count <= 0 || (!nation.is_null() && nation.continent() == 0) {
+        return o(this, count, nation.addr());
     }
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let mut novas = vec![[0u8; 0x2b]; count as usize];
@@ -131,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn compare_officials_manager_add_random_offi
     let state_rust = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     state.write_back();
     let before = read_i32(G_OFFICIAL_COUNT);
-    o(this, count, nation);
+    o(this, count, nation.addr());
     let estado_orig = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let total = read_i32(G_OFFICIAL_COUNT);
     let t = read_usize(G_OFFICIAL_TABLE);
@@ -145,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn compare_officials_manager_add_random_offi
     }
     let same = estado_orig == state_rust && total == before.wrapping_add(count) && missing.is_empty();
     SCOREBOARD.record(same, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
-        count, nation, total, before, estado_orig == state_rust, missing));
+        count, nation.addr(), total, before, estado_orig == state_rust, missing));
 }
 
 /// Comparer for `officials_manager_validate_officials`.

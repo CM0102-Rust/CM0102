@@ -1556,9 +1556,9 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
             if exe::comp_util_is_league_division(read_i32(this.competition().addr())) != 0 && this.upper_division_id() == -1 {
                 let slot = read_usize(G_CLUB_STATE_TABLE) + (read_i32(read_usize(li)) as usize).wrapping_mul(6);
                 let reg = Competition(this.competition().addr());
-                let nation = reg.nation();
-                if read_i32(slot) == -1 && nation != 0 && read_i32(nation) != read_i32(KEY_NATION_SCOTLAND) {
-                    let count = read_usize(nation + nation::CONTINENT);
+                let nation = Nation(reg.nation());
+                if read_i32(slot) == -1 && !nation.is_null() && read_i32(nation.addr()) != read_i32(KEY_NATION_SCOTLAND) {
+                    let count = nation.continent();
                     if count != 0 && read_i32(count) == read_i32(KEY_CONTINENT_EUROPE) {
                         let (mut cl, mut uefa) = (0i8, 0i8);
                         exe::uefaseeding_get_nation_places(read_usize(G_UEFA_SEEDING), nation, &mut cl, &mut uefa);
@@ -1823,8 +1823,8 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     exe::newsitem_set_slot(n, 5, r as u32);
     let news = read_usize(G_NEWS);
     if out as u8 != 0xff {
-        let nacao = club.nation().addr();
-        let continent = if nacao != 0 { read_usize(nacao + nation::CONTINENT) } else { 0 };
+        let nacao = Nation(club.nation().addr());
+        let continent = if !nacao.is_null() { nacao.continent() } else { 0 };
         exe::news_send_by_scope(news, n, club, league.competition().addr(), nacao, continent, out);
         return 1;
     }

@@ -1417,8 +1417,8 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
         return 0;
     }
     if exe::database_is_national_team(club) != 0 {
-        let nation = p.national_job();
-        if nation == 0 || core::ptr::read_unaligned((nation + nation::THREE_LETTER_NAME) as *const u32) != (club.nation().addr() as u32) {
+        let nation = Nation(p.national_job());
+        if nation.is_null() || nation.three_letter_name() != (club.nation().addr() as u32) {
             core::ptr::write_unaligned(home, -1);
             return 0;
         }

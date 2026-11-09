@@ -184,8 +184,9 @@ pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize,
 /// resultado internacional 0x58cf70): reputação (+0x8e) abaixo de 3000 e posição (+0x10 da entrada) abaixo de 50: 3;
 /// reputação abaixo de 6000 e posição abaixo de 15: 2; senão pela posição: abaixo de 21, 1; de 61, 2; de 101, 3; 4.
 pub(crate) unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nation: usize) -> u8 {
-    let rep = read_i16(nation + nation::REPUTATION);
-    let pos = || read_i16(ranking_entry(this, nation) + 0x10);
+    let nation = Nation(nation);
+    let rep = nation.reputation();
+    let pos = || read_i16(ranking_entry(this, nation.addr()) + 0x10);
     if rep < 0xbb8 && pos() < 0x32 {
         return 3;
     }

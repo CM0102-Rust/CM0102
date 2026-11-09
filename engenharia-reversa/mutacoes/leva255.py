@@ -38,5 +38,5 @@ MUTACOES = [
     ('cps12_dia_seguinte', 'let n = (start as i32).wrapping_add(exe::utils_random(end as i32 - start as i32)); // cps12: o dia sorteado', 'let n = (start as i32).wrapping_add(exe::utils_random(end as i32 - start as i32)).wrapping_add(1); // mutacao: um dia depois', 'cps_12 free date'),
     ('cps13_sorteio_atrasado', 'if year > hano || (year == hano && day as i16 > hdia as i16) { // cps13: the draw date', 'if year > hano || (year == hano && day as i16 >= hdia as i16) { // mutacao: um dia depois', 'cps_13 round draw'),
     ('cps13_montagem_atrasada', 'if (year, day) != (hano, hdia) { // cps13: the setup date', 'if (year, day) != (hano, hdia.wrapping_sub(1)) { // mutacao: um dia depois', 'cps_13 round setup'),
-    ('cps13_doenca_invertida', 'if read_u8(nation + nation::STATE_OF_DEVELOPMENT) != 3 { // cps13: só o terceiro mundo', 'if read_u8(nation + 0x7e) == 3 { // mutacao: menos o terceiro mundo'),
+    ('cps13_doenca_invertida', 'if nation.state_of_development() != 3 { // cps13: só o terceiro mundo', 'if read_u8(nation.addr() + 0x7e) == 3 { // mutacao: menos o terceiro mundo'),
 ]

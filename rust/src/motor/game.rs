@@ -3,10 +3,10 @@ use super::*;
 /// The nation's coefficient history: five past years (+0xb0..+0xd0) and the current year (+0xd8).
 ///
 /// [pt] A história do coeficiente da nação: +0xb0, +0xb8, +0xc0, +0xc8, +0xd0 (cinco anos) e +0xd8 (o ano corrente).
-pub(crate) unsafe fn nation_coefficient_history(na: usize) -> [f64; 6] {
+pub(crate) unsafe fn nation_coefficient_history(na: Nation) -> [f64; 6] {
     let mut h = [0f64; 6];
     for (k, x) in h.iter_mut().enumerate() {
-        *x = read_f64(na + nation::FIFACOEFFICIENT91 + k * 8);
+        *x = read_f64(na.addr() + nation::FIFACOEFFICIENT91 + k * 8);
     }
     h
 }
@@ -23,11 +23,11 @@ pub(crate) unsafe fn current_month() -> i32 {
 ///
 /// [pt] Dezembro na história `h` da nação `na` (`marca` = +0x121): com marca < 12, o ano corrente ganha
 /// reputação (+0x8e) × 0,05 × (12 − marca) × 3; a história anda um ano, o ano corrente e a marca zeram.
-pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], mark: &mut u8) {
+pub(crate) unsafe fn roll_coefficient_year(na: Nation, h: &mut [f64; 6], mark: &mut u8) {
     crate::comparison::branch("cpt_6 December");
     if (*mark as i8) < 0xc {
         crate::comparison::branch("cpt_6 December bonus");
-        h[5] = read_i16(na + nation::REPUTATION) as i32 as f64 * read_f64(rdata::F64_0_05) * (0xc - *mark as i8 as i32) as f64 * read_f64(rdata::F64_3) + h[5]; // cpt6: the December bonus;
+        h[5] = na.reputation() as i32 as f64 * read_f64(rdata::F64_0_05) * (0xc - *mark as i8 as i32) as f64 * read_f64(rdata::F64_3) + h[5]; // cpt6: the December bonus;
     }
     h[0] = h[1];
     h[1] = h[2];
@@ -88,9 +88,9 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
                 + read_f64(na + nation::FIFACOEFFICIENT94) * read_f64(rdata::F64_0_8) + read_f64(na + nation::FIFACOEFFICIENT96) + read_f64(na + nation::FIFACOEFFICIENT95);
             write_f64(e + 4, s);
             if dez {
-                let mut h = nation_coefficient_history(na);
+                let mut h = nation_coefficient_history(Nation(na));
                 let mut mark = read_u8(na + nation::GAMES_PLAYED);
-                roll_coefficient_year(na, &mut h, &mut mark);
+                roll_coefficient_year(Nation(na), &mut h, &mut mark);
                 for (k, x) in h.iter().enumerate() {
                     write_f64(na + nation::FIFACOEFFICIENT91 + k * 8, *x);
                 }

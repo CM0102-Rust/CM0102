@@ -323,9 +323,9 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
     let mut i = 0i32;
     let mut c = read_usize(G_CLUB_TABLE);
     while i < (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2)) {
-        let nation = read_usize(c + 0x53);
-        if nation != 0 && read_usize(nation + nation::CONTINENT) != 0 && read_usize(read_usize(nation + nation::CONTINENT)) == read_usize(KEY_CONTINENT_OCEANIA) {
-            let id = read_usize(nation);
+        let nation = Nation(read_usize(c + 0x53));
+        if !nation.is_null() && nation.continent() != 0 && read_usize(nation.continent()) == read_usize(KEY_CONTINENT_OCEANIA) {
+            let id = read_usize(nation.addr());
             if id == read_usize(KEY_NATION_NEW_ZEALAND) && nz.cabe() {
                 nz.por(c);
             } else if id == read_usize(KEY_NATION_AUSTRALIA) && aus.cabe() {

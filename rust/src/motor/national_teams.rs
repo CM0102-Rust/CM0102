@@ -694,7 +694,7 @@ pub(crate) unsafe fn reserve_group(this: usize, reg: usize, k: usize, g: usize) 
 ///
 /// [pt] O jogador `j` das reservas entra na lista da escala? (0x76cb84..0x76cf6c)
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn is_squad_candidate(this: usize, nation: usize, t: i8, data: usize, p: Fixture, squad: usize, reg: usize, lim: (i16, i16), j: usize) -> bool {
+pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data: usize, p: Fixture, squad: usize, reg: usize, lim: (i16, i16), j: usize) -> bool {
     let j = Staff(j);
     let bits: unsafe extern "stdcall" fn(usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
     // 0x53b620: push byte +0x3d; add esp, 4 -> cdecl; 0x62c400: push j; mov ecx, [0xb63d28] -> thiscall ret 4 (al);
@@ -712,13 +712,13 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: usize, t: i8, data:
         return false;
     }
     let tj = j.national_job();
-    if tj != 0 && (j.job_for_nation() != 0xb || read_usize(tj + club::NATION) != nation) {
+    if tj != 0 && (j.job_for_nation() != 0xb || read_usize(tj + club::NATION) != nation.addr()) {
         return false;
     }
     if !p.is_null() {
         let k = read_usize(p.addr());
         let c = j.club_job();
-        let other_nation = |c: usize| c != 0 && read_usize(c + club::NATION) != 0 && read_usize(read_usize(c + club::NATION) + 0x71) != read_usize(nation + nation::CONTINENT);
+        let other_nation = |c: usize| c != 0 && read_usize(c + club::NATION) != 0 && read_usize(read_usize(c + club::NATION) + 0x71) != nation.continent();
         let mut contract_ok = true;
         if k == read_usize(KEY_CLUB_COMP_FRIENDLY) || k == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) || k == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
             if other_nation(c) {
@@ -787,23 +787,23 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: usize, t: i8, data:
     if t == 2 && (j.age() as u8) as i8 > 0x17 { // cqc12: the under-21 age
         return false;
     }
-    let nat = j.nation();
+    let nat = Nation(j.nation());
     if nat != nation {
         // from another nation: no team, no +0x22 mark, no bit 2 of +0xc in the 79-byte record, with the second
         // nation (+0x1e) in this one; it gets in if this one has a higher +0x8e, or (club in the same confederation +0x71 or no club)
         // with +0x85 of 5 or more
         if tj != 0 || j.int_apps() != 0 || read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(j.addr()).wrapping_mul(0x4f)) + 0xc) & 2 != 0
-            || j.second_nation() != nation || nat == 0
+            || j.second_nation() != nation.addr() || nat.is_null()
         {
             return false;
         }
         let c = j.club_job();
-        let n2 = if c != 0 { read_usize(c + club::NATION) } else { 0 };
-        if read_i16(nation + nation::REPUTATION) <= read_i16(nat + nation::REPUTATION) {
-            if n2 != 0 && read_usize(nation + nation::CONTINENT) != read_usize(n2 + nation::CONTINENT) {
+        let n2 = Nation(if c != 0 { read_usize(c + club::NATION) } else { 0 });
+        if nation.reputation() <= nat.reputation() {
+            if !n2.is_null() && nation.continent() != n2.continent() {
                 return false;
             }
-            if (read_u8(nation + nation::LEAGUE_STANDARD) as i8) < 5 {
+            if (nation.league_standard() as i8) < 5 {
                 return false;
             }
         }
@@ -827,7 +827,7 @@ pub(crate) unsafe fn collect_squad_candidates(this: usize, nation: usize, t: i8,
             *cursor = v;
             for _ in ini..fim {
                 let j = read_usize(*cursor);
-                if is_squad_candidate(this, nation, t, data, Fixture(p), squad, reg, lim, j) {
+                if is_squad_candidate(this, Nation(nation), t, data, Fixture(p), squad, reg, lim, j) {
                     // simplification: the original writes to local_32c[(char) n]; from 128 on it would write before the vector
                     if (n as i8) >= 0 {
                         cand[n as usize] = j;
@@ -2173,9 +2173,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
             if msg != 0 {
                 let mut name = [0u8; 0x12c];
                 exe::database_format_staff_name(p, (name.as_mut_ptr()) as *mut u8 as usize, 0x12c, 1);
-                let other = read_usize(p.national_job() + 0x53);
-                let g = read_u8(other + nation::SHORT_GENDER_NAME) as i8 as i32;
-                text(msg, 0xa5b460, g, g, name.as_ptr(), other + nation::SHORT_NAME);
+                let other = Nation(read_usize(p.national_job() + 0x53));
+                let g = other.short_gender_name() as i8 as i32;
+                text(msg, 0xa5b460, g, g, name.as_ptr(), other.addr() + nation::SHORT_NAME);
             }
             return 0;
         }
@@ -2506,8 +2506,8 @@ pub(crate) unsafe fn mark_club_code(this: usize, c: usize, n: i32, code: u8) {
 ///
 /// [pt] O clube tem nação marcada (+0x53, +0x11c ≠ 0)?
 pub(crate) unsafe fn has_flagged_nation(c: Club) -> bool {
-    let n = c.nation().addr();
-    n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) != 0
+    let n = Nation(c.nation().addr());
+    !n.is_null() && n.league_selected() != 0
 }
 
 /// in the one-byte-per-club table, marks the clubs of the non-friendly fixtures on the date: 1 the club's league game,
@@ -2536,8 +2536,8 @@ pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, dat
     let get_fixture_list_for_date: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
     for i in 0..0x21usize {
         let e = G_LEAGUE_WORLD_CLUB_NATION + i * 0x48;
-        let nation = read_usize(e);
-        if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
+        let nation = Nation(read_usize(e));
+        if !nation.is_null() && nation.league_selected() == 0 {
             continue;
         }
         for fatia in 0..3u32 {
@@ -2902,8 +2902,8 @@ pub(crate) unsafe extern "thiscall" fn release_competitions_of_continent(this: u
     let end = end_of_stage as u8 != 0;
     let mut i = 0i32;
     while i < *(G_NATION_COUNT as *const i32) {
-        let nation = (*(G_NATION_TABLE as *const usize)).wrapping_add(0x122 * i as usize);
-        if read_usize(nation + nation::CONTINENT) == continent {
+        let nation = Nation((*(G_NATION_TABLE as *const usize)).wrapping_add(0x122 * i as usize));
+        if nation.continent() == continent {
             let current = read_usize(this + national_teams_fields::NATION_RECORDS) + 0x6e * i as usize + 4;
             let v = *(current as *const i32);
             if v != -1 && is_comp_finished(v, end) {
@@ -2919,7 +2919,7 @@ pub(crate) unsafe extern "thiscall" fn release_competitions_of_continent(this: u
                 crate::comparison::branch("national team continent next becomes current");
                 *((read_usize(this + national_teams_fields::NATION_RECORDS) + 0x6e * i as usize + 4) as *mut i32) = v;
                 *((read_usize(this + national_teams_fields::NEXT_COMPETITIONS) + 4 * i as usize) as *mut i32) = -1;
-                notify_manager_manager(nation); // the continent warning
+                notify_manager_manager(nation.addr()); // the continent warning
             }
         }
         i += 1;

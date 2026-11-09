@@ -68,6 +68,7 @@ pub(crate) unsafe fn call_stadium_compare(f: usize, a: usize, b: usize) -> i32 {
 /// (ou na competição [0x9cf76c] sem conferir) é reservada e devolvida. Sem nada: com nação, marcas sem 2 e com
 /// 4/8/0x20, o estádio nacional dela (+0x80); senão 0.
 pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: u32, cont: usize, nation: usize, data: usize, home: usize, away: usize, partida: usize) -> usize {
+    let nation = Nation(nation);
     let home = Club(home);
     let away = Club(away);
     let search: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
@@ -76,12 +77,12 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
     let mut key = [0u32; 4];
     let mut cmp = 0usize;
     let mut e;
-    if nation != 0 {
+    if !nation.is_null() {
         if *state != 1 {
             exe::crt_qsort(read_usize(this + stadium_obj::VENUES), read_usize(this + stadium_obj::VENUE_COUNT) as u32, 0x10, 0x85e2f0);
             *state = 1;
         }
-        key[0] = read_usize(nation) as u32;
+        key[0] = read_usize(nation.addr()) as u32;
         cmp = 0x85e2f0;
     } else if cont != 0 {
         if *state != 2 {
@@ -142,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                         break 'vaga;
                     }
                 }
-                if (nation != 0 || cont != 0) && call_stadium_compare(cmp, e, k) != 0 {
+                if (!nation.is_null() || cont != 0) && call_stadium_compare(cmp, e, k) != 0 {
                     // another key: end of the search
                     i = 0x1e;
                     count = false;
@@ -206,8 +207,8 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
             return read_usize(escolhida + 0xc);
         }
     }
-    if nation != 0 && marks & 2 == 0 && marks & 0x2c != 0 {
-        return read_usize(nation + nation::NATIONAL_STADIUM);
+    if !nation.is_null() && marks & 2 == 0 && marks & 0x2c != 0 {
+        return nation.national_stadium();
     }
     0
 }
@@ -917,8 +918,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
     let game = Fixture(game);
     let home = Club(home);
     let away = Club(away);
-    let inglaterra = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(nation::SIZE));
-    if est == read_usize(inglaterra + nation::NATIONAL_STADIUM) && core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) < 0x7d4 {
+    let inglaterra = Nation(read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(nation::SIZE)));
+    if est == inglaterra.national_stadium() && core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) < 0x7d4 {
         return 0;
     }
     let m = marks as u8;
@@ -1026,8 +1027,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
 /// nação, 0,05; e sempre [0x96d2c8]. Devolve o double no st0.
 pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, game: usize, cid_est: usize, cid_club: usize, base: f64) -> f64 {
     let game = Fixture(game);
-    let nation = read_usize(game.away_club() + 0x53);
-    let r = *((nation + nation::STATE_OF_DEVELOPMENT) as *const i8) as i32 as f64;
+    let nation = Nation(read_usize(game.away_club() + 0x53));
+    let r = (nation.state_of_development() as i8) as i32 as f64;
     let dy = read_f64(cid_est + city::LONGITUDE) - read_f64(cid_club + city::LONGITUDE);
     let dx = read_f64(cid_est + city::LATITUDE) - read_f64(cid_club + city::LATITUDE);
     let mut d = (dx * dx + dy * dy).sqrt();
@@ -1052,7 +1053,7 @@ pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, 
     if kind == 0xa && f < read_f64(rdata::F64_0_2) {
         return read_f64(rdata::F64_0_2);
     }
-    if f < read_f64(rdata::F64_0_05) && read_usize(game.home_club() + 0x53) == nation {
+    if f < read_f64(rdata::F64_0_05) && read_usize(game.home_club() + 0x53) == nation.addr() {
         return read_f64(rdata::F64_0_05);
     }
     if f < read_f64(rdata::F64_0_03) {
@@ -1310,14 +1311,14 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
         if city == 0 {
             continue;
         }
-        let nation = read_u32(city + city::NATION) as usize;
-        if nation == 0 || read_u32(nation + nation::CONTINENT) == 0 {
+        let nation = Nation(read_u32(city + city::NATION) as usize);
+        if nation.is_null() || (nation.continent() as u32) == 0 {
             continue;
         }
         if core::ffi::CStr::from_ptr((e + stadium::NAME) as *const core::ffi::c_char).to_bytes() == b"City of Manchester Stadium" {
             continue;
         }
-        if *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 && (read_u32(e + stadium::CAPACITY) as i32) < 0x1388 { // cqn3: menos de 5000 lugares
+        if nation.league_selected() != 0 && (read_u32(e + stadium::CAPACITY) as i32) < 0x1388 { // cqn3: menos de 5000 lugares
             crate::comparison::branch("cqn_3 small stadium");
             continue; // cqn3: the small stadium is left out
         }
@@ -1337,11 +1338,11 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
             *cap += 0x1e;
         }
         let r = *lista + 16 * *conta as usize;
-        *(r as *mut u32) = read_u32(nation);
-        *((r + 4) as *mut u32) = read_u32(read_u32(nation + nation::CONTINENT) as usize);
+        *(r as *mut u32) = read_u32(nation.addr());
+        *((r + 4) as *mut u32) = read_u32((nation.continent() as u32) as usize);
         *((r + 0xc) as *mut usize) = e;
         crate::comparison::branch("cqn_3 enters the list");
-        *((r + 8) as *mut u32) = (read_u32(nation + nation::NATIONAL_STADIUM) as usize == e) as u32; // cqn3: o estádio nacional
+        *((r + 8) as *mut u32) = ((nation.national_stadium() as u32) as usize == e) as u32; // cqn3: o estádio nacional
         *conta += 1;
     }
     exe::crt_qsort(*lista, *conta as u32, 0x10, 0x85e2f0);

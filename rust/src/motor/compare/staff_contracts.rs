@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_all_grievances(this: usize,
         return o(this, check);
     }
     let mut reg = vec![(this + 0x45, 4)];
-    if let Some(c) = database_staff_state_record(staff_of_contract(this)) {
+    if let Some(c) = database_staff_state_record(staff_of_contract(Contract(this))) {
         reg.push((c, 79));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, check), || clear_all_grievances(this, check));
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_all_grievances(this: usize,
 pub(crate) unsafe extern "thiscall" fn compare_check_transfer_request_withdrawal(this: usize, ctx: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CHECK_TRANSFER_REQUEST_WITHDRAWAL);
     let sheet = read_u32(G_CONTRACT_LOOKUP_RESULT);
-    let retira = should_withdraw_transfer_request(this).is_some();
+    let retira = should_withdraw_transfer_request(Contract(this)).is_some();
     *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = sheet;
     if retira {
         return o(this, ctx);
@@ -156,8 +156,9 @@ pub(crate) unsafe extern "thiscall" fn compare_get_contract_satisfaction(this: u
 ///
 /// [pt] Comparador: lado a lado pelo salário (+0xc). A 0x862720 grava a mesma ficha em [0xae1080] nas duas vezes.
 pub(crate) unsafe extern "thiscall" fn compare_set_default_wage(this: usize, person: usize) -> u32 {
+    let this = Contract(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_DEFAULT_WAGE);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + contract::WAGE, 4)], || o(this, person), || set_default_wage(this, person));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this.addr() + contract::WAGE, 4)], || o(this.addr(), person), || set_default_wage(this.addr(), person));
     SCOREBOARD.record(igual && r == n, || format!("set_default_wage({:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }

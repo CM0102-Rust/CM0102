@@ -31,8 +31,8 @@ pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(thi
         if exe::database_is_national_team(club) != 0 {
             break;
         }
-        let nation = read_usize(club + club::NATION);
-        if read_usize(club + club::DIVISION) != 0 && nation != 0 && (read_u8(nation + nation::LEAGUE_SELECTED) != 0 || read_i16(club + club::REPUTATION) >= 0x1388) && (0xb63d60 + (exe::key_nation_index_of_club(club) as i8 as i32) * 72) as usize == entry {
+        let nation = Nation(read_usize(club + club::NATION));
+        if read_usize(club + club::DIVISION) != 0 && !nation.is_null() && (nation.league_selected() != 0 || read_i16(club + club::REPUTATION) >= 0x1388) && (0xb63d60 + (exe::key_nation_index_of_club(club) as i8 as i32) * 72) as usize == entry {
             last = Some(k);
         }
         club += 0x245;
@@ -225,9 +225,10 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_other_costs(this: usize, valu
 /// [pt] Comparador: lado a lado na folha (+0xc), no maior salário (+0x10), no teto (+0x14) e no último contrato consultado
 /// ([0xae1080], que o salário padrão 0x864550 grava); as outras chamadas (contratos, teto 0x5968d0) só leem.
 pub(crate) unsafe extern "thiscall" fn compare_update_wage_bill(this: usize) {
+    let this = Finance(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UPDATE_WAGE_BILL);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + finance::WAGE_BILL, 12), (G_CONTRACT_LOOKUP_RESULT, 4)], || o(this), || update_wage_bill(this));
-    SCOREBOARD.record(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this.addr() + finance::WAGE_BILL, 12), (G_CONTRACT_LOOKUP_RESULT, 4)], || o(this.addr()), || update_wage_bill(this.addr()));
+    SCOREBOARD.record(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this.addr(), mo, mr));
 }
 
 /// Comparer for `refresh_all_wage_bills`.
@@ -388,9 +389,10 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_bonuses(this: usize, value: i
 
 /// Comparador: lado a lado no teto salarial (+0x14).
 pub(crate) unsafe extern "thiscall" fn compare_adjust_max_wage(this: usize, write_percent_pair: i8) {
+    let this = Finance(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_ADJUST_MAX_WAGE);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + finance::WAGE_CEILING, 4)], || o(this, write_percent_pair), || adjust_max_wage(this, write_percent_pair));
-    SCOREBOARD.record(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this, write_percent_pair, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this.addr() + finance::WAGE_CEILING, 4)], || o(this.addr(), write_percent_pair), || adjust_max_wage(this.addr(), write_percent_pair));
+    SCOREBOARD.record(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this.addr(), write_percent_pair, mo, mr));
 }
 
 /// Comparer for `get_wealth_band`.

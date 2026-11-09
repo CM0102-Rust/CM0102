@@ -449,8 +449,8 @@ pub(crate) fn key_nation_entry(k: i8) -> usize {
 pub(crate) unsafe fn find_key_nation_index(nation: usize) -> Option<i8> {
     let mut k: i8 = 0;
     while k < 0x23 {
-        let e = *(key_nation_entry(k) as *const usize);
-        if e != 0 && *((e + nation::LEAGUE_SELECTED) as *const u8) != 0 && e == nation {
+        let e = Nation(*(key_nation_entry(k) as *const usize));
+        if !e.is_null() && e.league_selected() != 0 && e.addr() == nation {
             return Some(k);
         }
         k += 1;
@@ -536,8 +536,8 @@ pub(crate) unsafe fn club_callup_record(this: usize, c: Club) -> Option<usize> {
     if id >= n || id < 0 {
         return None;
     }
-    let nation = c.nation().addr();
-    if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 || read_usize(nation) == read_usize(KEY_NATION_BRAZIL) {
+    let nation = Nation(c.nation().addr());
+    if nation.is_null() || nation.league_selected() == 0 || read_usize(nation.addr()) == read_usize(KEY_NATION_BRAZIL) {
         return None;
     }
     Some(read_usize(this + 0x20).wrapping_add(6 * id as usize))
@@ -663,8 +663,8 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
     let partida = Fixture(partida);
     let comp = Competition(comp);
     let row = |nation: usize| (0..0x23usize).find(|&k| {
-        let n = read_usize(G_LEAGUE_TABLE + 72 * k);
-        n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) != 0 && n == nation
+        let n = Nation(read_usize(G_LEAGUE_TABLE + 72 * k));
+        !n.is_null() && n.league_selected() != 0 && n.addr() == nation
     });
     let nation = comp.nation();
     let reservas = read_usize(KEY_CLUB_COMP_RESERVE);
@@ -675,11 +675,11 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
                 return 1;
             }
             let home = Club(partida.home_club());
-            let a = home.nation().addr();
-            if a != read_usize(partida.away_club() + 0x53) || *((a + nation::LEAGUE_SELECTED) as *const u8) == 0 {
+            let a = Nation(home.nation().addr());
+            if a.addr() != read_usize(partida.away_club() + 0x53) || a.league_selected() == 0 {
                 return 3;
             }
-            if let Some(k) = row(a) {
+            if let Some(k) = row(a.addr()) {
                 return *((0xb63d74 + 72 * k) as *const u8); // cpt3: the friendly’s nation
             }
             return if exe::database_is_national_team(home) != 0 { 0 } else { 3 };

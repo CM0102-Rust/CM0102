@@ -1621,8 +1621,8 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
     let mut f2 = [0u8; 0x4f];
     for k in 0..2 {
         let club = Club(read_usize(game.addr() + if k == 0 { 0x1c } else { 0x20 }));
-        let nation = club.nation().addr();
-        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
+        let nation = Nation(club.nation().addr());
+        if nation.is_null() || nation.league_selected() == 0 {
             continue;
         }
         // dois dias antes
@@ -2473,18 +2473,18 @@ pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, 
     if city == 0 {
         return;
     }
-    let nation = read_usize(city + city::NATION);
-    if nation == 0 {
+    let nation = Nation(read_usize(city + city::NATION));
+    if nation.is_null() {
         return;
     }
-    if read_u8(nation + nation::STATE_OF_DEVELOPMENT) != 3 { // cps13: só o terceiro mundo
+    if nation.state_of_development() != 3 { // cps13: só o terceiro mundo
         return;
     }
     let home = Club(f.home_club());
-    if !home.is_null() && home.nation().addr() != nation {
+    if !home.is_null() && home.nation().addr() != nation.addr() {
         crate::comparison::branch("cps_13 home side illness");
         // the original pushes the year in the club’s eax and the day in the nation’s ecx (high halves of the pointers)
-        add_illness_risk_before_match(f, f.home_club_id(), read_usize(read_usize(f.stadium() + 0x38) + 0x1f), nation as u32, home.addr() as u32);
+        add_illness_risk_before_match(f, f.home_club_id(), read_usize(read_usize(f.stadium() + 0x38) + 0x1f), nation.addr() as u32, home.addr() as u32);
     }
     let away = Club(f.away_club());
     if !away.is_null() && away.nation().addr() != read_usize(read_usize(f.stadium() + 0x38) + 0x1f) {
@@ -2522,8 +2522,8 @@ pub(crate) unsafe extern "C" fn fix_man_get_partner_key_nation_index(club: usize
     };
     let target = read_u32(G_NATION_TABLE).wrapping_add(other.wrapping_mul(0x122)) as usize;
     for i in 0..0x23usize {
-        let p = read_u32(G_LEAGUE_TABLE + i * 72) as usize;
-        if p != 0 && *((p + nation::LEAGUE_SELECTED) as *const u8) != 0 && p == target {
+        let p = Nation(read_u32(G_LEAGUE_TABLE + i * 72) as usize);
+        if !p.is_null() && p.league_selected() != 0 && p.addr() == target {
             return *((0xb63d74 + i * 72) as *const u8);
         }
     }

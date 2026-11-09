@@ -4,7 +4,7 @@ MUTACOES = [
     ('dq13_atributo', '    exe::staff_compute_non_player_attribute(person, not_player, attribute)\n', '    exe::staff_compute_non_player_attribute(person, not_player, attribute) ^ 1\n'),
     ('dq13_reduzida', 'ability * read_f64(rdata::F64_0_1) + (v + v)', 'ability * read_f64(rdata::F64_0_1) * 2.0 + (v + v)'),
     ('dq14_peso', 'for _ in 0..3 { // 3 weighted draws', 'for _ in 0..2 { // 3 weighted draws'),
-    ('dq14_cores', '    let (a, b) = if owner != 0 {', '    let (b, a) = if owner != 0 {'),
+    ('dq14_cores', '    let (a, b) = if !owner.is_null() {', '    let (b, a) = if !owner.is_null() {'),
     ('dq14_vaga', '        v == 0 || v == person\n', '        v == person\n'),
     ('dq15_cargo', '            person.set_job_for_club(c); // club and club role', '            *((person.addr() + 0x3d) as *mut u8) = c ^ 1; // club and club role'),
     ('dq15_data', 'core::ptr::read_unaligned((data + 4) as *const u32));', 'core::ptr::read_unaligned((data + 4) as *const u32) + 1);'),

@@ -258,8 +258,8 @@ pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> 
     let mut v = english_common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Third, 2 turnos e 3 pontos
     v.extend_from_slice(&[(0xbe, 1, 3), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 1), (0x1c, 4, read_usize(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) as u32)]);
-    let nation = read_usize(read_usize(this + 4) + 0x5d);
-    let below = if *((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) as u32 } else { 0xffff_ffff };
+    let nation = Nation(read_usize(read_usize(this + 4) + 0x5d));
+    let below = if nation.league_selected() & 4 != 0 { read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) as u32 } else { 0xffff_ffff };
     v.extend_from_slice(&[(0x20, 4, below), (0x4a, 1, 3), (0x49, 1, 5)]);
     v
 }
