@@ -12,7 +12,8 @@ Signatures already checked by hand (levas/reorganizacao/assinaturas_conferidas.j
 wrapper, or `true_signature` with `accepted_sites` judged harmless) are downgraded to info. --validar checks the tool
 against those answers. Output: one
 line per finding in levas/reorganizacao/conferencia_assinaturas.tsv, sorted by severity (bug, then info).
-Usage: python conferir_assinaturas.py [--fn FN_X | --validar]; exit code 1 when a bug is found (publicar_leva.py
+With --fila it also checks the code of the queue items not yet integrated (levas/fila/*/codigo.rs), before they enter.
+Usage: python conferir_assinaturas.py [--fn FN_X | --validar | --fila]; exit code 1 when a bug is found (publicar_leva.py
 stops on it)
 [pt] Confere cada função do exe chamada pelo Rust contra o código de máquina original: a pilha (`ret N` ou o
 `add esp` dos chamadores), o uso do ecx e a largura do retorno (o que a rotina escreve antes do `ret` e o que os
@@ -302,17 +303,31 @@ def por_parametro(fontes, out):
                         out['ADDR_' + end][sig].append('%s:%d (%s)' % (os.path.relpath(p, R).replace('\\', '/'), t.count('\n', 0, c.start()) + 1, nome))
 
 
-def declaracoes():
-    """{FN_X: {signature: [where, ...]}} from the wrappers and from the local transmutes."""
-    out = collections.defaultdict(lambda: collections.defaultdict(list))
-    fontes = {}
+def arquivos(fila=False):
+    """The Rust sources; with fila=True, the code of the queue items not yet integrated (levas/fila/*/codigo.rs)."""
     for raiz, _, fs in os.walk(os.path.join(R, 'rust', 'src')):
         for f in fs:
-            if not f.endswith('.rs'):
-                continue
-            p = os.path.join(raiz, f)
+            if f.endswith('.rs'):
+                yield os.path.join(raiz, f)
+    if fila:
+        for d in sorted(os.listdir(os.path.join(R, 'levas', 'fila'))):
+            q = os.path.join(R, 'levas', 'fila', d)
+            if os.path.exists(os.path.join(q, 'codigo.rs')) and not os.path.exists(os.path.join(q, 'materializada.txt')):
+                yield os.path.join(q, 'codigo.rs')
+
+
+def declaracoes(fila=False):
+    """{FN_X or ADDR_0x..: {signature: [where, ...]}} from the wrappers, the local transmutes (of a FN_ constant or of
+    a literal address `0x682200usize`) and the fixed addresses passed to helpers."""
+    out = collections.defaultdict(lambda: collections.defaultdict(list))
+    fontes = {}
+    for p in arquivos(fila):
+        if True:
             t = open(p, encoding='utf-8').read()
             fontes[p] = t
+            for m in re.finditer(r'let \w+: (unsafe extern "\w+" fn\([^)]*\)(?: -> [\w*: ]+?)?) = core::mem::transmute\((0x[0-9a-f]+)(?:usize|_usize)?\)', t):
+                lin = t.count('\n', 0, m.start()) + 1
+                out['ADDR_' + m.group(2)][re.sub(r'\s+', ' ', m.group(1))].append('%s:%d' % (os.path.relpath(p, R).replace('\\', '/'), lin))
             for m in re.finditer(r'let \w+: (unsafe extern "\w+" fn\([^)]*\)(?: -> [\w*: ]+?)?) = core::mem::transmute\((FN_\w+)\)', t):
                 lin = t.count('\n', 0, m.start()) + 1
                 out[m.group(2)][re.sub(r'\s+', ' ', m.group(1))].append('%s:%d' % (os.path.relpath(p, R).replace('\\', '/'), lin))
@@ -354,7 +369,8 @@ def julgar(sig, ns, le_ecx, le_edx, eax_w, leituras, limpezas):
             if leituras and 'st0' not in leituras and leituras.get('eax'):
                 prob.append(('bug', 'retorno float declarado, os chamadores leem eax'))
         else:
-            if leituras.get('st0', 0) >= 2 and not (leituras.keys() - {'st0'}):
+            # st0 right after the call in a few callers is often their own x87 code: it counts only when a good share reads it
+            if leituras.get('st0', 0) >= 2 and not (leituras.keys() - {'st0'}) and leituras['st0'] * 4 >= sum(limpezas.values()):
                 prob.append(('bug', 'retorno inteiro declarado, os chamadores leem st0'))
             lw = ie.largura(ret)
             ws = {4 if x == 'z' else x for x in eax_w if isinstance(x, int) or x == 'z'}
@@ -418,7 +434,7 @@ def main():
     conf = json.load(open(os.path.join(R, 'levas', 'reorganizacao', 'assinaturas_conferidas.json'), encoding='utf-8'))
     if '--validar' in sys.argv:
         return validar(ends, conf)
-    decl = declaracoes()
+    decl = declaracoes('--fila' in sys.argv)
     so = sys.argv[sys.argv.index('--fn') + 1] if '--fn' in sys.argv else None
     achados = []
     for fn in sorted(decl):

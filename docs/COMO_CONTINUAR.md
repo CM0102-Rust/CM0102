@@ -27,11 +27,12 @@ Uma leva junta itens da fila (até 13 itens de 3 rotinas desde 29/10/2026: `ITEN
    3. Carreira: `python simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --detector`. As duas execuções Rust têm de dar a mesma impressão (o `--detector` roda uma terceira, só registrada: ver "Memória da DLL, trampolins e detector de lixo"); desde 31/10/2026 a do modo original (`--modo original`) é só registrada, não barra a leva (critério "resultado que o jogo produz"; antes tinha de ser igual). Nas levas 50 a 52, `c76ad0ff6ce3daa6` com 2.357.335.216 sorteios.
 5. **Registrar.** Seção da leva em `ROTINAS.md` e no `ROTINAS.en.md`, tradução dos nomes novos em `glossario.py` (gera `GLOSSARIO.md` e `.en.md`), estado em `wiki/index.md`, uma linha em `wiki/log.md`, commit e push.
 
-## Legibilidade: depois de integrar uma leva (08/11/2026)
+## Legibilidade: depois de integrar uma leva (08/11/2026; passos das rodadas 15 a 28 em 09/11)
 
 O código público é em inglês e legível de fora (reorganização de 07/11/2026). Uma leva nova chega com nomes em
 português e no formato antigo; depois de integrá-la (e antes de publicar), passe as ferramentas, nesta ordem, e prove
-(carreiras Rust ×2 + detector e comparação, como sempre):
+(carreiras Rust ×2 + detector e comparação, como sempre). Antes de integrar, `conferir_assinaturas.py --fila` mostra
+as chamadas ao exe dos itens da fila que não batem com o original (corrija no item ou deixe o passo 9 cuidar):
 
 1. `partir_motor.py --gravar`: o código novo sai do `motor.rs` para o módulo do arquivo de origem;
 2. `unificar_memoria.py --gravar` e `unificar_auxiliares.py --gravar`: as cópias de acesso à memória e os auxiliares
@@ -48,7 +49,20 @@ português e no formato antigo; depois de integrá-la (e antes de publicar), pas
    pelo registro que a variável guarda em cada função, dito por leitura em `levas/reorganizacao/tipos_*.tsv`), `traduzir_locais.py --gravar` (locais e parâmetros,
    palavra por palavra), `aplicar_comentarios.py` (comentários do corpo em inglês) e `separar_comparadores.py --gravar`
    (os comparadores novos para `motor/compare/`);
-8. `legibilidade.py`: o placar (docs/LEGIBILIDADE.md) não pode piorar.
+8. `nomear_funcoes.py --gravar` (`transmute(0x5223a0usize)` vira `transmute(FN_...)`), `nomear_rdata.py --gravar`
+   (os números lidos do `.rdata` com nome), `fechar_closures.py --gravar` (closures que só leem memória viram o mem.rs),
+   `um_dialeto.py --gravar` (um só jeito de ler a memória) e `involucros_exe.py --gravar` (cada função do exe por
+   `exe::nome(..)`, com a assinatura conferida de `levas/reorganizacao/assinaturas_conferidas.json`; a função que não
+   compila volta ao texto de antes);
+9. as conferências contra o original: `conferir_assinaturas.py` (0 erros; um retorno que só define `al`/`ax` se
+   estreita pelo `estreitar_retorno.py`; um caso inofensivo vai como `accepted_sites` no json) e
+   `larguras_campos.py --original` (0 diferenças, ou cada uma classificada em `larguras_conferidas.json`);
+10. o inglês que pede leitura: `rotulos_em_ingles.py` (os rótulos dos contadores de ramo), `cabecalhos_completos.py` e
+    `docs_em_ingles.py` (cabeçalhos e docs só em português), `docs_sem_enderecos.py --gravar` (endereços viram nomes nos
+    docs em inglês);
+11. as mutações: `mutacoes_sem_apelidos.py --gravar` (texto de troca que cita um apelido que saiu), `fila.py checar` e
+    `compilar_mutacoes.py --desde <commit de antes>` (cada mutação mudada compila; numa bancada sincronizada);
+12. `legibilidade.py`: o placar (docs/LEGIBILIDADE.md) não pode piorar.
 
 Troca que depende do texto depois de `//` (comentários) vai às listas de mutação trecho por trecho
 (`trocar_nas_mutacoes.aplicar_por_trecho`), nunca linha a linha do arquivo Python.

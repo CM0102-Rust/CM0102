@@ -29,11 +29,12 @@ A batch gathers queue items (up to 13 items of 3 routines since 2026-10-29: `ITE
    3. Career: `python simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --detector`. The two Rust runs must give the same fingerprint (`--detector` runs a third one, only recorded: see "DLL memory, trampolines and garbage detector"); since 2026-10-31 the original mode one (`--modo original`) is only recorded and does not block the batch (criterion "a result the game produces"; before, it had to be equal). In batches 50 to 52, `c76ad0ff6ce3daa6` with 2,357,335,216 random draws.
 5. **Record.** Section for the batch in `ROTINAS.md` and in `ROTINAS.en.md`, translation of the new names in `glossario.py` (generates `GLOSSARIO.md` and `.en.md`), state in `wiki/index.md`, a line in `wiki/log.md`, commit and push.
 
-## Readability: after integrating a batch (2026-11-08)
+## Readability: after integrating a batch (2026-11-08; steps of rounds 15 to 28 on 2026-11-09)
 
 The public code is in English and readable from outside (reorganisation of 2026-11-07). A new batch arrives with
 Portuguese names and the old format; after integrating it (and before publishing), run the tools in this order and
-prove (Rust ×2 careers + detector and comparison, as always):
+prove (Rust ×2 careers + detector and comparison, as always). Before integrating, `conferir_assinaturas.py --fila`
+shows the queue items' exe calls that do not match the original (fix them in the item or let step 9 handle them):
 
 1. `partir_motor.py --gravar`: the new code leaves `motor.rs` for the module of its source file;
 2. `unificar_memoria.py --gravar` and `unificar_auxiliares.py --gravar`: memory-access copies and duplicated helpers
@@ -50,7 +51,20 @@ prove (Rust ×2 careers + detector and comparison, as always):
    by the record the variable holds in each function, read into `levas/reorganizacao/tipos_*.tsv`), `traduzir_locais.py --gravar` (locals and
    parameters, word by word), `aplicar_comentarios.py` (body comments in English) and `separar_comparadores.py --gravar`
    (new comparers into `motor/compare/`);
-8. `legibilidade.py`: the scoreboard (docs/LEGIBILIDADE.en.md) must not get worse.
+8. `nomear_funcoes.py --gravar` (`transmute(0x5223a0usize)` becomes `transmute(FN_...)`), `nomear_rdata.py --gravar`
+   (numbers read from `.rdata` by name), `fechar_closures.py --gravar` (closures that only read memory become mem.rs),
+   `um_dialeto.py --gravar` (one way to read memory) and `involucros_exe.py --gravar` (each exe function through
+   `exe::name(..)`, with the checked signature from `levas/reorganizacao/assinaturas_conferidas.json`; a function that
+   does not compile goes back to its previous text);
+9. the checks against the original: `conferir_assinaturas.py` (0 bugs; a return that only defines `al`/`ax` is
+   narrowed by `estreitar_retorno.py`; a harmless case goes in the json as `accepted_sites`) and
+   `larguras_campos.py --original` (0 differences, or each one classified in `larguras_conferidas.json`);
+10. the English that needs reading: `rotulos_em_ingles.py` (branch-counter labels), `cabecalhos_completos.py` and
+    `docs_em_ingles.py` (headers and docs only in Portuguese), `docs_sem_enderecos.py --gravar` (addresses become names
+    in the English docs);
+11. the mutations: `mutacoes_sem_apelidos.py --gravar` (a replacement naming an alias that is gone), `fila.py checar`
+    and `compilar_mutacoes.py --desde <commit before>` (each changed mutation compiles; on a synced bench);
+12. `legibilidade.py`: the scoreboard (docs/LEGIBILIDADE.en.md) must not get worse.
 
 A change that depends on the text after `//` (comments) goes to the mutation lists anchor by anchor
 (`trocar_nas_mutacoes.aplicar_por_trecho`), never line by line of the Python file.
