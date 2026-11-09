@@ -50,12 +50,11 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
     if rano > cano || (rano == cano && rdia > cdia) {
         return 1;
     }
-    let age: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_STAFF_AGE);
     let (d0, d1) = (read_usize(d) as u32, read_usize(d + 4) as u32);
     let mut t = [0u8; 8];
     exe::date_get_difference(G_CURRENT_DATE, t.as_mut_ptr(), d0, d1);
     let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(c).wrapping_mul(110));
-    let limit: u8 = if (age(person, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: the period by age
+    let limit: u8 = if (exe::database_get_staff_age(person, d as *const u16)) < 0x1c { 3 } else { 2 }; // cpu4: the period by age
     if !years.is_null() {
         *years = limit;
     }

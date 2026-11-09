@@ -1124,8 +1124,7 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
     if read_usize(p + staff::CLUB_JOB) == 0 {
         return;
     }
-    let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    if human(news, read_usize(p + staff::CLUB_JOB)) == 0 {
+    if exe::news_club_has_human_manager(news, read_usize(p + staff::CLUB_JOB)) == 0 {
         return;
     }
     exe::news_send_to_club_manager(read_usize(G_NEWS), nw, read_usize(p + staff::CLUB_JOB));
@@ -1697,7 +1696,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
                         crate::comparison::branch("cpv_8 collision becomes injury");
                         exe::injury_end_player_injury(this, pessoa, 0);
                         let j = if read_i32(game) == -2 { 0 } else { game };
-                        exe::injury_add_injury(this, t as u32, 0, pessoa, (j) as usize as u32, 1, -1, 0, 0);
+                        exe::injury_add_injury(this, t as u32, 0, pessoa, j as u32, 1, -1, 0, 0);
                     }
                 }
                 e = exe::llist_get_next(read_i32(this + injury_fields::MATCH_HIT_LIST) as usize);
@@ -2290,7 +2289,6 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
         show_error_at(0x9e7f28, 0x7d0);
         return;
     }
-    let choose: unsafe extern "thiscall" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_INJURY_CHOOSE_INJURY_TYPE);
     let (mut recorrentes, mut iniciais) = (0i32, 0i32);
     let mut r = v;
     let mut person = read_usize(G_STAFF_TABLE);
@@ -2318,7 +2316,7 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
                 // simplification: the original pushes stack dwords with only the low byte written (the rest is garbage); 0x62d140
                 // and 0x62d250 only read the byte: here they go clean
                 let category = friendly_random(0xc) as u8;
-                let kind = choose(this, category as u32, 0xffff_ffff, person) as u8;
+                let kind = (exe::injury_choose_injury_type(this, (category as u32) as u32 as i8, (0xffff_ffff) as u32 as i8, person) as u32) as u8;
                 exe::injury_add_injury(this, kind as u32, 1, person, 0, 1, -1, 0, 0);
                 iniciais += 1;
             }

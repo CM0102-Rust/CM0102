@@ -8,7 +8,7 @@ MUTACOES = [
     ('cqi2_intertoto_conta_dois', 'colocados += 1; // cqi2: mais um na Intertoto', 'colocados += 2; // mutacao: conta 2', 'cqi_2 club in intertoto'),
     ('cqi3_duas_na_primeira_fase', '(3, 0) // cqi3: 1st to 6th nation', '(2, 0) // mutacao: 2 vagas', 'cqi_3 three in the first stage'),
     ('cqi3_sem_fair_play', 'slots[2] = slots[2].wrapping_add(1); // cqi3: the fair play place', '// mutacao: sem o fair play', 'cqi_3 fair play'),
-    ('cqi3_sem_intertoto', 'exe::uefaseeding_assign_intertoto_places(this, t, n); // cqi3: the Intertoto places', 'let _ = intertoto; // mutacao: sem a Intertoto', 'cqi_3 qualification rollover'),
+    ('cqi3_sem_intertoto', 'exe::uefaseeding_assign_intertoto_places(this, t, n); // cqi3: the Intertoto places', '// mutacao: sem a Intertoto', 'cqi_3 qualification rollover'),
     ('cqj1_sem_vaga_da_cota', 'enter_libertadores(c, 2); // cqj1: the quota slot', '// mutacao: sem a vaga da cota', 'cqj_1 nation quota'),
     ('cqj1_sao_paulo_no_lugar_do_palmeiras', 'if enter_libertadores(contract_manager_club_by_id(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS)), 2) {', 'if enter_libertadores(contract_manager_club_by_id(read_u32(G_KEY_CLUB_SAO_PAULO_FUTEBOL_CLUBE)), 2) { // mutacao: o São Paulo', 'cqj_1 brazil fixed'),
     ('cqj1_sem_pular_ja_com_vaga', 'p += 12; // cqj1: skips the club that already has a slot', 'if foul == 0 { found = true; break; } p += 12; foul = foul.wrapping_sub(1); // mutacao: conta o que já tem vaga', 'cqj_1 already with a place'),

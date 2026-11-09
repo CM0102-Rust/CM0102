@@ -10,14 +10,13 @@ use super::*;
 /// original.
 pub(crate) unsafe extern "thiscall" fn compare_process_euro_registration(this: usize, step: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_PROCESS_EURO_REGISTRATION);
-    let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     let mut has_human = false;
     for &chave in EUROPEAN_REGISTRATION_CUPS.iter() {
         let id = read_u32(chave);
         let comp = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * id as usize) as usize;
         if comp != 0 {
             for_each_comp_club(comp, step, |c| {
-                if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == id && human(read_u32(G_NEWS) as usize, c) != 0 {
+                if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == id && exe::news_club_has_human_manager(read_u32(G_NEWS) as usize, c) != 0 {
                     has_human = true;
                 }
             });
@@ -153,7 +152,6 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this:
     if let Some(v) = (*core::ptr::addr_of_mut!(SQUAD_NUMBERS_PLAN)).as_mut() {
         v.push(league);
     }
-    let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     let clubs: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(read_u32(read_u32(league) as usize + 0x58) as usize);
     let mut list = 0usize;
     let n = clubs(league, &mut list, 0) as i16 as i32;
@@ -161,7 +159,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this:
     if list != 0 {
         exe::crt_free(list);
     }
-    if automatico == 0 && cs.iter().any(|&c| human(read_u32(G_NEWS) as usize, c) != 0) {
+    if automatico == 0 && cs.iter().any(|&c| exe::news_club_has_human_manager(read_u32(G_NEWS) as usize, c) != 0) {
         return o(this, league, initial, automatico);
     }
     let mut reg = vec![(0xb67a34usize, 4usize)];

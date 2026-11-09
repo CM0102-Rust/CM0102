@@ -60,12 +60,11 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
         return 0;
     }
     if sincronizar != 0 {
-        let maquina: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
         let of_team = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize);
-        let m = maquina(G_SCREEN_MANAGER, of_team) as u16;
+        let m = (exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, of_team) as u32) as u16;
         for j in 0..0x10i32 {
             let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - j - 1).wrapping_mul(0x6e) as usize);
-            if *((p + staff::CLASSIFICATION) as *const u8) == 1 && p != manager && maquina(G_SCREEN_MANAGER, p) as u16 == m {
+            if *((p + staff::CLASSIFICATION) as *const u8) == 1 && p != manager && (exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, p) as u32) as u16 == m {
                 exe::news_mark_item_read(this, p, id, 0);
             }
         }
@@ -379,7 +378,6 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: us
     if read_i32(e) == -1 {
         return 0;
     }
-    let text: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_ACTION_BUTTON);
     let mut k = read_i32(e + 4) - 1;
     loop {
         k = ring_prev_wrap(k, read_i32(e));
@@ -388,7 +386,7 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: us
             return 0;
         }
         let mut out = 0u32;
-        if text(slot, manager, 0xde1f64, 0x7d0, &mut out) as u8 == 2 {
+        if (exe::newsitem_get_action_button(slot, manager, 0xde1f64, 0x7d0, &mut out) as u32) as u8 == 2 {
             return 1; // pede resposta
         }
         let slot = read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));

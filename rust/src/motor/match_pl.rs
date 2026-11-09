@@ -4523,8 +4523,7 @@ pub(crate) unsafe fn punish_move_foul_injected(m: usize, e: usize, p: usize, mut
     let sent_off = matches!(kind, 3..=6);
     if colour as i16 > -1 {
         // event 0x82 (card 4/5 for reasons 5, 10, 11 and the player’s history)
-        let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
-        let v = ftol(average(read_usize(G_PLAYER_STATS + 0), read_usize(e + match_player::PLAYER), 0xb, 2, 6.5)) as i8;
+        let v = ftol(exe::playerstats_get_stat(read_usize(G_PLAYER_STATS + 0), read_usize(e + match_player::PLAYER), 0xb, 2, 6.5)) as i8;
         let base = *(G_STAFF_COUNT as *const i32);
         let list = if m != 0 { read_usize(m + engine::EVENT_LIST) } else { 0 };
         if list != 0
@@ -6041,8 +6040,7 @@ pub(crate) unsafe fn pass_foul_injected(m: usize, e: usize, p: usize, mut kind: 
         }
     };
     // event 0x82 (card 4/5 for reasons 5, 10, 11 and the player’s history)
-    let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
-    let v = ftol(average(read_usize(G_PLAYER_STATS + 0), read_usize(e + match_player::PLAYER), 0xb, 2, 6.5)) as i8;
+    let v = ftol(exe::playerstats_get_stat(read_usize(G_PLAYER_STATS + 0), read_usize(e + match_player::PLAYER), 0xb, 2, 6.5)) as i8;
     let base = *(G_STAFF_COUNT as *const i32);
     let list = if m != 0 { read_usize(m + engine::EVENT_LIST) } else { 0 };
     if list != 0
@@ -7682,8 +7680,7 @@ pub(crate) unsafe extern "thiscall" fn decide_player(j: usize) {
             0
         }
         _ => {
-            let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_DECIDE_BALL_ACTION);
-            f(this, 0)
+            (exe::match_player_decide_ball_action(this, 0) as u32)
         }
     })
 }
@@ -7970,9 +7967,8 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
         let q = exe::cm3_match_engine_get_goalkeeper(m, dir);
         if q == 0 {
             // the original shows the error box and quits the game (0x5cc7d0, 0x5a8f60, exit(-1))
-            let f2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
             exe::game_fatal_cleanup();
-            f2();
+            exe::shared_noop_ret0_5a8f60();
             exe::crt_exit(-1);
         }
         if read_i8(q + match_player::BUSY) > 1 {

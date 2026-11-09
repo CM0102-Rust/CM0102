@@ -91,6 +91,12 @@ def main():
     if os.path.exists(ARQ):
         for sig_, fn in re.findall(r'let f: (unsafe extern "\w+" fn\([^)]*\)(?: -> [\w*: ]+?)?) = core::mem::transmute\((FN_\w+)\);', open(ARQ, encoding='utf-8').read()):
             canon[fn] = sig_
+    # signatures checked against the disassembly win over the existing wrapper and over the majority
+    conferidas = {}
+    arq_conf = os.path.join(R, 'levas', 'reorganizacao', 'assinaturas_conferidas.json')
+    if os.path.exists(arq_conf):
+        conferidas = {fn: v['signature'] for fn, v in json.load(open(arq_conf, encoding='utf-8')).items() if v.get('signature')}
+        canon.update(conferidas)
     usos = collections.defaultdict(collections.Counter)
     for p in arqs:
         for m in LET.finditer(open(p, encoding='utf-8').read()):
@@ -150,7 +156,7 @@ def main():
             return None
         if ru and classe(ru) != classe(rc):
             return None
-        if ru and largura(ru) > largura(rc):  # the chosen signature would cut bits the use read
+        if ru and largura(ru) > largura(rc) and fn not in conferidas:  # cuts bits the use read (unless the true signature is known: then the use was wrong)
             return None
         if len(pu) != len(pc) or any(classe(a) != classe(b) for a, b in zip(pu, pc)):
             return None

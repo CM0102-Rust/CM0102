@@ -724,10 +724,9 @@ pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usi
         return 0;
     }
     let f = read_usize(p + staff::PLAYER);
-    let rating_of: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_PLAYER_ATTRIBUTE_RATING);
     // simplification: the original pushes the attribute byte in a register with leftover upper bytes; 0x544380 reads
     // o byte
-    let rating = |o: usize| rating_of(f, *((f + o) as *const u8) as u32) as u8 as i8 as i32;
+    let rating = |o: usize| (exe::player_attribute_rating(f, *((f + o) as *const u8) as u32) as u32) as u8 as i8 as i32;
     let b = |o: usize| read_i8(f + o) as i32;
     let adapt = read_i8(p + staff::ADAPTABILITY) as i32;
     let r = match m {

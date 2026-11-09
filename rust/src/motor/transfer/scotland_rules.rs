@@ -88,8 +88,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
         *start_year = (*start_year).wrapping_add(1);
     }
     // 0x4d45f0: push a1; mov ecx, [0xae1050] -> thiscall, ret 4 (the month the season ends)
-    let month_of_end: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
-    let e = month_of_end(read_usize(G_CONTRACT_MANAGER), a1) as i8;
+    let e = exe::contract_manager_season_end_month(read_usize(G_CONTRACT_MANAGER), a1) as i8;
     *end_month = e;
     if (read_u8(player + staff::AGE) as i8) < 0x16 {
         crate::comparison::branch("cqe_6 scotland until end of season");

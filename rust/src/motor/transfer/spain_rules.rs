@@ -69,8 +69,7 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, 
     };
     if read_usize(club + club::DIVISION) == read_usize(owner + club::DIVISION) {
         // 0x7c1e30: push 6,5f; push 1; push 2; push record; mov ecx, [0xb74350] -> thiscall, ret 0x10 (returns in st0)
-        let games: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
-        let v = games(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 2, 1, 6.5);
+        let v = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 2, 1, 6.5);
         if v > read_f32(rdata::F32_5) as f64 {
             crate::comparison::branch("cqe_6 spain same division");
             return refuse_loan(msg, reason, 0xa82b00, read_usize(this + 0xa), 0x1f);

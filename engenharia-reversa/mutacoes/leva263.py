@@ -23,7 +23,7 @@ MUTACOES = [
     ('cqa7_idade_com_09', '(dd * read_f64(rdata::F64_0_3) + read_f64(rdata::F64_0_8)); // cqa7: the age above the divisor', '(dd * read_f64(rdata::F64_0_3) + 0.9); // mutacao: a idade com 0,9', 'cqa_7 age'),
     ('cqa8_vencedor_sem_sorteio', '                let r = exe::utils_random(0x15 - read_i8(person + staff::AMBITION) as i32); // cqa8: the winner random draw', '                let r = 4; // mutacao: sem o sorteio do vencedor', 'cqa_8 winner morale'),
     ('cqa8_moral_sem_sorteio', '                    let r1 = exe::utils_random(0x1e); // cqa8: the first morale random draw', '                    let r1 = 15; // mutacao: sem o primeiro sorteio da moral', 'cqa_8 tests the morale'),
-    ('cqa8_fora_sem_evoluir', '            exe::update_player_reputation_after_match(0, person, club, outro, game, (rating - read_f64(rdata::F64_0_05)) as f32, 0, 0);', '            let _ = (evoluir, rating);', 'cqa_8 develops who was left out'),
+    ('cqa8_fora_sem_evoluir', '            exe::update_player_reputation_after_match(0, person, club, outro, game, (rating - read_f64(rdata::F64_0_05)) as f32, 0, 0);', '            let _ = rating; ', 'cqa_8 develops who was left out'),
     ('cqa9_auge_da_frente', '        (13_000_000.0, 0x1c) // cqa9: the base of those who play up front', '        (13_000_000.0, 0x1b) // mutacao: o auge de quem joga na frente'),
     ('cqa9_contrato_curto', '            if days < 0x15e { // cqa9: o contrato curto', '            if days < 0x12c { // mutacao: o contrato curto'),
     ('cqa9_indice_da_idade', '    let mut i = auge.wrapping_sub(age_ef).wrapping_add(10); // cqa9: the table index by age', '    let mut i = auge.wrapping_sub(age_ef).wrapping_add(9); // mutacao: o índice da tabela pela idade'),

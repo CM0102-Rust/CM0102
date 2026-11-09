@@ -1279,14 +1279,13 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
         show_error_at(0xa78310, 0x396);
         return 0;
     }
-    let index: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let mut i = 0i32;
     while i < read_i32(G_CLUB_COUNT) {
         let club = injury_club_by_index(i);
         if injury_is_national_team(club) {
             break; // the first national team ends it
         }
-        let k = index(club) as u8 as i8 as isize; // only al
+        let k = (exe::key_nation_index_of_club(club) as i8) as isize; // only al
         if (0xb63d60usize).wrapping_add((k * 72) as usize) == nation {
             for s in 0..50usize {
                 let p = read_usize(club + club::SQUAD + 4 * s);

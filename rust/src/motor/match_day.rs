@@ -54,7 +54,6 @@ pub(crate) unsafe extern "C" fn won_the_match(game: usize, club: u32) -> u8 {
 pub(crate) unsafe fn match_man_fatal_error(row: u32) -> ! {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let join: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
-    let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     exe::crt_strtok(0xa15da4, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
@@ -63,7 +62,7 @@ pub(crate) unsafe fn match_man_fatal_error(row: u32) -> ! {
     exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
     exe::game_fatal_cleanup();
-    fechar2();
+    exe::shared_noop_ret0_5a8f60();
     exit(-1)
 }
 
@@ -484,7 +483,6 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     let humano_a = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) - i - 1) as isize * 0x6e) as usize);
     let human_b = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) + i - 0x10) as isize * 0x6e) as usize);
     let human: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let level: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_HUMAN_MANAGER_GET_COMMENTARY_SPEED);
     // 0x5fe290 (ret 8): the match and the human (the original pushes the human before the test)
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
 
@@ -554,7 +552,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                             por(u(p, day_match::SCOREBOARD), o, v);
                         }
                         // the highest level (0x5fcff0) between the stored one and that of this human
-                        let greater = |s: u8, h: usize| if s as i16 > level(manager(), h) as i16 { s } else { level(manager(), h) as u8 };
+                        let greater = |s: u8, h: usize| if s as i16 > exe::human_manager_get_commentary_speed(manager(), h as u32) { s } else { (exe::human_manager_get_commentary_speed(manager(), h as u32) as u8) };
                         for i in 0..16 {
                             let h = humano_a(i);
                             if b(h, staff::CLASSIFICATION) == 0 {
@@ -800,7 +798,6 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
 /// crescem de 5 em 5 (0x945667; sem memoria, erros 0xd6, 0xf4, 0x140). Devolve `dia`.
 pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, mode: u32) -> usize {
     let por = |p: usize, o: usize, v: u32| core::ptr::write_unaligned((p + o) as *mut u32, v);
-    let list_of_day: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
     let modo8 = mode as u8;
     *(day as *mut u8) = modo8;
     for o in (1..=0x25).step_by(4) {
@@ -834,7 +831,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
     let mut comp_current = 0usize;
     let mut i = 0i32;
     while i < *(G_KEY_NATION_ACTIVE_COUNT as *const i8) as i32 {
-        let list = list_of_day(read_usize(G_FIXTURE_MANAGER + 0), data, mode, i as u32);
+        let list = exe::fix_man_get_fixture_list_for_date(read_usize(G_FIXTURE_MANAGER + 0), data, mode, i as u32);
         if list != 0 && *(list as *const i16) > 0 {
             por(list, 0xa, read_usize(list + 2) as u32);
             let mut group = 0usize;
@@ -1089,7 +1086,6 @@ pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
 /// vaga de humano com +0x11c bit 2, 0. No fim: 1 se a 0x7f9720 der 0.
 pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let slot_of: unsafe extern "C" fn(u32, usize) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
     let g = |a: usize| *(a as *const usize);
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16) as i32;
@@ -1147,7 +1143,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         crate::comparison::branch("no human by injury_word_0c");
         return if w(c2 + club::REPUTATION) + w(c1 + club::REPUTATION) > 0x2ee0 { 0 } else { final_() };
     }
-    let mut x = slot_of(read(partida + fixture::COMPETITION) as u32, partida) as u8;
+    let mut x = (exe::comp_active_key_nation_of_fixture((read(partida + fixture::COMPETITION) as u32) as u32 as usize, partida) as u32) as u8;
     if let Some(k) = (0xb63d74usize..G_KEY_NATION_ACTIVE_SLOT_LOOP_END).step_by(0x48).position(|e| *(e as *const u8) == x) {
         x = k as u8;
     }

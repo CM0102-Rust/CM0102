@@ -372,8 +372,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
             }
         }
     } else {
-        let tie: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE);
-        if tie(club, other) != 0 {
+        if exe::comp_util_get_league_clash_type(club, other) != 0 {
             fl |= 0x80;
         }
     }
@@ -510,8 +509,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     let mut aj = aj;
     if (aj as i16) < 0 {
         let manager = read_usize(club + club::MANAGER);
-        let mark: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
-        if manager != 0 && mark(read_usize(G_PLAYER_REGEN), manager) != 0 {
+        if manager != 0 && exe::player_regen_get_retirement_status(read_usize(G_PLAYER_REGEN), manager) != 0 {
             aj = ftol((aj as i16) as f64 * read_f64(rdata::F64_0_5));
         }
     }
@@ -872,8 +870,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
         2 => por(if meta() > 5 { meta() - 3 } else { meta() - 2 }),
         1 => por(if meta() > 5 { meta() - 2 } else { meta() - 1 }),
         0 => {
-            let budget: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i64 = core::mem::transmute(FN_FINANCE_GET_TRANSFER_BUDGET);
-            let v = budget(fin, 0, 0, 0, 1, 0);
+            let v = exe::finance_get_transfer_budget(fin, 0, 0, 0, 1, 0);
             if v > (read_i16(club + club::REPUTATION) as i32 * 250) as i64 && meta() > 5 {
                 por(meta() - 1);
             }
@@ -1923,8 +1920,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
         add_board_confidence(this, club, 0x16, -500);
         return clamp_confidence_floor(this, club);
     }
-    let budget: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> i64 = core::mem::transmute(FN_FINANCE_GET_TRANSFER_BUDGET);
-    let orcamento = budget(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club), j, 0, 0, 1, 0);
+    let orcamento = exe::finance_get_transfer_budget(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club), j as u32, 0, 0, 1, 0);
     if value as i64 > orcamento.wrapping_mul(12) / 10 { // cpy12: the board budget
         crate::comparison::branch("cpy_12 board without funds");
         return 0x800;
@@ -3185,8 +3181,7 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
             }
         }
     }
-    let mark: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
-    let ceiling = if mark(read_usize(G_PLAYER_REGEN), read_usize(club + club::MANAGER)) != 0 {
+    let ceiling = if exe::player_regen_get_retirement_status(read_usize(G_PLAYER_REGEN), read_usize(club + club::MANAGER)) != 0 {
         ftol(limit as i16 as i32 as f64 * read_f64(rdata::F64_0_25)) // 0,25
     } else {
         limit
@@ -3208,7 +3203,7 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
         }
     }
     if read_usize(club + club::MANAGER) != 0 {
-        if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 && mark(read_usize(G_PLAYER_REGEN), read_usize(club + club::MANAGER)) == 0
+        if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 && exe::player_regen_get_retirement_status(read_usize(G_PLAYER_REGEN), read_usize(club + club::MANAGER)) == 0
             && friendly_random(read_u8(read_usize(club + club::MANAGER) + 0x5a) as i8 as i32) == 0 && friendly_random(4) == 0 {
             crate::comparison::branch("cpq_1 the manager leaves");
             record_departure(this, club, 2);
@@ -3259,8 +3254,7 @@ pub(crate) unsafe fn issue_ultimatum(this: usize, club: usize, l: usize) -> u8 {
     if club == 0 || read_usize(club + club::MANAGER) == 0 || read_usize(club + club::DIVISION) == 0 {
         return 0;
     }
-    let nation: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
-    nation(club); // the original routine discards the value
+    (exe::key_nation_index_of_club(club) as u32); // the original routine discards the value
     let (mut d1, mut d2) = ([0u8; 8], [0u8; 8]);
     let p1 = exe::date_add_weeks(G_CURRENT_DATE, (d1.as_mut_ptr()) as *mut [u8; 8], 8);
     let year_end = read_i16(p1 + 2) as u16 as u32;
@@ -3585,8 +3579,7 @@ pub(crate) unsafe extern "thiscall" fn is_club_in_financial_trouble(this: usize,
     if club == 0 {
         return 0;
     }
-    let dirigivel: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_CAN_BE_MANAGED);
-    if dirigivel(club) as u8 == 0 || exe::database_is_national_team(club) != 0 {
+    if (exe::club_can_be_managed(club) as u32) as u8 == 0 || exe::database_is_national_team(club) != 0 {
         return 0;
     }
     let f = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
@@ -4279,7 +4272,6 @@ pub(crate) unsafe extern "thiscall" fn process_pending_departures(this: usize) {
         return;
     }
     write_usize(list + llist::CURSOR, read_usize(list + llist::HEAD));
-    let abre_vaga: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_CAN_BE_MANAGED);
     let mut k = 0i32;
     while k < read_i16(read_usize(this + manager_manager_fields::DEPARTURE_LIST)) as i32 {
         let item = exe::llist_get_next(read_usize(this + manager_manager_fields::DEPARTURE_LIST));
@@ -4293,7 +4285,7 @@ pub(crate) unsafe extern "thiscall" fn process_pending_departures(this: usize) {
                 let a = (id & 0xffff_ff00) | read_u8(item) as u32;
                 let b = (id.wrapping_mul(145) & 0xffff_ff00) | read_u8(item + 1) as u32;
                 exe::manager_manager_remove_club_manager(this, club, a, b, 0);
-                if abre_vaga(club) as u8 != 0 {
+                if (exe::club_can_be_managed(club) as u32) as u8 != 0 {
                     crate::comparison::branch("cpo_4 open the slot");
                     exe::manager_manager_add_job_vacancy(this, club, manager); // the club’s slot
                 }
@@ -5098,7 +5090,6 @@ pub(crate) unsafe extern "thiscall" fn post_job_rumour_news(_this: usize, person
     if year > today_year || (year == today_year && day > *(G_CURRENT_DATE as *const i16)) {
         return;
     }
-    let recipients: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_COLLECT_PLAYER_NEWS_RECIPIENTS);
     crate::comparison::branch("cpv_4 manager rumour");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
@@ -5114,7 +5105,7 @@ pub(crate) unsafe extern "thiscall" fn post_job_rumour_news(_this: usize, person
     exe::newsitem_set_slot(n, 7, s as u32);
     let mut clubs = [0usize; 30];
     let manager = read_usize(G_TRANSFER_MANAGER);
-    let q = if manager != 0 { recipients(manager, person, 0x52, clubs.as_mut_ptr(), 0x1e) as i8 } else { 0 };
+    let q = if manager != 0 { (exe::transfer_manager_collect_player_news_recipients(manager, person, 0x52, clubs.as_mut_ptr(), 0x1e) as i8) } else { 0 };
     for &c in clubs.iter().take(if q > 0 { q as usize } else { 0 }) {
         exe::news_send_to_club_manager(read_usize(G_NEWS), n, c);
     }

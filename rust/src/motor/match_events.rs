@@ -133,11 +133,10 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
 ///
 /// [pt] Como `show_error_at`, e o jogo para (como a original: 0x5cc7d0, 0x5a8f60 e sai com -1).
 pub(crate) unsafe fn fatal_error_at(file: usize, row: u32) -> ! {
-    let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     show_error_at(file, row);
     exe::game_fatal_cleanup();
-    fechar2();
+    exe::shared_noop_ret0_5a8f60();
     exit(-1)
 }
 

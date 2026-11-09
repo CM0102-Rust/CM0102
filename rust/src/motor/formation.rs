@@ -226,8 +226,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
             v += 2000;
         }
         if v as i16 > 8500 {
-            let write: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(FN_FORMATION_SET_PLAYER_INSTRUCTION);
-            write((this as isize + 0x91e2 + 0x18e3 * side as isize) as usize, read_i8(j + match_player::POSITION), 0x80_0000);
+            exe::formation_set_player_instruction((this as isize + 0x91e2 + 0x18e3 * side as isize) as usize, read_i8(j + match_player::POSITION), 0x80_0000);
         }
     }
 }

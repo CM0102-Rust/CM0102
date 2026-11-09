@@ -55,10 +55,9 @@ pub(crate) unsafe fn official_record(i: i32) -> usize {
 /// e exit(−1) (0x945934).
 pub(crate) unsafe fn officials_out_of_memory(row: u32) -> ! {
     show_error_at(0xa6a22c, row);
-    let f2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     exe::game_fatal_cleanup();
-    f2();
+    exe::shared_noop_ret0_5a8f60();
     exit(-1)
 }
 

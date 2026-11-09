@@ -11,5 +11,5 @@ MUTACOES = [
     ('cpx7_simulado_curto', '    if zip_write(read_usize(this + 4), 0x44, read_usize(this) as u32, z) != read_usize(this) as u32 { // cpx7: os registros simulados', '    if zip_write(read_usize(this + 4), 0x43, read_usize(this) as u32, z) != read_usize(this) as u32 { // mutacao: registro curto'),
     ('cpy7_datas_um_clube_a_menos', '    if exe::crt_fwrite(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the club dates', '    if exe::crt_fwrite(read_usize(0xae2a5c), 2, club_count() - 1, f) != club_count() - 1 { // mutacao: um clube a menos'),
     ('cpy7_datas_um_byte_por_clube', '    if exe::crt_fwrite(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the club dates', '    if exe::crt_fwrite(read_usize(0xae2a5c), 1, club_count(), f) != club_count() { // mutacao: um byte por clube'),
-    ('cpy7_datas_sem_gravar', '    if exe::crt_fwrite(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the club dates', '    if { let _ = write; false } { // mutacao: o arquivo sai vazio'),
+    ('cpy7_datas_sem_gravar', '    if exe::crt_fwrite(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the club dates', '    if { let _ = f; false } { // mutacao: o arquivo sai vazio'),
 ]

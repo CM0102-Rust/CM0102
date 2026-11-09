@@ -5,8 +5,7 @@ use super::*;
 /// [pt] O clube é dirigido por um técnico humano (0x7875e0: push clube; ecx = [0xb7431c]; sem add esp -> thiscall(notícias,
 /// clube), ret 4).
 pub(crate) unsafe fn cup_has_human_manager(club: usize) -> bool {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    f(read_usize(G_NEWS), club) != 0
+    exe::news_club_has_human_manager(read_usize(G_NEWS), club) != 0
 }
 
 /// Moves a fixture's date to tomorrow if it is not after today, then adds the fixture to the fixture calendar.
@@ -1964,7 +1963,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
         }
         i += 1;
     }
-    let p = exe::crt_operator_new((8) as usize as u32);
+    let p = exe::crt_operator_new(8 as u32);
     let data = if p != 0 {
         let base = read_usize(this + cup::ROUND_TABLE);
         let r = (base as isize + off) as usize;
@@ -2072,7 +2071,6 @@ pub(crate) unsafe fn fatal_memory_error_box(row: u32, text: usize) -> ! {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let translate: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     exe::crt_strtok(0x9b55ac, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
@@ -2083,7 +2081,7 @@ pub(crate) unsafe fn fatal_memory_error_box(row: u32, text: usize) -> ! {
     exe::gui_show_message_box(0xae28bc, 0xae26c4, 0);
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
     exe::game_fatal_cleanup();
-    fechar2();
+    exe::shared_noop_ret0_5a8f60();
     exit(-1)
 }
 

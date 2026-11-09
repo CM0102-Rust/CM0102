@@ -425,10 +425,10 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
             return 0;
         }
     }
-    if exe::human_manager_is_human_club(club, 0, (1) as u8 as u32, (0) as usize as u32, 0) != 0 {
+    if exe::human_manager_is_human_club(club, 0, (1) as u8 as u32, 0 as u32, 0) != 0 {
         return 0;
     }
-    if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), person, (0) as usize as u32) != 0 {
+    if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), person, 0 as u32) != 0 {
         return 0;
     }
     write_u32(c + contract::CLUB, read_usize(club) as u32);
@@ -1790,8 +1790,7 @@ pub(crate) unsafe extern "thiscall" fn handle_transfer_request(this: usize, cont
     if read_usize(person + staff::PLAYER) == 0 {
         return;
     }
-    let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    if human(read_usize(G_NEWS), club) != 0 {
+    if exe::news_club_has_human_manager(read_usize(G_NEWS), club) != 0 {
         // simplification: the human club receives the news item built on the stack (0x77bbe0 and the delivery are switched off): that
         // case stays with the original (which repeats the 0x7875e0 query, with no effect).
         // the record serves the proof of CMRTE’s ”Deixar infeliz” (make unhappy) (31/10/2026; deixar_infeliz.py): rare call
@@ -2629,7 +2628,6 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_lower_match_morale(this:
     let Some(m) = match_morale_drop(person, club, contract) else {
         return;
     };
-    let aposentando: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
     let emprestado = || {
         if read_u32(person) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
             return false;
@@ -2638,7 +2636,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_lower_match_morale(this:
         k >= 0 && (read_u32(read_u32(G_CONTRACT_MANAGER) as usize) as usize).wrapping_add((k as usize).wrapping_mul(0x50)) != 0
     };
     let age = read_u8_volatile(person + staff::AGE) as i8;
-    if exe::injury_get_player_injury_status(read_u32(G_INJURY) as usize, person) != 0 || emprestado() || aposentando(read_u32(G_PLAYER_REGEN) as usize, person) != 0
+    if exe::injury_get_player_injury_status(read_u32(G_INJURY) as usize, person) != 0 || emprestado() || exe::player_regen_get_retirement_status(read_u32(G_PLAYER_REGEN) as usize, person) != 0
         || age < 0x12 || read_u8_volatile(contract + contract::LEAVING_ON_BOSMAN) != 0 {
         if read_u32(contract + contract::GRIEVANCES) & 4 != 0 {
             exe::staff_contract_clear_grievances(contract, 4);
@@ -2772,9 +2770,9 @@ pub(crate) unsafe extern "thiscall" fn resubmit_held_offers(this: usize, id: usi
 }
 
 /// `contract_manager_season_end_month(club)` (stdcall, ret 4; SEH frame without a destructor on the normal path): the
-/// month (0..11) of the date ten days after the end of the season of the club's nation.
+/// (exe::date_get_month(0..11) as u32) of the date ten days after the end of the season of the club's nation.
 ///
-/// The club's season end date (Date() `exe::date_date_54a110` and `key_nation_club_in_season` with 0), plus 10 days (`exe::date_add_days`), and its month (`exe::date_get_month`).
+/// The club's season end date (Date() `exe::date_date_54a110` and `key_nation_club_in_season` with 0), plus 10 days (`exe::date_add_days`), and its (exe::date_get_month(`exe::date_get_month`) as u32).
 /// Returns the eax of `exe::date_get_month` (the month 0..11).
 /// Original: `contract_manager_season_end_month` (0x4d45f0, contract_manager.cpp, stdcall, ret 4).
 ///
@@ -2784,11 +2782,10 @@ pub(crate) unsafe extern "thiscall" fn resubmit_held_offers(this: usize, id: usi
 pub(crate) unsafe extern "stdcall" fn contract_manager_season_end_month(club: usize) -> u32 {
     let mut d1 = [0u32; 2];
     let mut d2 = [0u32; 2];
-    let month: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_MONTH);
     exe::date_date_54a110((d1.as_mut_ptr()) as usize);
-    exe::key_nation_club_in_season(club, (0) as u32 as usize, (d1.as_mut_ptr()) as *mut u32 as usize);
+    exe::key_nation_club_in_season(club, 0, (d1.as_mut_ptr()) as *mut u32 as usize);
     let p = exe::date_add_days((d1.as_mut_ptr()) as usize, (d2.as_mut_ptr()) as usize, (0xa) as u32); // dez dias depois
-    month(p)
+    (exe::date_get_month(p) as u32)
 }
 
 /// Shows the CONTRACT_MANAGER "cannot create space" box for a line and text; the game continues.
@@ -3938,7 +3935,6 @@ pub(crate) unsafe extern "stdcall" fn contract_category(p: usize, c: usize) -> u
 /// entrega (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, player: usize, club: usize) {
     let request: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_ASKING_PRICE);
-    let budget: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i64 = core::mem::transmute(FN_FINANCE_GET_TRANSFER_BUDGET);
     let recipients: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(FN_TRANSFER_MANAGER_COLLECT_PLAYER_NEWS_RECIPIENTS);
     if player == 0 || read_usize(player + staff::PLAYER) == 0 || club == 0 || read_usize(club + club::MANAGER) == 0 {
         return;
@@ -3998,7 +3994,7 @@ pub(crate) unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, pl
                     true
                 } else {
                     let f = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), transfer_manager_club_by_id(read_usize(no + 4)));
-                    f != 0 && price as f64 * read_f64(rdata::F64_1_1) <= budget(f, 0, 0, 0, 1, 0) as f64
+                    f != 0 && price as f64 * read_f64(rdata::F64_1_1) <= exe::finance_get_transfer_budget(f, 0, 0, 0, 1, 0) as f64
                 };
                 if can && read_usize(no + 4) as i32 > -1 {
                     clubs[q as usize] = transfer_manager_club_by_id(read_usize(no + 4));

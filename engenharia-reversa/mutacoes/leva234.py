@@ -11,7 +11,7 @@ MUTACOES = [
     ('dbo_zagueiros_rapidos', '<= 1) as u8 // zagueiros rapidos (dbo)', '> 1) as u8 // mutacao: a resposta invertida (zagueiros rapidos)'),
     ('dbo_atacante_rapido', '    (n > 0) as u8 // atacante rapido (dbo)', '    (n == 0) as u8 // mutacao: a resposta invertida (atacante rapido)'),
     ('dbo_meias_criativos', '    (n > 1) as u8 // meias criativos (dbo)', '    (n <= 1) as u8 // mutacao: a resposta invertida (meias criativos)'),
-    ('dbo_faixa_de_forca', '    exe::crt_qsort(v.as_mut_ptr() as usize, n as u32, 4, 0x549c30); // the best first (dbo)', '    let _ = sort; // mutacao: sem a ordenacao (os primeiros do elenco, nao os melhores)'),
+    ('dbo_faixa_de_forca', '    exe::crt_qsort(v.as_mut_ptr() as usize, n as u32, 4, 0x549c30); // the best first (dbo)', '    // mutacao: sem a ordenacao (os primeiros do elenco, nao os melhores)'),
     ('dbp_reputacao', '    let mut x = v * read_f64(rdata::F64_14) - read_f64(rdata::F64_18); // o peso entre 0 e 10', '    let mut x = v * read_f64(rdata::F64_14) - read_f64(rdata::F64_14); // mutacao: 14 no lugar do 18'),
     ('dbp_contar_rejeitados', '    count_preferred_people_at_club(person, club, 0x28) // the rejected ones', '    count_preferred_people_at_club(person, club, 0x1c) // mutacao: os favoritos no lugar dos rejeitados'),
     ('dbp_contar_favoritos', '    count_preferred_people_at_club(person, club, 0x1c) // the favorites', '    count_preferred_people_at_club(person, club, 0x28) // mutacao: os rejeitados no lugar dos favoritos'),

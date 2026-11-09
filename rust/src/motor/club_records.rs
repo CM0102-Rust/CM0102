@@ -543,7 +543,6 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
     if buyer == 0 || seller == 0 {
         return 1;
     }
-    let year_of_club: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
     let news: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_QUEUE_RECORD_NEWS);
     let add = |field: usize| {
         let v = read_usize(field) as i32;
@@ -554,7 +553,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
     let s = exe::club_records_get_all_time_record(this, seller, 1);
     add(t + club_record::TRANSFER_INCOME);
     write_i16(t + club_record::TRANSFER_INCOME_YEAR, 0);
-    let year = year_of_club(seller) as i16;
+    let year = (exe::key_nation_get_club_season_year(seller) as u32) as i16;
     if (read_usize(s + club_record::TRANSFER_INCOME) as i32) < read_usize(t + club_record::TRANSFER_INCOME) as i32 {
         let minimum = (read_i16(seller + club::REPUTATION) as i32 + 500).wrapping_mul(1000);
         if read_usize(t + club_record::TRANSFER_INCOME) as i32 >= minimum && year != read_i16(s + club_record::TRANSFER_INCOME_YEAR) && !is_record_news_queued(this, read_usize(seller), 0x1f) {
@@ -569,7 +568,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
     let s = exe::club_records_get_all_time_record(this, buyer, 1);
     add(t + club_record::TRANSFER_SPENDING);
     write_i16(t + club_record::TRANSFER_SPENDING_YEAR, 0);
-    let year = year_of_club(buyer) as i16;
+    let year = (exe::key_nation_get_club_season_year(buyer) as u32) as i16;
     if (read_usize(t + club_record::TRANSFER_SPENDING) as i32) > read_usize(s + club_record::TRANSFER_SPENDING) as i32 {
         let minimum = (read_i16(buyer + club::REPUTATION) as i32 + 500).wrapping_mul(1000);
         // the original checks the minimum against the old record (the ecx that still holds the all-time one)
@@ -652,7 +651,6 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
     if r == 0 {
         return 0;
     }
-    let estatistica: unsafe extern "stdcall" fn(usize, u32, f32) -> f64 = core::mem::transmute(FN_PLAYER_STATS_GET_RECORD_VALUE);
     let rating = (r + club_record::SEASON_RATING) as *mut f32;
     write_usize(r + club_record::SEASON_RATING, 0xbf800000); // −1.0f
     let mut found = 0;
@@ -672,11 +670,11 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         if reg == 0 {
             continue;
         }
-        let jogou = ftol(estatistica(reg, 1, 6.5)) as u8;
+        let jogou = ftol(exe::player_stats_get_record_value(reg, 1, 6.5)) as u8;
         if (jogou as i32) < *((entry + club_record_entry::SEASON_GAMES) as *const i8) as i32 / 2 { // fewer than half the matches
             continue;
         }
-        let average = estatistica(reg, 0x11, 6.5);
+        let average = exe::player_stats_get_record_value(reg, 0x11, 6.5);
         // fcomp with −1.0 (double) and fcom with the stored float: passes only with the higher average
         if *rating as f64 == read_f64(rdata::F64_NEG_1) || average > *rating as f64 {
             crate::comparison::branch("cpm_6 season rating record");

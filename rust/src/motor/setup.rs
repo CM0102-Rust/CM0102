@@ -5,10 +5,9 @@ use super::*;
 /// [pt] A caixa "Error" da carga sem volta (memória para os dados de execução): `setup_warning(linha)`,
 /// 0x5cc7d0, 0x5a8f60 e `exit(-1)` (0x945934).
 pub(crate) unsafe fn load_fatal_error(row: u32) -> ! {
-    let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     setup_warning(row);
     exe::game_fatal_cleanup();
-    fechar2();
+    exe::shared_noop_ret0_5a8f60();
     exe::crt_exit(-1);
     loop {}
 }
@@ -599,11 +598,10 @@ pub(crate) unsafe fn undo_holiday_managers() {
 /// [pt] A caixa "Error" de Setup.cpp (`setup_warning`) e o jogo para, como a original: 0x5cc7d0,
 /// 0x5a8f60 e `exit(-1)` (0x945934).
 pub(crate) unsafe fn setup_fatal_error(row: u32) -> ! {
-    let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     setup_warning(row);
     exe::game_fatal_cleanup();
-    fechar2();
+    exe::shared_noop_ret0_5a8f60();
     exit(-1)
 }
 

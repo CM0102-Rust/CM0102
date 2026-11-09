@@ -369,7 +369,6 @@ pub(crate) unsafe extern "thiscall" fn send_club_international_report_news(this:
 /// 0x76d560 com o jogo, sem lista e sem `sem_adversarios`), e até 3 jogadores (id e chaves). A lista montada aqui é
 /// destruída e liberada no fim (0x68d040, 0x944c94).
 pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: usize, national_team: usize, second: u32, game: usize, kind: u32, sem_adversarios: u32, adversarios: usize, count: u32) {
-    let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     // 0x7875e0: push club; mov ecx, [0xb7431c] -> thiscall, ret 4; 0x76d560: push match; push national team; mov ecx, this ->
     // thiscall, ret 8; 0x77bbe0 / 0x785790 / 0x68d1b0 / 0x68d040: lea ecx (ou mov ecx, lista) -> thiscall; 0x7861e0:
     // push club; push &news; mov ecx, [0xb7431c] -> thiscall, ret 8; 0x944c94 (delete): push; add esp, 4 -> cdecl
@@ -386,7 +385,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
     let nt = news.as_mut_ptr() as usize;
     for idx in 1..=0x32usize {
         let p = read_usize(national_team + club::SQUAD + (idx - 1) * 4);
-        if p == 0 || read_u8(p + staff::PLAYING_SQUAD) & mark == 0 || read_usize(p + staff::CLUB_JOB) == 0 || human(read_usize(G_NEWS), read_usize(p + staff::CLUB_JOB)) == 0 {
+        if p == 0 || read_u8(p + staff::PLAYING_SQUAD) & mark == 0 || read_usize(p + staff::CLUB_JOB) == 0 || exe::news_club_has_human_manager(read_usize(G_NEWS), read_usize(p + staff::CLUB_JOB)) == 0 {
             continue;
         }
         if list == 0 && sem_adversarios == 0 && game != 0 {

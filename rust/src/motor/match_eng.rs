@@ -3149,7 +3149,6 @@ pub(crate) fn is_recording_restart() -> bool {
 ///   ([0x9d0230]..), pela nacao (+0x76: 4/12, 13, 14) ou o "Ruud Gullit" (0x84b8b0);
 /// - e a bola parada por +0x8eb2.
 pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let write_home: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(FN_FORMATION_SET_PLAYER_INSTRUCTION);
     let b = |o: usize| (m + o) as *mut u8;
     let w = |o: usize| (m + o) as *mut i16;
     let d = |o: usize| (m + o) as *mut u32;
@@ -3314,7 +3313,7 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
             for k in 0..20 {
                 let c = read_i8(player(side, k) + 0x19);
                 if c >= 0 {
-                    write_home(tobj, c, 0x400000);
+                    exe::formation_set_player_instruction(tobj, c, 0x400000);
                 }
             }
         };
@@ -7045,7 +7044,6 @@ pub(crate) unsafe extern "C" fn kit(club: usize, other: usize, any: u32) -> u8 {
 /// idade +0x18 ate 19, potencia 3 da CRT). Com `jm` grava em +0x47/+0x49/+0x4b dele.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: usize, rep: usize, comp: usize, rating: f32, average_b: u32, strong: u32) {
-    let special: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
     let d8 = |a: usize| read_f64(a);
     let f4 = |a: usize| read_f32(a) as f64;
     let sheet = || *((person + staff::PLAYER) as *const usize);
@@ -7057,7 +7055,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     } else {
         let n = if read_i8(comp + fixture::HOME_SIDE_MARK) != 0 {
             Some(((injury_word_0c() / 500 + read_i16(of_game + competition::REPUTATION) as i32) / 2) as i8)
-        } else if *(G_NATIONAL_TEAMS as *const usize) != 0 && special(*(G_NATIONAL_TEAMS as *const usize), of_game) != 0 {
+        } else if *(G_NATIONAL_TEAMS as *const usize) != 0 && exe::national_teams_is_finals_comp(*(G_NATIONAL_TEAMS as *const usize), of_game) != 0 {
             let v = read_i16(of_game + competition::REPUTATION);
             if v <= 0xf { None } else { Some(v as i8) }
         } else {
@@ -7113,7 +7111,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
         div_d = (age(0xd, 0x15) as i16).wrapping_sub(nivel0);
         if read_i8(comp + fixture::CATEGORY) == 0xa
             && *(G_NATIONAL_TEAMS as *const usize) != 0
-            && special(*(G_NATIONAL_TEAMS as *const usize), of_game) != 0
+            && exe::national_teams_is_finals_comp(*(G_NATIONAL_TEAMS as *const usize), of_game) != 0
             && read_i16(of_game + competition::REPUTATION) >= 0x11
             && !((factor as f64) < d8(0x968988))
             && injury_word_0c() > 0x157c
@@ -7318,7 +7316,6 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
 /// maior nota fica em `*nota`/`*lance` e cansa (0x6f56c0 com -1).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: usize, side: i8, kind: i8, a: *mut u8, b: *mut u8, rating: *mut i16, lance: *mut i8, risky: *mut i8, free: u8) -> usize {
-    let marks: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_GET_INSTRUCTIONS);
     *risky = 0;
     let side = if atacante != 0 { read_i8(atacante + match_player::SIDE) } else { side };
     let flag = (side == 0) as i32;
@@ -7356,7 +7353,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
         // the weight stays in the register (double precision) between calculations; the in-memory copy is float
         let mut v: f64 = if read_i8(m + engine::BALL_HEIGHT) == 4 {
             read_f32(rdata::F32_3_5) as f64
-        } else if marks(p) & 0x200 != 0 {
+        } else if (exe::match_player_get_instructions(p) as u32) & 0x200 != 0 {
             let e = *((m + engine::TACTICS_FLAGS + 6371 * flag as usize) as *const u32);
             if e & 0x20 != 0 {
                 read_f32(rdata::F32_0_5) as f64
@@ -7365,9 +7362,9 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
             } else {
                 read_f32(rdata::F32_2) as f64
             }
-        } else if marks(p) & 0x800 != 0 {
+        } else if (exe::match_player_get_instructions(p) as u32) & 0x800 != 0 {
             read_f32(rdata::F32_0_5) as f64
-        } else if marks(p) & 0x1000 != 0 {
+        } else if (exe::match_player_get_instructions(p) as u32) & 0x1000 != 0 {
             read_f32(rdata::F32_4) as f64
         } else {
             read_f32(rdata::F32_2) as f64
@@ -8279,9 +8276,8 @@ pub(crate) unsafe extern "thiscall" fn line_up_set_piece(this: usize) {
                 };
                 if !(0..=8).contains(&x) || !(0..=11).contains(&y) {
                     // the original shows the error box and quits the game (0x5cc7d0, 0x5a8f60, exit(-1))
-                    let f2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
                     exe::game_fatal_cleanup();
-                    f2();
+                    exe::shared_noop_ret0_5a8f60();
                     exe::crt_exit(-1);
                 }
                 move_to_cell(j, x, y);
@@ -8850,7 +8846,6 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
 ) -> usize {
     type F1 = unsafe extern "thiscall" fn(usize) -> u8;
     let t = |a: usize| core::mem::transmute::<usize, F1>(a);
-    let marks: unsafe extern "thiscall" fn(usize) -> u64 = core::mem::transmute(FN_MATCH_PLAYER_GET_INSTRUCTIONS);
 
     let mut res = 0usize;
     *((m + engine::RESTART_TYPE) as *mut u8) = 0;
@@ -8925,11 +8920,11 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             if step_towards != 0 {
                 v34 = v34.wrapping_sub(step_towards);
                 v1c = v1c.wrapping_add(step_towards);
-                if (marks(c) >> 32) & 1 != 0 {
+                if (exe::match_player_get_instructions(c) >> 32) & 1 != 0 {
                     v1c = v1c.wrapping_add(step_towards);
                     v34 = v34.wrapping_sub(step_towards);
                 }
-            } else if (marks(c) >> 32) & 1 != 0 {
+            } else if (exe::match_player_get_instructions(c) >> 32) & 1 != 0 {
                 v1c = v1c.wrapping_add(500);
                 v34 = v34.wrapping_sub(500);
             }
@@ -8970,15 +8965,15 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             v38 = v38.wrapping_add(d);
         }
         if t(0x70df40)(c) == 0 {
-            let mc = marks(c);
+            let mc = exe::match_player_get_instructions(c);
             let level = if mc & 1 != 0 {
                 let f = *((m + 6371 * ls as usize + 0x9766) as *const u32);
                 if f & 8 != 0 { 3 } else if f & 4 != 0 { 2 } else if f & 2 != 0 { 1 } else { 0 }
-            } else if marks(c) & 0x10 != 0 {
+            } else if exe::match_player_get_instructions(c) & 0x10 != 0 {
                 3
-            } else if marks(c) & 8 != 0 {
+            } else if exe::match_player_get_instructions(c) & 8 != 0 {
                 2
-            } else if marks(c) & 4 != 0 {
+            } else if exe::match_player_get_instructions(c) & 4 != 0 {
                 1
             } else {
                 0
@@ -9135,7 +9130,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             let b = read_f32(c + match_player::CROSSING) as f64 * read_f32(rdata::F32_100) as f64;
             v4c = ftol((a + read_f32(rdata::F32_500) as f64) * v * read_f32(rdata::F32_0_1000000015) as f64 + b);
             v50 = ftol((read_f32(rdata::F32_3000) as f64 - a) * v * read_f32(rdata::F32_0_1000000015) as f64 + b);
-            if (marks(c) >> 32) & 4 != 0 {
+            if (exe::match_player_get_instructions(c) >> 32) & 4 != 0 {
                 let w = ftol(read_f32(c + match_player::TEAMWORK) as f64 * read_f32(rdata::F32_100) as f64 + read_f32(rdata::F32_500) as f64);
                 v4c = v4c.wrapping_add(w);
                 v50 = v50.wrapping_add(w);
@@ -9144,13 +9139,13 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             v38 = v38.wrapping_sub(2000);
             v3c = v3c.wrapping_sub(2000);
         }
-        if marks(c) & 0x40 != 0 && ((ls == 0 && px <= 2) || (ls == 1 && px >= 6)) {
+        if exe::match_player_get_instructions(c) & 0x40 != 0 && ((ls == 0 && px <= 2) || (ls == 1 && px >= 6)) {
             v1c = v1c.wrapping_add(1000);
         }
-        if marks(c) & 0x100 != 0 && ((ls == 0 && px >= 6) || (ls == 1 && px <= 2)) {
+        if exe::match_player_get_instructions(c) & 0x100 != 0 && ((ls == 0 && px >= 6) || (ls == 1 && px <= 2)) {
             v1c = v1c.wrapping_add(1000);
         }
-        if marks(c) & 0x80 != 0 && t(0x70df20)(p) == 0 && alcanca_r == 0 {
+        if exe::match_player_get_instructions(c) & 0x80 != 0 && t(0x70df20)(p) == 0 && alcanca_r == 0 {
             v1c = v1c.wrapping_add(1000);
         }
         // proximity to the area (the original’s branches at 0x6c7c95..0x6c7d5f)
@@ -9240,7 +9235,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             }
             if cnt == 0 {
                 d58 = (d58 as f64 + d58 as f64 + read_f64(rdata::F64_1)) as f32;
-            } else if !(2..=6).contains(&tx) && t(0x70dfa0)(p) == 0 && (marks(p) >> 32) & 4 != 0 {
+            } else if !(2..=6).contains(&tx) && t(0x70dfa0)(p) == 0 && (exe::match_player_get_instructions(p) >> 32) & 4 != 0 {
                 d58 = (d58 as f64 * read_f64(rdata::F64_1_5) + read_f64(rdata::F64_1)) as f32;
             }
         }
@@ -9925,10 +9920,9 @@ pub(crate) unsafe extern "thiscall" fn penalty(this: usize) {
 /// 0x5a8f60 e exit(-1).
 pub(crate) unsafe fn fatal_exit() -> ! {
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
-    let b: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     exe::game_fatal_cleanup();
-    b();
+    exe::shared_noop_ret0_5a8f60();
     exit(-1)
 }
 
@@ -10458,9 +10452,8 @@ pub(crate) unsafe extern "thiscall" fn take_off_pitch(this: usize, j: usize, mod
     if chosen == 0 {
         // the original shows the error box and exits (0x5cc7d0, 0x5a8f60, exit(-1))
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
-        let b: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
         exe::game_fatal_cleanup();
-        b();
+        exe::shared_noop_ret0_5a8f60();
         exe::crt_exit(-1);
     }
     *((chosen + match_player::POSITION) as *mut i8) = position;

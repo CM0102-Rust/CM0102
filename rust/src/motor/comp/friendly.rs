@@ -2047,7 +2047,6 @@ pub(crate) unsafe fn alloc_list() -> usize {
 /// (0x5c5570) e guarda a data na lista dos dois (criadas se faltam; 0x68d0d0); a data anda 2 dias a cada adversário.
 /// Devolve 1.
 pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
-    let free: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize, u32) -> usize = core::mem::transmute(FN_FRIENDLY_IS_CLUB_FREE_ON_DATE);
     let n = n as u8 as i8;
     let mut start = read_u16(cand + preseason_candidate::WINDOW_START) as i16;
     let mut end = read_u16(cand + preseason_candidate::WINDOW_END) as i16;
@@ -2108,7 +2107,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: 
     let mut p = adv;
     for k in 0..(n as i32).max(0) {
         let other = read_usize(G_CLUB_TABLE) + read_usize(read_usize(p)) * club::SIZE;
-        if free(this, &mut d1, other, 0) != 0 {
+        if (exe::friendly_is_club_free_on_date(this, &mut d1, other, 0) as usize) != 0 {
             let m = exe::friendly_add_friendly_match(this, club, (&mut d1) as *mut [u8; 8] as usize, other, 0); // cpt12: the home club
             if m != 0 {
                 crate::comparison::branch("cpt_12 tour match scheduled");
@@ -2297,7 +2296,7 @@ pub(crate) unsafe extern "thiscall" fn add_friendly_match(this: usize, club: usi
     if m != 0 {
         reaproveitado = true;
     } else {
-        let p = exe::crt_operator_new((0x19) as usize as u32);
+        let p = exe::crt_operator_new(0x19 as u32);
         m = if p != 0 { exe::date_date_54a110(p); p } else { 0 };
         if m == 0 {
             show_error_at(0x9cd0a0, 0xe6b);

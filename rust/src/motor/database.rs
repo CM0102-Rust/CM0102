@@ -2863,7 +2863,6 @@ pub(crate) unsafe extern "C" fn write_player_description(person: i32, position: 
 /// [pt] A nota do colega `o` como favorito da `pessoa` no `clube` (os filtros e a nota da 0x548810, iguais aos da 0x548da0),
 /// ou `None` se ele não entra. As chamadas pelo endereço do jogo, na ordem da original.
 pub(crate) unsafe fn favourite_colleague_score(person: usize, club: usize, o: usize) -> Option<i32> {
-    let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     if read_usize(o + staff::PLAYER) == 0 {
         return None;
     }
@@ -2887,8 +2886,8 @@ pub(crate) unsafe fn favourite_colleague_score(person: usize, club: usize, o: us
     if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), o, 0) != 0 || read_i16_as_i32(read_usize(o + staff::PLAYER) + 5) <= 100 {
         return None;
     }
-    let l0 = average(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 0x11, 6.5) as f32 as f64; // fstp dword
-    let m1 = average(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 1, 6.5);
+    let l0 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 0x11, 6.5) as f32 as f64; // fstp dword
+    let m1 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 1, 6.5);
     let data = read_usize(o + staff::PLAYER);
     let mut n = read_i16_as_i32(data + player_sheet::CURRENT_REPUTATION);
     if m1 > read_f32(rdata::F32_5) as f64 {
@@ -3180,7 +3179,6 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     if club == 0 || person == 0 {
         return 0;
     }
-    let word: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_INJURY_GET_FATIGUE);
     let j = || read_usize(person + staff::PLAYER);
     let b = |k: usize| signed_byte_at(j(), k);
     let m = |kind: u32, attribute: u32| player_stat_average(person, kind, attribute);
@@ -3193,7 +3191,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
         }
     }
     let mut n = 4;
-    let w = word(read_usize(G_INJURY), read_usize(person) as i32) as i16 as i32;
+    let w = (exe::injury_get_fatigue(read_usize(G_INJURY), (read_usize(person) as i32) as i32 as u32) as i32) as i16 as i32;
     if w > random(1000) + 500 {
         n = 8;
     }
@@ -3237,7 +3235,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     }
     let bd = read_usize(G_INJURY);
     if bd != 0 {
-        let w = word(bd, read_usize(person) as i32) as i16 as i32;
+        let w = (exe::injury_get_fatigue(bd, (read_usize(person) as i32) as i32 as u32) as i32) as i16 as i32;
         if w > random(500) + 750 {
             f += 8;
         }
@@ -3480,14 +3478,13 @@ pub(crate) unsafe extern "C" fn staff_get_player_attribute_for_viewer(who_ve: us
     if person == 0 || !(1..=0x1f).contains(&x) {
         return original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE_FOR_VIEWER)(who_ve, person, attribute);
     }
-    let calcular: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_STAFF_COMPUTE_PLAYER_ATTRIBUTE);
     let player = core::ptr::read_unaligned((person + staff::PLAYER) as *const usize);
     if *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0 {
         if exe::fog_of_war_get_manager_map(*(G_FOG_OF_WAR as *const usize), who_ve) != 0 && exe::staff_is_player_attribute_visible(who_ve, person, attribute) == 0 {
             return 0xf9; // desconhecido (dbt)
         }
     }
-    calcular(person, player, attribute) as u8
+    (exe::staff_compute_player_attribute(person, player, attribute) as u32) as u8
 }
 
 /// The names of the 12 manager attributes (abbreviated, full) of `database_get_non_player_attribute_name`, through the addresses of the texts in the
@@ -4026,7 +4023,6 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         return 0;
     }
     let age: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let id = read_usize(person) as i32;
     let r6 = id % 6;
     if (read_i8(person + staff::LOYALTY) as i32) < r6 + 6 || read_i8(person + staff::AMBITION) as i32 > 15 - r6 {
@@ -4063,8 +4059,8 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), o, 0) != 0 || read_i16(read_usize(o + staff::PLAYER) + 5) <= 100 {
             continue;
         }
-        let l0 = average(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 0x11, 6.5) as f32 as f64; // fstp dword
-        let m1 = average(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 1, 6.5);
+        let l0 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 0x11, 6.5) as f32 as f64; // fstp dword
+        let m1 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(o + staff::PLAYER), 6, 1, 6.5);
         let data = read_usize(o + staff::PLAYER);
         let mut rating = read_i16(data + player_sheet::CURRENT_REPUTATION) as i32;
         if m1 > read_f32(rdata::F32_5) as f64 {
@@ -4988,8 +4984,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
         }
         let mut bonus = 0;
         if person != 0 && read_usize(person + staff::PLAYER) != 0 && database_club_of_contract(person) == club {
-            let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
-            let m = average(read_usize(G_PLAYER_STATS), read_usize(person + staff::PLAYER), 6, 0x14, v as f32);
+            let m = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(person + staff::PLAYER), 6, 0x14, v as f32);
             v = (m + v) * read_f64(rdata::F64_0_5);
             bonus = club_preference_bonus(club, person);
         }
@@ -5720,11 +5715,10 @@ pub(crate) unsafe fn database_error_box(row: u32) {
 ///
 /// [pt] A caixa do Database.cpp seguida do fim do jogo (0x5cc7d0, 0x5a8f60 e exit(−1)), como a original sem memória.
 pub(crate) unsafe fn database_fatal_error(row: u32) -> ! {
-    let after: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     database_error_box(row);
     exe::game_fatal_cleanup();
-    after();
+    exe::shared_noop_ret0_5a8f60();
     exit(-1)
 }
 

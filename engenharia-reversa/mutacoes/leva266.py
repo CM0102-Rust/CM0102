@@ -11,7 +11,7 @@ MUTACOES = [
     ('cqc3_sem_dia_seguinte', 'exe::fixture_manager_collect_day_clashes(this, game, &mut g, list, pa, n as u32, pd, 1); // cqc3: o dia seguinte', '// mutacao: sem o dia seguinte', 'cqc_3 next day'),
     ('cqc4_dias_outra_ordem', 'let days: [i16; 9] = [2, 1, -1, 5, 6, -1, 0, 3, 4]; // cqc4: the order of the weekdays', 'let days: [i16; 9] = [1, 2, -1, 5, 6, -1, 0, 3, 4]; // mutacao: 1 antes de 2', 'cqc_4 new date'),
     ('cqc4_passo_de_3_dias', 'let r = date_op(0x54c5b0, pk, 4); // cqc4: the search step', 'let r = date_op(0x54c5b0, pk, 3); // mutacao: de 3 em 3 dias', 'cqc_4 new date'),
-    ('cqc4_mesmo_dia_sem_resolver', 'exe::fixture_manager_resolve_same_day_clash(this, game, l); // cqc4: the same-day conflict', 'let _ = same_day; // mutacao: sem resolver', 'cqc_4 same day'),
+    ('cqc4_mesmo_dia_sem_resolver', 'exe::fixture_manager_resolve_same_day_clash(this, game, l); // cqc4: the same-day conflict', '// mutacao: sem resolver', 'cqc_4 same day'),
     ('cqc5_ida_com_mando_invertido', 'let (lc, lf) = (read_i16(t), read_i16(t + cup_tie::AWAY_TEAM)); // cqc5: the first-leg sides', 'let (lc, lf) = (read_i16(t + cup_tie::AWAY_TEAM), read_i16(t)); // mutacao: a ida com o mando invertido', 'cqc_5 tie match'),
     ('cqc5_ida_uma_semana_depois', 'write_u16(p + fixture::DAY, read_i16(e + cup_round::DAY) as u16); // cqc5: the first-leg day', 'write_u16(p + fixture::DAY, read_i16(e + cup_round::DAY).wrapping_add(7) as u16); // mutacao: a ida uma semana depois', 'cqc_5 tie match'),
     ('cqc5_volta_sem_inverter', 'let (c1, c2, i1, i2) = (read_usize(p + fixture::HOME_CLUB), read_usize(p + fixture::AWAY_CLUB), read_usize(p + fixture::HOME_CLUB_ID), read_usize(p + fixture::AWAY_CLUB_ID)); // cqc5: the second-leg sides', 'let (c2, c1, i2, i1) = (read_usize(p + fixture::HOME_CLUB), read_usize(p + fixture::AWAY_CLUB), read_usize(p + fixture::HOME_CLUB_ID), read_usize(p + fixture::AWAY_CLUB_ID)); // mutacao: a volta sem inverter', 'cqc_5 return leg'),
@@ -40,6 +40,6 @@ MUTACOES = [
     ('cqc13_sem_sortear', '                let q = exe::utils_random(10) as i8; // cqc13: o observador sorteado', '                let q = (0..10usize).find(|&x| read_usize(marks + x * 4) == 0).unwrap_or(0) as i8; // mutacao: sem sortear', 'cqc_13 human scouts'),
     ('cqc13_aceita_repetido', '                if read_usize(marks.wrapping_add((q as isize * 4) as usize)) == 0 {', '                if true { // mutacao: aceita o repetido', 'cqc_13 human scouts'),
     ('cqd1_oferta_noutra_fatia', '&& read_u8(o + offer::DUE_SLICE) == f { // cqd1: a oferta desta fatia', '&& read_u8(o + offer::DUE_SLICE) != f { // mutacao: a oferta noutra fatia', 'cqd_1 offer of the day'),
-    ('cqd1_lance_sem_resposta', 'exe::transfer_manager_ai_respond_to_bid(this, slot, 0); // cqd1: the AI response to the bid', 'let _ = responder; // mutacao: o lance sem a resposta da IA', 'cqd_1 AI reply'),
+    ('cqd1_lance_sem_resposta', 'exe::transfer_manager_ai_respond_to_bid(this, slot, 0); // cqd1: the AI response to the bid', '// mutacao: o lance sem a resposta da IA', 'cqd_1 AI reply'),
     ('cqd1_orcamento_pela_metade', 'if t as f64 > v as f64 * 1.1 { // cqd1: acima do orçamento', 'if t as f64 > v as f64 * 0.5 { // mutacao: o orcamento pela metade', 'cqd_1 budget'),
 ]

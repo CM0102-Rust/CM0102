@@ -45,7 +45,6 @@ pub(crate) unsafe fn for_each_comp_club(comp: usize, step: u32, mut cada: impl F
 /// (0x85b020(this, clube, id, etapa), original); senão a inscrição é feita (0x85aae0(clube, etapa, 0), com ecx =
 /// [0xdd7ef0]).
 pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, step: u32) {
-    let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     if step as u8 == 1 {
         *(this as *mut u16) = *(G_CURRENT_DATE_YEAR as *const u16);
         let mut i = 0i32;
@@ -67,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, st
             if c == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != id {
                 return;
             }
-            if human(read_u32(G_NEWS) as usize, c) != 0 {
+            if exe::news_club_has_human_manager(read_u32(G_NEWS) as usize, c) != 0 {
                 exe::squad_manager_send_euro_registration_news(this, c, id, step);
             } else {
                 crate::comparison::branch("cqn_3 registers the club");
@@ -559,7 +558,6 @@ pub(crate) unsafe extern "thiscall" fn init_new_game(this: usize) {
 /// (0x85aec0, original). Senão: com `inicial`, cada jogador do elenco (da tabela das pessoas com contrato e com ficha)
 /// recebe o número do banco (o +4 da ficha, entre 0 e 50); e o elenco é numerado (0x859fe0(clube, 1)).
 pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, league: usize, mut initial: u32, automatico: u32) {
-    let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     if *(G_CURRENT_DATE_YEAR as *const u16) == 0x7ce {
         initial = 1;
     }
@@ -574,7 +572,7 @@ pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, 
         }
         let mut sq = [0usize; 50];
         exe::database_collect_club_squad(c, sq.as_mut_ptr(), 0);
-        if human(read_u32(G_NEWS) as usize, c) != 0 && automatico == 0 {
+        if exe::news_club_has_human_manager(read_u32(G_NEWS) as usize, c) != 0 && automatico == 0 {
             for &p in sq.iter() {
                 if p != 0 && exe::squad_manager_get_squad_number(this, p, c) < 0 {
                     exe::squad_manager_set_squad_number(this, p, c, (exe::squad_manager_get_squad_number(this, p, c) as u8).wrapping_neg() as u32);

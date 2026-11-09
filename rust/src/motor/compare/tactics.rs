@@ -101,8 +101,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_captain(this: usize, club: us
     if club == 0 || person == 0 {
         return o(this, club, person, team);
     }
-    let row: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(this, club, team);
+    let k = exe::tactics_get_club_tactics_index(this, club, team);
     if k == -1 {
         return o(this, club, person, team);
     }

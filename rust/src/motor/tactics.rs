@@ -914,7 +914,7 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
 /// Returns the captain stored (+0x52) in the club and team row of the tactics table; no row, 0.
 ///
 /// Ret 8: `Tactics::get_captain(club, team)`, from the tactic screens (0x8a7440). Null club: the box at line 0x527 and
-/// 0. The club's row (0x8982b0, thiscall(this, club, team), ret 8; −1: 0); returns dword +0x52 of the row's 0x91-byte
+/// 0. The club's exe::tactics_get_club_tactics_index(0x8982b0, thiscall(this, club, team), ret 8; −1: 0); returns dword +0x52 of the row's 0x91-byte
 /// record in the tactics table (+0x601).
 /// Original: `Tactics::get_captain` (0x8976a0, tactics.cpp, thiscall, ret 8).
 ///
@@ -926,8 +926,7 @@ pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, club: usize, tea
         show_error_at(0xa8b908, 0x527);
         return 0;
     }
-    let row: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(this, club, team);
+    let k = exe::tactics_get_club_tactics_index(this, club, team);
     if k == -1 {
         return 0;
     }

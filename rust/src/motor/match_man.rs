@@ -890,7 +890,6 @@ pub(crate) unsafe fn judge_formations(
 pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
     let w = |p: usize, o: usize| *((p + o) as *const i16);
-    let mark: unsafe extern "thiscall" fn(usize, u32, u32, u32) = core::mem::transmute(FN_FORMATION_SET_PLAYER_INSTRUCTION);
     let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f32 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let (ca, cb) = (u(c, match_manager::CLUB), u(c, match_manager::OPPONENT));
     let mut acc = 0i8;
@@ -1013,27 +1012,27 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             && fb(0x1a) > 15
             && f38 * 40.0 < (a(0x14) + (tc(0x15) as i32 - 10) * 3) as f64
         {
-            mark(t(), pos_j, 0x200000, 0);
+            exe::formation_set_player_instruction(t(), pos_j as i8, 0x200000);
             if (*((j + match_player::STAMINA) as *const f32) as f64) < 8500.0 || fb(0x3c) < 18 || fb(0x44) > 16 {
-                mark(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x4000, 0);
+                exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x4000);
             }
         } else {
             let b = a(0x14) + a(0xd) + a(7) + (tc(0x15) as i32 + fb(0x1a) as i32 - 20) * 3;
             if f38 * 40.0 > b as f64 {
-                mark(t(), pos_j, 0x100000, 0);
+                exe::formation_set_player_instruction(t(), pos_j as i8, 0x100000);
             }
         }
         // 0x5b5270 bit 1 e +0x584 bit 8: 2, senao 4
         let dois_ou_quatro = || {
-            let v = if exe::formation_get_player_instructions(t(), (read_i8(j + match_player::POSITION) as u8 as u32) as i8) & 1 != 0 && *((t() + 0x584) as *const u8) & 8 != 0 { 2 } else { 4 };
-            mark(t(), read_i8(j + match_player::POSITION) as u8 as u32, v, 0);
+            let v = if exe::formation_get_player_instructions(t(), read_i8(j + match_player::POSITION)) & 1 != 0 && *((t() + 0x584) as *const u8) & 8 != 0 { 2 } else { 4 };
+            exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), v as u64);
         };
         if tb() & 0x20 != 0 && tb() & 0x80 == 0 && tb() & 0x800 == 0 {
             dois_ou_quatro();
         }
         if (tb() & 8 != 0 || tb() & 0x10 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 && f38 * 16.0 > a(7) as f64 {
             dois_ou_quatro();
-            let r = (exe::cm3_match_engine_find_marking_target(m, (*((j + match_player::SIDE) as *const u8) as u32) as i8, (read_i8(j + match_player::POSITION) as u8 as u32) as i8) as i8);
+            let r = (exe::cm3_match_engine_find_marking_target(m, (*((j + match_player::SIDE) as *const u8) as u32) as i8, read_i8(j + match_player::POSITION)) as i8);
             if r != -1 {
                 let side = (read_i8(j + match_player::POSITION) == 0) as usize;
                 let o = m + 0x1be * (r as isize as usize).wrapping_add(20 * side) + 0x4796;
@@ -1107,9 +1106,9 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         // the passes
         let q = f38 * 10.0;
         if (a(0x12) as f64) < q {
-            mark(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x10000000, 0);
+            exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x10000000);
         } else if f38 * 13.0 < a(0x12) as f64 {
-            mark(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x20000000, 0);
+            exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x20000000);
         }
         // long shots
         if (tb() & 8 != 0 || tb() & 0x10 != 0 || tb() & 0x20 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 {
@@ -1118,20 +1117,20 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                 let a3 = a(0x1f);
                 let pj = read_i8(j + match_player::POSITION) as u8 as u32;
                 if (tc(0x1f) as i32 / 5) as f64 + f38 * 5.0 > a3 as f64 {
-                    let v = if exe::formation_get_player_instructions(t(), (pj) as i8) & 0x200 != 0 && *((t() + 0x584) as *const u8) & 0x20 != 0 { 0x400 } else { 0x1000 };
-                    mark(t(), pj, v, 0);
-                    mark(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x8000, 0);
+                    let v = if exe::formation_get_player_instructions(t(), pj as i8) & 0x200 != 0 && *((t() + 0x584) as *const u8) & 0x20 != 0 { 0x400 } else { 0x1000 };
+                    exe::formation_set_player_instruction(t(), pj as i8, v as u64);
+                    exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x8000);
                 } else {
                     let a3 = a(0x1f);
                     if (tc(0x1f) as i32 / 5) as f64 + q > a3 as f64 {
-                        let v = if exe::formation_get_player_instructions(t(), (pj) as i8) & 0x200 != 0 && *((t() + 0x584) as *const u8) & 0x20 != 0 { 0x400 } else { 0x1000 };
-                        mark(t(), read_i8(j + match_player::POSITION) as u8 as u32, v, 0);
+                        let v = if exe::formation_get_player_instructions(t(), pj as i8) & 0x200 != 0 && *((t() + 0x584) as *const u8) & 0x20 != 0 { 0x400 } else { 0x1000 };
+                        exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), v as u64);
                     }
                 }
             }
         }
         if read_i8(j + match_player::YELLOW_CARDS) != 0 && a(2) > tc(0x1f) as i32 / 4 + 8 {
-            mark(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x800, 0);
+            exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x800);
         }
         // dribles
         if tb() & 8 != 0 || tb() & 0x10 != 0 || (tc(0xe) > 16 && tb() & 0x40 != 0) {
@@ -1140,13 +1139,13 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             let pj = || read_i8(j + match_player::POSITION) as u8 as u32;
             let fl8000 = || *((j + match_player::STAMINA) as *const f32) as f64;
             if f28 - (te4 as f64) < a(0x14) as f64 && f28 - ((tc(0xe) as i32 / 4) as f64) < a(0xc) as f64 && fl8000() > 8000.0 {
-                mark(t(), pj(), 0x800000, 0);
+                exe::formation_set_player_instruction(t(), pj() as i8, 0x800000);
             } else {
                 let te4 = tc(0xe) as i32 / 4;
                 let lim = q - te4 as f64;
                 let high = lim > a(0x14) as f64 && lim < a(0xc) as f64;
                 if high || fl8000() < 8000.0 {
-                    mark(t(), pj(), 0x400000, 0);
+                    exe::formation_set_player_instruction(t(), pj() as i8, 0x400000);
                 }
             }
         }
@@ -1156,9 +1155,9 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             let enters = tb() & 0x10 != 0 || tb() & 0x20 != 0 || tb() & 0x40 != 0 || f38 * 16.0 < a(0xb) as f64;
             let strong = enters && (f38 * 14.0 < a(0xb) as f64 || f38 * 34.0 - ((tc(0xe) as i32 / 4) as f64) < (a(0x15) + a(0xb)) as f64);
             if strong {
-                mark(t(), pj(), 0x2000000, 0);
+                exe::formation_set_player_instruction(t(), pj() as i8, 0x2000000);
             } else if f38 * 25.0 - (tc(0xe) as i32 / 4) as f64 > (a(0x15) + a(0xb)) as f64 {
-                mark(t(), pj(), 0x1000000, 0);
+                exe::formation_set_player_instruction(t(), pj() as i8, 0x1000000);
             }
         }
         if tb() & 0x10 != 0 && fb(0x1a) > 12 && fb(0x14) >= fb(0x13) {
@@ -1171,9 +1170,9 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         // impedimento
         let d = || a(0x1b) - a(0x15) - a(0x14);
         if tb() & 0x40 != 0 && tb() & 0x80 == 0 && tb() & 0x800 == 0 && d() > 0 {
-            mark(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x8000000, 0);
+            exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x8000000);
         } else if d() < -5 {
-            mark(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x4000000, 0);
+            exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x4000000);
         }
         // cobrancas
         let l28 = acc as f64;
@@ -1186,9 +1185,9 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             (q, f38 * 5.0)
         };
         if k1 - l28 < a(8) as f64 {
-            mark(t(), pj(), 0, 4);
+            exe::formation_set_player_instruction(t(), pj() as i8, 4 << 32);
         } else if k2 - l28 > a(8) as f64 {
-            mark(t(), pj(), 0, 8);
+            exe::formation_set_player_instruction(t(), pj() as i8, 8 << 32);
         }
         // crosses by the table
         let tv = tb() as i16 as i32;
@@ -1196,19 +1195,19 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         match tv {
             0x210 | 0x110 | 0xa0 | 0x120 | 0x420 | 0x220 | 0x410 | 0x820 => {
                 if f38 * 23.0 < b() as f64 {
-                    mark(t(), pj(), 0, 1);
+                    exe::formation_set_player_instruction(t(), pj() as i8, 1 << 32);
                 }
             }
             0x90 | 0x108 | 0x202 | 0x208 | 0x408 | 0x810 => {
                 if f38 * 27.0 < b() as f64 {
-                    mark(t(), pj(), 0, 1);
+                    exe::formation_set_player_instruction(t(), pj() as i8, 1 << 32);
                 }
             }
             _ => {
                 if f38 * 31.0 < b() as f64 {
-                    mark(t(), pj(), 0, 1);
+                    exe::formation_set_player_instruction(t(), pj() as i8, 1 << 32);
                 } else if f38 * 20.0 > b() as f64 {
-                    mark(t(), pj(), 0, 2);
+                    exe::formation_set_player_instruction(t(), pj() as i8, 2 << 32);
                 }
             }
         }
@@ -1453,7 +1452,6 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     let h16 = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const i16);
     let tb = |o: usize| (t + o) as *mut u8;
 
-    let rival_de: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE);
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     let rodizio: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_CHECK_MATCHDAY_SQUAD_LIMIT);
@@ -1511,7 +1509,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             }
             let mut esi = ftol(l14 as f64 * factor);
             l14 = esi;
-            if rival_de(other, club) != 0 {
+            if exe::comp_util_get_league_clash_type(other, club) != 0 {
                 esi = ftol(l14 as f64 * read_f64(rdata::F64_1_75));
                 l14 = esi;
                 *tb(match_manager::SELECTION_FLAG) = 1;
@@ -1534,7 +1532,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 let rival = if club == u(x, 0x1c) { u(x, 0x20) } else { u(x, 0x1c) };
                 let mut l18 = weight(u(x, 0x14), rival);
                 let mut esi = l18;
-                if rival_de(rival, club) != 0 {
+                if exe::comp_util_get_league_clash_type(rival, club) != 0 {
                     esi = ftol(l18 as f64 * read_f64(rdata::F64_1_5));
                     l18 = esi;
                 } else if rival == u(club, club::RIVAL1) || rival == u(club, club::RIVAL2) || rival == u(club, club::RIVAL3) {
@@ -2997,8 +2995,7 @@ pub(crate) unsafe fn signed_byte_at(p: usize, k: usize) -> i32 {
 ///
 /// [pt] A 0x7c1e30 das notas ([0xb74350]) da ficha `f`.
 pub(crate) unsafe fn player_stat(f: usize, k: u32, c: u32, x: f32) -> f64 {
-    let g: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
-    g(*(G_PLAYER_STATS as *const usize), f, k, c, x)
+    exe::playerstats_get_stat(*(G_PLAYER_STATS as *const usize), f, k, c, x)
 }
 
 /// Rating of player data `f` for position mask `m` from its attributes via table `tab`, with the main-position special
@@ -3204,8 +3201,7 @@ pub(crate) unsafe fn age_and_foreigner_adjust(p: usize, f: usize, club: usize, f
     if nation == 0 || *((nation + nation::FIRST_LANGUAGE) as *const u8) == *((pais + nation::FIRST_LANGUAGE) as *const u8) {
         return l4c;
     }
-    let g: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_PLAYERSTATS_GET_LANGUAGE_FLUENCY);
-    let mut c = g(*(G_PLAYER_STATS as *const usize), p, club, (nation as u32 & !0xff) | *((nation + nation::FIRST_LANGUAGE) as *const u8) as u32, 1) as u8 as i8;
+    let mut c = (exe::playerstats_get_language_fluency(*(G_PLAYER_STATS as *const usize), p, club, (nation as u32 & !0xff) | *((nation + nation::FIRST_LANGUAGE) as *const u8) as u32, 1) as u32) as u8 as i8;
     if flags & 0x100 != 0 {
         let k = (age as u8).wrapping_sub((*((p + staff::ADAPTABILITY) as *const i8) / 2) as u8).wrapping_add(5) as i8;
         let m = read_f64(rdata::F64_26) - k as f64 * read_f64(rdata::F64_0_83);
@@ -3631,8 +3627,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     let mut l28: i32 = 100;
     let without_value = flags & 0x800;
     if without_value == 0 || flags & 0x210000 != 0 {
-        let value: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_INJURY_GET_CONDITION);
-        l24 = value(bd, p, 0);
+        l24 = (exe::injury_get_condition(bd, p, 0) as i32);
         l28 = l24 as i16 as i32 / 100;
     }
     let age = *((p + staff::AGE) as *const i8);
@@ -3645,10 +3640,8 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     } else {
         (0, 0)
     };
-    let relacao: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_DATABASE_GET_STAFF_REPUTATION_FOR_VIEWER);
-    let mut l3c = relacao(p, obs, 0);
-    let mask: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
-    let masc = mask(f);
+    let mut l3c = (exe::database_get_staff_reputation_for_viewer(p, obs, 0) as i32);
+    let masc = (exe::formation_get_position_mask(f) as u32);
     let mut edi: i32 = if masc as u16 == 0 { -100 } else { 0 };
     edi += if flags & 0x400 != 0 { 100 } else { position_rating(f, pos, masc, 0xa15d50, true) };
     let l40 = edi + if flags & 0x200 != 0 { 100 } else { position_attribute_adjust(f, pos) };
@@ -3869,8 +3862,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     let mut l24: i32 = 10000;
     let mut l28: i32 = 100;
     if without_value == 0 || flags & 0x210000 != 0 {
-        let value: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_INJURY_GET_CONDITION);
-        l24 = value(bd, p, 0);
+        l24 = (exe::injury_get_condition(bd, p, 0) as i32);
         l28 = l24 as i16 as i32 / 100;
     }
     let limit = if holiday != 0 { 0 } else { limit };
@@ -3885,10 +3877,8 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     } else {
         (0, 0)
     };
-    let relacao: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_DATABASE_GET_STAFF_REPUTATION_FOR_VIEWER);
-    let mut l3c = relacao(p, obs, 0);
-    let mask: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
-    let masc = mask(f);
+    let mut l3c = (exe::database_get_staff_reputation_for_viewer(p, obs, 0) as i32);
+    let masc = (exe::formation_get_position_mask(f) as u32);
     let second = pos2 as u16 != 0 && pos2 as u16 != pos as u16;
     let mut edi: i32 = if masc as u16 == 0 { -100 } else { 0 };
     let mut ebp: i32 = 0;

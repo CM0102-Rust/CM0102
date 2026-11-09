@@ -535,8 +535,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     let rb = |a: usize| *(a as *const u8);
     let sx = |a: usize| *(a as *const i8) as i32;
     let velocidade = || {
-        let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_GET_COMMENTARY_SPEED);
-        f(*(G_HUMAN_MANAGER as *const usize), 0)
+        (exe::human_manager_get_commentary_speed(*(G_HUMAN_MANAGER as *const usize), 0) as u32)
     };
     let write_item = |k: u32, r: usize| set_screen_param(k, r as i16 as isize as usize);
 
@@ -717,8 +716,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
         };
         if let Some(l) = candidata {
             league = l;
-            let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
-            if l != 0 && rb(l + 0x43) == 2 && national_team(*(G_RESERVE_COMP as *const usize), rd(l + 4)) == 0 {
+            if l != 0 && rb(l + 0x43) == 2 && exe::comp_is_reserve_or_minor_comp(*(G_RESERVE_COMP as *const usize), rd(l + 4)) == 0 {
                 text(match_tab_title(&mut tabs, 7), 0x99c280);
                 set_match_tab_flags(&mut tabs, 7, 3, 0xa);
                 n = 8;
@@ -867,7 +865,7 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
     let volume = rb(rd(pm + engine::COMMENTATOR) + 0x2db0);
     if volume as u16 != exe::human_manager_get_commentary_speed(*(G_HUMAN_MANAGER as *const usize), 0) as u16 {
         // the original pushes ecx with the upper 16 bits of what was left from 0x5fcff0 (extended here)
-        exe::human_manager_set_commentary_speed(*(G_HUMAN_MANAGER as *const usize), rb(rd(pm + engine::COMMENTATOR) + 0x2db0) as u32, (0) as u32 as usize);
+        exe::human_manager_set_commentary_speed(*(G_HUMAN_MANAGER as *const usize), rb(rd(pm + engine::COMMENTATOR) + 0x2db0) as u32, 0);
         return -11;
     }
     por(G_MATCH_SCREEN_LIVE_DATA_FLAG, 0);
@@ -903,7 +901,7 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
     let target: Option<usize> = if item16 == -1 {
         let mut to_play = false;
         if rd((0xb74c26 + h() as isize * 0x300) as usize) != 0 {
-            if exe::human_manager_is_on_holiday(*(G_HUMAN_MANAGER as *const usize), (0) as u32 as usize) != 0 {
+            if exe::human_manager_is_on_holiday(*(G_HUMAN_MANAGER as *const usize), 0) != 0 {
                 if mode == 2 || mode == 3 {
                     set_screen_param(1, 4);
                     mode = 4;
@@ -932,7 +930,7 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
             if marks() & 4 != 0 && g(G_MATCH_SCREEN_VIEW_CHANGED_FLAG) == 0 {
                 let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
                 format(BUF, 0x98806c, *((st + match_record::MINUTE) as *const i16) as i32);
-                exe::screenmanager_set_widget_text(sm, (p3) as usize as u32, BUF);
+                exe::screenmanager_set_widget_text(sm, p3 as u32, BUF);
                 por(G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 1);
             }
             if marks() & 8 != 0 {
@@ -959,8 +957,8 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
                 }
             } else if get_screen_param(7) != 0 {
                 if g(G_MATCH_SCREEN_VIEW_CHANGED_FLAG) == 0 {
-                    exe::screenmanager_set_widget_style(sm, (p8) as usize as u32, 1);
-                    exe::screenmanager_set_widget_text(sm, (p8) as usize as u32, 0xad9c64);
+                    exe::screenmanager_set_widget_style(sm, p8 as u32, 1);
+                    exe::screenmanager_set_widget_text(sm, p8 as u32, 0xad9c64);
                     por(G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 1);
                 }
                 set_screen_param(7, 0);
@@ -984,8 +982,8 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
             if g(G_MATCH_SCREEN_VIEW_CHANGED_FLAG) == 0 {
                 let mut colour: u32 = 0;
                 exe::match_screens_get_match_control_label(mode as u32, m, BUF, 0x7d0, &mut colour);
-                exe::screenmanager_set_widget_style(sm, (p4) as usize as u32, colour);
-                exe::screenmanager_set_widget_text(sm, (p4) as usize as u32, BUF);
+                exe::screenmanager_set_widget_style(sm, p4 as u32, colour);
+                exe::screenmanager_set_widget_text(sm, p4 as u32, BUF);
                 por(G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 1);
             }
             set_screen_param(0x24, esperando as usize);
@@ -1046,8 +1044,8 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
         }
         if target != p15 {
             if g(G_MATCH_SCREEN_VIEW_CHANGED_FLAG) == 0 {
-                exe::screenmanager_set_widget_style(sm, (p5) as usize as u32, if t_do_menu(0x1c) == target { 0x1061 } else { 0x1021 });
-                exe::screenmanager_set_widget_style(sm, (p6) as usize as u32, if t_do_menu(0x20) == target { 0x1061 } else { 0x1021 });
+                exe::screenmanager_set_widget_style(sm, p5 as u32, if t_do_menu(0x1c) == target { 0x1061 } else { 0x1021 });
+                exe::screenmanager_set_widget_style(sm, p6 as u32, if t_do_menu(0x20) == target { 0x1061 } else { 0x1021 });
                 por(G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 1);
             }
             set_screen_param(0x15, target);
@@ -1443,7 +1441,6 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
     let text_of_cell: ListCellTextFn = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     const MAX: usize = usize::MAX;
@@ -1588,7 +1585,7 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
         x = 0x7d;
     }
     let comp = u(part + fixture::COMPETITION);
-    if exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), comp) == 0 && national_team(*(G_RESERVE_COMP as *const usize), u(part + fixture::COMPETITION)) == 0 {
+    if exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), comp) == 0 && exe::comp_is_reserve_or_minor_comp(*(G_RESERVE_COMP as *const usize), u(part + fixture::COMPETITION)) == 0 {
         let key = (((*(u(part + fixture::COMPETITION) as *const u32)) << 11 | (core::ptr::read_unaligned((part + fixture::ROUND_PREFIX) as *const u16) as u32 & 0x7ff)) << 11)
             | (core::ptr::read_unaligned((part + fixture::ROUND_NAME) as *const u16) as u32 & 0x7ff);
         let t = *top;
@@ -3020,7 +3017,6 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
 pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     const BUF: usize = 0xde1f64;
     let sm = SCREEN_MANAGER;
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -3103,7 +3099,7 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                             }
                             let comp = u(m4 + fixture::COMPETITION);
                             let it = item(ebp, 0);
-                            if exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), comp) == 0 && national_team(*(G_RESERVE_COMP as *const usize), comp) == 0 {
+                            if exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), comp) == 0 && exe::comp_is_reserve_or_minor_comp(*(G_RESERVE_COMP as *const usize), comp) == 0 {
                                 exe::screenmanager_set_widget_rect(sm, it, (0x7d) as i32, (0) as i32, x, (0) as i32);
                                 exe::screenmanager_set_widget_text_colour(sm, it, colour_word_u32(G_GUI_COLOUR_YELLOW));
                                 exe::screenmanager_set_widget_text(sm, it, BUF);
@@ -3815,9 +3811,8 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
     let list: DisplayListFn = core::mem::transmute(FN_DISPLAY_ADD_AREA);
     let row: DisplayLineFn = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     let sem_selo = |c: usize| {
-        exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), c) == 0 && national_team(*(G_RESERVE_COMP as *const usize), c) == 0
+        exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), c) == 0 && exe::comp_is_reserve_or_minor_comp(*(G_RESERVE_COMP as *const usize), c) == 0
     };
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let rd32 = |a: usize| core::ptr::read_unaligned(a as *const i32);
@@ -3954,7 +3949,7 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
                 width = 0x2f1;
             }
             let width = width as usize;
-            if national_team(*(G_RESERVE_COMP as *const usize), comp) == 0 {
+            if exe::comp_is_reserve_or_minor_comp(*(G_RESERVE_COMP as *const usize), comp) == 0 {
                 let base_id = *(rd(fx + fixture::COMPETITION) as *const u32);
                 let id = (((base_id << 11) | (w32 as u32 & 0x7ff)) << 11) | (w30 as u32 & 0x7ff);
                 row(current_human_display(), 2, 0x73, 0, width, 0, 0, k as usize, 1, 0, 0, 1, 3, colour_with_high_bits(id as usize, G_GUI_COLOUR_YELLOW), BUF, 0, 0x7e5, id as usize, table);
@@ -4826,14 +4821,12 @@ pub(crate) unsafe extern "C" fn match_screens_handle_team_selection_input(item: 
         return exe::menubar_handle_object_link(item);
     }
     if id == 3 {
-        let capitao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_TACTICS_FIND_CAPTAIN_SLOT);
         let tactic = || *(G_TACTICS as *const usize);
-        if (capitao(tactic(), club, p2, 1) as u8 as i8) < 0 || (capitao(tactic(), club, p2, 0) as u8 as i8) >= 11 {
-            let best: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_MATCH_SCREENS_FIND_BEST_RATED_STARTER_SLOT);
-            let m = best(club, p2) as u8;
+        if ((exe::tactics_find_captain_slot(tactic(), club, p2 as u32, 1) as i8)) < 0 || ((exe::tactics_find_captain_slot(tactic(), club, p2 as u32, 0) as i8)) >= 11 {
+            let m = (exe::match_screens_find_best_rated_starter_slot(club, p2) as u32) as u8;
             if (m as i8) > -1 {
                 // the original writes the byte over the argument and pushes the whole word
-                exe::tactics_set_captain_from_slot(tactic(), club, ((item & 0xffff_ff00) | m as u32) as u32 as i8, (p2) as usize as u32);
+                exe::tactics_set_captain_from_slot(tactic(), club, ((item & 0xffff_ff00) | m as u32) as u32 as i8, p2 as u32);
             }
         }
     }
@@ -5549,7 +5542,7 @@ pub(crate) unsafe extern "C" fn open_latest_scores(slot: u32, entry: usize) {
         return original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_LATEST_SCORES)(slot, entry);
     }
     crate::comparison::branch("screens open the latest scores");
-    if exe::screenmanager_open_screen_for_each_record(SCREEN_MANAGER, slot, 0x71b300, 0x71b3d0, 0, (0) as u32 as usize, 0) == 0 {
+    if exe::screenmanager_open_screen_for_each_record(SCREEN_MANAGER, slot, 0x71b300, 0x71b3d0, 0, 0, 0) == 0 {
         return;
     }
     for (k, v) in [(0u32, 0usize), (0xe, entry), (0xf, 0), (0x10, usize::MAX), (0x11, 1), (0x12, 0), (0x13, 1), (0x14, 0)] {
@@ -5718,7 +5711,7 @@ pub(crate) unsafe extern "C" fn open_waiting_screen(slot: u32) {
         return original_fn::<unsafe extern "C" fn(u32)>(IDX_OPEN_WAITING_SCREEN)(slot);
     }
     crate::comparison::branch("screens open the wait");
-    exe::screenmanager_open_screen_for_each_record(G_SCREEN_MANAGER, slot, 0x727fa0, 0x727fb0, 0, (0) as u32 as usize, 0);
+    exe::screenmanager_open_screen_for_each_record(G_SCREEN_MANAGER, slot, 0x727fa0, 0x727fb0, 0, 0, 0);
 }
 
 // simplification: closing and opening touch the screen manager and memory (they do not run twice): in the
@@ -5766,8 +5759,7 @@ pub(crate) unsafe extern "C" fn draw_latest_scores_panel(top: *mut i32, base: *m
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     let sem_selo = |c: usize| {
-        let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
-        exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), c) == 0 && national_team(*(G_RESERVE_COMP as *const usize), c) == 0
+        exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), c) == 0 && exe::comp_is_reserve_or_minor_comp(*(G_RESERVE_COMP as *const usize), c) == 0
     };
 
     let partida = get_screen_param(0);

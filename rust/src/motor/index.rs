@@ -26,8 +26,7 @@ pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nation: usize, 
     if gender as u8 != 0 {
         let i = exe::langlib_get_language();
         if let Some(&(_, nome_se_vazio, cadeias)) = ADJETIVOS_DA_NACAO.iter().find(|x| x.0 == i) {
-            let form: unsafe extern "C" fn(u32, i32) -> u32 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
-            let f = form(gender, i) as u8 as usize;
+            let f = (exe::get_adjective_form_index(gender, (i) as i32 as u32) as u32) as u8 as usize;
             let id = core::ptr::read_unaligned(nation as *const i32);
             for cadeia in cadeias {
                 if let Some((_, fontes)) = cadeia.iter().find(|e| *(e.0 as *const i32) == id) {
@@ -83,7 +82,6 @@ pub(crate) unsafe fn key_ids_loop(limit: impl Fn() -> i32, mut f: impl FnMut(i32
 pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let antes_de_sair2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(u32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     exe::crt_strtok(0x9d93cc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
@@ -93,7 +91,7 @@ pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
     exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
     exe::game_fatal_cleanup();
-    antes_de_sair2();
+    exe::shared_noop_ret0_5a8f60();
     exit(mark)
 }
 

@@ -15,8 +15,7 @@ pub(crate) unsafe fn nation_coefficient_history(na: usize) -> [f64; 6] {
 ///
 /// [pt] O mês da data do jogo (0x54cfb0 sobre 0xae2c90, o al com sinal).
 pub(crate) unsafe fn current_month() -> i32 {
-    let month: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_MONTH);
-    month(G_CURRENT_DATE) as u8 as i8 as i32
+    (exe::date_get_month(G_CURRENT_DATE) as i8) as i32
 }
 
 /// December step: adds the reputation bonus if the mark is below 12, shifts the coefficient history one year and zeroes

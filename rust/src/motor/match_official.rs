@@ -660,8 +660,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         }
         _ => {}
     }
-    let aplica: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
-    if aplica(m, kind) != 0 {
+    if exe::is_undisputed_action_code(m, kind) != 0 {
         exe::match_player_scale_anger(other, (*grav as f64 * read_f64(rdata::F64_0_2) + read_f64(rdata::F64_1)) as f32);
         if exe::match_player_passes_anger_check(other, 1, 0) != 0 {
             *((other + match_player::ANGER) as *mut u8) = (*((other + match_player::ANGER) as *const u8)).wrapping_add(1);

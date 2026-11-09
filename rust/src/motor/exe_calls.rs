@@ -680,6 +680,11 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
+    pub(crate) unsafe fn comp_is_reserve_or_minor_comp(a0: usize, a1: usize) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
+        f(a0, a1)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn comp_key_nation_entry_from_active_index(a0: u32) -> u32 {
         let f: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_COMP_KEY_NATION_ENTRY_FROM_ACTIVE_INDEX);
         f(a0)
@@ -800,8 +805,8 @@ pub(crate) mod exe {
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn comp_util_get_fixture_venue_side(a0: usize, a1: usize) -> u32 {
-        let f: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
+    pub(crate) unsafe fn comp_util_get_fixture_venue_side(a0: usize, a1: usize) -> u8 {
+        let f: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
         f(a0, a1)
     }
     #[inline(always)]
@@ -812,6 +817,11 @@ pub(crate) mod exe {
     #[inline(always)]
     pub(crate) unsafe fn comp_util_get_latest_placed_club(a0: usize, a1: u32) -> usize {
         let f: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
+        f(a0, a1)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn comp_util_get_league_clash_type(a0: usize, a1: usize) -> u8 {
+        let f: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE);
         f(a0, a1)
     }
     #[inline(always)]
@@ -1000,6 +1010,11 @@ pub(crate) mod exe {
         f(a0, a1, a2)
     }
     #[inline(always)]
+    pub(crate) unsafe fn contract_manager_get_deserved_squad_status(a0: usize, a1: usize, a2: usize) -> u8 {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
+        f(a0, a1, a2)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn contract_manager_get_free_staff_contract_space(a0: usize, a1: u32) -> i32 {
         let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_FREE_STAFF_CONTRACT_SPACE);
         f(a0, a1)
@@ -1038,6 +1053,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn contract_manager_move_to_reserves(a0: usize, a1: usize, a2: usize) -> u32 {
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_MOVE_TO_RESERVES);
         f(a0, a1, a2)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn contract_manager_offer_contract(a0: usize, a1: usize, a2: u32, a3: u32, a4: i32, a5: f64, a6: u32) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, f64, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_OFFER_CONTRACT);
+        f(a0, a1, a2, a3, a4, a5, a6)
     }
     #[inline(always)]
     pub(crate) unsafe fn contract_manager_post_loan_recall_news(a0: usize, a1: usize, a2: usize) {
@@ -1118,6 +1138,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn contract_manager_schedule_offer_decision(a0: usize, a1: u32, a2: u32) -> u32 {
         let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_SCHEDULE_OFFER_DECISION);
         f(a0, a1, a2)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn contract_manager_season_end_month(a0: usize, a1: usize) -> u8 {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
+        f(a0, a1)
     }
     #[inline(always)]
     pub(crate) unsafe fn contract_manager_sign_contract(a0: usize, a1: usize, a2: u32) -> u32 {
@@ -1480,8 +1505,8 @@ pub(crate) mod exe {
         f(a0, a1, a2)
     }
     #[inline(always)]
-    pub(crate) unsafe fn database_get_contract_rating_modifier(a0: usize, a1: usize) -> u32 {
-        let f: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CONTRACT_RATING_MODIFIER);
+    pub(crate) unsafe fn database_get_contract_rating_modifier(a0: usize, a1: usize) -> i8 {
+        let f: unsafe extern "C" fn(usize, usize) -> i8 = core::mem::transmute(FN_DATABASE_GET_CONTRACT_RATING_MODIFIER);
         f(a0, a1)
     }
     #[inline(always)]
@@ -1505,8 +1530,8 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
-    pub(crate) unsafe fn database_get_staff_age(a0: usize, a1: *const u16) -> u16 {
-        let f: unsafe extern "C" fn(usize, *const u16) -> u16 = core::mem::transmute(FN_DATABASE_GET_STAFF_AGE);
+    pub(crate) unsafe fn database_get_staff_age(a0: usize, a1: *const u16) -> i8 {
+        let f: unsafe extern "C" fn(usize, *const u16) -> i8 = core::mem::transmute(FN_DATABASE_GET_STAFF_AGE);
         f(a0, a1)
     }
     #[inline(always)]
@@ -1940,6 +1965,11 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
+    pub(crate) unsafe fn finance_add_players_sold(a0: usize, a1: i64) {
+        let f: unsafe extern "thiscall" fn(usize, i64) = core::mem::transmute(FN_FINANCE_ADD_PLAYERS_SOLD);
+        f(a0, a1)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn finance_add_prize_money(a0: usize, a1: i32) {
         let f: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
         f(a0, a1)
@@ -1960,6 +1990,11 @@ pub(crate) mod exe {
         f(a0, a1, a2)
     }
     #[inline(always)]
+    pub(crate) unsafe fn finance_get_transfer_budget(a0: usize, a1: u32, a2: u32, a3: usize, a4: u32, a5: u32) -> i64 {
+        let f: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32) -> i64 = core::mem::transmute(FN_FINANCE_GET_TRANSFER_BUDGET);
+        f(a0, a1, a2, a3, a4, a5)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn finance_get_wealth_band(a0: usize) -> u8 {
         let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
         f(a0)
@@ -1967,6 +2002,11 @@ pub(crate) mod exe {
     #[inline(always)]
     pub(crate) unsafe fn finance_pay_bonuses(a0: usize, a1: i32) {
         let f: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_PAY_BONUSES);
+        f(a0, a1)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn finance_pay_players_bought(a0: usize, a1: i64) {
+        let f: unsafe extern "thiscall" fn(usize, i64) = core::mem::transmute(FN_FINANCE_PAY_PLAYERS_BOUGHT);
         f(a0, a1)
     }
     #[inline(always)]
@@ -2155,6 +2195,11 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
+    pub(crate) unsafe fn fix_man_get_fixture_list_for_date(a0: usize, a1: usize, a2: u32, a3: u32) -> usize {
+        let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
+        f(a0, a1, a2, a3)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn fix_man_get_partner_key_nation_index(a0: usize) -> u8 {
         let f: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_FIX_MAN_GET_PARTNER_KEY_NATION_INDEX);
         f(a0)
@@ -2252,6 +2297,11 @@ pub(crate) mod exe {
     #[inline(always)]
     pub(crate) unsafe fn formation_set_marking_target(a0: usize, a1: i8, a2: *const u32) -> u32 {
         let f: unsafe extern "thiscall" fn(usize, i8, *const u32) -> u32 = core::mem::transmute(FN_FORMATION_SET_MARKING_TARGET);
+        f(a0, a1, a2)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn formation_set_player_instruction(a0: usize, a1: i8, a2: u64) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(FN_FORMATION_SET_PLAYER_INSTRUCTION);
         f(a0, a1, a2)
     }
     #[inline(always)]
@@ -2368,6 +2418,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn friendly_is_banned_nation_pair(a0: usize, a1: i32, a2: i32) -> u32 {
         let f: unsafe extern "thiscall" fn(usize, i32, i32) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_BANNED_NATION_PAIR);
         f(a0, a1, a2)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn friendly_is_club_free_on_date(a0: usize, a1: *mut [u8; 8], a2: usize, a3: u32) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize, u32) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_CLUB_FREE_ON_DATE);
+        f(a0, a1, a2, a3)
     }
     #[inline(always)]
     pub(crate) unsafe fn friendly_is_friendly_competition(a0: usize, a1: usize) -> u32 {
@@ -2580,8 +2635,8 @@ pub(crate) mod exe {
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn hostcountry_find_hosts(a0: usize, a1: usize, a2: u32, a3: *mut i32, a4: *mut i32, a5: u32) -> u32 {
-        let f: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
+    pub(crate) unsafe fn hostcountry_find_hosts(a0: usize, a1: usize, a2: u32, a3: *mut i32, a4: *mut i32, a5: u32) -> u8 {
+        let f: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
         f(a0, a1, a2, a3, a4, a5)
     }
     #[inline(always)]
@@ -2630,8 +2685,8 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
-    pub(crate) unsafe fn human_manager_get_commentary_speed(a0: usize, a1: u32) -> u32 {
-        let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_GET_COMMENTARY_SPEED);
+    pub(crate) unsafe fn human_manager_get_commentary_speed(a0: usize, a1: u32) -> i16 {
+        let f: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_HUMAN_MANAGER_GET_COMMENTARY_SPEED);
         f(a0, a1)
     }
     #[inline(always)]
@@ -2823,6 +2878,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn is_in_own_penalty_area(a0: u8, a1: i8, a2: i8) -> u8 {
         let f: unsafe extern "stdcall" fn(u8, i8, i8) -> u8 = core::mem::transmute(FN_IS_IN_OWN_PENALTY_AREA);
         f(a0, a1, a2)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn is_undisputed_action_code(a0: usize, a1: i8) -> u8 {
+        let f: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
+        f(a0, a1)
     }
     #[inline(always)]
     pub(crate) unsafe fn ita_league_sort_clubs_level_on_points(a0: usize, a1: u32) {
@@ -3690,6 +3750,11 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
+    pub(crate) unsafe fn match_player_get_instructions(a0: usize) -> u64 {
+        let f: unsafe extern "thiscall" fn(usize) -> u64 = core::mem::transmute(FN_MATCH_PLAYER_GET_INSTRUCTIONS);
+        f(a0)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn match_player_get_marking_rating(a0: usize) -> u8 {
         let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_GET_MARKING_RATING);
         f(a0)
@@ -4190,6 +4255,11 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
+    pub(crate) unsafe fn national_teams_is_finals_comp(a0: usize, a1: usize) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
+        f(a0, a1)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn national_teams_post_call_up_news(a0: usize, a1: usize, a2: u32, a3: usize, a4: u32, a5: u32, a6: u32, a7: u32) {
         let f: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32) = core::mem::transmute(FN_NATIONAL_TEAMS_POST_CALL_UP_NEWS);
         f(a0, a1, a2, a3, a4, a5, a6, a7)
@@ -4305,6 +4375,11 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
+    pub(crate) unsafe fn news_club_has_human_manager(a0: usize, a1: usize) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
+        f(a0, a1)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn news_count_unread(a0: usize, a1: usize, a2: u32) -> i32 {
         let f: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_NEWS_COUNT_UNREAD);
         f(a0, a1, a2)
@@ -4400,8 +4475,8 @@ pub(crate) mod exe {
         f(a0, a1, a2)
     }
     #[inline(always)]
-    pub(crate) unsafe fn non_player_attribute_rating(a0: usize, a1: i8) -> i32 {
-        let f: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
+    pub(crate) unsafe fn non_player_attribute_rating(a0: usize, a1: i8) -> i8 {
+        let f: unsafe extern "C" fn(usize, i8) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
         f(a0, a1)
     }
     #[inline(always)]
@@ -4530,6 +4605,11 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
+    pub(crate) unsafe fn playerstats_get_stat(a0: usize, a1: usize, a2: u32, a3: u32, a4: f32) -> f64 {
+        let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
+        f(a0, a1, a2, a3, a4)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn playerstats_remove_language(a0: usize, a1: usize, a2: i8) {
         let f: unsafe extern "thiscall" fn(usize, usize, i8) = core::mem::transmute(FN_PLAYERSTATS_REMOVE_LANGUAGE);
         f(a0, a1, a2)
@@ -4578,6 +4658,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn player_regen_find_retirement_entry(a0: usize, a1: usize, a2: u32) -> usize {
         let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYER_REGEN_FIND_RETIREMENT_ENTRY);
         f(a0, a1, a2)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn player_regen_get_retirement_status(a0: usize, a1: usize) -> u8 {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
+        f(a0, a1)
     }
     #[inline(always)]
     pub(crate) unsafe fn player_regen_is_retirement_pending(a0: usize, a1: usize) -> u8 {
@@ -4733,6 +4818,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn player_stats_get_native_language_points(a0: usize, a1: i8) -> i16 {
         let f: unsafe extern "stdcall" fn(usize, i8) -> i16 = core::mem::transmute(FN_PLAYER_STATS_GET_NATIVE_LANGUAGE_POINTS);
         f(a0, a1)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn player_stats_get_record_value(a0: usize, a1: u32, a2: f32) -> f64 {
+        let f: unsafe extern "stdcall" fn(usize, u32, f32) -> f64 = core::mem::transmute(FN_PLAYER_STATS_GET_RECORD_VALUE);
+        f(a0, a1, a2)
     }
     #[inline(always)]
     pub(crate) unsafe fn pump_messages() {
@@ -5143,6 +5233,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn set_cursor_mode(a0: u32) {
         let f: unsafe extern "C" fn(u32) = core::mem::transmute(FN_SET_CURSOR_MODE);
         f(a0)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn shared_noop_ret0_5a8f60() {
+        let f: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
+        f()
     }
     #[inline(always)]
     pub(crate) unsafe fn shared_return_one(a0: *mut usize, a1: *mut usize) -> u32 {
@@ -5790,6 +5885,11 @@ pub(crate) mod exe {
         f(a0, a1, a2)
     }
     #[inline(always)]
+    pub(crate) unsafe fn tactics_get_club_tactics_index(a0: usize, a1: usize, a2: u32) -> i32 {
+        let f: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
+        f(a0, a1, a2)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn tactics_get_playmaker(a0: usize, a1: usize, a2: i8, a3: u32) -> usize {
         let f: unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize = core::mem::transmute(FN_TACTICS_GET_PLAYMAKER);
         f(a0, a1, a2, a3)
@@ -6260,8 +6360,8 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
-    pub(crate) unsafe fn transfer_manager_is_work_permit_granted(a0: usize, a1: usize, a2: usize, a3: usize, a4: usize, a5: u32) -> u8 {
-        let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u8 = core::mem::transmute(FN_TRANSFER_MANAGER_IS_WORK_PERMIT_GRANTED);
+    pub(crate) unsafe fn transfer_manager_is_work_permit_granted(a0: usize, a1: usize, a2: usize, a3: usize, a4: usize, a5: u32) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_IS_WORK_PERMIT_GRANTED);
         f(a0, a1, a2, a3, a4, a5)
     }
     #[inline(always)]
@@ -6792,6 +6892,11 @@ pub(crate) mod exe {
     #[inline(always)]
     pub(crate) unsafe fn utils_get_time_ms() -> u32 {
         let f: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
+        f()
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn utils_get_version_string() -> *const u8 {
+        let f: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
         f()
     }
     #[inline(always)]

@@ -372,8 +372,6 @@ pub(crate) use crate::conteiner::{abrir_no_conteiner, buscar_no_conteiner, posic
 /// +0x184): a ficha dele (+0x69) recebe +0x188/+0x18a/+0x18c em +0xa/+8/+0xc, e o auxiliar (+0xd3)
 /// e os 5 de +0x19f ganham um quarto da diferenca (entre 1 e 10000); +0x80 do clube = +0x18e.
 pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let special: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
-    let average_7c1e30: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let ch = core::cell::RefCell::new(call);
     let register = |r: usize, pa: usize, t: usize| (ch.borrow_mut())(0x5afe00, r, [pa as u32, t as u32, 0, 0, 0]);
     let news = |n: usize, p: usize, c: usize, tp: u32, pa: usize, z: u32| (ch.borrow_mut())(0x72c1f0, n, [p as u32, c as u32, tp, pa as u32, z]);
@@ -392,7 +390,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
         let d = core::ptr::read_unaligned((b + 0x18) as *const f64);
         if d != 0.0 { core::ptr::read_unaligned((b + 0x10) as *const f64) / d } else { 6.8 }
     };
-    let esp = special(g(G_NATIONAL_TEAMS), read(partida + 0x14) as u32);
+    let esp = exe::national_teams_is_finals_comp(g(G_NATIONAL_TEAMS), (read(partida + 0x14) as u32) as u32 as usize);
     if *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0 && g(G_FOG_OF_WAR) != 0 {
         register(g(G_FOG_OF_WAR), partida, t);
     }
@@ -455,7 +453,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             core::ptr::write_unaligned((g(p + staff::PLAYER) + 9) as *mut i16, w(row + 5));
             core::ptr::write_unaligned((g(p + staff::PLAYER) + 0xd) as *mut i16, w(row + 7));
             if read(club_of(read(t)) + 0x53) == read(club_of(read(t + 4)) + 0x53) && *((row - 8) as *const u8) != 0 {
-                let v = average_7c1e30(g(G_PLAYER_STATS), g(p + staff::PLAYER), 6, 0xb, 6.5);
+                let v = exe::playerstats_get_stat(g(G_PLAYER_STATS), g(p + staff::PLAYER), 6, 0xb, 6.5);
                 let previous = g(p + staff::NATION);
                 let nation = g(club + club::NATION);
                 let f = g(p + staff::PLAYER);

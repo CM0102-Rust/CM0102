@@ -1661,8 +1661,7 @@ pub(crate) unsafe fn set_dates_no_key_nation(out: usize) {
 pub(crate) unsafe fn set_retirement_dates(person: usize, out: usize, away: unsafe fn(usize)) {
     let club = read_usize(person + staff::CLUB_JOB);
     let k = if club != 0 {
-        let by_club: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
-        by_club(club) as u8 as i8
+        (exe::key_nation_index_of_club(club) as i8)
     } else {
         let nation = read_usize(person + staff::NATION);
         if nation == 0 {
@@ -2099,8 +2098,7 @@ pub(crate) unsafe fn leave_job_slot(person: usize, c: usize, job: i8, field: usi
                 exe::transfer_manager_cancel_club_offers(read_usize(G_TRANSFER_MANAGER), c);
             }
             exe::manager_manager_remove_club_manager(read_usize(G_MANAGER_MANAGER), c, 3, 0, 0);
-            let can: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_CAN_BE_MANAGED);
-            if can(c) as u8 != 0 {
+            if (exe::club_can_be_managed(c) as u32) as u8 != 0 {
                 exe::manager_manager_add_job_vacancy(read_usize(G_MANAGER_MANAGER), c, person); // cpr9: the manager slot opens
             }
         }

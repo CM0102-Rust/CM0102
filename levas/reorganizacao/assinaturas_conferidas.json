@@ -1,0 +1,430 @@
+{
+ "FN_CLUB_CAN_BE_MANAGED": {
+  "signature": "unsafe extern \"C\" fn(usize) -> u8",
+  "confidence": "high",
+  "evidence": "Plain ret, reads [esp+8] after push esi (1 arg); all exits set only al (mov al,1 / xor al,al); callers do add esp,4 then test al,al.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ]
+ },
+ "FN_COMP_ACTIVE_KEY_NATION_OF_CLUB": {
+  "signature": "unsafe extern \"C\" fn(usize) -> u8",
+  "confidence": "high",
+  "evidence": "Plain ret (cdecl), one stack arg [esp+4]; every return path sets only al (mov al,[..] / sbb al,al; add al,3), callers store al.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ]
+ },
+ "FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE": {
+  "signature": "unsafe extern \"C\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "cdecl (plain ret, callers add esp,8), 2 pointer args; returns in al only (mov al,[..] / sbb al,al with upper eax garbage); all 16 callers read al (test al / cmp al,1 / movsx ecx,al).",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(u32, usize) -> u32",
+   "unsafe extern \"C\" fn(usize, usize) -> u32",
+   "unsafe extern \"C\" fn(usize, u32) -> u32"
+  ]
+ },
+ "FN_COMP_ACTIVE_KEY_NATION_OF_STADIUM": {
+  "signature": "unsafe extern \"C\" fn(usize) -> u8",
+  "confidence": "high",
+  "evidence": "Plain ret, one arg [esp+4]; returns via mov al,3 / mov al,byte[...] (upper eax garbage); callers add esp,4 and store al to a byte.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ]
+ },
+ "FN_COMP_IS_RESERVE_OR_MINOR_COMP": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u32",
+  "confidence": "high",
+  "evidence": "ret 4, one stack arg; callers load ecx from global 0xb74434 but the body never reads ecx; returns full eax 0/1. Harmless: since ecx is unused, the stdcall form is ABI-equivalent.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize) -> u32"
+  ]
+ },
+ "FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE": {
+  "signature": "unsafe extern \"C\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "cdecl (ret, callers add esp,8); returns mov al,1/2/3 or setne al + inc eax with eax holding a loaded pointer, so upper 24 bits are garbage; callers cmp al,1 / store al.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize, usize) -> u32 (current wrapper)"
+  ]
+ },
+ "FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE": {
+  "signature": "unsafe extern \"C\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "Frame-pointer function reading only [ebp+8] and [ebp+0xc]; plain ret; callers push 2 args and add esp,8 then test al,al (one add esp,0xc merges an earlier push).",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize, usize, i32) -> u8"
+  ]
+ },
+ "FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "ret 8, two stack args; callers set ecx=[0xae1050] (body overwrites ecx without reading it); returns al only (mov al,N / setle al), callers cmp al. Harmless: the stdcall form is ABI-equivalent since ecx is unused.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize, usize) -> u8"
+  ]
+ },
+ "FN_CONTRACT_MANAGER_OFFER_CONTRACT": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, u32, i32, f64, u32) -> u32",
+  "confidence": "high",
+  "evidence": "thiscall (mov ecx,edi), ret 0x1c = 7 stack dwords; callers push ptr,0,0,-1, a double (0x3ff00000:0 = 1.0, used by fmul qword [esp+0xa8]) and 2; callers test eax after. The other sites have the same 28-byte stack layout (f64 split as two u32 / other int types), so they are type-wrong but stack-balanced; make_club_bids just discards the result.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32, u32, u32, u32, u32, u32)",
+   "unsafe extern \"thiscall\" fn(usize, usize, u32, u32, i32, u32, u32, u32) -> u32",
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, *mut u8, usize, f64, u32) -> u32"
+  ]
+ },
+ "FN_CONTRACT_MANAGER_SEASON_END_MONTH": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u8",
+  "confidence": "medium",
+  "evidence": "ret 4 with one stack arg [esp+0x20 after frame]; ecx is loaded by every caller with the global 0xae1050 but the body overwrites it immediately (this unused, so stdcall(usize) is stack-equivalent); result is the month index from 0x54cfb0 (0..11 or -1 in full eax) and callers store al to a byte.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize) -> u32"
+  ]
+ },
+ "FN_DATABASE_GET_CONTRACT_RATING_MODIFIER": {
+  "signature": "unsafe extern \"C\" fn(usize, usize) -> i8",
+  "confidence": "high",
+  "evidence": "Plain ret, callers add esp,8; returns al (xor al,al, or (byte&0xf)-10 in eax), all 4 original callers movsx eax,al. The u32 wrapper/site turns negatives into large unsigned values.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize, usize) -> u32"
+  ]
+ },
+ "FN_DATABASE_GET_STAFF_AGE": {
+  "signature": "unsafe extern \"C\" fn(usize, *const u16) -> i8",
+  "confidence": "high",
+  "evidence": "cdecl, 2 args; error path returns or al,0xff (-1) with ah/upper garbage, normal path a 16-bit difference in ax; all 22 callers use only al (cmp al,0x18 / movsx dx,al), so the real type is signed char. The u16 wrapper is safe for normal ages; u32 reads garbage.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize, usize) -> u32",
+   "unsafe extern \"C\" fn(usize, *const u16) -> u16 (current wrapper, low risk)"
+  ]
+ },
+ "FN_DATABASE_GET_STAFF_REPUTATION_FOR_VIEWER": {
+  "signature": "unsafe extern \"C\" fn(usize, usize, u32) -> i16",
+  "confidence": "high",
+  "evidence": "Plain ret, args at [esp+4..0xc]; every exit sets only ax (mov ax,word[...] after mov eax,pointer), so the upper 16 bits of eax are garbage: reading i32 is a real bug.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize, usize, u32) -> i32"
+  ]
+ },
+ "FN_DATE_GET_MONTH": {
+  "signature": "unsafe extern \"thiscall\" fn(usize) -> u8",
+  "confidence": "high",
+  "evidence": "thiscall reading [ecx], plain ret (no stack args); result in al (0..11, or 0xff via or al,0xff), callers cmp al / movsx al. Upper eax happens to be 0, so u32 only differs on the not-found case (255 instead of byte 0xff/-1).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize) -> u32"
+  ]
+ },
+ "FN_FINANCE_ADD_PLAYERS_SOLD": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, i64)",
+  "confidence": "high",
+  "evidence": "thiscall (adds to [ecx+0x78/0x7c], [ecx+0x118/0x11c], [ecx]/[ecx+4] with add/adc), ret 8 = one 64-bit arg; callers cdq then push edx,eax; no return. The (u32,u32) form is stack-compatible only if low,high order is kept.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32)"
+  ]
+ },
+ "FN_FINANCE_GET_TRANSFER_BUDGET": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32, u32, usize, u32, u32) -> i64",
+  "confidence": "high",
+  "evidence": "ecx = this (reads [ecx],[ecx+4],[ecx+8]); ret 0x14 = 5 stack args; arg3 is a nullable out pointer (mov dword [arg3],0/1); returns edx:eax (mov edx,edi / mov eax,ebp; callers test edx,edx or store edx). Original callers that take only eax truncate on purpose, so ->u32 is a narrowing, not the true return.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32, u32, u32, u32) -> u32"
+  ]
+ },
+ "FN_FINANCE_PAY_PLAYERS_BOUGHT": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, i64)",
+  "confidence": "high",
+  "evidence": "thiscall, ret 8; the two dwords are lo/hi of one 64-bit amount (add/adc, sub/sbb on this+0x70/0x74, 0x110/0x114, 0/4), callers push edx:eax after cdq; no return value. (u32,u32) is ABI-identical if passed lo,hi.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32)"
+  ]
+ },
+ "FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, u32) -> usize",
+  "confidence": "high",
+  "evidence": "ret 0xc = 3 stack args (date ptr, two u32); every original caller loads ecx=[0xae2a58] (fix_man) first, i.e. thiscall, but the body ignores ecx (reloads the global), so stdcall(usize,u32,u32) is ABI-equivalent and harmless; returns a pointer in eax.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize, u32, u32) -> usize (ABI-equivalent, ecx unused)"
+  ]
+ },
+ "FN_FIX_MAN_GET_PARTNER_KEY_NATION_INDEX": {
+  "signature": "unsafe extern \"C\" fn(usize) -> u8",
+  "confidence": "high",
+  "evidence": "Plain ret, reads only [esp+4]; exits set only al (or al,0xff / mov al,byte[...]); callers store al to a byte and clean up with add esp (merged with a previous call).",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ]
+ },
+ "FN_FORMATION_GET_POSITION_MASK": {
+  "signature": "unsafe extern \"C\" fn(usize) -> u16",
+  "confidence": "high",
+  "evidence": "Plain ret, callers add esp,4; returns ax (xor ax,ax on the null path), callers movsx edx,ax / test ax,ax.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ]
+ },
+ "FN_FORMATION_SET_PLAYER_INSTRUCTION": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, i8, u64) -> u32",
+  "confidence": "high",
+  "evidence": "thiscall (mov esi,ecx), ret 0xc: arg1 read as cl (slot 0..10), arg2 a 64-bit flag compared as edx:eax; returns mov eax,1 / xor eax,eax. The (u32,u32,u32) form is stack-compatible only if the u64 is split low,high; it drops the return.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32, u32)"
+  ]
+ },
+ "FN_FRIENDLY_IS_CLUB_FREE_ON_DATE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, *mut [u8; 8], usize, u32) -> u32",
+  "confidence": "medium",
+  "evidence": "ret 0xc = 3 stack args (arg1 pointer to a local 8-byte date, arg2 club pointer, arg3 read with movsx byte); callers load ecx with the global 0xae2c74 but the body never reads ecx (this unused), so stdcall(usize,usize,u32) is stack-equivalent; returns full eax 0/1 (xor eax,eax / test eax,eax at callers).",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize, usize, u32) -> u32 (convention only; harmless since ecx is unused)"
+  ]
+ },
+ "FN_GET_ADJECTIVE_FORM_INDEX": {
+  "signature": "unsafe extern \"C\" fn(u32, u32) -> u8",
+  "confidence": "high",
+  "evidence": "Plain ret, callers add esp,8; arg1 read as a byte (movsx [esp+4]), arg2 full dword; every path sets only al (or al,0xff / mov al,N / xor al,al) leaving upper eax garbage; callers movsx edx,al.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(u32, i32) -> u32"
+  ]
+ },
+ "FN_HOSTCOUNTRY_FIND_HOSTS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u8",
+  "confidence": "high",
+  "evidence": "thiscall, ret 0x14 = 5 stack args; returns xor al,al / mov al,dl (upper eax garbage); callers test al / cmp al,2 / movsx bp,al.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u32 (current wrapper)"
+  ]
+ },
+ "FN_HUMAN_MANAGER_GET_COMMENTARY_SPEED": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32) -> i16",
+  "confidence": "high",
+  "evidence": "ecx = this, ret 4 (one stack arg); returns via mov ax,word[edx+eax+0x9ad2] after eax held a pointer, so the upper 16 bits are garbage; callers do cmp bx,ax / jle (signed 16) or store al. Reading u32 is a real bug; u16 vs i16 is only signedness.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32) -> u32 (wrapper and match_screens.rs:build_match_screen)"
+  ]
+ },
+ "FN_INJURY_CHOOSE_INJURY_TYPE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, i8, i8, usize) -> u8",
+  "confidence": "high",
+  "evidence": "thiscall (mov esi,ecx), ret 0xc = 3 stack args (two bytes, one pointer); returns al = byte local, callers mov [..],al / movsx al / cmp al,0xff.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32, usize) -> u32"
+  ]
+ },
+ "FN_INJURY_GET_CONDITION": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32) -> i16",
+  "confidence": "high",
+  "evidence": "thiscall, ret 8; one path returns xor ax,ax with upper eax garbage; callers movsx ecx,ax / cmp ax,0x1964.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32) -> i32"
+  ]
+ },
+ "FN_INJURY_GET_FATIGUE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32) -> i16",
+  "confidence": "high",
+  "evidence": "ecx = this ([ecx] table), ret 4; returns movsx eax,word[...] or xor eax,eax, and all 32 callers use ax (movsx eax,ax / cmp ax,imm). The i32 read happens to be safe because the body sign-extends, but the declared type is 16-bit.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, i32) -> i32 (width only; harmless, the body sign-extends into eax)"
+  ]
+ },
+ "FN_IS_UNDISPUTED_ACTION_CODE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, i8) -> u8",
+  "confidence": "medium",
+  "evidence": "ret 4, one byte arg (movsx [esp+4]); 14 of 22 callers load ecx right before but the body never reads it; returns al (mov al,1 / xor al,al), callers test al,al. Harmless: the stdcall form is ABI-equivalent since ecx is unused.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(i8) -> u8"
+  ]
+ },
+ "FN_KEY_NATION_GET_CLUB_SEASON_YEAR": {
+  "signature": "unsafe extern \"C\" fn(usize) -> u16",
+  "confidence": "high",
+  "evidence": "cdecl (ret, callers add esp,4), 1 arg; returns mov ax,di (year word) or a dword slot whose high half is stack garbage; callers mov word [..],ax.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ]
+ },
+ "FN_KEY_NATION_INDEX_OF_CLUB": {
+  "signature": "unsafe extern \"C\" fn(usize) -> u8",
+  "confidence": "high",
+  "evidence": "Plain ret, one arg; exits set only al (xor al,al / inc al loop counter), upper eax garbage; all 16 callers add esp,4 and use movsx eax,al or store al.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ]
+ },
+ "FN_MATCH_PLAYER_DECIDE_BALL_ACTION": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32) -> u8",
+  "confidence": "high",
+  "evidence": "thiscall (mov esi,ecx), ret 4 at 0x713bf6; return paths set only al (mov al,1 / xor al,al), caller does mov bl,al.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32) -> u32"
+  ]
+ },
+ "FN_MATCH_PLAYER_GET_INSTRUCTIONS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize) -> u64",
+  "confidence": "high",
+  "evidence": "thiscall, plain ret; tail-calls 0x5b5270 which returns edx:eax from [ecx+slot*8+0x188b/0x188f]; callers test bits of both halves (and edx,1 ...). -> u32 loses the high dword (only safe if that site tests low-dword flags only).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize) -> u32"
+  ]
+ },
+ "FN_MATCH_SCREENS_FIND_BEST_RATED_STARTER_SLOT": {
+  "signature": "unsafe extern \"C\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "Plain ret, args at [esp+4]/[esp+8]; returns al (or al,0xff = -1 sentinel); both callers push 2 args, add esp,8, then cmp al,0xff and store al.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize, usize) -> u32"
+  ]
+ },
+ "FN_NATIONAL_TEAMS_IS_FINALS_COMP": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u32",
+  "confidence": "high",
+  "evidence": "ret 4, one pointer arg; callers set ecx=[0xb74318] but the body never reads ecx; returns full eax 0/1. Harmless: stdcall is ABI-equivalent (ecx unused) and (usize,u32) differs only in the Rust arg type.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize) -> u32",
+   "unsafe extern \"thiscall\" fn(usize, u32) -> u32"
+  ]
+ },
+ "FN_NEWSITEM_GET_ACTION_BUTTON": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, *mut u32) -> u8",
+  "confidence": "high",
+  "evidence": "thiscall, ret 0x10 = 4 stack args; returns mov al,1 / xor al,al; callers cmp al,2 / test al,al.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, *mut u32) -> u32"
+  ]
+ },
+ "FN_NEWS_CLUB_HAS_HUMAN_MANAGER": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u32",
+  "confidence": "high",
+  "evidence": "ret 4 with one stack arg (club pointer at [esp+8] after push esi); all 94 callers load ecx with the news global 0xb7431c but the body never reads ecx before overwriting it, so stdcall(usize) is stack-equivalent; returns full eax (xor eax,eax / mov eax,1 / callee result) and callers test eax,eax.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize) -> u32 (convention only; harmless since ecx is unused)"
+  ]
+ },
+ "FN_NON_PLAYER_ATTRIBUTE_RATING": {
+  "signature": "unsafe extern \"C\" fn(usize, i8) -> i8",
+  "confidence": "medium",
+  "evidence": "Plain ret, callers add esp,8; arg2 is a byte (movsx [esp+8]); result clamped to 1.0..20.0 then __ftol (0x945640) fills eax, original callers use movsx al / cmp al. The wrapper's i32 return yields the same 1..20, so neither existing form is harmful.",
+  "wrong_sites": []
+ },
+ "FN_PLAYERSTATS_GET_LANGUAGE_FLUENCY": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, u32) -> u8",
+  "confidence": "high",
+  "evidence": "thiscall, ret 0x10 = 4 stack args; returns mov al,[..] / and al,0xf / xor al,al / mov al,0xa (upper eax garbage); callers movsx eax,al / cmp al,0xa.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, u32) -> u32"
+  ]
+ },
+ "FN_PLAYERSTATS_GET_RECENT_FORM": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> i8",
+  "confidence": "high",
+  "evidence": "ecx = this (global 0xb74350 at callers, read as [ecx+0x30]), ret 4; the error exit does xor al,al with eax still holding the argument pointer, so only al is defined; all 15 callers use movsx reg,al or cmp al. Reading i32/u32 is a real bug on that path.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> i32",
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ]
+ },
+ "FN_PLAYERSTATS_GET_STAT": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, u32, f32) -> f64",
+  "confidence": "medium",
+  "evidence": "thiscall (mov esi,ecx), ret 0x10 = 4 args, the 4th read with fld dword (f32; callers push 0x40d00000 = 6.5f); result left in st0 (callers fstp/fcomp/__ftol). f32 vs f64 is not an ABI difference (both read st0); f64 keeps more of the original 80-bit value, f32 rounds it.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32, u32, f32) -> f32"
+  ]
+ },
+ "FN_PLAYER_ATTRIBUTE_RATING": {
+  "signature": "unsafe extern \"C\" fn(usize, u32) -> u8",
+  "confidence": "high",
+  "evidence": "cdecl, 2 args (second read as movsx byte); x87 result clamped to [1.0,20.0] then jmp _ftol, so eax holds the full integer 1..20 (upper bits zero); callers use al. The u32 site is ABI-correct too, nothing to fix.",
+  "wrong_sites": []
+ },
+ "FN_PLAYER_REGEN_GET_RETIREMENT_STATUS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "ret 4, one stack arg (person pointer); returns al = (byte[..+0xb] >> 4) & 3 with upper eax holding an index; callers load ecx with the global 0xb7434c but the body never reads ecx (this unused), so stdcall(usize)->u8 is stack-equivalent; callers test al / cmp al,1|2.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize) -> u8 (convention only; harmless since ecx is unused)"
+  ]
+ },
+ "FN_PLAYER_STATS_GET_RECORD_VALUE": {
+  "signature": "unsafe extern \"stdcall\" fn(usize, u32, f32) -> f64",
+  "confidence": "high",
+  "evidence": "ret 0xc = 3 args: record ptr, stat id (byte, movsx [esp+0x214]), default f32 (fmul dword [esp+0x214] after pop); result in st0 (fild/fidiv; callers __ftol). Callers set ecx=[0xb74350] but it is never read, so stdcall is fine. The (u32,u32) site passes default.to_bits(): ABI-identical, harmless.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize, u32, u32) -> f64"
+  ]
+ },
+ "FN_SCREENMANAGER_FIND_MANAGER_CHANNEL": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u16",
+  "confidence": "high",
+  "evidence": "thiscall, ret 4; returns the 16-bit loop index in ax or or ax,0xffff (-1) with eax upper bits 0 or garbage (null arg path); callers cmp ax,0xffff / movsx ecx,ax (semantically i16).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ]
+ },
+ "FN_SHARED_NOOP_RET0_5A8F60": {
+  "signature": "unsafe extern \"C\" fn()",
+  "confidence": "high",
+  "evidence": "The body is a single bare ret (no stack args, eax not set, ecx not read); 457 callers, mostly in exception/cleanup paths. A thiscall(usize) declaration is stack-equivalent (no stack args either way).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize) (convention only; harmless, ecx is ignored and nothing is popped)"
+  ]
+ },
+ "FN_STAFF_COMPUTE_PLAYER_ATTRIBUTE": {
+  "signature": "unsafe extern \"C\" fn(usize, usize, u32) -> u8",
+  "confidence": "high",
+  "evidence": "Plain ret, callers add esp,N; most return paths are mov al,byte [eax+..] with upper eax holding pointer bits (others via __ftol clamped 1..20); callers mov [..],al / mov bl,al.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize, usize, u32) -> u32"
+  ]
+ },
+ "FN_TACTICS_FIND_CAPTAIN_SLOT": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, u32) -> i8",
+  "confidence": "high",
+  "evidence": "thiscall (mov esi,ecx), ret 0xc = 3 stack args; returns xor al,al / mov al,bl / sbb al,al; callers movsx eax,al.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, u32) -> u32"
+  ]
+ },
+ "FN_TACTICS_GET_CLUB_TACTICS_INDEX": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32) -> i32",
+  "confidence": "high",
+  "evidence": "ret 8 = 2 stack args (club pointer, flag); callers load ecx (mov ecx,esi/ebx) but the body never reads ecx, so stdcall(usize,u32) is stack-equivalent; returns full eax (or eax,-1 / mov eax,[esi]) and callers cmp eax,-1.",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(usize, u32) -> i32 (convention only; harmless since ecx is unused)"
+  ]
+ },
+ "FN_TRANSFER_MANAGER_COLLECT_OFFER_NEWS_RECIPIENTS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut usize, u32) -> u8",
+  "confidence": "high",
+  "evidence": "thiscall (ecx saved to a local), ret 0x10 = 4 args; returns al (mov al,bl before ret), callers test al,al / mov bl,al. usize vs *mut usize for the 4th arg is ABI-identical.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut usize, u32) -> u32"
+  ]
+ },
+ "FN_TRANSFER_MANAGER_COLLECT_PLAYER_NEWS_RECIPIENTS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut usize, u32) -> u8",
+  "confidence": "high",
+  "evidence": "thiscall (mov esi,ecx), ret 0x10 = 4 stack args; returns mov al,bl (flag byte, upper eax garbage).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut usize, u32) -> u32"
+  ]
+ },
+ "FN_TRANSFER_MANAGER_IS_WORK_PERMIT_GRANTED": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, usize, usize, u32) -> u32",
+  "confidence": "high",
+  "evidence": "ecx = this (saved to [esp+0xc]; callers load the global 0xde1f54), ret 0x14 = 5 stack args (person, club, then flags pushed as 0/0/1); every exit sets full eax (mov eax,1 / xor eax,eax / xor ecx,ecx+setg cl+mov eax,ecx) and callers test eax,eax. The u8 wrapper only narrows a 0/1 value (harmless); the usize/u32 variant in complete_accepted_contract_offer is ABI-identical.",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, usize, usize, u32) -> u8 (wrapper; width only, harmless since eax is 0/1)"
+  ]
+ },
+ "FN_UTILS_GET_VERSION_STRING": {
+  "signature": "unsafe extern \"C\" fn() -> *const u8",
+  "confidence": "high",
+  "evidence": "The whole body is mov eax,0xad4394; ret, so it takes no args. The pushes before its 3927 calls belong to the following sprintf/error call (MSVC interleaves them; the next instruction is always push eax). cdecl caller-pops, so the extra args are harmless but meaningless.",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(*mut u8, *mut u8, u32) -> usize",
+   "unsafe extern \"C\" fn(*mut u8, *mut u8, u32, usize) -> usize"
+  ]
+ }
+}

@@ -112,7 +112,6 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
 /// sinal; de novo enquanto a vaga do pote já saiu) entre os 4 do pote (a lista nas vagas 4p a 4p + 3) vai para a vaga 4j
 /// + p dos grupos e sai do pote (zerado). A lista liberada (0x9452ca) e +0xee = os grupos. Devolve 1.
 pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
-    let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
     core::ptr::write_unaligned((this + 0xf2) as *mut u16, 0x10);
     let list = exe::crt_malloc(0xc8);
     write_usize(this + 0xee, list);
@@ -123,7 +122,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     let mut ids = [-1i32; 2];
     let (a, b) = ids.split_at_mut(1);
     // simplification: the original pushes eax with the year in the low 16 bits and leftovers in the high ones; 0x5fa730 only reads the word
-    let how_many = sedes(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), read_i16(this + league::YEAR) as u16 as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
+    let how_many = (exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), read_i16(this + league::YEAR) as u16 as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as i8);
     let mut n = 0usize;
     if how_many > 0 {
         for &id in ids.iter().take(how_many as usize) {

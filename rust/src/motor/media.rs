@@ -493,7 +493,6 @@ pub(crate) unsafe fn club_staff_vector(club: usize, call: &mut dyn FnMut(usize, 
 /// da fita que a original chama: o vínculo 0x4cf5f0 (0x75551e, 0x7557dc), o humano 0x600a50 (0x755598) e as 0x4cf5f0
 /// de dentro da 0x544520 (0x7554e8) e da 0x544600 (0x75567f, 0x7556ad), estas por `replay_inner_tape_calls`.
 pub(crate) unsafe fn squad_reaction_to_story_with(topic: u32, player: usize, club: usize, ids: usize, n: u32, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let tie: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE);
     if club == 0 || player == 0 {
         return;
     }
@@ -517,7 +516,7 @@ pub(crate) unsafe fn squad_reaction_to_story_with(topic: u32, player: usize, clu
                 chance += 100;
                 continue;
             }
-            if tie(club, other) != 0 {
+            if exe::comp_util_get_league_clash_type(club, other) != 0 {
                 chance += 10;
                 continue;
             }
@@ -1713,7 +1712,6 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     }
     crate::comparison::branch("cpo_5 board news");
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let ratings_average: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(FN_PLAYERSTATS_GET_RECENT_FORM);
     let value: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_PLAYER_VALUE);
     let conf = || if club != 0 { read_i16(manager_manager_row(club) + 6) } else { 0 };
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
@@ -1787,7 +1785,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     let mut m = 0u32;
     if sujeito != 0 && read_usize(sujeito + staff::PLAYER) != 0 {
         let base = read_usize(G_PLAYER_STATS);
-        let notes = ratings_average(base, read_usize(sujeito + staff::PLAYER)) as i8 as f64;
+        let notes = (exe::playerstats_get_recent_form(base, read_usize(sujeito + staff::PLAYER)) as i32) as i8 as f64;
         let base = read_usize(G_PLAYER_STATS);
         let y = read_f64(base + player_stats_fields::RATED_COUNT);
         let c0 = read_f64(rdata::F64_0);
@@ -2027,7 +2025,6 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     }
     crate::comparison::branch("cpo_7 reaction to criticism");
     let (construir, gravar) = news_item_fns();
-    let category: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbdc, 0);
@@ -2044,7 +2041,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     let mut reacao = 0i8;
     if rep > 0x109a && rep > read_i16(club + club::REPUTATION) {
         let manager = read_usize(G_CONTRACT_MANAGER);
-        let cat_ok = category(manager, player, contract) == 1 || category(manager, player, contract) == 2;
+        let cat_ok = exe::contract_manager_get_deserved_squad_status(manager, player, contract) == 1 || exe::contract_manager_get_deserved_squad_status(manager, player, contract) == 2;
         if cat_ok && read_i8_as_i32(player + staff::AGE) > 0x16 {
             if read_i8_as_i32(player + staff::LOYALTY) < 0xa && read_i8_as_i32(player + staff::AMBITION) > 0xf && read_i8_as_i32(player + staff::TEMPERAMENT) < 6 {
                 reacao = if mark && r == 2 { 3 } else { 1 };
@@ -2129,18 +2126,16 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
             return 0.0;
         }
     }
-    let stats: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
-    let average_notes: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_PLAYERSTATS_GET_RECENT_FORM);
     let g = read_usize(G_PLAYER_STATS);
     let games = core::ptr::read_unaligned((g + player_stats_fields::RATED_COUNT) as *const f64);
     let x = if games == 0.0 || games.is_nan() { 6.8 } else { core::ptr::read_unaligned((g + player_stats_fields::RATING_SUM) as *const f64) / games };
     let xf = x as f32;
-    let s1f = stats(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 6, 1, 6.5) as f32;
-    let s2f = stats(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 6, 0x11, 6.5) as f32;
-    let average = average_notes(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER)) as u8 as i8 as i32;
+    let s1f = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 6, 1, 6.5) as f32;
+    let s2f = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 6, 0x11, 6.5) as f32;
+    let average = (exe::playerstats_get_recent_form(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER)) as i8) as i32;
     let mut l0 = (average as f64 * 0.2) as f32;
     let y = if s1f as f64 > 1.0 { s1f as f64 } else { 1.0 }; // the matches, at least 1
-    let s3 = stats(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 6, 2, 6.5);
+    let s3 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 6, 2, 6.5);
     let l2 = (s3 / y) as f32;
     l0 = (l0 as f64 - xf as f64) as f32;
     let dif = s2f as f64 - xf as f64;

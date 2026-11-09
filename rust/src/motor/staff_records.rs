@@ -71,10 +71,9 @@ pub(crate) unsafe fn offer_renewal_if_due(club: usize, p: usize, k: usize) {
         DRY_RUN_STRAY_SCRATCH_DATE = true;
         return;
     }
-    let oferecer: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, f64, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_OFFER_CONTRACT);
     // 0x4cda70: push 1; push 0x3ff00000; push 0; push −1; push 0; push 0; push p; mov ecx, [0xae1050] -> thiscall
     // (p, 0, 0, −1, 1.0 in two dwords, 1)
-    oferecer(read_usize(G_CONTRACT_MANAGER), p, 0, 0, -1, 1.0, 1);
+    exe::contract_manager_offer_contract(read_usize(G_CONTRACT_MANAGER), p, 0, 0, -1, 1.0, 1);
 }
 
 /// Adds history entry e for each of the 20 lineup players (+0x190, 0x49 bytes, −1 empty) except non-players and the
@@ -231,7 +230,6 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
     if chairman != 0 {
         append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
     }
-    let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     // 0x7c1e30: push 6,5f; push 1; push 2; push player sheet; mov ecx, [0xb74350] -> thiscall (ret 0x10, x87); 0x544710: 3
     // pushes; add esp, 0xc -> cdecl; 0x4cf5f0: push club; push p; mov ecx, [0xae1050] -> thiscall (ret 8)
     for j in 0..50usize {
@@ -241,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         {
             continue;
         }
-        let f = average(read_usize(G_PLAYER_STATS), read_usize(p + staff::PLAYER), 2, 1, 6.5);
+        let f = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(p + staff::PLAYER), 2, 1, 6.5);
         if f > threshold as f64 { // cqd13: acima do limiar
             crate::comparison::branch("cqd_13 champion standout player");
             append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(p), &e);
@@ -359,9 +357,8 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
         }
         offer_renewal_if_due(club, p, k);
     }
-    let stored: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
     // 0x76d940 and 0x774f30: push comp; mov ecx, [0xb74318] (0x76d940 does not read ecx and only compares the id; ret 4 in both)
-    if stored(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION)) != 0 {
+    if exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION)) != 0 {
         if STAFF_HISTORY_DRY_RUN {
             DRY_RUN_STRAY_SCRATCH_DATE = true;
         } else {
@@ -1784,8 +1781,7 @@ pub(crate) unsafe fn stage_history_entry(club: usize, kind: u8, comp: usize, sta
 ///
 /// [pt] Na competição de seleção guardada (0x76d940 de [0xb74318]), as convocações da seleção para ela acabam (0x774f90).
 pub(crate) unsafe fn end_national_duty(club: usize, comp: usize) {
-    let special: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
-    if special(read_usize(G_NATIONAL_TEAMS), comp) != 0 {
+    if exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), comp) != 0 {
         crate::comparison::branch("cpq_4 end of call-ups");
         exe::nationalteams_end_duty_for_nation_in_competition(read_usize(G_NATIONAL_TEAMS), club, comp);
     }
@@ -1871,8 +1867,7 @@ pub(crate) unsafe fn staff_records_staff_by_id(id: usize) -> usize {
 ///
 /// [pt] O mês da data (0x54cfb0, o al com sinal).
 pub(crate) unsafe fn date_month(data: usize) -> i16 {
-    let month: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_MONTH);
-    month(data) as u8 as i8 as i16
+    (exe::date_get_month(data) as i8) as i16
 }
 
 /// `Staff_Records::daily_update(date)`: if the date's month (`exe::date_get_month`) or year (+2) are not the stored ones (+0x14

@@ -247,11 +247,10 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
         }
     }
     let news = read_usize(G_NEWS);
-    let of_human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     // 0x7875e0: mov ecx, [0xb7431c]; push club (ret 4); 0x7861e0: push club +0x39; push news; mov ecx, [0xb7431c];
     // 0x7863f0: push nation; push news; mov ecx, [0xb7431c] -> thiscall in all three
     let dry_run = (*core::ptr::addr_of!(AWOL_NEWS_TAPE)).is_some();
-    if of_human(news, club) != 0 {
+    if exe::news_club_has_human_manager(news, club) != 0 {
         if dry_run {
             AWOL_NEWS_DESTINATION = (1, read_usize(player + staff::CLUB_JOB));
         } else {

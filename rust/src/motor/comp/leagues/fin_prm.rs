@@ -2464,8 +2464,7 @@ pub(crate) unsafe fn transfer_budget(fin: usize) -> u32 {
     if RARE_FINANCE_EVENT_DRY_RUN {
         return 0;
     }
-    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_FINANCE_GET_TRANSFER_BUDGET);
-    f(fin, 0, 0, 0, 1, 0)
+    (exe::finance_get_transfer_budget(fin, 0, 0, 0, 1, 0) as u32)
 }
 
 /// Posts the end-of-crisis news (`exe::finance_post_receivers_appeased_news`, receivers appeased) for the club id.

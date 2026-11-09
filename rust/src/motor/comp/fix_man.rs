@@ -410,7 +410,6 @@ pub(crate) unsafe fn default_clash_severity(grav: *mut i32, twenty: bool) {
 pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: usize, grav: *mut i32, list: usize, nations: usize, n: u32, data: usize, desloc: u32) {
     // 0x53b900 (push; add esp, 4 -> cdecl), 0x53b3d0 (push; add esp, 4 -> cdecl)
     // 0x76d940: ecx = [0xb74318]; push comp -> thiscall, ret 4 (the Rust copy ignores ecx)
-    let special: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
     let e_sel = exe::database_is_national_team(read_usize(game + fixture::HOME_CLUB));
     let n1 = read_usize(read_usize(game + fixture::HOME_CLUB) + 0x53);
     // simplification: without a nation the original leaves the national team uninitialized; every club has a nation, so 0 does not happen in the game
@@ -517,7 +516,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                         } else {
                             let abs_flag = (flag as i32).abs();
                             let national_teams = (e_sel == 0
-                                && special(read_usize(G_NATIONAL_TEAMS), read_usize(x + 0x14)) == 0
+                                && exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), read_usize(x + 0x14)) == 0
                                 && abs_flag < 2
                                 && (read_u8(p) == 0 || read_u8(p) == 1)
                                 && (read_u8(game + fixture::CATEGORY) as i8) < 5
@@ -534,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                             } else if read_i32(game) == read_i32(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS) && (is_in_league(c1, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) || is_in_league(c2, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE))) {
                                 add_clash_by_type(grav, list, x, false);
                             } else if e_sel != 0
-                                && special(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION)) == 0
+                                && exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION)) == 0
                                 && abs_flag < 2
                                 && read_u8(p) != 0
                                 && read_u8(p) != 1
@@ -1028,12 +1027,11 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
                 }
             }
             // 0x7e6f20: mov ecx, [0xb74434]; push comp -> thiscall, ret 4
-            let convocada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
             if g >= read_u8(game + fixture::CATEGORY) as i8 as i32 {
                 if l != 0 {
                     free_list(l);
                 }
-                if convocada(read_usize(G_RESERVE_COMP), read_usize(game + fixture::COMPETITION)) != 0 {
+                if exe::comp_is_reserve_or_minor_comp(read_usize(G_RESERVE_COMP), read_usize(game + fixture::COMPETITION)) != 0 {
                     return 0;
                 }
                 exe::fixture_manager_find_new_fixture_date(this, game);
@@ -1052,7 +1050,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
                     } else if read_u8(x + 0x3a) == 9 {
                         exe::fixture_manager_remove_fixture(this, x);
                     } else {
-                        if convocada(read_usize(G_RESERVE_COMP), read_usize(game + fixture::COMPETITION)) != 0 {
+                        if exe::comp_is_reserve_or_minor_comp(read_usize(G_RESERVE_COMP), read_usize(game + fixture::COMPETITION)) != 0 {
                             return 0; // as in the original, without freeing the list
                         }
                         let mut copy = [0u8; 0x4f];
@@ -1079,9 +1077,8 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
             let c = read_usize(game + fixture::COMPETITION);
             let id = read_usize(c) as i32;
             if id != read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) as i32 && id != read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) as i32 && read_u8(game + fixture::FLAGS) & 3 == 0 {
-                let special: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
                 let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-                if special(read_usize(G_NATIONAL_TEAMS), c) == 0 || friendly(read_usize(G_FRIENDLY), read_usize(game + fixture::COMPETITION)) != 0 {
+                if exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), c) == 0 || friendly(read_usize(G_FRIENDLY), read_usize(game + fixture::COMPETITION)) != 0 {
                     exe::reservecomp_add_b_or_under21_fixture(read_usize(G_RESERVE_COMP), game);
                 }
             }
@@ -1867,8 +1864,7 @@ pub(crate) unsafe fn calendar_year_block(fm: usize, f: usize) -> usize {
 /// [pt] A lista do dia, fatia (+0x3f) e nação-chave do jogo `f` no bloco `b`: [[b + (dia +0x2a × 3 + fatia) × 4] + nação × 4],
 /// a nação pela 0x48dd70 (competição +0x14, o jogo), com sinal.
 pub(crate) unsafe fn fixture_list_in_block(b: usize, f: usize) -> usize {
-    let nation: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
-    let n = nation(read_usize(f + fixture::COMPETITION), f) as u8 as i8 as isize;
+    let n = (exe::comp_active_key_nation_of_fixture(read_usize(f + fixture::COMPETITION), f) as i8) as isize;
     let k = read_u16(f + fixture::DAY) as usize * 3 + *((f + fixture::TIME_SLICE) as *const u8) as usize;
     read_usize((read_usize(b + k * 4) as isize + n * 4) as usize)
 }
@@ -1989,8 +1985,7 @@ pub(crate) unsafe fn list_append_fixture(l: usize, f: usize) -> usize {
 ///
 /// [pt] A nação-chave ativa da competição `comp` (0x48dd70 sobre o registro [0xae23d0] + 0x6b × comp, sem jogo).
 pub(crate) unsafe fn comp_key_nation(comp: u32) -> u8 {
-    let nation: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
-    nation((read_u32(G_CLUB_COMP_TABLE).wrapping_add(comp.wrapping_mul(0x6b))) as usize, 0) as u8
+    (exe::comp_active_key_nation_of_fixture((read_u32(G_CLUB_COMP_TABLE).wrapping_add(comp.wrapping_mul(0x6b))) as usize, 0) as u32) as u8
 }
 
 /// Fixture passes the `find_fixtures` filters: type (+0x42), club home/away with its side (+0x40/+0x41) and competition (+0);
@@ -2049,11 +2044,9 @@ pub(crate) unsafe extern "thiscall" fn find_fixtures(this: usize, dia0: u32, ano
             nations[1] = 1;
             n = 2;
         } else {
-            let of_club: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_CLUB);
-            let parceira: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_FIX_MAN_GET_PARTNER_KEY_NATION_INDEX);
             nations[..6].copy_from_slice(&[2, 3, 4, 5, 6, 7]);
-            nations[6] = of_club(reg) as u8;
-            nations[7] = parceira(reg) as u8;
+            nations[6] = (exe::comp_active_key_nation_of_club(reg) as u32) as u8;
+            nations[7] = (exe::fix_man_get_partner_key_nation_index(reg) as u32) as u8;
             n = 8;
             for i in 0..7 {
                 if (i + 1..8).any(|j| nations[j] == nations[i]) {
@@ -2292,9 +2285,8 @@ pub(crate) unsafe fn fixture_matches_next_filter(f: usize, comp: i32, stage: i32
 /// 0x51a150, 0x522c70). Sem SEH, sem caixa (a da 0x5abf10 só sem memória).
 pub(crate) unsafe extern "thiscall" fn find_next_fixture(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, stage: i32, club: i32, club_b: i32, _a9: u32, _a10: u32, _a11: u32) -> usize {
-    let group_of: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
     let table = *(G_CLUB_COMP_TABLE as *const usize);
-    let group = group_of(table.wrapping_add((comp as usize).wrapping_mul(107)), 0) as u8 as u32;
+    let group = (exe::comp_active_key_nation_of_fixture(table.wrapping_add((comp as usize).wrapping_mul(107)), 0) as u32) as u8 as u32;
     let (mut year, mut day, mut slice) = (*pano, *pdia, *pfatia as u16);
     let find = |year: u16, day: u16, slice: u16| -> usize {
         let l = get_fixture_list_rewound(this, year as u32, day as u32, slice as u32, group);
@@ -2375,8 +2367,7 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_in_use(this: usize, stadium: u
     if stadium == 0 {
         return 0;
     }
-    let group_of_stadium: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_STADIUM);
-    let mut groups = [0u8, 1, 2, 3, 4, 5, 6, 7, group_of_stadium(stadium) as u8];
+    let mut groups = [0u8, 1, 2, 3, 4, 5, 6, 7, (exe::comp_active_key_nation_of_stadium(stadium) as u32) as u8];
     for i in 0..8 {
         for j in i + 1..9 {
             if groups[i] as i8 >= 0 && groups[i] == groups[j] {

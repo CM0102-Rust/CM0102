@@ -28,7 +28,7 @@ MUTACOES = [
     ('cpo_prever_negocia', 'crate::comparison::branch("cpo_9 negotiates");\n    1\n}', 'crate::comparison::branch("cpo_9 negotiates");\n    2 // mutacao: recusa\n}', 'cpo_9 negotiates'),
     ('cpo_periodo_recua', 'let m = (*month).wrapping_sub(1);', 'let m = (*month).wrapping_sub(2); // mutacao: dois meses', 'cpo_9 steps back the month'),
     ('cpo_prazo_sorteio', 'let s = exe::utils_random(status as i32 / 10 + 0xc) as i8;', 'let s = exe::utils_random(status as i32 / 10 + 6) as i8; // mutacao: ate +6', 'cpo_10 drawn deadline'),
-    ('cpo_prestacao_acabada', 'exe::llist_remove(list, e);', 'let _ = (remove, list); // mutacao: a acabada fica', 'cpo_10 instalment finished'),
+    ('cpo_prestacao_acabada', 'exe::llist_remove(list, e);', 'let _ = list; // mutacao: a acabada fica', 'cpo_10 instalment finished'),
     ('cpo_tirar_ofertas_pessoa', '*q = (*q).wrapping_sub(1); // the offers for the person', '// mutacao: sem baixar as ofertas pela pessoa', 'cpo_10 remove offer'),
     ('cpo11_suspensao_sem_regras', 'exe::rulingbody_attach_ban(ruling_body_of_rule(this, rule), id, slot as u16 as u32); // links the rule to the suspension', 'let _ = (&ligar, slot); // mutacao: a regra sem ligar a suspensao', 'cpo_11 new suspension'),
     ('cpo11_transferido_sem_cobertura', 'if ruling_body_covers_club(body, club) {\n            continue;\n        }\n        let e = ruling_body_entry(body, id);\n        if e == 0 {', '// mutacao: o clube novo nunca cobre\n        let e = ruling_body_entry(body, id);\n        if e == 0 {', 'cpo_11 transferred frees the slot'),
