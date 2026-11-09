@@ -160,6 +160,7 @@ pub(crate) unsafe fn append_history_node(this: usize, reg: usize, no: &[u8; 0x2b
 /// 365 dias desde a entrada no clube (+0x3e/+0x42, 0x54cdb0). Com `clube` ≥ 0 ou `valor` ≥ 0: recontam-se os jogos (+0x20) e os gols (+0x22) pelo
 /// `clube` nos nós da categoria 2 do histórico (0x58f120). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, value: u32, loan: u32, end: u32, club_id: u32, other: u32) -> u32 {
+    let p = Staff(p);
     let kind: u8 = if loan as u8 != 0 {
         2
     } else if end as u8 != 0 {
@@ -169,12 +170,12 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
     } else {
         0
     };
-    if p == 0 {
+    if p.is_null() {
         show_error_at(0xa78310, 0xf28);
         return 0;
     }
-    let club = Club(read_usize(p + staff::CLUB_JOB));
-    let f = read_usize(p + staff::PLAYER);
+    let club = Club(p.club_job());
+    let f = p.player();
     if f == 0 {
         return 0;
     }
@@ -219,7 +220,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         } else if !mark {
             true
         } else {
-            exe::date_days_since(G_CURRENT_DATE, read_usize(p + staff::DATE_JOINED_CLUB) as u32, read_usize(p + 0x42) as u32) < 0x16d
+            exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, read_usize(p.addr() + 0x42) as u32) < 0x16d
         };
         if write {
             let no = career_history_node(club.addr(), None, value, 0x30 | kind); // cqh8: the empty node of the sixth category
@@ -344,15 +345,16 @@ pub(crate) fn history_entry_at(buf: usize, n: i32, k: i32) -> usize {
 /// jogos com a última entrada sem clube (+0xd9) também some. (6) Os grupos de ano 0 saem da tabela (os seguintes
 /// descem) e a conta cai 6 por grupo.
 pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, count: *mut i32) -> usize {
+    let p = Staff(p);
     *count = 0;
-    if p == 0 {
+    if p.is_null() {
         show_player_stats_error(0xb98);
         return 0;
     }
-    if read_i32(p) >= read_i32(G_STAFF_COUNT) {
+    if read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    let f = read_usize(p + staff::PLAYER);
+    let f = p.player();
     if f == 0 {
         show_player_stats_error(0xbaa);
         return 0;
@@ -363,7 +365,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         return 0;
     }
     let mut cap: i32 = 500;
-    let club = read_usize(p + staff::CLUB_JOB);
+    let club = p.club_job();
     let mut last = PlayerStatsEntry::nova(0, 0, 0, 0);
     for cat in 1..=6u8 {
         let year = exe::key_nation_get_club_season_year(club);
@@ -573,7 +575,8 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
 /// de [0xae2364]: −1. Quem chama a põe com o ecx do PlayerStats, que ela não usa. Pela 0x5b03e0 (não roda na carreira
 /// automática: passageira).
 pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize, club: usize) -> i16 {
-    if p == 0 {
+    let p = Staff(p);
+    if p.is_null() {
         show_player_stats_error(0x133f);
         return -1;
     }
@@ -581,13 +584,13 @@ pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize,
         show_player_stats_error(0x1347);
         return -1;
     }
-    if read_i32(p) >= read_i32(G_STAFF_COUNT) {
+    if read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
         return -1;
     }
-    if read_usize(p + staff::CLUB_JOB) == club {
+    if p.club_job() == club {
         return 0;
     }
-    if read_usize(p + staff::PLAYER) == 0 {
+    if p.player() == 0 {
         show_player_stats_error(0x135f);
         return -1;
     }
@@ -805,14 +808,15 @@ pub(crate) unsafe extern "C" fn player_stats_compare_history_by_club(a: usize, b
 /// seis por temporada e clube) e a soma, em 16 bits, do byte +8 da sexta entrada de cada grupo (+0xdf); a tabela é
 /// liberada (0x9452ca, também quando nula). Quente (cada jogador de cada partida): sem contador.
 pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(person: usize) -> u16 {
-    if person == 0 {
+    let person = Staff(person);
+    if person.is_null() {
         show_error_at(0xa78310, 0xb4b);
         return 0;
     }
-    if read_i32(person) >= read_i32(G_STAFF_COUNT) {
+    if read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    if read_usize(person + staff::PLAYER) == 0 {
+    if person.player() == 0 {
         show_error_at(0xa78310, 0xb5d);
         return 0;
     }
@@ -1047,10 +1051,11 @@ pub(crate) unsafe extern "thiscall" fn improve_language(this: usize, person: usi
 /// (as notas recentes) e esvazia o histórico (0x58f110 sobre [this] com +0x18/+0x1c). Pessoa nula ou não jogadora
 /// (+0x61): a original (caixa fatal). Devolve o que a 0x58f110 devolve. Do regen (0x7a59e0).
 pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, person: usize) -> usize {
-    if person == 0 || read_usize(person + staff::PLAYER) == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER)(this, person); // fatal box: original only
+    let person = Staff(person);
+    if person.is_null() || person.player() == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER)(this, person.addr()); // fatal box: original only
     }
-    let r = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(read_usize(person + staff::PLAYER)).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
+    let r = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(person.player()).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
     for k in 0..6usize {
         let i = read_usize(r + 4 * k);
         if i as u32 == 0xffff_ffff {
@@ -1088,25 +1093,26 @@ pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pe
 /// 0x946464, comparação 0x7c6d40, registros de 6 bytes em [+0x3c], [+0x44] deles) pela chave {id, idioma}, o byte +5;
 /// sem a tabela ou sem o registro, 0. Os chamadores só leem o al.
 pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person: usize, club: usize, language: u32, by_contract: u32) -> u8 {
+    let person = Staff(person);
     let club = Club(club);
     let language = language as u8;
-    if person != 0 && read_usize(person) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
-        return if read_u8(read_usize(person + staff::NATION) + 0x77) == language { 10 } else { 0 }; // the human manager
+    if !person.is_null() && read_usize(person.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
+        return if read_u8(person.nation() + 0x77) == language { 10 } else { 0 }; // the human manager
     }
     if by_contract != 0 {
         let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
         if c != 0 {
-            let cp = Club(read_usize(person + staff::CLUB_JOB));
+            let cp = Club(person.club_job());
             if !cp.is_null() && club.nation().addr() == cp.nation().addr() {
                 return read_u8(c + contract::SQUAD_STATUS) & 0xf;
             }
         }
     }
     let fala = |l: u8| {
-        if read_u8(read_usize(person + staff::NATION) + 0x77) == l {
+        if read_u8(person.nation() + 0x77) == l {
             return true;
         }
-        let s = read_usize(person + staff::SECOND_NATION);
+        let s = person.second_nation();
         s != 0 && read_u8(s + nation::FIRST_LANGUAGE) == l // the second nation
     };
     if !club.is_null() {
@@ -1123,7 +1129,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         return 0;
     }
     let mut key = [0u8; 8];
-    key[..4].copy_from_slice(&(read_usize(person) as u32).to_le_bytes());
+    key[..4].copy_from_slice(&(read_usize(person.addr()) as u32).to_le_bytes());
     key[4] = language;
     let e = exe::crt_bsearch((key.as_ptr()) as usize, base, (read_usize(this + player_stats_fields::LANGUAGE_COUNT)) as u32, (6) as u32, 0x7c6d40);
     if e == 0 {
@@ -1289,11 +1295,11 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
         let k = (exe::key_nation_index_of_club(club) as i8) as isize; // only al
         if (0xb63d60usize).wrapping_add((k * 72) as usize) == nation {
             for s in 0..50usize {
-                let p = read_usize(club.addr() + club::SQUAD + 4 * s);
-                if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
+                let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * s));
+                if p.is_null() || p.player() == 0 || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                     continue;
                 }
-                if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + staff::CLUB_JOB) == club.addr() {
+                if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 || p.club_job() == club.addr() {
                     crate::comparison::branch("cpp_10 archive");
                     exe::playerstats_archive_player_stats(this, p, -1, 0, 0, -1, 0);
                 }
@@ -1400,7 +1406,8 @@ pub(crate) unsafe extern "thiscall" fn get_last_match_rating(stats: usize, id: *
 /// clube (+0xd9, com sinal, não negativo) é o id do `clube`; a tabela é liberada (0x9452ca, também quando nula).
 /// Quente (cada jogador de cada partida): sem contador.
 pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: usize, club: usize) -> u16 {
-    if person == 0 {
+    let person = Staff(person);
+    if person.is_null() {
         show_error_at(0xa78310, 0xb04);
         return 0;
     }
@@ -1408,10 +1415,10 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
         show_error_at(0xa78310, 0xb0c);
         return 0;
     }
-    if read_i32(person) >= read_i32(G_STAFF_COUNT) {
+    if read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    if read_usize(person + staff::PLAYER) == 0 {
+    if person.player() == 0 {
         show_error_at(0xa78310, 0xb1e);
         return 0;
     }
@@ -1447,6 +1454,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
 /// +0x78/+0x79 da competição: 500/1000/500/300 pela primeira, 300/500/300/100 pela segunda; sem
 /// competição, 0. Devolve só `ax`.
 pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> u16 {
+    let p = Staff(p);
     let k = |a: usize| *(a as *const i32);
     // as in the original: the first constant equal to the id decides (without the right code, goes to the codes)
     let special = |id: i32| -> u8 {
@@ -1462,7 +1470,7 @@ pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> 
             0
         }
     };
-    let c1 = core::ptr::read_unaligned((p + staff::NATION) as *const usize);
+    let c1 = core::ptr::read_unaligned((p.addr() + staff::NATION) as *const usize);
     if c1 == 0 {
         return 0;
     }
@@ -1477,7 +1485,7 @@ pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> 
     if *((c1 + nation::THIRD_LANGUAGE) as *const i8) == code {
         return 300;
     }
-    let c2 = core::ptr::read_unaligned((p + staff::SECOND_NATION) as *const usize);
+    let c2 = core::ptr::read_unaligned((p.addr() + staff::SECOND_NATION) as *const usize);
     if c2 == 0 {
         return 0;
     }

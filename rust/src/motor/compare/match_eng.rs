@@ -700,23 +700,24 @@ pub(crate) unsafe extern "C" fn compare_kit(club: usize, other: usize, any: u32)
 /// Comparer for `develop_player`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn compare_develop_player(jm: usize, person: usize, club: usize, rep: usize, comp: usize, rating: f32, average_b: u32, strong: u32) {
+    let person = Staff(person);
     type F = unsafe extern "C" fn(usize, usize, usize, usize, usize, f32, u32, u32);
     let o = original_fn::<F>(IDX_DEVELOP_PLAYER);
     if is_recording_wrap_up_calls() {
-        call_recording(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, jm, [person as u32, club as u32, rep as u32, rating.to_bits(), average_b & 0xff | (strong & 0xff) << 8], || {
-            o(jm, person, club, rep, comp, rating, average_b, strong);
+        call_recording(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, jm, [person.addr() as u32, club as u32, rep as u32, rating.to_bits(), average_b & 0xff | (strong & 0xff) << 8], || {
+            o(jm, person.addr(), club, rep, comp, rating, average_b, strong);
             0
         });
         return;
     }
-    let st = *((person + staff::PLAYER) as *const usize);
+    let st = person.player();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(st + player_sheet::CURRENT_ABILITY, 0xa), (st + player_sheet::PLAYER_MORALE, 1)]);
     if jm != 0 {
         reg.extend([(jm + 0x17, 1), (jm + 0x47, 6)]);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(jm, person, club, rep, comp, rating, average_b, strong), || {
-        crate::rng::without_counting(|| develop_player(jm, person, club, rep, comp, rating, average_b, strong))
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(jm, person.addr(), club, rep, comp, rating, average_b, strong), || {
+        crate::rng::without_counting(|| develop_player(jm, person.addr(), club, rep, comp, rating, average_b, strong))
     });
     SCOREBOARD.record(igual, || format!("develop_player(nota {} jogo {}) original={:x?} rust={:x?}", rating, jm != 0, mo, mr));
 }

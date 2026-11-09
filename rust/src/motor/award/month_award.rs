@@ -120,11 +120,12 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
 /// [pt] As regiões que a reputação do premiado grava: o registro do jogador (+0x61: +9..+0xe), o do não jogador (+0x69:
 /// +8..+0xd) e a linha da diretoria do clube (73 bytes em [[0xb67a44]], palavra +6).
 pub(crate) unsafe fn winner_reputation_regions(regions: &mut Vec<(usize, usize)>, person: usize, club: usize) {
-    let p = read_usize(person + staff::PLAYER);
+    let person = Staff(person);
+    let p = person.player();
     if p != 0 {
         regions.push((p + 9, 6));
     }
-    let np = read_usize(person + staff::NON_PLAYER);
+    let np = person.non_player();
     if np != 0 {
         regions.push((np + 8, 6));
     }

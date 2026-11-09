@@ -93,13 +93,14 @@ pub(crate) unsafe extern "thiscall" fn compare_set_squad_number(this: usize, p: 
 /// posição da ficha é boa, a original lê a lista de preferidos de 4 bytes sem valor na pilha (sobra de quem chamou):
 /// a cópia usa a lista vazia (um valor que o jogo produz quando a sobra é 0xff) e o comparador deixa só a original.
 pub(crate) unsafe extern "thiscall" fn compare_allocate_squad_number(this: usize, c: usize, p: usize) {
+    let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ALLOCATE_SQUAD_NUMBER);
-    if p == 0 || read_u32(p + staff::PLAYER) == 0 || preferred_squad_numbers(read_u32(p + staff::PLAYER) as usize).is_none() {
-        return o(this, c, p);
+    if p.is_null() || (p.player() as u32) == 0 || preferred_squad_numbers((p.player() as u32) as usize).is_none() {
+        return o(this, c, p.addr());
     }
-    let reg = squad_number_regions(&[p]);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, p), || allocate_squad_number(this, c, p));
-    SCOREBOARD.record(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p, mo.0, mr.0));
+    let reg = squad_number_regions(&[p.addr()]);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, p.addr()), || allocate_squad_number(this, c, p.addr()));
+    SCOREBOARD.record(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p.addr(), mo.0, mr.0));
 }
 
 /// Comparer for `assign_club_squad_numbers`.

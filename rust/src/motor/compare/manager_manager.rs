@@ -230,8 +230,8 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
     let mut sobra = 0u32;
     if exe::database_is_national_team(club) == 0 {
         for k in 0..50usize {
-            let p = read_usize(club.addr() + club::SQUAD + 4 * k);
-            if p == 0 || read_usize(p + staff::PLAYER) == 0 {
+            let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * k));
+            if p.is_null() || p.player() == 0 {
                 continue;
             }
             let ct = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
@@ -295,10 +295,10 @@ pub(crate) unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ASSESS_TRANSFER_DEAL);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(f1, 2), (f2, 2)]);
-    let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE));
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE)));
     let buyer = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(transf + 8).wrapping_mul(club::SIZE));
     reg.push((board_row_at(this, read_usize(buyer)) + 0x38, 8));
-    let seller = read_usize(person + staff::CLUB_JOB);
+    let seller = person.club_job();
     if seller != 0 {
         reg.push((board_row_at(this, read_usize(seller)) + 0x38, 8));
     }
@@ -314,12 +314,12 @@ pub(crate) unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize,
 pub(crate) unsafe extern "thiscall" fn compare_apply_transfer_confidence_changes(this: usize, transf: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_APPLY_TRANSFER_CONFIDENCE_CHANGES);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE));
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE)));
     reg.push((board_row_at(this, read_usize(transf + 8)), 0x49));
-    let seller = Club(read_usize(person + staff::CLUB_JOB));
+    let seller = Club(person.club_job());
     if !seller.is_null() {
         reg.push((board_row_at(this, read_usize(seller.addr())), 0x49));
-        let pref = staff_preferences(seller.chairman().addr());
+        let pref = staff_preferences(Staff(seller.chairman().addr()));
         if pref != 0 {
             reg.push((pref + preferences::STAFF_FAVOURITE_STAFF1, 12));
         }
@@ -357,12 +357,13 @@ pub(crate) unsafe extern "thiscall" fn compare_process_pending_departures(this: 
 /// [pt] Comparador: a original tira a pessoa das listas, da mídia e das táticas (não pode rodar duas vezes): roda só ela e
 /// confere o plano: a função e o clube (e a seleção) da pessoa e ela fora das 50 vagas do elenco.
 pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove_player_from_squad(this: usize, person: usize, club: usize) -> usize {
+    let person = Staff(person);
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_MANAGER_MANAGER_REMOVE_PLAYER_FROM_SQUAD);
-    let in_club = read_usize(person + staff::CLUB_JOB) == club.addr();
-    let in_national_team = read_usize(person + staff::NATIONAL_JOB) == club.addr();
-    let (mut f39, mut c39) = (read_u8(person + staff::JOB_FOR_CLUB), read_usize(person + staff::CLUB_JOB));
-    let (mut f28, mut c24) = (read_u8(person + staff::JOB_FOR_NATION), read_usize(person + staff::NATIONAL_JOB));
+    let in_club = person.club_job() == club.addr();
+    let in_national_team = person.national_job() == club.addr();
+    let (mut f39, mut c39) = (person.job_for_club(), person.club_job());
+    let (mut f28, mut c24) = (person.job_for_nation(), person.national_job());
     if in_club {
         let (f, fica) = role_after_leaving(f39);
         f39 = f;
@@ -377,11 +378,11 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove_player_fro
             c24 = 0;
         }
     }
-    let r = o(this, person, club.addr());
-    let away = !(in_club || in_national_team) || (0..0x32usize).all(|k| read_usize(club.addr() + club::SQUAD + 4 * k) != person);
-    let ok = away && read_u8(person + staff::JOB_FOR_CLUB) == f39 && read_usize(person + staff::CLUB_JOB) == c39 && read_u8(person + staff::JOB_FOR_NATION) == f28 && read_usize(person + staff::NATIONAL_JOB) == c24;
+    let r = o(this, person.addr(), club.addr());
+    let away = !(in_club || in_national_team) || (0..0x32usize).all(|k| read_usize(club.addr() + club::SQUAD + 4 * k) != person.addr());
+    let ok = away && person.job_for_club() == f39 && person.club_job() == c39 && person.job_for_nation() == f28 && person.national_job() == c24;
     SCOREBOARD.record(ok, || format!("manager_manager_remove_player_from_squad(pessoa {:x}, clube {:x}): função {:x}/{:x} clube {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), fora das vagas {}",
-        read_usize(person), read_usize(club.addr()), read_u8(person + staff::JOB_FOR_CLUB), read_u8(person + staff::JOB_FOR_NATION), read_usize(person + staff::CLUB_JOB), read_usize(person + staff::NATIONAL_JOB), f39, f28, c39, c24, away));
+        read_usize(person.addr()), read_usize(club.addr()), person.job_for_club(), person.job_for_nation(), person.club_job(), person.national_job(), f39, f28, c39, c24, away));
     r
 }
 
@@ -396,21 +397,22 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove_player_fro
 /// roda só ela e confere o plano feito antes com o corpo (`detach_staff_from_club`) sobre cópias dos campos da pessoa e das vagas
 /// do clube. Pessoa humana: só a original (as listas do humano podem mexer no clube).
 pub(crate) unsafe extern "thiscall" fn compare_remove_staff_from_club(this: usize, person: usize, club: usize) -> usize {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_REMOVE_STAFF_FROM_CLUB);
-    if person == 0 || club == 0 || read_i32(person) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
-        return o(this, person, club);
+    if person.is_null() || club == 0 || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
+        return o(this, person.addr(), club);
     }
     // the plan: the fields in copies with the same offsets
     let mut s = [0u8; 0x40];
     let mut c = [0u8; 0x1e0];
-    core::ptr::copy_nonoverlapping(person as *const u8, s.as_mut_ptr(), 0x40);
+    core::ptr::copy_nonoverlapping(person.addr() as *const u8, s.as_mut_ptr(), 0x40);
     core::ptr::copy_nonoverlapping(club as *const u8, c.as_mut_ptr(), 0x1e0);
-    detach_staff_from_club(person, s.as_mut_ptr() as usize, club, Club(c.as_mut_ptr() as usize));
-    let expected = staff_job_fields(s.as_ptr() as usize, Club(c.as_ptr() as usize));
-    let r = o(this, person, club);
+    detach_staff_from_club(person.addr(), Staff(s.as_mut_ptr() as usize), club, Club(c.as_mut_ptr() as usize));
+    let expected = staff_job_fields(Staff(s.as_ptr() as usize), Club(c.as_ptr() as usize));
+    let r = o(this, person.addr(), club);
     let after = staff_job_fields(person, Club(club));
     SCOREBOARD.record(after == expected, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
-        read_usize(person), read_u8(person + staff::JOB_FOR_CLUB) as i8, read_usize(club), after.0, after.1, expected.0, expected.1));
+        read_usize(person.addr()), person.job_for_club() as i8, read_usize(club), after.0, after.1, expected.0, expected.1));
     r
 }
 

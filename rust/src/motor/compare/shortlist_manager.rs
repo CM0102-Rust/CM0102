@@ -76,8 +76,8 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_player_under_offer(this: usi
 pub(crate) unsafe extern "thiscall" fn compare_value_player_for_club(this: usize, club: usize, p: usize, slot: usize, out: *mut i32, minimum: i32, ceiling: u32) -> i32 {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32, i32, u32) -> i32>(IDX_VALUE_PLAYER_FOR_CLUB);
-    let obs = club.manager().addr();
-    if obs != 0 && read_usize(obs + staff::NON_PLAYER) == 0 {
+    let obs = Staff(club.manager().addr());
+    if !obs.is_null() && obs.non_player() == 0 {
         return o(this, club.addr(), p, slot, out, minimum, ceiling);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out as usize, 4)], || o(this, club.addr(), p, slot, out, minimum, ceiling), || value_player_for_club(this, club.addr(), p, slot, out, minimum, ceiling));
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_loan
 /// evento 4 e no evento 1 que preenche a vaga, só a original (a cópia leva os ramos).
 pub(crate) unsafe extern "thiscall" fn compare_update_staff_status(this: usize, person: usize, club: usize, event: u32, kind: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(IDX_UPDATE_STAFF_STATUS);
-    if is_original_only_case(this, person, club, event, kind) {
+    if is_original_only_case(this, Staff(person), club, event, kind) {
         return o(this, person, club, event, kind);
     }
     let mut reg = STAFF_STATUS_DATE_STATICS.to_vec();
@@ -193,13 +193,14 @@ pub(crate) unsafe extern "thiscall" fn compare_allocate_transfer_budget(this: us
 ///
 /// [pt] Comparador: a devolução (rotina pura); sem ficha de jogador, só a original (caixa).
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_squad_status_allowed(person: usize, status: u32) -> u32 {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u32>(IDX_SHORTLIST_MANAGER_SQUAD_STATUS_ALLOWED);
-    if read_usize(person + staff::PLAYER) == 0 {
-        return o(person, status);
+    if person.player() == 0 {
+        return o(person.addr(), status);
     }
-    let r = o(person, status);
-    let n = shortlist_manager_squad_status_allowed(person, status);
-    SCOREBOARD.record(r == n, || format!("shortlist_manager_squad_status_allowed(pessoa {:x}, estatuto {}) original={} rust={}", person, status as i8, r, n));
+    let r = o(person.addr(), status);
+    let n = shortlist_manager_squad_status_allowed(person.addr(), status);
+    SCOREBOARD.record(r == n, || format!("shortlist_manager_squad_status_allowed(pessoa {:x}, estatuto {}) original={} rust={}", person.addr(), status as i8, r, n));
     r
 }
 

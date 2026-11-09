@@ -564,28 +564,28 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
 pub(crate) unsafe fn undo_holiday_managers() {
     let u = |a: usize| *(a as *const usize);
     for i in 0..0x10usize {
-        let s = u(G_STAFF_TABLE).wrapping_add(0x6e * ((*(G_STAFF_COUNT as *const i32)).wrapping_sub(i as i32).wrapping_sub(1) as usize));
-        if *((s + staff::CLASSIFICATION) as *const u8) != 5 {
+        let s = Staff(u(G_STAFF_TABLE).wrapping_add(0x6e * ((*(G_STAFF_COUNT as *const i32)).wrapping_sub(i as i32).wrapping_sub(1) as usize)));
+        if s.classification() != 5 {
             continue;
         }
-        *((s + staff::CLASSIFICATION) as *mut u8) = 0;
+        s.set_classification(0);
         exe::news_clear_inbox(u(G_NEWS), s);
         for f in [0x5fd2f0usize, 0x5fd590, 0x5fe140] {
             let f: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(f);
-            f(u(G_HUMAN_MANAGER), 0, s);
+            f(u(G_HUMAN_MANAGER), 0, s.addr());
         }
         for (g, f) in [(G_CONTRACT_MANAGER, 0x4ccbf0usize), (G_CONTRACT_MANAGER, 0x4d0b50), (G_CONTRACT_MANAGER, 0x4d0bd0), (G_NATIONAL_TEAMS, 0x775ba0), (G_STAFF_RECORDS, 0x86fb80), (G_STAFF_RECORDS, 0x86fc70)] {
             let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(f);
-            f(u(g), s);
+            f(u(g), s.addr());
         }
-        *((s + staff::CLASSIFICATION) as *mut u8) = 0;
-        *(u(s + staff::FIRST_NAME) as *mut u8) = 0;
-        *(u(s + staff::SECOND_NAME) as *mut u8) = 0;
-        *(u(s + staff::COMMON_NAME) as *mut u8) = 0;
-        exe::date_set(s + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
-        *((s + staff::AGE) as *mut u16) = 0x7ae;
-        core::ptr::write_unaligned((s + staff::NATIONAL_JOB) as *mut u32, 0);
-        core::ptr::write_unaligned((s + staff::CLUB_JOB) as *mut u32, 0);
+        s.set_classification(0);
+        *(u(s.addr() + staff::FIRST_NAME) as *mut u8) = 0;
+        *(u(s.addr() + staff::SECOND_NAME) as *mut u8) = 0;
+        *(u(s.addr() + staff::COMMON_NAME) as *mut u8) = 0;
+        exe::date_set(s.addr() + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
+        s.set_age((0x7ae) as i16);
+        core::ptr::write_unaligned((s.addr() + staff::NATIONAL_JOB) as *mut u32, 0);
+        core::ptr::write_unaligned((s.addr() + staff::CLUB_JOB) as *mut u32, 0);
         exe::screenmanager_remove_manager_record(G_SCREEN_MANAGER, s, -1);
     }
 }

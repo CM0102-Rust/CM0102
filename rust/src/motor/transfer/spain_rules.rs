@@ -57,6 +57,7 @@ pub(crate) const FRANCE_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
 /// motivo)`: fora da janela (0x8e8e50): 9; com contrato, entre clubes da mesma divisão (+0x57) depois de mais de
 /// [0x968990] jogos do jogador na liga (0x7c1e30 da ficha +0x61, tipo 2, 1, 6,5): 0x1f.
 pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+    let player = Staff(player);
     let club = Club(club);
     // 0x8e8e50: push 0; push 0xae2c90; mov ecx, edi (this) -> thiscall, ret 8
     let window: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
@@ -64,13 +65,13 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, 
         crate::comparison::branch("cqe_6 spain outside the window");
         return refuse_outside_window(this, msg, reason);
     }
-    let owner = Club(match loan_owner_club(player) {
+    let owner = Club(match loan_owner_club(player.addr()) {
         None => return 1,
         Some(d) => d,
     });
     if club.division().addr() == owner.division().addr() {
         // 0x7c1e30: push 6,5f; push 1; push 2; push record; mov ecx, [0xb74350] -> thiscall, ret 0x10 (returns in st0)
-        let v = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), read_usize(player + staff::PLAYER), 2, 1, 6.5);
+        let v = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), player.player(), 2, 1, 6.5);
         if v > read_f32(rdata::F32_5) as f64 {
             crate::comparison::branch("cqe_6 spain same division");
             return refuse_loan(msg, reason, 0xa82b00, read_usize(this + 0xa), 0x1f);

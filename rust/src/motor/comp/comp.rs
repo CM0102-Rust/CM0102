@@ -590,11 +590,11 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
 /// vetor)? Então ela pode realocar.
 pub(crate) unsafe fn callup_array_full(this: usize, team: Club) -> bool {
     (0..0x32usize).any(|i| {
-        let s = read_usize(team.addr() + club::SQUAD + 4 * i);
-        if s == 0 || read_usize(s) as i32 >= read_usize(G_STAFF_COUNT) as i32 || read_usize(s + staff::CLUB_JOB) == 0 {
+        let s = Staff(read_usize(team.addr() + club::SQUAD + 4 * i));
+        if s.is_null() || read_usize(s.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 || s.club_job() == 0 {
             return false;
         }
-        match club_callup_record(this, Club(read_usize(s + staff::CLUB_JOB))) {
+        match club_callup_record(this, Club(s.club_job())) {
             Some(rec) => *((rec + 4) as *const i8) == *((rec + 5) as *const i8),
             None => false,
         }

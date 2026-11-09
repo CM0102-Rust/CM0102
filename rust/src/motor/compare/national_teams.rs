@@ -291,22 +291,23 @@ pub(crate) unsafe extern "thiscall" fn compare_format_squad_label(this: usize, k
 /// seleção (+0x24) e a marca de convocado (+0x28) ficam; com retirada, o jogador que estava numa das 50 vagas do time
 /// sai delas (+0x24 zerado pela 0x7762f0). Sem clube (a caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_withdraw_injured_player(this: usize, p: usize, days: u32) {
+    let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_WITHDRAW_INJURED_PLAYER);
-    let club = Club(read_usize(p + staff::NATIONAL_JOB));
+    let club = Club(p.national_job());
     if (days as u16 as i16) < 0xe || club.is_null() {
-        return o(this, p, days);
+        return o(this, p.addr(), days);
     }
     let plan = release_plan(this, p, days);
     let team = Club(national_team_for_type(club.nation().addr(), call_up_type(club.addr(), p)));
-    let estava = !team.is_null() && (0..50usize).any(|c| read_usize(team.addr() + club::SQUAD + 4 * c) == p);
-    let before = (club.addr(), read_u8(p + staff::JOB_FOR_NATION));
-    o(this, p, days);
-    let after = (read_usize(p + staff::NATIONAL_JOB), read_u8(p + staff::JOB_FOR_NATION));
+    let estava = !team.is_null() && (0..50usize).any(|c| read_usize(team.addr() + club::SQUAD + 4 * c) == p.addr());
+    let before = (club.addr(), p.job_for_nation());
+    o(this, p.addr(), days);
+    let after = (p.national_job(), p.job_for_nation());
     let ok = match plan {
         0 => after == before,
         _ => !estava || after.0 == 0,
     };
-    SCOREBOARD.record(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p, days as u16 as i16, plan, estava, before, after));
+    SCOREBOARD.record(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p.addr(), days as u16 as i16, plan, estava, before, after));
 }
 
 /// Comparer for `national_teams_post_player_withdrawn_news`.
@@ -472,7 +473,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_player_to_squad(this: usize, 
     if team == 0 || p == 0 {
         return o(this, nation, kind, p);
     }
-    let reg = squad_change_regions(Club(team), p);
+    let reg = squad_change_regions(Club(team), Staff(p));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nation, kind, p), || add_player_to_squad(this, nation, kind, p));
     SCOREBOARD.record(igual, || format!("add_player_to_squad({:x}, {}, {:x}) {:x?} x {:x?}", nation, kind as u8, p, mo, mr));
 }
@@ -487,7 +488,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player_from
     if team == 0 || p == 0 {
         return o(this, nation, kind, p);
     }
-    let reg = squad_change_regions(Club(team), p);
+    let reg = squad_change_regions(Club(team), Staff(p));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nation, kind, p), || national_teams_remove_player_from_squad(this, nation, kind, p));
     SCOREBOARD.record(igual, || format!("national_teams_remove_player_from_squad({:x}, {}, {:x}) {:x?} x {:x?}", nation, kind as u8, p, mo, mr));
 }
@@ -581,17 +582,18 @@ pub(crate) unsafe extern "C" fn compare_compare_by_club(a: usize, b: usize) -> i
 
 /// Comparer for `national_teams_remove_player`.
 pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this: usize, player: usize) {
+    let player = Staff(player);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NATIONAL_TEAMS_REMOVE_PLAYER);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
-    let nation = u(player + staff::NATION);
-    if nation == 0 || u(player + staff::PLAYER) == 0 {
-        return o(this, player);
+    let nation = u(player.addr() + staff::NATION);
+    if nation == 0 || u(player.addr() + staff::PLAYER) == 0 {
+        return o(this, player.addr());
     }
     // the regions: the player, the nation record, the level band in the list and the national team (the level,
     // 0x76d810, only reads)
     let reg = u(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation as *const u32) as usize).wrapping_mul(110));
     let n = exe::national_teams_get_position_group(player, (reg as *const i16) as usize, (0) as u32) as i8 as isize;
-    let mut regions = [(player, 110), (reg, 110), (player, 0), (player, 0)];
+    let mut regions = [(player.addr(), 110), (reg, 110), (player.addr(), 0), (player.addr(), 0)];
     if (0..=3).contains(&n) {
         let start = (0..n as usize).fold(u(reg + 8) as i32, |s, k| s.wrapping_add(*((reg + 0xe + 4 * k) as *const u8) as i32));
         let size = *((reg + national_squad_record::RESERVE_GROUPS + 4 * n as usize) as *const u8) as usize;
@@ -599,10 +601,10 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
             regions[2] = (u(this + national_teams_fields::RESERVE_POOLS) + 4 * start as usize, 4 * size);
         }
     }
-    if u(player + staff::NATIONAL_JOB) != 0 {
-        regions[3] = (u(player + staff::NATIONAL_JOB) + 0xd7, 200);
+    if u(player.addr() + staff::NATIONAL_JOB) != 0 {
+        regions[3] = (u(player.addr() + staff::NATIONAL_JOB) + 0xd7, 200);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, player), || national_teams_remove_player(this, player));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, player.addr()), || national_teams_remove_player(this, player.addr()));
     SCOREBOARD.record(igual, || format!("national_teams_remove_player(nivel {}) {:x?} x {:x?}", n, mo, mr));
 }
 
@@ -678,11 +680,11 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
     let mut reg = vec![(team.addr() + club::SQUAD, 0xc8)];
     let mut vistos = Vec::new();
     for i in 0..0x32usize {
-        let s = read_usize(team.addr() + club::SQUAD + 4 * i);
-        if s == 0 || read_usize(s) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
+        let s = Staff(read_usize(team.addr() + club::SQUAD + 4 * i));
+        if s.is_null() || read_usize(s.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             continue;
         }
-        let c = read_usize(s + staff::CLUB_JOB);
+        let c = s.club_job();
         if c == 0 || vistos.contains(&c) {
             continue;
         }

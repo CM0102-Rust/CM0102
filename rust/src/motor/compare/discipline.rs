@@ -254,13 +254,14 @@ pub(crate) unsafe extern "thiscall" fn compare_release_ban(this: usize, id: u32,
 ///
 /// [pt] Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
 pub(crate) unsafe extern "thiscall" fn compare_clear_ban_history(this: usize, person: usize) -> usize {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CLEAR_BAN_HISTORY);
-    if person == 0 || read_usize(person + staff::PLAYER) == 0 {
-        return o(this, person);
+    if person.is_null() || person.player() == 0 {
+        return o(this, person.addr());
     }
-    let r = person_discipline_record(this, read_usize(person));
-    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + discipline_record::HISTORY_START, 8)], || o(this, person), || clear_ban_history(this, person));
-    SCOREBOARD.record(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", read_usize(person), mo, mr));
+    let r = person_discipline_record(this, read_usize(person.addr()));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + discipline_record::HISTORY_START, 8)], || o(this, person.addr()), || clear_ban_history(this, person.addr()));
+    SCOREBOARD.record(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", read_usize(person.addr()), mo, mr));
     a
 }
 
@@ -294,11 +295,12 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_set_slot(this: usize, 
 ///
 /// [pt] Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
 pub(crate) unsafe extern "thiscall" fn compare_is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
+    let player = Staff(player);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(IDX_IS_PLAYER_SUSPENDED);
-    let club = Club(if player != 0 { read_usize(player + staff::CLUB_JOB) } else { 0 });
+    let club = Club(if !player.is_null() { player.club_job() } else { 0 });
     let regions: &[(usize, usize)] = if !club.is_null() { &[(club.addr() + club::TEAM_SELECTED, 80)] } else { &[] };
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(this, player, comp, extra, partida), || is_player_suspended(this, player, comp, extra, partida));
-    SCOREBOARD.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", player, *comp, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(this, player.addr(), comp, extra, partida), || is_player_suspended(this, player.addr(), comp, extra, partida));
+    SCOREBOARD.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", player.addr(), *comp, r, n, mo, mr));
     r
 }
 

@@ -238,8 +238,8 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
     if exe::database_staff_matches_names(staff_records_staff_by_id(id_scout as usize), (read_usize(this + player_search_fields::SCOUT_NAME_REF)) as u32, (read_usize(this + 0x178)) as u32, (read_usize(this + 0x17c)) as u32, this + 0x184) == 0 {
         return 0;
     }
-    let scout = staff_records_staff_by_id(read_i32(this + player_search_fields::SCOUT_ID) as usize);
-    if scout == 0 || read_u8(result + 0x4c) != 0 {
+    let scout = Staff(staff_records_staff_by_id(read_i32(this + player_search_fields::SCOUT_ID) as usize));
+    if scout.is_null() || read_u8(result + 0x4c) != 0 {
         return 0;
     }
     let acompanhado = read_i32(this + player_search_fields::ASSIGNED_CLUB);
@@ -272,7 +272,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
         let request: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_SCOUT_MANAGER_HAS_SCOUT_REQUEST);
         // 0x7f9690: push &list; push scout’s club; mov ecx, [0xb74448] -> thiscall, ret 8; 0x68d1b0: lea ecx, list
         // -> thiscall; 0x7f8d70: push 1; push club; push player; mov ecx, [0xb74448] -> thiscall, ret 0xc
-        exe::scout_manager_collect_club_scout_targets(read_usize(G_SCOUT_MANAGER), read_usize(scout + staff::CLUB_JOB), l);
+        exe::scout_manager_collect_club_scout_targets(read_usize(G_SCOUT_MANAGER), scout.club_job(), l);
         let count = read_i16(l);
         if count == 0 {
             return 0;
@@ -284,11 +284,11 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
         let mut i: i32 = 0;
         if count > 0 {
             loop {
-                let item = exe::llist_get_next(l);
-                if item != 0 {
+                let item = Staff(exe::llist_get_next(l));
+                if !item.is_null() {
                     let (m, v) = (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB));
-                    let c39 = read_usize(item + staff::CLUB_JOB);
-                    let c24 = read_usize(item + staff::NATIONAL_JOB);
+                    let c39 = item.club_job();
+                    let c24 = item.national_job();
                     if c39 == m || c39 == v || c24 == m || c24 == v {
                         let mut side: i8 = 0;
                         while free {
@@ -296,7 +296,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
                             let mut k = 0usize;
                             while free {
                                 let id = read_i32(result + 0x190 + side as usize * 0x625 + k);
-                                if id != -1 && request(read_usize(G_SCOUT_MANAGER), staff_records_staff_by_id(id as usize), read_usize(scout + staff::CLUB_JOB), 1) != 0 {
+                                if id != -1 && request(read_usize(G_SCOUT_MANAGER), staff_records_staff_by_id(id as usize), scout.club_job(), 1) != 0 {
                                     free = false;
                                 }
                                 k += 0x49;
@@ -349,7 +349,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
     exe::date_date_54a110(reg);
     exe::record_holder_construct(reg + 0x1f);
     exe::record_holder_construct(reg + 0x37);
-    let club_scout = read_usize(scout + staff::CLUB_JOB);
+    let club_scout = scout.club_job();
     for side in 0..2usize {
         let mut e = result + 0x1c0 + side * 0x625;
         for j in 0..0x14i32 {
@@ -362,11 +362,11 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
             if id == -1 {
                 continue;
             }
-            let p = staff_records_staff_by_id(id as usize);
-            if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
+            let p = Staff(staff_records_staff_by_id(id as usize));
+            if !p.is_null() && read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
-            if player_search_contract_club(p) == club_scout || read_usize(p + staff::PLAYER) == 0 {
+            if player_search_contract_club(p.addr()) == club_scout || p.player() == 0 {
                 continue;
             }
             if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
@@ -375,7 +375,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
                     exe::fog_of_war_map_raise_knowledge(q, p, scout);
                 }
             }
-            let pediu = request(read_usize(G_SCOUT_MANAGER), p, club_scout, 0);
+            let pediu = request(read_usize(G_SCOUT_MANAGER), p.addr(), club_scout, 0);
             if pediu == 0 {
                 let target = read_i32(this + player_search_fields::ASSIGNED_COMP);
                 if !(target != -1 && read_i32(game) == target) && exe::database_get_staff_reputation_for_viewer(p, scout, 0) >= 0xfa0 { // cqf10: perceived reputation

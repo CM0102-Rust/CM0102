@@ -379,12 +379,12 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
     while chosen == 0 {
         let minimum = ftol(games_of_club() as i32 as f64 * factor) as i16;
         for s in 0..50usize {
-            let p = read_usize(club.addr() + club::SQUAD + 4 * s);
-            if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
+            let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * s));
+            if p.is_null() || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
-            let player = read_usize(p + staff::PLAYER);
-            if player == 0 || read_usize(p + staff::CLUB_JOB) != club.addr() {
+            let player = p.player();
+            if player == 0 || p.club_job() != club.addr() {
                 continue;
             }
             let st = exe::playerstats_get_category_record(read_usize(G_PLAYER_STATS), player, 6);
@@ -395,10 +395,10 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
             if (games as i16) < minimum || games == 0 {
                 continue;
             }
-            let rating = fan_rating(p, club.addr(), st);
+            let rating = fan_rating(p.addr(), club.addr(), st);
             if rating > best {
                 best = rating;
-                chosen = p;
+                chosen = p.addr();
             }
         }
         factor -= read_f64(rdata::F64_0_1);
@@ -659,15 +659,15 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
     write_usize(r + club_record::SEASON_RATING, 0xbf800000); // −1.0f
     let mut found = 0;
     for k in 0..50usize {
-        let p = read_usize(club.addr() + club::SQUAD + 4 * k);
-        if p == 0 {
+        let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * k));
+        if p.is_null() {
             continue;
         }
-        let est = read_usize(p + staff::PLAYER);
-        if est == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
+        let est = p.player();
+        if est == 0 || read_usize(p.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             continue;
         }
-        if read_usize(p + staff::CLUB_JOB) != club.addr() && read_usize(p + staff::CLUB_JOB) != exe::club_get_linked_b_team(club, (0) as *mut u32, 1) {
+        if p.club_job() != club.addr() && p.club_job() != exe::club_get_linked_b_team(club, (0) as *mut u32, 1) {
             continue;
         }
         let reg = exe::playerstats_get_category_record(read_usize(G_PLAYER_STATS), est, 6);

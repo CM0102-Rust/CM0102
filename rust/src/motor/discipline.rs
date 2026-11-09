@@ -362,8 +362,8 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
     let n = read_i16(this + discipline_fields::NATION_INDEX_COUNT);
     let item = read_usize(this + discipline_fields::NATION_INDEX).wrapping_add((n as i32 as usize).wrapping_mul(8));
     write_u32(item, id);
-    let person = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
-    write_u32(item + nation_index_item::NATION_ID, read_usize(read_usize(person + staff::NATION)) as u32); // the nation
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
+    write_u32(item + nation_index_item::NATION_ID, read_usize(person.nation()) as u32); // the nation
     write_u16(this + discipline_fields::NATION_INDEX_COUNT, n.wrapping_add(1) as u16);
     exe::crt_qsort(read_usize(this + discipline_fields::NATION_INDEX), (read_i16(this + discipline_fields::NATION_INDEX_COUNT) as i32) as u32, 8, 0x55e5f0);
 }
@@ -591,8 +591,8 @@ pub(crate) unsafe fn ruling_body_entry(body: usize, id: u32) -> usize {
 /// [pt] O item (id, nação) da pessoa no índice das nações (+0xc, 8 bytes por item, conta +0x12 com sinal): bsearch
 /// (0x946464 com 0x55e5f0) pela nação (+0x1a) e, sem achar, pela segunda nação (+0x1e, se houver). 0 sem achar.
 pub(crate) unsafe fn find_in_nation_index(this: usize, id: u32) -> usize {
-    let person = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
-    let mut key = [id, read_usize(read_usize(person + staff::NATION)) as u32];
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
+    let mut key = [id, read_usize(person.nation()) as u32];
     let e = exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this + discipline_fields::NATION_INDEX), (read_i16(this + discipline_fields::NATION_INDEX_COUNT) as i32) as u32, 8, 0x55e5f0);
     if e != 0 {
         return e;
@@ -745,10 +745,11 @@ pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: 
 /// da pessoa (registro de 29 bytes do id em [this+0x14]) fica sem o último (0x58f110 sobre [this+0x18]: +0x18 = −1).
 /// Devolve o que a 0x58f110 devolve. Pessoa nula ou não jogadora (+0x61): a original (caixa fatal).
 pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, person: usize) -> usize {
-    if person == 0 || read_usize(person + staff::PLAYER) == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CLEAR_BAN_HISTORY)(this, person); // fatal box: original only
+    let person = Staff(person);
+    if person.is_null() || person.player() == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CLEAR_BAN_HISTORY)(this, person.addr()); // fatal box: original only
     }
-    let r = person_discipline_record(this, read_usize(person));
+    let r = person_discipline_record(this, read_usize(person.addr()));
     exe::file_llist_reset_last_offset(read_usize(this + discipline_fields::BAN_HISTORY), r + discipline_record::HISTORY_START, r + discipline_record::HISTORY_LAST)
 }
 
@@ -849,7 +850,8 @@ pub(crate) unsafe extern "thiscall" fn discipline_set_slot(this: usize, id: i32,
 /// 0): 1, e se o clube dele (+0x39) é de humano (0x600a50 com 0, 1, 0, 0), ele sai da vaga que ocupa entre as 20 de
 /// +0x1e0. Senão 0.
 pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
-    if player != 0 && read_usize(player) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
+    let player = Staff(player);
+    if !player.is_null() && read_usize(player.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;
     }
     let v = read_usize(G_COMP_OBJECT_TABLE);
@@ -873,10 +875,10 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
         return 0;
     }
     crate::comparison::branch("cpk_3 suspended by the competition");
-    let club = Club(read_usize(player + staff::CLUB_JOB));
+    let club = Club(player.club_job());
     if !club.is_null() {
         if exe::human_manager_is_human_club(club, 0, 1, (0) as u32, 0) != 0 {
-            if let Some(s) = (0..20).map(|k| club.addr() + club::TEAM_SELECTED + k * 4).find(|&s| read_usize(s) == player) {
+            if let Some(s) = (0..20).map(|k| club.addr() + club::TEAM_SELECTED + k * 4).find(|&s| read_usize(s) == player.addr()) {
                 *(s as *mut usize) = 0; // leaves the slot
             }
         }

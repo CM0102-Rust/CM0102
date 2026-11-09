@@ -4995,10 +4995,10 @@ pub(crate) unsafe extern "thiscall" fn fixture_entry_matches(stats: usize, k: i3
 pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize, record: usize) -> u8 {
     let limit = *(G_STAFF_COUNT as *const i32);
     for o in [0x1c, 0x20] {
-        let p = core::ptr::read_unaligned((*((game + o) as *const usize) + 0xcf) as *const usize);
-        if p != 0 {
-            let id = *(p as *const i32);
-            if id >= limit.wrapping_sub(0x10) && id < limit && *((p + staff::CLASSIFICATION) as *const u8) != 0 {
+        let p = Staff(core::ptr::read_unaligned((*((game + o) as *const usize) + 0xcf) as *const usize));
+        if !p.is_null() {
+            let id = *(p.addr() as *const i32);
+            if id >= limit.wrapping_sub(0x10) && id < limit && p.classification() != 0 {
                 return 0;
             }
         }

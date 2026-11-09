@@ -111,15 +111,16 @@ pub(crate) unsafe fn contract_valid_for_club(k: usize, c: usize) -> bool {
 /// contrato vale no clube: o +0x3a do contrato; senão o contrato de empréstimo (0x4cf6d0, thiscall em [0xae1050], push
 /// pessoa), se vale no clube: o +0x3a dele; senão 0.
 pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -> i8 {
+    let p = Staff(p);
     let player: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
-    if p == 0 || c == 0 {
+    if p.is_null() || c == 0 {
         return 0;
     }
-    if read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
-        return *((read_u32(p + staff::PLAYER) as usize + 4) as *const i8);
+    if read_u32(p.addr()) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
+        return *(((p.player() as u32) as usize + 4) as *const i8);
     }
     let k = exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
-    if k != 0 && player(*((p + staff::JOB_FOR_CLUB) as *const i8)) != 0 && contract_valid_for_club(k, c) {
+    if k != 0 && player((p.job_for_club() as i8)) != 0 && contract_valid_for_club(k, c) {
         crate::comparison::branch("cql_1 contract number");
         return *((k + 0x3a) as *const i8); // cql1: the contract number
     }
@@ -265,7 +266,8 @@ pub(crate) unsafe fn preferred_squad_numbers(f: usize) -> Option<[u8; 5]> {
 /// 50; e, se ainda sem número, o maior livre de 11 para baixo. O número vai positivo para o clube de técnico humano
 /// (0x600a50(c, 0, 1, 0, 0), cdecl de 5) e negativo para os outros (0x85a850). Sem a pessoa, nada.
 pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usize, p: usize) {
-    if p == 0 {
+    let p = Staff(p);
+    if p.is_null() {
         return;
     }
     let mut used = [0u8; 50];
@@ -273,25 +275,25 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
     exe::database_collect_club_squad(c, list.as_mut_ptr(), 0);
     exe::crt_qsort(list.as_mut_ptr() as usize, 0x32, 4, 0x540130);
     for q in list.iter_mut() {
-        let x = *q;
-        if x == 0 {
+        let x = Staff(*q);
+        if x.is_null() {
             continue;
         }
-        if read_u32(x + staff::PLAYER) == 0 {
+        if (x.player() as u32) == 0 {
             *q = 0;
             continue;
         }
-        if is_contracted_staff(x) {
+        if is_contracted_staff(x.addr()) {
             let n = (exe::squad_manager_get_squad_number(this, x, c) as i32).abs() as u8;
             if n != 0 {
                 used[(n as i8 as isize - 1) as usize] = 1;
             }
         }
     }
-    if !is_contracted_staff(p) || exe::squad_manager_get_squad_number(this, p, c) != 0 {
+    if !is_contracted_staff(p.addr()) || exe::squad_manager_get_squad_number(this, p, c) != 0 {
         return;
     }
-    let pref = preferred_squad_numbers(read_u32(p + staff::PLAYER) as usize).unwrap_or([0xff; 5]);
+    let pref = preferred_squad_numbers((p.player() as u32) as usize).unwrap_or([0xff; 5]);
     // the number with the club’s sign: positive with a human manager, negative without
     let sign = |k: u8| -> u32 {
         if exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {

@@ -116,83 +116,84 @@ pub(crate) unsafe fn cap_current_ability(f: usize, ceiling: i16, n: i32) {
 /// o auxiliar pode gostar dele); senão, com chance, um clube da nação (0x7ad590). Sem clube e abaixo de 20 anos, as
 /// reputações até 1250 e +0xd = 1. No fim, os atributos normalizados (0x538ec0, 0x538bc0).
 pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
-    let mark = staff_state_byte(p, staff_state::STATUS_FLAGS);
+    let p = Staff(p);
+    let mark = staff_state_byte(p.addr(), staff_state::STATUS_FLAGS);
     let b = *mark;
-    if b & 0x30 == 0 || read_usize(p + staff::CLUB_JOB) != 0 {
+    if b & 0x30 == 0 || p.club_job() != 0 {
         *mark = b & 0xcf;
         return;
     }
-    call_thiscall_1(0x775ba0, read_usize(G_NATIONAL_TEAMS), p);
+    call_thiscall_1(0x775ba0, read_usize(G_NATIONAL_TEAMS), p.addr());
     let bench = read_usize(this + player_regen_fields::PLAYER_DATA_POOL);
     let (ficha_id, nacao_id, nacao2_id) = (read_i32(bench), read_i32(bench + regen_pool_item::NATION_ID), read_i32(bench + regen_pool_item::SECOND_NATION_ID));
     exe::player_regen_remove_player_data_from_pool(this, ficha_id);
-    *((p + staff::CLASSIFICATION) as *mut u8) = 2;
-    core::ptr::write_unaligned((p + staff::PLAYER) as *mut usize, read_usize(G_PLAYER_DATA_TABLE).wrapping_add((ficha_id as isize * 0x46) as usize));
-    *staff_state_byte(p, staff_state::STATUS_FLAGS) |= 0x40;
-    *staff_state_byte(p, 0xd) = 0;
-    *staff_state_byte(p, 0xc) &= 0xfd;
-    *staff_state_byte(p, staff_state::STATUS_FLAGS) &= 0x7f;
-    *staff_state_byte(p, 0xc) &= 0xfe;
-    *staff_state_byte(p, 9) = 0x9c;
+    p.set_classification(2);
+    core::ptr::write_unaligned((p.addr() + staff::PLAYER) as *mut usize, read_usize(G_PLAYER_DATA_TABLE).wrapping_add((ficha_id as isize * 0x46) as usize));
+    *staff_state_byte(p.addr(), staff_state::STATUS_FLAGS) |= 0x40;
+    *staff_state_byte(p.addr(), 0xd) = 0;
+    *staff_state_byte(p.addr(), 0xc) &= 0xfd;
+    *staff_state_byte(p.addr(), staff_state::STATUS_FLAGS) &= 0x7f;
+    *staff_state_byte(p.addr(), 0xc) &= 0xfe;
+    *staff_state_byte(p.addr(), 9) = 0x9c;
     if read_usize(G_FOG_OF_WAR) != 0 && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0 {
-        call_thiscall_1(0x5afd00, read_usize(G_FOG_OF_WAR), p);
+        call_thiscall_1(0x5afd00, read_usize(G_FOG_OF_WAR), p.addr());
     }
-    call_thiscall_1(0x7c6650, read_usize(G_PLAYER_STATS), p);
-    call_thiscall_1(0x86fb80, read_usize(G_STAFF_RECORDS), p);
-    call_thiscall_1(0x55e1d0, read_usize(G_DISCIPLINE), p);
-    call_thiscall_1(0x631f90, read_usize(G_INJURY), p);
-    call_thiscall_1(0x56a090, read_usize(G_DISPUTE), p);
-    call_thiscall_1(0x556830, read_usize(G_DISCIPLINE), read_usize(p));
-    call_thiscall_1(0x62bfa0, read_usize(G_INJURY), read_usize(p));
-    call_thiscall_1(0x4d0b50, read_usize(G_CONTRACT_MANAGER), p);
-    call_thiscall_1(0x4d0bd0, read_usize(G_CONTRACT_MANAGER), p);
-    *((p + staff::INT_APPS) as *mut u8) = 0;
-    *((p + staff::INT_GOALS) as *mut u8) = 0;
-    if read_usize(p + staff::NON_PLAYER) != 0 {
-        core::ptr::write_unaligned((p + staff::NON_PLAYER) as *mut u32, 0);
+    call_thiscall_1(0x7c6650, read_usize(G_PLAYER_STATS), p.addr());
+    call_thiscall_1(0x86fb80, read_usize(G_STAFF_RECORDS), p.addr());
+    call_thiscall_1(0x55e1d0, read_usize(G_DISCIPLINE), p.addr());
+    call_thiscall_1(0x631f90, read_usize(G_INJURY), p.addr());
+    call_thiscall_1(0x56a090, read_usize(G_DISPUTE), p.addr());
+    call_thiscall_1(0x556830, read_usize(G_DISCIPLINE), read_usize(p.addr()));
+    call_thiscall_1(0x62bfa0, read_usize(G_INJURY), read_usize(p.addr()));
+    call_thiscall_1(0x4d0b50, read_usize(G_CONTRACT_MANAGER), p.addr());
+    call_thiscall_1(0x4d0bd0, read_usize(G_CONTRACT_MANAGER), p.addr());
+    p.set_int_apps(0);
+    p.set_int_goals(0);
+    if p.non_player() != 0 {
+        core::ptr::write_unaligned((p.addr() + staff::NON_PLAYER) as *mut u32, 0);
     }
-    *staff_state_byte(p, staff_state::STATUS_FLAGS) &= 0xf0;
-    *staff_state_byte(p, 8) = 0;
-    *staff_state_byte(p, 9) = 0x9c;
+    *staff_state_byte(p.addr(), staff_state::STATUS_FLAGS) &= 0xf0;
+    *staff_state_byte(p.addr(), 8) = 0;
+    *staff_state_byte(p.addr(), 9) = 0x9c;
     let nations = read_usize(G_NATION_TABLE);
     let nation = nations.wrapping_add((nacao_id as isize * 0x122) as usize);
-    core::ptr::write_unaligned((p + staff::NATION) as *mut usize, nation);
+    core::ptr::write_unaligned((p.addr() + staff::NATION) as *mut usize, nation);
     if read_i32(nation + nation::NUMBER_STAFF) < 100 && friendly_random(4) == 0 {
         let k = friendly_random(read_i32(G_NATION_COUNT));
         let other = read_usize(G_NATION_TABLE).wrapping_add((k as isize * 0x122) as usize);
         if read_usize(other + nation::CONTINENT) != 0 && read_i32(other + nation::NUMBER_STAFF) < 100 {
-            core::ptr::write_unaligned((p + staff::NATION) as *mut usize, other);
+            core::ptr::write_unaligned((p.addr() + staff::NATION) as *mut usize, other);
         }
     }
     if nacao2_id > 0 && nacao2_id < read_i32(G_NATION_COUNT) {
         if !(nacao_id == read_i32(KEY_NATION_SPAIN) && friendly_random(100) == 0) {
             if nacao2_id != read_i32(KEY_NATION_PAYS_BASQUE) && friendly_random(3) != 0 {
-                core::ptr::write_unaligned((p + staff::SECOND_NATION) as *mut u32, 0);
+                core::ptr::write_unaligned((p.addr() + staff::SECOND_NATION) as *mut u32, 0);
             } else {
-                core::ptr::write_unaligned((p + staff::SECOND_NATION) as *mut usize, read_usize(G_NATION_TABLE).wrapping_add((nacao2_id as isize * 0x122) as usize));
+                core::ptr::write_unaligned((p.addr() + staff::SECOND_NATION) as *mut usize, read_usize(G_NATION_TABLE).wrapping_add((nacao2_id as isize * 0x122) as usize));
             }
         }
     } else {
-        core::ptr::write_unaligned((p + staff::SECOND_NATION) as *mut u32, 0);
+        core::ptr::write_unaligned((p.addr() + staff::SECOND_NATION) as *mut u32, 0);
     }
-    let v = exe::database_pick_first_name_for_nation(read_usize(p + staff::NATION));
-    core::ptr::write_unaligned((p + staff::FIRST_NAME) as *mut usize, v);
-    let v = exe::database_pick_second_name_for_nation(read_usize(p + staff::NATION));
-    core::ptr::write_unaligned((p + staff::SECOND_NAME) as *mut usize, v);
-    let v = exe::database_get_empty_common_name(read_usize(p + staff::NATION));
-    core::ptr::write_unaligned((p + staff::COMMON_NAME) as *mut usize, v);
-    call_thiscall_1(0x5fff30, read_usize(G_HUMAN_MANAGER), p);
-    write_i16(p + 0x40, read_i16(G_CURRENT_DATE_YEAR));
-    write_i16(p + staff::DATE_JOINED_CLUB, read_i16(G_CURRENT_DATE));
-    core::ptr::write_unaligned((p + staff::CLUB_JOB) as *mut u32, 0);
-    core::ptr::write_unaligned((p + staff::NATIONAL_JOB) as *mut u32, 0);
-    core::ptr::write_unaligned((p + staff::WAGE) as *mut u32, 0);
-    core::ptr::write_unaligned((p + staff::VALUE) as *mut u32, 0);
+    let v = exe::database_pick_first_name_for_nation(p.nation());
+    core::ptr::write_unaligned((p.addr() + staff::FIRST_NAME) as *mut usize, v);
+    let v = exe::database_pick_second_name_for_nation(p.nation());
+    core::ptr::write_unaligned((p.addr() + staff::SECOND_NAME) as *mut usize, v);
+    let v = exe::database_get_empty_common_name(p.nation());
+    core::ptr::write_unaligned((p.addr() + staff::COMMON_NAME) as *mut usize, v);
+    call_thiscall_1(0x5fff30, read_usize(G_HUMAN_MANAGER), p.addr());
+    write_i16(p.addr() + 0x40, read_i16(G_CURRENT_DATE_YEAR));
+    write_i16(p.addr() + staff::DATE_JOINED_CLUB, read_i16(G_CURRENT_DATE));
+    core::ptr::write_unaligned((p.addr() + staff::CLUB_JOB) as *mut u32, 0);
+    core::ptr::write_unaligned((p.addr() + staff::NATIONAL_JOB) as *mut u32, 0);
+    core::ptr::write_unaligned((p.addr() + staff::WAGE) as *mut u32, 0);
+    core::ptr::write_unaligned((p.addr() + staff::VALUE) as *mut u32, 0);
     // the languages: the original pushes the argument’s dword with the low byte replaced (the calls read the byte)
     for k in 1..=0x40i8 {
         exe::playerstats_remove_language(read_usize(G_PLAYER_STATS), p, k);
     }
-    let base = (0x14i16.wrapping_sub(read_i8(p + staff::ADAPTABILITY) as i16)).wrapping_mul(10);
+    let base = (0x14i16.wrapping_sub(p.adaptability() as i16)).wrapping_mul(10);
     for k in 1..=0x40i8 {
         let v = exe::player_stats_get_native_language_points(p, k);
         if v != 0 && v >= base {
@@ -202,11 +203,11 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
             exe::playerstats_add_language(read_usize(G_PLAYER_STATS), p, k as u8 as u32, level as u32, 1);
         }
     }
-    *((p + staff::JOB_FOR_CLUB) as *mut u8) = 0xb;
-    *((p + staff::JOB_FOR_NATION) as *mut u8) = 0xb;
-    *staff_state_byte(p, staff_state::STATUS_FLAGS) &= 0xcf;
-    let f = read_usize(p + staff::PLAYER);
-    let nation = read_usize(p + staff::NATION);
+    p.set_job_for_club(0xb);
+    p.set_job_for_nation(0xb);
+    *staff_state_byte(p.addr(), staff_state::STATUS_FLAGS) &= 0xcf;
+    let f = p.player();
+    let nation = p.nation();
     let age: i8;
     if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 && read_i32(nation + nation::NUMBER_STAFF) < 0x15e {
         // the small nation: age by its reputation and ability by PA
@@ -357,18 +358,18 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
             }
         }
     }
-    if exe::nation_is_major_nation(read_usize(p + staff::NATION)) == 0 {
+    if exe::nation_is_major_nation(p.nation()) == 0 {
         if age < 0x19 && read_i16(f + player_sheet::CURRENT_ABILITY) < 0x78 {
             write_i16(f + player_sheet::WORLD_REPUTATION, 1);
         } else {
             write_i16(f + player_sheet::WORLD_REPUTATION, mul_rdata_const(read_i16(f + player_sheet::WORLD_REPUTATION), 0x96a5d0));
         }
     }
-    write_i16(p + 0x12, read_i16(G_CURRENT_DATE_YEAR).wrapping_sub(age as i16)); // cqg7: the birth year
+    write_i16(p.addr() + 0x12, read_i16(G_CURRENT_DATE_YEAR).wrapping_sub(age as i16)); // cqg7: the birth year
     let r = friendly_random(0x16d);
-    write_i16(p + staff::DATE_OF_BIRTH, r as i16);
+    p.set_date_of_birth(r as i16);
     let a = exe::database_get_staff_age(p, G_CURRENT_DATE as *const u16);
-    write_i16(p + staff::AGE, a as u8 as i8 as i16);
+    p.set_age(a as u8 as i8 as i16);
     // +0x1b
     if read_i16(f + player_sheet::POTENTIAL_ABILITY) > 0x64 && (read_i8(f + player_sheet::ATTACKER) >= 0xf || read_i8(f + player_sheet::ATTACKING_MIDFIELDER) >= 0xf) {
         if friendly_random(3) != 0 {
@@ -533,21 +534,21 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         }
     }
     // the club
-    let nation = read_usize(p + staff::NATION);
+    let nation = p.nation();
     if age < 0x13 && nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 && friendly_random(4) != 0 {
         let contratar: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_SIGN_FOR_CLUB);
         let c = exe::player_regen_pick_best_club_for_player(this, p);
-        if c != 0 && contratar(p, c) != 0 {
+        if c != 0 && contratar(p.addr(), c) != 0 {
             crate::comparison::branch("cqg_7 best club");
             let human: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
             if human(c) != 0 {
                 exe::player_regen_post_youth_promotion_news(p, c);
             }
-            if read_i16(read_usize(p + staff::PLAYER) + 7) > 0x50 {
-                let t = read_usize(c + club::CHAIRMAN);
-                if t != 0 && read_usize(t + staff::NON_PLAYER) != 0 {
+            if read_i16(p.player() + 7) > 0x50 {
+                let t = Staff(read_usize(c + club::CHAIRMAN));
+                if !t.is_null() && t.non_player() != 0 {
                     let r = friendly_random(100);
-                    if read_i8(read_usize(t + staff::NON_PLAYER) + 0x16) as i32 > r {
+                    if read_i8(t.non_player() + 0x16) as i32 > r {
                         exe::staff_add_favoured_staff(t, p, 0);
                     }
                 }
@@ -557,11 +558,11 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         let c = exe::player_regen_pick_club_from_nation_list(this, p);
         if c != 0 {
             let contratar: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_SIGN_FOR_CLUB);
-            contratar(p, c);
+            contratar(p.addr(), c);
         }
     }
-    if read_usize(p + staff::CLUB_JOB) == 0 && age < 0x14 {
-        let f = read_usize(p + staff::PLAYER);
+    if p.club_job() == 0 && age < 0x14 {
+        let f = p.player();
         if read_i16(f + player_sheet::CURRENT_REPUTATION) > 0x4e2 {
             write_i16(f + player_sheet::CURRENT_REPUTATION, 0x4e2);
         }
@@ -773,8 +774,8 @@ pub(crate) fn coach_attribute_capped(pv: f64, x: f64, k: f64, ceiling: f64) -> u
 /// [pt] Os três atributos do técnico (+0xa, +8, +0xc do registro de não jogador `nj`) pelo jogador `p` (ficha `f`): a
 /// os jogos pela seleção (+0x22, byte) ao quadrado (pow 0x945640/0x945ff0) contra +0xb, +9 e +0xd da ficha (o último com o quadrado ×
 /// 0,75), × `k` e até os tetos.
-pub(crate) unsafe fn set_coach_attributes(p: usize, f: usize, nj: usize, k: f64, tetos: [f64; 3]) {
-    let r = *((p + staff::INT_APPS) as *const u8) as f64;
+pub(crate) unsafe fn set_coach_attributes(p: Staff, f: usize, nj: usize, k: f64, tetos: [f64; 3]) {
+    let r = p.int_apps() as f64;
     let q = game_pow(r, 2.0);
     core::ptr::write_unaligned((nj + non_player::CURRENT_REPUTATION) as *mut u16, coach_attribute_capped(q, read_i16(f + player_sheet::CURRENT_REPUTATION) as f64, k, tetos[0]));
     let q = game_pow(r, 2.0);
@@ -801,18 +802,18 @@ pub(crate) unsafe fn set_coach_attributes(p: usize, f: usize, nj: usize, k: f64,
 /// quando +0x10 é maior e, com sorteio(4) nulo, +0x11 = sorteio(50) + 50; a normalização (0x539490) e os atributos do
 /// técnico (0x9/7500 com +0xb da ficha acima de 7500; senão, com sorteio(+0x57) ≠ 0, 0,75/6000/3750; senão
 /// 0,5/4500/1).
-pub(crate) unsafe fn maybe_become_coach(this: usize, p: usize) {
-    let r = *((p + staff::INT_APPS) as *const u8);
-    let ra = friendly_random(read_i8(p + staff::PROFESSIONALISM) as i32);
+pub(crate) unsafe fn maybe_become_coach(this: usize, p: Staff) {
+    let r = p.int_apps();
+    let ra = friendly_random(p.professionalism() as i32);
     if ra <= friendly_random(100) {
         return;
     }
-    let f = read_usize(p + staff::PLAYER);
+    let f = p.player();
     let t = ftol(read_i16(f + player_sheet::CURRENT_REPUTATION) as f64 + game_pow(r as f64, 3.0));
     let r1 = friendly_random(t);
     let passes = r1 > friendly_random(50000) || { // cqd10: the random draw to become a manager
         let r3 = friendly_random(0x30d40).wrapping_add(0x30d40);
-        let v = (read_i16(read_usize(p + staff::NATION) + 0x8e) as i32).wrapping_mul(*((p + staff::INT_APPS) as *const u8) as i32);
+        let v = (read_i16(p.nation() + 0x8e) as i32).wrapping_mul(p.int_apps() as i32);
         v > r3
     };
     if !passes || read_i32(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) <= 2 {
@@ -820,26 +821,26 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: usize) {
     }
     crate::comparison::branch("cqd_10 becomes coach");
     let id = read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS));
-    core::ptr::write_unaligned((p + staff::NON_PLAYER) as *mut u32, read_usize(G_NON_PLAYER_TABLE).wrapping_add((id as isize * 0x44) as usize) as u32);
+    core::ptr::write_unaligned((p.addr() + staff::NON_PLAYER) as *mut u32, read_usize(G_NON_PLAYER_TABLE).wrapping_add((id as isize * 0x44) as usize) as u32);
     exe::player_regen_remove_spare_non_player_record(this, (read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS))) as i32 as u32);
-    if read_i8(read_usize(p + staff::PLAYER) + 0xf) == 0x14 {
-        let nj = read_usize(p + staff::NON_PLAYER);
+    if read_i8(p.player() + 0xf) == 0x14 {
+        let nj = p.non_player();
         let (a, b) = (read_i8(nj + non_player::COACHING), read_i8(nj + non_player::COACHING_GKS));
         if a > b {
             *((nj + non_player::COACHING_GKS) as *mut i8) = a;
-            *((read_usize(p + staff::NON_PLAYER) + 0x10) as *mut i8) = b;
+            *((p.non_player() + 0x10) as *mut i8) = b;
             if friendly_random(4) == 0 {
                 let v = (friendly_random(0x32) as u8).wrapping_add(0x32);
-                *((read_usize(p + staff::NON_PLAYER) + 0x11) as *mut u8) = v;
+                *((p.non_player() + 0x11) as *mut u8) = v;
             }
         }
     }
     exe::staff_normalise_non_player_attributes(p);
-    let f = read_usize(p + staff::PLAYER);
-    let nj = read_usize(p + staff::NON_PLAYER);
+    let f = p.player();
+    let nj = p.non_player();
     if read_i16(f + player_sheet::CURRENT_REPUTATION) > 0x1d4c {
         set_coach_attributes(p, f, nj, read_f64(rdata::F64_0_9), [read_f64(rdata::F64_7500), read_f64(rdata::F64_7500), read_f64(rdata::F64_5750)]);
-    } else if friendly_random(read_i8(p + staff::AMBITION) as i32) != 0 {
+    } else if friendly_random(p.ambition() as i32) != 0 {
         set_coach_attributes(p, f, nj, read_f64(rdata::F64_0_75), [read_f64(rdata::F64_6000), read_f64(rdata::F64_6000), read_f64(rdata::F64_3750)]);
     } else {
         set_coach_attributes(p, f, nj, read_f64(rdata::F64_0_5), [read_f64(rdata::F64_4500), read_f64(rdata::F64_4500), read_f64(rdata::F64_1)]);
@@ -922,7 +923,7 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
             if read_usize(p + staff::NON_PLAYER) != 0 {
                 bench = true;
             } else {
-                maybe_become_coach(this, p);
+                maybe_become_coach(this, Staff(p));
             }
         }
     }
@@ -1112,13 +1113,14 @@ pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
 /// clube (0x7861e0); jogador: aos interessados. Motivo 8 com +0xb da ficha acima de 4250 e clube de contrato
 /// (0x4cf5a0, guardado em [0xae1080]): o seguro (0x58a980 com +0x52).
 pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize, reason: u32, anunciada: u32) {
-    if p == 0 {
+    let p = Staff(p);
+    if p.is_null() {
         return;
     }
-    if read_usize(p + staff::PLAYER) != 0 && matches!(read_i8(p + staff::JOB_FOR_CLUB), 8 | 5) {
+    if p.player() != 0 && matches!((p.job_for_club() as i8), 8 | 5) {
         return;
     }
-    let club = read_usize(p + staff::CLUB_JOB);
+    let club = p.club_job();
     if club == 0 {
         return;
     }
@@ -1130,50 +1132,50 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nw = local.as_mut_ptr() as usize;
     exe::new_newsitem(nw, 0xbba, 0);
-    exe::newsitem_set_slot(nw, 0, read_usize(p) as u32);
+    exe::newsitem_set_slot(nw, 0, read_usize(p.addr()) as u32);
     for k in 1..4usize {
-        exe::newsitem_set_slot(nw, k as i8, read_usize(read_usize(p + staff::FIRST_NAME * k) + 0x33) as u32);
+        exe::newsitem_set_slot(nw, k as i8, read_usize(read_usize(p.addr() + staff::FIRST_NAME * k) + 0x33) as u32);
     }
     exe::newsitem_set_slot(nw, 4, reason as u8 as i8 as i32 as u32);
     exe::newsitem_set_slot(nw, 5, anunciada as u8 as i8 as i32 as u32);
-    let c = read_usize(p + staff::CLUB_JOB);
+    let c = p.club_job();
     exe::newsitem_set_slot(nw, 6, if c != 0 { read_usize(c) as u32 } else { u32::MAX });
-    exe::newsitem_set_slot(nw, 7, if *((p + staff::INT_APPS) as *const u8) != 0 { read_usize(read_usize(p + staff::NATION)) as u32 } else { u32::MAX });
-    let job = match read_i8(p + staff::JOB_FOR_CLUB) {
+    exe::newsitem_set_slot(nw, 7, if p.int_apps() != 0 { read_usize(p.nation()) as u32 } else { u32::MAX });
+    let job = match (p.job_for_club() as i8) {
         0xf => 8,
         0xd => 6,
         v => v,
     };
     exe::newsitem_set_slot(nw, 8, job as i32 as u32);
-    exe::newsitem_set_slot(nw, 9, *((p + staff::INT_APPS) as *const u8) as u32);
-    exe::newsitem_set_slot(nw, 0xa, read_i8(p + staff::JOB_FOR_NATION) as i32 as u32);
-    exe::newsitem_set_slot(nw, 0xb, (read_usize(p + staff::PLAYER) != 0 && read_usize(p + staff::NON_PLAYER) != 0) as u32);
-    exe::newsitem_set_slot(nw, 0xc, read_i8(p + staff::AGE) as i32 as u32);
-    exe::newsitem_set_slot(nw, 0xd, (read_usize(p + staff::NON_PLAYER) != 0) as u32);
-    exe::newsitem_set_slot(nw, 0xe, (read_usize(p + staff::PLAYER) != 0) as u32);
+    exe::newsitem_set_slot(nw, 9, p.int_apps() as u32);
+    exe::newsitem_set_slot(nw, 0xa, (p.job_for_nation() as i8) as i32 as u32);
+    exe::newsitem_set_slot(nw, 0xb, (p.player() != 0 && p.non_player() != 0) as u32);
+    exe::newsitem_set_slot(nw, 0xc, (p.age() as i8) as i32 as u32);
+    exe::newsitem_set_slot(nw, 0xd, (p.non_player() != 0) as u32);
+    exe::newsitem_set_slot(nw, 0xe, (p.player() != 0) as u32);
     let mut clubs = [0usize; 30];
     let tm = read_usize(G_TRANSFER_MANAGER);
-    let n = if tm != 0 && read_usize(p + staff::PLAYER) != 0 {
+    let n = if tm != 0 && p.player() != 0 {
         exe::transfer_manager_collect_player_news_recipients(tm, p, 0xa, clubs.as_mut_ptr(), 0x1e) as i8
     } else {
         0
     };
     let mn = read_usize(G_NEWS);
-    let pais = read_usize(p + staff::NATION);
-    let f = read_usize(p + staff::PLAYER);
-    let nj = read_usize(p + staff::NON_PLAYER);
-    let cargo5 = || read_i8(p + staff::JOB_FOR_CLUB) == 5;
+    let pais = p.nation();
+    let f = p.player();
+    let nj = p.non_player();
+    let cargo5 = || (p.job_for_club() as i8) == 5;
     if pais != 0 && read_i8(pais + nation::LEAGUE_STANDARD) > 8
         && ((f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x2134) || (nj != 0 && read_i16(nj + non_player::WORLD_REPUTATION) > 0x222e && cargo5())) {
         exe::news_send_to_all_managers(mn, nw);
     } else if (f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x1d4c) || (nj != 0 && read_i16(nj + non_player::CURRENT_REPUTATION) > 0x1c52 && cargo5()) {
         exe::news_send_to_nation_managers(mn, nw, pais);
-        let c = read_usize(p + staff::CLUB_JOB);
-        if c != 0 && read_usize(c + 0x53) != read_usize(p + staff::NATION) {
+        let c = p.club_job();
+        if c != 0 && read_usize(c + 0x53) != p.nation() {
             exe::news_send_to_nation_managers(read_usize(G_NEWS), nw, read_usize(c + 0x53));
         }
     } else {
-        let c = read_usize(p + staff::CLUB_JOB);
+        let c = p.club_job();
         if c != 0 && read_usize(c + 0x57) != 0 && cargo5() {
             exe::news_send_to_division_managers(mn, nw, read_usize(c + 0x57));
         } else if f == 0 {
@@ -1185,15 +1187,15 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
         }
     }
     if reason as u8 == 8 {
-        let f = read_usize(p + staff::PLAYER);
+        let f = p.player();
         if f != 0 && read_i16(f + player_sheet::CURRENT_REPUTATION) > 0x109a {
-            let c = contract_of_uncached(p);
+            let c = contract_of_uncached(p.addr());
             *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
             if c != 0 {
                 let club = read_usize(G_CLUB_TABLE).wrapping_add((read_i32(c + 4) as isize * 0x245) as usize);
                 if club != 0 {
                     crate::comparison::branch("cqd_10 retirement insurance");
-                    exe::news_post_insurance_payout(club, p, read_usize(p + staff::VALUE) as u32);
+                    exe::news_post_insurance_payout(club, p, p.value() as u32);
                 }
             }
         }
@@ -1224,8 +1226,9 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
 /// Com veredito: 7 auxiliar?, 8..0xb quem (id e nomes), 0xc e 0xd os vereditos; senão −1. Ao alcance do clube
 /// (0x786090).
 pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: usize, c: usize) {
+    let j = Staff(j);
     let c = Club(c);
-    if j == 0 || c.is_null() {
+    if j.is_null() || c.is_null() {
         return;
     }
     crate::comparison::branch("cqd_10 promoted youngster news");
@@ -1234,12 +1237,12 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: 
     let (mut v1, mut v2) = (0i8, 0i8);
     let mut who = 0usize;
     exe::new_newsitem(nw, 0xbce, 0);
-    exe::newsitem_set_slot(nw, 0, read_usize(j) as u32);
+    exe::newsitem_set_slot(nw, 0, read_usize(j.addr()) as u32);
     for k in 1..4usize {
-        exe::newsitem_set_slot(nw, k as i8, read_usize(read_usize(j + staff::FIRST_NAME * k) + 0x33) as u32);
+        exe::newsitem_set_slot(nw, k as i8, read_usize(read_usize(j.addr() + staff::FIRST_NAME * k) + 0x33) as u32);
     }
     exe::newsitem_set_slot(nw, 4, read_usize(c.addr()) as u32);
-    exe::newsitem_set_slot(nw, 5, read_i8(j + staff::AGE) as i32 as u32);
+    exe::newsitem_set_slot(nw, 5, (j.age() as i8) as i32 as u32);
     exe::newsitem_set_slot(nw, 6, (c.training() > 0xf) as u32);
     let mut current = 0usize;
     let mut k = -1i8;
@@ -1328,6 +1331,7 @@ pub(crate) unsafe fn first_free_squad_slot(club: Club) -> usize {
 /// baixo) do contrato. Com contrato: o salário padrão (0x8626e0), +0x3a = 0 e, fora do humano, o fim (+0x2f) até o ano de
 /// hoje + 5 (com o dia +0x2d = 0). No fim os números do elenco ([0xdd7ef0], 0x85add0 e 0x85a470). Devolve 1.
 pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, club: usize) -> u8 {
+    let person = Staff(person);
     let club = Club(club);
     let k = first_free_squad_slot(club);
     if k == 0x32 {
@@ -1339,23 +1343,23 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
     let month_of_end: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
     let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     crate::comparison::branch("cpv_9 regen signed");
-    write_i32(club.addr() + club::SQUAD + 4 * k, person as i32);
-    write_i32(person + staff::CLUB_JOB, club.addr() as i32);
-    write_i32(person + staff::WAGE, 0);
-    let v = value(manager, person, club.addr(), 1, -1, 0);
-    write_i32(person + staff::VALUE, v); // cpv9: the regen value
-    squad(person, 1);
+    write_i32(club.addr() + club::SQUAD + 4 * k, person.addr() as i32);
+    person.set_club_job((club.addr() as i32) as usize);
+    person.set_wage((0) as usize);
+    let v = value(manager, person.addr(), club.addr(), 1, -1, 0);
+    person.set_value((v) as usize); // cpv9: the regen value
+    squad(person.addr(), 1);
     if exe::utils_random(4) == 0 { // cpv9: once in four
         crate::comparison::branch("cpv_9 one in four");
         exe::staff_add_favoured_club(person, club, 0);
     }
-    if club.professional_status() == 3 && read_i32(person + staff::VALUE) > 0x1388 {
-        write_i32(person + staff::VALUE, 0x1388);
+    if club.professional_status() == 3 && (person.value() as i32) > 0x1388 {
+        person.set_value((0x1388) as usize);
     }
     // simplification: the original writes the year in the low word of the `clube` argument and pushes the dword; 0x549f70 reads 16 bits
     let year = *(G_CURRENT_DATE_YEAR as *const u16) as u32;
     let (mut d, mut ret) = ([0u8; 8], [0u8; 8]);
-    let day_and_year = if *((person + staff::AGE) as *const i8) < 0x13 {
+    let day_and_year = if (person.age() as i8) < 0x13 {
         crate::comparison::branch("cpv_9 youngster contract");
         let a = year.wrapping_add(2); // cpv9: o jovem por dois anos
         let month = month_of_end(club.addr());
@@ -1367,16 +1371,16 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
     };
     let day = (day_and_year.0 as u8).wrapping_add(1) as i8 as i16 as u16 as u32;
     let p = (exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, day_and_year.1, day_and_year.2, 0xffff_ffff) as *mut u8);
-    (exe::date_operator_3d(person + staff::DATE_EXPIRES_CLUB, (ret.as_mut_ptr()) as usize, (p) as usize) as *mut u8);
-    exe::contract_manager_add_staff_contract(manager, person, read_i32(person + staff::VALUE) as u32);
+    (exe::date_operator_3d(person.addr() + staff::DATE_EXPIRES_CLUB, (ret.as_mut_ptr()) as usize, (p) as usize) as *mut u8);
+    exe::contract_manager_add_staff_contract(manager, person, (person.value() as i32) as u32);
     if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
         exe::contract_manager_move_to_reserves(read_i32(G_CONTRACT_MANAGER) as usize, person, club);
-        let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
+        let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
         *((c + contract::SQUAD_STATUS) as *mut u8) = *((c + contract::SQUAD_STATUS) as *const u8) & 0xf | 0x60;
-        let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
+        let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
         *((c + contract::CONTRACT_TYPE) as *mut u8) = *((c + contract::CONTRACT_TYPE) as *const u8) & 0xc1 | 1;
     }
-    let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
+    let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
     if c != 0 {
         exe::staff_contract_set_default_wage(c, person);
         *((c + 0x3a) as *mut u8) = 0;
@@ -1408,19 +1412,20 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
 /// acrescenta (0x7a8510) a nova: id, id do clube (+0x39, ou −1), a data de hoje + exe::utils_random(dias / 2) + 1 (0x54c5b0) em
 /// +8 e de novo em +0x10, o motivo 8 (+0x18) e 0 (+0x19).
 pub(crate) unsafe extern "thiscall" fn schedule_injury_retirement(this: usize, person: usize, days: i16) {
+    let person = Staff(person);
     let n = read_i32(this + player_regen_fields::RETIREMENT_COUNT);
-    if person != 0 && n > 0 {
+    if !person.is_null() && n > 0 {
         let base = read_i32(this + player_regen_fields::RETIREMENTS) as usize;
-        let id = read_i32(person);
+        let id = read_i32(person.addr());
         if let Some(i) = (0..n as usize).find(|&i| read_i32(base + 0x1a * i) == id) {
             crate::comparison::branch("cpv_9 removes the pending retirement");
             exe::player_regen_remove_retirement(this, base + 0x1a * i);
         }
     }
     let mut r = [0u8; 0x1a];
-    let club = read_i32(person + staff::CLUB_JOB) as usize;
+    let club = (person.club_job() as i32) as usize;
     let rp = r.as_mut_ptr();
-    core::ptr::write_unaligned(rp as *mut i32, read_i32(person));
+    core::ptr::write_unaligned(rp as *mut i32, read_i32(person.addr()));
     core::ptr::write_unaligned(rp.add(4) as *mut i32, if club == 0 { -1 } else { read_i32(club) });
     let q = exe::utils_random(days as i32 / 2);
     let (mut t, mut t2) = ([0u8; 8], [0u8; 8]);
@@ -1449,19 +1454,20 @@ pub(crate) unsafe extern "thiscall" fn schedule_injury_retirement(this: usize, p
 /// [0xae23b4] pelo +4; contrato de tipo +0x35 & 0x3f = 5 ou sem clube: −1) e 6 = a idade (+0x18); vai para os técnicos
 /// dos até 30 clubes interessados ([0xde1f54], 0x8d1da0 com 10).
 pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_announcement_news(person: usize, reason: i8) {
-    if person == 0 {
+    let person = Staff(person);
+    if person.is_null() {
         return;
     }
-    if read_i32(person + staff::PLAYER) != 0 && matches!(*((person + staff::JOB_FOR_CLUB) as *const u8), 8 | 5) {
+    if (person.player() as i32) != 0 && matches!(person.job_for_club(), 8 | 5) {
         return;
     }
     crate::comparison::branch("player_regen_post_retirement_announcement_news");
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0xbbb, 0);
-    exe::newsitem_set_slot(n, 0, read_i32(person) as u32);
+    exe::newsitem_set_slot(n, 0, read_i32(person.addr()) as u32);
     for (k, o) in [(1i8, 4usize), (2, 8), (3, 0xc)] {
-        exe::newsitem_set_slot(n, k, read_i32(read_i32(person + o) as usize + 0x33) as u32);
+        exe::newsitem_set_slot(n, k, read_i32(read_i32(person.addr() + o) as usize + 0x33) as u32);
     }
     exe::newsitem_set_slot(n, 4, reason as i32 as u32);
     let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
@@ -1475,7 +1481,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_announcement_
         }
     }
     exe::newsitem_set_slot(n, 5, club as u32);
-    exe::newsitem_set_slot(n, 6, *((person + staff::AGE) as *const i8) as i32 as u32);
+    exe::newsitem_set_slot(n, 6, (person.age() as i8) as i32 as u32);
     let mut list = [0usize; 0x1e];
     let q = if read_i32(G_TRANSFER_MANAGER) != 0 { exe::transfer_manager_collect_player_news_recipients(read_i32(G_TRANSFER_MANAGER) as usize, person, 0xa, list.as_mut_ptr(), 0x1e) } else { 0 };
     for i in 0..(q as i8).max(0) as usize {
@@ -1509,9 +1515,9 @@ pub(crate) unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, pers
         }
     }
     crate::comparison::branch("cpu_9 player bench");
-    let record = read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul(0x6e) as usize);
+    let record = Staff(read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul(0x6e) as usize));
     let item = read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) << 4);
-    write_usize(item, read_usize(read_usize(record + staff::PLAYER)));
+    write_usize(item, read_usize(record.player()));
     write_usize(item + regen_pool_item::NATION_ID, nation as usize);
     write_usize(item + regen_pool_item::SECOND_NATION_ID, second as usize);
     write_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT).wrapping_add(1));
@@ -1562,10 +1568,10 @@ pub(crate) unsafe fn contract_status(c2: usize) -> i8 {
 /// [pt] O limite de idade de quem não é jogador, pelo tipo do cargo (+0x3d; sem ele +0x28; sem os dois, como a original,
 /// o byte baixo do ponteiro da saída, que ela lê da vaga errada da pilha): 1, 2 e 4: 70 + sorteio(10); 8 e 9:
 /// 60 + sorteio(5); os outros: 61 + sorteio(5) com clube (+0x39) ou seleção (+0x24), senão 55 + sorteio(10). Byte.
-pub(crate) unsafe fn non_player_age_limit(person: usize, out: usize) -> i8 {
-    let mut t = read_i8(person + staff::JOB_FOR_CLUB);
+pub(crate) unsafe fn non_player_age_limit(person: Staff, out: usize) -> i8 {
+    let mut t = (person.job_for_club() as i8);
     if t == 0 {
-        t = read_i8(person + staff::JOB_FOR_NATION);
+        t = (person.job_for_nation() as i8);
         if t == 0 {
             t = out as u8 as i8; // simplification: the original reads the low byte of the `saida` argument here
         }
@@ -1574,7 +1580,7 @@ pub(crate) unsafe fn non_player_age_limit(person: usize, out: usize) -> i8 {
         1 | 2 | 4 => (10, 0x46u8),
         8 | 9 => (5, 0x3c),
         _ => {
-            if read_usize(person + staff::CLUB_JOB) != 0 || read_usize(person + staff::NATIONAL_JOB) != 0 {
+            if person.club_job() != 0 || person.national_job() != 0 {
                 (5, 0x3d)
             } else {
                 (10, 0x37)
@@ -1603,11 +1609,11 @@ pub(crate) unsafe fn player_age_limit(j: usize) -> i8 {
 /// Fills the retirement output entry: reason (+0x18), +0x19 = 0, person id and club id (-1 without club).
 ///
 /// [pt] A saída de quem se aposenta: o motivo (+0x18), +0x19 = 0, o id (+0) e o id do clube (+4; −1 sem clube).
-pub(crate) unsafe fn fill_retirement_entry(person: usize, out: usize, reason: u8) {
+pub(crate) unsafe fn fill_retirement_entry(person: Staff, out: usize, reason: u8) {
     *((out + retirement_entry::REASON) as *mut u8) = reason;
     *((out + retirement_entry::ANNOUNCED) as *mut u8) = 0;
-    core::ptr::write_unaligned(out as *mut u32, read_usize(person) as u32);
-    let c = read_usize(person + staff::CLUB_JOB);
+    core::ptr::write_unaligned(out as *mut u32, read_usize(person.addr()) as u32);
+    let c = person.club_job();
     core::ptr::write_unaligned((out + retirement_entry::CLUB_ID) as *mut u32, if c != 0 { read_usize(c) as u32 } else { u32::MAX });
 }
 
@@ -1660,12 +1666,12 @@ pub(crate) unsafe fn set_dates_no_key_nation(out: usize) {
 /// aposentadoria no fim de temporada da nação (+0x15 do registro de 72 bytes em 0xb63d60) + sorteio(30) (passando de
 /// 365, sorteio(30) do ano seguinte; com +0x1d, um ano a mais); a aposentadoria antes do anúncio fica no anúncio, e a
 /// menos de 45 dias dele (0x54cdb0) o anúncio vai para ela. Índice fora: `fora` (cada rotina tem a sua).
-pub(crate) unsafe fn set_retirement_dates(person: usize, out: usize, away: unsafe fn(usize)) {
-    let club = read_usize(person + staff::CLUB_JOB);
+pub(crate) unsafe fn set_retirement_dates(person: Staff, out: usize, away: unsafe fn(usize)) {
+    let club = person.club_job();
     let k = if club != 0 {
         (exe::key_nation_index_of_club(club) as i8)
     } else {
-        let nation = read_usize(person + staff::NATION);
+        let nation = person.nation();
         if nation == 0 {
             return set_dates_tomorrow(out);
         }
@@ -1726,16 +1732,17 @@ pub(crate) unsafe fn set_retirement_dates(person: usize, out: usize, away: unsaf
 /// sem clube, motivo 2 com sorteio(25 × +0x3c) = 0. Quem se aposenta: a saída (fill_retirement_entry) e as datas
 /// (set_retirement_dates; sem nação-chave válida, amanhã); devolve 1.
 pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, person: usize, out: usize) -> u8 {
-    if read_usize(person + staff::CLUB_JOB) == 0 {
+    let person = Staff(person);
+    if person.club_job() == 0 {
         return 0;
     }
-    let c2 = contract_with_current_club(person);
+    let c2 = contract_with_current_club(person.addr());
     let status = contract_status(c2);
-    let age = read_i8(person + staff::AGE);
-    let j = read_usize(person + staff::PLAYER);
+    let age = (person.age() as i8);
+    let j = person.player();
     let reason: u8 = 'm: {
         if j == 0 {
-            if read_usize(person + staff::NON_PLAYER) != 0 && age <= non_player_age_limit(person, out) {
+            if person.non_player() != 0 && age <= non_player_age_limit(person, out) {
                 return 0;
             }
             break 'm 0x20;
@@ -1749,11 +1756,11 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
         if age > 0x2d {
             break 'm 1;
         }
-        let club = Club(read_usize(person + staff::CLUB_JOB));
+        let club = Club(person.club_job());
         let draws = if !club.is_null() {
             club.division().addr() == 0
         } else {
-            let n = read_usize(person + staff::NATION);
+            let n = person.nation();
             n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) == 0
         };
         if draws {
@@ -1825,13 +1832,14 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
 /// com clube só estatuto negativo; sem clube motivo 2 com sorteio(25 × +0x3c) = 0). Quem se aposenta: a saída e as
 /// datas (sem nação-chave válida, set_dates_no_key_nation); devolve 1.
 pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, person: usize, out: usize) -> u8 {
-    let c2 = contract_with_current_club(person);
+    let person = Staff(person);
+    let c2 = contract_with_current_club(person.addr());
     let status = contract_status(c2);
-    let age = read_i8(person + staff::AGE);
-    let j = read_usize(person + staff::PLAYER);
+    let age = (person.age() as i8);
+    let j = person.player();
     let reason: u8 = 'm: {
         if j == 0 {
-            if read_usize(person + staff::NON_PLAYER) != 0 && age <= non_player_age_limit(person, out) {
+            if person.non_player() != 0 && age <= non_player_age_limit(person, out) {
                 return 0;
             }
             break 'm 0x20;
@@ -1849,8 +1857,8 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
                 lim = lim.wrapping_sub(1);
             }
         }
-        if read_usize(person + staff::CLUB_JOB) != 0 && c2 != 0 {
-            let x = read_i8(person + staff::LOYALTY) as i32;
+        if person.club_job() != 0 && c2 != 0 {
+            let x = person.loyalty() as i32;
             if (read_usize(c2 + contract::WAGE) as i32) > (x + 10).wrapping_mul(750) && read_u16(c2 + 0x2f) > read_u16(G_CURRENT_DATE_YEAR) {
                 lim = lim.wrapping_sub(1);
                 if x < 6 {
@@ -1862,9 +1870,9 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
         if age > 0x2d {
             break 'm 1;
         }
-        if age > 0x22 && read_usize(person + staff::CLUB_JOB) == 0 {
+        if age > 0x22 && person.club_job() == 0 {
             let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-            if days(G_CURRENT_DATE, read_usize(person + staff::DATE_JOINED_CLUB) as u32, read_usize(person + 0x42) as u32) > 0x41 {
+            if days(G_CURRENT_DATE, person.date_joined_club() as u32, read_usize(person.addr() + 0x42) as u32) > 0x41 {
                 break 'm 1;
             }
         }
@@ -1873,14 +1881,14 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
             break 'm 1;
         }
         if i > l + 3 {
-            if read_usize(person + staff::CLUB_JOB) == 0 {
+            if person.club_job() == 0 {
                 break 'm 1;
             }
             if c2 != 0 && ((exe::staff_contract_days_to_end_date(c2) as u32) as i16) < 300 && status < 0x32 {
-                if read_usize(person + staff::NON_PLAYER) != 0 {
+                if person.non_player() != 0 {
                     break 'm 1;
                 }
-                if read_i8(person + staff::AMBITION) as i32 > random(20) {
+                if person.ambition() as i32 > random(20) {
                     let (cur, pot) = (read_i16(j + player_sheet::CURRENT_ABILITY) as f64, read_i16(j + player_sheet::POTENTIAL_ABILITY) as f64);
                     if !(pot * read_f64(rdata::F64_0_85) <= cur) {
                         break 'm 1;
@@ -1891,12 +1899,12 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
         if v > 0x157c {
             return 0;
         }
-        let club = Club(read_usize(person + staff::CLUB_JOB));
+        let club = Club(person.club_job());
         let draws = if !club.is_null() {
             let lg = club.division().addr();
             lg == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(lg).wrapping_mul(4))) == 0
         } else {
-            let n = read_usize(person + staff::NATION);
+            let n = person.nation();
             n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) == 0
         };
         if draws {
@@ -1904,7 +1912,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
             if random(3) == 0 {
                 break 'm 1; // cpr8: one in three retires
             }
-            if read_usize(person + staff::CLUB_JOB) != 0 && status < 0 {
+            if person.club_job() != 0 && status < 0 {
                 break 'm 1;
             }
             if v >= 0xdac {
@@ -2133,18 +2141,19 @@ pub(crate) unsafe fn leave_job_slot(person: usize, c: Club, job: i8, field: usiz
 /// 0x7a59e0, na aposentadoria): sai da vaga do cargo (+0x3d) no clube (+0x39) e da do cargo na seleção (+0x28) na
 /// seleção (+0x24) (leave_job_slot); clube e seleção zerados, e os dois tipos de cargo.
 pub(crate) unsafe extern "stdcall" fn player_regen_retire_from_non_playing_staff(person: usize) {
-    let c = read_usize(person + staff::CLUB_JOB);
+    let person = Staff(person);
+    let c = person.club_job();
     if c != 0 {
-        leave_job_slot(person, Club(c), read_i8(person + staff::JOB_FOR_CLUB), 0x39);
-        zero_dword(person + staff::CLUB_JOB);
+        leave_job_slot(person.addr(), Club(c), (person.job_for_club() as i8), 0x39);
+        zero_dword(person.addr() + staff::CLUB_JOB);
     }
-    let s = read_usize(person + staff::NATIONAL_JOB);
+    let s = person.national_job();
     if s != 0 {
-        leave_job_slot(person, Club(s), read_i8(person + staff::JOB_FOR_NATION), 0x24);
-        zero_dword(person + staff::NATIONAL_JOB);
+        leave_job_slot(person.addr(), Club(s), (person.job_for_nation() as i8), 0x24);
+        zero_dword(person.addr() + staff::NATIONAL_JOB);
     }
-    *((person + staff::JOB_FOR_CLUB) as *mut u8) = 0;
-    *((person + staff::JOB_FOR_NATION) as *mut u8) = 0;
+    person.set_job_for_club(0);
+    person.set_job_for_nation(0);
 }
 
 // simplification: the search appends (realloc) and rolls on each test: it does not run twice. Original only; Rust mode and the
@@ -2170,8 +2179,8 @@ pub(crate) unsafe fn job_exit_is_memory_only(person: usize) -> bool {
 }
 
 /// Regions of leaving jobs: the person (0x6e) and his club and national team records (0x245).
-pub(crate) unsafe fn job_exit_regions(person: usize) -> Vec<(usize, usize)> {
-    vec![(person, 0x6e), (read_usize(person + staff::CLUB_JOB), 0x245), (read_usize(person + staff::NATIONAL_JOB), 0x245)]
+pub(crate) unsafe fn job_exit_regions(person: Staff) -> Vec<(usize, usize)> {
+    vec![(person.addr(), 0x6e), (person.club_job(), 0x245), (person.national_job(), 0x245)]
 }
 
 // simplification: the history goes to the file (does not run twice) and the copy without it only writes [0xae1080]: only the
@@ -2199,27 +2208,28 @@ pub(crate) unsafe fn job_exit_regions(person: usize) -> Vec<(usize, usize)> {
 /// nota (+75 se o clube não tem +0xcf); sem clube: + (+0x22)², e a nota dobra se o +0xd do jogador passa de um
 /// sorteio(10000) (lê o jogador sem conferir, como a original). Quente (todas as pessoas a cada chamada): sem contador.
 pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(person: usize) -> i32 {
-    if read_usize(person + staff::NON_PLAYER) != 0 {
+    let person = Staff(person);
+    if person.non_player() != 0 {
         return -10000;
     }
-    let id = read_usize(person);
+    let id = read_usize(person.addr());
     if *((read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(79)) + 0xb) as *const u8) & 0x30 != 0 {
         return -10000;
     }
-    let age = read_i8_as_i32(person + staff::AGE);
+    let age = ((person.age() as i8) as i32);
     if age < 31 {
         return -10000;
     }
     let mut rating = random((age - 31) * 150); // a idade
-    let club = read_usize(person + staff::CLUB_JOB);
+    let club = person.club_job();
     if club != 0 {
         let injury_word_0c = read_i16_as_i32(club + club::REPUTATION);
-        let player = read_usize(person + staff::PLAYER);
+        let player = person.player();
         if injury_word_0c != 0 && player != 0 {
             rating = rating.wrapping_add((read_i16_as_i32(player + player_sheet::CURRENT_REPUTATION) / injury_word_0c).wrapping_mul(250));
         }
     }
-    let player = read_usize(person + staff::PLAYER);
+    let player = person.player();
     if player != 0 {
         let v = read_i8_as_i32(player + player_sheet::LEADERSHIP) / 2;
         rating = rating.wrapping_add(random(ftol(game_pow(v as f64, 3.0))));
@@ -2230,20 +2240,20 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
             rating = rating.wrapping_add(50);
         }
     }
-    let quadrados = ftol(game_pow(read_i8_as_i32(person + staff::PROFESSIONALISM) as f64, 2.0)).wrapping_add(ftol(game_pow(read_i8_as_i32(person + staff::AMBITION) as f64, 2.0)));
-    let sum = 3 * (read_i8_as_i32(person + staff::TEMPERAMENT) + read_i8_as_i32(person + staff::PRESSURE)) + 2 * (read_i8_as_i32(person + staff::LOYALTY) + read_i8_as_i32(person + staff::DETERMINATION)) + read_i8_as_i32(person + staff::ADAPTABILITY);
+    let quadrados = ftol(game_pow((person.professionalism() as i32) as f64, 2.0)).wrapping_add(ftol(game_pow((person.ambition() as i32) as f64, 2.0)));
+    let sum = 3 * ((person.temperament() as i32) + (person.pressure() as i32)) + 2 * ((person.loyalty() as i32) + (person.determination() as i32)) + (person.adaptability() as i32);
     rating = rating.wrapping_add(sum * 5).wrapping_add(quadrados);
-    let club = read_usize(person + staff::CLUB_JOB);
+    let club = person.club_job();
     if club != 0 {
         if read_usize(club + club::MANAGER) == 0 {
             rating = rating.wrapping_add(75);
         }
         return random(rating);
     }
-    let b = *((person + staff::INT_APPS) as *const u8) as i32;
+    let b = person.int_apps() as i32;
     rating = rating.wrapping_add(b * b);
     let r = random(10000); // no club
-    if read_i16_as_i32(read_usize(person + staff::PLAYER) + 0xd) > r {
+    if read_i16_as_i32(person.player() + 0xd) > r {
         rating = rating.wrapping_add(rating);
     }
     random(rating)
@@ -2346,9 +2356,9 @@ pub(crate) unsafe fn remove_from_team(p: usize, field: usize) {
 /// Formats the "already retired" message into buffer 0xde1f64 (first name, surname, id).
 ///
 /// [pt] O aviso "already retired" no buffer [0xde1f64] (nome +4, sobrenome +8, id +0).
-pub(crate) unsafe fn format_already_retired(p: usize) {
+pub(crate) unsafe fn format_already_retired(p: Staff) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    format(0xde1f64, 0xa70150, read_usize(p + staff::FIRST_NAME), read_usize(p + staff::SECOND_NAME), read_usize(p));
+    format(0xde1f64, 0xa70150, p.first_name(), p.second_name(), read_usize(p.addr()));
 }
 
 /// Removes the player from his club and national team and changes the player job to the staff job; without a kept job,
@@ -2370,25 +2380,26 @@ pub(crate) unsafe fn format_already_retired(p: usize) {
 /// cargo na seleção (+0x28) do mesmo jeito, mas 12/13/15 gravam no +0x3d (a original grava ali, não no +0x28) e o
 /// padrão grava 0x10 no +0x28. Sem cargo que fica, o clube (+0x39) e a seleção (+0x24) zeram. Sem SEH, sem sorteio.
 pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
-    if read_usize(p + staff::CLUB_JOB) != 0 {
-        remove_from_team(p, 0x39);
+    let p = Staff(p);
+    if p.club_job() != 0 {
+        remove_from_team(p.addr(), 0x39);
     }
-    if read_usize(p + staff::NATIONAL_JOB) != 0 {
-        remove_from_team(p, 0x24);
+    if p.national_job() != 0 {
+        remove_from_team(p.addr(), 0x24);
     }
-    let stays_in_club = match read_i8(p + staff::JOB_FOR_CLUB) as i32 {
+    let stays_in_club = match (p.job_for_club() as i8) as i32 {
         0 => false,
         1..=10 => return, // staff: the original exits through the end of the routine
         12 => {
-            write_i8(p + staff::JOB_FOR_CLUB, 5);
+            p.set_job_for_club((5) as u8);
             true
         }
         13 => {
-            write_i8(p + staff::JOB_FOR_CLUB, 6);
+            p.set_job_for_club((6) as u8);
             true
         }
         15 => {
-            write_i8(p + staff::JOB_FOR_CLUB, 8);
+            p.set_job_for_club((8) as u8);
             true
         }
         16 => {
@@ -2397,23 +2408,23 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
         }
         _ => {
             crate::comparison::branch("cpn_4 retired player");
-            write_i8(p + staff::JOB_FOR_CLUB, 0x10); // aposentado
+            p.set_job_for_club((0x10) as u8); // aposentado
             false
         }
     };
-    let stays_in_national_team = match read_i8(p + staff::JOB_FOR_NATION) as i32 {
+    let stays_in_national_team = match (p.job_for_nation() as i8) as i32 {
         0 => false,
         1..=10 => return,
         12 => {
-            write_i8(p + staff::JOB_FOR_CLUB, 5); // in +0x3d, like the original
+            p.set_job_for_club((5) as u8); // in +0x3d, like the original
             true
         }
         13 => {
-            write_i8(p + staff::JOB_FOR_CLUB, 6);
+            p.set_job_for_club((6) as u8);
             true
         }
         15 => {
-            write_i8(p + staff::JOB_FOR_CLUB, 8);
+            p.set_job_for_club((8) as u8);
             true
         }
         16 => {
@@ -2421,15 +2432,15 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
             false
         }
         _ => {
-            write_i8(p + staff::JOB_FOR_NATION, 0x10);
+            p.set_job_for_nation((0x10) as u8);
             false
         }
     };
     if !stays_in_club {
-        core::ptr::write_unaligned((p + staff::CLUB_JOB) as *mut usize, 0);
+        core::ptr::write_unaligned((p.addr() + staff::CLUB_JOB) as *mut usize, 0);
     }
     if !stays_in_national_team {
-        core::ptr::write_unaligned((p + staff::NATIONAL_JOB) as *mut usize, 0);
+        core::ptr::write_unaligned((p.addr() + staff::NATIONAL_JOB) as *mut usize, 0);
     }
 }
 
@@ -2437,8 +2448,8 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
 ///
 /// [pt] O jovem com a segunda nacionalidade (+0x1e) igual a [0x9cf424] só vai para os clubes de id [0x9d0120], [0x9d0134],
 /// [0x9d0128], [0x9d01a0] e [0x9d0124]: `true` para os outros clubes.
-pub(crate) unsafe fn is_basque_restricted(player: usize, club: usize) -> bool {
-    let e = read_usize(player + staff::SECOND_NATION);
+pub(crate) unsafe fn is_basque_restricted(player: Staff, club: usize) -> bool {
+    let e = player.second_nation();
     if e == 0 || read_usize(e) != read_usize(KEY_NATION_PAYS_BASQUE) {
         return false;
     }
@@ -2482,7 +2493,7 @@ pub(crate) unsafe extern "thiscall" fn pick_best_club_for_player(_this: usize, p
     while i < total() {
         let candidate = estrangeiro(player, read_usize(club + club::NATION), 1) == 0
             && (exe::club_get_linked_b_team(club, &mut eh_a, 1) == 0 || eh_a != 0)
-            && !is_basque_restricted(player, club);
+            && !is_basque_restricted(Staff(player), club);
         if candidate {
             let squad = exe::database_count_club_squad(club, 0, 0);
             if can_club_bid(player, club) && (squad as i8) < 0x32 {
@@ -2506,8 +2517,8 @@ pub(crate) unsafe extern "thiscall" fn pick_best_club_for_player(_this: usize, p
 ///
 /// [pt] A nação da lista do jovem: a nação (+0x1a) dele; [0x9cf510] e [0x9cf2dc] vão para [0x9cf2e4], e [0x9cf3e4] também
 /// com exe::utils_random(5) < 2.
-pub(crate) unsafe fn player_regen_youth_list_nation(player: usize) -> usize {
-    let n = read_usize(read_usize(player + staff::NATION));
+pub(crate) unsafe fn player_regen_youth_list_nation(player: Staff) -> usize {
+    let n = read_usize(player.nation());
     if n == read_usize(KEY_NATION_WALES) || n == read_usize(KEY_NATION_REPUBLIC_OF_IRELAND) || (n == read_usize(KEY_NATION_NORTHERN_IRELAND) && exe::utils_random(5) < 2) {
         return read_usize(KEY_NATION_ENGLAND);
     }
@@ -2540,6 +2551,7 @@ pub(crate) unsafe fn nation_club_list(this: usize, n: usize) -> usize {
 /// dela à habilidade da ficha +0x61: +0xb, +7 × 50 e +5 × 50, em 16 bits), comparado em 16 bits a partir de −25000.
 /// Sem lista ou lista vazia: 0. A lista que acaba antes da conta: a caixa "Error" (linha 0x19e9) e 0. Sem SEH.
 pub(crate) unsafe extern "thiscall" fn pick_club_from_nation_list(this: usize, player: usize) -> usize {
+    let player = Staff(player);
     let n = player_regen_youth_list_nation(player);
     let l = nation_club_list(this, n);
     if l == 0 || read_i16(l) == 0 {
@@ -2558,8 +2570,8 @@ pub(crate) unsafe extern "thiscall" fn pick_club_from_nation_list(this: usize, p
             return 0;
         }
         let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(item).wrapping_mul(club::SIZE)));
-        if !is_basque_restricted(player, club.addr()) && can_club_bid(player, club.addr()) && (exe::database_count_club_squad(club, 0, 0) as i8) < 0x32 {
-            let sheet = read_usize(player + staff::PLAYER);
+        if !is_basque_restricted(player, club.addr()) && can_club_bid(player.addr(), club.addr()) && (exe::database_count_club_squad(club, 0, 0) as i8) < 0x32 {
+            let sheet = player.player();
             let rep = club.reputation() as i32;
             let c = rep
                 .wrapping_sub((read_i16(sheet + player_sheet::CURRENT_REPUTATION) as i32).wrapping_sub(rep).wrapping_abs())
@@ -2689,7 +2701,7 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_QUEUE_STAFF_FOR_REGEN)(this, entry);
     }
     crate::comparison::branch("cpk_2 slot for the regen");
-    let person = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
     let cap = read_usize(this + player_regen_fields::REGEN_QUEUE_CAPACITY);
     if read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT) == cap.wrapping_sub(1) {
         let p = crt_realloc(read_usize(this + player_regen_fields::REGEN_QUEUE), cap.wrapping_add(250).wrapping_mul(12));
@@ -2704,7 +2716,7 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
     write_u16(queue + regen_queue_entry::REGEN_DATE, core::ptr::read_unaligned((entry + 4) as *const u16));
     write_u16(queue + regen_queue_entry::REGEN_YEAR, core::ptr::read_unaligned((entry + 6) as *const u16));
     write_usize(this + player_regen_fields::REGEN_QUEUE_COUNT, read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT).wrapping_add(1)); // one more in the regen queue
-    if read_usize(person + staff::NON_PLAYER) != 0 {
+    if person.non_player() != 0 {
         if read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) == read_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY).wrapping_sub(1) {
             let p = crt_realloc(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS), read_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY).wrapping_add(250) << 4);
             write_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS, p);
@@ -2714,18 +2726,18 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
             }
         }
         let item = || read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS).wrapping_add(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) << 4);
-        write_usize(item(), read_usize(read_usize(person + staff::NON_PLAYER)));
-        let nation = read_usize(person + staff::NATION);
+        write_usize(item(), read_usize(person.non_player()));
+        let nation = person.nation();
         if nation != 0 {
             write_usize(item() + 4, read_usize(nation));
         } else {
             let s = exe::utils_random(*(G_NATION_COUNT as *const i32));
             write_usize(item() + 4, s as usize);
         }
-        write_usize(item() + 0xc, read_usize(person));
+        write_usize(item() + 0xc, read_usize(person.addr()));
         write_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT, read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT).wrapping_add(1));
     }
-    if read_usize(person + staff::PLAYER) != 0 {
+    if person.player() != 0 {
         let cap = read_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY);
         if read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == cap.wrapping_sub(1) {
             let p = crt_realloc(read_usize(this + player_regen_fields::PLAYER_DATA_POOL), cap.wrapping_add(250) << 4);
@@ -2736,9 +2748,9 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
             }
         }
         let item = || read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) << 4);
-        write_usize(item(), read_usize(read_usize(person + staff::PLAYER)));
-        write_usize(item() + 4, read_usize(read_usize(person + staff::NATION)));
-        write_usize(item() + 0xc, read_usize(person));
+        write_usize(item(), read_usize(person.player()));
+        write_usize(item() + 4, read_usize(person.nation()));
+        write_usize(item() + 0xc, read_usize(person.addr()));
         write_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT).wrapping_add(1));
     }
 }
@@ -2813,32 +2825,33 @@ pub(crate) unsafe fn player_regen_is_on_shortlist(person: usize) -> bool {
 /// e sorteio(nota +0xb do jogador) < 750. Sem nenhum dos dois registros: sempre. Aposenta: a saída (26 bytes) recebe a
 /// pessoa, o motivo 0x10, +0x19 = 0, o clube (−1 sem) e a data do jogo em +8 e +0x10; devolve 1. Senão 0.
 pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(person: usize, out: usize) -> u8 {
+    let person = Staff(person);
     let mut without_record = false;
-    if player_regen_is_on_shortlist(person) {
+    if player_regen_is_on_shortlist(person.addr()) {
         return 0;
     }
-    let manager = read_u32(person + staff::NON_PLAYER) as usize;
-    if manager == 0 && read_u32(person + staff::PLAYER) == 0 {
+    let manager = (person.non_player() as u32) as usize;
+    if manager == 0 && (person.player() as u32) == 0 {
         without_record = true;
     }
     let aposenta = if manager != 0 {
-        if read_u32(person + staff::CLUB_JOB) != 0 || read_u32(person + staff::NATIONAL_JOB) != 0 {
+        if (person.club_job() as u32) != 0 || (person.national_job() as u32) != 0 {
             return 0;
         }
         *((manager + non_player::CURRENT_REPUTATION) as *const i16) < 50 && friendly_random(5) == 0 // the weak manager
-    } else if read_u32(person + staff::PLAYER) == 0 {
+    } else if (person.player() as u32) == 0 {
         false
     } else {
-        if player_regen_is_on_shortlist(person) {
+        if player_regen_is_on_shortlist(person.addr()) {
             return 0;
         }
-        if read_u32(person + staff::CLUB_JOB) != 0 || read_u32(person + staff::NATIONAL_JOB) != 0 {
+        if (person.club_job() as u32) != 0 || (person.national_job() as u32) != 0 {
             false
         } else {
-            let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(*((person + 0x40) as *const u16) as i32);
-            let days = years.wrapping_mul(365).wrapping_sub(*((person + staff::DATE_JOINED_CLUB) as *const i16) as i32).wrapping_add(*(G_CURRENT_DATE as *const i16) as i32);
+            let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(*((person.addr() + 0x40) as *const u16) as i32);
+            let days = years.wrapping_mul(365).wrapping_sub((person.date_joined_club() as i16) as i32).wrapping_add(*(G_CURRENT_DATE as *const i16) as i32);
             if days > 0x16d {
-                let rating = *((read_u32(person + staff::PLAYER) as usize + 0xb) as *const i16) as i32;
+                let rating = *(((person.player() as u32) as usize + 0xb) as *const i16) as i32;
                 friendly_random(rating) < 0x2ee // the roll by the rating
             } else {
                 false
@@ -2848,10 +2861,10 @@ pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(p
     if !aposenta && !without_record {
         return 0;
     }
-    core::ptr::write_unaligned(out as *mut u32, read_u32(person));
+    core::ptr::write_unaligned(out as *mut u32, read_u32(person.addr()));
     *((out + retirement_entry::REASON) as *mut u8) = 0x10; // o motivo: desempregado
     *((out + retirement_entry::ANNOUNCED) as *mut u8) = 0;
-    let club = read_u32(person + staff::CLUB_JOB) as usize;
+    let club = (person.club_job() as u32) as usize;
     core::ptr::write_unaligned((out + retirement_entry::CLUB_ID) as *mut u32, if club != 0 { read_u32(club) } else { u32::MAX });
     for o in [8usize, 0x10] {
         core::ptr::write_unaligned((out + o) as *mut u16, *(G_CURRENT_DATE as *const u16));
@@ -3015,8 +3028,9 @@ pub(crate) unsafe extern "thiscall" fn find_retirement_entry(regen: usize, id: *
 /// → +0x69) do clube do computador (0x600a50) ou o bônus do humano; a mesma nação (+0x1a/+0x53) e os
 /// clubes galeses (Swansea, Cardiff, Wrexham) e a Escócia. Só os 16 bits baixos da nota contam.
 pub(crate) unsafe extern "stdcall" fn player_regen_score_club_for_player(player: usize, club: usize, squad: i8) -> i32 {
+    let player = Staff(player);
     let club = Club(club);
-    let sheet = read_usize(player + staff::PLAYER);
+    let sheet = player.player();
     let rep = club.reputation() as i32;
     let mut s = rep
         .wrapping_sub((read_i16(sheet + player_sheet::CURRENT_REPUTATION) as i32 - rep).wrapping_abs())
@@ -3051,8 +3065,8 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_club_for_player(player:
             0xfa
         });
     }
-    let manager = club.manager().addr();
-    let x = if manager != 0 { read_usize(manager + staff::NON_PLAYER) } else { 0 };
+    let manager = Staff(club.manager().addr());
+    let x = if !manager.is_null() { manager.non_player() } else { 0 };
     if x != 0 && exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 {
         s = s.wrapping_add((*((x + non_player::YOUNGSTERS) as *const i8) as i32 - 10) * 30);
         if read_i16(sheet + player_sheet::POTENTIAL_ABILITY) as i32 > exe::utils_random(0x4b) + 0x64 {
@@ -3077,7 +3091,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_club_for_player(player:
             s = s.wrapping_add(juniores as i32 * 25);
         }
     }
-    let nation = read_usize(player + staff::NATION);
+    let nation = player.nation();
     let nation_of_club = club.nation().addr();
     if nation == nation_of_club {
         s = s.wrapping_add(0x3e8); // same nation
@@ -3243,49 +3257,49 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
         return;
     }
     for _ in 0..total - 2 {
-        let s = exe::player_regen_pick_staff_for_non_player_data(this, read_usize(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS) + 4));
-        if s == 0 {
+        let s = Staff(exe::player_regen_pick_staff_for_non_player_data(this, read_usize(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS) + 4)));
+        if s.is_null() {
             return;
         }
         crate::comparison::branch("cpw_10 reserve manager");
         let nj = read_usize(G_NON_PLAYER_TABLE).wrapping_add((read_usize(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)) as u32).wrapping_mul(0x44) as usize);
-        core::ptr::write_unaligned((s + staff::NON_PLAYER) as *mut usize, nj);
-        let sheet = read_usize(s + staff::PLAYER);
+        core::ptr::write_unaligned((s.addr() + staff::NON_PLAYER) as *mut usize, nj);
+        let sheet = s.player();
         if sheet == 0 {
             let a = friendly_random(0x5dc).wrapping_add(1) as u16;
-            write_u16(read_usize(s + staff::NON_PLAYER) + 8, a);
+            write_u16(s.non_player() + 8, a);
             let b = friendly_random(0x5dc).wrapping_add(1) as u16;
-            write_u16(read_usize(s + staff::NON_PLAYER) + 0xa, b);
+            write_u16(s.non_player() + 0xa, b);
             let c = friendly_random(0x1f4).wrapping_add(1) as u16;
-            write_u16(read_usize(s + staff::NON_PLAYER) + 0xc, c);
+            write_u16(s.non_player() + 0xc, c);
         } else {
             if *((sheet + player_sheet::GOALKEEPER) as *const i8) == 0x14 {
                 let (cl, dl) = (*((nj + non_player::COACHING) as *const i8), *((nj + non_player::COACHING_GKS) as *const i8));
                 if cl > dl {
                     *((nj + non_player::COACHING_GKS) as *mut i8) = cl;
-                    *((read_usize(s + staff::NON_PLAYER) + 0x10) as *mut i8) = dl;
+                    *((s.non_player() + 0x10) as *mut i8) = dl;
                     if friendly_random(4) == 0 {
                         let r = friendly_random(0x32) as u8;
-                        *((read_usize(s + staff::NON_PLAYER) + 0x11) as *mut u8) = r.wrapping_add(0x32);
+                        *((s.non_player() + 0x11) as *mut u8) = r.wrapping_add(0x32);
                     }
                 }
             }
             exe::staff_normalise_non_player_attributes(s);
             place_coach_at_ai_club(s);
-            let rep = read_i16(read_usize(s + staff::PLAYER) + 0xb);
+            let rep = read_i16(s.player() + 0xb);
             let (k, teto) = if rep > 0x1d4c {
                 (0x9689d8, 0x9690b8)
-            } else if friendly_random(*((s + staff::AMBITION) as *const i8) as i32) != 0 {
+            } else if friendly_random(s.ambition() as i32) != 0 {
                 (0x969040, 0x96d300)
             } else {
                 (0x968968, 0x96e288)
             };
             let a = rebuilt_coach_rating(s, rep, None, k, teto);
-            write_u16(read_usize(s + staff::NON_PLAYER) + 0xa, a);
-            let b = rebuilt_coach_rating(s, read_i16(read_usize(s + staff::PLAYER) + 9), None, k, teto);
-            write_u16(read_usize(s + staff::NON_PLAYER) + 8, b);
-            let c = rebuilt_coach_rating(s, read_i16(read_usize(s + staff::PLAYER) + 0xd), Some(0x969040), k, teto);
-            write_u16(read_usize(s + staff::NON_PLAYER) + 0xc, c);
+            write_u16(s.non_player() + 0xa, a);
+            let b = rebuilt_coach_rating(s, read_i16(s.player() + 9), None, k, teto);
+            write_u16(s.non_player() + 8, b);
+            let c = rebuilt_coach_rating(s, read_i16(s.player() + 0xd), Some(0x969040), k, teto);
+            write_u16(s.non_player() + 0xc, c);
         }
         exe::player_regen_remove_spare_non_player_record(this, (read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS))) as i32 as u32);
     }

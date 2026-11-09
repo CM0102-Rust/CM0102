@@ -187,8 +187,8 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_league_fine(this: usize, valu
 pub(crate) unsafe extern "thiscall" fn compare_try_finance_boost_event(this: usize, club: usize, fin: usize) -> u32 {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_FINANCE_BOOST_EVENT);
-    let presence = if !club.is_null() { club.chairman().addr() } else { 0 };
-    let sheet = if presence != 0 { read_usize(presence + staff::NON_PLAYER) } else { 0 };
+    let presence = Staff(if !club.is_null() { club.chairman().addr() } else { 0 });
+    let sheet = if !presence.is_null() { presence.non_player() } else { 0 };
     if club.is_null() || fin == 0 {
         return o(this, club.addr(), fin); // simplification: without a club or without finances, original only
     }

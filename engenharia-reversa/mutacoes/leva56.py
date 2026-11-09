@@ -8,7 +8,7 @@ MUTACOES = [
     ('c_2x', "1 | 2 => ftol(f(j, if kind == 1 { 0xdd } else { 0xe9 }) - 2.0 *", "1 | 2 => ftol(f(j, if kind == 1 { 0xdd } else { 0xe9 }) - 1.0 *"),
     ('c_t4', "            4 => if table_a(this, j) == 1 { 100 } else { 0 },", "            4 => if table_a(this, j) & 1 != 0 { 100 } else { 0 },"),
     ('c_lista_sel', "                        || is_national_team(read_usize(partida + (if side == 0 { 0x1c } else { 0x20 }))) != 0", "                        || is_national_team(read_usize(partida + (if side == 0 { 0x20 } else { 0x1c }))) != 0"),
-    ('c_5f', "                    && read_i8(manager + staff::CLASSIFICATION) != 0\n", "\n"),
+    ('c_5f', "                    && (manager.classification() as i8) != 0\n", "\n"),
     ('c_lista_ordem', "                            v = 10000 - b as i16;", "                            v = 10000 + b as i16;"),
     ('c_menos20', "(read_i8(read_usize(j + match_player::PLAYER) + 0xf) as i32 * 20 - 20) as f64) as i16;", "(read_i8(read_usize(j + match_player::PLAYER) + 0xf) as i32 * 20) as f64) as i16;"),
     ('c_goleiro5', "                    -10000\n", "                    10000\n"),

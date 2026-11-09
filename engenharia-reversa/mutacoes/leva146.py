@@ -13,7 +13,7 @@ MUTACOES = [
     ('p_penalti', "if random(read_i8(read_usize(e + match_player::STAFF) + 0x5a) as i32) == 0 {\n            let r = random(10);", "if random(read_i8(read_usize(e + match_player::STAFF) + 0x5a) as i32) == 0 {\n            let r = random(9);", "pass penalty"),
     ('p_desarme', "*w(e, match_player::BALL_CONTROL) = ((rating as i32 - 400) as i16).clamp(-200, 200);", "*w(e, match_player::BALL_CONTROL) = ((rating as i32 - 401) as i16).clamp(-200, 200);", "pass tackled"),
     ('p_ganho', "let gain: i16 = if controlled { 0x78 } else { 0xc8 };\n    let far = t() & 4 == 0 && t() & 2 == 0;", "let gain: i16 = if controlled { 0x78 } else { 0xc9 };\n    let far = t() & 4 == 0 && t() & 2 == 0;", "pass tackled"),
-    ('p_sem_folego', "let lim = ((25 - read_i8(person + staff::TEMPERAMENT) as i32) * 2) as f32;", "let lim = ((26 - read_i8(person + staff::TEMPERAMENT) as i32) * 2) as f32;", "pass out of breath"),
+    ('p_sem_folego', "let lim = ((25 - person.temperament() as i32) * 2) as f32;", "let lim = ((26 - person.temperament() as i32) * 2) as f32;", "pass out of breath"),
     ('p_fator', "        1 => 0x96d7bc,\n        2 => 0x96d3d4,", "        1 => 0x96d3d4,\n        2 => 0x96d3d4,"),
     ('p_impreciso', "let e8 = ftol((factor as f64 * d as f64 + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i8 as i32;", "let e8 = ftol((factor as f64 * d as f64 + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5) * 1.2) as i8 as i32;", "pass inaccurate"),
     ('p_custo', "*w(p, match_player::MATCH_RATING) = wp(0x35).wrapping_sub(if matches!(tipo, 8 | 7 | 6) { 0x14 } else { 0x48 });", "*w(p, match_player::MATCH_RATING) = wp(0x35).wrapping_sub(if matches!(tipo, 8 | 7 | 6) { 0x14 } else { 0x49 });"),

@@ -23,10 +23,11 @@ use super::*;
 /// +8 pela nação do clube, +0xa nacional) e, com clube, a confiança da diretoria (+6 da linha de 73 bytes) + 1000, entre
 /// 6500 e 10000. Só as palavras baixas das reputações valem.
 pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, club: usize, nation: u32, world: u32, player: u32) {
+    let person = Staff(person);
     let club = Club(club);
     let nation = nation as u16 as i16;
     let world = world as u16 as i16;
-    let p = read_usize(person + staff::PLAYER);
+    let p = person.player();
     if p != 0 && player != 0 {
         crate::comparison::branch("cpw_6 player award");
         add_to_word(p + player_sheet::WORLD_REPUTATION, ftol(world as i32 as f64 * read_f64(rdata::F64_0_05))); // cpw6: the worldwide increase;
@@ -36,7 +37,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
         if read_i16(p + player_sheet::WORLD_REPUTATION) <= world { // cpw6: o piso mundial
             write_i16(p + player_sheet::WORLD_REPUTATION, world);
         }
-        if !club.is_null() && club.nation().addr() == read_usize(person + staff::NATION) { // cpw6: the club of the player’s nation
+        if !club.is_null() && club.nation().addr() == person.nation() { // cpw6: the club of the player’s nation
             add_to_word(p + player_sheet::HOME_REPUTATION, ftol(nation as i32 as f64 * read_f64(rdata::F64_0_1)));
             clamp_word(p + player_sheet::HOME_REPUTATION, nation);
         } else {
@@ -57,14 +58,14 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
         }
         return;
     }
-    let np = read_usize(person + staff::NON_PLAYER);
+    let np = person.non_player();
     if np == 0 || player != 0 {
         return;
     }
     if read_i16(np + non_player::WORLD_REPUTATION) <= world {
         write_i16(np + non_player::WORLD_REPUTATION, world);
     }
-    if !club.is_null() && club.nation().addr() == read_usize(person + staff::NATION) {
+    if !club.is_null() && club.nation().addr() == person.nation() {
         if read_i16(np + non_player::HOME_REPUTATION) <= nation {
             write_i16(np + non_player::HOME_REPUTATION, nation);
         }

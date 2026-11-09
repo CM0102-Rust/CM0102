@@ -6,16 +6,17 @@ use super::*;
 /// [pt] { 0x6e9470 }: inicia o objeto (motor, pessoa, valor): sem pessoa, 5000; senao o primeiro de
 /// 7750, 7250, 6750, 6250, 5750 cuja palavra 0x1e da pessoa passa de sorteio(350, 300, ...), ou 5250.
 pub(crate) unsafe extern "thiscall" fn init_strictness(this: usize, engine: u32, person: usize) {
+    let person = Staff(person);
     *(this as *mut u32) = engine;
-    *((this + 4) as *mut u32) = person as u32;
+    *((this + 4) as *mut u32) = person.addr() as u32;
     let v = (this + 8) as *mut u16;
-    if person == 0 {
+    if person.is_null() {
         *v = 0x1388;
         return;
     }
     for (n, valor) in [(0x15e, 0x1e46u16), (0x12c, 0x1c52), (0xfa, 0x1a5e), (0xc8, 0x186a), (0x96, 0x1676)] {
         let r = random(n);
-        if *((person + staff::SECOND_NATION) as *const i16) as i32 > r {
+        if (person.second_nation() as i16) as i32 > r {
             *v = valor;
             return;
         }

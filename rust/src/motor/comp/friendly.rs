@@ -970,11 +970,11 @@ pub(crate) unsafe extern "thiscall" fn resolve_international_dates(this: usize) 
 /// clube (+0x39) do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]]); entre os 127 torneios (0x69 bytes a partir
 /// de +0xb1), o primeiro com esse anfitrião (+0) e em uso (+0x29 ≠ 0): o ponteiro dele; senão 0.
 pub(crate) unsafe extern "thiscall" fn find_human_club_tournament(this: usize) -> usize {
-    let manager = read_usize(G_SCREEN_RECORDS_MANAGER.wrapping_add((*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as i32 as usize).wrapping_mul(0x300)));
-    if manager == 0 {
+    let manager = Staff(read_usize(G_SCREEN_RECORDS_MANAGER.wrapping_add((*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as i32 as usize).wrapping_mul(0x300))));
+    if manager.is_null() {
         return 0;
     }
-    let club = read_usize(manager + staff::CLUB_JOB);
+    let club = manager.club_job();
     if club == 0 {
         return 0;
     }
@@ -1205,11 +1205,11 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_open_invitation(this: usi
     if list == 0 {
         return 0;
     }
-    let manager = read_usize(G_SCREEN_RECORDS_MANAGER.wrapping_add((*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as i32 as usize).wrapping_mul(0x300)));
-    if manager == 0 {
+    let manager = Staff(read_usize(G_SCREEN_RECORDS_MANAGER.wrapping_add((*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as i32 as usize).wrapping_mul(0x300))));
+    if manager.is_null() {
         return 0;
     }
-    let club = read_usize(manager + staff::CLUB_JOB);
+    let club = manager.club_job();
     if club == 0 {
         return 0;
     }
@@ -1597,7 +1597,7 @@ pub(crate) unsafe fn contract_club_except_type5(p: usize) -> usize {
 /// renewal and thank-you news for a player; `gravar` false skips the history file entry (comparison copy).
 ///
 /// [pt] O corpo da 0x86c8c0; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.
-pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, club: usize, prize: usize, a4: u32, a5: u32, write: bool) {
+pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: usize, prize: usize, a4: u32, a5: u32, write: bool) {
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x33;
@@ -1605,10 +1605,10 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, club: us
     put_i32(&mut e, 0xd, read_usize(prize) as i32);
     put_i32(&mut e, 0x11, (a4 & 0xff) as i32);
     put_i32(&mut e, 0x15, (a5 & 0xffff) as i32);
-    append_person_history_by_id(write, this, read_usize(p), &e);
-    let (t3d, t28) = (read_u8(p + staff::JOB_FOR_CLUB), read_u8(p + staff::JOB_FOR_NATION));
+    append_person_history_by_id(write, this, read_usize(p.addr()), &e);
+    let (t3d, t28) = (p.job_for_club(), p.job_for_nation());
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
-        let r = staff_records_manager_record(this, p);
+        let r = staff_records_manager_record(this, p.addr());
         if r != 0 {
             crate::comparison::branch("cpv_13 manager award");
             let a = (r + 0x9e) as *mut u16;
@@ -1616,7 +1616,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, club: us
         }
         return;
     }
-    if read_usize(p + staff::PLAYER) == 0 {
+    if p.player() == 0 {
         return;
     }
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
@@ -1627,28 +1627,28 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, club: us
     if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) == 0 {
         return;
     }
-    let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p));
+    let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p.addr()));
     if k == 0 {
         return;
     }
     let gt = read_usize(G_TRANSFER_MANAGER);
     if gt != 0 {
         if exe::date_days_since(G_CURRENT_DATE, (read_usize(k + contract::DATE_STARTED)) as u32, (read_usize(k + 0x29)) as u32) > 0x12c {
-            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), contract_club_except_type5(p), p, 0, 0);
-            if x != 0 && read_usize(x + 0xf) == read_usize(p) {
+            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), contract_club_except_type5(p.addr()), p, 0, 0);
+            if x != 0 && read_usize(x + 0xf) == read_usize(p.addr()) {
                 crate::comparison::branch("cpv_13 renewal");
-                offer_renewal(p);
+                offer_renewal(p.addr());
             }
         }
     }
     if read_usize(k + 0x45) != 0 {
         return;
     }
-    let v59 = read_u8(p + staff::LOYALTY) as i8;
+    let v59 = (p.loyalty() as u8) as i8;
     if v59 <= 0xf { // cpv13: o +0x59
         return;
     }
-    if read_u8(p + staff::PROFESSIONALISM) as i8 <= 0xa { // cpv13: o +0x5b
+    if (p.professionalism() as u8) as i8 <= 0xa { // cpv13: o +0x5b
         return;
     }
     crate::comparison::branch("cpv_13 thanks draw");

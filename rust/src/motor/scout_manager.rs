@@ -31,13 +31,13 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
     // thiscall, ret 4; 0x54c5b0: push n; push &output; lea ecx, [pedido+8] -> thiscall, ret 8; 0x62c400: push player;
     // mov ecx, [0xb63d28] -> thiscall, ret 4 (al); 0x4cf5f0: push club; push player; mov ecx, [0xae1050] -> thiscall,
     // ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24 (ax)
-    let player = staff_records_staff_by_id(read_usize(request + scout_request::PLAYER_ID));
+    let player = Staff(staff_records_staff_by_id(read_usize(request + scout_request::PLAYER_ID)));
     let club = Club(friendly_club_by_id(read_usize(request)));
     if exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 {
         return (true, false, 0, 0, 0);
     }
     let manager = club.manager().addr();
-    if read_usize(player + staff::CLUB_JOB) == club.addr() {
+    if player.club_job() == club.addr() {
         return (true, false, 0, 0, 0);
     }
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), player);
@@ -63,10 +63,10 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
     if exe::injury_get_player_injury_status(read_usize(G_INJURY), player) == 2 {
         return (true, false, 0, 0, 0);
     }
-    let seu = Club(read_usize(player + staff::CLUB_JOB));
+    let seu = Club(player.club_job());
     let mut nation = if !seu.is_null() { seu.nation().addr() } else { 0 };
     if nation == 0 {
-        nation = read_usize(player + staff::NATION);
+        nation = player.nation();
         if nation == 0 {
             return (false, false, 0, 0, 0);
         }
@@ -90,7 +90,7 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
             return (false, false, 0, 0, 0);
         }
     }
-    (true, true, player, manager, nation)
+    (true, true, player.addr(), manager, nation)
 }
 
 /// The scout manager's daily update, on day slice 2: prunes the scouting requests (non-human club, player already at
@@ -175,8 +175,8 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
     exe::scout_manager_send_scout_reports(this, l);
     exe::crt_qsort(read_usize(this + scout_manager_fields::SCOUT_REQUESTS), (read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT)) as u32, 0x11, 0x7fc270);
     for k in 0..0x10i32 {
-        let p = staff_records_staff_by_id((read_i32(G_STAFF_COUNT) - k - 1) as usize);
-        if read_u8(p + staff::CLASSIFICATION) == 1 {
+        let p = Staff(staff_records_staff_by_id((read_i32(G_STAFF_COUNT) - k - 1) as usize));
+        if p.classification() == 1 {
             crate::comparison::branch("cqf_12 human search");
             for j in 0..10u32 {
                 exe::player_search_run_scout_day(exe::scout_manager_get_search(this, j, p)); // cqf12: the search of each list
@@ -509,8 +509,8 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
     exe::new_llist(list);
     for k in 0..16i32 {
         let idx = (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(k).wrapping_sub(1);
-        let person = read_usize(G_STAFF_TABLE).wrapping_add((idx as usize).wrapping_mul(staff::SIZE));
-        if *((person + staff::CLASSIFICATION) as *const u8) != 1 {
+        let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((idx as usize).wrapping_mul(staff::SIZE)));
+        if person.classification() != 1 {
             continue;
         }
         crate::comparison::branch("cqc_13 human scouts");
@@ -527,7 +527,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
             // byte
             let r = exe::scout_manager_get_search(this, q as u8 as u32, person);
             if read_usize(r + 0x19d) != 0 && *((p + fixture::HOME_SIDE_MARK) as *const u8) != 0 && *((p + fixture::AWAY_SIDE_MARK) as *const u8) != 0 {
-                let club = read_usize(person + staff::CLUB_JOB);
+                let club = person.club_job();
                 if read_usize(p + fixture::HOME_CLUB) == club || read_usize(p + fixture::AWAY_CLUB) == club {
                     exe::player_search_start_scout_assignment(r, u32::MAX, u32::MAX, u32::MAX, 0, 1);
                 }
@@ -785,8 +785,8 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
         if id <= -1 {
             continue;
         }
-        let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
-        let (clube, sel) = (read_usize(p + staff::CLUB_JOB), read_usize(p + staff::NATIONAL_JOB));
+        let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
+        let (clube, sel) = (p.club_job(), p.national_job());
         let x = if c1 == clube || c1 == sel {
             c1
         } else if c2 == clube || c2 == sel {
@@ -945,11 +945,11 @@ pub(crate) unsafe extern "thiscall" fn remove_scout_request(this: usize, person:
     let mut c = club;
     if c == 0 {
         let i = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as i32;
-        let manager = read_u32((0xb74c26 + i * 0x300) as usize) as usize; // the current human manager
-        if manager == 0 {
+        let manager = Staff(read_u32((0xb74c26 + i * 0x300) as usize) as usize); // the current human manager
+        if manager.is_null() {
             return;
         }
-        c = read_u32(manager + staff::CLUB_JOB) as usize;
+        c = (manager.club_job() as u32) as usize;
         if c == 0 {
             return;
         }
@@ -1032,20 +1032,20 @@ pub(crate) unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nation
 /// +0 − byte de [0xae2364] + 16, 0..15; fora, a caixa da linha 0x212 e 0): com a edição aberta ([this + vaga × 4 +
 /// 0xc]), ela refaz os olheiros das listas (0x8043c0). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: usize) -> u32 {
-    let m = if manager != 0 { manager } else { scout_manager_current_human_manager() };
-    if m == 0 {
+    let m = Staff(if manager != 0 { manager } else { scout_manager_current_human_manager() });
+    if m.is_null() {
         show_error_at(0xa7b094, 0x1ba);
         return 0;
     }
-    let club = read_usize(m + staff::CLUB_JOB);
+    let club = m.club_job();
     for i in 0..10u8 {
-        let l = get_search(this, i, m);
+        let l = get_search(this, i, m.addr());
         if l == 0 || read_u8(l + 0xa) != 4 {
             continue;
         }
-        let o = search_scout(l);
+        let o = Staff(search_scout(l));
         if club != 0 {
-            if o == 0 || (read_usize(o + staff::CLUB_JOB) == club && read_u8(o + staff::JOB_FOR_CLUB) == 9) {
+            if o.is_null() || (o.club_job() == club && o.job_for_club() == 9) {
                 continue;
             }
         }
@@ -1062,7 +1062,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
             let mut free: i8 = -1;
             let mut has = false;
             for i in 0..10u8 {
-                let l = get_search(this, i, m);
+                let l = get_search(this, i, m.addr());
                 if l == 0 || read_u8(l + 0xa) != 4 {
                     continue;
                 }
@@ -1076,11 +1076,11 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
             }
             if !has && free > -1 {
                 crate::comparison::branch("cqa_6 scout in the free list");
-                set_search_scout(get_search(this, free as u8, m), s);
+                set_search_scout(get_search(this, free as u8, m.addr()), s);
             }
         }
     }
-    let slot = read_u8(m).wrapping_sub(read_u8(G_STAFF_COUNT)).wrapping_add(0x10) as i8;
+    let slot = read_u8(m.addr()).wrapping_sub(read_u8(G_STAFF_COUNT)).wrapping_add(0x10) as i8;
     if !(0..=15).contains(&slot) {
         show_error_at(0xa7b094, 0x212);
         return 0;
@@ -1107,8 +1107,9 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
 /// buscas (0x7f6cd0) com o clube observado (+0x190) igual ao da pessoa e o registro dele (+0x170) dá a vaga da pessoa
 /// nele (0x7bd700 sem reservar); nenhuma, 0.
 pub(crate) unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: usize) -> usize {
+    let p = Staff(p);
     let m = scout_manager_current_human_manager();
-    if m == 0 || read_usize(p + staff::CLUB_JOB) == 0 {
+    if m == 0 || p.club_job() == 0 {
         return 0;
     }
     let slot = read_u8(m).wrapping_sub(read_u8(G_STAFF_COUNT)).wrapping_add(0x10) as i8;
@@ -1119,7 +1120,7 @@ pub(crate) unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: us
     for i in 0..10u32 {
         let l = exe::scout_manager_get_search(this, i, m);
         // simplification: the original reads +0x190 without checking the search (would crash with 0); here a null search does not count
-        if l == 0 || read_usize(l + 0x190) != read_usize(read_usize(p + staff::CLUB_JOB)) || read_usize(exe::scout_manager_get_search(this, i, m) + 0x170) == 0 {
+        if l == 0 || read_usize(l + 0x190) != read_usize(p.club_job()) || read_usize(exe::scout_manager_get_search(this, i, m) + 0x170) == 0 {
             continue;
         }
         return exe::player_search_find_or_claim_player_slot(read_usize(exe::scout_manager_get_search(this, i, m) + 0x170), p, 0);
@@ -1178,11 +1179,11 @@ pub(crate) unsafe extern "thiscall" fn has_scout_request(this: usize, player: us
     }
     let mut club = club;
     if club == 0 {
-        let human = read_ptr(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize));
-        if human == 0 {
+        let human = Staff(read_ptr(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize)));
+        if human.is_null() {
             return 0;
         }
-        club = read_ptr(human + staff::CLUB_JOB);
+        club = read_ptr(human.addr() + staff::CLUB_JOB);
         if club == 0 {
             return 0;
         }

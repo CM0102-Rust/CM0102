@@ -93,8 +93,8 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
         }
         write_u32(this, table as u32);
     }
-    let p = month_ratings_staff_by_id(id);
-    let club = Club(read_usize(p + staff::CLUB_JOB));
+    let p = Staff(month_ratings_staff_by_id(id));
+    let club = Club(p.club_job());
     let mut league = -1i32;
     if !club.is_null() {
         let l = club.division().addr();
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     write_u32(r, id as u32);
     write_u32(r + 4, league as u32);
     core::ptr::write_unaligned((r + 8) as *mut u16, 0);
-    *((r + 0xb) as *mut u8) = read_u8(p + staff::AGE);
+    *((r + 0xb) as *mut u8) = (p.age() as u8);
     crate::comparison::branch("cpw_5 new player in the month");
     *((r + 0xa) as *mut u8) = 0; // cpw5: starts with no matches
     write_u32(this + 4, n.wrapping_add(1) as u32);

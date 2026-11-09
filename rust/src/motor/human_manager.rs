@@ -269,14 +269,14 @@ pub(crate) unsafe extern "thiscall" fn get_active_tactic(this: usize, manager: u
 /// (+0x39). A vaga ativa (+0x9a69 do registro): 4 na segunda seleção (0x5409b0), 3 com `reserva` numa seleção
 /// (0x53b900), 2 numa seleção, 1 com `reserva`, 0 no time principal. Fora da conta: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserve: u32, club: usize, manager: usize) {
-    let t = manager_or_current_human(manager);
-    if t == 0 {
+    let t = Staff(manager_or_current_human(manager));
+    if t.is_null() {
         return;
     }
-    let Some(k) = human_manager_human_manager_index(this, t) else {
+    let Some(k) = human_manager_human_manager_index(this, t.addr()) else {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT)(this, reserve, club, manager); // message box: original only
     };
-    let club = if club != 0 { club } else { read_usize(t + staff::CLUB_JOB) };
+    let club = if club != 0 { club } else { t.club_job() };
     let slot: u8 = if club != 0 && exe::club_is_national_team(club) != 0 {
         4
     } else if reserve != 0 && club != 0 && exe::database_is_national_team(club) != 0 {
@@ -309,8 +309,8 @@ pub(crate) unsafe fn human_manager_watched_match_record(this: usize, i: usize) -
 /// (0x5fe700), zera os 79 bytes dela. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn clear_invalid_watched_fixtures(this: usize) -> u32 {
     for i in 0..0x10usize {
-        let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE));
-        if *((p + staff::CLASSIFICATION) as *const u8) == 0 {
+        let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE)));
+        if p.classification() == 0 {
             continue;
         }
         let f = human_manager_watched_match_record(this, i);
@@ -352,8 +352,8 @@ pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: 
     }
     for k in 0..16i32 {
         let i = k.wrapping_add(*(G_STAFF_COUNT as *const i32)).wrapping_sub(0x10);
-        let h = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as isize * 110) as usize);
-        if *((h + staff::CLASSIFICATION) as *const u8) != 0 && exe::human_manager_is_watching_fixture(this, partida, h) != 0 {
+        let h = Staff((*(G_STAFF_TABLE as *const usize)).wrapping_add((i as isize * 110) as usize));
+        if h.classification() != 0 && exe::human_manager_is_watching_fixture(this, partida, h) != 0 {
             return 1;
         }
     }
@@ -469,12 +469,12 @@ pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) 
     let injury_word_0c = |p: usize| core::ptr::read_unaligned((core::ptr::read_unaligned((p + staff::NON_PLAYER) as *const usize) + 0xa) as *const i16);
     let mut best = 0usize;
     for k in 0..5 {
-        let c = core::ptr::read_unaligned((club.addr() + club::COACHES + k * 4) as *const usize);
-        if c == 0 || core::ptr::read_unaligned((c + staff::NON_PLAYER) as *const usize) == 0 {
+        let c = Staff(core::ptr::read_unaligned((club.addr() + club::COACHES + k * 4) as *const usize));
+        if c.is_null() || core::ptr::read_unaligned((c.addr() + staff::NON_PLAYER) as *const usize) == 0 {
             continue;
         }
-        if best == 0 || injury_word_0c(c) > injury_word_0c(best) {
-            best = c;
+        if best == 0 || injury_word_0c(c.addr()) > injury_word_0c(best) {
+            best = c.addr();
         }
     }
     best

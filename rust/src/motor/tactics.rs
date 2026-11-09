@@ -35,19 +35,19 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
         crate::comparison::branch("taker empty");
         return 0;
     }
-    let person = (*(G_STAFF_TABLE as *const usize)).wrapping_add(v as usize * staff::SIZE);
-    if *((person + staff::PLAYER) as *const u32) == 0 {
+    let person = Staff((*(G_STAFF_TABLE as *const usize)).wrapping_add(v as usize * staff::SIZE));
+    if (person.player() as u32) == 0 {
         crate::comparison::branch("taker without record");
         *cell = -1;
         return 0;
     }
-    if *((person + staff::CLUB_JOB) as *const usize) == club {
+    if person.club_job() == club {
         crate::comparison::branch("taker of the club");
-        return person;
+        return person.addr();
     }
     if exe::database_is_national_team(club) != 0 || exe::nationalteams_is_national_or_all_star_team(*(G_NATIONAL_TEAMS as *const usize), club) != 0 {
         crate::comparison::branch("taker from outside the club");
-        return person;
+        return person.addr();
     }
     crate::comparison::branch("taker left the club");
     *cell = -1;
@@ -1411,19 +1411,19 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
         return 0;
     }
     let persons = *(G_STAFF_TABLE as *const usize);
-    let p = persons.wrapping_add((id as usize).wrapping_mul(staff::SIZE));
-    if core::ptr::read_unaligned((p + staff::PLAYER) as *const usize) == 0 {
+    let p = Staff(persons.wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
+    if core::ptr::read_unaligned((p.addr() + staff::PLAYER) as *const usize) == 0 {
         core::ptr::write_unaligned(home, -1);
         return 0;
     }
     if exe::database_is_national_team(club) != 0 {
-        let nation = core::ptr::read_unaligned((p + staff::NATIONAL_JOB) as *const usize);
+        let nation = core::ptr::read_unaligned((p.addr() + staff::NATIONAL_JOB) as *const usize);
         if nation == 0 || core::ptr::read_unaligned((nation + nation::THREE_LETTER_NAME) as *const u32) != core::ptr::read_unaligned((club.addr() + club::NATION) as *const u32) {
             core::ptr::write_unaligned(home, -1);
             return 0;
         }
     }
-    p
+    p.addr()
 }
 
 /// stores the formation in the club row

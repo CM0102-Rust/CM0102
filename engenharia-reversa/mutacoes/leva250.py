@@ -1,6 +1,6 @@
 # Mutações da 250a leva (itens cpn_1, cpn_2, cpn_3, cpn_4, cpn_5, cpn_6, cpn_7). Uso: python mutacoes.py mutacoes\leva250.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpn_resposta_do_clube', 'exe::newsitem_auto_respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // the club', '// mutacao: sem a resposta automatica pelo clube', 'cpn_1 automatic reply'),
+    ('cpn_resposta_do_clube', 'exe::newsitem_auto_respond(slot(current), manager, manager.club_job()); // the club', '// mutacao: sem a resposta automatica pelo clube', 'cpn_1 automatic reply'),
     ('cpn_alcance_clube', 'crate::comparison::branch("cpn_1 club reach");', 'crate::comparison::branch("cpn_1 club reach"); return 0; // mutacao: o alcance do clube sem entrega', 'cpn_1 club reach'),
     ('cpn_tecnico_do_clube', 'let manager = club.manager().addr();\n    *((news + news_item::REACH) as *mut u8) = 0;', 'let manager = club.assistant_manager(); // mutacao: o auxiliar\n    *((news + news_item::REACH) as *mut u8) = 0;', 'cpn_1 news to the human manager'),
     ('cpn_responder_todas', 'exe::newsitem_auto_respond(slot, manager, club); // the automatic reply', '// mutacao: sem a resposta automatica', 'cpn_2 responder todas'),
@@ -9,7 +9,7 @@ MUTACOES = [
     ('cpn_poucas_partidas', 'r = r * s1f as f64 * (1.0f32 / 12.0) as f64; // fewer than 12 matches', 'r = r * s1f as f64 * (1.0f32 / 6.0) as f64; // mutacao: s1/6', 'cpn_3 few matches'),
     ('cpn_nota_negativa', 'r = r * player_club_reputation_ratio(player, Club(club)); // the refusal by reputation', 'r = r / player_club_reputation_ratio(player, Club(club)); // mutacao: dividida', 'cpn_3 negative rating'),
     ('cpn_peso_da_historia', 'weight as f64 * (1.0f32 / 60.0) as f64; // the weight of the story', 'weight as f64 * (1.0f32 / 30.0) as f64; // mutacao: 1/30', 'cpn_3 player rating'),
-    ('cpn_aposentado_vira_treinador', 'write_i8(p + staff::JOB_FOR_CLUB, 0x10); // aposentado', 'write_i8(p + staff::JOB_FOR_CLUB, 5); // mutacao: vira treinador', 'cpn_4 retired player'),
+    ('cpn_aposentado_vira_treinador', 'p.set_job_for_club((0x10) as u8); // aposentado', 'p.set_job_for_club((5) as u8); // mutacao: vira treinador', 'cpn_4 retired player'),
     ('cpn_jovem_primeiro_clube', 'if s > melhor_nota {', 'if melhor == 0 { // mutacao: o primeiro clube valido', 'cpn_4 better club for the youngster'),
     ('cpn_nacao_sem_sorteio', 'let rating = exe::utils_random(c as i16 as i32) as i16;', 'let rating = c as i16; // mutacao: sem o sorteio', 'cpn_4 draw of the nation club'),
     ('cpn_vaga_nunca_achada', 'return Some(true);', 'return Some(false); // mutacao: a vaga aberta nao conta', 'cpn_5 club with open vacancy'),

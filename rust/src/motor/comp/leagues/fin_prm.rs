@@ -376,8 +376,8 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
 /// [pt] O centro de treino do clube da máquina no fim da temporada (o trecho 0x59d32a..0x59d54d da 0x59cfa0), cobrado nas
 /// finanças do próprio clube ([tabela] + id × 0x167, sem o parceiro).
 pub(crate) unsafe fn upgrade_ai_training_ground(this: usize, club: Club, goal_difference: i32) {
-    let manager = club.manager().addr();
-    if manager == 0 || club.reputation() == 0 || (club.training() as u8) as i8 >= 0x14 || read_usize(manager + staff::NON_PLAYER) == 0 {
+    let manager = Staff(club.manager().addr());
+    if manager.is_null() || club.reputation() == 0 || (club.training() as u8) as i8 >= 0x14 || manager.non_player() == 0 {
         return;
     }
     if fin_prm_is_human_club(club.addr()) != 0 {
@@ -434,9 +434,9 @@ pub(crate) unsafe fn pay_dividend(this: usize, club: Club, fin: usize) {
         }
     } else {
         let mut s16 = rep as i16;
-        let presence = club.chairman().addr();
-        if presence != 0 && read_usize(presence + staff::NON_PLAYER) != 0 {
-            let e = (7i16.wrapping_sub(read_u8(presence + staff::LOYALTY) as i8 as i16)).wrapping_mul(3).wrapping_sub(read_u8(read_usize(presence + staff::NON_PLAYER) + 0x20) as i8 as i16);
+        let presence = Staff(club.chairman().addr());
+        if !presence.is_null() && presence.non_player() != 0 {
+            let e = (7i16.wrapping_sub((presence.loyalty() as u8) as i8 as i16)).wrapping_mul(3).wrapping_sub(read_u8(presence.non_player() + 0x20) as i8 as i16);
             s16 = (rep as i16).wrapping_add(e.wrapping_mul(5));
             if s16 < 0x1f4 {
                 s16 = 0x1f4;
@@ -549,9 +549,9 @@ pub(crate) unsafe fn big_spender_bonus(club: Club, band: i8, w: i32) -> i32 {
 ///
 /// [pt] O teto do técnico humano pelas reputações (+0xb, +0xd) e pela experiência (+5) do não-jogador `np`, pela idade
 /// (+0x18) e pela marca +0x22 da pessoa e pelo cargo (o trecho 0x597405..0x597566).
-pub(crate) unsafe fn human_manager_wage_cap(person: usize, np: usize, job: i8) -> i32 {
-    let age = read_u8(person + staff::AGE) as i8;
-    let mark = read_u8(person + staff::INT_APPS) != 0;
+pub(crate) unsafe fn human_manager_wage_cap(person: Staff, np: usize, job: i8) -> i32 {
+    let age = (person.age() as u8) as i8;
+    let mark = person.int_apps() != 0;
     let cx = read_i16(np + player_sheet::CURRENT_REPUTATION);
     let manager = job < 4 && job != 0 && job != 7;
     if cx < 0xea6 {
@@ -617,6 +617,7 @@ pub(crate) unsafe fn human_manager_wage_cap(person: usize, np: usize, job: i8) -
 /// +0x69 ao cubo), a tabela por (fator / 10) menos (+0xc − (fator³ × nação / divisor + saldo × 1,3) / 52), com o piso
 /// 0x9c83e8 ou 0x9c8338, a faixa e a nação. Depois o clube de +0x64 1 e 2, o mínimo da liga + 100 e o menor dos dois.
 pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, job_arg: u32) -> i32 {
+    let person = Staff(person);
     let mut job = job_arg as u8;
     let club = Club(read_usize(G_CLUB_TABLE).wrapping_add((read_i32(fin + finance::CLUB_ID) as u32).wrapping_mul(0x245) as usize));
     let budget = ftol(read_i64(fin) as f64 * read_f64(rdata::F64_1_3));
@@ -671,10 +672,10 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
     }
     let mut r: i32; // [esp + 0x18]: the ceiling that comes out
     let b20: i32;
-    if person != 0 {
+    if !person.is_null() {
         r = 0;
-        if read_usize(person + staff::CLUB_JOB) == club.addr() {
-            r = contract_wage(person);
+        if person.club_job() == club.addr() {
+            r = contract_wage(person.addr());
             let t = read_i32(fin + finance::WAGE_CEILING).wrapping_mul(2);
             if r > t {
                 r = t;
@@ -683,8 +684,8 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
         if read_i32(fin + finance::WAGE_CEILING) > r {
             r = read_i32(fin + finance::WAGE_CEILING);
         }
-        if read_usize(person + staff::NON_PLAYER) != 0 && read_usize(person + staff::PLAYER) == 0 {
-            let cap = match (read_u8(person + staff::JOB_FOR_CLUB) as i8 as i32).wrapping_sub(5) {
+        if person.non_player() != 0 && person.player() == 0 {
+            let cap = match (person.job_for_club() as i8 as i32).wrapping_sub(5) {
                 0 | 1 | 2 => 0x88b8,
                 3 => 0x4e20,
                 4 => 0x5dc,
@@ -790,20 +791,20 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
         }
         b20 = big_spender_bonus(club, band, s);
     }
-    if person != 0 {
+    if !person.is_null() {
         let repf = rep as i32 as f64;
         let t = repf * repf * factor * read_f64(rdata::F64_0_0001) + read_i32(fin + finance::HIGHEST_WAGE) as f64;
-        let v = contract_wage(person);
+        let v = contract_wage(person.addr());
         s = if (v as f64) < t {
             crate::comparison::branch("cqc_2 ceiling by injury_word_0c");
             ftol(repf * repf * factor * read_f64(rdata::F64_0_0001) + read_i32(fin + finance::HIGHEST_WAGE) as f64) // cqc2: reputation squared;
         } else {
-            contract_wage(person)
+            contract_wage(person.addr())
         };
-        let np = read_usize(person + staff::PLAYER);
+        let np = person.player();
         let c = job as i8;
-        if np != 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) > 0x1482 && (c == 3 || c == 2 || c == 1) && (read_u8(person + staff::AGE) as i8) < 0x20 {
-            let np2 = || read_usize(person + staff::PLAYER);
+        if np != 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) > 0x1482 && (c == 3 || c == 2 || c == 1) && ((person.age() as u8) as i8) < 0x20 {
+            let np2 = || person.player();
             if c == 3 {
                 let bf = b20 as f64;
                 let lim = bf * read_f64(rdata::F64_0_8);
@@ -820,7 +821,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
             }
         }
         if is_human_club_with(club.addr(), 0) != 0 {
-            let np = read_usize(person + staff::PLAYER);
+            let np = person.player();
             if np != 0 {
                 let ceiling = human_manager_wage_cap(person, np, job as i8);
                 if ceiling < r {
@@ -828,7 +829,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                 }
             }
         }
-        let np = read_usize(person + staff::PLAYER);
+        let np = person.player();
         if np != 0 {
             if nation != 0 && (e(KEY_NATION_ITALY) || e(KEY_NATION_ENGLAND) || e(KEY_NATION_GERMANY) || e(KEY_NATION_FRANCE) || e(KEY_NATION_SPAIN)) {
                 if exe::database_is_basque_club(club) != 0 {
@@ -851,13 +852,13 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                 // the contract near its end (0x54cdb0: lea ecx, contract + 0x2d; push [0xae2c94]; push [0xae2c90] ->
                 // thiscall, ret 8), less than 200 days
                 let near = || {
-                    contract != 0 && read_usize(person + staff::CLUB_JOB) == club.addr() && exe::date_days_since(contract + contract::CONTRACT_EXPIRES, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32) < 0xc8
+                    contract != 0 && person.club_job() == club.addr() && exe::date_days_since(contract + contract::CONTRACT_EXPIRES, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32) < 0xc8
                 };
                 let rr = club.reputation();
                 let k: Option<usize> = if rr > 0x186a {
-                    let np = read_usize(person + staff::PLAYER);
+                    let np = person.player();
                     if near() {
-                        let np = read_usize(person + staff::PLAYER);
+                        let np = person.player();
                         if read_i16(np + player_sheet::WORLD_REPUTATION) > 0x1482 {
                             Some(0x968978)
                         } else {
@@ -880,7 +881,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                     }
                 } else if rr > 0x109a {
                     if near() {
-                        let cx = read_i16(read_usize(person + staff::PLAYER) + 0xb);
+                        let cx = read_i16(person.player() + 0xb);
                         let al = read_u8(contract + contract::SQUAD_STATUS) & 0xf0;
                         if cx > 0x1a5e {
                             Some(0x9689b8)
@@ -889,7 +890,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                         } else {
                             None
                         }
-                    } else if read_i16(read_usize(person + staff::PLAYER) + 0xb) > 0x1e46 {
+                    } else if read_i16(person.player() + 0xb) > 0x1e46 {
                         Some(0x968f88)
                     } else {
                         None
@@ -902,7 +903,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                 }
             }
             let presence = club.chairman().addr();
-            if presence != 0 && read_usize(presence + staff::NON_PLAYER) != 0 && (club.reputation() as i32) < read_i16(read_usize(person + staff::PLAYER) + 0xb) as i32 + 0x4e2 {
+            if presence != 0 && read_usize(presence + staff::NON_PLAYER) != 0 && (club.reputation() as i32) < read_i16(person.player() + 0xb) as i32 + 0x4e2 {
                 crate::comparison::branch("cqc_2 chairman");
                 s = ftol(((read_u8(presence + staff::AMBITION) as i8 as i32) as f64 * read_f64(rdata::F64_0_01) + read_f64(rdata::F64_0_9)) * s as f64); // cqc2: o presidente;
                 // 0x547810 (push pres; push person; add esp, 8 -> cdecl), 0x547790 (push club; push person; add esp, 8 -> cdecl)
@@ -921,7 +922,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                 }
                 if club.plc() == 0 && (read_u8(pc + non_player::RESOURCES) as i8) > 0xf && (read_u8(presence + staff::AMBITION) as i8) > 0xf {
                     let rr = club.reputation();
-                    let k = if rr >= 0xabe && read_i16(read_usize(person + staff::PLAYER) + 0xb) >= 0x1c52 {
+                    let k = if rr >= 0xabe && read_i16(person.player() + 0xb) >= 0x1c52 {
                         if rr < 0x1676 { 0x9689c0 } else { 0x96a5a8 }
                     } else {
                         0x9689b8
@@ -930,7 +931,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                 }
             }
             let c = job as i8;
-            let np = read_usize(person + staff::PLAYER);
+            let np = person.player();
             match c {
                 1 => s = mul_exe_f64(s, 0x968928),
                 2 => {
@@ -939,7 +940,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                     } else {
                         s = ftol(s as f64);
                         let ok = is_human_club_with(club.addr(), 1) != 0 || {
-                            let np = read_usize(person + staff::PLAYER);
+                            let np = person.player();
                             np != 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) < 0x1e46
                         };
                         if ok && s > 0x14c08 {
@@ -1543,23 +1544,23 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         }
     }
     let rep = club.reputation();
-    let presence = club.chairman().addr();
+    let presence = Staff(club.chairman().addr());
     let strong = |a: usize, b: usize| a != 0 && b != 0; // (pointers checked before the bytes)
     let div = match wealth_band(fin) {
         -2 => read_f64(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
         -1 => read_f64(if rep > 0x1482 { 0x967880 } else if rep > 0xcb2 { 0x96a730 } else { 0x967878 }),
         0 => {
             if rep <= 0x109a {
-                let sheet = if presence != 0 { read_usize(presence + staff::NON_PLAYER) } else { 0 };
-                if strong(presence, sheet) && read_i8(presence + staff::AMBITION) > 0xf && read_i8(sheet + player_sheet::BRAVERY) > 0xf {
+                let sheet = if !presence.is_null() { presence.non_player() } else { 0 };
+                if strong(presence.addr(), sheet) && presence.ambition() > 0xf && read_i8(sheet + player_sheet::BRAVERY) > 0xf {
                     read_f64(rdata::F64_0_0125)
                 } else {
                     crate::comparison::branch("cqb_2 low band 0 divisor");
                     read_f64(rdata::F64_0_0075) // cqb2: the divisor of low-reputation band 0;
                 }
             } else if rep < 0x186a {
-                let sheet = if presence != 0 { read_usize(presence + staff::NON_PLAYER) } else { 0 };
-                if strong(presence, sheet) && read_i8(sheet + player_sheet::BRAVERY) > 0xf && read_i8(presence + staff::AMBITION) > 0xf {
+                let sheet = if !presence.is_null() { presence.non_player() } else { 0 };
+                if strong(presence.addr(), sheet) && read_i8(sheet + player_sheet::BRAVERY) > 0xf && presence.ambition() > 0xf {
                     read_f64(rdata::F64_0_05)
                 } else {
                     read_f64(rdata::F64_0_025)
@@ -1570,9 +1571,9 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         }
         _ => read_f64(rdata::F64_0_001),
     };
-    let sheet = if presence != 0 { read_usize(presence + staff::NON_PLAYER) } else { 0 };
+    let sheet = if !presence.is_null() { presence.non_player() } else { 0 };
     let value;
-    if presence != 0 && sheet != 0 {
+    if !presence.is_null() && sheet != 0 {
         crate::comparison::branch("cqb_2 with the record");
         let r1 = friendly_random(ftol(read_f64(rdata::F64_30) / div)); // cqb2: the random draw with the player sheet;
         let r2 = friendly_random(read_i8(sheet + player_sheet::GOALKEEPER) as i32);
@@ -1622,7 +1623,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
     credit_income(fin, value);
     let budget = transfer_budget(fin) as i32;
     let mark = club.plc();
-    let with_sheet = presence != 0 && sheet != 0;
+    let with_sheet = !presence.is_null() && sheet != 0;
     let mut kind = 0u32;
     if budget <= 0 && mark == 0 {
         kind = 3;
@@ -2188,8 +2189,8 @@ pub(crate) unsafe fn fin_prm_club_finance(this: usize, club: usize) -> usize {
 /// (+0x73) × reputação × fator, truncado; × (sorteio(11) + 95) × 0,01, truncado, soma em +0xbc, +0x15c e no saldo.
 pub(crate) unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, club: usize) {
     let club = Club(club);
-    let other = club.chairman().addr();
-    let est = if other != 0 { read_usize(other + staff::NON_PLAYER) } else { 0 };
+    let other = Staff(club.chairman().addr());
+    let est = if !other.is_null() { other.non_player() } else { 0 };
     let rep = club.reputation() as i32;
     let factor = if est != 0 {
         let s = (read_u8(est + non_player::BUSINESS) as i8 as i32).wrapping_mul(25);
@@ -2741,8 +2742,8 @@ pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, club:
         return 0;
     }
     let n = ftol(read_f64(rdata::F64_6) / div);
-    let other = club.chairman().addr();
-    if other != 0 && read_usize(other + staff::NON_PLAYER) != 0 {
+    let other = Staff(club.chairman().addr());
+    if !other.is_null() && other.non_player() != 0 {
         if friendly_random(n) != 0 {
             return 0;
         }
@@ -2848,9 +2849,9 @@ pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, club: usi
         _ => read_f64(rdata::F64_0_001),
     };
     let rep = club.reputation() as i32;
-    let other = club.chairman().addr();
+    let other = Staff(club.chairman().addr());
     let mut value;
-    if other != 0 && read_usize(other + staff::NON_PLAYER) != 0 && club.plc() == 0 {
+    if !other.is_null() && other.non_player() != 0 && club.plc() == 0 {
         let r = friendly_random(ftol(read_f64(rdata::F64_30) / div));
         let est = read_usize(club.chairman().addr() + 0x69);
         if (read_u8(est + non_player::BUSINESS) as i8 as i32) <= r {

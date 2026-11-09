@@ -247,8 +247,8 @@ pub(crate) unsafe extern "thiscall" fn training_manager_cpp_0x8b2230(this: usize
 /// 6-byte training entry of a person ([this+0x651d] + 6 x id of player data +0x61).
 ///
 /// [pt] A entrada de 6 bytes do treino do jogador: [this+0x651d] + 6 × id da ficha (+0x61).
-pub(crate) unsafe fn training_entry_of_staff(this: usize, p: usize) -> usize {
-    read_usize(this + 0x651d).wrapping_add((read_i32(read_usize(p + staff::PLAYER)) as isize * 6) as usize)
+pub(crate) unsafe fn training_entry_of_staff(this: usize, p: Staff) -> usize {
+    read_usize(this + 0x651d).wrapping_add((read_i32(p.player()) as isize * 6) as usize)
 }
 
 /// Person -> contract (get_contract), stored in G_CONTRACT_LOOKUP_RESULT.
@@ -324,14 +324,15 @@ pub(crate) unsafe fn is_human_manager_id(manager: usize) -> bool {
 /// < 5 dá nota − 2 e, abaixo de 1, o item acaba (taxa 0, nota 1). Aplica o progresso (0x8b2be0) e, com itens acabados,
 /// tira-os da lista (o último no lugar) e reordena (qsort 0x945333 com 0x8b4e00).
 pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, skip: u32) {
-    if p == 0 {
+    let p = Staff(p);
+    if p.is_null() {
         show_error_at(0xa8ccd0, 0x18a);
         return;
     }
-    if read_i32(p) >= read_i32(G_STAFF_COUNT) {
+    if read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
         return;
     }
-    if read_usize(p + staff::PLAYER) == 0 {
+    if p.player() == 0 {
         show_error_at(0xa8ccd0, 0x195);
         return;
     }
@@ -344,10 +345,10 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     }
     let mark = (e + 5) as *mut u8;
     if *mark & 0x20 == 0 {
-        let c = training_manager_get_contract_stored(p);
-        if c != 0 && training_manager_club_of_contract(c) != 0 && read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf) != 0
-            && is_human_manager_id(read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf)) {
-            let manager = read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf);
+        let c = training_manager_get_contract_stored(p.addr());
+        if c != 0 && training_manager_club_of_contract(c) != 0 && read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf) != 0
+            && is_human_manager_id(read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf)) {
+            let manager = read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf);
             *mark |= 0x20;
             let (mut goleiro, mut geral) = (-1i8, -1i8);
             for k in 0..10i8 {
@@ -357,7 +358,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                     geral = k;
                 }
             }
-            let slot = if read_i8(read_usize(p + staff::PLAYER) + 0xf) >= 0xf && goleiro != -1 {
+            let slot = if read_i8(p.player() + 0xf) >= 0xf && goleiro != -1 {
                 goleiro
             } else if geral != -1 {
                 geral
@@ -376,14 +377,14 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         return;
     }
     if *mark & 0x20 != 0 {
-        let c = training_manager_get_contract_stored(p);
-        let ainda = c != 0 && training_manager_club_of_contract(c) != 0 && read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf) != 0
-            && is_human_manager_id(read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf));
+        let c = training_manager_get_contract_stored(p.addr());
+        let ainda = c != 0 && training_manager_club_of_contract(c) != 0 && read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf) != 0
+            && is_human_manager_id(read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf));
         if !ainda {
             crate::comparison::branch("cqd_8 left the human club");
             *mark &= 0xdf;
             exe::injury_set_training_load(read_usize(G_INJURY), p, 0x32);
-            let f = read_usize(p + staff::PLAYER);
+            let f = p.player();
             *(training_entry_of_staff(this, p) as *mut u8) = if read_i8(f + player_sheet::GOALKEEPER) >= 0xf { 6 } else { 1 };
             let mut q = 0usize;
             let n = exe::training_manager_find_position_training(this, p, &mut q);
@@ -413,16 +414,16 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         // 0x8b41d0 leem o byte
         let lv = (exe::training_schedule_get_category_level(prog, k as u32) as u32) as u8 as i8;
         let base = (lv as i16).wrapping_mul(2).wrapping_add(0x3c); // cqd8: the level weight
-        let club = training_manager_club_of_contract(training_manager_get_contract_stored(p));
+        let club = training_manager_club_of_contract(training_manager_get_contract_stored(p.addr()));
         let fa = exe::training_manager_get_coaching_factor(this, club, k as u32) as u16 as i16 as i32;
         let x = base.wrapping_add(((fa - 100) / 5) as i16);
         let weight: i16 = if x < 0 { 0 } else if x > 200 { 200 } else { x };
-        let floor = ((read_i8(p + staff::PROFESSIONALISM) as i32 / 3) as i8).wrapping_sub(6);
-        let ceiling = (read_i8(p + staff::DETERMINATION) as i32 / 3) as i8;
+        let floor = ((p.professionalism() as i32 / 3) as i8).wrapping_sub(6);
+        let ceiling = (p.determination() as i32 / 3) as i8;
         let middle = training_nibble(e, k);
         for _ in 0..weeks {
             let v = middle.wrapping_add(d[k]);
-            if read_i8(read_usize(p + staff::PLAYER) + 0xf) > 0x12 {
+            if read_i8(p.player() + 0xf) > 0x12 {
                 let r = if k == 4 { friendly_random(2) } else { friendly_random(4) };
                 if r != 0 {
                     continue; // goalkeeper: the category barely moves
@@ -456,7 +457,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             laps = 1;
         }
         let sheet: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-        contract_of_club = sheet(read_usize(G_CONTRACT_MANAGER), p, read_usize(p + staff::CLUB_JOB) as u32);
+        contract_of_club = sheet(read_usize(G_CONTRACT_MANAGER), p.addr(), p.club_job() as u32);
     }
     let mut acabou = false;
     if npos > 0 {
@@ -478,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                         let apt = (exe::training_manager_get_position_aptitude(this, p, read_u16(it - 3) as u32) as u32) as u8 as i8;
                         let t = read_i8(it);
                         let quer = (t > 0x32 && friendly_random(100 - t as i32) < 10) || (apt < 0xc && friendly_random(apt as i32) < 2);
-                        let a = read_i8(p + staff::PROFESSIONALISM);
+                        let a = p.professionalism();
                         if quer && a < 0xf && friendly_random(a as i32) < 10 && read_usize(G_INJURY) != 0
                             && exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 0 {
                             crate::comparison::branch("cqd_8 complains about position training");
@@ -552,13 +553,14 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
 /// 0x60e × ([0xae2364] − id − 1); senão o da vaga da entrada do treino (+0, fora de 0..9 a 1); fora dos 16, a caixa
 /// (linha 0x68f) e 0. Senão: lesionado, o programa 0 (this); senão this + 0x9b × vaga (com sinal).
 pub(crate) unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize) -> usize {
-    if p == 0 || read_usize(p + staff::PLAYER) == 0 {
+    let p = Staff(p);
+    if p.is_null() || p.player() == 0 {
         show_error_at(0xa8ccd0, 0x6ad);
         return 0;
     }
-    let c = training_manager_get_contract_stored(p);
+    let c = training_manager_get_contract_stored(p.addr());
     if c != 0 && training_manager_club_of_contract(c) != 0 {
-        let manager = read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf);
+        let manager = read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf);
         if manager != 0 && is_human_manager_id(manager) {
             if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
                 let k = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1);
@@ -594,8 +596,8 @@ pub(crate) unsafe extern "thiscall" fn get_category_level(this: usize, category:
 /// 6-byte training entry of a person ([this+0x651d] + 6 x id of player data +0x61).
 ///
 /// [pt] A entrada de 6 bytes do treino do jogador: [this+0x651d] + 6 × id da ficha (+0x61).
-pub(crate) unsafe fn player_training_entry(this: usize, p: usize) -> usize {
-    read_usize(this + 0x651d).wrapping_add((*(read_usize(p + staff::PLAYER) as *const i32) as isize * 6) as usize)
+pub(crate) unsafe fn player_training_entry(this: usize, p: Staff) -> usize {
+    read_usize(this + 0x651d).wrapping_add((*(p.player() as *const i32) as isize * 6) as usize)
 }
 
 /// Signed nibble of category k in a training entry (low/high of +3, +4, low of +5).
@@ -633,7 +635,8 @@ pub(crate) unsafe fn training_manager_apply_training_progress(this: usize, p: us
 /// entrada do treino em 0xde1f3c..0xde1f40 (categoria 3, 2, 4, 0, 1) e aplica o progresso negado (0x8b2be0); devolver:
 /// aplica o guardado.
 pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this: usize, p: usize, devolver: u32) {
-    if p == 0 || read_usize(p + staff::PLAYER) == 0 {
+    let p = Staff(p);
+    if p.is_null() || p.player() == 0 {
         show_error_at(0xa8ccd0, 0x621);
         return;
     }
@@ -658,7 +661,7 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
             d[k] = training_nibble(e, k).wrapping_neg();
         }
     }
-    training_manager_apply_training_progress(this, p, &d);
+    training_manager_apply_training_progress(this, p.addr(), &d);
 }
 
 /// `TRAINING_MANAGER::get_training_attribute_change(person, attribute)`, called by the training screen (0x8b8184): how
@@ -672,7 +675,8 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
 /// (aplica o progresso negado, lê e reaplica o progresso), no al. Pessoa nula ou sem a ficha: a caixa "Error" (linha
 /// 0x657) e 0.
 pub(crate) unsafe extern "thiscall" fn get_training_attribute_change(this: usize, p: usize, attribute: u32) -> u8 {
-    if p == 0 || read_usize(p + staff::PLAYER) == 0 {
+    let p = Staff(p);
+    if p.is_null() || p.player() == 0 {
         show_error_at(0xa8ccd0, 0x657);
         return 0;
     }
@@ -682,13 +686,13 @@ pub(crate) unsafe extern "thiscall" fn get_training_attribute_change(this: usize
     for k in 0..5 {
         d[k] = training_nibble(e, k).wrapping_neg();
     }
-    training_manager_apply_training_progress(this, p, &d);
+    training_manager_apply_training_progress(this, p.addr(), &d);
     let sem = (exe::staff_get_player_attribute(p, attribute) as u8);
     let mut v = [0i8; 8];
     for k in 0..5 {
         v[k] = d[k].wrapping_neg();
     }
-    training_manager_apply_training_progress(this, p, &v);
+    training_manager_apply_training_progress(this, p.addr(), &v);
     before.wrapping_sub(sem)
 }
 
@@ -718,18 +722,19 @@ pub(crate) fn is_valid_position_mask(m: i32) -> bool {
 /// +0x40 e +0x36, por 5; 0x80 +0x30, por 2; 0x200 só a adaptabilidade (no al, os bytes de cima com a máscara); 0x800
 /// +0x3b, por 2 (divisões truncadas). Outra máscara: a caixa "Error" (linha 0x945) e 0.
 pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usize, mask: u32) -> u32 {
+    let p = Staff(p);
     let _ = this;
     let m = mask as u16 as i16 as i32;
     if !is_valid_position_mask(m) {
         show_error_at(0xa8ccd0, 0x945);
         return 0;
     }
-    let f = read_usize(p + staff::PLAYER);
+    let f = p.player();
     // simplification: the original pushes the attribute byte in a register with leftover upper bytes; 0x544380 reads
     // o byte
     let rating = |o: usize| (exe::player_attribute_rating(f, *((f + o) as *const u8) as u32) as u32) as u8 as i8 as i32;
     let b = |o: usize| read_i8(f + o) as i32;
-    let adapt = read_i8(p + staff::ADAPTABILITY) as i32;
+    let adapt = p.adaptability() as i32;
     let r = match m {
         1 => {
             let x = rating(0x39);
@@ -753,7 +758,7 @@ pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usi
             (x + y + adapt + b(0x40) + b(0x36)) / 5
         }
         0x80 => (adapt + b(0x30)) / 2,
-        0x200 => return (m as u32 & 0xffff_ff00) | *((p + staff::ADAPTABILITY) as *const u8) as u32,
+        0x200 => return (m as u32 & 0xffff_ff00) | (p.adaptability() as u8) as u32,
         _ => (adapt + b(0x3b)) / 2,
     };
     r as u32
@@ -1051,16 +1056,17 @@ pub(crate) unsafe fn add_low_nibble(a: usize, d: i8) {
 /// posição ou o lado da máscara vai a 20; abaixo, volta a 1 se ainda sobrar mais de uma posição (+0xf..+0x15) ou lado
 /// (+0x17..+0x19) de 15 para cima. Quente: sem contador.
 pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, person: usize, d: usize) {
-    if person == 0 {
+    let person = Staff(person);
+    if person.is_null() {
         show_error_at(0xa8ccd0, 0x4b3);
         return;
     }
-    let f = read_usize(person + staff::PLAYER);
+    let f = person.player();
     if f == 0 {
         show_error_at(0xa8ccd0, 0x4ba);
         return;
     }
-    if read_i32(person) >= read_i32(G_STAFF_COUNT) {
+    if read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return;
     }
     let e = read_usize(this + 0x651d) + 6 * read_i32(f) as usize;
@@ -1190,7 +1196,8 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
 /// de 8 bytes); não achou: 0; achou: recua até o primeiro item da pessoa, grava-o na saída e devolve quantos seguidos são
 /// dela.
 pub(crate) unsafe extern "thiscall" fn find_position_training(this: usize, person: usize, out: *mut usize) -> i32 {
-    if person == 0 {
+    let person = Staff(person);
+    if person.is_null() {
         show_error_at(0xa8ccd0, 0x995);
         return 0;
     }
@@ -1198,7 +1205,7 @@ pub(crate) unsafe extern "thiscall" fn find_position_training(this: usize, perso
         show_error_at(0xa8ccd0, 0x99c);
         return 0;
     }
-    let f = read_usize(person + staff::PLAYER);
+    let f = person.player();
     if f == 0 {
         show_error_at(0xa8ccd0, 0x9a3);
         return 0;
@@ -1206,7 +1213,7 @@ pub(crate) unsafe extern "thiscall" fn find_position_training(this: usize, perso
     if *((read_usize(this + 0x651d) + 6 * read_i32(f) as usize + 5) as *const u8) & 0x10 == 0 {
         return 0;
     }
-    let key = read_i32(person);
+    let key = read_i32(person.addr());
     let search: unsafe extern "C" fn(*const i32, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let base = read_usize(this + 0x6521);
     let mut a = search(&key, base, read_usize(this + 0x6525), 8, 0x8b4e00);

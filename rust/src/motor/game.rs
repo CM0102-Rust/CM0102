@@ -250,26 +250,26 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: Club, k: usize) {
 pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
     for _ in 0..10 {
         let club = club_record(friendly_random(read_usize(G_CLUB_COUNT) as i32) as usize);
-        let a = read_usize(club.wrapping_add(friendly_random(0x32) as usize * 4) + 0xd7);
+        let a = Staff(read_usize(club.wrapping_add(friendly_random(0x32) as usize * 4) + 0xd7));
         let b = read_usize(club.wrapping_add(friendly_random(0x32) as usize * 4) + 0xd7);
-        if a == 0 || b == 0 || a == b {
+        if a.is_null() || b == 0 || a.addr() == b {
             continue;
         }
-        if friendly_random(read_i8_as_i32(a + staff::PROFESSIONALISM)) != 0 {
+        if friendly_random((a.professionalism() as i32)) != 0 {
             continue;
         }
-        if is_disliked_by(b, a) != 0 {
+        if is_disliked_by(b, a.addr()) != 0 {
             exe::staff_remove_disliked_staff(a, b);
-            let c = game_get_contract_and_store(a);
+            let c = game_get_contract_and_store(a.addr());
             if c == 0 || game_club_of_contract(c) == 0 {
                 continue;
             }
-            let ca = game_club_of_contract(game_get_contract_and_store(a));
+            let ca = game_club_of_contract(game_get_contract_and_store(a.addr()));
             let cb = game_club_of_contract(game_get_contract_and_store(b));
             if ca != cb {
                 continue;
             }
-            let k = game_contract_for_club(a, game_club_of_contract(game_get_contract_and_store(a)));
+            let k = game_contract_for_club(a.addr(), game_club_of_contract(game_get_contract_and_store(a.addr())));
             if k == 0 || read_usize(k + 0x45) & 0x800 == 0 {
                 continue;
             }
@@ -294,7 +294,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
     let end = base.wrapping_add((read_usize(G_STAFF_COUNT).wrapping_sub(17)).wrapping_mul(staff::SIZE));
     let mut p = base;
     while p < end {
-        player_vs_manager_check(p);
+        player_vs_manager_check(Staff(p));
         p += 0x6e;
     }
 }
@@ -303,11 +303,11 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
 /// dressing_room_friction [inference].
 ///
 /// [pt] Uma pessoa do laço de fora dos dias múltiplos de 50 (0x5d6f15..0x5d7115).
-pub(crate) unsafe fn player_vs_manager_check(p: usize) {
-    if read_usize(p + staff::PLAYER) == 0 || read_usize(p + staff::STAFF_PREFERENCES) == 0 {
+pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
+    if p.player() == 0 || p.staff_preferences() == 0 {
         return;
     }
-    let c = game_get_contract_and_store(p);
+    let c = game_get_contract_and_store(p.addr());
     if c == 0 {
         return;
     }
@@ -319,36 +319,36 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
     if k == 0 {
         return;
     }
-    if friendly_random(read_i8_as_i32(p + staff::PROFESSIONALISM) + 5) != 0 && friendly_random(read_i8_as_i32(p + staff::TEMPERAMENT) + 5) != 0 && friendly_random(read_i8_as_i32(p + staff::PRESSURE) + 5) != 0 {
+    if friendly_random((p.professionalism() as i32) + 5) != 0 && friendly_random((p.temperament() as i32) + 5) != 0 && friendly_random((p.pressure() as i32) + 5) != 0 {
         return;
     }
-    let mut e = read_i8_as_i32(p + staff::PROFESSIONALISM) + (read_i8_as_i32(p + staff::PRESSURE) + read_i8_as_i32(p + staff::LOYALTY)) + (read_i8_as_i32(p + staff::SPORTSMANSHIP) + read_i8_as_i32(p + staff::AGE));
+    let mut e = (p.professionalism() as i32) + ((p.pressure() as i32) + (p.loyalty() as i32)) + ((p.sportsmanship() as i32) + ((p.age() as i8) as i32));
     crate::comparison::branch("cps_5 drawn manager");
-    if friendly_random(read_i8_as_i32(p + staff::LOYALTY)) == 0 { // cps5: the first discount
+    if friendly_random((p.loyalty() as i32)) == 0 { // cps5: the first discount
         e -= 3;
     }
-    if friendly_random(read_i8_as_i32(p + staff::PRESSURE)) == 0 {
+    if friendly_random((p.pressure() as i32)) == 0 {
         e -= 5;
     }
     if read_usize(k + 0x45) != 0 || friendly_random(0x64) == 0 {
-        if friendly_random(read_i8_as_i32(p + staff::PROFESSIONALISM)) == 0 {
+        if friendly_random((p.professionalism() as i32)) == 0 {
             e -= 0xf;
         }
-        if friendly_random(read_i8_as_i32(p + staff::TEMPERAMENT)) == 0 {
+        if friendly_random((p.temperament() as i32)) == 0 {
             e -= 0xf;
         }
     }
-    let rep = read_i16(read_usize(p + staff::PLAYER) + 0xb);
+    let rep = read_i16(p.player() + 0xb);
     if rep > 0x1194 && rep > club.reputation() {
         e -= 5;
     }
     if friendly_random(e) >= 1 {
         return;
     }
-    if read_usize(p + staff::STAFF_PREFERENCES) == 0 {
+    if p.staff_preferences() == 0 {
         return;
     }
-    dressing_room_friction(p, club, k);
+    dressing_room_friction(p.addr(), club, k);
 }
 
 // simplification: rolls and touches the preferences (0x547a10, 0x547af0, 0x547c10, 0x547c50), quarrel and complaint: original only;
@@ -364,18 +364,18 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
 pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize) {
     let club = Club(club);
     for i in 0..0x32usize {
-        let p = read_usize(club.addr() + club::SQUAD + i * 4);
-        if p == 0 {
+        let p = Staff(read_usize(club.addr() + club::SQUAD + i * 4));
+        if p.is_null() {
             continue;
         }
-        let k = game_contract_for_club(p, club.addr());
+        let k = game_contract_for_club(p.addr(), club.addr());
         if k == 0 {
             continue;
         }
-        if read_usize(p + staff::STAFF_PREFERENCES) == 0 {
+        if p.staff_preferences() == 0 {
             continue;
         }
-        dressing_room_friction(p, club, k);
+        dressing_room_friction(p.addr(), club, k);
     }
 }
 
@@ -385,8 +385,8 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize
 /// True if the person has a valid id, belongs to the club (+0x39) and has a player record.
 ///
 /// [pt] A pessoa conta para a liderança do clube: id válido (< [0xae2364]), contrato com o clube (+0x39) e ficha de jogador.
-pub(crate) unsafe fn is_club_squad_player(p: usize, club: usize) -> bool {
-    p != 0 && (read_usize(p) as i32) < read_usize(G_STAFF_COUNT) as i32 && read_usize(p + staff::CLUB_JOB) == club && read_usize(p + staff::PLAYER) != 0
+pub(crate) unsafe fn is_club_squad_player(p: Staff, club: usize) -> bool {
+    !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && p.club_job() == club && p.player() != 0
 }
 
 /// Spreads morale through the squads by leadership: one club in seven each day (not national teams): the squad's
@@ -417,7 +417,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
             let (mut soma, mut lideranca, mut q) = (0i32, 0i32, 0i32);
             for i in 0..0x32usize {
                 let p = read_usize(slots + i * 4);
-                if !is_club_squad_player(p, club) {
+                if !is_club_squad_player(Staff(p), club) {
                     continue;
                 }
                 let c = game_contract_for_club(p, club);
@@ -437,7 +437,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                     break;
                 }
                 let p = read_usize(slots + i * 4);
-                if !is_club_squad_player(p, club) {
+                if !is_club_squad_player(Staff(p), club) {
                     continue;
                 }
                 let c = game_contract_for_club(p, club);
@@ -481,8 +481,8 @@ pub(crate) unsafe fn contract_club_record(c: usize) -> usize {
 /// Days from the person's date at +0x3e to today.
 ///
 /// [pt] Dias desde a data de +0x3e da pessoa até hoje (0x54cdb0 sobre a data do jogo 0xae2c90, a outra por valor).
-pub(crate) unsafe fn days_since_staff_date(p: usize) -> i32 {
-    exe::date_days_since(G_CURRENT_DATE, read_usize(p + staff::DATE_JOINED_CLUB) as u32, read_usize(p + 0x42) as u32)
+pub(crate) unsafe fn days_since_staff_date(p: Staff) -> i32 {
+    exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, read_usize(p.addr() + 0x42) as u32)
 }
 
 /// Checks players missing training: n/250 consecutive people from a random one; a present player with training and
@@ -513,12 +513,12 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     let r = friendly_random(n - q - 1); // cps6: the first person
     let mut current = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(staff::SIZE));
     for _ in 0..q {
-        let p = current;
+        let p = Staff(current);
         current = current.wrapping_add(0x6e);
-        if read_usize(p + staff::PLAYER) == 0 || read_u8(p + staff::JOB_FOR_CLUB) != 0xb {
+        if p.player() == 0 || p.job_for_club() != 0xb {
             continue;
         }
-        let c = game_get_contract_and_store(p);
+        let c = game_get_contract_and_store(p.addr());
         if c == 0 {
             continue;
         }
@@ -536,10 +536,10 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
             continue;
         }
-        let jog = read_usize(p + staff::PLAYER);
-        let cl = read_u8(p + staff::PROFESSIONALISM);
+        let jog = p.player();
+        let cl = (p.professionalism() as u8);
         let dl = read_u8(jog + player_sheet::WORK_RATE);
-        let mut bl = read_u8(jog + player_sheet::LEADERSHIP).wrapping_add(read_u8(p + staff::AGE)).wrapping_add(cl).wrapping_add(dl);
+        let mut bl = read_u8(jog + player_sheet::LEADERSHIP).wrapping_add((p.age() as u8)).wrapping_add(cl).wrapping_add(dl);
         if cl == 1 {
             bl = bl.wrapping_add(0xfb);
         }
@@ -553,8 +553,8 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             bl = bl.wrapping_add(2);
         }
         let mut and_foul = false;
-        let a = read_u8(p + staff::PROFESSIONALISM);
-        if (a as i8) < 8 && (read_u8(read_usize(p + staff::PLAYER) + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
+        let a = (p.professionalism() as u8);
+        if (a as i8) < 8 && (read_u8(p.player() + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
             let mut s = a;
             if days_since_staff_date(p) < 0x1e {
                 s = s.wrapping_add(0x64);
@@ -569,20 +569,20 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             }
         }
         if !and_foul {
-            if read_i8_as_i32(p + staff::PROFESSIONALISM) >= 0xa {
+            if (p.professionalism() as i32) >= 0xa {
                 continue;
             }
-            let club = contract_club_record(game_get_contract_and_store(p));
+            let club = contract_club_record(game_get_contract_and_store(p.addr()));
             let v = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
             if v == 0 {
                 continue;
             }
-            if read_usize(v + 0x45) & 0x8000 != 0 && friendly_random(read_i8_as_i32(p + staff::PROFESSIONALISM)) == 0 {
+            if read_usize(v + 0x45) & 0x8000 != 0 && friendly_random((p.professionalism() as i32)) == 0 {
                 and_foul = true;
-            } else if read_usize(v + 0x45) & 0x30000 != 0 && friendly_random(read_i8_as_i32(p + staff::PROFESSIONALISM)) == 0 {
+            } else if read_usize(v + 0x45) & 0x30000 != 0 && friendly_random((p.professionalism() as i32)) == 0 {
                 and_foul = true;
             } else {
-                let a = read_i8_as_i32(p + staff::PROFESSIONALISM);
+                let a = (p.professionalism() as i32);
                 if a >= 5 || read_usize(v + 0x45) & 0x7800 == 0 || friendly_random(a) != 0 {
                     continue;
                 }
@@ -674,8 +674,9 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(ma
 /// [pt] { 0x5d5ac0 } (thiscall, ret 4, game.cpp): a entrada de 6 bytes do jogador na tabela do treino
 /// ([treino+0x651d]), pelo id dos dados do jogador ([[jogador+0x61]]).
 pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino: usize, player: usize) -> usize {
+    let player = Staff(player);
     let table = core::ptr::read_unaligned((treino + 0x651d) as *const usize);
-    let id = *(core::ptr::read_unaligned((player + staff::PLAYER) as *const usize) as *const i32);
+    let id = *(core::ptr::read_unaligned((player.addr() + staff::PLAYER) as *const usize) as *const i32);
     (table as isize + id as isize * 6) as usize
 }
 

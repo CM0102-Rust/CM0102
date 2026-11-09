@@ -81,6 +81,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
 /// (0x4d45f0) para quem tem menos de 22 anos (+0x18), neste ano se o começo vem antes dele, senão no ano seguinte;
 /// para os outros, três meses depois do começo.
 pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usize, a1: usize, _a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
+    let player = Staff(player);
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0
     *start_month = (exe::date_get_month(G_CURRENT_DATE) as i8).wrapping_add(1);
     *start_year = read_i16(G_CURRENT_DATE_YEAR);
@@ -91,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
     // 0x4d45f0: push a1; mov ecx, [0xae1050] -> thiscall, ret 4 (the month the season ends)
     let e = exe::contract_manager_season_end_month(read_usize(G_CONTRACT_MANAGER), a1) as i8;
     *end_month = e;
-    if (read_u8(player + staff::AGE) as i8) < 0x16 {
+    if ((player.age() as u8) as i8) < 0x16 {
         crate::comparison::branch("cqe_6 scotland until end of season");
         if *start_month < e {
             *end_year = *start_year;

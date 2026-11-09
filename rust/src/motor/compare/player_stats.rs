@@ -26,11 +26,12 @@ pub(crate) unsafe extern "stdcall" fn compare_player_statistic(r: *const u8, whi
 /// das categorias e os jogos e gols pelo clube (+0x20/+0x22 do registro da ficha). As posições do histórico (+0x18,
 /// +0x1c), que só a gravação da original move, ficam fora. Pessoa nula ou sem ficha: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize, p: usize, value: u32, loan: u32, end: u32, club_id: u32, other: u32) -> u32 {
+    let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_ARCHIVE_PLAYER_STATS);
-    if p == 0 || read_usize(p + staff::PLAYER) == 0 {
-        return o(this, p, value, loan, end, club_id, other);
+    if p.is_null() || p.player() == 0 {
+        return o(this, p.addr(), value, loan, end, club_id, other);
     }
-    let reg = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(read_usize(p + staff::PLAYER)) as isize * 0x27) as usize);
+    let reg = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(p.player()) as isize * 0x27) as usize);
     let mut regions = vec![(reg + player_stats_entry::CLUB_LEAGUE_GAMES, 4)];
     for cat in 0..6usize {
         let id = read_i32(reg + 4 * cat);
@@ -42,14 +43,14 @@ pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize,
     ARCHIVE_STATS_DRY_RUN = true;
     ARCHIVE_STATS_PENDING_TOTALS = (0, 0);
     ARCHIVE_STATS_CLUB_ID = club_id as i32;
-    let n = crate::rng::pause_trace(|| archive_player_stats(this, p, value, loan, end, club_id, other));
+    let n = crate::rng::pause_trace(|| archive_player_stats(this, p.addr(), value, loan, end, club_id, other));
     ARCHIVE_STATS_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    let r = o(this, p, value, loan, end, club_id, other);
+    let r = o(this, p.addr(), value, loan, end, club_id, other);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     SCOREBOARD.record(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
-        p, value as i32, club_id as i32, r, n, mo.0, mr.0));
+        p.addr(), value as i32, club_id as i32, r, n, mo.0, mr.0));
     r
 }
 
@@ -64,13 +65,14 @@ pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize,
 /// lido) e comparam a conta e as entradas; a da cópia é liberada (0x9452ca) e o jogo segue com a da original. Os casos
 /// de erro (caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize, p: usize, count: *mut i32) -> usize {
+    let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(IDX_BUILD_CAREER_HISTORY);
-    if p == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_usize(p + staff::PLAYER) == 0) {
-        return o(this, p, count);
+    if p.is_null() || (read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.player() == 0) {
+        return o(this, p.addr(), count);
     }
-    let r = o(this, p, count);
+    let r = o(this, p.addr(), count);
     let mut n = 0i32;
-    let t = build_career_history(this, p, &mut n);
+    let t = build_career_history(this, p.addr(), &mut n);
     let same = if r == 0 || t == 0 {
         r == t && *count == n
     } else {
@@ -83,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize,
         let dif = (0..k).find(|&i| {
             r == 0 || t == 0 || core::slice::from_raw_parts((r + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE) != core::slice::from_raw_parts((t + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE)
         });
-        format!("build_career_history(pessoa {:x}) conta original={} rust={}, primeira entrada diferente {:?}", p, *count, n, dif)
+        format!("build_career_history(pessoa {:x}) conta original={} rust={}, primeira entrada diferente {:?}", p.addr(), *count, n, dif)
     });
     if t != 0 {
         exe::crt_free(t);
@@ -95,13 +97,14 @@ pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize,
 ///
 /// [pt] Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p: usize, club: usize) -> i16 {
+    let p = Staff(p);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i16>(IDX_PLAYER_STATS_YEARS_SINCE_AT_CLUB);
-    if p == 0 || club == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_usize(p + staff::CLUB_JOB) != club && read_usize(p + staff::PLAYER) == 0) {
-        return o(p, club);
+    if p.is_null() || club == 0 || (read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.club_job() != club && p.player() == 0) {
+        return o(p.addr(), club);
     }
-    let r = o(p, club);
-    let n = player_stats_years_since_at_club(p, club);
-    SCOREBOARD.record(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p, club, r, n));
+    let r = o(p.addr(), club);
+    let n = player_stats_years_since_at_club(p.addr(), club);
+    SCOREBOARD.record(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p.addr(), club, r, n));
     r
 }
 
@@ -157,13 +160,14 @@ pub(crate) unsafe extern "C" fn compare_player_stats_compare_history_by_club(a: 
 ///
 /// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_career_goals(person: usize) -> u16 {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(IDX_PLAYER_STATS_GET_CAREER_GOALS);
-    if person == 0 || (read_i32(person) < read_i32(G_STAFF_COUNT) && read_usize(person + staff::PLAYER) == 0) {
-        return o(person);
+    if person.is_null() || (read_i32(person.addr()) < read_i32(G_STAFF_COUNT) && person.player() == 0) {
+        return o(person.addr());
     }
-    let r = o(person);
-    let n = player_stats_get_career_goals(person);
-    SCOREBOARD.record(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", person, r, n));
+    let r = o(person.addr());
+    let n = player_stats_get_career_goals(person.addr());
+    SCOREBOARD.record(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", person.addr(), r, n));
     r
 }
 
@@ -270,11 +274,12 @@ pub(crate) unsafe extern "thiscall" fn compare_improve_language(this: usize, per
 /// [pt] Comparador: lado a lado no registro de 39 bytes, na conta dos livres (+0x38) e na marca +0xe dos registros de
 /// categoria liberados (a 0x58f110 só grava +0x1c, dentro do registro). Pessoa nula ou não jogadora: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_player_stats_reset_player(this: usize, person: usize) -> usize {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER);
-    if person == 0 || read_usize(person + staff::PLAYER) == 0 {
-        return o(this, person);
+    if person.is_null() || person.player() == 0 {
+        return o(this, person.addr());
     }
-    let r = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(read_usize(person + staff::PLAYER)).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
+    let r = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(person.player()).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
     let mut reg = vec![(r, 39), (this + player_stats_fields::FREE_CATEGORY_COUNT, 4)];
     for k in 0..6usize {
         let i = read_usize(r + 4 * k);
@@ -282,8 +287,8 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_reset_player(this: u
             reg.push((read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add(i << 5) + 0xe, 2));
         }
     }
-    let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person), || player_stats_reset_player(this, person));
-    SCOREBOARD.record(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", read_usize(person), mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person.addr()), || player_stats_reset_player(this, person.addr()));
+    SCOREBOARD.record(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", read_usize(person.addr()), mo, mr));
     a
 }
 
@@ -402,13 +407,14 @@ pub(crate) unsafe extern "thiscall" fn compare_get_last_match_rating(stats: usiz
 ///
 /// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_goals_for_club(person: usize, club: usize) -> u16 {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u16>(IDX_PLAYER_STATS_GET_GOALS_FOR_CLUB);
-    if person == 0 || club == 0 || (read_i32(person) < read_i32(G_STAFF_COUNT) && read_usize(person + staff::PLAYER) == 0) {
-        return o(person, club);
+    if person.is_null() || club == 0 || (read_i32(person.addr()) < read_i32(G_STAFF_COUNT) && person.player() == 0) {
+        return o(person.addr(), club);
     }
-    let r = o(person, club);
-    let n = player_stats_get_goals_for_club(person, club);
-    SCOREBOARD.record(r == n, || format!("player_stats_get_goals_for_club(pessoa {:x}, clube {:x}) original={} rust={}", person, club, r, n));
+    let r = o(person.addr(), club);
+    let n = player_stats_get_goals_for_club(person.addr(), club);
+    SCOREBOARD.record(r == n, || format!("player_stats_get_goals_for_club(pessoa {:x}, clube {:x}) original={} rust={}", person.addr(), club, r, n));
     r
 }
 

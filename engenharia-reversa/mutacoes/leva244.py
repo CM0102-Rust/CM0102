@@ -1,6 +1,6 @@
 # Mutações da 244a leva (itens cph_2, cph_3, cph_4, cph_5, cph_6, cph_7). Uso: python mutacoes.py mutacoes\leva244.py --carreira 2002-06-01
 MUTACOES = [
-    ('cph_lugar_reservas', 'return if *((person + staff::PLAYING_SQUAD) as *const u8) & 1 != 0 { 2 } else { 1 }; // main or reserves', 'return if *((person + 0x5e) as *const u8) & 1 != 0 { 1 } else { 2 }; // mutacao: trocados'),
+    ('cph_lugar_reservas', 'return if person.playing_squad() & 1 != 0 { 2 } else { 1 }; // main or reserves', 'return if *((person.addr() + 0x5e) as *const u8) & 1 != 0 { 1 } else { 2 }; // mutacao: trocados'),
     ('cph_lugar_marca', 'if mark == 0 { 4 } else { 3 }', 'if mark == 0 { 3 } else { 4 } // mutacao: trocados'),
     ('cph_subir', 'toggle_placement_if_in(this, person, club, [1, 3]) // reserves or B team', 'toggle_placement_if_in(this, person, club, [1, 1]) // mutacao: sem o time B'),
     ('cph_descer', 'toggle_placement_if_in(this, person, club, [2, 4]) // senior team or club with a B team', 'toggle_placement_if_in(this, person, club, [2, 2]) // mutacao: sem o clube com time B'),
@@ -16,7 +16,7 @@ MUTACOES = [
     ('cph_desempregado_sorteio', 'friendly_random(rating) < 0x2ee // the roll by the rating', 'friendly_random(rating) < 700 // mutacao: 700'),
     ('cph_permissao_oferta', 'return 1; // the offer’s player', 'return 0; // mutacao: nunca precisa'),
     ('cph_permissao_anos', 'if years > 4 {', 'if years > 5 { // mutacao: 6 anos'),
-    ('cph_permissao_marca', '*mark(person) = 0; // the mark without permission', '*mark(person) &= 0xfe; // mutacao: so o bit 0'),
+    ('cph_permissao_marca', '*mark(person.addr()) = 0; // the mark without permission', '*mark(person.addr()) &= 0xfe; // mutacao: so o bit 0'),
     ('cph_olheiro_confere', 'return 0; // the slot changed person', 'return person; // mutacao: sem conferir'),
     ('cph_sequencia_dias', '< 10 { // less than 10 days ago', '< 9 { // mutacao: 9 dias'),
     ('cph_recordista_data', 'exe::date_date_54a110(this + record_holder::DATE); // the record holder’s date', 'exe::date_date_54a110(this + 0x8); // mutacao: em +8'),

@@ -355,8 +355,8 @@ pub(crate) unsafe extern "thiscall" fn update_player(this: usize) {
     let f1a2 = (this + match_player::CONFIDENCE) as *mut f32;
     let mut st = *f1a2 as f64 * read_f32(rdata::F32_0_8500000238) as f64;
     *f1a2 = st as f32;
-    let person = *((this + match_player::STAFF) as *const usize);
-    let floor = ((0x19 - *((person + staff::TEMPERAMENT) as *const i8) as i32) * 2) as f32;
+    let person = Staff(*((this + match_player::STAFF) as *const usize));
+    let floor = ((0x19 - person.temperament() as i32) * 2) as f32;
     if !(st > floor as f64) {
         st = floor as f64;
     }
@@ -3272,8 +3272,8 @@ pub(crate) unsafe fn shot_outcome_goal(m: usize, p: usize, g: usize, side: i8, o
         }
         if tabela1(g) {
             *((g + match_player::GOALS_CONCEDED) as *mut u8) = read_i8(g + match_player::GOALS_CONCEDED).wrapping_add(1) as u8;
-            let sheet = read_usize(g + match_player::STAFF);
-            if random(read_i8(sheet + staff::DETERMINATION) as i32 + 1) != 0 && random(read_i8(sheet + staff::PRESSURE) as i32 + 1) != 0 {
+            let sheet = Staff(read_usize(g + match_player::STAFF));
+            if random(sheet.determination() as i32 + 1) != 0 && random(sheet.pressure() as i32 + 1) != 0 {
                 let s = read_i8(g + match_player::GOALS_CONCEDED) as u8 as i32;
                 let r = random(s * s) as u8;
                 let pf = read_i8(p + match_player::GOALS_CONCEDED) as u8;
@@ -3657,8 +3657,8 @@ pub(crate) unsafe fn shot_on_goal_injected(p: usize, f_in: f32, call: &mut dyn F
         }
         if tabela1(g) {
             more(g, 0xf);
-            let sheet = u(g, match_player::STAFF);
-            if random(read_i8(sheet + staff::DETERMINATION) as i32 + 1) != 0 && random(read_i8(sheet + staff::PRESSURE) as i32 + 1) != 0 {
+            let sheet = Staff(u(g, match_player::STAFF));
+            if random(sheet.determination() as i32 + 1) != 0 && random(sheet.pressure() as i32 + 1) != 0 {
                 let s = read_i8(g + match_player::GOALS_CONCEDED) as u8 as i32;
                 let r = random(s * s) as u8;
                 let pf = read_i8(p + match_player::GOALS_CONCEDED) as u8;
@@ -6320,10 +6320,10 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
     // no challenger: the stamina of the passer
     if !is_in_attacked_box(side, read_i8(p + match_player::CELL_X), read_i8(p + match_player::CELL_Y)) && random(*w(p, 0x31) as i32) < -10 {
         crate::comparison::branch("pass out of breath");
-        let person = read_usize(p + match_player::STAFF);
+        let person = Staff(read_usize(p + match_player::STAFF));
         let mut v = read_f32(p + match_player::CONFIDENCE) as f64 * read_f32(rdata::F32_1_049999952) as f64;
         *((p + match_player::CONFIDENCE) as *mut f32) = v as f32;
-        let lim = ((25 - read_i8(person + staff::TEMPERAMENT) as i32) * 2) as f32;
+        let lim = ((25 - person.temperament() as i32) * 2) as f32;
         if !(v > lim as f64) {
             v = lim as f64;
         }
@@ -6332,7 +6332,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
             *((p + match_player::CONFIDENCE) as *mut f32) = 100.0;
         }
         narrar7(call, 0x211d, u32::MAX, (side == 0) as u32, 0xff, 0xff, 0);
-        if random(read_i8(person + staff::PRESSURE) as i32 * 20 + 10) == 0 {
+        if random(person.pressure() as i32 * 20 + 10) == 0 {
             let r = random(3);
             if adjust_17(p, (r as u8).wrapping_neg() as i8) != 0 {
                 match_performance(p, 0);
@@ -9476,7 +9476,7 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
         let t = *((*((this + match_player::ENGINE) as *const usize) + 0x4792) as *const usize);
         *((t + if read_i8(this + match_player::SIDE) == 0 { 0x1c } else { 0x20 }) as *const usize)
     };
-    let person = *((this + match_player::STAFF) as *const usize);
+    let person = Staff(*((this + match_player::STAFF) as *const usize));
     let sheet = *((this + match_player::PLAYER) as *const usize);
     let n = exe::database_get_contract_rating_modifier(person, club()) as f64;
     let mut form = (*((sheet + player_sheet::WORLD_REPUTATION) as *const i16) as i32 - *((club() + 0x80) as *const i16) as i32) as f64 * 0.002 + 1.5;
@@ -9501,9 +9501,9 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
         };
     }
     let x = if exe::database_is_national_team(club()) != 0 {
-        read_i8(person + staff::INT_APPS) as u8 as f64 * 75.0
+        (person.int_apps() as i8) as u8 as f64 * 75.0
     } else {
-        let read = |o: usize| core::ptr::read_unaligned((person + o) as *const u32);
+        let read = |o: usize| core::ptr::read_unaligned((person.addr() + o) as *const u32);
         exe::date_days_since(G_CURRENT_DATE, read(staff::DATE_JOINED_CLUB), read(0x42)) as f64
     };
     let y = if x > 1000.0 { (x - 1000.0) * 0.000125 + 1.0 } else { 1.0 };

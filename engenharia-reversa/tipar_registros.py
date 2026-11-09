@@ -90,6 +90,9 @@ class Conversor:
             return '%s.%s()' % (x, nome)
         if LARG.get(t) == LARG.get(ft) and 'f' not in (t[0] + ft[0]):
             return '(%s.%s() as %s)' % (x, nome, t)
+        # a narrower read of an integer field is its low bytes (little-endian, no side effect): the same value
+        if LARG.get(t, 9) < LARG.get(ft, 0) and 'f' not in (t[0] + ft[0]) and ft not in ('i64', 'u64'):
+            return '(%s.%s() as %s)' % (x, nome, t)
         return None
 
     def escrita(self, x, campo, t, valor):
@@ -126,8 +129,9 @@ class Conversor:
                 out[x] = 'let'
         return out
 
-    def converter_trecho(self, s, xs):
-        """The accesses and the other uses of the variables xs in the text s (a function or a mutation snippet)."""
+    def converter_trecho(self, s, xs, so_acessos=False):
+        """The accesses and the other uses of the variables xs in the text s (a function or a mutation snippet). With
+        so_acessos, the variables are already typed (`x.addr() + mod::F`): only the accesses change."""
         mk = mascara(s)
         edicoes = []
         ocupado = []
@@ -135,27 +139,31 @@ class Conversor:
         if not nomes:
             return s
         # read_T(x + mod::F) / write_T(x + mod::F, v)
-        for m in re.finditer(r'\b(read|write)_(u8|i8|u16|i16|u32|i32|usize|f32|f64|i64|u64)\(', mk):
+        for m in re.finditer(r'\b(read|write)_(u8|i8|u16|i16|u32|i32|usize|f32|f64|i64|u64)(_as_i32)?\(', mk):
             args, fim = ie.args_da_chamada(mk, m.end() - 1)
             if not args:
                 continue
-            a0 = re.fullmatch(r'\s*(%s)\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*' % (nomes, self.mod), args[0])
+            a0 = re.fullmatch(r'\s*(%s)(?:\.addr\(\))?\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*' % (nomes, self.mod), args[0])
             if not a0:
                 continue
             x, campo, t = a0.group(1), a0.group(2), m.group(2)
+            if m.group(3) and m.group(1) != 'read':
+                continue
             if m.group(1) == 'read' and len(args) == 1:
                 novo = self.leitura(x, campo, t)
+                if novo and m.group(3):
+                    novo = '(%s as i32)' % novo
             elif m.group(1) == 'write' and len(args) == 2:
                 # the value text from the real string (it may hold a comment or a literal)
                 ini_v = m.end() + mk[m.end():fim].index(',') + 1
-                novo = self.escrita(x, campo, t, self.converter_trecho(s[ini_v:fim - 1].strip(), xs))
+                novo = self.escrita(x, campo, t, self.converter_trecho(s[ini_v:fim - 1].strip(), xs, so_acessos))
             else:
                 novo = None
             if novo and not any(a <= m.start() < b for a, b in ocupado):
                 edicoes.append((m.start(), fim, novo))
                 ocupado.append((m.start(), fim))
         # *((x + mod::F) as *const T)  and  *((x + mod::F) as *mut T) = v;
-        for m in re.finditer(r'\*\(\(\s*(%s)\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*\)\s*as\s*\*(const|mut)\s+(\w+)\)' % (nomes, self.mod), mk):
+        for m in re.finditer(r'\*\(\(\s*(%s)(?:\.addr\(\))?\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*\)\s*as\s*\*(const|mut)\s+(\w+)\)' % (nomes, self.mod), mk):
             if any(a <= m.start() < b for a, b in ocupado):
                 continue
             x, campo, kind, t = m.group(1), m.group(2), m.group(3), m.group(4)
@@ -165,7 +173,7 @@ class Conversor:
                 fim = fim_da_expressao(mk, m.end() + atr.end())
                 if fim < 0:
                     continue
-                novo = self.escrita(x, campo, t, self.converter_trecho(s[m.end() + atr.end():fim].strip(), xs))
+                novo = self.escrita(x, campo, t, self.converter_trecho(s[m.end() + atr.end():fim].strip(), xs, so_acessos))
                 if novo:
                     edicoes.append((m.start(), fim, novo))
                     ocupado.append((m.start(), fim))
@@ -177,7 +185,7 @@ class Conversor:
                 edicoes.append((m.start(), m.end(), novo))
                 ocupado.append((m.start(), m.end()))
         # the other uses
-        for m in re.finditer(r'(?<![\w.:])(%s)\b(?!\s*::)(?!\s*:(?!:))' % nomes, mk):
+        for m in ([] if so_acessos else re.finditer(r'(?<![\w.:])(%s)\b(?!\s*::)(?!\s*:(?!:))' % nomes, mk)):
             if any(a <= m.start() < b for a, b in ocupado):
                 continue
             x = m.group(1)
@@ -347,7 +355,88 @@ def assinaturas(tipo, grava):
             sys.exit('parou: erros que a ferramenta não trata')
 
 
+def acessos(mod, grava):
+    """The accesses `read_T(x.addr() + mod::F)` of variables already typed become methods (a narrower read, a sign
+    cast, `read_i8_as_i32`); the mutation snippets follow."""
+    cv = Conversor(mod)
+    mutacoes = carregar_mutacoes()
+    trocas_mut, n = {}, 0
+    for raiz, _, fs in os.walk(SRC):
+        for f in fs:
+            p = os.path.join(raiz, f)
+            if not f.endswith('.rs') or f in ('records.rs', 'fields.rs', 'exe_calls.rs', 'mem.rs'):
+                continue
+            t = open(p, encoding='utf-8').read()
+            tl.ANTES[p] = t
+            partes, pos = [], 0
+            for _, a, b in mover_rotinas.blocos(t):
+                bloco = t[a:b]
+                xs = set(re.findall(r'(?<![\w.])([a-z_][a-z0-9_]*)\.addr\(\)\s*\+\s*%s::[A-Z]' % mod, mascara(bloco)))
+                if not xs:
+                    continue
+                novo = cv.converter_trecho(bloco, xs, True)
+                if novo == bloco:
+                    continue
+                n += 1
+                for lista, mu in mutacoes:
+                    if bloco.count(mu[1]) == 1:
+                        trocas_mut[(lista, mu[0])] = (mu, (lambda s, xs=xs: cv.converter_trecho(s, xs, True)))
+                partes += [t[pos:a], novo]
+                pos = b
+            partes.append(t[pos:])
+            if grava and ''.join(partes) != t:
+                open(p, 'w', encoding='utf-8').write(''.join(partes))
+    print('%d funções com acessos convertidos (%s)' % (n, mod))
+    if grava:
+        tl.voltar_funcoes_com_erro(trocas_mut)
+        gravar_mutacoes(trocas_mut)
+
+
+def carregar_mutacoes():
+    mutacoes = []
+    pasta = os.path.join(R, 'engenharia-reversa', 'mutacoes')
+    for f in sorted(os.listdir(pasta)):
+        if f.endswith('.py'):
+            cwd = os.getcwd()
+            try:
+                os.chdir(os.path.join(R, 'engenharia-reversa'))
+                mutacoes += [(f, m) for m in runpy.run_path(os.path.join(pasta, f)).get('MUTACOES', [])]
+            except Exception:
+                pass
+            finally:
+                os.chdir(cwd)
+    return mutacoes
+
+
+def gravar_mutacoes(trocas_mut):
+    pasta = os.path.join(R, 'engenharia-reversa', 'mutacoes')
+    por = collections.defaultdict(list)
+    for (lista, _), v in trocas_mut.items():
+        por[lista].append(v)
+    for lista, ms in por.items():
+        pl = os.path.join(pasta, lista)
+        s = open(pl, encoding='utf-8').read()
+        for mu, g in ms:
+            ini = max(s.find("('%s'," % mu[0]), s.find('("%s",' % mu[0]))
+            if ini < 0:
+                continue
+            pos = ini
+            for k in (1, 2):
+                nv = g(mu[k])
+                if nv == mu[k]:
+                    continue
+                for v, n2 in ((repr(mu[k]), repr(nv)), (json.dumps(mu[k], ensure_ascii=False), json.dumps(nv, ensure_ascii=False))):
+                    j = s.find(v, pos)
+                    if j >= 0:
+                        s = s[:j] + n2 + s[j + len(v):]
+                        pos = j + len(n2)
+                        break
+        open(pl, 'w', encoding='utf-8').write(s)
+
+
 def main():
+    if '--acessos' in sys.argv:
+        return acessos(sys.argv[sys.argv.index('--acessos') + 1], '--gravar' in sys.argv)
     if '--assinaturas' in sys.argv:
         return assinaturas(sys.argv[sys.argv.index('--assinaturas') + 1], '--gravar' in sys.argv)
     if '--exe' in sys.argv:

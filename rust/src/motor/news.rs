@@ -63,8 +63,8 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
         let of_team = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize);
         let m = (exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, of_team) as u32) as u16;
         for j in 0..0x10i32 {
-            let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - j - 1).wrapping_mul(0x6e) as usize);
-            if *((p + staff::CLASSIFICATION) as *const u8) == 1 && p != manager && (exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, p) as u32) as u16 == m {
+            let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - j - 1).wrapping_mul(0x6e) as usize));
+            if p.classification() == 1 && p.addr() != manager && (exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, p) as u32) as u16 == m {
                 exe::news_mark_item_read(this, p, id, 0);
             }
         }
@@ -220,17 +220,18 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: u
 /// = 0, sai da conta), avança o anel e, com todos de férias ([0xdd6bec]) ou o técnico de férias (0x5fd210), dá a
 /// resposta automática (0x784100) pelo clube (+0x39) e pela seleção (+0x24). Soma 1 na conta e devolve 1.
 pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usize, manager: usize, free: u32) -> u32 {
+    let manager = Staff(manager);
     if news == 0 {
         show_error_at(0xa693ec, 0x1f3f);
         return 0;
     }
-    if manager == 0 {
+    if manager.is_null() {
         show_error_at(0xa693ec, 0x1f47);
         return 0;
     }
     *((news + news_item::IMPORTANT) as *mut u8) = (exe::newsitem_is_important_for(news, manager) as u32) as u8;
     write_usize(news + news_item::READ, 0);
-    let idx = news_human_manager_index(manager);
+    let idx = news_human_manager_index(manager.addr());
     if idx < 0 {
         show_error_at(0xa693ec, 0x1f58);
         return 0;
@@ -279,8 +280,8 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
     }
     if *(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0 {
         crate::comparison::branch("cpn_1 automatic reply");
-        exe::newsitem_auto_respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // the club
-        let national_team = read_usize(manager + staff::NATIONAL_JOB);
+        exe::newsitem_auto_respond(slot(current), manager, manager.club_job()); // the club
+        let national_team = manager.national_job();
         if national_team != 0 {
             exe::newsitem_auto_respond(slot(current), manager, national_team);
         }
@@ -594,8 +595,8 @@ pub(crate) unsafe fn club_or_current_human(club: usize) -> usize {
 ///
 /// [pt] O técnico humano `i` (0 a 15: os últimos 16 de [0xae23bc], 0x6e bytes), se ativo (+0x5f = 1).
 pub(crate) unsafe fn active_human_manager(i: usize) -> Option<usize> {
-    let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE));
-    (*((p + staff::CLASSIFICATION) as *const u8) == 1).then_some(p)
+    let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE)));
+    (p.classification() == 1).then_some(p.addr())
 }
 
 /// Delivers the news to every active human manager that passa accepts, with reach alcance in +0xde; false at the first
@@ -690,11 +691,11 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize,
     }
     *((news + news_item::REACH) as *mut u8) = 2; // the nation’s reach
     for i in 0..0x10usize {
-        let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE));
-        if *((p + staff::CLASSIFICATION) as *const u8) != 1 {
+        let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE)));
+        if p.classification() != 1 {
             continue;
         }
-        let club = Club(read_usize(p + staff::CLUB_JOB));
+        let club = Club(p.club_job());
         if club.is_null() || club.nation().addr() != nation {
             continue;
         }

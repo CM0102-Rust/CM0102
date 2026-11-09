@@ -1005,9 +1005,9 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
                     crate::comparison::branch("interest two humans with club");
                 }
                 for k in 0..16 {
-                    let pe = (g(G_STAFF_TABLE) as isize + (read(G_STAFF_COUNT) + k - 16) as isize * 0x6e) as usize;
-                    let club = g(pe + staff::CLUB_JOB);
-                    let other = g(pe + staff::NATIONAL_JOB);
+                    let pe = Staff((g(G_STAFF_TABLE) as isize + (read(G_STAFF_COUNT) + k - 16) as isize * 0x6e) as usize);
+                    let club = g(pe.addr() + staff::CLUB_JOB);
+                    let other = g(pe.addr() + staff::NATIONAL_JOB);
                     if (club != 0 && exe::comp_includes_club(object, club) != 0) || (other != 0 && exe::comp_includes_club(object, other) != 0) {
                         crate::comparison::branch("interest human in the competition");
                         pr(comp + day_competition::INTERESTING, 1);
@@ -1130,9 +1130,9 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     // the 16 humans at the end of the people table
     let base = g(G_STAFF_TABLE);
     for k in 0..16isize {
-        let pe = (base as isize + (read(G_STAFF_COUNT) as isize - 1 - k) * 0x6e) as usize;
-        if pe != 0 && *((pe + staff::CLASSIFICATION) as *const u8) == 1 && g(pe + staff::CLUB_JOB) != 0 {
-            let nation = read(g(pe + staff::CLUB_JOB) + 0x57);
+        let pe = Staff((base as isize + (read(G_STAFF_COUNT) as isize - 1 - k) * 0x6e) as usize);
+        if !pe.is_null() && pe.classification() == 1 && g(pe.addr() + staff::CLUB_JOB) != 0 {
+            let nation = read(g(pe.addr() + staff::CLUB_JOB) + 0x57);
             if nation == read(c1 + club::DIVISION) || nation == read(c2 + club::DIVISION) {
                 crate::comparison::branch("no human nation manager");
                 return 0;
@@ -1516,9 +1516,9 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     let mut sozinho = true;
     for i in 0..0x10usize {
         let idx = (*(G_STAFF_COUNT as *const usize)).wrapping_add(i).wrapping_sub(0x10);
-        let q = read_usize(G_STAFF_TABLE + 0).wrapping_add(idx.wrapping_mul(110));
+        let q = Staff(read_usize(G_STAFF_TABLE + 0).wrapping_add(idx.wrapping_mul(110)));
         // like the original, without checking the other human’s null record
-        if *((q + staff::CLASSIFICATION) as *const u8) != 0 && q != p && read_usize((exe::get_human_manager_record(q)) + 0xe2) == game {
+        if q.classification() != 0 && q.addr() != p && read_usize((exe::get_human_manager_record(q)) + 0xe2) == game {
             let minha = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const u16);
             if exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, q) == minha {
                 return;

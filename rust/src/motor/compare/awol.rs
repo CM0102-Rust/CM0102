@@ -90,28 +90,29 @@ pub(crate) unsafe extern "thiscall" fn compare_has_fitness_incident(this: usize,
 /// sumiu; bit 2 novo: faltou). Sem decisão, o estado inteiro tem de bater (os mesmos sorteios). O byte do caso (+0xc do
 /// registro) não entra: na original é resíduo da pilha.
 pub(crate) unsafe extern "thiscall" fn compare_miss_training(this: usize, person: usize) {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MISS_TRAINING);
-    if person == 0 || read_usize(person + staff::PLAYER) == 0 || read_i32(person) >= read_i32(G_STAFF_COUNT) {
-        return o(this, person);
+    if person.is_null() || person.player() == 0 || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
+        return o(this, person.addr());
     }
-    let m = read_usize(this + awol_fields::PERSON_FLAGS).wrapping_add(read_i32(person) as usize);
+    let m = read_usize(this + awol_fields::PERSON_FLAGS).wrapping_add(read_i32(person.addr()) as usize);
     let mut regions = vec![(m, 1), (G_CONTRACT_LOOKUP_RESULT, 4)];
     regions.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&regions);
     MISS_TRAINING_DRY_RUN = true;
     MISS_TRAINING_DECISION = 0;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| miss_training(this, person)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| miss_training(this, person.addr())));
     MISS_TRAINING_DRY_RUN = false;
     let n = MISS_TRAINING_DECISION;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     let b0 = read_u8(m);
-    o(this, person);
+    o(this, person.addr());
     let new = read_u8(m) & !b0;
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     let r = if new & 2 != 0 { 2 } else if new & 1 != 0 { 1 } else { 0 };
     let same = (r == n || (n == 1 && b0 & 1 != 0)) && (n != 0 || mo == mr);
-    SCOREBOARD.record(same, || format!("miss_training(pessoa {:#x}) original={} {:x?} rust={} {:x?}", person, r, mo, n, mr));
+    SCOREBOARD.record(same, || format!("miss_training(pessoa {:#x}) original={} {:x?} rust={} {:x?}", person.addr(), r, mo, n, mr));
 }
 
 /// Comparer for `end_absence`.

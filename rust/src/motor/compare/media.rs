@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
         }
     }
     compare_pos("apply_squad_reaction_to_player_story", reg, || o(this, topic, player, club.addr(), ids, n),
-        |chamar| squad_reaction_to_story_with(topic, player, club, ids, n, chamar));
+        |chamar| squad_reaction_to_story_with(topic, Staff(player), club, ids, n, chamar));
 }
 
 /// Comparer for `warn_squad_of_position_rival`.
@@ -64,14 +64,14 @@ pub(crate) unsafe extern "thiscall" fn compare_warn_squad_of_position_rival(this
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     if !club.is_null() {
         for i in 0..50 {
-            let p = read_usize(club.addr() + club::SQUAD + 4 * i);
-            if p != 0 {
-                reg.push((p + staff::DETERMINATION, 6));
-                reg.extend(contract_region(p, club.addr()));
+            let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * i));
+            if !p.is_null() {
+                reg.push((p.addr() + staff::DETERMINATION, 6));
+                reg.extend(contract_region(p.addr(), club.addr()));
             }
         }
     }
-    compare_pos("warn_squad_of_position_rival", reg, || o(this, player, club.addr(), a, b), |chamar| warn_position_rivals_with(player, club, chamar));
+    compare_pos("warn_squad_of_position_rival", reg, || o(this, player, club.addr(), a, b), |chamar| warn_position_rivals_with(Staff(player), club, chamar));
 }
 
 /// Comparer for `media_format_response_option_label`.
@@ -97,9 +97,10 @@ pub(crate) unsafe extern "stdcall" fn compare_media_format_response_option_label
 /// do novo clube em [[0xb67a44]] e, de cada um dos elencos dos dois clubes (e da pessoa da história da mídia), o contrato
 /// com o clube (0x50 bytes) e a linha de opiniões em [0xae2d0c] (0x4f bytes). Quando a cópia para: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(this: usize, p: usize, new: usize, old: usize, flag: u32) {
+    let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(IDX_PROCESS_TRANSFER_SQUAD_REACTIONS);
-    if p == 0 || new == 0 || read_usize(p + staff::PLAYER) == 0 || read_i8_as_i32(p + staff::AGE) < 0x13 || current_reputation(p) < 0x109a {
-        return o(this, p, new, old, flag);
+    if p.is_null() || new == 0 || p.player() == 0 || ((p.age() as i8) as i32) < 0x13 || current_reputation(p) < 0x109a {
+        return o(this, p.addr(), new, old, flag);
     }
     let sheet = read_usize(G_CONTRACT_LOOKUP_RESULT);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -132,19 +133,19 @@ pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(
     let before = crate::comparison::MemorySnapshot::read(&reg);
     MEDIA_REACTION_DRY_RUN = true;
     MEDIA_REACTION_STOPPED = false;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| process_transfer_squad_reactions(this, p, new, old, flag)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| process_transfer_squad_reactions(this, p.addr(), new, old, flag)));
     MEDIA_REACTION_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
     if MEDIA_REACTION_STOPPED {
         crate::comparison::branch("cqa_13 reactions only in the original");
-        return o(this, p, new, old, flag);
+        return o(this, p.addr(), new, old, flag);
     }
-    o(this, p, new, old, flag);
+    o(this, p.addr(), new, old, flag);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
     SCOREBOARD.record(mo == mr, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| (0..a.1.len()).filter(move |&i| a.1[i] != b.1[i]).map(move |i| a.0 + i)).take(16).collect();
-        format!("process_transfer_squad_reactions(jogador {:#x}, novo {:#x}, velho {:#x}) diferencas em {:x?}", p, new, old, dif)
+        format!("process_transfer_squad_reactions(jogador {:#x}, novo {:#x}, velho {:#x}) diferencas em {:x?}", p.addr(), new, old, dif)
     });
 }
 
@@ -393,15 +394,16 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_former_international_pundit(
 /// [pt] Comparador: a resposta sorteia e pode pôr o jogador entre os rejeitados do técnico (0x547af0): lado a lado no
 /// estado do gerador e no bloco das preferências do técnico (+0x65, +0x1c..+0x34), a cópia sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn compare_pick_ai_manager_response(this: usize, manager: usize, player: usize, kind: u32) -> u32 {
+    let manager = Staff(manager);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_PICK_AI_MANAGER_RESPONSE);
     let mut regions = crate::rng::STATE_REGIONS.to_vec();
-    if manager != 0 && read_usize(manager + staff::STAFF_PREFERENCES) != 0 {
-        regions.push((read_usize(manager + staff::STAFF_PREFERENCES) + 0x1c, 0x18));
+    if !manager.is_null() && manager.staff_preferences() != 0 {
+        regions.push((manager.staff_preferences() + 0x1c, 0x18));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &regions,
-        || o(this, manager, player, kind),
-        || crate::rng::without_counting(|| pick_ai_manager_response(this, manager, player, kind)),
+        || o(this, manager.addr(), player, kind),
+        || crate::rng::without_counting(|| pick_ai_manager_response(this, manager.addr(), player, kind)),
     );
     SCOREBOARD.record(igual && r == n, || format!("pick_ai_manager_response(tipo {:#x}) original={} rust={} {:x?} x {:x?}", kind as i16, r, n, mo.0, mr.0));
     r

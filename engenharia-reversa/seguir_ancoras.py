@@ -7,6 +7,7 @@ Usage: python seguir_ancoras.py COMMIT [--gravar]
 mesma troca na âncora e no texto de troca.
 """
 import difflib
+import json
 import os
 import re
 import runpy
@@ -103,15 +104,23 @@ def main():
                 continue
             ini = max(novo_txt.find("('%s'," % m[0]), novo_txt.find('("%s",' % m[0]))
             pos = ini
+            gravou = True
             for velho_s, novo_s in ((m[1], ancora), (m[2], troca)):
                 if velho_s == novo_s:
                     continue
-                for rv, rn in ((repr(velho_s), repr(novo_s)), ('"%s"' % velho_s, '"%s"' % novo_s)):
+                # the literal as the file writes it: repr, or a double-quoted string with escapes (json)
+                for rv, rn in ((repr(velho_s), repr(novo_s)), (json.dumps(velho_s, ensure_ascii=False), json.dumps(novo_s, ensure_ascii=False))):
                     j = novo_txt.find(rv, pos)
                     if j >= 0:
                         novo_txt = novo_txt[:j] + rn + novo_txt[j + len(rv):]
                         pos = j + len(rn)
                         break
+                else:
+                    gravou = False
+            if not gravou:
+                print('NÃO GRAVEI (o texto no arquivo é outro)', lf, m[0])
+                n_falha += 1
+                continue
             n_ok += 1
             print('segui', lf, m[0])
         if novo_txt != txt and '--gravar' in sys.argv:

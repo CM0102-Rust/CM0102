@@ -276,27 +276,28 @@ pub(crate) unsafe extern "stdcall" fn compare_news_club_has_human_manager(club: 
 /// [pt] Comparador: lado a lado na caixa e nas 100 notícias; com resposta padrão a dar (clube ou seleção), só a original,
 /// conferindo o plano depois dela (+4 = +0, +8 = 0 e os dois campos das 100 notícias). Erros: a original.
 pub(crate) unsafe extern "thiscall" fn compare_clear_inbox(this: usize, manager: usize) {
+    let manager = Staff(manager);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_INBOX);
-    if manager == 0 {
-        return o(this, manager);
+    if manager.is_null() {
+        return o(this, manager.addr());
     }
-    let h = read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
+    let h = read_i32(manager.addr()).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if h < 0 {
-        return o(this, manager);
+        return o(this, manager.addr());
     }
     let caixa = (read_i32(this + news_fields::HUMAN_INBOXES) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
-    if read_i32(manager + staff::CLUB_JOB) != 0 || read_i32(manager + staff::NATIONAL_JOB) != 0 {
-        o(this, manager);
+    if (manager.club_job() as i32) != 0 || (manager.national_job() as i32) != 0 {
+        o(this, manager.addr());
         let first = read_i32(caixa);
         let news = news_box_regions(this, caixa);
         let ok = read_i32(caixa + 4) == first && read_i32(caixa + 8) == 0
             && news[1..].iter().all(|&(n, _)| read_i32(n) == 0 && read_i32(n + 4) == 1);
-        SCOREBOARD.record(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", manager, (first, read_i32(caixa + 4), read_i32(caixa + 8))));
+        SCOREBOARD.record(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", manager.addr(), (first, read_i32(caixa + 4), read_i32(caixa + 8))));
         return;
     }
     let reg = news_box_regions(this, caixa);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, manager), || clear_inbox(this, manager));
-    SCOREBOARD.record(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", manager, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, manager.addr()), || clear_inbox(this, manager.addr()));
+    SCOREBOARD.record(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", manager.addr(), mo, mr));
 }
 
 /// Comparer for `construct_news_item`.

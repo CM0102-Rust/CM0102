@@ -305,10 +305,11 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
 /// ano, 0x549f70 com 1998) e com o jogador abaixo de 24 anos (+0x18): o período da regra base (0x8e8bd0). Senão começa
 /// no mês seguinte e acaba três meses depois.
 pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize, club: usize, a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
+    let player = Staff(player);
     // 0x549f70: push -1; push 0x7ce; push 5; push 0x13; lea ecx, local -> thiscall, ret 0x10
     let mut d = [0u8; 8];
     exe::date_date_549f70((d.as_mut_ptr() as usize) as usize as *mut [u16; 4], (0x13) as i32 as u32, (5) as i32 as u32, 0x7ce, (-1) as i32 as u32);
-    if read_i16(G_CURRENT_DATE) > read_i16(d.as_ptr() as usize) && (read_u8(player + staff::AGE) as i8) < 0x18 { // cqe6: abaixo de 24 anos
+    if read_i16(G_CURRENT_DATE) > read_i16(d.as_ptr() as usize) && ((player.age() as u8) as i8) < 0x18 { // cqe6: abaixo de 24 anos
         crate::comparison::branch("cqe_6 england youth period");
         // 0x8e8bd0: the same 7 arguments pushed again; mov ecx, esi (this) -> thiscall, ret 0x1c
         exe::transfer_rules_get_loan_period(this, club, a2, start_month, start_year, end_month, end_year, player);

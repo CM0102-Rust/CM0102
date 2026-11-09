@@ -10,8 +10,8 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_champions_record(this:
     if club.is_null() || comp == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(comp))) == 0 {
         return o(this, club.addr(), comp);
     }
-    let t = club.manager().addr();
-    let notes = if t != 0 && read_usize(t + staff::NON_PLAYER) != 0 { (read_usize(t + staff::NON_PLAYER) + 8, 6) } else { (club.addr() + club::REPUTATION, 2) };
+    let t = Staff(club.manager().addr());
+    let notes = if !t.is_null() && t.non_player() != 0 { (t.non_player() + 8, 6) } else { (club.addr() + club::REPUTATION, 2) };
     compare_champion_update("add_league_champions_record", this, club, notes, true, || o(this, club.addr(), comp),
         || add_league_champions_record(this, club.addr(), comp));
 }
@@ -77,26 +77,27 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_finish_records(this: u
 /// rejeitadas do clube +0x9b e os clubes favoritos e rejeitados da pessoa, preferências +0x65: +4..+0x18). Pessoa nula:
 /// só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_supporters_player_of_year_record(this: usize, person: usize, club: usize, a: u32, b: u32) {
+    let person = Staff(person);
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_ADD_SUPPORTERS_PLAYER_OF_YEAR_RECORD);
-    if person == 0 || club.is_null() {
-        return o(this, person, club.addr(), a, b);
+    if person.is_null() || club.is_null() {
+        return o(this, person.addr(), club.addr(), a, b);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((club.addr() + club::FAV_STAFF1, 0x18));
-    let pref = read_usize(person + staff::STAFF_PREFERENCES);
+    let pref = person.staff_preferences();
     if pref != 0 {
         reg.push((pref + preferences::STAFF_FAVOURITE_CLUBS1, 0x18));
     }
     let before = crate::comparison::MemorySnapshot::read(&reg);
     SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_supporters_player_of_year_record(this, person, club.addr(), a, b)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_supporters_player_of_year_record(this, person.addr(), club.addr(), a, b)));
     SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
-    o(this, person, club.addr(), a, b);
+    o(this, person.addr(), club.addr(), a, b);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    SCOREBOARD.record(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", person, club.addr(), mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", person.addr(), club.addr(), mo, mr));
 }
 
 /// Comparer for `add_cup_runners_up_record`.
@@ -348,23 +349,24 @@ pub(crate) unsafe extern "thiscall" fn compare_get_manager_of_year_candidates(th
 /// [pt] Comparador: lado a lado pelo registro do técnico (e, quando a vaga é de outro, pelo registro que a original zera),
 /// pela devolução. Pessoa nula (a caixa) e o humano sem situação: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_manager_record(this: usize, person: usize, create: u32) -> usize {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_MANAGER_RECORD);
-    if person == 0 {
-        return o(this, person, create);
+    if person.is_null() {
+        return o(this, person.addr(), create);
     }
     let Some(r) = manager_manager_manager_record(this, person) else {
-        return o(this, person, create);
+        return o(this, person.addr(), create);
     };
     let mut reg = vec![(r, 0xd2)];
     let owner = read_u32(r + manager_record::OWNER) as i32;
-    if owner != -1 && owner != read_u32(person) as i32 {
-        let z = (read_u32(this + staff_records_fields::MANAGER_RECORDS) as usize).wrapping_add((read_u32(read_u32(person + staff::NON_PLAYER) as usize) as usize).wrapping_mul(0xd2));
+    if owner != -1 && owner != read_u32(person.addr()) as i32 {
+        let z = (read_u32(this + staff_records_fields::MANAGER_RECORDS) as usize).wrapping_add((read_u32((person.non_player() as u32) as usize) as usize).wrapping_mul(0xd2));
         if z != r {
             reg.push((z, 0xd2));
         }
     }
-    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, person, create), || get_manager_record(this, person, create));
-    SCOREBOARD.record(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", person, create, a, b, mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, person.addr(), create), || get_manager_record(this, person.addr(), create));
+    SCOREBOARD.record(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", person.addr(), create, a, b, mo, mr));
     a
 }
 
@@ -403,22 +405,23 @@ pub(crate) unsafe extern "thiscall" fn compare_rewind_staff_history(this: usize,
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
 /// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_year_award_record(this: usize, p: usize, club: usize, prize: usize, a4: u32, a5: u32, credito: u32) {
+    let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(IDX_ADD_YEAR_AWARD_RECORD);
-    if p == 0 || prize == 0 {
-        return o(this, p, club, prize, a4, a5, credito);
+    if p.is_null() || prize == 0 {
+        return o(this, p.addr(), club, prize, a4, a5, credito);
     }
-    let (t3d, t28) = (read_u8(p + staff::JOB_FOR_CLUB), read_u8(p + staff::JOB_FOR_NATION));
+    let (t3d, t28) = (p.job_for_club(), p.job_for_nation());
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
         crate::comparison::branch("add_year_award_record player");
-        return o(this, p, club, prize, a4, a5, credito);
+        return o(this, p.addr(), club, prize, a4, a5, credito);
     }
-    let r = staff_records_manager_record(this, p);
+    let r = staff_records_manager_record(this, p.addr());
     if r == 0 {
-        return o(this, p, club, prize, a4, a5, credito);
+        return o(this, p.addr(), club, prize, a4, a5, credito);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p, club, prize, a4, a5, credito),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p.addr(), club, prize, a4, a5, credito),
         || add_year_award(this, p, club, prize, a4, a5, credito, false));
-    SCOREBOARD.record(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(prize), mo, mr));
+    SCOREBOARD.record(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p.addr(), read_usize(prize), mo, mr));
 }
 
 /// Comparer for `add_first_cap_record`.
@@ -438,22 +441,23 @@ pub(crate) unsafe extern "thiscall" fn compare_add_first_cap_record(this: usize,
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
 /// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_month_award_record(this: usize, p: usize, club: usize, prize: usize, a4: u32, a5: u32) {
+    let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(IDX_ADD_MONTH_AWARD_RECORD);
-    if p == 0 || prize == 0 {
-        return o(this, p, club, prize, a4, a5);
+    if p.is_null() || prize == 0 {
+        return o(this, p.addr(), club, prize, a4, a5);
     }
-    let (t3d, t28) = (read_u8(p + staff::JOB_FOR_CLUB), read_u8(p + staff::JOB_FOR_NATION));
+    let (t3d, t28) = (p.job_for_club(), p.job_for_nation());
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
         crate::comparison::branch("add_month_award_record player");
-        return o(this, p, club, prize, a4, a5);
+        return o(this, p.addr(), club, prize, a4, a5);
     }
-    let r = staff_records_manager_record(this, p);
+    let r = staff_records_manager_record(this, p.addr());
     if r == 0 {
-        return o(this, p, club, prize, a4, a5);
+        return o(this, p.addr(), club, prize, a4, a5);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p, club, prize, a4, a5),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p.addr(), club, prize, a4, a5),
         || add_month_award_record_body(this, p, club, prize, a4, a5, false));
-    SCOREBOARD.record(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(prize), mo, mr));
+    SCOREBOARD.record(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p.addr(), read_usize(prize), mo, mr));
 }
 
 /// Comparer for `clear_manager_record`.

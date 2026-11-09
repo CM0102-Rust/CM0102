@@ -33,7 +33,7 @@ MUTACOES = [
     ('cqc12_sem_convocar', '        exe::nationalteams_select_squads_for_fixture(this, p); // cqc12: the call-ups for the match', '        // mutacao: sem convocar', 'cqc_12 calls up'),
     ('cqc12_reservas_em_fevereiro', '    if is_today(exe::date_date_549f70((pt) as *mut [u16; 4], 1, 0, year, u32::MAX), today) // cqc12: 1º de janeiro', '    if is_today(exe::date_date_549f70((pt) as *mut [u16; 4], 1, 1, year, u32::MAX), today) // mutacao: 1o de fevereiro', 'cqc_12 redoes the reserves'),
     ('cqc12_vaga23_goleiro', '            c[i] = SQUAD_SLOTS_24_EXTRAS[i - 22]; // cqc12: the correction places', '            c[i] = 1; // mutacao: goleiro', 'cqc_12 correção do elenco de 23'),
-    ('cqc12_idade_do_sub21', '    if t == 2 && read_u8(j + staff::AGE) as i8 > 0x17 { // cqc12: the under-21 age', '    if t == 2 && read_u8(j + staff::AGE) as i8 > 0x15 { // mutacao: 21', 'cqc_12 squad lineup'),
+    ('cqc12_idade_do_sub21', '    if t == 2 && (j.age() as u8) as i8 > 0x17 { // cqc12: the under-21 age', '    if t == 2 && (j.age() as u8) as i8 > 0x15 { // mutacao: 21', 'cqc_12 squad lineup'),
     ('cqc12_convocado_sem_time', '            write_usize(j + staff::NATIONAL_JOB, elenco); // cqc12: the called-up player gets the team', '            // mutacao: sem o time', 'cqc_12 squad lineup'),
     ('cqc12_sem_marcar', '            mark_clubs_three_days(this, d); // cqc12: the clubs with a match around the date', '            // mutacao: sem marcar', 'cqc_12 marks the clubs'),
     ('cqc13_nove_olheiros', '        for _ in 0..10 { // cqc13: os 10 observadores', '        for _ in 0..9 { // mutacao: 9 observadores', 'cqc_13 human scouts'),

@@ -60,14 +60,14 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     let table = *(G_STAFF_TABLE as *const usize);
     for i in 0..0x10i32 {
         let club_txt = summary.add(0x820 + 0x78 * i as usize);
-        let p = table.wrapping_add((how_many - i - 1).wrapping_mul(0x6e) as usize);
-        if *((p + staff::CLASSIFICATION) as *const u8) != 1 {
+        let p = Staff(table.wrapping_add((how_many - i - 1).wrapping_mul(0x6e) as usize));
+        if p.classification() != 1 {
             *club_txt.sub(0x3c) = 0;
             continue;
         }
         exe::database_format_staff_name(p, (club_txt.sub(0x3c)) as *mut u8 as usize, 200, 1);
-        let club = Club(core::ptr::read_unaligned((p + staff::CLUB_JOB) as *const usize));
-        let nation_of = core::ptr::read_unaligned((p + staff::NATIONAL_JOB) as *const usize);
+        let club = Club(core::ptr::read_unaligned((p.addr() + staff::CLUB_JOB) as *const usize));
+        let nation_of = core::ptr::read_unaligned((p.addr() + staff::NATIONAL_JOB) as *const usize);
         if !club.is_null() && nation_of != 0 {
             translate(club_txt, 0x9c80f4, club.addr() + club::SHORT_NAME, nation_of + nation::SHORT_NAME);
         } else if !club.is_null() {

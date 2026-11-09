@@ -29,6 +29,18 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 3: the person (`Staff`)
+
+The full pattern in one batch: `tipar_registros.py staff` (532 variables in 479 functions), `--exe` (633 `.addr()`
+removed from `exe::` arguments), `--assinaturas Staff` (74 functions take `Staff`, 191 calls fixed by the compiler) and
+the new `--acessos MOD` mode over the variables already typed: a read narrower than the field is its low byte
+(little-endian, no side effect), so `read_i8(p + staff::AGE)` (a 2-byte field the original reads as a byte) becomes
+`(p.age() as i8)`; `read_i8_as_i32` becomes `(p.f() as i8 as i32)`; writes keep the exact width. Raw person accesses
+2,262 → 195. The `.addr()` outside the wrappers went up (1,700 → 2,875): the person is passed to many functions that
+take it as `usize` without reading a field (the residue batch propagates the type), and there are reads at unnamed
+offsets (`read_usize(p.addr() + 0x61)`). Two round-25 mutations with an alias inside the replacement (`remove`,
+`reputacao`) were fixed. Proof: 7cc445c2 ×2, detector equal, comparison 0; the changed mutations compile.
+
 ## Migration to typed records, batch 2: the club in signatures
 
 - The `Addr` trait (records.rs): an address in the game's memory, `usize` or a typed record pointer. The `exe::`

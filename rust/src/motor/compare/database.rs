@@ -372,32 +372,35 @@ pub(crate) unsafe extern "C" fn compare_club_add_disliked_staff(club: usize, per
 
 /// Comparer for `staff_add_favoured_staff`.
 pub(crate) unsafe extern "C" fn compare_staff_add_favoured_staff(person: usize, other: usize, force: u32) {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_FAVOURED_STAFF);
-    let pref = if person != 0 { read_usize(person + staff::STAFF_PREFERENCES) } else { 0 };
+    let pref = if !person.is_null() { person.staff_preferences() } else { 0 };
     let reg = preference_regions(if pref != 0 { pref + preferences::STAFF_FAVOURITE_STAFF1 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, other, force),
-        || crate::rng::without_counting(|| staff_add_favoured_staff(person, other, force)));
-    SCOREBOARD.record(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", person, other, force, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person.addr(), other, force),
+        || crate::rng::without_counting(|| staff_add_favoured_staff(person.addr(), other, force)));
+    SCOREBOARD.record(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", person.addr(), other, force, mo, mr));
 }
 
 /// Comparer for `staff_add_disliked_club`.
 pub(crate) unsafe extern "C" fn compare_staff_add_disliked_club(person: usize, club: usize, force: u32) {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_DISLIKED_CLUB);
-    let pref = if person != 0 { read_usize(person + staff::STAFF_PREFERENCES) } else { 0 };
+    let pref = if !person.is_null() { person.staff_preferences() } else { 0 };
     let reg = preference_regions(if pref != 0 { pref + 4 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, club, force),
-        || crate::rng::without_counting(|| staff_add_disliked_club(person, club, force)));
-    SCOREBOARD.record(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", person, club, force, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person.addr(), club, force),
+        || crate::rng::without_counting(|| staff_add_disliked_club(person.addr(), club, force)));
+    SCOREBOARD.record(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", person.addr(), club, force, mo, mr));
 }
 
 /// Comparer for `staff_fade_staff_relationships`.
 pub(crate) unsafe extern "C" fn compare_staff_fade_staff_relationships(person: usize) {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_FADE_STAFF_RELATIONSHIPS);
-    let pref = if person != 0 { read_usize(person + staff::STAFF_PREFERENCES) } else { 0 };
+    let pref = if !person.is_null() { person.staff_preferences() } else { 0 };
     let reg = preference_regions(if pref != 0 { pref + preferences::STAFF_FAVOURITE_STAFF1 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person),
-        || crate::rng::without_counting(|| staff_fade_staff_relationships(person)));
-    SCOREBOARD.record(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", person, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person.addr()),
+        || crate::rng::without_counting(|| staff_fade_staff_relationships(person.addr())));
+    SCOREBOARD.record(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", person.addr(), mo, mr));
 }
 
 /// Comparer for `staff_get_disliked_staff`.
@@ -672,7 +675,7 @@ pub(crate) unsafe extern "C" fn compare_staff_count_favoured_staff_at_club(perso
 /// Comparer for `staff_remove_favoured_club`.
 pub(crate) unsafe extern "C" fn compare_staff_remove_favoured_club(person: usize, club: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_FAVOURED_CLUB);
-    let pref = staff_preferences(person);
+    let pref = staff_preferences(Staff(person));
     if pref == 0 {
         return o(person, club); // writes nothing
     }
@@ -696,7 +699,7 @@ pub(crate) unsafe extern "C" fn compare_club_remove_favoured_staff(club: usize, 
 /// Comparer for `staff_remove_favoured_staff`.
 pub(crate) unsafe extern "C" fn compare_staff_remove_favoured_staff(person: usize, target: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_FAVOURED_STAFF);
-    let pref = staff_preferences(person);
+    let pref = staff_preferences(Staff(person));
     if pref == 0 {
         return o(person, target);
     }
@@ -707,13 +710,14 @@ pub(crate) unsafe extern "C" fn compare_staff_remove_favoured_staff(person: usiz
 
 /// Comparer for `staff_remove_disliked_staff`.
 pub(crate) unsafe extern "C" fn compare_staff_remove_disliked_staff(person: usize, target: usize) -> usize {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_DISLIKED_STAFF);
-    let pref = if person == 0 { 0 } else { core::ptr::read_unaligned((person + staff::STAFF_PREFERENCES) as *const usize) };
+    let pref = if person.is_null() { 0 } else { core::ptr::read_unaligned((person.addr() + staff::STAFF_PREFERENCES) as *const usize) };
     if pref == 0 {
-        return o(person, target); // writes nothing
+        return o(person.addr(), target); // writes nothing
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pref + preferences::STAFF_DISLIKED_STAFF1, 12)], || o(person, target), || staff_remove_disliked_staff(person, target));
-    SCOREBOARD.record(igual && r == n, || format!("staff_remove_disliked_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", person, target, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pref + preferences::STAFF_DISLIKED_STAFF1, 12)], || o(person.addr(), target), || staff_remove_disliked_staff(person.addr(), target));
+    SCOREBOARD.record(igual && r == n, || format!("staff_remove_disliked_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", person.addr(), target, r, n, mo, mr));
     r
 }
 
@@ -1018,20 +1022,21 @@ pub(crate) unsafe extern "C" fn compare_compare_staff_by_player_ability_desc(a: 
 /// fora das regiões); com gerente, a original roda depois de verdade a partir do mesmo estado.
 pub(crate) unsafe fn compare_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), person: usize,
                                            name: &'static str) {
-    let player = if person == 0 { 0 } else { core::ptr::read_unaligned((person + staff::PLAYER) as *const usize) };
+    let person = Staff(person);
+    let player = if person.is_null() { 0 } else { core::ptr::read_unaligned((person.addr() + staff::PLAYER) as *const usize) };
     if player == 0 {
-        return o(person); // does nothing: original only
+        return o(person.addr()); // does nothing: original only
     }
-    let regions = [(player, 70), (person + staff::DETERMINATION, 1)];
+    let regions = [(player, 70), (person.addr() + staff::DETERMINATION, 1)];
     let manager = *(G_TRAINING_MANAGER as *const usize);
     let before = crate::comparison::MemorySnapshot::read(&regions);
     *(G_TRAINING_MANAGER as *mut usize) = 0;
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(person), || rust(person));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(person.addr()), || rust(person.addr()));
     *(G_TRAINING_MANAGER as *mut usize) = manager;
-    SCOREBOARD.record(igual, || format!("{}({:x}) {:x?} x {:x?}", name, person, mo, mr));
+    SCOREBOARD.record(igual, || format!("{}({:x}) {:x?} x {:x?}", name, person.addr(), mo, mr));
     if manager != 0 {
         before.write_back();
-        o(person);
+        o(person.addr());
     }
 }
 
@@ -1314,24 +1319,26 @@ pub(crate) unsafe extern "C" fn compare_database_vector_to_non_player(not_player
 
 /// Comparer for `database_vector_to_player`.
 pub(crate) unsafe extern "C" fn compare_database_vector_to_player(player: usize, person: usize, array: usize) -> u32 {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_PLAYER);
     // the ATTRIBUTE_VECTOR_CELLS offsets are at +0x0f..+0x44
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(player + player_sheet::GOALKEEPER, 0x44 - 0x0f + 1), (person + staff::DETERMINATION, 1)],
-        || o(player, person, array), || database_vector_to_player(player, person, array));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(player + player_sheet::GOALKEEPER, 0x44 - 0x0f + 1), (person.addr() + staff::DETERMINATION, 1)],
+        || o(player, person.addr(), array), || database_vector_to_player(player, person.addr(), array));
     SCOREBOARD.record(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", player, r, n, mo, mr));
     r
 }
 
 /// Comparer for `staff_normalise_non_player_attributes`.
 pub(crate) unsafe extern "C" fn compare_staff_normalise_non_player_attributes(person: usize) {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_NON_PLAYER_ATTRIBUTES);
-    let nj = if person == 0 { 0 } else { core::ptr::read_unaligned((person + staff::NON_PLAYER) as *const usize) };
+    let nj = if person.is_null() { 0 } else { core::ptr::read_unaligned((person.addr() + staff::NON_PLAYER) as *const usize) };
     if nj == 0 {
-        return o(person); // does nothing: original only
+        return o(person.addr()); // does nothing: original only
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(nj + non_player::ATTACKING, 21)], || o(person),
-        || staff_normalise_non_player_attributes(person));
-    SCOREBOARD.record(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", person, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(nj + non_player::ATTACKING, 21)], || o(person.addr()),
+        || staff_normalise_non_player_attributes(person.addr()));
+    SCOREBOARD.record(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", person.addr(), mo, mr));
 }
 
 /// Comparer for `database_get_colour_family`.
@@ -1445,18 +1452,19 @@ pub(crate) unsafe extern "C" fn compare_club_get_english_name(club: usize) -> us
 
 /// Comparer for `staff_adjust_morale`.
 pub(crate) unsafe extern "C" fn compare_staff_adjust_morale(person: usize, delta: u32, limitar: u32) -> u32 {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_STAFF_ADJUST_MORALE);
     if delta as u8 == 0 {
-        let r = o(person, delta, limitar);
-        SCOREBOARD.record(r == 0, || format!("staff_adjust_morale({:x}, 0) original={}", person, r));
+        let r = o(person.addr(), delta, limitar);
+        SCOREBOARD.record(r == 0, || format!("staff_adjust_morale({:x}, 0) original={}", person.addr(), r));
         return r;
     }
     // rolls (0x90cfc0): the generator state goes back between the sides and the copy does not count the rolls
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((core::ptr::read_unaligned((person + staff::PLAYER) as *const usize) + 0x45, 1));
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, delta, limitar),
-        || crate::rng::without_counting(|| staff_adjust_morale(person, delta, limitar)));
-    SCOREBOARD.record(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", person, delta as u8 as i8, limitar, r, n, mo, mr));
+    reg.push((core::ptr::read_unaligned((person.addr() + staff::PLAYER) as *const usize) + 0x45, 1));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person.addr(), delta, limitar),
+        || crate::rng::without_counting(|| staff_adjust_morale(person.addr(), delta, limitar)));
+    SCOREBOARD.record(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", person.addr(), delta as u8 as i8, limitar, r, n, mo, mr));
     r
 }
 
@@ -1475,10 +1483,11 @@ pub(crate) unsafe extern "C" fn compare_database_non_player_to_attribute_vector(
 
 /// Comparer for `staff_set_squad_flags`.
 pub(crate) unsafe extern "C" fn compare_staff_set_squad_flags(person: usize, squad: u32) -> usize {
+    let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_STAFF_SET_SQUAD_FLAGS);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(person + staff::PLAYING_SQUAD, 1)], || o(person, squad),
-        || staff_set_squad_flags(person, squad));
-    SCOREBOARD.record(igual && r == n, || format!("staff_set_squad_flags({:x}, {:x}) {:x?} x {:x?}", person, squad as u8, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(person.addr() + staff::PLAYING_SQUAD, 1)], || o(person.addr(), squad),
+        || staff_set_squad_flags(person.addr(), squad));
+    SCOREBOARD.record(igual && r == n, || format!("staff_set_squad_flags({:x}, {:x}) {:x?} x {:x?}", person.addr(), squad as u8, mo, mr));
     r
 }
 

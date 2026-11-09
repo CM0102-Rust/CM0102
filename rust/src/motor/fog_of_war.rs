@@ -20,13 +20,14 @@ pub(crate) unsafe extern "C" fn chance_to_know(person: usize, level: i8) -> i32 
 /// vai a 3. Com ele e nivel abaixo de 3: c = 0x544410(observador, byte +0x17), sorteio(c) (byte);
 /// c < 15 e sorteio 0: nivel + 1; senao nivel 0 e sorteio < 6: 2; senao 3.
 pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, font: usize) {
+    let font = Staff(font);
     if person == 0 || *(person as *const i32) >= *(G_STAFF_COUNT as *const i32) {
         return;
     }
     let reg = (*(this as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9));
     let mut data = [0u8; 8];
     exe::date_operator_3d(reg + 1, data.as_mut_ptr() as usize, G_CURRENT_DATE);
-    let obs = if font == 0 { 0 } else { *((font + staff::NON_PLAYER) as *const usize) };
+    let obs = if font.is_null() { 0 } else { font.non_player() };
     let level = reg as *mut u8;
     if obs == 0 {
         *level = 3;

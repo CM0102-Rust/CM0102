@@ -295,9 +295,10 @@ pub(crate) unsafe extern "stdcall" fn compare_is_contract_staff_job(job: u32) ->
 ///
 /// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "stdcall" fn compare_staff_is_not_board_member(person: usize) -> u32 {
-    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_STAFF_IS_NOT_BOARD_MEMBER)(person);
-    let n = staff_is_not_board_member(person);
-    SCOREBOARD.record(r == n, || format!("staff_is_not_board_member(pessoa {}, cargo {}) original={} rust={}", read_usize(person), read_u8(person + staff::JOB_FOR_CLUB), r, n));
+    let person = Staff(person);
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_STAFF_IS_NOT_BOARD_MEMBER)(person.addr());
+    let n = staff_is_not_board_member(person.addr());
+    SCOREBOARD.record(r == n, || format!("staff_is_not_board_member(pessoa {}, cargo {}) original={} rust={}", read_usize(person.addr()), person.job_for_club(), r, n));
     r
 }
 
@@ -409,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_lower_match_mora
         return o(this, person, club, contract);
     }
     let before = read_u8_volatile(contract + contract::MORALE) as i8;
-    let plan = match_morale_drop(person, Club(club), contract);
+    let plan = match_morale_drop(Staff(person), Club(club), contract);
     // deleting a complaint (0x8674e0) recalculates the contract (0x867240), which may rewrite morale: with a complaint marked before
     // or a drop above 5 (the branches that always delete), original only
     if read_u8_volatile(contract + contract::GRIEVANCES) & 0x14 != 0 || plan.is_some_and(|m| m > 5) {
@@ -521,7 +522,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_staff_contract(this: usize, p
 /// Comparador: os lembretes e a entrada esperados antes da original; confere a conta e cada entrada nova.
 pub(crate) unsafe extern "thiscall" fn compare_add_decision_date(this: usize, person: usize, data: usize, slice: u32, kind: u32) {
     let n = read_usize(this + contract_manager_fields::DECISION_COUNT);
-    let (lembretes, k) = decision_reminder_dates(this, person, data, kind as u8);
+    let (lembretes, k) = decision_reminder_dates(this, Staff(person), data, kind as u8);
     let d = core::ptr::read_unaligned(data as *const [u8; 8]);
     let id = read_usize(person);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_ADD_DECISION_DATE)(this, person, data, slice, kind);

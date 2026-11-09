@@ -28,6 +28,18 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 3: a pessoa (`Staff`)
+
+O padrão completo numa leva: `tipar_registros.py staff` (532 variáveis em 479 funções), `--exe` (633 `.addr()` tirados
+dos argumentos `exe::`), `--assinaturas Staff` (74 funções recebem `Staff`, 191 chamadas ajustadas pelo compilador) e
+o modo novo `--acessos MOD` sobre as variáveis já tipadas: uma leitura mais estreita que o campo é o byte de baixo dele
+(little-endian, sem efeito colateral), então `read_i8(p + staff::AGE)` (campo de 2 bytes que o original lê como byte)
+vira `(p.age() as i8)`; `read_i8_as_i32` vira `(p.f() as i8 as i32)`; a escrita continua na largura exata. Acessos crus
+à pessoa 2.262 → 195. O `.addr()` fora dos invólucros subiu (1.700 → 2.875): a pessoa é passada a muitas funções que a
+recebem como `usize` sem ler campo dela (a leva dos resíduos propaga o tipo) e há leituras em deslocamentos sem nome
+(`read_usize(p.addr() + 0x61)`). Duas mutações da rodada 25 com apelido no meio do texto de troca (`remove`,
+`reputacao`) foram consertadas. Prova: 7cc445c2 ×2, detector igual, comparação 0; as mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 2: o clube nas assinaturas
 
 - O traço `Addr` (records.rs): um endereço na memória do jogo, `usize` ou um ponteiro de registro tipado. Os invólucros
