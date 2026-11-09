@@ -25,8 +25,6 @@ pub(crate) unsafe fn conmebol_liber_drawn_club(this: usize, k: usize) -> usize {
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e segue. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     if read_usize(this + league::ACTIVE) == 0 && full != 0 {
         let day = read_i16(this + 0xb6) as u16; // cqr10: the draw day
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
@@ -39,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
             if exe::league_create_fixtures(this) == 0 {
                 show_error_at(0x9a7de4, 0x36a);
             }
-            if sort(this, 0) == 0 {
+            if exe::league_sort_table(this, 0) == 0 {
                 show_error_at(0x9a7de4, 0x370);
             }
             for g in 0..7i32 {
@@ -52,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
             write_usize(this + league::ACTIVE, 1);
         }
     }
-    league(this, today, full)
+    exe::league_update_for_date(this, today, full)
 }
 
 // simplification: the clubs (shuffled), the tables, the matches and the league day do not run twice. Original only; the plan

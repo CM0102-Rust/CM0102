@@ -33,8 +33,7 @@ pub(crate) unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
         }
         if read_i32(no) == read_i32(p) {
             crate::comparison::branch("cqg_7 left the contest");
-            let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LLIST_REMOVE);
-            remove(read_usize(this), no);
+            exe::llist_remove(read_usize(this), no);
             return;
         }
         k += 1;

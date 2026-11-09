@@ -38,10 +38,9 @@ pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
     write_u8(this + league::RELEGATED_COUNT, 0);
     write_u8(this + 0x49, 7);
     core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut u16, 0xffff);
-    let construct: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut data = [0u32; 2];
     // simplification: the original pushes the year in ecx with the high 16 bits of the cup pointer; 0x549f70 reads the word
-    construct(&mut data, 0xa, 2, read_i16(this + league::YEAR) as u16 as u32, 5); // cqs8: the draw date
+    exe::date_date_549f70((&mut data) as *mut [u32; 2] as *mut [u16; 4], 0xa, 2, read_i16(this + league::YEAR) as u16 as u32, 5); // cqs8: the draw date
     core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
     crate::comparison::branch("cqs_8 euro rules");

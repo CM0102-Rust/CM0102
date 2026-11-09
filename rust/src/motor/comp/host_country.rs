@@ -115,7 +115,6 @@ pub(crate) const HOST_COUNTRY_TABLE: [(u16, u8, u32); 281] = [
 /// depois o dia da decisão de cada entrada anda um sorteio de −35 a +34 (0x90cfc0(70)); a entrada que não é padrão
 /// fixa (−3) e tem segunda ou terceira candidatura completa leva a caixa (linha 0x226) e perde as duas.
 pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
-    let definir: unsafe extern "thiscall" fn(*mut crate::date::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_SET);
     let mut d = crate::date::Data { day: 40, year: 1972, is_leap_year: 1 };
     for &(off, t, v) in HOST_COUNTRY_TABLE.iter() {
         let e = read_usize(this) + off as usize;
@@ -126,7 +125,7 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
             3 => write_u16(e, v as u16),
             4 => {
                 let a = HOST_DECISION_DATES[v as usize];
-                definir(&mut d, a[0], a[1], a[2], a[3]);
+                exe::date_set((&mut d) as *mut crate::date::Data as usize, a[0], a[1], a[2], (a[3]) as u32 as i32);
             }
             _ => {
                 let (ini, n, g, ano, step_towards, intervalo) = HOST_COUNTRY_LOOPS[v as usize];
@@ -143,14 +142,13 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
             }
         }
     }
-    let sortear: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let n = read_u16(this + 4) as i16;
     let mut k: i16 = 0;
     while k < n {
         let o = (k as i32 * 0x22) as usize;
         let p = read_usize(this) + o + 0x1f;
         crate::comparison::branch("cqo_3 day draw");
-        let r = sortear(0x46); // cqo3: the random draw of the decision day
+        let r = exe::utils_random((0x46) as u32 as i32); // cqo3: the random draw of the decision day
         write_u16(p, read_u16(p).wrapping_add((r - 0x23) as u16));
         let e = read_usize(this) + o;
         if *((e + 0x1e) as *const u8) != 0xfd && (read_usize(e + 0x12) as u32 != u32::MAX || read_usize(e + 0x1a) as u32 != u32::MAX) {
@@ -169,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
 /// years ahead ([0xae2c92] + 8), the Olympics ([0x9cf7a0]) and the 2006 World Cup in Germany ([0x9cf79c], 0x7d6,
 /// [0x9cf314]): with voting open (−1), news 4 (the bids: competition, year and the six nations); otherwise news 5 (the
 /// chosen bid: competition, year and its two hosts, the first one in the fixed default), built by `construct_news_item`/`set_news_field` and
-/// delivered to the managers of the competition's continent (table [0xae23d0], 0x6b bytes, +0x59; `send_to_continent_managers`) or to
+/// delivered to the managers of the competition's exe::news_send_to_continent_managers(table [0xae23d0], 0x6b bytes, +0x59; `send_to_continent_managers`) or to
 /// everyone (`send_to_all_managers`).
 /// Original: `HostCountry::post_host_news` (0x5faec0, host_country.cpp, thiscall, ret 4).
 ///
@@ -181,9 +179,6 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
 /// duas sedes dela, a primeira na padrão fixa), montadas por 0x77bbe0/0x785790 e entregues aos técnicos do continente
 /// da competição (tabela [0xae23d0], 0x6b bytes, +0x59; 0x786640) ou a todos (0x786780).
 pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize) {
-    let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let continent: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
-    let all: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
     crate::comparison::branch("cqo_3 hosts news");
     write_u32(list + 0xa, read_usize(list + 2) as u32);
     let mut it = exe::llist_get_next(list);
@@ -199,10 +194,10 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
             let p = n.as_mut_ptr() as usize;
             if k == -1 {
                 exe::new_newsitem(p, 4, 0);
-                given(p, 0, read_usize(read_usize(it)) as u32);
-                given(p, 1, read_u16(read_usize(it) + 4) as u32);
+                exe::newsitem_set_slot(p, (0) as u32 as i8, read_usize(read_usize(it)) as u32);
+                exe::newsitem_set_slot(p, (1) as u32 as i8, read_u16(read_usize(it) + 4) as u32);
                 for (i, off) in [6usize, 0xa, 0xe, 0x12, 0x16, 0x1a].iter().enumerate() {
-                    given(p, 2 + i as u32, read_usize(read_usize(it) + off) as u32);
+                    exe::newsitem_set_slot(p, (2 + i as u32) as u32 as i8, read_usize(read_usize(it) + off) as u32);
                 }
             } else {
                 exe::new_newsitem(p, 5, 0);
@@ -210,18 +205,18 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
                 if b == -3 {
                     b = 0;
                 }
-                given(p, 0, read_usize(read_usize(it)) as u32);
-                given(p, 1, read_u16(read_usize(it) + 4) as u32);
+                exe::newsitem_set_slot(p, (0) as u32 as i8, read_usize(read_usize(it)) as u32);
+                exe::newsitem_set_slot(p, (1) as u32 as i8, read_u16(read_usize(it) + 4) as u32);
                 let o = (b as i32 * 8) as usize;
-                given(p, 2, read_usize(read_usize(it).wrapping_add(o) + 6) as u32);
-                given(p, 3, read_usize(read_usize(it).wrapping_add(o) + 0xa) as u32);
+                exe::newsitem_set_slot(p, (2) as u32 as i8, read_usize(read_usize(it).wrapping_add(o) + 6) as u32);
+                exe::newsitem_set_slot(p, (3) as u32 as i8, read_usize(read_usize(it).wrapping_add(o) + 0xa) as u32);
             }
             let id = read_usize(read_usize(it));
             let c = read_usize(read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)) + 0x59);
             if c != 0 {
-                continent(read_usize(G_NEWS), p, c);
+                exe::news_send_to_continent_managers(read_usize(G_NEWS), p, c);
             } else {
-                all(read_usize(G_NEWS), p);
+                exe::news_send_to_all_managers(read_usize(G_NEWS), p);
             }
         }
         it = exe::llist_get_next(list);
@@ -406,7 +401,6 @@ pub(crate) unsafe fn first_entry_for_date(start: usize, n: i16, year: u16, day: 
 /// intervalo (+0x21) e, fora da padrão fixa, a votação fecha (−2); a tabela é reordenada (qsort 0x945333 com 0x5fb3f0).
 /// Por fim a notícia das entradas da lista (0x5faec0).
 pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, today: usize) {
-    let por: unsafe extern "thiscall" fn(usize, *const usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let data: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> *const [u16; 4] = core::mem::transmute(FN_DATE_DATE_549F70);
     let n = read_u16(this + 4) as i16;
     let start = read_u32(this) as usize;
@@ -432,7 +426,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             }
             if *k == 0xff {
                 crate::comparison::branch("cqj_3 voting open");
-                por(l, &p, 4);
+                exe::llist_add_tail(l, (&p) as *const usize as usize, 4);
             }
             p += 0x22;
         }
@@ -440,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
     let mut p = first_entry_for_date(start, n, year.wrapping_add(5), day);
     if p != 0 {
         while p <= end && compare_year_day(p, year.wrapping_add(5), day) == 0 {
-            por(l, &p, 4);
+            exe::llist_add_tail(l, (&p) as *const usize as usize, 4);
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xff || *k == 0xfe {
                 crate::comparison::branch("cqj_3 host drawn");

@@ -36,7 +36,7 @@ pub(crate) unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
 /// the human manager and recomputes each category rating.
 ///
 /// Without a manager and with a club without a human (`exe::human_manager_is_human_club` with 1, 1, 0, 0), or a national side club (`exe::database_is_national_team`):
-/// nothing. A null manager: the club's (+0xcf). The human's staff (`get_coach_assignments`, six 9-byte slots): (1) the slot whose
+/// nothing. A null manager: the club's (+0xcf). The human's exe::training_manager_get_coach_assignments(`get_coach_assignments`, six 9-byte slots): (1) the slot whose
 /// coach has no non-player sheet (+0x69) or is neither the assistant (`database_get_club_assistant`) nor one of the 5 coaches (`database_get_club_coaches`) is
 /// emptied; (2) the assistant and the coaches with a sheet that are not in the slots go into the first empty one with
 /// all five categories (0x01010101 and 1); (3) each flagged category gets its rating: 0 (goalkeepers, sheet +0x10)
@@ -65,8 +65,7 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
         return;
     }
     let manager = if tecnico == 0 { read_usize(club + club::MANAGER) } else { tecnico };
-    let staff: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
-    let t = staff(this, manager);
+    let t = exe::training_manager_get_coach_assignments(this, manager);
     let aux = exe::database_get_club_assistant(club);
     let mut tr = [0usize; 5];
     exe::database_get_club_coaches(club, tr.as_mut_ptr());

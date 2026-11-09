@@ -353,8 +353,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
         return show_error_at(0x9c4180, 0x35a);
     }
     crate::comparison::branch("cqs_6 trophy final");
-    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
-    sortear(f, 0); // cqs6: the draw of the final
+    exe::cup_draw_round(f, 0); // cqs6: the draw of the final
     exe::crt_free(l);
 }
 
@@ -404,16 +403,15 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     exe::crt_qsort(v, n as u32, 4, 0x4b07d0);
     let n = read_i16(this + cup::TEAM_COUNT) as i32;
     exe::crt_qsort(v + n as usize * 4, n as u32, 4, 0x4b07d0);
-    let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let a = read_usize(v);
     let b = read_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4);
     crate::comparison::branch("cqs_6 trophy standings");
     if read_i16(a + 0x80) > read_i16(b + 0x80) {
-        position(read_usize(this + 8), a, 1);
-        position(read_usize(this + 8), read_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4), 2);
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), a, 1);
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4), 2);
     } else {
-        position(read_usize(this + 8), a, 2);
-        position(read_usize(this + 8), read_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4), 1);
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), a, 2);
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4), 1);
     }
     for lado in 0..2u8 {
         let mut k: i16 = if lado == 0 { 1 } else { read_i16(this + cup::TEAM_COUNT).wrapping_add(1) };
@@ -429,7 +427,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
             while j < read_i16(read_usize(this + cup::ROUND_TABLE) + r as usize * 0x68 + 0x1a) {
                 let c = read_usize(v + k as i32 as usize * 4);
                 k = k.wrapping_add(1);
-                position(read_usize(this + 8), c, p as u32);
+                exe::comp_stats_set_club_final_position(read_usize(this + 8), c, p as u32);
                 pos = pos.wrapping_add(2);
                 j = j.wrapping_add(1);
             }

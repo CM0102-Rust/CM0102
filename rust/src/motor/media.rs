@@ -315,8 +315,7 @@ pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(player: usize, cl
     }
     let f = read_usize(player + staff::PLAYER);
     if f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x1f40 {
-        let all: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
-        all(read_usize(G_NEWS), n);
+        exe::news_send_to_all_managers(read_usize(G_NEWS), n);
     } else {
         for &d in dest.iter().take((nd as i8).max(0) as usize) {
             exe::news_send_to_club_manager(read_usize(G_NEWS), n, d);
@@ -1322,43 +1321,42 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
         return;
     }
     crate::comparison::branch("cqa_13 celebration news");
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut local = [0u32; 0x3a]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0xbe5, 0);
-    write(nt, 0, read_usize(p) as u32);
+    exe::newsitem_set_slot(nt, 0, read_usize(p) as u32);
     for k in 1..4usize {
-        write(nt, k as i8, read_usize(read_usize(p + staff::FIRST_NAME * k) + 0x33) as u32);
+        exe::newsitem_set_slot(nt, k as i8, read_usize(read_usize(p + staff::FIRST_NAME * k) + 0x33) as u32);
     }
-    write(nt, 4, read_usize(read_usize(p + staff::CLUB_JOB)) as u32);
-    write(nt, 5, friendly_random(2) as u32);
+    exe::newsitem_set_slot(nt, 4, read_usize(read_usize(p + staff::CLUB_JOB)) as u32);
+    exe::newsitem_set_slot(nt, 5, friendly_random(2) as u32);
     let v = exe::media_pick_outlet_type_for_person(p);
-    write(nt, 6, v);
+    exe::newsitem_set_slot(nt, 6, v);
     let nation = read_usize(club + club::NATION);
-    write(nt, 7, exe::punditlist_pick_random_pundit(read_usize(G_PUNDIT_LIST), club, v, if nation != 0 { read_i32(nation) } else { -1 }) as u32);
-    write(nt, 8, exe::formation_get_position_mask(read_usize(p + staff::PLAYER)) as i16 as i32 as u32);
-    write(nt, 9, kind as u8 as i8 as i32 as u32);
+    exe::newsitem_set_slot(nt, 7, exe::punditlist_pick_random_pundit(read_usize(G_PUNDIT_LIST), club, v, if nation != 0 { read_i32(nation) } else { -1 }) as u32);
+    exe::newsitem_set_slot(nt, 8, exe::formation_get_position_mask(read_usize(p + staff::PLAYER)) as i16 as i32 as u32);
+    exe::newsitem_set_slot(nt, 9, kind as u8 as i8 as i32 as u32);
     let mut r = 0u32;
     if exe::human_manager_is_human_club(read_usize(p + staff::CLUB_JOB), 0, 1, 0, 0) == 0 {
         r = exe::media_pick_ai_manager_response(this, read_usize(read_usize(p + staff::CLUB_JOB) + 0xcf), p, 0x82);
     }
-    write(nt, 10, r);
+    exe::newsitem_set_slot(nt, 10, r);
     let mut k: i8 = 0xb;
     if kind as u8 == 2 {
-        write(nt, 0xb, read_usize(porta_voz) as u32);
+        exe::newsitem_set_slot(nt, 0xb, read_usize(porta_voz) as u32);
         for j in 1..4usize {
-            write(nt, 0xb + j as i8, read_usize(read_usize(porta_voz + 4 * j) + 0x33) as u32);
+            exe::newsitem_set_slot(nt, 0xb + j as i8, read_usize(read_usize(porta_voz + 4 * j) + 0x33) as u32);
         }
         k = 0xf;
     }
-    write(nt, k, (read_i16(club + club::REPUTATION) > 0x1c52) as u32);
+    exe::newsitem_set_slot(nt, k, (read_i16(club + club::REPUTATION) > 0x1c52) as u32);
     let t = read_usize(read_usize(p + staff::CLUB_JOB) + 0xcf);
-    write(nt, k + 1, read_usize(t) as u32);
+    exe::newsitem_set_slot(nt, k + 1, read_usize(t) as u32);
     for j in 1..4usize {
-        write(nt, k + 1 + j as i8, read_usize(read_usize(t + 4 * j) + 0x33) as u32);
+        exe::newsitem_set_slot(nt, k + 1 + j as i8, read_usize(read_usize(t + 4 * j) + 0x33) as u32);
     }
     // simplification: the original pushes the index in a dword with uninitialized upper bytes; 0x785790 reads the char
-    write(nt, k + 5, a as u8 as i8 as i32 as u32);
+    exe::newsitem_set_slot(nt, k + 5, a as u8 as i8 as i32 as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), nt, read_usize(p + staff::CLUB_JOB));
 }
 
@@ -1387,28 +1385,27 @@ pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, old
         return;
     }
     crate::comparison::branch("cqa_13 unsettling news");
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut local = [0u32; 0x3a];
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0xbe4, 0);
     let mut k: i8 = 0;
     for quem in [read_usize(old + club::MANAGER), comp, p] {
-        write(nt, k, read_usize(quem) as u32);
+        exe::newsitem_set_slot(nt, k, read_usize(quem) as u32);
         for j in 1..4usize {
-            write(nt, k + j as i8, read_usize(read_usize(quem + 4 * j) + 0x33) as u32);
+            exe::newsitem_set_slot(nt, k + j as i8, read_usize(read_usize(quem + 4 * j) + 0x33) as u32);
         }
         k += 4;
     }
-    write(nt, 0xc, read_usize(old) as u32);
-    write(nt, 0xd, read_usize(new) as u32);
+    exe::newsitem_set_slot(nt, 0xc, read_usize(old) as u32);
+    exe::newsitem_set_slot(nt, 0xd, read_usize(new) as u32);
     let r = friendly_random(5);
     let s = if read_i8_as_i32(comp + staff::PROFESSIONALISM) > r + 10 { friendly_random(2) } else { friendly_random(2) + 2 };
-    write(nt, 0xe, s as u32);
+    exe::newsitem_set_slot(nt, 0xe, s as u32);
     let v = exe::media_pick_outlet_type_for_club(old);
-    write(nt, 0xf, v);
+    exe::newsitem_set_slot(nt, 0xf, v);
     let nation = read_usize(old + club::NATION);
-    write(nt, 0x10, exe::punditlist_pick_random_pundit(read_usize(G_PUNDIT_LIST), old, v, if nation != 0 { read_i32(nation) } else { -1 }) as u32);
-    write(nt, 0x11, 2);
+    exe::newsitem_set_slot(nt, 0x10, exe::punditlist_pick_random_pundit(read_usize(G_PUNDIT_LIST), old, v, if nation != 0 { read_i32(nation) } else { -1 }) as u32);
+    exe::newsitem_set_slot(nt, 0x11, 2);
     exe::news_send_to_club_manager(read_usize(G_NEWS), nt, old);
 }
 
@@ -2228,8 +2225,6 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
 /// clube (+0x38) e o gênero (+0x52), põe na `saida` (0x4ae660) e liga o nome ao clube (0x4ae8a0, tipo 0x7d5).
 pub(crate) unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: usize, news: usize, body: u32, out: usize) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let by_text: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_TEXT_SET_STRING);
-    let ligar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_TEXT_ADD_LINK);
     crate::comparison::branch("cpn_3 financial crisis text");
     let id = (exe::newsitem_get_slot(news, 0) as i32);
     let severity = (exe::newsitem_get_slot(news, 1) as i32);
@@ -2251,8 +2246,8 @@ pub(crate) unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: 
         0xa43528 // "Financial trouble at ..."
     };
     format(0xde1f64, template, gender, gender, name);
-    by_text(out, 0xde1f64);
-    ligar(out, name, 0x7d5, club);
+    exe::text_set_string(out, (0xde1f64) as usize as *const u8);
+    exe::text_add_link(out, (name) as usize as *const u8, 0x7d5, club);
 }
 
 /// True if date a is before date b (year word unsigned, then day word signed).
@@ -2356,7 +2351,6 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
     if read_usize(this) == 0 {
         return;
     }
-    let date: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let mut i = 0i32;
     while i < read_usize(this + media_fields::STORY_LOG_COUNT) as i32 {
         let r = read_usize(this).wrapping_add((i as usize).wrapping_mul(0x17));
@@ -2368,7 +2362,7 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
             100 // the days of the other stories
         };
         let mut local = [0u8; 8];
-        let limit = date(G_CURRENT_DATE, &mut local, days);
+        let limit = exe::date_sub_days(G_CURRENT_DATE, (&mut local) as *mut [u8; 8] as usize, days);
         if media_date_before(r, limit) {
             let n = read_usize(this + media_fields::STORY_LOG_COUNT);
             let last = read_usize(this).wrapping_add(n.wrapping_mul(0x17)).wrapping_sub(0x17);
@@ -2729,21 +2723,20 @@ pub(crate) unsafe extern "stdcall" fn media_queue_player_apology_news(player: us
         return;
     }
     crate::comparison::branch("media_queue_player_apology_news");
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0xbdb, 0);
-    write(n, 0, read_i32(player) as u32);
-    write(n, 1, read_i32(read_i32(player + staff::FIRST_NAME) as usize + 0x33) as u32);
-    write(n, 2, read_i32(read_i32(player + staff::SECOND_NAME) as usize + 0x33) as u32);
+    exe::newsitem_set_slot(n, 0, read_i32(player) as u32);
+    exe::newsitem_set_slot(n, 1, read_i32(read_i32(player + staff::FIRST_NAME) as usize + 0x33) as u32);
+    exe::newsitem_set_slot(n, 2, read_i32(read_i32(player + staff::SECOND_NAME) as usize + 0x33) as u32);
     let third = read_i32(player + staff::COMMON_NAME) as usize;
-    write(n, 3, if third == 0 { u32::MAX } else { read_i32(third + 0x33) as u32 });
-    write(n, 4, read_i32(club) as u32);
+    exe::newsitem_set_slot(n, 3, if third == 0 { u32::MAX } else { read_i32(third + 0x33) as u32 });
+    exe::newsitem_set_slot(n, 4, read_i32(club) as u32);
     let h = historia as i32;
-    write(n, 5, h as u32);
-    write(n, 6, 0);
+    exe::newsitem_set_slot(n, 5, h as u32);
+    exe::newsitem_set_slot(n, 6, 0);
     let v = if (h as u32) <= 0x23 && *((0x72bd2c + h as usize) as *const u8) == 0 { exe::utils_random(4) } else { 0 };
-    write(n, 7, v as u32);
+    exe::newsitem_set_slot(n, 7, v as u32);
     exe::news_send_to_club_manager(read_i32(G_NEWS) as usize, n, club);
 }
 
@@ -3281,17 +3274,15 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
     crate::comparison::branch("cpk_6 financial trouble");
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     exe::new_newsitem(n, 0x1790, 0);
-    write(n, 0, read_usize(club) as u32);
-    write(n, 1, read_i16(club + club::REPUTATION) as i32 as u32);
+    exe::newsitem_set_slot(n, 0, read_usize(club) as u32);
+    exe::newsitem_set_slot(n, 1, read_i16(club + club::REPUTATION) as i32 as u32);
     let v = exe::utils_random(2); // the news item’s random roll
-    write(n, 2, v as u32);
+    exe::newsitem_set_slot(n, 2, v as u32);
     let news = read_usize(G_NEWS);
     let division = read_usize(club + club::DIVISION);
     if read_i16(club + club::REPUTATION) >= 9000 && division != 0 && read_i16(division + competition::REPUTATION) > 12 {
-        let all: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
-        all(news, n);
+        exe::news_send_to_all_managers(news, n);
     } else {
         exe::news_send_to_nation_managers(news, n, read_usize(club + club::NATION));
     }
@@ -3390,32 +3381,31 @@ pub(crate) unsafe extern "thiscall" fn queue_manager_fa_complaint_story(this: us
         return;
     }
     crate::comparison::branch("cpz_10 news of the complaint to the federation");
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0x178e, 0);
-    write(nt, 0, read_u32(club));
+    exe::newsitem_set_slot(nt, 0, read_u32(club));
     let manager = read_usize(club + club::MANAGER);
     if manager != 0 {
-        write(nt, 1, read_u32(manager));
-        write(nt, 2, read_u32(read_usize(manager + staff::FIRST_NAME) + 0x33));
-        write(nt, 3, read_u32(read_usize(manager + staff::SECOND_NAME) + 0x33));
-        write(nt, 4, read_u32(read_usize(manager + staff::COMMON_NAME) + 0x33));
+        exe::newsitem_set_slot(nt, 1, read_u32(manager));
+        exe::newsitem_set_slot(nt, 2, read_u32(read_usize(manager + staff::FIRST_NAME) + 0x33));
+        exe::newsitem_set_slot(nt, 3, read_u32(read_usize(manager + staff::SECOND_NAME) + 0x33));
+        exe::newsitem_set_slot(nt, 4, read_u32(read_usize(manager + staff::COMMON_NAME) + 0x33));
     } else {
         for k in 1..5 {
-            write(nt, k, u32::MAX);
+            exe::newsitem_set_slot(nt, k, u32::MAX);
         }
     }
-    write(nt, 5, kind as i8 as u32);
-    write(nt, 6, read_u32(person));
-    write(nt, 7, read_u32(read_usize(person + staff::FIRST_NAME) + 0x33));
-    write(nt, 8, read_u32(read_usize(person + staff::SECOND_NAME) + 0x33));
-    write(nt, 9, read_u32(read_usize(person + staff::COMMON_NAME) + 0x33));
-    write(nt, 0xa, a as i8 as u32);
-    write(nt, 0xb, b as i16 as u32);
+    exe::newsitem_set_slot(nt, 5, kind as i8 as u32);
+    exe::newsitem_set_slot(nt, 6, read_u32(person));
+    exe::newsitem_set_slot(nt, 7, read_u32(read_usize(person + staff::FIRST_NAME) + 0x33));
+    exe::newsitem_set_slot(nt, 8, read_u32(read_usize(person + staff::SECOND_NAME) + 0x33));
+    exe::newsitem_set_slot(nt, 9, read_u32(read_usize(person + staff::COMMON_NAME) + 0x33));
+    exe::newsitem_set_slot(nt, 0xa, a as i8 as u32);
+    exe::newsitem_set_slot(nt, 0xb, b as i16 as u32);
     let nation = read_usize(club + club::NATION);
-    write(nt, 0xc, if nation != 0 { read_u32(nation) } else { u32::MAX });
-    write(nt, 0xd, c as i8 as u32);
+    exe::newsitem_set_slot(nt, 0xc, if nation != 0 { read_u32(nation) } else { u32::MAX });
+    exe::newsitem_set_slot(nt, 0xd, c as i8 as u32);
     let nation = read_usize(club + club::NATION);
     if nation != 0 && read_i16_as_i32(club + club::REPUTATION) > 0x128e {
         exe::news_send_to_nation_managers(read_usize(G_NEWS), nt, nation);

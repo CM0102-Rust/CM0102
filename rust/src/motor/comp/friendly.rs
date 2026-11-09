@@ -29,16 +29,15 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
     let comp = read_usize(game + fixture::COMPETITION);
     if comp == read_usize(this + 4) {
         crate::comparison::branch("cqg_10 cancelled friendly news");
-        let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
         // 0x77bbe0: push 0; push 8; lea ecx -> thiscall; 0x785790: push v; push k; lea ecx -> thiscall, ret 8; 0x7861e0:
         // push club; push &news; mov ecx, [0xb7431c] -> thiscall, ret 8
         let mut news = [0u32; 0x38];
         let nt = news.as_mut_ptr() as usize;
         exe::new_newsitem(nt, 8, 0);
-        write(nt, 0, read_usize(game + fixture::HOME_CLUB_ID) as u32);
-        write(nt, 1, read_usize(game + fixture::AWAY_CLUB_ID) as u32);
-        write(nt, 2, *((game + fixture::DAY) as *const u16) as u32);
-        write(nt, 3, *((game + fixture::YEAR) as *const u16) as u32);
+        exe::newsitem_set_slot(nt, (0) as u32 as i8, read_usize(game + fixture::HOME_CLUB_ID) as u32);
+        exe::newsitem_set_slot(nt, (1) as u32 as i8, read_usize(game + fixture::AWAY_CLUB_ID) as u32);
+        exe::newsitem_set_slot(nt, (2) as u32 as i8, *((game + fixture::DAY) as *const u16) as u32);
+        exe::newsitem_set_slot(nt, (3) as u32 as i8, *((game + fixture::YEAR) as *const u16) as u32);
         let m = read_usize(game + fixture::HOME_CLUB);
         if who != m {
             exe::news_send_to_club_manager(read_usize(G_NEWS), nt, m);
@@ -52,9 +51,8 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
         let tournament = (this + friendly::TOURNAMENT_SLOTS).wrapping_add((k * 0x69) as usize);
         if read_usize(tournament) != 0 && tournament != 0 {
             crate::comparison::branch("cqg_10 tournament cancelled");
-            let cancelar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_FRIENDLY_CANCEL_TOURNAMENT);
             // 0x5c8260: push 0; push torneio; mov ecx, this -> thiscall, ret 8
-            cancelar(this, tournament, 0);
+            exe::friendly_cancel_tournament(this, tournament, 0);
         }
     }
     if read_usize(game + fixture::COMPETITION) == read_usize(this + 4) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
@@ -73,9 +71,8 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
         if exe::database_is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 {
             exe::friendly_remove_national_fixture(this, game);
         } else {
-            let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
             crate::comparison::branch("cqg_10 friendly outside the calendar");
-            remove(read_usize(G_FIXTURE_MANAGER), game); // cqg10: the friendly leaves the calendar
+            exe::fixture_manager_remove_fixture(read_usize(G_FIXTURE_MANAGER), game); // cqg10: the friendly leaves the calendar
         }
     }
 }
@@ -94,7 +91,6 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
 /// véspera nas duas pontas) sai do calendário (0x5abc30). Depois o próprio jogo sai.
 pub(crate) unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: usize, game: usize) {
     let _ = this;
-    let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
     // 0x68d020 / 0x68d040 / 0x68d1b0: lea ecx, local -> thiscall; 0x5abc30: push match; mov ecx, [0xae2a58] -> thiscall,
     // ret 4; 0x53b4f0: push nation; add esp, 4 -> cdecl; 0x549ef0: push +0x28; push +0x2a; lea ecx -> thiscall, ret 8;
     // 0x54c8e0: push 1; push &output; lea ecx -> thiscall, ret 8; 0x417c10: push source; push &output; lea ecx ->
@@ -113,26 +109,21 @@ pub(crate) unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: us
     if who != 0 && read_usize(who) as i32 != -1 {
         crate::comparison::branch("cqg_10 national team match the day before");
         let id = read_usize(who) as u32;
-        let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-        let minus: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-        let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-        let find: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, i32, i32, i32) -> i16 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
-        let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
         let (mut d0, mut d1, mut d2) = ([0u8; 8], [0u8; 8], [0u8; 8]);
         let (p0, p1, p2) = (d0.as_mut_ptr() as usize, d1.as_mut_ptr() as usize, d2.as_mut_ptr() as usize);
-        data_new(p0, *((game + fixture::DAY) as *const u16) as u32, *((game + fixture::YEAR) as *const u16) as u32);
-        let v = minus(p0, p1, 1); // cqg10: a véspera
-        copy(p0, p2, v);
+        exe::new_date(p0, *((game + fixture::DAY) as *const u16) as u32, *((game + fixture::YEAR) as *const u16) as u32);
+        let v = exe::date_sub_days(p0, p1, 1); // cqg10: a véspera
+        exe::date_operator_3d(p0, p2, v);
         let a = read_usize(p0) as u32;
         let b = core::ptr::read_unaligned((p0 + 2) as *const u32);
-        find(read_usize(G_FIXTURE_MANAGER), a, b, a, b, id, l, -1, -2, -1);
+        (exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), a, b, a, b, id, l, (-1) as i32 as u32, (-2) as i32 as u32, (-1) as i32 as u32) as i16);
         core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
-        let item = next(l);
+        let item = exe::llist_get_next(l);
         if item != 0 {
-            remove(read_usize(G_FIXTURE_MANAGER), item);
+            exe::fixture_manager_remove_fixture(read_usize(G_FIXTURE_MANAGER), item);
         }
     }
-    remove(read_usize(G_FIXTURE_MANAGER), game);
+    exe::fixture_manager_remove_fixture(read_usize(G_FIXTURE_MANAGER), game);
     exe::drop_llist(l);
 }
 
@@ -163,29 +154,24 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
         show_error_at(0x9cd0a0, 0x10ad);
         return;
     }
-    let minus: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let manager_manager_remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LLIST_REMOVE);
     // 0x54c8e0 / 0x54c5b0: push n; push &output; mov ecx, date -> thiscall, ret 8; 0x68d020 / 0x68d040 / 0x68d1b0: lea ecx
     // (ou mov ecx, lista) -> thiscall; 0x68d1f0: push item; mov ecx, [this+0x34d0] -> thiscall, ret 4
     let mut d7 = [0u32; 2];
-    let week = minus(G_CURRENT_DATE, d7.as_mut_ptr() as usize, 7);
+    let week = exe::date_sub_days(G_CURRENT_DATE, d7.as_mut_ptr() as usize, 7);
     let (dia7, ano7) = (read_i16(week), read_i16(week + 2) as u16);
     let start = tournament + tournament_slot::START_DATE;
     let (dia_i, ano_i) = (read_i16(start), read_i16(tournament + 6) as u16);
     if ano7 < ano_i || (ano7 == ano_i && dia7 < dia_i) {
         crate::comparison::branch("cqg_10 cancelled tournament news");
-        let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
         // 0x77bbe0: push 0; push 0xb; lea ecx -> thiscall; 0x785790: push v; push k; lea ecx -> thiscall, ret 8;
         // 0x7861e0: push club; push &news; mov ecx, [0xb7431c] -> thiscall, ret 8
         let mut news = [0u32; 0x38];
         let nt = news.as_mut_ptr() as usize;
         exe::new_newsitem(nt, 0xb, 0);
         let owner = read_usize(tournament);
-        write(nt, 0, read_usize(owner) as u32);
-        write(nt, 1, read_i16(start) as i32 as u32);
-        write(nt, 2, *((tournament + 6) as *const u16) as u32);
+        exe::newsitem_set_slot(nt, (0) as u32 as i8, read_usize(owner) as u32);
+        exe::newsitem_set_slot(nt, (1) as u32 as i8, read_i16(start) as i32 as u32);
+        exe::newsitem_set_slot(nt, (2) as u32 as i8, *((tournament + 6) as *const u16) as u32);
         for k in 0..4usize {
             let c = read_usize(tournament + tournament_slot::INVITED_CLUBS + k * 4);
             if c == 0 {
@@ -203,40 +189,36 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
     let pendentes = read_usize(this + friendly::PENDING_TOURNAMENT_LIST);
     if pendentes != 0 {
         core::ptr::write_unaligned((pendentes + llist::CURSOR) as *mut usize, read_usize(pendentes + llist::HEAD));
-        let mut item = next(read_usize(this + friendly::PENDING_TOURNAMENT_LIST));
+        let mut item = exe::llist_get_next(read_usize(this + friendly::PENDING_TOURNAMENT_LIST));
         while item != 0 {
             if tournament == read_usize(item) {
-                manager_manager_remove(read_usize(this + friendly::PENDING_TOURNAMENT_LIST), item);
+                exe::llist_remove(read_usize(this + friendly::PENDING_TOURNAMENT_LIST), item);
                 let p = read_usize(this + friendly::PENDING_TOURNAMENT_LIST);
                 core::ptr::write_unaligned((p + llist::CURSOR) as *mut usize, read_usize(p + llist::HEAD));
             }
-            item = next(read_usize(this + friendly::PENDING_TOURNAMENT_LIST));
+            item = exe::llist_get_next(read_usize(this + friendly::PENDING_TOURNAMENT_LIST));
         }
     }
     let (mut da, mut db) = ([0u8; 8], [0u8; 8]);
     let (pa, pb) = (da.as_mut_ptr() as usize, db.as_mut_ptr() as usize);
-    minus(start, pa, 7);
-    more(start, pb, 0xa);
+    exe::date_sub_days(start, pa, 7);
+    exe::date_add_days(start, pb, 0xa);
     let mut list = [0u8; 16];
     let l = list.as_mut_ptr() as usize;
     exe::new_llist(l);
     let competition = read_usize(tournament + tournament_slot::COMPETITION);
     if competition != 0 {
         crate::comparison::branch("cqg_10 tournament competition undone");
-        let find: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, i32, usize, u32, i32, i32) -> i16 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
-        let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-        let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
         // 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24; 0x549ef0: push +0x28; push +0x2a; lea ecx ->
         // thiscall, ret 8; 0x5ac7a0 / 0x5abc30 / 0x5ab230: push match; mov ecx, [0xae2a58] -> thiscall, ret 4
         let id_comp = read_usize(read_usize(competition + 4)) as u32;
-        find(read_usize(G_FIXTURE_MANAGER), read_usize(pa) as u32, core::ptr::read_unaligned((pa + 2) as *const u32), read_usize(pb) as u32,
-            core::ptr::read_unaligned((pb + 2) as *const u32), -1, l, id_comp, -2, -1);
+        (exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), read_usize(pa) as u32, core::ptr::read_unaligned((pa + 2) as *const u32), read_usize(pb) as u32, core::ptr::read_unaligned((pb + 2) as *const u32), (-1) as i32 as u32, l, id_comp, (-2) as i32 as u32, (-1) as i32 as u32) as i16);
         core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
-        let mut j = next(l);
+        let mut j = exe::llist_get_next(l);
         while j != 0 {
             let mut d = [0u8; 8];
             let pd = d.as_mut_ptr() as usize;
-            data_new(pd, *((j + fixture::DAY) as *const u16) as u32, *((j + fixture::YEAR) as *const u16) as u32);
+            exe::new_date(pd, *((j + fixture::DAY) as *const u16) as u32, *((j + fixture::YEAR) as *const u16) as u32);
             if read_i16(G_CURRENT_DATE_YEAR) == read_i16(pd + 2) && read_i16(G_CURRENT_DATE) == read_i16(pd) {
                 let r = exe::fixture_manager_find_stored_fixture(read_usize(G_FIXTURE_MANAGER), j);
                 if r != 0 {
@@ -245,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
                     core::ptr::write_unaligned(r as *mut usize, read_usize(KEY_CLUB_COMP_FRIENDLY));
                 }
             } else {
-                remove(read_usize(G_FIXTURE_MANAGER), j);
+                exe::fixture_manager_remove_fixture(read_usize(G_FIXTURE_MANAGER), j);
                 if read_u8(j + fixture::HOME_GOALS) != 0xff {
                     *((j + fixture::STAGE_INDEX) as *mut u8) = 0xff;
                     core::ptr::write_unaligned((j + fixture::COMPETITION) as *mut usize, read_usize(this + 4));
@@ -253,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
                     exe::fixture_manager_insert_fixture(read_usize(G_FIXTURE_MANAGER), j);
                 }
             }
-            j = next(l);
+            j = exe::llist_get_next(l);
         }
         let c = read_usize(tournament + tournament_slot::COMPETITION);
         if c != 0 {
@@ -385,13 +367,12 @@ pub(crate) unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, 
             e.por(b as usize, a);
         }
         None => {
-            let por: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
             *((usadas.wrapping_add(a as usize)) as *mut u8) = 1;
             crate::comparison::branch("cqc_11 nations with a match");
             *((usadas.wrapping_add(b as usize)) as *mut u8) = 1; // cqc11: the nations with a match near the date
             let (va, vb) = (a, b);
-            por(nation_friendly_list(this, a as usize), &vb as *const u32 as usize, 4);
-            por(nation_friendly_list(this, b as usize), &va as *const u32 as usize, 4);
+            exe::llist_add_tail(nation_friendly_list(this, a as usize), &vb as *const u32 as usize, 4);
+            exe::llist_add_tail(nation_friendly_list(this, b as usize), &va as *const u32 as usize, 4);
         }
     }
 }
@@ -411,12 +392,11 @@ pub(crate) unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, 
 /// fora, depois o contrário; 0x68d0d0 com 4). No ensaio, nada se grava fora das datas estáticas (o cursor das listas
 /// do calendário não se mexe).
 pub(crate) unsafe fn link_nations_near_date(this: usize, datas: usize, usadas: usize, mut ens: Option<&mut FriendlyComparerTrial>) {
-    let minus: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let list_of: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
     let (mut x, mut y, mut t, mut u) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
     let (px, py, pt, pu) = (x.as_mut_ptr() as usize, y.as_mut_ptr() as usize, t.as_mut_ptr() as usize, u.as_mut_ptr() as usize);
     let data = datas + 3;
-    exe::date_operator_3d(px, pu, minus(data, pt, 4)); // a primeira data: 4 dias antes
+    exe::date_operator_3d(px, pu, exe::date_sub_days(data, pt, 4)); // a primeira data: 4 dias antes
     exe::date_operator_3d(py, pu, exe::date_add_days(data, pt, 4)); // the last one: 4 days later
     while read_u16(py + 2) > read_u16(px + 2) || (read_u16(py + 2) == read_u16(px + 2) && read_i16(py) >= read_i16(px)) {
         for fatia in 0u32..3 {
@@ -504,7 +484,6 @@ pub(crate) unsafe fn is_african_excluded(datas: usize, n: usize) -> bool {
 pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas: usize, mut ens: Option<&mut FriendlyComparerTrial>, i0: i32) {
     let sortear: unsafe extern "C" fn(i32) -> i32 =
         if ens.is_some() { tape_random } else { core::mem::transmute(FN_UTILS_RANDOM) };
-    let por: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     // the random rolls: push n; add esp, 4 -> cdecl; 0x53b3d0: push; add esp, 4 -> cdecl; 0x5cc3e0, 0x5c6f00, 0x5c5f40 and
     // 0x68d0d0: mov ecx, esi (ou a lista) -> thiscall
     let how_many = n as i16 as i32;
@@ -597,8 +576,8 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
                                             exe::friendly_process_friendly_reply(this, m, 1);
                                             *((usadas.wrapping_add(idb)) as *mut u8) = 1;
                                             *((usadas.wrapping_add(first_leg)) as *mut u8) = 1; // cqc11: as duas usadas
-                                            por(nation_friendly_list(this, i as usize), b, 4);
-                                            por(nation_friendly_list(this, j as usize), a, 4);
+                                            exe::llist_add_tail(nation_friendly_list(this, i as usize), b, 4);
+                                            exe::llist_add_tail(nation_friendly_list(this, j as usize), a, 4);
                                         }
                                     }
                                 }
@@ -1059,21 +1038,18 @@ pub(crate) unsafe fn is_after_today(a: usize) -> bool {
 /// mandante; sem adversário ou com o amistoso marcado, a faixa × 0,8 (no mínimo 1). No fim, o qsort do plano pela data
 /// (0x945333: 4 pushes; add esp, 0x10 -> cdecl, pela 0x778e90).
 pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries: usize, ordenados: usize, count: u32) {
-    let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if read_usize(this + friendly::PLANNED_FRIENDLIES) != 0 {
         exe::crt_free(read_usize(this + friendly::PLANNED_FRIENDLIES));
     }
     *((this + friendly::PLANNED_CAPACITY) as *mut i32) = 100;
     *((this + friendly::PLANNED_COUNT) as *mut i32) = 0;
     *((this + friendly::PLANNED_NEXT_INDEX) as *mut i32) = 0;
-    let p = malloc(0x7d0);
+    let p = exe::crt_malloc(0x7d0);
     *((this + friendly::PLANNED_FRIENDLIES) as *mut usize) = p;
     if p == 0 {
         show_error_at(0x9cd0a0, 0x6f1);
         return;
     }
-    let minus: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_WEEKS);
-    let search: unsafe extern "C" fn(*const usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     for k in 0..0x23usize {
         let league = G_LEAGUE_TABLE + k * 0x48;
@@ -1085,7 +1061,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
             continue;
         }
         let mut d = [0u8; 8];
-        let r = minus(league + 0x39, &mut d, 0x34);
+        let r = exe::date_sub_weeks(league + 0x39, &mut d, 0x34);
         if is_after_today(r) {
             continue;
         }
@@ -1094,7 +1070,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
         key[5] = 0xff;
         key[6..10].copy_from_slice(&read_i32(nation).to_le_bytes());
         let pchave = key.as_ptr() as usize;
-        let mut q = search(&pchave, ordenados, count, 4, 0x5c5290);
+        let mut q = exe::crt_bsearch((&pchave) as *const usize as usize, ordenados, count, 4, 0x5c5290);
         if q == 0 {
             continue;
         }
@@ -1152,8 +1128,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
             }
         }
     }
-    let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    qsort(read_usize(this + friendly::PLANNED_FRIENDLIES), read_i32(this + friendly::PLANNED_COUNT), 0x14, 0x778e90);
+    exe::crt_qsort(read_usize(this + friendly::PLANNED_FRIENDLIES), (read_i32(this + friendly::PLANNED_COUNT)) as i32 as u32, 0x14, 0x778e90);
 }
 
 /// First of the 127 tournament slots (0x69 bytes from +0xb1) with no host (+0), or 0.
@@ -1186,9 +1161,8 @@ pub(crate) unsafe extern "thiscall" fn add_tournament(this: usize, host: usize, 
     *((t + 0xd) as *mut u8) = a as u8;
     core::ptr::write_unaligned(t as *mut usize, host);
     *((t + 0xe) as *mut u8) = b as u8;
-    let copy: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut tmp = [0u8; 8];
-    copy(t + tournament_slot::START_DATE, &mut tmp, start);
+    exe::date_operator_3d(t + tournament_slot::START_DATE, (&mut tmp) as *mut [u8; 8] as usize, start);
     core::ptr::write_unaligned((t + 0x11) as *mut u16, d as u16);
     core::ptr::write_unaligned((t + 0x13) as *mut u16, e as u16);
     core::ptr::write_unaligned((t + tournament_slot::COMPETITION) as *mut u32, 0);
@@ -1287,14 +1261,13 @@ pub(crate) unsafe fn club_has_human_manager(club: usize) -> bool {
 pub(crate) unsafe fn send_friendly_news(m: usize, kind: u32, status: u32, para: usize) {
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     exe::new_newsitem(n, kind, 0);
-    write(n, 0, read_usize(read_usize(m + friendly_match::HOME_CLUB)) as u32);
-    write(n, 1, read_usize(read_usize(m + friendly_match::AWAY_CLUB)) as u32);
-    write(n, 2, read_usize(read_usize(m + friendly_match::REQUESTING_CLUB)) as u32);
-    write(n, 3, read_i16(m) as i32 as u32);
-    write(n, 4, core::ptr::read_unaligned((m + 2) as *const u16) as u32);
-    write(n, 5, status);
+    exe::newsitem_set_slot(n, 0, read_usize(read_usize(m + friendly_match::HOME_CLUB)) as u32);
+    exe::newsitem_set_slot(n, 1, read_usize(read_usize(m + friendly_match::AWAY_CLUB)) as u32);
+    exe::newsitem_set_slot(n, 2, read_usize(read_usize(m + friendly_match::REQUESTING_CLUB)) as u32);
+    exe::newsitem_set_slot(n, 3, read_i16(m) as i32 as u32);
+    exe::newsitem_set_slot(n, 4, core::ptr::read_unaligned((m + 2) as *const u16) as u32);
+    exe::newsitem_set_slot(n, 5, status);
     exe::news_send_to_club_manager(read_usize(G_NEWS), n, para);
 }
 
@@ -1436,8 +1409,7 @@ pub(crate) unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: us
         p[0x4d] = 0x99;
         p[0x3d] = 0;
         p[0x3e] = 0;
-        let join: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
-        join(read_usize(G_FIXTURE_MANAGER), pp, 1);
+        exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER), pp, 1);
     }
     let s = read_u8(m + friendly_match::STATUS);
     if s == 3 || s == 4 {
@@ -1524,9 +1496,8 @@ pub(crate) unsafe extern "thiscall" fn send_friendly_request(this: usize, m: usi
             return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_FRIENDLY_REQUEST)(this, m); // simplification: out of memory, the original’s message box
         }
     }
-    let store: unsafe extern "thiscall" fn(usize, *const usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let copy = m;
-    store(read_usize(this + friendly::REQUEST_REPLY_LIST), &copy, 4);
+    exe::llist_add_tail(read_usize(this + friendly::REQUEST_REPLY_LIST), (&copy) as *const usize as usize, 4);
     if o == 0 || read_u8(m + friendly_match::STATUS) != 1 || !club_has_human_manager(o) {
         return;
     }
@@ -1646,8 +1617,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, club: us
     if read_usize(p + staff::PLAYER) == 0 {
         return;
     }
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contract(read_usize(G_CONTRACT_MANAGER), p);
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     if c == 0 || read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 5 {
         return;
@@ -1753,12 +1723,6 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
         return 1;
     }
     let weeks: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_WEEKS);
-    let minus_weeks: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_WEEKS);
-    let minus_days: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let copy: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let cancelar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FRIENDLY_CANCEL_TOURNAMENT);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     let day = read_u16(today) as i16 as i32;
     if day == read_u16(this + friendly::PRESEASON_PLAN_DAY_B) as i32 || day == read_u16(this + friendly::PRESEASON_PLAN_DAY_A) as i32 {
         let mut t = [0u8; 8];
@@ -1766,17 +1730,17 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
         if friendly_date_after(G_GAME_START_DATE, limit) {
             return 1;
         }
-        copy(this + friendly::PRESEASON_BASE_DATE, &mut t, today);
+        exe::date_operator_3d(this + friendly::PRESEASON_BASE_DATE, (&mut t) as *mut [u8; 8] as usize, today);
         crate::comparison::branch("cpt_11 planned the pre-season");
         exe::friendly_plan_ai_preseason_friendlies(this); // cpt11: planejar
         let mut ha_one_year = [0u8; 8];
-        minus_weeks(G_CURRENT_DATE, &mut ha_one_year, 0x34);
+        exe::date_sub_weeks(G_CURRENT_DATE, &mut ha_one_year, 0x34);
         let lo = u32::from_le_bytes([ha_one_year[0], ha_one_year[1], ha_one_year[2], ha_one_year[3]]);
         let hi = u32::from_le_bytes([ha_one_year[4], ha_one_year[5], ha_one_year[6], ha_one_year[7]]);
         for k in 0..0x7f {
             let e = this + friendly::TOURNAMENT_SLOTS + k * 0x69;
             if read_usize(e) != 0 && exe::date_operator_3c(e + tournament_slot::START_DATE, lo, hi) != 0 && read_usize(e + tournament_slot::COMPETITION) != 0 {
-                cancelar(this, e, 0);
+                exe::friendly_cancel_tournament(this, e, 0);
             }
         }
     }
@@ -1789,10 +1753,10 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
         if count > 0 {
             let mut n = count as i32;
             loop {
-                let item = next(read_usize(this + friendly::PENDING_TOURNAMENT_LIST));
+                let item = exe::llist_get_next(read_usize(this + friendly::PENDING_TOURNAMENT_LIST));
                 if item != 0 {
                     let r = read_usize(item);
-                    remove(read_usize(this + friendly::PENDING_TOURNAMENT_LIST), item);
+                    exe::llist_remove(read_usize(this + friendly::PENDING_TOURNAMENT_LIST), item);
                     exe::friendly_process_tournament_replies(this, r, 1, 0);
                 }
                 let l = read_usize(this + friendly::PENDING_TOURNAMENT_LIST);
@@ -1807,51 +1771,51 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
     let l = read_usize(this + friendly::REQUEST_REPLY_LIST);
     if l != 0 {
         write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
-        let mut item = next(read_usize(this + friendly::REQUEST_REPLY_LIST));
+        let mut item = exe::llist_get_next(read_usize(this + friendly::REQUEST_REPLY_LIST));
         while item != 0 {
             exe::friendly_process_friendly_reply(this, read_usize(item), 0);
-            item = next(read_usize(this + friendly::REQUEST_REPLY_LIST));
+            item = exe::llist_get_next(read_usize(this + friendly::REQUEST_REPLY_LIST));
         }
     }
     let l = read_usize(this + friendly::FRIENDLY_MATCH_LIST);
     if l != 0 {
         write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
-        let mut p = next(read_usize(this + friendly::FRIENDLY_MATCH_LIST));
+        let mut p = exe::llist_get_next(read_usize(this + friendly::FRIENDLY_MATCH_LIST));
         while p != 0 {
             if read_usize(p + friendly_match::HOME_CLUB) == 0 || read_usize(p + friendly_match::AWAY_CLUB) == 0 {
-                remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), p);
+                exe::llist_remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), p);
             }
             // simplification: like the original, the request date is looked at even after removing it (the block already removed)
             if friendly_date_after(today, p) {
-                remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), p);
+                exe::llist_remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), p);
             }
-            p = next(read_usize(this + friendly::FRIENDLY_MATCH_LIST));
+            p = exe::llist_get_next(read_usize(this + friendly::FRIENDLY_MATCH_LIST));
         }
     }
     for k in 0..0x7f {
         let e = this + friendly::TOURNAMENT_SLOTS + k * 0x69;
         if read_usize(e) != 0 && read_usize(e + tournament_slot::COMPETITION) == 0 {
             let mut t = [0u8; 8];
-            let end = minus_days(e + tournament_slot::START_DATE, &mut t, 2);
+            let end = exe::date_sub_days(e + tournament_slot::START_DATE, (&mut t) as *mut [u8; 8] as usize, 2);
             if friendly_date_after(today, end) {
-                cancelar(this, e, 0);
+                exe::friendly_cancel_tournament(this, e, 0);
             }
         }
     }
     let l = read_usize(this + friendly::SCHEDULED_SLOT_LIST);
     if l != 0 {
         write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
-        let mut item = next(read_usize(this + friendly::SCHEDULED_SLOT_LIST));
+        let mut item = exe::llist_get_next(read_usize(this + friendly::SCHEDULED_SLOT_LIST));
         while item != 0 {
             for k in 0..10 {
                 let s = item + 0x15 + k * 0x19;
                 let mut t = [0u8; 8];
-                let end = minus_days(s - 0xc, &mut t, 2);
+                let end = exe::date_sub_days(s - 0xc, (&mut t) as *mut [u8; 8] as usize, 2);
                 if friendly_date_after(today, end) {
                     write_usize(s, 0);
                 }
             }
-            item = next(read_usize(this + friendly::SCHEDULED_SLOT_LIST));
+            item = exe::llist_get_next(read_usize(this + friendly::SCHEDULED_SLOT_LIST));
         }
     }
     // simplification: the original does `mov al, 1` and leaves leftovers above; the caller tests the byte
@@ -1951,12 +1915,6 @@ pub(crate) unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize)
 /// da competição de tipo 1) ganham uma lista nova (0x944cf1 + 0x68d020) em +0x12. Com `gravar` falso só monta a lista
 /// (candidato, começo, fim, lista nova). A original calcula a data de início da liga (e + dias, tipo 2) e não usa.
 pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> Vec<(usize, i16, i16, bool)> {
-    let minus_weeks: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_WEEKS);
-    let data_new: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let more_days: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-    let copy: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let bsearch: unsafe extern "C" fn(*const usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let mut plan = Vec::new();
     for k in 0..0x23 {
         let ent = G_LEAGUE_TABLE + k * 0x48;
@@ -1973,12 +1931,12 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
                 let (mut t1, mut t2, mut t3, mut t4, mut t5, mut t6) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
                 let x = read_usize(comp + cup::ROUND_TABLE);
                 let year = *((x + cup_round::YEAR_OFFSET) as *const i8) as i16 as u16 as u32;
-                let r = data_new(&mut t1, read_u16(x + cup_round::DAY) as u32, year);
-                copy(&mut t2, &mut t3, r);
+                let r = exe::new_date((&mut t1) as *mut [u8; 8] as usize, read_u16(x + cup_round::DAY) as u32, year);
+                exe::date_operator_3d((&mut t2) as *mut [u8; 8] as usize, (&mut t3) as *mut [u8; 8] as usize, r);
                 if *((x + cup_round::LEGS) as *const u8) == 2 {
-                    let r = data_new(&mut t4, read_u16(x + cup_round::DAY) as u32, year);
-                    let r = more_days(r, &mut t5, *((x + cup_round::LEG_GAP_DAYS) as *const i8) as i16 as u16 as u32);
-                    copy(&mut t6, &mut t3, r);
+                    let r = exe::new_date((&mut t4) as *mut [u8; 8] as usize, read_u16(x + cup_round::DAY) as u32, year);
+                    let r = exe::date_add_days(r, (&mut t5) as *mut [u8; 8] as usize, *((x + cup_round::LEG_GAP_DAYS) as *const i8) as i16 as u16 as u32);
+                    exe::date_operator_3d((&mut t6) as *mut [u8; 8] as usize, (&mut t3) as *mut [u8; 8] as usize, r);
                 }
             }
             let t = read_usize(comp + cup::TEAM_TABLE);
@@ -1988,7 +1946,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
             ult = if b != 0 { read_usize(b) } else { u32::MAX as usize };
         }
         let mut l = [0u8; 8];
-        minus_weeks(ent + 0x2a, &mut l, 1);
+        exe::date_sub_weeks(ent + 0x2a, &mut l, 1);
         let dano = u16::from_le_bytes([l[2], l[3]]).wrapping_sub(read_u16(G_CURRENT_DATE_YEAR));
         let end = (dano as u32).wrapping_mul(365).wrapping_sub(read_usize(G_CURRENT_DATE) as u32)
             .wrapping_add(u32::from_le_bytes([l[0], l[1], l[2], l[3]])) as u16 as i16;
@@ -2000,7 +1958,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
         key[5] = 0xff;
         key[6..10].copy_from_slice(&(read_usize(nation) as u32).to_le_bytes());
         let pchave = key.as_ptr() as usize;
-        let mut q = bsearch(&pchave, ptrs, n as u32, 4, 0x5c5290);
+        let mut q = exe::crt_bsearch((&pchave) as *const usize as usize, ptrs, n as u32, 4, 0x5c5290);
         if q == 0 {
             continue;
         }
@@ -2021,7 +1979,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
             let nova = id == prim || id == ult;
             if write {
                 if nova {
-                    let m = novo(0xe);
+                    let m = exe::crt_operator_new(0xe);
                     write_usize(c + preseason_candidate::PLANNED_DATES, if m != 0 { exe::new_llist(m) } else { 0 });
                 }
                 crate::comparison::branch("cpt_11 window recorded");
@@ -2089,15 +2047,7 @@ pub(crate) unsafe fn alloc_list() -> usize {
 /// (0x5c5570) e guarda a data na lista dos dois (criadas se faltam; 0x68d0d0); a data anda 2 dias a cada adversário.
 /// Devolve 1.
 pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let more_days: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-    let minus_days: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let copy: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let data_default: unsafe extern "thiscall" fn(*mut [u8; 8]) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let free: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize, u32) -> usize = core::mem::transmute(FN_FRIENDLY_IS_CLUB_FREE_ON_DATE);
-    let append: unsafe extern "thiscall" fn(usize, usize, *mut [u8; 8], usize, u32) -> usize = core::mem::transmute(FN_FRIENDLY_ADD_FRIENDLY_MATCH);
-    let store: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let n = n as u8 as i8;
     let mut start = read_u16(cand + preseason_candidate::WINDOW_START) as i16;
     let mut end = read_u16(cand + preseason_candidate::WINDOW_END) as i16;
@@ -2119,35 +2069,35 @@ pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: 
     }
     crate::comparison::branch("cpt_12 tour window");
     let (mut d1, mut d2, mut t, mut u) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
-    data_default(&mut d1);
-    data_default(&mut d2);
+    exe::date_date_54a110((&mut d1) as *mut [u8; 8] as usize);
+    exe::date_date_54a110((&mut d2) as *mut [u8; 8] as usize);
     let mut attempts: i8 = 0;
     while attempts < 5 {
         let mut ok = true;
-        start = start.wrapping_add(sortear(end as i32 - start as i32) as i16);
-        let r = more_days(this + friendly::PRESEASON_BASE_DATE, &mut t, start as u16 as u32);
-        copy(&mut d1, &mut u, r);
-        let r = more_days(d1.as_ptr() as usize, &mut t, width as u16 as u32);
-        copy(&mut d2, &mut u, r);
+        start = start.wrapping_add(exe::utils_random(end as i32 - start as i32) as i16);
+        let r = exe::date_add_days(this + friendly::PRESEASON_BASE_DATE, (&mut t) as *mut [u8; 8] as usize, start as u16 as u32);
+        exe::date_operator_3d((&mut d1) as *mut [u8; 8] as usize, (&mut u) as *mut [u8; 8] as usize, r);
+        let r = exe::date_add_days(d1.as_ptr() as usize, (&mut t) as *mut [u8; 8] as usize, width as u16 as u32);
+        exe::date_operator_3d((&mut d2) as *mut [u8; 8] as usize, (&mut u) as *mut [u8; 8] as usize, r);
         let l = read_usize(cand + preseason_candidate::PLANNED_DATES);
         if l == 0 {
             break;
         }
         core::ptr::write_unaligned((l + llist::CURSOR) as *mut u32, read_usize(l + llist::HEAD) as u32);
-        let mut item = next(read_usize(cand + preseason_candidate::PLANNED_DATES));
+        let mut item = exe::llist_get_next(read_usize(cand + preseason_candidate::PLANNED_DATES));
         while item != 0 {
-            let before = minus_days(d1.as_ptr() as usize, &mut t, 2);
+            let before = exe::date_sub_days(d1.as_ptr() as usize, (&mut t) as *mut [u8; 8] as usize, 2);
             let estraga = if compare_dates(before, item) < 0 {
                 true
             } else {
-                let after = more_days(d2.as_ptr() as usize, &mut u, 2);
+                let after = exe::date_add_days(d2.as_ptr() as usize, (&mut u) as *mut [u8; 8] as usize, 2);
                 compare_dates(after, item) > 0
             };
             if estraga {
                 ok = false;
                 break;
             }
-            item = next(read_usize(cand + preseason_candidate::PLANNED_DATES));
+            item = exe::llist_get_next(read_usize(cand + preseason_candidate::PLANNED_DATES));
         }
         attempts += 1;
         if ok {
@@ -2159,7 +2109,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: 
     for k in 0..(n as i32).max(0) {
         let other = read_usize(G_CLUB_TABLE) + read_usize(read_usize(p)) * club::SIZE;
         if free(this, &mut d1, other, 0) != 0 {
-            let m = append(this, club, &mut d1, other, 0); // cpt12: the home club
+            let m = exe::friendly_add_friendly_match(this, club, (&mut d1) as *mut [u8; 8] as usize, other, 0); // cpt12: the home club
             if m != 0 {
                 crate::comparison::branch("cpt_12 tour match scheduled");
                 exe::friendly_send_friendly_request(this, m);
@@ -2171,16 +2121,16 @@ pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: 
                     let l = alloc_list();
                     core::ptr::write_unaligned((read_usize(p) + 0x12) as *mut u32, l as u32);
                 }
-                store(read_usize(cand + preseason_candidate::PLANNED_DATES), &mut d1, 8);
-                store(read_usize(read_usize(p) + 0x12), &mut d1, 8);
+                exe::llist_add_tail(read_usize(cand + preseason_candidate::PLANNED_DATES), (&mut d1) as *mut [u8; 8] as usize, 8);
+                exe::llist_add_tail(read_usize(read_usize(p) + 0x12), (&mut d1) as *mut [u8; 8] as usize, 8);
             }
         }
         p += 4;
         if k + 1 < n as i32 {
             crate::comparison::branch("cpt_12 next match date");
         }
-        let r = more_days(d1.as_ptr() as usize, &mut t, 2); // cpt12: the next match
-        copy(&mut d1, &mut u, r);
+        let r = exe::date_add_days(d1.as_ptr() as usize, (&mut t) as *mut [u8; 8] as usize, 2); // cpt12: the next match
+        exe::date_operator_3d((&mut d1) as *mut [u8; 8] as usize, (&mut u) as *mut [u8; 8] as usize, r);
     }
     1
 }
@@ -2224,8 +2174,7 @@ pub(crate) unsafe fn alloc_empty_list() -> usize {
 ///
 /// [pt] Acrescenta à lista `l` uma cópia de `n` bytes de `p` (0x68d0d0); devolve a cópia (0 se falhou).
 pub(crate) unsafe fn list_append_copy(l: usize, p: usize, n: u32) -> usize {
-    let copy: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
-    copy(l, p, n)
+    exe::llist_add_tail(l, p, n)
 }
 
 /// Friendly::get_club_date_status (0x5c75a0) of a date for the club, checking the stadium; 1 = free.
@@ -2348,10 +2297,8 @@ pub(crate) unsafe extern "thiscall" fn add_friendly_match(this: usize, club: usi
     if m != 0 {
         reaproveitado = true;
     } else {
-        let new: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-        let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-        let p = new(0x19);
-        m = if p != 0 { data_default(p); p } else { 0 };
+        let p = exe::crt_operator_new((0x19) as usize as u32);
+        m = if p != 0 { exe::date_date_54a110(p); p } else { 0 };
         if m == 0 {
             show_error_at(0x9cd0a0, 0xe6b);
             return 0;
@@ -2360,10 +2307,9 @@ pub(crate) unsafe extern "thiscall" fn add_friendly_match(this: usize, club: usi
     if home_stadium_busy_on(club, data, opponent, in_home) {
         return 0;
     }
-    let atribuir: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut copy = [0u8; 8];
     write_usize(m + friendly_match::REQUESTING_CLUB, club);
-    atribuir(m, &mut copy, data);
+    exe::date_operator_3d(m, (&mut copy) as *mut [u8; 8] as usize, data);
     *((m + friendly_match::STATUS) as *mut u8) = 1;
     write_usize(m + 8, 0);
     let (mandante, visitante) = if in_home != 0 {
@@ -2430,13 +2376,11 @@ pub(crate) unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, h
     if start >= end {
         return 0;
     }
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let more_days: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-    let n = (start as i32).wrapping_add(sortear(end as i32 - start as i32)); // cps12: o dia sorteado
+    let n = (start as i32).wrapping_add(exe::utils_random(end as i32 - start as i32)); // cps12: o dia sorteado
     let mut data = [0u8; 8];
     // simplification: the original pushes the whole esi (the low word is the sum, on top a register leftover); 0x54c5b0 reads
     // a palavra
-    more_days(this + friendly::PRESEASON_BASE_DATE, &mut data, n as u16 as u32);
+    exe::date_add_days(this + friendly::PRESEASON_BASE_DATE, (&mut data) as *mut [u8; 8] as usize, n as u16 as u32);
     let pdata = data.as_mut_ptr() as usize;
     let mut found = false;
     let mut k = 0u8;
@@ -2503,7 +2447,6 @@ pub(crate) unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, h
 /// Senão, livre se a 0x5acbe0 não acha jogo do clube (+0 id) na janela (com uma lista provisória, destruída no fim).
 /// Clube ou data nulos: 0.
 pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize, club: usize, kind: u32) -> u32 {
-    let minus_days: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let (mut a, mut b, mut t0, mut t1) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
     let mut list = [0u8; 0x10];
     let (pa, pb, p0, p1, pl) = (a.as_mut_ptr() as usize, b.as_mut_ptr() as usize, t0.as_mut_ptr() as usize,
@@ -2529,7 +2472,7 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
         }
     };
     crate::comparison::branch("cpr_13 free club");
-    let r = minus_days(data, p0, 1); // the day before
+    let r = exe::date_sub_days(data, p0, 1); // the day before
     exe::date_operator_3d(pa, p1, r);
     // simplification: the original pushes the slack with the high 16 bits of the pointer that 0x417c10 returned; 0x54c5b0 only reads
     // a palavra
@@ -2629,7 +2572,6 @@ pub(crate) unsafe extern "thiscall" fn remove_friendly_match(this: usize, game: 
     if game == 0 || read_usize(this + friendly::FRIENDLY_MATCH_LIST) == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_REMOVE_FRIENDLY_MATCH)(this, game, clear_slot);
     }
-    let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     let recomecar = || {
         let l = read_usize(this + friendly::REQUEST_REPLY_LIST);
         write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
@@ -2639,7 +2581,7 @@ pub(crate) unsafe extern "thiscall" fn remove_friendly_match(this: usize, game: 
         let mut e = exe::llist_get_next(read_usize(this + friendly::REQUEST_REPLY_LIST));
         while e != 0 {
             if read_usize(e) == game {
-                remove(read_usize(this + friendly::REQUEST_REPLY_LIST), e);
+                exe::llist_remove(read_usize(this + friendly::REQUEST_REPLY_LIST), e);
                 recomecar();
             }
             e = exe::llist_get_next(read_usize(this + friendly::REQUEST_REPLY_LIST));
@@ -2657,7 +2599,7 @@ pub(crate) unsafe extern "thiscall" fn remove_friendly_match(this: usize, game: 
         }
     }
     crate::comparison::branch("cpn_7 remove the friendly");
-    remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), game) // removes the match from the friendlies list
+    exe::llist_remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), game) // removes the match from the friendlies list
 }
 
 /// `Friendly::init_banned_nation_pairs()`: allocates the 4 nation pairs that play no friendlies with each other.
@@ -2716,17 +2658,15 @@ pub(crate) unsafe extern "thiscall" fn is_comp_current_on_date(this: usize, comp
     if read_usize(e + 0xb1) == 0 {
         return 0;
     }
-    let minus: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let more: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let (dia, ano) = friendly_date_day_year(data);
     let mut a = [0u8; 8];
-    let (adia, aano) = friendly_date_day_year(minus(e + 0xb5, &mut a, 7));
+    let (adia, aano) = friendly_date_day_year(exe::date_sub_days(e + 0xb5, (&mut a) as *mut [u8; 8] as usize, 7));
     if ano < aano || (ano == aano && dia <= adia) {
         return 0;
     }
     let (dia, ano) = friendly_date_day_year(data);
     let mut b = [0u8; 8];
-    let (bdia, bano) = friendly_date_day_year(more(e + 0xb5, &mut b, 7));
+    let (bdia, bano) = friendly_date_day_year(exe::date_add_days(e + 0xb5, (&mut b) as *mut [u8; 8] as usize, 7));
     (ano < bano || (ano == bano && dia < bdia)) as u32
 }
 
@@ -2743,20 +2683,17 @@ pub(crate) unsafe extern "thiscall" fn is_comp_current_on_date(this: usize, comp
 /// (0x54c8e0) ou o dia depois (0x54c5b0). Percorre do começo (o cursor +0xa = a cabeça +2; 0x68d1b0). Sem lista: 0. As
 /// datas locais vêm antes (como a original); o quadro SEH é delas (destrutores vazios).
 pub(crate) unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, club: usize, data: usize) -> u32 {
-    let minus: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let more: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let (mut before, mut after) = ([0u8; 8], [0u8; 8]);
-    minus(data, &mut before, 1);
-    more(data, &mut after, 1);
+    exe::date_sub_days(data, (&mut before) as *mut [u8; 8] as usize, 1);
+    exe::date_add_days(data, (&mut after) as *mut [u8; 8] as usize, 1);
     let l = read_usize(club + preseason_candidate::PLANNED_DATES);
     if l == 0 {
         return 0;
     }
     write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let before = friendly_date_day_year(before.as_ptr() as usize);
     let after = friendly_date_day_year(after.as_ptr() as usize);
-    let mut e = next(l);
+    let mut e = exe::llist_get_next(l);
     while e != 0 {
         let item = friendly_date_day_year(e);
         if item == friendly_date_day_year(data) {
@@ -2770,7 +2707,7 @@ pub(crate) unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, c
             crate::comparison::branch("cpm_7 friendly the day after");
             return 1;
         }
-        e = next(l);
+        e = exe::llist_get_next(l);
     }
     0
 }
@@ -2792,8 +2729,7 @@ pub(crate) unsafe extern "thiscall" fn add_planned_friendly(this: usize, host: u
         crate::comparison::branch("cpm_7 friendlies grow");
         let cap = read_usize(this + friendly::PLANNED_CAPACITY).wrapping_add(100);
         write_usize(this + friendly::PLANNED_CAPACITY, cap);
-        let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-        let p = realloc(read_usize(this + friendly::PLANNED_FRIENDLIES), cap.wrapping_mul(0x14) as u32);
+        let p = exe::crt_realloc(read_usize(this + friendly::PLANNED_FRIENDLIES), cap.wrapping_mul(0x14) as u32);
         write_usize(this + friendly::PLANNED_FRIENDLIES, p);
         if p == 0 {
             show_error_at(0x9cd0a0, 0x797);
@@ -2806,9 +2742,8 @@ pub(crate) unsafe extern "thiscall" fn add_planned_friendly(this: usize, host: u
     write_usize(item + planned_friendly::HOST_CLUB_ID, read_usize(host));
     write_usize(item + planned_friendly::HOME_CLUB_ID, read_usize(home)); // o mandante
     write_usize(item + planned_friendly::AWAY_CLUB_ID, read_usize(away)); // o visitante
-    let copiar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut copy = [0u8; 8];
-    copiar(item, &mut copy, data);
+    exe::date_operator_3d(item, (&mut copy) as *mut [u8; 8] as usize, data);
     write_usize(this + friendly::PLANNED_COUNT, n.wrapping_add(1)); // mais um amistoso
 }
 

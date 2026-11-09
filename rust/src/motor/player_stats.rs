@@ -132,8 +132,7 @@ pub(crate) unsafe fn append_history_node(this: usize, reg: usize, no: &[u8; 0x2b
         }
         return;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
-    f(read_usize(this), reg + player_stats_entry::HISTORY_START, reg + player_stats_entry::HISTORY_LAST, no.as_ptr());
+    exe::file_llist_add_node(read_usize(this), reg + player_stats_entry::HISTORY_START, reg + player_stats_entry::HISTORY_LAST, no.as_ptr());
 }
 
 /// When the player leaves a club: the season's stats of each category go to the history file (with the year, the club,
@@ -1066,8 +1065,7 @@ pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pe
     *((r + player_stats_entry::LAST_RATING) as *mut u8) = 0;
     *((r + 0x25) as *mut u8) = 0;
     *((r + player_stats_entry::RECENT_RATINGS) as *mut u8) = 0;
-    let esvaziar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_FILE_LLIST_RESET_LAST_OFFSET);
-    esvaziar(read_usize(this), r + player_stats_entry::HISTORY_START, r + player_stats_entry::HISTORY_LAST)
+    exe::file_llist_reset_last_offset(read_usize(this), r + player_stats_entry::HISTORY_START, r + player_stats_entry::HISTORY_LAST)
 }
 
 /// Returns from 0 to 10 how well the person speaks the language: the contract level, 10 for a nation (or the second
@@ -1095,8 +1093,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         return if read_u8(read_usize(person + staff::NATION) + 0x77) == language { 10 } else { 0 }; // the human manager
     }
     if by_contract != 0 {
-        let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-        let c = contract(read_usize(G_CONTRACT_MANAGER), person, club);
+        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
         if c != 0 {
             let cp = read_usize(person + staff::CLUB_JOB);
             if cp != 0 && read_usize(club + club::NATION) == read_usize(cp + club::NATION) {

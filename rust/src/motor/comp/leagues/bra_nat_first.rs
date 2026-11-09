@@ -55,8 +55,7 @@ pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file:
         return;
     }
     crate::comparison::branch(ramo);
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    build(stage, 0);
+    exe::cup_set_up_round(stage, 0);
     exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
 }
@@ -167,8 +166,7 @@ pub(crate) unsafe fn bra_nat_first_call_virtual_no_args(c: usize, deslocamento: 
 /// (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem da tabela (League::sort_table 0x6827d0, thiscall(this,
 /// 0), ret 4); por fim as posições previstas (virtual +0x5c). Devolve falso depois de uma caixa.
 pub(crate) unsafe fn rebuild_season(this: usize, table: usize, file: usize, rows: [u32; 4], year: i16) -> bool {
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    liberar_tabela(this, 0);
+    exe::league_free_table(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
         exe::crt_free(l);
@@ -208,8 +206,7 @@ pub(crate) unsafe fn rebuild_season(this: usize, table: usize, file: usize, rows
         show_error_at(file, rows[2]);
         return false;
     }
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    if sort(this, 0) == 0 {
+    if exe::league_sort_table(this, 0) == 0 {
         show_error_at(file, rows[3]);
         return false;
     }
@@ -299,12 +296,11 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegatio
     for k in 0..7 {
         bra_nat_first_call_virtual_no_args(read_usize(read_usize(comp_by_global(c) + 0xc) + 4 * k), 0xa4);
     }
-    let swap: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, i32, i32) -> u32 = core::mem::transmute(FN_LEAGUE_PROMOTE_AND_RELEGATE);
     crate::comparison::branch("cqq_8 promotion and relegation");
-    swap(this, comp_by_global(a), comp_by_global(b), 1, 1, -1, -1); // cqq8: A e B
-    let mut r = swap(this, comp_by_global(b), comp_by_global(c), 1, 1, -1, -1); // cqq8: B e C
+    exe::league_promote_and_relegate(this, comp_by_global(a), comp_by_global(b), 1, 1, -1, -1); // cqq8: A e B
+    let mut r = exe::league_promote_and_relegate(this, comp_by_global(b), comp_by_global(c), 1, 1, -1, -1); // cqq8: B e C
     for k in 0..7 {
-        r = swap(this, comp_by_global(b), read_usize(read_usize(comp_by_global(c) + 0xc) + 4 * k), 1, 1, -1, -1);
+        r = exe::league_promote_and_relegate(this, comp_by_global(b), read_usize(read_usize(comp_by_global(c) + 0xc) + 4 * k), 1, 1, -1, -1);
     }
     r
 }

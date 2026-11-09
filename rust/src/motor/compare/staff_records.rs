@@ -129,8 +129,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_manager_job_change(this: u
     }
     let mut reg = vec![(G_DAYS_SINCE_SCRATCH_DATE, 8usize)];
     if is_national_team(club) == 0 || contratado as u8 == 1 {
-        let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
-        let r = record(this, manager, 1);
+        let r = exe::staff_records_get_manager_record(this, manager, 1);
         if r != 0 {
             reg.push((r, 0xd2));
         }
@@ -199,8 +198,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_qualified_for_round_record(th
     if club == 0 || read_usize(club + club::MANAGER) == 0 {
         return o(this, club, comp, stage, round, weight);
     }
-    let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
-    let r = record(this, read_usize(club + club::MANAGER), 1);
+    let r = exe::staff_records_get_manager_record(this, read_usize(club + club::MANAGER), 1);
     if r == 0 {
         return o(this, club, comp, stage, round, weight);
     }

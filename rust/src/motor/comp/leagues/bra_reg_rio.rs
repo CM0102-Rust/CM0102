@@ -47,7 +47,6 @@ pub(crate) struct BraRegRioStateChampionship {
 pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, registro: usize, e: &BraRegRioStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
-    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
@@ -76,7 +75,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, r
         show_error_at(e.file, e.rows[2]);
         return this;
     }
-    if ordenar(this, 0) == 0 {
+    if exe::league_sort_table(this, (0) as u32 as usize) == 0 {
         show_error_at(e.file, e.rows[3]);
         return this;
     }
@@ -536,9 +535,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_half_season_stage(this
 /// thiscall([0xb74340], +4), ret 4), cujo eax ela devolve. Com caixa, a cópia devolve 0 (a original devolve o eax da
 /// caixa, que a virada do Brasil não lê).
 pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file: usize, year: i16, ramo: &'static str) -> u32 {
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
-    liberar_tabela(this, 0);
+    exe::league_free_table(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
         exe::crt_free(l);
@@ -584,8 +582,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file
         show_error_at(file, 0x1e1);
         return 0;
     }
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    if sort(this, 0) == 0 {
+    if exe::league_sort_table(this, 0) == 0 {
         show_error_at(file, 0x1e8);
         return 0;
     }
@@ -720,8 +717,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
         return show_error_at(0x98b014, 0x250);
     }
     crate::comparison::branch("cqo_9 final");
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    build(stage, 0);
+    exe::cup_set_up_round(stage, 0);
     exe::crt_free(t);
     exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 2);

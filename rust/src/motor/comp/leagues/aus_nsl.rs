@@ -120,7 +120,6 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
 /// thiscall(fase, 0), ret 4) e a lista liberada. A fase atual (+0x30 = 1) já foi gravada pela fase seguinte.
 /// [inferência] A grande final é um jogo só, com o primeiro da série final como mandante.
 pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
@@ -148,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
         return show_error_at(0x987c20, 0x35c);
     }
     crate::comparison::branch("cqr_3 grand final");
-    build(stage, 0);
+    exe::cup_set_up_round(stage, 0);
     exe::crt_free(list);
 }
 

@@ -396,11 +396,9 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
             }
             let w = core::ptr::read_unaligned(copia.as_ptr().add(0x4d) as *const u16) & 0xcfff;
             core::ptr::write_unaligned(copia.as_mut_ptr().add(0x4d) as *mut u16, w);
-            let write: unsafe extern "thiscall" fn(usize, *mut u8) = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE);
-            let join: unsafe extern "thiscall" fn(usize, *mut u8, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
             exe::weather_post_abandoned_news(u(G_WEATHER, 0), p + day_match::FIXTURE_COPY, ((*((game + fixture::SQUAD_RULES) as *const u16) >> 12) & 3) as u32);
-            write(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr());
-            join(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr(), 1);
+            exe::fixture_manager_find_new_fixture_date(u(G_FIXTURE_MANAGER, 0), (copia.as_mut_ptr()) as *mut u8 as usize);
+            exe::fixture_manager_add_fixture(u(G_FIXTURE_MANAGER, 0), (copia.as_mut_ptr()) as *mut u8 as usize, 1);
         } else {
             let c = competition(*(game as *const i32));
             let metodo: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(u(u(c, 0), 4));
@@ -803,8 +801,6 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, mode: u32) -> usize {
     let por = |p: usize, o: usize, v: u32| core::ptr::write_unaligned((p + o) as *mut u32, v);
     let list_of_day: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
-    let write: unsafe extern "thiscall" fn(usize, *mut u8) = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE);
-    let join: unsafe extern "thiscall" fn(usize, *mut u8, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
     let modo8 = mode as u8;
     *(day as *mut u8) = modo8;
     for o in (1..=0x25).step_by(4) {
@@ -854,8 +850,8 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
                         *((x + fixture::HOME_GOALS) as *mut u8) = 0xfe;
                         // simplification: the 2nd argument goes with only the byte; the original passes stack leftovers in the high part (read as a byte)
                         exe::weather_post_postponed_news(read_usize(G_WEATHER + 0), x, r as u32);
-                        write(read_usize(G_FIXTURE_MANAGER + 0), copia.as_mut_ptr());
-                        join(read_usize(G_FIXTURE_MANAGER + 0), copia.as_mut_ptr(), 1);
+                        exe::fixture_manager_find_new_fixture_date(read_usize(G_FIXTURE_MANAGER + 0), (copia.as_mut_ptr()) as *mut u8 as usize);
+                        exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER + 0), (copia.as_mut_ptr()) as *mut u8 as usize, 1);
                     } else {
                         exe::officialsmanager_choose_match_official(read_usize(G_OFFICIALS_MANAGER + 0), x, x + fixture::REFEREE);
                         crate::comparison::branch("setup notified");
@@ -1664,7 +1660,6 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
 pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| core::ptr::read_unaligned((q + o) as *const usize);
     let por = |q: usize, o: usize, v: u32| core::ptr::write_unaligned((q + o) as *mut u32, v);
-    let register: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
     let follow = || {
         if exe::match_day_step_background_match(day, 0) != 0 {
             exe::match_day_start_next_background_match(day);
@@ -1779,7 +1774,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     }
     rever();
     por(pl, 0x10d, exe::utils_get_time_ms());
-    register(u(G_MATCH_STATS, 0), engine, u(p, day_match::SUMMARY), 1);
+    exe::match_stats_fill_match_record(u(G_MATCH_STATS, 0), engine, u(p, day_match::SUMMARY), 1);
     let s = u(u(day, match_day_fields::HUMAN_MATCH), 0x5f);
     let swap = if s != 0 {
         let a = exe::match_day_get_period_rank(*((u(p, day_match::SUMMARY) + 0x4f) as *const u16) as u32, 1) as i8;
@@ -1815,7 +1810,6 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
 pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| core::ptr::read_unaligned((q + o) as *const usize);
     let por = |q: usize, o: usize, v: usize| core::ptr::write_unaligned((q + o) as *mut usize, v);
-    let register_for_ver: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
     const FONTE: usize = 0xa15708; // match_day.cpp
     if p == 0 {
         show_error_at(FONTE, 0x4b8);
@@ -1882,7 +1876,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usiz
         show_error_at(FONTE, 0x511);
         return 0;
     }
-    register_for_ver(u(G_MATCH_STATS, 0), u(p, day_match::ENGINE), r, 1);
+    exe::match_stats_fill_match_record(u(G_MATCH_STATS, 0), u(p, day_match::ENGINE), r, 1);
     1
 }
 

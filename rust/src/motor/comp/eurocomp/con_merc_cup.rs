@@ -52,7 +52,6 @@ pub(crate) unsafe fn stage_club_at(this: usize, f: usize, j: i32) -> usize {
 /// liberadas (0x9452ca). Sem fase: a caixa `linha_sem_fase`. Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round:
 /// push 0; mov ecx, fase -> thiscall, ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize, knockout: u32, file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
-    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
     let list = exe::crt_malloc(teams * 4);
     if list == 0 {
         return show_error_at(file, row_without_list);
@@ -92,7 +91,7 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
     if f == 0 {
         return show_error_at(file, row_without_stage);
     }
-    sortear(f, 0);
+    exe::cup_draw_round(f, 0);
 }
 
 /// The knockout plan (the comparer runs only the original routine: the list, the table and the stage are allocated and
@@ -375,8 +374,6 @@ pub(crate) unsafe fn con_merc_cup_drawn_club(this: usize, k: usize) -> usize {
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e volta 0 sem o dia de liga. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     if read_usize(this + league::ACTIVE) == 0 && full != 0 {
         let day = read_i16(this + 0xb6) as u16; // cqr12: the draw day
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
@@ -393,7 +390,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
                 // simplification: the original returns only al = 0 (the rest of eax is what the box left); the caller reads the byte
                 return 0;
             }
-            if sort(this, 0) == 0 {
+            if exe::league_sort_table(this, 0) == 0 {
                 show_error_at(0x9a7d6c, 0x392);
                 // simplification: the original returns only al = 0 (the rest of eax is what the box left); the caller reads the byte
                 return 0;
@@ -408,7 +405,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
             write_usize(this + league::ACTIVE, 1);
         }
     }
-    league(this, today, full)
+    exe::league_update_for_date(this, today, full)
 }
 
 // simplification: the clubs (shuffled), the tables, the matches and the league day do not run twice. Original only; the plan

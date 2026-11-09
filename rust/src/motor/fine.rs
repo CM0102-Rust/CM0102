@@ -2,8 +2,7 @@ use super::*;
 
 /// Writes value v into news item slot k (NEWSITEM set_slot).
 pub(crate) unsafe fn set_news_slot(n: usize, k: i8, v: u32) {
-    let f: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    f(n, k, v);
+    exe::newsitem_set_slot(n, k, v);
 }
 
 /// Writes the person's id and the +0x33 keys of +4, +8, +0xc into news slots k..k+3.

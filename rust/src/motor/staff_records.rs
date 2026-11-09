@@ -113,9 +113,8 @@ pub(crate) unsafe fn add_club_history(this: usize, club: usize, kind: u8, comp: 
     e[8] = kind;
     put_i32(&mut e, 9, read_i32(comp));
     if !STAFF_HISTORY_DRY_RUN {
-        let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
         let p = read_usize(this + staff_records_fields::CLUB_HISTORY_LISTS).wrapping_add(read_usize(club).wrapping_mul(8));
-        f(read_usize(this + staff_records_fields::CLUB_HISTORY_FILE), p, p + 4, e.as_ptr());
+        exe::file_llist_add_node(read_usize(this + staff_records_fields::CLUB_HISTORY_FILE), p, p + 4, e.as_ptr());
     }
 }
 
@@ -338,7 +337,6 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     }
     let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club != read_usize(game + fixture::HOME_CLUB)) as usize;
     add_lineup_histories(this, club, escalacao, &e);
-    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     for j in 0..50usize {
         if (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(400) < read_i16(club + club::REPUTATION) as i32 {
             break;
@@ -349,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
         }
         crate::comparison::branch("cqd_13 cup winner squad");
         exe::staff_adjust_morale(p, 0xf, 1); // cqd13: the morale of the cup winner player
-        let k = contract(read_usize(G_CONTRACT_MANAGER), p, club);
+        let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
         if k == 0 {
             continue;
         }
@@ -737,9 +735,8 @@ pub(crate) unsafe fn append_club_history_by_id(this: usize, id: usize, e: &[u8; 
     if CUP_PLACED_CLUB_DRY_RUN {
         return;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
     let p = read_usize(this + staff_records_fields::CLUB_HISTORY_LISTS).wrapping_add(id.wrapping_mul(8));
-    f(read_usize(this + staff_records_fields::CLUB_HISTORY_FILE), p, p + 4, e.as_ptr());
+    exe::file_llist_add_node(read_usize(this + staff_records_fields::CLUB_HISTORY_FILE), p, p + 4, e.as_ptr());
 }
 
 /// Raises a side rating word by ftol(weight × k × [0x96ff88]), floored at weight × k and capped at 10000.
@@ -1129,9 +1126,8 @@ pub(crate) unsafe fn append_history(write: bool, arq: usize, base: usize, id: us
     if !write {
         return;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
     let p = base.wrapping_add(id.wrapping_mul(8));
-    f(arq, p, p + 4, e.as_ptr());
+    exe::file_llist_add_node(arq, p, p + 4, e.as_ptr());
 }
 
 /// Appends entry e to the person's history (file [this], lists [this+0xc]).
@@ -1544,9 +1540,8 @@ pub(crate) unsafe fn append_person_history_by_id(write: bool, this: usize, id: u
     if !write {
         return;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
     let p = read_usize(this + staff_records_fields::PERSON_HISTORY_LISTS).wrapping_add(id.wrapping_mul(8));
-    f(read_usize(this), p, p + 4, e.as_ptr());
+    exe::file_llist_add_node(read_usize(this), p, p + 4, e.as_ptr());
 }
 
 /// Returns the id of the person's employing club (staff::CLUB_JOB), or −1.
@@ -1613,8 +1608,7 @@ pub(crate) unsafe fn staff_records_manager_record(this: usize, manager: usize) -
 /// [pt] Os lados da transferência: (pessoa, contrato da pessoa 0x4cf5a0, vendedor ou 0, comprador).
 pub(crate) unsafe fn transfer_parties(t: usize) -> (usize, usize, usize, usize) {
     let person = staff_records_staff_by_id(read_usize(t + offer::TARGET_STAFF_ID));
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contract(read_usize(G_CONTRACT_MANAGER), person);
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     let seller = if c != 0 && read_u8(c + contract::CONTRACT_TYPE) & 0x3f != 5 {
         read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE))
     } else {
@@ -2086,11 +2080,10 @@ pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usiz
 /// (+0x72, +0x76..+0x7e) pela 0x54cdb0, a de hoje em +0x6a / +0x7e. Devolve o registro.
 pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: usize, create: u32) -> usize {
     if person == 0 {
-        let split: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
         let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
         let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
         let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
-        split(0xa83b78, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
+        exe::crt_strtok(0xa83b78, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
         let v = version(nome.as_mut_ptr(), ext.as_mut_ptr(), 0xf6e);
         format(0xae24d0, 0x9870e8, v, nome.as_ptr(), ext.as_ptr(), 0xf6eu32);
         exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
@@ -2148,19 +2141,17 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: u
             write_u32(r + manager_record::CURRENT_CLUB, read_u32(club));
             contract_manager_assign_date(r + manager_record::CURRENT_CLUB_SINCE, person + staff::DATE_JOINED_CLUB);
             let mut local = [0u8; 8];
-            let construct: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
-            let p = construct(&mut local, 0xd, 0xb, 0x7b7, -1);
+            let p = exe::date_date_549f70((&mut local) as *mut [u8; 8] as *mut [u16; 4], 0xd, 0xb, 0x7b7, (-1) as i32 as u32);
             contract_manager_assign_date(r + manager_record::CURRENT_CLUB_END, p);
         }
     }
-    let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     if read_u32(r + manager_record::LONGEST_CLUB) as i32 == -1 {
         write_u32(r + manager_record::LONGEST_CLUB, read_u32(r + manager_record::CURRENT_CLUB));
         contract_manager_assign_date(r + manager_record::LONGEST_START, r + manager_record::CURRENT_CLUB_SINCE);
         contract_manager_assign_date(r + manager_record::LONGEST_END, G_CURRENT_DATE);
     } else if read_u32(r + manager_record::CURRENT_CLUB) as i32 != -1 {
-        let a = days(r + manager_record::LONGEST_END, read_u32(r + manager_record::LONGEST_START), read_u32(r + manager_record::LONGEST_START_HIGH));
-        let b = days(G_CURRENT_DATE, read_u32(r + manager_record::CURRENT_CLUB_SINCE), read_u32(r + manager_record::CURRENT_CLUB_SINCE_HIGH));
+        let a = exe::date_days_since(r + manager_record::LONGEST_END, read_u32(r + manager_record::LONGEST_START), read_u32(r + manager_record::LONGEST_START_HIGH));
+        let b = exe::date_days_since(G_CURRENT_DATE, read_u32(r + manager_record::CURRENT_CLUB_SINCE), read_u32(r + manager_record::CURRENT_CLUB_SINCE_HIGH));
         if b > a {
             write_u32(r + manager_record::LONGEST_CLUB, read_u32(r + manager_record::CURRENT_CLUB)); // a mais longa
             contract_manager_assign_date(r + manager_record::LONGEST_START, r + manager_record::CURRENT_CLUB_SINCE);
@@ -2181,8 +2172,8 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: u
     if current as i32 == -1 {
         return r;
     }
-    let a = days(r + manager_record::SHORTEST_END, read_u32(r + manager_record::SHORTEST_START), read_u32(r + manager_record::SHORTEST_START_HIGH));
-    let b = days(G_CURRENT_DATE, read_u32(r + manager_record::CURRENT_CLUB_SINCE), read_u32(r + manager_record::CURRENT_CLUB_SINCE_HIGH));
+    let a = exe::date_days_since(r + manager_record::SHORTEST_END, read_u32(r + manager_record::SHORTEST_START), read_u32(r + manager_record::SHORTEST_START_HIGH));
+    let b = exe::date_days_since(G_CURRENT_DATE, read_u32(r + manager_record::CURRENT_CLUB_SINCE), read_u32(r + manager_record::CURRENT_CLUB_SINCE_HIGH));
     if b < a {
         write_u32(r + manager_record::SHORTEST_CLUB, read_u32(r + manager_record::CURRENT_CLUB)); // a mais curta
         contract_manager_assign_date(r + manager_record::SHORTEST_START, r + manager_record::CURRENT_CLUB_SINCE);
@@ -2280,8 +2271,7 @@ pub(crate) unsafe extern "thiscall" fn rewind_staff_history(this: usize, person:
     }
     crate::comparison::branch("cpk_7 restart history");
     let par = read_usize(this + staff_records_fields::PERSON_HISTORY_LISTS).wrapping_add(read_usize(person).wrapping_mul(8));
-    let without_last: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FILE_LLIST_RESET_LAST_OFFSET);
-    without_last(read_usize(this), par, par + 4); // the last offset
+    exe::file_llist_reset_last_offset(read_usize(this), par, par + 4); // the last offset
 }
 
 /// `Staff_Records::add_year_award_record(p, club, award, a4, a5, credit)`: records a year award. SEH frame without a

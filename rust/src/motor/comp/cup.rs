@@ -21,10 +21,8 @@ pub(crate) unsafe fn cup_has_human_manager(club: usize) -> bool {
 /// (0x54c5b0: push 1; push saída; mov ecx, 0xae2c90 -> thiscall(data, saída, n), ret 8); e a partida vai ao calendário
 /// (0x5aa680: push 1; push &partida; ecx = [0xae2a58] -> thiscall, ret 8).
 pub(crate) unsafe fn add_fixture_to_calendar(p: usize) {
-    let new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let join: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
     let (mut t, mut saida) = ([0u8; 8], [0u8; 8]);
-    let f = new(t.as_mut_ptr() as usize, read_usize(p + fixture::DAY) as u32, read_usize(p + fixture::YEAR) as u32);
+    let f = exe::new_date(t.as_mut_ptr() as usize, read_usize(p + fixture::DAY) as u32, read_usize(p + fixture::YEAR) as u32);
     let (hd, ha) = (read_i16(G_CURRENT_DATE), read_i16(G_CURRENT_DATE_YEAR) as u16);
     let fa = read_i16(f + 2) as u16;
     let before = ha < fa || (ha == fa && hd < read_i16(f));
@@ -34,7 +32,7 @@ pub(crate) unsafe fn add_fixture_to_calendar(p: usize) {
         write_u16(p + fixture::DAY, read_i16(s) as u16);
         write_u16(p + fixture::YEAR, read_i16(s + 2) as u16);
     }
-    join(read_usize(G_FIXTURE_MANAGER), p, 1);
+    exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER), p, 1);
 }
 
 /// Creates the fixture of a tie (or only marks it as deferred): competition, round, rules, clubs, date (tomorrow if
@@ -193,21 +191,20 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     if (cup_has_human_manager(home) || cup_has_human_manager(away)) && read_i16(round_entry(this, ri) + 0xd) as u16 & 0x100 == 0 {
         let mut news = [0u32; 0x38];
         let n = news.as_mut_ptr() as usize;
-        let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
         exe::new_newsitem(n, 0x14, 0);
-        write(n, 0, read_usize(read_usize(this + 4)) as u32);
-        write(n, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
-        write(n, 2, read_i16(round_entry(this, ri) + 7) as i32 as u32);
-        write(n, 5, (read_u8(round_entry(this, ri) + 0x21) == 2) as u32);
-        write(n, 6, read_usize(p + fixture::STADIUM_ID) as u32);
-        write(n, 7, read_i16(p + fixture::DAY) as u16 as u32);
-        write(n, 8, read_i16(p + fixture::YEAR) as u16 as u32);
+        exe::newsitem_set_slot(n, 0, read_usize(read_usize(this + 4)) as u32);
+        exe::newsitem_set_slot(n, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
+        exe::newsitem_set_slot(n, 2, read_i16(round_entry(this, ri) + 7) as i32 as u32);
+        exe::newsitem_set_slot(n, 5, (read_u8(round_entry(this, ri) + 0x21) == 2) as u32);
+        exe::newsitem_set_slot(n, 6, read_usize(p + fixture::STADIUM_ID) as u32);
+        exe::newsitem_set_slot(n, 7, read_i16(p + fixture::DAY) as u16 as u32);
+        exe::newsitem_set_slot(n, 8, read_i16(p + fixture::YEAR) as u16 as u32);
         if cup_has_human_manager(home) {
-            write(n, 3, read_usize(p + fixture::HOME_CLUB_ID) as u32);
-            write(n, 4, read_usize(p + fixture::AWAY_CLUB_ID) as u32);
+            exe::newsitem_set_slot(n, 3, read_usize(p + fixture::HOME_CLUB_ID) as u32);
+            exe::newsitem_set_slot(n, 4, read_usize(p + fixture::AWAY_CLUB_ID) as u32);
         } else {
-            write(n, 3, read_usize(p + fixture::AWAY_CLUB_ID) as u32);
-            write(n, 4, read_usize(p + fixture::HOME_CLUB_ID) as u32);
+            exe::newsitem_set_slot(n, 3, read_usize(p + fixture::AWAY_CLUB_ID) as u32);
+            exe::newsitem_set_slot(n, 4, read_usize(p + fixture::HOME_CLUB_ID) as u32);
         }
         exe::news_send_to_club_manager(read_usize(G_NEWS), n, home);
         exe::news_send_to_club_manager(read_usize(G_NEWS), n, away);
@@ -223,18 +220,17 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
         write_u8(p + fixture::FLAGS, read_u8(p + fixture::FLAGS) | 4);
     }
     write_u16(p + fixture::ROUND_NAME, read_i16(e + cup_round::ROUND_CODE).wrapping_add(4) as u16);
-    let new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let week: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
     let (mut a, mut s, mut c, mut x) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
     let pa = a.as_mut_ptr() as usize;
     // simplification: the original pushes the day and the year in registers with leftovers in the high 16 bits; 0x549ef0 only reads the
     // palavras
-    new(pa, read_i16(e + cup_round::DAY) as u16 as u32, (read_u8(e + cup_round::YEAR_OFFSET) as i8 as i16).wrapping_add(read_i16(this + cup::YEAR)) as u16 as u32);
+    exe::new_date(pa, read_i16(e + cup_round::DAY) as u16 as u32, (read_u8(e + cup_round::YEAR_OFFSET) as i8 as i16).wrapping_add(read_i16(this + cup::YEAR)) as u16 as u32);
     let r = exe::date_add_days(pa, s.as_mut_ptr() as usize, read_u8(e + cup_round::LEG_GAP_DAYS) as u32);
     exe::date_operator_3d(pa, c.as_mut_ptr() as usize, r);
     write_u16(p + fixture::YEAR, read_i16(pa + 2) as u16);
     write_u16(p + fixture::DAY, read_i16(pa) as u16);
-    let day = new(x.as_mut_ptr() as usize, read_usize(pa) as u32, read_usize(pa + 2) as u32);
+    let day = exe::new_date(x.as_mut_ptr() as usize, read_usize(pa) as u32, read_usize(pa + 2) as u32);
     let sd = week(day) as i16;
     write_u8(p + fixture::TIME_SLICE, if sd == 5 || sd == 6 { 1 } else { 2 });
     let (c1, c2, i1, i2) = (read_usize(p + fixture::HOME_CLUB), read_usize(p + fixture::AWAY_CLUB), read_usize(p + fixture::HOME_CLUB_ID), read_usize(p + fixture::AWAY_CLUB_ID)); // cqc5: the second-leg sides
@@ -349,24 +345,23 @@ pub(crate) unsafe extern "thiscall" fn post_draw_news(this: usize, round: u32, t
     crate::comparison::branch("cqc_5 pending tie");
     let mut noticia = [0u32; 0x38];
     let n = noticia.as_mut_ptr() as usize;
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     exe::new_newsitem(n, 0x26, 0);
-    write(n, 0, read_usize(read_usize(this + 4)) as u32);
-    write(n, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
-    write(n, 2, read_i16(round_entry(this, ri) + 7) as i32 as u32);
+    exe::newsitem_set_slot(n, 0, read_usize(read_usize(this + 4)) as u32);
+    exe::newsitem_set_slot(n, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
+    exe::newsitem_set_slot(n, 2, read_i16(round_entry(this, ri) + 7) as i32 as u32);
     if casa != 0 {
-        write(n, 3, read_usize(casa) as u32);
-        write(n, 4, u32::MAX);
+        exe::newsitem_set_slot(n, 3, read_usize(casa) as u32);
+        exe::newsitem_set_slot(n, 4, u32::MAX);
     } else {
-        write(n, 3, read_usize(a1) as u32);
-        write(n, 4, read_usize(a2) as u32);
+        exe::newsitem_set_slot(n, 3, read_usize(a1) as u32);
+        exe::newsitem_set_slot(n, 4, read_usize(a2) as u32);
     }
     if away != 0 {
-        write(n, 5, read_usize(away) as u32);
-        write(n, 6, u32::MAX);
+        exe::newsitem_set_slot(n, 5, read_usize(away) as u32);
+        exe::newsitem_set_slot(n, 6, u32::MAX);
     } else {
-        write(n, 5, read_usize(b1) as u32);
-        write(n, 6, read_usize(b2) as u32);
+        exe::newsitem_set_slot(n, 5, read_usize(b1) as u32);
+        exe::newsitem_set_slot(n, 6, read_usize(b2) as u32);
     }
     let news = read_usize(G_NEWS);
     if casa != 0 {
@@ -1055,9 +1050,8 @@ pub(crate) unsafe fn round_has_open_team(cup: usize, r: u32) -> bool {
 /// push ano; push dia; ecx = a local; sem add esp -> thiscall, ret 8; os dois em registradores com lixo nos bits altos,
 /// a Rust só lê as palavras).
 pub(crate) unsafe fn round_draw_date(cup: usize, reg: usize, d: *mut [u8; 8]) {
-    let new: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let year = (read_u8(reg + 2) as i8 as i16).wrapping_add(read_i16(cup + cup::YEAR));
-    new(d, read_i16(reg) as u16 as u32, year as u16 as u32);
+    exe::new_date((d) as *mut [u8; 8] as usize, read_i16(reg) as u16 as u32, year as u16 as u32);
 }
 
 /// Stores date d as the round's draw date: the day word and the year byte minus the low byte of cup +0x40.
@@ -1140,12 +1134,11 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
     let reg = round_record_by_dword(cup, round);
     if round_has_open_team(cup, round) {
         let more: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], u32) -> *mut [u8; 8] = core::mem::transmute(FN_DATE_ADD_DAYS);
-        let copy: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], *mut [u8; 8]) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
         let (mut a, mut b, mut c) = ([0u8; 8], [0u8; 8], [0u8; 8]);
         round_draw_date(cup, reg, &mut a);
         crate::comparison::branch("cqa_3 draw postponed");
         let r = more(&mut a, &mut b, 1); // cqa3: the deferred random draw
-        copy(&mut a, &mut c, r); // push &b; push &c; ecx = &a -> thiscall, ret 8
+        exe::date_operator_3d((&mut a) as *mut [u8; 8] as usize, (&mut c) as *mut [u8; 8] as usize, (r) as *mut [u8; 8] as usize); // push &b; push &c; ecx = &a -> thiscall, ret 8
         set_round_draw_date(cup, reg, &a);
         let mut k = round.wrapping_add(1);
         while (k as i16) < read_i16(cup + cup::ROUND_COUNT) {
@@ -1198,16 +1191,15 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
     }
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let human: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     exe::new_newsitem(n, 0x27, 0); // push 0; push 0x27; ecx = a local -> thiscall, ret 8
-    write(n, 0, read_usize(read_usize(cup + 4)) as u32); // push valor; push k; ecx = a local -> thiscall, ret 8
-    write(n, 1, read_i16(cup + cup::STAGE_LABEL) as i32 as u32);
-    write(n, 2, read_i16(round_record_by_dword(cup, round) + 7) as i32 as u32);
-    write(n, 4, read_u8(cup + cup::STAGE_INDEX) as i8 as i32 as u32);
-    write(n, 5, round);
-    write(n, 6, 0);
-    write(n, 7, ((read_u8(cup + cup::CURRENT_ROUND) as i8 as i32 + 1) < read_u8(cup + cup::NEXT_DRAW_ROUND) as i8 as i32) as u32);
+    exe::newsitem_set_slot(n, 0, read_usize(read_usize(cup + 4)) as u32); // push valor; push k; ecx = a local -> thiscall, ret 8
+    exe::newsitem_set_slot(n, 1, read_i16(cup + cup::STAGE_LABEL) as i32 as u32);
+    exe::newsitem_set_slot(n, 2, read_i16(round_record_by_dword(cup, round) + 7) as i32 as u32);
+    exe::newsitem_set_slot(n, 4, read_u8(cup + cup::STAGE_INDEX) as i8 as i32 as u32);
+    exe::newsitem_set_slot(n, 5, round);
+    exe::newsitem_set_slot(n, 6, 0);
+    exe::newsitem_set_slot(n, 7, ((read_u8(cup + cup::CURRENT_ROUND) as i8 as i32 + 1) < read_u8(cup + cup::NEXT_DRAW_ROUND) as i8 as i32) as u32);
     for i in 0..sum.max(0) as usize {
         let e = read_usize(cup + cup::TEAM_TABLE) + 6 * i;
         if read_u8(e + 5) != 0 || read_usize(e) == 0 {
@@ -1217,7 +1209,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
         if human(read_usize(e)) == 0 {
             continue;
         }
-        write(n, 3, read_usize(read_usize(read_usize(cup + cup::TEAM_TABLE) + 6 * i)) as u32);
+        exe::newsitem_set_slot(n, 3, read_usize(read_usize(read_usize(cup + cup::TEAM_TABLE) + 6 * i)) as u32);
         // push club; push &local; ecx = [0xb7431c]; no add esp -> thiscall, ret 8
         exe::news_send_to_club_manager(read_usize(G_NEWS), n, read_usize(read_usize(cup + cup::TEAM_TABLE) + 6 * i));
     }
@@ -1693,9 +1685,8 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_side_teams(this: usize, round
 ///
 /// [pt] Uma data montada pela 0x549ef0 (dia, ano: ela lê as palavras; os dwords vão como os da original).
 pub(crate) unsafe fn make_date(day: u32, year: u32) -> [u8; 8] {
-    let build: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let mut d = [0u8; 8];
-    build(&mut d, day, year);
+    exe::new_date((&mut d) as *mut [u8; 8] as usize, day, year);
     d
 }
 
@@ -1746,7 +1737,7 @@ pub(crate) unsafe fn cup_stage(this: usize, i: usize) -> usize {
 /// A cup with no parent (`+0x44` = `0xff`): with `+0xb1`, if stages 0..=`+0x30` are complete (virtual `+0x10` with 0,
 /// 1), it moves to the next stage (virtual `+0x28`, if `+0x30` < `+0x2c` − 1) or ends the cup once (`+0x4c`: the
 /// history `0x442e80` of `[0xad9da8]`, virtual `+0x30`, the records `0x4a19f0` of Comp_Stats `+8`); then the records
-/// news (`0x4a2450`). Still with no parent, each stage receives the day (virtual `+0x14` with `0xae2c90` and the
+/// exe::comp_stats_send_record_news(`0x4a2450`). Still with no parent, each stage receives the day (virtual `+0x14` with `0xae2c90` and the
 /// phase).
 ///
 /// Phase 0 (with `[0xae2c88]` = 1): the last, final round (`+7` = `0x8c`) is drawn on its date (`0x51c410`); without
@@ -1758,14 +1749,12 @@ pub(crate) unsafe fn cup_stage(this: usize, i: usize) -> usize {
 /// [pt] { 0x51f890 } (thiscall, ret 8, Cup.cpp; a atualização diária de cada copa): `Cup::update_for_date(hoje, fase)`. Copa
 /// sem pai (+0x44 = 0xff): com +0xb1, se as fases 0..=+0x30 estão completas (virtual +0x10 com 0, 1), passa à fase
 /// seguinte (virtual +0x28, se +0x30 < +0x2c − 1) ou encerra uma vez (+0x4c: o histórico 0x442e80 de [0xad9da8], a
-/// virtual +0x30, os recordes 0x4a19f0 do Comp_Stats +8); depois as notícias dos recordes (0x4a2450). Ainda sem pai,
+/// virtual +0x30, os recordes 0x4a19f0 do Comp_Stats +8); depois as notícias dos exe::comp_stats_update_season_end_records(0x4a2450). Ainda sem pai,
 /// cada fase recebe o dia (virtual +0x14 com 0xae2c90 e a fase). Fase 0 (com [0xae2c88] = 1): a última rodada final
 /// (+7 = 0x8c) sorteia na data dela (0x51c410); sem +0xb1, sorteia as rodadas a partir de +0xac cuja data chegou, até
 /// não avançar ou acabar. Fase ≠ 0 (com +0x45): o mesmo com a montagem das rodadas (0x51c800) a partir de +0xab, que
 /// também monta na data pendente da rodada (+0x34 da fase da rodada). Devolve 0.
 pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    let sortear: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_DRAW_ROUND);
-    let build: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     if read_u8(this + cup::STAGE_INDEX) == 0xff {
         let mut completas = read_u8(this + cup::RUN_BY_STAGES) != 0;
         if completas {
@@ -1787,15 +1776,13 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
                 exe::club_history_record_comp_season(read_usize(G_CLUB_HISTORY), this);
                 cup_call_virtual_no_args(this, 0x30);
                 if read_usize(this + 8) != 0 {
-                    let recordes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_STATS_UPDATE_SEASON_END_RECORDS);
-                    recordes(read_usize(this + 8));
+                    exe::comp_stats_update_season_end_records(read_usize(this + 8));
                 }
                 core::ptr::write_unaligned((this + cup::SEASON_CLOSED) as *mut u32, 1);
             }
         }
         if read_usize(this + 8) != 0 {
-            let news: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_STATS_SEND_RECORD_NEWS);
-            news(read_usize(this + 8));
+            exe::comp_stats_send_record_news(read_usize(this + 8));
         }
     }
     if read_u8(this + cup::STAGE_INDEX) == 0xff {
@@ -1818,7 +1805,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
             let year = (read_u8(r + 2) as i8 as i16).wrapping_add(read_u16(this + cup::YEAR) as i16) as u16 as u32;
             let d = make_date(read_u16(r) as u32, year);
             if cup_date_day_year(&d) == (hdia, hano) {
-                sortear(this, (n as i32 - 1) as u32); // the final on its date
+                exe::cup_draw_round(this, (n as i32 - 1) as u32); // the final on its date
             }
         }
         if read_u8(this + cup::RUN_BY_STAGES) != 0 {
@@ -1835,7 +1822,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
                 return 0;
             }
             crate::comparison::branch("cps_13 round draw");
-            sortear(this, read_u8(this + cup::NEXT_DRAW_ROUND) as i8 as i32 as u32);
+            exe::cup_draw_round(this, read_u8(this + cup::NEXT_DRAW_ROUND) as i8 as i32 as u32);
             let new = read_u8(this + cup::NEXT_DRAW_ROUND) as i8;
             if new == k || new as i16 == read_u16(this + cup::ROUND_COUNT) as i16 {
                 return 0;
@@ -1851,7 +1838,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
         let year = (read_u8(r + 2) as i8 as i16).wrapping_add(read_u16(this + cup::YEAR) as i16) as u16 as u32;
         let d = make_date(read_u16(r) as u32, year);
         if cup_date_day_year(&d) == (hdia, hano) {
-            build(this, (n as i32 - 1) as u32); // the final on its date
+            exe::cup_set_up_round(this, (n as i32 - 1) as u32); // the final on its date
         }
     }
     if read_u8(this + cup::RUN_BY_STAGES) != 0 || read_usize(this + cup::SEASON_SET_UP) == 0 {
@@ -1871,7 +1858,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
             }
         }
         crate::comparison::branch("cps_13 round setup");
-        build(this, read_u8(this + cup::CURRENT_ROUND) as i8 as i32 as u32);
+        exe::cup_set_up_round(this, read_u8(this + cup::CURRENT_ROUND) as i8 as i32 as u32);
         let new = read_u8(this + cup::CURRENT_ROUND) as i8;
         if new == k || new as i16 == read_u16(this + cup::ROUND_COUNT) as i16 {
             return 0;
@@ -1916,8 +1903,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
     }
     let ad = read_usize(this + cup::TIE_TABLES);
     if read_u8(read_usize(ad + round as usize * 4) + 0x34) == 0 {
-        let sortear: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_DRAW_ROUND);
-        sortear(this, round);
+        exe::cup_draw_round(this, round);
     }
     let current = read_u8(this + cup::CURRENT_ROUND) as i8 as isize;
     let base = read_usize(this + cup::ROUND_TABLE);
@@ -1939,14 +1925,12 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
     }
     if without_club {
         // the requested round (not the current one) and the following ones are moved one day later
-        let more_days: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-        let atribuir: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
         let r = round_record_at(this, ri as isize);
         let year = (read_u8(r + 2) as i8 as i16).wrapping_add(read_u16(this + cup::YEAR) as i16) as u16 as u32;
         let mut d = make_date((read_usize(this + cup::TEAM_TABLE) as u32 & 0xffff_0000) | read_u16(r) as u32, year);
         let (mut amanha, mut copia) = ([0u8; 8], [0u8; 8]);
-        let p = more_days(&mut d, &mut amanha, 1);
-        atribuir(&mut d, &mut copia, p);
+        let p = exe::date_add_days((&mut d) as *mut [u8; 8] as usize, (&mut amanha) as *mut [u8; 8] as usize, 1);
+        exe::date_operator_3d((&mut d) as *mut [u8; 8] as usize, (&mut copia) as *mut [u8; 8] as usize, p);
         let (day, year) = cup_date_day_year(&d);
         crate::comparison::branch("cps_13 round postponed");
         let r = round_record_at(this, ri as isize);
@@ -1980,15 +1964,13 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
         }
         i += 1;
     }
-    let new: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let build_data: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let p = new(8);
+    let p = exe::crt_operator_new((8) as usize as u32);
     let data = if p != 0 {
         let base = read_usize(this + cup::ROUND_TABLE);
         let r = (base as isize + off) as usize;
         let year = (read_u8(r + 5) as i8 as i16).wrapping_add(read_u16(this + cup::YEAR) as i16) as u16 as u32;
         let day = read_u16(r + 3) as u32;
-        build_data(p, (r as u32 & 0xffff_0000) | day, (base as u32 & 0xffff_0000) | year)
+        exe::new_date(p, (r as u32 & 0xffff_0000) | day, (base as u32 & 0xffff_0000) | year)
     } else {
         0
     };
@@ -2020,14 +2002,11 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
 /// 0x549ef0, 0x54c8e0, 0x417c10) para o clube `id` com a nação do estádio. `alto_dia`/`alto_ano`: as metades altas dos
 /// dwords que a original empurra à 0x549ef0.
 pub(crate) unsafe fn add_illness_risk_before_match(f: usize, id: usize, nation: usize, high_day: u32, high_year: u32) {
-    let minus_days: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let atribuir: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let doenca: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32, usize, usize) -> u32 = core::mem::transmute(FN_INJURY_ADD_ILLNESS_OUTBREAK);
     let mut d = make_date((high_day & 0xffff_0000) | read_u16(f + fixture::DAY) as u32, (high_year & 0xffff_0000) | read_u16(f + fixture::YEAR) as u32);
     let (mut vespera, mut copia) = ([0u8; 8], [0u8; 8]);
-    let p = minus_days(&mut d, &mut vespera, 1);
-    atribuir(&mut d, &mut copia, p);
-    doenca(read_usize(G_INJURY), &mut d, 3, id, nation);
+    let p = exe::date_sub_days((&mut d) as *mut [u8; 8] as usize, (&mut vespera) as *mut [u8; 8] as usize, 1);
+    exe::date_operator_3d((&mut d) as *mut [u8; 8] as usize, (&mut copia) as *mut [u8; 8] as usize, p);
+    exe::injury_add_illness_outbreak(read_usize(G_INJURY), &mut d, 3, id, nation);
 }
 
 // simplification: draws and builds rounds (allocates matches): does not run twice. Original only; the copy carries the branches (draw and
@@ -2735,9 +2714,8 @@ pub(crate) unsafe extern "C" fn cup_compare_draw_entries_by_seed(a: usize, b: us
 /// [pt] A data (Date::Date, 0x549f70, num Date local de 8 bytes) de `dia`/`mes`/`ano`, levada ao dia da
 /// semana `semana` (−1 = qualquer): (palavra +0 = dia do ano, byte baixo do ano +2).
 pub(crate) unsafe fn date_on_weekday(day: u32, month: u32, year: u32, week: u32) -> (u16, u8) {
-    let construct: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u32; 2];
-    construct(&mut d, day, month, year, week);
+    exe::date_date_549f70((&mut d) as *mut [u32; 2] as *mut [u16; 4], day, month, year, week);
     (d[0] as u16, (d[0] >> 16) as u8)
 }
 
@@ -2903,7 +2881,6 @@ pub(crate) unsafe extern "thiscall" fn cup_match_importance(cup: usize, partida:
 /// região da competição (0x786860); senão ao técnico do clube (0x7861e0). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: usize, outcome: u32, a3: u32, p: usize, a5: u32) -> u32 {
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     // simplification: the original writes only the output byte into a stack dword and pushes the dword; 0x786090 reads the byte
     let mut out: u32 = 0xff;
     if friendly(read_usize(G_FRIENDLY), read_usize(cup + 4)) != 0 {
@@ -2919,11 +2896,11 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0x10, 0);
-    write(n, 0, read_usize(club) as u32);
-    write(n, 1, read_usize(read_usize(cup + 4)) as u32);
-    write(n, 2, outcome as u8 as i8 as i32 as u32);
-    write(n, 3, exe::comp_util_classify_tie_result_for_news(club, p) as i8 as i32 as u32);
-    write(n, 4, r as u32);
+    exe::newsitem_set_slot(n, 0, read_usize(club) as u32);
+    exe::newsitem_set_slot(n, 1, read_usize(read_usize(cup + 4)) as u32);
+    exe::newsitem_set_slot(n, 2, outcome as u8 as i8 as i32 as u32);
+    exe::newsitem_set_slot(n, 3, exe::comp_util_classify_tie_result_for_news(club, p) as i8 as i32 as u32);
+    exe::newsitem_set_slot(n, 4, r as u32);
     // simplification: the cursor is a stack dword with 5 in the low byte (the rest is leftover); only the low byte counts
     let mut cursor = [5u8, 0, 0, 0];
     exe::comp_util_write_fixture_to_news_slots(p, n, cursor.as_mut_ptr());
@@ -2934,7 +2911,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     } else {
         -1
     };
-    write(n, cursor[0] as i8, proxima as u32);
+    exe::newsitem_set_slot(n, cursor[0] as i8, proxima as u32);
     let news = read_usize(G_NEWS);
     if out as u8 != 0xff {
         let nation = read_usize(club + club::NATION);
@@ -3014,7 +2991,6 @@ pub(crate) unsafe extern "thiscall" fn cup_check_complete(this: usize, stages: u
 /// 0xff. Com ou sem a mudança, a notícia 0x14 vai aos clubes se um é de técnico humano. Sem vaga (fim das vagas ou
 /// vaga vazia): só a notícia, com os dados do jogo.
 pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: usize, round: u32) {
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut news = [0u32; 0x38];
     let n1 = news.as_mut_ptr() as usize;
     exe::new_newsitem(n1, 0x14, 0);
@@ -3027,23 +3003,23 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
     let l = list.as_mut_ptr() as usize;
     exe::new_llist(l);
     if collect_round_fixtures(this, data, round, l) != 0 {
-        write(n1, 0, read_usize(read_usize(this + 4)) as u32);
-        write(n1, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
-        write(n1, 2, read_i16(cup_round_entry(this, round) + 7) as i32 as u32);
-        write(n1, 5, (read_u8(cup_round_entry(this, round) + 0x21) == 2) as u32);
+        exe::newsitem_set_slot(n1, 0, read_usize(read_usize(this + 4)) as u32);
+        exe::newsitem_set_slot(n1, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
+        exe::newsitem_set_slot(n1, 2, read_i16(cup_round_entry(this, round) + 7) as i32 as u32);
+        exe::newsitem_set_slot(n1, 5, (read_u8(cup_round_entry(this, round) + 0x21) == 2) as u32);
         // match news item 0x14 (data 3, 4, 6, 7, 8) to both clubs, if either has a human manager
         let news_of_game = |c1: usize, c2: usize, i1: usize, i2: usize, est: usize, day: u16, year: u16| {
             if cup_has_human_manager(c1) || cup_has_human_manager(c2) {
                 if cup_has_human_manager(c1) {
-                    write(n1, 3, i1 as u32);
-                    write(n1, 4, i2 as u32);
+                    exe::newsitem_set_slot(n1, 3, i1 as u32);
+                    exe::newsitem_set_slot(n1, 4, i2 as u32);
                 } else {
-                    write(n1, 3, i2 as u32);
-                    write(n1, 4, i1 as u32);
+                    exe::newsitem_set_slot(n1, 3, i2 as u32);
+                    exe::newsitem_set_slot(n1, 4, i1 as u32);
                 }
-                write(n1, 6, est as u32);
-                write(n1, 7, day as u32);
-                write(n1, 8, year as u32);
+                exe::newsitem_set_slot(n1, 6, est as u32);
+                exe::newsitem_set_slot(n1, 7, day as u32);
+                exe::newsitem_set_slot(n1, 8, year as u32);
                 exe::news_send_to_club_manager(read_usize(G_NEWS), n1, c1);
                 exe::news_send_to_club_manager(read_usize(G_NEWS), n1, c2);
             }
@@ -3059,9 +3035,8 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                     let r = buf.as_mut_ptr() as usize;
                     core::ptr::copy_nonoverlapping(f as *const u8, r as *mut u8, 0x4f);
                     if fixture_on_round_date(this, e, f) {
-                        let new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
                         let p = exe::crt_operator_new(8);
-                        let dp = if p != 0 { new(p, read_i16(f + fixture::DAY) as u16 as u32, read_i16(f + fixture::YEAR) as u16 as u32) } else { 0 };
+                        let dp = if p != 0 { exe::new_date(p, read_i16(f + fixture::DAY) as u16 as u32, read_i16(f + fixture::YEAR) as u16 as u32) } else { 0 };
                         let mut t = [0u8; 8];
                         let pt = t.as_mut_ptr() as usize;
                         exe::date_date_54a110(pt);
@@ -3071,23 +3046,22 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                             let mut noticia2 = [0u32; 0x38];
                             let n2 = noticia2.as_mut_ptr() as usize;
                             exe::new_newsitem(n2, 3, 0);
-                            write(n2, 0, read_usize(r + fixture::HOME_CLUB_ID) as u32);
-                            write(n2, 1, read_usize(r + fixture::AWAY_CLUB_ID) as u32);
-                            write(n2, 2, read_usize(r) as u32);
-                            write(n2, 3, read_i16(r + fixture::ROUND_PREFIX) as i32 as u32);
-                            write(n2, 4, read_i16(r + fixture::ROUND_NAME) as i32 as u32);
-                            write(n2, 5, read_i16(r + fixture::DAY) as u16 as u32);
-                            write(n2, 6, read_i16(r + fixture::YEAR) as u16 as u32);
-                            write(n2, 7, read_u8(r + fixture::TIME_SLICE) as u32);
-                            write(n2, 8, read_i16(pt) as i32 as u32);
-                            write(n2, 9, read_i16(pt + 2) as u16 as u32);
-                            write(n2, 10, read_u8(cup_round_entry(this, round) + j + 0x28) as i8 as i32 as u32);
-                            write(n2, 11, read_u8(cup_round_entry(this, round) + j + 0x29) as i8 as i32 as u32);
+                            exe::newsitem_set_slot(n2, 0, read_usize(r + fixture::HOME_CLUB_ID) as u32);
+                            exe::newsitem_set_slot(n2, 1, read_usize(r + fixture::AWAY_CLUB_ID) as u32);
+                            exe::newsitem_set_slot(n2, 2, read_usize(r) as u32);
+                            exe::newsitem_set_slot(n2, 3, read_i16(r + fixture::ROUND_PREFIX) as i32 as u32);
+                            exe::newsitem_set_slot(n2, 4, read_i16(r + fixture::ROUND_NAME) as i32 as u32);
+                            exe::newsitem_set_slot(n2, 5, read_i16(r + fixture::DAY) as u16 as u32);
+                            exe::newsitem_set_slot(n2, 6, read_i16(r + fixture::YEAR) as u16 as u32);
+                            exe::newsitem_set_slot(n2, 7, read_u8(r + fixture::TIME_SLICE) as u32);
+                            exe::newsitem_set_slot(n2, 8, read_i16(pt) as i32 as u32);
+                            exe::newsitem_set_slot(n2, 9, read_i16(pt + 2) as u16 as u32);
+                            exe::newsitem_set_slot(n2, 10, read_u8(cup_round_entry(this, round) + j + 0x28) as i8 as i32 as u32);
+                            exe::newsitem_set_slot(n2, 11, read_u8(cup_round_entry(this, round) + j + 0x29) as i8 as i32 as u32);
                             exe::news_send_to_club_manager(read_usize(G_NEWS), n2, read_usize(r + fixture::HOME_CLUB));
                             exe::news_send_to_club_manager(read_usize(G_NEWS), n2, read_usize(r + fixture::AWAY_CLUB));
                         }
-                        let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
-                        remove(read_usize(G_FIXTURE_MANAGER), r);
+                        exe::fixture_manager_remove_fixture(read_usize(G_FIXTURE_MANAGER), r);
                         crate::comparison::branch("cqc_7 match moved to the date");
                         write_u16(r + fixture::DAY, read_i16(pt) as u16); // cqc7: o dia marcado
                         write_u16(r + fixture::YEAR, read_i16(pt + 2) as u16);
@@ -3096,8 +3070,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         write_u8(r + fixture::STAGE, read_u8(v + 0x29));
                         let stadium: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
                         stadium(read_usize(G_STADIUM), read_usize(cup_round_entry(this, round) + j + 0x23), r, read_usize(this + cup::VENUE_STADIUM_ID));
-                        let join: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
-                        join(read_usize(G_FIXTURE_MANAGER), r, 1);
+                        exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER), r, 1);
                         if dp != 0 {
                             exe::crt_operator_delete(dp);
                         }

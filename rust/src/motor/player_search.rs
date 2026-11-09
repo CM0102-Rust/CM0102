@@ -336,7 +336,6 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
     exe::date_operator_3d(this + player_search_fields::SCOUTING_START_DATE, copia.as_mut_ptr() as usize, tomorrow);
     let mut mark = copia[0] & !0xff;
     let request: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_SCOUT_MANAGER_HAS_SCOUT_REQUEST);
-    let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     // 0x5afde0: push owner; mov ecx, [0xae2a60] -> thiscall, ret 4; 0x5b09d0: push scout; push player; mov ecx, eax ->
     // thiscall, ret 8; 0x7f8d70: push 0; push club; push player; mov ecx, [0xb74448] -> thiscall, ret 0xc; 0x5407e0:
     // push 0; push olheiro; push jogador; add esp, 0xc -> cdecl; 0x7b62a0: 7 pushes; mov ecx, this -> thiscall, ret 0x1c;
@@ -416,7 +415,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
             let n = ((read_u8(current + 5) as i32 * 0x28 - 0x104).wrapping_mul(rating as i8 as i32)) / 2;
             exe::player_search_report_on_player(this, p, reg, n, mode, game, result, mark);
             if (read_u8(reg + 0x66) as i8) > -1 {
-                append(out, reg, 0x67);
+                exe::llist_add_tail(out, reg, 0x67);
             }
         }
         mark = (mark & !0xff) | ((mark as u8).wrapping_add(1)) as u32;

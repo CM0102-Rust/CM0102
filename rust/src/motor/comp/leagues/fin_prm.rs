@@ -472,13 +472,12 @@ pub(crate) unsafe fn pay_dividend(this: usize, club: usize, fin: usize) {
 /// ecx = local; 2 pushes -> thiscall, ret 8) com o id do clube, o valor e a marca +0x82 (0x785790: ecx = local; 2
 /// pushes -> thiscall, ret 8) entregue ao técnico do clube (0x7861e0: ecx = [0xb7431c]; 2 pushes -> thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn news_dividend(_this: usize, club: usize, value: i32) {
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
     exe::new_newsitem(p, 0x177c, 0);
-    write(p, 0, read_usize(club) as u32);
-    write(p, 1, value as u32);
-    write(p, 2, read_u8(club + club::PLC) as i8 as i32 as u32);
+    exe::newsitem_set_slot(p, 0, read_usize(club) as u32);
+    exe::newsitem_set_slot(p, 1, value as u32);
+    exe::newsitem_set_slot(p, 2, read_u8(club + club::PLC) as i8 as i32 as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
 }
 
@@ -1049,13 +1048,12 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
 /// lea ecx, local; 2 pushes -> thiscall, ret 8) entregue ao técnico do clube (0x7861e0: ecx = [0xb7431c]; push clube;
 /// push &local -> thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn news_ground_works(_this: usize, club: usize, value: u32, kind: u32) {
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
     exe::new_newsitem(p, 0x177d, 0);
-    write(p, 0, read_usize(club) as u32);
-    write(p, 1, value);
-    write(p, 2, kind as u8 as i8 as i32 as u32);
+    exe::newsitem_set_slot(p, 0, read_usize(club) as u32);
+    exe::newsitem_set_slot(p, 1, value);
+    exe::newsitem_set_slot(p, 2, kind as u8 as i8 as i32 as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
 }
 
@@ -1077,13 +1075,12 @@ pub(crate) unsafe extern "thiscall" fn news_request_refused(_this: usize, club: 
     if club == 0 {
         return;
     }
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
     exe::new_newsitem(p, 0x1788, 0);
-    write(p, 1, subject as u16 as i16 as i32 as u32);
+    exe::newsitem_set_slot(p, 1, subject as u16 as i16 as i32 as u32);
     let v = if reason as u16 == 2 { 2 } else { exe::utils_random(2) };
-    write(p, 2, v as u16 as i16 as i32 as u32);
+    exe::newsitem_set_slot(p, 2, v as u16 as i16 as i32 as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
 }
 
@@ -1838,9 +1835,6 @@ pub(crate) unsafe extern "thiscall" fn pay_other_costs(this: usize, value: i32) 
 /// (tipo 1: Inglaterra e Itália 0,001 / 0,0008 / 0,0006 acima de 5250 / 3250; outras 0,0004; fora do tipo 1: 0,0002
 /// acima de 3250, senão 0,0001), truncado. O teto salarial (+0x14) refeito por Finance::get_max_wage (0x5968d0, 0, −1).
 pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
-    let with_club: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let default: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32, u32) -> f64 = core::mem::transmute(FN_STAFF_CONTRACT_DEFAULT_STAFF_CONTRACT);
-    let sheet: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let ceiling: unsafe extern "thiscall" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_FINANCE_GET_MAX_WAGE);
     write_i32(this + finance::HIGHEST_WAGE, 0);
     write_i32(this + league::STAGES, 0);
@@ -1852,16 +1846,16 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
             continue;
         }
         ocupadas = ocupadas.wrapping_add(1);
-        let c = with_club(read_usize(G_CONTRACT_MANAGER), p, club);
+        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
         if c == 0 {
             continue;
         }
         let mut w = read_i32(c + contract::WAGE);
         if w == -1 {
-            w = ftol(default(c, p, club, 0, -1, 0xb, 0));
+            w = ftol(exe::staff_contract_default_staff_contract(c, p, club, 0, (-1) as i32 as u32, 0xb, 0));
         }
-        if sheet(read_usize(G_CONTRACT_MANAGER), p) != 0 && read_u8(c + contract::CONTRACT_TYPE) & 0x3f != 6 {
-            w = w.wrapping_sub(read_i32(sheet(read_usize(G_CONTRACT_MANAGER), p) + 0xc)); // the share of the other contract
+        if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) != 0 && read_u8(c + contract::CONTRACT_TYPE) & 0x3f != 6 {
+            w = w.wrapping_sub(read_i32(exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) + 0xc)); // the share of the other contract
         }
         if w > read_i32(this + finance::HIGHEST_WAGE) {
             write_i32(this + finance::HIGHEST_WAGE, w);
@@ -2563,7 +2557,6 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
         }
         -2 => {
             if read_u8(fin + 0x165) != 1 {
-                let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
                 exe::finance_post_financial_crisis_news(this, club);
                 if read_u8(club + club::PLC) != 0 {
                     *((club + club::PLC) as *mut u8) = 0;
@@ -2582,7 +2575,7 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
                     let k = exe::contract_manager_get_contract(g, j);
                     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k;
                     let owner = if k != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE)) } else { 0 };
-                    let ct = contract(read_usize(G_CONTRACT_MANAGER), j, owner);
+                    let ct = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), j, owner);
                     if owner == club && ct != 0 {
                         let v = exe::contract_manager_calc_player_value(read_usize(G_CONTRACT_MANAGER), j, owner, 0, -1, 1);
                         if v < read_i32(j + staff::VALUE) {

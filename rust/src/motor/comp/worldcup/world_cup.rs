@@ -151,7 +151,6 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
 /// zerados no órgão da competição (0x7e9180 push 0; ecx = [[0xae28f0] + 4 × (char)+0x50] -> thiscall, ret 4).
 /// Num erro a lista não é liberada (como a original).
 pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let list = exe::worldcup_draw_groups(this);
     if exe::worldcup_create_group_table(this, list) == 0 {
         show_error_at(0xad5888, 0x46d);
@@ -161,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
         show_error_at(0xad5888, 0x473);
         return;
     }
-    if sort(this, 0) == 0 {
+    if exe::league_sort_table(this, 0) == 0 {
         show_error_at(0xad5888, 0x47a);
         return;
     }
@@ -193,7 +192,6 @@ pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
 /// = 0), o sorteio (0x92e7f0 mov ecx -> thiscall, ret 0). Depois o dia de liga (0x6847c0 push completo; push hoje; mov
 /// ecx -> thiscall, ret 8), cuja devolução (eax) ela repassa. A data: +0 o dia do ano, +2 o ano (sem sinal).
 pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     let year = core::ptr::read_unaligned((today + 2) as *const u16) as i32;
     let day = core::ptr::read_unaligned(today as *const u16);
     if read_i16(this + 0x18e) as u16 == day && read_i16(this + 0x190) as i32 + read_i16(this + league::YEAR) as i32 == year && full != 0 {
@@ -204,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
         crate::comparison::branch("cqf_4 draw day");
         exe::worldcup_run_group_draw(this);
     }
-    league(this, today, full)
+    exe::league_update_for_date(this, today, full)
 }
 
 /// Club of entry i (5 bytes, id at +0) of the draw list: [G_CLUB_TABLE] + id × 0x245.

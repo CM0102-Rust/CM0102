@@ -31,10 +31,8 @@ use super::*;
 /// 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela
 /// repassa.
 pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     if full == 0 {
-        return league(this, today, 0);
+        return exe::league_update_for_date(this, today, 0);
     }
     let day = read_i16(this + league::NEXT_DRAW_DAY) as u16;
     let year = (read_i16(this + league::NEXT_DRAW_YEAR_OFFSET) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
@@ -58,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
             show_error_at(0x9870f8, 0x3c8);
             return 0;
         }
-        if sort(this, 0) == 0 {
+        if exe::league_sort_table(this, 0) == 0 {
             show_error_at(0x9870f8, 0x3cf);
             return 0;
         }
@@ -70,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
         core::ptr::write_unaligned((this + 0xf2) as *mut u16, 0);
         write_usize(this + league::ACTIVE, 1);
     }
-    league(this, today, full)
+    exe::league_update_for_date(this, today, full)
 }
 
 // simplification: the draw, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan

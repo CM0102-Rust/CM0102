@@ -795,7 +795,6 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
         return 0;
     }
     crate::comparison::branch("cqi_3 english volunteer");
-    let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let club_drawn = || {
         let s = exe::utils_random(read_i16(league + league::CLUB_COUNT) as i32) as i16 as i32;
         read_u32((read_u32(league + league::TABLE) as usize).wrapping_add((s * 0x3b) as usize)) as usize
@@ -852,7 +851,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     let mut news = [0u8; 0xe8];
     let n = news.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0x17, 0);
-    write(n, 0, read_u32(best));
+    exe::newsitem_set_slot(n, (0) as u32 as i8, read_u32(best));
     exe::news_send_to_division_managers(read_u32(G_NEWS) as usize, n, read_u32(league + 4) as usize);
     best
 }
@@ -905,18 +904,17 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
             return;
         }
         if read_u32(table.wrapping_add(read_u32(KEY_CLUB_COMP_INTER_TOTO_CUP) as usize * 4)) != 0 {
-            let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
             let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
             let mut news = [0u8; 0xe8];
             let p = news.as_mut_ptr() as usize;
             exe::new_newsitem(p, 0x16, 0);
-            write(p, 0, 0);
-            write(p, 2, read_i16(this + 0x439) as u16 as u32);
+            exe::newsitem_set_slot(p, (0) as u32 as i8, 0);
+            exe::newsitem_set_slot(p, (2) as u32 as i8, read_i16(this + 0x439) as u16 as u32);
             let mut i = 0i16;
             while i < read_i16(league + league::CLUB_COUNT) {
                 let c = read_u32((read_u32(league + league::TABLE) as usize).wrapping_add(i as i32 as usize * 0x3b)) as usize;
                 if human(read_u32(G_NEWS) as usize, c) != 0 {
-                    write(p, 1, read_u32(c));
+                    exe::newsitem_set_slot(p, (1) as u32 as i8, read_u32(c));
                     exe::news_send_to_club_manager(read_u32(G_NEWS) as usize, p, c);
                 }
                 i += 1;

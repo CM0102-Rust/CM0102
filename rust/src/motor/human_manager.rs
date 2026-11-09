@@ -546,12 +546,11 @@ pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: u
     if dele(partida) {
         return 0;
     }
-    let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let list_of: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
     let mut group = 0u8;
     while (group as i8) < read_u8(G_KEY_NATION_ACTIVE_COUNT) as i8 {
         let mut d = [0u8; 8];
-        let data = data_new(d.as_mut_ptr() as usize, read_i16(partida + fixture::DAY) as u16 as u32, read_i16(partida + fixture::YEAR) as u16 as u32);
+        let data = exe::new_date(d.as_mut_ptr() as usize, read_i16(partida + fixture::DAY) as u16 as u32, read_i16(partida + fixture::YEAR) as u16 as u32);
         // simplification: the original pushes the group as a whole word (the upper bytes are stack leftover); 0x5ae6a0
         // passes the type (char) on and 0x5abf10 reads only the byte.
         let list = list_of(data, read_u8(partida + fixture::TIME_SLICE) as u32, group as u32);
@@ -755,12 +754,11 @@ pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, holiday: u32,
     core::ptr::write_unaligned(mark as *mut u32, holiday);
     crate::comparison::branch("cpy_13 human on holiday");
     if holiday != 0 {
-        let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_AUTO_RESPOND_ALL);
         if read_usize(t + staff::CLUB_JOB) != 0 {
-            respond(read_usize(G_NEWS), t, read_usize(t + staff::CLUB_JOB));
+            exe::news_auto_respond_all(read_usize(G_NEWS), t, read_usize(t + staff::CLUB_JOB));
         }
         if read_usize(t + staff::NATIONAL_JOB) != 0 {
-            respond(read_usize(G_NEWS), t, read_usize(t + staff::NATIONAL_JOB));
+            exe::news_auto_respond_all(read_usize(G_NEWS), t, read_usize(t + staff::NATIONAL_JOB));
         }
     }
     let day = read_usize(G_MATCH_DAY);

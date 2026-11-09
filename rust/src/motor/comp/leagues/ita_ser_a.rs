@@ -495,9 +495,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
         return 0xffff_ffff;
     }
     crate::comparison::branch("cql_4 tiebreak result");
-    let sort: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     write_usize(this + league::TABLE_COLUMN, 0);
-    sort(this, 0);
+    exe::league_sort_table(this, (0) as u32 as usize);
     let t = read_usize(this + league::TABLE);
     let (a, b) = (read_usize(game + 0x1c), read_usize(game + 0x20));
     let mut i: i16 = 0;
@@ -602,7 +601,6 @@ pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro:
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.table);
     let fixos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(p.fixed);
-    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     exe::new_league(this);
     write_usize(this + 4, registro);
     write_usize(this, p.vtabela);
@@ -638,7 +636,7 @@ pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro:
         show_error_at(p.file, p.rows[2]);
         return this;
     }
-    if ordenar(this, 0) == 0 {
+    if exe::league_sort_table(this, (0) as u32 as usize) == 0 {
         show_error_at(p.file, p.rows[3]);
         return this;
     }

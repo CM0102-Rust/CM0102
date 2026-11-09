@@ -79,7 +79,6 @@ pub(crate) unsafe fn club_nation(club: usize) -> usize {
 ///    partir de +0x3e − 24), +4 e +5 zerados, na tabela +0x14 dela com a situação 5 (+0x36 sobe) e com a competição
 ///    europeia do clube (+0x1db) = [0x9cf6f0]; depois as posições previstas da UEFA (método +0x5c dela).
 pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
-    let points: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_ADD_NATION_POINTS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -232,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         let row = slot(g, 0);
         for q in 0..4usize {
             let c = read_usize(row + q * 4);
-            points(read_usize(G_UEFA_SEEDING), club_nation(c), 1);
+            exe::uefaseeding_add_nation_points(read_usize(G_UEFA_SEEDING), club_nation(c), 1);
             let value = 1_800_000i32; // cqg4: the group stage prize
             crate::comparison::branch("cqg_4 group stage prize");
             exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), value);
@@ -437,7 +436,6 @@ pub(crate) unsafe fn planned_final_positions(this: usize, knockout: usize, nm: i
 /// clube; mov ecx, [+8] -> thiscall, ret 8; a original empurra o dword da pilha com a posição no byte de baixo e lixo
 /// nos outros, e a 0x4a2540 só grava o byte: a cópia passa o byte limpo) no plano de `planned_final_positions`; o vetor liberado.
 pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
-    let position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
         show_error_at(0x9c4900, 0x81b);
         return;
@@ -462,7 +460,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
         if j == n_mata {
             exe::crt_free(knockout);
         }
-        position(read_usize(this + 8), read_usize(v + k as usize * 4), p as u32);
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + k as usize * 4), p as u32);
     }
     if n_mata == plano.len() {
         exe::crt_free(knockout);
@@ -539,7 +537,6 @@ pub(crate) unsafe fn copy_group_entry(para: usize, de: usize) {
 ///    situação 5 e com a competição europeia do clube = a UEFA; os quartos (push 3) ficam sem competição europeia (−1);
 ///    depois as posições previstas da UEFA (método +0x5c).
 pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: u32) {
-    let points: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_ADD_NATION_POINTS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -672,7 +669,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
     for h in 0..4i32 {
         for q in 0..4i32 {
             let c = read_usize(e7(g, h * 4 + q));
-            points(read_usize(G_UEFA_SEEDING), club_nation(c), 1);
+            exe::uefaseeding_add_nation_points(read_usize(G_UEFA_SEEDING), club_nation(c), 1);
             let value = 1_200_000i32; // cqg6: the second stage prize
             crate::comparison::branch("cqg_6 second stage prize");
             exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), value);
@@ -1030,8 +1027,7 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
         leave_euro_competition(second_stage_group_club(this, g, 2));
         leave_euro_competition(second_stage_group_club(this, g, 3));
     }
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    build(stage, 0);
+    exe::cup_set_up_round(stage, 0);
     core::ptr::write_unaligned((this + cup::CURRENT_STAGE) as *mut i32, 0xc);
 }
 
@@ -1312,8 +1308,7 @@ pub(crate) unsafe fn european_cup_add_prize_money(fin: usize, value: i32) {
 /// [pt] Os pontos do coeficiente da UEFA para a nação (0x9058b0: thiscall(tabela [0xde1f58], nação, pontos), ret 8; soma
 /// o byte dos pontos na palavra +0xf + 18 × índice (+0x1df da seleção 0x53b3d0 da nação)).
 pub(crate) unsafe fn add_uefa_coefficient(nation: usize, points: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_UEFASEEDING_ADD_NATION_POINTS);
-    f(read_usize(G_UEFA_SEEDING), nation, points);
+    exe::uefaseeding_add_nation_points(read_usize(G_UEFA_SEEDING), nation, points);
 }
 
 /// The dry run of the comparer of `0x583b10`.
@@ -1498,12 +1493,11 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
     let half = if f < 8 {
         if f < 4 { 0 } else { 1 }
     } else {
-        let minus: unsafe extern "thiscall" fn(*mut [u16; 4], *mut [u16; 4], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
         let copy: unsafe extern "thiscall" fn(*mut [u16; 4], *mut [u16; 4], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
         let (mut d, mut t1, mut t2) = ([0u16; 4], [0u16; 4], [0u16; 4]);
         // simplification: the year + 1 goes in ax with the rest of eax in the high bytes; 0x549f70 reads the year as a word
         exe::date_date_549f70(&mut d, 1, 2, (year as u16).wrapping_add(1) as u32, 2);
-        let r = minus(&mut d, &mut t1, 1);
+        let r = exe::date_sub_days((&mut d) as *mut [u16; 4] as usize, (&mut t1) as *mut [u16; 4] as usize, 1);
         copy(&mut d, &mut t2, r);
         if f < 10 { 2 } else { 3 }
     };

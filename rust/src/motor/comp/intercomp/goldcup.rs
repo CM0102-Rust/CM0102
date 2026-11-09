@@ -135,7 +135,6 @@ pub(crate) const COPA_AMERICA_PREDICTED_PLACES: [u32; 12] = [1, 2, 3, 3, 5, 5, 5
 /// estatística (0x4a2540 Comp_Stats::set_club_final_position: push posição; push clube; mov ecx, [+8] -> thiscall,
 /// ret 8): 1, 2, 3, 3, quatro 5, 9 e três 10 (as 12 primeiras da cópia); a cópia liberada (0x9452ca).
 pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
-    let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
         return show_error_at(0x9cd640, 0x419);
     }
@@ -148,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
     exe::crt_qsort(v, read_usize(this + 0xf2) as u32, 4, 0x4b07d0);
     crate::comparison::branch("cqs_12 copa america expected");
     for (k, &p) in COPA_AMERICA_PREDICTED_PLACES.iter().enumerate() {
-        position(read_usize(this + 8), read_usize(v + k * 4), p);
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + k * 4), p);
     }
     exe::crt_free(v);
 }
@@ -175,9 +174,8 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
 /// virtual 0 de cada uma com 1: o destrutor que libera), o ano +0x40 sobe 2, +0x45 = 0, +0x30 = −1 e as regras de novo
 /// (a virtual +0x8c, thiscall, ret 0; 0: a caixa da linha 0x28b).
 pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
-    let release_table: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     write_usize(this + league::SEASON_CLOSED, 0);
-    release_table(this, 0);
+    exe::league_free_table(this, 0);
     if read_usize(this + league::ROUND_DATES) != 0 {
         exe::crt_free(read_usize(this + league::ROUND_DATES));
         write_usize(this + league::ROUND_DATES, 0);
@@ -253,8 +251,6 @@ pub(crate) unsafe fn drawn_team(this: usize, k: usize) -> usize {
 /// e +0x45 = 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja
 /// devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     let day = read_i16(this + 0xb6) as u16; // cqr13: the draw day
     let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
@@ -277,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
             show_error_at(0x9cd640, 0x3ed);
             return 0;
         }
-        if sort(this, 0) == 0 {
+        if exe::league_sort_table(this, 0) == 0 {
             show_error_at(0x9cd640, 0x3f4);
             return 0;
         }
@@ -289,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
         write_usize(this + 0xf2, 0);
         write_usize(this + league::ACTIVE, 1);
     }
-    league(this, today, full)
+    exe::league_update_for_date(this, today, full)
 }
 
 // simplification: the list, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan in the

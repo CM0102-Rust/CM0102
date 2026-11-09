@@ -50,7 +50,6 @@ pub(crate) struct BraRegBahiaStateChampionship {
 pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32, registro: usize, e: &BraRegBahiaStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
-    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
@@ -79,7 +78,7 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32,
         show_error_at(e.file, e.rows[2]);
         return this;
     }
-    if ordenar(this, 0) == 0 {
+    if exe::league_sort_table(this, (0) as u32 as usize) == 0 {
         show_error_at(e.file, e.rows[3]);
         return this;
     }
@@ -182,9 +181,8 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, year
 /// 0), ret 4); por fim as posições previstas (virtual +0x5c) e a renovação dos árbitros do estadual
 /// (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
 pub(crate) unsafe fn state_league_new_season(this: usize, table: usize, file: usize, rows: [u32; 4], year: i16, ramo: &'static str) -> u32 {
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
-    liberar_tabela(this, 0);
+    exe::league_free_table(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
         exe::crt_free(l);
@@ -226,8 +224,7 @@ pub(crate) unsafe fn state_league_new_season(this: usize, table: usize, file: us
         show_error_at(file, rows[2]);
         return 0;
     }
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    if sort(this, 0) == 0 {
+    if exe::league_sort_table(this, 0) == 0 {
         show_error_at(file, rows[3]);
         return 0;
     }

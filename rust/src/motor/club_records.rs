@@ -204,11 +204,10 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
     if liga0 == 0 || read_u8(liga0 + league::STAGE_INDEX) != 0xff {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS)(this, liga0, always); // the boxes
     }
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let comp = read_usize(read_usize(liga0 + 4)) as i32;
     for liga in league_stage_chain(liga0) {
         if !POSITION_RECORDS_DRY_RUN {
-            sort(liga, 0);
+            exe::league_sort_table(liga, 0);
         }
         let mut i = 0i32;
         while i < read_i16(liga + league::CLUB_COUNT) as i32 {
@@ -1125,9 +1124,8 @@ pub(crate) unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize,
 ///
 /// [pt] Date::operator= (0x417c10): copia a data de `origem` para `destino`, com o retorno numa local.
 pub(crate) unsafe fn copy_record_date(target: usize, source: usize) {
-    let copy: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut local = [0u8; 8];
-    copy(target, &mut local, source);
+    exe::date_operator_3d(target, (&mut local) as *mut [u8; 8] as usize, source);
 }
 
 /// copies the record holder: four identity fields and the date

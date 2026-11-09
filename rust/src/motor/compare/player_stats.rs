@@ -124,9 +124,8 @@ pub(crate) unsafe extern "thiscall" fn compare_get_stat(this: usize, player: usi
     let c = category as u8 as i8;
     let simples = which as u8 != 0x13 && c <= 6;
     // simplification: category outside 1..6 falls into the box of 0x7c3920; in the combined ones without record 4 or 5, locals without a value
-    let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
     if (simples && !(1..=6).contains(&c))
-        || (!simples && (100..=102).contains(&(c as i32)) && (record(this, player, 4) == 0 || record(this, player, 5) == 0))
+        || (!simples && (100..=102).contains(&(c as i32)) && (exe::playerstats_get_category_record(this, player, 4) == 0 || exe::playerstats_get_category_record(this, player, 5) == 0))
     {
         return o(this, player, category, which, default);
     }

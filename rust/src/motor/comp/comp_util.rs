@@ -222,7 +222,6 @@ pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club
 /// Na primeira rodada vista, os que saem nela ganham todos a posição 1 (sem olhar nulos); em cada rodada, os seguintes
 /// ganham a posição do contador (que sobe a cada vaga, nula ou não), pulando os nulos. `gravar` = 0 só monta a lista.
 pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, write: usize) -> Vec<(usize, u8)> {
-    let write_position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let mut chamadas: Vec<(usize, u8)> = Vec::new();
     let mut s: i16 = 0; // the index into the vector (bp signed)
     let mut b: u8 = 1; // the position counter
@@ -240,7 +239,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
                 s = s.wrapping_add(1);
                 chamadas.push((c, a));
                 if write != 0 {
-                    write_position(read_usize(this + 8), c, a as u32);
+                    exe::comp_stats_set_club_final_position(read_usize(this + 8), c, a as u32);
                 }
                 b = b.wrapping_add(1);
                 j += 1;
@@ -255,7 +254,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
                 chamadas.push((c, a));
                 if write != 0 {
                     crate::comparison::branch("cpt_13 position by round");
-                    write_position(read_usize(this + 8), c, a as u32);
+                    exe::comp_stats_set_club_final_position(read_usize(this + 8), c, a as u32);
                 }
             }
             b = b.wrapping_add(1);
@@ -754,7 +753,6 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
 /// +0x2a sem). Devolve o que a última gravação devolveu. A original guarda o índice do 18º dado no
 /// byte baixo do próprio argumento `cursor` (só a parte baixa chega à 0x785790).
 pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usize, news: usize, cursor: *mut u8) -> u32 {
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let b = |o: usize| read_i8(game + o) as i32 as u32;
     let s = |o: usize| core::ptr::read_unaligned((game + o) as *const i16) as i32 as u32;
     let valores = [
@@ -764,7 +762,7 @@ pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usiz
     let mut k = *cursor;
     let mut r = 0;
     for v in valores {
-        r = write(news, k as i8, v);
+        r = exe::newsitem_set_slot(news, k as i8, v);
         k = k.wrapping_add(1);
     }
     *cursor = k;
@@ -789,21 +787,20 @@ pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(stage: u32, ro
         return original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(IDX_COMP_UTIL_FORMAT_STAGE_ROUND_NAME)(stage, round, out, size, style); // a caixa
     }
     // 0x4b4850: 4 pushes (style, id, size, output); add esp -> cdecl; 0x4ba8f0: push style; push id -> cdecl
-    let name: unsafe extern "C" fn(*mut u8, i32, u32, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME);
     *out = 0;
     if stage != 0 && round != 0 {
         let (mut a, mut b) = ([0u8; 0x64], [0u8; 0x64]);
-        name(a.as_mut_ptr(), 0x64, stage, style);
+        exe::comp_util_get_stage_name(a.as_mut_ptr(), 0x64, stage, style);
         let ga = exe::comp_util_get_stage_name_gender(stage, style) as i8 as i32 as u32;
-        name(b.as_mut_ptr(), 0x64, round, style);
+        exe::comp_util_get_stage_name(b.as_mut_ptr(), 0x64, round, style);
         let gb = exe::comp_util_get_stage_name_gender(round, style) as i8 as i32 as u32;
         // 0x66f4e0: 8 pushes; add esp, 0x20 -> cdecl (output, template, ga, ga, gb, gb, &a, &b)
         let text: unsafe extern "C" fn(*mut u8, usize, u32, u32, u32, u32, *const u8, *const u8) -> usize = core::mem::transmute(FN_LANGLIB_SPRINTF);
         text(out, 0x9a7cfc, ga, ga, gb, gb, a.as_ptr(), b.as_ptr());
     } else if stage != 0 {
-        name(out, size, stage, style);
+        exe::comp_util_get_stage_name(out, size, stage, style);
     } else if round != 0 {
-        name(out, size, round, style);
+        exe::comp_util_get_stage_name(out, size, round, style);
     } else {
         return 0; // neither of the two: 0 (0x4c0136)
     }

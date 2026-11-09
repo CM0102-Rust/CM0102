@@ -50,7 +50,6 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
         return;
     }
     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
-    let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LLIST_REMOVE);
     // 0x68d1b0: mov ecx, [edi + lista] -> thiscall; 0x68d1f0: push item; mov ecx, [edi + lista]; ret 4 -> thiscall
     let mut i: i32 = 0;
     if read_i16(l) as i32 <= 0 {
@@ -65,7 +64,7 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
             if foul {
                 crate::comparison::branch("cqd_11 absence record removed");
             }
-            remove(read_usize(this + list), item);
+            exe::llist_remove(read_usize(this + list), item);
             return;
         }
         i += 1;
@@ -197,29 +196,28 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     if player == 0 || read_usize(player + staff::PLAYER) == 0 || club == 0 || read_usize(club + club::MANAGER) == 0 { // cqd11: no player or manager
         return;
     }
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     // 0x77bbe0: push 0; push 0xbc9; lea ecx -> thiscall; 0x785790: push v; push k; lea ecx -> thiscall; 0x600a50: 5
     // pushes; add esp, 0x14 -> cdecl (club, 0, 1, 0, 0) and (club, 1, 1, 0, 0)
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0xbc9, 0);
-    write(nt, 0, read_usize(player) as u32);
-    write(nt, 1, read_usize(read_usize(player + staff::FIRST_NAME) + 0x33) as u32);
-    write(nt, 2, read_usize(read_usize(player + staff::SECOND_NAME) + 0x33) as u32);
-    write(nt, 3, read_usize(read_usize(player + staff::COMMON_NAME) + 0x33) as u32);
-    write(nt, 4, read_usize(club) as u32);
+    exe::newsitem_set_slot(nt, 0, read_usize(player) as u32);
+    exe::newsitem_set_slot(nt, 1, read_usize(read_usize(player + staff::FIRST_NAME) + 0x33) as u32);
+    exe::newsitem_set_slot(nt, 2, read_usize(read_usize(player + staff::SECOND_NAME) + 0x33) as u32);
+    exe::newsitem_set_slot(nt, 3, read_usize(read_usize(player + staff::COMMON_NAME) + 0x33) as u32);
+    exe::newsitem_set_slot(nt, 4, read_usize(club) as u32);
     crate::comparison::branch("cqd_11 absence news");
     let r = taped_random(3); // cqd11: the news random draw
-    write(nt, 5, r as u32);
-    write(nt, 6, exe::human_manager_is_human_club(club, 0, 1, 0, 0));
+    exe::newsitem_set_slot(nt, 5, r as u32);
+    exe::newsitem_set_slot(nt, 6, exe::human_manager_is_human_club(club, 0, 1, 0, 0));
     let manager = read_usize(club + club::MANAGER);
     if manager != 0 && exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 { // cqd11: the AI manager reports
         crate::comparison::branch("cqd_11 technical reporter");
         let t = read_usize(club + club::MANAGER);
-        write(nt, 7, read_usize(t) as u32);
-        write(nt, 8, read_usize(read_usize(t + staff::FIRST_NAME) + 0x33) as u32);
-        write(nt, 9, read_usize(read_usize(t + staff::SECOND_NAME) + 0x33) as u32);
-        write(nt, 0xa, read_usize(read_usize(t + staff::COMMON_NAME) + 0x33) as u32);
+        exe::newsitem_set_slot(nt, 7, read_usize(t) as u32);
+        exe::newsitem_set_slot(nt, 8, read_usize(read_usize(t + staff::FIRST_NAME) + 0x33) as u32);
+        exe::newsitem_set_slot(nt, 9, read_usize(read_usize(t + staff::SECOND_NAME) + 0x33) as u32);
+        exe::newsitem_set_slot(nt, 0xa, read_usize(read_usize(t + staff::COMMON_NAME) + 0x33) as u32);
     } else {
         let who = if taped_random(2) != 0 {
             let mut k;
@@ -238,14 +236,14 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
         let id = if who != 0 { read_usize(who) as i32 } else { -1 };
         if id == -1 {
             for k in 7..=0xa {
-                write(nt, k, u32::MAX);
+                exe::newsitem_set_slot(nt, k, u32::MAX);
             }
         } else {
             let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
-            write(nt, 7, id as u32);
-            write(nt, 8, read_usize(read_usize(p + staff::FIRST_NAME) + 0x33) as u32);
-            write(nt, 9, read_usize(read_usize(p + staff::SECOND_NAME) + 0x33) as u32);
-            write(nt, 0xa, read_usize(read_usize(p + staff::COMMON_NAME) + 0x33) as u32);
+            exe::newsitem_set_slot(nt, 7, id as u32);
+            exe::newsitem_set_slot(nt, 8, read_usize(read_usize(p + staff::FIRST_NAME) + 0x33) as u32);
+            exe::newsitem_set_slot(nt, 9, read_usize(read_usize(p + staff::SECOND_NAME) + 0x33) as u32);
+            exe::newsitem_set_slot(nt, 0xa, read_usize(read_usize(p + staff::COMMON_NAME) + 0x33) as u32);
         }
     }
     let news = read_usize(G_NEWS);
@@ -321,9 +319,8 @@ pub(crate) unsafe fn close_awol_case(this: usize, r: usize) {
         return;
     }
     *m ^= 2;
-    let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     crate::comparison::branch("cpw_7 absence removed from the list");
-    remove(read_usize(this + 4), r); // cpw7: removes the case from the list
+    exe::llist_remove(read_usize(this + 4), r); // cpw7: removes the case from the list
 }
 
 /// Calls AWOL miss_training for a person.
@@ -448,8 +445,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                 }
             };
             if resolveu {
-                let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
-                remove(read_usize(this + 8), r);
+                exe::llist_remove(read_usize(this + 8), r);
                 return;
             }
         }
@@ -486,13 +482,12 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
     let club = if k != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 };
     if club != 0 {
-        let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
         for v in 0..0x32usize {
             let s = read_usize(club + club::SQUAD + v * 4);
             if s == 0 || s == person || read_usize(s + staff::PLAYER) == 0 {
                 continue;
             }
-            let ct = contract(read_usize(G_CONTRACT_MANAGER), person, club);
+            let ct = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
             if ct == 0 {
                 continue;
             }
@@ -726,8 +721,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     reg[..4].copy_from_slice(&read_i32(person).to_le_bytes());
     reg[4..12].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
     reg[12] = AWOL_RESIDUE_BYTE;
-    let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
-    append(read_usize(this + 4), reg.as_ptr() as usize, 0xd);
+    exe::llist_add_tail(read_usize(this + 4), reg.as_ptr() as usize, 0xd);
     if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
         return;
     }
@@ -781,8 +775,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     if MISS_TRAINING_DRY_RUN {
         return;
     }
-    let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
-    remove(read_usize(this), r);
+    exe::llist_remove(read_usize(this), r);
 }
 
 /// `AWOL::report_poor_fitness(player, club)`: records a fitness incident and handles the reaction. Called by the daily
@@ -816,8 +809,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     let mut temporary = [0u8; 8];
     exe::date_operator_3d(reg.as_mut_ptr() as usize + 8, temporary.as_mut_ptr() as usize, G_CURRENT_DATE);
     // simplification: byte +0x10 of the record is stack leftover in the original; the copy writes 0 (nobody reads it)
-    let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
-    append(read_usize(this + 8), reg.as_ptr() as usize, 0x11);
+    exe::llist_add_tail(read_usize(this + 8), reg.as_ptr() as usize, 0x11);
     if club_has_human_manager(club) {
         let mut coach;
         loop {

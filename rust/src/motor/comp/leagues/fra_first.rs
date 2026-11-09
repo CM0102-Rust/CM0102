@@ -64,7 +64,6 @@ pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
 /// mov ecx -> thiscall, ret 4) e a divisão de baixo (0x5bd600, o mesmo), que deixam os seus jogos no calendário do jogo,
 /// e são destruídas (a virtual 0 com 1: push 1; mov ecx -> thiscall, ret 4). Devolve this.
 pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u32, record: usize) -> usize {
-    let sort: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     exe::new_league(this);
     write_usize(this, 0x96aa24);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
@@ -116,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
         show_error_at(0x9ccb5c, 0x73);
         return this;
     }
-    if sort(this, 0) == 0 {
+    if exe::league_sort_table(this, (0) as u32 as usize) == 0 {
         show_error_at(0x9ccb5c, 0x7c);
         return this;
     }

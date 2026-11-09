@@ -3,7 +3,7 @@ MUTACOES = [
     ('cpd_fim_competicao', 'read_usize(r + 4) == read_usize(comp) /* a competição */', 'read_usize(r + 4) != read_usize(comp) /* mutacao: as outras */'),
     ('cpd_fim_nacao', 'read_usize(r) == read_usize(nation) /* a nação */', 'read_usize(r) != read_usize(nation) /* mutacao: as outras */'),
     ('cpd_poda_vencidas', 'vencidas = vencidas.wrapping_add(1); // one won', 'vencidas = vencidas.wrapping_add(0); // mutacao: nenhuma vencida'),
-    ('cpd_por_marca', '    *((p + staff::JOB_FOR_NATION) as *mut u8) = 0xb;\n    let mark_squad', '    *((p + staff::JOB_FOR_NATION) as *mut u8) = 0xa; // mutacao: outra marca\n    let mark_squad'),
+    ('cpd_por_marca', '    *((p + staff::JOB_FOR_NATION) as *mut u8) = 0xb;\n    exe::staff_set_squad_flags(p, squad)', '    *((p + staff::JOB_FOR_NATION) as *mut u8) = 0xa; // mutacao: outra marca\n    exe::staff_set_squad_flags(p, squad)'),
     ('cpd_tirar_vaga', 'core::ptr::write_unaligned((team + club::SQUAD + 4 * c) as *mut usize, 0);', 'core::ptr::write_unaligned((team + club::SQUAD + 4 * c) as *mut usize, p); // mutacao: a vaga fica'),
     ('cpd_sub21_idade', '*((p + staff::AGE) as *const i8) > 0x15 { // over 21 years old', '*((p + staff::AGE) as *const i8) >= 0x15 { // mutacao: tambem os de 21'),
     ('cpd_atual_aviso', '        notify_manager_manager(nation); // the notice of the next competition', '        // mutacao: sem o aviso da competicao seguinte'),

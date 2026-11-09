@@ -190,9 +190,8 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     crate::comparison::branch("cqe_5 outside the window");
     if msg != 0 {
         // 0x6181d0: push 2; push 100; push buffer; push nation; add esp, 0x10 -> cdecl (the nation’s adjective)
-        let adjective: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_NATION_GET_NATIONALITY_ADJECTIVE);
         let mut buf = [0u8; 100];
-        adjective(read_usize(this + 0xa), buf.as_mut_ptr(), 100, 2);
+        exe::nation_get_nationality_adjective(read_usize(this + 0xa), (buf.as_mut_ptr()) as *mut u8 as usize, 100, 2);
         text(msg, 0x987d38, 100, 100, buf.as_ptr());
     }
     if !reason.is_null() {
@@ -227,9 +226,8 @@ pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, offer: usize) {
 /// 20 de junho (só o dia do ano, 0x549f70 com 1998), a conta da temporada de cada clube ([0xae235c] em [0xae23b4]) da
 /// nação destas regras (+0xa) volta a zero.
 pub(crate) unsafe extern "thiscall" fn england_rules_daily_update(this: usize, data: usize) {
-    let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    let r = data_de(d.as_mut_ptr() as usize, 0x14, 5, 0x7ce, -1);
+    let r = exe::date_date_549f70((d.as_mut_ptr() as usize) as usize as *mut [u16; 4], (0x14) as i32 as u32, (5) as i32 as u32, 0x7ce, (-1) as i32 as u32);
     if read_i16(data) != read_i16(r) {
         return;
     }
@@ -307,9 +305,8 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
 /// no mês seguinte e acaba três meses depois.
 pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize, club: usize, a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
     // 0x549f70: push -1; push 0x7ce; push 5; push 0x13; lea ecx, local -> thiscall, ret 0x10
-    let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    data_de(d.as_mut_ptr() as usize, 0x13, 5, 0x7ce, -1);
+    exe::date_date_549f70((d.as_mut_ptr() as usize) as usize as *mut [u16; 4], (0x13) as i32 as u32, (5) as i32 as u32, 0x7ce, (-1) as i32 as u32);
     if read_i16(G_CURRENT_DATE) > read_i16(d.as_ptr() as usize) && (read_u8(player + staff::AGE) as i8) < 0x18 { // cqe6: abaixo de 24 anos
         crate::comparison::branch("cqe_6 england youth period");
         // 0x8e8bd0: the same 7 arguments pushed again; mov ecx, esi (this) -> thiscall, ret 0x1c
@@ -317,8 +314,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize
         return;
     }
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0 (today’s month)
-    let month: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
-    *start_month = (month(G_CURRENT_DATE) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)
+    *start_month = (exe::date_get_month(G_CURRENT_DATE) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)
     *start_year = read_i16(G_CURRENT_DATE_YEAR);
     if *start_month > 0xb {
         *start_month = (*start_month).wrapping_sub(0xc);

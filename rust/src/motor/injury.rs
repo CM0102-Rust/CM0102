@@ -226,10 +226,9 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
 pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> u32 {
     let m = *((p + match_player::ENGINE) as *const usize);
     let today = G_CURRENT_DATE;
-    let date: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
     let (mut d7, mut d30) = ([0u8; 8], [0u8; 8]);
-    date(today, &mut d7, 7);
-    date(today, &mut d30, 0x1e);
+    exe::date_sub_days(today, (&mut d7) as *mut [u8; 8] as usize, 7);
+    exe::date_sub_days(today, (&mut d30) as *mut [u8; 8] as usize, 0x1e);
     let c = code as u16 as i16 as i32;
     if !(0x1f40..=0x21e4).contains(&c) {
         return 0;
@@ -454,21 +453,20 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
             return;
         }
     }
-    let given: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut news = [0u8; 0xe8];
     let n = news.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0x7d1, 0);
     let est = estagio as u8 as i8;
     let tp = kind as u8 as i8;
-    given(n, 0, est as i32 as u32);
-    given(n, 1, tp as i32 as u32);
-    given(n, 2, read_usize(p) as u32);
-    given(n, 3, read_usize(read_usize(p + staff::FIRST_NAME) + 0x33) as u32);
-    given(n, 4, read_usize(read_usize(p + staff::SECOND_NAME) + 0x33) as u32);
-    given(n, 5, read_usize(read_usize(p + staff::COMMON_NAME) + 0x33) as u32);
-    given(n, 6, *((p + staff::DATE_OF_BIRTH) as *const i16) as i32 as u32);
-    given(n, 7, *((p + 0x12) as *const u16) as u32);
-    given(n, 8, days as u16 as i16 as i32 as u32);
+    exe::newsitem_set_slot(n, 0, est as i32 as u32);
+    exe::newsitem_set_slot(n, 1, tp as i32 as u32);
+    exe::newsitem_set_slot(n, 2, read_usize(p) as u32);
+    exe::newsitem_set_slot(n, 3, read_usize(read_usize(p + staff::FIRST_NAME) + 0x33) as u32);
+    exe::newsitem_set_slot(n, 4, read_usize(read_usize(p + staff::SECOND_NAME) + 0x33) as u32);
+    exe::newsitem_set_slot(n, 5, read_usize(read_usize(p + staff::COMMON_NAME) + 0x33) as u32);
+    exe::newsitem_set_slot(n, 6, *((p + staff::DATE_OF_BIRTH) as *const i16) as i32 as u32);
+    exe::newsitem_set_slot(n, 7, *((p + 0x12) as *const u16) as u32);
+    exe::newsitem_set_slot(n, 8, days as u16 as i16 as i32 as u32);
     let club = read_usize(p + staff::CLUB_JOB);
     let mut res: i8 = -1;
     let mut f1: i8 = 0;
@@ -644,8 +642,8 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
             *(e as *mut u8) &= 0xfe; // cqf9: a marca +0xc cai
         }
     }
-    given(n, 9, res as i32 as u32);
-    given(n, 10, f1 as i32 as u32);
+    exe::newsitem_set_slot(n, 9, res as i32 as u32);
+    exe::newsitem_set_slot(n, 10, f1 as i32 as u32);
     if RECOVERY_NEWS_DRY_RUN {
         return;
     }
@@ -791,8 +789,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     if read_usize(p + staff::PLAYER) == 0 || !(0..0x52).contains(&kind) {
         return original(this, kind_arg, retroativa, p, game, surto, news, rec_arg, so_recorrencia); // the boxes: original only
     }
-    let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
-    fisico(this, p);
+    exe::injury_update_player_fitness(this, p);
     if read_usize(G_TRAINING_MANAGER) != 0 {
         exe::training_manager_update_player_training(read_usize(G_TRAINING_MANAGER), p, 0);
     }
@@ -825,8 +822,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
         let r = physical_record(this, read_usize(p));
         let l = injury_entry(this, antiga as usize);
         remaining = read_i16(l + injury_entry::DAYS_LEFT) as u16;
-        let history: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
-        history(read_usize(this + injury_fields::INJURY_HISTORY), r + 0x14, r + 0x18, l);
+        exe::file_llist_add_node(read_usize(this + injury_fields::INJURY_HISTORY), r + 0x14, r + 0x18, (l) as usize as *const u8);
         *(l as *mut u8) = 0xff;
         core::ptr::write_unaligned((physical_record(this, read_usize(p)) + 0xe) as *mut i32, -1);
     }
@@ -883,8 +879,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
             };
             if found {
                 if club != 0 {
-                    let register: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_FILL_MATCH_RECORD_FROM_FIXTURE);
-                    register(game, club, read_usize(this + injury_fields::INJURY_ENTRIES) + off + 1);
+                    exe::fill_match_record_from_fixture(game, club, read_usize(this + injury_fields::INJURY_ENTRIES) + off + 1);
                     of_match = true;
                 }
                 break;
@@ -977,14 +972,13 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     let mut out = [0u8; 8];
     if retroativa != 0 {
         let s = friendly_random(n);
-        let minus: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
         let mut d = [0u8; 8];
-        let r = minus(G_CURRENT_DATE, d.as_mut_ptr(), (s + 1) as u32);
+        let r = exe::date_sub_days(G_CURRENT_DATE, (d.as_mut_ptr()) as *mut u8 as usize, (s + 1) as u32);
         exe::date_operator_3d(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x20, (out.as_mut_ptr()) as usize, r);
     } else {
         exe::date_operator_3d(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x20, (out.as_mut_ptr()) as usize, G_CURRENT_DATE);
     }
-    fisico(this, p);
+    exe::injury_update_player_fitness(this, p);
     exe::injury_post_injury_news(this, p, read_usize(this + injury_fields::INJURY_ENTRIES) + off, news);
     core::ptr::write_unaligned((physical_record(this, read_usize(p)) + 0xe) as *mut i32, slot);
     if rec != 0 && read_usize(G_INJURY_TYPE_CAN_RECUR + t) != 0 {
@@ -1040,8 +1034,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     if surto != 0 && (kind == 1 || kind == 0 || kind == 2) {
         let club = read_usize(p + staff::CLUB_JOB);
         if club != 0 {
-            let surto_fn: unsafe extern "thiscall" fn(usize, usize, u32, i32, usize) = core::mem::transmute(FN_INJURY_ADD_ILLNESS_OUTBREAK);
-            surto_fn(this, G_CURRENT_DATE, kind_arg, read_usize(club) as i32, 0);
+            exe::injury_add_illness_outbreak(this, (G_CURRENT_DATE) as usize as *mut [u8; 8], kind_arg, (read_usize(club) as i32) as i32 as usize, 0);
         }
     }
     slot
@@ -1085,43 +1078,40 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
         clubs[n as usize] = sel;
         n += 1;
     }
-    let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nw = local.as_mut_ptr() as usize;
     exe::new_newsitem(nw, 0x7d0, 0);
-    write(nw, 0, read_usize(p) as u32);
+    exe::newsitem_set_slot(nw, 0, read_usize(p) as u32);
     for k in 1..4usize {
         let q = read_usize(p + staff::FIRST_NAME * k);
-        write(nw, k as i8, if q != 0 { read_usize(q + 0x33) as u32 } else { 0 });
+        exe::newsitem_set_slot(nw, k as i8, if q != 0 { read_usize(q + 0x33) as u32 } else { 0 });
     }
-    write(nw, 4, read_i8_as_i32(l) as u32);
-    write(nw, 5, read_i16(l + injury_entry::DATE) as i32 as u32);
-    write(nw, 6, read_i16(l + 0x22) as u16 as u32);
-    write(nw, 7, read_i16(l + injury_entry::DAYS_OUT) as i32 as u32);
-    write(nw, 8, read_i16(p + staff::DATE_OF_BIRTH) as i32 as u32);
-    write(nw, 9, read_i16(p + 0x12) as u16 as u32);
+    exe::newsitem_set_slot(nw, 4, read_i8_as_i32(l) as u32);
+    exe::newsitem_set_slot(nw, 5, read_i16(l + injury_entry::DATE) as i32 as u32);
+    exe::newsitem_set_slot(nw, 6, read_i16(l + 0x22) as u16 as u32);
+    exe::newsitem_set_slot(nw, 7, read_i16(l + injury_entry::DAYS_OUT) as i32 as u32);
+    exe::newsitem_set_slot(nw, 8, read_i16(p + staff::DATE_OF_BIRTH) as i32 as u32);
+    exe::newsitem_set_slot(nw, 9, read_i16(p + 0x12) as u16 as u32);
     if read_u8(l + injury_entry::MATCH_MARK) != 0xff {
-        write(nw, 0xa, read_usize(l + 0x12) as u32);
-        write(nw, 0xb, read_usize(l + 0x16) as u32);
-        write(nw, 0xc, read_usize(l + 9) as u32);
+        exe::newsitem_set_slot(nw, 0xa, read_usize(l + 0x12) as u32);
+        exe::newsitem_set_slot(nw, 0xb, read_usize(l + 0x16) as u32);
+        exe::newsitem_set_slot(nw, 0xc, read_usize(l + 9) as u32);
     } else {
-        write(nw, 0xa, u32::MAX);
-        write(nw, 0xb, u32::MAX);
-        write(nw, 0xc, u32::MAX);
+        exe::newsitem_set_slot(nw, 0xa, u32::MAX);
+        exe::newsitem_set_slot(nw, 0xb, u32::MAX);
+        exe::newsitem_set_slot(nw, 0xc, u32::MAX);
     }
-    write(nw, 0xd, arg);
+    exe::newsitem_set_slot(nw, 0xd, arg);
     let club = read_usize(p + staff::CLUB_JOB);
-    write(nw, 0xe, if club != 0 { read_usize(club) as u32 } else { u32::MAX });
-    write(nw, 0xf, 0x420e9);
+    exe::newsitem_set_slot(nw, 0xe, if club != 0 { read_usize(club) as u32 } else { u32::MAX });
+    exe::newsitem_set_slot(nw, 0xf, 0x420e9);
     let mut mark: u8 = 0x10;
-    let match_in_news: unsafe extern "C" fn(usize, usize, *mut u8) = core::mem::transmute(FN_WRITE_MATCH_RECORD_TO_NEWS);
-    match_in_news(l + 1, nw, &mut mark);
+    exe::write_match_record_to_news(l + 1, nw, &mut mark);
     let news = read_usize(G_NEWS);
     if read_i16(l + injury_entry::DAYS_OUT) > 100 {
         let f = read_usize(p + staff::PLAYER);
         if f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x1f40 {
-            let all: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
-            all(read_usize(G_NEWS), nw);
+            exe::news_send_to_all_managers(read_usize(G_NEWS), nw);
         } else {
             let mut i: i8 = 0;
             while i < n {
@@ -1246,11 +1236,10 @@ pub(crate) unsafe extern "thiscall" fn injury_daily_update(this: usize) {
             INJURY_DAILY_STOPPED = true;
             return;
         }
-        let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
         let mut p = read_usize(G_STAFF_TABLE);
         let mut i = 0i32;
         while i < read_i32(G_STAFF_COUNT) {
-            fisico(this, p);
+            exe::injury_update_player_fitness(this, p);
             i += 1;
             p = p.wrapping_add(0x6e);
         }
@@ -1368,9 +1357,8 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
                 return;
             }
             apply_injury_attribute_loss(this, idx, p, category, case);
-            let new: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_INJURY_ADD_INJURY);
             // simplification: the original pushes the type in a dword whose upper bytes have no value; 0x62d250 reads a char
-            new(this, kind as u32, 0, p, 0, 1, 0xffff_ffff, 0, 0);
+            (exe::injury_add_injury(this, kind as u32, 0, p, 0, 1, (0xffff_ffff) as u32 as i32, 0, 0) as i32);
         }
         i += 1;
     }
@@ -1459,7 +1447,6 @@ pub(crate) unsafe fn apply_injury_attribute_loss(this: usize, idx: i32, p: usize
 /// completa; as de data B já passada saem do começo da fila.
 pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
     crate::comparison::branch("cpw_9 news back");
-    let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
     for k in 0..0x10i32 {
         let n = read_i32(G_STAFF_COUNT);
         let s = read_usize(G_STAFF_TABLE).wrapping_add(((n - k - 1) as u32).wrapping_mul(0x6e) as usize);
@@ -1489,7 +1476,7 @@ pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
                     exe::injury_post_recovery_news(this, p, 0, *(inj as *const u8) as u32, 0, days as u32);
                 }
             }
-            fisico(this, p);
+            exe::injury_update_player_fitness(this, p);
         }
     }
     if read_usize(this + injury_fields::RECOVERY_NEWS_QUEUE) == 0 {
@@ -1655,7 +1642,6 @@ pub(crate) unsafe fn slot_rhythm_level(partida: usize, slot: usize) -> i8 {
 /// mais) tem a gravidade por +5 (acima de 95: 2; de 66: 1; de 51: 0; senão a da batida anterior) e o tipo da lesão
 /// (0x62d140); tipo válido: fim da lesão atual (0x62e700) e a lesão nova (0x62d250 com o jogo, ou 0 no jogo −2).
 pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: usize, partida: usize) {
-    let new_injury: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, i32, u32, u32) = core::mem::transmute(FN_INJURY_ADD_INJURY);
     // simplification: the severity is a local of the original that carries over from one hit to the next; with no hit above 51 before,
     // the original reads a stack leftover and the copy uses 0 (the comparer leaves every match with a clash to the original).
     let mut severity: i8 = 0;
@@ -1711,7 +1697,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
                         crate::comparison::branch("cpv_8 collision becomes injury");
                         exe::injury_end_player_injury(this, pessoa, 0);
                         let j = if read_i32(game) == -2 { 0 } else { game };
-                        new_injury(this, t as u32, 0, pessoa, j, 1, -1, 0, 0);
+                        exe::injury_add_injury(this, t as u32, 0, pessoa, (j) as usize as u32, 1, -1, 0, 0);
                     }
                 }
                 e = exe::llist_get_next(read_i32(this + injury_fields::MATCH_HIT_LIST) as usize);
@@ -1889,8 +1875,7 @@ pub(crate) unsafe extern "thiscall" fn get_player_injury_status(this: usize, per
     if read_usize(person) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;
     }
-    let update: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
-    update(this, person);
+    exe::injury_update_player_fitness(this, person);
     injury_status(this, person)
 }
 
@@ -2061,9 +2046,8 @@ pub(crate) unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: u
 ///
 /// [pt] A data de cinco dias atrás (0x54c8e0 sobre a data do jogo).
 pub(crate) unsafe fn five_days_ago() -> [u8; 8] {
-    let date: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
     let mut d = [0u8; 8];
-    date(G_CURRENT_DATE, &mut d, 5); // five days ago
+    exe::date_sub_days(G_CURRENT_DATE, (&mut d) as *mut [u8; 8] as usize, 5); // five days ago
     d
 }
 
@@ -2098,7 +2082,6 @@ pub(crate) unsafe fn is_after_outbreak(limit: &[u8; 8], e: usize) -> bool {
 /// embora do começo do vetor (os outros descem) e a conta cai.
 pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
     let five = five_days_ago();
-    let injure: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(FN_INJURY_ADD_INJURY);
     let mut removidos: i32 = 0;
     let mut k: i32 = 0;
     let mut off: usize = 0;
@@ -2132,7 +2115,7 @@ pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
                             let doenca = read_u8(e + 8);
                             let record = read_usize(this).wrapping_add((read_i32(p) as usize).wrapping_mul(31));
                             if read_u8(record + physical_record::LAST_INJURY_TYPE) != doenca {
-                                injure(this, (off as u32 & 0xffff_ff00) | doenca as u32, 0, p, 0, 0, read_i32(e + illness_outbreak::CLUB_ID), 0, 0);
+                                exe::injury_add_injury(this, (off as u32 & 0xffff_ff00) | doenca as u32, 0, p, 0, 0, read_i32(e + illness_outbreak::CLUB_ID), 0, 0);
                                 how_many = how_many.wrapping_sub(1);
                             }
                         }
@@ -2189,8 +2172,7 @@ pub(crate) unsafe extern "stdcall" fn injury_player_in_close_season(person: usiz
     if club == 0 || convocado || read_i32(club + club::CONTINENTAL_COMP_ID) != -1 {
         return 0;
     }
-    let season: unsafe extern "C" fn(usize, *mut u32, *mut u32) -> u32 = core::mem::transmute(FN_KEY_NATION_CLUB_IN_SEASON);
-    if season(club, start.as_mut_ptr(), end.as_mut_ptr()) != 0 {
+    if exe::key_nation_club_in_season(club, (start.as_mut_ptr()) as *mut u32 as usize, (end.as_mut_ptr()) as *mut u32 as usize) != 0 {
         return 0;
     }
     if (exe::date_days_since(G_CURRENT_DATE, end[0], end[1]) as u16) < 0x28 {
@@ -2213,8 +2195,7 @@ pub(crate) unsafe fn injury_club_count_without_nations() -> i32 {
 /// os dias do começo dela até hoje (0x54cdb0 sobre a primeira data): acima de 80, 40; de 41 a 80, 80 − dias (no byte,
 /// com sinal); senão os dias.
 pub(crate) unsafe fn preseason_days(club: usize, start: &mut [u32; 2], end: &mut [u32; 2]) -> i32 {
-    let season: unsafe extern "C" fn(usize, *mut u32, *mut u32) -> u32 = core::mem::transmute(FN_KEY_NATION_CLUB_IN_SEASON);
-    if season(club, start.as_mut_ptr(), end.as_mut_ptr()) != 0 {
+    if exe::key_nation_club_in_season(club, (start.as_mut_ptr()) as *mut u32 as usize, (end.as_mut_ptr()) as *mut u32 as usize) != 0 {
         return 0;
     }
     let d = exe::date_days_since((start.as_mut_ptr()) as usize, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32);
@@ -2310,7 +2291,6 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
         return;
     }
     let choose: unsafe extern "thiscall" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_INJURY_CHOOSE_INJURY_TYPE);
-    let injure: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(FN_INJURY_ADD_INJURY);
     let (mut recorrentes, mut iniciais) = (0i32, 0i32);
     let mut r = v;
     let mut person = read_usize(G_STAFF_TABLE);
@@ -2339,7 +2319,7 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
                 // and 0x62d250 only read the byte: here they go clean
                 let category = friendly_random(0xc) as u8;
                 let kind = choose(this, category as u32, 0xffff_ffff, person) as u8;
-                injure(this, kind as u32, 1, person, 0, 1, -1, 0, 0);
+                exe::injury_add_injury(this, kind as u32, 1, person, 0, 1, -1, 0, 0);
                 iniciais += 1;
             }
         }
@@ -2488,8 +2468,7 @@ pub(crate) unsafe extern "thiscall" fn roll_recurring_injury(this: usize, record
                 0x0c | 0x0d | 0x12 | 0x14 | 0x19..=0x1c | 0x1f | 0x24 | 0x25 | 0x2c | 0x2d | 0x3b => 0x4f,
                 _ => 0x4d,
             };
-            let injure: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(FN_INJURY_ADD_INJURY);
-            injure(this, (record as u32 & 0xffff_ff00) | new as u32, 0, p, 0, 1, -1, 0, 0);
+            exe::injury_add_injury(this, (record as u32 & 0xffff_ff00) | new as u32, 0, p, 0, 1, -1, 0, 0);
         }
         RecurringInjuryOutcome::Limpar(r) => {
             *((r + physical_record::RECURRING_TYPE) as *mut u8) = 0xff;
@@ -2514,8 +2493,7 @@ pub(crate) unsafe extern "thiscall" fn reset_player_history(this: usize, person:
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RESET_PLAYER_HISTORY)(this, person); // fatal box: original only
     }
     let r = injury_history_record(this, read_usize(person));
-    let without_last: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_FILE_LLIST_RESET_LAST_OFFSET);
-    without_last(read_usize(this + injury_fields::INJURY_HISTORY), r + physical_record::HISTORY_FIRST, r + physical_record::HISTORY_LAST)
+    exe::file_llist_reset_last_offset(read_usize(this + injury_fields::INJURY_HISTORY), r + physical_record::HISTORY_FIRST, r + physical_record::HISTORY_LAST)
 }
 
 /// Resets a person's injury state: removes their items from the match knock list, ends the injury, rewinds the history
@@ -2538,11 +2516,10 @@ pub(crate) unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32)
     if read_usize(this + injury_fields::MATCH_HIT_LIST) != 0 {
         let l = read_usize(this + injury_fields::MATCH_HIT_LIST);
         core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
-        let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
         let mut e = exe::llist_get_next(read_usize(this + injury_fields::MATCH_HIT_LIST));
         while e != 0 {
             if read_usize(e) as u32 == id {
-                remove(read_usize(this + injury_fields::MATCH_HIT_LIST), e);
+                exe::llist_remove(read_usize(this + injury_fields::MATCH_HIT_LIST), e);
             }
             e = exe::llist_get_next(read_usize(this + injury_fields::MATCH_HIT_LIST));
         }
@@ -2665,8 +2642,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_condition(this: usize, player: 
     if id >= *(G_STAFF_COUNT as *const i32) {
         return if in_percent != 0 { 100 } else { 10000 };
     }
-    let update: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
-    update(this, player);
+    exe::injury_update_player_fitness(this, player);
     let c = core::ptr::read_unaligned((*(this as *const usize)).wrapping_add((*(player as *const i32) as usize).wrapping_mul(31)).wrapping_add(0xa) as *const i16);
     if in_percent != 0 {
         return ftol(c as f64 * *(0x96bac8 as *const f32) as f64) as u16; // in percent
@@ -2788,8 +2764,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
         let club = read_usize(person + staff::CLUB_JOB);
         if club != 0 && !ocupado {
             if club != read_usize(G_FITNESS_UPDATE_CACHED_CLUB) || read_u16(G_FITNESS_UPDATE_CACHE_DATE_YEAR) != read_u16(G_CURRENT_DATE_YEAR) || read_i16(G_FITNESS_UPDATE_CACHE_DATE) != read_i16(G_CURRENT_DATE) {
-                let in_season: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_KEY_NATION_CLUB_IN_SEASON);
-                let r = in_season(club, G_FITNESS_UPDATE_SEASON_START_DATE, G_FITNESS_UPDATE_SEASON_END_DATE);
+                let r = exe::key_nation_club_in_season(club, G_FITNESS_UPDATE_SEASON_START_DATE, G_FITNESS_UPDATE_SEASON_END_DATE);
                 *(G_FITNESS_UPDATE_CACHED_SEASON_FLAG as *mut u32) = (r == 0) as u32;
                 *(G_FITNESS_UPDATE_CACHED_CLUB as *mut usize) = read_usize(person + staff::CLUB_JOB);
                 manager_manager_copy_date(G_FITNESS_UPDATE_CACHE_DATE, G_CURRENT_DATE);

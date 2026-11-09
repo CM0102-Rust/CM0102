@@ -3150,7 +3150,6 @@ pub(crate) fn is_recording_restart() -> bool {
 /// - e a bola parada por +0x8eb2.
 pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let write_home: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(FN_FORMATION_SET_PLAYER_INSTRUCTION);
-    let scoreboard: unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOAL_MARGIN);
     let b = |o: usize| (m + o) as *mut u8;
     let w = |o: usize| (m + o) as *mut i16;
     let d = |o: usize| (m + o) as *mut u32;
@@ -3380,7 +3379,7 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
                     narr(call, if mode == 3 { 0x2136 } else { 0x2135 }, u32::MAX, la, u32::MAX, 0);
                 } else if (old[side] == 2 || old[side] == 1) && quinze_l {
                     let (mut c1, mut c2, mut c3, mut c4, mut c5) = (0i8, 0i8, 0u8, 0u8, 0u8);
-                    let r = scoreboard(m, side as i8, &mut c1, &mut c2, &mut c3, &mut c4, &mut c5, 0);
+                    let r = (exe::cm3_match_engine_get_goal_margin(m, side as i8, &mut c1, &mut c2, &mut c3, &mut c4, &mut c5, 0) as u8);
                     narr(call, if (r as i8) > 0 { 0x213b } else { 0x213d }, u32::MAX, la, u32::MAX, 0);
                     *w(0x1d2 + 2 * side) = *w(engine::CLOCK);
                 }
@@ -3429,7 +3428,7 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
             }
         }
         let (mut o1, mut o2, mut o3, mut o4, mut o5) = (0i8, 0i8, 0u8, 0u8, 0u8);
-        scoreboard(m, 0, &mut o1, &mut o2, &mut o3, &mut o4, &mut o5, 0);
+        (exe::cm3_match_engine_get_goal_margin(m, 0, &mut o1, &mut o2, &mut o3, &mut o4, &mut o5, 0) as u8);
         let (v1, v2, empate) = (o1 as i32, o2 as i32, o3);
         let canto = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, side: u32| {
             crate::comparison::branch("restart goal_crowd_reaction chant");
@@ -6115,8 +6114,7 @@ pub(crate) unsafe fn push_prematch_event(m: usize, sheet: usize, club: usize, ba
     ev[0xf..0x13].copy_from_slice(&u32::MAX.to_le_bytes());
     ev[0x13..0x15].copy_from_slice(&code.to_le_bytes());
     ev[0x15..0x19].copy_from_slice(&u32::MAX.to_le_bytes());
-    let copy: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
-    copy(*((m + engine::EVENT_LIST) as *const usize), ev.as_ptr() as usize, 0x19);
+    exe::llist_add_tail(*((m + engine::EVENT_LIST) as *const usize), ev.as_ptr() as usize, 0x19);
 }
 
 /// `0x6b7f20` (ret 0x10, match_eng.cpp, 6 KB): prepares match `jogo` in the engine; returns 0 if the match had already
@@ -6319,14 +6317,13 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, fast: u8, comment
     // the squads
     let (mut n_casa, mut n_fora) = (0i8, 0i8);
     let pouco = |n: i8, row: u32, text: usize| {
-        let data_new: unsafe extern "thiscall" fn(*mut u8, u32, u32) = core::mem::transmute(FN_DATE_DATE);
         let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
         let join: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
         let mut data = [0u8; 8];
         let mut quando = [0u8; 200];
         let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
         let j = *((m + engine::MATCH) as *const usize);
-        data_new(data.as_mut_ptr(), *((j + fixture::DAY) as *const u16) as u32, *((j + fixture::YEAR) as *const u16) as u32);
+        exe::new_date((data.as_mut_ptr()) as *mut u8 as usize, *((j + fixture::DAY) as *const u16) as u32, *((j + fixture::YEAR) as *const u16) as u32);
         exe::date_get_short_weekday_date_string(data.as_mut_ptr(), quando.as_mut_ptr(), 200, 0xff);
         let id = *(j as *const i32);
         let comp = if id == -2 { 0xa158dc } else if id == -1 { 0xa158ec } else { read_usize(j + fixture::COMPETITION) + 0x38 };
@@ -7049,7 +7046,6 @@ pub(crate) unsafe extern "C" fn kit(club: usize, other: usize, any: u32) -> u8 {
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: usize, rep: usize, comp: usize, rating: f32, average_b: u32, strong: u32) {
     let special: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
-    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let d8 = |a: usize| read_f64(a);
     let f4 = |a: usize| read_f32(a) as f64;
     let sheet = || *((person + staff::PLAYER) as *const usize);
@@ -7255,7 +7251,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let rd = preso(cd, f_d, f4(0x96d1a8), (level as i32 * 100) as f64, td);
     // the club’s reputation pulls +0xb
     if exe::database_is_national_team(club) == 0 && level > 10 {
-        let e = contract(*(G_CONTRACT_MANAGER as *const usize), person, club);
+        let e = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club);
         if e != 0 {
             let mut id = read_i8(person + staff::YEAR_OF_BIRTH) as i32 as f32;
             if read_f32(rdata::F32_19) < id {
@@ -7749,8 +7745,7 @@ pub(crate) unsafe fn pressure_on_player_with(m: usize, j: usize, out: *mut i16, 
 /// [pt] { 0x6bcbd0 } (ret 0xc, match_eng.cpp): ver `pressure_on_player_with`.
 pub(crate) unsafe extern "thiscall" fn pressure(m: usize, j: usize, out: *mut i16, list: usize) -> u8 {
     pressure_on_player_with(m, j, out, list, &mut |l, p| {
-        let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
-        f(l, p, 0x1be);
+        exe::llist_add_tail(l, p, 0x1be);
     })
 }
 
@@ -8677,7 +8672,6 @@ pub(crate) unsafe extern "thiscall" fn side_strength(this: usize, side: i8) {
     let sum = move |v: i32| *strength = (*strength).wrapping_add(v as i16);
     *strength = 0;
     *((this as isize + 0xaf + l) as *mut u8) = 0;
-    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let rating: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_MATCH_PLAYER_CALC_INFLUENCE_SCORE);
     let rating = |j: usize| rating(j) as i8 as i32;
     let designado = || {
@@ -8701,7 +8695,7 @@ pub(crate) unsafe extern "thiscall" fn side_strength(this: usize, side: i8) {
         let main = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = main;
         let club = if main == 0 { 0 } else { (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((main + 4) as *const i32) as usize).wrapping_mul(581)) };
-        let c = contract(*(G_CONTRACT_MANAGER as *const usize), person, club);
+        let c = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club);
         if c != 0 && club != 0 {
             let sheet = *((j + match_player::PLAYER) as *const usize);
             if (read_i8(sheet + player_sheet::LEADERSHIP) as i32) > random(20)
@@ -9757,8 +9751,7 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
 
 /// Calls MATCH_PLAYER move_to_grid_cell for player j and cell (x, y).
 pub(crate) unsafe fn move_to_cell(j: usize, x: i8, y: i8) {
-    let f: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL);
-    f(j, x, y);
+    exe::match_player_move_to_grid_cell(j, x, y);
 }
 /// Calls MATCH_PLAYER set_action_delay(0) for player j (field +0x2b).
 pub(crate) unsafe fn clear_action_delay(j: usize) {
@@ -10338,7 +10331,6 @@ pub(crate) unsafe extern "C" fn new_reputation(this: usize, side: i8, value: f32
 /// bloco, como o original.
 pub(crate) unsafe extern "thiscall" fn individual_marking(this: usize) {
     let marker: unsafe extern "thiscall" fn(usize, i8, i8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_FIND_MARKING_TARGET);
-    let mark: unsafe extern "thiscall" fn(usize, i8, *const u32) -> u32 = core::mem::transmute(FN_FORMATION_SET_MARKING_TARGET);
     for l in 0..2i8 {
         let table = this + engine::TACTICS + 0x18e3 * l as usize;
         for k in 0..20i8 {
@@ -10350,7 +10342,7 @@ pub(crate) unsafe extern "thiscall" fn individual_marking(this: usize) {
             let mk = marker(this, l, k) as i8;
             let other = (l == 0) as isize;
             let q = (this as isize + 0x4796 + 0x1be * (20 * other + mk as isize)) as usize;
-            mark(table, read_i8(p + match_player::POSITION), *((q + match_player::STAFF) as *const usize) as *const u32);
+            exe::formation_set_marking_target(table, read_i8(p + match_player::POSITION), *((q + match_player::STAFF) as *const usize) as *const u32);
         }
     }
 }
@@ -10739,7 +10731,6 @@ pub(crate) unsafe extern "thiscall" fn kick_off(this: usize) {
     *((this + engine::POSSESSION_SIDE) as *mut i8) = -1;
     *((this + engine::BALL_X) as *mut i8) = 4;
     *((this + engine::BALL_Y) as *mut i8) = if sai == 0 { 5 } else { 6 };
-    let move_to_cell: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL);
     // simplification: in the original x and y start with stack garbage; they are only read after some active one
     let (mut x, mut y) = (0i8, 0i8);
     for l in 0..2i8 {
@@ -10760,7 +10751,7 @@ pub(crate) unsafe extern "thiscall" fn kick_off(this: usize) {
             } else if y >= 6 {
                 y = 5;
             }
-            move_to_cell(p, x, y);
+            exe::match_player_move_to_grid_cell(p, x, y);
             if l == 0 {
                 exe::match_player_set_facing_direction(p, x, y, 4, if y < 9 { y + 3 } else { 11 });
             } else {
@@ -11272,10 +11263,9 @@ pub(crate) unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -
 /// os da tabela gravam o valor em `saida`. Os eventos da faixa fora dos 13 casos: sim.
 pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, event: u32, out: *mut i32) -> u32 {
     let today = G_CURRENT_DATE;
-    let date: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
     let (mut d10, mut d30) = ([0u8; 8], [0u8; 8]);
-    date(today, &mut d10, 10);
-    date(today, &mut d30, 0x1e);
+    exe::date_sub_days(today, (&mut d10) as *mut [u8; 8] as usize, 10);
+    exe::date_sub_days(today, (&mut d30) as *mut [u8; 8] as usize, 0x1e);
     let ev = event as u16 as i16 as i32;
     if !(8000..=0x21e4).contains(&ev) {
         return 0;

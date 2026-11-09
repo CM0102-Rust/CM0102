@@ -249,7 +249,6 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
 /// filtram; a soma de cinco atributos menos 3, 5, 15, 15 por sorteios zerados e 5 se a reputação do jogador (+0xb)
 /// passa de 4500 e da do clube (+0x80) dá o sorteio que, zerado, leva ao atrito com o técnico.
 pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
-    let tirar_favorita: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_STAFF_REMOVE_FAVOURED_STAFF);
     for _ in 0..10 {
         let club = club_record(friendly_random(read_usize(G_CLUB_COUNT) as i32) as usize);
         let a = read_usize(club.wrapping_add(friendly_random(0x32) as usize * 4) + 0xd7);
@@ -281,7 +280,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
         } else if friendly_random(3) == 0 {
             exe::staff_add_favoured_staff(a, b, 1);
         } else {
-            tirar_favorita(a, b);
+            exe::staff_remove_favoured_staff(a, b);
         }
     }
     if (read_i16(G_CURRENT_DATE) as i32) % 0x32 == 0 {

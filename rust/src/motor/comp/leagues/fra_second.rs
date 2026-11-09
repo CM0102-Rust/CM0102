@@ -48,8 +48,6 @@ pub(crate) struct LeagueDivision {
 pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: usize, p: &LeagueDivision) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.table);
-    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let baixo: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SPALOWER_SPALOWER);
     exe::new_league(this);
     write_usize(this + 4, registro);
     write_usize(this, p.vtabela);
@@ -75,7 +73,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
         show_error_at(p.file, p.rows[2]);
         return this;
     }
-    if ordenar(this, 0) == 0 {
+    if exe::league_sort_table(this, (0) as u32 as usize) == 0 {
         show_error_at(p.file, p.rows[3]);
         return this;
     }
@@ -94,7 +92,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
             let e = exe::crt_operator_new(0xee);
             // simplification: the original pushes the year in the low word of ecx, with the rest of the record pointer in
             // above; 0x851020 only reads the word (mov ax, word ptr [esp + 0x21c]).
-            let b = if e != 0 { baixo(e, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32) } else { 0 };
+            let b = if e != 0 { exe::new_spalower(e, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32) } else { 0 };
             write_usize(this + 0xee, b);
         } else {
             write_usize(this + 0xee, 0);

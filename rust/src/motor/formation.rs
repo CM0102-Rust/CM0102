@@ -1044,7 +1044,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     }
     core::ptr::write_unaligned(extra_of_home as *mut i16, p);
     // 0x5b7e60 and 0x5b73a0 only read the low word of the mask (the original pushes eax with whatever high part it has)
-    let pitch_cell: unsafe extern "C" fn(u32, u32, u32, *mut u32) -> u32 = core::mem::transmute(FN_FORMATION_GET_DEFAULT_COORDINATE);
     // the outputs carry over from one iteration to the next, like the original’s locals (uninitialized only if 0x5b73a0 fails
     // right on the first one: zero here)
     let (mut setor_geral, mut setor_extra, mut lado, mut saida) = (0u16, 0u16, 0u16, 0u32);
@@ -1070,9 +1069,9 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
                     (g, e)
                 }
             };
-            pitch_cell(a, 0, arg, &mut saida);
+            exe::formation_get_default_coordinate(a, (0) as u32 as i8, arg, (&mut saida) as *mut u32 as *mut i16);
             core::ptr::write_unaligned(sem_bola as *mut u32, saida);
-            pitch_cell(b, 1, arg, &mut saida);
+            exe::formation_get_default_coordinate(b, (1) as u32 as i8, arg, (&mut saida) as *mut u32 as *mut i16);
             core::ptr::write_unaligned(com_bola as *mut u32, saida);
         }
     }

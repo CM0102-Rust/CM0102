@@ -27,17 +27,13 @@ pub(crate) static mut SCOUT_DAILY_DRY_RUN: bool = false;
 /// com mais de um ano, com 3 relatórios, ou (depois de 30 dias) de jogador machucado (0x62c400 = 2); entre 30 dias e um
 /// ano o pedido é processado (e sai), salvo jogador sem nação ou de clube que joga nos 14 dias seguintes, que fica.
 pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (bool, bool, usize, usize, usize) {
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-    let contract_with: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let find: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, i32, i32, u32) -> i16 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
     // 0x600a50: 5 pushes (club, 1, 1, 0, 0); add esp, 0x14 -> cdecl; 0x4cf5a0: push player; mov ecx, [0xae1050] ->
     // thiscall, ret 4; 0x54c5b0: push n; push &output; lea ecx, [pedido+8] -> thiscall, ret 8; 0x62c400: push player;
     // mov ecx, [0xb63d28] -> thiscall, ret 4 (al); 0x4cf5f0: push club; push player; mov ecx, [0xae1050] -> thiscall,
     // ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24 (ax)
     let player = staff_records_staff_by_id(read_usize(request + scout_request::PLAYER_ID));
     let club = friendly_club_by_id(read_usize(request));
-    if human(club, 1, 1, 0, 0) == 0 {
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 {
         return (true, false, 0, 0, 0);
     }
     let manager = read_usize(club + club::MANAGER);
@@ -52,7 +48,7 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
     }
     let (dia, ano) = (read_i16(G_CURRENT_DATE), read_i16(G_CURRENT_DATE_YEAR) as u16);
     let mut t = [0u32; 2];
-    let year_after = more(request + scout_request::DATE, t.as_mut_ptr() as usize, 0x16d); // cqf12: um ano
+    let year_after = exe::date_add_days(request + scout_request::DATE, t.as_mut_ptr() as usize, 0x16d); // cqf12: um ano
     if scout_manager_date_after(dia, ano, year_after) {
         return (true, false, 0, 0, 0);
     }
@@ -60,7 +56,7 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
         return (true, false, 0, 0, 0);
     }
     let mut t2 = [0u32; 2];
-    let month_after = more(request + scout_request::DATE, t2.as_mut_ptr() as usize, 0x1e); // cqf12: trinta dias
+    let month_after = exe::date_add_days(request + scout_request::DATE, t2.as_mut_ptr() as usize, 0x1e); // cqf12: trinta dias
     if !scout_manager_date_after(dia, ano, month_after) {
         return (false, false, 0, 0, 0);
     }
@@ -77,7 +73,7 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
     }
     let mut direct = false;
     if seu != 0 {
-        let k = contract_with(read_usize(G_CONTRACT_MANAGER), player, seu);
+        let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, seu);
         if k != 0 {
             let s = read_u8(k + contract::SQUAD_STATUS) & 0xf0;
             direct = s == 0x60 || s == 0x70 || s == 0;
@@ -90,7 +86,7 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
         let last_high = core::ptr::read_unaligned((catorze + 2) as *const u32);
         let a1 = (last_high & 0xffff_0000) | dia as u16 as u32;
         let a2 = ano as u32;
-        if find(read_usize(G_FIXTURE_MANAGER), a1, a2, last, last_high, read_usize(seu) as u32, 0, -1, -2, 1) != 0 {
+        if (exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), a1, a2, last, last_high, read_usize(seu) as u32, 0, (-1) as i32 as u32, (-2) as i32 as u32, 1) as i16) != 0 {
             return (false, false, 0, 0, 0);
         }
     }
@@ -136,7 +132,6 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
         exe::drop_llist(l);
         return 0;
     }
-    let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     // 0x7f6cd0: push manager; push k; mov ecx, this -> thiscall, ret 8; 0x7b7490: push nation; mov ecx, list ->
     // thiscall, ret 4; 0x7b62a0: push 1; push 0; push 0; push 1; push −1000; push &record; push player; mov ecx, list
     // -> thiscall, ret 0x1c; 0x68d0d0: push 0x67; push &registro; lea ecx, local -> thiscall, ret 8; 0x7f9890: push
@@ -159,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
                     feitos += 1;
                     if (read_u8(reg + 0x66) as i8) > -1 {
                         crate::comparison::branch("cqf_12 request report");
-                        append(l, reg, 0x67);
+                        exe::llist_add_tail(l, reg, 0x67);
                     }
                 }
             }
@@ -285,7 +280,6 @@ pub(crate) unsafe extern "thiscall" fn send_scout_reports(this: usize, list: usi
 pub(crate) unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: usize, how_many: u32) {
     let _ = this;
     let n = (how_many as u8 as i8).min(3);
-    let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let data: unsafe extern "C" fn(usize, usize, *mut u8) = core::mem::transmute(FN_WRITE_MATCH_RECORD_TO_NEWS);
     // 0x77bbe0: push 0; push 0x138e; lea ecx -> thiscall; 0x785790: push v; push k; lea ecx -> thiscall, ret 8; 0x7e5160
     // and 0x7e4de0: push &index; push &news; push record; add esp, 0xc -> cdecl; 0x546ab0: push club; push
@@ -293,10 +287,10 @@ pub(crate) unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: us
     let mut news = [0u32; 0x38];
     let nt = news.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0x138e, 0);
-    write(nt, 0, n as i32 as u32);
+    exe::newsitem_set_slot(nt, (0) as u32 as i8, n as i32 as u32);
     let mut idx: u8 = 1;
     let mut pr = |idx: &mut u8, v: u32| {
-        write(nt, *idx as u32, v);
+        exe::newsitem_set_slot(nt, (*idx as u32) as u32 as i8, v);
         *idx = idx.wrapping_add(1);
     };
     pr(&mut idx, read_u8(r + 0x66) as i8 as i32 as u32);
@@ -323,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: us
     let k = idx;
     idx = idx.wrapping_add(1);
     let _ = idx;
-    write(nt, k as u32, exe::staff_get_player_strength_flags(staff_records_staff_by_id(read_usize(r + scout_report::PLAYER_ID)), club));
+    exe::newsitem_set_slot(nt, (k as u32) as u32 as i8, exe::staff_get_player_strength_flags(staff_records_staff_by_id(read_usize(r + scout_report::PLAYER_ID)), club));
     exe::news_send_to_club_manager(read_usize(G_NEWS), nt, friendly_club_by_id(read_usize(r + scout_report::CLUB_ID)));
 }
 
@@ -339,17 +333,16 @@ pub(crate) unsafe fn is_today(r: usize, today: usize) -> bool {
 /// [pt] Marca os clubes com jogo na data `d` e nos dias vizinhos (0x7775c0 na data, na véspera e no dia seguinte; a data
 /// volta a ser a mesma no fim: 0x54c8e0/0x54c5b0 e 0x417c10).
 pub(crate) unsafe fn mark_clubs_three_days(this: usize, d: usize) {
-    let minus: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     // 0x7775c0: push &data; mov ecx, edi -> thiscall, ret 4
     let (mut t, mut u) = ([0u8; 8], [0u8; 8]);
     let (pt, pu) = (t.as_mut_ptr() as usize, u.as_mut_ptr() as usize);
     crate::comparison::branch("cqc_12 marks the clubs");
     exe::nationalteams_mark_clubs_with_fixtures(this, d);
-    exe::date_operator_3d(d, pu, minus(d, pt, 1));
+    exe::date_operator_3d(d, pu, exe::date_sub_days(d, pt, 1));
     exe::nationalteams_mark_clubs_with_fixtures(this, d);
     exe::date_operator_3d(d, pu, exe::date_add_days(d, pt, 2));
     exe::nationalteams_mark_clubs_with_fixtures(this, d);
-    exe::date_operator_3d(d, pu, minus(d, pt, 1));
+    exe::date_operator_3d(d, pu, exe::date_sub_days(d, pt, 1));
 }
 
 /// The fixtures of list `l` (of the day two weeks from now): for each one, the national team call-ups (`select_squads_for_fixture`) and,
@@ -615,18 +608,12 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
     // (lea ecx, destination; 2 push); 0x946464: cdecl(key, array, count, 0x14, 0x5cc610) (add esp, 0x14); 0x456770 and
     // 0x456740: thiscall(data, baixo, alto) (lea ecx, data; 2 push); 0x5cbdf0: thiscall(this, primeira, quantas) (mov
     // ecx, esi; 2 push)
-    let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    let weeks: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_WEEKS);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let copy: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let bsearch: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let after: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     // the search key: the date at +3, like the 20-byte entries (the original passes the local date − 3)
     let mut key = [0u8; 0x14];
     let d = key.as_mut_ptr() as usize + 3;
-    data_default(d);
+    exe::date_date_54a110(d);
     let mut lim = [0u8; 8];
-    weeks(G_CURRENT_DATE, &mut lim, 0xc); // cpy4: hoje + 12 semanas
+    exe::date_add_weeks(G_CURRENT_DATE, &mut lim, 0xc); // cpy4: hoje + 12 semanas
     let today = read_u16(G_CURRENT_DATE);
     if today == 0 && !dry_run {
         crate::comparison::branch("cpy_4 year rollover");
@@ -638,7 +625,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
             }
             i += 1;
         }
-        sort(read_usize(this + friendly::SORTED_NATIONS), read_usize(this + friendly::SORTED_NATION_COUNT) as u32, 4, 0x5cc5f0); // cpy4: the nations by reputation
+        exe::crt_qsort(read_usize(this + friendly::SORTED_NATIONS), read_usize(this + friendly::SORTED_NATION_COUNT) as u32, 4, 0x5cc5f0); // cpy4: the nations by reputation
         // the first World Cup year (year − 2 a multiple of 4) from this one; the high half of the dword the original adds is
         // stack leftover: here, zero
         let mut year = read_u16(G_CURRENT_DATE_YEAR) as u32;
@@ -655,7 +642,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
             exe::friendly_international_date_resolve(e, a);
             k += 1;
         }
-        sort(read_usize(this + friendly::INTL_DATE_TABLE), read_usize(this + friendly::INTL_DATE_COUNT) as u32, 0x14, 0x5cc610);
+        exe::crt_qsort(read_usize(this + friendly::INTL_DATE_TABLE), read_usize(this + friendly::INTL_DATE_COUNT) as u32, 0x14, 0x5cc610);
     }
     // the date of 0xdd6ec8 after today + 12 weeks: nothing
     let x_year = read_u16(G_GAME_START_DATE_YEAR);
@@ -667,14 +654,14 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
         return None;
     }
     let mut lixo = [0u8; 8];
-    copy(d, &mut lixo, lim.as_ptr() as usize);
+    exe::date_operator_3d(d, (&mut lixo) as *mut [u8; 8] as usize, lim.as_ptr() as usize);
     let base = read_usize(this + friendly::INTL_DATE_TABLE);
     let n = read_usize(this + friendly::INTL_DATE_COUNT);
-    let p = bsearch(key.as_ptr() as usize, base, n as u32, 0x14, 0x5cc610);
+    let p = exe::crt_bsearch(key.as_ptr() as usize, base, n as u32, 0x14, 0x5cc610);
     if p == 0 {
         return None;
     }
-    let same = |e: usize| exe::date_operator_3c(d, read_usize(e + 3) as u32, read_usize(e + 7) as u32) == 0 && after(d, read_usize(e + 3) as u32, read_usize(e + 7) as u32) == 0;
+    let same = |e: usize| exe::date_operator_3c(d, read_usize(e + 3) as u32, read_usize(e + 7) as u32) == 0 && exe::date_operator_3e(d, read_usize(e + 3) as u32, read_usize(e + 7) as u32) == 0;
     // goes back to the first entry of the date
     let mut e = p;
     while e > base {
@@ -929,9 +916,8 @@ pub(crate) unsafe extern "thiscall" fn collect_club_scout_targets(this: usize, c
     }
     let alvos = scouting_targets_of_club(this, *club);
     if list != 0 {
-        let append: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LLIST_ADD_TAIL);
         for &p in &alvos {
-            append(list, p, 0x6e);
+            (exe::llist_add_tail(list, p, 0x6e) as u32);
         }
     }
     (!alvos.is_empty()) as u32
@@ -955,8 +941,7 @@ pub(crate) unsafe extern "thiscall" fn collect_club_scout_targets(this: usize, c
 /// lugar (+0, +4, a data +8 pela 0x417c10 e o byte +0x10), a contagem desce e, sobrando algum, reordena (qsort).
 pub(crate) unsafe extern "thiscall" fn remove_scout_request(this: usize, person: usize, club: usize) {
     let mut key = [0u8; 0x11];
-    let default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    default(key.as_mut_ptr() as usize + 8);
+    exe::date_date_54a110(key.as_mut_ptr() as usize + 8);
     let mut c = club;
     if c == 0 {
         let i = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as i32;
@@ -981,13 +966,12 @@ pub(crate) unsafe extern "thiscall" fn remove_scout_request(this: usize, person:
         return;
     }
     let mut k = ((s.wrapping_sub(base) as u32 as u64 * 0xf0f0f0f1) >> 36) as i32; // the place of the request
-    let copy_data: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     while k < read_u32(this + scout_manager_fields::SCOUT_REQUEST_COUNT) as i32 - 1 {
         let r = (read_u32(this + scout_manager_fields::SCOUT_REQUESTS) as usize).wrapping_add(k as usize * 17);
         core::ptr::write_unaligned(r as *mut u32, read_u32(r + 0x11));
         core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(r + 0x15));
         let mut local = [0u8; 8];
-        copy_data(r + 8, &mut local, r + 0x19);
+        exe::date_operator_3d(r + 8, (&mut local) as *mut [u8; 8] as usize, r + 0x19);
         *((r + 0x10) as *mut u8) = *((r + 0x21) as *const u8);
         k += 1;
     }

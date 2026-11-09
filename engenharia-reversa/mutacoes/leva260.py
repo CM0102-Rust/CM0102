@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpw7_repetido_sem_sorteio', '            if friendly_random(read_u8(person + staff::PROFESSIONALISM) as i8 as i32) == 0 && friendly_random(read_u8(person + staff::TEMPERAMENT) as i8 as i32) == 0 { // cpw7: the random draws of the repeated case', '            if false { // mutacao: sem os sorteios', 'cpw_7 repeated case'),
     ('cpw7_duas_semanas', '                if weeks_after_have_passed(r + 4, 1) { // cpw7: one week later', '                if weeks_after_have_passed(r + 4, 2) { // mutacao: duas semanas', 'cpw_7 absence expired'),
-    ('cpw7_nao_sai_da_lista', '    remove(read_usize(this + 4), r); // cpw7: removes the case from the list', '    let _ = remove; // mutacao: nao sai da lista', 'cpw_7 absence removed from the list'),
+    ('cpw7_nao_sai_da_lista', '    exe::llist_remove(read_usize(this + 4), r); // cpw7: removes the case from the list', '    let _ = remove; // mutacao: nao sai da lista', 'cpw_7 absence removed from the list'),
     ('cpx1_recusa_sem_desassossego', '    call_with_offer(0x8c1290, this, o); // cpx1: the unsettlement from the refusal', '    // mutacao: sem o desassossego na recusa', 'cpx_1 refusal unsettles'),
     ('cpx1_retirada_desassossega_sempre', '    if reason as u16 == 2 { // cpx1: só o motivo 2 desassossega', '    if reason as u16 == 2 || true { // mutacao: toda retirada desassossega', 'cpx_1 withdrawal without unsettling'),
     ('cpx1_sem_desmarcar_comprador', '    clear_bid_markers(this, friendly_club_by_id(read_usize(o + offer::BUYER_CLUB_ID)), p); // cpx1: unmark the bids of the buyer', '    let _ = p; // mutacao: os lances do comprador ficam marcados', 'cpx_1 refusal unmarks'),

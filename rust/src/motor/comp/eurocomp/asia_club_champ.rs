@@ -185,7 +185,6 @@ pub(crate) unsafe fn asia_semi_finalists(this: usize) -> [usize; 4] {
 /// não é liberada, como na original). Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round: push 0; mov ecx, fase ->
 /// thiscall, ret 4) e a lista liberada.
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(this: usize) {
-    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
     let list = exe::crt_malloc(0x10);
     if list == 0 {
         return show_error_at(0x987a40, 0x3d1);
@@ -212,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(t
     if f == 0 {
         return show_error_at(0x987a40, 0x3e6);
     }
-    sortear(f, 0);
+    exe::cup_draw_round(f, 0);
     exe::crt_free(list);
 }
 

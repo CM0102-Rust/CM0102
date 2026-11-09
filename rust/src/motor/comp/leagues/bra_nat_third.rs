@@ -90,9 +90,8 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
 /// dos 56 (+0xee) liberada (se houver) e zerada. Com caixa, a cópia devolve 0 (a original devolve o eax da caixa, que
 /// a virada do Brasil não lê); no fim, o eax do free ou o +0xee (a cópia devolve 0: ninguém lê).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usize) -> u32 {
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
-    liberar_tabela(this, 0);
+    exe::league_free_table(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
         exe::crt_free(l);
@@ -137,8 +136,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
         show_error_at(0x98aba4, 0x20f);
         return 0;
     }
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    if sort(this, 0) == 0 {
+    if exe::league_sort_table(this, 0) == 0 {
         show_error_at(0x98aba4, 0x216);
         return 0;
     }
@@ -191,13 +189,12 @@ pub(crate) fn place_for_index(k: usize) -> u8 {
 /// thiscall(+8, clube, posição), ret 8; a original empurra a faixa dos quarenta num dword com o byte da faixa e lixo
 /// da pilha em cima; a 0x4a2540 só lê o byte: a cópia passa o byte limpo).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(this: usize) {
-    let position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
         return show_error_at(0x98aba4, 0x4a2);
     }
     exe::crt_qsort(read_usize(this + bra_nat_third::CLUB_LIST), 0x38, 4, 0x4b07d0); // cqs4: the list of the 56 by reputation
     for k in 0..0x38usize {
-        position(read_usize(this + 8), read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k), place_for_index(k) as u32);
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k), place_for_index(k) as u32);
     }
     crate::comparison::branch("cqs_4 expected positions");
 }

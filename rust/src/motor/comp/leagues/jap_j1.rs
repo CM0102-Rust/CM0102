@@ -66,8 +66,7 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
     core::ptr::write_unaligned((read_usize(this + league::STAGES) + 8) as *mut usize, stage);
     exe::crt_free(list);
     exe::crt_free(t);
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    build(read_usize(read_usize(this + league::STAGES) + 8), 0);
+    exe::cup_set_up_round(read_usize(read_usize(this + league::STAGES) + 8), 0);
     if read_usize(read_usize(this + league::STAGES) + 8) == 0 {
         return show_error_at(0x9eabc8, 0x25c);
     }
@@ -89,7 +88,7 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
 /// Then, each with its own box if it returns 0: the rules (virtual `+0x8c`, `0x1be`), the table (`0x6634e0`, `0x1c5`),
 /// the fixtures (League::create_fixtures `0x6835c0`, `0x1cb`) and the order (League::sort_table `0x6827d0`,
 /// thiscall(this, 0), `0x1d2`); then the J2 turnover (virtual `+8` of the competition with id `[0x9cf768]`), the
-/// predicted positions (virtual `+0x5c`), the board expectations (League::set_club_season_expectations `0x68aa80`) and
+/// predicted positions (virtual `+0x5c`), the board exe::league_set_club_season_expectations(League::set_club_season_expectations `0x68aa80`) and
 /// the referee renewal (OfficialsManager::renew_officials `0x79cee0`, thiscall(`[0xb74340]`, `+4`), ret 4), whose eax
 /// it returns.
 /// Original: `JapJ1::start_new_season` (0x6636d0, jap_j1.cpp, thiscall, ret 0).
@@ -113,8 +112,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0xb0));
     cadeia(this, 1);
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    liberar_tabela(this, 0);
+    exe::league_free_table(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
         exe::crt_free(l);
@@ -171,8 +169,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     }
     virtual_(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)), 8);
     virtual_(this, 0x5c);
-    let expectations: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
-    expectations(this);
+    exe::league_set_club_season_expectations(this);
     exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 

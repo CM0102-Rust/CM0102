@@ -360,8 +360,7 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
         other = b.wrapping_mul(50) / 11;
     }
     let (mut x11, mut x12, mut x14, mut x16, mut x17) = (0i8, 0i8, 0u8, 0u8, 0u8);
-    let aggregate: unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> i8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOAL_MARGIN);
-    aggregate(m, side, &mut x11, &mut x12, &mut x16, &mut x17, &mut x14, 0);
+    exe::cm3_match_engine_get_goal_margin(m, side, &mut x11, &mut x12, &mut x16, &mut x17, &mut x14, 0);
     let own = own as i16 as i32;
     let other = other as i16 as i32;
     let f = (own - other) as f64 / ((1.5 - own as f64 * 0.0001) * 6000.0) + 1.0;
@@ -892,8 +891,6 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
     let w = |p: usize, o: usize| *((p + o) as *const i16);
     let mark: unsafe extern "thiscall" fn(usize, u32, u32, u32) = core::mem::transmute(FN_FORMATION_SET_PLAYER_INSTRUCTION);
-    let marcar: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_FORMATION_SET_MARKING_TARGET);
-    let bench: unsafe extern "thiscall" fn(usize, usize, u32, usize, i32) = core::mem::transmute(FN_TACTICS_SET_PLAYMAKER);
     let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f32 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let (ca, cb) = (u(c, match_manager::CLUB), u(c, match_manager::OPPONENT));
     let mut acc = 0i8;
@@ -951,8 +948,8 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     }
     let tat = || u(G_TACTICS, 0);
     let hum = read_i8(c + match_manager::TACTIC_SLOT) as i32;
-    bench(tat(), u(c, match_manager::CLUB), 0, 0, hum);
-    bench(tat(), u(c, match_manager::CLUB), 1, 0, read_i8(c + match_manager::TACTIC_SLOT) as i32);
+    exe::tactics_set_playmaker(tat(), u(c, match_manager::CLUB), 0, 0, (hum) as i32 as u32);
+    exe::tactics_set_playmaker(tat(), u(c, match_manager::CLUB), 1, 0, (read_i8(c + match_manager::TACTIC_SLOT) as i32) as i32 as u32);
     let m = u(c, match_manager::ENGINE);
     let block = |k: usize| m + 0x22d8 * read_i8(c + match_manager::SIDE) as isize as usize + 0x4796 + 0x1be * k;
     // the running total of those who can take set pieces
@@ -1063,7 +1060,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                         if u(u(u(c, match_manager::ENGINE), 0x4792), 0x1c) != u(c, match_manager::CLUB) || a(0x1a) > 15 {
                             exe::formation_set_slot_position(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x208, 1);
                         }
-                        marcar(blk(), read_i8(j + match_player::POSITION) as u8 as u32, u(o, match_player::STAFF));
+                        exe::formation_set_marking_target(blk(), (read_i8(j + match_player::POSITION) as u8 as u32) as u32 as i8, (u(o, match_player::STAFF)) as usize as *const u32);
                     } else if u(o, match_player::STAFF) != 0
                         && tb() & 8 != 0
                         && (tb() & 0x200 != 0 || tb() & 0x100 != 0 || tb() & 0x400 != 0)
@@ -1076,7 +1073,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                         && a(0x1a) > 10
                         && exe::staff_get_non_player_attribute(u(c, match_manager::MANAGER), 0xb) as i32 > (resto5() as i8).wrapping_add(7) as i32
                     {
-                        marcar(blk(), read_i8(j + match_player::POSITION) as u8 as u32, u(o, match_player::STAFF));
+                        exe::formation_set_marking_target(blk(), (read_i8(j + match_player::POSITION) as u8 as u32) as u32 as i8, (u(o, match_player::STAFF)) as usize as *const u32);
                     } else if u(o, match_player::STAFF) != 0
                         && (tbo() & 0x10 != 0 || (exe::match_player_get_secondary_position(o) as u8) & 0x10 != 0)
                         && sides()
@@ -1101,7 +1098,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                             if (tbo() & 0x20 != 0 || (exe::match_player_get_secondary_position(o) as u8) & 0x20 != 0) && (fb(0x12) == 20 || fb(0x13) == 20) && a(0x1a) > 14 {
                                 exe::formation_set_slot_position(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x208, 1);
                             }
-                            marcar(blk(), read_i8(j + match_player::POSITION) as u8 as u32, u(o, match_player::STAFF));
+                            exe::formation_set_marking_target(blk(), (read_i8(j + match_player::POSITION) as u8 as u32) as u32 as i8, (u(o, match_player::STAFF)) as usize as *const u32);
                         }
                     }
                 }
@@ -1222,7 +1219,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             if ((w(ca, club::REPUTATION) as i32 / 500) as f64 + f38 * 30.0) < s as f64 {
                 let pj = u(j, match_player::STAFF);
                 if u(c, 6) == pj || u(c, match_manager::KEY_PLAYER_2) == pj || u(c, match_manager::KEY_PLAYER_3) == pj {
-                    bench(tat(), ca, 0, pj, read_i8(c + match_manager::TACTIC_SLOT) as i32);
+                    exe::tactics_set_playmaker(tat(), ca, 0, pj, (read_i8(c + match_manager::TACTIC_SLOT) as i32) as i32 as u32);
                 }
             }
         }
@@ -1456,11 +1453,9 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     let h16 = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const i16);
     let tb = |o: usize| (t + o) as *mut u8;
 
-    let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let rival_de: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE);
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
-    let mark: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_TACTICS_REMOVE_PLAYER_FROM_SELECTION);
     let rodizio: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_CHECK_MATCHDAY_SQUAD_LIMIT);
     #[allow(clippy::type_complexity)]
     let capitao: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_CAPTAIN_FROM_SLOT);
@@ -1534,7 +1529,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             let x = exe::llist_get_next(f + 0x80);
             wd(0x20, x as u32);
             if x != 0 && *(x as *const i32) != -2 {
-                let d = data_new(f + 0x24, *((x + 0x2a) as *const u16) as u32, *((x + 0x28) as *const u16) as u32);
+                let d = exe::new_date(f + 0x24, *((x + 0x2a) as *const u16) as u32, *((x + 0x28) as *const u16) as u32);
                 exe::date_operator_3d(f + 0x38, f + 0x18, d);
                 let rival = if club == u(x, 0x1c) { u(x, 0x20) } else { u(x, 0x1c) };
                 let mut l18 = weight(u(x, 0x14), rival);
@@ -1692,7 +1687,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     let slot = |p: usize| exe::tactics_find_selection_slot(tactic, club, p, humano19) as i8;
     let mark_se = |p: usize| {
         if bl == 1 && slot(p) > -1 {
-            mark(tactic, club, p, humano19, 1);
+            exe::tactics_remove_player_from_selection(tactic, club, p, humano19, 1);
         }
     };
     *b(0x18) = 0;

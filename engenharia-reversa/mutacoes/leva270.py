@@ -33,7 +33,7 @@ MUTACOES = [
     ('cqf11_sem_sorteio', 'let r = random_or_tape(2); // cqf11: the news random draw', 'let r = 0; // mutacao: sem o sorteio', 'cqf_11 club news'),
     ('cqf11_um_grupo_so', 'if read_usize(other + staff::CLUB_JOB) != read_usize(first + staff::CLUB_JOB) {', 'if false && read_usize(other + staff::CLUB_JOB) != read_usize(first + staff::CLUB_JOB) { // mutacao: um grupo so', 'cqf_11 club news'),
     ('cqf11_sem_tirar_do_elenco', '                    *pj = 0;', '                    let _ = pj; // mutacao: o jogador fica no elenco', 'cqf_11 club news'),
-    ('cqf12_quinze_dias', 'let month_after = more(request + scout_request::DATE, t2.as_mut_ptr() as usize, 0x1e); // cqf12: trinta dias', 'let month_after = more(request + scout_request::DATE, t2.as_mut_ptr() as usize, 0xf); // mutacao: quinze dias', 'cqf_12 request processed'),
+    ('cqf12_quinze_dias', 'let month_after = exe::date_add_days(request + scout_request::DATE, t2.as_mut_ptr() as usize, 0x1e); // cqf12: trinta dias', 'let month_after = exe::date_add_days(request + scout_request::DATE, t2.as_mut_ptr() as usize, 0xf); // mutacao: quinze dias', 'cqf_12 request processed'),
     ('cqf12_um_relatorio', 'if feitos >= 3 { // cqf12: up to three reports', 'if feitos >= 1 { // mutacao: um relatorio', 'cqf_12 request report'),
-    ('cqf12_meio_ano', 'let year_after = more(request + scout_request::DATE, t.as_mut_ptr() as usize, 0x16d); // cqf12: um ano', 'let year_after = more(request + scout_request::DATE, t.as_mut_ptr() as usize, 0x2d); // mutacao: 45 dias', 'cqf_12 request processed'),
+    ('cqf12_meio_ano', 'let year_after = exe::date_add_days(request + scout_request::DATE, t.as_mut_ptr() as usize, 0x16d); // cqf12: um ano', 'let year_after = exe::date_add_days(request + scout_request::DATE, t.as_mut_ptr() as usize, 0x2d); // mutacao: 45 dias', 'cqf_12 request processed'),
 ]

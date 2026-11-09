@@ -18,12 +18,6 @@ pub(crate) fn match_event_files(human: bool) -> (usize, usize) {
 /// recria o mais antigo com o numero seguinte de [0xb6b7c0]+0x18 (sem abrir, erro 0xba4). Em `desc`:
 /// posicao, quantos, numero e o byte `humano`. Devolve se gravou.
 pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, human: u8) -> u8 {
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let read: unsafe extern "C" fn(*mut i32, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-    let search: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-    let position: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CRT_FTELL);
     if desc.is_null() {
         return 0;
     }
@@ -32,14 +26,14 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
     let mut ids = [-1i32, -1];
     let mut aberto = 0usize;
     for (k, name) in [um, dois].into_iter().enumerate() {
-        let f = open(path(0x987da0, name), 0x9c7848);
+        let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, name), 0x9c7848);
         if f == 0 {
             continue;
         }
-        search(f, 0, 0);
-        read(&mut versao, 4, 1, f);
-        read(&mut ids[k], 4, 1, f);
-        read(&mut quantos, 4, 1, f);
+        exe::crt_fseek(f, 0, 0);
+        exe::crt_fread((&mut versao) as *mut i32 as usize, 4, 1, f);
+        exe::crt_fread((&mut ids[k]) as *mut i32 as usize, 4, 1, f);
+        exe::crt_fread((&mut quantos) as *mut i32 as usize, 4, 1, f);
         numero = ids[k];
         if versao != 1 {
             show_error_at(0xa159b0, if k == 0 { 0xb5c } else { 0xb7b });
@@ -57,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
         aberto
     } else {
         let name = if ids[0] == -1 || (ids[1] != -1 && ids[0] <= ids[1]) { um } else { dois };
-        let f = open(path(0x987da0, name), 0x9a7f28);
+        let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, name), 0x9a7f28);
         if f == 0 {
             show_error_at(0xa159b0, 0xba4);
             return 0;
@@ -68,21 +62,21 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
         let r = *(G_MATCH_STATS as *const usize) + 0x18;
         numero = *(r as *const i32) + 1;
         *(r as *mut i32) = numero;
-        write(&versao as *const i32 as usize, 4, 1, f);
-        write(&numero as *const i32 as usize, 4, 1, f);
-        write(&quantos as *const i32 as usize, 4, 1, f);
+        exe::crt_fwrite(&versao as *const i32 as usize, 4, 1, f);
+        exe::crt_fwrite(&numero as *const i32 as usize, 4, 1, f);
+        exe::crt_fwrite(&quantos as *const i32 as usize, 4, 1, f);
         f
     };
-    search(f, 0, 2);
-    *desc = position(f);
+    exe::crt_fseek(f, 0, 2);
+    *desc = (exe::crt_ftell(f) as u32);
     let n = *((e + 6) as *const i16) as i32;
     *desc.add(1) = n as u32;
     *desc.add(2) = numero as u32;
     *(desc.add(3) as *mut u8) = human;
-    let r = write(e + 0x720, 0xe, *((e + 6) as *const i16) as i32 as u32, f);
+    let r = exe::crt_fwrite(e + 0x720, 0xe, *((e + 6) as *const i16) as i32 as u32, f);
     quantos += 1;
-    search(f, 8, 0);
-    write(&quantos as *const i32 as usize, 4, 1, f);
+    exe::crt_fseek(f, 8, 0);
+    exe::crt_fwrite(&quantos as *const i32 as usize, 4, 1, f);
     exe::crt_fclose(f);
     (r != 0) as u8
 }
@@ -747,7 +741,6 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, panel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let mostrar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FLAGS);
     const SOM: usize = G_SCREEN_MANAGER;
     const TABELA: isize = 0xb68788;
 
@@ -1097,7 +1090,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         exe::screenmanager_set_widget_text_colour(SOM, panel, core::ptr::read_unaligned(cor1.as_ptr() as *const u32));
         exe::screenmanager_set_widget_text(SOM, panel, (row.as_ptr()) as usize);
         exe::screenmanager_set_widget_style(SOM, panel, 0x30);
-        mostrar(SOM, panel, if *((e + 3) as *const u8) != 0 { 0x1001 } else { 1 });
+        exe::screenmanager_set_widget_flags(SOM, (panel) as u32 as usize, if *((e + 3) as *const u8) != 0 { 0x1001 } else { 1 });
     }
 
     // the event sound
@@ -1728,8 +1721,7 @@ pub(crate) unsafe extern "thiscall" fn event_at_front(t: usize, a: u32, b: u32, 
     if n > 0 && read_i16(t + (0x712 + n as usize * 14)) == read_i16(t + (0x30 + pos as usize * 14)) {
         core::ptr::write_unaligned((t + 6) as *mut i16, n - 1);
     }
-    let enfileirar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_MATCH_EVENTS_ADD_EVENT);
-    enfileirar(t, a, b, c, d, e, f, g)
+    exe::match_events_add_event(t, a, b, c, d, e, f, g)
 }
 
 /// The commentary queue constructor: clears the queue, reads the events and, if asked, plays the crowd loop.

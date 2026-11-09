@@ -58,8 +58,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], see
     if stage == 0 {
         return show_error_at(file, row_without_stage);
     }
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    build(stage, 0);
+    exe::cup_set_up_round(stage, 0);
     exe::crt_free(t);
     exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);

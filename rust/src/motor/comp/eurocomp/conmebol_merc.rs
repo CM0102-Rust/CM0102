@@ -42,12 +42,9 @@ pub(crate) unsafe fn conmebol_merc_drawn_club(this: usize, k: usize) -> usize {
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e segue. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     let mut junho = [0u8; 8];
-    data(junho.as_mut_ptr(), 1, 5, year_of_today as u32, -1);
+    exe::date_date_549f70((junho.as_mut_ptr()) as *mut u8 as *mut [u16; 4], 1, 5, year_of_today as u32, (-1) as i32 as u32);
     if core::ptr::read_unaligned(junho.as_ptr().add(2) as *const u16) == year_of_today
         && core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16)
         && read_i16(this + league::YEAR) as i32 != year_of_today as i32
@@ -67,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
             if exe::league_create_fixtures(this) == 0 {
                 show_error_at(0x9a7e5c, 0x39b);
             }
-            if sort(this, 0) == 0 {
+            if exe::league_sort_table(this, 0) == 0 {
                 show_error_at(0x9a7e5c, 0x3a1);
             }
             for g in 0..4i32 {
@@ -80,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
             write_usize(this + league::ACTIVE, 1);
         }
     }
-    league(this, today, full)
+    exe::league_update_for_date(this, today, full)
 }
 
 // simplification: the clubs (shuffled), the tables, the matches and the league day do not run twice. Original only; the plan
@@ -91,10 +88,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
 ///
 /// [pt] O dia da virada (1º de junho do ano de hoje, com a copa de outro ano): o comparador não confere o sorteio nesse dia.
 pub(crate) unsafe fn is_rollover_day(this: usize, today: usize) -> bool {
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     let mut junho = [0u8; 8];
-    data(junho.as_mut_ptr(), 1, 5, year_of_today as u32, -1);
+    exe::date_date_549f70((junho.as_mut_ptr()) as *mut u8 as *mut [u16; 4], 1, 5, year_of_today as u32, (-1) as i32 as u32);
     core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16) && read_i16(this + league::YEAR) as i32 != year_of_today as i32
 }
 

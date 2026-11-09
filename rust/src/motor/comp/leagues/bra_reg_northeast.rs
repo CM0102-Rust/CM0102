@@ -47,7 +47,6 @@ pub(crate) struct StateLeague {
 pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: u32, registro: usize, e: &StateLeague, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
-    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
@@ -76,7 +75,7 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: 
         show_error_at(e.file, e.rows[2]);
         return this;
     }
-    if ordenar(this, 0) == 0 {
+    if exe::league_sort_table(this, (0) as u32 as usize) == 0 {
         show_error_at(e.file, e.rows[3]);
         return this;
     }

@@ -221,13 +221,12 @@ pub(crate) unsafe extern "thiscall" fn compare_update_club_shortlist(this: usize
 /// clubes que a 0x842180 (pura) junta antes, numa lista própria. Cada lado cria e libera a sua lista.
 pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player(this: usize, player: usize, clear: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8)>(IDX_SUSPEND_CLUBS_SHORTLISTING_PLAYER);
-    let interested: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_COLLECT_INTERESTED_CLUBS);
     let p = exe::crt_operator_new(0xe);
     if p == 0 {
         return o(this, player, clear);
     }
     let list = exe::new_llist(p);
-    interested(this, player, list, 1, 3, 0);
+    exe::shortlist_manager_collect_interested_clubs(this, player, list, 1, 3, 0);
     // the items (8 bytes: player id, club id) through the nodes (+2 the first; node: +0 the data, +6 the next)
     let mut reg: Vec<(usize, usize)> = Vec::new();
     let mut no = read_usize(list + llist::HEAD);

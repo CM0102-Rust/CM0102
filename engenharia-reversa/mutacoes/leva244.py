@@ -9,7 +9,7 @@ MUTACOES = [
     ('cph_moral_ganho', 'let happiness = (read_u8(contract + contract::MATCHES_LEFT_OUT) as i8 as i32 + 5) as f64; // +0x3f + 5', 'let happiness = (read_u8(contract + contract::MATCHES_LEFT_OUT) as i8 as i32 + 6) as f64; // mutacao: + 6'),
     ('cph_conversas_clube', '&& (club == 0 || read_u32(r + contract_talks::CLUB_ID) == read_u32(club)) // the club', '&& (club == 0 || true) // mutacao: sem o clube'),
     ('cph_interesse_ordem', 'if *n != 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0);', 'if *n < 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0); // mutacao: sem reordenar'),
-    ('cph_pedido_data', 'copy_data(r + 8, &mut local, r + 0x19);', 'copy_data(r + 8, &mut local, r + 8); // mutacao: a data fica'),
+    ('cph_pedido_data', 'exe::date_operator_3d(r + 8, (&mut local) as *mut [u8; 8] as usize, r + 0x19);', 'exe::date_operator_3d(r + 8, (&mut local) as *mut [u8; 8] as usize, r + 8); // mutacao: a data fica'),
     ('cph_apelido_fim', 'core::ptr::write_unaligned((end - 0x1e) as *mut u32, u32::MAX);', 'core::ptr::write_unaligned((end - 0x1e) as *mut u32, 0); // mutacao: id 0'),
     ('cph_pendente_fim', 'core::ptr::write_unaligned(end as *mut u32, u32::MAX); // the last one without a person', 'core::ptr::write_unaligned(end as *mut u32, 0); // mutacao: pessoa 0'),
     ('cph_desempregado_tecnico', '*((manager + non_player::CURRENT_REPUTATION) as *const i16) < 50 && friendly_random(5) == 0 // the weak manager', '*((manager + non_player::CURRENT_REPUTATION) as *const i16) < 49 && friendly_random(5) == 0 // mutacao: 49'),

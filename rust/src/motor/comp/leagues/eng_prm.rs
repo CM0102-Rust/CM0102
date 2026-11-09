@@ -56,7 +56,6 @@ pub(crate) struct EnglishDivision {
 pub(crate) unsafe fn construct_english_division(this: usize, year: u32, registro: usize, p: &EnglishDivision) -> usize {
     let set_up_rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.set_up_rules);
     let create_table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.create_table);
-    let sort: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     exe::new_league(this);
     write_usize(this + 4, registro);
     write_usize(this, p.vtable);
@@ -91,7 +90,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, year: u32, registro
         show_error_at(p.source_file, p.box_lines[2]);
         return this;
     }
-    if sort(this, 0) == 0 {
+    if exe::league_sort_table(this, (0) as u32 as usize) == 0 {
         show_error_at(p.source_file, p.box_lines[3]);
         return this;
     }

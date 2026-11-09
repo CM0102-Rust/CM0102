@@ -96,7 +96,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_advance_stage(this: usize) {
 ///    e a tabela liberada (free 0x9452ca). Sem fase: a caixa da linha 0x5c4. Com ela: Cup::set_up_round (0x51c800,
 ///    thiscall(fase, 0), ret 4). A lista não é liberada (a fase fica com ela; a original a deixa assim).
 pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize) {
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
@@ -144,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
         return show_error_at(0xaa1fb4, 0x5c4);
     }
     crate::comparison::branch("cqr_4 play-off");
-    build(stage, 0);
+    exe::cup_set_up_round(stage, 0);
 }
 
 /// Creates the MLS Cup final: the two play-off winners in a two-club cup stage [inference: a single game]; the winner
@@ -167,7 +166,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
 /// 3, 1, o extra, 0x14, 0, 0, 0 e sementes nulas) em [+0xc][3] e a tabela liberada. Sem fase: a caixa da linha 0x5fe e
 /// volta (sem liberar a lista). Com ela: Cup::set_up_round (thiscall(fase, 0)) e a lista liberada (free 0x9452ca).
 pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
@@ -203,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
         return show_error_at(0xaa1fb4, 0x5fe);
     }
     crate::comparison::branch("cqr_4 final");
-    build(stage, 0);
+    exe::cup_set_up_round(stage, 0);
     exe::crt_free(list);
 }
 
@@ -419,9 +417,8 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: usize, code: i16, 
 /// caixa, a cópia devolve 0 (a original devolve o eax da caixa; a virada é chamada pelo laço das viradas, que não o lê).
 /// O vetor das fases (+0xc) fica: as divisões e o play-off regravam as vagas.
 pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
-    liberar_tabela(this, 0);
+    exe::league_free_table(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
         exe::crt_free(l);
@@ -462,15 +459,13 @@ pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
         show_error_at(0xaa1fb4, 0x4bc);
         return 0;
     }
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    if sort(this, 0) == 0 {
+    if exe::league_sort_table(this, 0) == 0 {
         show_error_at(0xaa1fb4, 0x4c3);
         return 0;
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     predicted(this);
-    let expectations: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
-    expectations(this);
+    exe::league_set_club_season_expectations(this);
     exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqs2: the renewal of the MLS referees
 }
 
@@ -506,7 +501,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_start_new_season(this: usize) -> 
 /// thiscall(+8, clube, posição), ret 8; a ordem das doze chamadas é a do vetor); o vetor liberado (free 0x9452ca).
 /// [inferência] As três divisões se misturam na previsão: o favorito de cada uma é previsto em 1º, o segundo em 4º...
 pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usize) {
-    let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let n3 = read_i16(this + league::CLUB_COUNT).wrapping_mul(3);
     if read_usize(this + 8) == 0 {
         return show_error_at(0xaa1fb4, 0x675);
@@ -532,7 +526,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
     exe::crt_qsort(v + 8 * n as usize, n as u32, 4, 0x4b07d0);
     let places: [u32; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10]; // cqs2: the predicted positions of the three divisions
     for (k, p) in places.iter().enumerate() {
-        position(read_usize(this + 8), read_usize(v + 4 * k), *p);
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + 4 * k), *p);
     }
     crate::comparison::branch("cqs_2 expected positions");
     exe::crt_free(v);

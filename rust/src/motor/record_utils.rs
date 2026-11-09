@@ -31,11 +31,10 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
         show_error_at(0xa7a088, 0x39);
         return 0;
     }
-    let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let side: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let (mut t0, mut t1) = ([0u8; 8], [0u8; 8]);
     let (p0, p1) = (t0.as_mut_ptr() as usize, t1.as_mut_ptr() as usize);
-    let d = data_new(p0, read_u16(game + fixture::DAY) as u32, read_u16(game + fixture::YEAR) as u32);
+    let d = exe::new_date(p0, read_u16(game + fixture::DAY) as u32, read_u16(game + fixture::YEAR) as u32);
     exe::date_operator_3d(out, p1, d);
     let s = |o: usize| (out + o) as *mut u8;
     core::ptr::write_unaligned(s(8) as *mut u32, read_u32(game));
@@ -158,8 +157,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
     if read_usize(p + staff::PLAYER) == 0 {
         return;
     }
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contract(read_usize(G_CONTRACT_MANAGER), p);
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     if c == 0 || read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 5 {
         return;

@@ -36,8 +36,6 @@ pub(crate) unsafe fn selected_club(this: usize, k: usize) -> usize {
 /// 4 -> cdecl) e zerada, +0xf2 = 0 e +0x45 = 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this
 /// -> thiscall, ret 8), cuja devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     let day = read_i16(this + 0xb6) as u16;
     let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
@@ -60,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
             show_error_at(0xa6a068, 0x224);
             return 1;
         }
-        if sort(this, 0) == 0 {
+        if exe::league_sort_table(this, 0) == 0 {
             show_error_at(0xa6a068, 0x22b);
             return 1;
         }
@@ -70,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
         write_usize(this + 0xf2, 0);
         write_usize(this + league::ACTIVE, 1);
     }
-    league(this, today, full)
+    exe::league_update_for_date(this, today, full)
 }
 
 // simplification: the clubs, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan
@@ -434,7 +432,6 @@ pub(crate) unsafe fn semifinalists(this: usize) -> [usize; 4] {
 /// da linha 0x2e3 e volta. Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall,
 /// ret 4).
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize) {
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     let list = exe::crt_malloc(0x10);
     if list == 0 {
         return show_error_at(0xa6a068, 0x2cb);
@@ -462,7 +459,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
     if f == 0 {
         return show_error_at(0xa6a068, 0x2e3);
     }
-    build(f, 0);
+    exe::cup_set_up_round(f, 0);
 }
 
 // simplification: allocates the stage and builds the round: does not run twice. Original only; the plan: the stage at [+0xc][1] with 4 teams,

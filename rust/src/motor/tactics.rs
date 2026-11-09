@@ -868,7 +868,6 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
             return 0;
         }
     }
-    let record: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_FILL_MATCH_RECORD_FROM_FIXTURE);
     let mut reg = [0u8; 0x20];
     let pr = reg.as_mut_ptr() as usize;
     exe::date_date_54a110(pr);
@@ -879,7 +878,7 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
             continue;
         }
         let l = tactic_stats_row(this, c);
-        record(game, c, pr);
+        exe::fill_match_record_from_fixture(game, c, pr);
         let m = |o: usize| (l + o) as *mut i16;
         crate::comparison::branch("cpz_5 tactic row");
         *m(2) = (*m(2)).wrapping_add(1);
@@ -1046,12 +1045,11 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
         }
     }
     if papeis != 0 {
-        let extra: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_PLAYMAKER);
         // simplification: the original pushes the type and the side with leftovers in the high bytes (the row offset and the stack);
         // the calls read only the low byte, and the copy passes clean values
         for qual in 0..2u32 {
             if exe::tactics_get_playmaker(this, club, (qual) as i8, team) == person {
-                extra(this, club, qual, 0, team);
+                exe::tactics_set_playmaker(this, club, qual, 0, team);
             }
         }
         for tipo in 0..5u32 {

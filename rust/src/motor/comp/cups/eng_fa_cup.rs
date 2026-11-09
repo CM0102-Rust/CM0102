@@ -62,8 +62,7 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_update_for_date(this: usize, t
                 return 1;
             }
             call_cup_virtual(this, 0x5c);
-            let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-            sortear(this, 0);
+            exe::cup_set_up_round(this, 0);
         }
     }
     eng_cc_cup_cup_update_for_date(this, today, stage)

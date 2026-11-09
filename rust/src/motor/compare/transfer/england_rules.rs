@@ -35,9 +35,8 @@ pub(crate) unsafe extern "thiscall" fn compare_record_loan(this: usize, offer: u
 /// de junho); nos outros dias as duas rodam sem gravar nada e só a original fica valendo.
 pub(crate) unsafe extern "thiscall" fn compare_england_rules_daily_update(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ENGLAND_RULES_DAILY_UPDATE);
-    let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    let r = data_de(d.as_mut_ptr() as usize, 0x14, 5, 0x7ce, -1);
+    let r = exe::date_date_549f70((d.as_mut_ptr() as usize) as usize as *mut [u16; 4], (0x14) as i32 as u32, (5) as i32 as u32, 0x7ce, (-1) as i32 as u32);
     if read_i16(data) != read_i16(r) {
         o(this, data);
         return;

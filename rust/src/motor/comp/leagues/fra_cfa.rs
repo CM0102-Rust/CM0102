@@ -387,7 +387,6 @@ pub(crate) struct BackgroundLeague {
 /// enche a lista; a original leria lixo da pilha sem clubes bastantes).
 pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &BackgroundLeague) -> usize {
     let tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(p.table);
-    let soltar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     exe::new_league(this);
     write_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
@@ -449,7 +448,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
             show_error_at(p.file, p.rows[2]);
             return this;
         }
-        soltar(this, 0);
+        exe::league_free_table(this, 0);
     }
     this
 }
@@ -522,9 +521,8 @@ pub(crate) unsafe fn compare_construct_group_league(name: &str, this: usize, yea
 /// 0 com 1 (o destrutor que solta: push 1; mov ecx, fase -> thiscall, ret 4), o vetor [+0xc] solto e zerado e, por fim,
 /// League::~League (0x682300: mov ecx -> thiscall, ret 0).
 pub(crate) unsafe fn destroy_group_league(this: usize, vtabela: usize) {
-    let release_table: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     write_usize(this, vtabela);
-    release_table(this, 0);
+    exe::league_free_table(this, 0);
     let g = read_usize(this + league::ROUND_DATES);
     if g != 0 {
         exe::crt_free(g);

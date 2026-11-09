@@ -222,13 +222,12 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_daily_update(thi
     }
     let mut erradas = 0u32;
     if f == 2 && read_i16(today) == 100 {
-        let new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
         let community: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_EU_NATIONAL);
         let year = read_i16(today + cm_date::YEAR) as u16;
         let (mut d5, mut d2, mut d10) = ([0u8; 8], [0u8; 8], [0u8; 8]);
-        let p5 = new(d5.as_mut_ptr() as usize, 100, year.wrapping_sub(5) as u32);
-        let p2 = new(d2.as_mut_ptr() as usize, 100, year.wrapping_sub(2) as u32);
-        let p10 = new(d10.as_mut_ptr() as usize, 100, year.wrapping_sub(10) as u32);
+        let p5 = exe::new_date(d5.as_mut_ptr() as usize, 100, year.wrapping_sub(5) as u32);
+        let p2 = exe::new_date(d2.as_mut_ptr() as usize, 100, year.wrapping_sub(2) as u32);
+        let p10 = exe::new_date(d10.as_mut_ptr() as usize, 100, year.wrapping_sub(10) as u32);
         let mut s = read_usize(G_STAFF_TABLE);
         for _ in 0..(read_usize(G_STAFF_COUNT) as i32).max(0) {
             if meets_residency_naturalisation(s, p2, p5, p10, community) && read_usize(s + staff::SECOND_NATION) != read_usize(read_usize(s + staff::CLUB_JOB) + 0x53) {
@@ -393,8 +392,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_squad_limits(this: usize, c
     let same = if liberado == 0 {
         mo.0 == mr.0
     } else {
-        let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-        let c = contract(read_usize(G_CONTRACT_MANAGER), liberado);
+        let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), liberado);
         c == 0 || friendly_club_by_id(read_usize(c + contract::CLUB)) != club
     };
     SCOREBOARD.record(same && r == n, || {

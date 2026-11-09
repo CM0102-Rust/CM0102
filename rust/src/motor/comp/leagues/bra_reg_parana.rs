@@ -103,8 +103,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         return show_error_at(0x98af98, 0x250);
     }
     crate::comparison::branch("cqo_8 final");
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    build(stage, 0);
+    exe::cup_set_up_round(stage, 0);
     exe::crt_free(t);
     exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 2);

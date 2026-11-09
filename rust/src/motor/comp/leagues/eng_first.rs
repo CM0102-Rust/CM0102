@@ -410,8 +410,7 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: u
     if stage == 0 {
         return show_error_at(file, row_without_stage);
     }
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    build(stage, 0);
+    exe::cup_set_up_round(stage, 0);
 }
 
 /// builds the play-off stage with the 6th, 3rd, 5th and 4th of the table (ties 6th v 3rd and 5th v 4th), the round

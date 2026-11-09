@@ -376,8 +376,7 @@ pub(crate) unsafe fn create_knockout_stage(this: usize, n: u32, teams: usize, st
     if f == 0 {
         return show_error_at(file, row);
     }
-    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
-    sortear(f, 0);
+    exe::cup_draw_round(f, 0);
 }
 
 /// ItaCup::create_knockout_stage(): builds the 24-team knockout stage (stage 7) of the Italian Cup from the 8 group
@@ -481,8 +480,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
         write_usize(read_usize(league + league::TABLE) + i * 0x3b + 9, 0);
         write_usize(read_usize(league + league::TABLE) + i * 0x3b + 5, 0);
     }
-    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    sort(league, 0); // cqr9: the ranking of the runners-up
+    exe::league_sort_table(league, 0); // cqr9: the ranking of the runners-up
     let teams = exe::crt_malloc(0x80);
     if teams == 0 {
         return show_error_at(0x9ea204, 0x2ba);

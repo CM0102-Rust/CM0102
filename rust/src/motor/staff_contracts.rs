@@ -442,7 +442,6 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
         return 1;
     }
     let category: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
-    let wanted: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, u32, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_SET_TO_DESIRED_CONTRACT);
     // the local contract (0x50 bytes) as the original leaves it before 0x85fc50; it fills in the rest
     let mut local = [0u8; 0x50];
     let l = local.as_mut_ptr() as usize;
@@ -459,7 +458,7 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     } else {
         current as u32
     };
-    wanted(l, person, friendly_club_by_id(read_usize(this + contract::CLUB)), -1, status, 0xb, 0, 0);
+    exe::staff_contract_set_to_desired_contract(l, person, friendly_club_by_id(read_usize(this + contract::CLUB)), -1, status, 0xb, 0, 0);
     let v1 = calc_contract_value(this, person, l) as f32;
     let v2 = calc_contract_value(l, person, l) as f64;
     let mut ratio = if v2 == read_f32(rdata::F32_0) as f64 {

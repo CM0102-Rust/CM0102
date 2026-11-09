@@ -93,7 +93,6 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, manager: usi
         show_error_at(0xa693ec, 0x225a);
         return 0;
     }
-    let copy: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_NEWSITEM_OPERATOR_3D);
     let (inicio, n) = if manager == 0 {
         (0usize, read_i32(this + news_fields::SLOT_COUNT).max(0) as usize)
     } else {
@@ -111,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, manager: usi
     for k in 0..n {
         let v = read_usize(this).wrapping_add(inicio.wrapping_add(k).wrapping_mul(STORED_NEWS_SIZE));
         if read_usize(v + news_item::ID) as u32 == id {
-            copy(out, v);
+            exe::newsitem_operator_3d(out, v);
             return 1;
         }
     }
@@ -271,8 +270,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
     if read_usize(slot(current) + 0xda) == 0 {
         write_usize(e + 8, read_usize(e + 8).wrapping_sub(1));
     }
-    let copy: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWSITEM_OPERATOR_3D);
-    copy(slot(current), news);
+    exe::newsitem_operator_3d(slot(current), news);
     let current = read_i32(e + 4);
     let start = read_i32(e);
     write_usize(e + 4, current.wrapping_add(1) as usize);
@@ -880,11 +878,10 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
         return;
     }
     let caixa = (read_i32(this + news_fields::HUMAN_INBOXES) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
-    let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_AUTO_RESPOND_ALL);
     for o in [0x39usize, 0x24] {
         let c = read_i32(manager + o) as usize;
         if c != 0 {
-            respond(this, manager, c);
+            exe::news_auto_respond_all(this, manager, c);
         }
     }
     let first = read_i32(caixa);
@@ -954,7 +951,6 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
     if read_i32(e) == -1 {
         return 0;
     }
-    let copy: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWSITEM_OPERATOR_3D);
     let mut array = 0usize;
     let mut k = read_i32(e + 4) - 1;
     loop {
@@ -976,7 +972,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
             }
             let n = *count;
             *count = n + 1;
-            copy(array.wrapping_add((n as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE)), read_usize(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE)));
+            exe::newsitem_operator_3d(array.wrapping_add((n as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE)), read_usize(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE)));
         }
         k -= 1;
         if k == read_i32(e + 4) - 1 {

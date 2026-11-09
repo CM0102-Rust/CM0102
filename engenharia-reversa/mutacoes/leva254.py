@@ -20,7 +20,7 @@ MUTACOES = [
     ('cpr8_fim_de_temporada_31', 'let d2 = (random(30) as u16).wrapping_add(read_u16(t + key_nation_record::SEASON_END_DAY)); // the nation’s end of season', 'let d2 = (random(31) as u16).wrapping_add(read_u16(t + key_nation_record::SEASON_END_DAY)); // mutacao: sorteio(31)', 'cpr_8 dates by nation'),
     ('cpr9_sem_desempregado', '} else if exe::player_regen_check_unemployed_retirement(p, e.as_mut_ptr()) != 0 {', '} else if false && exe::player_regen_check_unemployed_retirement(p, e.as_mut_ptr()) != 0 { // mutacao: sem o desempregado', 'cpr_9 unemployed'),
     ('cpr9_treinador_fica', 'clear(0x19f, 5); // cpr9: the coach slots', '// mutacao: as vagas de treinador ficam', 'cpr_9 coach'),
-    ('cpr9_vaga_nao_abre', 'open(read_usize(G_MANAGER_MANAGER), c, person); // cpr9: the manager slot opens', 'let _ = open; // mutacao: a vaga nao abre', 'cpr_9 manager'),
+    ('cpr9_vaga_nao_abre', 'exe::manager_manager_add_job_vacancy(read_usize(G_MANAGER_MANAGER), c, person); // cpr9: the manager slot opens', 'let _ = open; // mutacao: a vaga nao abre', 'cpr_9 manager'),
     ('cpr10_lesionado_como_recuperando', 'return 2; // cpr10: lesionado', 'return 1; // mutacao: lesionado como recuperando'),
     ('cpr10_recuperando_como_pronto', '(days < read_i16(l + injury_entry::DAYS_OUT) as i32) as u8 // cpr10: recuperando a forma', '0 // mutacao: recuperando como pronto'),
     ('cpr10_decisao_mais_tarde', 'injury_date_add_days(G_CURRENT_DATE, (random(5) + 1) as u32, &mut d); // cpr10: the decision in 1 to 5 days', 'injury_date_add_days(G_CURRENT_DATE, (random(5) + 2) as u32, &mut d); // mutacao: 2 a 6 dias', 'cpr_10 new decision'),
@@ -31,6 +31,6 @@ MUTACOES = [
     ('cpr12_janela_curta', '(ano as u16 == ano1 as u16 && dia as u16 > dia1 as u16)', '(ano as u16 == ano1 as u16 && dia as u16 >= dia1 as u16) /* mutacao: sem o ultimo dia */'),
     ('cpr12_qualquer_rodada', 'ok = false; // another round', '// mutacao: a rodada nao filtra', 'cpr_12 round match'),
     ('cpr13_um_jogo_livre', 'if n as u16 != 0 {', 'if n as u16 > 1 { // mutacao: um jogo nao ocupa', 'cpr_13 busy'),
-    ('cpr13_sem_vespera', 'let r = minus_days(data, p0, 1); // the day before', 'let r = minus_days(data, p0, 0); // mutacao: sem a vespera', 'cpr_13 free club'),
+    ('cpr13_sem_vespera', 'let r = exe::date_sub_days(data, p0, 1); // the day before', 'let r = exe::date_sub_days(data, p0, 0); // mutacao: sem a vespera', 'cpr_13 free club'),
     ('cpr13_copa_sem_o_clube', 'return 1; // is in the cup', 'return 0; // mutacao: nunca na copa', 'cpr_13 cup has the club'),
 ]

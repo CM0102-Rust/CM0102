@@ -111,30 +111,29 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
         return;
     }
     crate::comparison::branch("cqp_1 prize news");
-    let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut n = [0u8; 0xe8];
     let p = n.as_mut_ptr() as usize;
     exe::new_newsitem(p, 0x1a, 0);
-    given(p, 0, read_usize(read_usize(this + 4)) as u32);
-    given(p, 1, lo);
-    given(p, 2, read_usize(club) as u32);
-    given(p, 3, position as u8 as i8 as i32 as u32);
-    given(p, 4, round as u16 as i16 as i32 as u32);
-    given(p, 7, kind as u8 as i8 as i32 as u32);
+    exe::newsitem_set_slot(p, (0) as u32 as i8, read_usize(read_usize(this + 4)) as u32);
+    exe::newsitem_set_slot(p, (1) as u32 as i8, lo);
+    exe::newsitem_set_slot(p, (2) as u32 as i8, read_usize(club) as u32);
+    exe::newsitem_set_slot(p, (3) as u32 as i8, position as u8 as i8 as i32 as u32);
+    exe::newsitem_set_slot(p, (4) as u32 as i8, round as u16 as i16 as i32 as u32);
+    exe::newsitem_set_slot(p, (7) as u32 as i8, kind as u8 as i8 as i32 as u32);
     let b = |a: usize| *(a as *const i8);
     let won = if partida != 0 {
         if read_usize(partida + fixture::HOME_CLUB) == club {
-            given(p, 5, read_usize(read_usize(partida + fixture::AWAY_CLUB)) as u32);
+            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(read_usize(partida + fixture::AWAY_CLUB)) as u32);
             b(partida + fixture::HOME_RESULT_MARK) != 0 || b(partida + fixture::HOME_AGGREGATE) > b(partida + fixture::AWAY_AGGREGATE) || b(partida + fixture::HOME_GOALS) > b(partida + fixture::AWAY_GOALS)
         } else {
-            given(p, 5, read_usize(read_usize(partida + fixture::HOME_CLUB)) as u32);
+            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(read_usize(partida + fixture::HOME_CLUB)) as u32);
             b(partida + fixture::AWAY_RESULT_MARK) != 0 || b(partida + fixture::HOME_AGGREGATE) < b(partida + fixture::AWAY_AGGREGATE) || b(partida + fixture::HOME_GOALS) < b(partida + fixture::AWAY_GOALS)
         }
     } else {
-        given(p, 5, u32::MAX);
+        exe::newsitem_set_slot(p, (5) as u32 as i8, u32::MAX);
         false
     };
-    given(p, 6, won as u32);
+    exe::newsitem_set_slot(p, (6) as u32 as i8, won as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
 }
 
@@ -155,14 +154,13 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, club: us
         return;
     }
     crate::comparison::branch("cqp_1 tv news");
-    let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut n = [0u8; 0xe8];
     let p = n.as_mut_ptr() as usize;
     exe::new_newsitem(p, 0x1f, 0);
-    given(p, 0, read_usize(club) as u32);
-    given(p, 1, read_usize(read_usize(this + 4)) as u32);
-    given(p, 2, value);
-    given(p, 3, *((this + league::YEAR) as *const i16) as i32 as u32);
+    exe::newsitem_set_slot(p, (0) as u32 as i8, read_usize(club) as u32);
+    exe::newsitem_set_slot(p, (1) as u32 as i8, read_usize(read_usize(this + 4)) as u32);
+    exe::newsitem_set_slot(p, (2) as u32 as i8, value);
+    exe::newsitem_set_slot(p, (3) as u32 as i8, *((this + league::YEAR) as *const i16) as i32 as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
 }
 

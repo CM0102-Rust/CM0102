@@ -18,7 +18,7 @@ MUTACOES = [
     ('cpk_texto_dado', 'let source = (news + 5 + 4 * k as usize) as *const u8; // o dado', 'let source = (news + 9 + 4 * k as usize) as *const u8; // mutacao: o dado seguinte'),
     ('cpk_apuro_sorteio', 'let v = exe::utils_random(2); // the news item’s random roll', 'let v = 0; let _ = sorteio; // mutacao: sem o sorteio'),
     ('cpk_olheiro_regiao', 'if *((read_usize(c + club::NATION) + 0x76) as *const u8) != *((nation + nation::ACTUAL_REGION) as *const u8) { // outside the region', 'if *((read_usize(c + club::NATION) + 0x76) as *const u8) == *((nation + 0x76) as *const u8) { // mutacao: dentro'),
-    ('cpk_historico_ultimo', 'without_last(read_usize(this), par, par + 4); // the last offset', 'without_last(read_usize(this), par, par); // mutacao: o primeiro'),
-    ('cpk_formacao_com_bola', 'pitch_cell(b, 1, arg, &mut saida);', 'pitch_cell(b, 0, arg, &mut saida); // mutacao: sem a bola'),
+    ('cpk_historico_ultimo', 'exe::file_llist_reset_last_offset(read_usize(this), par, par + 4); // the last offset', 'exe::file_llist_reset_last_offset(read_usize(this), par, par); // mutacao: o primeiro'),
+    ('cpk_formacao_com_bola', 'exe::formation_get_default_coordinate(b, (1) as u32 as i8, arg, (&mut saida) as *mut u32 as *mut i16);', 'exe::formation_get_default_coordinate(b, (0) as u32 as i8, arg, (&mut saida) as *mut u32 as *mut i16); // mutacao: sem a bola'),
     ('cpk_formacao_setor', 'if (setor_extra as i16) < (setor_geral as i16) { // the rearmost extra', 'if (setor_extra as i16) > (setor_geral as i16) { // mutacao: trocado'),
 ]

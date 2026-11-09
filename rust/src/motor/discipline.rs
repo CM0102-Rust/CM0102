@@ -47,7 +47,6 @@ pub(crate) unsafe fn nation_index_range(this: usize, team: usize) -> (usize, usi
 /// a contagem pode soltar a suspensão e reordenar o índice) e, para cada uma, um jogo cumprido na regra 0
 /// (0x556e90 com 0 e 1). No fim a lista é destruída.
 pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, team: usize) {
-    let por: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let mut l = [0u8; 14];
     let list = l.as_mut_ptr() as usize;
     exe::new_llist(list);
@@ -55,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, tea
     if ini != 0 {
         let mut e = ini;
         while e < fim {
-            por(list, e, 4);
+            exe::llist_add_tail(list, e, 4);
             e += 8;
         }
         // the cursor (+0xa) at the start (+2)
@@ -484,7 +483,6 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
     let club = if contract == 0 { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(contract + contract::CLUB).wrapping_mul(club::SIZE)) };
     let list = this + discipline_fields::HELD_BANS;
     write_u32(list + llist::CURSOR, read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32);
-    let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     let mut marks = [0u32; 4];
     let mut item = exe::llist_get_next(list);
     while item != 0 && *((r + discipline_record::HELD_BAN_COUNT) as *const i8) > 0 {
@@ -503,7 +501,7 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
             let v = r.wrapping_add(k.wrapping_mul(5));
             write_u32(v, read_usize(item + held_ban::SLOT_DATA) as u32);
             *((v + 4) as *mut u8) = *((item + 9) as *const u8);
-            remove(list, item); // libera o item
+            exe::llist_remove(list, item); // libera o item
             *((r + discipline_record::HELD_BAN_COUNT) as *mut u8) = (*((r + discipline_record::HELD_BAN_COUNT) as *const u8)).wrapping_sub(1);
         }
         item = exe::llist_get_next(list);
@@ -751,8 +749,7 @@ pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, person: us
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CLEAR_BAN_HISTORY)(this, person); // fatal box: original only
     }
     let r = person_discipline_record(this, read_usize(person));
-    let without_last: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_FILE_LLIST_RESET_LAST_OFFSET);
-    without_last(read_usize(this + discipline_fields::BAN_HISTORY), r + discipline_record::HISTORY_START, r + discipline_record::HISTORY_LAST)
+    exe::file_llist_reset_last_offset(read_usize(this + discipline_fields::BAN_HISTORY), r + discipline_record::HISTORY_START, r + discipline_record::HISTORY_LAST)
 }
 
 /// Copies a ban record (`0x14` bytes): the fields, the date (`+4`) and bits 0..2 of `+0x13`. Returns `this`.
@@ -771,9 +768,8 @@ pub(crate) unsafe extern "thiscall" fn discipline_operator(this: usize, source: 
     b(0);
     b(1);
     w(2);
-    let copy: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut local = [0u8; 8];
-    copy(this + ban_record::START_DATE, &mut local, source + ban_record::START_DATE);
+    exe::date_operator_3d(this + ban_record::START_DATE, (&mut local) as *mut [u8; 8] as usize, source + ban_record::START_DATE);
     for o in 0xc..0x10 {
         b(o);
     }
@@ -932,14 +928,13 @@ pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, player: u
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_HOLD_BANS_FOR_LOAN)(this, player); // message box: original only
     }
     let (reg, vagas) = suspensions_to_store(this, sheet, player);
-    let append: unsafe extern "thiscall" fn(usize, *const u8, u32) -> u32 = core::mem::transmute(FN_LLIST_ADD_TAIL);
     for k in vagas {
         let slot = reg + 5 * k as usize;
         let mut r = [0u8; 10];
         r[..4].copy_from_slice(&(read_usize(player) as u32).to_le_bytes());
         r[4] = k; // the place
         r[5..].copy_from_slice(core::slice::from_raw_parts(slot as *const u8, 5));
-        append(this + discipline_fields::HELD_BANS, r.as_ptr(), 10);
+        (exe::llist_add_tail(this + discipline_fields::HELD_BANS, (r.as_ptr()) as *const u8 as usize, 10) as u32);
         core::ptr::write_unaligned(slot as *mut u32, u32::MAX);
         *((slot + 4) as *mut u8) = 0xff;
         *((reg + discipline_record::HELD_BAN_COUNT) as *mut u8) = (*((reg + discipline_record::HELD_BAN_COUNT) as *const u8)).wrapping_add(1);
@@ -1066,11 +1061,10 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
     }
     let list = this + discipline_fields::HELD_BANS;
     write_u32(list + llist::CURSOR, read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32);
-    let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     let mut item = exe::llist_get_next(list);
     while item != 0 && *((r + discipline_record::HELD_BAN_COUNT) as *const i8) > 0 {
         if read_usize(item) as u32 == id {
-            remove(list, item); // libera o item
+            exe::llist_remove(list, item); // libera o item
             *((r + discipline_record::HELD_BAN_COUNT) as *mut u8) = (*((r + discipline_record::HELD_BAN_COUNT) as *const u8)).wrapping_sub(1);
         }
         item = exe::llist_get_next(list);

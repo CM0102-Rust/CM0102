@@ -109,8 +109,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_board_transfer_veto(this: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32) -> u32>(IDX_CHECK_BOARD_TRANSFER_VETO);
     if comprando as u8 != 0 && j != 0 {
         // ecx = [0xb63d28]; push person -> thiscall, ret 4 (as in 0x62edfc); checks id and record inside
-        let in_day: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
-        in_day(read_usize(G_INJURY), j);
+        exe::injury_update_player_fitness(read_usize(G_INJURY), j);
     }
     let regions = [(club_board_row(this, club), 0x49), (G_CONTRACT_LOOKUP_RESULT, 4), (0xde1f5c, 8), (0xad6c30, 4)];
     let (r, n, _, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, j, club, value, comprando),

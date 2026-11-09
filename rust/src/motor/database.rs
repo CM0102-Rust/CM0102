@@ -831,7 +831,6 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
     }
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
@@ -902,7 +901,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             if nation != 0 && gi(rd(nation + nation::CONTINENT)) == gi(KEY_CONTINENT_EUROPE) && exe::database_is_staff_eu_national(p, nation) == 0 {
                 let a = w(data + 2);
                 let r = exe::utils_random(2);
-                let d = data_new(l(1, &mut lixo), 1, (a as i32 - r - 1) as u32);
+                let d = exe::new_date(l(1, &mut lixo), 1, (a as i32 - r - 1) as u32);
                 exe::date_operator_3d(p + staff::DATE_JOINED_CLUB, l(2, &mut lixo), d);
             }
         }
@@ -918,9 +917,9 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
         for &(o, k) in &[(0x46usize, 6usize), (0x31, 8)] {
             let a = w(p + o + 2) as u16;
             if a < 0x7cf || a > 0x7da {
-                let d = data_new(l(k, &mut lixo), 0x1f, 0x76c);
+                let d = exe::new_date(l(k, &mut lixo), 0x1f, 0x76c);
                 if w(d + 2) != w(p + o + 2) || w(d) != w(p + o) {
-                    let d = data_new(l(k + 1, &mut lixo), 0x1f, 0x76c);
+                    let d = exe::new_date(l(k + 1, &mut lixo), 0x1f, 0x76c);
                     exe::date_operator_3d(p + o, l(10, &mut lixo), d);
                 }
             }
@@ -3554,15 +3553,14 @@ pub(crate) unsafe extern "C" fn database_get_non_player_attribute_name(attribute
 /// (sem maiúsculas, `compare_text_nocase`); pessoa nula vale o texto vazio (a original zera o primeiro byte das duas
 /// locais antes). Na tela de oferta de contrato (contract_screens 0x4de5d0).
 pub(crate) unsafe extern "C" fn database_compare_staff_by_surname(a: usize, b: usize) -> i32 {
-    let format: unsafe extern "C" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
     let mut na = [0u8; 0x7d0];
     let mut nb = [0u8; 0x7d0];
     let (pa, pb) = (*(a as *const usize), *(b as *const usize));
     if pa != 0 {
-        format(pa, na.as_mut_ptr() as usize, 0x7d0, 4); // "sobrenome, nome" (dbt)
+        exe::database_format_staff_name(pa, na.as_mut_ptr() as usize, 0x7d0, 4); // "sobrenome, nome" (dbt)
     }
     if pb != 0 {
-        format(pb, nb.as_mut_ptr() as usize, 0x7d0, 4);
+        exe::database_format_staff_name(pb, nb.as_mut_ptr() as usize, 0x7d0, 4);
     }
     compare_text_nocase(na.as_ptr(), nb.as_ptr())
 }
@@ -4305,15 +4303,14 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_short_name(a: usize, b
 /// ponteiros de pessoa pelo nome no estilo 1 ("nome sobrenome", 0x53dba0 em 0x7d0 bytes) na comparação de textos
 /// 0x90c1d0; pessoa nula vale o texto vazio. No menu (0x7612c0) e no gerente de transferências (0x8e55f0).
 pub(crate) unsafe extern "C" fn database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
-    let format: unsafe extern "C" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
     let mut na = [0u8; 0x7d0];
     let mut nb = [0u8; 0x7d0];
     let (pa, pb) = (*(a as *const usize), *(b as *const usize));
     if pa != 0 {
-        format(pa, na.as_mut_ptr() as usize, 0x7d0, 1); // "nome sobrenome"
+        exe::database_format_staff_name(pa, na.as_mut_ptr() as usize, 0x7d0, 1); // "nome sobrenome"
     }
     if pb != 0 {
-        format(pb, nb.as_mut_ptr() as usize, 0x7d0, 1);
+        exe::database_format_staff_name(pb, nb.as_mut_ptr() as usize, 0x7d0, 1);
     }
     compare_text_nocase(na.as_ptr(), nb.as_ptr())
 }
@@ -4903,8 +4900,7 @@ pub(crate) unsafe extern "C" fn club_squad_strength_band(club: usize, other: usi
 /// [pt] O clube do contrato da `pessoa` como a 0x545e90 o acha: o contrato pela 0x4cf5a0 (this = [0xae1050]), gravado
 /// em [0xae1080] como na original; com contrato, o clube de id +4 na tabela [0xae23b4] (581 bytes); sem: 0.
 pub(crate) unsafe fn database_club_of_contract(person: usize) -> usize {
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contract(read_usize(G_CONTRACT_MANAGER), person);
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     if c == 0 {
         return 0;
@@ -5227,8 +5223,7 @@ pub(crate) unsafe extern "C" fn club_is_in_season(club: usize) -> u32 {
     if club == 0 {
         return 0;
     }
-    let season: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_KEY_NATION_CLUB_IN_SEASON);
-    season(club, 0, 0) // the season of the club’s nation
+    exe::key_nation_club_in_season(club, 0, 0) // the season of the club’s nation
 }
 
 /// `club_is_in_major_nation(club)`: 1 if the club's nation (+0x53) has the id (+0) of one of the index.cpp keys England
@@ -7754,7 +7749,6 @@ pub(crate) unsafe extern "C" fn database_count_club_squad(club: usize, mode: u32
         return original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_DATABASE_COUNT_CLUB_SQUAD)(club, mode, filter);
     }
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let mode = mode as u8;
     let count = |c: usize, marks: u8| -> u8 {
         let mut n = 0u8;
@@ -7765,7 +7759,7 @@ pub(crate) unsafe extern "C" fn database_count_club_squad(club: usize, mode: u32
             }
             if filter != 0 && exe::contract_manager_get_loan_contract(*(G_CONTRACT_MANAGER as *const usize), p) != 0
                 && core::ptr::read_unaligned((p + staff::CLUB_JOB) as *const usize) != club {
-                let k = contract(*(G_CONTRACT_MANAGER as *const usize), p);
+                let k = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), p);
                 *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k;
                 let owner = if k == 0 {
                     0

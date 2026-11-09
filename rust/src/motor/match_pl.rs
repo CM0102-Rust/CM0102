@@ -8760,7 +8760,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
 }
 
 /// recomputes word +0x3b and the 34 f32 fields from +0x71 to +0xf5 of the player: the designated player's rating
-/// (`player_rating`, slot `exe::tactics_find_captain_slot`), age, days alive, contract (`exe::contract_manager_get_contract_for_club`, +0x45 bits, +0x10/+0x14 history), morale, tactical
+/// (`player_rating`, slot `exe::tactics_find_captain_slot`), age, days alive, exe::contract_manager_get_contract_for_club(`exe::contract_manager_get_contract_for_club`, +0x45 bits, +0x10/+0x14 history), morale, tactical
 /// tables A/B (`table_a`/`table_b`), formation (`side_centre_backs_without_conflict`/`side_slots_without_conflict`), managers and preferences
 /// (`exe::staff_is_favoured_by`/`exe::staff_is_disliked_by`/`exe::staff_dislikes_club`/`exe::staff_favours_club`), powers (0x945ff0) and random draws. Only the player record changes
 /// Original: `update_attributes` (0x6ec010, match_pl.cpp, thiscall).
@@ -8836,8 +8836,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         }
     }
     let l2c = if exe::database_is_national_team(club_side()) == 0 {
-        let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-        contract(*(G_CONTRACT_MANAGER as *const usize), person(), club_side())
+        exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person(), club_side())
     } else {
         0
     };
@@ -9492,8 +9491,7 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
     } else if form > 4.0 {
         form = 4.0;
     }
-    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let r = contract(*(G_CONTRACT_MANAGER as *const usize), person, club());
+    let r = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club());
     let mut c = 0.0;
     if r != 0 {
         c = *((r + 0x44) as *const i8) as f64 * 0.013333333333333334 + 0.5;

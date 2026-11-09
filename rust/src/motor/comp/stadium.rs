@@ -349,8 +349,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             let n = read_usize(casa + club::NATION);
             let mut amistoso = false;
             if n != 0 && (read_usize(n) == read_usize(KEY_NATION_ITALY) || read_usize(n) == read_usize(KEY_NATION_FRANCE)) {
-                let e: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-                amistoso = e(read_usize(G_FRIENDLY), read_usize(fx + fixture::COMPETITION)) != 0;
+                amistoso = exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), read_usize(fx + fixture::COMPETITION)) != 0;
             }
             if !amistoso {
                 crate::comparison::branch("cqo_1 home team stadium");
@@ -393,10 +392,9 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         return;
     }
     let comp = read_usize(fx + fixture::COMPETITION);
-    let sede: unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
     let (mut a, mut b) = (0u32, 0u32);
     // simplification: the original pushes eax with the year (word +0x2c) in the low 16 bits and leftover in the high ones; 0x5fa730 only reads the word
-    let r = sede(read_usize(G_HOST_COUNTRY), read_usize(comp) as u32, *((fx + fixture::SEASON_YEAR) as *const u16) as u32, &mut a, &mut b, 1) as u8;
+    let r = exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), (read_usize(comp) as u32) as u32 as usize, *((fx + fixture::SEASON_YEAR) as *const u16) as u32, (&mut a) as *mut u32 as *mut i32, (&mut b) as *mut u32 as *mut i32, 1) as u8;
     let mut alvo;
     let mut alt = 0usize;
     if r == 2 {

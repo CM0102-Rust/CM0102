@@ -33,7 +33,6 @@ use super::*;
 pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     let format: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let name_of: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
     let version: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let mut nation = [0u8; 100];
     *summary = 0;
@@ -66,7 +65,7 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
             *club_txt.sub(0x3c) = 0;
             continue;
         }
-        name_of(p, club_txt.sub(0x3c), 200, 1);
+        exe::database_format_staff_name(p, (club_txt.sub(0x3c)) as *mut u8 as usize, 200, 1);
         let club = core::ptr::read_unaligned((p + staff::CLUB_JOB) as *const usize);
         let nation_of = core::ptr::read_unaligned((p + staff::NATIONAL_JOB) as *const usize);
         if club != 0 && nation_of != 0 {
