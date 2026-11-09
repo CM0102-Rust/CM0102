@@ -1,0 +1,54 @@
+ROUND 10 READER REPORT (Rust developer, no Portuguese, no RE background)
+VERDICT: Much better navigated than round 9, still not approachable: typed records exist but the code still talks in raw offsets, raw derefs and hex event codes about half the time, so you can follow a function's shape but not safely change one.
+
+NUMBERS (rust/src, comments stripped; "gen" = records.rs/fields.rs/exe_calls.rs/exe_fns.rs/globals.rs/keys.rs)
+- raw offsets `+ 0x..` in code: 4,957 (motor.rs 566, match_eng 206, match_pl 187, match_man 143, transfer_manager 127)
+- typed accessor calls (`club.reputation()` etc., 2,600 accessors on 162 record types): ~10,960
+- raw `read_*/write_*(.. + module::FIELD)`: 7,619 outside gen (transfer_manager.rs alone 1,284)
+- raw pointer derefs `*((x + o) as *const T)`: 6,563
+- `.addr()` calls: 5,298 outside gen
+- `transmute` outside exe_calls.rs: 1,113 (round 9: ~1,950); exe_calls.rs has 1,415 typed wrappers
+- `unsafe`: 9,354 unsafe fns outside gen + 6,042 in gen; only 9 `unsafe {}` blocks; 0 SAFETY comments
+- `static mut`: 130 (unchanged)
+- literal exe addresses 0x4xxxxx-0xbxxxxx in routine code: ~7,560 (excl. tables/data files; ~20,000 total)
+- Portuguese identifiers: hundreds of locals/closures (vaga, ocupante, sai, soltar, melhor, fala, resolvido, casa/fora,
+  olheiros, desloc, ini_dia), comparer names (compare_condicao, compare_posicao_um), log labels ("motor_tabela_a"),
+  crate::registro::linha, allocator::instalar, branch log "ramo".
+
+TOP OBSTACLES (by impact)
+1. Typed records stop after one hop: pointer fields return usize, so code drops back to raw offsets. match_eng.rs:2534
+   `read_i8(m.pending_play_offender() + 0x27)` although match_player::SIDE = 0x27 and MatchPlayer::side() exist;
+   contract_manager.rs:194 `read_usize(person.club_job() + 0xcf)` = club::MANAGER. City/Staff::nation() -> usize,
+   Club::nation() -> Nation.
+2. Four memory dialects coexist in one function (typed method / read_x(a + mod::F) / read_x(a + 0x..) / raw deref).
+   fin_prm.rs:100-118: `read_usize(club + club::NATION)`, `read_i16(club + club::REPUTATION)` beside `nation.league_selected()`,
+   then `club += 0x245` (club::SIZE exists), `(0xb63d60 + l * 72) == entry`.
+3. Engine sub-structures are not modelled: players are `m + 0x4796 + 0x22d8*side + 0x1be*k` (match_man.rs:353; match_pl.rs:140
+   writes 8920), the cell grid is `+ 0x21b6 + 90*(..)` re-derived at match_pl.rs:131 and match_eng.rs:4173, 5225, 8032.
+4. Event/commentary ids are bare hex: ~309 `0x20xx/0x21xx` in match_eng.rs (2541 `narrate(call, 0x20f0, ..)`; league.rs:89-127 0x2171/0x2120).
+5. Everything is `unsafe fn` with no SAFETY contract and 130 `static mut`; no way to tell which invariants matter.
+6. Inline transmutes duplicating existing wrappers: contract_manager.rs:180 (exe::scout_manager_sync_scout_lists exists),
+   fin_prm.rs:92 (exe::key_nation_index_of_club exists), match_pl.rs:1430 (exe::is_undisputed_action_code).
+7. Doc headers still narrate the disassembly: league.rs:63-73 ("With +0x8ebb ... average of +0x1b ... strength (+0x80)"),
+   club_records.rs:80-84 ("[0xae23bc], 0x6e bytes"); match code lives in league.rs (comment_standing_with).
+8. Portuguese locals mixed into English code (match_man.rs:158-176, league.rs:85-91), plus `[pt]` blocks double every header.
+
+INCONSISTENT
+- Same field three ways within 15 lines (match_eng.rs:2534/2542/2548: `+ 0x27`, `+ match_player::SIDE`, `p.side()`).
+- competition::REPUTATION exists but club_records.rs:135 reads `+ 0x69` with a hand-written 0x6b stride.
+- Typed constants used half-way: `(m.restart_type() as u8) != restart::OPEN_PLAY as u8` casts on both sides.
+- Comparer/log names Portuguese while routine names are English.
+
+GOOD
+- routines! macro (motor.rs:43) ended the parallel tables; each hook is one line. detours.rs/comparison.rs are clean, English, small.
+- exe_calls.rs: typed wrappers with `impl Addr` remove most call-site transmutes; records.rs gives named, typed fields.
+- match_codes.rs is excellent: named constants with meaning and confidence (verified/read/inferred); used 58x in match_eng.
+- Headers state what a routine does and its original address; branch()/mutation markers make the test harness legible.
+
+WHAT A MOTIVATED RUST DEV CAN DO TODAY
+- Game management: read and tweak isolated rules (thresholds, reputations, contract dates, finance numbers) in files like
+  contract_manager.rs and fin_prm.rs, because typed fields cover most first-level reads. Cannot safely restructure, add a
+  feature touching linked records, or audit memory safety; cannot test without the original exe + game data (8 #[test] total).
+- Match engine: can follow control flow and change named decisions (restart types, ball height, shoot-out states).
+  Cannot reason about positional logic, the grid, player blocks or commentary without a reverse engineer's offset map;
+  any change there is guesswork verified only by the in-game comparison run.
