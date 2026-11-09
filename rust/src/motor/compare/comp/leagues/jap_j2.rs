@@ -17,5 +17,5 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_j2_set_up_rules(this: usize) 
 /// Comparer for `jap_j2_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_j2_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J2_CREATE_TABLE);
-    compare_japanese_table("jap_j2_create_table", this, 0xc, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, true, 0, || o(this))
+    compare_japanese_table("jap_j2_create_table", League(this), 0xc, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, true, 0, || o(this))
 }

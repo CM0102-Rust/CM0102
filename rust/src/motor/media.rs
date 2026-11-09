@@ -3305,8 +3305,8 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
     let v = exe::utils_random(2); // the news item’s random roll
     exe::newsitem_set_slot(n, 2, v as u32);
     let news = read_usize(G_NEWS);
-    let division = club.division().addr();
-    if club.reputation() >= 9000 && division != 0 && read_i16(division + competition::REPUTATION) > 12 {
+    let division = Competition(club.division().addr());
+    if club.reputation() >= 9000 && !division.is_null() && division.reputation() > 12 {
         exe::news_send_to_all_managers(news, n);
     } else {
         exe::news_send_to_nation_managers(news, n, club.nation().addr());

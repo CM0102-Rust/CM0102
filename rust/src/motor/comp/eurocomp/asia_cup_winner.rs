@@ -15,8 +15,8 @@ pub(crate) const AFRICAN_NATIONS_QUARTER_FINAL_SLOTS: [(i32, i32); 8] = [
 /// Club at position p of group g (or the cup itself when g < 0) via League::get_table_row.
 ///
 /// [pt] O clube da posição `p` do grupo `g` (pela 0x6826d0 League::get_table_row: push p; mov ecx, grupo -> thiscall, ret 4).
-pub(crate) unsafe fn group_table_club(this: usize, g: i32, p: i32) -> usize {
-    let group = if g < 0 { this } else { read_usize(read_usize(this + 0xc) + g as usize * 4) };
+pub(crate) unsafe fn group_table_club(this: League, g: i32, p: i32) -> usize {
+    let group = if g < 0 { this.addr() } else { read_usize(read_usize(this.addr() + 0xc) + g as usize * 4) };
     read_usize(exe::league_get_table_row(group, p))
 }
 
@@ -47,6 +47,7 @@ pub(crate) unsafe fn group_table_club(this: usize, g: i32, p: i32) -> usize {
 /// construtor não lê) em [+0xc][3]; a lista e a tabela liberadas (0x9452ca). Sem fase: a caixa da linha 0x32c e volta.
 /// Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall, ret 4) e +0x30 = 3.
 pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(this: usize) {
+    let this = League(this);
     let list = exe::crt_malloc(0x20);
     if list == 0 {
         return show_error_at(0x9870f8, 0x311);
@@ -55,27 +56,27 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
     for (k, &(g, p)) in AFRICAN_NATIONS_QUARTER_FINAL_SLOTS.iter().enumerate() {
         write_usize(list + k * 4, group_table_club(this, g, p));
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
-    let table = rounds_of_cup(this, 3, &mut rodadas, &mut id, 0);
+    let table = rounds_of_cup(this.addr(), 3, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 8, list, rodadas as u16 as u32, read_usize(this + 4), table, read_i16(this + league::YEAR) as u16 as u32, 3, 4, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this.addr(), 8, list, rodadas as u16 as u32, read_usize(this.addr() + 4), table, this.year() as u16 as u32, 3, 4, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_usize(read_usize(this + league::STAGES) + 0xc, stage);
+    write_usize(this.stages() + 0xc, stage);
     exe::crt_free(list);
     exe::crt_free(table);
-    let f = read_usize(read_usize(this + league::STAGES) + 0xc);
+    let f = read_usize(this.stages() + 0xc);
     if f == 0 {
         return show_error_at(0x9870f8, 0x32c);
     }
     exe::cup_set_up_round(f, 0);
-    write_usize(this + league::CURRENT_STAGE, 3);
+    this.set_current_stage(3);
 }
 
 // simplification: allocates the stage and sets up the round: does not run twice. Original only; the plan: the stage at [+0xc][3] with 8 teams,

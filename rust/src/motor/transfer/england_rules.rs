@@ -132,9 +132,9 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         crate::comparison::branch("cqe_5 same division");
         if msg != 0 {
             let id = read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION);
-            let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b));
-            let g = read_u8(r + competition::GENDER_NAME) as i8 as i32;
-            text(msg, 0x9c4590, g, g, r + competition::NAME);
+            let r = Competition(read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)));
+            let g = r.gender_name() as i8 as i32;
+            text(msg, 0x9c4590, g, g, r.addr() + competition::NAME);
         }
         if !reason.is_null() {
             *reason = 0x1d;

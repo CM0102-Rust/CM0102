@@ -177,11 +177,11 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         if read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) == 0 || exe::comp_util_is_league_division(k) == 0 {
             continue;
         }
-        let comp = read_usize(G_CLUB_COMP_TABLE).wrapping_add(k as usize * 0x6b);
+        let comp = Competition(read_usize(G_CLUB_COMP_TABLE).wrapping_add(k as usize * 0x6b));
         if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0 {
             continue;
         }
-        let nation = read_usize(comp + competition::NATION);
+        let nation = comp.nation();
         if nation == 0 {
             continue;
         }
@@ -391,19 +391,19 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
     let nations = read_i32(G_NATION_COUNT);
     let home = Club(read_usize(game + fixture::HOME_CLUB));
     let away = read_usize(game + fixture::AWAY_CLUB);
-    let comp = read_usize(game + fixture::COMPETITION);
+    let comp = Competition(read_usize(game + fixture::COMPETITION));
     let band_of_nation = |nacao: i32| {
         let b = nation_officials_block(this, nacao);
         (read_i32(b + officials_nation_block::FIRST_REFEREE), read_i32(b + officials_nation_block::REFEREE_COUNT))
     };
-    let (ini, n) = if comp == 0 {
+    let (ini, n) = if comp.is_null() {
         band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| random(nations)))
     } else {
         let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-        if friendly(read_usize(G_FRIENDLY), comp) != 0 {
+        if friendly(read_usize(G_FRIENDLY), comp.addr()) != 0 {
             band_of_nation(read_i32(home.nation().addr())) // like the original, without checking the nation
         } else {
-            let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp).wrapping_mul(4) as usize));
+            let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp.addr()).wrapping_mul(4) as usize));
             if c == 0 {
                 band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| random(nations)))
             } else {
@@ -413,8 +413,8 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                         let n = read_usize(club + club::NATION);
                         if n != 0 && read_usize(n + nation::CONTINENT) != 0 { Some(read_i32(read_usize(n + nation::CONTINENT))) } else { None }
                     };
-                    let continent = if read_usize(comp + competition::CONTINENT) != 0 {
-                        read_i32(read_usize(comp + competition::CONTINENT))
+                    let continent = if comp.continent() != 0 {
+                        read_i32(comp.continent())
                     } else if let Some(k) = continent_of(home.addr()) {
                         k
                     } else if let Some(k) = continent_of(away) {
@@ -446,8 +446,8 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     crate::comparison::branch("cpy_8 neutral referee");
                     (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(ftol(count * -0.75)), ftol(count * 0.25)) // cpy8: the top quarter
                 } else {
-                    let nacao = if read_usize(comp + competition::NATION) != 0 {
-                        read_i32(read_usize(comp + competition::NATION))
+                    let nacao = if comp.nation() != 0 {
+                        read_i32(comp.nation())
                     } else if let Some(k) = officials_manager_club_nation_id(home) {
                         k
                     } else if let Some(k) = officials_manager_club_nation_id(Club(away)) {
@@ -456,7 +456,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                         random(nations)
                     };
                     let b = nation_officials_block(this, nacao);
-                    let id = read_i32(comp);
+                    let id = read_i32(comp.addr());
                     let mut found = None;
                     for f in 0..read_i16(b + officials_nation_block::COMP_COUNT).max(0) as usize {
                         let e = b + officials_nation_block::COMP_SLOTS + f * 0x10;
@@ -545,22 +545,23 @@ pub(crate) unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
 /// bytes em [this]) de cada árbitro da faixa (+4, +8, +0xa, +0xc, +0xf; o `add eax, 0x11` em 0x79d149 fica dentro do
 /// laço). Devolve 1 (só o al vale).
 pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
-    if comp == 0 {
+    let comp = Competition(comp);
+    if comp.is_null() {
         return 0;
     }
-    let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp).wrapping_mul(4) as usize));
+    let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp.addr()).wrapping_mul(4) as usize));
     if c == 0 || read_u8(c + cup::CLUB_SIDES) == 4 || read_u8(c + cup::CLUB_SIDES) == 2 {
         return 0;
     }
-    if exe::comp_util_is_league_division(read_i32(comp)) == 0 {
+    if exe::comp_util_is_league_division(read_i32(comp.addr())) == 0 {
         return 0;
     }
-    let nacao = if read_usize(comp + competition::NATION) != 0 { read_i32(read_usize(comp + competition::NATION)) } else { random(read_i32(G_NATION_COUNT)) };
+    let nacao = if comp.nation() != 0 { read_i32(comp.nation()) } else { random(read_i32(G_NATION_COUNT)) };
     let b = nation_officials_block(this, nacao);
     let mut band = None;
     for f in 0..read_i16(b + officials_nation_block::COMP_COUNT).max(0) as usize {
         let e = b + officials_nation_block::COMP_SLOTS + f * 0x10;
-        if read_i32(e + officials_comp_slot::COMP_ID) == read_i32(comp) {
+        if read_i32(e + officials_comp_slot::COMP_ID) == read_i32(comp.addr()) {
             band = Some((read_i32(e), read_i32(e + officials_comp_slot::SHARE)));
             break;
         }

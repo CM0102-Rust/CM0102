@@ -3,8 +3,8 @@ use super::*;
 /// Club k of the 8 selected (+0xee: group A slots 0..3, B 4..7).
 ///
 /// [pt] O clube k dos 8 escolhidos (+0xee, ponteiros: o grupo A nas vagas 0..3, o B nas 4..7), a que as duas tabelas leem.
-pub(crate) unsafe fn selected_club(this: usize, k: usize) -> usize {
-    read_usize(read_usize(this + 0xee) + k * 4) // cqt10: o escolhido k
+pub(crate) unsafe fn selected_club(this: League, k: usize) -> usize {
+    read_usize(read_usize(this.addr() + 0xee) + k * 4) // cqt10: o escolhido k
 }
 
 /// Rule: the Oceania Club Championship is drawn on the start day (+0xb6/+0xb8) and only on the call without `completo`:
@@ -36,8 +36,9 @@ pub(crate) unsafe fn selected_club(this: usize, k: usize) -> usize {
 /// 4 -> cdecl) e zerada, +0xf2 = 0 e +0x45 = 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this
 /// -> thiscall, ret 8), cuja devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let day = read_i16(this + 0xb6) as u16;
-    let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
+    let this = League(this);
+    let day = read_i16(this.addr() + 0xb6) as u16;
+    let year = (read_i16(this.addr() + 0xb8) as u16).wrapping_add(this.year() as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     // simplification: in the loops before the draw and on errors the original returns only al (0 or 1; the rest of eax is leftover from the
@@ -45,11 +46,11 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
     if year_of_today < year || (year_of_today == year && (day_of_today as i16) < day as i16) {
         return 0;
     }
-    if year_of_today == year && day_of_today == day && read_usize(this + league::ACTIVE) == 0 && full == 0 {
+    if year_of_today == year && day_of_today == day && this.active() == 0 && full == 0 {
         crate::comparison::branch("cqt_10 oceania draw");
         exe::oceaniaclubchamp_select_qualified_clubs(this);
-        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
-        predicted(this);
+        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+        predicted(this.addr());
         if exe::oceaniaclubchamp_create_group_a_table(this) == 0 {
             show_error_at(0xa6a068, 0x21d);
             return 1;
@@ -63,10 +64,10 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
             return 1;
         }
         exe::oceaniaclubchamp_create_group_b_stage(this);
-        exe::crt_free(read_usize(this + 0xee));
-        write_usize(this + 0xee, 0);
-        write_usize(this + 0xf2, 0);
-        write_usize(this + league::ACTIVE, 1);
+        exe::crt_free(read_usize(this.addr() + 0xee));
+        write_usize(this.addr() + 0xee, 0);
+        write_usize(this.addr() + 0xf2, 0);
+        this.set_active(1);
     }
     (exe::league_update_for_date(this, today, full) as u32)
 }
@@ -91,15 +92,16 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
 /// clube; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this ->
 /// thiscall, ret 0) e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
 pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
+    let this = League(this);
+    this.set_club_count(4);
     let t = exe::crt_malloc(0xec);
-    write_usize(this + league::TABLE, t);
+    this.set_table(t);
     if t == 0 {
         show_error_at(0xa6a068, 0x182);
         return 0;
     }
     let mut i = 0i8;
-    while (i as i16) < read_i16(this + league::CLUB_COUNT) {
+    while (i as i16) < this.club_count() {
         crate::comparison::branch("cqt_10 group a row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: row i of group A
@@ -136,6 +138,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
 /// não lê: a cópia passa os valores limpos) em [+0xc][0]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase:
 /// a caixa da linha 0x2ad e 0. Com ela: +0x30 = 0, a notícia do grupo (0x684230 na fase) e 1.
 pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
+    let this = League(this);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -148,32 +151,32 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
         crate::comparison::branch("cqt_10 group b team");
         write_usize(teams + n * 4, selected_club(this, 4 + n)); // cqt10: the team in the group B slot
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
-    let table = rounds_of_cup(this, 0, &mut rodadas, &mut id, 0);
+    let table = rounds_of_cup(this.addr(), 0, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         construct(
             p,
-            this,
+            this.addr(),
             4,
             teams,
             1,
-            read_usize(this + 4),
+            read_usize(this.addr() + 4),
             table,
             rodadas as u16 as u32,
-            (read_u8(this + 0xc2) as u32),
-            (read_u8(this + 0xc3) as u32),
-            (read_u8(this + 0xc4) as u32),
-            this + league::TIEBREAKS,
-            this + league::PROMOTED_COUNT,
-            read_i16(this + league::YEAR) as u16 as u32,
+            (read_u8(this.addr() + 0xc2) as u32),
+            (read_u8(this.addr() + 0xc3) as u32),
+            (read_u8(this.addr() + 0xc4) as u32),
+            this.addr() + league::TIEBREAKS,
+            this.addr() + league::PROMOTED_COUNT,
+            this.year() as u16 as u32,
             0,
             id as u16 as u32,
-            (read_u8(this + 0x51) as u32),
+            (read_u8(this.addr() + 0x51) as u32),
             2,
             0,
-            read_i16(this + league::LEAGUE_FLAGS) as u16 as u32,
+            this.league_flags() as u16 as u32,
             -1,
             0,
             2,
@@ -181,15 +184,15 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
     } else {
         0
     };
-    write_usize(read_usize(this + league::STAGES), stage);
+    write_usize(this.stages(), stage);
     exe::crt_free(teams);
     exe::crt_free(table);
-    let f = read_usize(read_usize(this + league::STAGES));
+    let f = read_usize(this.stages());
     if f == 0 {
         show_error_at(0xa6a068, 0x2ad);
         return 0;
     }
-    write_usize(this + league::CURRENT_STAGE, 0);
+    this.set_current_stage(0);
     exe::league_send_group_draw_news(f);
     1
 }
@@ -383,12 +386,13 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_select_qualified_clubs
 /// última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x274; senão +0x30 sobe e, chegando a 1 (depois dos
 /// grupos), as semifinais (0x798050: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: usize) {
-    let f = read_usize(this + league::CURRENT_STAGE) as i32;
-    if f >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
+    let this = League(this);
+    let f = this.current_stage() as i32;
+    if f >= (this.stage_count() as i32).wrapping_sub(1) {
         return show_error_at(0xa6a068, 0x274);
     }
     let f = f + 1;
-    write_usize(this + league::CURRENT_STAGE, f as usize);
+    this.set_current_stage(f as usize);
     if f == 1 {
         crate::comparison::branch("cqt_11 oceania semifinals");
         exe::oceaniaclubchamp_create_knockout_stage(this);
@@ -402,9 +406,9 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: us
 ///
 /// [pt] Os 4 das semifinais, na ordem da lista: o 1º do grupo A (a tabela da copa, +0xb1), o 2º do B (a tabela da fase
 /// [+0xc][0]), o 2º do A e o 1º do B (os cruzamentos: as chaves são os pares da lista).
-pub(crate) unsafe fn semifinalists(this: usize) -> [usize; 4] {
-    let a = |l: usize| read_usize(read_usize(this + league::TABLE) + l * 0x3b);
-    let b = |l: usize| read_usize(read_usize(read_usize(read_usize(this + league::STAGES)) + 0xb1) + l * 0x3b);
+pub(crate) unsafe fn semifinalists(this: League) -> [usize; 4] {
+    let a = |l: usize| read_usize(this.table() + l * 0x3b);
+    let b = |l: usize| read_usize(read_usize(read_usize(this.stages()) + 0xb1) + l * 0x3b);
     [a(0), b(1), a(1), b(0)] // cqt11: 1º A × 2º B, 2º A × 1º B
 }
 
@@ -432,6 +436,7 @@ pub(crate) unsafe fn semifinalists(this: usize) -> [usize; 4] {
 /// da linha 0x2e3 e volta. Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall,
 /// ret 4).
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize) {
+    let this = League(this);
     let list = exe::crt_malloc(0x10);
     if list == 0 {
         return show_error_at(0xa6a068, 0x2cb);
@@ -440,22 +445,22 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
     for (k, &c) in semifinalists(this).iter().enumerate() {
         write_usize(list + k * 4, c);
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
-    let table = rounds_of_cup(this, 1, &mut rodadas, &mut id, 0);
+    let table = rounds_of_cup(this.addr(), 1, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 4, list, rodadas as u16 as u32, read_usize(this + 4), table, read_i16(this + league::YEAR) as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this.addr(), 4, list, rodadas as u16 as u32, read_usize(this.addr() + 4), table, this.year() as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_usize(read_usize(this + league::STAGES) + 4, stage);
+    write_usize(this.stages() + 4, stage);
     exe::crt_free(table);
     exe::crt_free(list);
-    let f = read_usize(read_usize(this + league::STAGES) + 4);
+    let f = read_usize(this.stages() + 4);
     if f == 0 {
         return show_error_at(0xa6a068, 0x2e3);
     }
@@ -524,7 +529,7 @@ pub(crate) struct OceaniaStage {
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
 /// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
-pub(crate) unsafe fn build_stage_table(this: usize, f: Option<OceaniaStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+pub(crate) unsafe fn build_stage_table(this: League, f: Option<OceaniaStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
     let f = match f {
         Some(f) => f,
         None => return 0,
@@ -542,8 +547,8 @@ pub(crate) unsafe fn build_stage_table(this: usize, f: Option<OceaniaStage>, rod
         return 0;
     }
     crate::comparison::branch(f.name);
-    let ano16 = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
-    let ano = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
+    let ano16 = (this.year() as u16) as u32;
+    let ano = this.year() as i32 as u32;
     for op in f.ops.iter().chain(f.ops2.iter()) {
         match *op {
             Cqq12D(r, dia, mes, anos, sem, cod, v) => {
@@ -689,7 +694,7 @@ pub(crate) fn oceania_stage_spec(fase: u32) -> Option<OceaniaStage> {
 /// [pt] { 0x797230 } (thiscall, ret 0x10, oceania_club_champ.cpp; a virtual +0x3c): `OceaniaClubChamp::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a fase de `oceania_stage_spec`.
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    build_stage_table(this, oceania_stage_spec(stage), rounds, extra, league, 0xa6a068)
+    build_stage_table(League(this), oceania_stage_spec(stage), rounds, extra, league, 0xa6a068)
 }
 
 /// The 16-team table of the Asian cups (AsiaClubChamp::build_team_table `asia_club_champ_build_team_table` and AsiaCupWinner::create_team_entries
@@ -767,6 +772,6 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce(
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqj_11 oceania rules");
     let day = 0x14; // cqj11: the start day in Oceania
-    apply_cup_rules(this, &OCEANIA_RULES, day, 3)
+    apply_cup_rules(League(this), &OCEANIA_RULES, day, 3)
 }
 

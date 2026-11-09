@@ -29,6 +29,18 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 5: the league and the competition
+
+The full package (variables, accesses, wrappers, signatures, propagation) for `league` and `competition`, now also on
+the methods' `this` (`let this = League(this);`): 424 + 50 variables, 142 + 5 functions take the type, propagation 17
+more. New forms in the converter: `core::ptr::read_unaligned/write_unaligned((x + mod::F) as *T, v)`; a pointer write
+whose value holds an already converted read replaces the inner edit (before, the two overlapped and broke the text: the
+first write-out was undone). Raw league accesses 1,914 → 278, competition 119 → 47. `.addr()` outside the wrappers went
+up (2,503 → 3,683): the typed `this` is passed on as `usize` to the original routines and read at unnamed offsets
+(`this.addr() + 0xee`). Mutations: 57 anchors followed, 27 by the fix for the `.addr()` the signatures removed from the
+code, 4 by hand; compiled the changed ones and the 93 whose replacement calls a typed function (5 fixed). Proof:
+7cc445c2 ×2, detector equal, comparison 0.
+
 ## Migration to typed records, batch 4: propagation (club and person)
 
 `tipar_registros.py --propagar Club,Staff`: a function of ours with a `usize` parameter that most calls fill with a

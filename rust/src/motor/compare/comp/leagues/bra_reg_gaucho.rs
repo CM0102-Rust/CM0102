@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `bra_reg_gaucho_create_knockout_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GAUCHO_CREATE_KNOCKOUT_STAGE);
-    bra_reg_pern_compare_knockout_from_table("bra_reg_gaucho_create_knockout_stage", this, &[0, 3, 1, 2], || o(this))
+    bra_reg_pern_compare_knockout_from_table("bra_reg_gaucho_create_knockout_stage", League(this), &[0, 3, 1, 2], || o(this))
 }
 
 /// Comparer for `bra_reg_gaucho_record_season_honours` (comparison mode: see the header of motor.rs): only the original
@@ -26,25 +26,25 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_record_season_hono
 /// Comparer for `construct_bra_reg_gaucho`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_bra_reg_gaucho(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_GAUCHO);
-    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_gaucho", this, year, record, &GAUCHO_STATE_LEAGUE, || o(this, year, record))
+    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_gaucho", League(this), year, record, &GAUCHO_STATE_LEAGUE, || o(this, year, record))
 }
 
 /// Comparer for `bra_reg_gaucho_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_START_NEW_SEASON);
-    compare_state_league_new_season("bra_reg_gaucho_start_new_season", this, || o(this))
+    compare_state_league_new_season("bra_reg_gaucho_start_new_season", League(this), || o(this))
 }
 
 /// Comparer for `bra_reg_gaucho_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GAUCHO_ADVANCE_STAGE);
-    compare_state_league_advance_stage("bra_reg_gaucho_advance_stage", this, || o(this))
+    compare_state_league_advance_stage("bra_reg_gaucho_advance_stage", League(this), || o(this))
 }
 
 /// Comparer for `bra_reg_gaucho_load_region_clubs`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_LOAD_REGION_CLUBS);
-    bra_reg_rio_compare_state_league_table("bra_reg_gaucho_load_region_clubs", this, 0x11, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, || o(this))
+    bra_reg_rio_compare_state_league_table("bra_reg_gaucho_load_region_clubs", League(this), 0x11, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// Comparador: como o do Centro-Oeste.

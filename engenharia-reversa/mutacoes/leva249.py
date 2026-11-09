@@ -4,7 +4,7 @@ MUTACOES = [
     ('cpm_confronto_agregado', 'if tot1 > tot2 {', 'if tot1 >= tot2 { // mutacao: o empate no agregado para o primeiro lado', 'cpm_1 tie level on aggregate'),
     ('cpm_ordem_sorteio', 'read_i8(b + 6) as i32 - read_i8(a + 6) as i32 // the largest first', 'read_i8(a + 6) as i32 - read_i8(b + 6) as i32 // mutacao: o menor primeiro', 'cpm_1 seeding order'),
     ('cpm_confronto_adversario', 'write_usize(p + 14 * k, read_usize(table + j as usize * TABLE_ROW_SIZE)); // the opposing club', 'write_usize(p + 14 * k, read_usize(table + a as usize * TABLE_ROW_SIZE)); // mutacao: o proprio clube', 'cpm_2 head to head'),
-    ('cpm_vetor_conta', '*n = read_i16(this + league::CLUB_COUNT); // the count', '*n = read_i16(this + league::CLUB_COUNT) - 1; // mutacao: sem o ultimo', 'cpm_2 clubs array'),
+    ('cpm_vetor_conta', '*n = this.club_count(); // the count', '*n = this.club_count() - 1; // mutacao: sem o ultimo', 'cpm_2 clubs array'),
     ('cpm_posicao_final', 'c.set_last_position((i as u8).wrapping_add(1)); // the final position', 'c.set_last_position((i as u8).wrapping_add(2)); // mutacao: uma abaixo', 'cpm_2 final position'),
     ('cpm_estadio_obra', '(exe::finance_upgrade_stadium_for_league(f, required_seats as i32, required_capacity as i32, id, 0) as u32); // the stadium works', 'let _ = (f, required_seats); // mutacao: sem a obra', 'cpm_3 division stadium'),
     ('cpm_melhores_trocas', 'for _ in 0..m as i32 { // m trocas', 'for _ in 1..m as i32 { // mutacao: uma troca a menos', 'cpm_3 shuffle the best'),

@@ -6,25 +6,25 @@ use super::*;
 /// Comparer for `eng_third_create_play_off_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_third_create_play_off_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_THIRD_CREATE_PLAY_OFF_STAGE);
-    compare_playoff_stage("eng_third_create_play_off_stage", this, [6, 3, 5, 4], || o(this))
+    compare_playoff_stage("eng_third_create_play_off_stage", League(this), [6, 3, 5, 4], || o(this))
 }
 
 /// Comparer for `construct_eng_third`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_eng_third(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_THIRD);
-    compare_english_constructor("construct_eng_third", this, year, record, &THIRD_DIVISION, || o(this, year, record))
+    compare_english_constructor("construct_eng_third", League(this), year, record, &THIRD_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `eng_third_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_third_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_THIRD_SET_UP_RULES);
-    eng_prm_compare_league_rules("eng_third_set_up_rules", this, third_division_rules(this), || o(this), || eng_third_set_up_rules(this))
+    eng_prm_compare_league_rules("eng_third_set_up_rules", League(this), third_division_rules(this), || o(this), || eng_third_set_up_rules(this))
 }
 
 /// Comparer for `eng_third_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_third_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_THIRD_CREATE_TABLE);
-    eng_prm_compare_league_table("eng_third_create_table", this, 0x18, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, 0x2710, || o(this))
+    eng_prm_compare_league_table("eng_third_create_table", League(this), 0x18, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, 0x2710, || o(this))
 }
 
 /// Comparer for `eng_third_create_schedule`.
@@ -42,5 +42,5 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_third_set_club_progress(this:
 /// Comparer for `eng_third_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_third_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_THIRD_ADVANCE_STAGE);
-    ita_ser_c1a_compare_advance_stage("eng_third_advance_stage", this, || o(this), || eng_third_advance_stage(this))
+    ita_ser_c1a_compare_advance_stage("eng_third_advance_stage", League(this), || o(this), || eng_third_advance_stage(this))
 }

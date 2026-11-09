@@ -5,11 +5,12 @@ use super::*;
 
 /// Comparer for `aus_nsl_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_advance_stage(this: usize) {
-    let before = read_usize(this + league::CURRENT_STAGE) as i32;
-    let last = before >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AUS_NSL_ADVANCE_STAGE)(this);
-    let after = read_usize(this + league::CURRENT_STAGE) as i32;
-    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    let this = League(this);
+    let before = this.current_stage() as i32;
+    let last = before >= (this.stage_count() as i32).wrapping_sub(1);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AUS_NSL_ADVANCE_STAGE)(this.addr());
+    let after = this.current_stage() as i32;
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this.addr(), before, after));
 }
 
 /// Comparer for `create_finals_series_stage`.
@@ -24,13 +25,14 @@ pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_advance_stage(this: usize
 /// antes: os seis primeiros da tabela. Depois, a devolução 1, a fase na vaga 0 com +0x3e = 6, +4 = o +4 da liga e os
 /// seis na tabela dela (+0xb1, como conjunto), e +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: usize) -> u32 {
+    let this = League(this);
     let mut six = [0usize; 6];
     for (i, c) in six.iter_mut().enumerate() {
         *c = aus_nsl_table_row_club(this, i);
     }
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FINALS_SERIES_STAGE)(this);
-    let stage = read_usize(read_usize(this + league::STAGES));
-    let same = r == 1 && stage != 0 && read_i16(stage + league::CLUB_COUNT) == 6 && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + league::CURRENT_STAGE) == 0 && {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FINALS_SERIES_STAGE)(this.addr());
+    let stage = League(read_usize(this.stages()));
+    let same = r == 1 && !stage.is_null() && stage.club_count() == 6 && read_usize(stage.addr() + 4) == read_usize(this.addr() + 4) && this.current_stage() == 0 && {
         let mut in_it = [0usize; 6];
         for (i, c) in in_it.iter_mut().enumerate() {
             *c = aus_nsl_table_row_club(stage, i);
@@ -40,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: 
         b.sort_unstable();
         a == b
     };
-    SCOREBOARD.record(same, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, stage, six));
+    SCOREBOARD.record(same, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this.addr(), r, stage.addr(), six));
     r
 }
 
@@ -56,16 +58,17 @@ pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: 
 /// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
 /// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
 pub(crate) unsafe extern "thiscall" fn compare_create_grand_final_stage(this: usize) {
-    let series = read_usize(read_usize(this + league::STAGES));
-    let (a, b) = (aus_nsl_table_row_club(series, 0), aus_nsl_table_row_club(series, 1));
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_GRAND_FINAL_STAGE)(this);
-    let stage = read_usize(read_usize(this + league::STAGES) + 4);
+    let this = League(this);
+    let series = read_usize(this.stages());
+    let (a, b) = (aus_nsl_table_row_club(League(series), 0), aus_nsl_table_row_club(League(series), 1));
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_GRAND_FINAL_STAGE)(this.addr());
+    let stage = read_usize(this.stages() + 4);
     let same = stage != 0 && {
         let l = read_usize(stage + cup::TEAM_TABLE);
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
+        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this.addr() + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    SCOREBOARD.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, stage));
+    SCOREBOARD.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this.addr(), a, b, stage));
 }
 
 /// Comparer for `aus_nsl_set_up_rules`.
@@ -74,8 +77,8 @@ pub(crate) unsafe extern "thiscall" fn compare_create_grand_final_stage(this: us
 /// (0xee) menos as saídas do calendário (+0x3a, +0xa9, +0xba; a 0x4111a0 não grava nada no objeto além delas); a
 /// devolução.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_set_up_rules(this: usize) -> u32 {
-    let o = this;
-    let reg = [(o, 0x3a), (o + league::LEGS, 0xa9 - 0x3c), (o + league::MATCH_RULES, 0xba - 0xab), (o + league::PROMOTED_COUNT, 0xee - 0xbe)];
+    let o = League(this);
+    let reg = [(o.addr(), 0x3a), (o.addr() + league::LEGS, 0xa9 - 0x3c), (o.addr() + league::MATCH_RULES, 0xba - 0xab), (o.addr() + league::PROMOTED_COUNT, 0xee - 0xbe)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_SET_UP_RULES)(this), || {
         set_nsl_rules(this);
         1
@@ -97,5 +100,5 @@ pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_update_staff_records_for_
 /// Comparer for `aus_nsl_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_CREATE_TABLE);
-    compare_japanese_table("aus_nsl_create_table", this, 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))
+    compare_japanese_table("aus_nsl_create_table", League(this), 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))
 }

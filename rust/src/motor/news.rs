@@ -487,16 +487,17 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
 /// senão para todos (0x786780). Devolve o que a entrega devolve. Notícia ou competição nulas: a original (caixa
 /// "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, news: usize, comp: usize) -> u32 {
-    if news == 0 || comp == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp); // message box: original only
+    let comp = Competition(comp);
+    if news == 0 || comp.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp.addr()); // message box: original only
     }
-    let nation = read_usize(comp + competition::NATION);
+    let nation = comp.nation();
     if nation != 0 {
         crate::comparison::branch("cpk_5 news of the competition nation");
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_CLUB_MANAGERS);
         return f(this, news, nation);
     }
-    let continent = read_usize(comp + competition::CONTINENT);
+    let continent = comp.continent();
     if continent != 0 {
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
         return f(this, news, continent);

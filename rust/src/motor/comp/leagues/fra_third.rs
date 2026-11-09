@@ -72,7 +72,7 @@ pub(crate) struct FraThirdSingleStageLeague {
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &FraThirdSingleStageLeague) -> usize {
+pub(crate) unsafe fn create_league_schedule(this: League, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &FraThirdSingleStageLeague) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -87,7 +87,7 @@ pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mu
         return 0;
     }
     crate::comparison::branch(p.branch);
-    let ano = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+    let ano = (this.year() as u16) as u32;
     fra_third_write_league_rounds(t, ano, 0, p.table);
     t
 }
@@ -233,7 +233,7 @@ pub(crate) const LOWER_DIVISION_LEAGUE: FraThirdSingleStageLeague = FraThirdSing
 /// [pt] { 0x5bfe30 } (thiscall, ret 0x10, fra_third.cpp, 1.948 bytes, método +0x3c): `FraThird::create_schedule(fase, &rodadas, &extra,
 /// &é_liga)`: o National, 38 rodadas (`FRENCH_THIRD_DIVISION_ROUNDS`). Fonte 0x9ccc80, linha 0xa6.
 pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    create_league_schedule(this, stage, rounds, extra, league, &FRENCH_THIRD_LEAGUE)
+    create_league_schedule(League(this), stage, rounds, extra, league, &FRENCH_THIRD_LEAGUE)
 }
 
 /// Sets up the rules of the French National: 4 go up in 2001 and 3 afterwards, 4 go down (no league below in the game);
@@ -249,7 +249,7 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, st
 /// = −1), +0xa7 (os jogos da temporada) = −1 (recalculado pela 0x687430) e 3 reservas (+0x49).
 pub(crate) unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqj_5 national rules");
-    fra_first_apply_league_rules(this, &national_division_rules(this))
+    fra_first_apply_league_rules(League(this), &national_division_rules(this))
 }
 
 /// the National has 20 clubs; prize fund of 20,000 per place; TV pays 200,000 to each club
@@ -258,12 +258,13 @@ pub(crate) unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u3
 /// [pt] { 0x5c05d0 } (thiscall, ret 0, fra_third.cpp): `FraThird::create_table()`: 20 clubes ([0x9cf5d4]); cheia, o fundo
 /// pela cota de 20.000 e a TV de 200.000 a cada clube; 1. Fonte 0x9ccc80, linha 0x15d.
 pub(crate) unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x14);
+    let this = League(this);
+    this.set_club_count(0x14);
     if fra_first_fill_league_table(this, 0x9ccc80, 0x15d, KEY_CLUB_COMP_FRENCH_NATIONAL) != Some(true) {
         return 0;
     }
     set_prize_fund(this, 0x4e20);
-    eng_prm_pay_tv_rights(this, 0x30d40, 0);
+    eng_prm_pay_tv_rights(this.addr(), 0x30d40, 0);
     1
 }
 
@@ -273,6 +274,6 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u3
 /// [pt] { 0x5bfb40 } (thiscall, ret 8, fra_third.cpp): `FraThird::FraThird(ano, registro)`: a terceira divisão francesa (o
 /// National), disciplina 0xc, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_fra_third(this: usize, year: u32, record: usize) -> usize {
-    construct_division_league(this, year, record, &FRENCH_THIRD_DIVISION)
+    construct_division_league(League(this), year, record, &FRENCH_THIRD_DIVISION)
 }
 

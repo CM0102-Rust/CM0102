@@ -10,7 +10,7 @@ use super::*;
 /// &rodadas, &extra, &é_liga)`: grupos abaixo da fase 0xf (extra = fase + 0x420; a caixa da linha 0xbc), o mata-mata na
 /// fase 0xf (a caixa da linha 0xe3).
 pub(crate) unsafe extern "thiscall" fn ita_c_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    create_schedule(this, stage, rounds, extra, league, 0xf, 0x420, &SERIE_C_CUP_GROUP_ROUNDS, &SERIE_C_CUP_KNOCKOUT_ROUNDS, 0x9ea204, 0xbc, 0xe3,
+    create_schedule(League(this), stage, rounds, extra, league, 0xf, 0x420, &SERIE_C_CUP_GROUP_ROUNDS, &SERIE_C_CUP_KNOCKOUT_ROUNDS, 0x9ea204, 0xbc, 0xe3,
         "cqo_10 grupos da copa da serie c", "cqo_10 mata-mata da copa da serie c")
 }
 
@@ -37,5 +37,5 @@ pub(crate) unsafe extern "thiscall" fn ita_c_cup_select_entrants(this: usize) ->
 pub(crate) unsafe extern "thiscall" fn ita_c_cup_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqi_12 serie c cup rules");
     let rounds = 1i16; // cqi12: the single round-robin of the Serie C groups
-    set_cup_league_rules(this, &SERIE_C_CUP_RULES, rounds)
+    set_cup_league_rules(League(this), &SERIE_C_CUP_RULES, rounds)
 }

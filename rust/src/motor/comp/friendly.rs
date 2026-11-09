@@ -1665,7 +1665,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
 /// 5 a partir de 8000, 4 de 6000, 3 de 4000, 2 de 2000, senão 1 (só o al vale).
 pub(crate) unsafe extern "stdcall" fn friendly_club_reputation_tier(club: usize) -> u8 {
     let club = Club(club);
-    let r = core::ptr::read_unaligned((club.addr() + club::REPUTATION) as *const i16);
+    let r = club.reputation();
     if r >= 0x1f40 {
         5
     } else if r >= 0x1770 {

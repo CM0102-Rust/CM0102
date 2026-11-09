@@ -5,17 +5,18 @@ use super::*;
 
 /// Comparer for `asia_cup_winner_create_knockout_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_create_knockout_stage(this: usize) {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ASIA_CUP_WINNER_CREATE_KNOCKOUT_STAGE);
-    let stages = read_usize(this + league::STAGES);
-    if stages == 0 || (0..3).any(|g| read_usize(stages + g * 4) == 0) || read_usize(this + league::TABLE) == 0 {
-        return o(this);
+    let stages = this.stages();
+    if stages == 0 || (0..3).any(|g| read_usize(stages + g * 4) == 0) || this.table() == 0 {
+        return o(this.addr());
     }
-    let table = |g: i32| if g < 0 { read_usize(this + league::TABLE) } else { read_usize(read_usize(stages + g as usize * 4) + 0xb1) };
+    let table = |g: i32| if g < 0 { this.table() } else { read_usize(read_usize(stages + g as usize * 4) + 0xb1) };
     let mut plan: Vec<usize> = AFRICAN_NATIONS_QUARTER_FINAL_SLOTS.iter().map(|&(g, p)| read_usize(table(g) + p as usize * 0x3b)).collect();
-    o(this);
-    let stage = read_usize(read_usize(this + league::STAGES) + 0xc);
+    o(this.addr());
+    let stage = read_usize(this.stages() + 0xc);
     if stage == 0 {
-        SCOREBOARD.record(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this));
+        SCOREBOARD.record(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this.addr()));
         return;
     }
     let list = read_usize(stage + cup::TEAM_TABLE);
@@ -23,8 +24,8 @@ pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_create_knockout_s
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + league::CURRENT_STAGE) == 3;
-    SCOREBOARD.record(same, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == read_usize(this.addr() + 4) && this.current_stage() == 3;
+    SCOREBOARD.record(same, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this.addr(), pl, ac));
 }
 
 /// Comparer for `asia_cup_winner_advance_stage`.

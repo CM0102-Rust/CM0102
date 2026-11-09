@@ -26,7 +26,7 @@ use super::*;
 /// primeira vaga de fases ([+0xc]). Sem fase: a caixa `linha_sem_fase` e volta (sem liberar). Com ela:
 /// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela de rodadas e a lista liberadas (free 0x9452ca,
 /// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], seeds: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
+pub(crate) unsafe fn create_knockout_from_table(this: League, rows: &[usize], seeds: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
     let n = rows.len();
     // the seeds: the original writes the bytes on the stack before allocating (same as the rows, but separate constants)
     let mut s = [0u8; 8];
@@ -39,9 +39,9 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], see
         core::ptr::write_unaligned((list + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
     }
     crate::comparison::branch(ramo);
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = table(this, 0, &mut rodadas, &mut extra, 0);
+    let t = table(this.addr(), 0, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
     // virtual are words on the stack; the year goes in cx); the constructor only reads the words.
@@ -49,19 +49,19 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], see
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, n as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
+        construct(p, this.addr(), n as u32, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + league::STAGES) as *mut usize, stage);
-    let stage = read_usize(read_usize(this + league::STAGES));
+    core::ptr::write_unaligned(this.stages() as *mut usize, stage);
+    let stage = read_usize(this.stages());
     if stage == 0 {
         return show_error_at(file, row_without_stage);
     }
     exe::cup_set_up_round(stage, 0);
     exe::crt_free(t);
     exe::crt_free(list);
-    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
+    this.set_current_stage((0) as usize);
 }
 
 /// Rio Grande do Sul: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed
@@ -71,7 +71,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], see
 /// [pt] { 0x4325b0 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98ae50, linhas 0x217 (sem lista) e 0x22b (sem fase).
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this: usize) {
-    create_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98ae50, 0x217, 0x22b, "cqn_9 gaucho"); // cqn9: 1º × 4º, 2º × 3º Gaúcho
+    create_knockout_from_table(League(this), &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98ae50, 0x217, 0x22b, "cqn_9 gaucho"); // cqn9: 1º × 4º, 2º × 3º Gaúcho
 }
 
 /// End of a state league: records the honours of the first stage (the table) and calls `exe::bra_nat_first_fill_champions_cup_entrants`, which, once the twelve
@@ -88,7 +88,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this
 /// e, em salto final, a 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze
 /// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
-    record_first_stage_honours(this); // cqj8: the state championship history
+    record_first_stage_honours(League(this)); // cqj8: the state championship history
     crate::comparison::branch("cqj_8 state league history");
     exe::bra_nat_first_fill_champions_cup_entrants()
 }
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this
 ///
 /// [pt] { 0x4317c0 } (thiscall, ret 8, bra_reg_gaucho.cpp): `BraRegGaucho::BraRegGaucho(ano, registro)`: o Gaúcho (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_bahia_construct_state_league(this, year, record, &GAUCHO_STATE_LEAGUE, 7, true, "cqt_1 gaucho novo") // cqt1: the discipline and expected positions of the Gaúcho
+    bra_reg_bahia_construct_state_league(League(this), year, record, &GAUCHO_STATE_LEAGUE, 7, true, "cqt_1 gaucho novo") // cqt1: the discipline and expected positions of the Gaúcho
 }
 
 /// The Rio Grande do Sul turnover: archives the season in the statistics, clears the previous table and stages, moves
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, yea
 /// [pt] { 0x432370 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::start_new_season()`, a virada da temporada do Gaúcho (a tabela:
 /// 0x4321d0; caixas nas linhas 0x1c6, 0x1cd, 0x1d3 e 0x1da).
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x4321d0, 0x98ae50, [0x1c6, 0x1cd, 0x1d3, 0x1da], 1, "cqp_7 virada do gaucho") // cqp7: the next year of the Gaúcho
+    state_league_new_season(League(this), 0x4321d0, 0x98ae50, [0x1c6, 0x1cd, 0x1d3, 0x1da], 1, "cqp_7 virada do gaucho") // cqp7: the next year of the Gaúcho
 }
 
 /// The Rio Grande do Sul next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_start_new_season(this: usi
 /// [pt] { 0x432520 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::advance_stage()`, a fase seguinte do Gaúcho: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4325b0); a caixa da linha 0x1f4.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_advance_stage(this: usize) {
-    state_league_advance_stage(this, 0x98ae50, 0x1f4, 0x4325b0);
+    state_league_advance_stage(League(this), 0x98ae50, 0x1f4, 0x4325b0);
 }
 
 /// the Rio Grande do Sul league has 17 clubs: those with it as their reserve division in the database (the field that
@@ -131,7 +131,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_advance_stage(this: usize)
 /// [pt] { 0x4321d0 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::load_region_clubs()`: o Gaúcho tem 17 clubes (divisão reserva +0x60 = [0x9cf9c8]).
 /// Fonte 0x98ae50, linha 0x163.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
-    fill_state_league_table(this, 0x11, 0x98ae50, 0x163, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, 0, "cql_8 gaucho cheio")
+    fill_state_league_table(League(this), 0x11, 0x98ae50, 0x163, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, 0, "cql_8 gaucho cheio")
 }
 
 /// Gaucho, Northeast Cup and Paulista (the same routine in the three vtables): single round robin; 4 top places (the
@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_load_region_clubs(this: us
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     gaucho_rules(this);
     crate::comparison::branch("cqi_8 gaucho rules");
-    create_main_schedule(this);
+    create_main_schedule(League(this));
     1
 }
 

@@ -22,13 +22,13 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
     let mut vistos = Vec::with_capacity(32);
     let mut ok = read_usize(this + cup::CURRENT_STAGE) == 7;
     for g in 0..8usize {
-        let f = read_usize(stages + g * 4);
-        if f == 0 || read_usize(f + league::TABLE) == 0 {
+        let f = League(read_usize(stages + g * 4));
+        if f.is_null() || f.table() == 0 {
             ok = false;
             break;
         }
         for r in 0..4usize {
-            vistos.push(read_usize(read_usize(f + league::TABLE) + r * 0x3b));
+            vistos.push(read_usize(f.table() + r * 0x3b));
         }
     }
     vistos.sort_unstable();
@@ -97,13 +97,13 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, a
     let mut vistos = Vec::with_capacity(16);
     let mut ok = read_usize(this + cup::CURRENT_STAGE) == 11;
     for h in 8..12usize {
-        let f = read_usize(read_usize(this + cup::STAGES) + h * 4);
-        if f == 0 || read_usize(f + league::TABLE) == 0 {
+        let f = League(read_usize(read_usize(this + cup::STAGES) + h * 4));
+        if f.is_null() || f.table() == 0 {
             ok = false;
             break;
         }
         for r in 0..4usize {
-            vistos.push(read_usize(read_usize(f + league::TABLE) + r * 0x3b));
+            vistos.push(read_usize(f.table() + r * 0x3b));
         }
     }
     vistos.sort_unstable();
@@ -136,9 +136,9 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_update_staff_records
     } else {
         false
     };
-    let before = if !club.is_null() { core::ptr::read_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *const i32) } else { 0 };
+    let before = if !club.is_null() { (club.continental_comp_id() as i32) } else { 0 };
     let r = o(this, club.addr(), outcome, stage, a, game, end);
-    let after = if !club.is_null() { core::ptr::read_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *const i32) } else { 0 };
+    let after = if !club.is_null() { (club.continental_comp_id() as i32) } else { 0 };
     let same = r == 0 && (club.is_null() || after == if sai { -1 } else { before });
     SCOREBOARD.record(same, || format!("european_cup_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, club.addr(), d, f, r, before, after, sai));
     r

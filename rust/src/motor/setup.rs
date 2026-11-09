@@ -584,8 +584,8 @@ pub(crate) unsafe fn undo_holiday_managers() {
         *(u(s.addr() + staff::COMMON_NAME) as *mut u8) = 0;
         exe::date_set(s.addr() + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
         s.set_age((0x7ae) as i16);
-        core::ptr::write_unaligned((s.addr() + staff::NATIONAL_JOB) as *mut u32, 0);
-        core::ptr::write_unaligned((s.addr() + staff::CLUB_JOB) as *mut u32, 0);
+        s.set_national_job((0) as usize);
+        s.set_club_job((0) as usize);
         exe::screenmanager_remove_manager_record(G_SCREEN_MANAGER, s, -1);
     }
 }
@@ -890,13 +890,13 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         if exe::database_is_national_team(c) != 0 {
             continue;
         }
-        let nation = core::ptr::read_unaligned((c.addr() + club::NATION) as *const usize);
+        let nation = c.nation().addr();
         if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) & 2 == 0 || exe::club_can_be_managed(c) == 0 {
             continue;
         }
         break c.addr();
     });
-    let nation = core::ptr::read_unaligned((club.addr() + club::NATION) as *const usize);
+    let nation = club.nation().addr();
     core::ptr::write_unaligned((p + staff::NATION) as *mut usize, nation);
     core::ptr::write_unaligned((p + staff::FIRST_NAME) as *mut u32, (exe::database_pick_first_name_for_nation(nation) as u32));
     let n2 = (exe::database_pick_second_name_for_nation(core::ptr::read_unaligned((p + staff::NATION) as *const usize)) as u32);

@@ -558,7 +558,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(t
 pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize, base: *mut i32, forcada: *const i16) -> i32 {
     let club = Club(club);
     let li = (club.continental_comp_id() as i32);
-    let league = if li > -1 { (read_i32(G_CLUB_COMP_TABLE) as usize).wrapping_add((li as usize).wrapping_mul(0x6b)) } else { 0 };
+    let league = Competition(if li > -1 { (read_i32(G_CLUB_COMP_TABLE) as usize).wrapping_add((li as usize).wrapping_mul(0x6b)) } else { 0 });
     let nation = (club.division().addr() as i32) as usize;
     let mut esi: i32;
     if !forcada.is_null() {
@@ -576,8 +576,8 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
                 l = n;
             }
         }
-        if league != 0 {
-            let c = read_i16(league + competition::REPUTATION) as i32;
+        if !league.is_null() {
+            let c = league.reputation() as i32;
             if c > rep / 500 {
                 l = c * 600;
             }

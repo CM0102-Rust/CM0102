@@ -13,20 +13,21 @@ pub(crate) unsafe extern "thiscall" fn compare_fra_cfa_create_schedule(this: usi
 ///
 /// [pt] O calendário (a virtual +0x3c) aloca: só a original, conferindo os campos e a devolução 1.
 pub(crate) unsafe extern "thiscall" fn compare_fra_cfa_set_up_rules(this: usize) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_CFA_SET_UP_RULES);
-    let r = o(this);
-    let ok = r == 1 && core::ptr::read_unaligned((this + league::LEGS) as *const u16) == 2 && read_u8(this + league::WIN_POINTS) == 3 && read_u8(this + league::DRAW_POINTS) == 1 && read_u8(this + league::MATCH_CATEGORY) == 2
-        && read_u8(this + league::TIEBREAKS) == 4 && read_u8(this + 0xc6) == 1 && read_u8(this + 0xc7) == 2 && read_u8(this + league::CLUB_SIDES) == 1 && read_u8(this + league::PROMOTED_COUNT) == 0 && read_u8(this + league::PROMOTION_PLAYOFF_COUNT) == 0 && read_u8(this + league::RELEGATION_PLAYOFF_COUNT) == 0 && read_u8(this + league::RELEGATED_COUNT) == 0
-        && read_usize(this + league::UPPER_DIVISION_ID) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_usize(this + league::LOWER_DIVISION_ID) == 0xffff_ffff
-        && core::ptr::read_unaligned((this + league::LEAGUE_FLAGS) as *const u16) == 0x43;
-    SCOREBOARD.record(ok, || format!("fra_cfa_set_up_rules({:#x}): devolveu {}, campos fora do esperado", this, r));
+    let r = o(this.addr());
+    let ok = r == 1 && (this.legs() as u16) == 2 && this.win_points() == 3 && this.draw_points() == 1 && this.match_category() == 2
+        && (this.tiebreaks() as u8) == 4 && read_u8(this.addr() + 0xc6) == 1 && read_u8(this.addr() + 0xc7) == 2 && this.club_sides() == 1 && this.promoted_count() == 0 && this.promotion_playoff_count() == 0 && this.relegation_playoff_count() == 0 && this.relegated_count() == 0
+        && (this.upper_division_id() as usize) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && this.lower_division_id() == 0xffff_ffff
+        && (this.league_flags() as u16) == 0x43;
+    SCOREBOARD.record(ok, || format!("fra_cfa_set_up_rules({:#x}): devolveu {}, campos fora do esperado", this.addr(), r));
     r
 }
 
 /// Comparer for `construct_fra_cfa`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_fra_cfa(this: usize, year: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_CFA);
-    compare_construct_group_league("construct_fra_cfa", this, year, &FRA_CFA_CFA_LEAGUE, || o(this, year))
+    compare_construct_group_league("construct_fra_cfa", League(this), year, &FRA_CFA_CFA_LEAGUE, || o(this, year))
 }
 
 /// Comparer for `destroy_fra_cfa`.
@@ -39,6 +40,6 @@ pub(crate) unsafe extern "thiscall" fn compare_destroy_fra_cfa(this: usize) {
 /// Comparer for `fra_cfa_create_group_table`.
 pub(crate) unsafe extern "thiscall" fn compare_fra_cfa_create_group_table(this: usize, clubs: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_CFA_CREATE_GROUP_TABLE);
-    compare_french_table("fra_cfa_create_group_table", this, clubs, 0x12, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], || o(this, clubs))
+    compare_french_table("fra_cfa_create_group_table", League(this), clubs, 0x12, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], || o(this, clubs))
 }
 

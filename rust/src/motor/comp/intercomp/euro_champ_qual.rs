@@ -22,38 +22,38 @@ use super::*;
 /// push 0xa; lea ecx, local -> thiscall, ret 0x10: 10 de março levado à sexta-feira [inferência]); +0xb8 = 0 (word); a
 /// tabela das rodadas pela virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) em
 /// +0xba. Devolve 1.
-pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
-    write_u8(this + league::WIN_POINTS, 3);
-    write_u8(this + 0x4a, 3);
-    core::ptr::write_unaligned((this + league::LEGS) as *mut i16, 2); // cqs8: dois turnos
-    write_u8(this + league::DRAW_POINTS, 1);
-    write_u8(this + league::MATCH_CATEGORY, 0xa);
-    write_u8(this + league::COMP_TYPE, 2);
+pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
+    this.set_win_points(3);
+    write_u8(this.addr() + 0x4a, 3);
+    core::ptr::write_unaligned((this.addr() + league::LEGS) as *mut i16, 2); // cqs8: dois turnos
+    this.set_draw_points(1);
+    this.set_match_category(0xa);
+    this.set_comp_type(2);
     for (k, v) in [1u8, 2, 4, 5].into_iter().enumerate() {
-        write_u8(this + league::TIEBREAKS + k, v);
+        write_u8(this.addr() + league::TIEBREAKS + k, v);
     }
-    write_u8(this + league::PROMOTED_COUNT, 1);
-    write_u8(this + league::PROMOTION_PLAYOFF_COUNT, 1);
-    write_u8(this + league::RELEGATION_PLAYOFF_COUNT, 0);
-    write_u8(this + league::RELEGATED_COUNT, 0);
-    write_u8(this + 0x49, 7);
-    core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut u16, 0xffff);
+    this.set_promoted_count(1);
+    this.set_promotion_playoff_count(1);
+    this.set_relegation_playoff_count(0);
+    this.set_relegated_count(0);
+    write_u8(this.addr() + 0x49, 7);
+    core::ptr::write_unaligned((this.addr() + league::GAMES_PER_CLUB) as *mut u16, 0xffff);
     let mut data = [0u32; 2];
     // simplification: the original pushes the year in ecx with the high 16 bits of the cup pointer; 0x549f70 reads the word
-    exe::date_date_549f70((&mut data) as *mut [u32; 2] as *mut [u16; 4], 0xa, 2, read_i16(this + league::YEAR) as u16 as u32, 5); // cqs8: the draw date
-    core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, data[0] as u16);
-    core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
+    exe::date_date_549f70((&mut data) as *mut [u32; 2] as *mut [u16; 4], 0xa, 2, this.year() as u16 as u32, 5); // cqs8: the draw date
+    core::ptr::write_unaligned((this.addr() + league::NEXT_DRAW_DAY) as *mut u16, data[0] as u16);
+    core::ptr::write_unaligned((this.addr() + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
     crate::comparison::branch("cqs_8 euro rules");
-    let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
-    let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
-    core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut u32, t as u32);
+    let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
+    core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut u32, t as u32);
     1
 }
 
 /// EuroChampQual::set_up_rules hook entry: sets the European Championship qualifying rules (points, two legs,
 /// tiebreaks, one direct and one play-off place, draw date) and builds the round table (see set_up_rules); returns 1.
 pub(crate) unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize) -> u32 {
-    set_up_rules(this)
+    set_up_rules(League(this))
 }
 
 /// `EuroChampQual::get_group_team_count(g)` (`exe::eurochampqual_get_group_team_count`, thiscall, ret 4, euro_champ_qual.cpp): the number of teams in
@@ -118,24 +118,25 @@ pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, clu
 /// (League::init_table_row 0x687430: push 0; push 0; push clube; push o dword do byte i com lixo em cima (só o byte é lido);
 /// mov ecx -> thiscall, ret 0x10); a notícia do grupo (0x684230, thiscall). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 {
+    let this = League(this);
     let n = exe::eurochampqual_get_group_team_count(this, 0xffff_ffff);
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
+    this.set_club_count(n);
     let t = exe::crt_malloc((n as i32 * 0x3b) as u32);
-    core::ptr::write_unaligned((this + league::TABLE) as *mut u32, t as u32);
+    this.set_table((t as u32) as usize);
     if t == 0 {
         show_error_at(0x9c4674, 0x2d2);
         return 0;
     }
-    let n = read_i16(this + league::CLUB_COUNT);
-    core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut i16, n.wrapping_sub(1).wrapping_mul(read_i16(this + league::LEGS))); // cqs8: the group 1 rounds
+    let n = this.club_count();
+    this.set_games_per_club(n.wrapping_sub(1).wrapping_mul(this.legs())); // cqs8: the group 1 rounds
     crate::comparison::branch("cqs_8 euro group 1");
     let mut i: i8 = 0;
     if n > 0 {
         loop {
-            let c = read_usize(read_usize(this + 0xf7) + i as isize as usize * 4);
+            let c = read_usize(read_usize(this.addr() + 0xf7) + i as isize as usize * 4);
             exe::league_init_table_row(this, i as u8 as u32, c, 0, 0);
             i = i.wrapping_add(1);
-            if (i as i16) >= read_i16(this + league::CLUB_COUNT) {
+            if (i as i16) >= this.club_count() {
                 break;
             }
         }

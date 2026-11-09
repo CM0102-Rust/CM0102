@@ -153,16 +153,16 @@ pub(crate) unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: 
         return 0;
     }
     let table = read_u32(G_COMP_OBJECT_TABLE) as usize;
-    let comp = read_u32(table + read_u32(div) as usize * 4) as usize;
-    if comp == 0 {
+    let comp = Competition(read_u32(table + read_u32(div) as usize * 4) as usize);
+    if comp.is_null() {
         return 0;
     }
-    if *((comp + competition::SHORT_GENDER_NAME) as *const u8) & 2 == 0 {
+    if comp.short_gender_name() & 2 == 0 {
         return 0;
     }
     if other != 0 {
-        let comp2 = read_u32(table + read_u32(other) as usize * 4) as usize;
-        if *((comp2 + competition::SHORT_GENDER_NAME) as *const u8) & 2 == 0 {
+        let comp2 = Competition(read_u32(table + read_u32(other) as usize * 4) as usize);
+        if comp2.short_gender_name() & 2 == 0 {
             return 0;
         }
     }
@@ -522,10 +522,10 @@ pub(crate) static mut SQUAD_NUMBERS_PLAN: Option<Vec<usize>> = None;
 pub(crate) unsafe fn for_each_numbered_league(mut cada: impl FnMut(usize)) {
     let mut i = 0i32;
     while i < read_u32(G_COMP_OBJECT_COUNT) as i32 {
-        let c = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * i as usize) as usize;
-        if c != 0 && exe::comp_util_is_league_division(read_u32(read_u32(c + 4) as usize) as i32) != 0 && *((c + league::SQUAD_FLAGS) as *const u8) & 2 != 0 {
+        let c = League(read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * i as usize) as usize);
+        if !c.is_null() && exe::comp_util_is_league_division(read_u32(read_u32(c.addr() + 4) as usize) as i32) != 0 && c.squad_flags() & 2 != 0 {
             crate::comparison::branch("cql_3 numbers the league");
-            cada(c); // cql3: numera a liga
+            cada(c.addr()); // cql3: numera a liga
         }
         i += 1;
     }

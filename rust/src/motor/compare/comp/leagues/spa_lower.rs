@@ -13,11 +13,12 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_lower_create_schedule(this: u
 ///
 /// [pt] Aloca e sorteia (pela tabela): só a original, conferindo a devolução, a vtable, o ano, a disciplina e o registro.
 pub(crate) unsafe extern "thiscall" fn compare_construct_spa_lower(this: usize, year: u32) -> usize {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_SPA_LOWER);
-    let r = o(this, year);
-    let ok = r == this && read_usize(this) == 0x96fb1c && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
-        && *((this + league::DISCIPLINE_RULE) as *const u8) == 0xff && read_usize(this + 4) == comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION);
-    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, read_usize(this), read_usize(this + 4)));
+    let r = o(this.addr(), year);
+    let ok = r == this.addr() && read_usize(this.addr()) == 0x96fb1c && (this.year() as u16) == year as u16
+        && this.discipline_rule() == 0xff && read_usize(this.addr() + 4) == comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION);
+    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this.addr(), r, read_usize(this.addr()), read_usize(this.addr() + 4)));
     r
 }
 
@@ -34,6 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_spa_lower(this: usize, 
 /// +0x60 de todo time espanhol que não entra nela, inclusive os da Primera que a primeira acabou de pôr na tabela
 /// (comportamento da original, que a cópia repete; achado pela comparação de 8 ligas, 05/11/2026).
 pub(crate) unsafe extern "thiscall" fn compare_spa_lower_create_table(this: usize) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_LOWER_CREATE_TABLE);
     let mut plan: Vec<usize> = Vec::new();
     let mut k: u8 = 0;
@@ -44,15 +46,15 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_lower_create_table(this: usiz
             }
         });
     }
-    let r = o(this);
-    let t = read_usize(this + league::TABLE);
-    let mut ok = read_i16(this + league::CLUB_COUNT) == 0x16 && t != 0;
+    let r = o(this.addr());
+    let t = this.table();
+    let mut ok = this.club_count() == 0x16 && t != 0;
     if ok {
         for (i, &c) in plan.iter().enumerate() {
             ok = ok && read_usize(t + i * 0x3b) == c;
         }
     }
-    SCOREBOARD.record(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plan,
+    SCOREBOARD.record(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this.addr(), r, plan,
         (0..plan.len()).map(|i| if t != 0 { read_usize(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
     r
 }
@@ -60,5 +62,5 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_lower_create_table(this: usiz
 /// Comparer for `spa_lower_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_spa_lower_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_LOWER_SET_UP_RULES);
-    spa_first_compare_league_rules("spa_lower_set_up_rules", this, lower_division_rules(), || o(this), || spa_lower_set_up_rules(this))
+    spa_first_compare_league_rules("spa_lower_set_up_rules", League(this), lower_division_rules(), || o(this), || spa_lower_set_up_rules(this))
 }

@@ -6,13 +6,13 @@ use super::*;
 /// Comparer for `ita_ser_c1a_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c1a_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_ADVANCE_STAGE);
-    ita_ser_c1a_compare_advance_stage("ita_ser_c1a_advance_stage", this, || o(this), || ita_ser_c1a_advance_stage(this))
+    ita_ser_c1a_compare_advance_stage("ita_ser_c1a_advance_stage", League(this), || o(this), || ita_ser_c1a_advance_stage(this))
 }
 
 /// Comparer for `create_playoff_stages`.
 pub(crate) unsafe extern "thiscall" fn compare_create_playoff_stages(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_PLAYOFF_STAGES);
-    compare_end_of_league_stages("create_playoff_stages", this, || o(this))
+    compare_end_of_league_stages("create_playoff_stages", League(this), || o(this))
 }
 
 /// Comparer for `ita_ser_c1a_create_schedule`.
@@ -30,23 +30,23 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c1a_set_club_progress(thi
 /// Comparer for `ita_ser_c1a_set_up_fixed_fixtures`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_SET_UP_FIXED_FIXTURES);
-    fra_first_compare_fixed_fixtures("ita_ser_c1a_set_up_fixed_fixtures", this, || o(this))
+    fra_first_compare_fixed_fixtures("ita_ser_c1a_set_up_fixed_fixtures", League(this), || o(this))
 }
 
 /// Comparer for `construct_ita_ser_c1a`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_ita_ser_c1a(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_C1A);
-    compare_italian_constructor("construct_ita_ser_c1a", this, year, record, &SERIE_C1A_DIVISION, || o(this, year, record))
+    compare_italian_constructor("construct_ita_ser_c1a", League(this), year, record, &SERIE_C1A_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `ita_ser_c1a_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c1a_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_C1A_SET_UP_RULES);
-    ita_ser_a_compare_league_rules("ita_ser_c1a_set_up_rules", this, serie_c1a_rules(this), || o(this), || ita_ser_c1a_set_up_rules(this))
+    ita_ser_a_compare_league_rules("ita_ser_c1a_set_up_rules", League(this), serie_c1a_rules(this), || o(this), || ita_ser_c1a_set_up_rules(this))
 }
 
 /// Comparer for `ita_ser_c1a_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c1a_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_C1A_CREATE_TABLE);
-    ita_ser_a_compare_league_table("ita_ser_c1a_create_table", this, 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, None, || o(this))
+    ita_ser_a_compare_league_table("ita_ser_c1a_create_table", League(this), 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, None, || o(this))
 }

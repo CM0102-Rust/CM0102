@@ -207,17 +207,18 @@ pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32,
 /// tabela dela ([+0xb1], 59 bytes por clube), que a rotina reordena. As cópias locais nascem e morrem
 /// dentro dela. Sem liga ou sem o parâmetro 0xe (caixa "Error"): só a original.
 pub(crate) unsafe extern "C" fn compare_match_screens_draw_live_league_table(league: usize, top: i32, base: i32) {
+    let league = League(league);
     let o = original_fn::<unsafe extern "C" fn(usize, i32, i32)>(IDX_MATCH_SCREENS_DRAW_LIVE_LEAGUE_TABLE);
-    if league == 0 || get_screen_param(0xe) == 0 {
-        return o(league, top, base);
+    if league.is_null() || get_screen_param(0xe) == 0 {
+        return o(league.addr(), top, base);
     }
-    let mut extra = vec![(league, 0xee)];
-    let table = core::ptr::read_unaligned((league + league::TABLE) as *const usize);
-    let n = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16);
+    let mut extra = vec![(league.addr(), 0xee)];
+    let table = league.table();
+    let n = league.club_count();
     if table != 0 && n > 0 {
         extra.push((table, n as usize * 59));
     }
-    compare_pela_lista_com("match_screens_draw_live_league_table", &extra, || o(league, top, base), || match_screens_draw_live_league_table(league, top, base));
+    compare_pela_lista_com("match_screens_draw_live_league_table", &extra, || o(league.addr(), top, base), || match_screens_draw_live_league_table(league.addr(), top, base));
 }
 
 /// Comparer for `match_screens_draw_team_selection`.

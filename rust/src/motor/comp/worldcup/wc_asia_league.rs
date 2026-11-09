@@ -9,8 +9,8 @@ use super::*;
 /// 3), um classificado por grupo, seleções, começo em 25 do mês 2 num dia da semana 5, +0xb8 = 1.
 pub(crate) unsafe extern "thiscall" fn wc_asia_league_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqj_12 asia rules");
-    wc_europe_league_write_rule_fields(this, &ASIA_QUALIFIER_RULE_FIELDS);
+    wc_europe_league_write_rule_fields(League(this), &ASIA_QUALIFIER_RULE_FIELDS);
     let day = 0x19; // cqj12: the start day of the Asian qualifiers
-    let word = comp_date_word(this, day, 2, 5);
-    finish_rules_setup(this, word, 1)
+    let word = comp_date_word(League(this), day, 2, 5);
+    finish_rules_setup(League(this), word, 1)
 }

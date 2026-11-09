@@ -432,8 +432,8 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
         return;
     }
     if flag == 0 {
-        let comp = read_usize(game + fixture::COMPETITION);
-        let nc = if comp != 0 { read_usize(comp + competition::NATION) } else { 0 };
+        let comp = Competition(read_usize(game + fixture::COMPETITION));
+        let nc = if !comp.is_null() { comp.nation() } else { 0 };
         let e_da = |g: usize| nc != 0 && read_i32(nc) == read_i32(g);
         if same(day_of_year(0x19, 0xb, year())) && !e_da(KEY_NATION_JAPAN) {
             crate::comparison::branch("cqc_3 Christmas");
@@ -2432,9 +2432,10 @@ pub(crate) unsafe fn call_original_with_year(o: usize, this: usize, year: u32) -
 /// em [0x9cf338], [0x9cf2dc], [0x9cf244], [0x9cf300]) só têm 1 no dia 6; as outras, 1 nos dias 5 e 6;
 /// senão 2. Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn get_time_slice(_this: usize, comp: usize, day: u32) -> u8 {
+    let comp = Competition(comp);
     let day = day as i16;
-    if comp != 0 {
-        let nation = core::ptr::read_unaligned((comp + competition::NATION) as *const usize);
+    if !comp.is_null() {
+        let nation = comp.nation();
         if nation != 0 {
             let id = *(nation as *const u32);
             if [KEY_NATION_HOLLAND, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_BELGIUM, KEY_NATION_FRANCE].iter().any(|&g| id == *(g as *const u32)) {

@@ -12,17 +12,18 @@ use super::*;
 /// desempates (1, 2, 3), vagas diretas 4 − +0xef − +0xee (as isentas saem das quatro), uma de repescagem, seleções, 7 no
 /// banco e 3 substituições, +0xa7 = −1, +0xab = +0xdb = 0, começo em 25 do mês 0 num dia da semana 5.
 pub(crate) unsafe extern "thiscall" fn wc_south_american_league_set_up_rules(this: usize) -> u32 {
+    let this = League(this);
     let list = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
     if list != 0 {
         let o = core::ptr::read_unaligned((list + core::ptr::read_unaligned(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION as *const usize).wrapping_mul(4)) as *const usize);
         if o != 0 {
-            *((this + 0xef) as *mut u8) = *((o + 0xee) as *const u8);
+            *((this.addr() + 0xef) as *mut u8) = *((o + 0xee) as *const u8);
         }
     }
     crate::comparison::branch("cqj_12 south america rules");
     wc_europe_league_write_rule_fields(this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS);
-    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: the win in the South American qualifiers
-    *((this + league::PROMOTED_COUNT) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: the direct places of South America
+    this.set_win_points(3); // cqj12: the win in the South American qualifiers
+    this.set_promoted_count(4u8.wrapping_sub(*((this.addr() + 0xef) as *const u8)).wrapping_sub(*((this.addr() + 0xee) as *const u8))); // cqj12: the direct places of South America
     let day = 0x19; // cqj12: the start day of the South American qualifier
     let word = comp_date_word(this, day, 0, 5);
     finish_rules_setup(this, word, 0)

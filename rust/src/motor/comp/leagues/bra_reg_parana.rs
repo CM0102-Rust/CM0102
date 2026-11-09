@@ -10,12 +10,13 @@ use super::*;
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x4382c0, call direto com o ecx da liga).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize) {
-    let stage = read_usize(this + league::CURRENT_STAGE) as i32;
-    if stage >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
+    let this = League(this);
+    let stage = this.current_stage() as i32;
+    if stage >= (this.stage_count() as i32).wrapping_sub(1) {
         return show_error_at(0x98af98, 0x202);
     }
     let stage = stage + 1;
-    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
+    this.set_current_stage((stage) as usize);
     if stage == 2 {
         exe::braregparana_create_final_stage(this); // cqo8: the final after the second stage
     }
@@ -56,6 +57,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize)
 ///   Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela e a lista liberadas (free 0x9452ca, nessa
 ///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: usize) {
+    let this = League(this);
     let seeds: [u8; 4] = [0, 1, 0, 0];
     let list = exe::crt_malloc(8);
     if list == 0 {
@@ -67,14 +69,14 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
     core::ptr::write_unaligned((list + 4) as *mut usize, b);
     if a == b {
         crate::comparison::branch("cqo_8 same champion");
-        core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 1);
-        core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 2);
+        this.set_current_stage((1) as usize);
+        this.set_stage_count((2) as usize);
         for k in 0..2 {
-            *((read_usize(read_usize(read_usize(this + league::STAGES) + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo8: champion of both halves
+            *((read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo8: champion of both halves
         }
         let mut i: i16 = 0;
-        while i < read_i16(this + league::CLUB_COUNT) {
-            let row = read_usize(this + league::TABLE) + i as usize * 0x3b;
+        while i < this.club_count() {
+            let row = this.table() + i as usize * 0x3b;
             if read_usize(row) == read_usize(list) {
                 *((row + 0x37) as *mut u8) = 5;
             }
@@ -83,9 +85,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         // simplification: the 8-byte list is not freed, as in the original.
         return;
     }
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = table(this, 2, &mut rodadas, &mut extra, 0);
+    let t = table(this.addr(), 2, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
     // virtual are words on the stack; the year goes in dx); the constructor only reads the words.
@@ -93,12 +95,12 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, seeds.as_ptr())
+        construct(p, this.addr(), 2, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, seeds.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + league::STAGES) + 8) as *mut usize, stage);
-    let stage = read_usize(read_usize(this + league::STAGES) + 8);
+    core::ptr::write_unaligned((this.stages() + 8) as *mut usize, stage);
+    let stage = read_usize(this.stages() + 8);
     if stage == 0 {
         return show_error_at(0x98af98, 0x250);
     }
@@ -106,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
     exe::cup_set_up_round(stage, 0);
     exe::crt_free(t);
     exe::crt_free(list);
-    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 2);
+    this.set_current_stage((2) as usize);
 }
 
 /// The end of the Paraná season: with a final, the honours come from the final; without one, from the league, and the
@@ -137,20 +139,21 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
 ///   thiscall, ret 4) e na notícia do prêmio (0x48e3e0 Comp::send_prize_money_news: thiscall(this, clube, valor em 64
 ///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this: usize) -> u32 {
-    if read_usize(this + league::CURRENT_STAGE) == 2 {
-        let f = read_usize(read_usize(this + league::STAGES) + 8);
+    let this = League(this);
+    if this.current_stage() == 2 {
+        let f = read_usize(this.stages() + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         history(f);
         crate::comparison::branch("cqo_8 final history");
         return exe::bra_nat_first_fill_champions_cup_entrants();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
-    history(this);
+    history(this.addr());
     let news: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     for (linha, valor, posicao) in [(0usize, 175000i32, 1i32), (0x3b, 100000, 2)] {
-        let c = read_usize(read_usize(this + league::TABLE) + linha);
+        let c = read_usize(this.table() + linha);
         exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
-        news(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
+        news(this.addr(), read_usize(this.table() + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparison::branch("cqo_8 prizes");
     exe::bra_nat_first_fill_champions_cup_entrants()
@@ -225,7 +228,7 @@ pub(crate) unsafe fn carioca_rules(o: usize) {
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) -> u32 {
     parana_rules(this);
     crate::comparison::branch("cqi_9 paranaense rules");
-    create_main_schedule(this);
+    create_main_schedule(League(this));
     1
 }
 
@@ -236,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) 
 ///
 /// [pt] { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_northeast_construct_state_league(this, year, record, &PARANA_CHAMPIONSHIP, 7, true, "cqt_3 paranaense novo") // cqt3: the discipline and expected positions of the Paranaense
+    bra_reg_northeast_construct_state_league(League(this), year, record, &PARANA_CHAMPIONSHIP, 7, true, "cqt_3 paranaense novo") // cqt3: the discipline and expected positions of the Paranaense
 }
 
 /// the Parana league has 12 clubs: those with it as their reserve division in the database (the field that holds the
@@ -246,7 +249,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, yea
 /// [pt] { 0x437ec0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_table()`: o Paranaense tem 12 clubes (divisão reserva +0x60 = [0x9cf9d0]).
 /// Fonte 0x98af98, linha 0x169.
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_table(this: usize) -> u32 {
-    fill_state_league_table(this, 0xc, 0x98af98, 0x169, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, 0, "cqm_7 paranaense cheio")
+    fill_state_league_table(League(this), 0xc, 0x98af98, 0x169, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, 0, "cqm_7 paranaense cheio")
 }
 
 /// One half of the Parana state league: when the first game of a half is processed, it builds that half's round-robin
@@ -258,7 +261,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_table(this: usize) 
 /// [pt] { 0x438760 } (thiscall, ret 4, bra_reg_parana.cpp): `BraRegParana::create_half_stage(k)`, um turno do Paranaense (a
 /// caixa da linha 0x3d5).
 pub(crate) unsafe extern "thiscall" fn create_half_stage(this: usize, k: u32) {
-    create_half_season_stage(this, k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: the points per win in the Paranaense
+    create_half_season_stage(League(this), k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: the points per win in the Paranaense
 }
 
 /// The Parana state league turnover: archives the season in the statistics, clears the table, the schedule and the
@@ -269,6 +272,6 @@ pub(crate) unsafe extern "thiscall" fn create_half_stage(this: usize, k: u32) {
 ///
 /// [pt] { 0x438060 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::start_new_season()`, a virada do Paranaense (a tabela: 0x437ec0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_start_new_season(this: usize) -> u32 {
-    start_new_season_two_halves(this, 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: the next year of the Paranaense
+    start_new_season_two_halves(League(this), 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: the next year of the Paranaense
 }
 

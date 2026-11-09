@@ -9,7 +9,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn jap_j2_set_up_rules(this: usize) -> u32 {
     j2_rules(this);
     crate::comparison::branch("cqj_7 j2 rules");
-    create_main_schedule(this);
+    create_main_schedule(League(this));
     1
 }
 
@@ -20,8 +20,8 @@ pub(crate) unsafe extern "thiscall" fn jap_j2_set_up_rules(this: usize) -> u32 {
 /// [pt] { 0x665030 } (thiscall, ret 0, jap_j2.cpp): `JapJ2::create_table()`: a J2 tem 12 clubes (+0x57 = [0x9cf768]; os que
 /// sobram perdem a divisão), sem fundo de prêmios nem TV. Fonte 0x9eaedc, linha 0x13a. Devolve 1 se encheu.
 pub(crate) unsafe extern "thiscall" fn jap_j2_create_table(this: usize) -> u32 {
-    if alloc_league_table(this, 0xc, 0x9eaedc, 0x13a) == 0 {
+    if alloc_league_table(League(this), 0xc, 0x9eaedc, 0x13a) == 0 {
         return 0;
     }
-    fill_japanese_table(this, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, 0, "cqm_9 j2 cheia")
+    fill_japanese_table(League(this), KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, 0, "cqm_9 j2 cheia")
 }

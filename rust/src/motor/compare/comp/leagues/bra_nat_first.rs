@@ -6,19 +6,19 @@ use super::*;
 /// Comparer for `bra_nat_first_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_ADVANCE_STAGE);
-    compare_state_league_advance_stage("bra_nat_first_advance_stage", this, || o(this))
+    compare_state_league_advance_stage("bra_nat_first_advance_stage", League(this), || o(this))
 }
 
 /// Comparer for `bra_nat_first_create_play_off_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_create_play_off_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_CREATE_PLAY_OFF_STAGE);
-    compare_play_off_stage("bra_nat_first_create_play_off_stage", this, &[0, 3, 1, 2], || o(this))
+    compare_play_off_stage("bra_nat_first_create_play_off_stage", League(this), &[0, 3, 1, 2], || o(this))
 }
 
 /// Comparer for `bra_nat_first_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_START_NEW_SEASON);
-    compare_state_league_new_season("bra_nat_first_start_new_season", this, || o(this))
+    compare_state_league_new_season("bra_nat_first_start_new_season", League(this), || o(this))
 }
 
 /// Comparer for `bra_nat_first_process_promotion_relegation_chain`.
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_process_promotion_r
 /// Comparer for `bra_nat_first_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_CREATE_TABLE);
-    compare_division_table("bra_nat_first_create_table", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, || o(this))
+    compare_division_table("bra_nat_first_create_table", League(this), 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, || o(this))
 }
 
 /// Comparer for `bra_nat_first_set_up_rules`.

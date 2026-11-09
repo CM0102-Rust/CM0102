@@ -8,5 +8,5 @@ use super::*;
 /// das Séries A e B): só o histórico do primeiro estágio, em salto final; devolve o eax dele.
 pub(crate) unsafe extern "thiscall" fn arg_second_record_season_honours(this: usize) -> u32 {
     crate::comparison::branch("cqj_8 first stage history");
-    record_first_stage_honours(this)
+    record_first_stage_honours(League(this))
 }

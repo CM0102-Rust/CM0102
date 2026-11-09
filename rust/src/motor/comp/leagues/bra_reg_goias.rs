@@ -44,52 +44,52 @@ pub(crate) struct BraRegGoiasStateChampionship {
 /// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: usize, ano: u32, registro: usize, e: &BraRegGoiasStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: League, ano: u32, registro: usize, e: &BraRegGoiasStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
-    core::ptr::write_unaligned((this + 4) as *mut usize, registro);
-    core::ptr::write_unaligned(this as *mut usize, e.vtabela);
-    core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
-    *((this + league::DISCIPLINE_RULE) as *mut u8) = disciplina;
+    core::ptr::write_unaligned((this.addr() + 4) as *mut usize, registro);
+    core::ptr::write_unaligned(this.addr() as *mut usize, e.vtabela);
+    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut u16, ano as u16);
+    this.set_discipline_rule(disciplina);
     if exe::league_load_from_temp_file(this, 1) != 0 {
-        return this;
+        return this.addr();
     }
     crate::comparison::branch(ramo);
-    *((this + league::IMPORTANCE) as *mut u8) = 0xf;
-    *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
-    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
-    core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, e.stages);
+    this.set_importance(0xf);
+    this.set_stage_index(0xff);
+    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
+    core::ptr::write_unaligned((this.addr() + league::STAGE_COUNT) as *mut u32, e.stages);
     let v = exe::crt_malloc(e.stages * 4);
-    core::ptr::write_unaligned((this + league::STAGES) as *mut usize, v);
-    if regras(this) == 0 {
+    core::ptr::write_unaligned((this.addr() + league::STAGES) as *mut usize, v);
+    if regras(this.addr()) == 0 {
         show_error_at(e.file, e.rows[0]);
-        return this;
+        return this.addr();
     }
-    if tabela(this) == 0 {
+    if tabela(this.addr()) == 0 {
         show_error_at(e.file, e.rows[1]);
-        return this;
+        return this.addr();
     }
     if exe::league_create_fixtures(this) == 0 {
         show_error_at(e.file, e.rows[2]);
-        return this;
+        return this.addr();
     }
     if exe::league_sort_table(this, (0) as u32 as usize) == 0 {
         show_error_at(e.file, e.rows[3]);
-        return this;
+        return this.addr();
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
-    core::ptr::write_unaligned((this + 8) as *mut usize, s);
+    core::ptr::write_unaligned((this.addr() + 8) as *mut usize, s);
     if s == 0 {
         show_error_at(e.file, e.rows[4]);
-        return this;
+        return this.addr();
     }
     if previstas_sim {
-        previstas(this);
+        previstas(this.addr());
     }
-    this
+    this.addr()
 }
 
 /// Comparer for state league constructors: runs only the original and checks return, vtable, year, record, discipline
@@ -98,14 +98,14 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: usize, ano: u32,
 /// [pt] O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
 /// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
 /// fases e a importância +0x51 = 0xf.
-pub(crate) unsafe fn bra_reg_goias_compare_state_league_ctor(name: &str, this: usize, year: u32, record: usize, e: &BraRegGoiasStateChampionship, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn bra_reg_goias_compare_state_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraRegGoiasStateChampionship, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
-        && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 7;
-    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_usize(this + 8) != 0 {
-        ok = ok && read_usize(this + league::STAGE_COUNT) == e.stages as usize && read_usize(this + league::STAGES) != 0 && *((this + league::IMPORTANCE) as *const u8) == 0xf;
+    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtabela && (this.year() as u16) == year as u16
+        && read_usize(this.addr() + 4) == record && this.discipline_rule() == 7;
+    if this.stage_index() == 0xff && read_usize(this.addr() + 8) != 0 {
+        ok = ok && this.stage_count() == e.stages as usize && this.stages() != 0 && this.importance() == 0xf;
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + league::STAGE_COUNT), read_usize(this + league::STAGES), read_usize(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), read_usize(this.addr() + 8)));
     r
 }
 
@@ -146,7 +146,7 @@ pub(crate) const NORTH_CHAMPIONSHIP: BraRegGoiasStateChampionship = BraRegGoiasS
 ///
 /// [pt] { 0x432b50 } (thiscall, ret 8, bra_reg_goias.cpp): `BraRegGoias::BraRegGoias(ano, registro)`: o Goiano (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_goias(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_goias_construct_state_league(this, year, record, &GOIANO_STATE_CHAMPIONSHIP, 7, true, "cqt_2 goiano novo") // cqt2: the discipline and expected positions of the Goiano
+    bra_reg_goias_construct_state_league(League(this), year, record, &GOIANO_STATE_CHAMPIONSHIP, 7, true, "cqt_2 goiano novo") // cqt2: the discipline and expected positions of the Goiano
 }
 
 /// The Goias turnover: archives the season in the statistics, clears the previous table and stages, moves to the next
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_goias(this: usize, year
 /// [pt] { 0x4336f0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::start_new_season()`, a virada da temporada do Goiano (a tabela:
 /// 0x433540; caixas nas linhas 0x1c3, 0x1ca, 0x1d0 e 0x1d7).
 pub(crate) unsafe extern "thiscall" fn bra_reg_goias_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x433540, 0x98ae90, [0x1c3, 0x1ca, 0x1d0, 0x1d7], 1, "cqp_8 virada do goiano") // cqp8: the next year of the Goiano
+    state_league_new_season(League(this), 0x433540, 0x98ae90, [0x1c3, 0x1ca, 0x1d0, 0x1d7], 1, "cqp_8 virada do goiano") // cqp8: the next year of the Goiano
 }
 
 /// The Goias next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 8 go to the
@@ -167,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_start_new_season(this: usiz
 /// [pt] { 0x4338a0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::advance_stage()`, a fase seguinte do Goiano: no fim dos pontos corridos,
 /// o mata-mata de 8 (0x433930); a caixa da linha 0x1f1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_goias_advance_stage(this: usize) {
-    state_league_advance_stage(this, 0x98ae90, 0x1f1, 0x433930);
+    state_league_advance_stage(League(this), 0x98ae90, 0x1f1, 0x433930);
 }
 
 /// the Goias league has 14 clubs: those with it as their reserve division in the database (the field that holds the
@@ -177,7 +177,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_advance_stage(this: usize) 
 /// [pt] { 0x433540 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_table()`: o Goiano tem 14 clubes (divisão reserva +0x60 = [0x9cf9b4]).
 /// Fonte 0x98ae90, linha 0x160.
 pub(crate) unsafe extern "thiscall" fn bra_reg_goias_create_table(this: usize) -> u32 {
-    fill_state_league_table(this, 0xe, 0x98ae90, 0x160, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, 0, "cql_9 goiano cheio")
+    fill_state_league_table(League(this), 0xe, 0x98ae90, 0x160, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, 0, "cql_9 goiano cheio")
 }
 
 /// Writes the Goiano league rules (what `bra_reg_goias_set_up_rules` writes before the calendar): points, tiebreaks, 8 qualifiers,
@@ -269,7 +269,7 @@ pub(crate) unsafe fn j2_rules(o: usize) {
 pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_up_rules(this: usize) -> u32 {
     goiano_rules(this);
     crate::comparison::branch("cqj_7 goiano rules");
-    create_main_schedule(this);
+    create_main_schedule(League(this));
     1
 }
 
@@ -280,6 +280,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_up_rules(this: usize) -
 /// [pt] { 0x433930 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As quartas de final: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º (linhas 0, 7, 2, 5, 6, 1, 4, 3). Fonte 0x98ae90, linhas 0x214 (sem lista) e 0x22c (sem fase).
 pub(crate) unsafe extern "thiscall" fn bra_reg_goias_create_knockout_stage(this: usize) {
-    create_knockout_from_table(this, &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae90, 0x214, 0x22c, "cqn_9 goiano"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Goiano
+    create_knockout_from_table(League(this), &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae90, 0x214, 0x22c, "cqn_9 goiano"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Goiano
 }
 

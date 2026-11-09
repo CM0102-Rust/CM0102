@@ -507,7 +507,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 }
             }
         }
-        core::ptr::write_unaligned((club.addr() + club::REPUTATION) as *mut i16, w(ts + 0x18e));
+        club.set_reputation(w(ts + 0x18e));
     }
 }
 

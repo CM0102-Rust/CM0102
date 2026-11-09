@@ -1470,7 +1470,7 @@ pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> 
             0
         }
     };
-    let c1 = core::ptr::read_unaligned((p.addr() + staff::NATION) as *const usize);
+    let c1 = p.nation();
     if c1 == 0 {
         return 0;
     }
@@ -1485,7 +1485,7 @@ pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> 
     if *((c1 + nation::THIRD_LANGUAGE) as *const i8) == code {
         return 300;
     }
-    let c2 = core::ptr::read_unaligned((p.addr() + staff::SECOND_NATION) as *const usize);
+    let c2 = p.second_nation();
     if c2 == 0 {
         return 0;
     }

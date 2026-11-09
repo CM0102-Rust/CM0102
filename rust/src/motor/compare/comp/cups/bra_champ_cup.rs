@@ -13,6 +13,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_champ_cup_create_schedule(thi
 /// Comparer for `bra_champ_cup_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_champ_cup_set_up_rules(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CHAMP_CUP_SET_UP_RULES)(this);
-    check_cup_league_rules("bra_champ_cup_set_up_rules", this, &CHAMPIONS_CUP_RULES, r);
+    check_cup_league_rules("bra_champ_cup_set_up_rules", League(this), &CHAMPIONS_CUP_RULES, r);
     r
 }

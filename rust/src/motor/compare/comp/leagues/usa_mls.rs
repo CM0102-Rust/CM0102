@@ -5,12 +5,13 @@ use super::*;
 
 /// Comparer for `usa_mls_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_advance_stage(this: usize) {
-    let before = read_usize(this + league::CURRENT_STAGE) as i32;
-    let last = before >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_ADVANCE_STAGE)(this);
-    let after = read_usize(this + league::CURRENT_STAGE) as i32;
+    let this = League(this);
+    let before = this.current_stage() as i32;
+    let last = before >= (this.stage_count() as i32).wrapping_sub(1);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_ADVANCE_STAGE)(this.addr());
+    let after = this.current_stage() as i32;
     let expected = if last { before } else if before == 1 || before == 2 { before + 1 } else { before };
-    SCOREBOARD.record(after == expected, || format!("usa_mls_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    SCOREBOARD.record(after == expected, || format!("usa_mls_advance_stage({:#x}) antes={} depois={}", this.addr(), before, after));
 }
 
 /// Comparer for `usa_mls_create_playoff_stage`.
@@ -23,20 +24,21 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_advance_stage(this: usize
 /// antes pela cópia da escolha (os mesmos registros e o mesmo qsort): a fase da terceira vaga existe, com +0x3e = 8, +4
 /// = o +4 da liga e os oito na lista dela (+0xa7, 6 bytes; como conjunto).
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this: usize) {
-    let (a, b) = (read_usize(read_usize(this + league::STAGES)), read_usize(read_usize(this + league::STAGES) + 4));
+    let this = League(this);
+    let (a, b) = (read_usize(this.stages()), read_usize(this.stages() + 4));
     let mut plan = [0usize; 8];
     let mut r = [0u8; 54];
     put_club_points_record(&mut r, 0, table_row_club_points(this, 0));
-    put_club_points_record(&mut r, 1, table_row_club_points(a, 0));
-    put_club_points_record(&mut r, 2, table_row_club_points(b, 0));
+    put_club_points_record(&mut r, 1, table_row_club_points(League(a), 0));
+    put_club_points_record(&mut r, 2, table_row_club_points(League(b), 0));
     exe::crt_qsort((r.as_mut_ptr()) as usize, 3, 6, 0x90a130);
     for k in 0..3 {
         plan[k] = club_of_record(&r, k);
     }
     let mut k = 0usize;
     for j in 1..4 {
-        for t in [this, a, b] {
-            put_club_points_record(&mut r, k, table_row_club_points(t, j));
+        for t in [this.addr(), a, b] {
+            put_club_points_record(&mut r, k, table_row_club_points(League(t), j));
             k += 1;
         }
     }
@@ -44,9 +46,9 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this
     for k in 0..5 {
         plan[3 + k] = club_of_record(&r, k);
     }
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_PLAYOFF_STAGE)(this);
-    let stage = read_usize(read_usize(this + league::STAGES) + 8);
-    let same = stage != 0 && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == read_usize(this + 4) && {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_PLAYOFF_STAGE)(this.addr());
+    let stage = read_usize(this.stages() + 8);
+    let same = stage != 0 && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == read_usize(this.addr() + 4) && {
         let mut in_it = [0usize; 8];
         for (i, c) in in_it.iter_mut().enumerate() {
             *c = read_usize(read_usize(stage + cup::TEAM_TABLE) + 6 * i);
@@ -56,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this
         in_it.sort_unstable();
         p == in_it
     };
-    SCOREBOARD.record(same, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this, stage, plan));
+    SCOREBOARD.record(same, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this.addr(), stage, plan));
 }
 
 /// Comparer for `usa_mls_create_final_stage` (comparison mode: see the header of motor.rs): the comparer of the final;
@@ -70,7 +72,8 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this
 /// os dois primeiros vencedores do play-off. Depois, a fase da quarta vaga existe, com +0x3e = 2, +4 = o +4 da liga e
 /// os dois na lista dela (como conjunto).
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_final_stage(this: usize) {
-    let po = read_usize(read_usize(this + league::STAGES) + 8);
+    let this = League(this);
+    let po = read_usize(this.stages() + 8);
     let mut v = [0usize; 2];
     let mut n = 0usize;
     let mut i = 0i32;
@@ -82,15 +85,15 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_final_stage(this: 
         }
         i += 1;
     }
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_FINAL_STAGE)(this);
-    let stage = read_usize(read_usize(this + league::STAGES) + 0xc);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_FINAL_STAGE)(this.addr());
+    let stage = read_usize(this.stages() + 0xc);
     // simplification: with fewer than two winners the original reads uninitialized slots from the list; then only the stage is checked.
     let same = stage != 0 && n < 2 || stage != 0 && {
         let l = read_usize(stage + cup::TEAM_TABLE);
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
+        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this.addr() + 4) && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
     };
-    SCOREBOARD.record(same, || format!("usa_mls_create_final_stage({:#x}) finalistas={:x?} n={} fase={:#x}", this, v, n, stage));
+    SCOREBOARD.record(same, || format!("usa_mls_create_final_stage({:#x}) finalistas={:x?} n={} fase={:#x}", this.addr(), v, n, stage));
 }
 
 /// Comparer for `usa_mls_create_table`.
@@ -98,6 +101,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_final_stage(this: 
 /// [pt] O comparador da tabela: só a original (simplification: aloca a tabela e as listas das linhas), com o plano feito antes:
 /// os clubes da competição com o código 0x413, na ordem do banco, até 4. Depois, a devolução, +0x3e = 4 e as linhas.
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_table(this: usize) -> u32 {
+    let this = League(this);
     let mut plan = [0usize; 4];
     let mut n = 0usize;
     let base = read_usize(G_CLUB_TABLE);
@@ -110,23 +114,23 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_table(this: usize)
         }
         i = i.wrapping_add(1);
     }
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_CREATE_TABLE)(this);
-    let t = read_usize(this + league::TABLE);
-    let same = r == (n == 4) as u32 && read_i16(this + league::CLUB_COUNT) == 4 && t != 0 && (0..n).all(|k| read_usize(t + k * 0x3b) == plan[k]);
-    SCOREBOARD.record(same, || format!("usa_mls_create_table({:#x}) r={} n={} plano={:x?}", this, r, n, plan));
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_CREATE_TABLE)(this.addr());
+    let t = this.table();
+    let same = r == (n == 4) as u32 && this.club_count() == 4 && t != 0 && (0..n).all(|k| read_usize(t + k * 0x3b) == plan[k]);
+    SCOREBOARD.record(same, || format!("usa_mls_create_table({:#x}) r={} n={} plano={:x?}", this.addr(), r, n, plan));
     r
 }
 
 /// Comparer for `create_second_division_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_create_second_division_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECOND_DIVISION_STAGE);
-    compare_division_stage("create_second_division_stage", this, 0x47b, 0, || o(this))
+    compare_division_stage("create_second_division_stage", League(this), 0x47b, 0, || o(this))
 }
 
 /// Comparer for `create_third_division_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_create_third_division_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_THIRD_DIVISION_STAGE);
-    compare_division_stage("create_third_division_stage", this, 0x414, 1, || o(this))
+    compare_division_stage("create_third_division_stage", League(this), 0x414, 1, || o(this))
 }
 
 /// Comparer for `usa_mls_start_new_season`.
@@ -139,11 +143,12 @@ pub(crate) unsafe extern "thiscall" fn compare_create_third_division_stage(this:
 /// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1 e as três divisões montadas
 /// (+0x3e = 4 e as vagas 0 e 1 das fases).
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_start_new_season(this: usize) -> u32 {
-    let before = read_i16(this + league::YEAR);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_START_NEW_SEASON)(this);
-    let after = read_i16(this + league::YEAR);
-    let same = after == before.wrapping_add(1) && read_i16(this + league::CLUB_COUNT) == 4 && read_usize(read_usize(this + league::STAGES)) != 0 && read_usize(read_usize(this + league::STAGES) + 4) != 0;
-    SCOREBOARD.record(same, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this, before, after, read_i16(this + league::CLUB_COUNT)));
+    let this = League(this);
+    let before = this.year();
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_START_NEW_SEASON)(this.addr());
+    let after = this.year();
+    let same = after == before.wrapping_add(1) && this.club_count() == 4 && read_usize(this.stages()) != 0 && read_usize(this.stages() + 4) != 0;
+    SCOREBOARD.record(same, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this.addr(), before, after, this.club_count()));
     r
 }
 
@@ -157,27 +162,28 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_start_new_season(this: us
 /// tem; não pode rodar duas vezes), com o plano feito antes: os doze clubes das três tabelas, cada bloco ordenado pela
 /// mesma qsort numa cópia; depois, a posição (+0x72 do registro achado por 0x4a4850) de cada um.
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(this: usize) {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_SET_PREDICTED_POSITIONS);
-    let n = read_i16(this + league::CLUB_COUNT) as usize;
-    if read_usize(this + 8) == 0 || n != 4 {
-        return o(this);
+    let n = this.club_count() as usize;
+    if read_usize(this.addr() + 8) == 0 || n != 4 {
+        return o(this.addr());
     }
     let mut v = [0usize; 12];
     for k in 0..4 {
         v[k] = aus_nsl_table_row_club(this, k);
-        v[4 + k] = aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES)), k);
-        v[8 + k] = aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES) + 4), k);
+        v[4 + k] = aus_nsl_table_row_club(League(read_usize(this.stages())), k);
+        v[8 + k] = aus_nsl_table_row_club(League(read_usize(this.stages() + 4)), k);
     }
     for b in 0..3 {
         exe::crt_qsort((v[4 * b..].as_mut_ptr()) as usize, 4, 4, 0x4b07d0);
     }
-    o(this);
+    o(this.addr());
     const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];
     let wrong = (0..12).find(|&k| {
-        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
+        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), v[k]) } else { 0 };
         e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != LUGARES[k]
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this, wrong, v));
+    SCOREBOARD.record(wrong.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this.addr(), wrong, v));
 }
 
 /// Comparer for `usa_mls_get_club_array`.
@@ -185,14 +191,15 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
 /// [pt] O comparador da lista: só a original (aloca a lista, que fica com quem chamou), com o plano: n = 12 e os doze clubes
 /// das três tabelas na ordem.
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_get_club_array(this: usize, list: *mut usize, n: *mut i16) {
-    original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(IDX_USA_MLS_GET_CLUB_ARRAY)(this, list, n);
-    let m = read_i16(this + league::CLUB_COUNT) as usize;
+    let this = League(this);
+    original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(IDX_USA_MLS_GET_CLUB_ARRAY)(this.addr(), list, n);
+    let m = this.club_count() as usize;
     let same = *n == 0xc && *list != 0 && (0..m).all(|i| {
         read_usize(*list + 4 * i) == aus_nsl_table_row_club(this, i)
-            && read_usize(*list + 4 * (m + i)) == aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES)), i)
-            && read_usize(*list + 4 * (2 * m + i)) == aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES) + 4), i)
+            && read_usize(*list + 4 * (m + i)) == aus_nsl_table_row_club(League(read_usize(this.stages())), i)
+            && read_usize(*list + 4 * (2 * m + i)) == aus_nsl_table_row_club(League(read_usize(this.stages() + 4)), i)
     });
-    SCOREBOARD.record(same, || format!("usa_mls_get_club_array({:#x}) n={}", this, *n));
+    SCOREBOARD.record(same, || format!("usa_mls_get_club_array({:#x}) n={}", this.addr(), *n));
 }
 
 /// Comparer for `usa_mls_update_staff_records_for_status`.
@@ -211,12 +218,13 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_update_staff_records_for_
 /// [pt] Comparador: só a original (simplification: o resultado entra nas tabelas; não roda duas vezes), com o plano: a devolução
 /// 1, a marca +0x42 do jogo (1 no estágio 1; senão -1 se estava abaixo de 2) e o bloco +8 devolvido.
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_add_result(this: usize, game: usize, stats: u32) -> u32 {
+    let this = League(this);
     let mark = *((game + fixture::STAGE_INDEX) as *const i8);
-    let block = read_usize(this + 8);
-    let esperada = if read_usize(this + league::CURRENT_STAGE) == 1 { 1 } else if mark < 2 { -1 } else { mark };
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this, game, stats);
-    let (m, b) = (*((game + fixture::STAGE_INDEX) as *const i8), read_usize(this + 8));
-    SCOREBOARD.record(r == 1 && m == esperada && b == block, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, game, r, m, esperada, b, block));
+    let block = read_usize(this.addr() + 8);
+    let esperada = if this.current_stage() == 1 { 1 } else if mark < 2 { -1 } else { mark };
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this.addr(), game, stats);
+    let (m, b) = (*((game + fixture::STAGE_INDEX) as *const i8), read_usize(this.addr() + 8));
+    SCOREBOARD.record(r == 1 && m == esperada && b == block, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this.addr(), game, r, m, esperada, b, block));
     r
 }
 

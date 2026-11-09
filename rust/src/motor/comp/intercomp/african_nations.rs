@@ -31,11 +31,12 @@ use super::*;
 /// 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela
 /// repassa.
 pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usize, today: usize, full: u32) -> u32 {
+    let this = League(this);
     if full == 0 {
         return (exe::league_update_for_date(this, today, 0) as u32);
     }
-    let day = read_i16(this + league::NEXT_DRAW_DAY) as u16;
-    let year = (read_i16(this + league::NEXT_DRAW_YEAR_OFFSET) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
+    let day = this.next_draw_day() as u16;
+    let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     // simplification: in the passes before the draw and on errors the original returns only al = 0 (the rest of eax is leftover from the
@@ -43,11 +44,11 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
     if year_of_today < year || (year_of_today == year && (day_of_today as i16) < day as i16) {
         return 0;
     }
-    if year_of_today == year && day_of_today == day && read_usize(this + league::ACTIVE) == 0 {
+    if year_of_today == year && day_of_today == day && this.active() == 0 {
         crate::comparison::branch("cqs_13 african cup draw day");
         exe::africannations_draw_finalists(this);
-        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
-        predicted(this);
+        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+        predicted(this.addr());
         if exe::africannations_init_group_a_table(this) == 0 {
             show_error_at(0x9870f8, 0x3c2);
             return 0;
@@ -63,10 +64,10 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
         for g in 0..3i32 {
             exe::africannations_create_group_stage(this, g);
         }
-        exe::crt_free(read_usize(this + 0xee));
-        write_usize(this + 0xee, 0);
-        core::ptr::write_unaligned((this + 0xf2) as *mut u16, 0);
-        write_usize(this + league::ACTIVE, 1);
+        exe::crt_free(read_usize(this.addr() + 0xee));
+        write_usize(this.addr() + 0xee, 0);
+        core::ptr::write_unaligned((this.addr() + 0xf2) as *mut u16, 0);
+        this.set_active(1);
     }
     (exe::league_update_for_date(this, today, full) as u32)
 }
@@ -111,10 +112,10 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
 /// devolve 0): para cada grupo j (0..3) e pote p (0..3), um sorteado (0x90cfc0(4): push 4; add esp -> cdecl; o byte com
 /// sinal; de novo enquanto a vaga do pote já saiu) entre os 4 do pote (a lista nas vagas 4p a 4p + 3) vai para a vaga 4j
 /// + p dos grupos e sai do pote (zerado). A lista liberada (0x9452ca) e +0xee = os grupos. Devolve 1.
-pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + 0xf2) as *mut u16, 0x10);
+pub(crate) unsafe fn draw_african_nations_finalists(this: League) -> u32 {
+    core::ptr::write_unaligned((this.addr() + 0xf2) as *mut u16, 0x10);
     let list = exe::crt_malloc(0xc8);
-    write_usize(this + 0xee, list);
+    write_usize(this.addr() + 0xee, list);
     if list == 0 {
         show_error_at(0x9870f8, 0x349);
         return 0;
@@ -122,11 +123,11 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     let mut ids = [-1i32; 2];
     let (a, b) = ids.split_at_mut(1);
     // simplification: the original pushes eax with the year in the low 16 bits and leftovers in the high ones; 0x5fa730 only reads the word
-    let how_many = (exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), read_i16(this + league::YEAR) as u16 as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as i8);
+    let how_many = (exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), this.year() as u16 as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as i8);
     let mut n = 0usize;
     if how_many > 0 {
         for &id in ids.iter().take(how_many as usize) {
-            write_usize(read_usize(this + 0xee) + n * 4, exe::database_get_national_team(read_usize(G_NATION_TABLE) + id as usize * nation::SIZE));
+            write_usize(read_usize(this.addr() + 0xee) + n * 4, exe::database_get_national_team(read_usize(G_NATION_TABLE) + id as usize * nation::SIZE));
             n += 1;
         }
     }
@@ -135,10 +136,10 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     while (i as i32) < read_usize(G_NATION_COUNT) as i32 {
         let continent = read_usize(nation + nation::CONTINENT);
         if continent != 0 && read_usize(continent) == read_usize(KEY_CONTINENT_AFRICA) && n < 0x32 { // cqs13: up to 50 African ones
-            let l = read_usize(this + 0xee);
+            let l = read_usize(this.addr() + 0xee);
             let sede = (0..how_many.max(0) as usize).any(|j| read_usize(read_usize(l + j * 4) + 0x53) == nation);
             if !sede {
-                write_usize(read_usize(this + 0xee) + n * 4, exe::database_get_national_team(nation));
+                write_usize(read_usize(this.addr() + 0xee) + n * 4, exe::database_get_national_team(nation));
                 n += 1;
             }
         }
@@ -149,7 +150,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
         return 0;
     }
     let h = how_many as i32;
-    exe::crt_qsort(read_usize(this + 0xee) + (h as isize * 4) as usize, (n as i32 - h) as u32, 4, 0x4b07d0); // cqs13: the non-hosts by reputation
+    exe::crt_qsort(read_usize(this.addr() + 0xee) + (h as isize * 4) as usize, (n as i32 - h) as u32, 4, 0x4b07d0); // cqs13: the non-hosts by reputation
     let groups = exe::crt_malloc(0x40);
     if groups == 0 {
         show_error_at(0x9870f8, 0x380);
@@ -159,16 +160,16 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     for j in 0..4usize {
         for p in 0..4usize {
             let mut r = exe::utils_random(4) as u8 as i8 as usize;
-            while read_usize(read_usize(this + 0xee) + (r + 4 * p) * 4) == 0 {
+            while read_usize(read_usize(this.addr() + 0xee) + (r + 4 * p) * 4) == 0 {
                 r = exe::utils_random(4) as u8 as i8 as usize;
             }
-            let e = read_usize(this + 0xee) + (r + 4 * p) * 4;
+            let e = read_usize(this.addr() + 0xee) + (r + 4 * p) * 4;
             write_usize(groups + (4 * j + p) * 4, read_usize(e)); // cqs13: the one from pot p in slot 4j + p
             write_usize(e, 0);
         }
     }
-    exe::crt_free(read_usize(this + 0xee));
-    write_usize(this + 0xee, groups);
+    exe::crt_free(read_usize(this.addr() + 0xee));
+    write_usize(this.addr() + 0xee, groups);
     1
 }
 
@@ -176,7 +177,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
 /// plus the best-reputed African nations and draws the 16 finalists into 4 groups of 4 by pots; returns 1 on success, 0
 /// with fewer than 16 nations or out of memory.
 pub(crate) unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
-    draw_african_nations_finalists(this)
+    draw_african_nations_finalists(League(this))
 }
 
 /// `AfricanNations::create_group_stage(g)` (`0x401ea0`, thiscall, ret 4, `african_nations.cpp`): creates the stage of
@@ -207,6 +208,7 @@ pub(crate) unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
 /// em [+0xc][g]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x2f2 e 0. Com ela:
 /// +0x30 = g, a notícia do grupo (0x684230 na fase) e 1.
 pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: usize, g: i32) -> u32 {
+    let this = League(this);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -217,34 +219,34 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
     }
     for n in 0..4usize {
         crate::comparison::branch("cqs_13 group team");
-        write_usize(teams + n * 4, read_usize(read_usize(this + 0xee) + ((g as usize + 1) * 4 + n) * 4)); // cqs13: the team in the group slot
+        write_usize(teams + n * 4, read_usize(read_usize(this.addr() + 0xee) + ((g as usize + 1) * 4 + n) * 4)); // cqs13: the team in the group slot
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
-    let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
+    let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         construct(
             p,
-            this,
+            this.addr(),
             4,
             teams,
             1,
-            read_usize(this + 4),
+            read_usize(this.addr() + 4),
             table,
             rodadas as u16 as u32,
-            (read_u8(this + league::WIN_POINTS) as u32),
-            (read_u8(this + league::DRAW_POINTS) as u32),
-            (read_u8(this + league::MATCH_CATEGORY) as u32),
-            this + league::TIEBREAKS,
-            this + league::PROMOTED_COUNT,
-            read_i16(this + league::YEAR) as u16 as u32,
+            (this.win_points() as u32),
+            (this.draw_points() as u32),
+            (this.match_category() as u32),
+            this.addr() + league::TIEBREAKS,
+            this.addr() + league::PROMOTED_COUNT,
+            this.year() as u16 as u32,
             g as u32,
             id as u16 as u32,
-            (read_u8(this + league::IMPORTANCE) as u32),
+            (this.importance() as u32),
             4,
             0,
-            read_i16(this + league::LEAGUE_FLAGS) as u16 as u32,
+            this.league_flags() as u16 as u32,
             -1,
             0,
             2,
@@ -252,15 +254,15 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
     } else {
         0
     };
-    write_usize(read_usize(this + league::STAGES) + g as usize * 4, stage);
+    write_usize(this.stages() + g as usize * 4, stage);
     exe::crt_free(teams);
     exe::crt_free(table);
-    let f = read_usize(read_usize(this + league::STAGES) + g as usize * 4);
+    let f = read_usize(this.stages() + g as usize * 4);
     if f == 0 {
         show_error_at(0x9870f8, 0x2f2);
         return 0;
     }
-    write_usize(this + league::CURRENT_STAGE, g as usize);
+    this.set_current_stage(g as usize);
     exe::league_send_group_draw_news(f);
     1
 }
@@ -277,13 +279,14 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
 /// fase (+0x30 ≥ +0x2c − 1), a caixa da linha 0x2ba; senão +0x30 sobe e, chegando a 3 (depois dos grupos), o mata-mata
 /// (0x402090: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize) {
-    let f = read_usize(this + league::CURRENT_STAGE) as i32;
-    if f >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
+    let this = League(this);
+    let f = this.current_stage() as i32;
+    if f >= (this.stage_count() as i32).wrapping_sub(1) {
         show_error_at(0x9870f8, 0x2ba);
         return;
     }
     let f = f + 1;
-    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, f);
+    this.set_current_stage((f) as usize);
     if f == 3 { // cqk12: the African Cup knockout after the groups
         crate::comparison::branch("cqk_12 african cup knockout");
         exe::africannations_create_knockout_stage(this);
@@ -308,18 +311,19 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
 /// push seleção; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this
 /// -> thiscall, ret 0) e devolve 1.
 pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
+    let this = League(this);
     let teams = 4i16; // cqk12: the four of group A
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, teams);
+    this.set_club_count(teams);
     let t = exe::crt_malloc(0xec);
-    core::ptr::write_unaligned((this + league::TABLE) as *mut u32, t as u32);
+    this.set_table((t as u32) as usize);
     if t == 0 {
         show_error_at(0x9870f8, 0x1f1);
         return 0;
     }
     crate::comparison::branch("cqk_12 african cup group a");
     let mut i = 0i8;
-    while (i as i16) < read_i16(this + league::CLUB_COUNT) {
-        let national_team = read_usize(read_usize(this + 0xee).wrapping_add((i as isize * 4) as usize)); // cqk12: the national team in the row
+    while (i as i16) < this.club_count() {
+        let national_team = read_usize(read_usize(this.addr() + 0xee).wrapping_add((i as isize * 4) as usize)); // cqk12: the national team in the row
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, national_team, 0, 0);
         i = i.wrapping_add(1);
@@ -338,7 +342,8 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
 /// [pt] { 0x401b90 } (thiscall, ret 0, african_nations.cpp; a virtual +0x30): `AfricanNations::record_season_honours()`: o
 /// histórico vem do mata-mata: salta para a virtual +0x30 da fase 3 ([+0xc] + 0xc; jmp, sem quadro).
 pub(crate) unsafe extern "thiscall" fn african_nations_record_season_honours(this: usize) {
-    let stage = read_usize(read_usize(this + league::STAGES) + 0xc);
+    let this = League(this);
+    let stage = read_usize(this.stages() + 0xc);
     let h: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(stage) + 0x30));
     h(stage);
 }
@@ -374,9 +379,9 @@ pub(crate) unsafe fn african_nations_record_final_result(f: usize, club: usize, 
 /// a fase [+0xc][grupos]): 0, a classificação com a fase +0x32 do jogo, o +0x6f da rodada do jogo (+0x34) na tabela de
 /// rodadas da fase (+0xa3, 0x68 bytes) e o peso 0x4bf850(0x28, 0x64, rodada, 3); 0xff, a eliminação (0x86c000) com
 /// +0x32, +0x30 e o mesmo peso; 1, 2 e 3, os registros de campeão, vice e terceiro. Devolve 0.
-pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: usize, club: usize, outcome: u32, stage: u32, game: usize, a6: u32, groups: i8) -> u32 {
+pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: League, club: usize, outcome: u32, stage: u32, game: usize, a6: u32, groups: i8) -> u32 {
     let (d, f) = (outcome as u8, stage as u8 as i8);
-    let comp = read_usize(this + 4);
+    let comp = read_usize(this.addr() + 4);
     if f < groups {
         if d == 6 {
             european_cup_add_qualified_record(club, comp, 0, 0x78, 0x19);
@@ -394,7 +399,7 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: usize, cl
             0 => {
                 let r = read_i16(game + 0x34);
                 let weight = scale_by_round(0x28, 0x64, r, 3);
-                let knockout = read_usize(read_usize(this + league::STAGES) + groups as usize * 4);
+                let knockout = read_usize(this.stages() + groups as usize * 4);
                 let round = read_i16(read_usize(knockout + cup::ROUND_TABLE).wrapping_add((r as isize * 0x68) as usize) + 0x6f) as u16 as u32;
                 european_cup_add_qualified_record(club, comp, read_i16(game + 0x32) as u16 as u32, round, weight);
             }
@@ -427,7 +432,7 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: usize, cl
 /// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: national_tournament_staff_records com 3 fases de grupos (o
 /// mata-mata na fase 3); o desfecho 4 não faz nada.
 pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, a6: u32) -> u32 {
-    national_tournament_staff_records(0, this, club, outcome, stage, game, a6, 3)
+    national_tournament_staff_records(0, League(this), club, outcome, stage, game, a6, 3)
 }
 
 // simplification: the records go to the managers’ history and end the call-ups: they do not run twice, and the routine
@@ -454,7 +459,7 @@ pub(crate) unsafe fn clear_national_team_competition(club: Club) {
 /// [pt] { 0x4012e0 } (thiscall, ret 0x10, african_nations.cpp; a virtual +0x3c da Copa Africana): `AfricanNations::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `african_nations_phase`.
 pub(crate) unsafe extern "thiscall" fn african_nations_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    build_phase_table(this, african_nations_phase(stage), rounds, extra, league, 0x9870f8)
+    build_phase_table(League(this), african_nations_phase(stage), rounds, extra, league, 0x9870f8)
 }
 
 /// rule: the African Nations Cup groups are single round robin, 3/1 points, tiebreak 1, 2, 3, two qualifiers per group,
@@ -471,7 +476,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize)
     let win = 3; // cqk10: the win in the African Cup groups
     goldcup_write_rule_fields(this, &AFRICAN_NATIONS_RULE_FIELDS, win);
     let day = 5; // cqk10: the day of the African Cup date
-    let word = competition_date_word(this, day, 9, -1, 5);
-    finish_rules_setup(this, word, 0xffff)
+    let word = competition_date_word(League(this), day, 9, -1, 5);
+    finish_rules_setup(League(this), word, 0xffff)
 }
 

@@ -354,7 +354,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
             let uefa = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
             european_cup_add_qualified_record(club.addr(), uefa, 0, 0xa, weight);
             crate::comparison::branch("cqi_10 intertoto winner");
-            core::ptr::write_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *mut u32, read_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA
+            club.set_continental_comp_id(read_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA
         }
         0 => {
             let r = read_i16(game + 0x34);

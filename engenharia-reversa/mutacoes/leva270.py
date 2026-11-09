@@ -11,7 +11,7 @@ MUTACOES = [
     ('cqf3_teto_pela_metade', 'ceiling = q as f64; // cqf3: the cap by the total', 'ceiling = q as f64 * 0.5; // mutacao: metade', 'cqf_3 cap by total'),
     ('cqf4_limite_do_grupo_mais_um', 'let lim = ((k / 8) as i8).wrapping_add(1); // cqf4: the limit of teams per group', 'let lim = ((k / 8) as i8).wrapping_add(2); // mutacao: um time a mais por grupo', 'cqf_4 place in the group'),
     ('cqf4_sorteio_2002_invertido', 'for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: the nations of the real random draw', 'for (i, &chave) in WORLD_CUP_2002_DRAW.iter().rev().enumerate() { // mutacao: a ordem inversa', 'cqf_4 2002 draw'),
-    ('cqf4_sorteio_um_dia_depois', 'let day_of_draw = read_i16(this + 0xb6) as u16; // cqf4: the random draw day', 'let day_of_draw = (read_i16(this + 0xb6) as u16).wrapping_add(1); // mutacao: um dia depois', 'cqf_4 draw day'),
+    ('cqf4_sorteio_um_dia_depois', 'let day_of_draw = read_i16(this.addr() + 0xb6) as u16; // cqf4: the random draw day', 'let day_of_draw = (read_i16(this.addr() + 0xb6) as u16).wrapping_add(1); // mutacao: um dia depois', 'cqf_4 draw day'),
     ('cqf5_grupo_um_do_fim', 'let e = i as usize; // cqf5: the list entry', 'let e = 31 - i as usize; // mutacao: a lista do fim para o comeco', 'cqf_5 group one team'),
     ('cqf5_vagas_do_grupo_invertidas', 'write_usize(teams + n as usize * 4, draw_list_club(list, i as usize)); // cqf5: the team in the group slot', 'write_usize(teams + (3 - n as usize) * 4, draw_list_club(list, i as usize)); // mutacao: as vagas invertidas', 'cqf_5 group team'),
     ('cqf5_metade_das_nacoes', 'i += 1; // cqf5: the next nation', 'i += 2; // mutacao: uma sim, uma nao', 'cqf_5 nation competition'),

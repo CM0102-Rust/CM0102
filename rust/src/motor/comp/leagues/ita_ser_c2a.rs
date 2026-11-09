@@ -27,8 +27,9 @@ use super::*;
 /// 0x32, rodada do jogo +0x34, 2)) e +0x37 = 0xfe. No play-out (fase 1): 1 (salvou-se), +0x37 = 0xfe; 2 ou 0xff,
 /// o rebaixamento e +0x37 = 3.
 pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, _a4: u32, game: usize, _a6: u32) -> u32 {
+    let this = League(this);
     let s = status as u8;
-    let comp = read_usize(this + 4);
+    let comp = read_usize(this.addr() + 4);
     let f = stage as u8;
     if f == 0xff {
         match s {
@@ -55,17 +56,17 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
     if f > 1 {
         return 0;
     }
-    let n = read_i16(this + league::CLUB_COUNT) as i32;
+    let n = this.club_count() as i32;
     let mut i: i32 = 0;
     while i < n {
-        let row = read_usize(this + league::TABLE) + (i as usize) * 0x3b;
+        let row = this.table() + (i as usize) * 0x3b;
         if read_usize(row) == club {
             if f == 0 {
                 match s {
                     1 => {
                         let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                         promotion(eng_second_staff_records(), club, comp, 0x32);
-                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
+                        *((this.table() + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
                         return 0;
                     }
                     2 | 0xff => {
@@ -73,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
                         // simplification: the original pushes the match’s stage (+0x32) and round (+0x30) as words in
                         // registers with garbage in the high 16 bits; 0x86c000 only reads the words.
                         exe::staff_records_add_knocked_out_record(eng_second_staff_records(), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
-                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
+                        *((this.table() + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
                         return 0;
                     }
                     _ => {}
@@ -81,13 +82,13 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
             } else {
                 match s {
                     1 => {
-                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
+                        *((this.table() + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
                         return 0;
                     }
                     2 | 0xff => {
                         let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
                         cair(eng_second_staff_records(), club, comp);
-                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 3;
+                        *((this.table() + (i as usize) * 0x3b + 0x37) as *mut u8) = 3;
                         return 0;
                     }
                     _ => {}

@@ -113,7 +113,7 @@ class Conversor:
         cab = mk[:mk.find('{')] if '{' in mk else ''
         out = {}
         for x in nomes:
-            if x in ('self', 'this'):
+            if x == 'self':
                 continue
             param = re.search(r'[(,]\s*%s\s*:\s*usize\b' % re.escape(x), cab)
             lets = re.findall(r'\blet\s+(mut\s+)?%s\b' % re.escape(x), mk)
@@ -162,6 +162,29 @@ class Conversor:
             if novo and not any(a <= m.start() < b for a, b in ocupado):
                 edicoes.append((m.start(), fim, novo))
                 ocupado.append((m.start(), fim))
+        # core::ptr::read_unaligned((x + mod::F) as *const T)  and  core::ptr::write_unaligned((x + mod::F) as *mut T, v)
+        for m in re.finditer(r'core::ptr::(read|write)_unaligned\(', mk):
+            if any(a <= m.start() < b for a, b in ocupado):
+                continue
+            args, fim = ie.args_da_chamada(mk, m.end() - 1)
+            if not args:
+                continue
+            a0 = re.fullmatch(r'\s*\(\s*(%s)(?:\.addr\(\))?\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*\)\s*as\s*\*(?:const|mut)\s+(\w+)\s*' % (nomes, self.mod), args[0])
+            if not a0:
+                continue
+            x, campo, t = a0.group(1), a0.group(2), a0.group(3)
+            if m.group(1) == 'read' and len(args) == 1:
+                novo = self.leitura(x, campo, t)
+            elif m.group(1) == 'write' and len(args) == 2:
+                ini_v = m.end() + len(mk[m.end():fim]) - len(mk[m.end():fim].lstrip()) + mk[m.end():fim].index(args[1], len(args[0]))
+                novo = self.escrita(x, campo, t, self.converter_trecho(s[ini_v:ini_v + len(args[1])].strip(), xs, so_acessos))
+            else:
+                novo = None
+            if novo:
+                edicoes[:] = [e for e in edicoes if not (m.start() <= e[0] and e[1] <= fim)]
+                ocupado[:] = [o for o in ocupado if not (m.start() <= o[0] and o[1] <= fim)]
+                edicoes.append((m.start(), fim, novo))
+                ocupado.append((m.start(), fim))
         # *((x + mod::F) as *const T)  and  *((x + mod::F) as *mut T) = v;
         for m in re.finditer(r'\*\(\(\s*(%s)(?:\.addr\(\))?\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*\)\s*as\s*\*(const|mut)\s+(\w+)\)' % (nomes, self.mod), mk):
             if any(a <= m.start() < b for a, b in ocupado):
@@ -175,6 +198,9 @@ class Conversor:
                     continue
                 novo = self.escrita(x, campo, t, self.converter_trecho(s[m.end() + atr.end():fim].strip(), xs, so_acessos))
                 if novo:
+                    # the value was converted with it: the reads already edited inside this span go
+                    edicoes[:] = [e for e in edicoes if not (m.start() <= e[0] and e[1] <= fim)]
+                    ocupado[:] = [o for o in ocupado if not (m.start() <= o[0] and o[1] <= fim)]
                     edicoes.append((m.start(), fim, novo))
                     ocupado.append((m.start(), fim))
                 continue

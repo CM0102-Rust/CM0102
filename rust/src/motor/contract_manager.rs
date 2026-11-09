@@ -1123,7 +1123,7 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
     let k = if club.is_null() {
         (exe::utils_random(3) + 1) as f64
     } else {
-        let div = club.division().addr();
+        let div = Competition(club.division().addr());
         let nat = club.nation().addr();
         if nat == 0 {
             c890
@@ -1132,7 +1132,7 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
             if !(t >= c890) || t > read_f64(rdata::F64_3) {
                 t = read_f64(rdata::F64_3);
             }
-            if div != 0 {
+            if !div.is_null() {
                 t = (t + c890) * read_f64(rdata::F64_0_5);
             }
             match (club.professional_status() as i8) {
@@ -1140,7 +1140,7 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
                 3 => t *= read_f64(rdata::F64_7_5),
                 _ => {}
             }
-            let n = if div != 0 { read_i16(div + competition::REPUTATION) as i32 } else { read_i8(nat + nation::LEAGUE_STANDARD) as i32 };
+            let n = if !div.is_null() { div.reputation() as i32 } else { read_i8(nat + nation::LEAGUE_STANDARD) as i32 };
             let e = n.wrapping_mul(n).wrapping_mul(25).wrapping_add(club.reputation() as i32);
             e as f64 / (t * read_f64(rdata::F64_1000))
         }
@@ -3522,7 +3522,7 @@ pub(crate) unsafe extern "stdcall" fn contract_manager_raise_match_morale(person
     if player == 0 {
         return;
     }
-    let a = core::ptr::read_unaligned((player + player_sheet::CURRENT_REPUTATION) as *const i16) as i32 - core::ptr::read_unaligned((club.addr() + club::REPUTATION) as *const i16) as i32;
+    let a = core::ptr::read_unaligned((player + player_sheet::CURRENT_REPUTATION) as *const i16) as i32 - club.reputation() as i32;
     let x = (a as f64 + (person.age() as u8) as i8 as f64 * read_f64(rdata::F64_417)) - read_f64(rdata::F64_11680);
     let mut y = (if x < read_f64(rdata::F64_0) { x * read_f64(rdata::F64_6_6ENEG_05) } else { x * read_f64(rdata::F64_6_666666667ENEG_05) }) + read_f64(rdata::F64_1);
     if y < read_f64(rdata::F64_0_01) {
@@ -3844,7 +3844,7 @@ pub(crate) unsafe extern "stdcall" fn contract_category(p: usize, c: usize) -> u
     if p.is_null() {
         return 7;
     }
-    let sheet = core::ptr::read_unaligned((p.addr() + staff::PLAYER) as *const usize);
+    let sheet = p.player();
     if sheet == 0 {
         return 7;
     }

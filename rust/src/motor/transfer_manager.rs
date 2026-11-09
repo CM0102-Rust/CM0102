@@ -3912,7 +3912,7 @@ pub(crate) unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize
         exe::contract_manager_remove_contract_offer(read_usize(G_CONTRACT_MANAGER), p, owner);
     }
     exe::contract_manager_remove_contract(read_usize(G_CONTRACT_MANAGER), p);
-    core::ptr::write_unaligned((p.addr() + staff::VALUE) as *mut u32, 0);
+    p.set_value((0) as usize);
     p.set_squad_selected_for(0);
     exe::transfer_manager_remove_next_sale_percentage(this, p);
     exe::transfer_manager_remove_first_team_appearance_money(this, p);
@@ -9072,7 +9072,7 @@ pub(crate) unsafe extern "thiscall" fn update_work_permits(this: usize) {
         let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(*((r + work_permit::YEAR) as *const u16) as i32);
         if years > 4 {
             let nation = read_u32(r + work_permit::NATION_ID) as usize;
-            core::ptr::write_unaligned((person.addr() + staff::SECOND_NATION) as *mut usize, (read_u32(G_NATION_TABLE) as usize).wrapping_add(nation.wrapping_mul(nation::SIZE)));
+            person.set_second_nation((read_u32(G_NATION_TABLE) as usize).wrapping_add(nation.wrapping_mul(nation::SIZE)));
             *mark(person.addr()) &= 0xdf;
             core::ptr::write_unaligned(((read_u32(this + transfer_manager_fields::WORK_PERMITS) as usize).wrapping_add(off)) as *mut u32, u32::MAX);
             left = true;
@@ -9152,7 +9152,7 @@ pub(crate) unsafe fn nation_transfer_rules(manager: usize, nation: usize) -> usi
 pub(crate) unsafe extern "thiscall" fn can_sign_player(manager: usize, club: usize, a2: u32, player: usize, a4: u32, a5: u32, out: *mut u16) -> u32 {
     let player = Staff(player);
     let club = Club(club);
-    let rules = nation_transfer_rules(manager, core::ptr::read_unaligned((club.addr() + club::NATION) as *const usize));
+    let rules = nation_transfer_rules(manager, club.nation().addr());
     if !out.is_null() {
         *out = 0;
     }
@@ -9181,7 +9181,7 @@ pub(crate) unsafe extern "thiscall" fn can_sign_player(manager: usize, club: usi
     }
     let nation = (player.addr() + staff::NATION) as *mut u32;
     let stored = core::ptr::read_unaligned(nation);
-    core::ptr::write_unaligned(nation, core::ptr::read_unaligned((club.addr() + club::NATION) as *const u32));
+    core::ptr::write_unaligned(nation, (club.nation().addr() as u32));
     let r = consultar(rules, club.addr(), player.addr(), a4, a2, &mut reason);
     core::ptr::write_unaligned(nation, stored);
     if r != 0 {

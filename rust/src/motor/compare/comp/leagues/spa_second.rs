@@ -12,13 +12,13 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_schedule(this: 
 /// Comparer for `construct_spa_second`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_spa_second(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SPA_SECOND);
-    compare_division_league_ctor("construct_spa_second", this, year, record, &SPANISH_SEGUNDA, || o(this, year, record))
+    compare_division_league_ctor("construct_spa_second", League(this), year, record, &SPANISH_SEGUNDA, || o(this, year, record))
 }
 
 /// Comparer for `spa_second_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_spa_second_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_SET_UP_RULES);
-    spa_first_compare_league_rules("spa_second_set_up_rules", this, segunda_rules(this), || o(this), || spa_second_set_up_rules(this))
+    spa_first_compare_league_rules("spa_second_set_up_rules", League(this), segunda_rules(this), || o(this), || spa_second_set_up_rules(this))
 }
 
 /// Comparer for `spa_second_create_table`.
@@ -26,6 +26,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_set_up_rules(this: usi
 /// [pt] Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
 pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usize) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_CREATE_TABLE);
     let n = read_usize(G_CLUB_COUNT) as i32;
     let base = read_usize(G_CLUB_TABLE);
@@ -39,15 +40,15 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usi
             }
         }
     }
-    let r = o(this);
-    let t = read_usize(this + league::TABLE);
-    let mut ok = r == (plan.len() == 0x16) as u32 && read_i16(this + league::CLUB_COUNT) == 0x16 && t != 0;
+    let r = o(this.addr());
+    let t = this.table();
+    let mut ok = r == (plan.len() == 0x16) as u32 && this.club_count() == 0x16 && t != 0;
     if ok {
         for (k, &(c, b)) in plan.iter().enumerate() {
             let l = t + k * 0x3b;
             ok = ok && read_usize(l) == c && (!b || *((l + league_table_row::STATUS) as *const u8) == 0xfc);
         }
     }
-    SCOREBOARD.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plan));
+    SCOREBOARD.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this.addr(), r, plan));
     r
 }

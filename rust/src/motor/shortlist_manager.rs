@@ -437,11 +437,11 @@ pub(crate) unsafe fn reputation_by_stadium(club: Club) -> i32 {
 /// 500 × a da divisão; senão o maior entre rep/2 + 250 × a da divisão e 500 × a da divisão.
 pub(crate) unsafe fn reputation_by_division(club: Club) -> i16 {
     let rep = club.reputation() as i32;
-    let comp = club.division().addr();
-    if comp == 0 {
+    let comp = Competition(club.division().addr());
+    if comp.is_null() {
         return rep as i16;
     }
-    let cv = read_i16(comp + competition::REPUTATION) as i32;
+    let cv = comp.reputation() as i32;
     let t = cv.wrapping_mul(500);
     if rep >= 0x1d4c && (club.attendance() as usize) as i32 > 0x88b8 {
         (if t > rep { t } else { rep }) as i16
@@ -2189,9 +2189,9 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, club: 
             x = (kk - base) * a + base;
         }
     }
-    let bc = club.division().addr();
-    if bc != 0 && read_i16(bc + competition::REPUTATION) < 0x10 {
-        let b69 = read_i16(bc + competition::REPUTATION) as i32;
+    let bc = Competition(club.division().addr());
+    if !bc.is_null() && bc.reputation() < 0x10 {
+        let b69 = bc.reputation() as i32;
         let ri = club.reputation() as i32 / 500;
         let m = if ri > b69 { ri } else { b69 };
         let mut lim = m.wrapping_mul(670000);
@@ -3082,7 +3082,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize
         let lo = read_usize(p) as u32;
         let (dia, ano) = (lo as u16 as i16, (lo >> 16) as u16);
         let year_j = core::ptr::read_unaligned((player.addr() + 0x40) as *const u16);
-        let day_j = core::ptr::read_unaligned((player.addr() + staff::DATE_JOINED_CLUB) as *const i16);
+        let day_j = (player.date_joined_club() as i16);
         let recente = if ano != year_j { ano < year_j } else { dia < day_j };
         if recente {
             let c = get_contract(player.addr());
@@ -3789,7 +3789,7 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(pe
     let club = Club(club);
     let manager: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_MANAGER);
     let mut rep = if (exe::database_get_staff_reputation_for_viewer(person, manager(club.addr()), 0) as u16) as i16 > 1 { (exe::database_get_staff_reputation_for_viewer(person, manager(club.addr()), 0) as u16) as i16 } else { 1 };
-    let mut rc = core::ptr::read_unaligned((club.addr() + club::REPUTATION) as *const i16);
+    let mut rc = club.reputation();
     if rc <= 1 {
         rc = 1;
     }
@@ -4072,10 +4072,10 @@ pub(crate) unsafe extern "thiscall" fn collect_club_shortlist_entries(this: usiz
 /// outros, -1.
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_max_fee_for_squad_status(club: usize, positions: u32, kind: u32) -> i32 {
     let club = Club(club);
-    let rep = core::ptr::read_unaligned((club.addr() + club::REPUTATION) as *const i16) as i32;
+    let rep = club.reputation() as i32;
     match kind as i8 {
         4 => {
-            let nation = core::ptr::read_unaligned((club.addr() + club::NATION) as *const usize);
+            let nation = club.nation().addr();
             let eh = |gs: &[usize]| nation != 0 && gs.iter().any(|&g| *(nation as *const u32) == *(g as *const u32));
             if eh(&[KEY_NATION_ITALY, KEY_NATION_ENGLAND, KEY_NATION_SPAIN]) {
                 rep.wrapping_mul(550)
@@ -4133,7 +4133,7 @@ pub(crate) unsafe extern "thiscall" fn update_club_target_reputation(this: usize
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let w = || core::ptr::read_unaligned(target) as i32;
     let por = |dif: i32, k: usize, v: i32| ftol((dif as f64 * read_f64(k) + read_f64(rdata::F64_1)) * v as f64);
-    core::ptr::write_unaligned(target, (core::ptr::read_unaligned((club.addr() + club::ATTENDANCE) as *const i32) / 10 + 0x1194) as i16);
+    core::ptr::write_unaligned(target, (club.attendance() / 10 + 0x1194) as i16);
     if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) == 0 {
         let manager = Staff(u(club.addr() + club::MANAGER));
         if !manager.is_null() {
@@ -4149,7 +4149,7 @@ pub(crate) unsafe extern "thiscall" fn update_club_target_reputation(this: usize
         let sheet = u(u(club.addr() + club::CHAIRMAN) + 0x69);
         core::ptr::write_unaligned(target, por(read_i8(sheet + non_player::RESOURCES) as i32 - 10, 0x967878, v as i32) as i16);
     }
-    let floor = core::ptr::read_unaligned((club.addr() + club::REPUTATION) as *const i16);
+    let floor = club.reputation();
     let v = core::ptr::read_unaligned(target);
     let v = if floor > v { floor } else if v > 0x2710 { 0x2710 } else { v };
     core::ptr::write_unaligned(target, v);
@@ -4171,7 +4171,7 @@ pub(crate) unsafe extern "thiscall" fn update_club_target_reputation(this: usize
 /// Sem ficha (fora a vaga 15): 0. Vaga fora de 0..15: a original (caixa de erro). Devolve só `al`.
 pub(crate) unsafe extern "stdcall" fn shortlist_slot_fits(j: usize, slot: i8) -> u8 {
     let j = Staff(j);
-    let sheet = core::ptr::read_unaligned((j.addr() + staff::PLAYER) as *const usize);
+    let sheet = j.player();
     if sheet == 0 && slot != 15 {
         return 0;
     }
@@ -4197,13 +4197,13 @@ pub(crate) unsafe extern "stdcall" fn shortlist_slot_fits(j: usize, slot: i8) ->
         13 => (0x14, 0x17),
         14 => (0x15, 0),
         _ => {
-            let manager = core::ptr::read_unaligned((j.addr() + staff::CLUB_JOB) as *const usize);
+            let manager = j.club_job();
             if manager != 0 && matches!(j.job_for_club(), 0xb | 0xf | 0xd) {
                 if exe::human_manager_is_human_club(manager, 0, 1, 0, 0) != 0 {
                     return 0;
                 }
             }
-            let contract = core::ptr::read_unaligned((j.addr() + staff::NON_PLAYER) as *const usize);
+            let contract = j.non_player();
             return (contract != 0 && *(j.addr() as *const i32) < (*(G_STAFF_COUNT as *const i32)).wrapping_sub(0x10)) as u8;
         }
     };

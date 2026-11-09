@@ -497,7 +497,7 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
 /// original), truncado (0x945640), com mínimo 55. Devolve o truncado (antes do mínimo).
 pub(crate) unsafe extern "thiscall" fn set_default_wage(this: usize, person: usize) -> u32 {
     let person = Staff(person);
-    let v = ftol(exe::staff_contract_calc_unset_default_wage(this, person, core::ptr::read_unaligned((person.addr() + staff::CLUB_JOB) as *const usize), 1, -1, 0xb, 0));
+    let v = ftol(exe::staff_contract_calc_unset_default_wage(this, person, person.club_job(), 1, -1, 0xb, 0));
     *((this + contract::WAGE) as *mut i32) = if v < 0x37 { 0x37 } else { v }; // the minimum of 55
     v as u32
 }

@@ -3,8 +3,8 @@ use super::*;
 /// Row i of a league/stage table (+0xb1, 0x3b bytes): club and points (+0x19).
 ///
 /// [pt] A linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`: o clube (+0) e os pontos (+0x19, word).
-pub(crate) unsafe fn table_row_club_points(t: usize, i: usize) -> (usize, i16) {
-    let l = read_usize(t + league::TABLE) + i * 0x3b;
+pub(crate) unsafe fn table_row_club_points(t: League, i: usize) -> (usize, i16) {
+    let l = t.table() + i * 0x3b;
     (read_usize(l), read_i16(l + 0x19))
 }
 
@@ -34,23 +34,24 @@ pub(crate) fn club_of_record(r: &[u8], k: usize) -> usize {
 /// fase, +0x30 fica); então, na 2, monta o play-off (0x9094c0) e, na 3, a final (0x9097d0), em call direto com o ecx da
 /// liga.
 pub(crate) unsafe extern "thiscall" fn usa_mls_advance_stage(this: usize) {
-    let stage = read_usize(this + league::CURRENT_STAGE) as i32;
-    if stage >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
+    let this = League(this);
+    let stage = this.current_stage() as i32;
+    if stage >= (this.stage_count() as i32).wrapping_sub(1) {
         return show_error_at(0xaa1fb4, 0x55b);
     }
     if stage == 1 {
-        core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 2);
+        this.set_current_stage((2) as usize);
     } else if stage == 2 {
-        core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 3);
+        this.set_current_stage((3) as usize);
     }
-    match read_usize(this + league::CURRENT_STAGE) {
+    match this.current_stage() {
         2 => {
             let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_USAMLS_CREATE_PLAYOFF_STAGE);
-            f(this);
+            f(this.addr());
         }
         3 => {
             let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_USAMLS_CREATE_FINAL_STAGE);
-            f(this);
+            f(this.addr());
         }
         _ => {}
     }
@@ -96,10 +97,11 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_advance_stage(this: usize) {
 ///    e a tabela liberada (free 0x9452ca). Sem fase: a caixa da linha 0x5c4. Com ela: Cup::set_up_round (0x51c800,
 ///    thiscall(fase, 0), ret 4). A lista não é liberada (a fase fica com ela; a original a deixa assim).
 pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize) {
+    let this = League(this);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-    let (a, b) = (read_usize(read_usize(this + league::STAGES)), read_usize(read_usize(this + league::STAGES) + 4));
+    let (a, b) = (read_usize(this.stages()), read_usize(this.stages() + 4));
     let list = exe::crt_malloc(0x20);
     if list == 0 {
         return show_error_at(0xaa1fb4, 0x58d);
@@ -107,16 +109,16 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
     let poe = |k: usize, c: usize| core::ptr::write_unaligned((list + 4 * k) as *mut usize, c);
     let mut r = [0u8; 54];
     put_club_points_record(&mut r, 0, table_row_club_points(this, 0));
-    put_club_points_record(&mut r, 1, table_row_club_points(a, 0));
-    put_club_points_record(&mut r, 2, table_row_club_points(b, 0));
+    put_club_points_record(&mut r, 1, table_row_club_points(League(a), 0));
+    put_club_points_record(&mut r, 2, table_row_club_points(League(b), 0));
     exe::crt_qsort((r.as_mut_ptr()) as usize, 3, 6, 0x90a130);
     poe(1, club_of_record(&r, 0)); // cqr4: the best division champion
     poe(3, club_of_record(&r, 1));
     poe(5, club_of_record(&r, 2));
     let mut k = 0usize;
     for j in 1..4 {
-        for t in [this, a, b] {
-            put_club_points_record(&mut r, k, table_row_club_points(t, j));
+        for t in [this.addr(), a, b] {
+            put_club_points_record(&mut r, k, table_row_club_points(League(t), j));
             k += 1;
         }
     }
@@ -126,19 +128,19 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
     poe(4, club_of_record(&r, 2));
     poe(2, club_of_record(&r, 3));
     poe(0, club_of_record(&r, 4)); // cqr4: the fifth best of the others
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = table(this, 2, &mut rodadas, &mut extra, 0);
+    let t = table(this.addr(), 2, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
-        construct(p, this, 8, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 2, 1,
+        construct(p, this.addr(), 8, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 2, 1,
                   extra as u16 as u32, 0x12, 1, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + league::STAGES) + 8) as *mut usize, stage);
+    core::ptr::write_unaligned((this.stages() + 8) as *mut usize, stage);
     exe::crt_free(t);
-    let stage = read_usize(read_usize(this + league::STAGES) + 8);
+    let stage = read_usize(this.stages() + 8);
     if stage == 0 {
         return show_error_at(0xaa1fb4, 0x5c4);
     }
@@ -166,10 +168,11 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
 /// 3, 1, o extra, 0x14, 0, 0, 0 e sementes nulas) em [+0xc][3] e a tabela liberada. Sem fase: a caixa da linha 0x5fe e
 /// volta (sem liberar a lista). Com ela: Cup::set_up_round (thiscall(fase, 0)) e a lista liberada (free 0x9452ca).
 pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
+    let this = League(this);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-    let po = read_usize(read_usize(this + league::STAGES) + 8);
+    let po = read_usize(this.stages() + 8);
     let list = exe::crt_malloc(8);
     if list == 0 {
         return show_error_at(0xaa1fb4, 0x5e5);
@@ -184,19 +187,19 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
         }
         i += 1;
     }
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = table(this, 3, &mut rodadas, &mut extra, 0);
+    let t = table(this.addr(), 3, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
-        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 3, 1,
+        construct(p, this.addr(), 2, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 3, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + league::STAGES) + 0xc) as *mut usize, stage);
+    core::ptr::write_unaligned((this.stages() + 0xc) as *mut usize, stage);
     exe::crt_free(t);
-    let stage = read_usize(read_usize(this + league::STAGES) + 0xc);
+    let stage = read_usize(this.stages() + 0xc);
     if stage == 0 {
         return show_error_at(0xaa1fb4, 0x5fe);
     }
@@ -209,8 +212,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
 ///
 /// [pt] O código de divisão do clube `c` na MLS (usa_mls_get_club_division 0x909ec0: push c; call; add esp, 4 -> cdecl; a
 /// palavra baixa do eax: 0x413, 0x47b ou 0x414), se ele é da competição da liga (+0x57 do clube = +4 da liga).
-pub(crate) unsafe fn is_in_mls_division(this: usize, c: Club, code: i16) -> bool {
-    c.division().addr() == read_usize(this + 4) && (exe::usa_mls_get_club_division(c) as u32) as u16 as i16 == code
+pub(crate) unsafe fn is_in_mls_division(this: League, c: Club, code: i16) -> bool {
+    c.division().addr() == read_usize(this.addr() + 4) && (exe::usa_mls_get_club_division(c) as u32) as u16 as i16 == code
 }
 
 /// Creates the MLS table (the first division, code 0x413): the four clubs of the competition with that division code,
@@ -230,9 +233,10 @@ pub(crate) unsafe fn is_in_mls_division(this: usize, c: Club, code: i16) -> bool
 /// clube; push eax com a linha no byte baixo e o lixo do código em cima, que ela não lê; mov ecx -> thiscall, ret
 /// 0x10). Devolve 1 se encheu as 4 linhas.
 pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
+    let this = League(this);
+    this.set_club_count(4);
     let t = exe::crt_malloc(0xec);
-    core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
+    this.set_table(t);
     if t == 0 {
         show_error_at(0xaa1fb4, 0x2fe);
         return 0;
@@ -240,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 
     let mut n: i16 = 0;
     let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
-    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n < read_i16(this + league::CLUB_COUNT) {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n < this.club_count() {
         let c = base + i as u16 as usize * club::SIZE;
         if is_in_mls_division(this, Club(c), 0x413) {
             exe::league_init_table_row(this, n as u8 as u32, c, 0, 0); // cqs1: the next row of the first division
@@ -249,7 +253,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 
         i = i.wrapping_add(1);
     }
     crate::comparison::branch("cqs_1 mls fixtures");
-    (n == read_i16(this + league::CLUB_COUNT)) as u32
+    (n == this.club_count()) as u32
 }
 
 /// Creates the stage of one of the other MLS divisions (`create_second_division_stage` and
@@ -286,18 +290,18 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 
 ///    Sem memória: 0.
 /// 4) [+0xc][k] = a fase; o vetor e a tabela das rodadas liberados (free 0x9452ca, nessa ordem). Sem fase: a caixa da
 ///    linha `linhas[1]`. Com ela: +0x30 = `atual` (a original grava k) e +0x3a da fase = o código da divisão.
-pub(crate) unsafe fn create_division_stage(this: usize, code: i16, k: u32, current: u32, pv: usize, rows: [u32; 2], ramo: &'static str) {
+pub(crate) unsafe fn create_division_stage(this: League, code: i16, k: u32, current: u32, pv: usize, rows: [u32; 2], ramo: &'static str) {
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let v = exe::crt_malloc(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
+    let v = exe::crt_malloc(((this.club_count() as i32) << 2) as u32);
     if v == 0 {
         return show_error_at(0xaa1fb4, rows[0]);
     }
     let mut n: i16 = 0;
     let base = read_usize(G_CLUB_TABLE);
     let mut i = 0i32;
-    while i < read_usize(G_CLUB_COUNT) as i32 && n < read_i16(this + league::CLUB_COUNT) {
+    while i < read_usize(G_CLUB_COUNT) as i32 && n < this.club_count() {
         let c = base + i as usize * club::SIZE;
         if is_in_mls_division(this, Club(c), code) {
             core::ptr::write_unaligned((v + 4 * n as usize) as *mut usize, c);
@@ -305,26 +309,26 @@ pub(crate) unsafe fn create_division_stage(this: usize, code: i16, k: u32, curre
         }
         i += 1;
     }
-    let table: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = table(this, -3, &mut rodadas, &mut extra, 0);
+    let t = table(this.addr(), -3, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
-        construct(p, this, read_i16(this + league::CLUB_COUNT) as u16 as u32, v, read_i16(this + league::LEGS) as u16 as u32, read_usize(this + 4), t, rodadas as u16 as u32,
-                  read_u8(this + pv) as u32, read_u8(this + league::DRAW_POINTS) as u32, read_u8(this + league::MATCH_CATEGORY) as u32, this + league::TIEBREAKS, this + league::PROMOTED_COUNT,
-                  read_i16(this + league::YEAR) as u16 as u32, k, extra as u16 as u32, read_u8(this + league::IMPORTANCE) as u32, 1, read_i16(this + league::MATCH_RULES) as u16 as u32,
-                  read_i16(this + league::LEAGUE_FLAGS) as u16 as u32, read_i16(this + league::GAMES_PER_CLUB) as u16 as u32, 0, 2)
+        construct(p, this.addr(), this.club_count() as u16 as u32, v, this.legs() as u16 as u32, read_usize(this.addr() + 4), t, rodadas as u16 as u32,
+                  read_u8(this.addr() + pv) as u32, this.draw_points() as u32, this.match_category() as u32, this.addr() + league::TIEBREAKS, this.addr() + league::PROMOTED_COUNT,
+                  this.year() as u16 as u32, k, extra as u16 as u32, this.importance() as u32, 1, this.match_rules() as u16 as u32,
+                  this.league_flags() as u16 as u32, this.games_per_club() as u16 as u32, 0, 2)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + league::STAGES) + 4 * k as usize) as *mut usize, stage);
+    core::ptr::write_unaligned((this.stages() + 4 * k as usize) as *mut usize, stage);
     exe::crt_free(v);
     exe::crt_free(t);
-    let stage = read_usize(read_usize(this + league::STAGES) + 4 * k as usize);
+    let stage = read_usize(this.stages() + 4 * k as usize);
     if stage == 0 {
         return show_error_at(0xaa1fb4, rows[1]);
     }
-    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, current);
+    this.set_current_stage((current) as usize);
     crate::comparison::branch(ramo);
     core::ptr::write_unaligned((stage + league::STAGE_ID) as *mut i16, code);
 }
@@ -337,7 +341,7 @@ pub(crate) unsafe fn create_division_stage(this: usize, code: i16, k: u32, curre
 /// [pt] { 0x908fc0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_second_division_stage()`, a
 /// segunda divisão da MLS (código 0x47b) na fase 0; caixas nas linhas 0x4e6 e 0x506.
 pub(crate) unsafe extern "thiscall" fn create_second_division_stage(this: usize) {
-    create_division_stage(this, 0x47b, 0, 0, 0xc2, [0x4e6, 0x506], "cqs_1 segunda divisao") // cqs1: the points per win in the second
+    create_division_stage(League(this), 0x47b, 0, 0, 0xc2, [0x4e6, 0x506], "cqs_1 segunda divisao") // cqs1: the points per win in the second
 }
 
 /// The third MLS division (code 0x414): the same template as the second, as stage 1; the current stage becomes 1, from
@@ -347,7 +351,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_division_stage(this: usize)
 /// [pt] { 0x9091e0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_third_division_stage()`, a
 /// terceira divisão da MLS (código 0x414) na fase 1; caixas nas linhas 0x524 e 0x544.
 pub(crate) unsafe extern "thiscall" fn create_third_division_stage(this: usize) {
-    create_division_stage(this, 0x414, 1, 1, 0xc2, [0x524, 0x544], "cqs_1 terceira divisao") // cqs1: the current stage after the third
+    create_division_stage(League(this), 0x414, 1, 1, 0xc2, [0x524, 0x544], "cqs_1 terceira divisao") // cqs1: the current stage after the third
 }
 
 /// The comparer of an MLS division stage: runs only the original (it allocates the array, the round table and the
@@ -359,12 +363,12 @@ pub(crate) unsafe extern "thiscall" fn create_third_division_stage(this: usize) 
 /// [pt] O comparador de uma divisão: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes:
 /// os clubes do código, na ordem do banco. Depois, a fase na vaga k com +0x3e da liga, os clubes na tabela dela (como
 /// conjunto), +0x3a = o código e +0x30 = k.
-pub(crate) unsafe fn compare_division_stage(name: &str, this: usize, code: i16, k: usize, original: impl FnOnce()) {
+pub(crate) unsafe fn compare_division_stage(name: &str, this: League, code: i16, k: usize, original: impl FnOnce()) {
     let mut plan = [0usize; 8];
     let mut n = 0usize;
     let base = read_usize(G_CLUB_TABLE);
     let mut i = 0i32;
-    while i < read_usize(G_CLUB_COUNT) as i32 && (n as i16) < read_i16(this + league::CLUB_COUNT) && n < 8 {
+    while i < read_usize(G_CLUB_COUNT) as i32 && (n as i16) < this.club_count() && n < 8 {
         let c = base + i as usize * club::SIZE;
         if is_in_mls_division(this, Club(c), code) {
             plan[n] = c;
@@ -373,18 +377,18 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: usize, code: i16, 
         i += 1;
     }
     original();
-    let stage = read_usize(read_usize(this + league::STAGES) + 4 * k);
-    let same = stage != 0 && read_i16(stage + league::STAGE_ID) == code && read_usize(this + league::CURRENT_STAGE) == k && read_i16(stage + league::CLUB_COUNT) == read_i16(this + league::CLUB_COUNT) && {
+    let stage = League(read_usize(this.stages() + 4 * k));
+    let same = !stage.is_null() && stage.stage_id() == code && this.current_stage() == k && stage.club_count() == this.club_count() && {
         let mut in_it = [0usize; 8];
         for (j, c) in in_it.iter_mut().enumerate().take(n) {
-            *c = read_usize(read_usize(stage + league::TABLE) + j * 0x3b);
+            *c = read_usize(stage.table() + j * 0x3b);
         }
         let (mut a, mut b) = (plan, in_it);
         a[..n].sort_unstable();
         b[..n].sort_unstable();
         a[..n] == b[..n]
     };
-    SCOREBOARD.record(same, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", name, this, stage, n, plan));
+    SCOREBOARD.record(same, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", name, this.addr(), stage.addr(), n, plan));
 }
 
 /// `UsaMls::start_new_season()` (`0x908e00`, thiscall, ret 0, `usa_mls.cpp`): the MLS season rollover.
@@ -416,38 +420,38 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: usize, code: i16, 
 /// árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve. Com
 /// caixa, a cópia devolve 0 (a original devolve o eax da caixa; a virada é chamada pelo laço das viradas, que não o lê).
 /// O vetor das fases (+0xc) fica: as divisões e o play-off regravam as vagas.
-pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
-    core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
+pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
+    core::ptr::write_unaligned((this.addr() + league::SEASON_CLOSED) as *mut u32, 0);
     exe::league_free_table(this, 0);
-    let l = read_usize(this + league::ROUND_DATES);
+    let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, 0);
+        core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
     }
-    if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
+    if (this.current_stage() as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = read_usize(read_usize(this + league::STAGES) + 4 * i as usize);
+            let f = read_usize(this.stages() + 4 * i as usize);
             if f != 0 {
                 let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
                 destroy(f, 1);
             }
             i += 1;
-            if i > read_usize(this + league::CURRENT_STAGE) as i32 {
+            if i > this.current_stage() as i32 {
                 break;
             }
         }
     }
-    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
-    let stats = read_usize(this + 8);
+    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
+    let stats = read_usize(this.addr() + 8);
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
-    let a = read_i16(this + league::YEAR);
-    core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(year));
+    let a = this.year();
+    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut i16, a.wrapping_add(year));
     crate::comparison::branch("cqs_2 mls rollover");
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
-    if rules(this) == 0 {
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
+    if rules(this.addr()) == 0 {
         show_error_at(0xaa1fb4, 0x4af);
         return 0;
     }
@@ -463,10 +467,10 @@ pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
         show_error_at(0xaa1fb4, 0x4c3);
         return 0;
     }
-    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
-    predicted(this);
+    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+    predicted(this.addr());
     exe::league_set_club_season_expectations(this);
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) as u32) // cqs2: the renewal of the MLS referees
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + 4)) as u32) // cqs2: the renewal of the MLS referees
 }
 
 /// The MLS turnover: clears the table, the schedule and the stages (the other two divisions, the play-off and the
@@ -477,7 +481,7 @@ pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
 ///
 /// [pt] { 0x908e00 } (thiscall, ret 0, usa_mls.cpp): a virada da MLS (acima), um ano adiante.
 pub(crate) unsafe extern "thiscall" fn usa_mls_start_new_season(this: usize) -> u32 {
-    mls_start_new_season(this, 1) // cqs2: the next year of the MLS
+    mls_start_new_season(League(this), 1) // cqs2: the next year of the MLS
 }
 
 /// Sets the MLS predicted positions: in each division the four clubs are ordered by reputation and get positions 1, 4,
@@ -501,8 +505,9 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_start_new_season(this: usize) -> 
 /// thiscall(+8, clube, posição), ret 8; a ordem das doze chamadas é a do vetor); o vetor liberado (free 0x9452ca).
 /// [inferência] As três divisões se misturam na previsão: o favorito de cada uma é previsto em 1º, o segundo em 4º...
 pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usize) {
-    let n3 = read_i16(this + league::CLUB_COUNT).wrapping_mul(3);
-    if read_usize(this + 8) == 0 {
+    let this = League(this);
+    let n3 = this.club_count().wrapping_mul(3);
+    if read_usize(this.addr() + 8) == 0 {
         return show_error_at(0xaa1fb4, 0x675);
     }
     let v = exe::crt_malloc(((n3 as i32) << 2) as u32);
@@ -510,23 +515,23 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
         return show_error_at(0xaa1fb4, 0x67d);
     }
     let mut i: i16 = 0;
-    while i < read_i16(this + league::CLUB_COUNT) {
-        let n = read_i16(this + league::CLUB_COUNT) as i32;
+    while i < this.club_count() {
+        let n = this.club_count() as i32;
         let k = i as usize;
         core::ptr::write_unaligned((v + 4 * k) as *mut usize, aus_nsl_table_row_club(this, k));
-        core::ptr::write_unaligned((v + 4 * (k + n as usize)) as *mut usize, aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES)), k));
-        core::ptr::write_unaligned((v + 4 * (k + 2 * n as usize)) as *mut usize, aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES) + 4), k));
+        core::ptr::write_unaligned((v + 4 * (k + n as usize)) as *mut usize, aus_nsl_table_row_club(League(read_usize(this.stages())), k));
+        core::ptr::write_unaligned((v + 4 * (k + 2 * n as usize)) as *mut usize, aus_nsl_table_row_club(League(read_usize(this.stages() + 4)), k));
         i += 1;
     }
-    let n = read_i16(this + league::CLUB_COUNT) as i32;
+    let n = this.club_count() as i32;
     exe::crt_qsort(v, n as u32, 4, 0x4b07d0);
-    let n = read_i16(this + league::CLUB_COUNT) as i32;
+    let n = this.club_count() as i32;
     exe::crt_qsort(v + 4 * n as usize, n as u32, 4, 0x4b07d0);
-    let n = read_i16(this + league::CLUB_COUNT) as i32;
+    let n = this.club_count() as i32;
     exe::crt_qsort(v + 8 * n as usize, n as u32, 4, 0x4b07d0);
     let places: [u32; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10]; // cqs2: the predicted positions of the three divisions
     for (k, p) in places.iter().enumerate() {
-        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + 4 * k), *p);
+        exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), read_usize(v + 4 * k), *p);
     }
     crate::comparison::branch("cqs_2 expected positions");
     exe::crt_free(v);
@@ -540,6 +545,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
 /// (word); *lista = malloc 0x944e46 de 0x30 (sem memória: a caixa da linha 0x64c, *n = 0 e volta); os +0x3e clubes da
 /// tabela da liga, depois os da fase 0 (a partir de +0x3e) e os da fase 1 (a partir de 2 × +0x3e), linha a linha.
 pub(crate) unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, list: *mut usize, n: *mut i16) {
+    let this = League(this);
     *n = 0xc;
     let v = exe::crt_malloc(0x30);
     *list = v;
@@ -549,20 +555,20 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, list:
         return;
     }
     let mut i: i16 = 0;
-    while i < read_i16(this + league::CLUB_COUNT) {
+    while i < this.club_count() {
         core::ptr::write_unaligned((*list + 4 * i as usize) as *mut usize, aus_nsl_table_row_club(this, i as usize));
         i += 1;
     }
     let mut i: i16 = 0;
-    while i < read_i16(this + league::CLUB_COUNT) {
-        let k = read_i16(this + league::CLUB_COUNT) as i32 + i as i32;
-        core::ptr::write_unaligned((*list + 4 * k as usize) as *mut usize, aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES)), i as usize));
+    while i < this.club_count() {
+        let k = this.club_count() as i32 + i as i32;
+        core::ptr::write_unaligned((*list + 4 * k as usize) as *mut usize, aus_nsl_table_row_club(League(read_usize(this.stages())), i as usize));
         i += 1;
     }
     let mut i: i16 = 0;
-    while i < read_i16(this + league::CLUB_COUNT) {
-        let k = 2 * read_i16(this + league::CLUB_COUNT) as i32 + i as i32;
-        core::ptr::write_unaligned((*list + 4 * k as usize) as *mut usize, aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES) + 4), i as usize));
+    while i < this.club_count() {
+        let k = 2 * this.club_count() as i32 + i as i32;
+        core::ptr::write_unaligned((*list + 4 * k as usize) as *mut usize, aus_nsl_table_row_club(League(read_usize(this.stages() + 4)), i as usize));
         i += 1;
     }
     crate::comparison::branch("cqs_2 mls clubs");
@@ -664,18 +670,19 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(t
 /// temporada regular), vai também para as tabelas das duas conferências (os estágios 0 e 1, pelo slot 2 deles, com a
 /// marca 0 e 1 e sem o bloco de estatísticas +8, guardado e devolvido). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usize, stats: u32) -> u32 {
+    let this = League(this);
     if (*((game + 0x42) as *const i8)) < 2 {
         *((game + 0x42) as *mut u8) = 0xff;
     }
     exe::league_add_result(this, game, stats);
-    if read_usize(this + league::CURRENT_STAGE) != 1 {
+    if this.current_stage() != 1 {
         return 1;
     }
-    let stored = read_usize(this + 8);
-    *((this + 8) as *mut u32) = 0;
+    let stored = read_usize(this.addr() + 8);
+    *((this.addr() + 8) as *mut u32) = 0;
     *((game + 0x42) as *mut u8) = 0;
     let estagio = |k: usize| -> (usize, unsafe extern "thiscall" fn(usize, usize, u32) -> u32) {
-        let e = read_usize(read_usize(this + league::STAGES) + 4 * k);
+        let e = read_usize(this.stages() + 4 * k);
         (e, core::mem::transmute(read_usize(read_usize(e) + 4)))
     };
     let (e0, f0) = estagio(0);
@@ -684,7 +691,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     let (e1, f1) = estagio(1);
     crate::comparison::branch("cqk_9 mls second conference");
     f1(e1, game, stats); // cqk9: the match in the second conference table
-    *((this + 8) as *mut u32) = stored as u32;
+    *((this.addr() + 8) as *mut u32) = stored as u32;
     1
 }
 

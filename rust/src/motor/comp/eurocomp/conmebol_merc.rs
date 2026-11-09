@@ -3,8 +3,8 @@ use super::*;
 /// Club k of the drawn list (+0xee pointers).
 ///
 /// [pt] O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
-pub(crate) unsafe fn conmebol_merc_drawn_club(this: usize, k: usize) -> usize {
-    read_usize(read_usize(this + 0xee) + k * 4) // cqr11: o sorteado k
+pub(crate) unsafe fn conmebol_merc_drawn_club(this: League, k: usize) -> usize {
+    read_usize(read_usize(this.addr() + 0xee) + k * 4) // cqr11: o sorteado k
 }
 
 /// `update_for_date(today, full)` (virtual +0x14): the Copa Mercosur's day. Rule: the Mercosur has 20 invited clubs
@@ -42,19 +42,20 @@ pub(crate) unsafe fn conmebol_merc_drawn_club(this: usize, k: usize) -> usize {
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e segue. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize, today: usize, full: u32) -> u32 {
+    let this = League(this);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     let mut junho = [0u8; 8];
     exe::date_date_549f70((junho.as_mut_ptr()) as *mut u8 as *mut [u16; 4], 1, 5, year_of_today as u32, (-1) as i32 as u32);
     if core::ptr::read_unaligned(junho.as_ptr().add(2) as *const u16) == year_of_today
         && core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16)
-        && read_i16(this + league::YEAR) as i32 != year_of_today as i32
+        && this.year() as i32 != year_of_today as i32
     {
-        let virada: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 8));
-        virada(this);
+        let virada: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 8));
+        virada(this.addr());
     }
-    if read_usize(this + league::ACTIVE) == 0 && full != 0 {
-        let day = read_i16(this + 0xb6) as u16; // cqr11: the draw day
-        let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
+    if this.active() == 0 && full != 0 {
+        let day = read_i16(this.addr() + 0xb6) as u16; // cqr11: the draw day
+        let year = (read_i16(this.addr() + 0xb8) as u16).wrapping_add(this.year() as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
             crate::comparison::branch("cqr_11 mercosul draw");
             exe::conmebolmerc_select_invited_clubs(this);
@@ -70,11 +71,11 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
             for g in 0..4i32 {
                 exe::conmebolmerc_create_group_stage(this, g);
             }
-            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
-            predicted(this);
-            exe::crt_free(read_usize(this + 0xee));
-            write_usize(this + 0xee, 0);
-            write_usize(this + league::ACTIVE, 1);
+            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+            predicted(this.addr());
+            exe::crt_free(read_usize(this.addr() + 0xee));
+            write_usize(this.addr() + 0xee, 0);
+            this.set_active(1);
         }
     }
     (exe::league_update_for_date(this, today, full) as u32)
@@ -87,11 +88,11 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
 /// Is today June 1 with the cup from another year (rollover day, draw not checked)?
 ///
 /// [pt] O dia da virada (1º de junho do ano de hoje, com a copa de outro ano): o comparador não confere o sorteio nesse dia.
-pub(crate) unsafe fn is_rollover_day(this: usize, today: usize) -> bool {
+pub(crate) unsafe fn is_rollover_day(this: League, today: usize) -> bool {
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     let mut junho = [0u8; 8];
     exe::date_date_549f70((junho.as_mut_ptr()) as *mut u8 as *mut [u16; 4], 1, 5, year_of_today as u32, (-1) as i32 as u32);
-    core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16) && read_i16(this + league::YEAR) as i32 != year_of_today as i32
+    core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16) && this.year() as i32 != year_of_today as i32
 }
 
 /// Builds the table of group 1 of the Copa Mercosur. Rule: group 1 has 4 clubs, the first 4 drawn, each in the row of
@@ -110,15 +111,16 @@ pub(crate) unsafe fn is_rollover_day(this: usize, today: usize) -> bool {
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
 /// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
+    let this = League(this);
+    this.set_club_count(4);
     let t = exe::crt_malloc(0xec);
-    write_usize(this + league::TABLE, t);
+    this.set_table(t);
     if t == 0 {
         show_error_at(0x9a7e5c, 0x155);
         return 0;
     }
     let mut i = 0i8;
-    while (i as i16) < read_i16(this + league::CLUB_COUNT) {
+    while (i as i16) < this.club_count() {
         crate::comparison::branch("cqr_11 first group row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
@@ -156,10 +158,11 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x211 e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: usize, g: i32) -> u32 {
+    let this = League(this);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = exe::crt_malloc(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
+    let teams = exe::crt_malloc(((this.club_count() as i32) << 2) as u32);
     if teams == 0 {
         show_error_at(0x9a7e5c, 0x1fb);
         return 0;
@@ -171,32 +174,32 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
         write_usize(teams + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: the team in the group slot
         k += 1;
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
-    let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
+    let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         construct(
             p,
-            this,
-            read_i16(this + league::CLUB_COUNT) as u16 as u32,
+            this.addr(),
+            this.club_count() as u16 as u32,
             teams,
-            read_i16(this + league::LEGS) as u16 as u32,
-            read_usize(this + 4),
+            this.legs() as u16 as u32,
+            read_usize(this.addr() + 4),
             table,
             rodadas as u16 as u32,
-            (read_u8(this + 0xc2) as u32),
-            (read_u8(this + 0xc3) as u32),
-            (read_u8(this + 0xc4) as u32),
-            this + league::TIEBREAKS,
-            this + league::PROMOTED_COUNT,
-            read_i16(this + league::YEAR) as u16 as u32,
+            (read_u8(this.addr() + 0xc2) as u32),
+            (read_u8(this.addr() + 0xc3) as u32),
+            (read_u8(this.addr() + 0xc4) as u32),
+            this.addr() + league::TIEBREAKS,
+            this.addr() + league::PROMOTED_COUNT,
+            this.year() as u16 as u32,
             g as u32,
             id as u16 as u32,
-            (read_u8(this + 0x51) as u32),
+            (read_u8(this.addr() + 0x51) as u32),
             2,
             0,
-            read_i16(this + league::LEAGUE_FLAGS) as u16 as u32,
+            this.league_flags() as u16 as u32,
             -1,
             0,
             2,
@@ -204,16 +207,16 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     } else {
         0
     };
-    write_usize(read_usize(this + league::STAGES) + g as usize * 4, stage);
+    write_usize(this.stages() + g as usize * 4, stage);
     exe::crt_free(teams);
     exe::crt_free(table);
-    let f = read_usize(read_usize(this + league::STAGES) + g as usize * 4);
+    let f = read_usize(this.stages() + g as usize * 4);
     if f == 0 {
         show_error_at(0x9a7e5c, 0x211);
         return 0;
     }
     exe::league_send_group_draw_news(f);
-    write_usize(this + league::CURRENT_STAGE, g as usize);
+    this.set_current_stage(g as usize);
     1
 }
 
@@ -250,7 +253,7 @@ pub(crate) type ConmebolMercGroupRound = (u32, u32, u32, u32);
 /// rodadas = o tamanho de `mata`, extra = 0; a tabela de 0x68 bytes por rodada (sem memória, a caixa `linha_m`), as
 /// rodadas pela `eng_cc_cup_write_cup_round` com o ano +0x40 da copa (com sinal) e as palavras de `a_mais` (rodada, deslocamento,
 /// valor). Acima de `limite`: devolve 0 sem gravar nada.
-pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32, limit: i8, groups: &[ConmebolMercGroupRound],
+pub(crate) unsafe fn south_american_cup_schedule(this: League, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32, limit: i8, groups: &[ConmebolMercGroupRound],
     knockout: &[EngCcCupCupRound], more: &[(usize, usize, u16)], file: usize, row_g: u32, row_m: u32, name_g: &'static str, name: &'static str) -> usize {
     let f = stage as u8 as i8;
     if f < limit {
@@ -267,7 +270,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
         crate::comparison::branch(name_g);
         // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
         // 0x68a160 only uses the low 16 bits: the copy passes the clean year
-        let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+        let year = (this.year() as u16) as u32;
         for (r, &(dia, mes, semana, codigo)) in groups.iter().enumerate() {
             exe::league_round_set_date(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
             exe::league_round_set_match_slot(t, r as i32, 0, -1, -1, -1, 0);
@@ -288,7 +291,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
         return 0;
     }
     crate::comparison::branch(name);
-    let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
+    let year = this.year() as i32 as u32;
     for (i, r) in knockout.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
     }
@@ -380,7 +383,7 @@ pub(crate) const MERCOSUR_FINAL_EXTRA_WRITES: [(usize, usize, u16); 1] = [(2, 0x
 /// fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 4 (a caixa da linha 0x97), o mata-mata na fase 4 (a caixa
 /// da linha 0xbd).
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    south_american_cup_schedule(this, stage, rounds, extra, league, 4, &MERCOSUR_GROUP_ROUNDS, &MERCOSUR_KNOCKOUT_ROUNDS, &MERCOSUR_FINAL_EXTRA_WRITES, 0x9a7e5c, 0x97, 0xbd,
+    south_american_cup_schedule(League(this), stage, rounds, extra, league, 4, &MERCOSUR_GROUP_ROUNDS, &MERCOSUR_KNOCKOUT_ROUNDS, &MERCOSUR_FINAL_EXTRA_WRITES, 0x9a7e5c, 0x97, 0xbd,
         "cqo_13 grupos da mercosul", "cqo_13 mata-mata da mercosul")
 }
 
@@ -438,6 +441,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_select_invited_clubs(this: 
 /// [pt] { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
 /// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_advance_stage(this: usize) {
-    con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
+    con_merc_cup_advance_stage_cqs11_fase_seguinte(League(this), 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
 }
 

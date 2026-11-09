@@ -676,7 +676,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(ma
 pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino: usize, player: usize) -> usize {
     let player = Staff(player);
     let table = core::ptr::read_unaligned((treino + 0x651d) as *const usize);
-    let id = *(core::ptr::read_unaligned((player.addr() + staff::PLAYER) as *const usize) as *const i32);
+    let id = *(player.player() as *const i32);
     (table as isize + id as isize * 6) as usize
 }
 

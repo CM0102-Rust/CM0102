@@ -162,20 +162,20 @@ pub(crate) unsafe fn club_records_queue_record_news(this: usize, club: usize, su
 ///
 /// [pt] As ligas da cadeia da 0x447430: a liga e, enquanto houver, a fase seguinte (0x48d200 da primeira, índice +0x44 + 1
 /// até +0x30) do tipo 2 (+0x43) com as mesmas +0x3e linhas.
-pub(crate) unsafe fn league_stage_chain(liga0: usize) -> Vec<usize> {
-    let mut v = vec![liga0];
-    let mut league = liga0;
+pub(crate) unsafe fn league_stage_chain(liga0: League) -> Vec<usize> {
+    let mut v = vec![liga0.addr()];
+    let mut league = liga0.addr();
     loop {
         let k = read_u8(league + league::STAGE_INDEX) as i8 as i32;
-        if k >= read_usize(liga0 + league::CURRENT_STAGE) as i32 {
+        if k >= liga0.current_stage() as i32 {
             return v;
         }
-        let f = exe::comp_get_stage(liga0, k + 1);
-        if read_u8(f + league::COMP_TYPE) != 2 || read_i16(f + league::CLUB_COUNT) != read_i16(league + league::CLUB_COUNT) {
+        let f = League(exe::comp_get_stage(liga0, k + 1));
+        if f.comp_type() != 2 || f.club_count() != read_i16(league + league::CLUB_COUNT) {
             return v;
         }
-        v.push(f);
-        league = f;
+        v.push(f.addr());
+        league = f.addr();
     }
 }
 
@@ -201,10 +201,11 @@ pub(crate) unsafe fn league_stage_chain(liga0: usize) -> Vec<usize> {
 /// competição (+1/+8) e o ano (+5/+0xc; 0 na temporada, 0x669950 em sempre). Em sempre (com `sempre`; id acima de
 /// [0xae2378] também é "sem"), a fila da notícia (club_records_queue_record_news). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: usize, always: u32) -> u32 {
-    if liga0 == 0 || read_u8(liga0 + league::STAGE_INDEX) != 0xff {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS)(this, liga0, always); // the boxes
+    let liga0 = League(liga0);
+    if liga0.is_null() || liga0.stage_index() != 0xff {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS)(this, liga0.addr(), always); // the boxes
     }
-    let comp = read_usize(read_usize(liga0 + 4)) as i32;
+    let comp = read_usize(read_usize(liga0.addr() + 4)) as i32;
     for liga in league_stage_chain(liga0) {
         if !POSITION_RECORDS_DRY_RUN {
             exe::league_sort_table(liga, 0);

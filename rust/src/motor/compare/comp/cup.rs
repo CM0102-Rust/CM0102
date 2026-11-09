@@ -280,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_update_staff_records_for_stat
     let state = club_state_record(club);
     let before = read_i32(state);
     let predicted = if read_u8(game + fixture::CATEGORY) != 1 && read_usize(cup + cup::STAGE_COUNT) == 0 && read_u8(cup + cup::STAGE_INDEX) == 0xff && outcome as u8 == 1
-        && wins_uefa_cup_place(read_usize(cup + 4), club) { read_i32(KEY_CLUB_COMP_UEFA_CUP) } else { before };
+        && wins_uefa_cup_place(Competition(read_usize(cup + 4)), club) { read_i32(KEY_CLUB_COMP_UEFA_CUP) } else { before };
     let r = o(cup, club, outcome, a3, a4, game, final_);
     let after = read_i32(state);
     SCOREBOARD.record(r == 0 && after == predicted, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", outcome as u8, before, after, predicted, r));

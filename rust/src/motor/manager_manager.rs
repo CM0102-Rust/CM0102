@@ -28,8 +28,8 @@ pub(crate) unsafe fn manager_manager_is_national_team(c: Club) -> u32 {
 /// senão 1 − |500 × (+0x69) − reputação| / 15000, × 1,25 na copa (+0x3a = 8) e pela fase (+0x30: 0x78 × 1,25, 0x82
 /// × 1,5, 0x8c × 0,75, 0x96 e 0xa0 × 2).
 pub(crate) unsafe fn match_weight(club: Club, partida: usize, factor: &mut f64) -> f64 {
-    let comp = read_usize(partida + fixture::COMPETITION);
-    if comp == 0 {
+    let comp = Competition(read_usize(partida + fixture::COMPETITION));
+    if comp.is_null() {
         return read_f64(rdata::F64_0_01);
     }
     let obj = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(partida) as usize).wrapping_mul(4)));
@@ -37,17 +37,17 @@ pub(crate) unsafe fn match_weight(club: Club, partida: usize, factor: &mut f64) 
         return read_f64(rdata::F64_0_2);
     }
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    if friendly(read_usize(G_FRIENDLY), comp) != 0 {
+    if friendly(read_usize(G_FRIENDLY), comp.addr()) != 0 {
         return if manager_manager_is_national_team(Club(read_usize(partida + fixture::HOME_CLUB))) != 0 { read_f64(rdata::F64_0_67) } else { read_f64(rdata::F64_0_05) };
     }
     if read_u8(partida + fixture::HOME_SIDE_MARK) == 0 {
         return read_f64(rdata::F64_0_1);
     }
-    if comp == read_usize(read_usize(partida + fixture::HOME_CLUB) + 0x57) {
-        *factor = read_i16(comp + competition::REPUTATION) as i32 as f64 * read_f64(rdata::F64_0_06) + read_f64(rdata::F64_0_27);
+    if comp.addr() == read_usize(read_usize(partida + fixture::HOME_CLUB) + 0x57) {
+        *factor = comp.reputation() as i32 as f64 * read_f64(rdata::F64_0_06) + read_f64(rdata::F64_0_27);
         return read_f64(rdata::F64_1);
     }
-    let x = (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(500).wrapping_sub(club.reputation() as i32);
+    let x = (comp.reputation() as i32).wrapping_mul(500).wrapping_sub(club.reputation() as i32);
     let mut p = read_f64(rdata::F64_1) - (x as f64).abs() * read_f64(rdata::F64_6_666666667ENEG_05);
     if read_u8(partida + fixture::CATEGORY) == 8 {
         p *= read_f64(rdata::F64_1_25);
@@ -2026,15 +2026,15 @@ pub(crate) unsafe extern "stdcall" fn news_board_ultimatum_text(news: usize, bod
     let person = read_usize(G_STAFF_TABLE).wrapping_add((v[0] as usize).wrapping_mul(staff::SIZE));
     let club = Club(friendly_club_by_id(v[4] as usize));
     let opponent = Club(friendly_club_by_id(v[5] as usize));
-    let comp = read_usize(G_CLUB_COMP_TABLE).wrapping_add((v[6] as usize).wrapping_mul(0x6b));
+    let comp = Competition(read_usize(G_CLUB_COMP_TABLE).wrapping_add((v[6] as usize).wrapping_mul(0x6b)));
     let mut name = [0u8; 0x200];
     let buf = name.as_mut_ptr() as usize;
     exe::database_format_staff_name(person, buf, 0x1f4, 1);
     if body != 0 {
-        let gc = read_u8(comp + competition::SHORT_GENDER_NAME) as i8 as i32;
+        let gc = comp.short_gender_name() as i8 as i32;
         let ga = (opponent.gender_name() as u8) as i8 as i32;
         let gl = (club.gender_name() as u8) as i8 as i32;
-        format(0xde1f64, 0xa12dac, gl, gl, ga, ga, gc, gc, club.addr() + 4, buf, opponent.addr() + club::NAME, comp + competition::SHORT_NAME);
+        format(0xde1f64, 0xa12dac, gl, gl, ga, ga, gc, gc, club.addr() + 4, buf, opponent.addr() + club::NAME, comp.addr() + competition::SHORT_NAME);
         exe::text_set_string(out, (0xde1f64) as usize as *const u8);
         if exe::database_staff_matches_names(person, v[1], v[2], v[3], (0) as usize) != 0 {
             exe::text_add_link(out, (buf) as usize as *const u8, 0x7da, person);
@@ -4753,11 +4753,11 @@ pub(crate) unsafe extern "thiscall" fn update_board_after_fixture(this: usize, p
 ///
 /// [pt] O tribunal (vetor [this], pelo byte +0x50 da competição de id `id` em [0xadadfc]), se houver.
 pub(crate) unsafe fn comp_tribunal(this: usize, id: i32) -> Option<usize> {
-    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((id as usize).wrapping_mul(4)));
-    if comp == 0 {
+    let comp = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((id as usize).wrapping_mul(4))));
+    if comp.is_null() {
         return None;
     }
-    let t = *((comp + league::DISCIPLINE_RULE) as *const i8);
+    let t = (comp.discipline_rule() as i8);
     if t == -1 {
         return None;
     }
@@ -4915,11 +4915,11 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
         }
     }
     if read_u8_volatile(person.addr() + staff::JOB_FOR_CLUB) == 5 {
-        let league = (club.division().addr() as u32) as usize;
+        let league = Competition((club.division().addr() as u32) as usize);
         let current = (person.club_job() as u32) as usize;
-        if league != 0 && current != 0 && read_u32(current + club::DIVISION) != 0 {
-            let liga2 = read_u32(current + club::DIVISION) as usize;
-            if read_i16(league + competition::REPUTATION) < read_i16(liga2 + competition::REPUTATION) {
+        if !league.is_null() && current != 0 && read_u32(current + club::DIVISION) != 0 {
+            let liga2 = Competition(read_u32(current + club::DIVISION) as usize);
+            if league.reputation() < liga2.reputation() {
                 return 0; // his club is in a better division
             }
             if league == liga2 && (rep(club.addr()) as i32 - 0x4e2) < rep(current) as i32 {

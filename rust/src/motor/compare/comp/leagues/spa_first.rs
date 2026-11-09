@@ -12,7 +12,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_create_schedule(this: u
 /// Comparer for `spa_first_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_spa_first_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_FIRST_SET_UP_RULES);
-    spa_first_compare_league_rules("spa_first_set_up_rules", this, primera_rules(), || o(this), || spa_first_set_up_rules(this))
+    spa_first_compare_league_rules("spa_first_set_up_rules", League(this), primera_rules(), || o(this), || spa_first_set_up_rules(this))
 }
 
 /// Comparer for `spa_first_create_table`.
@@ -29,6 +29,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_set_up_rules(this: usiz
 /// banco (até 20). Depois: os primeiros com +0x57 = o registro de [0x9cf764]; +0x3e = 20, a devolução, as linhas com
 /// os clubes da Primera na ordem e, cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
 pub(crate) unsafe extern "thiscall" fn compare_spa_first_create_table(this: usize) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_FIRST_CREATE_TABLE);
     let (mut baixo, mut plano): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     for i in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) as usize {
@@ -40,19 +41,19 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_create_table(this: usiz
             plano.push(club.addr());
         }
     }
-    let r = o(this);
-    let t = read_usize(this + league::TABLE);
+    let r = o(this.addr());
+    let t = this.table();
     let generica = comp_record_of(KEY_CLUB_COMP_A_LOWER_DIVISION);
-    let mut same = r == (plano.len() == 0x14) as u32 && read_i16(this + league::CLUB_COUNT) == 0x14 && t != 0 && baixo.iter().all(|&c| read_usize(c + club::DIVISION) == generica);
+    let mut same = r == (plano.len() == 0x14) as u32 && this.club_count() == 0x14 && t != 0 && baixo.iter().all(|&c| read_usize(c + club::DIVISION) == generica);
     let mut found: Vec<usize> = Vec::new();
     if same {
         found = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plano;
         if r == 1 {
-            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == exe::league_calc_prize_fund(this, 0x3d090);
+            same = same && this.prize_mode() == 1 && this.prize_fund() == exe::league_calc_prize_fund(this, 0x3d090);
         }
     }
-    SCOREBOARD.record(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, found));
+    SCOREBOARD.record(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this.addr(), r, baixo.len(), plano, found));
     r
 }
 
@@ -73,5 +74,5 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_set_club_progress(this:
 /// Comparer for `construct_spa_first`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_spa_first(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SPA_FIRST);
-    compare_division_league_ctor("construct_spa_first", this, year, record, &SPAIN_PRIMERA_DIVISION, || o(this, year, record))
+    compare_division_league_ctor("construct_spa_first", League(this), year, record, &SPAIN_PRIMERA_DIVISION, || o(this, year, record))
 }

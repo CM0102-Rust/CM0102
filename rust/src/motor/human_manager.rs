@@ -462,7 +462,7 @@ pub(crate) unsafe extern "thiscall" fn get_saved_lineup(manager: usize, person: 
 /// ficando o primeiro no empate); 0 se nenhum.
 pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) -> usize {
     let club = Club(club);
-    let auxiliar = core::ptr::read_unaligned((club.addr() + club::ASSISTANT_MANAGER) as *const usize);
+    let auxiliar = club.assistant_manager();
     if auxiliar != 0 {
         return auxiliar;
     }
@@ -470,7 +470,7 @@ pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) 
     let mut best = 0usize;
     for k in 0..5 {
         let c = Staff(core::ptr::read_unaligned((club.addr() + club::COACHES + k * 4) as *const usize));
-        if c.is_null() || core::ptr::read_unaligned((c.addr() + staff::NON_PLAYER) as *const usize) == 0 {
+        if c.is_null() || c.non_player() == 0 {
             continue;
         }
         if best == 0 || injury_word_0c(c.addr()) > injury_word_0c(best) {

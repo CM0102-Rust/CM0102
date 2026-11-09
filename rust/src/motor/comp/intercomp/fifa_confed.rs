@@ -8,5 +8,5 @@ use super::*;
 /// [pt] { 0x58b560 } (thiscall, ret 0x10, fifa_confed.cpp; a virtual +0x3c da Copa das Confederações): `FifaConfed::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `confed_cup_phase`.
 pub(crate) unsafe extern "thiscall" fn fifa_confed_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    build_phase_table(this, confed_cup_phase(stage), rounds, extra, league, 0x9c7474)
+    build_phase_table(League(this), confed_cup_phase(stage), rounds, extra, league, 0x9c7474)
 }

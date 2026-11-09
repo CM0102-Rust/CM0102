@@ -5,63 +5,66 @@ use super::*;
 
 /// Comparer for `oceania_club_champ_update_for_date`.
 pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_update_for_date(this: usize, today: usize, full: u32) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_OCEANIA_CLUB_CHAMP_UPDATE_FOR_DATE);
-    let draws = read_usize(this + league::ACTIVE) == 0
+    let draws = this.active() == 0
         && full == 0
-        && (read_i16(this + league::NEXT_DRAW_YEAR_OFFSET) as u16).wrapping_add(read_i16(this + league::YEAR) as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
-        && read_i16(this + league::NEXT_DRAW_DAY) as u16 == core::ptr::read_unaligned(today as *const u16);
-    let r = o(this, today, full);
+        && (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
+        && this.next_draw_day() as u16 == core::ptr::read_unaligned(today as *const u16);
+    let r = o(this.addr(), today, full);
     if draws {
-        let stages = read_usize(this + league::STAGES);
-        let ok = read_usize(this + league::ACTIVE) == 1
-            && read_usize(this + 0xee) == 0
-            && read_usize(this + 0xf2) == 0
-            && read_usize(this + league::TABLE) != 0
+        let stages = this.stages();
+        let ok = this.active() == 1
+            && read_usize(this.addr() + 0xee) == 0
+            && read_usize(this.addr() + 0xf2) == 0
+            && this.table() != 0
             && stages != 0
             && read_usize(stages) != 0
-            && read_usize(this + league::CURRENT_STAGE) == 0;
-        SCOREBOARD.record(ok, || format!("oceania_club_champ_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_usize(this + league::ACTIVE), read_usize(this + league::CURRENT_STAGE) as i32));
+            && this.current_stage() == 0;
+        SCOREBOARD.record(ok, || format!("oceania_club_champ_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
 
 /// Comparer for `create_group_a_table`.
 pub(crate) unsafe extern "thiscall" fn compare_create_group_a_table(this: usize) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_GROUP_A_TABLE);
-    let list = read_usize(this + 0xee);
+    let list = read_usize(this.addr() + 0xee);
     if list == 0 {
-        return o(this);
+        return o(this.addr());
     }
     let predicted: [usize; 4] = core::array::from_fn(|i| read_usize(list + i * 4));
-    let r = o(this);
-    let t = read_usize(this + league::TABLE);
+    let r = o(this.addr());
+    let t = this.table();
     let mut read = [(0usize, 0u8); 4];
     if t != 0 {
         for (i, l) in read.iter_mut().enumerate() {
             *l = (read_usize(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
         }
     }
-    let same = r == 1 && read_i16(this + league::CLUB_COUNT) == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
-    SCOREBOARD.record(same, || format!("create_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, predicted));
+    let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
+    SCOREBOARD.record(same, || format!("create_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this.addr(), r, read, predicted));
     r
 }
 
 /// Comparer for `create_group_b_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_create_group_b_stage(this: usize) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_GROUP_B_STAGE);
-    let list = read_usize(this + 0xee);
+    let list = read_usize(this.addr() + 0xee);
     if list == 0 {
-        return o(this);
+        return o(this.addr());
     }
     let mut plan: Vec<usize> = (4..8).map(|k| read_usize(list + k * 4)).collect();
-    let r = o(this);
+    let r = o(this.addr());
     if r == 1 {
-        let f = read_usize(read_usize(this + league::STAGES));
-        let t = if f != 0 { read_usize(f + league::TABLE) } else { 0 };
+        let f = League(read_usize(this.stages()));
+        let t = if !f.is_null() { f.table() } else { 0 };
         let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| read_usize(t + k * 0x3b)).collect() } else { Vec::new() };
         a.sort_unstable();
         plan.sort_unstable();
-        let ok = f != 0 && read_usize(this + league::CURRENT_STAGE) == 0 && read_i16(f + league::CLUB_COUNT) == 4 && read_i16(f + league::YEAR) == read_i16(this + league::YEAR) && a == plan;
+        let ok = !f.is_null() && this.current_stage() == 0 && f.club_count() == 4 && f.year() == this.year() && a == plan;
         SCOREBOARD.record(ok, || format!("create_group_b_stage: a fase não bate com o plano ({:x?} lidos {:x?})", plan, a));
     }
     r
@@ -102,25 +105,27 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_select_qualifi
 
 /// Comparer for `oceania_club_champ_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_advance_stage(this: usize) {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_OCEANIA_CLUB_CHAMP_ADVANCE_STAGE);
-    let f = read_usize(this + league::CURRENT_STAGE) as i32;
-    let last = f >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
-    o(this);
-    let after = read_usize(this + league::CURRENT_STAGE) as i32;
-    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    let f = this.current_stage() as i32;
+    let last = f >= (this.stage_count() as i32).wrapping_sub(1);
+    o(this.addr());
+    let after = this.current_stage() as i32;
+    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this.addr(), f, after));
 }
 
 /// Comparer for `oceania_club_champ_create_knockout_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_create_knockout_stage(this: usize) {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_OCEANIA_CLUB_CHAMP_CREATE_KNOCKOUT_STAGE);
-    if read_usize(this + league::TABLE) == 0 || read_usize(this + league::STAGES) == 0 || read_usize(read_usize(this + league::STAGES)) == 0 {
-        return o(this);
+    if this.table() == 0 || this.stages() == 0 || read_usize(this.stages()) == 0 {
+        return o(this.addr());
     }
     let mut plan = semifinalists(this).to_vec();
-    o(this);
-    let stage = read_usize(read_usize(this + league::STAGES) + 4);
+    o(this.addr());
+    let stage = read_usize(this.stages() + 4);
     if stage == 0 {
-        SCOREBOARD.record(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this));
+        SCOREBOARD.record(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this.addr()));
         return;
     }
     let list = read_usize(stage + cup::TEAM_TABLE);
@@ -128,8 +133,8 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_create_knockou
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == read_usize(this + 4);
-    SCOREBOARD.record(same, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == read_usize(this.addr() + 4);
+    SCOREBOARD.record(same, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this.addr(), pl, ac));
 }
 
 /// Comparer for `oceania_club_champ_create_schedule`.
@@ -142,5 +147,5 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_create_schedul
 /// Comparer for `oceania_club_champ_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_OCEANIA_CLUB_CHAMP_SET_UP_RULES);
-    check_cup_rules("oceania_club_champ_set_up_rules", this, &OCEANIA_RULES, || o(this))
+    check_cup_rules("oceania_club_champ_set_up_rules", League(this), &OCEANIA_RULES, || o(this))
 }

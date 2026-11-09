@@ -610,12 +610,12 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                     }
                     b'C' | b'c' | b'F' | b'f' => {
                         if comp >= 0 {
-                            let cp = (*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((comp as usize).wrapping_mul(0x6b));
+                            let cp = Competition((*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((comp as usize).wrapping_mul(0x6b)));
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
                             let r = if x as u8 == b'C' || x as u8 == b'c' {
-                                let g = *((cp + competition::SHORT_GENDER_NAME) as *const u8) as u32;
-                                exe::langlib_apply_grammar_modifier(cp + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
+                                let g = cp.short_gender_name() as u32;
+                                exe::langlib_apply_grammar_modifier(cp.addr() + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
                             } else {
                                 exe::comp_util_format_comp_stage_round_label(cp, 0, 0x96, 3, text_stage.as_mut_ptr(), 0x7d0);
                                 let g = exe::comp_util_get_label_gender(0, 0, 0x96, 3) as u32;
@@ -930,12 +930,12 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                         }
                         b'C' | b'c' | b'F' | b'f' => {
                             if comp >= 0 {
-                                let cp = (*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((comp as usize).wrapping_mul(0x6b));
+                                let cp = Competition((*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((comp as usize).wrapping_mul(0x6b)));
                                 prefixo(pos, &mut pre);
                                 sufixo(pos + 2, &mut suf);
                                 let r = if x == b'C' || x == b'c' {
-                                    let g = *((cp + competition::SHORT_GENDER_NAME) as *const u8) as u32;
-                                    exe::langlib_apply_grammar_modifier(cp + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
+                                    let g = cp.short_gender_name() as u32;
+                                    exe::langlib_apply_grammar_modifier(cp.addr() + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
                                 } else {
                                     exe::comp_util_format_comp_stage_round_label(cp, 0, 0x96, 3, text_stage.as_mut_ptr(), 0x7d0);
                                     let g = exe::comp_util_get_label_gender(0, 0, 0x96, 3) as u32;

@@ -290,6 +290,7 @@ pub(crate) const PRIMERA_ODD_YEAR_CHRISTMAS: SpaFirstChristmasSchedule = SpaFirs
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 38 rodadas, a tabela pela paridade do ano +0x40 (o resto da divisão com
 /// sinal: `movsx; and 0x80000001; jns`), cada uma com a rodada do Natal; as outras devolvem 0. Fonte 0xa82944.
 pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let this = League(this);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -303,7 +304,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, st
                 return 0;
             }
             crate::comparison::branch("cqp_6 primera calendar");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+            let year = (this.year() as u16) as u32;
             if (year as i16) % 2 != 0 {
                 write_rounds_winter_break(t, year, &PRIMERA_ODD_YEAR_CHRISTMAS, 0xa82844);
             } else {
@@ -327,18 +328,18 @@ pub(crate) static mut SPA_FIRST_RULES_DRY_RUN: bool = false;
 /// [pt] Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
 /// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
 /// resultado em +0xba. Devolve 1.
-pub(crate) unsafe fn spa_first_apply_league_rules(this: usize, written: &[(usize, u8, u32)]) -> u32 {
+pub(crate) unsafe fn spa_first_apply_league_rules(this: League, written: &[(usize, u8, u32)]) -> u32 {
     for &(d, t, v) in written {
         match t {
-            1 => *((this + d) as *mut u8) = v as u8,
-            2 => core::ptr::write_unaligned((this + d) as *mut u16, v as u16),
-            _ => core::ptr::write_unaligned((this + d) as *mut u32, v),
+            1 => *((this.addr() + d) as *mut u8) = v as u8,
+            2 => core::ptr::write_unaligned((this.addr() + d) as *mut u16, v as u16),
+            _ => core::ptr::write_unaligned((this.addr() + d) as *mut u32, v),
         }
     }
     if !SPA_FIRST_RULES_DRY_RUN {
-        let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
-        let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
-        core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, t);
+        let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+        let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
+        this.set_round_dates(t);
     }
     1
 }
@@ -368,8 +369,9 @@ pub(crate) fn spanish_common_rules() -> Vec<(usize, u8, u32)> {
 /// (+0xbe = +0xbf = 0), 3 caem (+0xc1), nenhuma liga acima (+0x1c = −1), a Segunda abaixo (+0x20 = [0x9cf628]) e
 /// +0x52 = 2 [sem nome].
 pub(crate) unsafe extern "thiscall" fn spa_first_set_up_rules(this: usize) -> u32 {
+    let this = League(this);
     crate::comparison::branch("cqk_4 primera rules");
-    core::ptr::write_unaligned((this + league::ROUND_COUNT) as *mut u16, 0x26);
+    this.set_round_count((0x26) as i16);
     spa_first_apply_league_rules(this, &primera_rules())
 }
 
@@ -411,8 +413,8 @@ pub(crate) unsafe fn lower_division_rules() -> Vec<(usize, u8, u32)> {
 /// [pt] O comparador das três (ensaio, como o da cqi_4): a original roda inteira; a faixa +0x1c..+0xec volta e a cópia
 /// grava as regras sem a virtual +0x3c; os campos da lista saem iguais aos da original (o +0xa9 da Primera, que a
 /// virtual reescreve, fica de fora), e a devolução 1; no fim fica a faixa da original.
-pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, written: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
-    let band = [(this + league::UPPER_DIVISION_ID, 0xd0)];
+pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: League, written: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
+    let band = [(this.addr() + league::UPPER_DIVISION_ID, 0xd0)];
     let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
     let mo = crate::comparison::MemorySnapshot::read(&band);
@@ -431,7 +433,7 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, wri
         }
     };
     let difs: Vec<(usize, u32, u32)> = written.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
+    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this.addr(), r, rr, difs));
     r
 }
 
@@ -454,9 +456,10 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, wri
 /// League::calc_prize_fund 0x682f70 pela cota de 250.000), +0xe1 = 1, a TV de 5.000.000 a cada clube (0x683010:
 /// thiscall(liga, valor, 0), ret 8) e 1.
 pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x14);
+    let this = League(this);
+    this.set_club_count(0x14);
     let t = exe::crt_malloc(0x49c);
-    core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
+    this.set_table(t);
     if t == 0 {
         show_error_at(0xa82844, 0x250);
         return 0;
@@ -483,20 +486,20 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
             // o byte.
             exe::league_init_table_row(this, row as u32, club, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
+            if k as i8 as i16 == this.club_count() {
                 break;
             }
         }
         i = i.wrapping_add(1);
         club = club.wrapping_add(0x245);
     }
-    if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
+    if k as i8 as i16 != this.club_count() {
         return 0;
     }
     crate::comparison::branch("cqk_5 primera fixtures");
     let f = exe::league_calc_prize_fund(this, 0x3d090); // cqk5: the Primera quota
-    core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
-    *((this + league::PRIZE_MODE) as *mut u8) = 1; // cqk5: the table prize at the end of the league
+    this.set_prize_fund(f);
+    this.set_prize_mode(1); // cqk5: the table prize at the end of the league
     exe::league_pay_tv_rights(this, 0x4c4b40, 0); // cqk5: the Primera TV money
     1
 }
@@ -538,6 +541,6 @@ pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, 
 /// [pt] { 0x84e130 } (thiscall, ret 8, spa_first.cpp, 606 bytes): `SpaFirst::SpaFirst(ano, registro)`: a Primera,
 /// disciplina 0x1a, só a liga, e a divisão de baixo espanhola em +0xee.
 pub(crate) unsafe extern "thiscall" fn construct_spa_first(this: usize, year: u32, record: usize) -> usize {
-    construct_division_league(this, year, record, &SPAIN_PRIMERA_DIVISION)
+    construct_division_league(League(this), year, record, &SPAIN_PRIMERA_DIVISION)
 }
 

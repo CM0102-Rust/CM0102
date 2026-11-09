@@ -289,7 +289,8 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
 /// 2; senão a linha de continente (nação 0) com o continente da competição (+0x59), ou 3. A original lê +0x5d antes de
 /// conferir a competição nula (o caso de erro nunca chega à caixa). TapeCall a cada partida: sem contador.
 pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
-    let nation = read_usize(comp + competition::NATION);
+    let comp = Competition(comp);
+    let nation = comp.nation();
     if nation != 0 {
         let row = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation); // cpt4: the nation search
         return match row {
@@ -297,7 +298,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
             None => 4,
         };
     }
-    let id = read_usize(comp);
+    let id = read_usize(comp.addr());
     let cup = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT]; // cpt4: the World Cup and the qualifiers
     if cup.iter().any(|&g| read_usize(g) == id) {
         return 0;
@@ -309,7 +310,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
         return 2;
     }
     for k in 0..0x23usize {
-        let c = read_usize(comp + competition::CONTINENT);
+        let c = comp.continent();
         if read_usize(G_LEAGUE_TABLE + 72 * k) == 0 && c != 0 && c == read_usize(G_LEAGUE_WORLD_CUP_CONTINENT + 72 * k) {
             return k as u8; // cpt4: the continent row
         }

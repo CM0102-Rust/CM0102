@@ -7052,19 +7052,19 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let d8 = |a: usize| read_f64(a);
     let f4 = |a: usize| read_f32(a) as f64;
     let sheet = || person.player();
-    let of_game = *((comp + fixture::COMPETITION) as *const usize);
+    let of_game = Competition(*((comp + fixture::COMPETITION) as *const usize));
     let injury_word_0c = || rep.reputation() as i32;
     // the competition level
     let mut level: i8 = if *(comp as *const i32) == -2 {
         5
     } else {
         let n = if read_i8(comp + fixture::HOME_SIDE_MARK) != 0 {
-            Some(((injury_word_0c() / 500 + read_i16(of_game + competition::REPUTATION) as i32) / 2) as i8)
+            Some(((injury_word_0c() / 500 + of_game.reputation() as i32) / 2) as i8)
         } else if *(G_NATIONAL_TEAMS as *const usize) != 0 && exe::national_teams_is_finals_comp(*(G_NATIONAL_TEAMS as *const usize), of_game) != 0 {
-            let v = read_i16(of_game + competition::REPUTATION);
+            let v = of_game.reputation();
             if v <= 0xf { None } else { Some(v as i8) }
         } else {
-            Some(read_i8(of_game + competition::REPUTATION))
+            Some((of_game.reputation() as i8))
         };
         match n {
             None => 15,
@@ -7094,7 +7094,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let ja_national_team = exe::database_is_national_team(club) != 0;
     let div_9 = if ja_national_team
         || (*(comp as *const i32) == -2 && (club.nation().addr() as i32) != 0 && (club.nation().addr() as i32) == (person.nation() as i32))
-        || (of_game != 0 && *((of_game + competition::NATION) as *const i32) == (person.nation() as i32))
+        || (!of_game.is_null() && (of_game.nation() as i32) == (person.nation() as i32))
         || (club.nation().addr() as i32) == (person.nation() as i32)
     {
         grande = true;
@@ -7117,7 +7117,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
         if read_i8(comp + fixture::CATEGORY) == 0xa
             && *(G_NATIONAL_TEAMS as *const usize) != 0
             && exe::national_teams_is_finals_comp(*(G_NATIONAL_TEAMS as *const usize), of_game) != 0
-            && read_i16(of_game + competition::REPUTATION) >= 0x11
+            && of_game.reputation() >= 0x11
             && !((factor as f64) < d8(0x968988))
             && injury_word_0c() > 0x157c
         {
@@ -7156,7 +7156,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
             }
         } else if matches!(c30, 0x78..=0x7c | 0x82..=0x87 | 0x96..=0x9b) {
             let id = age(0xd, 0x15);
-            level = read_i8(of_game + competition::REPUTATION);
+            level = (of_game.reputation() as i8);
             div_d = (id as i16).wrapping_sub(level as i16);
             if !((factor as f64) < d8(0x968eb0)) && injury_word_0c() > 0x157c {
                 (pa, pb, pc) = floor((injury_word_0c() - 0x1194) as f64 * (factor as f64 - d8(0x968988)), grande);
@@ -8936,8 +8936,8 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
         }
         let partida = *((m + engine::MATCH) as *const usize);
         let (mut v44, mut v4c, mut v50) = (0i32, 0i32, 0i32);
-        let comp = *((partida + fixture::COMPETITION) as *const usize);
-        let mut edi: i32 = if comp != 0 { (*((comp + competition::REPUTATION) as *const i16) as i32 - 12) * 25 } else { 0 };
+        let comp = Competition(*((partida + fixture::COMPETITION) as *const usize));
+        let mut edi: i32 = if !comp.is_null() { (comp.reputation() as i32 - 12) * 25 } else { 0 };
         let mut v30 = edi.wrapping_mul(-4);
         let mut v38 = 0i32;
         let lp = side_of_player(p);
@@ -10139,14 +10139,14 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
     if st == 0 {
         return;
     }
-    let comp = *((partida + fixture::COMPETITION) as *const usize);
+    let comp = Competition(*((partida + fixture::COMPETITION) as *const usize));
     let mut level: i8 = if *(partida as *const i32) == -2 {
         5
     } else {
         let v = if read_i8(partida + fixture::HOME_SIDE_MARK) != 0 {
-            (((other.reputation() as i32) / 500 + (read_i16(comp + competition::REPUTATION) as i32)) / 2) as i8
+            (((other.reputation() as i32) / 500 + (comp.reputation() as i32)) / 2) as i8
         } else {
-            read_i8(comp + competition::REPUTATION)
+            (comp.reputation() as i8)
         };
         v.min(20)
     };
@@ -10157,7 +10157,7 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
     let club_p = p.nation();
     let (mut f_atual, mut f_mundo) = (2i32, 2i32);
     // simplification: the original also tests match -2 with a non-null +0x53; the last test (+0x53 equal) already covers it
-    let n_current: i16 = if national_team || (comp != 0 && *((comp + competition::NATION) as *const usize) == club_p) || my.nation().addr() == club_p {
+    let n_current: i16 = if national_team || (!comp.is_null() && comp.nation() == club_p) || my.nation().addr() == club_p {
         f_atual = 1;
         ceiling(atual, 22).wrapping_sub(level as i16)
     } else {
@@ -10174,7 +10174,7 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
         if (0x41f..=0x426).contains(&w32) {
             ceiling(mundo, 21).wrapping_sub(level as i16).wrapping_add(1)
         } else if matches!(w30, 0x78..=0x7c | 0x82..=0x87 | 0x96..=0x9b) {
-            level = read_i8(comp + competition::REPUTATION);
+            level = (comp.reputation() as i8);
             ceiling(mundo, 21).wrapping_sub(level as i16)
         } else {
             (0xca - 10 * level as i32) as i16
@@ -10257,15 +10257,15 @@ pub(crate) unsafe extern "C" fn new_reputation(this: usize, side: i8, value: f32
     } else {
         (*((partida + fixture::HOME_CLUB) as *const usize), *((partida + fixture::AWAY_CLUB) as *const usize))
     };
-    let comp = *((partida + fixture::COMPETITION) as *const usize);
+    let comp = Competition(*((partida + fixture::COMPETITION) as *const usize));
     let rep_de = |c: usize| *((c + club::REPUTATION) as *const i16) as i32;
     let mut level: i8 = if *(partida as *const i32) == -2 {
         5
     } else {
         let v = if read_i8(partida + fixture::HOME_SIDE_MARK) != 0 {
-            ((rep_de(outro) / 500 + *((comp + competition::REPUTATION) as *const i16) as i32) / 2) as i8
+            ((rep_de(outro) / 500 + comp.reputation() as i32) / 2) as i8
         } else {
-            read_i8(comp + competition::REPUTATION)
+            (comp.reputation() as i8)
         };
         v.min(20)
     };
@@ -10277,7 +10277,7 @@ pub(crate) unsafe extern "C" fn new_reputation(this: usize, side: i8, value: f32
     } else if read_i8(partida + fixture::CATEGORY) == 8 && (0x41f..=0x426).contains(&w32) {
         ceiling().wrapping_sub(level as i16).wrapping_add(1)
     } else if read_i8(partida + fixture::CATEGORY) == 8 && matches!(w30, 0x78..=0x7c | 0x82..=0x87 | 0x96..=0x9b) {
-        level = read_i8(comp + competition::REPUTATION);
+        level = (comp.reputation() as i8);
         ceiling().wrapping_sub(level as i16)
     } else {
         (0xca - 10 * level as i32) as i16
@@ -11310,8 +11310,8 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
         }
         if n == 0 { None } else { Some((s / n) as i16) }
     };
-    let of_club = || core::ptr::read_unaligned((club.addr() + club::DIVISION) as *const u32) == *((c + fixture::COMPETITION) as *const u32);
-    let of_competition = || core::ptr::read_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *const u32) == *(c as *const u32);
+    let of_club = || (club.division().addr() as u32) == *((c + fixture::COMPETITION) as *const u32);
+    let of_competition = || club.continental_comp_id() == *(c as *const u32);
     let minute = core::ptr::read_unaligned((m + engine::CLOCK) as *const i16) as i32 / 11;
     // 0x6d587c / 0x6d5704: the table row (+o1, +o2) against random rolls; writes +o2 to `saida`
     let table = |o1: usize, o2: usize| -> u32 {

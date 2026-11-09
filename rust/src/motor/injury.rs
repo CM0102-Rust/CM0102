@@ -2254,7 +2254,7 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
                 if p.club_job() == club.addr() {
                     match p.job_for_club() {
                         0xb => {
-                            core::ptr::write_unaligned((p.addr() + staff::CLUB_JOB) as *mut usize, 0);
+                            p.set_club_job(0);
                             p.set_job_for_club(8);
                         }
                         0xf => *((p.addr() + staff::JOB_FOR_CLUB) as *mut u8) = 8,
@@ -2437,7 +2437,7 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
         return RecurringInjuryOutcome::Marcada;
     }
     let club = Club(read_usize(pessoa + staff::CLUB_JOB));
-    if read_usize(pessoa + staff::PLAYER) != 0 && !club.is_null() && core::ptr::read_unaligned((club.addr() + club::REPUTATION) as *const i16) > 0x109a {
+    if read_usize(pessoa + staff::PLAYER) != 0 && !club.is_null() && club.reputation() > 0x109a {
         let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
         if human(club.addr(), 0, 1, 0, 0) == 0 && friendly_random(3) == 0 && pessoa != 0 {
             return RecurringInjuryOutcome::Tratar(pessoa);
@@ -2944,7 +2944,7 @@ pub(crate) unsafe extern "thiscall" fn daily_wear(t: usize, id: i32) {
         let r = exe::utils_random(0xd) as i16;
         core::ptr::write_unaligned(e, core::ptr::read_unaligned(e).wrapping_sub(r));
     }
-    let sheet = core::ptr::read_unaligned((p.addr() + staff::PLAYER) as *const usize);
+    let sheet = p.player();
     if sheet != 0 && *((sheet + player_sheet::GOALKEEPER) as *const u8) == 0x14 && core::ptr::read_unaligned(e) >= 0x41a {
         core::ptr::write_unaligned(e, 0x41a);
     }

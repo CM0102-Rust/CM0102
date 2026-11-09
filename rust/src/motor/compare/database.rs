@@ -712,7 +712,7 @@ pub(crate) unsafe extern "C" fn compare_staff_remove_favoured_staff(person: usiz
 pub(crate) unsafe extern "C" fn compare_staff_remove_disliked_staff(person: usize, target: usize) -> usize {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_DISLIKED_STAFF);
-    let pref = if person.is_null() { 0 } else { core::ptr::read_unaligned((person.addr() + staff::STAFF_PREFERENCES) as *const usize) };
+    let pref = if person.is_null() { 0 } else { person.staff_preferences() };
     if pref == 0 {
         return o(person.addr(), target); // writes nothing
     }
@@ -1023,7 +1023,7 @@ pub(crate) unsafe extern "C" fn compare_compare_staff_by_player_ability_desc(a: 
 pub(crate) unsafe fn compare_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), person: usize,
                                            name: &'static str) {
     let person = Staff(person);
-    let player = if person.is_null() { 0 } else { core::ptr::read_unaligned((person.addr() + staff::PLAYER) as *const usize) };
+    let player = if person.is_null() { 0 } else { person.player() };
     if player == 0 {
         return o(person.addr()); // does nothing: original only
     }
@@ -1160,7 +1160,7 @@ pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: us
     // the club, the person and, for the senior national team, the U21 (the only other place the routine zeroes)
     let mut regions = vec![(club.addr(), 581), (person, 110)];
     let (id, n, nacoes) = (*(club.addr() as *const i32), *(G_CLUB_COUNT as *const i32), *(G_NATION_COUNT as *const i32));
-    let nation = core::ptr::read_unaligned((club.addr() + club::NATION) as *const usize);
+    let nation = club.nation().addr();
     if id >= n.wrapping_sub(nacoes.wrapping_mul(2)) && id < n.wrapping_sub(nacoes) && nation != 0 {
         let s = exe::database_get_national_u21_team(nation);
         if s != club.addr() {
@@ -1332,7 +1332,7 @@ pub(crate) unsafe extern "C" fn compare_database_vector_to_player(player: usize,
 pub(crate) unsafe extern "C" fn compare_staff_normalise_non_player_attributes(person: usize) {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_NON_PLAYER_ATTRIBUTES);
-    let nj = if person.is_null() { 0 } else { core::ptr::read_unaligned((person.addr() + staff::NON_PLAYER) as *const usize) };
+    let nj = if person.is_null() { 0 } else { person.non_player() };
     if nj == 0 {
         return o(person.addr()); // does nothing: original only
     }
@@ -1461,7 +1461,7 @@ pub(crate) unsafe extern "C" fn compare_staff_adjust_morale(person: usize, delta
     }
     // rolls (0x90cfc0): the generator state goes back between the sides and the copy does not count the rolls
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((core::ptr::read_unaligned((person.addr() + staff::PLAYER) as *const usize) + 0x45, 1));
+    reg.push((person.player() + 0x45, 1));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person.addr(), delta, limitar),
         || crate::rng::without_counting(|| staff_adjust_morale(person.addr(), delta, limitar)));
     SCOREBOARD.record(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", person.addr(), delta as u8 as i8, limitar, r, n, mo, mr));

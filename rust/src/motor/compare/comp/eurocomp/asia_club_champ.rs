@@ -23,9 +23,9 @@ pub(crate) unsafe extern "thiscall" fn compare_create_group_stages(this: usize) 
     let v = group_stage_qualifiers(this);
     o(this);
     let checks = |g: usize, de: &[usize]| {
-        let f = read_usize(read_usize(this + cup::STAGES) + g * 4);
-        let t = if f != 0 { read_usize(f + league::TABLE) } else { 0 };
-        if t == 0 || read_i16(f + league::CLUB_COUNT) != 4 || read_i16(f + league::YEAR) != read_i16(this + cup::YEAR) {
+        let f = League(read_usize(read_usize(this + cup::STAGES) + g * 4));
+        let t = if !f.is_null() { f.table() } else { 0 };
+        if t == 0 || f.club_count() != 4 || f.year() != read_i16(this + cup::YEAR) {
             return false;
         }
         let mut a: Vec<usize> = (0..4).map(|k| read_usize(t + k * 0x3b)).collect();

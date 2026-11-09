@@ -22,12 +22,13 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_second_create_schedule(this: 
 /// rotina grava (+0x37 = 0 e saiu = 1 com 1; +0x37 = 0xfe com 0xff ou 2; nada com 0, que segue procurando outra linha
 /// do mesmo clube); depois a linha e `saiu` têm de estar assim. Na liga a rotina não grava nada: a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, left: usize, a: u32, b: u32) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(IDX_ENG_SECOND_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let s = status as u8;
     let mut plan: Option<(usize, u8, bool)> = None;
     if stage as u8 != 0xff {
-        let table = read_usize(this + league::TABLE);
-        let n = *((this + league::CLUB_COUNT) as *const i16) as i32;
+        let table = this.table();
+        let n = this.club_count() as i32;
         let mut i: i32 = 0;
         while i < n {
             let row = table + (i as usize) * 0x3b;
@@ -47,42 +48,42 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_second_update_staff_records_f
             i += 1;
         }
     }
-    let r = o(this, club, status, stage, left, a, b);
+    let r = o(this.addr(), club, status, stage, left, a, b);
     let same = r == 0
         && match plan {
             Some((row, v, marca)) => read_u8(row + league_table_row::STATUS) == v && (!marca || read_u8(left) == 1),
             None => true,
         };
-    SCOREBOARD.record(same, || format!("eng_second_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, club, s, stage as u8, r, plan));
+    SCOREBOARD.record(same, || format!("eng_second_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this.addr(), club, s, stage as u8, r, plan));
     r
 }
 
 /// Comparer for `eng_second_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_second_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_SECOND_ADVANCE_STAGE);
-    compare_stage_advance("eng_second_advance_stage", this, || o(this), || eng_second_advance_stage(this))
+    compare_stage_advance("eng_second_advance_stage", League(this), || o(this), || eng_second_advance_stage(this))
 }
 
 /// Comparer for `eng_second_create_play_off_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_second_create_play_off_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_SECOND_CREATE_PLAY_OFF_STAGE);
-    compare_playoff_stage("eng_second_create_play_off_stage", this, [5, 2, 4, 3], || o(this))
+    compare_playoff_stage("eng_second_create_play_off_stage", League(this), [5, 2, 4, 3], || o(this))
 }
 
 /// Comparer for `construct_eng_second`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_eng_second(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_SECOND);
-    compare_english_constructor("construct_eng_second", this, year, record, &ENG_SECOND_DIVISION, || o(this, year, record))
+    compare_english_constructor("construct_eng_second", League(this), year, record, &ENG_SECOND_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `eng_second_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_second_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_SECOND_SET_UP_RULES);
-    eng_prm_compare_league_rules("eng_second_set_up_rules", this, eng_prm_second_division_rules(), || o(this), || eng_second_set_up_rules(this))
+    eng_prm_compare_league_rules("eng_second_set_up_rules", League(this), eng_prm_second_division_rules(), || o(this), || eng_second_set_up_rules(this))
 }
 
 /// Comparer for `eng_second_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_second_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_SECOND_CREATE_TABLE);
-    eng_prm_compare_league_table("eng_second_create_table", this, 0x18, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, 0x4e20, || o(this))
+    eng_prm_compare_league_table("eng_second_create_table", League(this), 0x18, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, 0x4e20, || o(this))
 }

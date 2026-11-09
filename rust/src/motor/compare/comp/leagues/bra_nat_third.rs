@@ -9,15 +9,16 @@ use super::*;
 /// campeões dos grupos da terceira fase. Depois, a fase da vaga 10 existe, com +0x3e = 2, os dois na lista dela (como
 /// conjunto) e +0x30 = 10.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_final_stage(this: usize) {
+    let this = League(this);
     let (a, b) = (stage_leader(this, 8), stage_leader(this, 9));
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_CREATE_FINAL_STAGE)(this);
-    let stage = read_usize(read_usize(this + league::STAGES) + 0x28);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_CREATE_FINAL_STAGE)(this.addr());
+    let stage = read_usize(this.stages() + 0x28);
     let same = stage != 0 && {
         let l = read_usize(stage + cup::TEAM_TABLE);
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(this + league::CURRENT_STAGE) == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
+        read_i16(stage + cup::TEAM_COUNT) == 2 && this.current_stage() == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    SCOREBOARD.record(same, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this, a, b, stage));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this.addr(), a, b, stage));
 }
 
 /// Comparer for `bra_nat_third_start_new_season`.
@@ -30,11 +31,12 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_final_stage(
 /// grupos; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1, os sete grupos nas vagas 0 a 6 e a
 /// lista dos 56 zerada.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_start_new_season(this: usize) -> u32 {
-    let before = read_i16(this + league::YEAR);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_START_NEW_SEASON)(this);
-    let after = read_i16(this + league::YEAR);
-    let same = after == before.wrapping_add(1) && read_usize(this + 0xee) == 0 && (0..7).all(|g| read_usize(read_usize(this + league::STAGES) + 4 * g) != 0);
-    SCOREBOARD.record(same, || format!("bra_nat_third_start_new_season({:#x}) ano antes={} depois={} +0xee={:#x}", this, before, after, read_usize(this + 0xee)));
+    let this = League(this);
+    let before = this.year();
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_START_NEW_SEASON)(this.addr());
+    let after = this.year();
+    let same = after == before.wrapping_add(1) && read_usize(this.addr() + 0xee) == 0 && (0..7).all(|g| read_usize(this.stages() + 4 * g) != 0);
+    SCOREBOARD.record(same, || format!("bra_nat_third_start_new_season({:#x}) ano antes={} depois={} +0xee={:#x}", this.addr(), before, after, read_usize(this.addr() + 0xee)));
     r
 }
 
@@ -78,24 +80,25 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_posit
 /// sete clubes das vagas 7(g + 1).. da lista dos 56. Depois, a fase na vaga g com +0x3e = 7, os sete na tabela dela
 /// (como conjunto) e +0x30 = g.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_group_stage(this: usize, g: u32) {
+    let this = League(this);
     let k = g as u8 as i8 as i32;
     let mut plan = [0usize; 7];
     for (j, c) in plan.iter_mut().enumerate() {
-        *c = read_usize(read_usize(this + 0xee) + 4 * (7 * (k + 1) as usize + j));
+        *c = read_usize(read_usize(this.addr() + 0xee) + 4 * (7 * (k + 1) as usize + j));
     }
-    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_NAT_THIRD_CREATE_GROUP_STAGE)(this, g);
-    let stage = read_usize(read_usize(this + league::STAGES) + 4 * k as usize);
-    let same = stage != 0 && read_i16(stage + league::CLUB_COUNT) == 7 && read_usize(this + league::CURRENT_STAGE) as i32 == k && {
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_NAT_THIRD_CREATE_GROUP_STAGE)(this.addr(), g);
+    let stage = League(read_usize(this.stages() + 4 * k as usize));
+    let same = !stage.is_null() && stage.club_count() == 7 && this.current_stage() as i32 == k && {
         let mut in_it = [0usize; 7];
         for (j, c) in in_it.iter_mut().enumerate() {
-            *c = read_usize(read_usize(stage + league::TABLE) + j * 0x3b);
+            *c = read_usize(stage.table() + j * 0x3b);
         }
         let mut a = plan;
         a.sort_unstable();
         in_it.sort_unstable();
         a == in_it
     };
-    SCOREBOARD.record(same, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this, k, stage, plan));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this.addr(), k, stage.addr(), plan));
 }
 
 /// Comparer for `create_second_round_stage`.
@@ -110,9 +113,10 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_group_stage(
 /// antes pela mesma escolha numa cópia dos registros: a fase da vaga 7 existe, com +0x3e = 16 e os dezesseis na ordem
 /// das vagas na lista dela (+0xa7, 6 bytes), e +0x30 = 7.
 pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: usize) {
+    let this = League(this);
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
-        let t = read_usize(if g == -1 { this } else { read_usize(read_usize(this + league::STAGES) + 4 * g as usize) } + 0xb1);
+        let t = read_usize(if g == -1 { this.addr() } else { read_usize(this.stages() + 4 * g as usize) } + 0xb1);
         r[2 * k] = (read_usize(t), read_i16(t + league_table_row::POINTS));
         r[2 * k + 1] = (read_usize(t + 0x3b), read_i16(t + 0x54));
     }
@@ -129,9 +133,9 @@ pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: u
             r[m].0 = 0;
         }
     }
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECOND_ROUND_STAGE)(this);
-    let stage = read_usize(read_usize(this + league::STAGES) + 0x1c);
-    let same = stage != 0 && read_i16(stage + cup::TEAM_COUNT) == 0x10 && read_usize(this + league::CURRENT_STAGE) == 7 && {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECOND_ROUND_STAGE)(this.addr());
+    let stage = read_usize(this.stages() + 0x1c);
+    let same = stage != 0 && read_i16(stage + cup::TEAM_COUNT) == 0x10 && this.current_stage() == 7 && {
         let mut in_it = [0usize; 16];
         for (j, c) in in_it.iter_mut().enumerate() {
             *c = read_usize(read_usize(stage + cup::TEAM_TABLE) + 6 * j);
@@ -141,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: u
         b.sort_unstable();
         a == b
     };
-    SCOREBOARD.record(same, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this, stage, plan));
+    SCOREBOARD.record(same, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this.addr(), stage, plan));
 }
 
 /// Comparer for `create_third_round_groups`.
@@ -149,7 +153,8 @@ pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: u
 /// [pt] O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
 /// vencedores da segunda fase; depois, as fases 8 e 9 com 4 clubes cada, os oito juntos (como conjunto) e +0x30 = 9.
 pub(crate) unsafe extern "thiscall" fn compare_create_third_round_groups(this: usize) {
-    let second = read_usize(read_usize(this + league::STAGES) + 0x1c);
+    let this = League(this);
+    let second = read_usize(this.stages() + 0x1c);
     let mut plan = [0usize; 8];
     let mut n = 0usize;
     let mut i = 0i32;
@@ -161,9 +166,9 @@ pub(crate) unsafe extern "thiscall" fn compare_create_third_round_groups(this: u
         }
         i += 1;
     }
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_THIRD_ROUND_GROUPS)(this);
-    let (a, b) = (read_usize(read_usize(this + league::STAGES) + 0x20), read_usize(read_usize(this + league::STAGES) + 0x24));
-    let same = a != 0 && b != 0 && read_i16(a + league::CLUB_COUNT) == 4 && read_i16(b + league::CLUB_COUNT) == 4 && read_usize(this + league::CURRENT_STAGE) == 9 && {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_THIRD_ROUND_GROUPS)(this.addr());
+    let (a, b) = (read_usize(this.stages() + 0x20), read_usize(this.stages() + 0x24));
+    let same = a != 0 && b != 0 && read_i16(a + league::CLUB_COUNT) == 4 && read_i16(b + league::CLUB_COUNT) == 4 && this.current_stage() == 9 && {
         let mut in_it = [0usize; 8];
         for j in 0..4 {
             in_it[j] = read_usize(read_usize(a + league::TABLE) + j * 0x3b);
@@ -174,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_third_round_groups(this: u
         in_it.sort_unstable();
         p == in_it
     };
-    SCOREBOARD.record(same, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this, n, plan));
+    SCOREBOARD.record(same, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this.addr(), n, plan));
 }
 
 /// Comparer for `bra_nat_third_create_table` (the Série C; comparison mode: see the header of motor.rs).
@@ -187,19 +192,20 @@ pub(crate) unsafe extern "thiscall" fn compare_create_third_round_groups(this: u
 /// [this+4], na ordem do banco, até 56. Depois: a devolução 1, +0x3e = 7, a lista (+0xee) com os clubes do plano em
 /// alguma ordem (o sorteio) e as linhas 0..6 da tabela com os 7 primeiros da lista.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_table(this: usize) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_CREATE_TABLE);
     let mut plan = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && plan.len() < 0x38 {
         let club = Club(read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE);
-        if club.division().addr() == read_usize(this + 4) {
+        if club.division().addr() == read_usize(this.addr() + 4) {
             plan.push(club.addr());
         }
         i += 1;
     }
-    let r = o(this);
-    let (lista, t) = (read_usize(this + 0xee), read_usize(this + league::TABLE));
-    let mut same = r == 1 && read_i16(this + league::CLUB_COUNT) == 7 && lista != 0 && t != 0 && plan.len() >= 7;
+    let r = o(this.addr());
+    let (lista, t) = (read_usize(this.addr() + 0xee), this.table());
+    let mut same = r == 1 && this.club_count() == 7 && lista != 0 && t != 0 && plan.len() >= 7;
     let mut drawn: Vec<usize> = Vec::new();
     if same {
         drawn = (0..plan.len()).map(|k| read_usize(lista + k * 4)).collect();
@@ -209,7 +215,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_table(this: 
         b.sort_unstable();
         same = rows_ok && a == b;
     }
-    SCOREBOARD.record(same, || format!("bra_nat_third_create_table({:#x}) original={} plano={:x?} lista={:x?}", this, r, plan, drawn));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_table({:#x}) original={} plano={:x?} lista={:x?}", this.addr(), r, plan, drawn));
     r
 }
 
@@ -230,7 +236,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_up_rules(this: 
 ///
 /// [pt] Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, l, dest) = serie_c_staff_records(this, club, status, stage, false);
+    let (n, l, dest) = serie_c_staff_records(League(this), club, status, stage, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_THIRD_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, a5, a6);
     let written = if l == 0 { dest } else { *((l + league_table_row::STATUS) as *const u8) };
     SCOREBOARD.record(r == n && written == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, written as i8, dest as i8));

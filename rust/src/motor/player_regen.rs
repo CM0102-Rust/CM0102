@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     let (ficha_id, nacao_id, nacao2_id) = (read_i32(bench), read_i32(bench + regen_pool_item::NATION_ID), read_i32(bench + regen_pool_item::SECOND_NATION_ID));
     exe::player_regen_remove_player_data_from_pool(this, ficha_id);
     p.set_classification(2);
-    core::ptr::write_unaligned((p.addr() + staff::PLAYER) as *mut usize, read_usize(G_PLAYER_DATA_TABLE).wrapping_add((ficha_id as isize * 0x46) as usize));
+    p.set_player(read_usize(G_PLAYER_DATA_TABLE).wrapping_add((ficha_id as isize * 0x46) as usize));
     *staff_state_byte(p, staff_state::STATUS_FLAGS) |= 0x40;
     *staff_state_byte(p, 0xd) = 0;
     *staff_state_byte(p, 0xc) &= 0xfd;
@@ -150,45 +150,45 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     p.set_int_apps(0);
     p.set_int_goals(0);
     if p.non_player() != 0 {
-        core::ptr::write_unaligned((p.addr() + staff::NON_PLAYER) as *mut u32, 0);
+        p.set_non_player((0) as usize);
     }
     *staff_state_byte(p, staff_state::STATUS_FLAGS) &= 0xf0;
     *staff_state_byte(p, 8) = 0;
     *staff_state_byte(p, 9) = 0x9c;
     let nations = read_usize(G_NATION_TABLE);
     let nation = nations.wrapping_add((nacao_id as isize * 0x122) as usize);
-    core::ptr::write_unaligned((p.addr() + staff::NATION) as *mut usize, nation);
+    p.set_nation(nation);
     if read_i32(nation + nation::NUMBER_STAFF) < 100 && friendly_random(4) == 0 {
         let k = friendly_random(read_i32(G_NATION_COUNT));
         let other = read_usize(G_NATION_TABLE).wrapping_add((k as isize * 0x122) as usize);
         if read_usize(other + nation::CONTINENT) != 0 && read_i32(other + nation::NUMBER_STAFF) < 100 {
-            core::ptr::write_unaligned((p.addr() + staff::NATION) as *mut usize, other);
+            p.set_nation(other);
         }
     }
     if nacao2_id > 0 && nacao2_id < read_i32(G_NATION_COUNT) {
         if !(nacao_id == read_i32(KEY_NATION_SPAIN) && friendly_random(100) == 0) {
             if nacao2_id != read_i32(KEY_NATION_PAYS_BASQUE) && friendly_random(3) != 0 {
-                core::ptr::write_unaligned((p.addr() + staff::SECOND_NATION) as *mut u32, 0);
+                p.set_second_nation((0) as usize);
             } else {
-                core::ptr::write_unaligned((p.addr() + staff::SECOND_NATION) as *mut usize, read_usize(G_NATION_TABLE).wrapping_add((nacao2_id as isize * 0x122) as usize));
+                p.set_second_nation(read_usize(G_NATION_TABLE).wrapping_add((nacao2_id as isize * 0x122) as usize));
             }
         }
     } else {
-        core::ptr::write_unaligned((p.addr() + staff::SECOND_NATION) as *mut u32, 0);
+        p.set_second_nation((0) as usize);
     }
     let v = exe::database_pick_first_name_for_nation(p.nation());
-    core::ptr::write_unaligned((p.addr() + staff::FIRST_NAME) as *mut usize, v);
+    p.set_first_name(v);
     let v = exe::database_pick_second_name_for_nation(p.nation());
-    core::ptr::write_unaligned((p.addr() + staff::SECOND_NAME) as *mut usize, v);
+    p.set_second_name(v);
     let v = exe::database_get_empty_common_name(p.nation());
-    core::ptr::write_unaligned((p.addr() + staff::COMMON_NAME) as *mut usize, v);
+    p.set_common_name(v);
     call_thiscall_1(0x5fff30, read_usize(G_HUMAN_MANAGER), p);
     write_i16(p.addr() + 0x40, read_i16(G_CURRENT_DATE_YEAR));
     write_i16(p.addr() + staff::DATE_JOINED_CLUB, read_i16(G_CURRENT_DATE));
-    core::ptr::write_unaligned((p.addr() + staff::CLUB_JOB) as *mut u32, 0);
-    core::ptr::write_unaligned((p.addr() + staff::NATIONAL_JOB) as *mut u32, 0);
-    core::ptr::write_unaligned((p.addr() + staff::WAGE) as *mut u32, 0);
-    core::ptr::write_unaligned((p.addr() + staff::VALUE) as *mut u32, 0);
+    p.set_club_job((0) as usize);
+    p.set_national_job((0) as usize);
+    p.set_wage((0) as usize);
+    p.set_value((0) as usize);
     // the languages: the original pushes the argument’s dword with the low byte replaced (the calls read the byte)
     for k in 1..=0x40i8 {
         exe::playerstats_remove_language(read_usize(G_PLAYER_STATS), p, k);
@@ -821,7 +821,7 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: Staff) {
     }
     crate::comparison::branch("cqd_10 becomes coach");
     let id = read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS));
-    core::ptr::write_unaligned((p.addr() + staff::NON_PLAYER) as *mut u32, read_usize(G_NON_PLAYER_TABLE).wrapping_add((id as isize * 0x44) as usize) as u32);
+    p.set_non_player((read_usize(G_NON_PLAYER_TABLE).wrapping_add((id as isize * 0x44) as usize) as u32) as usize);
     exe::player_regen_remove_spare_non_player_record(this, (read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS))) as i32 as u32);
     if read_i8(p.player() + 0xf) == 0x14 {
         let nj = p.non_player();
@@ -2437,10 +2437,10 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
         }
     };
     if !stays_in_club {
-        core::ptr::write_unaligned((p.addr() + staff::CLUB_JOB) as *mut usize, 0);
+        p.set_club_job(0);
     }
     if !stays_in_national_team {
-        core::ptr::write_unaligned((p.addr() + staff::NATIONAL_JOB) as *mut usize, 0);
+        p.set_national_job(0);
     }
 }
 
@@ -3263,7 +3263,7 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
         }
         crate::comparison::branch("cpw_10 reserve manager");
         let nj = read_usize(G_NON_PLAYER_TABLE).wrapping_add((read_usize(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)) as u32).wrapping_mul(0x44) as usize);
-        core::ptr::write_unaligned((s.addr() + staff::NON_PLAYER) as *mut usize, nj);
+        s.set_non_player(nj);
         let sheet = s.player();
         if sheet == 0 {
             let a = friendly_random(0x5dc).wrapping_add(1) as u16;

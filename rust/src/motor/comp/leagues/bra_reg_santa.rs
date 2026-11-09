@@ -12,7 +12,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn bra_reg_santa_set_up_rules(this: usize) -> u32 {
     catarinense_rules(this);
     crate::comparison::branch("cqi_8 catarinense rules");
-    create_main_schedule(this);
+    create_main_schedule(League(this));
     1
 }
 
@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_santa_set_up_rules(this: usize) -
 /// [pt] { 0x43bd10 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::start_new_season()`, a virada da temporada do Catarinense (a tabela:
 /// 0x43bb70; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
 pub(crate) unsafe extern "thiscall" fn bra_reg_santa_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x43bb70, 0x98b050, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do catarinense") // cqp9: the next year of the Catarinense
+    state_league_new_season(League(this), 0x43bb70, 0x98b050, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do catarinense") // cqp9: the next year of the Catarinense
 }
 
 /// The Santa Catarina next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to
@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_santa_start_new_season(this: usiz
 /// [pt] { 0x43bec0 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::advance_stage()`, a fase seguinte do Catarinense: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x43bf50); a caixa da linha 0x1f8.
 pub(crate) unsafe extern "thiscall" fn bra_reg_santa_advance_stage(this: usize) {
-    state_league_advance_stage(this, 0x98b050, 0x1f8, 0x43bf50);
+    state_league_advance_stage(League(this), 0x98b050, 0x1f8, 0x43bf50);
 }
 
 /// Santa Catarina: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_santa_advance_stage(this: usize) 
 /// [pt] { 0x43bf50 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b050, linhas 0x21b (sem lista) e 0x22f (sem fase).
 pub(crate) unsafe extern "thiscall" fn bra_reg_santa_create_semi_final_stage(this: usize) {
-    create_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b050, 0x21b, 0x22f, "cqn_8 catarinense"); // cqn8: 1º × 4º, 2º × 3º Catarinense
+    create_knockout_from_table(League(this), &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b050, 0x21b, 0x22f, "cqn_8 catarinense"); // cqn8: 1º × 4º, 2º × 3º Catarinense
 }
 
 /// The Santa Catarina state league at career creation: the year and the database competition, disciplinary rule 7 and,
@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_santa_create_semi_final_stage(thi
 ///
 /// [pt] { 0x43b130 } (thiscall, ret 8, bra_reg_santa.cpp): `BraRegSanta::BraRegSanta(ano, registro)`: o Catarinense (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_santa(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_rio_construct_state_league(this, year, record, &CATARINENSE_STATE_CHAMPIONSHIP, 7, true, "cqt_4 catarinense novo") // cqt4: the discipline and expected positions of the Catarinense
+    bra_reg_rio_construct_state_league(League(this), year, record, &CATARINENSE_STATE_CHAMPIONSHIP, 7, true, "cqt_4 catarinense novo") // cqt4: the discipline and expected positions of the Catarinense
 }
 
 /// the Santa Catarina league has 10 clubs: those with it as their reserve division in the database (the field that
@@ -64,5 +64,5 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_santa(this: usize, year
 /// [pt] { 0x43bb70 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_table()`: o Catarinense tem 10 clubes (divisão reserva +0x60 = [0x9cf9b0]).
 /// Fonte 0x98b050, linha 0x167.
 pub(crate) unsafe extern "thiscall" fn bra_reg_santa_create_table(this: usize) -> u32 {
-    fill_state_league_table(this, 0xa, 0x98b050, 0x167, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, 0, "cqm_8 catarinense cheio")
+    fill_state_league_table(League(this), 0xa, 0x98b050, 0x167, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, 0, "cqm_8 catarinense cheio")
 }

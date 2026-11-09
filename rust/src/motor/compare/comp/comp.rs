@@ -54,12 +54,13 @@ pub(crate) unsafe extern "thiscall" fn compare_find_club_progress(this: usize, c
 /// [pt] O comparador da primeira fase do grupo: com o índice válido (−1..+0x30), as duas (só leem) e o mesmo índice; fora
 /// dele só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn compare_get_first_stage_of_group(this: usize, k: i32) -> i32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_GET_FIRST_STAGE_OF_GROUP);
-    if k < -1 || k > read_usize(this + league::CURRENT_STAGE) as i32 {
-        return o(this, k);
+    if k < -1 || k > this.current_stage() as i32 {
+        return o(this.addr(), k);
     }
-    let r = o(this, k);
-    let n = get_first_stage_of_group(this, k);
+    let r = o(this.addr(), k);
+    let n = get_first_stage_of_group(this.addr(), k);
     SCOREBOARD.record(r == n, || format!("get_first_stage_of_group({}): original={} rust={}", k, r, n));
     r
 }
@@ -116,13 +117,14 @@ pub(crate) unsafe extern "thiscall" fn compare_get_fixture_match_importance(this
 ///
 /// [pt] Comparador: pelo valor (só lê). A caixa: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_stage(this: usize, k: i32) -> usize {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_GET_STAGE);
-    if k < -1 || k > read_usize(this + league::CURRENT_STAGE) as i32 {
-        return o(this, k); // simplification: the box, original only
+    if k < -1 || k > this.current_stage() as i32 {
+        return o(this.addr(), k); // simplification: the box, original only
     }
-    let r = o(this, k);
-    let n = get_stage(this, k);
-    SCOREBOARD.record(r == n, || format!("get_stage({:x}, {}) original={:x} rust={:x}", this, k, r, n));
+    let r = o(this.addr(), k);
+    let n = get_stage(this.addr(), k);
+    SCOREBOARD.record(r == n, || format!("get_stage({:x}, {}) original={:x} rust={:x}", this.addr(), k, r, n));
     r
 }
 
@@ -138,13 +140,14 @@ pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_fixture(comp: 
 ///
 /// [pt] Comparador: pelo valor (só lê). A caixa: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_are_round_fixtures_known(this: usize, stage: i32, round: i32) -> u32 {
+    let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN);
-    if stage < -1 && stage <= read_usize(this + league::CURRENT_STAGE) as i32 {
-        return o(this, stage, round); // simplification: the box, original only
+    if stage < -1 && stage <= this.current_stage() as i32 {
+        return o(this.addr(), stage, round); // simplification: the box, original only
     }
-    let r = o(this, stage, round);
-    let n = are_round_fixtures_known(this, stage, round);
-    SCOREBOARD.record(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, stage, round, r, n));
+    let r = o(this.addr(), stage, round);
+    let n = are_round_fixtures_known(this.addr(), stage, round);
+    SCOREBOARD.record(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this.addr(), stage, round, r, n));
     r
 }
 

@@ -791,11 +791,11 @@ compare_value!(compare_get_match_condition, get_match_condition, IDX_GET_MATCH_C
 /// regras da disciplina dela (índice +0x50 da competição em [0xadadfc], 0xff sem) recebem o método 0
 /// da tabela virtual.
 pub(crate) unsafe extern "thiscall" fn discipline_new_season(this: usize, id: *const i32) {
-    let competition = *((*(G_COMP_OBJECT_TABLE as *const usize) as isize + 4 * *id as isize) as *const usize);
-    if competition == 0 {
+    let competition = League(*((*(G_COMP_OBJECT_TABLE as *const usize) as isize + 4 * *id as isize) as *const usize));
+    if competition.is_null() {
         return;
     }
-    let k = *((competition + league::DISCIPLINE_RULE) as *const i8);
+    let k = (competition.discipline_rule() as i8);
     if k == -1 {
         return;
     }
@@ -858,15 +858,15 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
     if v == 0 {
         return 0;
     }
-    let c = read_usize(v.wrapping_add((*comp as usize).wrapping_mul(4)));
-    if c == 0 {
+    let c = League(read_usize(v.wrapping_add((*comp as usize).wrapping_mul(4))));
+    if c.is_null() {
         return 0;
     }
     let tribunais = read_usize(this);
     if exe::rulingbody_is_player_banned(read_usize(tribunais), player, 1, extra, partida) != 0 {
         return 1; // the general suspension
     }
-    let t = *((c + league::DISCIPLINE_RULE) as *const i8);
+    let t = (c.discipline_rule() as i8);
     if t == -1 {
         return 0;
     }
@@ -958,11 +958,11 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pers
     if person != 0 && read_i32(person) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(competition) as u32).wrapping_mul(4) as usize));
-    if comp == 0 || person == 0 {
+    let comp = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(competition) as u32).wrapping_mul(4) as usize)));
+    if comp.is_null() || person == 0 {
         return 0;
     }
-    let body = *((comp + league::DISCIPLINE_RULE) as *const u8);
+    let body = comp.discipline_rule();
     if body == 0xff {
         return 0;
     }
@@ -970,7 +970,7 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pers
     if o == 0 {
         return 0;
     }
-    exe::rulingbody_check_one_booking_from_ban(o, read_usize(person) as u32, 0, 0, read_usize(comp + 4) as u32)
+    exe::rulingbody_check_one_booking_from_ban(o, read_usize(person) as u32, 0, 0, read_usize(comp.addr() + 4) as u32)
 }
 
 /// the penalty at the table row and column, if the type matches

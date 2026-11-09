@@ -62,6 +62,6 @@ pub(crate) unsafe extern "thiscall" fn wc_oceania_league_set_up_rules(this: usiz
     crate::comparison::branch("cqk_10 oceania rules");
     goldcup_write_rule_fields(this, &OCEANIA_RULE_FIELDS, 3);
     let day = 0xf; // cqk10: the start day in Oceania
-    let word = competition_date_word(this, day, 0, 0, 5);
-    finish_rules_setup(this, word, 0)
+    let word = competition_date_word(League(this), day, 0, 0, 5);
+    finish_rules_setup(League(this), word, 0)
 }

@@ -53,56 +53,56 @@ pub(crate) struct EnglishDivision {
 /// Comp_Stats::Comp_Stats 0x49ee70: push liga; mov ecx, novo -> thiscall, ret 4) em +8 e as posições previstas
 /// (League::set_predicted_positions 0x68a850: mov ecx -> thiscall, ret 0). Cada passo que falha mostra a caixa da
 /// sua linha e encerra. Devolve this.
-pub(crate) unsafe fn construct_english_division(this: usize, year: u32, registro: usize, p: &EnglishDivision) -> usize {
+pub(crate) unsafe fn construct_english_division(this: League, year: u32, registro: usize, p: &EnglishDivision) -> usize {
     let set_up_rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.set_up_rules);
     let create_table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.create_table);
     exe::new_league(this);
-    write_usize(this + 4, registro);
-    write_usize(this, p.vtable);
-    core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
-    *((this + league::DISCIPLINE_RULE) as *mut u8) = 9; // cql6: the discipline rule of the English leagues
+    write_usize(this.addr() + 4, registro);
+    write_usize(this.addr(), p.vtable);
+    this.set_year((year as u16) as i16);
+    this.set_discipline_rule(9); // cql6: the discipline rule of the English leagues
     if let Some((capacidade, sentados)) = p.stadium {
-        core::ptr::write_unaligned((this + league::REQUIRED_CAPACITY) as *mut u16, capacidade);
-        core::ptr::write_unaligned((this + league::REQUIRED_SEATS) as *mut u16, sentados);
+        this.set_required_capacity(capacidade);
+        this.set_required_seats(sentados);
     }
     if exe::league_load_from_temp_file(this, 1) != 0 {
-        return this;
+        return this.addr();
     }
     crate::comparison::branch("cql_6 new english division");
-    *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
-    write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
-    write_usize(this + league::STAGE_COUNT, p.extra_stages as usize);
+    this.set_stage_index(0xff);
+    this.set_current_stage(0xffff_ffff);
+    this.set_stage_count(p.extra_stages as usize);
     if p.extra_stages != 0 {
         let v = exe::crt_malloc(4);
-        write_usize(this + league::STAGES, v);
+        this.set_stages(v);
     } else {
-        write_usize(this + league::STAGES, 0);
+        this.set_stages(0);
     }
-    if set_up_rules(this) == 0 {
+    if set_up_rules(this.addr()) == 0 {
         show_error_at(p.source_file, p.box_lines[0]);
-        return this;
+        return this.addr();
     }
-    if create_table(this) == 0 {
+    if create_table(this.addr()) == 0 {
         show_error_at(p.source_file, p.box_lines[1]);
-        return this;
+        return this.addr();
     }
     if exe::league_create_fixtures(this) == 0 {
         show_error_at(p.source_file, p.box_lines[2]);
-        return this;
+        return this.addr();
     }
     if exe::league_sort_table(this, (0) as u32 as usize) == 0 {
         show_error_at(p.source_file, p.box_lines[3]);
-        return this;
+        return this.addr();
     }
     let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
-    write_usize(this + 8, s);
+    write_usize(this.addr() + 8, s);
     if s == 0 {
         show_error_at(p.source_file, p.box_lines[4]);
-        return this;
+        return this.addr();
     }
     exe::league_set_predicted_positions(this);
-    this
+    this.addr()
 }
 
 pub(crate) const PREMIER_DIVISION: EnglishDivision = EnglishDivision {
@@ -150,7 +150,7 @@ pub(crate) const THIRD_DIVISION: EnglishDivision = EnglishDivision {
 /// [pt] { 0x573380 } (thiscall, ret 8, eng_prm.cpp): `EngPrm::EngPrm(ano, registro)`. A Premier: sem fases além da liga
 /// (+0x2c = 0, +0xc = 0) e o estádio mínimo de 10.000 lugares, todos sentados.
 pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32, record: usize) -> usize {
-    construct_english_division(this, year, record, &PREMIER_DIVISION)
+    construct_english_division(League(this), year, record, &PREMIER_DIVISION)
 }
 
 /// Comparer of the four constructors: runs only the original and checks return value, vtable, year, record, discipline,
@@ -159,17 +159,17 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
 /// [pt] O comparador dos quatro: alocam (as estatísticas, a tabela, os jogos): só a original, conferindo o que ela grava:
 /// a devolução, a vtable, o ano, o registro e a regra de disciplina; na liga nova (+0x44 = 0xff), +0x2c, o vetor das
 /// fases, a fase atual −1 e as estatísticas em +8.
-pub(crate) unsafe fn compare_english_constructor(name: &str, this: usize, year: u32, record: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn compare_english_constructor(name: &str, this: League, year: u32, record: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_usize(this) == p.vtable && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
-        && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 9;
+    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && (this.year() as u16) == year as u16
+        && read_usize(this.addr() + 4) == record && this.discipline_rule() == 9;
     if let Some((c, s)) = p.stadium {
-        ok = ok && core::ptr::read_unaligned((this + league::REQUIRED_CAPACITY) as *const u16) == c && core::ptr::read_unaligned((this + league::REQUIRED_SEATS) as *const u16) == s;
+        ok = ok && this.required_capacity() == c && this.required_seats() == s;
     }
-    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_usize(this + 8) != 0 {
-        ok = ok && read_usize(this + league::STAGE_COUNT) == p.extra_stages as usize && (read_usize(this + league::STAGES) != 0) == (p.extra_stages != 0);
+    if this.stage_index() == 0xff && read_usize(this.addr() + 8) != 0 {
+        ok = ok && this.stage_count() == p.extra_stages as usize && (this.stages() != 0) == (p.extra_stages != 0);
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + league::STAGE_COUNT), read_usize(this + league::STAGES), read_usize(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), read_usize(this.addr() + 8)));
     r
 }
 
@@ -185,18 +185,18 @@ pub(crate) static mut ENG_PRM_RULES_DRY_RUN: bool = false;
 /// [pt] Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
 /// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
 /// resultado em +0xba. Devolve 1.
-pub(crate) unsafe fn eng_prm_apply_league_rules(this: usize, written: &[(usize, u8, u32)]) -> u32 {
+pub(crate) unsafe fn eng_prm_apply_league_rules(this: League, written: &[(usize, u8, u32)]) -> u32 {
     for &(d, t, v) in written {
         match t {
-            1 => *((this + d) as *mut u8) = v as u8,
-            2 => core::ptr::write_unaligned((this + d) as *mut u16, v as u16),
-            _ => core::ptr::write_unaligned((this + d) as *mut u32, v),
+            1 => *((this.addr() + d) as *mut u8) = v as u8,
+            2 => core::ptr::write_unaligned((this.addr() + d) as *mut u16, v as u16),
+            _ => core::ptr::write_unaligned((this.addr() + d) as *mut u32, v),
         }
     }
     if !ENG_PRM_RULES_DRY_RUN {
-        let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
-        let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
-        core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, t);
+        let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+        let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
+        this.set_round_dates(t);
     }
     1
 }
@@ -224,7 +224,7 @@ pub(crate) fn english_common_rules() -> Vec<(usize, u8, u32)> {
 /// nenhuma liga acima (+0x1c = −1) e a First abaixo (+0x20 = [0x9cf5c0]).
 pub(crate) unsafe extern "thiscall" fn eng_prm_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqi_4 premier rules");
-    eng_prm_apply_league_rules(this, &premier_rules())
+    eng_prm_apply_league_rules(League(this), &premier_rules())
 }
 
 /// Rule writes for the Premier Division (2 rounds, 3 points, 3 relegated, lower division First).
@@ -275,8 +275,8 @@ pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> 
 /// original roda inteira; a faixa +0x1c..+0xec volta como estava e a cópia grava as regras sem a virtual +0x3c; os
 /// campos que a cópia grava têm de sair iguais aos da original, e a devolução 1; no fim fica a faixa da original
 /// (com a tabela de rodadas dela em +0xba, +0xa9 e +0x3a).
-pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, written: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
-    let band = [(this + league::UPPER_DIVISION_ID, 0xd0)];
+pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: League, written: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
+    let band = [(this.addr() + league::UPPER_DIVISION_ID, 0xd0)];
     let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
     let mo = crate::comparison::MemorySnapshot::read(&band);
@@ -295,7 +295,7 @@ pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, writt
         }
     };
     let difs: Vec<(usize, u32, u32)> = written.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
+    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this.addr(), r, rr, difs));
     r
 }
 
@@ -338,10 +338,10 @@ pub(crate) unsafe fn eng_prm_pay_tv_rights(this: usize, value: i32, filter: usiz
 /// (+0x57, o id no +0) é a do global `g`, na ordem do banco, cada um na linha seguinte (League::init_table_row
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Sem encher: 0. Cheia: o fundo de prêmios
 /// +0x28 (League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4), +0xe1 = 1, o dinheiro da TV (`pagar`) e 1.
-pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize, row: u32, g: usize, quota: i32, pay: impl FnOnce()) -> u32 {
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
+pub(crate) unsafe fn eng_prm_fill_league_table(this: League, n: i16, file: usize, row: u32, g: usize, quota: i32, pay: impl FnOnce()) -> u32 {
+    this.set_club_count(n);
     let t = exe::crt_malloc((n as i32 as u32).wrapping_mul(0x3b));
-    core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
+    this.set_table(t);
     if t == 0 {
         show_error_at(file, row);
         return 0;
@@ -357,20 +357,20 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
             // o byte.
             exe::league_init_table_row(this, row as u32, club, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
+            if k as i8 as i16 == this.club_count() {
                 break;
             }
         }
         i = i.wrapping_add(1);
         club = club.wrapping_add(0x245);
     }
-    if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
+    if k as i8 as i16 != this.club_count() {
         return 0;
     }
     crate::comparison::branch("cqi_5 full table");
     let f = exe::league_calc_prize_fund(this, quota);
-    core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
-    *((this + league::PRIZE_MODE) as *mut u8) = 1;
+    this.set_prize_fund(f);
+    this.set_prize_mode(1);
     pay();
     1
 }
@@ -382,7 +382,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
 /// [pt] { 0x574a20 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::create_table()`: 20 clubes ([0x9cf5bc]), cota 250.000 do
 /// fundo de prêmios e a TV: 12.000.000 a cada clube depois de 1999 (5.000.000 antes). Fonte 0x9c43b0, linha 0x1ee.
 pub(crate) unsafe extern "thiscall" fn eng_prm_create_table(this: usize) -> u32 {
-    eng_prm_fill_league_table(this, 0x14, 0x9c43b0, 0x1ee, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || {
+    eng_prm_fill_league_table(League(this), 0x14, 0x9c43b0, 0x1ee, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || {
         let value = if is_after_1999() { 0xb71b00 } else { 0x4c4b40 }; // cqi5: the Premier TV money
         eng_prm_pay_tv_rights(this, value, 0)
     })
@@ -400,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_table(this: usize) -> u32 
 /// [pt] O comparador das quatro: a original aloca a tabela e paga os clubes (não roda duas vezes): só ela. O plano, feito
 /// antes: os clubes da divisão na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu
 /// (senão 0) e as linhas da tabela com os clubes do plano, na ordem; cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
-pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i16, g: usize, quota: i32, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: League, n: i16, g: usize, quota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
@@ -412,18 +412,18 @@ pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i1
         i += 1;
     }
     let r = original();
-    let t = read_usize(this + league::TABLE);
+    let t = this.table();
     let expected = (plan.len() as i16 == n) as u32;
-    let mut same = r == expected && read_i16(this + league::CLUB_COUNT) == n && t != 0;
+    let mut same = r == expected && this.club_count() == n && t != 0;
     let mut found: Vec<usize> = Vec::new();
     if same {
         found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plan;
         if r == 1 {
-            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == exe::league_calc_prize_fund(this, quota);
+            same = same && this.prize_mode() == 1 && this.prize_fund() == exe::league_calc_prize_fund(this, quota);
         }
     }
-    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this.addr(), r, plan, found));
     r
 }
 
@@ -434,6 +434,7 @@ pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i1
 /// [pt] { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
 /// &extra, &é_liga)`: só a fase −1, 38 rodadas (`PREMIERSHIP_CHRISTMAS`); as outras devolvem 0. Fonte 0x9c43b0.
 pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let this = League(this);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -447,7 +448,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stag
                 return 0;
             }
             crate::comparison::branch("cqp_5 premiership calendar");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+            let year = (this.year() as u16) as u32;
             eng_first_set_christmas_rounds(t, year, &PREMIERSHIP_CHRISTMAS, 0x9c43b0);
             t
         }

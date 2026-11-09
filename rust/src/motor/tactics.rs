@@ -1412,13 +1412,13 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
     }
     let persons = *(G_STAFF_TABLE as *const usize);
     let p = Staff(persons.wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
-    if core::ptr::read_unaligned((p.addr() + staff::PLAYER) as *const usize) == 0 {
+    if p.player() == 0 {
         core::ptr::write_unaligned(home, -1);
         return 0;
     }
     if exe::database_is_national_team(club) != 0 {
-        let nation = core::ptr::read_unaligned((p.addr() + staff::NATIONAL_JOB) as *const usize);
-        if nation == 0 || core::ptr::read_unaligned((nation + nation::THREE_LETTER_NAME) as *const u32) != core::ptr::read_unaligned((club.addr() + club::NATION) as *const u32) {
+        let nation = p.national_job();
+        if nation == 0 || core::ptr::read_unaligned((nation + nation::THREE_LETTER_NAME) as *const u32) != (club.nation().addr() as u32) {
             core::ptr::write_unaligned(home, -1);
             return 0;
         }

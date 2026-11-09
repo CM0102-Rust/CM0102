@@ -4,12 +4,12 @@ use super::*;
 ///
 /// [pt] Os campos de byte e palavra de uma eliminatória (a virtual +0x8c, set_up_rules, na liga do grupo): (deslocamento,
 /// tamanho 1 ou 2, valor). Os pontos da vitória (+0xc2) e a categoria (+0xc4) vêm à parte, para as mutações.
-pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: usize, fields: &[(usize, u8, u32)]) {
+pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: League, fields: &[(usize, u8, u32)]) {
     for &(o, n, v) in fields {
         if n == 1 {
-            *((this + o) as *mut u8) = v as u8;
+            *((this.addr() + o) as *mut u8) = v as u8;
         } else {
-            core::ptr::write_unaligned((this + o) as *mut u16, v as u16);
+            core::ptr::write_unaligned((this.addr() + o) as *mut u16, v as u16);
         }
     }
 }
@@ -18,10 +18,10 @@ pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: usize, fields: &[(
 ///
 /// [pt] A primeira palavra da Date(dia, mês, ano da competição +0x40, dia da semana) (0x549f70: push semana; push ano; push
 /// mês; push dia; lea ecx, local -> thiscall, ret 0x10).
-pub(crate) unsafe fn comp_date_word(this: usize, day: u32, month: u32, week: u32) -> u16 {
+pub(crate) unsafe fn comp_date_word(this: League, day: u32, month: u32, week: u32) -> u16 {
     let mut d = [0u8; 8];
     // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
-    exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, month, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, week);
+    exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, month, (this.year() as u16) as u32, week);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
 
@@ -29,13 +29,13 @@ pub(crate) unsafe fn comp_date_word(this: usize, day: u32, month: u32, week: u32
 ///
 /// [pt] O fim comum: +0xb6 = a palavra da data, +0xb8 = `b8`, e a tabela das rodadas da virtual +0x3c (push 0; push &+0x3a;
 /// push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
-pub(crate) unsafe fn finish_rules_setup(this: usize, word: u16, b8: u16) -> u32 {
-    core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, word);
-    core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, b8);
-    let vt = core::ptr::read_unaligned(this as *const usize);
+pub(crate) unsafe fn finish_rules_setup(this: League, word: u16, b8: u16) -> u32 {
+    this.set_next_draw_day((word) as i16);
+    this.set_next_draw_year_offset((b8) as i16);
+    let vt = core::ptr::read_unaligned(this.addr() as *const usize);
     let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(core::ptr::read_unaligned((vt + 0x3c) as *const usize));
-    let t = table(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
-    core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut u32, t as u32);
+    let t = table(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
+    this.set_round_dates((t as u32) as usize);
     1
 }
 
@@ -43,7 +43,7 @@ pub(crate) unsafe fn finish_rules_setup(this: usize, word: u16, b8: u16) -> u32 
 ///
 /// [pt] O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
 pub(crate) unsafe fn check_qualifier_rules(name: &str, this: usize, fields: &[(usize, u8, u32)], data: (u32, u32, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
-    let word = comp_date_word(this, data.0, data.1, data.2);
+    let word = comp_date_word(League(this), data.0, data.1, data.2);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
@@ -74,10 +74,11 @@ pub(crate) const EUROPE_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 /// 0xa (seleções), os desempates (1, 2, 4, 5), um classificado direto por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 25 do mês 2 num dia da semana 5; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
+    let this = League(this);
     crate::comparison::branch("cqj_12 europe rules");
     wc_europe_league_write_rule_fields(this, &EUROPE_RULE_FIELDS);
-    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: the win in the European qualifiers
-    *((this + league::MATCH_CATEGORY) as *mut u8) = 0xa; // cqj12: the match category of the European qualifiers
+    this.set_win_points(3); // cqj12: the win in the European qualifiers
+    this.set_match_category(0xa); // cqj12: the match category of the European qualifiers
     let day = 0x19; // cqj12: the start day of the European qualifiers
     let word = comp_date_word(this, day, 2, 5);
     finish_rules_setup(this, word, 0)

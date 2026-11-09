@@ -17,9 +17,10 @@ use super::*;
 /// de cada clube da cadeia, o cabeçalho da fila (+0x24..+0x30) e a fila; e a devolução. Liga nula ou com +0x44 ≠ 0xff,
 /// registro a criar (0x4528d0/0x452710 alocam) ou fila que pode crescer: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(this: usize, liga0: usize, always: u32) -> u32 {
+    let liga0 = League(liga0);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS);
-    if liga0 == 0 || read_u8(liga0 + league::STAGE_INDEX) != 0xff {
-        return o(this, liga0, always); // simplification: the boxes, original only
+    if liga0.is_null() || liga0.stage_index() != 0xff {
+        return o(this, liga0.addr(), always); // simplification: the boxes, original only
     }
     let mut regions = vec![(this + club_records_fields::NEWS_QUEUE, 0xc)];
     let mut podem_entrar = 0i32;
@@ -32,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
             }
             let (t, s) = (club_season_record(this, club, 0), club_all_time_record(this, club, 0));
             if t == 0 || s == 0 {
-                return o(this, liga0, always); // simplification: the record would be created, original only
+                return o(this, liga0.addr(), always); // simplification: the record would be created, original only
             }
             regions.push((t, 0xe));
             regions.push((s, 0xe));
@@ -43,21 +44,21 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
     }
     let queue = read_usize(this + club_records_fields::NEWS_QUEUE);
     if (read_usize(this + club_records_fields::NEWS_QUEUE_COUNT) as i32).wrapping_add(podem_entrar) > read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY) as i32 || (queue == 0 && podem_entrar > 0) {
-        return o(this, liga0, always); // simplification: the queue may grow (reallocates), original only
+        return o(this, liga0.addr(), always); // simplification: the queue may grow (reallocates), original only
     }
     if queue != 0 {
         regions.push((queue, 6 * read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY)));
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    let ro = o(this, liga0, always);
+    let ro = o(this, liga0.addr(), always);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     POSITION_RECORDS_DRY_RUN = true;
-    let rr = crate::rng::pause_trace(|| update_league_position_records(this, liga0, always));
+    let rr = crate::rng::pause_trace(|| update_league_position_records(this, liga0.addr(), always));
     POSITION_RECORDS_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     mo.write_back();
-    SCOREBOARD.record(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, always, ro, mo, rr, mr));
+    SCOREBOARD.record(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0.addr(), always, ro, mo, rr, mr));
     ro
 }
 

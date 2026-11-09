@@ -267,6 +267,7 @@ pub(crate) const DIVISION_THREE_PLAYOFF_1: EngCcCupCupRound = cql10r((0x11, 4, 1
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`DIVISION_TWO_CHRISTMAS`); a fase 0, os play-offs (semifinais e
 /// final); as outras devolvem 0. Fonte 0x9c43e8.
 pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let this = League(this);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -280,7 +281,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
                 return 0;
             }
             crate::comparison::branch("cqp_4 english second division calendar");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+            let year = (this.year() as u16) as u32;
             eng_second_set_christmas_rounds(t, year, &DIVISION_TWO_CHRISTMAS, 0x9c43e8);
             t
         }
@@ -296,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
                 return 0;
             }
             crate::comparison::branch("cqp_4 english second division play-offs");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
+            let year = this.year() as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_TWO_PLAYOFF_0, year);
             eng_cc_cup_write_cup_round(t, 1, &SECOND_DIVISION_PLAYOFF_1, year);
             t
@@ -337,8 +338,9 @@ pub(crate) unsafe fn eng_second_staff_records() -> usize {
 /// tabela (+0xb1, 0x3b bytes, +0x3e linhas): 1 (venceu a final), o acesso com peso 0x32, +0x37 = 0 e saiu = 1; 0
 /// (passou da rodada), a classificação (0xa0, 0x96, 0xf) e segue procurando; 0xff ou 2 (caiu), +0x37 = 0xfe.
 pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, left: usize, _a: u32, _b: u32) -> u32 {
+    let this = League(this);
     let s = status as u8;
-    let comp = read_usize(this + 4);
+    let comp = read_usize(this.addr() + 4);
     if stage as u8 == 0xff {
         match s {
             5 => {
@@ -363,15 +365,15 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
         return 0;
     }
     let mut i: i32 = 0;
-    while i < *((this + league::CLUB_COUNT) as *const i16) as i32 {
-        let row = read_usize(this + league::TABLE) + (i as usize) * 0x3b;
+    while i < this.club_count() as i32 {
+        let row = this.table() + (i as usize) * 0x3b;
         if read_usize(row) == club {
             match s {
                 1 => {
                     crate::comparison::branch("cpz_2 won the knockout");
                     let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                     promotion(eng_second_staff_records(), club, comp, 0x32);
-                    *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
+                    *((this.table() + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
                     *(left as *mut u8) = 1;
                     return 0;
                 }
@@ -380,7 +382,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                     slot(eng_second_staff_records(), club, comp, 0xa0, 0x96, 0xf);
                 }
                 0xff | 2 => {
-                    *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
+                    *((this.table() + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
                     return 0;
                 }
                 _ => {}
@@ -455,7 +457,7 @@ pub(crate) unsafe fn compare_club_stage_status(name: &str, this: usize, club: us
 /// [pt] { 0x5769e0 } (thiscall, ret 0, eng_second.cpp): `EngSecond::advance_stage()` (a virtual +0x28): fonte 0x9c43e8,
 /// linha 0x294; o mata-mata 0x576a70.
 pub(crate) unsafe extern "thiscall" fn eng_second_advance_stage(this: usize) {
-    advance_league_stage(this, 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
+    advance_league_stage(League(this), 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
 }
 
 /// like the First one (6th, 3rd, 5th and 4th), with +0x3a = the extra from virtual +0x3c (lines 0x2b6 and 0x2cc)
@@ -464,7 +466,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_advance_stage(this: usize) {
 /// [pt] { 0x576a70 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_play_off_stage()` (de 0x5769e0). As chaves da
 /// First (linhas 5, 2, 4 e 3); +0x3a da fase = o extra da virtual +0x3c. Fonte 0x9c43e8, linhas 0x2b6 e 0x2cc.
 pub(crate) unsafe extern "thiscall" fn eng_second_create_play_off_stage(this: usize) {
-    create_playoff_stage(this, [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second
+    create_playoff_stage(League(this), [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second
 }
 
 /// the Second Division: discipline 9, no minimum ground, the league and the play-off
@@ -473,7 +475,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_play_off_stage(this: us
 /// [pt] { 0x5754a0 } (thiscall, ret 8, eng_second.cpp): `EngSecond::EngSecond(ano, registro)`. A Second Division: 1 fase além
 /// da liga (o play-off), sem estádio mínimo.
 pub(crate) unsafe extern "thiscall" fn construct_eng_second(this: usize, year: u32, record: usize) -> usize {
-    construct_english_division(this, year, record, &ENG_SECOND_DIVISION)
+    construct_english_division(League(this), year, record, &ENG_SECOND_DIVISION)
 }
 
 /// the Second (24): 2 go up directly, 3rd to 6th to the play-offs, the bottom 4 go down to the Third
@@ -483,7 +485,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_second(this: usize, year: u
 /// caem (+0xc1); a First acima ([0x9cf5c0]) e a Third abaixo ([0x9cf5c8]).
 pub(crate) unsafe extern "thiscall" fn eng_second_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqi_4 second division rules");
-    eng_prm_apply_league_rules(this, &eng_prm_second_division_rules())
+    eng_prm_apply_league_rules(League(this), &eng_prm_second_division_rules())
 }
 
 /// the Second has 24 clubs; prize fund of 20,000 per place; TV pays 2,500,000 to each club (300,000 up to 1999)
@@ -492,6 +494,6 @@ pub(crate) unsafe extern "thiscall" fn eng_second_set_up_rules(this: usize) -> u
 /// [pt] { 0x576630 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_table()`: 24 clubes ([0x9cf5c4]), cota 20.000
 /// e a TV: 2.500.000 depois de 1999 (300.000 antes). Fonte 0x9c43e8, linha 0x1f5.
 pub(crate) unsafe extern "thiscall" fn eng_second_create_table(this: usize) -> u32 {
-    eng_prm_fill_league_table(this, 0x18, 0x9c43e8, 0x1f5, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, 0x4e20, || eng_prm_pay_tv_rights(this, if is_after_1999() { 0x2625a0 } else { 0x493e0 }, 0))
+    eng_prm_fill_league_table(League(this), 0x18, 0x9c43e8, 0x1f5, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, 0x4e20, || eng_prm_pay_tv_rights(this, if is_after_1999() { 0x2625a0 } else { 0x493e0 }, 0))
 }
 

@@ -9269,9 +9269,9 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     if l12f < 32 && t != 0 {
         let c1c = Club(*((t + fixture::HOME_CLUB) as *const usize));
         if !c1c.is_null() {
-            let c57 = c1c.division().addr();
-            if c57 != 0 && *((t + fixture::COMPETITION) as *const usize) == c57 {
-                let ax = (read_i16(c57 + competition::REPUTATION) as i32);
+            let c57 = Competition(c1c.division().addr());
+            if !c57.is_null() && *((t + fixture::COMPETITION) as *const usize) == c57.addr() {
+                let ax = (c57.reputation() as i32);
                 if ax < 5 {
                     wr(0xd5, (read_f32(this + match_player::STAMINA_ATTRIBUTE) as f64) + q(0x968928));
                 } else if ax < 9 {

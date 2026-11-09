@@ -218,6 +218,7 @@ pub(crate) const SEGUNDA_EVEN_CHRISTMAS_SCHEDULE: SpaSecondChristmasSchedule = S
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40 (no ano par com a rodada
 /// do Natal; no ímpar sem); as outras devolvem 0. Fonte 0xa829bc.
 pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let this = League(this);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -231,7 +232,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
                 return 0;
             }
             crate::comparison::branch("cqq_4 spanish second division calendar");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+            let year = (this.year() as u16) as u32;
             if (year as i16) % 2 != 0 {
                 spa_second_set_league_rounds(t, year, 0, &SEGUNDA_ODD_ALL_ROUNDS);
             } else {
@@ -249,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
 /// [pt] { 0x8539a0 } (thiscall, ret 8, spa_second.cpp): `SpaSecond::SpaSecond(ano, registro)`: a Segunda espanhola,
 /// disciplina 0x1a, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, year: u32, record: usize) -> usize {
-    construct_division_league(this, year, record, &SPANISH_SEGUNDA)
+    construct_division_league(League(this), year, record, &SPANISH_SEGUNDA)
 }
 
 /// `SpaSecond::set_up_rules()`: La Segunda (22 clubs).
@@ -266,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, year: u
 /// da nação [inferência]), senão −1; +0x52 = 2.
 pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqk_4 segunda rules");
-    spa_first_apply_league_rules(this, &segunda_rules(this))
+    spa_first_apply_league_rules(League(this), &segunda_rules(this))
 }
 
 /// `SpaSecond::create_table()`: the Segunda has 22 clubs (+0x3e), those of the competition in database order.
@@ -287,9 +288,10 @@ pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u
 /// Primera ([0x9cf624]) leva o destino −4 (+0x37 = 0xfc: não pode subir). Cheia: o fundo de prêmios (+0x28 =
 /// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 e 1; senão 0.
 pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
+    let this = League(this);
+    this.set_club_count(0x16);
     let t = exe::crt_malloc(0x512);
-    write_usize(this + league::TABLE, t);
+    this.set_table(t);
     if t == 0 {
         show_error_at(0xa828bc, 0x298);
         return 0;
@@ -304,22 +306,22 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
             exe::league_init_table_row(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
                 crate::comparison::branch("cqm_6 b team in the second division");
-                *((read_usize(this + league::TABLE) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
+                *((this.table() + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
             }
             k = k.wrapping_add(1);
-            if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
+            if k as i8 as i16 == this.club_count() {
                 break;
             }
         }
         i = i.wrapping_add(1);
     }
     crate::comparison::branch("cqm_6 second division fixtures");
-    if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
+    if k as i8 as i16 != this.club_count() {
         return 0;
     }
     let f = (exe::league_calc_prize_fund(this, (0xc350) as i32) as u32);
-    write_usize(this + league::PRIZE_FUND, f as usize);
-    *((this + league::PRIZE_MODE) as *mut u8) = 1;
+    this.set_prize_fund((f as usize) as i32);
+    this.set_prize_mode(1);
     1
 }
 

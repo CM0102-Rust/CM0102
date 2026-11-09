@@ -35,16 +35,16 @@ pub(crate) unsafe fn copy_to_work_text(source: usize) {
 /// [pt] O nome da competição do registro `c` (107 bytes) no texto 0xde1f64 do jeito do painel: "Friendlies"
 /// e "Reserves" para as dos amistosos ([0x9cf668]) e reservas ([0x9cf684]) com mais de uma rodada
 /// (+8 > +4 de `rodadas`); senão o nome (+0x38).
-pub(crate) unsafe fn panel_competition_name(c: usize, rounds: usize) {
+pub(crate) unsafe fn panel_competition_name(c: Competition, rounds: usize) {
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let more_of_one = core::ptr::read_unaligned((rounds + 8) as *const i32) > core::ptr::read_unaligned((rounds + 4) as *const i32);
-    let key = *(c as *const usize);
+    let key = *(c.addr() as *const usize);
     if key == *(KEY_CLUB_COMP_FRIENDLY as *const usize) && more_of_one {
         text(0xde1f64, 0xa1631c);
     } else if key == *(KEY_CLUB_COMP_RESERVE as *const usize) && more_of_one {
         text(0xde1f64, 0xa16310);
     } else {
-        copy_to_work_text(c + competition::SHORT_NAME);
+        copy_to_work_text(c.addr() + competition::SHORT_NAME);
     }
 }
 

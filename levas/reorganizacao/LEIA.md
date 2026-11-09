@@ -28,6 +28,18 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 5: a liga e a competição
+
+O pacote completo (variáveis, acessos, invólucros, assinaturas, propagação) para `league` e `competition`, agora também
+no `this` dos métodos (`let this = League(this);`): 424 + 50 variáveis, 142 + 5 funções recebem o tipo, a propagação
+mais 17. Formas novas no conversor: `core::ptr::read_unaligned/write_unaligned((x + mod::F) as *T, v)`; a escrita por
+ponteiro cujo valor tem uma leitura já convertida substitui a edição de dentro (antes as duas se sobrepunham e
+estragavam o texto: a primeira gravação foi desfeita). Acessos crus à liga 1.914 → 278, à competição 119 → 47. O
+`.addr()` fora dos invólucros subiu (2.503 → 3.683): o `this` tipado é repassado como `usize` às rotinas originais e lido
+em deslocamentos sem nome (`this.addr() + 0xee`). Mutações: 57 âncoras seguidas, 27 pelo conserto dos `.addr()` que as
+assinaturas tiraram do código, 4 à mão; compiladas as mudadas e as 93 cujo texto de troca chama uma função tipada (5
+corrigidas). Prova: 7cc445c2 ×2, detector igual, comparação 0.
+
 ## Migração para os registros tipados, leva 4: a propagação (clube e pessoa)
 
 `tipar_registros.py --propagar Club,Staff`: uma função nossa com um parâmetro `usize` que a maioria das chamadas

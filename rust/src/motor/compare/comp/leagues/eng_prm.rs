@@ -6,19 +6,19 @@ use super::*;
 /// Comparer for `construct_eng_prm`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_eng_prm(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_PRM);
-    compare_english_constructor("construct_eng_prm", this, year, record, &PREMIER_DIVISION, || o(this, year, record))
+    compare_english_constructor("construct_eng_prm", League(this), year, record, &PREMIER_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `eng_prm_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_prm_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_SET_UP_RULES);
-    eng_prm_compare_league_rules("eng_prm_set_up_rules", this, premier_rules(), || o(this), || eng_prm_set_up_rules(this))
+    eng_prm_compare_league_rules("eng_prm_set_up_rules", League(this), premier_rules(), || o(this), || eng_prm_set_up_rules(this))
 }
 
 /// Comparer for `eng_prm_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_prm_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_CREATE_TABLE);
-    eng_prm_compare_league_table("eng_prm_create_table", this, 0x14, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || o(this))
+    eng_prm_compare_league_table("eng_prm_create_table", League(this), 0x14, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || o(this))
 }
 
 /// Comparer for `eng_prm_create_schedule`.

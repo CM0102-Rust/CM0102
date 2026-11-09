@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `construct_fra_lower`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_fra_lower(this: usize, year: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_LOWER);
-    compare_construct_group_league("construct_fra_lower", this, year, &FRENCH_LOWER_DIVISION, || o(this, year))
+    compare_construct_group_league("construct_fra_lower", League(this), year, &FRENCH_LOWER_DIVISION, || o(this, year))
 }
 
 /// Comparer for `destroy_fra_lower`.
@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn compare_destroy_fra_lower(this: usize) {
 /// Comparer for `fra_lower_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_fra_lower_create_table(this: usize, clubs: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_LOWER_CREATE_TABLE);
-    compare_french_table("fra_lower_create_table", this, clubs, 0x14, &[KEY_CLUB_COMP_FRENCH_NATIONAL], || o(this, clubs))
+    compare_french_table("fra_lower_create_table", League(this), clubs, 0x14, &[KEY_CLUB_COMP_FRENCH_NATIONAL], || o(this, clubs))
 }
 
 /// Comparer for `fra_lower_create_schedule`.

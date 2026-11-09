@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_promotion_record(this: usize,
         None => return o(this, club, comp, weight),
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, comp, weight),
-        || crate::rng::without_counting(|| apply_promotion(this, Club(club), comp, weight, false)));
+        || crate::rng::without_counting(|| apply_promotion(this, Club(club), Competition(comp), weight, false)));
     SCOREBOARD.record(igual, || format!("add_promotion_record(clube {:x}, peso {}) {:x?} x {:x?}", club, weight as u8 as i8, mo, mr));
 }
 
@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_relegation_record(this: usize
         None => return o(this, club, comp),
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, comp),
-        || crate::rng::without_counting(|| apply_relegation(this, Club(club), comp, false)));
+        || crate::rng::without_counting(|| apply_relegation(this, Club(club), Competition(comp), false)));
     SCOREBOARD.record(igual, || format!("add_relegation_record(clube {:x}) {:x?} x {:x?}", club, mo, mr));
 }
 
@@ -207,7 +207,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_qualified_for_round_record(th
         return o(this, club.addr(), comp, stage, round, weight);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, club.addr(), comp, stage, round, weight),
-        || record_qualification(this, club, comp, stage, round, weight, false));
+        || record_qualification(this, club, Competition(comp), stage, round, weight, false));
     SCOREBOARD.record(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", club.addr(), weight as u8 as i8, mo, mr));
 }
 
@@ -321,8 +321,8 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_end_season_for_nati
 /// [pt] Comparador: pelo valor (o registro 0x86f5b0 criado pela original já existe para a cópia).
 pub(crate) unsafe extern "thiscall" fn compare_find_manager_of_the_month(this: usize, index: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_FIND_MANAGER_OF_THE_MONTH);
-    let league = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((index as usize).wrapping_mul(4)));
-    if *((league + league::COMP_TYPE) as *const u8) != 2 {
+    let league = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((index as usize).wrapping_mul(4))));
+    if league.comp_type() != 2 {
         return o(this, index);
     }
     let r = o(this, index);

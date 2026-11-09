@@ -7,7 +7,7 @@ MUTACOES = [
     ('j_tec', "da = w(ts + 0x188).wrapping_sub(w(f + 0xa));", "da = w(ts + 0x18a).wrapping_sub(w(f + 0xa));", "players manager"),
     ('j_aux', "ftol(dv as f64 * 0.25)", "ftol(dv as f64 * 0.3)", "players manager"),
     ('j_limite', "w(f + o).clamp(1, 10000)", "w(f + o).clamp(1, 9000)", "players manager"),
-    ('j_80', "core::ptr::write_unaligned((club.addr() + club::REPUTATION) as *mut i16, w(ts + 0x18e));", "core::ptr::write_unaligned((club.addr() + club::REPUTATION) as *mut i16, w(ts + 0x18c));"),
+    ('j_80', "club.set_reputation(w(ts + 0x18e));", "club.set_reputation(w(ts + 0x18c));"),
     ('j_n11_media', "&& average() + 0.2 > nota11", "&& average() + 0.3 > nota11", "players news 0x11"),
     ('j_n11_sorteio', "&& ((random(10) + 5) as f64) < nota1", "&& ((random(10) + 4) as f64) < nota1", "players news 0x11"),
     ('j_n11_nota', "d * 1.1 < w(row + 3) as f64", "d * 1.2 < w(row + 3) as f64", "players news 0x11"),

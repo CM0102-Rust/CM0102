@@ -8,11 +8,12 @@ use super::*;
 /// [pt] O comparador da fase seguinte: só a original (simplification: ao chegar a 2 monta a final, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (a final grava 2, o mesmo valor).
 pub(crate) unsafe extern "thiscall" fn compare_jap_j1_advance_stage(this: usize) {
-    let before = read_usize(this + league::CURRENT_STAGE) as i32;
-    let last = before >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_JAP_J1_ADVANCE_STAGE)(this);
-    let after = read_usize(this + league::CURRENT_STAGE) as i32;
-    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    let this = League(this);
+    let before = this.current_stage() as i32;
+    let last = before >= (this.stage_count() as i32).wrapping_sub(1);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_JAP_J1_ADVANCE_STAGE)(this.addr());
+    let after = this.current_stage() as i32;
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this.addr(), before, after));
 }
 
 /// Comparer for `create_championship_final_stage`.
@@ -25,15 +26,16 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_j1_advance_stage(this: usize)
 /// os campeões dos turnos. Depois, a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os dois campeões
 /// na lista dela (+0xa7, 6 bytes; como conjunto), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn compare_create_championship_final_stage(this: usize) {
+    let this = League(this);
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_CHAMPIONSHIP_FINAL_STAGE)(this);
-    let stage = read_usize(read_usize(this + league::STAGES) + 8);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_CHAMPIONSHIP_FINAL_STAGE)(this.addr());
+    let stage = read_usize(this.stages() + 8);
     let same = stage != 0 && {
         let l = read_usize(stage + cup::TEAM_TABLE);
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + league::CURRENT_STAGE) == 2
+        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this.addr() + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && this.current_stage() == 2
     };
-    SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, stage, read_usize(this + league::CURRENT_STAGE)));
+    SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this.addr(), a, b, stage, this.current_stage()));
 }
 
 /// Comparer for `jap_j1_start_new_season`.
@@ -41,17 +43,18 @@ pub(crate) unsafe extern "thiscall" fn compare_create_championship_final_stage(t
 /// [pt] O comparador da virada: só a original (simplification: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
 /// J2; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um e +0x2c = 3.
 pub(crate) unsafe extern "thiscall" fn compare_jap_j1_start_new_season(this: usize) -> u32 {
-    let before = read_i16(this + league::YEAR);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_START_NEW_SEASON)(this);
-    let after = read_i16(this + league::YEAR);
-    SCOREBOARD.record(after == before.wrapping_add(1) && read_usize(this + league::STAGE_COUNT) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, before, after, read_usize(this + league::STAGE_COUNT)));
+    let this = League(this);
+    let before = this.year();
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_START_NEW_SEASON)(this.addr());
+    let after = this.year();
+    SCOREBOARD.record(after == before.wrapping_add(1) && this.stage_count() == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this.addr(), before, after, this.stage_count()));
     r
 }
 
 /// Comparer for `jap_j1_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_j1_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_CREATE_TABLE);
-    compare_japanese_table("jap_j1_create_table", this, 0x10, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, true, 0x186a0, || o(this))
+    compare_japanese_table("jap_j1_create_table", League(this), 0x10, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, true, 0x186a0, || o(this))
 }
 
 /// Comparador: como o do Goiano.
@@ -68,5 +71,5 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_j1_set_up_rules(this: usize) 
 /// Comparer for `jap_j1_create_half_season_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_j1_create_half_season_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_JAP_J1_CREATE_HALF_SEASON_STAGE);
-    compare_half_season_stage("jap_j1_create_half_season_stage", this, k, || o(this, k))
+    compare_half_season_stage("jap_j1_create_half_season_stage", League(this), k, || o(this, k))
 }

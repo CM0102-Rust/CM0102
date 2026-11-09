@@ -683,9 +683,9 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
                 f[k] *= read_f64(rdata::F64_1_25);
             }
             let _ = clube;
-            let lg = read_usize(read_usize(game + if side == 0 { 0x1c } else { 0x20 }) + 0x57);
-            if lg != 0 && read_i16(lg + competition::REPUTATION) != 0 {
-                f[k] /= read_i16(lg + competition::REPUTATION) as i32 as f64;
+            let lg = Competition(read_usize(read_usize(game + if side == 0 { 0x1c } else { 0x20 }) + 0x57));
+            if !lg.is_null() && lg.reputation() != 0 {
+                f[k] /= lg.reputation() as i32 as f64;
             } else if read_u8(game + fixture::CATEGORY) == 0xa {
                 f[k] *= read_f64(rdata::F64_0_2);
             } else {

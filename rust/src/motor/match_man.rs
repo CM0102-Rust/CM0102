@@ -3244,8 +3244,8 @@ pub(crate) unsafe fn contract_adjust(p: Staff, f: usize, club: Club, contract: u
             l4c = mul(l4c, read_f64(rdata::F64_0_75));
         }
     } else {
-        let lim = core::ptr::read_unaligned((owner.addr() + club::REPUTATION) as *const i16) as i32 - 0x4e2;
-        let dx = core::ptr::read_unaligned((club.addr() + club::REPUTATION) as *const i16);
+        let lim = owner.reputation() as i32 - 0x4e2;
+        let dx = club.reputation();
         let ax = *((contract + 0x3d) as *const i8) as i16;
         let cl = age;
         let k = if dx as i32 > lim {
@@ -3567,11 +3567,11 @@ pub(crate) unsafe fn appearances_or_club_adjust(p: Staff, f: usize, flags: u32, 
     if owner.is_null() {
         return if core::ptr::read_unaligned((f + player_sheet::HOME_REPUTATION) as *const i16) < 0x1388 { l4c - 0x1e } else { l4c };
     }
-    let s = owner.division().addr();
-    if s == 0 {
+    let s = Competition(owner.division().addr());
+    if s.is_null() {
         return l4c;
     }
-    l4c + ftol((core::ptr::read_unaligned((s + competition::REPUTATION) as *const i16) as i32 - 0x10) as f64 * read_f64(rdata::F64_5))
+    l4c + ftol((s.reputation() as i32 - 0x10) as f64 * read_f64(rdata::F64_5))
 }
 
 /// At the player's own club (+0x39): rating up by 5 or 5%, whichever is larger.
@@ -3732,7 +3732,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
         l4c += ftol(fb(0x45) as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_15));
     }
     if flags & 0x4000 != 0 {
-        let q = (0x1b58 - core::ptr::read_unaligned((club.addr() + club::REPUTATION) as *const i16) as i32) / 100;
+        let q = (0x1b58 - club.reputation() as i32) / 100;
         let k = (if q < 10 { 10 } else { q }) as i8 as i32;
         let lim = if fb(0xf) == 0x14 { 0x24 } else if fb(0x15) == 0x14 || fb(0x14) == 0x14 { 0x22 } else { 0x23 };
         if age as i32 > lim {

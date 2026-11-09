@@ -62,7 +62,7 @@ pub(crate) unsafe fn catarinense_rules(o: usize) {
 pub(crate) unsafe extern "thiscall" fn bra_reg_central_set_up_rules(this: usize) -> u32 {
     centro_oeste_rules(this);
     crate::comparison::branch("cqi_8 centro-oeste rules");
-    create_main_schedule(this);
+    create_main_schedule(League(this));
     1
 }
 
@@ -90,18 +90,18 @@ pub(crate) unsafe fn record_state_league_stage(this: usize, club: usize, st: u8,
 /// [pt] O mata-mata dos estaduais: a linha do clube na tabela (+0xb1, +0x3e linhas); o campeão (1) ganha o registro de
 /// campeão e o destino 5; os eliminados (2 ou -1), o registro de eliminação (0x86c000) com o peso da escala 0x4bf850
 /// (30 a 50 pela rodada do jogo em `rodadas`) e o destino -2. Devolve (linha gravada ou 0, destino).
-pub(crate) unsafe fn record_state_knockout(this: usize, club: usize, st: u8, game: usize, rounds: u32, fazer: bool) -> (usize, u8) {
-    let comp = read_usize(this + 4);
-    let n = read_i16(this + league::CLUB_COUNT) as i32;
+pub(crate) unsafe fn record_state_knockout(this: League, club: usize, st: u8, game: usize, rounds: u32, fazer: bool) -> (usize, u8) {
+    let comp = read_usize(this.addr() + 4);
+    let n = this.club_count() as i32;
     let mut i = 0i32;
     while i < n {
-        if read_usize(read_usize(this + league::TABLE) + 0x3b * i as usize) == club {
+        if read_usize(this.table() + 0x3b * i as usize) == club {
             if st == 1 {
                 if fazer {
                     crate::comparison::branch("cqk_7 state league champion");
                     add_champions_record(club, comp); // cqk7: the state champion record
                 }
-                let l = read_usize(this + league::TABLE) + 0x3b * i as usize;
+                let l = this.table() + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 5;
                 }
@@ -115,7 +115,7 @@ pub(crate) unsafe fn record_state_knockout(this: usize, club: usize, st: u8, gam
                     let weight = (exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, rounds) as u32);
                     exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight); // cqk7: the eliminated club record
                 }
-                let l = read_usize(this + league::TABLE) + 0x3b * i as usize;
+                let l = this.table() + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 0xfe;
                 }
@@ -141,7 +141,7 @@ pub(crate) unsafe fn centro_oeste_end_of_stage(this: usize, club: usize, status:
     if fa != 0 {
         return (0, 0, 0);
     }
-    let (l, d) = record_state_knockout(this, club, st, game, 3, fazer);
+    let (l, d) = record_state_knockout(League(this), club, st, game, 3, fazer);
     (0, l, d)
 }
 
@@ -162,7 +162,7 @@ pub(crate) unsafe fn mineiro_end_of_stage(this: usize, club: usize, status: u32,
     if fa != 2 {
         return (0, 0, 0);
     }
-    let (l, d) = record_state_knockout(this, club, st, game, 1, fazer);
+    let (l, d) = record_state_knockout(League(this), club, st, game, 1, fazer);
     (0, l, d)
 }
 
@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_update_staff_records_for_
 ///
 /// [pt] { 0x4304b0 } (thiscall, ret 8, bra_reg_central.cpp): `BraRegCentral::BraRegCentral(ano, registro)`: o Centro-Oeste (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_bahia_construct_state_league(this, year, record, &CENTRO_OESTE_STATE_CHAMPIONSHIP, 7, true, "cqt_1 centro_oeste novo") // cqt1: the discipline and expected positions of the Centro-Oeste
+    bra_reg_bahia_construct_state_league(League(this), year, record, &CENTRO_OESTE_STATE_CHAMPIONSHIP, 7, true, "cqt_1 centro_oeste novo") // cqt1: the discipline and expected positions of the Centro-Oeste
 }
 
 /// The Centre-West turnover: archives the season in the statistics, clears the previous table and stages, moves to the
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, ye
 /// [pt] { 0x431090 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::start_new_season()`, a virada da temporada do Centro-Oeste (a tabela:
 /// 0x430ef0; caixas nas linhas 0x1cb, 0x1d2, 0x1d8 e 0x1df).
 pub(crate) unsafe extern "thiscall" fn bra_reg_central_start_new_season(this: usize) -> u32 {
-    state_league_new_season(this, 0x430ef0, 0x98ae10, [0x1cb, 0x1d2, 0x1d8, 0x1df], 1, "cqp_7 virada do centro_oeste") // cqp7: the next year of the Centro-Oeste
+    state_league_new_season(League(this), 0x430ef0, 0x98ae10, [0x1cb, 0x1d2, 0x1d8, 0x1df], 1, "cqp_7 virada do centro_oeste") // cqp7: the next year of the Centro-Oeste
 }
 
 /// The Centre-West next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 8 go to the
@@ -251,7 +251,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_start_new_season(this: us
 /// [pt] { 0x431240 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::advance_stage()`, a fase seguinte do Centro-Oeste: no fim dos pontos corridos,
 /// o mata-mata de 8 (0x4312d0); a caixa da linha 0x1f9.
 pub(crate) unsafe extern "thiscall" fn bra_reg_central_advance_stage(this: usize) {
-    state_league_advance_stage(this, 0x98ae10, 0x1f9, 0x4312d0);
+    state_league_advance_stage(League(this), 0x98ae10, 0x1f9, 0x4312d0);
 }
 
 /// the Centre-West league has 15 clubs: those with it as their reserve division in the database (the field that holds
@@ -261,7 +261,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_advance_stage(this: usize
 /// [pt] { 0x430ef0 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::load_region_clubs()`: o Centro-Oeste tem 15 clubes (divisão reserva +0x60 = [0x9cf998]).
 /// Fonte 0x98ae10, linha 0x168.
 pub(crate) unsafe extern "thiscall" fn bra_reg_central_load_region_clubs(this: usize) -> u32 {
-    fill_state_league_table(this, 0xf, 0x98ae10, 0x168, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, 0, "cql_8 centro_oeste cheio")
+    fill_state_league_table(League(this), 0xf, 0x98ae10, 0x168, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, 0, "cql_8 centro_oeste cheio")
 }
 
 /// Centre-West: after the round robin, the top 8 go to the quarter-finals: 1st v 8th, 3rd v 6th, 7th v 2nd, 5th v 4th
@@ -271,6 +271,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_load_region_clubs(this: u
 /// [pt] { 0x4312d0 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As quartas de final: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º (linhas 0, 7, 2, 5, 6, 1, 4, 3). Fonte 0x98ae10, linhas 0x21c (sem lista) e 0x234 (sem fase).
 pub(crate) unsafe extern "thiscall" fn bra_reg_central_create_knockout_stage(this: usize) {
-    create_knockout_from_table(this, &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae10, 0x21c, 0x234, "cqn_9 centro_oeste"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Centro-Oeste
+    create_knockout_from_table(League(this), &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae10, 0x21c, 0x234, "cqn_9 centro_oeste"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Centro-Oeste
 }
 

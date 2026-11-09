@@ -307,6 +307,7 @@ pub(crate) const PREMIERSHIP_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChri
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`DIVISION_ONE_CHRISTMAS`, as datas da segunda com faixas de TV);
 /// a fase 0, os play-offs; as outras devolvem 0. Fonte 0x9c4374.
 pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let this = League(this);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -320,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 return 0;
             }
             crate::comparison::branch("cqp_5 english first division calendar");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+            let year = (this.year() as u16) as u32;
             eng_first_set_christmas_rounds(t, year, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
             t
         }
@@ -336,7 +337,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 return 0;
             }
             crate::comparison::branch("cqp_5 english first division play-offs");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
+            let year = this.year() as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, year);
             eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, year);
             t
@@ -348,8 +349,8 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
 /// Club of row k of the league table (+0xb1, 0x3b bytes).
 ///
 /// [pt] O clube da linha `k` da tabela da liga (+0xb1, linhas de 0x3b bytes; o clube no +0).
-pub(crate) unsafe fn eng_first_league_row_club(league: usize, k: usize) -> usize {
-    read_usize(read_usize(league + league::TABLE) + k * 0x3b)
+pub(crate) unsafe fn eng_first_league_row_club(league: League, k: usize) -> usize {
+    read_usize(league.table() + k * 0x3b)
 }
 
 /// Creates the play-off stage of the three divisions from 4 table rows: club list, round table, Cup_Stage in the first
@@ -379,8 +380,8 @@ pub(crate) unsafe fn eng_first_league_row_club(league: usize, k: usize) -> usize
 /// `a10` (ou o extra da virtual), 0x14, 0, 0, 0, 0) vai para a primeira vaga de fases ([+0xc]); a lista e a tabela de
 /// rodadas são liberadas (free 0x9452ca). Sem fase: a caixa `linha_sem_fase`; senão Cup::set_up_round (0x51c800,
 /// thiscall(fase, 0), ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: usize, row_without_list: u32, row_without_stage: u32, a10: Option<u32>, name: &'static str) {
-    let n = read_u8(this + league::PROMOTION_PLAYOFF_COUNT) as i8 as i32;
+pub(crate) unsafe fn create_playoff_stage(this: League, rows: [usize; 4], file: usize, row_without_list: u32, row_without_stage: u32, a10: Option<u32>, name: &'static str) {
+    let n = this.promotion_playoff_count() as i8 as i32;
     let list = exe::crt_malloc((n << 2) as u32);
     if list == 0 {
         return show_error_at(file, row_without_list);
@@ -389,9 +390,9 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: u
         core::ptr::write_unaligned((list + 4 * k) as *mut usize, eng_first_league_row_club(this, l));
     }
     crate::comparison::branch(name);
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = table(this, 0, &mut rodadas, &mut extra, 0);
+    let t = table(this.addr(), 0, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     // simplification: the original pushes the count, the rounds and the word +0x40 in integer registers with garbage in the high 16 bits
     // high; the constructor only reads the words ([esp+0x230], [esp+0x238], [esp+0x244] and [esp+0x250] with mov ax/dx).
@@ -399,14 +400,14 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: u
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         let a10 = a10.unwrap_or(extra as u16 as u32);
-        construct(p, this, n as u16 as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
+        construct(p, this.addr(), n as u16 as u32, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + league::STAGES) as *mut usize, stage);
+    core::ptr::write_unaligned(this.stages() as *mut usize, stage);
     exe::crt_free(list);
     exe::crt_free(t);
-    let stage = read_usize(read_usize(this + league::STAGES));
+    let stage = read_usize(this.stages());
     if stage == 0 {
         return show_error_at(file, row_without_stage);
     }
@@ -422,7 +423,7 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: u
 /// (0x572ff0, quando a fase passa de −1 a 0). As chaves: o 6º contra o 3º e o 5º contra o 4º (linhas 5, 2, 4 e 3);
 /// +0x3a da fase = 0xa0. Fonte 0x9c4374, linhas 0x2f0 (sem lista) e 0x306 (sem fase).
 pub(crate) unsafe extern "thiscall" fn eng_first_create_playoff_stage(this: usize) {
-    create_playoff_stage(this, [5, 2, 4, 3], 0x9c4374, 0x2f0, 0x306, Some(0xa0), "cpz_1 mata-mata da first"); // cpz1: 6º × 3º e 5º × 4º da First
+    create_playoff_stage(League(this), [5, 2, 4, 3], 0x9c4374, 0x2f0, 0x306, Some(0xa0), "cpz_1 mata-mata da first"); // cpz1: 6º × 3º e 5º × 4º da First
 }
 
 /// The comparer of the three play-off stage routines: runs only the original and checks the stage, the count and the 4
@@ -437,16 +438,16 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_playoff_stage(this: usiz
 /// plano, feito antes: os clubes das 4 linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = a conta
 /// (+0xbf), +4 = o +4 da liga e os 4 primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como
 /// conjunto: o sorteio da rodada 0x51c800 pode reordenar as chaves).
-pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize; 4], original: impl FnOnce()) {
+pub(crate) unsafe fn compare_playoff_stage(name: &str, this: League, rows: [usize; 4], original: impl FnOnce()) {
     let mut plan: [usize; 4] = [0; 4];
     for (k, &l) in rows.iter().enumerate() {
         plan[k] = eng_first_league_row_club(this, l);
     }
-    let n = read_u8(this + league::PROMOTION_PLAYOFF_COUNT) as i8 as i16;
+    let n = this.promotion_playoff_count() as i8 as i16;
     original();
-    let stage = read_usize(read_usize(this + league::STAGES));
+    let stage = read_usize(this.stages());
     if stage == 0 {
-        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this));
+        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this.addr()));
         return;
     }
     let list = read_usize(stage + cup::TEAM_TABLE);
@@ -457,8 +458,8 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize
     let (mut x, mut y) = (plan, found);
     x.sort_unstable();
     y.sort_unstable();
-    let same = x == y && read_i16(stage + cup::TEAM_COUNT) == n && read_usize(stage + 4) == read_usize(this + 4);
-    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this, plan, stage, found, read_i16(stage + cup::TEAM_COUNT), n));
+    let same = x == y && read_i16(stage + cup::TEAM_COUNT) == n && read_usize(stage + 4) == read_usize(this.addr() + 4);
+    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this.addr(), plan, stage, found, read_i16(stage + cup::TEAM_COUNT), n));
 }
 
 /// at the last stage (+0x30 >= +0x2c - 1) the error box (line 0x2ce); otherwise +0x30 + 1 and, on reaching 0, the
@@ -468,7 +469,7 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize
 /// [pt] { 0x572ff0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::advance_stage()` (a virtual +0x28): fonte 0x9c4374,
 /// linha 0x2ce; o mata-mata 0x573080.
 pub(crate) unsafe extern "thiscall" fn eng_first_advance_stage(this: usize) {
-    advance_league_stage(this, 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
+    advance_league_stage(League(this), 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
 }
 
 /// the First Division: discipline 9, no minimum ground, the league and 1 stage (the promotion play-off)
@@ -477,7 +478,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_advance_stage(this: usize) {
 /// [pt] { 0x571680 } (thiscall, ret 8, eng_first.cpp): `EngFirst::EngFirst(ano, registro)`. A First Division: 1 fase além da
 /// liga (o play-off de acesso), sem estádio mínimo.
 pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, year: u32, record: usize) -> usize {
-    construct_english_division(this, year, record, &FIRST_DIVISION)
+    construct_english_division(League(this), year, record, &FIRST_DIVISION)
 }
 
 /// Sets up the rules of the English First Division (24 clubs): the top 2 go up directly, 3rd to 6th go to the promotion
@@ -494,7 +495,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, year: u3
 /// (+0x49) e 3 substituições (+0x4a).
 pub(crate) unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqi_4 first division rules");
-    eng_prm_apply_league_rules(this, &eng_prm_first_division_rules())
+    eng_prm_apply_league_rules(League(this), &eng_prm_first_division_rules())
 }
 
 /// the First has 24 clubs; prize fund of 70,000 per place; TV pays by the division the club came from: 5,877,777 to
@@ -507,7 +508,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u3
 /// de [0x9cf5bc]), 4.099.999 aos que já estavam na First (o próprio registro, +4) e 4.099.999 aos que subiram da
 /// Second ([0x9cf5c4]); antes, 1.000.000 a todos. Fonte 0x9c4374, linha 0x22d.
 pub(crate) unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u32 {
-    eng_prm_fill_league_table(this, 0x18, 0x9c4374, 0x22d, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, 0x11170, || {
+    eng_prm_fill_league_table(League(this), 0x18, 0x9c4374, 0x22d, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, 0x11170, || {
         if is_after_1999() {
             eng_prm_pay_tv_rights(this, 0x59b011, comp_record_of(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION)); // cqi5: the TV money of those relegated from the Premier
             eng_prm_pay_tv_rights(this, 0x3e8fa0, read_usize(this + 4));

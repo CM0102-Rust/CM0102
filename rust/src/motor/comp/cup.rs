@@ -1219,9 +1219,9 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
 ///
 /// [pt] O nível da divisão do clube: a palavra +0x69 da divisão (+0x57), ou 0 sem divisão.
 pub(crate) unsafe fn division_level(club: Club) -> i16 {
-    let d = club.division().addr();
-    if d != 0 {
-        read_i16(d + competition::REPUTATION)
+    let d = Competition(club.division().addr());
+    if !d.is_null() {
+        d.reputation()
     } else {
         0
     }
@@ -1287,22 +1287,22 @@ pub(crate) unsafe fn is_main_national_cup(comp: usize) -> bool {
 /// [pt] A vaga na Copa da UEFA que o campeão da copa (`cup_update_staff_records_for_status`, desfecho 1) ganha: a Copa da Liga
 /// inglesa ([0x9cf750]) sempre; senão, a copa principal de uma nação europeia ([0x9cfa10] o continente, pela nação
 /// +0x5d e o continente +0x71), não amistosa, com o clube ainda sem competição europeia (−1) e a nação com índice.
-pub(crate) unsafe fn wins_uefa_cup_place(comp: usize, club: usize) -> bool {
-    if read_i32(comp) == read_i32(KEY_CLUB_COMP_ENGLISH_LEAGUE_CUP) {
+pub(crate) unsafe fn wins_uefa_cup_place(comp: Competition, club: usize) -> bool {
+    if read_i32(comp.addr()) == read_i32(KEY_CLUB_COMP_ENGLISH_LEAGUE_CUP) {
         return true;
     }
-    let nation = read_usize(comp + competition::NATION);
+    let nation = comp.nation();
     if nation == 0 {
         return false;
     }
     let continent = read_usize(nation + nation::CONTINENT);
-    if continent == 0 || read_i32(continent) != read_i32(KEY_CONTINENT_EUROPE) || cup_is_friendly_comp(comp) {
+    if continent == 0 || read_i32(continent) != read_i32(KEY_CONTINENT_EUROPE) || cup_is_friendly_comp(comp.addr()) {
         return false;
     }
-    if read_i32(club_state_record(club)) != -1 || cup_key_nation_index_of_comp(comp) == 0xff {
+    if read_i32(club_state_record(club)) != -1 || cup_key_nation_index_of_comp(comp.addr()) == 0xff {
         return false;
     }
-    is_main_national_cup(comp)
+    is_main_national_cup(comp.addr())
 }
 
 /// Calls a staff-records final routine f (winner/runner-up/third) on G_STAFF_RECORDS with club, match and final.
@@ -1347,7 +1347,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: 
         1 => {
             crate::comparison::branch("cqa_4 champion");
             cup_record_final_result(0x86a800, club, game, final_); // cqa4: the champion record
-            if wins_uefa_cup_place(comp, club) {
+            if wins_uefa_cup_place(Competition(comp), club) {
                 core::ptr::write_unaligned(club_state_record(club) as *mut i32, read_i32(KEY_CLUB_COMP_UEFA_CUP));
             }
         }

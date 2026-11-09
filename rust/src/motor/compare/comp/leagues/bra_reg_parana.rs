@@ -14,12 +14,13 @@ use super::*;
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_advance_stage(this: usize) {
-    let before = read_usize(this + league::CURRENT_STAGE) as i32;
-    let last = before >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_ADVANCE_STAGE)(this);
-    let after = read_usize(this + league::CURRENT_STAGE) as i32;
+    let this = League(this);
+    let before = this.current_stage() as i32;
+    let last = before >= (this.stage_count() as i32).wrapping_sub(1);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_ADVANCE_STAGE)(this.addr());
+    let after = this.current_stage() as i32;
     let same = if last { after == before } else if before + 1 == 2 { after == 2 || after == 1 } else { after == before + 1 };
-    SCOREBOARD.record(same, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    SCOREBOARD.record(same, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this.addr(), before, after));
 }
 
 /// Comparer for `bra_reg_parana_create_final_stage`.
@@ -36,26 +37,27 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_advance_stage(this
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_create_final_stage(this: usize) {
+    let this = League(this);
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_CREATE_FINAL_STAGE)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_CREATE_FINAL_STAGE)(this.addr());
     let same = if a == b {
-        let mark = |k: usize| *((read_usize(read_usize(read_usize(this + league::STAGES) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
-        let in_league = (0..read_i16(this + league::CLUB_COUNT).max(0) as usize).all(|i| {
-            let row = read_usize(this + league::TABLE) + i * 0x3b;
+        let mark = |k: usize| *((read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
+        let in_league = (0..this.club_count().max(0) as usize).all(|i| {
+            let row = this.table() + i * 0x3b;
             read_usize(row) != a || *((row + league_table_row::STATUS) as *const u8) == 5
         });
-        read_usize(this + league::CURRENT_STAGE) == 1 && read_usize(this + league::STAGE_COUNT) == 2 && mark(0) && mark(1) && in_league
+        this.current_stage() == 1 && this.stage_count() == 2 && mark(0) && mark(1) && in_league
     } else {
-        let stage = read_usize(read_usize(this + league::STAGES) + 8);
+        let stage = read_usize(this.stages() + 8);
         if stage == 0 {
             false
         } else {
             let l = read_usize(stage + cup::TEAM_TABLE);
             let (x, y) = (read_usize(l), read_usize(l + 6));
-            read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + league::CURRENT_STAGE) == 2
+            read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this.addr() + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && this.current_stage() == 2
         }
     };
-    SCOREBOARD.record(same, || format!("bra_reg_parana_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + league::CURRENT_STAGE), read_usize(this + league::STAGE_COUNT)));
+    SCOREBOARD.record(same, || format!("bra_reg_parana_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this.addr(), a, b, this.current_stage(), this.stage_count()));
 }
 
 /// Comparer for `bra_reg_parana_record_season_honours` (end of season; comparison mode: see the header of motor.rs).
@@ -88,23 +90,23 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_set_up_rules(this:
 /// Comparer for `construct_bra_reg_parana`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_bra_reg_parana(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_PARANA);
-    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_parana", this, year, record, &PARANA_CHAMPIONSHIP, || o(this, year, record))
+    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_parana", League(this), year, record, &PARANA_CHAMPIONSHIP, || o(this, year, record))
 }
 
 /// Comparer for `bra_reg_parana_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_CREATE_TABLE);
-    bra_reg_rio_compare_state_league_table("bra_reg_parana_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
+    bra_reg_rio_compare_state_league_table("bra_reg_parana_create_table", League(this), 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// Comparer for `create_half_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_create_half_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CREATE_HALF_STAGE);
-    compare_half_season_stage("create_half_stage", this, k, || o(this, k))
+    compare_half_season_stage("create_half_stage", League(this), k, || o(this, k))
 }
 
 /// Comparer for `bra_reg_parana_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_START_NEW_SEASON);
-    compare_new_season("bra_reg_parana_start_new_season", this, || o(this))
+    compare_new_season("bra_reg_parana_start_new_season", League(this), || o(this))
 }

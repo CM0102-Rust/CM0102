@@ -262,6 +262,7 @@ pub(crate) const LOWER_ODD_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerC
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40, cada uma com a rodada
 /// do Natal; as outras devolvem 0. Fonte 0xa82980.
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let this = League(this);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -275,7 +276,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, st
                 return 0;
             }
             crate::comparison::branch("cqq_5 spanish lower division calendar");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+            let year = (this.year() as u16) as u32;
             if (year as i16) % 2 != 0 {
                 set_rounds_around_christmas(t, year, &LOWER_ODD_YEAR_CHRISTMAS, 0xa82880);
             } else {
@@ -321,30 +322,31 @@ pub(crate) unsafe fn spa_lower_is_in_comp(c: Club, g: usize) -> bool {
 /// (League::create_fixtures 0x6835c0), todos mov ecx -> thiscall, ret 0; cada falha, a caixa da sua linha (0x3f,
 /// 0x46, 0x4d do fonte 0xa82880) e fim. Devolve this.
 pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u32) -> usize {
+    let this = League(this);
     exe::new_league(this);
-    write_usize(this, 0x96fb1c);
-    core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
-    *((this + league::DISCIPLINE_RULE) as *mut u8) = 0xff;
-    write_usize(this + 4, comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION));
+    write_usize(this.addr(), 0x96fb1c);
+    this.set_year((year as u16) as i16);
+    this.set_discipline_rule(0xff);
+    write_usize(this.addr() + 4, comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION));
     if exe::league_load_from_temp_file(this, 1) != 0 {
-        return this;
+        return this.addr();
     }
     crate::comparison::branch("cqm_6 new lower division");
-    *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
-    write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
-    write_usize(this + league::STAGE_COUNT, 0);
+    this.set_stage_index(0xff);
+    this.set_current_stage(0xffff_ffff);
+    this.set_stage_count(0);
     if exe::spalower_set_up_rules(this) == 0 {
         show_error_at(0xa82880, 0x3f);
-        return this;
+        return this.addr();
     }
     if exe::spalower_create_table(this) == 0 {
         show_error_at(0xa82880, 0x46);
-        return this;
+        return this.addr();
     }
     if exe::league_create_fixtures(this) == 0 {
         show_error_at(0xa82880, 0x4d);
     }
-    this
+    this.addr()
 }
 
 /// Is club c the B team of a parent club (club_get_linked_b_team) that plays in competition [g]?
@@ -437,9 +439,10 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
 /// (al = a linha, os bits de cima são lixo de outra conta; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret
 /// 0x10). Devolve se encheu.
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
+    let this = League(this);
+    this.set_club_count(0x16);
     let t = exe::crt_malloc(0x512);
-    write_usize(this + league::TABLE, t);
+    this.set_table(t);
     if t == 0 {
         show_error_at(0xa82880, 0x2ac);
         return 0;
@@ -457,14 +460,14 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     }
     let mut k: u8 = 0;
     for g in [KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION] { // cqm6: the B teams of the Primera and the Segunda
-        let rows = read_i16(this + league::CLUB_COUNT);
+        let rows = this.club_count();
         // the row count for the condition advances together with `k`
         let mut kk = k;
         for_each_spanish_b_team(g, &mut kk, rows, |c, entra| {
             if entra {
                 exe::league_init_table_row(this, k as u32, c, 0, 0);
                 k = k.wrapping_add(1);
-                write_usize(c + club::RESERVE_DIVISION, read_usize(this + 4));
+                write_usize(c + club::RESERVE_DIVISION, read_usize(this.addr() + 4));
             } else {
                 write_usize(c + club::RESERVE_DIVISION, 0);
             }
@@ -473,18 +476,18 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     crate::comparison::branch("cqm_6 lower division fixtures");
     let mut list = spanish_lower_candidates();
     let how_many = list.len() as u16 as u32;
-    let missing = (read_i16(this + league::CLUB_COUNT) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
+    let missing = (this.club_count() as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
     list.resize(100, 0);
     exe::comp_util_sort_and_shuffle_top_clubs(list.as_mut_ptr() as usize, how_many, missing);
     let mut j: i16 = 0;
-    while j < how_many as u16 as i16 && (k as i8 as i16) < read_i16(this + league::CLUB_COUNT) {
+    while j < how_many as u16 as i16 && (k as i8 as i16) < this.club_count() {
         let c = list[j as usize];
         exe::league_init_table_row(this, k as u32, c, 0, 0);
         k = k.wrapping_add(1);
-        write_usize(c + club::RESERVE_DIVISION, read_usize(this + 4));
+        write_usize(c + club::RESERVE_DIVISION, read_usize(this.addr() + 4));
         j += 1;
     }
-    (k as i8 as i16 == read_i16(this + league::CLUB_COUNT)) as u32
+    (k as i8 as i16 == this.club_count()) as u32
 }
 
 /// the lower division (22: B teams and the best minor clubs by reputation): 2 go up directly and 2 go to the promotion
@@ -496,6 +499,6 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
 /// acesso (+0xbf), 4 caem (+0xc1), a Primera como liga de cima ([0x9cf624], assim no original) e nenhuma abaixo.
 pub(crate) unsafe extern "thiscall" fn spa_lower_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqk_4 lower division rules");
-    spa_first_apply_league_rules(this, &lower_division_rules())
+    spa_first_apply_league_rules(League(this), &lower_division_rules())
 }
 

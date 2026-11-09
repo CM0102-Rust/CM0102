@@ -338,10 +338,10 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
                     core::ptr::write_unaligned(r as *mut u32, c as u32);
                     core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation));
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32 / 500) as u8;
-                    let row = read_u32(c + club::LAST_DIVISION) as usize;
-                    if row != 0 {
+                    let row = Competition(read_u32(c + club::LAST_DIVISION) as usize);
+                    if !row.is_null() {
                         crate::comparison::branch("cqi_2 division level");
-                        core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((row + competition::REPUTATION) as *const u16)); // cqi2: the division level
+                        core::ptr::write_unaligned((r + 9) as *mut u16, (row.reputation() as u16)); // cqi2: the division level
                         *((r + 0xb) as *mut u8) = read_u8(c + club::LAST_POSITION);
                         let comp = read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize;
                         if comp == 0 || read_u8(comp + nation::LEAGUE_SELECTED) == 0 {
@@ -790,14 +790,14 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     if table == 0 {
         return 0;
     }
-    let league = read_u32(table.wrapping_add(read_u32(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) as usize * 4)) as usize;
-    if league == 0 {
+    let league = League(read_u32(table.wrapping_add(read_u32(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) as usize * 4)) as usize);
+    if league.is_null() {
         return 0;
     }
     crate::comparison::branch("cqi_3 english volunteer");
     let club_drawn = || {
-        let s = exe::utils_random(read_i16(league + league::CLUB_COUNT) as i32) as i16 as i32;
-        read_u32((read_u32(league + league::TABLE) as usize).wrapping_add((s * 0x3b) as usize)) as usize
+        let s = exe::utils_random(league.club_count() as i32) as i16 as i32;
+        read_u32(((league.table() as u32) as usize).wrapping_add((s * 0x3b) as usize)) as usize
     };
     let mut attempts = 0i8;
     while (read_u8(this + 0x43f) as i8) < 6 && attempts < 0x50 {
@@ -830,7 +830,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
             let c = base.wrapping_add((read_u32(list + q * 4) as usize).wrapping_mul(club::SIZE));
             if read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                 let v = read_u8(c + club::LAST_POSITION) as i8;
-                if read_u32(c + club::LAST_DIVISION) == read_u32(league + 4) {
+                if read_u32(c + club::LAST_DIVISION) == read_u32(league.addr() + 4) {
                     if v < level {
                         best = c;
                         level = v;
@@ -852,7 +852,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     let n = news.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0x17, 0);
     exe::newsitem_set_slot(n, (0) as u32 as i8, read_u32(best));
-    exe::news_send_to_division_managers(read_u32(G_NEWS) as usize, n, read_u32(league + 4) as usize);
+    exe::news_send_to_division_managers(read_u32(G_NEWS) as usize, n, read_u32(league.addr() + 4) as usize);
     best
 }
 
@@ -899,8 +899,8 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
     }
     if *(G_CURRENT_DATE as *const i16) == 100 {
         let table = read_u32(G_COMP_OBJECT_TABLE) as usize;
-        let league = read_u32(table.wrapping_add(read_u32(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) as usize * 4)) as usize;
-        if league == 0 {
+        let league = League(read_u32(table.wrapping_add(read_u32(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) as usize * 4)) as usize);
+        if league.is_null() {
             return;
         }
         if read_u32(table.wrapping_add(read_u32(KEY_CLUB_COMP_INTER_TOTO_CUP) as usize * 4)) != 0 {
@@ -910,8 +910,8 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
             exe::newsitem_set_slot(p, (0) as u32 as i8, 0);
             exe::newsitem_set_slot(p, (2) as u32 as i8, read_i16(this + 0x439) as u16 as u32);
             let mut i = 0i16;
-            while i < read_i16(league + league::CLUB_COUNT) {
-                let c = read_u32((read_u32(league + league::TABLE) as usize).wrapping_add(i as i32 as usize * 0x3b)) as usize;
+            while i < league.club_count() {
+                let c = read_u32(((league.table() as u32) as usize).wrapping_add(i as i32 as usize * 0x3b)) as usize;
                 if exe::news_club_has_human_manager(read_u32(G_NEWS) as usize, c) != 0 {
                     exe::newsitem_set_slot(p, (1) as u32 as i8, read_u32(c));
                     exe::news_send_to_club_manager(read_u32(G_NEWS) as usize, p, c);

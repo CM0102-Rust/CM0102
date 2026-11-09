@@ -1652,8 +1652,8 @@ pub(crate) unsafe fn club_nation_record(this: usize, club: Club) -> usize {
 /// [pt] Jogou pela nação do clube: se a segunda nação (+0x1e) é a dele, ela vira a primeira (+0x1a) e a antiga a segunda.
 pub(crate) unsafe fn swap_to_club_nation(p: Staff, club: Club) {
     if club.nation().addr() == p.second_nation() {
-        core::ptr::write_unaligned((p.addr() + staff::SECOND_NATION) as *mut usize, p.nation());
-        core::ptr::write_unaligned((p.addr() + staff::NATION) as *mut usize, club.nation().addr());
+        p.set_second_nation(p.nation());
+        p.set_nation(club.nation().addr());
     }
 }
 
@@ -2739,7 +2739,7 @@ pub(crate) unsafe fn remove_from_tactics(team: Club, p: usize) {
 ///
 /// [pt] A pessoa sai da seleção: sem time (+0x24), sem a marca +0x28 e só com os bits de clube (& 3) em +0x5e.
 pub(crate) unsafe fn clear_national_call_up(p: Staff) {
-    core::ptr::write_unaligned((p.addr() + staff::NATIONAL_JOB) as *mut usize, 0);
+    p.set_national_job(0);
     p.set_job_for_nation(0); // the call-up mark
     *((p.addr() + staff::PLAYING_SQUAD) as *mut u8) &= 3;
 }
@@ -2762,7 +2762,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_squad(_this: usize, nation:
         None => return,
     };
     core::ptr::write_unaligned(slot as *mut usize, p.addr()); // the place
-    core::ptr::write_unaligned((p.addr() + staff::NATIONAL_JOB) as *mut usize, team.addr());
+    p.set_national_job(team.addr());
     let mut data = [0u8; 8];
     exe::date_operator_3d(p.addr() + staff::DATE_JOINED_NATION, (data.as_mut_ptr()) as usize, G_CURRENT_DATE);
     p.set_job_for_nation(0xb);
@@ -3261,7 +3261,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player(this: usize,
     if let Some(k) = (0..50).find(|&k| u(national_team.addr() + club::SQUAD + 4 * k) == player.addr()) {
         core::ptr::write_unaligned((national_team.addr() + club::SQUAD + 4 * k) as *mut usize, 0);
     }
-    core::ptr::write_unaligned((player.addr() + staff::NATIONAL_JOB) as *mut usize, 0);
+    player.set_national_job(0);
     *((player.addr() + staff::PLAYING_SQUAD) as *mut u8) &= 3;
 }
 
@@ -3311,7 +3311,7 @@ pub(crate) unsafe extern "stdcall" fn national_team_level(j: usize, rep: *const 
     if *rep < if base != 0 { 0x32 } else { 0x64 } {
         return 0;
     }
-    let sheet = core::ptr::read_unaligned((j.addr() + staff::PLAYER) as *const usize);
+    let sheet = j.player();
     let n = |o: usize| *((sheet + o) as *const i8) >= 0xf;
     if n(0xf) {
         0
