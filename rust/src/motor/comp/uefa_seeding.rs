@@ -652,7 +652,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                         if read_u8(nation + nation::LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
-                            let cup = read_u32(G_LEAGUE_WORLD_CUP_CUP_COMP + ((exe::key_nation_index_of_nation(nation) as i8) as i32 * 0x48) as usize) as usize;
+                            let cup = read_u32(G_LEAGUE_WORLD_CUP_CUP_COMP + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as usize;
                             if cup == 0 {
                                 show_error_at(0xaa1a1c, 0x418);
                                 tentar_de_novo = true;
@@ -675,7 +675,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                                         um()
                                     } else {
                                         let id = read_u32(cup);
-                                        let year = core::ptr::read_unaligned((0xb63d7b + ((exe::key_nation_index_of_nation(nation) as i8) as i32 * 0x48) as usize) as *const u16) as i32;
+                                        let year = core::ptr::read_unaligned((0xb63d7b + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as *const u16) as i32;
                                         let comp = read_u32((read_u32(G_COMP_OBJECT_TABLE) as usize).wrapping_add(id as usize * 4)) as usize;
                                         if read_i16(comp + 0x40) as i32 == year || read_u32(nation) == read_u32(KEY_NATION_SPAIN) || read_u32(nation) == read_u32(KEY_NATION_BELGIUM) {
                                             um()
@@ -707,7 +707,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                         if read_u8(nation + nation::LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
-                            let cup = read_u32(G_LEAGUE_WORLD_CUP_SECOND_CUP_COMP + ((exe::key_nation_index_of_nation(nation) as i8) as i32 * 0x48) as usize) as usize;
+                            let cup = read_u32(G_LEAGUE_WORLD_CUP_SECOND_CUP_COMP + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as usize;
                             if cup == 0 {
                                 um()
                             } else {
@@ -885,7 +885,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
         exe::uefaseeding_roll_coefficients(this);
         exe::uefaseeding_set_place_counts(this);
         let mut t = 0usize;
-        let n = exe::uefaseeding_collect_european_clubs(this, &mut t);
+        let n = (exe::uefaseeding_collect_european_clubs(this, &mut t) as u32);
         if n as u16 == 0 {
             show_error_at(0xaa1a1c, 0x2b7);
         } else {

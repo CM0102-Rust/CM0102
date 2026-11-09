@@ -514,7 +514,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     exe::date_add_days(p1, p2, 0xd);
     let (a1, a2) = day_year(p1);
     let (a3, a4) = day_year(p2);
-    exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), a1, a2, a3, a4, read_usize(national_team) as u32, l, (-1) as i32 as u32, (-2) as i32 as u32, cell as u32);
+    (exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), a1, a2, a3, a4, read_usize(national_team) as u32, l, (-1) as i32 as u32, (-2) as i32 as u32, cell as u32) as u32);
     core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
     let finais = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP];
     let mut item = exe::llist_get_next(l);

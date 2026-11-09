@@ -529,7 +529,7 @@ pub(crate) unsafe fn side_match_points(m: usize, a: usize, b: usize, c: usize, d
 /// dividido por 100000 (divisões com sinal truncadas, como as multiplicações mágicas da original; produtos em 32 bits).
 pub(crate) unsafe fn match_rating_for_manager(p: usize, side: u32, out: &mut u32, opponent: usize, points: i32) -> i32 {
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(p)));
-    let i = exe::comp_get_fixture_match_importance(comp, p, side, out as *mut u32) as u8 as i8 as i32;
+    let i = (exe::comp_get_fixture_match_importance(comp, p, side, out as *mut u32) as u32) as u8 as i8 as i32;
     let x = i
         .wrapping_mul(read_i16(opponent + club::REPUTATION) as i32 / 500)
         .wrapping_mul(read_i16(read_usize(p + fixture::COMPETITION) + 0x69) as i32)

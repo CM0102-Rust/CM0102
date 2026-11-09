@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
             write_usize(this + league::ACTIVE, 1);
         }
     }
-    exe::league_update_for_date(this, today, full)
+    (exe::league_update_for_date(this, today, full) as u32)
 }
 
 // simplification: the clubs (shuffled), the tables, the matches and the league day do not run twice. Original only; the plan

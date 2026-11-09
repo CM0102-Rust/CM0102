@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: us
         exe::date_operator_3d(p0, p2, v);
         let a = read_usize(p0) as u32;
         let b = core::ptr::read_unaligned((p0 + 2) as *const u32);
-        (exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), a, b, a, b, id, l, (-1) as i32 as u32, (-2) as i32 as u32, (-1) as i32 as u32) as i16);
+        ((exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), a, b, a, b, id, l, (-1) as i32 as u32, (-2) as i32 as u32, (-1) as i32 as u32) as u32) as i16);
         core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
         let item = exe::llist_get_next(l);
         if item != 0 {
@@ -212,7 +212,7 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
         // 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24; 0x549ef0: push +0x28; push +0x2a; lea ecx ->
         // thiscall, ret 8; 0x5ac7a0 / 0x5abc30 / 0x5ab230: push match; mov ecx, [0xae2a58] -> thiscall, ret 4
         let id_comp = read_usize(read_usize(competition + 4)) as u32;
-        (exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), read_usize(pa) as u32, core::ptr::read_unaligned((pa + 2) as *const u32), read_usize(pb) as u32, core::ptr::read_unaligned((pb + 2) as *const u32), (-1) as i32 as u32, l, id_comp, (-2) as i32 as u32, (-1) as i32 as u32) as i16);
+        ((exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), read_usize(pa) as u32, core::ptr::read_unaligned((pa + 2) as *const u32), read_usize(pb) as u32, core::ptr::read_unaligned((pb + 2) as *const u32), (-1) as i32 as u32, l, id_comp, (-2) as i32 as u32, (-1) as i32 as u32) as u32) as i16);
         core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
         let mut j = exe::llist_get_next(l);
         while j != 0 {
@@ -2479,7 +2479,7 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
     exe::date_operator_3d(pb, p0, r);
     let nation = read_u32(club + club::NATION) as usize;
     if k != 0 && exe::database_is_national_team(club) == 0 && nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
-        let reg = (exe::key_nation_index_of_nation(nation) as u8 as i8 as isize * 72) as usize;
+        let reg = ((exe::key_nation_index_of_nation(nation) as u32) as u8 as i8 as isize * 72) as usize;
         let start = G_LEAGUE_WORLD_CUP_START_DATE.wrapping_add(reg); // the key nation’s season
         let (iano, idia) = (read_u16(start + 2), read_u16(start + 0) as i16);
         if iano < read_u16(pb + 2) || (iano == read_u16(pb + 2) && idia < read_u16(pb + 0) as i16) {

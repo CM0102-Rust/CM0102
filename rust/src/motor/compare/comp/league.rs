@@ -52,8 +52,8 @@ pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize,
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
     exe::new_llist(l);
-    let n = exe::fixture_manager_collect_comp_fixtures_on_day(read_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
-        read_usize(read_usize(this + 4)) as u32, u32::MAX, read_u8(this + league::STAGE_INDEX) as u32, l) as usize & 0xffff;
+    let n = (exe::fixture_manager_collect_comp_fixtures_on_day(read_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
+        read_usize(read_usize(this + 4)) as u32, u32::MAX, read_u8(this + league::STAGE_INDEX) as u32, l) as u32) as usize & 0xffff;
     exe::drop_llist(l);
     o(this, data);
     let expected = if n == 0 { 0 } else { validas.min(n) };

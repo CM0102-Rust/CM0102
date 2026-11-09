@@ -32,7 +32,7 @@ use super::*;
 /// repassa.
 pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     if full == 0 {
-        return exe::league_update_for_date(this, today, 0);
+        return (exe::league_update_for_date(this, today, 0) as u32);
     }
     let day = read_i16(this + league::NEXT_DRAW_DAY) as u16;
     let year = (read_i16(this + league::NEXT_DRAW_YEAR_OFFSET) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
         core::ptr::write_unaligned((this + 0xf2) as *mut u16, 0);
         write_usize(this + league::ACTIVE, 1);
     }
-    exe::league_update_for_date(this, today, full)
+    (exe::league_update_for_date(this, today, full) as u32)
 }
 
 // simplification: the draw, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan

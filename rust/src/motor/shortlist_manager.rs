@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
             exe::new_transfer_offer(po);
             let mut terms: usize = 0;
             if exe::transfer_offer_build_bid(po, p, club, slot(0), read_usize(slot(7)) as u32, 0, &mut terms) == 0 {
-                (exe::shortlist_manager_update_staff_status(this, p, club, 1, (read_u8(slot(0)) != 0xb) as u32) as u8);
+                ((exe::shortlist_manager_update_staff_status(this, p, club, 1, (read_u8(slot(0)) != 0xb) as u32) as usize) as u8);
             } else {
                 exe::transfer_manager_add_transfer_offer(gm, (po) as usize as *mut u8, (0) as u32 as *mut u8);
                 if terms != 0 {
@@ -353,7 +353,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
             } else {
                 // simplification: the setne goes with the high bytes of the slot pointer (as in the original); 0x843e10 reads the byte
                 let e = slot(0);
-                (exe::shortlist_manager_update_staff_status(this, p, club, 1, (e as u32 & 0xffff_ff00) | (read_u8(e) != 0xb) as u32) as u8);
+                ((exe::shortlist_manager_update_staff_status(this, p, club, 1, (e as u32 & 0xffff_ff00) | (read_u8(e) != 0xb) as u32) as usize) as u8);
             }
         }
     }
@@ -2445,7 +2445,7 @@ pub(crate) unsafe extern "thiscall" fn update_staff_status(this: usize, person: 
         core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
         let mut e = exe::llist_get_next(l);
         while e != 0 {
-            (exe::shortlist_manager_update_staff_status(this, person, friendly_club_by_id(read_usize(e + shortlist_pair::CLUB_ID)), 1, 2) as u8);
+            ((exe::shortlist_manager_update_staff_status(this, person, friendly_club_by_id(read_usize(e + shortlist_pair::CLUB_ID)), 1, 2) as usize) as u8);
             e = exe::llist_get_next(l);
         }
     }
@@ -2801,7 +2801,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clu
             }
             if c2 != 0 {
                 let lim = 20 - exe::utils_random(10);
-                if (exe::staff_contract_days_to_end_date(c2) as i16 as i32) < lim {
+                if ((exe::staff_contract_days_to_end_date(c2) as u32) as i16 as i32) < lim {
                     break 'c true;
                 }
             }
@@ -3843,7 +3843,7 @@ pub(crate) unsafe extern "thiscall" fn shortlist_manager_release_club_slot_targe
         // setne al on the slot address: the high 24 bits are its own
         let kind = ((s & !0xff) | (read_u8(s) != 0xb) as usize) as u32;
         crate::comparison::branch("cpn_6 target outside the club");
-        (exe::shortlist_manager_update_staff_status(this, p, club, 3, kind) as u32);
+        ((exe::shortlist_manager_update_staff_status(this, p, club, 3, kind) as usize) as u32);
     }
 }
 
@@ -3922,7 +3922,7 @@ pub(crate) unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, pl
             if LOAN_OFFER_DRY_RUN {
                 return -3;
             }
-            (exe::shortlist_manager_update_staff_status(this, player, club, 1, 0) as u32);
+            ((exe::shortlist_manager_update_staff_status(this, player, club, 1, 0) as usize) as u32);
         }
         return -1;
     }

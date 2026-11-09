@@ -900,7 +900,7 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
     if sm != 0 {
         let c = read_usize(p + staff::CLUB_JOB);
         if c != 0 {
-            (exe::shortlist_manager_update_staff_status(sm, p, c, 4, 2) as u8);
+            ((exe::shortlist_manager_update_staff_status(sm, p, c, 4, 2) as usize) as u8);
         }
         exe::shortlist_manager_suspend_clubs_shortlisting_player(sm, p, 0);
         let c = read_usize(p + staff::CLUB_JOB);
@@ -1667,7 +1667,7 @@ pub(crate) unsafe fn set_retirement_dates(person: usize, out: usize, away: unsaf
         if nation == 0 {
             return set_dates_tomorrow(out);
         }
-        exe::key_nation_index_of_nation(nation) as u8 as i8
+        (exe::key_nation_index_of_nation(nation) as u32) as u8 as i8
     };
     if k < 0 || k >= 0x23 {
         return away(out);
@@ -1801,7 +1801,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
 /// until after this year (+0x2f), it drops 1 (and 1 more with +0x59 < 6). v = ⌊(1 − (age − limit) × 0.075) × ability
 /// (+0xb)⌋ (16 bits). Reason 1: over 45; over 34 without a club and unemployed for more than 65 days (since +0x3e); 3
 /// years above the limit, over 31 and the contract's +0x3e > 5; 4 above: without a club; or a contract less than 300
-/// days from its exe::staff_contract_days_to_end_date(`days_to_end_date`), status below 50 and manager (+0x69) or +0x57 > random(20) with potential × 0.85 above
+/// days from its (exe::staff_contract_days_to_end_date(`days_to_end_date`) as u32), status below 50 and manager (+0x69) or +0x57 > random(20) with potential × 0.85 above
 /// the current ability (+7 and +5). Then v > 5500, no. A club in a competition not running in the game ([[0xadadfc] +
 /// id × 4] = 0, or without +0x57; without a club, a nation without +0x11c): random(3) = 0 retires; with a club and a
 /// negative status too; otherwise only with v < 3500. Otherwise as in `player_regen_check_initial_retirement` (+5 > 100 no; +5 < 10 or v < 1500 yes;
@@ -1874,7 +1874,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
             if read_usize(person + staff::CLUB_JOB) == 0 {
                 break 'm 1;
             }
-            if c2 != 0 && (exe::staff_contract_days_to_end_date(c2) as i16) < 300 && status < 0x32 {
+            if c2 != 0 && ((exe::staff_contract_days_to_end_date(c2) as u32) as i16) < 300 && status < 0x32 {
                 if read_usize(person + staff::NON_PLAYER) != 0 {
                     break 'm 1;
                 }

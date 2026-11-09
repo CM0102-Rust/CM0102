@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn decide_foul(this: usize, j: usize, code: 
     if exe::cm3_match_engine_is_foul_pending(engine) != 0 {
         return 0;
     }
-    if exe::cm3_match_engine_get_player_position(engine, j) & 1 != 0 && exe::match_player_is_in_penalty_area(j, side_of_player(j) as u8) as u8 != 0 {
+    if exe::cm3_match_engine_get_player_position(engine, j) & 1 != 0 && (exe::match_player_is_in_penalty_area(j, side_of_player(j) as u8) as u32) as u8 != 0 {
         return 0;
     }
     let person = *((this + 4) as *const usize);
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn decide_foul(this: usize, j: usize, code: 
         *v = (*v).wrapping_add(0xff06);
         return 0;
     }
-    if exe::match_player_is_in_penalty_area(j, side_of_player(j) as u8) as u8 != 0 && random(4) != 0 {
+    if (exe::match_player_is_in_penalty_area(j, side_of_player(j) as u8) as u32) as u8 != 0 && random(4) != 0 {
         return 0;
     }
     *v = (*v).wrapping_add(0xaf);
@@ -123,7 +123,7 @@ pub(crate) unsafe fn count_foul(engine: usize, j: usize) {
 
 /// Calls the match player is_in_penalty_area check for the player.
 pub(crate) unsafe fn is_in_penalty_area(j: usize) -> bool {
-    exe::match_player_is_in_penalty_area(j, side_of_player(j) as u8) as u8 != 0
+    (exe::match_player_is_in_penalty_area(j, side_of_player(j) as u8) as u32) as u8 != 0
 }
 
 /// The referee's punishment for a foul by player `j`: counts the foul; for a type 1 foul, either a straight red (type
@@ -266,7 +266,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
             continue;
         }
         if passador != 0 {
-            if exe::match_player_is_in_penalty_area(passador, (side_b == 0) as u8) as u8 == 0 {
+            if (exe::match_player_is_in_penalty_area(passador, (side_b == 0) as u8) as u32) as u8 == 0 {
                 continue;
             }
             let dist = match_player_distance_to_cell(p, 4, y);
@@ -432,15 +432,15 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     let minute = (*((m + engine::CLOCK) as *const i16) as i32 / 11) as i8;
     *paciencia = (*paciencia).wrapping_add(0xaf);
     let dura = |t: i8| t == 0x2a || t == 0xc || t == 0x15;
-    if arb != 0 && dura(kind) && (exe::match_player_is_in_penalty_area(j, (0) as u8) as u8) == 0 && (exe::match_player_is_in_penalty_area(j, (1) as u8) as u8) == 0 && random(50 - read_i8(arb + 0x24) as i32) == 0 {
+    if arb != 0 && dura(kind) && ((exe::match_player_is_in_penalty_area(j, (0) as u8) as u32) as u8) == 0 && ((exe::match_player_is_in_penalty_area(j, (1) as u8) as u32) as u8) == 0 && random(50 - read_i8(arb + 0x24) as i32) == 0 {
         *paciencia = (*paciencia).wrapping_add(0x19);
         return 0;
     }
-    if ((exe::match_player_is_in_penalty_area(j, (0) as u8) as u8) != 0 || (exe::match_player_is_in_penalty_area(j, (1) as u8) as u8) != 0) && (dura(kind) || kind == 0x2e) && random(3) != 0 {
+    if (((exe::match_player_is_in_penalty_area(j, (0) as u8) as u32) as u8) != 0 || ((exe::match_player_is_in_penalty_area(j, (1) as u8) as u32) as u8) != 0) && (dura(kind) || kind == 0x2e) && random(3) != 0 {
         return 0;
     }
     // advantage: (20, or 5 in the band of its own side) x (+0x5c of `outro`’s profile)^1.5 / (1 or 3)
-    let a = if (exe::match_player_is_in_penalty_area(j, (read_i8(j + match_player::SIDE)) as u8) as u8) != 0 { 5.0 } else { 20.0 };
+    let a = if ((exe::match_player_is_in_penalty_area(j, (read_i8(j + match_player::SIDE)) as u8) as u32) as u8) != 0 { 5.0 } else { 20.0 };
     let b = read_i8(*((other + match_player::STAFF) as *const usize) + 0x5c) as f64;
     let div = if *((other + match_player::LAST_FOULED_BY) as *const usize) != j { 1.0 } else { 3.0 };
     *advantage = (random(ftol(a * game_pow(b, read_f64(rdata::F64_1_5)) / div)) == 0) as u8;
@@ -549,7 +549,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         0x2d => {
             word(j, -4);
             if random(ftol(factor * read_f64(rdata::F64_20))) != 0 {
-                if (exe::match_player_is_in_penalty_area(j, (read_i8(j + match_player::SIDE)) as u8) as u8) == 0 || random(0x12) == 0 {
+                if ((exe::match_player_is_in_penalty_area(j, (read_i8(j + match_player::SIDE)) as u8) as u32) as u8) == 0 || random(0x12) == 0 {
                     res = 1;
                     add(random(dureza) + rigor as i32 + 4);
                     *card = 7;
@@ -614,7 +614,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         0x13 | 0x21 | 0x22 => {
             let follows = random(ftol(read_f64(rdata::F64_75) / factor)) == 0
                 || (who == 0x6c && random(if *advantage != 0 { 2 } else { 6 }) == 0);
-            if follows && ((exe::match_player_is_in_penalty_area(j, (read_i8(j + match_player::SIDE)) as u8) as u8) == 0 || random(ftol(read_f64(rdata::F64_18) / factor)) == 0) {
+            if follows && (((exe::match_player_is_in_penalty_area(j, (read_i8(j + match_player::SIDE)) as u8) as u32) as u8) == 0 || random(ftol(read_f64(rdata::F64_18) / factor)) == 0) {
                 res = 1;
                 let a = random(dureza);
                 let b = random(5);

@@ -29,6 +29,32 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Round 28: the automatic checker of signatures and field widths
+
+Round 27 only caught the functions declared in different ways; one declared wrong in the same way everywhere slipped
+through. Two tools now check everything against the original machine code:
+
+- `engenharia-reversa/conferir_assinaturas.py`: every exe function the Rust code calls (1,435, counting the wrappers,
+  the local declarations and the fixed addresses passed to helpers) against the routine and its callers in the
+  original: the stack (`ret N` or the caller's `add esp`), ecx read before written (`thiscall`) and the return width
+  (what the routine writes last before each `ret` and what the callers read: `al`, `ax`, `eax`, `edx`, `st0`).
+  Validated against the 53 of round 27: it flags none of the true ones and catches every wrong one that was a real bug.
+  It found 31 functions returning only `al`/`ax` declared `u32`: narrowed by `estreitar_retorno.py` (signed where the
+  original callers use `movsx`), each existing call keeping the old type with an `as`. 24 ambiguous suspects were
+  checked by agents: all harmless (return ignored or truncated), recorded as `accepted_sites` in
+  `assinaturas_conferidas.json`. Result: 0 bugs. It runs on every batch in `publicar_leva.py` and stops the publication
+  on a bug (exit code 1); the full list goes to `conferencia_assinaturas.tsv`.
+- `engenharia-reversa/larguras_campos.py --original`: every access to a named field inside a ported routine against
+  the widths the original routine uses at that displacement. Of the 8,964 checkable accesses, 8,886 match the original
+  instruction; the other 78 were checked by agents (55 collisions with another object at the same displacement, 14
+  fields merged into a wider or narrower access, 9 address only), none wrong (`larguras_conferidas.json`). Without
+  `--original`, the list of fields read with different widths across uses (`larguras_campos.tsv`), for review. Known
+  limit: some routine sizes in the community map are short (0x6c6a30, 0x6e2f20, 0x6ec010, 0x736720) and the matching
+  access lies past the stated end.
+
+Calls through pointers that only exist at run time (the game's tables and vtables) stay out: they cannot be checked
+statically.
+
 ## The proof of each step
 
 Each step was proved before its commit, on a bench (`engenharia-reversa/bancada.py`), with the DLL built from that step:
@@ -51,6 +77,7 @@ Each step was proved before its commit, on a bench (`engenharia-reversa/bancada.
 | `rodada5/` | the 5th typing round: variables (`tipos5_*`) and 835 proposed fields (`campos5_*`, 113 new objects) | `juntar_campos.py`, `aplicar_tipos_variaveis.py` |
 | `rodada6/` | the 6th round (motor.rs, managers, match, comparers): `tipos6_*`, `campos6_*` | `juntar_campos.py`, `aplicar_tipos_variaveis.py` |
 | `comentarios5/` | the English of 873 body comments | `aplicar_comentarios.py` |
+| `conferencia_assinaturas.tsv`, `larguras_no_original.tsv`, `larguras_conferidas.json`, `larguras_campos.tsv` | the output of the signature checker and of the width checker, and the verdicts on the 78 widths | `conferir_assinaturas.py`, `larguras_campos.py` |
 | `assinaturas_conferidas.json` | the true signature of 53 exe functions, checked against the disassembly (with the evidence) | `involucros_exe.py` |
 | `objetos/` | the fields of 5 objects that had no module (the scheduled match, the match-day manager, Finance, Stadium, FIXTURE_MANAGER) and who holds them | `aplicar_tipos_variaveis.py` |
 

@@ -1,4 +1,41 @@
 {
+ "ADDR_0x5afe00": {
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32) -> u32"
+  ],
+  "evidence": "conferir_assinaturas.py: returns only al on some path; called through dispatch_post_match_call (match_day.rs), whose u32 result is ignored (a routine with side effects).",
+  "note": "harmless; the dispatcher keeps one u32 return for all routines"
+ },
+ "ADDR_0x733a60": {
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32) -> u32"
+  ],
+  "evidence": "conferir_assinaturas.py: returns only al on some path; called through dispatch_post_match_call (match_day.rs), whose u32 result is ignored (a routine with side effects).",
+  "note": "harmless; the dispatcher keeps one u32 return for all routines"
+ },
+ "ADDR_0x7c3a40": {
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32) -> u32"
+  ],
+  "evidence": "conferir_assinaturas.py: returns only ax on some path; called through dispatch_post_match_call (match_day.rs), whose u32 result is read as u16 (test_7c3a40).",
+  "note": "harmless; the dispatcher keeps one u32 return for all routines"
+ },
+ "ADDR_0x867560": {
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32) -> u32"
+  ],
+  "evidence": "conferir_assinaturas.py: returns only al on some path; called through dispatch_post_match_call (match_day.rs), whose u32 result is ignored (a routine with side effects).",
+  "note": "harmless; the dispatcher keeps one u32 return for all routines"
+ },
+ "FN_94739C": {
+  "signature": "unsafe extern \"C\" fn(usize) -> i16",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only ax after the call. ret=[0] ecx=0 edx=0 eax_w=['call'] chamadores=10 lidos={'al': 8, 'ax': 2} add_esp={None: 8, 4: 2} ecx_antes=6",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> i32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_CLUB_CAN_BE_MANAGED": {
   "signature": "unsafe extern \"C\" fn(usize) -> u8",
   "confidence": "high",
@@ -6,6 +43,33 @@
   "wrong_sites": [
    "unsafe extern \"C\" fn(usize) -> u32"
   ]
+ },
+ "FN_CM3_MATCH_ENGINE_CAN_MARKER_CHALLENGE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, i8, i8) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[12] ecx=1 edx=0 eax_w=['z'] chamadores=8 lidos={'al': 8} add_esp={None: 8} ecx_antes=5",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, i8, i8) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_CM3_MATCH_ENGINE_RUN_MATCH_STEPS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, i32) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[0, 4] ecx=1 edx=0 eax_w=['1', 'z'] chamadores=8 lidos={'al': 7} add_esp={None: 8} ecx_antes=8",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, i32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_COLLECT_CONMEBOL_CLUBS": {
+  "signature": "unsafe extern \"stdcall\" fn(*mut usize) -> u16",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only ax before ret (upper bits undefined). ret=[4] ecx=0 edx=0 eax_w=['2'] chamadores=1 lidos={'ax': 1} add_esp={None: 1} ecx_antes=0",
+  "wrong_sites": [
+   "unsafe extern \"stdcall\" fn(*mut usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
  },
  "FN_COMP_ACTIVE_KEY_NATION_OF_CLUB": {
   "signature": "unsafe extern \"C\" fn(usize) -> u8",
@@ -33,6 +97,24 @@
    "unsafe extern \"C\" fn(usize) -> u32"
   ]
  },
+ "FN_COMP_COLLECT_CLUB_LIST": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u16",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only ax before ret (upper bits undefined). ret=[8] ecx=1 edx=0 eax_w=['2'] chamadores=1 lidos={} add_esp={None: 1} ecx_antes=1",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_COMP_GET_FIXTURE_MATCH_IMPORTANCE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut u32) -> i8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[12] ecx=1 edx=0 eax_w=['call'] chamadores=2 lidos={'al': 2} add_esp={None: 2} ecx_antes=2 Callers sign-extend (movsx).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_COMP_IS_RESERVE_OR_MINOR_COMP": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u32",
   "confidence": "high",
@@ -57,6 +139,15 @@
    "unsafe extern \"C\" fn(usize, usize, i32) -> u8"
   ]
  },
+ "FN_COMP_UTIL_SCALE_BY_ROUND": {
+  "signature": "unsafe extern \"C\" fn(u32, u32, u32, u32) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only al before ret (upper bits undefined). ret=[0] ecx=0 edx=0 eax_w=['1'] chamadores=63 lidos={'eax': 63} add_esp={None: 58, 16: 5} ecx_antes=17",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(u32, u32, u32, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize) -> u8",
   "confidence": "high",
@@ -75,6 +166,15 @@
    "unsafe extern \"thiscall\" fn(usize, usize, usize, *mut u8, usize, f64, u32) -> u32"
   ]
  },
+ "FN_CONTRACT_MANAGER_RESET_DIVISION_CLAUSES": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize, u32)",
+  "confidence": "high",
+  "evidence": "ret 8, ecx saved as this; no meaningful return (eax left as the loop counter al / the 0x540a50 result), the only original caller (0x6830f7) ignores eax. Declared -> u32 is harmless: our only caller (league.rs:3833) discards it.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
  "FN_CONTRACT_MANAGER_SEASON_END_MONTH": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u8",
   "confidence": "medium",
@@ -83,13 +183,71 @@
    "unsafe extern \"stdcall\" fn(usize) -> u32"
   ]
  },
+ "FN_CONTRACT_MANAGER_TRIGGER_RELEGATION_CLAUSES": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize, usize)",
+  "confidence": "high",
+  "evidence": "Saves ecx at 0x4cd03b and ends in a single ret 8. Nothing is returned on purpose: at the ret eax holds whatever was left there (the 0x540a50 result, a stack load, or the loop counter in al), and none of the 6 callers reads it. The declared -> u32 does no harm. league.rs:1498 reads that leftover eax on purpose (& !0xff) to copy the original's set_row_status argument, so keep -> u32 there; it is a deliberate leftover-value read, not a bug.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_CRT_STRICMP": {
+  "true_signature": "unsafe extern \"C\" fn(usize, usize) -> i32",
+  "confidence": "high",
+  "evidence": "CRT _stricmp: plain ret, caller pops 8; every return writes all of eax (movsx eax,al or sbb eax,eax / sbb eax,-1; the 'al' writes are inside the loop and are followed by movsx). The checker's '1' width is a false alarm; declared signature correct.",
+  "accepted_sites": [
+   "unsafe extern \"C\" fn(usize, usize) -> i32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_CUP_UPDATE_FOR_DATE": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u8",
+  "confidence": "high",
+  "evidence": "thiscall (mov esi, ecx) with one ret 8 at 0x51fbf3. Every path joins at 0x51fbe0 and does xor al, al, so it always returns bool 0 in al with the upper bits of eax left over from earlier code. The callers tail-return it through their own ret 8 (a bool virtual). The declared -> u32 does no harm: the overrides in intertoto_cup/eng_cc_cup/spa_cup/con_champ pass eax through unchanged.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_DATABASE_ATTRIBUTE_VECTOR_TO_NON_PLAYER": {
+  "signature": "unsafe extern \"C\" fn(usize, usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only al before ret (upper bits undefined). ret=[0] ecx=0 edx=0 eax_w=['1'] chamadores=4 lidos={} add_esp={12: 2, None: 2} ecx_antes=2",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize, usize, usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_DATABASE_ATTRIBUTE_VECTOR_TO_PLAYER": {
+  "signature": "unsafe extern \"C\" fn(usize, usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only al before ret (upper bits undefined). ret=[0] ecx=0 edx=0 eax_w=['1'] chamadores=4 lidos={} add_esp={None: 4} ecx_antes=1",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize, usize, usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_DATABASE_COMPARE_COMP_HISTORY_ROWS": {
+  "true_signature": "unsafe extern \"C\" fn(*const u8, usize) -> i32",
+  "confidence": "high",
+  "evidence": "qsort-style comparator, plain ret, caller add esp 8. The setne al path runs only when eax==0 (jne not taken), so eax is 0/1 with clean upper bits; other paths write eax fully (or eax,-1 / sub / movsx). Declared signature correct.",
+  "accepted_sites": [
+   "unsafe extern \"C\" fn(*const u8, usize) -> i32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
  "FN_DATABASE_GET_CONTRACT_RATING_MODIFIER": {
   "signature": "unsafe extern \"C\" fn(usize, usize) -> i8",
   "confidence": "high",
   "evidence": "Plain ret, callers add esp,8; returns al (xor al,al, or (byte&0xf)-10 in eax), all 4 original callers movsx eax,al. The u32 wrapper/site turns negatives into large unsigned values.",
   "wrong_sites": [
    "unsafe extern \"C\" fn(usize, usize) -> u32"
-  ]
+  ],
+  "accepted_sites": [
+   "unsafe extern \"C\" fn(usize, usize) -> u32"
+  ],
+  "evidence_2": "cdecl: plain ret, callers do add esp, 8, ecx is not used. One path returns (byte+0x4f & 0xf) - 10 in the full eax. The other path is xor al, al with garbage in the upper bits. All callers do movsx eax, al (the checker's st0 reads are the callers' own x87 code). The -> u32 at match_pl.rs:9482 does no harm because it immediately does `as i8 as f64`. exe_calls.rs and match_man.rs already use -> i8."
  },
  "FN_DATABASE_GET_STAFF_AGE": {
   "signature": "unsafe extern \"C\" fn(usize, *const u16) -> i8",
@@ -108,6 +266,24 @@
    "unsafe extern \"C\" fn(usize, usize, u32) -> i32"
   ]
  },
+ "FN_DATABASE_NON_PLAYER_TO_ATTRIBUTE_VECTOR": {
+  "true_signature": "unsafe extern \"C\" fn(usize, usize, usize, *mut u8)",
+  "confidence": "high",
+  "evidence": "cdecl (plain ret, caller add esp 0x10), no ecx; returns nothing: the last eax write is movsx ax,[eax+0x21], a scratch store into the vector (upper bits = the first argument's), and callers never read eax (the 'st0' read is an x87 value the caller loaded itself). Declared -> u32 is harmless: our call sites discard it; only the comparator in compare/database.rs also checks r == n, which holds only while the port mimics that leftover eax.",
+  "accepted_sites": [
+   "unsafe extern \"C\" fn(usize, usize, usize, *mut u8) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_DATE_GET_DAY_OF_MONTH": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize) -> i16",
+  "confidence": "high",
+  "evidence": "thiscall reading [ecx]/[ecx+4], plain ret. Returns in ax: or ax, 0xffff, or sub eax, ecx after mov ax, [ecx]. The upper 16 bits come from [ecx+4]: garbage. Callers use movsx edx, ax / cmp ax, 0x1c. The -> u32 does no harm: the Rust users cast to u16/i16, and transfer_manager.rs:10217 passes the raw value to 0x549f70, which reads only di (16 bits), just as the original does.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
  "FN_DATE_GET_MONTH": {
   "signature": "unsafe extern \"thiscall\" fn(usize) -> u8",
   "confidence": "high",
@@ -115,6 +291,34 @@
   "wrong_sites": [
    "unsafe extern \"thiscall\" fn(usize) -> u32"
   ]
+ },
+ "FN_DATE_GET_TIME_OF_DAY_GENDER": {
+  "signature": "unsafe extern \"C\" fn(u32) -> i8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[0] ecx=0 edx=0 eax_w=['1'] chamadores=9 lidos={'al': 9} add_esp={None: 9} ecx_antes=8 Callers sign-extend (movsx).",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_DATE_GET_WEEKDAY_GENDER": {
+  "signature": "unsafe extern \"C\" fn(u32, u32) -> i8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[0] ecx=0 edx=0 eax_w=['1'] chamadores=9 lidos={'al': 9} add_esp={None: 9} ecx_antes=0 Callers sign-extend (movsx).",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(u32, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_DATE_OPERATOR_3D": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize, usize) -> usize",
+  "confidence": "high",
+  "evidence": "Date::operator= returning by value through a hidden pointer: ecx=this, args (ret_ptr, src), ret 8; copies src into this and this into *ret_ptr, returns eax = ret_ptr (full 32 bits). No x87 at all; the 'st0' reads are the callers' own. Both declared forms are equivalent and correct.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(*mut [u16; 4], *mut [u16; 4], usize) -> usize",
+   "unsafe extern \"thiscall\" fn(usize, usize, usize) -> usize"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
  },
  "FN_FINANCE_ADD_PLAYERS_SOLD": {
   "signature": "unsafe extern \"thiscall\" fn(usize, i64)",
@@ -139,6 +343,42 @@
   "wrong_sites": [
    "unsafe extern \"thiscall\" fn(usize, u32, u32)"
   ]
+ },
+ "FN_FINANCE_UPGRADE_STADIUM_FOR_LEAGUE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, i32, i32, usize, u32) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[16] ecx=1 edx=0 eax_w=['1'] chamadores=3 lidos={'al': 2} add_esp={None: 3} ecx_antes=3",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, i32, i32, usize, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_FIXTURE_MANAGER_COLLECT_COMP_FIXTURES_ON_DAY": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u16",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only ax before ret (upper bits undefined). ret=[28] ecx=1 edx=0 eax_w=['2'] chamadores=2 lidos={'eax': 2} add_esp={None: 2} ecx_antes=2",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_FIXTURE_MANAGER_FIND_FIXTURES": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u16",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only ax after the call. ret=[36] ecx=1 edx=0 eax_w=['2'] chamadores=44 lidos={'ax': 10} add_esp={None: 44} ecx_antes=43",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize)",
+  "confidence": "high",
+  "evidence": "thiscall (mov ebx, ecx), one ret 4 at 0x5abae0. No meaningful return: eax is left with a date word or whatever the early jumps to 0x5abac8 had; the result is stored into the fixture at +0x28/+0x2a. None of the 12 callers reads eax. The -> u32 does no harm: every Rust site ignores it.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
  },
  "FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, u32) -> usize",
@@ -188,6 +428,24 @@
    "unsafe extern \"C\" fn(u32, i32) -> u32"
   ]
  },
+ "FN_GET_HEADING_COLOUR": {
+  "signature": "unsafe extern \"C\" fn(u32) -> u16",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only ax before ret (upper bits undefined). ret=[0] ecx=0 edx=0 eax_w=['2'] chamadores=42 lidos={'eax': 42} add_esp={4: 30, None: 8, 8: 4} ecx_antes=6",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_GRAPHICS_RGB_TO_PIXEL": {
+  "true_signature": "unsafe extern \"C\" fn(u32, u32, u32, u32) -> u16",
+  "confidence": "high",
+  "evidence": "cdecl, plain ret, caller pops 16. Returns a 16-bit pixel: the 565/555 paths compute it in full eax (upper bits 0), but the early path when [0xaebe0c]!=0 does mov eax,[0xaebe0c]; xor ax,ax, leaving the flag's upper 16 bits in eax; callers store ax (42) or a dword that is later used as a word. Declared -> u32 is harmless in practice: our sites truncate (as u16) or deliberately carry the full eax like the original, and 0xaebe0c is a flag (no code writes a large value), so the upper bits are 0.",
+  "accepted_sites": [
+   "unsafe extern \"C\" fn(u32, u32, u32, u32) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
  "FN_HOSTCOUNTRY_FIND_HOSTS": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u8",
   "confidence": "high",
@@ -228,6 +486,15 @@
    "unsafe extern \"thiscall\" fn(usize, i32) -> i32 (width only; harmless, the body sign-extends into eax)"
   ]
  },
+ "FN_INJURY_UPDATE_PLAYER_FITNESS": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize)",
+  "confidence": "high",
+  "evidence": "thiscall, one ret 4 at 0x62cdf2. Before it, eax is overwritten by the call to 0x417c10 (or left over on the early exits to 0x62cde1); the computed fitness is stored at [ebp+8]/[ebp+0xa]. None of the 9 callers reads eax. The -> u32 does no harm: every Rust site ignores it.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
  "FN_IS_UNDISPUTED_ACTION_CODE": {
   "signature": "unsafe extern \"thiscall\" fn(usize, i8) -> u8",
   "confidence": "medium",
@@ -252,6 +519,78 @@
    "unsafe extern \"C\" fn(usize) -> u32"
   ]
  },
+ "FN_KEY_NATION_INDEX_OF_NATION": {
+  "signature": "unsafe extern \"C\" fn(usize) -> i8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[0] ecx=0 edx=0 eax_w=['1'] chamadores=28 lidos={'al': 23} add_esp={None: 19, 4: 9} ecx_antes=5 Callers sign-extend (movsx).",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_LEAGUE_FREE_TABLE": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize)",
+  "confidence": "high",
+  "evidence": "ret 4, ecx=this; void: eax is only the ax of +0x3e or 0 from the free calls, no caller reads it (234 callers, lidos={}). Declared -> u32 is harmless: all our call sites discard it.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_LEAGUE_PROMOTE_AND_RELEGATE": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, u32, i32, i32) -> u32",
+  "confidence": "high",
+  "evidence": "Saves ecx, ret 0x18 = 6 stack args plus this, so the declared argument count is correct. No meaningful return: eax holds al = a byte argument, or what 0x5e8290 left. None of the 56 callers reads it. bra_nat_first.rs:301-305 passes the last call's eax on as its own return to copy the original's leftover value. Semantically void, but keep -> u32 for that site; it does no harm.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, u32, i32, i32) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_LEAGUE_UPDATE_FOR_DATE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[8] ecx=1 edx=0 eax_w=['1'] chamadores=27 lidos={'al': 4} add_esp={None: 27} ecx_antes=21",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_MATCH_EVENTS_ADD_EVENT": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, u32, u32, u32, u32, u32, u32, u32)",
+  "confidence": "high",
+  "evidence": "ret 0x1c (7 stack dwords), ecx=this; void: exits through tail-calls (0x6d5d00, recursive 0x6d6f70) or with leftover eax, no caller reads eax and nothing is left in st0 (the 'st0' reads are the callers' own x87 values). The void form in match_pl.rs is right; the -> u32 form is harmless (event_at_front only forwards it, its own callers don't read it).",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_MATCH_EVENTS_LOAD_EVENT_LOG": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only al before ret (upper bits undefined). ret=[4] ecx=1 edx=0 eax_w=['1'] chamadores=1 lidos={'al': 1} add_esp={None: 1} ecx_antes=0",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_MATCH_EVENTS_SHOW_EVENT_TEXT": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, usize, usize, u32, u32, u32, u32)",
+  "confidence": "high",
+  "evidence": "Uses ecx (mov esi, ecx at 0x6d7b14; callers do mov ecx, edi or mov ecx, [esp+0x20]; the checker's ecx=0 is a false alarm), one ret 0x20 = 8 stack args plus this, so the declared argument count is correct. Before the ret it writes a field at [esi+0x2dac]; eax is not meaningful and the 3 callers do not read it. The -> u32 does no harm: match_screens.rs ignores it.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, usize, usize, u32, u32, u32, u32) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_MATCH_PLAYER_BIAS_TARGET_COLUMN": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, i8) -> i8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[4] ecx=1 edx=0 eax_w=['1', '4', 'z'] chamadores=3 lidos={'al': 3} add_esp={None: 3} ecx_antes=3",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, i8) -> i32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_MATCH_PLAYER_DECIDE_BALL_ACTION": {
   "signature": "unsafe extern \"thiscall\" fn(usize, u32) -> u8",
   "confidence": "high",
@@ -267,6 +606,33 @@
   "wrong_sites": [
    "unsafe extern \"thiscall\" fn(usize) -> u32"
   ]
+ },
+ "FN_MATCH_PLAYER_IS_IN_PENALTY_AREA": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u8) -> i8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[4] ecx=1 edx=0 eax_w=['z'] chamadores=31 lidos={'al': 31} add_esp={None: 31} ecx_antes=29 Callers sign-extend (movsx).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u8) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_MATCH_PLAYER_MOVE_TO": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, i8, i8, i32, u32, u32)",
+  "confidence": "high",
+  "evidence": "ret 0x14 (5 stack args), ecx=this (esi); void: both rets leave al = a loop counter, no caller reads eax. Declared -> u32 is harmless (not read).",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, i8, i8, i32, u32, u32) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_MATCH_PLAYER_MOVE_TO_GRID_CELL": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, i8, i8)",
+  "confidence": "high",
+  "evidence": "thiscall reading [ecx+0x102]/[ecx+0x28]. Two ret 8 exits (0x6f47a1, 0x6f4919), each with 2 byte arguments in dword slots. eax is left over (from the 0x5e8290 call, a field, or the byte at +0x103) and no caller reads it. The -> u32 does no harm: match_pl.rs:8351/8364 only pass it through as a tail return. The (usize, u32, u32) variant in match_eng.rs:2434 has the same ABI.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, i8, i8) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
  },
  "FN_MATCH_SCREENS_FIND_BEST_RATED_STARTER_SLOT": {
   "signature": "unsafe extern \"C\" fn(usize, usize) -> u8",
@@ -293,6 +659,24 @@
    "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, *mut u32) -> u32"
   ]
  },
+ "FN_NEWSITEM_GET_CATEGORY": {
+  "signature": "unsafe extern \"thiscall\" fn(usize) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[0] ecx=1 edx=0 eax_w=['1'] chamadores=26 lidos={'al': 26} add_esp={None: 26} ecx_antes=23",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_NEWSITEM_IS_IMPORTANT_FOR": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only al before ret (upper bits undefined). ret=[4] ecx=1 edx=0 eax_w=['1'] chamadores=1 lidos={'al': 1} add_esp={None: 1} ecx_antes=1",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_NEWS_CLUB_HAS_HUMAN_MANAGER": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u32",
   "confidence": "high",
@@ -306,6 +690,15 @@
   "confidence": "medium",
   "evidence": "Plain ret, callers add esp,8; arg2 is a byte (movsx [esp+8]); result clamped to 1.0..20.0 then __ftol (0x945640) fills eax, original callers use movsx al / cmp al. The wrapper's i32 return yields the same 1..20, so neither existing form is harmful.",
   "wrong_sites": []
+ },
+ "FN_OFFICIALSMANAGER_RENEW_OFFICIALS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only al before ret (upper bits undefined). ret=[4] ecx=1 edx=0 eax_w=['1'] chamadores=83 lidos={} add_esp={None: 83} ecx_antes=83",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
  },
  "FN_PLAYERSTATS_GET_LANGUAGE_FLUENCY": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, u32) -> u8",
@@ -354,6 +747,24 @@
    "unsafe extern \"stdcall\" fn(usize, u32, u32) -> f64"
   ]
  },
+ "FN_PUMP_MESSAGES": {
+  "true_signature": "unsafe extern \"C\" fn()",
+  "confidence": "high",
+  "evidence": "Single plain ret at 0x68d5b6, no args, no ecx; the WM_QUIT/error path ends in exit (call 0x945934) and never returns, the 'ret 16' the checker saw belongs to the next function (WndProc at 0x68d630). Declared signature correct.",
+  "accepted_sites": [
+   "unsafe extern \"C\" fn()"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_RULINGBODY_PROCESS_MATCH": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, u32, u32, u32) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only al before ret (upper bits undefined). ret=[20] ecx=1 edx=0 eax_w=['1'] chamadores=3 lidos={} add_esp={None: 3} ecx_antes=3",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32, u32, u32, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_SCREENMANAGER_FIND_MANAGER_CHANNEL": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u16",
   "confidence": "high",
@@ -370,6 +781,24 @@
    "unsafe extern \"thiscall\" fn(usize) (convention only; harmless, ecx is ignored and nothing is popped)"
   ]
  },
+ "FN_SHORTLIST_MANAGER_ESTIMATE_SQUAD_STATUS": {
+  "true_signature": "unsafe extern \"stdcall\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "stdcall: args at [esp+..], ecx not read (it is overwritten at 0x849dc0), all exits ret 8. Returns in al: mov al, 1/2/3/5, or setge/dec/and/add, which writes the full eax. The mov al paths leave the upper bits of eax holding fnstsw/fild leftovers: garbage. The only caller tail-returns it. The -> u32 does no harm: the comparer compares `as u8`.",
+  "accepted_sites": [
+   "unsafe extern \"stdcall\" fn(usize, usize) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_SHORTLIST_MANAGER_UPDATE_STAFF_STATUS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, u32) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only al before ret (upper bits undefined). ret=[16] ecx=1 edx=0 eax_w=['1'] chamadores=29 lidos={} add_esp={None: 29} ecx_antes=24",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, u32) -> usize"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_STAFF_COMPUTE_PLAYER_ATTRIBUTE": {
   "signature": "unsafe extern \"C\" fn(usize, usize, u32) -> u8",
   "confidence": "high",
@@ -377,6 +806,33 @@
   "wrong_sites": [
    "unsafe extern \"C\" fn(usize, usize, u32) -> u32"
   ]
+ },
+ "FN_STAFF_CONTRACT_DAYS_TO_END_DATE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize) -> i16",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only ax after the call. ret=[0] ecx=1 edx=0 eax_w=['call'] chamadores=11 lidos={'ax': 11} add_esp={None: 11} ecx_antes=9 Callers sign-extend (movsx).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_STAFF_CONTRACT_GENERATE_INITIAL_CONTRACT": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize, u32)",
+  "confidence": "high",
+  "evidence": "One ret 8 at 0x85f79c, ecx=this; eax is just the leftover of the last call 0x945640 (ftol, stored into +0xc), the 5 original callers never read it. Declared -> u32 is harmless: add_staff_contract forwards it and its callers ignore it.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_STAFF_GET_NATURAL_POSITION_MASK": {
+  "true_signature": "unsafe extern \"C\" fn(usize) -> u32",
+  "confidence": "high",
+  "evidence": "cdecl (plain ret, callers pop; ecx is a scratch register loaded from the argument). eax is zeroed first (xor eax, eax), then built with or al/ah or set with full mov eax, imm. Every path returns a fully defined eax with zero upper bits. The checker's mixed width is a false alarm. The declared signature is correct.",
+  "accepted_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
  },
  "FN_TACTICS_FIND_CAPTAIN_SLOT": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, u32) -> i8",
@@ -393,6 +849,42 @@
   "wrong_sites": [
    "unsafe extern \"stdcall\" fn(usize, u32) -> i32 (convention only; harmless since ecx is unused)"
   ]
+ },
+ "FN_TRAINING_MANAGER_GET_COACHING_FACTOR": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize, usize, u32) -> i16",
+  "confidence": "high",
+  "evidence": "ret 8, called with ecx (this unused, still thiscall); returns a 16-bit value: the 'mov ax,0x64' path (club id < count-16) leaves the pointer's upper 16 bits in eax, and the original caller reads movsx ecx,ax. Declared -> u32 is harmless for our only caller (it truncates: as u16 as i16), but compare/training_manager.rs compares the full u32 (r == n), which is only right if the port mimics that leftover pointer; compare as u16 to be safe.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_TRAINING_MANAGER_GET_POSITION_APTITUDE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32) -> i8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[8] ecx=0 edx=0 eax_w=['1', '4'] chamadores=2 lidos={'al': 2} add_esp={None: 2} ecx_antes=2 Callers sign-extend (movsx).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_TRAINING_SCHEDULE_GET_CATEGORY_LEVEL": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32) -> i8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[4] ecx=1 edx=0 eax_w=['1'] chamadores=2 lidos={'al': 2} add_esp={None: 2} ecx_antes=2 Callers sign-extend (movsx).",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_TRANSFER_MANAGER_CHECK_OFFER_RESTRICTIONS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, *mut u32, u32) -> u8",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[16] ecx=1 edx=0 eax_w=['1'] chamadores=8 lidos={'al': 8} add_esp={None: 8} ecx_antes=8",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, *mut u32, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
  },
  "FN_TRANSFER_MANAGER_COLLECT_OFFER_NEWS_RECIPIENTS": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, *mut usize, u32) -> u8",
@@ -417,6 +909,33 @@
   "wrong_sites": [
    "unsafe extern \"thiscall\" fn(usize, usize, usize, usize, usize, u32) -> u8 (wrapper; width only, harmless since eax is 0/1)"
   ]
+ },
+ "FN_TRANSFER_RULES_GET_DAYS_UNTIL_WINDOW_CLOSES": {
+  "true_signature": "unsafe extern \"thiscall\" fn(usize) -> u16",
+  "confidence": "medium",
+  "evidence": "thiscall (mov esi, ecx), plain ret at 0x8e9060, returning the result of the inner date call 0x54cdb0 (16-bit), and a 16-bit value on the other path. Callers compare with cmp bx, ax / cmp bx, 3 (16-bit, unsigned jb/jae). The -> u32 does no harm: transfer_manager.rs:8129-8134 casts `as u16`.",
+  "accepted_sites": [
+   "unsafe extern \"thiscall\" fn(usize) -> u32"
+  ],
+  "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
+ },
+ "FN_UEFASEEDING_COLLECT_EUROPEAN_CLUBS": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, *mut usize) -> u16",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: every path writes only ax before ret (upper bits undefined). ret=[4] ecx=1 edx=0 eax_w=['2'] chamadores=1 lidos={'eax': 1} add_esp={None: 1} ecx_antes=1",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, *mut usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_USA_MLS_GET_CLUB_DIVISION": {
+  "signature": "unsafe extern \"C\" fn(usize) -> i16",
+  "confidence": "high",
+  "evidence": "conferir_assinaturas.py: the original callers read only ax after the call. ret=[0] ecx=0 edx=0 eax_w=['2'] chamadores=10 lidos={'ax': 10} add_esp={4: 9, None: 1} ecx_antes=5 Callers sign-extend (movsx).",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
  },
  "FN_UTILS_GET_VERSION_STRING": {
   "signature": "unsafe extern \"C\" fn() -> *const u8",

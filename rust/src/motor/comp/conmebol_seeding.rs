@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, skip: 
     crate::comparison::branch("cqj_2 year rollover");
     core::ptr::write_unaligned((this + 0x6f) as *mut u16, year);
     let mut t = 0usize;
-    let n = exe::collect_conmebol_clubs(&mut t);
+    let n = (exe::collect_conmebol_clubs(&mut t) as u32);
     if n as u16 == 0 {
         show_error_at(0x9a7ed8, 0x9b);
         return;

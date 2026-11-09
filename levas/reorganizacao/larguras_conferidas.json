@@ -1,0 +1,470 @@
+[
+ {
+  "where": "rust/src/motor/contract_manager.rs:214",
+  "field": "contract::DATE_STARTED",
+  "class": "merged",
+  "original": "004cf8ad mov eax, dword ptr [esi+0x25] / 004cf8aa mov edx, dword ptr [esi+0x29] (and 004cf904): the 8-byte date copied in two dwords to a temp and compared by day/year words; Rust reads the day (i16) and year (u16) words directly"
+ },
+ {
+  "where": "rust/src/motor/contract_manager.rs:474",
+  "field": "contract::NON_PROMOTION_RC",
+  "class": "collision",
+  "original": "contract is a stack copy at esp+0x38: 004cdd4e mov al, byte ptr [esp+0x54] (+0x1c) / 004cdd46 mov al, byte ptr [esp+0x57] (+0x1f), test al,al; the dword at 004ce2e0 mov dword ptr [esi+0x1c], eax is the block copy-out of the contract"
+ },
+ {
+  "where": "rust/src/motor/database.rs:4339",
+  "field": "staff::DATE_OF_BIRTH",
+  "class": "merged",
+  "original": "0053ea86 mov edx, dword ptr [eax+0x14] / 0053ea89 mov eax, dword ptr [eax+0x10]; push; call 0x4a7f20 (date ==, this=data): the 8-byte birth date passed by value and compared by day/year words; Rust compares the +0x10 and +0x12 words"
+ },
+ {
+  "where": "rust/src/motor/discipline.rs:488",
+  "field": "discipline_record::HELD_BAN_COUNT",
+  "class": "collision",
+  "original": "005565f5 mov al, byte ptr [ebp+0x1c]; test al,al; jle (signed byte, ebp = discipline record); the dword hits are [esp+0x1c] and [edi+0x1c] (list in this)"
+ },
+ {
+  "where": "rust/src/motor/discipline.rs:505",
+  "field": "discipline_record::HELD_BAN_COUNT",
+  "class": "collision",
+  "original": "005566af dec byte ptr [ebp+0x1c] (byte, same as Rust); dword hits are stack [esp+0x1c] and other base"
+ },
+ {
+  "where": "rust/src/motor/file_screens.rs:74",
+  "field": "club::SHORT_NAME",
+  "class": "pointer",
+  "original": "0059214a lea edi, [eax+0x38] (strlen/copy of club short name)"
+ },
+ {
+  "where": "rust/src/motor/injury.rs:871",
+  "field": "fixture::HOME_CLUB",
+  "class": "collision",
+  "original": "0062d57a mov ebx, dword ptr [ebp+0x1c] (dword, ebp = fixture) matches Rust; the byte hit 0062d9a4 mov byte ptr [ecx+edx+0x1c], 0 is the injury table entry"
+ },
+ {
+  "where": "rust/src/motor/manager_manager.rs:345",
+  "field": "fixture::TIE_RULES",
+  "class": "collision",
+  "original": "00695a30 test byte ptr [ebp+0x38], 4 (byte test, same as Rust); the dword/word hits at [eax+0x38]/[ecx+0x38]/[edx+0x38] are other objects or other tests (word read + test al,0x10)"
+ },
+ {
+  "where": "rust/src/motor/manager_manager.rs:2824",
+  "field": "club::DIRECTORS",
+  "class": "pointer",
+  "original": "0068f242 lea ecx, [edi+0xc3]; mov dword ptr [ecx],0 / [ecx+4] / [ecx+8]: 12 bytes zeroed, same as write_bytes(..,0,12)"
+ },
+ {
+  "where": "rust/src/motor/match_day.rs:151",
+  "field": "day_competition::PANEL",
+  "class": "pointer",
+  "original": "006b42d7 lea edi, [edx+esi+0x14]; mov ecx,0x10; rep stosd: 0x40 bytes zeroed, same as write_bytes(..,0,0x40)"
+ },
+ {
+  "where": "rust/src/motor/match_day.rs:392",
+  "field": "day_match::FIXTURE_COPY",
+  "class": "pointer",
+  "original": "006b5f91 lea esi, [eax+4]; mov ecx,0x13; rep movsd; movsw; movsb: 0x4f-byte copy, same as ptr::copy(..,0x4f)"
+ },
+ {
+  "where": "rust/src/motor/match_eng.rs:8935",
+  "field": "competition::REPUTATION",
+  "class": "collision",
+  "original": "006c6fd8 mov eax, dword ptr [ecx+0x14]; 006c6fdf movsx eax, word ptr [eax+0x69]; sub eax,0xc (i16, same as Rust; the routine is longer than the map size); the dword at 006c6a54 mov ecx, dword ptr [eax+0x69] is another object (engine+0xf582 record)"
+ },
+ {
+  "where": "rust/src/motor/match_man.rs:353",
+  "field": "match_player::POSITION",
+  "class": "collision",
+  "original": "006df4d4 add edi,0x69; 006df4d7 mov al, byte ptr [edi-0x50] (= +0x19); test al,al; jl (signed byte); the dword at 006df954 [edi+0x19] is another object"
+ },
+ {
+  "where": "rust/src/motor/match_man.rs:4057",
+  "field": "match_manager::BEST_PLAYER",
+  "class": "collision",
+  "original": "006e5af9 mov edx, dword ptr [ecx+0x3b]; cmp edx, [esp+0x64] (dword, same as Rust; routine longer than the map size); the byte hits movsx [esi+0x3b] are a staff/player attribute"
+ },
+ {
+  "where": "rust/src/motor/match_pl.rs:9352",
+  "field": "staff::AMBITION",
+  "class": "collision",
+  "original": "006ee46c cmp byte ptr [eax+0x57], 0xf (byte, signed; routine longer than the map size); the dword at 006edf68 [eax+0x57] is another object"
+ },
+ {
+  "where": "rust/src/motor/media.rs:2179",
+  "field": "staff::AGE",
+  "class": "collision",
+  "original": "00736ab5 movsx eax, byte ptr [esi+0x18]; mov ecx,0x23 / 00736b02 movsx edx, byte ptr [esi+0x18]; sub edx,0x13 (signed byte, same as Rust); the qword hit fld qword ptr [ecx+0x18] is a global object"
+ },
+ {
+  "where": "rust/src/motor/officials_manager.rs:785",
+  "field": "official::BIRTH_YEAR",
+  "class": "collision",
+  "original": "esi = record+0x16: 0079cdb2 mov ax, word ptr [esi-8] (= +0xe), cmp dx, ax; ja/jb (u16), 0079cde8 mov word ptr [esi-8], ax; the byte hits [esi+0xe] are attribute bytes at another base"
+ },
+ {
+  "where": "rust/src/motor/officials_manager.rs:601",
+  "field": "official_stats::FOULS",
+  "class": "collision",
+  "original": "eax = row+0x11: 0079d154 mov word ptr [eax+edx-9], bx (= +8, word, same as Rust); the dword hit is [esi+ecx+8] of the official record"
+ },
+ {
+  "where": "rust/src/motor/player_search.rs:107",
+  "field": "fixture::DAY",
+  "class": "collision",
+  "original": "007bd4fc mov dx, word ptr [ebp+0x2a]; mov word ptr [esi+6], dx (word, same as Rust); the byte hits [edi+0x2a]/[esi+0x2a] are byte copies between other objects"
+ },
+ {
+  "where": "rust/src/motor/player_search.rs:116",
+  "field": "fixture::MATCH_STATS_SLOT",
+  "class": "collision",
+  "original": "007bd546 mov edx, dword ptr [ebp+8]; mov dword ptr [esi+0x10], edx (dword, same as Rust); the word hit 007bd508 mov word ptr [esi+8], ax is the scout record year"
+ },
+ {
+  "where": "rust/src/motor/scout_manager.rs:1214",
+  "field": "scout_request::DATE",
+  "class": "merged",
+  "original": "007f8e92 mov ecx, dword ptr [eax+8] / mov edx, dword ptr [eax+0xc] to a temp, then 007f8eb9 cmp cx, word ptr [0xae2c90]; setl (signed day word) and year cmp ax,dx; jb/ja; Rust reads the i16 day and u16 year: equivalent"
+ },
+ {
+  "where": "rust/src/motor/staff_records.rs:954",
+  "field": "manager_record::CURRENT_CLUB_SINCE",
+  "class": "merged",
+  "original": "00869b64 mov eax, dword ptr [esi+0x4e] / mov ecx, dword ptr [esi+0x52] to a temp; 00869b7a cmp dx, word ptr [esi+0x78]; 00869b80 cmp ax, word ptr [esi+0x76] (word compares); Rust compares the same words"
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:536",
+  "field": "past_transfer::TO_CLUB_ID",
+  "class": "collision",
+  "original": "record on the stack at esp+0x24: 008c2761 mov dword ptr [esp+0x34], edx (+0x10, dword, same as Rust); the byte hit 008c226d mov byte ptr [esi+0x10], 2 is another object"
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:1539",
+  "field": "cm_date::YEAR",
+  "class": "merged",
+  "original": "008d34a6 mov dx, word ptr [esp+0x1e]; cmp dx, word ptr [esp+0x16] (year words), 008d34df mov ecx, dword ptr [esp+0x16]; and ecx,0xffff (year zero-extended); Rust read_i16(..) as u16 as u32 is the same value"
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:5976",
+  "field": "free_transfer_entry::REASON",
+  "class": "collision",
+  "original": "008c19a0 mov al, byte ptr [ebp+4] (byte, same as Rust); dword hits [eax+4] are other objects"
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:5992",
+  "field": "free_transfer_entry::REASON",
+  "class": "collision",
+  "original": "008c1a06 mov al, byte ptr [ebp+4] / 008c1a5f movsx eax, byte ptr [ebp+4] (byte); dword hits are other objects"
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:10313",
+  "field": "cm_date::YEAR",
+  "class": "merged",
+  "original": "date at esp+0x1c: 008c6cbc mov eax, dword ptr [esp+0x1e] (dword at date+2, pushed as the 4th argument of [ebx+0x2c] with al replaced by the code); word compares cmp word ptr [esp+0x26], ax; Rust read_usize(pd+2) reproduces the same dword"
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:137",
+  "field": "fixture::ROUND_NUMBER",
+  "class": "collision",
+  "original": "fixture on the stack at esp+0x18: 0051cd04 mov cx, word ptr [eax+9]; 0051cd08 mov word ptr [esp+0x4c], cx (+0x34, word, same as Rust); the byte hits [ecx+edi+0x34] are the cup tie FIXTURE_STATE"
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:151",
+  "field": "fixture::HOME_SIDE_MARK",
+  "class": "collision",
+  "original": "fixture at esp+0x18: 0051cd7d mov byte ptr [esp+0x58], 1 (+0x40, byte, same as Rust); word hits [esi+0x40] are a cup field (year)"
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:180",
+  "field": "fixture::NEXT_ROUND_YEAR",
+  "class": "collision",
+  "original": "fixture at esp+0x18: 0051cea5 mov word ptr [esp+0x3c], dx / 0051ceb1 mov word ptr [esp+0x3c], cx (+0x24, word, same as Rust); dword hits [esp+0x24] are another local"
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:189",
+  "field": "fixture::AWAY_CLUB",
+  "class": "collision",
+  "original": "fixture at esp+0x18: 0051ce56 mov dword ptr [esp+0x38], edx (+0x20 dword, same as Rust); the byte hits [eax+0x20] are the cup round entry"
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:237",
+  "field": "fixture::AWAY_CLUB",
+  "class": "collision",
+  "original": "0051d1da mov ecx, dword ptr [esp+0x38] / 0051d1e9 mov dword ptr [esp+0x38], eax (fixture+0x20 dword swap, same as Rust); byte hits [eax+0x20] are the cup round entry"
+ },
+ {
+  "where": "rust/src/motor/comp/fix_man.rs:834",
+  "field": "fixture::HOME_CLUB_ID",
+  "class": "merged",
+  "original": "005ab692 mov eax, dword ptr [esi+0xc] (dword copy into the 15-byte leg record); Rust copies the same 4 bytes via a byte slice: equivalent"
+ },
+ {
+  "where": "rust/src/motor/comp/friendly.rs:656",
+  "field": "llist::HEAD",
+  "class": "collision",
+  "original": "list at esp+0x10: 005ca1a2 mov eax, dword ptr [esp+0x12]; mov dword ptr [esp+0x1a], eax (HEAD dword -> CURSOR, same as Rust); the word hits are other objects"
+ },
+ {
+  "where": "rust/src/motor/comp/friendly.rs:3161",
+  "field": "scheduled_friendly_slot::YEAR",
+  "class": "collision",
+  "original": "005c67b7 mov si, word ptr [esp+0x16]; 005c67c5 cmp si, word ptr [edx+ebp+0xb] (= slot+2, word, same as Rust); the dword hit 005c6787 mov edx, dword ptr [eax+2] is the llist HEAD"
+ },
+ {
+  "where": "rust/src/motor/comp/league.rs:759",
+  "field": "league::LAST_RESULT_DATE",
+  "class": "merged",
+  "original": "00684903 mov eax, dword ptr [esi+0xc9] / mov ecx, dword ptr [esi+0xcd] to a temp; 0068491a cmp word ptr [esp+0x12], dx; 00684925 cmp ax, word ptr [0xae2c90] (word compares); Rust compares the same words"
+ },
+ {
+  "where": "rust/src/motor/comp/league.rs:970",
+  "field": "fixture::CATEGORY",
+  "class": "collision",
+  "original": "fixture at esp+0x2c (before the push): 0068374b mov byte ptr [esp+0x66], dl (+0x3a, byte from league+0xc4, same as Rust); the word hit 0068370b mov cx, word ptr [esi+0x3a] is league STAGE_ID"
+ },
+ {
+  "where": "rust/src/motor/comp/league.rs:979",
+  "field": "fixture::AWAY_RESULT_MARK",
+  "class": "collision",
+  "original": "fixture at esp+0x30 after the push: 006837a4 mov byte ptr [esp+0x6e], 0 (+0x3e, byte, same as Rust); the word hits movsx [esi+0x3e] are a league field"
+ },
+ {
+  "where": "rust/src/motor/comp/league.rs:2554",
+  "field": "league::MATCH_RULES",
+  "class": "merged",
+  "original": "0068ab07 mov cx, word ptr [esi+0xab]; test cl, 2 / test cl, 0x21: only low-byte bits are tested; Rust reads the low byte and tests the same bits"
+ },
+ {
+  "where": "rust/src/motor/contract_manager.rs:216",
+  "field": "contract::CONTRACT_EXPIRES",
+  "class": "collision",
+  "original": "0x4cf90d lea ebx,[esi+0x2d]; 0x4cf928 mov dx,word ptr [esp+0x18]; 0x4cf92f cmp dx,word ptr [ebx]; setl (signed 16-bit read of the expiry day via ebx=esi+0x2d). The 4-byte accesses at 0x2d are lea (address passed to 0x417c10/0x54cdb0). Rust read_i16 matches."
+ },
+ {
+  "where": "rust/src/motor/contract_manager.rs:2640",
+  "field": "contract::GRIEVANCES",
+  "class": "merged",
+  "original": "0x4cb8f1 test byte ptr [edi+0x45],4 (and 0x4cb900 test byte ptr [edi+0x45],0x10). Rust read_u32(...)&4 tests the same bit in the low byte; equivalent."
+ },
+ {
+  "where": "rust/src/motor/database.rs:4286",
+  "field": "club::SHORT_NAME",
+  "class": "pointer",
+  "original": "0x5400a6 lea edi,[eax+0x38] / 0x5400dc lea edi,[edx+0x38]: address of the short name copied to the stack for comparison. Rust only takes (c+SHORT_NAME) as *const u8."
+ },
+ {
+  "where": "rust/src/motor/discipline.rs:505",
+  "field": "discipline_record::HELD_BAN_COUNT",
+  "class": "collision",
+  "original": "0x5566af dec byte ptr [ebp+0x1c] (the person record's count, 1 byte, matches Rust u8). The 4-byte ones are lea ebx,[edi+0x1c] / mov ecx,[edi+0x1e]: the held-bans list inside the discipline object (another base)."
+ },
+ {
+  "where": "rust/src/motor/discipline.rs:1092",
+  "field": "discipline_record::HELD_BAN_COUNT",
+  "class": "collision",
+  "original": "0x55cb91 mov cl,byte ptr [ebp+0x1c]; test cl,cl; jle (signed byte, matches Rust i8). The 4-byte one is lea esi,[ecx+0x1c]: the held-bans list of the discipline object (another base)."
+ },
+ {
+  "where": "rust/src/motor/file_screens.rs:76",
+  "field": "nation::SHORT_NAME",
+  "class": "pointer",
+  "original": "0x59214a lea edi,[eax+0x38] / 0x592173 lea edi,[esi+0x38]: address of the nation's short name for the string copy. Rust passes (nation_of+SHORT_NAME) as *const u8 to copy_text."
+ },
+ {
+  "where": "rust/src/motor/injury.rs:2714",
+  "field": "injury_fields::INJURY_ENTRY_COUNT",
+  "class": "collision",
+  "original": "0x62c7c4 mov ecx,dword ptr [ebp+8] (ebp=this); 0x62c7cf cmp eax,ecx; jg (signed dword, matches Rust read_i32). The 2-byte ones (0x62caf6 movsx eax,word ptr [ebx+8], 0x62cdd3 mov word ptr [ebp+8],di) are on the physical record / a date (other bases)."
+ },
+ {
+  "where": "rust/src/motor/manager_manager.rs:595",
+  "field": "llist::HEAD",
+  "class": "collision",
+  "original": "0x6964ba mov eax,dword ptr [ebp+0x10]; 0x6964c3 mov ecx,dword ptr [eax+2]; 0x6964c8 mov dword ptr [eax+0xa],ecx (4-byte HEAD copied to CURSOR, matches Rust; this tail lies past the size given in mapa_funcoes). The 1-byte 0x695668 mov cl,byte ptr [edi+2] is another object."
+ },
+ {
+  "where": "rust/src/motor/manager_manager.rs:2825",
+  "field": "club::COACHES",
+  "class": "merged",
+  "original": "0x68f266 lea eax,[edi+0x19f]; mov dword [eax..eax+0x10],0 (5 dwords); edi+0x1b3 rep stosd x7; 0x68f28f edx+0x1cf, 3 dwords: zeroes 0x19f..0x1db (0x3c bytes). Rust write_bytes(club+COACHES,0,0x3c) is the same block."
+ },
+ {
+  "where": "rust/src/motor/match_day.rs:364",
+  "field": "day_match::FIXTURE_COPY",
+  "class": "pointer",
+  "original": "0x6b5f91 lea esi,[eax+4]; mov ecx,0x13; rep movsd; movsw; movsb (0x4f bytes copied from the entry+4 to the fixture). Rust copy(p+FIXTURE_COPY, game, 0x4f) is the same."
+ },
+ {
+  "where": "rust/src/motor/match_eng.rs:7254",
+  "field": "staff::YEAR_OF_BIRTH",
+  "class": "collision",
+  "original": "0x6d342f movsx ecx,byte ptr [ebp+0x18] after 0x6d3420 call 0x4cf5f0 (contract for club), then fild: signed byte, matches Rust read_i8. The 8-byte accesses (fld qword ptr [ecx+0x18]) are doubles of another object."
+ },
+ {
+  "where": "rust/src/motor/match_events.rs:459",
+  "field": "event_type::VARIANTS",
+  "class": "collision",
+  "original": "0x6d8d53 cmp dword ptr [eax+0xb68790],ebx and 0x6d8d7b mov eax,dword ptr [eax+0xb68790] (0xb68788 + 8, 4 bytes, matches Rust usize). The 1-byte 0x6d8f44 mov cl,byte ptr [ecx+8] is another object."
+ },
+ {
+  "where": "rust/src/motor/match_man.rs:3915",
+  "field": "staff::NATION",
+  "class": "collision",
+  "original": "0x6e378c mov edx,dword ptr [ebp+0x1a]; 0x6e378f movsx eax,word ptr [edx+0x8e] (dword nation pointer, matches Rust usize). The movsx byte ptr [esi+0x1a] reads are another object (player sheet attribute)."
+ },
+ {
+  "where": "rust/src/motor/match_man.rs:4399",
+  "field": "match_manager::TACTICS_ROW",
+  "class": "pointer",
+  "original": "0x6dbaf0 lea eax,[ebp+0x3f] / 0x6dbb60 lea eax,[esi+0x3f]; push eax (address of the tactics row passed to the call). Rust passes (t+TACTICS_ROW) as *mut u8."
+ },
+ {
+  "where": "rust/src/motor/media.rs:244",
+  "field": "transfer_interest::DATE",
+  "class": "merged",
+  "original": "0x75522a mov ecx,dword ptr [edi+eax+8]; 0x755232 mov edx,dword ptr [edi+eax+0xc] (the 8-byte date copied to the stack); 0x75523e mov dx,word ptr [esp+0x66] (year, unsigned ja/jb); 0x755250 cmp cx,word ptr [ebx+0x3e]; setg (day, signed 16-bit). Rust read_i16 day / year as u16 is equivalent."
+ },
+ {
+  "where": "rust/src/motor/media.rs:2181",
+  "field": "staff::AGE",
+  "class": "collision",
+  "original": "0x736b02 movsx edx,byte ptr [esi+0x18]; sub edx,0x13 (case 5; also 0x736ab5 for case 3): signed byte, matches Rust read_i8. The 8-byte ones (0x73675e fld qword ptr [ecx+0x18]) are doubles of the object at [0xb74350]."
+ },
+ {
+  "where": "rust/src/motor/officials_manager.rs:787",
+  "field": "official::BIRTH_YEAR",
+  "class": "collision",
+  "original": "0x79cdde add eax,0x7a8; 0x79cde8 mov word ptr [esi-8],ax (esi = e+0x16, so e+0xe, 16-bit write, matches Rust write_i16); day 0x79cdf5 mov word ptr [esi-0xa],ax. The byte ptr [esi+0xe] accesses use esi as another base (attribute bytes)."
+ },
+ {
+  "where": "rust/src/motor/player_regen.rs:3233",
+  "field": "regen_queue_entry::REGEN_DATE",
+  "class": "collision",
+  "original": "0x7a6689 mov dword ptr [ecx+eax*4-0xc],0xffffffff; 0x7a669a mov word ptr [eax+edx*4-8],bx (entry+4, 16-bit zero, matches Rust write_u16; the year likewise). The 4-byte 0x7a6608 lea ecx,[eax+4] is the address of another entry's date passed to 0x456770."
+ },
+ {
+  "where": "rust/src/motor/player_search.rs:108",
+  "field": "fixture::YEAR",
+  "class": "collision",
+  "original": "0x7bd504 mov ax,word ptr [ebp+0x28]; 0x7bd508 mov word ptr [esi+8],ax (16-bit year copy, matches Rust i16/u16). The 1-byte [esi+0x28]/[edi+0x28] are the scouting report entry and the event record (other bases)."
+ },
+ {
+  "where": "rust/src/motor/player_search.rs:874",
+  "field": "player_search_fields::ASSIGNED_REGION",
+  "class": "collision",
+  "original": "0x7b754d lea ecx,[esi+0x194]; 0x7b7561 mov dword ptr [esp+0x30],ecx (address kept on the stack, passed to 0x7aefd0); then 0x7b75bd mov eax,dword ptr [esp+0x20]; 0x7b75c1 mov al,byte ptr [eax]; cmp al,0xff; jle; 0x7b75c7 cmp byte ptr [ebp+0x76],al: 1-byte read through the saved pointer, matches Rust read_u8 with the (r as i8) > -1 test."
+ },
+ {
+  "where": "rust/src/motor/shortlist_manager.rs:3452",
+  "field": "club_shortlist::DAYS",
+  "class": "collision",
+  "original": "0x8422ca cmp byte ptr [ebp+8],0x64; jae (unsigned byte, matches Rust read_u8 >= 100). The 4-byte 0x842309 mov eax,dword ptr [esi+8] is another array."
+ },
+ {
+  "where": "rust/src/motor/staff_records.rs:2163",
+  "field": "manager_record::CURRENT_CLUB_SINCE",
+  "class": "merged",
+  "original": "0x86f8b7 mov eax,dword ptr [esi+0x4e]; mov edx,dword ptr [esi+0x52] (the 8-byte date to the stack); 0x86f8ca cmp dx(year),word ptr [esi+0x78]; 0x86f8d0 cmp ax,word ptr [esi+0x76] (day, 16-bit equality). Rust read_i16 equality tests are equivalent."
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:1536",
+  "field": "cm_date::YEAR",
+  "class": "collision",
+  "original": "0x8d3478 lea ecx,[esp+0x14] (local date, 0x54a110 then 0x8d0bb0); 0x8d34a6 mov dx,word ptr [esp+0x1e]; 0x8d34ab cmp dx,word ptr [esp+0x16] (16-bit year of the local date); 0x8d34ce movsx eax,word ptr [esp+0x14]. Matches Rust read_i16. The 4-byte 0x8d3315 mov ecx,dword ptr [eax+2] is an LLIST head (another object)."
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:5862",
+  "field": "cm_date::YEAR",
+  "class": "collision",
+  "original": "0x8c6fae lea ecx,[esp+0x2c]; call 0x417c10 (local date copy); 0x8c6fc2 mov dx,word ptr [esp+0x26] (year of the local date, unsigned ja/jb); 0x8c6fdd cmp ax,word ptr [esp+0x24]; setg. Matches Rust read_u16. The 4-byte 0x8c6f1e lea edx,[eax+2] / mov ecx,dword ptr [edx] is another table."
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:5982",
+  "field": "free_transfer_entry::REASON",
+  "class": "collision",
+  "original": "0x8c19a0 / 0x8c19d0 / 0x8c1a06 mov al,byte ptr [ebp+4]; test al,al; jne (1 byte, matches Rust read_u8 == 0). The 4-byte 0x8c1912 mov edx,dword ptr [eax+4] is part of the 12-byte copy of the whole entry to the stack (other base)."
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:6006",
+  "field": "free_transfer_entry::REASON",
+  "class": "collision",
+  "original": "0x8c1a5f movsx eax,byte ptr [ebp+4] (signed byte passed to 0x8df9b0 path, matches Rust read_u8 as i8 as i32). The 4-byte 0x8c1912 mov edx,dword ptr [eax+4] is the whole-entry copy to the stack."
+ },
+ {
+  "where": "rust/src/motor/transfer_manager.rs:10061",
+  "field": "offer::DUE_DATE",
+  "class": "pointer",
+  "original": "0x8c62e7 lea edi,[esi+0x12]; mov ecx,edi; call 0x417c10 (8-byte date copy into the offer). Rust copy_nonoverlapping(data, offer+DUE_DATE, 8) is the same copy."
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:138",
+  "field": "fixture::CATEGORY",
+  "class": "collision",
+  "original": "The fixture is a stack local at esp+0x18: 0x51cd0d mov cl,byte ptr [eax+0x17]; 0x51cd10 mov byte ptr [esp+0x52],cl (fixture+0x3a, 1 byte, matches Rust write_u8). The 2-byte ones (0x51ccc8 mov cx,word ptr [esi+0x3a], 0x51cfd1 movsx eax,word ptr [esi+0x3a]) are the cup object (other base)."
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:172",
+  "field": "fixture::AWAY_CLUB",
+  "class": "collision",
+  "original": "Stack-local fixture at esp+0x18: 0x51ce56 mov dword ptr [esp+0x38],edx (fixture+0x20, 4 bytes, matches Rust write_usize). The 1-byte [eax+0x20] / [ebx+ecx+0x21] reads are the cup round entry (other base)."
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:183",
+  "field": "fixture::NEXT_ROUND_YEAR",
+  "class": "collision",
+  "original": "Stack-local fixture at esp+0x18: 0x51ceb1 mov word ptr [esp+0x3c],cx (last round, zero) and 0x51cea5 mov word ptr [esp+0x3c],dx (fixture+0x24, 16 bits, matches Rust write_u16). The 4-byte [esi+0x24] / [esp+0x24] are the cup object and another stack slot."
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:235",
+  "field": "fixture::AWAY_CLUB",
+  "class": "collision",
+  "original": "Stack-local fixture at esp+0x18: 0x51d1da mov ecx,dword ptr [esp+0x38]; 0x51d1e9 mov dword ptr [esp+0x38],eax (fixture+0x20 read and swapped, 4 bytes, matches Rust read_usize). The 1-byte [eax+0x20] reads are the cup round entry."
+ },
+ {
+  "where": "rust/src/motor/comp/cup.rs:3025",
+  "field": "llist::HEAD",
+  "class": "collision",
+  "original": "Local LLIST at esp+0x20: 0x51ed79 mov eax,dword ptr [esp+0x22]; 0x51ed81 mov dword ptr [esp+0x2a],eax (HEAD to CURSOR, 4 bytes, matches Rust). The 2-byte 0x51ec75 mov di,word ptr [eax+2] is a date year (other base)."
+ },
+ {
+  "where": "rust/src/motor/comp/fix_man.rs:835",
+  "field": "fixture::AWAY_CLUB_ID",
+  "class": "merged",
+  "original": "0x5ab686 mov ecx,dword ptr [esi+0x10] then stored into the 15-byte list record on the stack (with 0x5ab680 mov eax,dword ptr [esi], 0x5ab67c word +0x34, 0x5ab679 byte +0x42). Rust copies the same 4 bytes with a byte slice copy; equivalent."
+ },
+ {
+  "where": "rust/src/motor/comp/friendly.rs:1389",
+  "field": "fixture::STADIUM",
+  "class": "collision",
+  "original": "Stack-local fixture at esp+0x14: 0x5c6176 mov ecx,dword ptr [eax+0x69] (club stadium); 0x5c617b mov dword ptr [esp+0x2c],ecx (fixture+0x18, 4 bytes, matches Rust write_usize); 0x5c6183 id to [esp+0x18]. The 1-byte [esi+0x18] accesses are the friendly_match record's state (other base)."
+ },
+ {
+  "where": "rust/src/motor/comp/league.rs:368",
+  "field": "llist::HEAD",
+  "class": "collision",
+  "original": "Local LLIST at esp+0x34: 0x685969 mov edx,dword ptr [esp+0x3e]; 0x68597c mov dword ptr [esp+0x46],edx (HEAD to CURSOR, 4 bytes, matches Rust); then 0x685980 call 0x68d1b0. The 2-byte [eax+2]/[ebx+2] are date years (other bases)."
+ },
+ {
+  "where": "rust/src/motor/comp/league.rs:968",
+  "field": "fixture::TIE_RULES",
+  "class": "collision",
+  "original": "Stack-local fixture at esp+0x2c: 0x68371e mov cx,word ptr [esi+0xab]; 0x683742 mov word ptr [esp+0x64],cx (fixture+0x38, 16 bits, matches Rust write_u16). The 1-byte [edx+0x38]/[eax+0x38] reads are the league team records (other base)."
+ },
+ {
+  "where": "rust/src/motor/comp/league.rs:978",
+  "field": "fixture::HOME_RESULT_MARK",
+  "class": "collision",
+  "original": "Stack-local fixture at esp+0x30 after 0x683759 push ecx: 0x68379f mov byte ptr [esp+0x6d],0 (fixture+0x3d, 1 byte, matches Rust write_u8; 0x6837a4 byte +0x3e). The 4-byte 0x6839e7 mov edx,dword ptr [ebx+ecx+0x3d] is the league round-dates table (other base)."
+ },
+ {
+  "where": "rust/src/motor/comp/league.rs:988",
+  "field": "fixture::NEXT_ROUND_YEAR",
+  "class": "collision",
+  "original": "Stack-local fixture at esp+0x2c: 0x68380c mov dx,word ptr [esp+0x86]; 0x683823 mov word ptr [esp+0x50],dx (fixture+0x24, 16 bits, matches Rust write_u16; day 0x68381e word [esp+0x52]). The 4-byte [esi+0x24] is the league object (other base)."
+ },
+ {
+  "where": "rust/src/motor/comp/leagues/spa_first.rs:372",
+  "field": "league::ROUND_COUNT",
+  "class": "collision",
+  "original": "0x84fdfc lea eax,[esi+0xa9]; 0x84fe29 mov word ptr [eax],0x26 (16-bit write through eax, matches Rust write u16 0x26). The 4-byte access is only the lea."
+ }
+]

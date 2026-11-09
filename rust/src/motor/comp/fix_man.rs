@@ -1528,7 +1528,7 @@ pub(crate) unsafe fn date_assign_ptr(target: *mut u8, source: usize) {
 /// cada data (só a palavra baixa conta), o clube, a lista, comp −1, tipo −2 e lado 1.
 pub(crate) unsafe fn find_club_fixtures_between(this: usize, a: *const u8, b: *const u8, club: u32, list: usize) -> u32 {
     let (a, b) = (a as usize, b as usize);
-    exe::fixture_manager_find_fixtures(this, read_u32(a), read_u32(a + 2), read_u32(b), read_u32(b + 2), club, list, u32::MAX, 0xffff_fffe, 1)
+    (exe::fixture_manager_find_fixtures(this, read_u32(a), read_u32(a + 2), read_u32(b), read_u32(b + 2), club, list, u32::MAX, 0xffff_fffe, 1) as u32)
 }
 
 /// Removes a fixture from the calendar (`remove_fixture`).

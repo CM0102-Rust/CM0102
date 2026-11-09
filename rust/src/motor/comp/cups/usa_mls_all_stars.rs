@@ -146,7 +146,7 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = usa_mls_all_stars_club_by_index(i);
         let league = read_usize(c + 0x57);
-        if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && (exe::usa_mls_get_club_division(c) as i16) as i32 == conferencia {
+        if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && ((exe::usa_mls_get_club_division(c) as u32) as i16) as i32 == conferencia {
             if k == 0 {
                 crate::comparison::branch("cqr_6 all-star game stadium");
                 let first = read_usize(read_usize(this + cup::TEAM_TABLE));

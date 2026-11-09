@@ -1483,7 +1483,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     if read_i8(t + match_manager::TACTIC_SLOT) == 0 && h16(club, club::REPUTATION) >= 0x1770 && *(game as *const i32) != -2 && exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 && exe::database_is_national_team(club) == 0 && strong > 0x1e {
         exe::date_add_days(G_CURRENT_DATE, f + 0xa4, 1);
         exe::date_add_days(G_CURRENT_DATE, f + 0x40, 7);
-        let r = exe::fixture_manager_find_fixtures(u(G_FIXTURE_MANAGER, 0), rd(0xa4), rd(0xa6), rd(0x40), rd(0x42), *(club as *const u32), f + 0x80, u32::MAX, 0xffff_fffe, 1);
+        let r = (exe::fixture_manager_find_fixtures(u(G_FIXTURE_MANAGER, 0), rd(0xa4), rd(0xa6), rd(0x40), rd(0x42), *(club as *const u32), f + 0x80, u32::MAX, 0xffff_fffe, 1) as u32);
         if r as u16 != 0 {
             // 333 x the competition’s reputation (.69; that of [0x9cf6f8] in table [0xae23d0]) + reputation/3
             let weight = |comp: usize, rival: usize| -> i32 {

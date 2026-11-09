@@ -2252,7 +2252,7 @@ pub(crate) unsafe extern "thiscall" fn end_loan(this: usize, person: usize) {
     update_club_wage_bill(if f == 0 { 0 } else { contract_manager_club_by_id(read_u32(f + contract::CLUB)) });
     let list = read_u32(read_u32(G_TRANSFER_MANAGER) as usize + 0x856) as usize;
     if exe::shortlist_manager_find_club_shortlist_entry(list, club, person, 0, 0) != 0 {
-        exe::shortlist_manager_update_staff_status(read_u32(read_u32(G_TRANSFER_MANAGER) as usize + 0x856) as usize, person, club, 4, 0);
+        (exe::shortlist_manager_update_staff_status(read_u32(read_u32(G_TRANSFER_MANAGER) as usize + 0x856) as usize, person, club, 4, 0) as usize);
     }
     let f = main_contract_lookup(person);
     let volta = if f == 0 { 0 } else { contract_manager_club_by_id(read_u32(f + contract::CLUB)) };
@@ -2585,8 +2585,7 @@ pub(crate) unsafe fn transfer_window_open(person: usize, club: usize) -> bool {
     let c1 = club_of_main_contract(person);
     let k = if read_u32(c1 + club::NATION) != 0 {
         let c2 = club_of_main_contract(person);
-        let index: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_NATION);
-        index(read_u32(c2 + club::NATION) as usize) as u8 as i8
+        exe::key_nation_index_of_nation(read_u32(c2 + club::NATION) as usize)
     } else {
         // simplification: the original reads the low byte of the slot of the `clube` argument (the pointer), not an index
         club as u8 as i8

@@ -519,7 +519,7 @@ pub(crate) unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize,
     }
     exe::staff_records_add_loan_records(read_usize(G_STAFF_RECORDS), person, b, a);
     if exe::shortlist_manager_is_on_shortlist(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), person, a) != 0 {
-        exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), person, a, 5, 0);
+        (exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), person, a, 5, 0) as usize);
     }
     exe::discipline_hold_bans_for_loan(read_usize(G_DISCIPLINE), transfer_manager_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)));
     exe::squad_manager_set_squad_number(read_usize(G_SQUAD_MANAGER), transfer_manager_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), a, 0);
@@ -1344,7 +1344,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
             if x != 0 {
                 // simplification: the original pushes the setne with the high bytes of the entry pointer; 0x843e10 only reads the byte
                 let t = (x as u32 & 0xffff_ff00) | (read_u8(x) != 0xb) as u32;
-                (exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), transfer_manager_staff_by_id(read_usize(o + offer::TARGET_STAFF_ID)), transfer_manager_club_by_id(read_usize(o + offer::BUYER_CLUB_ID)), 1, t) as u8);
+                ((exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), transfer_manager_staff_by_id(read_usize(o + offer::TARGET_STAFF_ID)), transfer_manager_club_by_id(read_usize(o + offer::BUYER_CLUB_ID)), 1, t) as usize) as u8);
             }
             return;
         }
@@ -1785,8 +1785,8 @@ pub(crate) unsafe fn cup_round_entry(cup: usize, round: u32) -> usize {
 pub(crate) unsafe fn collect_round_fixtures(cup: usize, data: usize, round: u32, list: usize) -> u32 {
     // simplification: the original pushes the day, the slice and the type in registers with leftovers in the high bytes; 0x5abd90 only
     // reads the words and the bytes
-    exe::fixture_manager_collect_comp_fixtures_on_day(read_usize(G_FIXTURE_MANAGER), read_i16(data + cm_date::YEAR) as u16 as u32, read_i16(data) as u16 as u32, read_u8(cup_round_entry(cup, round) + 6) as u32,
-        read_usize(read_usize(cup + 4)) as u32, round, read_u8(cup + cup::STAGE_INDEX) as u32, list) & 0xffff
+    (exe::fixture_manager_collect_comp_fixtures_on_day(read_usize(G_FIXTURE_MANAGER), read_i16(data + cm_date::YEAR) as u16 as u32, read_i16(data) as u16 as u32, read_u8(cup_round_entry(cup, round) + 6) as u32,
+        read_usize(read_usize(cup + 4)) as u32, round, read_u8(cup + cup::STAGE_INDEX) as u32, list) as u32) & 0xffff
 }
 
 /// Fixture `f` is on the round entry's scheduled date: day, year (+cup year +0x40), slice and the league type (+0x44)
@@ -3875,7 +3875,7 @@ pub(crate) unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize
         let mut comp = compensation;
         if comp == -1 {
             comp = if c != 0 && read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 2 {
-                ((exe::staff_contract_days_to_end_date(c) as i16) as i32).wrapping_mul(read_usize(c + contract::WAGE) as i32) / 7
+                (((exe::staff_contract_days_to_end_date(c) as u32) as i16) as i32).wrapping_mul(read_usize(c + contract::WAGE) as i32) / 7
             } else {
                 0
             };
@@ -4079,7 +4079,7 @@ pub(crate) unsafe fn update_shortlist_status(this: usize, person: usize, club: u
     if OFFER_RESPONSE_DRY_RUN {
         return;
     }
-    exe::shortlist_manager_update_staff_status(shortlist_manager_of(this), person, club, event, kind);
+    (exe::shortlist_manager_update_staff_status(shortlist_manager_of(this), person, club, event, kind) as usize);
 }
 
 /// A thiscall(transfer manager, offer) call with ret 4: `0x8c1290` (unsettle), `0x8cbf70` (remove the future transfer)
@@ -5298,7 +5298,7 @@ pub(crate) unsafe extern "thiscall" fn try_complete_offer(this: usize, offer: us
     // simplification: 0x8cfc90 writes only the low word of the reason; the original pushes the dword (the high word is leftover from
     // stack). The copy starts from zero, a value the game also produces.
     let mut reason: u32 = 0;
-    let r = (exe::transfer_manager_check_offer_restrictions(this, offer, buyer, &mut reason, 0) as u8);
+    let r = ((exe::transfer_manager_check_offer_restrictions(this, offer, buyer, &mut reason, 0) as u32) as u8);
     if in_deadline == 0 || reason as u16 != 9 {
         if exe::human_manager_is_human_club(buyer, 0, (1) as u32, (0) as u32, 0) == 0 && r == 1 {
             return exe::transfer_manager_club_rejects_offer(this, offer, buyer, 0);
@@ -5308,7 +5308,7 @@ pub(crate) unsafe extern "thiscall" fn try_complete_offer(this: usize, offer: us
         }
     }
     if seller != 0 {
-        let r = (exe::transfer_manager_check_offer_restrictions(this, offer, seller, &mut reason, 0) as u8);
+        let r = ((exe::transfer_manager_check_offer_restrictions(this, offer, seller, &mut reason, 0) as u32) as u8);
         if exe::human_manager_is_human_club(seller, 0, (1) as u32, (0) as u32, 0) == 0 && r == 1 {
             return exe::transfer_manager_club_rejects_offer(this, offer, seller, 0);
         }
@@ -5512,7 +5512,7 @@ pub(crate) unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usiz
     // word. The copy starts at zero.
     let mut reason: u32 = 0;
     if exe::human_manager_is_human_club(buyer, 0, 1, 0, 0) == 0 {
-        if exe::transfer_manager_check_offer_restrictions(this, offer, buyer, &mut reason, 1) as u8 == 1 {
+        if (exe::transfer_manager_check_offer_restrictions(this, offer, buyer, &mut reason, 1) as u32) as u8 == 1 {
             if read_u8(offer + offer::RESPONSE_ROUND) < 3 {
                 exe::transfer_manager_club_rejects_offer(this, offer, buyer, reason);
             } else {
@@ -5530,7 +5530,7 @@ pub(crate) unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usiz
     if exe::human_manager_is_human_club(seller, 0, 1, 0, 0) != 0 {
         return;
     }
-    if exe::transfer_manager_check_offer_restrictions(this, slot, seller, &mut reason, 1) as u8 == 1 {
+    if (exe::transfer_manager_check_offer_restrictions(this, slot, seller, &mut reason, 1) as u32) as u8 == 1 {
         return exe::transfer_manager_club_rejects_offer(this, slot, seller, 0);
     }
     crate::comparison::branch("cpv_1 confirmed by the seller");
@@ -7674,7 +7674,7 @@ pub(crate) unsafe extern "thiscall" fn offer_contract_to_offer_player(this: usiz
         let e = exe::shortlist_manager_find_club_shortlist_entry(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), club, person, (read_u8(offer + offer::JOB_TYPE) != 0xb) as u32, 0);
         if e != 0 {
             // simplification: the original pushes the type (setne) with the rest of the entry pointer above; 0x843e10 only reads the byte
-            exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), person, club, 1, (read_u8(e) != 0xb) as u32);
+            (exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), person, club, 1, (read_u8(e) != 0xb) as u32) as usize);
         }
         let mut o = offer;
         return exe::transfer_manager_withdraw_transfer_offer(this, &mut o, 0, 0x16);
@@ -7815,7 +7815,7 @@ pub(crate) unsafe extern "thiscall" fn collapse_offer(this: usize, offer: usize,
     let e = exe::shortlist_manager_find_club_shortlist_entry(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), friendly_club_by_id(read_usize(offer + offer::BUYER_CLUB_ID)), staff_records_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), (read_u8(offer + offer::JOB_TYPE) != 0xb) as u32, 0);
     if e != 0 {
         // simplification: the original pushes the type (setne) with garbage in the high bytes; 0x843e10 only reads the byte
-        exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), staff_records_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), friendly_club_by_id(read_usize(offer + offer::BUYER_CLUB_ID)), 1, (read_u8(e) != 0xb) as u32);
+        (exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), staff_records_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), friendly_club_by_id(read_usize(offer + offer::BUYER_CLUB_ID)), 1, (read_u8(e) != 0xb) as u32) as usize);
     }
     exe::contract_manager_remove_contract_offer(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), friendly_club_by_id(read_usize(offer + offer::BUYER_CLUB_ID))); // the contract offer goes out
     *((offer + offer::TERMS_STATE) as *mut u8) = 0;
@@ -7893,12 +7893,12 @@ pub(crate) unsafe extern "thiscall" fn process_due_future_transfers(this: usize)
         } else if exe::transfer_manager_check_offer_work_permits(this, offer, 1) != 0 {
             let buyer = friendly_club_by_id(read_usize(offer + offer::BUYER_CLUB_ID));
             let mut segura = false;
-            if exe::transfer_manager_check_offer_restrictions(this, offer, buyer, &mut reason, 0) as u8 != 0 && reason as u16 != 9 {
+            if (exe::transfer_manager_check_offer_restrictions(this, offer, buyer, &mut reason, 0) as u32) as u8 != 0 && reason as u16 != 9 {
                 exe::transfer_manager_collapse_offer(this, offer, buyer, reason, 0);
                 segura = true;
             } else if offer_target_seller_club(offer) != 0 {
                 let v = offer_target_seller_club(offer);
-                if exe::transfer_manager_check_offer_restrictions(this, offer, v, &mut reason, 0) as u8 != 0 && reason as u16 != 9 {
+                if (exe::transfer_manager_check_offer_restrictions(this, offer, v, &mut reason, 0) as u32) as u8 != 0 && reason as u16 != 9 {
                     let v = offer_target_seller_club(offer);
                     exe::transfer_manager_collapse_offer(this, offer, v, reason, 0);
                     segura = true;
@@ -9793,7 +9793,7 @@ pub(crate) unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize,
         if exe::human_manager_is_human_club(buyer, 0, 1, 0, 0) == 0 {
             crate::comparison::branch("cpv_2 refusal noted in the list");
             // the original tests the byte with eax zeroed by the previous query (above, zero)
-            exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), person, buyer, 1, (read_u8(o + offer::JOB_TYPE) != 0xb) as u32); // cpv2: the refusal in the list
+            (exe::shortlist_manager_update_staff_status(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), person, buyer, 1, (read_u8(o + offer::JOB_TYPE) != 0xb) as u32) as usize); // cpv2: the refusal in the list
         }
         crate::comparison::branch("cpv_2 player refusal");
         exe::transfer_manager_schedule_offer(this, o, 0xa, 0); // cpv2: back in 10 days

@@ -588,7 +588,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     predicted(this);
-    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) as u32)
 }
 
 /// Comparer for the season change: only the original runs; checks year +1, +0x2c = 3 and +0x30 = −1.

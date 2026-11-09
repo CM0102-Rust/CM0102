@@ -227,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
         show_error_at(0xa693ec, 0x1f47);
         return 0;
     }
-    *((news + news_item::IMPORTANT) as *mut u8) = exe::newsitem_is_important_for(news, manager) as u8;
+    *((news + news_item::IMPORTANT) as *mut u8) = (exe::newsitem_is_important_for(news, manager) as u32) as u8;
     write_usize(news + news_item::READ, 0);
     let idx = news_human_manager_index(manager);
     if idx < 0 {
@@ -532,7 +532,7 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(news: usize, person: usi
     if person == 0 || !(1..=0x1790).contains(&t) {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_IMPORTANT_FOR)(news, person); // message box: original only
     }
-    let r = match exe::newsitem_get_category(news) as u8 {
+    let r = match (exe::newsitem_get_category(news) as u32) as u8 {
         2 => matches!(t, 7..=0xb | 0x27 | 0x28),
         4 => matches!(t, 0xbb8 | 0xbb9 | 0xbc4),
         5 => match t {
@@ -771,7 +771,7 @@ pub(crate) unsafe extern "thiscall" fn count_unread(news: usize, manager: usize,
     for k in 0..100 {
         let n = inbox_news_item(news, start, k);
         if core::ptr::read_unaligned((n + news_item::ID) as *const u32) != 0
-            && exe::newsitem_get_category(n) as u8 == category as u8
+            && (exe::newsitem_get_category(n) as u32) as u8 == category as u8
             && core::ptr::read_unaligned((n + news_item::READ) as *const u32) == 0
         {
             count += 1;
@@ -959,7 +959,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
         if read_usize(slot + news_item::ID) == 0 {
             return array;
         }
-        if category as u8 == 0 || exe::newsitem_get_category(slot) as u8 == category as u8 {
+        if category as u8 == 0 || (exe::newsitem_get_category(slot) as u32) as u8 == category as u8 {
             if array == 0 {
                 array = exe::crt_malloc(0x571c);
                 if array == 0 {

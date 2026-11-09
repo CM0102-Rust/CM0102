@@ -288,7 +288,7 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
     crate::comparison::branch("walk with engine");
     let end = |e: u8| e == 2 || e == 8;
     let step_towards = |n: i32| {
-        let e = exe::cm3_match_engine_run_match_steps(u(p, day_match::ENGINE), n) as u8;
+        let e = (exe::cm3_match_engine_run_match_steps(u(p, day_match::ENGINE), n) as u32) as u8;
         *state = e;
         if end(e) {
             *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 1;
@@ -490,7 +490,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     // plays to the end (steps of -1), counting those finished in +0x25
     let until_end = |p: usize| {
         while !terminou(*((p + day_match::STATE) as *const u8)) {
-            let e = exe::cm3_match_engine_run_match_steps(u(p, day_match::ENGINE), -1) as u8;
+            let e = (exe::cm3_match_engine_run_match_steps(u(p, day_match::ENGINE), -1) as u32) as u8;
             *((p + day_match::STATE) as *mut u8) = e;
             if terminou(e) {
                 *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 1;
@@ -1554,7 +1554,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     }
     let state = (game + day_match::STATE) as *mut u8;
     while *state != 2 && *state != 8 {
-        let e = exe::cm3_match_engine_run_match_steps(core::ptr::read_unaligned(engine), -1) as u8;
+        let e = (exe::cm3_match_engine_run_match_steps(core::ptr::read_unaligned(engine), -1) as u32) as u8;
         *state = e;
         if e == 2 || e == 8 {
             *((read_usize(G_MATCH_DAY + 0) + 0x25) as *mut i32) += 1;
@@ -1607,7 +1607,7 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
     // the original pushes the whole registers: on top, the 16 bits of [this] and of k × 3
     let d1 = (table as u32 & 0xffff_0000) | *((e + 8) as *const u16) as u32;
     let d2 = ((k as u32).wrapping_mul(3) & 0xffff_0000) | *((e + 0xa) as *const u16) as u32;
-    exe::fixture_manager_find_fixtures(*(G_FIXTURE_MANAGER as *const usize), d1, d2, d1, d2, *(e as *const u32), l, u32::MAX, 0xffff_fffe, u32::MAX);
+    (exe::fixture_manager_find_fixtures(*(G_FIXTURE_MANAGER as *const usize), d1, d2, d1, d2, *(e as *const u32), l, u32::MAX, 0xffff_fffe, u32::MAX) as u32);
     // the cursor (+0xa) starts at the head (+2)
     core::ptr::copy(list.as_ptr().add(2), list.as_mut_ptr().add(0xa), 4);
     let club = *((e + 4) as *const u32);
@@ -1715,7 +1715,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     }
     if u(pl, 0x111) != 0 {
         por(pl, 0x115, 0);
-        let r = exe::cm3_match_engine_run_match_steps(engine, 1) as u8;
+        let r = (exe::cm3_match_engine_run_match_steps(engine, 1) as u32) as u8;
         *((p + day_match::STATE) as *mut u8) = r;
         if r == 2 || r == 8 {
             *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 1;
@@ -1841,7 +1841,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usiz
         let terminou = |e: u8| e == 2 || e == 8;
         let state = (p + day_match::STATE) as *mut u8;
         while !terminou(*state) {
-            let e = exe::cm3_match_engine_run_match_steps(u(p, day_match::ENGINE), -1) as u8;
+            let e = (exe::cm3_match_engine_run_match_steps(u(p, day_match::ENGINE), -1) as u32) as u8;
             *state = e;
             if terminou(e) {
                 *((u(G_MATCH_DAY, 0) + 0x25) as *mut i32) += 1;

@@ -328,7 +328,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, mana
             if read_usize(slot + news_item::ID) == 0 {
                 break;
             }
-            if category as u8 == 0 || exe::newsitem_get_category(slot) as u8 == category as u8 {
+            if category as u8 == 0 || (exe::newsitem_get_category(slot) as u32) as u8 == category as u8 {
                 ids.push(read_usize(slot + news_item::ID));
             }
             k -= 1;

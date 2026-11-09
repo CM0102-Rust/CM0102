@@ -410,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     for k in 0..5usize {
         // simplification: the original pushes the category in a dword whose upper bytes are stack leftovers; 0x8b4f50 and
         // 0x8b41d0 leem o byte
-        let lv = exe::training_schedule_get_category_level(prog, k as u32) as u8 as i8;
+        let lv = (exe::training_schedule_get_category_level(prog, k as u32) as u32) as u8 as i8;
         let base = (lv as i16).wrapping_mul(2).wrapping_add(0x3c); // cqd8: the level weight
         let club = training_manager_club_of_contract(training_manager_get_contract_stored(p));
         let fa = exe::training_manager_get_coaching_factor(this, club, k as u32) as u16 as i16 as i32;
@@ -474,7 +474,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                     if c != 0 && read_usize(c + 0x45) & 0x8000 == 0 {
                         // simplification: the original pushes the mask in ecx with the leftover upper 16 bits; 0x8b4770
                         // reads the word
-                        let apt = exe::training_manager_get_position_aptitude(this, p, read_u16(it - 3) as u32) as u8 as i8;
+                        let apt = (exe::training_manager_get_position_aptitude(this, p, read_u16(it - 3) as u32) as u32) as u8 as i8;
                         let t = read_i8(it);
                         let quer = (t > 0x32 && friendly_random(100 - t as i32) < 10) || (apt < 0xc && friendly_random(apt as i32) < 2);
                         let a = read_i8(p + staff::PROFESSIONALISM);

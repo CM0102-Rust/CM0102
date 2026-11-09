@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
     let mark = if club == 0 || read_usize(club + club::NATION) == 0 {
         true
     } else {
-        let k = (exe::key_nation_index_of_nation(read_usize(club + club::NATION)) as i8);
+        let k = ((exe::key_nation_index_of_nation(read_usize(club + club::NATION)) as u32) as i8);
         if !(0..0x23).contains(&k) {
             true
         } else {

@@ -1534,7 +1534,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     }
                 }
             }
-            exe::database_attribute_vector_to_player(j, p, v1.as_mut_ptr() as usize);
+            (exe::database_attribute_vector_to_player(j, p, v1.as_mut_ptr() as usize) as u32);
             if b(j + player_sheet::GOALKEEPER) == 0x14 && signed_byte_at(j + player_sheet::JUMPING) < 8 {
                 wb(j + player_sheet::JUMPING, (exe::utils_random(6) as u8).wrapping_add(5));
             }
@@ -1788,7 +1788,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     }
                 }
             }
-            exe::database_attribute_vector_to_non_player(nj, p, v1.as_mut_ptr() as usize);
+            (exe::database_attribute_vector_to_non_player(nj, p, v1.as_mut_ptr() as usize) as u32);
             // ---- o cargo: olheiro (9), fisioterapeuta (8), treinador (10) ----
             let ate = |o: usize, max: i8, n: i32, base: u8| {
                 if signed_byte_at(nj + o) > max {
@@ -1890,7 +1890,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     set_attr_cell_value(&mut v3, c, (x as i32 / 2) as i16);
                 }
             }
-            exe::database_attribute_vector_to_player(jj, q, v3.as_mut_ptr() as usize);
+            (exe::database_attribute_vector_to_player(jj, q, v3.as_mut_ptr() as usize) as u32);
             exe::staff_normalise_player_physical_attributes(q);
             exe::staff_normalise_player_attributes(q);
         }
@@ -1905,7 +1905,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 set_attr_cell_value(&mut v3, c as isize, (x as i32 / 2) as i16);
                 c = c.wrapping_add(1);
             }
-            exe::database_attribute_vector_to_non_player(nn, q, v3.as_mut_ptr() as usize);
+            (exe::database_attribute_vector_to_non_player(nn, q, v3.as_mut_ptr() as usize) as u32);
             exe::staff_normalise_non_player_attributes(q);
         }
         k += 1;
@@ -6773,7 +6773,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
     let (lados, ponderados) = player_attr_vector(player, person, v);
     rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, player, target, &[0x1e, 0x18],
         |x| 2 * x as i32);
-    exe::database_attribute_vector_to_player(player, person, v as usize);
+    (exe::database_attribute_vector_to_player(player, person, v as usize) as u32);
     if *((player + player_sheet::GOALKEEPER) as *const i8) == 0x14 {
         subtract_mean_2a_3a(player);
         let third = ((b(player_sheet::ANTICIPATION) + b(player_sheet::DECISIONS) + b(player_sheet::POSITIONING)) / 3) as u8;
@@ -6848,7 +6848,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(person: usize)
     let (lados, ponderados) = player_attr_vector(player, person, v);
     rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, player, -20, &[],
         |x| ftol(x as f64 * read_f64(rdata::F64_1_75)));
-    exe::database_attribute_vector_to_player(player, person, v as usize);
+    (exe::database_attribute_vector_to_player(player, person, v as usize) as u32);
     if *((player + player_sheet::GOALKEEPER) as *const i8) >= 0xf {
         subtract_mean_2a_3a(player);
     }
@@ -8035,7 +8035,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(person: us
             }
         }
     }
-    exe::database_attribute_vector_to_non_player(nj, person, v as usize);
+    (exe::database_attribute_vector_to_non_player(nj, person, v as usize) as u32);
 }
 
 /// The fixed colours (index.cpp keys at 0x9cf178..0x9cf1fc, ids) and the family of each one, in the order of the

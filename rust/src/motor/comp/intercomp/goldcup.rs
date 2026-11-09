@@ -285,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
         write_usize(this + 0xf2, 0);
         write_usize(this + league::ACTIVE, 1);
     }
-    exe::league_update_for_date(this, today, full)
+    (exe::league_update_for_date(this, today, full) as u32)
 }
 
 // simplification: the list, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan in the

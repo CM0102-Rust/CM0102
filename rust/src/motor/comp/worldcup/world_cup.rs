@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
         crate::comparison::branch("cqf_4 draw day");
         exe::worldcup_run_group_draw(this);
     }
-    exe::league_update_for_date(this, today, full)
+    (exe::league_update_for_date(this, today, full) as u32)
 }
 
 /// Club of entry i (5 bytes, id at +0) of the draw list: [G_CLUB_TABLE] + id × 0x245.

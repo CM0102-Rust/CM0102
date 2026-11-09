@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_create_schedule(this: usize, st
 /// ret 4); havendo algum, a fase do desempate (+0x2c = 1, +0xc = malloc de 4, virtual +0x28). Sem nenhum: +0xdd = 0,
 /// +0xe6 = 0 e a virtual +0x94.
 pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let r = exe::league_update_for_date(this, today, full);
+    let r = (exe::league_update_for_date(this, today, full) as u32);
     if read_usize(this + league::COMPLETE) == 0 || read_usize(this + league::STAGE_COUNT) != 0 || full == 0 || read_usize(this + league::TIEBREAK_MATCHES) == 0 {
         return r;
     }

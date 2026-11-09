@@ -86,7 +86,7 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
         let last_high = core::ptr::read_unaligned((catorze + 2) as *const u32);
         let a1 = (last_high & 0xffff_0000) | dia as u16 as u32;
         let a2 = ano as u32;
-        if (exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), a1, a2, last, last_high, read_usize(seu) as u32, 0, (-1) as i32 as u32, (-2) as i32 as u32, 1) as i16) != 0 {
+        if ((exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), a1, a2, last, last_high, read_usize(seu) as u32, 0, (-1) as i32 as u32, (-2) as i32 as u32, 1) as u32) as i16) != 0 {
             return (false, false, 0, 0, 0);
         }
     }

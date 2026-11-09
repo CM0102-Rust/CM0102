@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
 /// [pt] O código de divisão do clube `c` na MLS (usa_mls_get_club_division 0x909ec0: push c; call; add esp, 4 -> cdecl; a
 /// palavra baixa do eax: 0x413, 0x47b ou 0x414), se ele é da competição da liga (+0x57 do clube = +4 da liga).
 pub(crate) unsafe fn is_in_mls_division(this: usize, c: usize, code: i16) -> bool {
-    read_usize(c + club::DIVISION) == read_usize(this + 4) && exe::usa_mls_get_club_division(c) as u16 as i16 == code
+    read_usize(c + club::DIVISION) == read_usize(this + 4) && (exe::usa_mls_get_club_division(c) as u32) as u16 as i16 == code
 }
 
 /// Creates the MLS table (the first division, code 0x413): the four clubs of the competition with that division code,
@@ -466,7 +466,7 @@ pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     predicted(this);
     exe::league_set_club_season_expectations(this);
-    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqs2: the renewal of the MLS referees
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) as u32) // cqs2: the renewal of the MLS referees
 }
 
 /// The MLS turnover: clears the table, the schedule and the stages (the other two divisions, the play-off and the
@@ -579,7 +579,7 @@ pub(crate) unsafe fn usa_mls_add_failed_to_qualify_record(club: usize, comp: usi
 ///
 /// [pt] 0x4bf850 comp_util_scale_by_round (cdecl): o peso de 50 a 70 pela rodada do jogo, em 2 rodadas.
 pub(crate) unsafe fn weight_by_round(game: usize) -> u32 {
-    exe::comp_util_scale_by_round(0x32, 0x46, read_i16(game + 0x34) as u16 as u32, 2)
+    (exe::comp_util_scale_by_round(0x32, 0x46, read_i16(game + 0x34) as u16 as u32, 2) as u32)
 }
 
 /// The MLS stage-end outcome (`usa_mls_update_staff_records_for_status`): qualified, failed or knocked-out records by situation and phase; dry run

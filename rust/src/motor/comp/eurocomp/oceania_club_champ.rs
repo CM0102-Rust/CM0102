@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
         write_usize(this + 0xf2, 0);
         write_usize(this + league::ACTIVE, 1);
     }
-    exe::league_update_for_date(this, today, full)
+    (exe::league_update_for_date(this, today, full) as u32)
 }
 
 // simplification: the clubs, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan

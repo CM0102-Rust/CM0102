@@ -2824,7 +2824,7 @@ pub(crate) unsafe fn tackle_contest_with(m: usize, x: i8, y: i8, call: &mut dyn 
                 ADVANTAGE_UNANSWERED.store(true, std::sync::atomic::Ordering::Relaxed);
                 vantagem = 0;
             }
-            if read_i8(m + engine::LIVE_MATCH) != 0 && exe::match_player_is_in_penalty_area(wv, read_i8(wv + match_player::SIDE) as u8) as u8 != 0
+            if read_i8(m + engine::LIVE_MATCH) != 0 && (exe::match_player_is_in_penalty_area(wv, read_i8(wv + match_player::SIDE) as u8) as u32) as u8 != 0
                 && (special(lance_w) || vantagem != 0 || random(*w(wv, 0x31) as i32) < -10)
                 && random(3) != 0
             {
@@ -2931,7 +2931,7 @@ pub(crate) unsafe fn tackle_contest_with(m: usize, x: i8, y: i8, call: &mut dyn 
         if kind == 7 {
             sound = 0x1f79;
             *b(m, engine::RESTART_TYPE) = 7;
-        } else if exe::match_player_is_in_penalty_area(f, read_i8(f + match_player::SIDE) as u8) as u8 != 0 {
+        } else if (exe::match_player_is_in_penalty_area(f, read_i8(f + match_player::SIDE) as u8) as u32) as u8 != 0 {
             if colour == -1 {
                 match random(4) {
                     0 => narrate(call, 0x20e9, u32::MAX, lado_narrado, u32::MAX),
@@ -7522,7 +7522,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
             }
             0x6d => {
                 let k = if exe::match_player_get_position(p) == 1 {
-                    if exe::match_player_is_in_penalty_area(p, (flag as u32) as u8) as u8 == 0 {
+                    if (exe::match_player_is_in_penalty_area(p, (flag as u32) as u8) as u32) as u8 == 0 {
                         None
                     } else if read_i8(m + engine::SHOOTOUT_STATE) != 0 {
                         Some(5)
@@ -7618,19 +7618,19 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
         let arr = *risky as i32;
         let chosen: Option<i8> = 'e: {
             if kind == 0x15 {
-                let fx = exe::match_player_is_in_penalty_area(p, (flag as u32) as u8) as i8 as i32;
+                let fx = (exe::match_player_is_in_penalty_area(p, (flag as u32) as u8) as u32) as i8 as i32;
                 if random(b5c() * 200 + fx * 1500 + 0xfa) == 0 {
                     break 'e Some(0x25);
                 }
             }
             let fo = strength as i16 as i32;
-            let fx = exe::match_player_is_in_penalty_area(p, (flag as u32) as u8) as i8 as i32;
+            let fx = (exe::match_player_is_in_penalty_area(p, (flag as u32) as u8) as u32) as i8 as i32;
             let lim = ((leitura + 5) * read_i8(p + match_player::YELLOW_CARDS) as i32 + fx * leitura * 14 + leitura * arr * 20) * 25 + 0x14;
             if fo > random(lim) {
                 break 'e Some(lance1);
             }
             if lance2 > -1 {
-                let fx = exe::match_player_is_in_penalty_area(p, (flag as u32) as u8) as i8 as i32;
+                let fx = (exe::match_player_is_in_penalty_area(p, (flag as u32) as u8) as u32) as i8 as i32;
                 let lim = (fx * (leitura + 10) + 10) * 500 + (b5c() + 100) * leitura * arr * 80;
                 if fo * fo > random(lim) {
                     break 'e Some(lance2);
@@ -7650,7 +7650,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
             value_play = value_play.wrapping_add(c * c);
         }
         let v16 = value_play as i16;
-        let accepted = v16 > 0 || exe::match_player_is_in_penalty_area(p, (read_i8(p + match_player::SIDE) as u8 as u32) as u8) as u8 != 0 || (leitura == 0 && read_i8(p + match_player::MOMENT_WORK_RATE) as i32 > random(100));
+        let accepted = v16 > 0 || (exe::match_player_is_in_penalty_area(p, (read_i8(p + match_player::SIDE) as u8 as u32) as u8) as u32) as u8 != 0 || (leitura == 0 && read_i8(p + match_player::MOMENT_WORK_RATE) as i32 > random(100));
         if !accepted {
             continue;
         }
@@ -8957,7 +8957,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             edi = edi.wrapping_sub(r);
             v38 = r.wrapping_neg();
         }
-        if (exe::match_player_is_in_penalty_area(p, (lp == 0) as u8) as u8) != 0 {
+        if ((exe::match_player_is_in_penalty_area(p, (lp == 0) as u8) as u32) as u8) != 0 {
             let b = ftol(read_f32(p + match_player::TECHNIQUE) as f64 * read_f32(p + match_player::PACE) as f64 * read_f64(rdata::F64_NEG_5));
             let a = read_f32(p + match_player::FINISHING) as f64;
             let d = ftol(a * a * read_f64(rdata::F64_5)).wrapping_sub(b);

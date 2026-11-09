@@ -6527,8 +6527,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
             if (ty >= 0xc && side == 1) || (ty < 0 && side == 0) {
                 n(call, if tx != 4 && random(4) != 0 { 0x210e } else { 0x211a });
             } else {
-                let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
-                n(call, if f(p, side as u8) as u8 == 0 { 0x2157 } else { 0x1f70 });
+                n(call, if (exe::match_player_is_in_penalty_area(p, side as u8) as u8) == 0 { 0x2157 } else { 0x1f70 });
             }
         }
         0x3e => n(call, 0x2134),
@@ -6618,7 +6617,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, kind_in: i8, 
         0xb => {
             if bl & 0x80 != 0 && bl & 1 == 0 {
                 nr(call, 0x214a, 0);
-            } else if exe::match_player_is_in_penalty_area(receiver, (side == 0) as u8) as u8 != 0 && exe::match_player_is_in_penalty_area(p, (side == 0) as u8) as u8 != 0 && (d as f64) < read_f64(rdata::F64_2) {
+            } else if (exe::match_player_is_in_penalty_area(receiver, (side == 0) as u8) as u8) != 0 && (exe::match_player_is_in_penalty_area(p, (side == 0) as u8) as u8) != 0 && (d as f64) < read_f64(rdata::F64_2) {
                 nr(call, 0x2021, l12);
             } else {
                 let c = group(*out, l24, [
@@ -7554,7 +7553,7 @@ pub(crate) unsafe fn player_decide_injected(j: usize, call: &mut dyn FnMut(usize
         let mut k = 0i8;
         while k < b(0x101) {
             let p = u(j + match_player::MARKERS + 4 * k as usize);
-            if exe::cm3_match_engine_can_marker_challenge(u(j + match_player::ENGINE), p, b(0x102), b(0x103)) as u8 != 0 {
+            if (exe::cm3_match_engine_can_marker_challenge(u(j + match_player::ENGINE), p, b(0x102), b(0x103)) as u32) as u8 != 0 {
                 let prod = b(0x107) as i32 * b(0x104) as i32;
                 if prod <= random(0x384) + 0x32 {
                     c(0x714d40, p, [0; 5]);
@@ -7930,7 +7929,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
         (px, py) = (bx, by);
     } else {
         exe::cm3_match_engine_get_player_target_cell(m, j, &mut px, &mut py, 1);
-        px = exe::match_player_bias_target_column(j, px) as i8;
+        px = (exe::match_player_bias_target_column(j, px) as i32) as i8;
     }
     let v_goalkeeper = if dir != 0 { 0 } else { 11 };
     if t == 1 {
@@ -8185,7 +8184,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: usize, call: &mut dyn FnMut(usi
     }
     let (mut ax, mut ay) = (0i8, 0i8);
     exe::cm3_match_engine_get_player_target_cell(m, j, &mut ax, &mut ay, 1);
-    ax = exe::match_player_bias_target_column(j, ax) as i8;
+    ax = (exe::match_player_bias_target_column(j, ax) as i32) as i8;
     if (exe::formation_get_player_instructions(block, read_i8(j + match_player::POSITION)) >> 32) & 4 != 0 {
         let (bx, by) = (read_i8(m + engine::BALL_X), read_i8(m + engine::BALL_Y));
         let t = ta();
@@ -9479,8 +9478,7 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
     };
     let person = *((this + match_player::STAFF) as *const usize);
     let sheet = *((this + match_player::PLAYER) as *const usize);
-    let level: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CONTRACT_RATING_MODIFIER);
-    let n = level(person, club()) as i8 as f64;
+    let n = exe::database_get_contract_rating_modifier(person, club()) as f64;
     let mut form = (*((sheet + player_sheet::WORLD_REPUTATION) as *const i16) as i32 - *((club() + 0x80) as *const i16) as i32) as f64 * 0.002 + 1.5;
     if form < -4.0 {
         form = -4.0;

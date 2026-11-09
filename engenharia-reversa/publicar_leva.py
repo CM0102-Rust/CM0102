@@ -62,6 +62,8 @@ def main():
         rodar(sys.executable, os.path.join('levas', str(prox), 'integrar.py'))
     # a tabela das assinaturas acompanha a PROLOGOS (a DLL não desvia rotina que não seja a do exe original/1080)
     rodar(sys.executable, os.path.join('engenharia-reversa', 'assinaturas.py'))
+    # every exe function the copies call, checked against the original machine code (stack, ecx, return width)
+    rodar(sys.executable, os.path.join('engenharia-reversa', 'conferir_assinaturas.py'))
     rodar('cargo', 'build', '--release', cwd=os.path.join(RAIZ, 'rust'))
     shutil.copy2(os.path.join(RAIZ, 'rust', 'target', 'i686-pc-windows-msvc', 'release', 'ddraw.dll'), os.path.join(RAIZ, 'jogo_testes', 'ddraw.dll'))
     from fila import texto_do_motor

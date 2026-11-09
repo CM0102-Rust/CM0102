@@ -112,7 +112,7 @@ pub(crate) unsafe fn record_state_knockout(this: usize, club: usize, st: u8, gam
                     // simplification: the original pushes eax (caller garbage above the word) and whole ecx/edx; the
                     // 0x4bf850 and 0x86c000 only read the words: the words are passed.
                     crate::comparison::branch("cqk_7 state league eliminated");
-                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, rounds);
+                    let weight = (exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, rounds) as u32);
                     exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight); // cqk7: the eliminated club record
                 }
                 let l = read_usize(this + league::TABLE) + 0x3b * i as usize;

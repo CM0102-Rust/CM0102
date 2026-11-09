@@ -702,9 +702,9 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
                 let slot = rd((0xb74c26 + h * 0x300) as usize);
                 let side = if rd(rd(p + live_match::AWAY_CLUB) + 0xcf) == slot { rd(p + live_match::AWAY_CLUB) } else { rd(p + live_match::HOME_CLUB) };
                 let national_teams = || *(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE as *const i32) as isize;
-                Some(if exe::usa_mls_get_club_division(side) as u16 == 0x414 {
+                Some(if (exe::usa_mls_get_club_division(side) as u32) as u16 == 0x414 {
                     rd(rd(ligas(national_teams()) + 0xc) + 4)
-                } else if exe::usa_mls_get_club_division(side) as u16 == 0x47b {
+                } else if (exe::usa_mls_get_club_division(side) as u32) as u16 == 0x47b {
                     rd(rd(ligas(national_teams()) + 0xc))
                 } else {
                     ligas(national_teams())
@@ -1937,7 +1937,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
             let n = ((base - y - 0x10) / a) as u8;
             exe::date_get_long_date_string(s + 0x30, s + 0x3d0, 0x7d0, 0xff);
             let d = (exe::date_get_weekday(s + 0x30) as u32);
-            let g = exe::date_get_weekday_gender((exe::langlib_get_language() as u32), d);
+            let g = (exe::date_get_weekday_gender((exe::langlib_get_language() as u32), d) as u32);
             text(BUF, 0x99c2e8, g as u8 as i8 as i32, s + 0x3d0);
             mensagem(0x6e, z(y), 0x30c, z(base), 2, 0, n as usize, 3, colour_word(G_GUI_COLOUR_PALE_GREY), BUF, 0);
             exe::drop_league(local);
@@ -3676,7 +3676,7 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(top: *mut i32, base: *mu
             // simplification: the original’s SEH frame only frees the memory if the constructor throws an exception, which it does not
             let r = exe::new_match_events(memoria, (0) as u8);
             set_screen_param(0x2d, r);
-            if exe::match_events_load_event_log(r, dados + match_record::EVENT_LOG) as u8 == 0 {
+            if (exe::match_events_load_event_log(r, dados + match_record::EVENT_LOG) as u32) as u8 == 0 {
                 show_panel_empty_message(top, base, SEM_RELATORIO);
                 let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
                 destroy(r);
@@ -3852,8 +3852,8 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
         (true, false) => 0xa16290,
     };
     let r1 = exe::date_get_time_of_day_name(*(rd(G_MATCH_DAY) as *const u8) as u32, 1);
-    let r2 = exe::date_get_time_of_day_gender(*(rd(G_MATCH_DAY) as *const u8) as u32) as u8 as i8 as i32;
-    let r3 = exe::date_get_time_of_day_gender(*(rd(G_MATCH_DAY) as *const u8) as u32) as u8 as i8 as i32;
+    let r2 = (exe::date_get_time_of_day_gender(*(rd(G_MATCH_DAY) as *const u8) as u32) as u32) as u8 as i8 as i32;
+    let r3 = (exe::date_get_time_of_day_gender(*(rd(G_MATCH_DAY) as *const u8) as u32) as u32) as u8 as i8 as i32;
     text(BUF, formato, r3, r2, r1);
     exe::screenmanager_add_screen_subtitle(sm, BUF, 1);
 
@@ -5570,7 +5570,7 @@ pub(crate) unsafe extern "C" fn build_latest_scores() {
     exe::background_set_comp_picture((*(G_CLUB_COMP_TABLE as *const usize) as isize + id as isize * 107) as usize, 0, 0);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     text(0xde1f64, 0xa16328, 0xad9c64);
-    let (c1, c0) = (exe::get_heading_colour(1), exe::get_heading_colour(0));
+    let (c1, c0) = ((exe::get_heading_colour(1) as u32), (exe::get_heading_colour(0) as u32));
     exe::screenmanager_add_screen_title(SCREEN_MANAGER, c0, c1, 0xde1f64);
     exe::menubar_build(4, 0);
     let (mut topo, mut base) = (0x50i32, 0x217i32);

@@ -320,8 +320,8 @@ pub(crate) unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: u
     exe::new_llist(l);
     // simplification: the original pushes the year, the day, the slice and the type in registers with leftover in the high bytes; the
     // 0x5abd90 only reads the words and the bytes
-    let n = exe::fixture_manager_collect_comp_fixtures_on_day(read_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
-        read_usize(read_usize(this + 4)) as u32, u32::MAX, read_u8(this + league::STAGE_INDEX) as u32, l) & 0xffff;
+    let n = (exe::fixture_manager_collect_comp_fixtures_on_day(read_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
+        read_usize(read_usize(this + 4)) as u32, u32::MAX, read_u8(this + league::STAGE_INDEX) as u32, l) as u32) & 0xffff;
     if n != 0 {
         let mut k = 0usize;
         let mut sort = false;
@@ -3847,7 +3847,7 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club:
                 crate::comparison::branch("cpm_3 division stadium");
                 let required_seats = core::ptr::read_unaligned((comp + league::REQUIRED_SEATS) as *const i16);
                 let f = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
-                exe::finance_upgrade_stadium_for_league(f, required_seats as i32, required_capacity as i32, id, 0); // the stadium works
+                (exe::finance_upgrade_stadium_for_league(f, required_seats as i32, required_capacity as i32, id, 0) as u32); // the stadium works
             }
         }
     }

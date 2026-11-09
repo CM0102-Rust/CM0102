@@ -304,7 +304,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 let mut c = 0;
                 for o in 0..7usize {
                     c = field();
-                    let v = exe::at_94739c(BUF) as u8;
+                    let v = (exe::at_94739c(BUF) as i32) as u8;
                     *((e + o) as *mut u8) = v;
                     if o == 4 {
                         let b = (e + 4) as *mut i8;
@@ -337,11 +337,11 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 core::ptr::write_unaligned((e + event_type::VARIANTS) as *mut usize, new);
                 let s = new + 0x110 * how_many(e) as usize;
                 field();
-                *(s as *mut i16) = exe::at_94739c(BUF) as i16;
+                *(s as *mut i16) = (exe::at_94739c(BUF) as i32) as i16;
                 let p = (*(s as *const i16) as i32).max(*weight(e));
                 core::ptr::write_unaligned(weight(e), p);
                 field();
-                *((s + 2) as *mut i16) = exe::at_94739c(BUF) as i16;
+                *((s + 2) as *mut i16) = (exe::at_94739c(BUF) as i32) as i16;
                 let mut c = exe::at_9469e0(f);
                 *((s + 4) as *mut u8) = 0;
                 while (c == 0x20 || c == 0xd) && c != -1 {

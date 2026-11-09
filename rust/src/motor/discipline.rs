@@ -1004,7 +1004,7 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize
     let id = read_usize(partida) as i32;
     if id > -1 {
         if let Some(b) = comp_tribunal(this, id) {
-            return exe::rulingbody_process_match(b, partida, result, 1, 1, 1);
+            return (exe::rulingbody_process_match(b, partida, result, 1, 1, 1) as u32);
         }
     }
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
@@ -1017,7 +1017,7 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize
             continue;
         }
         if let Some(t) = comp_tribunal(this, read_usize(league) as i32) { // the tribunal of the club’s league
-            exe::rulingbody_process_match(t, partida, result, a, b, 0);
+            (exe::rulingbody_process_match(t, partida, result, a, b, 0) as u32);
         }
     }
     0

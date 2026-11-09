@@ -224,7 +224,7 @@ pub(crate) unsafe fn rebuild_season(this: usize, table: usize, file: usize, rows
 pub(crate) unsafe fn set_expectations_and_renew_officials(this: usize) -> u32 {
     let expectations: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectations(this);
-    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqq8: os árbitros
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) as u32) // cqq8: os árbitros
 }
 
 /// The season turnovers of the other fourteen competitions in Brazil, in the original routine's order.
@@ -723,7 +723,7 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, club: usize, status: u32,
                     // simplification: the original pushes the whole registers (eax with the caller’s garbage above the
                     // word, ecx with the upper half of the table pointer); 0x4bf850 and 0x86c000 only read the
                     // words (0x4b0870 / `as u16`): the words go.
-                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2);
+                    let weight = (exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2) as u32);
                     exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
                 }
                 let l = read_usize(this + league::TABLE) + 0x3b * i as usize;

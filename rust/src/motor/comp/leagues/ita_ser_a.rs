@@ -397,7 +397,7 @@ pub(crate) unsafe fn tie_on_zone_boundary(league: usize, z: &[u8; 64]) -> bool {
 /// A regra: na Itália, empate em pontos entre clubes de faixas diferentes (título, Liga dos Campeões, Copa da UEFA,
 /// Intertoto [inferência], rebaixamento) não se decide pelo saldo: vai a um jogo extra.
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let r = exe::league_update_for_date(this, today, full);
+    let r = (exe::league_update_for_date(this, today, full) as u32);
     // simplification: the original returns the league day byte with the upper bits of eax left over from the last call; the
     // the competitions loop only reads the byte.
     if read_usize(this + league::COMPLETE) == 0 || read_usize(this + league::STAGE_COUNT) != 0 || full == 0 || read_usize(this + league::TIEBREAK_MATCHES) == 0 {

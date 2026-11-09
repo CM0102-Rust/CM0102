@@ -4344,7 +4344,7 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_remove_player_from_squad(
         *((person + staff::JOB_FOR_CLUB) as *mut u8) = f;
         let lists: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, i32, u32) = core::mem::transmute(FN_PLAYERSTATS_ARCHIVE_PLAYER_STATS);
         lists(read_usize(G_PLAYER_STATS), person, -1, 0, 0, -1, 0);
-        exe::shortlist_manager_update_staff_status(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), person, club, 4, 2);
+        (exe::shortlist_manager_update_staff_status(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), person, club, 4, 2) as usize);
         exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), club, person, 0, 1);
         exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), club, person, 1, 1);
         remove_from_squad(club, person);
@@ -4495,7 +4495,7 @@ pub(crate) unsafe fn detach_staff_from_club(person: usize, s: usize, club: usize
 pub(crate) unsafe extern "thiscall" fn remove_staff_from_club(_this: usize, person: usize, club: usize) -> usize {
     exe::contract_manager_remove_contract(read_usize(G_CONTRACT_MANAGER), person);
     detach_staff_from_club(person, person, club, club);
-    let mut r = exe::shortlist_manager_update_staff_status(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), person, club, 4, 2);
+    let mut r = (exe::shortlist_manager_update_staff_status(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), person, club, 4, 2) as usize);
     if read_i32(person) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         (exe::scout_manager_sync_scout_lists(read_usize(G_SCOUT_MANAGER), person) as usize);
         r = exe::training_manager_reassign_squad_schedules(read_usize(G_TRAINING_MANAGER), person, club, 0);
