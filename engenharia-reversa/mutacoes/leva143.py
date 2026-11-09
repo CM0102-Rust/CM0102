@@ -15,7 +15,7 @@ MUTACOES = [
     ('m_marcas', "if marks & 0x8000 != 0 ||", "if marks & 0x4000 != 0 ||"),
     ('m_bola_fora', "if !(bx >= 0 && by >= 0 && by < 0xc && bx < 9) {", "if !(bx >= 0 && by >= 0 && by < 0xc && bx < 8) {"),
     ('m_livre', "            p.set_match_rating((p.match_rating()).wrapping_add(4));", "            p.set_match_rating((p.match_rating()).wrapping_add(5));", "movement controls the loose ball"),
-    ('m_direcao', "let dx = read_i8(m + engine::BALL_X) as i32 + 4 + nx as i32;", "let dx = read_i8(m + engine::BALL_X) as i32 + 5 + nx as i32;"),
+    ('m_direcao', "let dx = m.ball_x() as i32 + 4 + nx as i32;", "let dx = m.ball_x() as i32 + 5 + nx as i32;"),
     ('m_perde', "            add(p, -0x96);", "            add(p, -0x95);", "movement loses the ball"),
     ('m_vence', "gain = ftol(gain as f64 * read_f64(rdata::F64_0_85)) as i16;", "gain = ftol(gain as f64 * read_f64(rdata::F64_0_85) * 1.01) as i16;", "movement challenger wins"),
     ('m_penalti', "if random(read_i8(e.staff() + 0x5a) as i32 + 6) == 0 {", "if random(read_i8(e.staff() + 0x5a) as i32 + 7) == 0 {", "movement penalty"),

@@ -625,6 +625,7 @@ def acessos(mod, grava):
         gravar_mutacoes(trocas_mut)
 
 
+FECHO1 = re.compile(r'^([ \t]*)let (\w+) = \|(\w+): usize\| \((\w+) \+ \3\) as \*(mut|const) (\w+);[ \t]*\n', re.M)
 LEITORA = re.compile(r'^([ \t]*)let (\w+) = \|(\w+): usize\| (?:core::ptr::read_unaligned\(\3 as \*const (\w+)\)|\*\(\3 as \*const (\w+)\)|read_(\w+)\(\3\));[ \t]*\n', re.M)
 FECHO = re.compile(r'^([ \t]*)let (\w+) = \|(\w+): usize, (\w+): usize\| \(\3 \+ \4\) as \*(mut|const) (\w+);[ \t]*\n', re.M)
 
@@ -635,6 +636,14 @@ def expandir_fechos_trecho(s, defs):
     mk = mascara(s)
     ed = []
     for nome, (kind, t) in defs.items():
+        if isinstance(kind, tuple):  # one-parameter closure over a captured base: NAME(o) -> ((base + o) as *mut T)
+            base, k2 = kind
+            for m in re.finditer(r'(?<![\w.:])%s\(' % re.escape(nome), mk):
+                args, fim = ie.args_da_chamada(mk, m.end() - 1)
+                if not args or len(args) != 1:
+                    continue
+                ed.append((m.start(), fim, '((%s + %s) as *%s %s)' % (base, s[m.end():fim - 1].strip(), k2, t)))
+            continue
         if kind == 'read':
             for m in re.finditer(r'(?<![\w.:])%s\(' % re.escape(nome), mk):
                 args, fim = ie.args_da_chamada(mk, m.end() - 1)
@@ -672,6 +681,8 @@ def expandir_fechos(grava):
             for _, a, b in mover_rotinas.blocos(t):
                 bloco = t[a:b]
                 defs = {m.group(2): (m.group(5), m.group(6)) for m in FECHO.finditer(bloco)}
+                for m in FECHO1.finditer(bloco):
+                    defs[m.group(2)] = ((m.group(4), m.group(5)), m.group(6))
                 for m in LEITORA.finditer(bloco):
                     tl_ = m.group(4) or m.group(5) or m.group(6)
                     if tl_ in ('u8', 'i8', 'u16', 'i16', 'u32', 'i32', 'usize', 'f32', 'f64'):
@@ -686,7 +697,7 @@ def expandir_fechos(grava):
                         novo = novo[:m.start()] + novo[m.end():]
                         break
                 for _ in range(len(defs)):
-                    for m in FECHO.finditer(novo):
+                    for m in list(FECHO.finditer(novo)) + list(FECHO1.finditer(novo)):
                         if m.group(2) in defs and not re.search(r'(?<![\w.:])%s\b' % re.escape(m.group(2)), mascara(novo[:m.start()] + novo[m.end():])):
                             novo = novo[:m.start()] + novo[m.end():]
                             break

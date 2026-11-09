@@ -1685,21 +1685,22 @@ pub(crate) unsafe extern "C" fn compare_load_database_from_stream(save: usize, c
 
 /// Comparer for `ball_out`.
 pub(crate) unsafe extern "thiscall" fn compare_ball_out(this: usize, l: u8) -> u8 {
+    let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> u8>(IDX_BALL_OUT);
     // call from inside another comparison that records the commentary: original only (see port)
     if RECORDING_6D6F70.load(std::sync::atomic::Ordering::Relaxed) {
-        return o(this, l);
+        return o(this.addr(), l);
     }
     if is_recording() {
-        return call_recording(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, this, [l as u32, 0, 0, 0, 0], || o(this, l) as u32) as u8;
+        return call_recording(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, this.addr(), [l as u32, 0, 0, 0, 0], || o(this.addr(), l) as u32) as u8;
     }
-    let mut extra = vec![(this + 0x8ea0, 0x20), (this + 0x4780, 0x10), (this + 0xf570, 0x20), (this + 0x1a0, 0x10)];
-    let owner = *((this + engine::BALL_HOLDER) as *const usize);
+    let mut extra = vec![(this.addr() + 0x8ea0, 0x20), (this.addr() + 0x4780, 0x10), (this.addr() + 0xf570, 0x20), (this.addr() + 0x1a0, 0x10)];
+    let owner = this.ball_holder();
     if owner != 0 {
         extra.extend([(owner + 0x29, 2), (owner + 0x19c, 2)]);
     }
     let (r, n) = (core::cell::Cell::new(0u8), core::cell::Cell::new(0u8));
-    let (igual, k) = compare_with_commentary_at(&extra, || r.set(o(this, l)), |c| n.set(ball_out_with(this, l, c)));
+    let (igual, k) = compare_with_commentary_at(&extra, || r.set(o(this.addr(), l)), |c| n.set(ball_out_with(this, l, c)));
     SCOREBOARD.record(igual && r.get() == n.get(), || format!("ball_out({}) original={} rust={} ({} comentarios)", l, r.get(), n.get(), k));
     r.get()
 }
@@ -1735,9 +1736,10 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_position(this: usize, positi
 pub(crate) unsafe extern "thiscall" fn compare_foul_in_engine(
     m: usize, j: usize, other: usize, kind: i8, who: i8, card: *mut u8, grav: *mut i8, advantage: *mut u8,
 ) -> u8 {
+    let m = Engine(m);
     // the decision itself (0x6e9820) is already compared in its own hook; here only the pass-through
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8>(IDX_FOUL_IN_ENGINE);
-    let mut regions = vec![(m + engine::REFEREE + 8, 2), (card as usize, 1), (grav as usize, 1), (advantage as usize, 1)];
+    let mut regions = vec![(m.addr() + engine::REFEREE + 8, 2), (card as usize, 1), (grav as usize, 1), (advantage as usize, 1)];
     for p in [j, other] {
         if p != 0 {
             regions.push((p, 0x1be));
@@ -1746,8 +1748,8 @@ pub(crate) unsafe extern "thiscall" fn compare_foul_in_engine(
     regions.extend(crate::rng::STATE_REGIONS);
     let (r, v, igual, _, _) = crate::comparison::side_by_side(
         &regions,
-        || o(m, j, other, kind, who, card, grav, advantage),
-        || crate::rng::without_counting(|| foul_in_engine(m, j, other, kind, who, card, grav, advantage)),
+        || o(m.addr(), j, other, kind, who, card, grav, advantage),
+        || crate::rng::without_counting(|| foul_in_engine(m.addr(), j, other, kind, who, card, grav, advantage)),
     );
     SCOREBOARD.record(igual && r == v, || format!("foul_in_engine original={} rust={}", r, v));
     r

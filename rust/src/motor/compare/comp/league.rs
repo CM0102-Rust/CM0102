@@ -720,6 +720,6 @@ pub(crate) unsafe extern "thiscall" fn compare_narrate_qualification(this: usize
         });
         return;
     }
-    let (igual, n) = compare_with_commentary(|| o(this, side), |c| comment_standing_with(this, side, c));
+    let (igual, n) = compare_with_commentary(|| o(this, side), |c| comment_standing_with(Engine(this), side, c));
     SCOREBOARD.record(igual, || format!("narrate_qualification({}) {} chamadas", side as u8, n));
 }

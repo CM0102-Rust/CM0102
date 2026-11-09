@@ -5,20 +5,21 @@ use super::*;
 
 /// Comparer for `restart_play`.
 pub(crate) unsafe extern "thiscall" fn compare_restart_play(m: usize) {
+    let m = Engine(m);
     use std::sync::atomic::Ordering::Relaxed;
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RESTART_PLAY);
     if is_recording_top_level() {
-        return o(m);
+        return o(m.addr());
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_RESTART.swap(true, Relaxed);
     let a7 = RECORD_A7.swap(true, Relaxed);
-    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m), |chamar| {
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr()), |chamar| {
         restart_play_with(m, &mut |rotina, this, args| {
             let mask = match rotina {
                 0x6d6f70 => [0xffffff, u32::MAX, 0xff, 0xff, 0xff],
@@ -30,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn compare_restart_play(m: usize) {
     });
     RECORD_A7.store(a7, Relaxed);
     RECORD_RESTART.store(write, Relaxed);
-    SCOREBOARD.record(igual && sequencia, || format!("restart_play(modo {}) {} chamadas: {}", *((m + engine::RESTART_TYPE) as *const u8), k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("restart_play(modo {}) {} chamadas: {}", (m.restart_type() as u8), k, tape_detail()));
 }
 
 /// Comparer for `engine_loop`.
@@ -158,10 +159,10 @@ pub(crate) unsafe fn compare_com_fita<R>(reg: Vec<(usize, usize)>, original: imp
 /// Comparer for `play`.
 pub(crate) unsafe fn compare_play(p: MatchPlayer, a1: u32, a2: u32, a3: u32, a4: u32, rodar: &dyn Fn() -> u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
-    let m = p.engine();
+    let m = Engine(p.engine());
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
@@ -192,13 +193,13 @@ pub(crate) unsafe extern "C" fn compare_match_wrap_up(m: usize) {
     if is_recording_top_level() {
         return o(m);
     }
-    let reg = wrap_up_regions(m);
+    let reg = wrap_up_regions(Engine(m));
     let write = RECORD_WRAP_UP.swap(true, Relaxed);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || {
         zero_stack_below();
         o(m)
     }, |chamar| {
-        match_wrap_up_with(m, &mut |rotina, this, args| {
+        match_wrap_up_with(Engine(m), &mut |rotina, this, args| {
             let mask = match rotina {
                 0x68d0d0 => [0, u32::MAX, 0, 0, 0],
                 _ => [u32::MAX; 5],
@@ -251,37 +252,39 @@ pub(crate) unsafe extern "thiscall" fn compare_context_commentary(m: usize, side
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m, side, event, out), || crate::rng::without_counting(|| context_commentary(m, side, event, out)));
     SCOREBOARD.record(igual && r == n, || format!("context_commentary({}, {:#x}) original={} rust={} {:x?} x {:x?}", side as u8, event as u16, r, n, mo, mr));
-    probe_context_commentary(m, o);
+    probe_context_commentary(Engine(m), o);
     r
 }
 
 /// Comparer for `referee_grade`.
 pub(crate) unsafe extern "thiscall" fn compare_referee_grade(m: usize) {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REFEREE_GRADE);
     if is_recording_top_level() {
-        return o(m);
+        return o(m.addr());
     }
     // the random roll and the referee’s record
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    let referee = *((m + engine::REFEREE_ID) as *const usize);
+    let referee = m.referee_id();
     if referee != 0 && *(G_OFFICIALS_MANAGER as *const usize) != 0 {
         reg.extend(official_record_region(*(G_OFFICIALS_MANAGER as *const usize), *(referee as *const i32)));
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m), || referee_grade(m));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m.addr()), || referee_grade(m.addr()));
     SCOREBOARD.record(igual, || format!("referee_grade {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparer for `quick_simulation`.
 pub(crate) unsafe extern "thiscall" fn compare_quick_simulation(m: usize) {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_QUICK_SIMULATION);
     if is_recording_top_level() {
-        return o(m);
+        return o(m.addr());
     }
     // the whole engine, the random roll, the error, 0xae1080, the tactic row of both clubs (the sending-off
     // may change the captain) and the match record (scores and aggregate)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    let t = Fixture(m.r#match());
     reg.push((t.addr(), 0x50));
     for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
@@ -289,9 +292,9 @@ pub(crate) unsafe extern "thiscall" fn compare_quick_simulation(m: usize) {
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || {
         zero_stack_below();
-        o(m)
+        o(m.addr())
     }, |chamar| {
-        quick_simulation_with(m, &mut |rotina, this, args| {
+        quick_simulation_with(m.addr(), &mut |rotina, this, args| {
             let mask = match rotina {
                 0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
                 0x6d0980 => [0xff, 0xff, u32::MAX, u32::MAX, 0],
@@ -309,17 +312,19 @@ pub(crate) unsafe extern "thiscall" fn compare_quick_simulation(m: usize) {
 
 /// Comparer for `record_move`.
 pub(crate) unsafe extern "thiscall" fn compare_record_move(this: usize, a: u16, b: u32, c: u32, d: u8, e: u8, f2: u8, g: u8, h: u8, i: u8) {
+    let this = Engine(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8)>(IDX_RECORD_MOVE);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::PENDING_PLAY_KIND, 16)], || f(this, a, b, c, d, e, f2, g, h, i), || record_move(this, a, b, c, d, e, f2, g, h, i));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this.addr() + engine::PENDING_PLAY_KIND, 16)], || f(this.addr(), a, b, c, d, e, f2, g, h, i), || record_move(this.addr(), a, b, c, d, e, f2, g, h, i));
     SCOREBOARD.record(igual, || format!("record_move original={:x?} rust={:x?}", mo, mr));
 }
 
 /// Comparer for `check_move`.
 pub(crate) unsafe extern "thiscall" fn compare_check_move(this: usize) -> u8 {
+    let this = Engine(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_CHECK_MOVE);
-    let mut reg = vec![(this + engine::PENDING_PLAY_KIND, 16)];
+    let mut reg = vec![(this.addr() + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this), || crate::rng::without_counting(|| check_move(this)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this.addr()), || crate::rng::without_counting(|| check_move(this.addr())));
     SCOREBOARD.record(igual && r == n, || format!("check_move original={} {:x?} rust={} {:x?}", r, mo, n, mr));
     r
 }
@@ -398,7 +403,7 @@ pub(crate) unsafe extern "thiscall" fn compare_kick_off(this: usize) {
 pub(crate) unsafe extern "thiscall" fn compare_roll_ball(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ROLL_BALL);
     let extra = [(this + 0x8ea0, 0x40), (this + 0x4780, 0x10), (this + 0xf570, 0x20), (this + 0x1a0, 0x10)];
-    let (igual, k) = compare_with_commentary_at(&extra, || o(this), |c| roll_loose_ball_with(this, c));
+    let (igual, k) = compare_with_commentary_at(&extra, || o(this), |c| roll_loose_ball_with(Engine(this), c));
     SCOREBOARD.record(igual, || format!("roll_ball ({} comentarios)", k));
 }
 
@@ -451,21 +456,22 @@ pub(crate) unsafe extern "thiscall" fn compare_side_strength(this: usize, side: 
 
 /// Comparer for `intercept`.
 pub(crate) unsafe extern "thiscall" fn compare_intercept(this: usize, x: i8, y: i8, a3: u32, goal: i8, a5: u32, a6: u32) -> u8 {
+    let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u32, i8, u32, u32) -> u8>(IDX_INTERCEPT);
     if is_recording_top_level() {
-        return o(this, x, y, a3, goal, a5, a6);
+        return o(this.addr(), x, y, a3, goal, a5, a6);
     }
     // what the plays change and the Rust copy reads: the whole grid, the bytes of all players, the
     // ball fields in the engine and the random roll
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(this + engine::GRID, 9 * 12 * 90), (this + 0x8ea0, 0x20), (this + 0x4780, 0x10), (this + 0xf570, 0x44)]);
+    reg.extend([(this.addr() + engine::GRID, 9 * 12 * 90), (this.addr() + 0x8ea0, 0x20), (this.addr() + 0x4780, 0x10), (this.addr() + 0xf570, 0x44)]);
     for l in 0..2i8 {
         for k in 0..20 {
-            let j = MatchPlayer(side_player_slot(this, l, k));
+            let j = MatchPlayer(side_player_slot(this.addr(), l, k));
             reg.extend([(j.addr() + match_player::BALLS_CONTESTED, 1), (j.addr() + match_player::POSITION, 1), (j.addr() + match_player::BUSY, 1), (j.addr() + match_player::ACTION, 2)]);
         }
     }
-    let (r, n, igual, sequencia, k) = compare_com_fita(reg, || o(this, x, y, a3, goal, a5, a6), |chamar| {
+    let (r, n, igual, sequencia, k) = compare_com_fita(reg, || o(this.addr(), x, y, a3, goal, a5, a6), |chamar| {
         let mut play = |p: usize, a: [u32; 4]| chamar(FN_MATCH_PLAYER_TRY_BLOCK_SHOT, p, [a[0], a[1], a[2], a[3], 0], ARG_MASK_70DFD0) as u8;
         find_interception_with(this, x, y, a3, goal, a5, a6, &mut |lado, grupo, v, a3, a5, a6| try_side_block_with(this, lado, grupo, v, a3, 1, a5, a6, &mut play))
     });
@@ -475,19 +481,20 @@ pub(crate) unsafe extern "thiscall" fn compare_intercept(this: usize, x: i8, y: 
 
 /// Comparer for `apply_substitutions`.
 pub(crate) unsafe extern "thiscall" fn compare_apply_substitutions(m: usize) {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_APPLY_SUBSTITUTIONS);
     if is_recording_top_level() {
-        return o(m);
+        return o(m.addr());
     }
     // the whole engine (players and staff), the random roll, the error, 0xae1080 and the tactics row of both
     // clubs (the captain at +0x52, which the substitution changes)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
-    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m), |chamar| {
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr()), |chamar| {
         apply_substitutions_with(m, &mut |rotina, this, args| {
             let mask = match rotina {
                 0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
@@ -503,19 +510,20 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_substitutions(m: usize) {
 
 /// Comparer for `punishments`.
 pub(crate) unsafe extern "thiscall" fn compare_punishments(m: usize, first: usize) {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_PUNISHMENTS);
     if is_recording_top_level() {
-        return o(m, first);
+        return o(m.addr(), first);
     }
     // the whole engine, the random state, the error, 0xae1080 and the tactics row of both clubs (the captain)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     RECORD_716.store(true, std::sync::atomic::Ordering::Relaxed);
-    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m, first), |chamar| {
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr(), first), |chamar| {
         apply_pending_punishments_with(m, first, &mut |rotina, this, args| {
             let mask = match rotina {
                 0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
@@ -532,15 +540,16 @@ pub(crate) unsafe extern "thiscall" fn compare_punishments(m: usize, first: usiz
 
 /// Comparer for `penalties`.
 pub(crate) unsafe extern "thiscall" fn compare_penalties(m: usize, mode: u32) {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_PENALTIES);
     if is_recording_top_level() {
-        return o(m, mode);
+        return o(m.addr(), mode);
     }
     // the whole engine, the random roll, the error, the commentator (+0x8f7a points outside) and the match score
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    let game = Fixture(*((m + engine::MATCH) as *const usize));
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (*((m + engine::COMMENTATOR) as *const usize), 1), (game.addr() + fixture::HOME_PENALTIES, 2)]);
-    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m, mode), |chamar| {
+    let game = Fixture(m.r#match());
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (m.commentator(), 1), (game.addr() + fixture::HOME_PENALTIES, 2)]);
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr(), mode), |chamar| {
         penalty_shootout_step_with(m, mode, &mut |rotina, this, args| {
             let mask = match rotina {
                 0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
@@ -552,26 +561,27 @@ pub(crate) unsafe extern "thiscall" fn compare_penalties(m: usize, mode: u32) {
             chamar(rotina, this, args, mask)
         })
     });
-    SCOREBOARD.record(igual && sequencia, || format!("penalties(estado {}) {} chamadas: {}", read_i8(m + engine::SHOOTOUT_STATE), k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("penalties(estado {}) {} chamadas: {}", m.shootout_state(), k, tape_detail()));
 }
 
 /// Comparer for `apply_foul`.
 pub(crate) unsafe extern "thiscall" fn compare_apply_foul(m: usize) -> u8 {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_APPLY_FOUL);
     if is_recording_top_level() {
-        return o(m);
+        return o(m.addr());
     }
     // the whole engine, the random roll, the error, 0xae1080 and the tactic row of both clubs (the sending-off
     // pode trocar o capitao)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
-    let kind = read_i8(m + engine::PENDING_PLAY_KIND);
+    let kind = m.pending_play_kind();
     RECORD_716.store(true, std::sync::atomic::Ordering::Relaxed);
-    let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(m), |chamar| {
+    let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr()), |chamar| {
         apply_pending_foul_with(m, &mut |rotina, this, args| {
             let mask = match rotina {
                 0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
@@ -589,21 +599,22 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_foul(m: usize) -> u8 {
 
 /// Comparer for `contest`.
 pub(crate) unsafe extern "thiscall" fn compare_contest(m: usize, x: u32, y: u32) -> usize {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_CONTEST);
     if is_recording_top_level() {
-        return o(m, x, y);
+        return o(m.addr(), x, y);
     }
     ADVANTAGE_UNANSWERED.store(false, std::sync::atomic::Ordering::Relaxed);
     // the whole engine, the random roll, the error, 0xae1080 and the tactic row of both clubs (the sending-off
     // pode trocar o capitao)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
-    let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(m, x, y), |chamar| {
+    let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr(), x, y), |chamar| {
         tackle_contest_with(m, x as i8, y as i8, &mut |rotina, this, args| {
             let mask = match rotina {
                 0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
@@ -634,19 +645,20 @@ pub(crate) unsafe extern "thiscall" fn compare_contest(m: usize, x: u32, y: u32)
 
 /// Comparer for `player_left`.
 pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, ja_away: u32) {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PLAYER_LEFT);
     if is_recording_top_level() {
-        return o(m, j, ja_away);
+        return o(m.addr(), j, ja_away);
     }
     // the whole engine (the grid, the players, the staff +0x9032), the random roll and what the side’s strength
     // e o erro tocam
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     // the captain kept in the tactic row (+0x52) of both clubs: the substitution (0x6e1090) swaps him
     // before the compared one checks whether the player who left was the captain
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         for humano in 0..2u32 {
             let l = if clube == 0 { -1 } else { row(clube, humano) };
@@ -655,7 +667,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, j
             }
         }
     }
-    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m, j, ja_away), |chamar| {
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr(), j, ja_away), |chamar| {
         player_left_pitch_with(m, MatchPlayer(j), ja_away as u8, &mut |rotina, this, args| {
             chamar(rotina, this, args, if rotina == 0x897760 { [u32::MAX, 0xff, u32::MAX, 0, 0] } else { [0xff, 0, 0, 0, 0] })
         })
@@ -665,13 +677,14 @@ pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, j
 
 /// Comparer for `tackle_injury`.
 pub(crate) unsafe extern "thiscall" fn compare_tackle_injury(m: usize, a: usize, kind: u32, b: usize, kind_b: u32, direct: u32) {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32)>(IDX_TACKLE_INJURY);
     if is_recording_top_level() {
-        return o(m, a, kind, b, kind_b, direct);
+        return o(m.addr(), a, kind, b, kind_b, direct);
     }
     // the random state, the two players, their injury records and what 0x6d0980 changes in the engine
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m + 0x8ea0, 0x20), (m + engine::BALL_HOLDER, 4), (m + engine::INJURY_COUNT, 2)]);
+    reg.extend([(m.addr() + 0x8ea0, 0x20), (m.addr() + engine::BALL_HOLDER, 4), (m.addr() + engine::INJURY_COUNT, 2)]);
     let table = *(*(G_INJURY as *const usize) as *const usize);
     for p in [a, b] {
         if p != 0 {
@@ -682,7 +695,7 @@ pub(crate) unsafe extern "thiscall" fn compare_tackle_injury(m: usize, a: usize,
             }
         }
     }
-    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m, a, kind, b, kind_b, direct), |chamar| {
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr(), a, kind, b, kind_b, direct), |chamar| {
         tackle_injury_with(m, MatchPlayer(a), kind as u16 as i16, b, kind_b as u16 as i16, direct as u8, &mut |rotina, this, args| {
             chamar(rotina, this, args, if rotina == 0x62ed70 { [u32::MAX, 0, 0, 0, 0] } else { [0xff, 0xff, u32::MAX, u32::MAX, 0] })
         })
@@ -762,7 +775,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pressure(m: usize, j: usize, out:
         return o(m, j, out, list);
     }
     let (r, n, igual, sequencia, k) = compare_com_fita(vec![(out as usize, 2)], || o(m, j, out, list), |chamar| {
-        pressure_on_player_with(m, MatchPlayer(j), out, list, &mut |l, p| {
+        pressure_on_player_with(Engine(m), MatchPlayer(j), out, list, &mut |l, p| {
             chamar(FN_LLIST_ADD_TAIL, taped_pressure_list_addr(l, 0x1be), [p as u32, 0x1be, 0, 0, 0], [u32::MAX; 5]);
         })
     });
@@ -772,14 +785,15 @@ pub(crate) unsafe extern "thiscall" fn compare_pressure(m: usize, j: usize, out:
 
 /// Comparer for `period_completed`.
 pub(crate) unsafe extern "thiscall" fn compare_period_completed(m: usize) -> u8 {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_PERIOD_COMPLETED);
     if is_recording_top_level() {
-        return o(m);
+        return o(m.addr());
     }
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    let t = Fixture(m.r#match());
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m + 0x1a0, 0x30), (m + engine::GRID, 0x8f00 - 0x215e), (m + engine::FORMATION_TABLE, 0xd8), (t.addr() + fixture::TIE_RULES, 0x18)]);
-    let (r, n, igual, sequencia, k) = compare_com_fita(reg, || o(m), |chamar| {
+    reg.extend([(m.addr() + 0x1a0, 0x30), (m.addr() + engine::GRID, 0x8f00 - 0x215e), (m.addr() + engine::FORMATION_TABLE, 0xd8), (t.addr() + fixture::TIE_RULES, 0x18)]);
+    let (r, n, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr()), |chamar| {
         period_completed_with(m, &mut |rotina, this, args| {
             chamar(rotina, this, args, match rotina {
                 0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
@@ -788,24 +802,25 @@ pub(crate) unsafe extern "thiscall" fn compare_period_completed(m: usize) -> u8 
             })
         })
     });
-    SCOREBOARD.record(igual && sequencia && r == n, || format!("period_completed(periodo {:#x}) original={} rust={} {} chamadas: {}", *((m + engine::PERIOD_END) as *const i16), r, n, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == n, || format!("period_completed(periodo {:#x}) original={} rust={} {} chamadas: {}", m.period_end(), r, n, k, tape_detail()));
     r
 }
 
 /// Comparer for `deflect_ball`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_deflect_ball(this: usize, x: i8, y: i8, spread: i8, side: i8, inside: u8, cansa: u8, shooter: usize) {
+    let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, u8, u8, usize)>(IDX_DEFLECT_BALL);
     if is_recording_top_level() {
-        call_recording(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, this, [x as u8 as u32, y as u8 as u32, spread as u8 as u32 | (side as u8 as u32) << 8, inside as u32, shooter as u32], || {
-            o(this, x, y, spread, side, inside, cansa, shooter);
+        call_recording(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, this.addr(), [x as u8 as u32, y as u8 as u32, spread as u8 as u32 | (side as u8 as u32) << 8, inside as u32, shooter as u32], || {
+            o(this.addr(), x, y, spread, side, inside, cansa, shooter);
             0
         });
         return;
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(this + 0x1a0, 0x30), (this + engine::GRID, 0x8f00 - 0x215e), (this + engine::FORMATION_TABLE, 0xa0)]);
-    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(this, x, y, spread, side, inside, cansa, shooter), |chamar| {
+    reg.extend([(this.addr() + 0x1a0, 0x30), (this.addr() + engine::GRID, 0x8f00 - 0x215e), (this.addr() + engine::FORMATION_TABLE, 0xa0)]);
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(this.addr(), x, y, spread, side, inside, cansa, shooter), |chamar| {
         deflect_ball_with(this, x, y, spread, side, inside, cansa, MatchPlayer(shooter), &mut |rotina, alvo, args| {
             chamar(rotina, alvo, args, if rotina == 0x6cd490 { [0xff, 0, 0, 0, 0] } else { [u32::MAX, 0, 0, 0, 0] })
         })
@@ -815,30 +830,32 @@ pub(crate) unsafe extern "thiscall" fn compare_deflect_ball(this: usize, x: i8, 
 
 /// Comparer for `line_up_set_piece`.
 pub(crate) unsafe extern "thiscall" fn compare_line_up_set_piece(this: usize) {
+    let this = Engine(this);
     // inside the restart comparison (0x6c54a0) the set piece is a tape unit
     if is_recording_restart() {
         let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LINE_UP_SET_PIECE);
-        call_recording(FN_CM3_MATCH_ENGINE_SET_UP_FREE_KICK, this, [0; 5], || {
-            o(this);
+        call_recording(FN_CM3_MATCH_ENGINE_SET_UP_FREE_KICK, this.addr(), [0; 5], || {
+            o(this.addr());
             0
         });
         return;
     }
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LINE_UP_SET_PIECE);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(this + 0x1a0, 0x30), (this + engine::GRID, 0x8f00 - 0x215e), (this + engine::FORMATION_TABLE, 0x90)]);
-    let side_b = read_i8(this + engine::POSSESSION_SIDE);
-    let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| line_up_set_piece(this)));
+    reg.extend([(this.addr() + 0x1a0, 0x30), (this.addr() + engine::GRID, 0x8f00 - 0x215e), (this.addr() + engine::FORMATION_TABLE, 0x90)]);
+    let side_b = this.possession_side();
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this.addr()), || crate::rng::without_counting(|| line_up_set_piece(this.addr())));
     SCOREBOARD.record(igual, || format!("line_up_set_piece(lado {})", side_b));
 }
 
 /// Comparer for `line_up_kickoff`.
 pub(crate) unsafe extern "thiscall" fn compare_line_up_kickoff(this: usize) {
+    let this = Engine(this);
     // inside the restart comparison (0x6c54a0) the set piece is a tape unit
     if is_recording_restart() {
         let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LINE_UP_KICKOFF);
-        call_recording(FN_CM3_MATCH_ENGINE_SET_UP_GOAL_KICK, this, [0; 5], || {
-            o(this);
+        call_recording(FN_CM3_MATCH_ENGINE_SET_UP_GOAL_KICK, this.addr(), [0; 5], || {
+            o(this.addr());
             0
         });
         return;
@@ -847,31 +864,32 @@ pub(crate) unsafe extern "thiscall" fn compare_line_up_kickoff(this: usize) {
     // everything the arrangement (and what it calls) writes: the 0x1a0 engine, the grid, the 40 players, the
     // ball and possessions (0x215e..0x8f00) and the pointers at 0xf56e
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(this + 0x1a0, 0x30), (this + engine::GRID, 0x8f00 - 0x215e), (this + engine::FORMATION_TABLE, 0x48)]);
-    let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| line_up_kickoff(this)));
-    SCOREBOARD.record(igual, || format!("line_up_kickoff(lado {})", read_i8(this + engine::POSSESSION_SIDE)));
+    reg.extend([(this.addr() + 0x1a0, 0x30), (this.addr() + engine::GRID, 0x8f00 - 0x215e), (this.addr() + engine::FORMATION_TABLE, 0x48)]);
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this.addr()), || crate::rng::without_counting(|| line_up_kickoff(this.addr())));
+    SCOREBOARD.record(igual, || format!("line_up_kickoff(lado {})", this.possession_side()));
 }
 
 /// Comparer for `look_for_play`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_look_for_play(this: usize, side: i8, group: usize, a3: u32, a4: u32, mode: u8, a6: u32, a7: u32) -> u8 {
+    let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, usize, u32, u32, u8, u32, u32) -> u8>(IDX_LOOK_FOR_PLAY);
     if is_recording_top_level() {
-        return o(this, side, group, a3, a4, mode, a6, a7);
+        return o(this.addr(), side, group, a3, a4, mode, a6, a7);
     }
     // what the move changes and the Rust copy reads: the side’s list and count, the bytes of each
     // player, the player marked in the engine and the random roll
     let base = (group as isize + side as isize) as usize;
     let list = (group as isize + side as isize * 44) as usize;
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(this + engine::SHOT_BLOCKER, 4), (base + 0x58, 1), (list, 44)]);
+    reg.extend([(this.addr() + engine::SHOT_BLOCKER, 4), (base + 0x58, 1), (list, 44)]);
     for k in 0..read_i8(base + 0x58).clamp(0, 11) as usize {
         let j = MatchPlayer(*((list + 4 * k) as *const usize));
         reg.extend([(j.addr() + match_player::BALLS_CONTESTED, 1), (j.addr() + match_player::POSITION, 1), (j.addr() + match_player::BUSY, 1)]);
     }
     let (r, n, igual, sequencia, k) = compare_com_fita(
         reg,
-        || o(this, side, group, a3, a4, mode, a6, a7),
+        || o(this.addr(), side, group, a3, a4, mode, a6, a7),
         |chamar| try_side_block_with(this, side, group, a3, a4, mode, a6, a7, &mut |p, a| chamar(FN_MATCH_PLAYER_TRY_BLOCK_SHOT, p, [a[0], a[1], a[2], a[3], 0], ARG_MASK_70DFD0) as u8),
     );
     SCOREBOARD.record(igual && sequencia && r == n, || format!("look_for_play({} modo {}) original={} rust={} ({} jogadas)", side, mode, r, n, k));
@@ -883,13 +901,14 @@ pub(crate) unsafe extern "thiscall" fn compare_look_for_play(this: usize, side: 
 pub(crate) unsafe extern "thiscall" fn compare_choose_teammate(
     m: usize, bx: i8, by: i8, kind: *mut i8, moveu: *mut u8, x: *mut i8, y: *mut i8, best: *mut i32, request: i8,
 ) -> usize {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, *mut i8, *mut u8, *mut i8, *mut i8, *mut i32, i8) -> usize>(IDX_CHOOSE_TEAMMATE);
-    let mut regions = vec![(kind as usize, 1), (moveu as usize, 1), (x as usize, 1), (y as usize, 1), (best as usize, 4), (m + engine::RESTART_TYPE, 1)];
+    let mut regions = vec![(kind as usize, 1), (moveu as usize, 1), (x as usize, 1), (y as usize, 1), (best as usize, 4), (m.addr() + engine::RESTART_TYPE, 1)];
     regions.extend(crate::rng::STATE_REGIONS);
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side(
         &regions,
-        || o(m, bx, by, kind, moveu, x, y, best, request),
-        || crate::rng::without_counting(|| choose_teammate(m, bx, by, kind, moveu, x, y, best, request)),
+        || o(m.addr(), bx, by, kind, moveu, x, y, best, request),
+        || crate::rng::without_counting(|| choose_teammate(m.addr(), bx, by, kind, moveu, x, y, best, request)),
     );
     SCOREBOARD.record(igual && r == v, || format!("choose_teammate(pedido {:#x}) original={:x} {:x?} rust={:x} {:x?}", request, r, mo, v, mr));
     r
@@ -897,10 +916,11 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_teammate(
 
 /// Comparer for `player_order`.
 pub(crate) unsafe extern "thiscall" fn compare_player_order(m: usize) {
+    let m = Engine(m);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PLAYER_ORDER);
-    let mut regions = vec![(m + engine::ACTIVE_LIST_COUNT, 1), (m + engine::ACTIVE_LIST, 4 * 40), (G_ACTION_ORDER_MATCH_ENGINE, 4)];
+    let mut regions = vec![(m.addr() + engine::ACTIVE_LIST_COUNT, 1), (m.addr() + engine::ACTIVE_LIST, 4 * 40), (G_ACTION_ORDER_MATCH_ENGINE, 4)];
     regions.extend(crate::rng::STATE_REGIONS);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(m), || crate::rng::without_counting(|| player_order(m)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(m.addr()), || crate::rng::without_counting(|| player_order(m.addr())));
     SCOREBOARD.record(igual, || format!("player_order original={:x?} rust={:x?}", mo, mr));
 }
 

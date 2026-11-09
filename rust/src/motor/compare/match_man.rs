@@ -158,10 +158,10 @@ pub(crate) unsafe extern "C" fn compare_pick(
 /// Comparer for `stance`.
 pub(crate) unsafe extern "thiscall" fn compare_stance(c: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_STANCE);
-    let m = *((c + match_manager::ENGINE) as *const usize);
+    let m = Engine(*((c + match_manager::ENGINE) as *const usize));
     // the active ones (engine+4/+5, 0x6cbbb0), the factor of both sides, the dates (0x54cdb0) and the pointer of the
     // table that the league search (0x4a4850) sorts
-    let reg = [(m + 4, 2), (m + engine::STANCE_FACTOR, 8), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_COMP_STATS_SORT_CONTEXT, 4)];
+    let reg = [(m.addr() + 4, 2), (m.addr() + engine::STANCE_FACTOR, 8), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_COMP_STATS_SORT_CONTEXT, 4)];
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(c), || stance(c));
     SCOREBOARD.record(igual && r == rr, || format!("stance(lado {}) original={} rust={} {:x?} x {:x?}", read_i8(c + match_manager::SIDE), r, rr, mo, mr));
     r

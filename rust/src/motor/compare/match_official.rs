@@ -22,8 +22,9 @@ pub(crate) unsafe extern "thiscall" fn compare_init_strictness(this: usize, engi
 
 /// Comparer for `move_counts`.
 pub(crate) unsafe extern "thiscall" fn compare_move_counts(this: usize) -> u8 {
+    let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_MOVE_COUNTS);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::PENDING_PLAY_KIND, 16)], || o(this), || move_counts(this));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this.addr() + engine::PENDING_PLAY_KIND, 16)], || o(this.addr()), || move_counts(this.addr()));
     SCOREBOARD.record(igual && r == n, || format!("move_counts original={} {:x?} rust={} {:x?}", r, mo, n, mr));
     r
 }
@@ -31,8 +32,8 @@ pub(crate) unsafe extern "thiscall" fn compare_move_counts(this: usize) -> u8 {
 /// Comparer for `decide_foul`.
 pub(crate) unsafe extern "thiscall" fn compare_decide_foul(this: usize, j: usize, code: u16, kind: *mut u8, value: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_DECIDE_FOUL);
-    let engine = *(this as *const usize);
-    let mut reg = vec![(this + 8, 2), (kind as usize, 1), (value as usize, 1), (engine + engine::PENDING_PLAY_KIND, 16)];
+    let engine = Engine(*(this as *const usize));
+    let mut reg = vec![(this + 8, 2), (kind as usize, 1), (value as usize, 1), (engine.addr() + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, code, kind, value), || crate::rng::without_counting(|| decide_foul(this, j, code, kind, value)));
     SCOREBOARD.record(igual && r == n, || format!("decide_foul({:#x}) original={} {:x?} rust={} {:x?}", code, r, mo, n, mr));

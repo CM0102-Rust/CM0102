@@ -80,7 +80,6 @@ pub(crate) unsafe fn match_man_fatal_error(row: u32) -> ! {
 /// (0x6b97a0 e liberado; a partida sai de [0xde2f70] por 0x90d6b0), o resumo (+0x5b) e o objeto de
 /// +0x5f (0x453bc0); por fim o vetor das partidas.
 pub(crate) unsafe extern "thiscall" fn end_day(day: usize) {
-    let d = |o: usize| (day + o) as *mut usize;
     let list = *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *const usize);
     if list != 0 {
         exe::drop_llist(list);
@@ -88,43 +87,42 @@ pub(crate) unsafe extern "thiscall" fn end_day(day: usize) {
         *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *mut usize) = 0;
     }
     for o in [1usize, 0xd] {
-        if *d(o) != 0 {
-            exe::crt_free(*d(o));
-            *d(o) = 0;
-            *d(o + 4) = 0;
-            *d(o + 8) = 0;
+        if *((day + o) as *mut usize) != 0 {
+            exe::crt_free(*((day + o) as *mut usize));
+            *((day + o) as *mut usize) = 0;
+            *((day + o + 4) as *mut usize) = 0;
+            *((day + o + 8) as *mut usize) = 0;
         }
     }
-    if *d(match_day_fields::MATCHES) == 0 {
+    if *((day + match_day_fields::MATCHES) as *mut usize) == 0 {
         return;
     }
     let mut k = 0i32;
-    while k < *d(match_day_fields::MATCH_COUNT) as i32 {
-        let p = *d(match_day_fields::MATCHES) + k as usize * 0x69;
-        let q = |o: usize| (p + o) as *mut usize;
-        let engine = *q(day_match::ENGINE);
+    while k < *((day + match_day_fields::MATCH_COUNT) as *mut usize) as i32 {
+        let p = *((day + match_day_fields::MATCHES) as *mut usize) + k as usize * 0x69;
+        let engine = *((p + day_match::ENGINE) as *mut usize);
         if engine != 0 {
             exe::drop_cm3_match_engine(engine);
             exe::crt_operator_delete(engine);
-            *q(day_match::ENGINE) = 0;
+            *((p + day_match::ENGINE) as *mut usize) = 0;
             exe::virtual_staff_release_fixture(*(G_VIRTUAL_STAFF as *const usize), p + day_match::FIXTURE_COPY);
         }
-        if *q(day_match::SCOREBOARD) != 0 {
-            exe::crt_operator_delete(*q(day_match::SCOREBOARD));
-            *q(day_match::SCOREBOARD) = 0;
+        if *((p + day_match::SCOREBOARD) as *mut usize) != 0 {
+            exe::crt_operator_delete(*((p + day_match::SCOREBOARD) as *mut usize));
+            *((p + day_match::SCOREBOARD) as *mut usize) = 0;
         }
-        let x = *q(day_match::SUMMARY);
+        let x = *((p + day_match::SUMMARY) as *mut usize);
         if x != 0 {
             exe::match_team_pair_destructor(x);
             exe::crt_operator_delete(x);
-            *q(day_match::SUMMARY) = 0;
+            *((p + day_match::SUMMARY) as *mut usize) = 0;
         }
         k += 1;
     }
-    exe::crt_free(*d(match_day_fields::MATCHES));
-    *d(match_day_fields::MATCHES) = 0;
-    *d(match_day_fields::MATCH_CAPACITY) = 0;
-    *d(match_day_fields::MATCH_COUNT) = 0;
+    exe::crt_free(*((day + match_day_fields::MATCHES) as *mut usize));
+    *((day + match_day_fields::MATCHES) as *mut usize) = 0;
+    *((day + match_day_fields::MATCH_CAPACITY) as *mut usize) = 0;
+    *((day + match_day_fields::MATCH_COUNT) as *mut usize) = 0;
 }
 
 /// Clears each of the day's matches' fields and picks the human's match (or the first marked one) for the screen.
@@ -1669,7 +1667,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     }
     let pl = u(p, day_match::SCOREBOARD);
     crate::comparison::branch("step_towards in network");
-    let engine = u(p, day_match::ENGINE);
+    let engine = Engine(u(p, day_match::ENGINE));
     let state = pl as *mut u8;
     let eu = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
     let visto = |i: isize| ((pl as isize) + 0x85 + 4 * i) as *mut u32;
@@ -1680,7 +1678,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
         *((pl + 0x107) as *mut u8) = 1;
     };
     let mostrar_evento = |ev: usize| {
-        if exe::match_events_get_event_priority(u(engine, engine::COMMENTATOR), *(ev as *const u16) as u32) == 2 {
+        if exe::match_events_get_event_priority(u(engine.addr(), engine::COMMENTATOR), *(ev as *const u16) as u32) == 2 {
             por(pl, 0x115, 1);
         }
         por(pl, 1, ev as u32);
@@ -1700,15 +1698,15 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     if *((pl + 0x108) as *const u8) != 0 {
         return follow();
     }
-    if *state & 8 != 0 && exe::match_events_is_line_finished(u(engine, engine::COMMENTATOR), pl + 5) == 0 {
+    if *state & 8 != 0 && exe::match_events_is_line_finished(u(engine.addr(), engine::COMMENTATOR), pl + 5) == 0 {
         return follow();
     }
-    let espera = if *((u(engine, engine::COMMENTATOR) + 0x2db0) as *const u8) == 0x14 { 0 } else { u(pl, 0x109) as u32 };
+    let espera = if *((u(engine.addr(), engine::COMMENTATOR) + 0x2db0) as *const u8) == 0x14 { 0 } else { u(pl, 0x109) as u32 };
     if exe::utils_get_time_ms() < (u(pl, 0x10d) as u32).wrapping_add(espera) {
         return follow();
     }
     if *state & 8 != 0 {
-        let ev = exe::match_events_get_next_event(u(engine, engine::COMMENTATOR), 0);
+        let ev = exe::match_events_get_next_event(u(engine.addr(), engine::COMMENTATOR), 0);
         if ev != 0 {
             mostrar_evento(ev);
             por(pl, 0x10d, exe::utils_get_time_ms());
@@ -1722,8 +1720,8 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
         if r == 2 || r == 8 {
             *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 1;
         }
-        if *((u(engine, engine::COMMENTATOR) + 5) as *const u8) != 0 {
-            let ev = exe::match_events_get_next_event(u(engine, engine::COMMENTATOR), 0);
+        if *((u(engine.addr(), engine::COMMENTATOR) + 5) as *const u8) != 0 {
+            let ev = exe::match_events_get_next_event(u(engine.addr(), engine::COMMENTATOR), 0);
             if ev != 0 {
                 mostrar_evento(ev);
                 por(pl, 0x10d, exe::utils_get_time_ms());
@@ -1749,20 +1747,20 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     if *((p + day_match::STATE) as *const u8) == 4 {
         mark(0x20);
     }
-    if read_i8(engine + engine::SCORE) as i32 > *((summary + match_summary::SIDES) as *const u8) as i32 {
+    if engine.score() as i32 > *((summary + match_summary::SIDES) as *const u8) as i32 {
         mark(1);
     }
-    if read_i8(engine + engine::SCORE_SIDE1) as i32 > *((u(p, day_match::SUMMARY) + 0x744) as *const u8) as i32 {
+    if engine.score_side1() as i32 > *((u(p, day_match::SUMMARY) + 0x744) as *const u8) as i32 {
         mark(2);
     }
     if u(pl, 0x115) != 0 {
         mark(0x10);
     }
-    if *((engine + engine::RESTART_TYPE) as *const u8) != 0 {
+    if (engine.restart_type() as u8) != 0 {
         mark(0x80);
     }
     let r = u(p, day_match::SUMMARY);
-    if *((engine + engine::CLOCK) as *const i16) as i32 / 11 > *((r + 0x4d) as *const i16) as i32 {
+    if engine.clock() as i32 / 11 > *((r + 0x4d) as *const i16) as i32 {
         *state |= 4;
         por(pl, 0x109, (0x226 - 50 * *((u(p, day_match::SUMMARY) + 0x51) as *const i16) as i32) as u32);
     }

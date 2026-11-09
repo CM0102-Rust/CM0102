@@ -3414,8 +3414,9 @@ compare_value!(compare_clear_path, clear_path_to, IDX_CLEAR_PATH_TO, (l: i8, x: 
 compare_value!(compare_reaches_the_point, reaches_the_point, IDX_REACHES_THE_POINT, (x: i8, y: i8) -> u8);
 
 unsafe extern "thiscall" fn compare_choose_standout(this: usize) {
+    let this = Engine(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CHOOSE_STANDOUT);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::ADJUSTED_PLAYER_ID, 4)], || f(this), || choose_standout(this));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this.addr() + engine::ADJUSTED_PLAYER_ID, 4)], || f(this.addr()), || choose_standout(this.addr()));
     SCOREBOARD.record(igual, || format!("choose_standout original={:x?} rust={:x?}", mo, mr));
 }
 unsafe extern "thiscall" fn compare_choose_by_role_b(this: usize, arg: u32) -> u8 {
@@ -3426,10 +3427,11 @@ unsafe extern "thiscall" fn compare_choose_by_role_b(this: usize, arg: u32) -> u
     r
 }
 unsafe extern "thiscall" fn compare_formation_square(this: usize, j: usize, x: *mut u8, y: *mut u8) {
+    let this = Engine(this);
     let j = MatchPlayer(j);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_FORMATION_SQUARE);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this, j.addr(), x, y), || formation_square(this, j.addr(), x, y));
-    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", read_i8(this + engine::POSSESSION_SIDE), j.side(), j.position(), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this.addr(), j.addr(), x, y), || formation_square(this.addr(), j.addr(), x, y));
+    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", this.possession_side(), j.side(), j.position(), mo, mr));
 }
 
 unsafe extern "thiscall" fn compare_compute_percentages(this: usize, i: i8) {
@@ -3490,28 +3492,30 @@ unsafe fn card_regions(motor: usize, j: usize, tipo: *mut u8, peso: *mut f32) ->
 
 // The wrappers go through the inner (hooked) routine: they compare the same regions as it.
 unsafe extern "thiscall" fn compare_engine_decide_foul(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
+    let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_ENGINE_DECIDE_FOUL);
-    let mut reg = vec![(this + engine::REFEREE + 8, 2), (tipo as usize, 1), (valor as usize, 1), (this + engine::PENDING_PLAY_KIND, 16)];
+    let mut reg = vec![(this.addr() + engine::REFEREE + 8, 2), (tipo as usize, 1), (valor as usize, 1), (this.addr() + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, codigo, tipo, valor), || crate::rng::without_counting(|| engine_decide_foul(this, j, codigo, tipo, valor)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), j, codigo, tipo, valor), || crate::rng::without_counting(|| engine_decide_foul(this.addr(), j, codigo, tipo, valor)));
     SCOREBOARD.record(igual && r == n, || format!("engine_decide_foul original={} {:x?} rust={} {:x?}", r, mo, n, mr));
     r
 }
 
 unsafe extern "thiscall" fn compare_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_LOOK_FOR_OFFSIDE);
-    let motor = *(this as *const usize);
-    let mut reg = vec![(this + 8, 2), (motor + engine::PENDING_PLAY_KIND, 16)];
+    let motor = Engine(*(this as *const usize));
+    let mut reg = vec![(this + 8, 2), (motor.addr() + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| look_for_offside(this, l, linha, y, passador)));
     SCOREBOARD.record(igual && r == n, || format!("look_for_offside({}, {}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", l, linha, y, passador != 0, r, mo, n, mr));
     r
 }
 unsafe extern "thiscall" fn compare_engine_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
+    let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_ENGINE_LOOK_FOR_OFFSIDE);
-    let mut reg = vec![(this + engine::REFEREE + 8, 2), (this + engine::PENDING_PLAY_KIND, 16)];
+    let mut reg = vec![(this.addr() + engine::REFEREE + 8, 2), (this.addr() + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| engine_look_for_offside(this, l, linha, y, passador)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), l, linha, y, passador), || crate::rng::without_counting(|| engine_look_for_offside(this.addr(), l, linha, y, passador)));
     SCOREBOARD.record(igual && r == n, || format!("engine_look_for_offside original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
     r
 }
@@ -3547,17 +3551,18 @@ unsafe extern "thiscall" fn compare_possession_statistic(this: usize, l: i8, jan
 }
 
 unsafe extern "thiscall" fn compare_match_summary(this: usize, momento: i16) {
+    let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i16)>(IDX_MATCH_SUMMARY);
     if is_recording_top_level() {
-        call_recording(0x6ce460, this, [momento as u16 as u32, 0, 0, 0, 0], || {
-            o(this, momento);
+        call_recording(0x6ce460, this.addr(), [momento as u16 as u32, 0, 0, 0, 0], || {
+            o(this.addr(), momento);
             0
         });
         return;
     }
-    let mut reg = vec![(this + engine::PLAYERS, 40 * 0x1be), (this + 0xf5b0, 0x90)];
+    let mut reg = vec![(this.addr() + engine::PLAYERS, 40 * 0x1be), (this.addr() + 0xf5b0, 0x90)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, momento), || crate::rng::without_counting(|| match_summary(this, momento)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), momento), || crate::rng::without_counting(|| match_summary(this.addr(), momento)));
     SCOREBOARD.record(igual, || format!("match_summary({}) original={:x?} rust={:x?}", momento, mo, mr));
 }
 
@@ -4021,10 +4026,10 @@ pub unsafe fn instalar_passagem() {
 ///
 /// [pt] Diagnostico do autoteste: a grade do motor falso esta consistente (contagens 0..=11, cada
 /// entrada um jogador do bloco do lado, na casa certa e com o indice certo em 0x28)?
-unsafe fn grid_inconsistent(m: usize) -> Option<String> {
+unsafe fn grid_inconsistent(m: Engine) -> Option<String> {
     for x in 0..9i8 {
         for y in 0..12i8 {
-            let casa = occupancy_grid_cell(m, x, y) as usize;
+            let casa = occupancy_grid_cell(m.addr(), x, y) as usize;
             for l in 0..2usize {
                 let n = read_i8(casa + (0x58 + l));
                 if !(0..=11).contains(&n) {
@@ -4032,7 +4037,7 @@ unsafe fn grid_inconsistent(m: usize) -> Option<String> {
                 }
                 for i in 0..n as usize {
                     let p = MatchPlayer(*((casa + 4 * (11 * l + i)) as *const usize));
-                    let base = m + engine::PLAYERS + 8920 * l;
+                    let base = m.addr() + engine::PLAYERS + 8920 * l;
                     if p.addr() < base || p.addr() >= base + 20 * 0x1be || (p.addr() - base) % 0x1be != 0 {
                         return Some(format!("casa ({},{}) lado {} entrada {}/{} = {:#x}", x, y, l, i, n, p.addr()));
                     }
@@ -5180,13 +5185,13 @@ pub unsafe fn autoteste(casos: u64) {
             *(m as *mut u8) = 0;
             static WARNINGS47: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
             let avisar = || WARNINGS47.fetch_add(1, std::sync::atomic::Ordering::Relaxed) < 6;
-            if let Some(e) = grid_inconsistent(m) {
+            if let Some(e) = grid_inconsistent(Engine(m)) {
                 if avisar() {
                     linha(&format!("motor: grade inconsistente antes do pontape: {}", e));
                 }
             }
             compare_kick_off(m);
-            let grade47 = grid_inconsistent(m);
+            let grade47 = grid_inconsistent(Engine(m));
             if let Some(e) = &grade47 {
                 if avisar() {
                     linha(&format!("motor: grade inconsistente depois do pontape: {}", e));

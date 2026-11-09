@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 12: the match engine (`Engine`)
+
+The planned batch 12 (league subclasses and leftovers) was swapped, at Lucas's request after the review, for the match
+engine, the largest object still untyped. `--fechos` now also expands one-parameter closures over a captured base
+(`let b = |o: usize| (m + o) as *mut u8;` → `((m + o) as *mut u8)`; 29 functions), then the full package: 209 engine
+variables in 198 functions (73 of them `this`), 143 `.addr()` removed from the wrappers, 42 functions take `Engine`
+(109 calls fixed), propagation 5 more and 2 closures. Raw engine accesses 1,290 → 692. Five mutation anchors built with
+`chr(10)` were fixed by hand. Proof: 7cc445c2 ×2, detector equal, comparison 0; the 115 changed mutations and the 7 at
+risk compile.
+
 ## Migration to typed records, batch 11: increments, compound assignments, readers and read names
 
 - The converter recognises the one-line add helpers by their shape (seven: `add_to_i32`, `fin_prm_add_i32`,

@@ -19,15 +19,13 @@ pub(crate) unsafe extern "thiscall" fn record_referee_grade(this: usize, r: *con
         return;
     }
     let f = base + id as usize * 17;
-    let b = |o: usize| (f + o) as *mut u8;
-    let w = |o: usize| (f + o) as *mut i16;
-    *b(0xf) = (*b(0xf)).wrapping_add(*r.add(4));
-    *w(8) = (*w(8)).wrapping_add(*r.add(5) as i8 as i16);
-    *w(0xa) = (*w(0xa)).wrapping_add(*r.add(6) as i8 as i16);
-    *b(0x10) = *r.add(6);
-    *w(0xc) = (*w(0xc)).wrapping_add(1);
-    if *w(0xc) != 0 {
-        *((f + 4) as *mut f32) = (*w(0xa) as f64 / *w(0xc) as f64) as f32;
+    *((f + 0xf) as *mut u8) = (*((f + 0xf) as *mut u8)).wrapping_add(*r.add(4));
+    *((f + 8) as *mut i16) = (*((f + 8) as *mut i16)).wrapping_add(*r.add(5) as i8 as i16);
+    *((f + 0xa) as *mut i16) = (*((f + 0xa) as *mut i16)).wrapping_add(*r.add(6) as i8 as i16);
+    *((f + 0x10) as *mut u8) = *r.add(6);
+    *((f + 0xc) as *mut i16) = (*((f + 0xc) as *mut i16)).wrapping_add(1);
+    if *((f + 0xc) as *mut i16) != 0 {
+        *((f + 4) as *mut f32) = (*((f + 0xa) as *mut i16) as f64 / *((f + 0xc) as *mut i16) as f64) as f32;
     }
 }
 

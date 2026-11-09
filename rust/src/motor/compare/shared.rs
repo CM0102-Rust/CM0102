@@ -183,10 +183,10 @@ pub(crate) unsafe extern "thiscall" fn compare_facing(this: usize, a: i8, b: i8)
 /// Comparer for `respond`.
 pub(crate) unsafe fn compare_respond(p: MatchPlayer, a: u32, b: u32, c: u32, d: u32, rodar: &dyn Fn() -> u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
-    let m = p.engine();
+    let m = Engine(p.engine());
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
@@ -211,19 +211,20 @@ pub(crate) unsafe fn compare_respond(p: MatchPlayer, a: u32, b: u32, c: u32, d: 
 /// Comparer for `procurar`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_procurar(this: usize, side: i8, group: usize, a3: u32, a4: u32, a5: u32, a6: u32, mode: i8) -> u8 {
+    let this = Engine(this);
     use std::sync::atomic::Ordering::Relaxed;
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, usize, u32, u32, u32, u32, i8) -> u8>(IDX_SEARCH_ON_SIDE);
     // The Rust copy must see the state the original saw: 0x6f5c30 changes the receiving player
     // (0x2b, 0x19) and may remove it from the list, so the list, the count and these bytes of each player
     // go into the regions (the tape records them after each call).
     let list = (group as isize + side as isize * 44) as *const usize;
-    let mut regions = vec![(this + engine::SIDE_PLAYED_BALL, 2), ((group as isize + side as isize) as usize + 0x58, 1), (list as usize, 44)];
+    let mut regions = vec![(this.addr() + engine::SIDE_PLAYED_BALL, 2), ((group as isize + side as isize) as usize + 0x58, 1), (list as usize, 44)];
     for i in 0..read_i8((group as isize + side as isize) as usize + 0x58).clamp(0, 11) as usize {
         let p = *list.add(i);
         regions.extend([(p + match_player::POSITION, 1), (p + match_player::BUSY, 1)]);
     }
     let write = RECORD_6F5C30.swap(true, Relaxed);
-    let (r, n, igual, sequencia, k) = compare_com_fita(regions, || f(this, side, group, a3, a4, a5, a6, mode), |chamar| {
+    let (r, n, igual, sequencia, k) = compare_com_fita(regions, || f(this.addr(), side, group, a3, a4, a5, a6, mode), |chamar| {
         search_cell_side_with(this, side, group, a3, a4, a5, a6, mode, &mut |p, w, x, y, z| {
             chamar(FN_MATCH_PLAYER_TRY_INTERCEPT_BALL, p, [w, x, y, z, 0], [u32::MAX, u32::MAX, u32::MAX, u32::MAX, 0]) as u8
         })
@@ -342,18 +343,20 @@ pub(crate) unsafe extern "thiscall" fn compare_papel_defesa(j: usize) -> u8 {
 
 /// Comparer for `position_place_players`.
 pub(crate) unsafe extern "thiscall" fn compare_position_place_players(this: usize, j: usize, sx: *mut i8, sy: *mut i8, a4: u32) {
+    let this = Engine(this);
     let j = MatchPlayer(j);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8, u32)>(IDX_POSITION_PLACE_PLAYERS);
     let regions = [(sx as usize, 1), (sy as usize, 1)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this, j.addr(), sx, sy, a4), || position_place_players(this, j.addr(), sx, sy, a4));
-    SCOREBOARD.record(igual, || format!("position_place_players(lado {}, pos {}, bola {} {}) original={:x?} rust={:x?}", side_of_player(j), j.position(), read_i8(this + engine::BALL_X), read_i8(this + engine::BALL_Y), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this.addr(), j.addr(), sx, sy, a4), || position_place_players(this.addr(), j.addr(), sx, sy, a4));
+    SCOREBOARD.record(igual, || format!("position_place_players(lado {}, pos {}, bola {} {}) original={:x?} rust={:x?}", side_of_player(j), j.position(), this.ball_x(), this.ball_y(), mo, mr));
 }
 
 /// Comparer for `linhas`.
 pub(crate) unsafe extern "thiscall" fn compare_linhas(this: usize) {
+    let this = Engine(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DEFENSIVE_LINES);
-    let regions = [(this + engine::OFFSIDE_LINE, 2)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this), || defensive_lines(this));
+    let regions = [(this.addr() + engine::OFFSIDE_LINE, 2)];
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this.addr()), || defensive_lines(this.addr()));
     SCOREBOARD.record(igual, || format!("defensive_lines original={:x?} rust={:x?}", mo, mr));
 }
 
@@ -382,12 +385,13 @@ pub(crate) unsafe extern "thiscall" fn compare_momento(this: usize) {
 
 /// Comparer for `posicao_um`.
 pub(crate) unsafe extern "thiscall" fn compare_posicao_um(this: usize, l: i8) -> usize {
+    let this = Engine(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> usize>(IDX_HOLD_POSITION_ONE);
-    let mut regions = vec![(this + engine::GOALKEEPER, 8)];
+    let mut regions = vec![(this.addr() + engine::GOALKEEPER, 8)];
     for k in 0..40 {
-        regions.push((this + engine::PLAYERS + 8920 * (k / 20) + (k % 20) * 0x1be + 0x19, 2));
+        regions.push((this.addr() + engine::PLAYERS + 8920 * (k / 20) + (k % 20) * 0x1be + 0x19, 2));
     }
-    let (r, n, igual, _, _) = crate::comparison::side_by_side(&regions, || f(this, l), || hold_position_one(this, l));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&regions, || f(this.addr(), l), || hold_position_one(this.addr(), l));
     SCOREBOARD.record(igual && r == n, || format!("hold_position_one({}) original={:#x} rust={:#x} memoria igual={}", l, r, n, igual));
     r
 }
@@ -444,9 +448,10 @@ pub(crate) unsafe extern "thiscall" fn compare_read_8f7a(this: usize) -> u32 {
 
 /// Comparer for `posse`.
 pub(crate) unsafe extern "thiscall" fn compare_posse(this: usize, v: i8) {
+    let this = Engine(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_RECORD_POSSESSION);
-    let regions = [(this + engine::LAST_POSSESSION_SIDE, 1), ((this as isize + 0x8d46 + v as isize) as usize, 1), (this + engine::POSSESSION_COUNTER, 2)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this, v), || record_possession(this, v));
+    let regions = [(this.addr() + engine::LAST_POSSESSION_SIDE, 1), ((this.addr() as isize + 0x8d46 + v as isize) as usize, 1), (this.addr() + engine::POSSESSION_COUNTER, 2)];
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this.addr(), v), || record_possession(this.addr(), v));
     SCOREBOARD.record(igual, || format!("record_possession({}) original={:x?} rust={:x?}", v, mo, mr));
 }
 
@@ -461,8 +466,9 @@ pub(crate) unsafe extern "thiscall" fn compare_in_list(this: usize, target: usiz
 
 /// Comparer for `extremos`.
 pub(crate) unsafe extern "thiscall" fn compare_extremos(this: usize) {
+    let this = Engine(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_STORE_EXTREMES);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::LOWEST_Y_PLAYER, 16)], || f(this), || store_extremes(this));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this.addr() + engine::LOWEST_Y_PLAYER, 16)], || f(this.addr()), || store_extremes(this.addr()));
     SCOREBOARD.record(igual, || format!("store_extremes original={:x?} rust={:x?}", mo, mr));
 }
 

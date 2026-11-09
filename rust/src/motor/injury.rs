@@ -96,13 +96,12 @@ pub(crate) unsafe extern "thiscall" fn register_injury(this: usize, sheet: usize
 /// +0x59 e reduz +0xd5 a metade. Folego abaixo do limite: sai (+0x8eb5, +0x1d, +0x1c); senao para
 /// (0x7160e0 com 5 ou 3) conforme a forca da pessoa (+0x2d x 25). Folego entre 1 e o teto; saindo,
 /// mais uma lesao no jogo.
-pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: MatchPlayer, o: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let w = |x: usize| (m + x) as *mut i16;
-    let n = *w(engine::INJURY_COUNT);
+pub(crate) unsafe fn injure_with(m: Engine, kind: u32, chance: u32, p: MatchPlayer, o: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let n = m.injury_count();
     if n > 3 && random(n as i32) != 0 && random(0x1f4) != 0 {
         return;
     }
-    if *w(engine::INJURY_COUNT) > 6 {
+    if m.injury_count() > 6 {
         return;
     }
     let (mut t, mut g) = (kind as u8, chance as u8);
@@ -131,7 +130,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: MatchPlaye
     }
     if !(*folego as f64 >= read_f64(rdata::F64_5000)) {
         crate::comparison::branch("injury out of breath");
-        *((m + engine::SUBSTITUTION_PENDING) as *mut u8) = 1;
+        m.set_substitution_pending((1) as i8);
         p.set_injury_pending((1) as i8);
         p.set_injury_forces_off((1) as i8);
     } else {
@@ -140,13 +139,13 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: MatchPlaye
         if v > *folego as f64 {
             crate::comparison::branch("injury to 5");
             write_2b(p.addr(), 5);
-            *((m + engine::SUBSTITUTION_PENDING) as *mut u8) = 1;
+            m.set_substitution_pending((1) as i8);
             p.set_injury_pending((1) as i8);
         } else {
             write_2b(p.addr(), 3);
             if local >= read_f32(rdata::F32_500) && (p.injury_forces_off() as u8) != 0 {
                 crate::comparison::branch("injury to 3 and leaves");
-                *((m + engine::SUBSTITUTION_PENDING) as *mut u8) = 1;
+                m.set_substitution_pending((1) as i8);
                 p.set_injury_pending((1) as i8);
             }
         }
@@ -157,8 +156,8 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: MatchPlaye
     } else if x > read_f64(rdata::F64_10000) {
         *folego = read_f64(rdata::F64_10000) as f32;
     }
-    if *((m + engine::SUBSTITUTION_PENDING) as *mut u8) != 0 {
-        *w(engine::INJURY_COUNT) = (*w(engine::INJURY_COUNT)).wrapping_add(1);
+    if (m.substitution_pending() as u8) != 0 {
+        m.set_injury_count((m.injury_count()).wrapping_add(1));
     }
 }
 
@@ -206,7 +205,7 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
     reg.extend(injury_list_regions());
     let write = RECORD_INJURY.swap(true, Relaxed);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || f(m, kind, chance, p, o), |chamar| {
-        injure_with(m, kind, chance, MatchPlayer(p), o, &mut |rotina, this, args| chamar(rotina, this, args, [0, u32::MAX, 0, 0, 0]))
+        injure_with(Engine(m), kind, chance, MatchPlayer(p), o, &mut |rotina, this, args| chamar(rotina, this, args, [0, u32::MAX, 0, 0, 0]))
     });
     RECORD_INJURY.store(write, Relaxed);
     SCOREBOARD.record(igual && sequencia, || format!("injure(tipo {}, chance {}) {} chamadas: {}", kind as u8 as i8, chance as u8 as i8, k, tape_detail()));
@@ -224,7 +223,7 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
 /// 0x757da0 nos ultimos 7 ou 30 dias, datas da 0x54c8e0); os demais da faixa, sim.
 pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> u32 {
     let p = MatchPlayer(p);
-    let m = p.engine();
+    let m = Engine(p.engine());
     let today = G_CURRENT_DATE;
     let (mut d7, mut d30) = ([0u8; 8], [0u8; 8]);
     exe::date_sub_days(today, (&mut d7) as *mut [u8; 8] as usize, 7);
@@ -234,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         return 0;
     }
     let side = p.side() as i32;
-    if *((m as isize + ((c + side * 1000) * 4) as isize - 0x7ae2) as *const u32) != 0 {
+    if *((m.addr() as isize + ((c + side * 1000) * 4) as isize - 0x7ae2) as *const u32) != 0 {
         return 0;
     }
     let sheet = p.staff();
@@ -243,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     }
     let atuacao = p.match_rating() as i32;
     let b = |o: usize| read_i8(p.addr() + o);
-    let minute = *((m + engine::CLOCK) as *const i16) as i32 / 11;
+    let minute = m.clock() as i32 / 11;
     let in_field = minute - b(0x1f) as i32;
     let limit = |t: i32| (t * 33 + 0xfa0).min(0x1964);
     // the common conditions: no goal, no card, +0x17 up to 8, +0x03 up to 2 and the performance up to the limit
@@ -266,7 +265,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         }
         0x21a1 | 0x21a2 => {
             let goals = b(0xa) as u8 as i32;
-            if p.addr() != *((m + engine::PASS_RECEIVER) as *const usize) || *((m + engine::ASSIST_CANDIDATE) as *const u32) == 0 {
+            if p.addr() != m.pass_receiver() || (m.assist_candidate() as u32) == 0 {
                 false
             } else if c == 0x21a1 {
                 if goals <= 4 || p.shot_quality() <= 0xfa {
@@ -292,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
             let yes = atuacao > random(0x7d0) + 0x1c52 && b(0xc) == 1 && in_field > 0x41 && b(0x30) != 0;
             if yes {
                 crate::comparison::branch("highlight mark 21b5");
-                *((m + 0xbf2 + side as usize * 4000) as *mut u32) = 1;
+                *((m.addr() + 0xbf2 + side as usize * 4000) as *mut u32) = 1;
             }
             yes
         }

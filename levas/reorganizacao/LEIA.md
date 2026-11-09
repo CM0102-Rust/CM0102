@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 12: o motor de partidas (`Engine`)
+
+A leva 12 combinada (subclasses da liga e restos) foi trocada, a pedido do Lucas depois do balanço, pelo motor de
+partidas, o maior objeto ainda sem tipo. O `--fechos` agora expande também as closures de um parâmetro sobre uma base
+capturada (`let b = |o: usize| (m + o) as *mut u8;` → `((m + o) as *mut u8)`; 29 funções), e então o pacote completo:
+209 variáveis de motor em 198 funções (73 delas o `this`), 143 `.addr()` tirados dos invólucros, 42 funções recebem
+`Engine` (109 chamadas ajustadas), a propagação mais 5 e 2 closures. Acessos crus ao motor 1.290 → 692. Cinco âncoras
+de mutação montadas com `chr(10)` foram acertadas à mão. Prova: 7cc445c2 ×2, detector igual, comparação 0; as 115
+mutações mudadas e as 7 em risco compilam.
+
 ## Migração para os registros tipados, leva 11: incrementos, operações compostas, leitoras e nomes lidos
 
 - O conversor reconhece os auxiliares de incremento de uma linha pelo formato (sete: `add_to_i32`, `fin_prm_add_i32`,

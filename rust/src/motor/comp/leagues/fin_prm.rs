@@ -2018,8 +2018,8 @@ pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: u
 /// Adds v to the i64 at address a.
 ///
 /// [pt] Soma `v` (64 bits) ao i64 em `a` (o add/adc da original).
-pub(crate) unsafe fn fin_prm_add_i64(a: usize, v: i64) {
-    core::ptr::write_unaligned(a as *mut i64, core::ptr::read_unaligned(a as *const i64).wrapping_add(v));
+pub(crate) unsafe fn fin_prm_add_i64(a: Finance, v: i64) {
+    core::ptr::write_unaligned(a.addr() as *mut i64, core::ptr::read_unaligned(a.addr() as *const i64).wrapping_add(v));
 }
 
 /// Adds v to the i32 at address a.
@@ -2056,7 +2056,7 @@ pub(crate) unsafe extern "thiscall" fn add_players_sold(this: usize, low: u32, h
     if v != 0 {
         crate::comparison::branch("cpz_12 sale received"); // only a nonzero value changes the balance
     }
-    fin_prm_add_i64(this.addr(), v); // cpz12: the sale enters the balance
+    fin_prm_add_i64(this, v); // cpz12: the sale enters the balance
 }
 
 /// Adds the amount (64 bits) to the purchases of the month (+0x70) and of the year (+0x110) and takes it from the
@@ -2078,7 +2078,7 @@ pub(crate) unsafe extern "thiscall" fn pay_players_bought(this: usize, low: u32,
     if v != 0 {
         crate::comparison::branch("cpz_12 purchase paid"); // only a nonzero value changes the balance
     }
-    fin_prm_add_i64(this.addr(), v.wrapping_neg()); // cpz12: the purchase leaves the balance
+    fin_prm_add_i64(this, v.wrapping_neg()); // cpz12: the purchase leaves the balance
 }
 
 /// Adds the amount to the signing-on fees of the month (+0x9c) and of the year (+0x13c) and takes it from the balance.
@@ -2098,7 +2098,7 @@ pub(crate) unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, value: i32) 
     if value != 0 {
         crate::comparison::branch("cpz_12 signing-on fees paid"); // only a nonzero value changes the balance
     }
-    fin_prm_add_i64(this.addr(), (value as i64).wrapping_neg()); // cpz12: the signing-on fees leave the balance
+    fin_prm_add_i64(this, (value as i64).wrapping_neg()); // cpz12: the signing-on fees leave the balance
 }
 
 /// Adds v to the i64 balance at +0 of a finance record.

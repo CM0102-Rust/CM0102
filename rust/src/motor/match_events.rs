@@ -1299,9 +1299,10 @@ pub(crate) enum BranchLabel {
 /// área (0x6d58f0). As duas chamadas da 0x6cb960 do original não têm efeito e o valor delas é
 /// descartado (ficam de fora).
 pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
+    let m = Engine(m);
     let w = |p: usize| core::ptr::read_unaligned(p as *const i16);
     let s2 = w(e);
-    let (posse, area) = if m == 0 { (0, 0) } else { (read_i8(m + engine::LAST_POSSESSION_SIDE), ball_goal_end(m)) };
+    let (posse, area) = if m.is_null() { (0, 0) } else { (m.last_possession_side(), ball_goal_end(m.addr())) };
     if w(t + 8) == w(t + 6) {
         return 0;
     }
@@ -1638,12 +1639,12 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
 /// para os dois clubes) e o minuto 31, os caminhos que dependem das notícias. O estado do sorteador e as notas voltam ao que eram e os
 /// sorteios não contam nem entram no rastro de uma comparação pela fita em curso (o chute, 0x702050,
 /// chama esta rotina por dentro): a trajetória do jogo comparando não muda.
-pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32) {
+pub(crate) unsafe fn probe_context_commentary(m: Engine, o: unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32) {
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     // the fake media: in the news log (0x757da0 searches by subject -1, club id, type -1 and
     // subtype, records of 0x17 bytes in order), one of today’s news items of each subtype that the
     // the comments query, for both clubs
-    let c = *((m + engine::MATCH) as *const usize);
+    let c = m.r#match();
     let today = *(G_CURRENT_DATE as *const [u8; 8]);
     let mut records: Vec<[u8; 0x17]> = Vec::new();
     for o_clube in [0x1c, 0x20] {
@@ -1667,14 +1668,14 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
     records.dedup_by_key(|r| key(r));
     let falsa: [usize; 3] = [records.as_ptr() as usize, 0, records.len()];
     let average = *(G_MEDIA as *const usize);
-    let minute = core::ptr::read_unaligned((m + engine::CLOCK) as *const i16);
+    let minute = m.clock();
     crate::rng::pause_trace(|| crate::rng::without_counting(|| {
         // 0: the real state; 1: with the news; 2: with the news at minute 31
         for cenario in 0..3 {
             *(G_MEDIA as *mut usize) = if cenario == 0 { average } else { falsa.as_ptr() as usize };
-            core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, if cenario == 2 { 31 * 11 } else { minute });
+            m.set_clock(if cenario == 2 { 31 * 11 } else { minute });
             for lado in 0..2u32 {
-                let notes: Vec<(usize, usize)> = (0..20).map(|k| (m + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
+                let notes: Vec<(usize, usize)> = (0..20).map(|k| (m.addr() + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
                 let guardadas = crate::comparison::MemorySnapshot::read(&notes);
                 for limit in [None, Some(0x1d4di16), Some(0x1b59), Some(8000), Some(0x1e46), Some(0x1a2b)] {
                     if let Some(v) = limit {
@@ -1687,7 +1688,7 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
                         let ps = &mut out as *mut i32;
                         let mut reg = crate::rng::STATE_REGIONS.to_vec();
                         reg.push((ps as usize, 4));
-                        let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m, lado, evento, ps), || context_commentary(m, lado, evento, ps));
+                        let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m.addr(), lado, evento, ps), || context_commentary(m.addr(), lado, evento, ps));
                         SCOREBOARD.record(igual && r == n, || format!("sonda context_commentary(cenario {}, {}, {:#x}, media {:?}) original={} rust={} {:x?} x {:x?}", cenario, lado, evento, limit, r, n, mo, mr));
                     }
                 }
@@ -1695,7 +1696,7 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
             }
         }
         *(G_MEDIA as *mut usize) = average;
-        core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, minute);
+        m.set_clock(minute);
     }));
     state.write_back();
 }

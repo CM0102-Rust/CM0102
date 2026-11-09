@@ -77,7 +77,7 @@ pub(crate) fn is_recording_wrap_up_calls() -> bool {
 /// +0,25 fora vai para 0x6d3610 e, fora das selecoes, 0x6d3de0. Sem minutos, a media fica a do lado
 /// anterior (no 1o lado era lixo de pilha: 0 no original determinizado, como os 4 bytes finais do
 /// evento montado na pilha).
-pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let list_global = || *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *const usize);
     // puts a copy of the block (0x19 bytes) in the events list (the content is checked on the tape)
@@ -85,9 +85,9 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
         request_buffers(&[(p, 0x19)], &[]);
         call(FN_LLIST_ADD_TAIL, list_global(), [0, 0x19, 0, 0, 0]);
     };
-    let partida = || read_usize(m + engine::MATCH);
+    let partida = || m.r#match();
     let person_of = |id: i32| (*(G_STAFF_TABLE as *const usize)).wrapping_add(id as usize * staff::SIZE);
-    let list = read_usize(m + engine::EVENT_LIST);
+    let list = m.event_list();
     if list != 0 && list_global() != 0 && partida() != 0 && read_i8(partida() + 0x40) != 0 {
         *((list + llist::CURSOR) as *mut u32) = core::ptr::read_unaligned((list + llist::HEAD) as *const u32);
         let mut i: i8 = 0;
@@ -153,12 +153,12 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                 if person != 0 {
                     // the event’s player on one of the two sides
                     let achar = |side: usize| (0..20usize).find(|&k| {
-                        let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
+                        let p = m.addr() + engine::PLAYERS + (k + side * 20) * 0x1be;
                         read_usize(p + match_player::STAFF) == person && read_i8(p + match_player::POSITION) >= 0
                     });
                     let found = achar(0).map(|k| (k, 0)).or_else(|| achar(1).map(|k| (k, 1)));
                     if let Some((k, side)) = found {
-                        let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
+                        let p = m.addr() + engine::PLAYERS + (k + side * 20) * 0x1be;
                         let vale = if kind == 6 {
                             crate::comparison::branch("match_wrap_up type 6 event");
                             read_i8(p + match_player::YELLOW_CARDS) == 2 || read_i8(p + match_player::RED_CARDS) != 0
@@ -182,13 +182,13 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
         let pt = partida();
         let (meu, outro) = if side == 0 { (read_usize(pt + fixture::HOME_CLUB), read_usize(pt + fixture::AWAY_CLUB)) } else { (read_usize(pt + fixture::AWAY_CLUB), read_usize(pt + fixture::HOME_CLUB)) };
         for k in 0..20usize {
-            let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
+            let p = m.addr() + engine::PLAYERS + (k + side * 20) * 0x1be;
             if k > 10 && read_i8(p + match_player::MINUTE_ON) == -1 {
                 continue;
             }
             let person = read_usize(p + match_player::STAFF);
             if person != 0 && read_usize(p + match_player::PLAYER) != 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
-                call(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, p, [person as u32, meu as u32, outro as u32, (read_i8(p + match_player::MATCH_GRADE) as f32).to_bits(), *(m as *const u8) as u32 | 1 << 8]);
+                call(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, p, [person as u32, meu as u32, outro as u32, (read_i8(p + match_player::MATCH_GRADE) as f32).to_bits(), *(m.addr() as *const u8) as u32 | 1 << 8]);
                 if list_global() != 0 && exe::database_is_national_team(meu) == 0 && read_i8(pt + fixture::HOME_SIDE_MARK) != 0 {
                     let ct = contract(*(G_CONTRACT_MANAGER as *const usize), person, meu);
                     if ct != 0
@@ -260,7 +260,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                 }
             }
             // the minutes played
-            let minute = (read_i16(m + engine::CLOCK) as i32 / 11) as i8;
+            let minute = (m.clock() as i32 / 11) as i8;
             let v: i8 = if k >= 11 {
                 let c = read_i8(p + match_player::MINUTE_ON);
                 if c == -1 {
@@ -268,7 +268,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                 }
                 let end = if read_i8(p + match_player::MINUTE_LEFT_PITCH) > -1 { read_i8(p + match_player::MINUTE_LEFT_PITCH) } else if read_i8(p + match_player::MINUTE_OFF) > -1 { read_i8(p + match_player::MINUTE_OFF) } else { minute };
                 end.wrapping_sub(c)
-            } else if *(m as *const u8) != 0 {
+            } else if *(m.addr() as *const u8) != 0 {
                 0x5a
             } else if read_i8(p + match_player::MINUTE_LEFT_PITCH) > -1 {
                 read_i8(p + match_player::MINUTE_LEFT_PITCH)
@@ -289,10 +289,10 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
         }
         crate::comparison::branch(if soma != 0 { "match_wrap_up media do lado" } else { "match_wrap_up lado sem minutos" });
         let value = (average as f32).to_bits();
-        let alt = *(m as *const u8) as u32;
-        call(FN_UPDATE_MANAGER_REPUTATION_AFTER_MATCH, m + engine::MATCH_MANAGERS + side * 0xd0, [meu as u32, outro as u32, pt as u32, value, alt | 1 << 8]);
+        let alt = *(m.addr() as *const u8) as u32;
+        call(FN_UPDATE_MANAGER_REPUTATION_AFTER_MATCH, m.addr() + engine::MATCH_MANAGERS + side * 0xd0, [meu as u32, outro as u32, pt as u32, value, alt | 1 << 8]);
         if exe::database_is_national_team(meu) == 0 {
-            call(FN_MATCH_ENG_COMPUTE_CLUB_REPUTATION, m, [side as u32, value, alt | 1 << 8, 0, 0]);
+            call(FN_MATCH_ENG_COMPUTE_CLUB_REPUTATION, m.addr(), [side as u32, value, alt | 1 << 8, 0, 0]);
         }
     }
 }
@@ -342,10 +342,10 @@ pub(crate) fn zero_stack_below() {
 ///
 /// [pt] As regioes do fechamento: o sorteio, o motor, a lista de eventos do dia (cabecalho e cursor) e os
 /// eventos dela (+0xe e +0xf mudam).
-pub(crate) unsafe fn wrap_up_regions(m: usize) -> Vec<(usize, usize)> {
+pub(crate) unsafe fn wrap_up_regions(m: Engine) -> Vec<(usize, usize)> {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
-    let list = *((m + engine::EVENT_LIST) as *const usize);
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
+    let list = m.event_list();
     if list != 0 {
         reg.push((list, 0xe));
         let mut no = core::ptr::read_unaligned((list + 2) as *const usize);
@@ -535,7 +535,8 @@ pub(crate) unsafe extern "C" fn partner_club(club: usize, eh_a: *mut u32, active
 pub(crate) unsafe extern "thiscall" fn foul_in_engine(
     m: usize, j: usize, other: usize, kind: i8, who: i8, card: *mut u8, grav: *mut i8, advantage: *mut u8,
 ) -> u8 {
-    exe::match_official_judge_tackle(m + engine::REFEREE, j, other, kind, who, card, grav, advantage)
+    let m = Engine(m);
+    exe::match_official_judge_tackle(m.addr() + engine::REFEREE, j, other, kind, who, card, grav, advantage)
 }
 
 /// Returns holiday option `i` (byte +0x9b23 + i) of the human manager record for the person (or the current human
@@ -602,7 +603,7 @@ pub(crate) unsafe extern "C" fn b_national_team(nation: usize) -> usize {
 ///
 /// [pt] { 0x6cd490 } (match_eng.cpp): bola fora do campo (ver `ball_out_with`).
 pub(crate) unsafe extern "thiscall" fn ball_out(this: usize, side_b: u8) -> u8 {
-    ball_out_with(this, side_b, &mut |t, a| add_match_event(t, a))
+    ball_out_with(Engine(this), side_b, &mut |t, a| add_match_event(t, a))
 }
 
 /// Returns 1 if the club belongs to the second set of national teams (id at least club count minus nation count)
@@ -635,6 +636,7 @@ pub(crate) unsafe extern "C" fn is_second_national_team(club: usize) -> u32 {
 /// gols fora (`classificado`). Devolve 1 classificado, senao casa - fora (byte).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, home: *mut i8, away: *mut i8, classificado: *mut u8, first_leg: *mut u8, fase3: *mut u8, bonus: u8) -> u8 {
+    let this = Engine(this);
     *home = 0;
     *away = 0;
     *classificado = 0;
@@ -646,9 +648,9 @@ pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, 
         (false, true) => (0, 1),
         _ => (0, 0),
     };
-    *este = read_i8(this + engine::SCORE);
-    *outro = read_i8(this + engine::SCORE_SIDE1);
-    let partida = Fixture(*((this + engine::MATCH) as *const usize));
+    *este = this.score();
+    *outro = this.score_side1();
+    let partida = Fixture(this.r#match());
     if exe::comp_util_get_round_variant(partida.round_name() as i32) == 3 {
         *fase3 = 1;
     }
@@ -659,9 +661,9 @@ pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, 
         *first_leg = 1;
         if *este as i32 + bonus_este as i32 == *outro as i32 + bonus_outro as i32 {
             let f = partida.tie_rules();
-            let time_ok = f & 0x4000 == 0 || *((this + engine::PERIOD_END) as *const i16) > 0x3de;
+            let time_ok = f & 0x4000 == 0 || this.period_end() > 0x3de;
             if f & 4 == 0 && time_ok {
-                let goals_away = *((this + engine::SCORE_SIDE1) as *const u8) as i32;
+                let goals_away = (this.score_side1() as u8) as i32;
                 if side_b == 0 {
                     if goals_away + (bonus_este as i32) < first_leg_home as i32 {
                         *classificado = 1;

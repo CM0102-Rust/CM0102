@@ -570,7 +570,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     if auxiliar != 0 && p.addr() == auxiliar {
         return 0;
     }
-    let funcoes = u(t.addr() + contract::GRIEVANCES) as u32;
+    let funcoes = read_usize(t.addr() + contract::GRIEVANCES) as u32;
     if funcoes == 0 {
         return 0;
     }

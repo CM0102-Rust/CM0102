@@ -10,7 +10,7 @@ MUTACOES = [
     ('o_11', "                let (perto, longe) = if kind == 0x11 { (12, 8) } else { (8, 4) };", "                let (perto, longe) = if kind == 0x11 { (13, 8) } else { (8, 4) };"),
     ('o_15', "                    let a2 = if random(5) != 0 { -1 } else { 0x2f };", "                    let a2 = if random(6) != 0 { -1 } else { 0x2f };"),
     ('o_6c', "                    k += 0x514;", "                    k += 0x515;"),
-    ('o_6d', "                } else if read_i8(m + engine::BALL_HEIGHT) < 2 {", "                } else if read_i8(m + engine::BALL_HEIGHT) < 3 {"),
+    ('o_6d', "                } else if m.ball_height() < 2 {", "                } else if m.ball_height() < 3 {"),
     ('o_letras', "            1 => (0x2d, 0x2c),", "            1 => (0x2b, 0x2c),"),
     ('o_frente', "                if q.position() >= 0 && ((l == 1 && q.cell_y() < y) || (l == 0 && q.cell_y() > y)) {", "                if q.position() >= 0 && ((l == 1 && q.cell_y() <= y) || (l == 0 && q.cell_y() > y)) {"),
     ('o_ultimo', "                y <= if u != 0 { read_i8(u + match_player::CELL_Y) } else { 0xc }", "                y < if u != 0 { read_i8(u + match_player::CELL_Y) } else { 0xc }"),

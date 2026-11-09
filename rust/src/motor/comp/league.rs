@@ -74,12 +74,12 @@ pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, club: usize, p
 /// 0x82 ou 0x96): 0x2171/0x2170. Com +0x8ebb: 0x2120 se o lado esta na frente do agregado, senao
 /// 0x2121 quando a media do +0x1b dos titulares e baixa e a forca (+0x80) do outro clube pesa. No fim,
 /// para o lado 1 sem +0x1a8: 0x2001 se o jogo ainda nao estiver decidido.
-pub(crate) unsafe fn comment_standing_with(this: usize, side: u32, call: AddEventCall) {
-    let t = || *((this + engine::MATCH) as *const usize);
+pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEventCall) {
+    let t = || this.r#match();
     let count_t = || exe::comp_util_is_league_division(*(t() as *const i32));
     let object = || *((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add((*(t() as *const i32) as usize).wrapping_mul(4)) as *const usize);
-    let commentator = || *((this + engine::COMMENTATOR) as *const usize);
-    let fala = |c: &mut dyn FnMut(usize, [u32; 7]), code: u32, l: u32| c(commentator(), [code, this as u32, u32::MAX, l, u32::MAX, u32::MAX, 0]);
+    let commentator = || this.commentator();
+    let fala = |c: &mut dyn FnMut(usize, [u32; 7]), code: u32, l: u32| c(commentator(), [code, this.addr() as u32, u32::MAX, l, u32::MAX, u32::MAX, 0]);
     // the aggregate score with the 5th output (fase3): in the original it lands on the argument itself
     let resolvido = |l: i8| -> bool {
         let (mut a, mut b, mut c, mut d, mut e) = (0i8, 0i8, 0u8, 0u8, 0u8);
@@ -100,7 +100,7 @@ pub(crate) unsafe fn comment_standing_with(this: usize, side: u32, call: AddEven
         fala(call, 0x2170, side);
         return;
     }
-    if read_i8(this + engine::LIVE_MATCH) != 0 {
+    if this.live_match() != 0 {
         let (mut casa, mut fora, mut classificado, mut x, mut y) = (0i8, 0i8, 0u8, 0u8, 0u8);
         exe::cm3_match_engine_get_goal_margin(this, bl, &mut casa, &mut fora, &mut classificado, &mut x, &mut y, 0);
         if casa > fora || (casa == fora && classificado != 0) {
@@ -109,7 +109,7 @@ pub(crate) unsafe fn comment_standing_with(this: usize, side: u32, call: AddEven
             let mut sum = 0.0f64;
             let mut n = 0i8;
             for k in 0..20usize {
-                let j = MatchPlayer(side_player_slot(this, bl, k));
+                let j = MatchPlayer(side_player_slot(this.addr(), bl, k));
                 if k <= 10 || (j.minute_on() as u8) != 0xff {
                     sum += j.match_grade() as f64;
                     n = n.wrapping_add(1);
@@ -130,7 +130,7 @@ pub(crate) unsafe fn comment_standing_with(this: usize, side: u32, call: AddEven
             }
         }
     }
-    if bl != 1 || read_i8(this + engine::GOLDEN_GOAL_SCORED) != 0 {
+    if bl != 1 || this.golden_goal_scored() != 0 {
         return;
     }
     if read_i16(t() + 0x32) == 0 && count_t() == 0 && read_i16(t() + 0x30) == 0x82 && resolvido(0) {
@@ -151,7 +151,7 @@ pub(crate) unsafe fn comment_standing_with(this: usize, side: u32, call: AddEven
 ///
 /// [pt] { 0x6be120 } (ret 4, match_eng.cpp): ver `comment_standing_with`.
 pub(crate) unsafe extern "thiscall" fn narrate_qualification(this: usize, side: u32) {
-    comment_standing_with(this, side, &mut |t, a| add_match_event(t, a))
+    comment_standing_with(Engine(this), side, &mut |t, a| add_match_event(t, a))
 }
 
 /// The dates of the 6 rounds of the group stages, by half of the stage.
@@ -3688,18 +3688,16 @@ pub(crate) unsafe extern "thiscall" fn update_head_to_head(league: usize, table:
         return;
     }
     let e = head_to_head_record(table, row, opponent);
-    let byte = |o: usize| (e + o) as *mut u8;
-    let word = |o: usize| (e + o) as *mut i16;
-    let add = |o: usize, v: i16| core::ptr::write_unaligned(word(o), core::ptr::read_unaligned(word(o)).wrapping_add(v));
-    *byte(4) = (*byte(4)).wrapping_add(1);
+    let add = |o: usize, v: i16| core::ptr::write_unaligned(((e + o) as *mut i16), core::ptr::read_unaligned(((e + o) as *mut i16)).wrapping_add(v));
+    *((e + 4) as *mut u8) = (*((e + 4) as *mut u8)).wrapping_add(1);
     if pro > contra {
-        *byte(5) = (*byte(5)).wrapping_add(1);
+        *((e + 5) as *mut u8) = (*((e + 5) as *mut u8)).wrapping_add(1);
         add(0xc, (league.win_points() as i8) as i16);
     } else if pro == contra {
-        *byte(6) = (*byte(6)).wrapping_add(1);
+        *((e + 6) as *mut u8) = (*((e + 6) as *mut u8)).wrapping_add(1);
         add(0xc, (league.draw_points() as i8) as i16);
     } else {
-        *byte(7) = (*byte(7)).wrapping_add(1);
+        *((e + 7) as *mut u8) = (*((e + 7) as *mut u8)).wrapping_add(1);
     }
     add(8, pro as i16);
     add(0xa, contra as i16);
