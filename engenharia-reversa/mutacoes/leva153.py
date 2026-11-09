@@ -6,6 +6,6 @@ MUTACOES = [
     ('m_ordenar', "                exe::crt_qsort(read_usize(day + match_day_fields::MATCHES) + de as usize * 0x69, (ate - de + 1) as u32, 0x69, 0x6b6510);\n", ""),
     ('m_competicao', "            por(read_usize(day + match_day_fields::MATCHES) + k as usize * 0x69, 0x63, c as u32);", "            por(read_usize(day + match_day_fields::MATCHES) + k as usize * 0x69, 0x63, read_usize(day + match_day_fields::COMPETITIONS) as u32);"),
     ('m_interesse', "    exe::match_day_refresh_human_interest_flags(day);\n    day\n", "    day\n"),
-    ('l_lado', "    *((j + match_player::SIDE) as *const u8)\n", "    *((j + match_player::SIDE) as *const u8) ^ 1\n"),
+    ('l_lado', "    (j.side() as u8)\n", "    (j.side() as u8) ^ 1\n"),
     ('s_canal', "            if *canal == 0xfe {\n                return 0;", "            if *canal == 0xfd {\n                return 0;"),
 ]

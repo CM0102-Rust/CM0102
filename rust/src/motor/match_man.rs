@@ -350,9 +350,9 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
         let mut sum = [0i32; 2];
         for (l, s) in sum.iter_mut().enumerate() {
             for k in 0..20 {
-                let j = m + 0x22d8 * l + 0x4796 + 0x1be * k;
-                if read_i8(j + match_player::POSITION) >= 0 {
-                    *s = s.wrapping_add(exe::match_man_judge_player_ability(u(c, match_manager::MANAGER), u(j, match_player::STAFF), clube_a, (2) as i8, (u32::MAX) as i16) as i32);
+                let j = MatchPlayer(m + 0x22d8 * l + 0x4796 + 0x1be * k);
+                if j.position() >= 0 {
+                    *s = s.wrapping_add(exe::match_man_judge_player_ability(u(c, match_manager::MANAGER), u(j.addr(), match_player::STAFF), clube_a, (2) as i8, (u32::MAX) as i16) as i32);
                 }
             }
         }
@@ -1282,23 +1282,24 @@ pub(crate) unsafe extern "thiscall" fn init_player_hook(j: usize, m: u32, person
 ///
 /// [pt] As duas pontas das ordens da substituicao: sem pessoa (+0x6d) vai para o fim; +0x19 = -2 vem
 /// primeiro; goleiro (tabela 1) com ficha +0xf abaixo de 20 tambem. Devolve None quando o resto decide.
-pub(crate) unsafe fn substitution_order_ends(a: usize, b: usize) -> Option<i32> {
-    if a == 0 || read_usize(a + match_player::PLAYER) == 0 {
+pub(crate) unsafe fn substitution_order_ends(a: MatchPlayer, b: usize) -> Option<i32> {
+    let b = MatchPlayer(b);
+    if a.is_null() || a.player() == 0 {
         return Some(1);
     }
-    if b == 0 || read_usize(b + match_player::PLAYER) == 0 {
+    if b.is_null() || b.player() == 0 {
         return Some(-1);
     }
-    if read_i8(a + match_player::POSITION) == -2 {
+    if a.position() == -2 {
         return Some(-1);
     }
-    if read_i8(b + match_player::POSITION) == -2 {
+    if b.position() == -2 {
         return Some(1);
     }
-    if exe::match_player_get_position(a) == 1 && read_i8(read_usize(a + match_player::PLAYER) + 0xf) < 20 {
+    if exe::match_player_get_position(a) == 1 && read_i8(a.player() + 0xf) < 20 {
         return Some(-1);
     }
-    if exe::match_player_get_position(b) == 1 && read_i8(read_usize(b + match_player::PLAYER) + 0xf) < 20 {
+    if exe::match_player_get_position(b) == 1 && read_i8(b.player() + 0xf) < 20 {
         return Some(1);
     }
     None
@@ -1307,8 +1308,8 @@ pub(crate) unsafe fn substitution_order_ends(a: usize, b: usize) -> Option<i32> 
 /// Player's condition: +0x35 (i16) + +0x4d (f32), truncated.
 ///
 /// [pt] +0x35 (curto) + +0x4d (float), truncado.
-pub(crate) unsafe fn match_condition(j: usize) -> i32 {
-    ftol(*((j + match_player::MATCH_RATING) as *const i16) as f64 + *((j + match_player::STAMINA) as *const f32) as f64)
+pub(crate) unsafe fn match_condition(j: MatchPlayer) -> i32 {
+    ftol(j.match_rating() as f64 + j.stamina() as f64)
 }
 
 /// qsort comparator for substitutions: compares two match players by condition (+0x35 + +0x4d), weighted by the first
@@ -1318,7 +1319,7 @@ pub(crate) unsafe fn match_condition(j: usize) -> i32 {
 /// pela tabela de `a` (2 e 4: x1,35; 8: x1,2 em `a` e x1,25 em `b`; 0x10: x1,1) nos dois lados.
 pub(crate) unsafe extern "C" fn order_by_table(pa: *const usize, pb: *const usize) -> i32 {
     let (a, b) = (*pa, *pb);
-    if let Some(r) = substitution_order_ends(a, b) {
+    if let Some(r) = substitution_order_ends(MatchPlayer(a), b) {
         return r;
     }
     let pesar = |v: i32, oito: f64| -> i32 {
@@ -1329,8 +1330,8 @@ pub(crate) unsafe extern "C" fn order_by_table(pa: *const usize, pb: *const usiz
             _ => v,
         }
     };
-    let va = pesar(match_condition(a), 1.2);
-    let vb = pesar(match_condition(b), 1.25);
+    let va = pesar(match_condition(MatchPlayer(a)), 1.2);
+    let vb = pesar(match_condition(MatchPlayer(b)), 1.25);
     va.wrapping_sub(vb)
 }
 
@@ -1340,11 +1341,11 @@ pub(crate) unsafe extern "C" fn order_by_table(pa: *const usize, pb: *const usiz
 /// [pt] { 0x6e0fe0 } (cdecl, comparador do qsort da substituicao): so pela condicao (+0x35 + +0x4d).
 pub(crate) unsafe extern "C" fn order_by_condition(pa: *const usize, pb: *const usize) -> i32 {
     let (a, b) = (*pa, *pb);
-    if let Some(r) = substitution_order_ends(a, b) {
+    if let Some(r) = substitution_order_ends(MatchPlayer(a), b) {
         return r;
     }
-    let vb = match_condition(b);
-    match_condition(a).wrapping_sub(vb)
+    let vb = match_condition(MatchPlayer(b));
+    match_condition(MatchPlayer(a)).wrapping_sub(vb)
 }
 
 /// for each place from 0 to 10 + (match +0x4d & 0xf), the person from the club's tactic (`tactic_slot_person`) comes in (`exe::match_man_place_player_in_team`)
@@ -2605,11 +2606,12 @@ pub(crate) unsafe extern "thiscall" fn best_rated(this: usize) -> i8 {
 /// 21, x0,9 abaixo de 24, x1,05 acima de 25), x0,9 se os dias ficarem abaixo de (50 - +0x59) x 10 e
 /// x(0,01 x +0x5b + 0,9) com +0x5b abaixo de 10.
 pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: usize) -> i16 {
+    let player = MatchPlayer(player);
     let club = Club(club);
     let encaixe: unsafe extern "C" fn(usize, usize) -> i8 = core::mem::transmute(FN_DATABASE_GET_CONTRACT_RATING_MODIFIER);
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let d8 = |a: usize| read_f64(a);
-    let p = Staff(if player != 0 { *((player + match_player::STAFF) as *const usize) } else { person });
+    let p = Staff(if !player.is_null() { player.staff() } else { person });
     if p.is_null() {
         return -10000;
     }
@@ -3857,6 +3859,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, club: usize, side: usize, manager: usize, limit: i32, mark: u32, _marca_alta: u32,
     bytes: u32, tactic: u32, pos2: u32, holiday: usize,
 ) -> i32 {
+    let reg = MatchPlayer(reg);
     let p = Staff(p);
     let manager = Staff(manager);
     let club = Club(club);
@@ -3935,9 +3938,9 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
             return -10000;
         }
     }
-    if flags & 1 != 0 && reg != 0 && masc & 1 == 0 {
+    if flags & 1 != 0 && !reg.is_null() && masc & 1 == 0 {
         count += 1;
-        sum += (core::ptr::read_unaligned((reg + match_player::MATCH_RATING) as *const i16) as i32 - match_fatigue_offset(reg, fb(0xf))) / 50;
+        sum += (reg.match_rating() as i32 - match_fatigue_offset(reg, fb(0xf))) / 50;
     }
     if flags & 4 != 0 && da_base {
         let v = ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64(rdata::F64_20));
@@ -4032,13 +4035,13 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     let mut value: i32 = 0;
     if without_value == 0 {
         let mut v: i32;
-        if reg != 0 {
-            if *((reg + match_player::POSITION) as *const i8) == -2 {
+        if !reg.is_null() {
+            if reg.position() == -2 {
                 return -1000000;
             }
-            let x = core::ptr::read_unaligned((reg + match_player::STAMINA_BOOST) as *const f32) as f64;
-            v = ftol(x + x + core::ptr::read_unaligned((reg + match_player::STAMINA) as *const f32) as f64) as i16 as i32;
-            if core::ptr::read_unaligned((*((reg + match_player::ENGINE) as *const usize) + 0x8ed4) as *const i16) == 0x1ef {
+            let x = reg.stamina_boost() as f64;
+            v = ftol(x + x + reg.stamina() as f64) as i16 as i32;
+            if core::ptr::read_unaligned((reg.engine() + 0x8ed4) as *const i16) == 0x1ef {
                 v = (v + 0x5dc).min(0x2710);
             }
         } else {
@@ -4074,10 +4077,10 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     }
     // fatigue at the match minute reduces the extra
     let by_minute = |v: i32| {
-        if reg == 0 {
+        if reg.is_null() {
             v
         } else {
-            let minute = core::ptr::read_unaligned((*((reg + match_player::ENGINE) as *const usize) + 0x8ed0) as *const i16) as f64;
+            let minute = core::ptr::read_unaligned((reg.engine() + 0x8ed0) as *const i16) as f64;
             ftol((read_f64(rdata::F64_1) - minute * read_f64(rdata::F64_0_0008333333333)) * v as f64)
         }
     };
@@ -4132,12 +4135,12 @@ pub(crate) unsafe fn injury_history_penalty_2c(p: Staff, l4c: i32) -> i32 {
 /// (+0x904d do lado, sem 0x5fd210, seleção ou 0x5fd480) com o jogador abaixo de 11 (+0); fora de
 /// campo (+0x19 = -1) os minutos que faltam x 150 (até 3000; goleiro só +3500, os demais pelo menos
 /// -2000); em campo, os minutos jogados (minuto - +0x1f) abaixo de 60 x 40.
-pub(crate) unsafe fn match_fatigue_offset(reg: usize, goalkeeper: i32) -> i32 {
-    let m = *((reg + match_player::ENGINE) as *const usize);
+pub(crate) unsafe fn match_fatigue_offset(reg: MatchPlayer, goalkeeper: i32) -> i32 {
+    let m = reg.engine();
     let human = if core::ptr::read_unaligned((m + engine::PERIOD_END) as *const i16) == 0x1ef {
         true
     } else {
-        let side = *((reg + match_player::SIDE) as *const i8);
+        let side = reg.side();
         let base = (m as isize + side as isize * 0xd0) as usize;
         let t = Staff(*((base + engine::SIDE0_MANAGER) as *const usize));
         let n = *(G_STAFF_COUNT as *const i32);
@@ -4159,14 +4162,14 @@ pub(crate) unsafe fn match_fatigue_offset(reg: usize, goalkeeper: i32) -> i32 {
             }
         }
     };
-    let extra = if human && *(reg as *const i8) < 0xb { -2000 } else { 0 };
-    let state = *((reg + match_player::POSITION) as *const i8);
+    let extra = if human && *(reg.addr() as *const i8) < 0xb { -2000 } else { 0 };
+    let state = reg.position();
     let minute = core::ptr::read_unaligned((m + engine::CLOCK) as *const i16) as i32 / 11;
     if state == -1 {
         let e = extra + ((60 - minute) * 150).min(3000);
         if goalkeeper > 1 { e + 0xdac } else { e.max(-2000) }
     } else if state >= 0 {
-        let jogados = (minute as u8).wrapping_sub(*((reg + match_player::MINUTE_ON) as *const u8)) as i8;
+        let jogados = (minute as u8).wrapping_sub((reg.minute_on() as u8)) as i8;
         if jogados < 0x3c { extra + (jogados as i32 - 60) * 40 } else { extra }
     } else {
         extra

@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 8: o jogador na partida (`MatchPlayer`)
+
+O pacote completo para `match_player`, com o `this` dos métodos: 294 variáveis em 239 funções, 222 `.addr()` tirados
+dos invólucros, 58 funções recebem `MatchPlayer` (240 chamadas ajustadas), a propagação mais 13 (76). Passo novo,
+`tipar_registros.py --fechos`: as closures locais que devolvem um ponteiro (`let b = |q: usize, o: usize| (q + o) as
+*mut u8;`, usadas como `*b(j.addr(), match_player::X)`) são expandidas na chamada para a forma que o conversor entende
+(27 funções), e a closure sem uso sai. Acessos crus ao jogador na partida 2.552 → ~1.070 (o resto: variáveis de closure,
+reatribuídas ou com vários `let`). `.addr()` fora dos invólucros 3.815 → 4.760. Mutações: 3 textos de troca sem o
+`MatchPlayer(..)` exigido foram corrigidos. Prova: 7cc445c2 ×2, detector igual, comparação 0.
+
 ## Migração para os registros tipados, leva 7: a partida (`Fixture`)
 
 O pacote completo para `fixture`: 184 variáveis em 182 funções, 75 `.addr()` tirados dos invólucros, 31 funções recebem

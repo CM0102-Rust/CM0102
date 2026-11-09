@@ -109,9 +109,9 @@ pub(crate) unsafe fn comment_standing_with(this: usize, side: u32, call: AddEven
             let mut sum = 0.0f64;
             let mut n = 0i8;
             for k in 0..20usize {
-                let j = side_player_slot(this, bl, k);
-                if k <= 10 || *((j + match_player::MINUTE_ON) as *const u8) != 0xff {
-                    sum += read_i8(j + match_player::MATCH_GRADE) as f64;
+                let j = MatchPlayer(side_player_slot(this, bl, k));
+                if k <= 10 || (j.minute_on() as u8) != 0xff {
+                    sum += j.match_grade() as f64;
                     n = n.wrapping_add(1);
                 }
             }

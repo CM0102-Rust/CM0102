@@ -95,19 +95,18 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
         let e = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(human as *const i32)).wrapping_sub(1);
         if (0..16).contains(&e) { Some(this + e as usize * 0x5c) } else { None }
     };
-    let u = |p: usize, o: usize| (p + o) as *mut u32;
     if volta == 0 {
         if usar != 0 {
             if let Some(s) = espaco() {
                 crate::comparison::branch("instructions stored");
-                if *u(s, 0x38) == 0 {
+                if *((s + 0x38) as *mut u32) == 0 {
                     *ocupados = (*ocupados).wrapping_add(1);
                 }
-                *u(s, 0x30) = club as u32;
-                *u(s, 0x34) = person;
-                *u(s, 0x38) = 1;
+                *((s + 0x30) as *mut u32) = club as u32;
+                *((s + 0x34) as *mut u32) = person;
+                *((s + 0x38) as *mut u32) = 1;
                 for i in 0..20 {
-                    *u(s, 0x3c + 4 * i) = *instrucao(i);
+                    *((s + 0x3c + 4 * i) as *mut u32) = *instrucao(i);
                 }
             }
         }
@@ -119,25 +118,25 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
     }
     if usar != 0 {
         if let Some(s) = espaco() {
-            if *u(s, 0x38) != 0 && *u(s, 0x30) == club as u32 && *u(s, 0x34) == person {
+            if *((s + 0x38) as *mut u32) != 0 && *((s + 0x30) as *mut u32) == club as u32 && *((s + 0x34) as *mut u32) == person {
                 crate::comparison::branch("instructions returned");
                 for i in 0..20 {
-                    *instrucao(i) = *u(s, 0x3c + 4 * i);
+                    *instrucao(i) = *((s + 0x3c + 4 * i) as *mut u32);
                 }
             }
-            if *u(s, 0x38) != 0 {
+            if *((s + 0x38) as *mut u32) != 0 {
                 *ocupados = (*ocupados).wrapping_sub(1);
             }
-            *u(s, 0x38) = 0;
+            *((s + 0x38) as *mut u32) = 0;
         }
         return 1;
     }
     if *ocupados != 0 {
         for e in 0..16 {
             let s = this + e * 0x5c;
-            if *u(s, 0x38) != 0 && *u(s, 0x30) == club as u32 && *u(s, 0x34) == person {
+            if *((s + 0x38) as *mut u32) != 0 && *((s + 0x30) as *mut u32) == club as u32 && *((s + 0x34) as *mut u32) == person {
                 crate::comparison::branch("instructions released");
-                *u(s, 0x38) = 0;
+                *((s + 0x38) as *mut u32) = 0;
                 *ocupados = (*ocupados).wrapping_sub(1);
             }
         }
@@ -376,7 +375,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     let p = jog(other, c as i8);
                     more((p + match_player::RED_CARDS) as *mut u8);
                     more((mo + engine::CARDS) as *mut u8);
-                    player_left_pitch_with(m, p, 1, call);
+                    player_left_pitch_with(m, MatchPlayer(p), 1, call);
                     team_strength(m, other as i8);
                     narrate(call, 0x1ff8, c, other);
                 };

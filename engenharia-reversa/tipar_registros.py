@@ -563,6 +563,75 @@ def acessos(mod, grava):
         gravar_mutacoes(trocas_mut)
 
 
+FECHO = re.compile(r'^([ \t]*)let (\w+) = \|(\w+): usize, (\w+): usize\| \(\3 \+ \4\) as \*(mut|const) (\w+);[ \t]*\n', re.M)
+
+
+def expandir_fechos_trecho(s, defs):
+    """`NAME(a, b)` -> `((a + b) as *mut T)` for the pointer closures in defs {NAME: (kind, T)}."""
+    mk = mascara(s)
+    ed = []
+    for nome, (kind, t) in defs.items():
+        for m in re.finditer(r'(?<![\w.:])%s\(' % re.escape(nome), mk):
+            args, fim = ie.args_da_chamada(mk, m.end() - 1)
+            if not args or len(args) != 2:
+                continue
+            a0 = s[mk.index(args[0], m.end()):mk.index(args[0], m.end()) + len(args[0])]
+            ini1 = mk.index(args[1], m.end() + len(args[0]))
+            a1 = s[ini1:ini1 + len(args[1])]
+            ed.append((m.start(), fim, '((%s + %s) as *%s %s)' % (a0.strip(), a1.strip(), kind, t)))
+    for a, b, novo in sorted(ed, reverse=True):
+        s = s[:a] + novo + s[b:]
+    return s
+
+
+def expandir_fechos(grava):
+    """The local pointer closures `let b = |q: usize, o: usize| (q + o) as *mut u8;` are expanded at their calls
+    (`*b(j, match_player::X)` -> `*((j + match_player::X) as *mut u8)`), so the field accesses become visible to
+    --acessos; a closure left without calls goes."""
+    mutacoes = carregar_mutacoes()
+    trocas_mut, n = {}, 0
+    for raiz, _, fs in os.walk(SRC):
+        for f in fs:
+            p = os.path.join(raiz, f)
+            if not f.endswith('.rs') or f in ('records.rs', 'fields.rs', 'exe_calls.rs', 'mem.rs'):
+                continue
+            t = open(p, encoding='utf-8').read()
+            tl.ANTES[p] = t
+            partes, pos = [], 0
+            for _, a, b in mover_rotinas.blocos(t):
+                bloco = t[a:b]
+                defs = {m.group(2): (m.group(5), m.group(6)) for m in FECHO.finditer(bloco)}
+                # only closures defined once in the block (no shadowing)
+                defs = {k: v for k, v in defs.items() if len(re.findall(r'\blet %s\b' % re.escape(k), bloco)) == 1}
+                if not defs:
+                    continue
+                novo = expandir_fechos_trecho(bloco, defs)
+                for m in FECHO.finditer(novo):
+                    if m.group(2) in defs and not re.search(r'(?<![\w.:])%s\b' % re.escape(m.group(2)), mascara(novo[:m.start()] + novo[m.end():])):
+                        novo = novo[:m.start()] + novo[m.end():]
+                        break
+                for _ in range(len(defs)):
+                    for m in FECHO.finditer(novo):
+                        if m.group(2) in defs and not re.search(r'(?<![\w.:])%s\b' % re.escape(m.group(2)), mascara(novo[:m.start()] + novo[m.end():])):
+                            novo = novo[:m.start()] + novo[m.end():]
+                            break
+                if novo == bloco:
+                    continue
+                n += 1
+                for lista, mu in mutacoes:
+                    if bloco.count(mu[1]) == 1:
+                        trocas_mut[(lista, mu[0])] = (mu, (lambda s, defs=defs: expandir_fechos_trecho(s, defs)))
+                partes += [t[pos:a], novo]
+                pos = b
+            partes.append(t[pos:])
+            if grava and ''.join(partes) != t:
+                open(p, 'w', encoding='utf-8').write(''.join(partes))
+    print('%d funções com closures de ponteiro expandidas' % n)
+    if grava:
+        tl.voltar_funcoes_com_erro(trocas_mut)
+        gravar_mutacoes(trocas_mut)
+
+
 def carregar_mutacoes():
     mutacoes = []
     pasta = os.path.join(R, 'engenharia-reversa', 'mutacoes')
@@ -606,6 +675,8 @@ def gravar_mutacoes(trocas_mut):
 
 
 def main():
+    if '--fechos' in sys.argv:
+        return expandir_fechos('--gravar' in sys.argv)
     if '--propagar' in sys.argv:
         return propagar(sys.argv[sys.argv.index('--propagar') + 1].split(','), '--gravar' in sys.argv)
     if '--acessos' in sys.argv:

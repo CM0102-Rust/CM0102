@@ -8,7 +8,7 @@ MUTACOES = [
     ('q_7d', "                        rating = rating.wrapping_add(0x7d);", "                        rating = rating.wrapping_add(0x7c);"),
     ('q_empate', "        if best == 0 || rating as i16 > rating_best {", "        if best == 0 || rating as i16 >= rating_best {"),
     ('q_linhas', "    while r <= y.wrapping_add(1) {", "    while r <= y {"),
-    ('q_bola', "                b = b.wrapping_add(e);\n                store(c,", "                b = b.wrapping_add(e) + 1;\n                store(c,"),
-    ('q_ad', "                if (random(30) as f64) < read_f32(q + match_player::JUMPING) as f64 && (random(30) as f64) < read_f32(j + match_player::JUMPING) as f64 {", "                if (random(30) as f64) < read_f32(q + match_player::JUMPING) as f64 {"),
-    ('q_f18', "                if (f18 as f64) < read_f64(rdata::F64_5) && read_i8(c + match_player::MOMENT_FLAIR) != 0 {", "                if (f1c as f64) < read_f64(rdata::F64_5) && read_i8(c + match_player::MOMENT_FLAIR) != 0 {"),
+    ('q_bola', "                b = b.wrapping_add(e);\n                store(c.addr(),", "                b = b.wrapping_add(e) + 1;\n                store(c.addr(),"),
+    ('q_ad', "                if (random(30) as f64) < read_f32(q + match_player::JUMPING) as f64 && (random(30) as f64) < j.jumping() as f64 {", "                if (random(30) as f64) < read_f32(q + match_player::JUMPING) as f64 {"),
+    ('q_f18', "                if (f18 as f64) < read_f64(rdata::F64_5) && c.moment_flair() != 0 {", "                if (f1c as f64) < read_f64(rdata::F64_5) && c.moment_flair() != 0 {"),
 ]

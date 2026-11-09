@@ -12,14 +12,15 @@ pub(crate) unsafe extern "thiscall" fn compare_register_injury(this: usize, shee
 
 /// Comparer for `player_highlight`.
 pub(crate) unsafe extern "thiscall" fn compare_player_highlight(p: usize, code: u32) -> u32 {
+    let p = MatchPlayer(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_PLAYER_HIGHLIGHT);
     if is_recording_top_level() {
-        return o(p, code);
+        return o(p.addr(), code);
     }
-    let m = *((p + match_player::ENGINE) as *const usize);
+    let m = p.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(p, code), || crate::rng::without_counting(|| player_highlight(p, code)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(p.addr(), code), || crate::rng::without_counting(|| player_highlight(p.addr(), code)));
     SCOREBOARD.record(igual && r == n, || format!("player_highlight({:#x}) original={} rust={} {:x?} x {:x?}", code as u16, r, n, mo, mr));
     r
 }

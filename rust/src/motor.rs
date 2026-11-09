@@ -2259,12 +2259,12 @@ const GLOBAL_TABLE: usize = 0xb67c30;
 /// The player's value in a table of 11 words (one per side), by the player's position (0..=10).
 ///
 /// [pt] Valor do jogador numa tabela de 11 palavras (uma por lado), pela posicao dele (0..=10).
-unsafe fn table_by_position(this: usize, jogador: usize, campo: usize) -> u16 {
-    let posicao = read_i8(jogador + match_player::POSITION);
+unsafe fn table_by_position(this: usize, jogador: MatchPlayer, campo: usize) -> u16 {
+    let posicao = jogador.position();
     if !(0..=10).contains(&posicao) {
         return 0;
     }
-    let lado = read_i8(jogador + match_player::SIDE) as isize;
+    let lado = jogador.side() as isize;
     let tabela = *((this as isize + campo as isize + lado * 4) as *const usize) as *const u16;
     *tabela.add(posicao as usize)
 }
@@ -2272,8 +2272,8 @@ unsafe fn table_by_position(this: usize, jogador: usize, campo: usize) -> u16 {
 /// { `player_side` } (match_pl.cpp, 4 bytes, not hookable): the player's side. Read directly.
 ///
 /// [pt] { 0x714d30 } (match_pl.cpp, 4 bytes, nao desviavel): lado do jogador. Lido direto.
-unsafe fn side_of_player(player: usize) -> i8 {
-    read_i8(player + match_player::SIDE)
+unsafe fn side_of_player(player: MatchPlayer) -> i8 {
+    player.side()
 }
 
 unsafe fn random(n: i32) -> i32 {
@@ -3390,19 +3390,21 @@ compare_split!(compare_split_d, split_d, IDX_SPLIT_D);
 compare_split!(compare_split_e, split_e, IDX_SPLIT_E);
 compare_split!(compare_split_f, split_f, IDX_SPLIT_F);
 unsafe extern "thiscall" fn compare_remove_from_list(this: usize, alvo: usize) -> u8 {
+    let this = MatchPlayer(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_REMOVE_FROM_LIST);
-    let n = read_i8(this + match_player::MARKER_COUNT).max(0) as usize;
-    let reg = [(this + match_player::MARKER_COUNT, 1), (this + match_player::MARKERS, 4 * n)];
-    let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, alvo), || remove_from_list(this, alvo));
+    let n = this.marker_count().max(0) as usize;
+    let reg = [(this.addr() + match_player::MARKER_COUNT, 1), (this.addr() + match_player::MARKERS, 4 * n)];
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this.addr(), alvo), || remove_from_list(this.addr(), alvo));
     SCOREBOARD.record(igual && r == x, || format!("remove_from_list(n {}) original={} {:x?} rust={} {:x?}", n, r, mo, x, mr));
     r
 }
 unsafe extern "thiscall" fn compare_take_the_field(this: usize, j: usize) -> u8 {
+    let j = MatchPlayer(j);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_TAKE_THE_FIELD);
     let l = side_of_player(j) as isize;
     let n = *((this as isize + 0x4592 + l) as *const i8) as isize;
-    let reg = [(j + match_player::CELL_SLOT, 1), (j + match_player::CELL_X, 2), ((this as isize + 0x4592 + l) as usize, 1), ((this as isize + 0x453a + 4 * (n + 11 * l)) as usize, 4)];
-    let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, j), || take_the_field(this, j));
+    let reg = [(j.addr() + match_player::CELL_SLOT, 1), (j.addr() + match_player::CELL_X, 2), ((this as isize + 0x4592 + l) as usize, 1), ((this as isize + 0x453a + 4 * (n + 11 * l)) as usize, 4)];
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, j.addr()), || take_the_field(this, j.addr()));
     SCOREBOARD.record(igual && r == x, || format!("take_the_field(lado {}, n {}) original={} {:x?} rust={} {:x?}", l, n, r, mo, x, mr));
     r
 }
@@ -3424,9 +3426,10 @@ unsafe extern "thiscall" fn compare_choose_by_role_b(this: usize, arg: u32) -> u
     r
 }
 unsafe extern "thiscall" fn compare_formation_square(this: usize, j: usize, x: *mut u8, y: *mut u8) {
+    let j = MatchPlayer(j);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_FORMATION_SQUARE);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this, j, x, y), || formation_square(this, j, x, y));
-    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", read_i8(this + engine::POSSESSION_SIDE), read_i8(j + match_player::SIDE), read_i8(j + match_player::POSITION), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this, j.addr(), x, y), || formation_square(this, j.addr(), x, y));
+    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", read_i8(this + engine::POSSESSION_SIDE), j.side(), j.position(), mo, mr));
 }
 
 unsafe extern "thiscall" fn compare_compute_percentages(this: usize, i: i8) {
@@ -3451,7 +3454,7 @@ unsafe extern "thiscall" fn compare_choose_by_role_c(this: usize, arg: u32, modo
 compare_value!(compare_value_by_condition, value_by_condition, IDX_VALUE_BY_CONDITION, (alvo: usize) -> i32);
 unsafe extern "thiscall" fn compare_apply_to_team(this: usize, j: usize, f: f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, f32)>(IDX_APPLY_TO_TEAM);
-    let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, side_of_player(j), k) + 0x1a2, 4)).collect();
+    let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, side_of_player(MatchPlayer(j)), k) + 0x1a2, 4)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, f), || apply_to_team(this, j, f));
     SCOREBOARD.record(igual, || format!("apply_to_team({}) original={:x?} rust={:x?}", f, mo, mr));
 }
@@ -3480,7 +3483,7 @@ compare_value!(compare_role_880, role_880, IDX_ROLE_880, () -> u8);
 compare_value!(compare_player_by_record, player_by_record, IDX_PLAYER_BY_RECORD, (ficha: usize) -> usize);
 
 unsafe fn card_regions(motor: usize, j: usize, tipo: *mut u8, peso: *mut f32) -> Vec<(usize, usize)> {
-    let mut reg = vec![(j, 0x40), (tipo as usize, 1), (peso as usize, 4), ((motor as isize + 0xf5c9 + 54 * side_of_player(j) as isize) as usize, 1)];
+    let mut reg = vec![(j, 0x40), (tipo as usize, 1), (peso as usize, 4), ((motor as isize + 0xf5c9 + 54 * side_of_player(MatchPlayer(j)) as isize) as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
     reg
 }
@@ -3754,11 +3757,12 @@ unsafe fn compare_with_commentary_at(extra: &[(usize, usize)], original: impl Fn
 }
 
 unsafe extern "thiscall" fn compare_shot_value(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
+    let this = MatchPlayer(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u16) -> u16>(IDX_SHOT_VALUE);
-    let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this + match_player::SHOT_QUALITY, 2)];
+    let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this.addr() + match_player::SHOT_QUALITY, 2)];
     reg.extend(crate::rng::STATE_REGIONS);
     let t0 = *tipo;
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tipo, som), || crate::rng::without_counting(|| shot_value(this, tipo, som)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), tipo, som), || crate::rng::without_counting(|| shot_value(this.addr(), tipo, som)));
     SCOREBOARD.record(igual && r == n, || format!("shot_value(tipo {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
     r
 }
@@ -4027,13 +4031,13 @@ unsafe fn grid_inconsistent(m: usize) -> Option<String> {
                     return Some(format!("casa ({},{}) lado {} contagem {}", x, y, l, n));
                 }
                 for i in 0..n as usize {
-                    let p = *((casa + 4 * (11 * l + i)) as *const usize);
+                    let p = MatchPlayer(*((casa + 4 * (11 * l + i)) as *const usize));
                     let base = m + engine::PLAYERS + 8920 * l;
-                    if p < base || p >= base + 20 * 0x1be || (p - base) % 0x1be != 0 {
-                        return Some(format!("casa ({},{}) lado {} entrada {}/{} = {:#x}", x, y, l, i, n, p));
+                    if p.addr() < base || p.addr() >= base + 20 * 0x1be || (p.addr() - base) % 0x1be != 0 {
+                        return Some(format!("casa ({},{}) lado {} entrada {}/{} = {:#x}", x, y, l, i, n, p.addr()));
                     }
-                    if read_i8(p + match_player::CELL_X) != x || read_i8(p + match_player::CELL_Y) != y || read_i8(p + match_player::CELL_SLOT) != i as i8 {
-                        return Some(format!("casa ({},{}) lado {} entrada {}: jogador em ({},{}) indice {}", x, y, l, i, read_i8(p + match_player::CELL_X), read_i8(p + match_player::CELL_Y), read_i8(p + match_player::CELL_SLOT)));
+                    if p.cell_x() != x || p.cell_y() != y || p.cell_slot() != i as i8 {
+                        return Some(format!("casa ({},{}) lado {} entrada {}: jogador em ({},{}) indice {}", x, y, l, i, p.cell_x(), p.cell_y(), p.cell_slot()));
                     }
                 }
             }

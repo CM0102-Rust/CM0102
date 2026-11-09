@@ -156,9 +156,9 @@ pub(crate) unsafe fn compare_com_fita<R>(reg: Vec<(usize, usize)>, original: imp
 }
 
 /// Comparer for `play`.
-pub(crate) unsafe fn compare_play(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, rodar: &dyn Fn() -> u32) -> u8 {
+pub(crate) unsafe fn compare_play(p: MatchPlayer, a1: u32, a2: u32, a3: u32, a4: u32, rodar: &dyn Fn() -> u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
-    let m = *((p + match_player::ENGINE) as *const usize);
+    let m = p.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(*((m + engine::MATCH) as *const usize));
@@ -326,8 +326,9 @@ pub(crate) unsafe extern "thiscall" fn compare_check_move(this: usize) -> u8 {
 
 /// Comparer for `apply_factor`.
 pub(crate) unsafe extern "thiscall" fn compare_apply_factor(this: usize, f: f32) {
+    let this = MatchPlayer(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, f32)>(IDX_APPLY_FACTOR);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + match_player::CONFIDENCE, 4)], || o(this, f), || apply_factor(this, f));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this.addr() + match_player::CONFIDENCE, 4)], || o(this.addr(), f), || apply_factor(this.addr(), f));
     SCOREBOARD.record(igual, || format!("apply_factor({}) original={:x?} rust={:x?}", f, mo, mr));
 }
 
@@ -363,8 +364,8 @@ pub(crate) unsafe extern "thiscall" fn compare_team_strength(this: usize, l: i8)
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_TEAM_STRENGTH);
     let mut reg = vec![(this + 0x1d8, 0x20), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     for k in 0..20 {
-        let p = side_player_slot(this, l, k);
-        reg.extend([(p + match_player::MATCH_RATING, 2), (p + match_player::STAMINA, 4)]);
+        let p = MatchPlayer(side_player_slot(this, l, k));
+        reg.extend([(p.addr() + match_player::MATCH_RATING, 2), (p.addr() + match_player::STAMINA, 4)]);
     }
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l), || crate::rng::without_counting(|| team_strength(this, l)));
@@ -460,8 +461,8 @@ pub(crate) unsafe extern "thiscall" fn compare_intercept(this: usize, x: i8, y: 
     reg.extend([(this + engine::GRID, 9 * 12 * 90), (this + 0x8ea0, 0x20), (this + 0x4780, 0x10), (this + 0xf570, 0x44)]);
     for l in 0..2i8 {
         for k in 0..20 {
-            let j = side_player_slot(this, l, k);
-            reg.extend([(j + match_player::BALLS_CONTESTED, 1), (j + match_player::POSITION, 1), (j + match_player::BUSY, 1), (j + match_player::ACTION, 2)]);
+            let j = MatchPlayer(side_player_slot(this, l, k));
+            reg.extend([(j.addr() + match_player::BALLS_CONTESTED, 1), (j.addr() + match_player::POSITION, 1), (j.addr() + match_player::BUSY, 1), (j.addr() + match_player::ACTION, 2)]);
         }
     }
     let (r, n, igual, sequencia, k) = compare_com_fita(reg, || o(this, x, y, a3, goal, a5, a6), |chamar| {
@@ -655,7 +656,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, j
         }
     }
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m, j, ja_away), |chamar| {
-        player_left_pitch_with(m, j, ja_away as u8, &mut |rotina, this, args| {
+        player_left_pitch_with(m, MatchPlayer(j), ja_away as u8, &mut |rotina, this, args| {
             chamar(rotina, this, args, if rotina == 0x897760 { [u32::MAX, 0xff, u32::MAX, 0, 0] } else { [0xff, 0, 0, 0, 0] })
         })
     });
@@ -682,7 +683,7 @@ pub(crate) unsafe extern "thiscall" fn compare_tackle_injury(m: usize, a: usize,
         }
     }
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m, a, kind, b, kind_b, direct), |chamar| {
-        tackle_injury_with(m, a, kind as u16 as i16, b, kind_b as u16 as i16, direct as u8, &mut |rotina, this, args| {
+        tackle_injury_with(m, MatchPlayer(a), kind as u16 as i16, b, kind_b as u16 as i16, direct as u8, &mut |rotina, this, args| {
             chamar(rotina, this, args, if rotina == 0x62ed70 { [u32::MAX, 0, 0, 0, 0] } else { [0xff, 0xff, u32::MAX, u32::MAX, 0] })
         })
     });
@@ -761,7 +762,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pressure(m: usize, j: usize, out:
         return o(m, j, out, list);
     }
     let (r, n, igual, sequencia, k) = compare_com_fita(vec![(out as usize, 2)], || o(m, j, out, list), |chamar| {
-        pressure_on_player_with(m, j, out, list, &mut |l, p| {
+        pressure_on_player_with(m, MatchPlayer(j), out, list, &mut |l, p| {
             chamar(FN_LLIST_ADD_TAIL, taped_pressure_list_addr(l, 0x1be), [p as u32, 0x1be, 0, 0, 0], [u32::MAX; 5]);
         })
     });
@@ -805,7 +806,7 @@ pub(crate) unsafe extern "thiscall" fn compare_deflect_ball(this: usize, x: i8, 
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(this + 0x1a0, 0x30), (this + engine::GRID, 0x8f00 - 0x215e), (this + engine::FORMATION_TABLE, 0xa0)]);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(this, x, y, spread, side, inside, cansa, shooter), |chamar| {
-        deflect_ball_with(this, x, y, spread, side, inside, cansa, shooter, &mut |rotina, alvo, args| {
+        deflect_ball_with(this, x, y, spread, side, inside, cansa, MatchPlayer(shooter), &mut |rotina, alvo, args| {
             chamar(rotina, alvo, args, if rotina == 0x6cd490 { [0xff, 0, 0, 0, 0] } else { [u32::MAX, 0, 0, 0, 0] })
         })
     });
@@ -865,8 +866,8 @@ pub(crate) unsafe extern "thiscall" fn compare_look_for_play(this: usize, side: 
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(this + engine::SHOT_BLOCKER, 4), (base + 0x58, 1), (list, 44)]);
     for k in 0..read_i8(base + 0x58).clamp(0, 11) as usize {
-        let j = *((list + 4 * k) as *const usize);
-        reg.extend([(j + match_player::BALLS_CONTESTED, 1), (j + match_player::POSITION, 1), (j + match_player::BUSY, 1)]);
+        let j = MatchPlayer(*((list + 4 * k) as *const usize));
+        reg.extend([(j.addr() + match_player::BALLS_CONTESTED, 1), (j.addr() + match_player::POSITION, 1), (j.addr() + match_player::BUSY, 1)]);
     }
     let (r, n, igual, sequencia, k) = compare_com_fita(
         reg,

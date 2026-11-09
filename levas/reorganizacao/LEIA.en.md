@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 8: the player in the match (`MatchPlayer`)
+
+The full package for `match_player`, with the methods' `this`: 294 variables in 239 functions, 222 `.addr()` removed
+from the wrappers, 58 functions take `MatchPlayer` (240 calls fixed), propagation 13 more (76). New step,
+`tipar_registros.py --fechos`: the local closures returning a pointer (`let b = |q: usize, o: usize| (q + o) as *mut u8;`,
+used as `*b(j.addr(), match_player::X)`) are expanded at the call into the form the converter understands (27
+functions), and the unused closure goes. Raw match-player accesses 2,552 → ~1,070 (the rest: closure parameters,
+reassigned variables or several `let`). `.addr()` outside the wrappers 3,815 → 4,760. Mutations: 3 replacements
+missing the now required `MatchPlayer(..)` were fixed. Proof: 7cc445c2 ×2, detector equal, comparison 0.
+
 ## Migration to typed records, batch 7: the fixture (`Fixture`)
 
 The full package for `fixture`: 184 variables in 182 functions, 75 `.addr()` removed from the wrappers, 31 functions

@@ -96,9 +96,8 @@ pub(crate) unsafe extern "thiscall" fn register_injury(this: usize, sheet: usize
 /// +0x59 e reduz +0xd5 a metade. Folego abaixo do limite: sai (+0x8eb5, +0x1d, +0x1c); senao para
 /// (0x7160e0 com 5 ou 3) conforme a forca da pessoa (+0x2d x 25). Folego entre 1 e o teto; saindo,
 /// mais uma lesao no jogo.
-pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: MatchPlayer, o: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let w = |x: usize| (m + x) as *mut i16;
-    let b = |q: usize, x: usize| (q + x) as *mut u8;
     let n = *w(engine::INJURY_COUNT);
     if n > 3 && random(n as i32) != 0 && random(0x1f4) != 0 {
         return;
@@ -108,47 +107,47 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
     }
     let (mut t, mut g) = (kind as u8, chance as u8);
     if t as i8 > -1 {
-        register_injury_with(*(G_INJURY as *const usize), *((p + match_player::STAFF) as *const usize), &mut t, &mut g, call);
+        register_injury_with(*(G_INJURY as *const usize), p.staff(), &mut t, &mut g, call);
     }
-    *((p + match_player::INJURY_CULPRIT) as *mut usize) = o;
+    p.set_injury_culprit(o);
     if o != 0 {
         let q = (o + 0x31) as *mut i16;
         *q = (*q).wrapping_sub(10);
     }
-    let folego = (p + match_player::STAMINA) as *mut f32;
+    let folego = (p.addr() + match_player::STAMINA) as *mut f32;
     let c = g as i8 as i32;
     let mut local = 0f32;
     if g as i8 > 0x32 {
         crate::comparison::branch("injury serious");
-        *b(p, match_player::INJURY_FORCES_OFF) = 1;
+        p.set_injury_forces_off((1) as i8);
         *folego = (*folego as f64 - (c * c) as f64) as f32;
     } else {
         local = random(ftol((c * c) as f64 * read_f64(rdata::F64_0_5))) as f32;
         *folego = (*folego as f64 - local as f64) as f32;
         let r = random(ftol(local as f64 * read_f32(rdata::F32_0_5) as f64));
-        *((p + match_player::STAMINA_BOOST) as *mut f32) = r as f32;
-        let d5 = (p + match_player::STAMINA_ATTRIBUTE) as *mut f32;
+        p.set_stamina_boost(r as f32);
+        let d5 = (p.addr() + match_player::STAMINA_ATTRIBUTE) as *mut f32;
         *d5 = (*d5 as f64 * read_f32(rdata::F32_0_5) as f64) as f32;
     }
     if !(*folego as f64 >= read_f64(rdata::F64_5000)) {
         crate::comparison::branch("injury out of breath");
-        *b(m, engine::SUBSTITUTION_PENDING) = 1;
-        *b(p, match_player::INJURY_PENDING) = 1;
-        *b(p, match_player::INJURY_FORCES_OFF) = 1;
+        *((m + engine::SUBSTITUTION_PENDING) as *mut u8) = 1;
+        p.set_injury_pending((1) as i8);
+        p.set_injury_forces_off((1) as i8);
     } else {
-        let person = *((p + match_player::PLAYER) as *const usize);
+        let person = p.player();
         let v = (read_i8(person + player_sheet::INJURY_PRONENESS) as i32 * 25) as f64 + read_f64(rdata::F64_7100);
         if v > *folego as f64 {
             crate::comparison::branch("injury to 5");
-            write_2b(p, 5);
-            *b(m, engine::SUBSTITUTION_PENDING) = 1;
-            *b(p, match_player::INJURY_PENDING) = 1;
+            write_2b(p.addr(), 5);
+            *((m + engine::SUBSTITUTION_PENDING) as *mut u8) = 1;
+            p.set_injury_pending((1) as i8);
         } else {
-            write_2b(p, 3);
-            if local >= read_f32(rdata::F32_500) && *b(p, match_player::INJURY_FORCES_OFF) != 0 {
+            write_2b(p.addr(), 3);
+            if local >= read_f32(rdata::F32_500) && (p.injury_forces_off() as u8) != 0 {
                 crate::comparison::branch("injury to 3 and leaves");
-                *b(m, engine::SUBSTITUTION_PENDING) = 1;
-                *b(p, match_player::INJURY_PENDING) = 1;
+                *((m + engine::SUBSTITUTION_PENDING) as *mut u8) = 1;
+                p.set_injury_pending((1) as i8);
             }
         }
     }
@@ -158,7 +157,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
     } else if x > read_f64(rdata::F64_10000) {
         *folego = read_f64(rdata::F64_10000) as f32;
     }
-    if *b(m, engine::SUBSTITUTION_PENDING) != 0 {
+    if *((m + engine::SUBSTITUTION_PENDING) as *mut u8) != 0 {
         *w(engine::INJURY_COUNT) = (*w(engine::INJURY_COUNT)).wrapping_add(1);
     }
 }
@@ -207,7 +206,7 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
     reg.extend(injury_list_regions());
     let write = RECORD_INJURY.swap(true, Relaxed);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || f(m, kind, chance, p, o), |chamar| {
-        injure_with(m, kind, chance, p, o, &mut |rotina, this, args| chamar(rotina, this, args, [0, u32::MAX, 0, 0, 0]))
+        injure_with(m, kind, chance, MatchPlayer(p), o, &mut |rotina, this, args| chamar(rotina, this, args, [0, u32::MAX, 0, 0, 0]))
     });
     RECORD_INJURY.store(write, Relaxed);
     SCOREBOARD.record(igual && sequencia, || format!("injure(tipo {}, chance {}) {} chamadas: {}", kind as u8 as i8, chance as u8 as i8, k, tape_detail()));
@@ -224,7 +223,8 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
 /// +0x35 contra um sorteio ou contra o tempo em campo, gols +0xc, cartoes, e a busca no historico
 /// 0x757da0 nos ultimos 7 ou 30 dias, datas da 0x54c8e0); os demais da faixa, sim.
 pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> u32 {
-    let m = *((p + match_player::ENGINE) as *const usize);
+    let p = MatchPlayer(p);
+    let m = p.engine();
     let today = G_CURRENT_DATE;
     let (mut d7, mut d30) = ([0u8; 8], [0u8; 8]);
     exe::date_sub_days(today, (&mut d7) as *mut [u8; 8] as usize, 7);
@@ -233,16 +233,16 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     if !(0x1f40..=0x21e4).contains(&c) {
         return 0;
     }
-    let side = read_i8(p + match_player::SIDE) as i32;
+    let side = p.side() as i32;
     if *((m as isize + ((c + side * 1000) * 4) as isize - 0x7ae2) as *const u32) != 0 {
         return 0;
     }
-    let sheet = *((p + match_player::STAFF) as *const usize);
+    let sheet = p.staff();
     if sheet != 0 && *(sheet as *const i32) >= *(G_STAFF_COUNT as *const i32) {
         return 0;
     }
-    let atuacao = *((p + match_player::MATCH_RATING) as *const i16) as i32;
-    let b = |o: usize| read_i8(p + o);
+    let atuacao = p.match_rating() as i32;
+    let b = |o: usize| read_i8(p.addr() + o);
     let minute = *((m + engine::CLOCK) as *const i16) as i32 / 11;
     let in_field = minute - b(0x1f) as i32;
     let limit = |t: i32| (t * 33 + 0xfa0).min(0x1964);
@@ -250,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     let common = || b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && atuacao <= limit(in_field);
     let search = |cod: u32, data: &[u8; 8]| {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, *const [u8; 8]) -> u32 = core::mem::transmute(FN_MEDIA_HAS_LOGGED_STORY);
-        f(*(G_MEDIA as *const usize), sheet, *((p + match_player::CLUB) as *const usize), -1, cod, data) != 0
+        f(*(G_MEDIA as *const usize), sheet, p.club(), -1, cod, data) != 0
     };
     let algum = |de: u32, ate: u32, data: &[u8; 8]| (de..=ate).any(|k| search(k as u16 as u32, data));
     let r = match c {
@@ -266,10 +266,10 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         }
         0x21a1 | 0x21a2 => {
             let goals = b(0xa) as u8 as i32;
-            if p != *((m + engine::PASS_RECEIVER) as *const usize) || *((m + engine::ASSIST_CANDIDATE) as *const u32) == 0 {
+            if p.addr() != *((m + engine::PASS_RECEIVER) as *const usize) || *((m + engine::ASSIST_CANDIDATE) as *const u32) == 0 {
                 false
             } else if c == 0x21a1 {
-                if goals <= 4 || *((p + match_player::SHOT_QUALITY) as *const i16) <= 0xfa {
+                if goals <= 4 || p.shot_quality() <= 0xfa {
                     false
                 } else {
                     let r = random(6) + 12;
@@ -300,8 +300,8 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         0x21b8 => {
             atuacao < 0x1964
                 && (b(0x14) as u8 as i32) > random(3)
-                && player_table(p) & 4 != 0
-                && read_i8(*((p + match_player::PLAYER) as *const usize) + 0x11) as i32 > random(4) + 0xf
+                && player_table(p.addr()) & 4 != 0
+                && read_i8(p.player() + 0x11) as i32 > random(4) + 0xf
                 && b(0xc) == 0
                 && (b(0x17) as i32) < random(6)
                 && in_field > random(0x32) + 0x1e
